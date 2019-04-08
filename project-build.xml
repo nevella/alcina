@@ -23,22 +23,25 @@
 	<target name="build-dependencies">
 		<!-- override in the top-level-project build script -->
 	</target>
-	<target name="compile" description="Compiles the ${project.module.description} module" depends="build-dependencies">
-		<mkdir dir="${project.build.dir}" />
-		<javac includeantruntime="false" debug="on" sourcepath="" destdir="${project.build.dir}">
+	<target name="compile-task" description="Compiles the ${project.module.description} module" depends="">
+			<mkdir dir="${project.build.dir}" />
+			<javac includeantruntime="false" debug="on" sourcepath="" destdir="${project.build.dir}">
 
-			<src path="${project.src.dirs}" />
-			<classpath>
-				<path refid="project.classpath" />
-			</classpath>
-			<patternset refid="project.compile.filter.sources" />
-			<compilerarg value="${alcina.compiler.args}" />
-		</javac>
-		<!-- a hack, but then...maybe I don't understand Ant? -->
-		<delete dir="${project.build.dir}/com/totsp" />
+				<src path="${project.src.dirs}" />
+				<classpath>
+					<path refid="project.classpath" />
+				</classpath>
+				<patternset refid="project.compile.filter.sources" />
+				<compilerarg value="${alcina.compiler.args}" />
+			</javac>
+			<!-- a hack, but then...maybe I don't understand Ant? -->
+			<delete dir="${project.build.dir}/com/totsp" />
+		</target>
+	<target name="compile" description="Compiles the ${project.module.description} module" depends="build-dependencies,compile-task">
 	</target>
-
-	<target name="make-jars" description="Make ${project.module.description} jar" depends="compile">
+	<target name="make-jars" description="Make ${project.module.description} jar" depends="compile,make-jars-task">
+		</target>
+	<target name="make-jars-task" description="Make ${project.module.description} jar" depends="">
 		<mkdir dir="${project.dist.dir}" />
 		<delete file="${project.dist.dir}/${ant.project.name}.jar" if:true="${alcina.delete-before-jars}"/>
 		<copy todir="${project.build.dir}">

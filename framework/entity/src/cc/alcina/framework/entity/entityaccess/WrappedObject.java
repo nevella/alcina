@@ -86,6 +86,10 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
             return classes;
         }
 
+        public static synchronized void withoutRegistry() {
+            jaxbSubclasses = new ArrayList<>();
+        }
+
         @SuppressWarnings("unchecked")
         public static <T> T xmlDeserialize(Class<T> clazz, String xmlStr) {
             if (xmlStr == null) {

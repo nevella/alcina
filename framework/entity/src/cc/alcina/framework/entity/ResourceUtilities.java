@@ -562,7 +562,6 @@ public class ResourceUtilities {
         return readUrlAsString(strUrl, null);
     }
 
-    @SuppressWarnings({ "deprecation" })
     public static String readUrlAsString(String strUrl, String charset)
             throws Exception {
         // don't use

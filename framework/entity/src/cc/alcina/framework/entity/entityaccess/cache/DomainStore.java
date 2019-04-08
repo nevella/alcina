@@ -421,7 +421,9 @@ public class DomainStore implements IDomainStore {
         initialising = false;
         initialised = true;
         threads.startLongLockHolderCheck();
-        threads.setupLockedAccessCheck();
+        if (ResourceUtilities.is("checkAccessWithoutLock")) {
+            threads.setupLockedAccessCheck();
+        }
     }
 
     private void doEvictions() {

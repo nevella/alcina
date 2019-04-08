@@ -61,8 +61,6 @@ import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
-import cc.alcina.framework.entity.util.ShellWrapper;
-import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.ServletLayerObjects;
@@ -303,27 +301,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-            }
-            {
-                // change log colours, off thread
-                new Thread() {
-                    @Override
-                    public void run() {
-                        try {
-                            ShellWrapper shellWrapper = new ShellWrapper();
-                            String[] cmdAndArgs = {
-                                    "/opt/jboss/wildfly/bin/jboss-cli.sh",
-                                    "--connect",
-                                    "--commands=/subsystem=logging/pattern-formatter=COLOR-PATTERN:write-attribute(name=color-map,value=\"WARN:blue,ERROR:red,DEBUG:green,INFO:black\")" };
-                            shellWrapper.logToStdOut = true;
-                            ShellOutputTuple shellOutputTuple = shellWrapper
-                                    .runProcessCatchOutputAndWait(cmdAndArgs);
-                            int debug = 3;
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    };
-                }.start();
             }
         }
         {

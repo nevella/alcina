@@ -26,7 +26,9 @@
 		<delete dir="${framework.classmeta.build.dir}" />
 		<mkdir dir="${framework.dist.dir}" />
 	</target>
-	<target name="compile" description="Compiles all J2SE modules">
+	<target name="compile" description="Compiles all J2SE modules" depends="compile-task">
+	</target>
+	<target name="compile-task" description="Compiles all J2SE modules">
 		<mkdir dir="${framework.entity.build.dir}" />
 		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${framework.entity.src.dirs}" destdir="${framework.entity.build.dir}">
 			<classpath>
@@ -166,7 +168,9 @@
 			</fileset>
 		</jar>
 	</target>
-	<target name="make-jars" description="Make entity, entity-impl, servlet and extras jars " depends="compile,make-ant-jar">
+	<target name="make-jars" description="Make entity, entity-impl, servlet and extras jars " depends="compile,make-ant-jar,make-jars-task">
+	</target>
+	<target name="make-jars-task" description="Make entity, entity-impl, servlet and extras jars " depends="">
 		<mkdir dir="${framework.dist.dir}" />
 		<mkdir dir="${extras.dist.dir}" />
 		<delete file="${framework.dist.dir}/${ant.project.name}-entity.jar" if:true="${alcina.delete-before-jars}" />

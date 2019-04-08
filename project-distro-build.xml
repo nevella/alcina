@@ -125,7 +125,9 @@
 	</target>
 	<target name="hot-deploy" description="Dev :: copy changed server files, no WAR restart" depends="hot-deploy-main">
 	</target>
-	<target name="hot-deploy-main" depends="build-dependencies,compile">
+	<target name="hot-deploy-main" depends="build-dependencies,compile,hot-deploy-task">
+	</target>
+	<target name="hot-deploy-task" depends="">
 		<!--the ear -->
 		<mkdir dir="${j2ee-server.unear.target}" />
 		<mkdir dir="${j2ee-server.unear.target}${j2ee-lib.dir}" />
