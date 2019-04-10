@@ -104,7 +104,8 @@ public class AntHandler extends AbstractHandler {
                     && currentTask.cwd.equals(runningTask.cwd)) {
                 currentListener.flush();
                 if (lastBuildException == null
-                        && runningTask.returnCmd.endsWith("hot-deploy")) {
+                        && runningTask.returnCmd.endsWith("hot-deploy")
+                        && !runningTask.returnCmd.contains("compile-gwt")) {
                     runningTask.returnCmd = "";
                 }
             } else {
