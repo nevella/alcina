@@ -307,6 +307,9 @@ public class InternalMetrics {
     }
 
     protected void persist() {
+        if (!ResourceUtilities.is("enabled")) {
+            return;
+        }
         LinkedHashMap<InternalMetricData, InternalMetric> toPersist = null;
         List<InternalMetricData> toRemove = trackers.values().stream()
                 .filter(imd -> imd.isFinished() && imd.sliceCount() == 0)

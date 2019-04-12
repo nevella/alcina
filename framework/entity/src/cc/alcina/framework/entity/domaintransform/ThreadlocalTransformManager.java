@@ -69,6 +69,7 @@ import cc.alcina.framework.common.client.logic.reflection.AssignmentPermission;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
+import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -153,6 +154,19 @@ public class ThreadlocalTransformManager extends TransformManager
     public static boolean isInEntityManagerTransaction() {
         return get() instanceof ThreadlocalTransformManager
                 && cast().getEntityManager() != null;
+    }
+
+    public static boolean isServerOnly(DomainTransformEvent evt) {
+        Class clazz = evt.getObjectClass();
+        if (clazz.getAnnotation(DomainTransformPersistable.class) != null) {
+            return true;
+        }
+        clazz = evt.getValueClass();
+        if (clazz != null && clazz
+                .getAnnotation(DomainTransformPersistable.class) != null) {
+            return true;
+        }
+        return false;
     }
 
     public static TopicSupport<Thread> topicTransformManagerWasReset() {

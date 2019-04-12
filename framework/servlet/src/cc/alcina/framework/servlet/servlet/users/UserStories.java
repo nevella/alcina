@@ -219,6 +219,9 @@ public class UserStories {
     }
 
     public void persist(UserStory incoming) {
+        if (ResourceUtilities.is("disabled")) {
+            return;
+        }
         ClientInstance clientInstance = SessionHelper
                 .getAuthenticatedSessionClientInstance(
                         CommonRemoteServiceServlet
