@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -59,6 +60,10 @@ import java.util.zip.GZIPOutputStream;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
+import org.cyberneko.html.parsers.DOMParser;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+
 import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -67,6 +72,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
@@ -149,6 +155,26 @@ public class ResourceUtilities {
             }
         }
         return tgtBean;
+    }
+
+    public static DOMParser createDOMParser(boolean elementNamesToLowerCase) {
+        DOMParser parser = new DOMParser();
+        try {
+            parser.setFeature(
+                    "http://cyberneko.org/html/features/scanner/fix-mswindows-refs",
+                    true);
+            parser.setFeature(
+                    "http://cyberneko.org/html/features/scanner/ignore-specified-charset",
+                    true);
+            if (elementNamesToLowerCase) {
+                parser.setProperty(
+                        "http://cyberneko.org/html/properties/names/elems",
+                        "lower");
+            }
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+        return parser;
     }
 
     public static <T> T deserializeKryoOrAlcina(String string, Class<T> clazz) {
@@ -345,6 +371,49 @@ public class ResourceUtilities {
 
     public static boolean isNumericPrimitive(Class c) {
         return (c.isPrimitive() && c != char.class && c != boolean.class);
+    }
+
+    public static Document loadDocumentFromInputStream(InputStream is)
+            throws Exception {
+        return loadHtmlDocumentFromInputStream(is, null);
+    }
+
+    public static XmlDoc loadHtmlDocFromStrUrl(String url) {
+        return new XmlDoc(loadHtmlDocumentFromStrUrl(url));
+    }
+
+    public static Document loadHtmlDocumentFromInputStream(InputStream is,
+            String charset) throws Exception {
+        byte[] bs = ResourceUtilities.readStreamToByteArray(is);
+        is.close();
+        InputSource isrc = null;
+        if (charset == null) {
+            isrc = new InputSource(new ByteArrayInputStream(bs));
+        } else {
+            isrc = new InputSource(new InputStreamReader(
+                    new ByteArrayInputStream(bs), charset));
+        }
+        DOMParser parser = createDOMParser(false);
+        parser.parse(isrc);
+        return (Document) parser.getDocument();
+    }
+
+    public static Document loadHtmlDocumentFromString(String s)
+            throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        OutputStreamWriter osw = new OutputStreamWriter(baos, "UTF-8");
+        osw.write(s);
+        osw.close();
+        return loadHtmlDocumentFromInputStream(
+                new ByteArrayInputStream(baos.toByteArray()), "UTF-8");
+    }
+
+    public static Document loadHtmlDocumentFromStrUrl(String url) {
+        try {
+            return loadDocumentFromInputStream(new URL(url).openStream());
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
     }
 
     public static void loadSystemPropertiesFromCustomProperties() {
