@@ -15,6 +15,8 @@ public class ClusterDefinition {
 
     public String zkHostPort;
 
+    public String testName;
+
     public List<ClusterMember> clusterMembers = new ArrayList<>();
 
     public ClusterMember memberByName(String hostName) {
