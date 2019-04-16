@@ -17,6 +17,8 @@ public class ClusterDefinition {
 
     public String testName;
 
+    public String bpxGroup;
+
     public List<ClusterMember> clusterMembers = new ArrayList<>();
 
     public ClusterMember memberByName(String hostName) {
