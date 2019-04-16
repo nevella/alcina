@@ -2,6 +2,9 @@ package cc.alcina.framework.entity.control;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import cc.alcina.framework.common.client.util.Ax;
 
 public class ClusterDefinition {
     public String clusterId;
@@ -15,8 +18,13 @@ public class ClusterDefinition {
     public List<ClusterMember> clusterMembers = new ArrayList<>();
 
     public ClusterMember memberByName(String hostName) {
-        return clusterMembers.stream().filter(m -> m.hostName.equals(hostName))
-                .findFirst().get();
+        Optional<ClusterMember> member = clusterMembers.stream()
+                .filter(m -> m.hostName.equals(hostName)).findFirst();
+        if (!member.isPresent()) {
+            throw Ax.runtimeException("Host not in cluster definition: %s",
+                    hostName);
+        }
+        return member.get();
     }
 
     public ClusterMember provideCurrentWriterHost() {
@@ -40,5 +48,10 @@ public class ClusterDefinition {
         public boolean proxiedTo;
 
         public String tunnelAliasTo;
+
+        @Override
+        public String toString() {
+            return hostName;
+        }
     }
 }
