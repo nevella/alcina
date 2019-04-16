@@ -104,7 +104,8 @@ public class AntHandler extends AbstractHandler {
                     && currentTask.cwd.equals(runningTask.cwd)) {
                 currentListener.flush();
                 if (lastBuildException == null
-                        && runningTask.returnCmd.endsWith("hot-deploy")
+                        && (runningTask.returnCmd.endsWith("hot-deploy")
+                                || runningTask.returnCmd.endsWith("build-all"))
                         && !runningTask.returnCmd.contains("compile-gwt")) {
                     runningTask.returnCmd = "";
                 }
@@ -226,13 +227,17 @@ public class AntHandler extends AbstractHandler {
                         return;
                     }
                     String path = file.getPath();
-                    if (path.matches(".+\\.(jar|class)")) {
+                    if (path.matches(".+\\.(jar|class|lock)")) {
                         // build artifact
                         return;
                     }
                     if (file.getPath().matches(
                             ".+/(?:build|bin|dist|classmeta/schema)/.+")) {
                         // build path
+                        return;
+                    }
+                    if (file.getPath().matches(".+/api-request.*\\.json")) {
+                        // debug file
                         return;
                     }
                     logger.debug("Intersting fs event - {} {}", project, path);
