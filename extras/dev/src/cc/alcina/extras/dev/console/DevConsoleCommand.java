@@ -920,6 +920,10 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
             String idStr = console.getMultilineInput(
                     "Enter the ids, or blank for clipboard: ");
             idStr = idStr.isEmpty() ? console.getClipboardContents() : idStr;
+            return runWithIds(idStr);
+        }
+
+        public String runWithIds(String idStr) throws Exception {
             String sql = String.format(
                     "select " + "id,optlock,creationdate,lastmodificationdate,"
                             + "classname,serializedxml,creation_user_id,"
