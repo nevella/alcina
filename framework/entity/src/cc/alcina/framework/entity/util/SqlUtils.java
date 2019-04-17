@@ -56,9 +56,12 @@ public class SqlUtils {
     public static <T> List<T> getMapped(Statement statement, String sql,
             ThrowingFunction<ResultSet, T> mapper) {
         try {
+            MetricLogging.get().start("query");
+            maybeLogQuery(sql);
             ResultSet rs = (statement instanceof PreparedStatement)
                     ? ((PreparedStatement) statement).executeQuery()
                     : statement.executeQuery(sql);
+            MetricLogging.get().end("query");
             List<T> result = new ArrayList<>();
             while (rs.next()) {
                 result.add(mapper.apply(rs));
