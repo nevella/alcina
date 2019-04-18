@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.control.ClusterStateProvider;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
@@ -110,9 +111,10 @@ public class ControlServlet extends HttpServlet {
             break;
         case TEST_SENDMAIL:
             String toAddress = testSendmail();
-            String message = Ax.format("Test email sent to: %s via: %s",
-                    toAddress, ResourceUtilities.get(ContentDeliveryEmail.class,
-                            "smtp.host.name"));
+            String message = Ax.format(
+                    "Test email sent to: %s from: %s via: %s", toAddress,
+                    EntityLayerUtils.getLocalHostName(), ResourceUtilities
+                            .get(ContentDeliveryEmail.class, "smtp.host.name"));
             logger.warn(message);
             writeAndClose(message, resp);
             break;
@@ -158,7 +160,8 @@ public class ControlServlet extends HttpServlet {
                         ContentDeliveryType_EMAIL.class);
         TestContentRequest testContentRequest = new TestContentRequest();
         testContentRequest.setEmailInline(true);
-        testContentRequest.setEmailSubject(Ax.format("Test: %s", new Date()));
+        testContentRequest.setEmailSubject(Ax.format("Test: %s :: %s",
+                EntityLayerUtils.getLocalHostName(), new Date()));
         String emailAddress = ResourceUtilities.get("testSendmailAddress");
         testContentRequest.setEmailAddress(emailAddress);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(
