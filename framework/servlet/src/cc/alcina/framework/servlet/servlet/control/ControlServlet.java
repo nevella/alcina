@@ -127,9 +127,12 @@ public class ControlServlet extends HttpServlet {
         } else if (cmd.equals("vm-health")) {
             csr.setCommand(ControlServletRequestCommand.VM_HEALTH);
             return csr;
+        } else if (cmd.equals("test-sendmail")) {
+            csr.setCommand(ControlServletRequestCommand.TEST_SENDMAIL);
+            return csr;
         }
         writeAndClose("Usage:\n" + "control.do?apiKey=xxx&"
-                + "{json=yyy|cmd=[refresh-config|to-reader|to-writer|get-status|vm-health]}",
+                + "{json=yyy|cmd=[refresh-config|to-reader|to-writer|get-status|vm-health|test-sendmail]}",
                 resp);
         return null;
     }
