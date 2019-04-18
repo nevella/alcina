@@ -38,449 +38,489 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public abstract class ContentRequestBase<CD extends ContentDefinition> extends
-		WrapperPersistable implements GwtMultiplePersistable, DeliveryModel {
-	static final long serialVersionUID = -1L;
+        WrapperPersistable implements GwtMultiplePersistable, DeliveryModel {
+    static final long serialVersionUID = -1L;
 
-	private String outputFormat = FormatConversionTarget.HTML.serializedForm();
+    private String outputFormat = FormatConversionTarget.HTML.serializedForm();
 
-	private String deliveryMode = ContentDeliveryType.DOWNLOAD.serializedForm();
+    private String deliveryMode = ContentDeliveryType.DOWNLOAD.serializedForm();
 
-	private PublicationRange publicationRange = PublicationRange.ALL;
+    private PublicationRange publicationRange = PublicationRange.ALL;
 
-	private String fontOptions = PublicationFontOptions.ARIAL.serializedForm();
+    private String fontOptions = PublicationFontOptions.ARIAL.serializedForm();
 
-	private boolean coverPage = false;
+    private boolean coverPage = false;
 
-	private String suggestedFileName = "";
+    private String suggestedFileName = "";
 
-	private String emailSubject = "";
+    private String emailSubject = "";
 
-	private String emailSubjectForRequestor = null;
+    private String emailSubjectForRequestor = null;
 
-	private String attachmentMessage = "";
+    private String attachmentMessage = "";
 
-	private String attachmentMessageForRequestor = "";
+    private String attachmentMessageForRequestor = "";
 
-	private String systemEmailAddressOfRequestor;
+    private String systemEmailAddressOfRequestor;
 
-	private boolean pageBreakAfterEachDocument = false;
+    private boolean pageBreakAfterEachDocument = false;
 
-	private boolean emailInline = true;
+    private boolean emailInline = true;
 
-	private Long singleContentObjectId;
+    private Long singleContentObjectId;
 
-	private int singleContentObjectResultPosition;
+    private int singleContentObjectResultPosition;
 
-	private int resultCount;
+    private int resultCount;
 
-	private transient String systemMessage;
+    private transient String systemMessage;
 
-	private String contentPageRange;
+    private String contentPageRange;
 
-	private String emailAddress;
+    private String emailAddress;
 
-	private String permalinkQuery = null;
+    private String permalinkQuery = null;
 
-	private String mimeType = null;
+    private String mimeType = null;
 
-	private String note;
+    private String note;
 
-	private boolean noPersistence = false;
+    private boolean noPersistence = false;
 
-	protected CD contentDefinition;
+    protected CD contentDefinition;
 
-	private boolean footer = false;
+    private boolean footer = false;
 
-	private Long randomSeed;
+    private Long randomSeed;
 
-	private transient boolean test;
+    private transient boolean test;
 
-	private String publicDescription;
+    private String publicDescription;
 
-	private Map<String, String> properties = new LinkedHashMap<String, String>();
+    private Map<String, String> properties = new LinkedHashMap<String, String>();
 
-	public transient List<MailInlineImage> images = new ArrayList<>();
+    public transient List<MailInlineImage> images = new ArrayList<>();
 
-	public transient List<MailAttachment> attachments = new ArrayList<>();
+    public transient List<MailAttachment> attachments = new ArrayList<>();
 
-	private String opaqueRequestXml;
+    private String opaqueRequestXml;
 
-	private String opaqueRequestClassname;
+    private String opaqueRequestClassname;
 
-	public String getAttachmentMessage() {
-		return attachmentMessage;
-	}
+    @Override
+    public String getAttachmentMessage() {
+        return attachmentMessage;
+    }
 
-	public String getAttachmentMessageForRequestor() {
-		return attachmentMessageForRequestor;
-	}
+    @Override
+    public String getAttachmentMessageForRequestor() {
+        return attachmentMessageForRequestor;
+    }
 
-	/**
-	 * Don't assume non-null anywhere along the publication chain - use the
-	 * contentDefinition field of the ContentModelHandler etc
-	 */
-	@XmlTransient
-	public abstract CD getContentDefinition();
+    /**
+     * Don't assume non-null anywhere along the publication chain - use the
+     * contentDefinition field of the ContentModelHandler etc
+     */
+    @XmlTransient
+    public abstract CD getContentDefinition();
 
-	public String getContentPageRange() {
-		return this.contentPageRange;
-	}
+    public String getContentPageRange() {
+        return this.contentPageRange;
+    }
 
-	@Display(name = "deliveryMode")
-	public String getDeliveryMode() {
-		return this.deliveryMode;
-	}
+    @Display(name = "deliveryMode")
+    public String getDeliveryMode() {
+        return this.deliveryMode;
+    }
 
-	public String getEmailAddress() {
-		return emailAddress == null
-				? PermissionsManager.get().getUser() == null ? null
-						: PermissionsManager.get().getUser().getEmail()
-				: this.emailAddress;
-	}
-
-	public String getEmailSubject() {
-		return emailSubject;
-	}
-
-	public String getEmailSubjectForRequestor() {
-		if (emailSubjectForRequestor == null) {
-			return getEmailSubject();
-		}
-		return emailSubjectForRequestor;
-	}
-
-	public String getFontOptions() {
-		return fontOptions;
-	}
-
-	public String getMimeType() {
-		return this.mimeType;
-	}
-
-	public String getNote() {
-		return note;
-	}
-
-	public String getOpaqueRequestClassname() {
-		return this.opaqueRequestClassname;
-	}
-
-	/**
-	 * For when we don't want the client to have to know the request class
-	 */
-	public String getOpaqueRequestXml() {
-		return this.opaqueRequestXml;
-	}
-
-	@Display(name = "outputFormat")
-	public String getOutputFormat() {
-		return this.outputFormat;
-	}
-
-	public String getPermalinkQuery() {
-		return permalinkQuery;
-	}
-
-	public Map<String, String> getProperties() {
-		return this.properties;
-	}
-
-	@Transient
-	public PropertyChangeListener[] getPropertyChangeListeners() {
-		return this.propertyChangeSupport().getPropertyChangeListeners();
-	}
-
-	public PublicationRange getPublicationRange() {
-		return publicationRange;
-	}
-
-	public String getPublicDescription() {
-		return this.publicDescription;
-	}
-
-	public Long getRandomSeed() {
-		return this.randomSeed;
-	}
-
-	public int getResultCount() {
-		return this.resultCount;
-	}
-
-	public Long getSingleContentObjectId() {
-		return this.singleContentObjectId;
-	}
-
-	public int getSingleContentObjectResultPosition() {
-		return this.singleContentObjectResultPosition;
-	}
-
-	public String getSuggestedFileName() {
-		return suggestedFileName;
-	}
-
-	public String getSystemEmailAddressOfRequestor() {
-		return systemEmailAddressOfRequestor;
-	}
-
-	@XmlTransient
-	public String getSystemMessage() {
-		return systemMessage;
-	}
-
-	@Override
-	public boolean hasProperty(String key) {
-		return properties.containsKey(key);
-	}
-	public boolean isCoverPage() {
-		return coverPage;
-	}
-
-	public boolean isEmailInline() {
-		return emailInline;
-	}
-
-	public boolean isFooter() {
-		return footer;
-	}
-
-	public boolean isNoPersistence() {
-		return noPersistence;
-	}
-
-	public boolean isPageBreakAfterEachDocument() {
-		return pageBreakAfterEachDocument;
-	}
-
-	@XmlTransient
-	public boolean isTest() {
-		return test;
-	}
-
-	@Override
-	public List<MailAttachment> provideAttachments() {
-		if (attachments == null) {
-			attachments = new ArrayList<>();
-		}
-		return attachments;
-	}
-
-	@Override
-	public ContentDeliveryType provideContentDeliveryType() {
-		return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
-	}
-
-	@Override
-	public List<MailInlineImage> provideImages() {
-		if (images == null) {
-			images = new ArrayList<>();
-		}
-		return images;
-	}
-
-	@Override
-	public String providePropertyValue(String key) {
-		return properties.get(key);
-	}
-
-	public PublicationFontOptions providePublicationFontOptions() {
-		return ExtensibleEnum.valueOf(PublicationFontOptions.class,
-				fontOptions);
-	}
-
-	@Override
-	public FormatConversionTarget provideTargetFormat() {
-		return ExtensibleEnum.valueOf(FormatConversionTarget.class,
-				outputFormat);
-	}
-
-	public void putContentDeliveryType(ContentDeliveryType type) {
-		setDeliveryMode(type == null ? null : type.name());
-	}
-
-	public void putFormatConversionTarget(FormatConversionTarget target) {
-		setOutputFormat(target == null ? null : target.name());
-	}
-
-	public void putPublicationFontOptions(PublicationFontOptions fontOptions) {
-		setFontOptions(fontOptions == null ? null : fontOptions.name());
-	}
-
-	public void setAttachmentMessage(String attachmentMessage) {
-		this.attachmentMessage = attachmentMessage;
-	}
-
-	public void setAttachmentMessageForRequestor(
-			String attachmentMessageForRequestor) {
-		this.attachmentMessageForRequestor = attachmentMessageForRequestor;
-	}
-
-	public abstract void setContentDefinition(CD contentDefinition);
-
-	public void setContentPageRange(String contentPageRange) {
-		String old_contentPageRange = this.contentPageRange;
-		this.contentPageRange = contentPageRange;
-		propertyChangeSupport().firePropertyChange("contentPageRange",
-				old_contentPageRange, contentPageRange);
-	}
-
-	public void setCoverPage(boolean coverPage) {
-		boolean old_coverPage = this.coverPage;
-		this.coverPage = coverPage;
-		propertyChangeSupport().firePropertyChange("coverPage", old_coverPage,
-				coverPage);
-	}
-
-	public void setDeliveryMode(String deliveryMode) {
-		String old_deliveryMode = this.deliveryMode;
-		this.deliveryMode = deliveryMode;
-		propertyChangeSupport().firePropertyChange("deliveryMode",
-				old_deliveryMode, deliveryMode);
-	}
-
-	public void setEmailAddress(String emailAddress) {
-		String old_emailAddress = this.emailAddress;
-		this.emailAddress = emailAddress;
-		propertyChangeSupport().firePropertyChange("emailAddress",
-				old_emailAddress, emailAddress);
-	}
-
-	public void setEmailInline(boolean emailInline) {
-		boolean old_emailInline = this.emailInline;
-		this.emailInline = emailInline;
-		propertyChangeSupport().firePropertyChange("emailInline",
-				old_emailInline, emailInline);
-	}
-
-	public void setEmailSubject(String emailSubject) {
-		this.emailSubject = emailSubject;
-	}
-
-	public void setEmailSubjectForRequestor(String emailSubjectForRequestor) {
-		this.emailSubjectForRequestor = emailSubjectForRequestor;
-	}
-
-	public void setFontOptions(String fontOptions) {
-		String old_fontOptions = this.fontOptions;
-		this.fontOptions = fontOptions;
-		propertyChangeSupport().firePropertyChange("fontOptions",
-				old_fontOptions, fontOptions);
-	}
-
-	public void setFooter(boolean footer) {
-		boolean old_footer = this.footer;
-		this.footer = footer;
-		propertyChangeSupport().firePropertyChange("footer", old_footer,
-				footer);
-	}
-
-	public void setMimeType(String MimeType) {
-		String old_MimeType = this.mimeType;
-		propertyChangeSupport().firePropertyChange("MimeType", old_MimeType,
-				MimeType);
-		this.mimeType = MimeType;
-	}
-
-	public void setNoPersistence(boolean noPersistence) {
-		this.noPersistence = noPersistence;
-	}
-
-	public void setNote(String note) {
-		String old_note = this.note;
-		this.note = note;
-		propertyChangeSupport().firePropertyChange("note", old_note, note);
-	}
-
-	public void setOpaqueRequestClassname(String opaqueRequestClassname) {
-		this.opaqueRequestClassname = opaqueRequestClassname;
-	}
-
-	public void setOpaqueRequestXml(String opaqueRequestXml) {
-		this.opaqueRequestXml = opaqueRequestXml;
-	}
-
-	public void setOutputFormat(String outputFormat) {
-		String old_outputFormat = this.outputFormat;
-		this.outputFormat = outputFormat;
-		propertyChangeSupport().firePropertyChange("outputFormat",
-				old_outputFormat, outputFormat);
-	}
-
-	public void
-			setPageBreakAfterEachDocument(boolean pageBreakAfterEachDocument) {
-		boolean old_pageBreakAfterEachDocument = this.pageBreakAfterEachDocument;
-		this.pageBreakAfterEachDocument = pageBreakAfterEachDocument;
-		propertyChangeSupport().firePropertyChange("pageBreakAfterEachDocument",
-				old_pageBreakAfterEachDocument, pageBreakAfterEachDocument);
-	}
-
-	public void setPermalinkQuery(String permalinkQuery) {
-		String old_permalinkQuery = this.permalinkQuery;
-		propertyChangeSupport().firePropertyChange("permalinkQuery",
-				old_permalinkQuery, permalinkQuery);
-		this.permalinkQuery = permalinkQuery;
-	}
-
-	public void setProperties(Map<String, String> properties) {
-		this.properties = properties;
-	}
-
-	public void setPublicationRange(PublicationRange publicationRange) {
-		PublicationRange old_publicationRange = this.publicationRange;
-		this.publicationRange = publicationRange;
-		propertyChangeSupport().firePropertyChange("publicationRange",
-				old_publicationRange, publicationRange);
-	}
-
-	public void setPublicDescription(String publicDescription) {
-		this.publicDescription = publicDescription;
-	}
-
-	public void setRandomSeed(Long randomSeed) {
-		this.randomSeed = randomSeed;
-	}
-
-	public void setResultCount(int resultCount) {
-		this.resultCount = resultCount;
-	}
-
-	public void setSingleContentObjectId(Long singleContentObjectId) {
-		Long old_singleContentObjectId = this.singleContentObjectId;
-		this.singleContentObjectId = singleContentObjectId;
-		propertyChangeSupport().firePropertyChange("singleContentObjectId",
-				old_singleContentObjectId, singleContentObjectId);
-	}
-
-	public void setSingleContentObjectResultPosition(
-			int singleContentObjectResultPosition) {
-		this.singleContentObjectResultPosition = singleContentObjectResultPosition;
-	}
-
-	public void setSuggestedFileName(String suggestedFileName) {
-		this.suggestedFileName = suggestedFileName;
-	}
-
-	public void setSystemEmailAddressOfRequestor(
-			String systemEmailAddressOfRequestor) {
-		this.systemEmailAddressOfRequestor = systemEmailAddressOfRequestor;
-	}
-
-	public void setSystemMessage(String systemMessage) {
-		this.systemMessage = systemMessage;
-	}
-
-	public void setTest(boolean test) {
-		this.test = test;
-	}
-
-	@Override
-	public String toString() {
-		if (publicDescription != null) {
-			return publicDescription;
-		}
-		String s = contentDefinition == null ? ""
-				: getContentDefinition().toString() + "\n" + "-";
-		return s + " Delivery mode: "
-				+ CommonUtils.friendlyConstant(getDeliveryMode()) + " - "
-				+ " Format: " + CommonUtils.friendlyConstant(getOutputFormat());
-	}
+    @Override
+    public String getEmailAddress() {
+        return emailAddress == null
+                ? PermissionsManager.get().getUser() == null ? null
+                        : PermissionsManager.get().getUser().getEmail()
+                : this.emailAddress;
+    }
+
+    @Override
+    public String getEmailSubject() {
+        return emailSubject;
+    }
+
+    @Override
+    public String getEmailSubjectForRequestor() {
+        if (emailSubjectForRequestor == null) {
+            return getEmailSubject();
+        }
+        return emailSubjectForRequestor;
+    }
+
+    public String getFontOptions() {
+        return fontOptions;
+    }
+
+    @Override
+    public String getMimeType() {
+        return this.mimeType;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public String getOpaqueRequestClassname() {
+        return this.opaqueRequestClassname;
+    }
+
+    /**
+     * For when we don't want the client to have to know the request class
+     */
+    public String getOpaqueRequestXml() {
+        return this.opaqueRequestXml;
+    }
+
+    @Display(name = "outputFormat")
+    public String getOutputFormat() {
+        return this.outputFormat;
+    }
+
+    @Override
+    public String getPermalinkQuery() {
+        return permalinkQuery;
+    }
+
+    public Map<String, String> getProperties() {
+        return this.properties;
+    }
+
+    @Override
+    @Transient
+    public PropertyChangeListener[] getPropertyChangeListeners() {
+        return this.propertyChangeSupport().getPropertyChangeListeners();
+    }
+
+    public PublicationRange getPublicationRange() {
+        return publicationRange;
+    }
+
+    public String getPublicDescription() {
+        return this.publicDescription;
+    }
+
+    public Long getRandomSeed() {
+        return this.randomSeed;
+    }
+
+    public int getResultCount() {
+        return this.resultCount;
+    }
+
+    public Long getSingleContentObjectId() {
+        return this.singleContentObjectId;
+    }
+
+    public int getSingleContentObjectResultPosition() {
+        return this.singleContentObjectResultPosition;
+    }
+
+    @Override
+    public String getSuggestedFileName() {
+        return suggestedFileName;
+    }
+
+    @Override
+    public String getSystemEmailAddressOfRequestor() {
+        return systemEmailAddressOfRequestor;
+    }
+
+    @XmlTransient
+    public String getSystemMessage() {
+        return systemMessage;
+    }
+
+    @Override
+    public boolean hasProperty(String key) {
+        return properties.containsKey(key);
+    }
+
+    @Override
+    public boolean isCoverPage() {
+        return coverPage;
+    }
+
+    @Override
+    public boolean isEmailInline() {
+        return emailInline;
+    }
+
+    @Override
+    public boolean isFooter() {
+        return footer;
+    }
+
+    @Override
+    public boolean isNoPersistence() {
+        return noPersistence;
+    }
+
+    @Override
+    public boolean isPageBreakAfterEachDocument() {
+        return pageBreakAfterEachDocument;
+    }
+
+    @Override
+    @XmlTransient
+    public boolean isTest() {
+        return test;
+    }
+
+    @Override
+    public List<MailAttachment> provideAttachments() {
+        if (attachments == null) {
+            attachments = new ArrayList<>();
+        }
+        return attachments;
+    }
+
+    @Override
+    public ContentDeliveryType provideContentDeliveryType() {
+        return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
+    }
+
+    @Override
+    public List<MailInlineImage> provideImages() {
+        if (images == null) {
+            images = new ArrayList<>();
+        }
+        return images;
+    }
+
+    @Override
+    public String providePropertyValue(String key) {
+        return properties.get(key);
+    }
+
+    public PublicationFontOptions providePublicationFontOptions() {
+        return ExtensibleEnum.valueOf(PublicationFontOptions.class,
+                fontOptions);
+    }
+
+    @Override
+    public FormatConversionTarget provideTargetFormat() {
+        return ExtensibleEnum.valueOf(FormatConversionTarget.class,
+                outputFormat);
+    }
+
+    public void putContentDeliveryType(ContentDeliveryType type) {
+        setDeliveryMode(type == null ? null : type.name());
+    }
+
+    public void putFormatConversionTarget(FormatConversionTarget target) {
+        setOutputFormat(target == null ? null : target.name());
+    }
+
+    public void putPublicationFontOptions(PublicationFontOptions fontOptions) {
+        setFontOptions(fontOptions == null ? null : fontOptions.name());
+    }
+
+    public void setAttachmentMessage(String attachmentMessage) {
+        this.attachmentMessage = attachmentMessage;
+    }
+
+    public void setAttachmentMessageForRequestor(
+            String attachmentMessageForRequestor) {
+        this.attachmentMessageForRequestor = attachmentMessageForRequestor;
+    }
+
+    public abstract void setContentDefinition(CD contentDefinition);
+
+    public void setContentPageRange(String contentPageRange) {
+        String old_contentPageRange = this.contentPageRange;
+        this.contentPageRange = contentPageRange;
+        propertyChangeSupport().firePropertyChange("contentPageRange",
+                old_contentPageRange, contentPageRange);
+    }
+
+    public void setCoverPage(boolean coverPage) {
+        boolean old_coverPage = this.coverPage;
+        this.coverPage = coverPage;
+        propertyChangeSupport().firePropertyChange("coverPage", old_coverPage,
+                coverPage);
+    }
+
+    public void setDeliveryMode(String deliveryMode) {
+        String old_deliveryMode = this.deliveryMode;
+        this.deliveryMode = deliveryMode;
+        propertyChangeSupport().firePropertyChange("deliveryMode",
+                old_deliveryMode, deliveryMode);
+    }
+
+    public void setEmailAddress(String emailAddress) {
+        String old_emailAddress = this.emailAddress;
+        this.emailAddress = emailAddress;
+        propertyChangeSupport().firePropertyChange("emailAddress",
+                old_emailAddress, emailAddress);
+    }
+
+    public void setEmailInline(boolean emailInline) {
+        boolean old_emailInline = this.emailInline;
+        this.emailInline = emailInline;
+        propertyChangeSupport().firePropertyChange("emailInline",
+                old_emailInline, emailInline);
+    }
+
+    public void setEmailSubject(String emailSubject) {
+        this.emailSubject = emailSubject;
+    }
+
+    public void setEmailSubjectForRequestor(String emailSubjectForRequestor) {
+        this.emailSubjectForRequestor = emailSubjectForRequestor;
+    }
+
+    public void setFontOptions(String fontOptions) {
+        String old_fontOptions = this.fontOptions;
+        this.fontOptions = fontOptions;
+        propertyChangeSupport().firePropertyChange("fontOptions",
+                old_fontOptions, fontOptions);
+    }
+
+    public void setFooter(boolean footer) {
+        boolean old_footer = this.footer;
+        this.footer = footer;
+        propertyChangeSupport().firePropertyChange("footer", old_footer,
+                footer);
+    }
+
+    public void setMimeType(String MimeType) {
+        String old_MimeType = this.mimeType;
+        propertyChangeSupport().firePropertyChange("MimeType", old_MimeType,
+                MimeType);
+        this.mimeType = MimeType;
+    }
+
+    public void setNoPersistence(boolean noPersistence) {
+        this.noPersistence = noPersistence;
+    }
+
+    public void setNote(String note) {
+        String old_note = this.note;
+        this.note = note;
+        propertyChangeSupport().firePropertyChange("note", old_note, note);
+    }
+
+    public void setOpaqueRequestClassname(String opaqueRequestClassname) {
+        this.opaqueRequestClassname = opaqueRequestClassname;
+    }
+
+    public void setOpaqueRequestXml(String opaqueRequestXml) {
+        this.opaqueRequestXml = opaqueRequestXml;
+    }
+
+    public void setOutputFormat(String outputFormat) {
+        String old_outputFormat = this.outputFormat;
+        this.outputFormat = outputFormat;
+        propertyChangeSupport().firePropertyChange("outputFormat",
+                old_outputFormat, outputFormat);
+    }
+
+    public void setPageBreakAfterEachDocument(
+            boolean pageBreakAfterEachDocument) {
+        boolean old_pageBreakAfterEachDocument = this.pageBreakAfterEachDocument;
+        this.pageBreakAfterEachDocument = pageBreakAfterEachDocument;
+        propertyChangeSupport().firePropertyChange("pageBreakAfterEachDocument",
+                old_pageBreakAfterEachDocument, pageBreakAfterEachDocument);
+    }
+
+    public void setPermalinkQuery(String permalinkQuery) {
+        String old_permalinkQuery = this.permalinkQuery;
+        propertyChangeSupport().firePropertyChange("permalinkQuery",
+                old_permalinkQuery, permalinkQuery);
+        this.permalinkQuery = permalinkQuery;
+    }
+
+    public void setProperties(Map<String, String> properties) {
+        this.properties = properties;
+    }
+
+    public void setPublicationRange(PublicationRange publicationRange) {
+        PublicationRange old_publicationRange = this.publicationRange;
+        this.publicationRange = publicationRange;
+        propertyChangeSupport().firePropertyChange("publicationRange",
+                old_publicationRange, publicationRange);
+    }
+
+    public void setPublicDescription(String publicDescription) {
+        this.publicDescription = publicDescription;
+    }
+
+    public void setRandomSeed(Long randomSeed) {
+        this.randomSeed = randomSeed;
+    }
+
+    public void setResultCount(int resultCount) {
+        this.resultCount = resultCount;
+    }
+
+    public void setSingleContentObjectId(Long singleContentObjectId) {
+        Long old_singleContentObjectId = this.singleContentObjectId;
+        this.singleContentObjectId = singleContentObjectId;
+        propertyChangeSupport().firePropertyChange("singleContentObjectId",
+                old_singleContentObjectId, singleContentObjectId);
+    }
+
+    public void setSingleContentObjectResultPosition(
+            int singleContentObjectResultPosition) {
+        this.singleContentObjectResultPosition = singleContentObjectResultPosition;
+    }
+
+    public void setSuggestedFileName(String suggestedFileName) {
+        this.suggestedFileName = suggestedFileName;
+    }
+
+    public void setSystemEmailAddressOfRequestor(
+            String systemEmailAddressOfRequestor) {
+        this.systemEmailAddressOfRequestor = systemEmailAddressOfRequestor;
+    }
+
+    public void setSystemMessage(String systemMessage) {
+        this.systemMessage = systemMessage;
+    }
+
+    public void setTest(boolean test) {
+        this.test = test;
+    }
+
+    @Override
+    public String toString() {
+        if (publicDescription != null) {
+            return publicDescription;
+        }
+        String s = contentDefinition == null ? ""
+                : getContentDefinition().toString() + "\n" + "-";
+        return s + " Delivery mode: "
+                + CommonUtils.friendlyConstant(getDeliveryMode()) + " - "
+                + " Format: " + CommonUtils.friendlyConstant(getOutputFormat());
+    }
+
+    public static class TestContentDefinition implements ContentDefinition {
+        @Override
+        public String getPublicationType() {
+            return "test";
+        }
+    }
+
+    public static class TestContentRequest
+            extends ContentRequestBase<TestContentDefinition> {
+        private TestContentDefinition contentDefinition = new TestContentDefinition();
+
+        @Override
+        public TestContentDefinition getContentDefinition() {
+            return this.contentDefinition;
+        }
+
+        @Override
+        public void setContentDefinition(
+                TestContentDefinition contentDefinition) {
+            this.contentDefinition = contentDefinition;
+        }
+    }
 }
