@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
@@ -19,12 +21,15 @@ import cc.alcina.framework.common.client.publication.request.ContentRequestBase.
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.control.ClusterStateProvider;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
 
 public class ControlServlet extends HttpServlet {
+    Logger logger = LoggerFactory.getLogger(getClass());
+
     public void writeAndClose(String s, HttpServletResponse resp)
             throws IOException {
         resp.setContentType("text/plain");
@@ -56,10 +61,15 @@ public class ControlServlet extends HttpServlet {
 
     private void doGet0(HttpServletRequest req, HttpServletResponse resp)
             throws Exception {
-        String apiKey = getApiKey();
-        authenticate(req, req.getParameter("apiKey"), apiKey);
-        ControlServletRequest csr = parseRequest(req, resp);
-        handleRequest(csr, req, resp);
+        try {
+            String apiKey = getApiKey();
+            authenticate(req, req.getParameter("apiKey"), apiKey);
+            ControlServletRequest csr = parseRequest(req, resp);
+            handleRequest(csr, req, resp);
+        } catch (Exception e) {
+            e.printStackTrace();
+            writeAndClose(SEUtilities.getFullExceptionMessage(e), resp);
+        }
     }
 
     private void handleRequest(ControlServletRequest csr,
@@ -99,7 +109,9 @@ public class ControlServlet extends HttpServlet {
             break;
         case TEST_SENDMAIL:
             String toAddress = testSendmail();
-            writeAndClose(Ax.format("Sent to: %s", toAddress), resp);
+            String message = Ax.format("Test email sent to: %s", toAddress);
+            logger.warn(message);
+            writeAndClose(message, resp);
             break;
         }
     }
