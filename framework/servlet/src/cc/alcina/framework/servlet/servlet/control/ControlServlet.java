@@ -26,6 +26,7 @@ import cc.alcina.framework.entity.control.ClusterStateProvider;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
+import cc.alcina.framework.servlet.publication.delivery.ContentDeliveryEmail;
 
 public class ControlServlet extends HttpServlet {
     Logger logger = LoggerFactory.getLogger(getClass());
@@ -109,7 +110,9 @@ public class ControlServlet extends HttpServlet {
             break;
         case TEST_SENDMAIL:
             String toAddress = testSendmail();
-            String message = Ax.format("Test email sent to: %s", toAddress);
+            String message = Ax.format("Test email sent to: %s via: %s",
+                    toAddress, ResourceUtilities.get(ContentDeliveryEmail.class,
+                            "smtp.host.name"));
             logger.warn(message);
             writeAndClose(message, resp);
             break;
