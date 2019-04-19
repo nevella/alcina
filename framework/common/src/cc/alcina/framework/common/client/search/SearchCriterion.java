@@ -34,114 +34,120 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 public abstract class SearchCriterion extends BaseBindable
-		implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion> {
-	public static final transient String CONTEXT_ENSURE_DISPLAY_NAME = SearchCriterion.class
-			+ ".CONTEXT_ENSURE_DISPLAY_NAME";
+        implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion> {
+    public static final transient String CONTEXT_ENSURE_DISPLAY_NAME = SearchCriterion.class
+            + ".CONTEXT_ENSURE_DISPLAY_NAME";
 
-	// TODO: great big injection hole here - should be checked server-side
-	// FIXED: - transient, and set in the server validation phase
-	private transient String targetPropertyName;
+    // TODO: great big injection hole here - should be checked server-side
+    // FIXED: - transient, and set in the server validation phase
+    private transient String targetPropertyName;
 
-	private Direction direction = Direction.ASCENDING;
+    private Direction direction = Direction.ASCENDING;
 
-	private String displayName;
+    private String displayName;
 
-	private StandardSearchOperator operator;
+    private StandardSearchOperator operator;
 
-	public SearchCriterion() {
-	}
+    public SearchCriterion() {
+    }
 
-	public SearchCriterion(String displayName) {
-		this.displayName = displayName;
-	}
+    public SearchCriterion(String displayName) {
+        this.displayName = displayName;
+    }
 
-	public CollectionProvider collectionProvider() {
-		return null;
-	}
+    public CollectionProvider collectionProvider() {
+        return null;
+    }
 
-	public boolean emptyCriterion() {
-		if ((this instanceof HasValue)) {
-			Object value = ((HasValue) this).getValue();
-			if (value instanceof Collection) {
-				return ((Collection) value).isEmpty();
-			} else {
-				return value == null;
-			}
-		}
-		return false;
-	}
+    public boolean emptyCriterion() {
+        if ((this instanceof HasValue)) {
+            Object value = ((HasValue) this).getValue();
+            if (value instanceof Collection) {
+                return ((Collection) value).isEmpty();
+            } else {
+                return value == null;
+            }
+        }
+        return false;
+    }
 
-	public EqlWithParameters eql() {
-		return null;
-	}
+    public EqlWithParameters eql() {
+        return null;
+    }
 
-	public Direction getDirection() {
-		return this.direction;
-	}
+    public Direction getDirection() {
+        return this.direction;
+    }
 
-	public String getDisplayName() {
-		if (CommonUtils.isNullOrEmpty(displayName)
-				&& LooseContext.is(CONTEXT_ENSURE_DISPLAY_NAME)) {
-			return CommonUtils.simpleClassName(getClass());
-		}
-		return this.displayName;
-	}
+    @Override
+    public String getDisplayName() {
+        if (CommonUtils.isNullOrEmpty(displayName)
+                && LooseContext.is(CONTEXT_ENSURE_DISPLAY_NAME)) {
+            return CommonUtils.simpleClassName(getClass());
+        }
+        return this.displayName;
+    }
 
-	public StandardSearchOperator getOperator() {
-		return this.operator;
-	}
+    public StandardSearchOperator getOperator() {
+        return this.operator;
+    }
 
-	public String getTargetPropertyName() {
-		return targetPropertyName;
-	}
+    public String getTargetPropertyName() {
+        return targetPropertyName;
+    }
 
-	public void setDirection(Direction direction) {
-		Direction old_direction = this.direction;
-		this.direction = direction;
-		propertyChangeSupport().firePropertyChange("direction", old_direction,
-				direction);
-	}
+    public void setDirection(Direction direction) {
+        Direction old_direction = this.direction;
+        this.direction = direction;
+        propertyChangeSupport().firePropertyChange("direction", old_direction,
+                direction);
+    }
 
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
-	}
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
 
-	public void setOperator(StandardSearchOperator operator) {
-		StandardSearchOperator old_operator = this.operator;
-		this.operator = operator;
-		propertyChangeSupport().firePropertyChange("operator", old_operator,
-				operator);
-	}
-	
-	public SearchCriterion withOperator(StandardSearchOperator operator) {
-		setOperator(operator);
-		return this;
-	}
+    public void setOperator(StandardSearchOperator operator) {
+        StandardSearchOperator old_operator = this.operator;
+        this.operator = operator;
+        propertyChangeSupport().firePropertyChange("operator", old_operator,
+                operator);
+    }
 
-	public void setTargetPropertyName(String propertyName) {
-		this.targetPropertyName = propertyName;
-	}
+    public void setTargetPropertyName(String propertyName) {
+        this.targetPropertyName = propertyName;
+    }
 
-	public String toHtml() {
-		return toString();
-	}
+    public String toHtml() {
+        return toString();
+    }
 
-	protected String targetPropertyNameWithTable() {
-		String targetPropertyName = getTargetPropertyName();
-		if (targetPropertyName == null || targetPropertyName.contains(".")) {
-			return targetPropertyName;
-		}
-		return "t." + targetPropertyName;
-	}
+    public SearchCriterion withDirection(Direction direction) {
+        setDirection(direction);
+        return this;
+    }
 
-	/**
-	 * Can also apply to things like date criteria, not just order - so leave
-	 * here rather than in OrderCriterion
-	 * 
-	 * @author nick@alcina.cc
-	 * 
-	 */
-	public enum Direction {
-		ASCENDING, DESCENDING
-	}
+    public SearchCriterion withOperator(StandardSearchOperator operator) {
+        setOperator(operator);
+        return this;
+    }
+
+    protected String targetPropertyNameWithTable() {
+        String targetPropertyName = getTargetPropertyName();
+        if (targetPropertyName == null || targetPropertyName.contains(".")) {
+            return targetPropertyName;
+        }
+        return "t." + targetPropertyName;
+    }
+
+    /**
+     * Can also apply to things like date criteria, not just order - so leave
+     * here rather than in OrderCriterion
+     * 
+     * @author nick@alcina.cc
+     * 
+     */
+    public enum Direction {
+        ASCENDING, DESCENDING
+    }
 }

@@ -8,42 +8,46 @@ import org.w3c.dom.Text;
 import cc.alcina.framework.entity.XmlUtils.SurroundingBlockTuple;
 
 public interface TokenParserPeer<T extends ParserToken, S extends AbstractParserSlice<T>> {
-	default void beforeMatchTokens() {
-	}
+    default void addMatchedToken(ParserContext context, S next) {
+        context.addMatchedToken(next);
+    }
 
-	boolean continueBlock(SurroundingBlockTuple lastSurroundingTuple,
-			SurroundingBlockTuple surroundingTuple);
+    default void beforeMatchTokens() {
+    }
 
-	void flushRunContextAndCatch(boolean end);
+    boolean continueBlock(SurroundingBlockTuple lastSurroundingTuple,
+            SurroundingBlockTuple surroundingTuple);
 
-	ParserContext getContext();
+    void flushRunContextAndCatch(boolean end);
 
-	default SurroundingBlockTuple getSurroundingBlockTuple(Node n) {
-		return null;
-	}
+    ParserContext getContext();
 
-	List<T> getTokens();
+    default SurroundingBlockTuple getSurroundingBlockTuple(Node n) {
+        return null;
+    }
 
-	boolean ignoreCitationsInBlock(String content);
+    List<T> getTokens();
 
-	boolean ignoreNode(Node n);
+    boolean ignoreCitationsInBlock(String content);
 
-	default boolean ignorePrecedingExceptions() {
-		return false;
-	}
+    boolean ignoreNode(Node n);
 
-	boolean isBold(Node n);
+    default boolean ignorePrecedingExceptions() {
+        return false;
+    }
 
-	boolean isEmphasised(Text t);
+    boolean isBold(Node n);
 
-	boolean isMultiLine();
+    boolean isEmphasised(Text t);
 
-	boolean processMatch() throws TokenParserException;
+    boolean isMultiLine();
 
-	void resetContext(boolean clearMatched);
+    boolean processMatch() throws TokenParserException;
 
-	boolean reverseItalicsForBlocklikeAround(Text txt,
-			SurroundingBlockTuple surroundingTuple);
+    void resetContext(boolean clearMatched);
 
-	S validateMatch(S bestMatch);
+    boolean reverseItalicsForBlocklikeAround(Text txt,
+            SurroundingBlockTuple surroundingTuple);
+
+    S validateMatch(S bestMatch);
 }
