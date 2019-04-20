@@ -86,6 +86,11 @@ public class ClassMetaServer {
             ctx.setHandler(new AntHandler());
             handlers.addHandler(ctx);
         }
+        {
+            ContextHandler ctx = new ContextHandler(handlers, "/jsCodeServer");
+            ctx.setHandler(new JsCodeServerHandler());
+            handlers.addHandler(ctx);
+        }
         server.setHandler(handlers);
         server.start();
         server.dumpStdErr();

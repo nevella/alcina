@@ -21,6 +21,7 @@
 	<classpathentry excluding="com.google.gwt.regexp.super.com.google.gwt.regexp.shared/" kind="src" output="extras/jsdom/build" path="extras/jsdom/src"/>
 	<classpathentry kind="src" output="extras/jsdom/build-element" path="extras/jsdom/src-element"/>
 	<classpathentry kind="src" path="extras/wd/src"/>
+	<classpathentry kind="src" path="extras/jscodeserver"/>
 	<classpathentry kind="lib" path="lib/framework/entity/nekohtml.jar"/>
 	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-ant-1.9.5/src/"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
