@@ -3,6 +3,7 @@
 	<classpathentry kind="lib" path="lib/framework/entity/xalan-2.7.2.jar" sourcepath="/g/minor/xalan-j"/>
 	<classpathentry exported="true" kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/|de/benediktmeurer/gwt/slf4j/api/" kind="src" path="framework/common/src"/>
+	<classpathentry kind="src" path="framework/jscodeserver/src"/>
 	<classpathentry kind="src" path="framework/classmeta/src"/>
 	<classpathentry kind="src" path="extras/jsdom/src-regex"/>
 	<classpathentry excluding="com/google/gwt/user/client/translatable/" kind="src" output="framework/extras/rpc/client/build" path="extras/rpc/client/src"/>
@@ -21,7 +22,6 @@
 	<classpathentry excluding="com.google.gwt.regexp.super.com.google.gwt.regexp.shared/" kind="src" output="extras/jsdom/build" path="extras/jsdom/src"/>
 	<classpathentry kind="src" output="extras/jsdom/build-element" path="extras/jsdom/src-element"/>
 	<classpathentry kind="src" path="extras/wd/src"/>
-	<classpathentry kind="src" path="extras/jscodeserver"/>
 	<classpathentry kind="lib" path="lib/framework/entity/nekohtml.jar"/>
 	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-ant-1.9.5/src/"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>

@@ -1,4 +1,4 @@
-package cc.alcina.extas.jscodeserver;
+package cc.alcina.framework.jscodeserver;
 
 import java.io.ByteArrayOutputStream;
 import java.net.Socket;

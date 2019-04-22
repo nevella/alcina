@@ -82,7 +82,7 @@
 		</javac>
 		<mkdir dir="${framework.classmeta.build.dir}" />
 		<javac target="8" source="8" includeantruntime="false" debug="on" destdir="${framework.classmeta.build.dir}">
-			<src path="${framework.classmeta.src.dir}" />
+			<src path="${framework.classmeta.src.dir}:${framework.jscodeserver.src.dir}" />
 			<exclude name="cc/alcina/framework/common/translatable/**" />
 			<classpath>
 				<path refid="framework.common.lib.path" />
