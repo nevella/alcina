@@ -7,18 +7,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.eclipse.jetty.server.Request;
-
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
- * TODO:
+ * TODO-jscs
  * 
  * Disconnect after timeout
- * 
- * asdf
  * 
  * 
  * @author nick@alcina.cc
@@ -30,6 +26,8 @@ public class XhrTcpBridge {
 
     public static final String HEADER_CODE_SERVER_PORT = "XhrTcpBridge.codeserver_port";
 
+    public static final String HEADER_META = "XhrTcpBridge.meta";
+
     public static XhrTcpBridge get() {
         return Registry.impl(XhrTcpBridge.class);
     }
@@ -38,8 +36,7 @@ public class XhrTcpBridge {
 
     Map<String, XhrTcpSession> sessions = new ConcurrentHashMap<>();
 
-    public void handle(String target, Request baseRequest,
-            HttpServletRequest request, HttpServletResponse response)
+    public void handle(HttpServletRequest request, HttpServletResponse response)
             throws Exception {
         /*
          * if we have no handle header, generate and add it
@@ -47,12 +44,16 @@ public class XhrTcpBridge {
         String handleId = request.getHeader(HEADER_HANDLE_ID);
         XhrTcpSession session = null;
         if (handleId == null) {
-            session = new XhrTcpSession();
+            session = new XhrTcpSession(this);
             session.handleId = sessionCounter.incrementAndGet();
             sessions.put(String.valueOf(session.handleId), session);
         } else {
             session = sessions.get(handleId);
         }
-        session.handle(target, baseRequest, request, response);
+        session.handle(request, response);
+    }
+
+    public void removeSession(XhrTcpSession xhrTcpSession) {
+        sessions.remove(String.valueOf(xhrTcpSession.handleId));
     }
 }

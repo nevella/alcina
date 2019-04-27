@@ -245,6 +245,21 @@ function findPluginXPCOM() {
     return null;
   }
 }
+function loadPluginJsCodeServer() {
+  try {
+    var script = $doc.createElement('script');
+    script.src = "jscodeserver/GwtJsPlugin.js";
+    document.getElementsByTagName('head')[0].appendChild(script);
+  } catch (e) {
+  }
+}
+function findPluginJsCodeServer() {
+  try {
+    return __gwt_jsCodeServerPlugin;
+  } catch (e) {
+    return null;
+  }
+}
 
 function getCodeServer() {
   var server = "localhost:9997";
@@ -330,7 +345,7 @@ function simpleEscape(originalString) {
 
 function tryConnectingToPlugin(sessionId, url) {
   // Note that the order is important
-  var pluginFinders = [findPluginXPCOM, findPluginObject, findPluginEmbed];
+  var pluginFinders = [findPluginXPCOM, findPluginObject, findPluginEmbed, findPluginJsCodeServer];
   var codeServer = getCodeServer();
   var plugin = null;
   for (var i = 0; i < pluginFinders.length; ++i) {
@@ -362,6 +377,12 @@ function tryConnectingToPlugin(sessionId, url) {
  * Development Mode startup code
  *****************************************************************************/
 function gwtOnLoad(errFn, moduleName, moduleBase, softPermutationId, computePropValue) {
+  loadPluginJsCodeServer();
+  window.setTimeout( function(){
+    gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePropValue);
+  },50);
+}
+function gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePropValue) {
   $errFn = errFn;
   $moduleName = moduleName;
   $moduleBase = moduleBase;
