@@ -248,7 +248,7 @@ function findPluginXPCOM() {
 function loadPluginJsCodeServer() {
   try {
     var script = $doc.createElement('script');
-    script.src = "jscodeserver/GwtJsPlugin.js";
+    script.src = "/jscodeserver/GwtJsPlugin.js";
     document.getElementsByTagName('head')[0].appendChild(script);
   } catch (e) {
   }

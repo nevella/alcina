@@ -24,6 +24,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 public class XhrTcpBridge {
     public static final String HEADER_HANDLE_ID = "XhrTcpBridge.handle_id";
 
+    public static final String HEADER_MESSAGE_ID = "XhrTcpBridge.message_id";
+
     public static final String HEADER_CODE_SERVER_PORT = "XhrTcpBridge.codeserver_port";
 
     public static final String HEADER_META = "XhrTcpBridge.meta";

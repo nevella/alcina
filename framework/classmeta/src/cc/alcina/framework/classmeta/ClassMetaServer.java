@@ -102,9 +102,9 @@ public class ClassMetaServer {
         cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM,
                 "OPTIONS,GET,POST,HEAD");
         cors.setInitParameter(CrossOriginFilter.EXPOSED_HEADERS_PARAM,
-                "XhrTcpBridge.handle_id");
+                "XhrTcpBridge.handle_id,XhrTcpBridge.message_id");
         cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM,
-                "X-Requested-With,Content-Type,Accept,Origin,Cache-Control,xhrtcpbridge.codeserver_port,XhrTcpBridge.handle_id,XhrTcpBridge.meta");
+                "X-Requested-With,Content-Type,Accept,Origin,Cache-Control,xhrtcpbridge.codeserver_port,XhrTcpBridge.handle_id,XhrTcpBridge.message_id,XhrTcpBridge.meta");
         cors.setInitParameter(CrossOriginFilter.CHAIN_PREFLIGHT_PARAM, "false");
         {
             ServletContextHandler ctx = new ServletContextHandler(handlers,

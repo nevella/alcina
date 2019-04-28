@@ -160,6 +160,12 @@ public class ConsolePanel extends Composite {
                     box.setFocus(true);
                 }
             }, RemoteConsoleLayoutMessage.FOCUS_COMMAND_BAR, true);
+            // new Timer() {
+            // @Override
+            // public void run() {
+            // box.setText(box.getText() + "h");
+            // }
+            // }.scheduleRepeating(100);
         }
 
         void focus() {

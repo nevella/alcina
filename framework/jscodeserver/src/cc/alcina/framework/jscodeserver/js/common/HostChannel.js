@@ -136,31 +136,137 @@ class gwt_hm_HostChannel {
         this.buf_out += str;
     }
     readValue() {
-        throw "nope";
+        var type = this.readByte();
+        var value = new gwt_hm_Value();
+        switch (type) {
+            case gwt_hm_BrowserChannel.VALUE_TYPE_NULL:
+                value.setNull();
+                return value;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
+                value.setUndefined();
+                return value;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
+                {
+                    var val = this.readByte();
+                    value.setBoolean(val != 0);
+                }
+                return value;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
+                {
+                    var val = this.readByte();
+                    value.setByte(val);
+                }
+                return value;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
+                {
+                    var val = this.readShort();
+                    value.setChar(val);
+                }
+                return value;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
+                {
+                    var val = this.readShort();
+                    value.setShort(val);
+                }
+                return value;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
+                {
+                    var val = this.readString();
+                    value.setString(val);
+                }
+                return value;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
+                {
+                    var val = this.readInt();
+                    value.setInt(val);
+                }
+                return value;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
+                {
+                    var val = this.readLong();
+                    value.setLong(val);
+                }
+                return value;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
+                {
+                    var val = this.readDouble();
+                    value.setDouble(val);
+                }
+                return value;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
+                {
+                    var val = this.readInt();
+                    value.setJavaObjectId(val);
+                }
+                return value;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
+                {
+                    var val = this.readInt();
+                    value.setJsObjectId(val);
+                }
+                return value;
+            default:
+                throw "Unhandled value type sent from server: " + type;
+        }
+        return false;
     }
     sendValue(value) {
-        throw "nope";
+        var type = value.type;
+        this.sendByte(type);
+        switch (type) {
+            case gwt_hm_BrowserChannel.VALUE_TYPE_NULL:
+            case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
+                return;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
+                return this.sendByte(value.getBoolean() ? 1 : 0);
+            case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
+                return this.sendByte(value.getByte());
+            case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
+                return this.sendShort(short(value.getChar()));
+            case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
+                return this.sendShort(value.getShort());
+            case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
+                return this.sendInt(value.getInt());
+            case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
+                return this.sendLong(value.getLong());
+            case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
+                return this.sendString(value.getString());
+            case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
+                return this.sendDouble(value.getDouble());
+            case gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT:
+                return this.sendFloat(value.getFloat());
+            case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
+                return this.sendInt(value.getJsObjectId());
+            case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
+                return this.sendInt(value.getJavaObjectId());
+            default:
+                throw "Unhandled value type sent to server: " + type;
+        }
     }
     reactToMessages(handler, expectReturn) {
-      try{
-      return this.reactToMessagesOrThrow(handler,expectReturn);
-      }catch(e){
-        console.warn(e);
-        this.disconnectFromHost();
-      }
+        try {
+            return this.reactToMessagesOrThrow(handler, expectReturn);
+        } catch (e) {
+            console.warn(e);
+            this.disconnectFromHost();
+        }
     }
     reactToMessagesOrThrow(handler, expectReturn) {
         while (true) {
             this.flush();
             var type = this.readByte(type);
+            //console.log(`message: ${this.messageId} :: ${type} `);
             switch (type) {
                 case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKE:
                     {
                         var message = gwt_hm_InvokeMessage.receive(this);
-                        var result = handler.invoke(this, message._this, message.methodName,
+                        if(parseInt(this.messageId) % 20 ==0){
+                          console.log(`invoke: ${this.messageId} :: ${message.methodName} [${message.thisRef.intValue}]`);
+                        }
+                        var result = handler.invoke(this, message.thisRef, message.methodName,
                             message.numArgs, message.args);
                         handler.sendFreeValues(this);
-                        gwt_hm_ReturnMessage.send(this, result.exception, result.returnValue);
+                        gwt_hm_ReturnMessage.send(this, result.exception, result.value);
                     }
                     break;
                 case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKESPECIAL:
@@ -170,7 +276,7 @@ class gwt_hm_HostChannel {
                         var result = handler.invokeSpecial(this, message._dispatchId, message.methodName,
                             message.numArgs, message.args);
                         handler.sendFreeValues(this);
-                        gwt_hm_ReturnMessage.send(this, result.exception, result.returnValue);
+                        gwt_hm_ReturnMessage.send(this, result.exception, result.value);
                     }
                     break;
                 case gwt_hm_BrowserChannel.MESSAGE_TYPE_FREEVALUE:
@@ -191,7 +297,7 @@ class gwt_hm_HostChannel {
                     if (!expectReturn) {
                         throw "Received unexpected RETURN";
                     }
-                    return ReturnMessage.receive(this);
+                    return gwt_hm_ReturnMessage.receive(this);
                 case gwt_hm_BrowserChannel.MESSAGE_TYPE_QUIT:
                     if (expectReturn) {
                         throw "Received QUIT while waiting for return";
@@ -215,13 +321,17 @@ class gwt_hm_HostChannel {
         if (this.channelId) {
             xhr.setRequestHeader("XhrTcpBridge.handle_id", this.channelId);
         }
-        if(this.closeSocket){
-          xhr.setRequestHeader("XhrTcpBridge.meta", "close_socket");
+        if (this.closeSocket) {
+            xhr.setRequestHeader("XhrTcpBridge.meta", "close_socket");
         }
         var body = btoa(this.buf_out);
         this.buf_out = "";
         xhr.send(body);
+        if (this.closeSocket) {
+          return;
+        }
         var xhrChannelId = xhr.getResponseHeader("XhrTcpBridge.handle_id");
+        this.messageId = xhr.getResponseHeader("XhrTcpBridge.message_id");
         if (this.channelId && this.channelId != xhrChannelId) {
             throw "Different channel id";
         }
@@ -232,8 +342,8 @@ class gwt_hm_HostChannel {
     reactToMessagesWhileWaitingForReturn(handler) {
         return this.reactToMessages(handler, true);
     }
-    disconnectFromHost(){
-      new gwt_hm_QuitMessage.send(this);
+    disconnectFromHost() {
+        new gwt_hm_QuitMessage.send(this);
     }
 }
 gwt_hm_HostChannel.long_BITS = 22;

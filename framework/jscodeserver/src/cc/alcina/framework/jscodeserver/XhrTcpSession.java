@@ -16,6 +16,8 @@ public class XhrTcpSession {
 
     public int handleId;
 
+    public int messageId;
+
     int socketPort;
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -36,28 +38,32 @@ public class XhrTcpSession {
         if (socket == null) {
             initSocket(request);
         }
-        String payload = ResourceUtilities
-                .readStreamToString(request.getInputStream());
-        byte[] bytes = Base64.getDecoder().decode(payload);
-        socket.getOutputStream().write(bytes);
-        byte[] messageBytes = client.receiveMessageBytes();
-        response.setHeader(XhrTcpBridge.HEADER_HANDLE_ID,
-                String.valueOf(handleId));
-        response.setHeader("Access-Control-Allow-Origin", "*");
-        response.getOutputStream()
-                .write(Base64.getEncoder().encode(messageBytes));
-        response.getOutputStream().close();
         String meta = request.getHeader(XhrTcpBridge.HEADER_META);
         if (meta != null) {
             switch (meta) {
             case "close_socket":
                 client.endSession();
                 xhrTcpBridge.removeSession(this);
-                break;
+                return;
             default:
                 throw new UnsupportedOperationException();
             }
         }
+        String payload = ResourceUtilities
+                .readStreamToString(request.getInputStream());
+        byte[] bytes = Base64.getDecoder().decode(payload);
+        socket.getOutputStream().write(bytes);
+        // Ax.out(">>> to codeserver - %s bytes", bytes.length);
+        byte[] messageBytes = client.receiveMessageBytes();
+        // Ax.out("<<<to browser - %s bytes - %s", messageBytes.length,
+        // client.getLastMessageName());
+        response.setHeader(XhrTcpBridge.HEADER_HANDLE_ID,
+                String.valueOf(handleId));
+        response.setHeader(XhrTcpBridge.HEADER_MESSAGE_ID,
+                String.valueOf(messageId++));
+        response.getOutputStream()
+                .write(Base64.getEncoder().encode(messageBytes));
+        response.getOutputStream().close();
         return;
     }
 

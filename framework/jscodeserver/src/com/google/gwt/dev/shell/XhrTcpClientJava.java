@@ -29,8 +29,14 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 public class XhrTcpClientJava extends BrowserChannel {
     private DataOutputStream out;
 
+    private Message lastMessage;
+
     public XhrTcpClientJava(Socket socket) throws IOException {
         super(socket, new ClientObjectRefFactory());
+    }
+
+    public String getLastMessageName() {
+        return this.lastMessage.getClass().getSimpleName();
     }
 
     public Message receiveMessage() throws Exception {
@@ -61,6 +67,7 @@ public class XhrTcpClientJava extends BrowserChannel {
         default:
             throw new UnsupportedOperationException();
         }
+        this.lastMessage = message;
         return message;
     }
 
