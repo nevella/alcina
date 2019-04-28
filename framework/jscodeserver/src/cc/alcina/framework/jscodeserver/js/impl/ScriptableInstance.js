@@ -39,7 +39,7 @@ class gwt_hm_ScriptableInstance {
         };
         try {
             var thisRef = this.resolveLocal(_thisRef);
-//            console.log(thisRef);
+            //            console.log(thisRef);
             thisRef = (thisRef) ? thisRef : this.win;
             var varArgs = [];
             for (var idx = 0; idx < numArgs; idx++) {
@@ -48,7 +48,7 @@ class gwt_hm_ScriptableInstance {
             var ret = this.win[methodName].apply(thisRef, varArgs);
             retValue.value = this.getAsValue(ret);
         } catch (e) {
-            console.log(e);
+            console.warn(e);
             retValue.value = this.getAsValue(e.toString());
             retValue.exception = true;
         }
@@ -67,7 +67,7 @@ class gwt_hm_ScriptableInstance {
     }
     //free js object refs
     freeValue(idCount, ids) {
-        for (var idx=0;idx<idCount;idx++) {
+        for (var idx = 0; idx < idCount; idx++) {
             this.localObjects.setFree(ids[idx]);
         }
     }
@@ -153,5 +153,20 @@ class gwt_hm_ScriptableInstance {
         }
         retArr.push(this.resolveLocal(ret.retValue));
         return retArr;
+    }
+    javaObjectSet(objectId, dispId, value) {
+      var ret = gwt_hm_ServerMethods.setProperty(this.channel, this, objectId, dispId, this.getAsValue(value));
+      if(ret.isException){
+      //tostring
+        throw ret.retValue.toString();
+      }
+    }
+    javaObjectGet(objectId, dispId) {
+        var ret = gwt_hm_ServerMethods.getProperty(this.channel, this, objectId, dispId);
+        if(ret.isException){
+          //tostring
+          throw ret.retValue.toString();
+        }
+        return this.resolveLocal(ret.retValue);
     }
 }

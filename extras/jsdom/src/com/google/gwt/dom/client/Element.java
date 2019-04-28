@@ -599,20 +599,7 @@ public class Element extends Node implements DomElement {
 
     @Override
     public void setInnerSafeHtml(SafeHtml html) {
-        ensureRemoteCheck();
-        clearResolved();
-        List<Node> oldChildren = getChildNodes().stream()
-                .collect(Collectors.toList());
-        removeAllChildren();
-        if (notPendingAndLinked()) {
-            remote().setInnerSafeHtml(html);
-            String remoteHtml = typedRemote().getInnerHTML0();
-            local().setInnerHTML(remoteHtml);
-            LocalDom.wasResolved(this);
-        } else {
-            local().setInnerSafeHtml(html);
-        }
-        oldChildren.forEach(LocalDom::detach);
+        setInnerSafeHtml(html, true);
     }
 
     @Override
@@ -902,31 +889,52 @@ public class Element extends Node implements DomElement {
         }
     }
 
+    protected void setInnerSafeHtml(SafeHtml html, boolean withPreRemove) {
+        ensureRemoteCheck();
+        clearResolved();
+        List<Node> oldChildren = getChildNodes().stream()
+                .collect(Collectors.toList());
+        if (withPreRemove) {
+            removeAllChildren();
+        } else {
+            local().getChildren().clear();
+        }
+        if (notPendingAndLinked()) {
+            remote().setInnerSafeHtml(html);
+            String remoteHtml = typedRemote().getInnerHTML0();
+            local().setInnerHTML(remoteHtml);
+            LocalDom.wasResolved(this);
+        } else {
+            local().setInnerSafeHtml(html);
+        }
+        oldChildren.forEach(LocalDom::detach);
+    }
+
     @Override
     protected ElementRemote typedRemote() {
         return (ElementRemote) remote();
     }
 
     final native String getClassNameSvg() /*-{
-    var elem = this.@com.google.gwt.dom.client.Element::typedRemote()();
-    var cn = elem.className;
-    //note - someone says IE DOM objects don't support - hence try/catch
-    try {
-      if (cn.hasOwnProperty("baseVal")) {
-        cn = cn.baseVal;
-      }
-      if ((typeof cn).toLowerCase() != "string") {
-        if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
-          cn = 'svg-string';
-        } else {
-          debugger;
-        }
-      }
-    } catch (e) {
-      return "";
-    }
-    return cn;
-    }-*/;
+                                          var elem = this.@com.google.gwt.dom.client.Element::typedRemote()();
+                                          var cn = elem.className;
+                                          //note - someone says IE DOM objects don't support - hence try/catch
+                                          try {
+                                          if (cn.hasOwnProperty("baseVal")) {
+                                          cn = cn.baseVal;
+                                          }
+                                          if ((typeof cn).toLowerCase() != "string") {
+                                          if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
+                                          cn = 'svg-string';
+                                          } else {
+                                          debugger;
+                                          }
+                                          }
+                                          } catch (e) {
+                                          return "";
+                                          }
+                                          return cn;
+                                          }-*/;
 
     void pendingResolution() {
         this.pendingResolution = true;

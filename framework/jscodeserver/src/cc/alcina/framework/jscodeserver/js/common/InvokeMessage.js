@@ -20,14 +20,12 @@ gwt_hm_InvokeMessage.receive = function(channel) {
     var args = [];
     for (var idx = 0; idx < numArgs; idx++) {
         var val = channel.readValue();
-        if(val.type===undefined){
-         debugger; 
-        }
         args.push(val);
     }
     return new gwt_hm_InvokeMessage(thisRef, methodName, numArgs, args);
 }
 gwt_hm_InvokeMessage.send = function(channel, thisRef, methodDispatchId, numArgs, args) {
+    channel.ensureClear();
     channel.sendByte(gwt_hm_InvokeMessage.TYPE);
     channel.sendInt(methodDispatchId)
     channel.sendValue(thisRef)

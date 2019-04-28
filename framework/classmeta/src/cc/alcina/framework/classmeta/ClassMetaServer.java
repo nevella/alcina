@@ -107,12 +107,14 @@ public class ClassMetaServer {
                 "X-Requested-With,Content-Type,Accept,Origin,Cache-Control,xhrtcpbridge.codeserver_port,XhrTcpBridge.handle_id,XhrTcpBridge.message_id,XhrTcpBridge.meta");
         cors.setInitParameter(CrossOriginFilter.CHAIN_PREFLIGHT_PARAM, "false");
         {
-            ServletContextHandler ctx = new ServletContextHandler(handlers,
-                    "/jsCodeServer.tcp");
-            ctx.addServlet(new ServletHolder(new JsCodeServerServlet()), "/*");
-            ctx.setAllowNullPathInfo(true);
-            handlers.addHandler(ctx);
-            ctx.addFilter(cors, "/*", EnumSet.of(DispatcherType.REQUEST));
+            ServletContextHandler jsCodeServerHandler = new ServletContextHandler(
+                    handlers, "/jsCodeServer.tcp");
+            jsCodeServerHandler.addServlet(
+                    new ServletHolder(new JsCodeServerServlet()), "/*");
+            jsCodeServerHandler.setAllowNullPathInfo(true);
+            handlers.addHandler(jsCodeServerHandler);
+            jsCodeServerHandler.addFilter(cors, "/*",
+                    EnumSet.of(DispatcherType.REQUEST));
         }
         server.setHandler(handlers);
         server.start();

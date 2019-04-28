@@ -24,6 +24,7 @@ import org.eclipse.jetty.util.resource.Resource;
 
 import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.extras.dev.console.DevConsole.DevConsoleStyle;
+import cc.alcina.framework.classmeta.JsCodeServerServlet;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -135,30 +136,46 @@ public class DevConsoleRemote {
         URI webRootUri = gwtHtmlFile.toURI().resolve("./").normalize();
         System.err.println("WebRoot is " + webRootUri);
         HandlerCollection handlers = new HandlerCollection();
-        ContextHandler protocolHandler = new ContextHandler(handlers,
-                "/remote-console.do");
-        protocolHandler.setAllowNullPathInfo(true);
-        protocolHandler.setHandler(new DevConsoleProtocolHandler(this));
-        ContextHandler serveLocalHandler = new ContextHandler(handlers,
-                "/serve-local.do");
-        serveLocalHandler.setAllowNullPathInfo(true);
-        serveLocalHandler.setHandler(new DevConsoleServeLocalHandler(this));
-        ServletContextHandler resourceHandler = new ServletContextHandler(
-                ServletContextHandler.SESSIONS);
-        resourceHandler.setContextPath("/");
-        resourceHandler.setBaseResource(Resource.newResource(webRootUri));
-        resourceHandler.setWelcomeFiles(new String[] { "remote.html" });
-        // Lastly, the default servlet for root content (always needed, to
-        // satisfy servlet spec)
-        // It is important that this is last.
-        ServletHolder holderPwd = new ServletHolder("default",
-                DefaultServlet.class);
-        holderPwd.setInitParameter("resourceBase", webRootUri.toString());
-        holderPwd.setInitParameter("dirAllowed", "false");
-        resourceHandler.addServlet(holderPwd, "/");
-        handlers.addHandler(protocolHandler);
-        handlers.addHandler(serveLocalHandler);
-        handlers.addHandler(resourceHandler);
+        {
+            ContextHandler protocolHandler = new ContextHandler(handlers,
+                    "/remote-console.do");
+            protocolHandler.setAllowNullPathInfo(true);
+            protocolHandler.setHandler(new DevConsoleProtocolHandler(this));
+            handlers.addHandler(protocolHandler);
+        }
+        {
+            ContextHandler serveLocalHandler = new ContextHandler(handlers,
+                    "/serve-local.do");
+            serveLocalHandler.setAllowNullPathInfo(true);
+            serveLocalHandler.setHandler(new DevConsoleServeLocalHandler(this));
+            handlers.addHandler(serveLocalHandler);
+        }
+        {
+            ServletContextHandler jsCodeServerHandler = new ServletContextHandler(
+                    handlers, "/jsCodeServer.tcp");
+            jsCodeServerHandler.addServlet(
+                    new ServletHolder(new JsCodeServerServlet()), "/*");
+            jsCodeServerHandler.setAllowNullPathInfo(true);
+            handlers.addHandler(jsCodeServerHandler);
+            handlers.addHandler(jsCodeServerHandler);
+            // ctx.addFilter(cors, "/*", EnumSet.of(DispatcherType.REQUEST));
+        }
+        {
+            ServletContextHandler resourceHandler = new ServletContextHandler(
+                    ServletContextHandler.SESSIONS);
+            resourceHandler.setContextPath("/");
+            resourceHandler.setBaseResource(Resource.newResource(webRootUri));
+            resourceHandler.setWelcomeFiles(new String[] { "remote.html" });
+            // Lastly, the default servlet for root content (always needed, to
+            // satisfy servlet spec)
+            // It is important that this is last.
+            ServletHolder holderPwd = new ServletHolder("default",
+                    DefaultServlet.class);
+            holderPwd.setInitParameter("resourceBase", webRootUri.toString());
+            holderPwd.setInitParameter("dirAllowed", "false");
+            resourceHandler.addServlet(holderPwd, "/");
+            handlers.addHandler(resourceHandler);
+        }
         server.setHandler(handlers);
         server.start();
         server.dumpStdErr();

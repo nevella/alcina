@@ -61,26 +61,32 @@ public class RemoteConsoleInit {
             public void onPreviewNativeEvent(NativePreviewEvent event) {
                 NativeEvent nativeEvent = event.getNativeEvent();
                 String type = nativeEvent.getType();
+                switch (type) {
+                case "keydown":
+                case "keypress":
+                    break;
+                default:
+                    return;
+                }
                 boolean altKey = nativeEvent.getAltKey();
                 boolean shiftKey = nativeEvent.getShiftKey();
                 // Remote - use jade event sys
                 int keyCode = nativeEvent.getKeyCode();
                 int charCode = nativeEvent.getCharCode();
-                if (nativeEvent != null && type.equals("keydown") && altKey
-                        && shiftKey) {
+                if (type.equals("keydown") && altKey && shiftKey) {
                     if (keyCode == (int) 'Y') {
                         DevModule.callDevStyleUI();
                         event.cancel();
                         WidgetUtils.squelchCurrentEvent();
                     }
                     if (keyCode == (int) 'J') {
-                        RemoteConsoleLayout.get()
-                                .fire(RemoteConsoleLayoutMessage.FOCUS_COMMAND_BAR);
+                        RemoteConsoleLayout.get().fire(
+                                RemoteConsoleLayoutMessage.FOCUS_COMMAND_BAR);
                         event.cancel();
                         WidgetUtils.squelchCurrentEvent();
                     }
                 }
-                if (nativeEvent != null && type.equals("keypress")) {
+                if (type.equals("keypress")) {
                     if (altKey && shiftKey && WidgetUtils.recentSquelch()) {
                         WidgetUtils.squelchCurrentEvent();
                     }

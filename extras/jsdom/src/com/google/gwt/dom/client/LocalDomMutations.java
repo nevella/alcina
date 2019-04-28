@@ -42,15 +42,15 @@ public class LocalDomMutations {
 
     private boolean disabled;
 
+    public LocalDomMutations() {
+    }
+
     public boolean isDisabled() {
         return this.disabled;
     }
 
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
-    }
-
-    public LocalDomMutations() {
     }
 
     public void startObserving() {
@@ -75,33 +75,33 @@ public class LocalDomMutations {
     }
 
     private native void checkReceivedRecords() /*-{
-        if (this.@LocalDomMutations::records.length == 0) {
-            return;
-        }
-        var records = this.@LocalDomMutations::records;
-        this.@LocalDomMutations::records = [];
-        this.@LocalDomMutations::handleMutations(*)(records);
+    if (this.@LocalDomMutations::records.length == 0) {
+      return;
+    }
+    var records = this.@LocalDomMutations::records;
+    this.@LocalDomMutations::records = [];
+    this.@LocalDomMutations::handleMutations(*)(records);
     }-*/;
 
     private native void connectObserver() /*-{
-        //clear the buffer and discard
-        this.@LocalDomMutations::observer.takeRecords();
-        this.@LocalDomMutations::records = [];
+    //clear the buffer and discard
+    this.@LocalDomMutations::observer.takeRecords();
+    this.@LocalDomMutations::records = [];
 
-        var config = {
-            attributes : true,
-            childList : true,
-            subtree : true
-        };
-        this.@LocalDomMutations::observer.observe(
-                this.@LocalDomMutations::documentElement, config);
+    var config = {
+      attributes : true,
+      childList : true,
+      subtree : true
+    };
+    this.@LocalDomMutations::observer.observe(
+        this.@LocalDomMutations::documentElement, config);
     }-*/;
 
     private native void disconnectObserver() /*-{
-        var eventBuffer = this.@LocalDomMutations::observer.takeRecords();
-        this.@LocalDomMutations::records = this.@LocalDomMutations::records
-                .concat(eventBuffer);
-        this.@LocalDomMutations::observer.disconnect();
+    var eventBuffer = this.@LocalDomMutations::observer.takeRecords();
+    this.@LocalDomMutations::records = this.@LocalDomMutations::records
+        .concat(eventBuffer);
+    this.@LocalDomMutations::observer.disconnect();
 
     }-*/;
 
@@ -110,19 +110,19 @@ public class LocalDomMutations {
     }
 
     private native void setupObserver() /*-{
-        this.@LocalDomMutations::disabled = this.@LocalDomMutations::disabled
-                || (typeof MutationObserver == "undefined");
-        if (this.@LocalDomMutations::disabled) {
-            console.log("Mutation tracking not defined");
-            return;
-        }
-        this.@LocalDomMutations::documentElement = $doc.documentElement;
-        var _this = this;
-        var callback = function(mutationsList, observer) {
-            _this.@LocalDomMutations::records = _this.@LocalDomMutations::records
-                    .concat(mutationsList);
-        };
-        this.@LocalDomMutations::observer = new MutationObserver(callback);
+    this.@LocalDomMutations::disabled = this.@LocalDomMutations::disabled
+        || (typeof MutationObserver == "undefined");
+    if (this.@LocalDomMutations::disabled) {
+      console.log("Mutation tracking not defined");
+      return;
+    }
+    this.@LocalDomMutations::documentElement = $doc.documentElement;
+    var _this = this;
+    var callback = function(mutationsList, observer) {
+      _this.@LocalDomMutations::records = _this.@LocalDomMutations::records
+          .concat(mutationsList);
+    };
+    this.@LocalDomMutations::observer = new MutationObserver(callback);
 
     }-*/;
 

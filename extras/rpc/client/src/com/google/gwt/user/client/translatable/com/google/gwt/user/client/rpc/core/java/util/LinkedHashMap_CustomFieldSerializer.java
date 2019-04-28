@@ -54,8 +54,9 @@ public  class LinkedHashMap_CustomFieldSerializer extends
 
   @SuppressWarnings("unchecked") // raw LinkedHashMap
   private static native boolean getAccessOrder(LinkedHashMap instance) /*-{
-    return instance.@java.util.LinkedHashMap::accessOrder;
-  }-*/;
+  return false;
+  //return instance.@java.util.LinkedHashMap::accessOrder;
+}-*/;
 
   public void deserializeInstance(SerializationStreamReader streamReader,
       LinkedHashMap instance) throws SerializationException {

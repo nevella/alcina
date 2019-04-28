@@ -70,7 +70,7 @@ public class XhrTcpSession {
     private void initSocket(HttpServletRequest request) throws Exception {
         socketPort = Integer.parseInt(
                 request.getHeader(XhrTcpBridge.HEADER_CODE_SERVER_PORT));
-        socket = new Socket("127.0.0.1", socketPort);
+        socket = new Socket(ResourceUtilities.get("host"), socketPort);
         client = new XhrTcpClientJava(socket);
     }
 }

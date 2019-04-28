@@ -52,10 +52,15 @@ public class XhrTcpBridge {
         } else {
             session = sessions.get(handleId);
         }
+        if (session == null) {
+            // unknown, discard call
+            return;
+        }
         session.handle(request, response);
     }
 
     public void removeSession(XhrTcpSession xhrTcpSession) {
-        sessions.remove(String.valueOf(xhrTcpSession.handleId));
+        // keep so we have it available for cleanup/exceptions
+        // sessions.remove(String.valueOf(xhrTcpSession.handleId));
     }
 }

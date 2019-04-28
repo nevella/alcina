@@ -1,17 +1,21 @@
 class gwt_hm_HostChannel {
-    // codepoints
+    // codepoints (binary string)
     buf_out = "";
-    // codepoints
+    // codepoints (binary string)
     buf_in;
     buf_in_idx;
     handler;
     channelId;
     closeSocket = false;
+    tcpHost = "";
     connectToHost(host, port) {
-        this.host = host;
+        // ignore host (for the mo) - assume local, otherwise will need CORS
+        //
+        //correction, always use local (rather than routing through remote) - network round trips more than compensates
+        //      this.host = "";
+        this.host = "http://127.0.0.1:10005"
         this.port = port;
     }
-    // Negotiates protocol version and transport selection.
     init(handler, minVersion, maxVersion,
         hostedHtmlVersion) {
         this.handler = handler;
@@ -32,10 +36,11 @@ class gwt_hm_HostChannel {
             default:
                 return false;
         }
+        var self = this;
+        window.addEventListener("unload", function(event) {
+            self.disconnectFromHost();
+        });
         return true;
-    }
-    disconnectFromHost() {
-        throw "nope";
     }
     isConnected() {
         return true
@@ -106,7 +111,7 @@ class gwt_hm_HostChannel {
         var v = [this.readByte(), this.readByte(), this.readByte(), this.readByte(), this.readByte(), this.readByte(), this.readByte(), this.readByte()];
         return ieee754.read(v, 0, false, 52, 8);
     }
-    sendDouble(data) {
+    sendDouble(v) {
         var buf = [];
         ieee754.write(buf, v, 0, false, 52, 8);
         for (var idx = 0; idx <= 7; idx++) {
@@ -120,6 +125,9 @@ class gwt_hm_HostChannel {
         return this.buf_in.charCodeAt(this.buf_in_idx++);
     }
     sendByte(c) {
+        if (this.buf_out.length == 0) {
+//            console.log(`send >> ${c}`);
+        }
         this.buf_out += String.fromCharCode(c);
     }
     readStringLength() {
@@ -127,13 +135,107 @@ class gwt_hm_HostChannel {
     }
     readString() {
         var len = this.readInt();
-        var ret = this.buf_in.substring(this.buf_in_idx, this.buf_in_idx + len);
+        var utf8 = this.buf_in.substring(this.buf_in_idx, this.buf_in_idx + len);
+        var ret = this.utf8BinaryStringToStr(utf8);
         this.buf_in_idx += len;
         return ret;
     }
     sendString(str) {
-        this.sendInt(str.length);
-        this.buf_out += str;
+        var utf8 = this.utf16ToUtf8(str);
+        this.sendInt(utf8.length);
+        this.buf_out += utf8;
+    }
+    utf8BinaryStringToStr(str) {
+        var utf8safe = true;
+        for (var i = 0; i < str.length; i++) {
+            var charcode = str.charCodeAt(i);
+            if (charcode > 0x80) {
+                utf8safe = false;
+                break;
+            }
+        }
+        if (utf8safe) {
+            return str;
+        }
+        var out, i, len, c;
+        var char2, char3;
+        out = "";
+        len = str.length;
+        i = 0;
+        while (i < len) {
+            c = str.charCodeAt(i++);
+            switch (c >> 4) {
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                    // 0xxxxxxx
+                    out += String.fromCharCode(c);
+                    break;
+                case 12:
+                case 13:
+                    // 110x xxxx 10xx xxxx
+                    char2 = str.charCodeAt(i++);
+                    out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
+                    break;
+                case 14:
+                    // 1110 xxxx 10xx xxxx 10xx xxxx
+                    char2 = str.charCodeAt(i++);
+                    char3 = str.charCodeAt(i++);
+                    out += String.fromCharCode(((c & 0x0F) << 12) |
+                        ((char2 & 0x3F) << 6) |
+                        ((char3 & 0x3F) << 0));
+                    break;
+            }
+        }
+        return out;
+    }
+    utf16ToUtf8(str) {
+        var utf8safe = true;
+        for (var i = 0; i < str.length; i++) {
+            var charcode = str.charCodeAt(i);
+            if (charcode > 0x80) {
+                utf8safe = false;
+                break;
+            }
+        }
+        if (utf8safe) {
+            return str;
+        }
+        var utf8 = "";
+        var lastCheck = 0;
+        for (var i = 0; i < str.length; i++) {
+            var charcode = str.charCodeAt(i);
+            if (charcode < 0x80) {
+                utf8 += String.fromCharCode(charcode);
+            } else if (charcode < 0x800) {
+                utf8 += String.fromCharCode(0xc0 | (charcode >> 6));
+                utf8 += String.fromCharCode(0x80 | (charcode & 0x3f));
+            } else if (charcode < 0xd800 || charcode >= 0xe000) {
+                utf8 += String.fromCharCode(0xe0 | (charcode >> 12));
+                utf8 += String.fromCharCode(0x80 | ((charcode >> 6) & 0x3f));
+                utf8 += String.fromCharCode(0x80 | (charcode & 0x3f));
+            }
+            // surrogate pair
+            else {
+                i++;
+                charcode = ((charcode & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff)
+                utf8 += String.fromCharCode(0xf0 | (charcode >> 18));
+                utf8 += String.fromCharCode(0x80 | ((charcode >> 12) & 0x3f));
+                utf8 += String.fromCharCode(0x80 | ((charcode >> 6) & 0x3f));
+                utf8 += String.fromCharCode(0x80 | (charcode & 0x3f));
+            }
+            for (; lastCheck < utf8.length; lastCheck++) {
+                if (utf8.charCodeAt(lastCheck) > 0xff) {
+                    debugger;
+                }
+            }
+        }
+        return utf8;
     }
     readValue() {
         var type = this.readByte();
@@ -255,13 +357,13 @@ class gwt_hm_HostChannel {
         while (true) {
             this.flush();
             var type = this.readByte(type);
-            //console.log(`message: ${this.messageId} :: ${type} `);
+//            console.log(`message: ${this.messageId} :: ${type} `);
             switch (type) {
                 case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKE:
                     {
                         var message = gwt_hm_InvokeMessage.receive(this);
-                        if(parseInt(this.messageId) % 20 ==0){
-                          console.log(`invoke: ${this.messageId} :: ${message.methodName} [${message.thisRef.intValue}]`);
+                        if (parseInt(this.messageId) > 0) {
+//                            console.log(`invoke: ${this.messageId} :: ${message.methodName} [${message.thisRef.intValue}]`);
                         }
                         var result = handler.invoke(this, message.thisRef, message.methodName,
                             message.numArgs, message.args);
@@ -271,7 +373,8 @@ class gwt_hm_HostChannel {
                     break;
                 case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKESPECIAL:
                     {
-                        // scottb: I think this is never used; I think server never sends invokeSpecial
+                        // scottb: I think this is never used; I think server
+                        // never sends invokeSpecial
                         var message = gwt_hm_InvokeSpecialMessage.receive(this);
                         var result = handler.invokeSpecial(this, message._dispatchId, message.methodName,
                             message.numArgs, message.args);
@@ -314,8 +417,18 @@ class gwt_hm_HostChannel {
         return !this.reactToMessages(handler, false);
     }
     flush() {
+        let body = null;
+        try {
+            body = btoa(this.buf_out);
+        } catch (e) {
+            debugger;
+        }
+        this.buf_out = "";
+        this.flushWithBody(body);
+    }
+    flushWithBody(body) {
         var xhr = new XMLHttpRequest();
-        var url = "http://127.0.0.1:10005/jsCodeServer.tcp/";
+        var url = `${this.host}/jsCodeServer.tcp`;
         xhr.open("POST", url, false);
         xhr.setRequestHeader("XhrTcpBridge.codeserver_port", this.port);
         if (this.channelId) {
@@ -324,11 +437,20 @@ class gwt_hm_HostChannel {
         if (this.closeSocket) {
             xhr.setRequestHeader("XhrTcpBridge.meta", "close_socket");
         }
-        var body = btoa(this.buf_out);
-        this.buf_out = "";
-        xhr.send(body);
+        try {
+            xhr.send(body);
+        } catch (e) {
+            if (this.channelId || this.host) {
+                throw e;
+            } else {
+                // retry with alt code server;
+                this.host = "http://127.0.0.1:10005";
+                this.flushWithBody(body);
+                return;
+            }
+        }
         if (this.closeSocket) {
-          return;
+            return;
         }
         var xhrChannelId = xhr.getResponseHeader("XhrTcpBridge.handle_id");
         this.messageId = xhr.getResponseHeader("XhrTcpBridge.message_id");
@@ -338,6 +460,11 @@ class gwt_hm_HostChannel {
         this.channelId = xhrChannelId;
         this.buf_in = atob(xhr.responseText);
         this.buf_in_idx = 0;
+    }
+    ensureClear() {
+        if (this.buf_out.length > 0) {
+            throw "pending message";
+        }
     }
     reactToMessagesWhileWaitingForReturn(handler) {
         return this.reactToMessages(handler, true);
