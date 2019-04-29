@@ -684,7 +684,7 @@ public class CrossSiteIframeLinker extends SelectionScriptLinker {
                 buffer.append("\n");
             }
         }
-        Ax.out(buffer);
+        // Ax.out(buffer);
         String outputFilename = filename;
         if (result != null) {
             // If we're including bootstrap in the primary fragment, we generate
