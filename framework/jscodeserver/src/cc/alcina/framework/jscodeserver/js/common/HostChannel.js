@@ -146,96 +146,22 @@ class gwt_hm_HostChannel {
         this.buf_out += utf8;
     }
     utf8BinaryStringToStr(str) {
-        var utf8safe = true;
-        for (var i = 0; i < str.length; i++) {
-            var charcode = str.charCodeAt(i);
-            if (charcode > 0x80) {
-                utf8safe = false;
-                break;
-            }
-        }
-        if (utf8safe) {
-            return str;
-        }
-        var out, i, len, c;
-        var char2, char3;
-        out = "";
-        len = str.length;
-        i = 0;
-        while (i < len) {
-            c = str.charCodeAt(i++);
-            switch (c >> 4) {
-                case 0:
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                case 5:
-                case 6:
-                case 7:
-                    // 0xxxxxxx
-                    out += String.fromCharCode(c);
-                    break;
-                case 12:
-                case 13:
-                    // 110x xxxx 10xx xxxx
-                    char2 = str.charCodeAt(i++);
-                    out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
-                    break;
-                case 14:
-                    // 1110 xxxx 10xx xxxx 10xx xxxx
-                    char2 = str.charCodeAt(i++);
-                    char3 = str.charCodeAt(i++);
-                    out += String.fromCharCode(((c & 0x0F) << 12) |
-                        ((char2 & 0x3F) << 6) |
-                        ((char3 & 0x3F) << 0));
-                    break;
-            }
-        }
-        return out;
+      var buf = new ArrayBuffer(str.length); // 1 bytes for each utf-8 codepoint
+      var bufView = new Uint8Array(buf);
+      for (var i=0, strLen=str.length; i < strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+      }
+      var str = new TextDecoder("UTF-8").decode(buf);
+      return str;
     }
     utf16ToUtf8(str) {
-        var utf8safe = true;
-        for (var i = 0; i < str.length; i++) {
-            var charcode = str.charCodeAt(i);
-            if (charcode > 0x80) {
-                utf8safe = false;
-                break;
-            }
+        var u8a = new TextEncoder().encode(str);
+        var CHUNK_SZ = 0x8000;
+        var c = [];
+        for (var i=0; i < u8a.length; i+=CHUNK_SZ) {
+          c.push(String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ)));
         }
-        if (utf8safe) {
-            return str;
-        }
-        var utf8 = "";
-        var lastCheck = 0;
-        for (var i = 0; i < str.length; i++) {
-            var charcode = str.charCodeAt(i);
-            if (charcode < 0x80) {
-                utf8 += String.fromCharCode(charcode);
-            } else if (charcode < 0x800) {
-                utf8 += String.fromCharCode(0xc0 | (charcode >> 6));
-                utf8 += String.fromCharCode(0x80 | (charcode & 0x3f));
-            } else if (charcode < 0xd800 || charcode >= 0xe000) {
-                utf8 += String.fromCharCode(0xe0 | (charcode >> 12));
-                utf8 += String.fromCharCode(0x80 | ((charcode >> 6) & 0x3f));
-                utf8 += String.fromCharCode(0x80 | (charcode & 0x3f));
-            }
-            // surrogate pair
-            else {
-                i++;
-                charcode = ((charcode & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff)
-                utf8 += String.fromCharCode(0xf0 | (charcode >> 18));
-                utf8 += String.fromCharCode(0x80 | ((charcode >> 12) & 0x3f));
-                utf8 += String.fromCharCode(0x80 | ((charcode >> 6) & 0x3f));
-                utf8 += String.fromCharCode(0x80 | (charcode & 0x3f));
-            }
-            for (; lastCheck < utf8.length; lastCheck++) {
-                if (utf8.charCodeAt(lastCheck) > 0xff) {
-                    debugger;
-                }
-            }
-        }
-        return utf8;
+        return c.join("");
     }
     readValue() {
         var type = this.readByte();
