@@ -377,10 +377,14 @@ function tryConnectingToPlugin(sessionId, url) {
  * Development Mode startup code
  *****************************************************************************/
 function gwtOnLoad(errFn, moduleName, moduleBase, softPermutationId, computePropValue) {
-  loadPluginJsCodeServer();
-  window.setTimeout( function(){
+  if(typeof __gwt_jsCodeServerPlugin == "undefined"){
+    loadPluginJsCodeServer();
+    window.setTimeout( function(){
+      gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePropValue);
+    },50);
+  }else{
     gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePropValue);
-  },50);
+  }
 }
 function gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePropValue) {
   $errFn = errFn;
