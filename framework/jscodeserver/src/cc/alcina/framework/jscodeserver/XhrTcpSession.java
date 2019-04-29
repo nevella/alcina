@@ -3,12 +3,16 @@ package cc.alcina.framework.jscodeserver;
 import java.io.ByteArrayOutputStream;
 import java.net.Socket;
 import java.util.Base64;
+import java.util.Date;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.gwt.dev.shell.XhrTcpClientJava;
 
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class XhrTcpSession {
@@ -57,6 +61,13 @@ public class XhrTcpSession {
         byte[] messageBytes = client.receiveMessageBytes();
         // Ax.out("<<<to browser - %s bytes - %s", messageBytes.length,
         // client.getLastMessageName());
+        if (messageId % 100 == 0) {
+            Ax.out("%s :: %s :: %s :: %s",
+                    CommonUtils.formatDate(new Date(),
+                            DateStyle.TIMESTAMP_HUMAN_NO_DATE),
+                    messageId, client.getLastMessageName(),
+                    client.getLastMessageDetails());
+        }
         response.setHeader(XhrTcpBridge.HEADER_HANDLE_ID,
                 String.valueOf(handleId));
         response.setHeader(XhrTcpBridge.HEADER_MESSAGE_ID,

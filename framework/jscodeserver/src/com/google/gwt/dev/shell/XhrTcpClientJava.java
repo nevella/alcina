@@ -35,6 +35,14 @@ public class XhrTcpClientJava extends BrowserChannel {
         super(socket, new ClientObjectRefFactory());
     }
 
+    public String getLastMessageDetails() {
+        if (this.lastMessage instanceof InvokeOnClientMessage) {
+            return ((InvokeOnClientMessage) this.lastMessage).getMethodName();
+        } else {
+            return "-";
+        }
+    }
+
     public String getLastMessageName() {
         return this.lastMessage.getClass().getSimpleName();
     }
