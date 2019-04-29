@@ -15,8 +15,6 @@
  */
 package com.google.gwt.core.linker;
 
-import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +46,6 @@ import com.google.gwt.util.tools.shared.StringUtils;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.SEUtilities;
 
 /**
  * This linker uses an iframe to hold the code and a script tag to download the
@@ -660,27 +657,32 @@ public class CrossSiteIframeLinker extends SelectionScriptLinker {
                 "com/google/gwt/core/ext/linker/impl/" + filename, logger);
         boolean injectJsCodeServerFiles = true;
         if (injectJsCodeServerFiles) {
-            List<File> listFilesRecursive = SEUtilities.listFilesRecursive(
-                    "/g/alcina/framework/jscodeserver/src/cc/alcina/framework/jscodeserver/js",
-                    new FileFilter() {
-                        @Override
-                        public boolean accept(File file) {
-                            return file.isDirectory()
-                                    || file.getName().endsWith(".js");
-                        }
-                    });
-            SEUtilities.listFilesRecursive(
-                    "/g/alcina/framework/jscodeserver/src/cc/alcina/framework/jscodeserver/js",
-                    new FileFilter() {
-                        @Override
-                        public boolean accept(File file) {
-                            return file.isDirectory()
-                                    || file.getName().endsWith(".js");
-                        }
-                    }).stream().filter(f -> f.isFile()).forEach(f -> {
-                        buffer.append("\n");
-                        buffer.append(ResourceUtilities.read(f));
-                    });
+            String[] scriptNames = { "GwtJsPlugin.js", "common/Message.js",
+                    "common/BrowserChannel.js", "impl/JavaObject.js",
+                    "impl/ScriptableInstance.js", "impl/LocalObjectTable.js",
+                    "common/ieee754.js", "common/Platform.js",
+                    "common/HashMap.js", "common/FatalErrorMessage.js",
+                    "common/HostChannel.js", "common/InvokeMessage.js",
+                    "common/LoadModuleMessage.js",
+                    "common/InvokeSpecialMessage.js",
+                    "common/AllowedConnections.js", "common/DebugLevel.js",
+                    "common/Socket.js", "common/Debug.js",
+                    "common/QuitMessage.js", "common/SwitchTransportMessage.js",
+                    "common/ProtocolVersionMessage.js",
+                    "common/ChooseTransportMessage.js",
+                    "common/SessionHandler.js", "common/ByteOrder.js",
+                    "common/ReturnMessage.js", "common/ServerMethods.js",
+                    "common/LoadJsniMessage.js", "common/Value.js",
+                    "common/CheckVersionsMessage.js",
+                    "common/FreeValueMessage.js" };
+            for (String fn : scriptNames) {
+                String path = Ax.format(
+                        "/g/alcina/framework/jscodeserver/src/cc/alcina/framework/jscodeserver/js/%s",
+                        fn);
+                buffer.append("\n");
+                buffer.append(ResourceUtilities.read(path));
+                buffer.append("\n");
+            }
         }
         Ax.out(buffer);
         String outputFilename = filename;
