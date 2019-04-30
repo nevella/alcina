@@ -1475,7 +1475,7 @@ public class CommonUtils {
         return sb.toString();
     }
 
-    public static <T> ThreeWaySetResult<T> threeWayIdentitySplit(
+    public static <T> ThreeWaySetResult<T> threeWaySplitIdentity(
             Collection<T> c1, Collection<T> c2) {
         ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
         IdentityHashMap m1 = new IdentityHashMap();

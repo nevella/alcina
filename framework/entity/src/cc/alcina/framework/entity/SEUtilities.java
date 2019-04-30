@@ -110,11 +110,11 @@ public class SEUtilities {
 
     private static Map<Class, List<Field>> allFieldsPerClass = new LinkedHashMap<>();
 
-    private static Pattern sq_1 = Pattern.compile("(?<=\\s|^)\"");
+    private static Pattern sq_1 = Pattern.compile("(?<=\\s|^|\\(|\\[)\"");
 
     private static Pattern sq_2 = Pattern.compile("(?<=\\S)\"");
 
-    private static Pattern sq_3 = Pattern.compile("(?<=\\s|^)[`'´]");
+    private static Pattern sq_3 = Pattern.compile("(?<=\\s|^|\\(|\\[)[`'´]");
 
     private static Pattern sq_4 = Pattern.compile("(?<=\\S|^)[`'´]");
 
