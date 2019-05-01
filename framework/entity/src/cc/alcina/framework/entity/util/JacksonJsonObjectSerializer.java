@@ -38,6 +38,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
     private int maxLength = ResourceUtilities
             .getInteger(JacksonJsonObjectSerializer.class, "maxLength");
 
+    private boolean withPrettyPrint;
+
     @Override
     public <T> T deserialize(String json, Class<T> clazz) {
         try {
@@ -81,7 +83,12 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
         try {
             ObjectMapper mapper = getObjectMapper();
             StringWriter writer = new LengthLimitedStringWriter(maxLength);
-            mapper.writeValue(writer, object);
+            if (withPrettyPrint) {
+                mapper.writerWithDefaultPrettyPrinter().writeValue(writer,
+                        object);
+            } else {
+                mapper.writeValue(writer, object);
+            }
             String json = writer.toString();
             if (withBase64Encoding) {
                 json = Base64.getEncoder()
@@ -110,6 +117,11 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
     public JacksonJsonObjectSerializer withMaxLength(int maxLength) {
         this.maxLength = maxLength;
+        return this;
+    }
+
+    public JacksonJsonObjectSerializer withPrettyPrint() {
+        this.withPrettyPrint = true;
         return this;
     }
 
