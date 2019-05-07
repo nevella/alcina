@@ -333,7 +333,12 @@ public abstract class ClientTransformManager extends TransformManager {
             AsyncCallback<Long> savedCallback);
 
     protected boolean checkRemoveAssociation(HasIdAndLocalId hili,
-            HasIdAndLocalId target, String propertyName) {
+            HasIdAndLocalId target, ClientPropertyReflector propertyReflector) {
+        Association association = propertyReflector
+                .getAnnotation(Association.class);
+        if (association != null && association.dereferenceOnDelete()) {
+            return true;
+        }
         return !(target instanceof IUser || target instanceof IGroup);
     }
 
@@ -394,31 +399,33 @@ public abstract class ClientTransformManager extends TransformManager {
     protected void removeAssociations(HasIdAndLocalId hili) {
         ClientBeanReflector bi = ClientReflector.get()
                 .beanInfoForClass(hili.getClass());
-        Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
-                .values();
-        for (ClientPropertyReflector pr : prs) {
-            if (pr.getAnnotation(SyntheticGetter.class) != null) {
+        Collection<ClientPropertyReflector> propertyReflectors = bi
+                .getPropertyReflectors().values();
+        for (ClientPropertyReflector propertyReflector : propertyReflectors) {
+            if (propertyReflector
+                    .getAnnotation(SyntheticGetter.class) != null) {
                 continue;
             }
             DomainTransformEvent dte = new DomainTransformEvent();
-            dte.setPropertyName(pr.getPropertyName());
-            if (!CommonUtils.isStandardJavaClass(pr.getPropertyType())) {
-                Object object = Reflections.propertyAccessor()
-                        .getPropertyValue(hili, pr.getPropertyName());
+            dte.setPropertyName(propertyReflector.getPropertyName());
+            if (!CommonUtils
+                    .isStandardJavaClass(propertyReflector.getPropertyType())) {
+                Object object = Reflections.propertyAccessor().getPropertyValue(
+                        hili, propertyReflector.getPropertyName());
                 if (object instanceof HasIdAndLocalId) {
                     // do not null user/group properties, since they may be
                     // required for deletion permission checks, and should never
                     // be the collection owner of non-userland objects
                     HasIdAndLocalId target = (HasIdAndLocalId) object;
                     if (!checkRemoveAssociation(hili, target,
-                            pr.getPropertyName())) {
+                            propertyReflector)) {
                         continue;
                     }
                     boolean wasRegistered = getObject(target) != null;
                     if (!wasRegistered) {
                         registerDomainObject(target);
                     }
-                    pr.setPropertyValue(hili, null);
+                    propertyReflector.setPropertyValue(hili, null);
                     if (!wasRegistered) {
                         deregisterDomainObject(target);
                     }
