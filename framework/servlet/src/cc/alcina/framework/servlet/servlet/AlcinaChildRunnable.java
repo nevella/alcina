@@ -34,6 +34,20 @@ public abstract class AlcinaChildRunnable implements Runnable {
         }
     }
 
+    public static <T> Consumer<T> wrapWithCurrentThreadContext(
+            Consumer<T> consumer) {
+        LooseContextInstance snapshot = LooseContext.getContext().snapshot();
+        return t -> {
+            try {
+                LooseContext.push();
+                LooseContext.putSnapshotProperties(snapshot);
+                consumer.accept(t);
+            } finally {
+                LooseContext.pop();
+            }
+        };
+    }
+
     public static Runnable wrapWithCurrentThreadContext(Runnable runnable) {
         LooseContextInstance snapshot = LooseContext.getContext().snapshot();
         return () -> {
