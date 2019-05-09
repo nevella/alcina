@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.parser.structured.node;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Cell;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
@@ -84,6 +85,11 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
         public XmlNodeHtmlTableCellBuilder cell() {
             ensureBuilt();
             return new XmlNodeHtmlTableCellBuilder(relativeTo);
+        }
+
+        public XmlNodeHtmlTableCellBuilder cell(Consumer<XmlNode> consumer) {
+            consumer.accept(ensureBuilt());
+            return cell();
         }
 
         public XmlNodeHtmlTableCellBuilder cell(Object text) {

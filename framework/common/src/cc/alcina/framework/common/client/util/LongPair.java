@@ -3,10 +3,12 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 
+@JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
     public static LongPair parseLongPair(String string) {
         try {
