@@ -357,6 +357,7 @@ class gwt_hm_HostChannel {
         var url = `${this.host}/jsCodeServer.tcp`;
         xhr.open("POST", url, false);
         xhr.setRequestHeader("XhrTcpBridge.codeserver_port", this.port);
+        xhr.setRequestHeader("mixed-content", "noupgrade");
         if (this.channelId) {
             xhr.setRequestHeader("XhrTcpBridge.handle_id", this.channelId);
         }
