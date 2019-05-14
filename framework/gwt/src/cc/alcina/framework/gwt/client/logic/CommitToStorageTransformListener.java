@@ -85,10 +85,6 @@ public class CommitToStorageTransformListener extends StateListenable
     private static final String TOPIC_TRANSFORMS_COMMITTED = CommitToStorageTransformListener.class
             .getName() + ".TOPIC_TRANSFORMS_COMMITTED";
 
-    public static TopicSupport<DomainTransformResponse> topicTransformsCommitted() {
-        return new TopicSupport<>(TOPIC_TRANSFORMS_COMMITTED);
-    }
-
     public static void flushAndRun(Runnable runnable) {
         Registry.impl(CommitToStorageTransformListener.class)
                 .flushWithOneoffCallback(new AsyncCallbackStd() {
@@ -119,6 +115,10 @@ public class CommitToStorageTransformListener extends StateListenable
             TopicListener<Throwable> listener, boolean add) {
         GlobalTopicPublisher.get().listenerDelta(TOPIC_DOMAIN_EXCEPTION,
                 listener, add);
+    }
+
+    public static TopicSupport<DomainTransformResponse> topicTransformsCommitted() {
+        return new TopicSupport<>(TOPIC_TRANSFORMS_COMMITTED);
     }
 
     static void notifyCommitDomainException(Throwable message) {
@@ -365,7 +365,11 @@ public class CommitToStorageTransformListener extends StateListenable
                 }
             }
 
-            private void onSuccess0(DomainTransformResponse response) {
+            // must be synchronized for multithreaded (RCP) clients - note,
+            // better yet would be to pass synthesisedEvents with the emitted
+            // callbacks/events
+            private synchronized void onSuccess0(
+                    DomainTransformResponse response) {
                 PermissionsManager.get().setOnlineState(OnlineState.ONLINE);
                 TransformManager tm = TransformManager.get();
                 tm.setReplayingRemoteEvent(true);
