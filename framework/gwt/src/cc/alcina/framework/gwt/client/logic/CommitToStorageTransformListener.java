@@ -365,7 +365,11 @@ public class CommitToStorageTransformListener extends StateListenable
                 }
             }
 
-            private void onSuccess0(DomainTransformResponse response) {
+            // must be synchronized for multithreaded (RCP) clients - note,
+            // better yet would be to pass synthesisedEvents with the emitted
+            // callbacks/events
+            private synchronized void onSuccess0(
+                    DomainTransformResponse response) {
                 PermissionsManager.get().setOnlineState(OnlineState.ONLINE);
                 TransformManager tm = TransformManager.get();
                 tm.setReplayingRemoteEvent(true);
