@@ -12,5 +12,7 @@ import java.lang.annotation.Target;
 @Documented
 @Target({ ElementType.METHOD })
 public @interface DomainStoreTransient {
-	boolean translatePropertyStoreWrites() default false;
+    String toIdProperty() default "";
+
+    boolean translateObjectWritesToIdWrites() default false;
 }

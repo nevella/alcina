@@ -445,10 +445,21 @@ public class DomainStore implements IDomainStore {
         if (ann == null) {
             return dte;
         }
-        if (!ann.translatePropertyStoreWrites()) {
+        if (!ann.translateObjectWritesToIdWrites()) {
             return null;
         }
-        return dte;
+        if (ann.toIdProperty().isEmpty()) {
+            return dte;
+        } else {
+            DomainTransformEvent translated = ResourceUtilities
+                    .fieldwiseClone(dte, true);
+            translated.setPropertyName(ann.toIdProperty());
+            translated.setNewValue(translated.getValueId());
+            TransformManager.get().convertToTargetObject(translated);
+            translated.setTransformType(
+                    TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+            return translated;
+        }
     }
 
     private List<DomainTransformEvent> filterInterestedTransforms(

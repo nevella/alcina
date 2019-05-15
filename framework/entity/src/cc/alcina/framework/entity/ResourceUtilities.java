@@ -203,42 +203,49 @@ public class ResourceUtilities {
         }
     }
 
-    public static <T> T fieldwiseClone(T t) throws Exception {
+    public static <T> T fieldwiseClone(T t) {
         return fieldwiseClone(t, false);
     }
 
-    public static <T> T fieldwiseClone(T t, boolean withTransients)
-            throws Exception {
-        T instance = (T) t.getClass().newInstance();
-        return fieldwiseCopy(t, instance, withTransients);
+    public static <T> T fieldwiseClone(T t, boolean withTransients) {
+        try {
+            T instance = (T) t.getClass().newInstance();
+            return fieldwiseCopy(t, instance, withTransients);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
     }
 
-    public static <T> T fieldwiseCopy(T t, T toInstance, boolean withTransients)
-            throws Exception {
-        List<Field> allFields = new ArrayList<Field>();
-        Class c = t.getClass();
-        while (c != Object.class) {
-            Field[] fields = c.getDeclaredFields();
-            for (Field field : fields) {
-                if (Modifier.isStatic(field.getModifiers())) {
-                    continue;
+    public static <T> T fieldwiseCopy(T t, T toInstance,
+            boolean withTransients) {
+        try {
+            List<Field> allFields = new ArrayList<Field>();
+            Class c = t.getClass();
+            while (c != Object.class) {
+                Field[] fields = c.getDeclaredFields();
+                for (Field field : fields) {
+                    if (Modifier.isStatic(field.getModifiers())) {
+                        continue;
+                    }
+                    if (Modifier.isFinal(field.getModifiers())) {
+                        continue;
+                    }
+                    if (Modifier.isTransient(field.getModifiers())
+                            && !withTransients) {
+                        continue;
+                    }
+                    field.setAccessible(true);
+                    allFields.add(field);
                 }
-                if (Modifier.isFinal(field.getModifiers())) {
-                    continue;
-                }
-                if (Modifier.isTransient(field.getModifiers())
-                        && !withTransients) {
-                    continue;
-                }
-                field.setAccessible(true);
-                allFields.add(field);
+                c = c.getSuperclass();
             }
-            c = c.getSuperclass();
+            for (Field field : allFields) {
+                field.set(toInstance, field.get(t));
+            }
+            return toInstance;
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
         }
-        for (Field field : allFields) {
-            field.set(toInstance, field.get(t));
-        }
-        return toInstance;
     }
 
     public static String get(Class clazz, String propertyName) {
