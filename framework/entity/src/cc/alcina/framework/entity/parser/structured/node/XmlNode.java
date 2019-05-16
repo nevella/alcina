@@ -64,7 +64,7 @@ public class XmlNode {
 
     private XmlNodeXpath xpath;
 
-    private XmlNodeAncestor ancestor;
+    private XmlNodeAncestors ancestor;
 
     private XmlNodeHtml xmlNodeHtml;
 
@@ -88,9 +88,9 @@ public class XmlNode {
         return this;
     }
 
-    public XmlNodeAncestor ancestors() {
+    public XmlNodeAncestors ancestors() {
         if (ancestor == null) {
-            ancestor = new XmlNodeAncestor();
+            ancestor = new XmlNodeAncestors();
         }
         return ancestor;
     }
@@ -468,7 +468,7 @@ public class XmlNode {
                 : node.getOwnerDocument();
     }
 
-    public class XmlNodeAncestor {
+    public class XmlNodeAncestors {
         private boolean orSelf = false;
 
         public XmlNode ancestorBefore(XmlNode node) {
@@ -539,10 +539,22 @@ public class XmlNode {
             return Optional.empty();
         }
 
-        public XmlNodeAncestor orSelf() {
-            XmlNodeAncestor ancestor = new XmlNodeAncestor();
+        public XmlNodeAncestors orSelf() {
+            XmlNodeAncestors ancestor = new XmlNodeAncestors();
             ancestor.orSelf = true;
             return ancestor;
+        }
+
+        public boolean parentHasNoTextOrElementsBeforeThisChild() {
+            for (XmlNode node : parent().children.nodes()) {
+                if (node == XmlNode.this) {
+                    return true;
+                }
+                if (node.isText() || node.isElement()) {
+                    return false;
+                }
+            }
+            return false;
         }
     }
 
@@ -959,12 +971,12 @@ public class XmlNode {
             return Boolean.valueOf(textOrEmpty());
         }
 
-        public boolean matchExists() {
-            return node() != null;
-        }
-
         public void forEach(Consumer<XmlNode> consumer) {
             stream().forEach(consumer);
+        }
+
+        public boolean matchExists() {
+            return node() != null;
         }
 
         public XmlNode node() {
