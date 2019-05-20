@@ -21,6 +21,7 @@ import com.google.gwt.user.cellview.client.LoadingStateChangeEvent.LoadingState;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.SelectionModel;
 
 /**
  * A tabular view with a fixed header and footer section and a scrollable data
@@ -60,45 +61,55 @@ import com.google.gwt.user.client.ui.Widget;
  *            the data type of each row
  */
 public class DataGridWithScrollAccess<T> extends DataGrid<T>
-		implements HasDataWidget<T> {
-	private static Widget createDefaultLoadingIndicator(Resources resources) {
-		ImageResource loadingImg = resources.dataGridLoading();
-		if (loadingImg == null) {
-			return null;
-		}
-		Image image = new Image(loadingImg);
-		image.getElement().getStyle().setMarginTop(30.0, Unit.PX);
-		image.setStyleName("dg-loading-image");
-		return image;
-	}
+        implements HasDataWidget<T> {
+    private static Widget createDefaultLoadingIndicator(Resources resources) {
+        ImageResource loadingImg = resources.dataGridLoading();
+        if (loadingImg == null) {
+            return null;
+        }
+        Image image = new Image(loadingImg);
+        image.getElement().getStyle().setMarginTop(30.0, Unit.PX);
+        image.setStyleName("dg-loading-image");
+        return image;
+    }
 
-	public DataGridWithScrollAccess(int pageSize,
-			com.google.gwt.user.cellview.client.DataGrid.Resources resources) {
-		super(pageSize, resources, null,
-				createDefaultLoadingIndicator(resources));
-		addRedrawHandler(() -> forceReflow());
-	}
+    public DataGridWithScrollAccess(int pageSize,
+            com.google.gwt.user.cellview.client.DataGrid.Resources resources) {
+        super(pageSize, resources, null,
+                createDefaultLoadingIndicator(resources));
+        addRedrawHandler(() -> forceReflow());
+        setRowStyles(new RowStyles<T>() {
+            @Override
+            public String getStyleNames(T rowValue, int rowIndex) {
+                SelectionModel<? super T> selectionModel = getSelectionModel();
+                boolean isSelected = (selectionModel == null
+                        || rowValue == null) ? false
+                                : selectionModel.isSelected(rowValue);
+                return isSelected ? "dg-selected-row" : null;
+            }
+        });
+    }
 
-	public ScrollPanel getBodyScrollPanel() {
-		return (ScrollPanel) tableData.getParent();
-	}
+    public ScrollPanel getBodyScrollPanel() {
+        return (ScrollPanel) tableData.getParent();
+    }
 
-	@Override
-	public void onLoadingStateChanged(LoadingState state) {
-		if (state == LoadingState.LOADING && getRowCount() > 0) {
-			return;
-		}
-		super.onLoadingStateChanged(state);
-	}
+    @Override
+    public void onLoadingStateChanged(LoadingState state) {
+        if (state == LoadingState.LOADING && getRowCount() > 0) {
+            return;
+        }
+        super.onLoadingStateChanged(state);
+    }
 
-	private void forceReflow() {
-		// -webkit-transform: translate3d(0,0,0);
-		getElement().getStyle().setProperty("webkitTransform",
-				"translate3d(0,0,0)");
-	}
+    private void forceReflow() {
+        // -webkit-transform: translate3d(0,0,0);
+        getElement().getStyle().setProperty("webkitTransform",
+                "translate3d(0,0,0)");
+    }
 
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-	}
+    @Override
+    protected void onAttach() {
+        super.onAttach();
+    }
 }
