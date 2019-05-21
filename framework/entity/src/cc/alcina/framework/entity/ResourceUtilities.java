@@ -81,7 +81,6 @@ import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
  *
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
-@SuppressWarnings("deprecation")
 public class ResourceUtilities {
     private static Map<String, String> customProperties = new ConcurrentHashMap<String, String>();
 
