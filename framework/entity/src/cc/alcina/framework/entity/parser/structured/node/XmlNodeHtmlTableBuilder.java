@@ -170,6 +170,11 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
             return new XmlNodeHtmlTableCellBuilder(builtNode());
         }
 
+        public XmlNodeHtmlTableCellBuilder cell(Consumer<XmlNode> consumer) {
+            consumer.accept(cell().ensureBuilt());
+            return cell();
+        }
+
         public XmlNodeHtmlTableCellBuilder cell(String text) {
             return cell().text(text).cell();
         }
