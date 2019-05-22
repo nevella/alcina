@@ -48,6 +48,9 @@ import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
  *
  */
 public class DomainTransformPersistenceQueue {
+    public static final String CONTEXT_WAIT_TIMEOUT_MS = DomainTransformPersistenceQueue.class
+            .getName() + ".CONTEXT_WAIT_TIMEOUT_MS";
+
     final Logger logger = LoggerFactory.getLogger(getClass());
 
     Set<Long> firing = new LinkedHashSet<>();
@@ -130,6 +133,9 @@ public class DomainTransformPersistenceQueue {
 
     public void waitUntilRequestProcessed(String logOffset) {
         long timeoutMs = 60 * TimeConstants.ONE_SECOND_MS;
+        if (LooseContext.has(CONTEXT_WAIT_TIMEOUT_MS)) {
+            timeoutMs = LooseContext.get(CONTEXT_WAIT_TIMEOUT_MS);
+        }
         /*
          * 'event' in this class means
          * "domaintransformrequest of id x were fired" - eventId is the dtrp id
