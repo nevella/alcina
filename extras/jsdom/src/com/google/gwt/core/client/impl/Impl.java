@@ -82,57 +82,57 @@ public final class Impl {
      */
     public static native JavaScriptObject entry(
             JavaScriptObject jsFunction) /*-{
-                                         return function() {
-                                         if (@com.google.gwt.core.client.GWT::isScript()()) {
-                                         return @Impl::entry0(*)(jsFunction, this, arguments);
-                                         } else {
-                                         var _ = @Impl::entry0(*)(jsFunction, this, arguments);
-                                         if (_ != null) {
-                                         // Unwraps for Development Mode (see #apply())
-                                         _ = _.val;
-                                         }
-                                         return _;
-                                         }
-                                         };
-                                         }-*/;
+    return function() {
+      if (@com.google.gwt.core.client.GWT::isScript()()) {
+        return @Impl::entry0(*)(jsFunction, this, arguments);
+      } else {
+        var _ = @Impl::entry0(*)(jsFunction, this, arguments);
+        if (_ != null) {
+          // Unwraps for Development Mode (see #apply())
+          _ = _.val;
+        }
+        return _;
+      }
+    };
+    }-*/;
 
     public static native String getHostPageBaseURL() /*-{
-                                                     var s = $doc.location.href;
-                                                     
-                                                     // Pull off any hash.
-                                                     var i = s.indexOf('#');
-                                                     if (i != -1)
-                                                     s = s.substring(0, i);
-                                                     
-                                                     // Pull off any query string.
-                                                     i = s.indexOf('?');
-                                                     if (i != -1)
-                                                     s = s.substring(0, i);
-                                                     
-                                                     // Rip off everything after the last slash.
-                                                     i = s.lastIndexOf('/');
-                                                     if (i != -1)
-                                                     s = s.substring(0, i);
-                                                     
-                                                     // Ensure a final slash if non-empty.
-                                                     return s.length > 0 ? s + "/" : "";
-                                                     }-*/;
+    var s = $doc.location.href;
+
+    // Pull off any hash.
+    var i = s.indexOf('#');
+    if (i != -1)
+      s = s.substring(0, i);
+
+    // Pull off any query string.
+    i = s.indexOf('?');
+    if (i != -1)
+      s = s.substring(0, i);
+
+    // Rip off everything after the last slash.
+    i = s.lastIndexOf('/');
+    if (i != -1)
+      s = s.substring(0, i);
+
+    // Ensure a final slash if non-empty.
+    return s.length > 0 ? s + "/" : "";
+    }-*/;
 
     public static native String getModuleBaseURL() /*-{
-                                                   // Check to see if DevModeRedirectHook has set an alternate value.
-                                                   // The key should match DevModeRedirectHook.js.
-                                                   var key = "__gwtDevModeHook:" + $moduleName + ":moduleBase";
-                                                   var global = $wnd || self;
-                                                   return global[key] || $moduleBase;
-                                                   }-*/;
+    // Check to see if DevModeRedirectHook has set an alternate value.
+    // The key should match DevModeRedirectHook.js.
+    var key = "__gwtDevModeHook:" + $moduleName + ":moduleBase";
+    var global = $wnd || self;
+    return global[key] || $moduleBase;
+    }-*/;
 
     public static native String getModuleBaseURLForStaticFiles() /*-{
-                                                                 return $moduleBase;
-                                                                 }-*/;
+    return $moduleBase;
+    }-*/;
 
     public static native String getModuleName() /*-{
-                                                return $moduleName;
-                                                }-*/;
+    return $moduleName;
+    }-*/;
 
     /**
      * Returns the obfuscated name of members in the compiled output. This is a
@@ -159,8 +159,8 @@ public final class Impl {
     }
 
     public static native String getPermutationStrongName() /*-{
-                                                           return $strongName;
-                                                           }-*/;
+    return $strongName;
+    }-*/;
 
     /**
      * Indicates if <code>$entry</code> has been called.
@@ -232,19 +232,19 @@ public final class Impl {
 
     private static native Object apply(Object jsFunction, Object thisObj,
             Object args) /*-{
-                         if (@com.google.gwt.core.client.GWT::isScript()()) {
-                         return jsFunction.apply(thisObj, args);
-                         } else {
-                         var _ = jsFunction.apply(thisObj, args);
-                         if (_ != null) {
-                         // Wrap for Development Mode (unwrapped in #entry())
-                         _ = {
-                         val : _
-                         };
-                         }
-                         return _;
-                         }
-                         }-*/;
+    if (@com.google.gwt.core.client.GWT::isScript()()) {
+      return jsFunction.apply(thisObj, args);
+    } else {
+      var _ = jsFunction.apply(thisObj, args);
+      if (_ != null) {
+        // Wrap for Development Mode (unwrapped in #entry())
+        _ = {
+          val : _
+        };
+      }
+      return _;
+    }
+    }-*/;
 
     /**
      * Called by ModuleSpace in Development Mode when running onModuleLoads.
@@ -331,10 +331,10 @@ public final class Impl {
     }
 
     private static native void reportToBrowser(Object e) /*-{
-                                                         $wnd.setTimeout(function() {
-                                                         throw e;
-                                                         }, 0);
-                                                         }-*/;
+    $wnd.setTimeout(function() {
+      throw e;
+    }, 0);
+    }-*/;
 
     private static void reportToBrowser(Throwable e) {
         reportToBrowser(e instanceof JavaScriptException
@@ -343,13 +343,13 @@ public final class Impl {
     }
 
     private static native Object undefined() /*-{
-                                             // Intentionally not returning a value
-                                             return;
-                                             }-*/;
+    // Intentionally not returning a value
+    return;
+    }-*/;
 
     private static native void watchdogEntryDepthCancel(int timerId) /*-{
-                                                                     $wnd.clearTimeout(timerId);
-                                                                     }-*/;
+    $wnd.clearTimeout(timerId);
+    }-*/;
 
     private static void watchdogEntryDepthRun() {
         // Note: this must NEVER be called nested in a $entry() call.
@@ -362,7 +362,7 @@ public final class Impl {
     }
 
     private static native int watchdogEntryDepthSchedule() /*-{
-                                                           return $wnd.setTimeout(@Impl::watchdogEntryDepthRun(), 10);
-                                                           }-*/;
+    return $wnd.setTimeout(@Impl::watchdogEntryDepthRun(), 10);
+    }-*/;
 }
 // @formatter:on

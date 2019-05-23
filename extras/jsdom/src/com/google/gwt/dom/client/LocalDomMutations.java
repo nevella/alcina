@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
+import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
@@ -106,6 +107,9 @@ public class LocalDomMutations {
     }-*/;
 
     private void log(Supplier<String> messageSupplier) {
+        if (!GWT.isScript()) {
+            System.out.println(messageSupplier.get());
+        }
         LocalDom.consoleLog(messageSupplier);
     }
 
@@ -207,6 +211,36 @@ public class LocalDomMutations {
             List<MutationRecord> mutationRecords = modifiedContainers
                     .get(childNodesModifiedRemote).stream().distinct()
                     .collect(Collectors.toList());
+            /*
+             * issue with conflicting google recaptcha and dialog insertion - if
+             * elt exists in local children, has no removes - remove adds from
+             * mutation list
+             */
+            Set<Node> removed = mutationRecords.stream()
+                    .map(MutationRecord::getRemovedNodes)
+                    .flatMap(NodeListRemote::stream)
+                    .collect(Collectors.toSet());
+            mutationRecords.removeIf(mr -> {
+                if (mr.getAddedNodes().getLength() == 1) {
+                    Node added = mr.getAddedNodes().getItem(0);
+                    if (!removed.contains(added)) {
+                        boolean alreadyInChildList = childNodesModified.local()
+                                .getChildren().stream()
+                                .map(child -> child.node.remote())
+                                .anyMatch(node -> node == added);
+                        if (alreadyInChildList) {
+                            log(() -> Ax.format(
+                                    "removing add node from mutation list because already in localdom children - %s",
+                                    added.remote().hashCode()));
+                        }
+                        return alreadyInChildList;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            });
             ChildModificationHistory history = new ChildModificationHistory(
                     childNodesModified, mutationRecords);
             history.model();

@@ -91,9 +91,9 @@ class DomNodeStatic {
                         CommonUtils.padStringRight(node.getNodeName(), 12, ' '),
                         "  ",
                         CommonUtils.padStringRight(
-                                String.valueOf(node.hashCode()), 8, ' '),
+                                String.valueOf(node.hashCode()), 16, ' '),
                         CommonUtils
-                                .padStringRight(remoteHash, 8, ' '),
+                                .padStringRight(remoteHash, 16, ' '),
                         node.getNodeType() == Node.TEXT_NODE ? CommonUtils
                                 .trimToWsChars(TextUtils.normalizeWhitespace(
                                         node.getNodeValue()), 50, true)

@@ -711,10 +711,11 @@ public class LocalDom {
                 // FIXME - check we have no widgets in the tree - if we do,
                 // we're...not..good. Also remove and remote refs below (albeit
                 // unlikely)
-                int localIndex = cursor.getParentElement()
-                        .getChildIndexLocal(cursor);
+                int localIndex = (cursor.getParentElement() == null ? cursor
+                        : cursor.getParentElement()).getChildIndexLocal(cursor);
                 cursor.local().clearChildrenAndAttributes0();
                 String builtOuterHtml = remoteCursor.buildOuterHtml();
+                String remoteOuterHtml = remoteCursor.getOuterHtml();
                 parseAndMarkResolved(remoteCursor, builtOuterHtml, cursor);
                 invalid = cursor.getChildCount() != size;
                 if (!invalid) {
@@ -752,9 +753,10 @@ public class LocalDom {
                             hasNode.local().provideLocalDomTree());
                     preface += Ax.format("(Local outer html):\n%s\n",
                             hasNode.local().getOuterHtml());
-                    unableToParseTopic()
-                            .publish(Ax.format("%s\n(Built outer html):\n%s",
-                                    preface, builtOuterHtml));
+                    String message = Ax.format(
+                            "%s\n(Built outer html):\n%s\n\n(Remote outer html):\n%s",
+                            preface, builtOuterHtml, remoteOuterHtml);
+                    unableToParseTopic().publish(message);
                     Ax.out("Reparse unsuccessful");
                     return;
                 }
