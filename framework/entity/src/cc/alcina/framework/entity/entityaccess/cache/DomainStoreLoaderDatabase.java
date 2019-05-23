@@ -428,7 +428,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         for (DomainSegmentLoaderPhase phase : DomainSegmentLoaderPhase
                 .iterateOver()) {
             segmentLoader.phase = phase;
-            int maxPasses = 120;
+            int maxPasses = 240;
             int pass = 0;
             long start = System.currentTimeMillis();
             int lastTotal = -1;
