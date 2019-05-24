@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
-import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
@@ -43,6 +42,14 @@ public class LocalDomMutations {
 
     private boolean disabled;
 
+    private boolean debugEntry = false;
+
+    private boolean firstTimeConnect = true;
+
+    private boolean observerConnected = false;
+
+    private boolean inGwtEventCycle = false;
+
     public LocalDomMutations() {
     }
 
@@ -61,7 +68,19 @@ public class LocalDomMutations {
         if (this.observer == null) {
             setupObserver();
         }
-        connectObserver();
+        if (!observerConnected) {
+            connectObserver();
+            observerConnected = true;
+        } else {
+            clearReceivedRecords();
+        }
+        inGwtEventCycle = false;
+    }
+
+    public void startObservingIfNotInEventCycle() {
+        if (!inGwtEventCycle) {
+            startObserving();
+        }
     }
 
     public void stopObserving() {
@@ -73,6 +92,7 @@ public class LocalDomMutations {
         }
         disconnectObserver();
         checkReceivedRecords();
+        inGwtEventCycle = true;
     }
 
     private native void checkReceivedRecords() /*-{
@@ -84,14 +104,30 @@ public class LocalDomMutations {
     this.@LocalDomMutations::handleMutations(*)(records);
     }-*/;
 
+    private native void clearReceivedRecords() /*-{
+    this.@LocalDomMutations::observer.takeRecords();
+    this.@LocalDomMutations::records = [];
+
+    }-*/;
+
     private native void connectObserver() /*-{
+    if (this.@LocalDomMutations::disabled) {
+      console.log("Mutation tracking not defined");
+      return;
+    }
+    if (this.@LocalDomMutations::debugEntry
+        || this.@LocalDomMutations::firstTimeConnect) {
+      this.@LocalDomMutations::firstTimeConnect = false;
+      console.log("Mutation observer :: connected");
+      //      console.log($doc.documentElement.outerHTML);
+    }
     //clear the buffer and discard
     this.@LocalDomMutations::observer.takeRecords();
     this.@LocalDomMutations::records = [];
 
     var config = {
-      attributes : true,
       childList : true,
+      //TODO - add attributes
       subtree : true
     };
     this.@LocalDomMutations::observer.observe(
@@ -99,18 +135,23 @@ public class LocalDomMutations {
     }-*/;
 
     private native void disconnectObserver() /*-{
-    var eventBuffer = this.@LocalDomMutations::observer.takeRecords();
+    var mutationsList = this.@LocalDomMutations::observer.takeRecords();
+    if (mutationsList.length) {
+      //      console.log(mutationsList);
+    }
     this.@LocalDomMutations::records = this.@LocalDomMutations::records
-        .concat(eventBuffer);
-    this.@LocalDomMutations::observer.disconnect();
-
+        .concat(mutationsList);
+    if (!this.@LocalDomMutations::debugEntry) {
+      this.@LocalDomMutations::observerConnected = false;
+      this.@LocalDomMutations::observer.disconnect();
+    }
     }-*/;
 
     private void log(Supplier<String> messageSupplier) {
-        if (!GWT.isScript()) {
-            System.out.println(messageSupplier.get());
-        }
-        LocalDom.consoleLog(messageSupplier);
+        // if (!GWT.isScript()) {
+        // System.out.println(messageSupplier.get());
+        // }
+        // LocalDom.consoleLog(messageSupplier);
     }
 
     private native void setupObserver() /*-{
@@ -121,8 +162,12 @@ public class LocalDomMutations {
       return;
     }
     this.@LocalDomMutations::documentElement = $doc.documentElement;
+    //console.log(this.@LocalDomMutations::documentElement);
     var _this = this;
     var callback = function(mutationsList, observer) {
+      if (mutationsList.length) {
+        //        console.log(mutationsList);
+      }
       _this.@LocalDomMutations::records = _this.@LocalDomMutations::records
           .concat(mutationsList);
     };
@@ -144,6 +189,8 @@ public class LocalDomMutations {
 
     void handleMutations0(JsArray<MutationRecord> records) {
         log(() -> Ax.format("Jv records: %s", records.length()));
+        String outerHtml = Document.get().typedRemote().getDocumentElement0()
+                .getOuterHtml();
         /*
          * (phase 1) - ignore attr, cdata modifications
          * 
@@ -154,13 +201,13 @@ public class LocalDomMutations {
          * 
          * Run the localdom deltas against these modfified containers
          * 
-         * ** initially, just log
          */
         Multimap<NodeRemote, List<MutationRecord>> modifiedContainers = new Multimap<>();
-        ClientUtils.jsArrayToTypedArray(records).forEach(record -> {
-            {
-                modifiedContainers.add(record.getTarget(), record);
-            }
+        List<MutationRecord> typedRecords = ClientUtils
+                .jsArrayToTypedArray(records);
+        // String combinedLogString = new ChildModificationHistory(null,
+        // typedRecords).toLogString();
+        typedRecords.forEach(record -> {
             {
                 modifiedContainers.add(record.getTarget(), record);
             }
@@ -199,8 +246,17 @@ public class LocalDomMutations {
                 .collect(Collectors.toList());
         for (NodeRemote childNodesModifiedRemote : orderedNormalisedModifiedContainers) {
             ElementRemote elementRemote = (ElementRemote) childNodesModifiedRemote;
+            List<MutationRecord> mutationRecords = modifiedContainers
+                    .get(childNodesModifiedRemote).stream()
+                    .collect(Collectors.toList());
+            // String logString = new ChildModificationHistory(null,
+            // mutationRecords).toLogString();
+            // ClientUtils.invokeJsDebugger(records);
+            if (!LocalDom.hasNode(elementRemote)) {
+                Preconditions.checkArgument(false);
+            }
+            ElementRemote elt2 = elementRemote.getParentElementRemote();
             Element childNodesModified = LocalDom.nodeFor(elementRemote);
-            Preconditions.checkState(childNodesModified.wasResolved());
             int insertionPointLocalChildrenSize = childNodesModified
                     .getChildCount();
             long linkedToRemote = childNodesModified.streamChildren()
@@ -208,30 +264,32 @@ public class LocalDomMutations {
             List<NodeRemote> childNodesRemotePostMutation = childNodesModified
                     .typedRemote().getChildNodes0().streamRemote()
                     .collect(Collectors.toList());
-            List<MutationRecord> mutationRecords = modifiedContainers
-                    .get(childNodesModifiedRemote).stream().distinct()
-                    .collect(Collectors.toList());
             /*
              * issue with conflicting google recaptcha and dialog insertion - if
              * elt exists in local children, has no removes - remove adds from
              * mutation list
+             * 
+             * FIXME: probably issue because recaptcha called during gwt event
+             * cycle. formalise the
+             * "shouldn't modify dom during event cycle outside of localdom" -
+             * or at least wrap in connect/disconnect observer calls
              */
-            Set<Node> removed = mutationRecords.stream()
-                    .map(MutationRecord::getRemovedNodes)
-                    .flatMap(NodeListRemote::stream)
+            Set<NodeRemote> removed = mutationRecords.stream()
+                    .map(mr -> mr.getRemovedNodes())
+                    .flatMap(nlr -> nlr.streamRemote())
                     .collect(Collectors.toSet());
             mutationRecords.removeIf(mr -> {
                 if (mr.getAddedNodes().getLength() == 1) {
-                    Node added = mr.getAddedNodes().getItem(0);
-                    if (!removed.contains(added)) {
+                    NodeRemote addedRemote = mr.getAddedNodes().getItem0(0);
+                    if (!removed.contains(addedRemote)) {
                         boolean alreadyInChildList = childNodesModified.local()
                                 .getChildren().stream()
                                 .map(child -> child.node.remote())
-                                .anyMatch(node -> node == added);
+                                .anyMatch(node -> node == addedRemote);
                         if (alreadyInChildList) {
                             log(() -> Ax.format(
                                     "removing add node from mutation list because already in localdom children - %s",
-                                    added.remote().hashCode()));
+                                    addedRemote.hashCode()));
                         }
                         return alreadyInChildList;
                     } else {
@@ -259,8 +317,10 @@ public class LocalDomMutations {
                     DomNodeStatic
                             .shortLog(history.preObservedState().children)));
             log(() -> Ax.format("Mutations:\n%s", history.toLogString()));
-            Preconditions.checkState(
-                    insertionPointLocalChildrenSize == preObservedSize);
+            if (insertionPointLocalChildrenSize != preObservedSize) {
+                Preconditions.checkState(
+                        insertionPointLocalChildrenSize == preObservedSize);
+            }
             Map<NodeRemote, Node> childByRemote = new LinkedHashMap<>();
             Set<Node> retained = new LinkedHashSet<>();
             Set<Node> added = new LinkedHashSet<>();
@@ -268,7 +328,16 @@ public class LocalDomMutations {
                 Node node = childNodesModified.getChild(idx);
                 NodeRemote nodeRemote = history.preObservedState().children
                         .get(idx);
-                node.putRemote(nodeRemote, true);
+                boolean doNotPutOwingToRace = false;
+                if (!childNodesRemotePostMutation.contains(nodeRemote)) {
+                    // possible hosted mode callback essentially racing this?
+                    if (childNodesRemotePostMutation.contains(node.remote())) {
+                        doNotPutOwingToRace = true;
+                    }
+                }
+                if (!doNotPutOwingToRace) {
+                    node.putRemote(nodeRemote, true);
+                }
                 if (childNodesRemotePostMutation.contains(nodeRemote)) {
                     childByRemote.put(nodeRemote, node);
                     retained.add(node);
@@ -291,8 +360,14 @@ public class LocalDomMutations {
                         .get(postMutationIdx);
                 Node localNode = childByRemote.get(nodeRemote);
                 if (localNode == null) {
-                    // created in external mutation; generate a match
-                    localNode = LocalDom.resolveExternal(nodeRemote);
+                    // created (or reparented) in external mutation; generate a
+                    // match if new
+                    if (LocalDom.hasNode(nodeRemote)) {
+                        localNode = LocalDom.nodeFor(nodeRemote);
+                    }
+                    if (localNode == null) {
+                        localNode = LocalDom.resolveExternal(nodeRemote);
+                    }
                     added.add(localNode);
                 }
                 Node currentLocalNode = postMutationIdx >= childNodesModified
@@ -332,14 +407,16 @@ public class LocalDomMutations {
                 List<MutationRecord> mutationRecords) {
             this.insertionPoint = insertionPoint;
             this.mutationRecords = mutationRecords;
-            Collections.reverse(mutationRecords);
         }
 
         public void model() {
             ChildModificationHistoryState currentState = ChildModificationHistoryState
                     .fromCurrentState(insertionPoint.typedRemote());
             states.add(currentState);
-            for (MutationRecord mutationRecord : mutationRecords) {
+            List<MutationRecord> reverseMutations = mutationRecords.stream()
+                    .collect(Collectors.toList());
+            Collections.reverse(reverseMutations);
+            for (MutationRecord mutationRecord : reverseMutations) {
                 currentState = currentState.undo(mutationRecord);
                 states.add(currentState);
             }
@@ -348,10 +425,7 @@ public class LocalDomMutations {
         public String toLogString() {
             FormatBuilder formatBuilder = new FormatBuilder();
             int idx = 0;
-            List<MutationRecord> mutationRecordsCopy = mutationRecords.stream()
-                    .collect(Collectors.toList());
-            Collections.reverse(mutationRecordsCopy);
-            for (MutationRecord mutationRecord : mutationRecordsCopy) {
+            for (MutationRecord mutationRecord : mutationRecords) {
                 formatBuilder.line(
                         "  Mutation record %s #%s %s:\n   target %s\n   pr-sib %s",
                         idx++, mutationRecord.getType(),

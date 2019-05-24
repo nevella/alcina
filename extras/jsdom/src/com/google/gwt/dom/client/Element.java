@@ -856,6 +856,9 @@ public class Element extends Node implements DomElement {
 
     @Override
     protected void putRemote(NodeRemote remote, boolean resolved) {
+        if (getTagName().equalsIgnoreCase("body")) {
+            int debug = 3;
+        }
         if (!GWT.isScript()) {
             Preconditions.checkState(
                     remote.getNodeName().equalsIgnoreCase(local.getNodeName()));
@@ -883,6 +886,9 @@ public class Element extends Node implements DomElement {
 
     @Override
     protected void resetRemote0() {
+        if (getTagName().equalsIgnoreCase("body")) {
+            int debug = 3;
+        }
         this.remote = ElementNull.INSTANCE;
         if (this.hasStyle()) {
             this.style.resetRemote();

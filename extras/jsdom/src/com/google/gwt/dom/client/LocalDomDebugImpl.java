@@ -39,7 +39,9 @@ public class LocalDomDebugImpl {
         }
         if (issue == null) {
             remoteChild = childNodes.getItem0(idx);
-            if (remoteChild.provideIsElement()) {
+            if (remoteChild == null) {
+                issue = "node removed";
+            } else if (remoteChild.provideIsElement()) {
                 localChild = withRemote.getChild(idx);
                 String tagName0 = ((ElementRemote) remoteChild)
                         .getTagNameRemote();

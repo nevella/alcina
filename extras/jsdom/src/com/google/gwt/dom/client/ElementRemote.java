@@ -897,7 +897,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
           addNodeToBuiltHtml(child, buffer, depth + 1);
         }
         buf = buffer.buf;
-        var re = /area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr/i;
+        var re = /^(?:area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
         if (node.tagName.match(re)) {
 
         } else {

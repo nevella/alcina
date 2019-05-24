@@ -127,6 +127,7 @@ public class LocalDom {
         if (useRemoteDom) {
             get().linkRemote(doc.typedRemote(), doc);
             get().nodeFor0(doc.typedRemote().getDocumentElement0());
+            mutations.startObservingIfNotInEventCycle();
         }
     }
 
