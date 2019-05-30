@@ -262,6 +262,10 @@ public class IntPair implements Comparable<IntPair>, Serializable {
         i2 -= ip.i2;
     }
 
+    public String toDashString() {
+        return "[" + i1 + "-" + i2 + "]";
+    }
+
     @Override
     public String toString() {
         return "[" + i1 + "," + i2 + "]";
