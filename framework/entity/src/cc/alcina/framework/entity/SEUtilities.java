@@ -529,6 +529,16 @@ public class SEUtilities {
         expandAll(tree, new TreePath(root), expand);
     }
 
+    public static boolean filesAreEqual(File file1, File file2)
+            throws IOException {
+        if (!file1.exists() || !file2.exists()
+                || file1.length() != file2.length()) {
+            return false;
+        }
+        return Arrays.equals(ResourceUtilities.readFileToByteArray(file1),
+                ResourceUtilities.readFileToByteArray(file2));
+    }
+
     public static <T> List<T> filterCollection(Collection<T> coll,
             ObjectFilter<T> filter) {
         List<T> result = new ArrayList<T>();
