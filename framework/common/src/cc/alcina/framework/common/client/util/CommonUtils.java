@@ -1475,6 +1475,18 @@ public class CommonUtils {
         return sb.toString();
     }
 
+    public static <T> ThreeWaySetResult<T> threeWaySplit(Collection<T> c1,
+            Collection<T> c2) {
+        ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
+        Set intersection = intersection(c1, c2);
+        result.intersection = intersection;
+        result.firstOnly = new LinkedHashSet<T>(c1);
+        result.secondOnly = new LinkedHashSet<T>(c2);
+        result.firstOnly.removeAll(intersection);
+        result.secondOnly.removeAll(intersection);
+        return result;
+    }
+
     public static <T> ThreeWaySetResult<T> threeWaySplitIdentity(
             Collection<T> c1, Collection<T> c2) {
         ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
@@ -1493,18 +1505,6 @@ public class CommonUtils {
         }
         result.firstOnly.removeAll(result.intersection);
         result.secondOnly.removeAll(result.intersection);
-        return result;
-    }
-
-    public static <T> ThreeWaySetResult<T> threeWaySplit(Collection<T> c1,
-            Collection<T> c2) {
-        ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
-        Set intersection = intersection(c1, c2);
-        result.intersection = intersection;
-        result.firstOnly = new LinkedHashSet<T>(c1);
-        result.secondOnly = new LinkedHashSet<T>(c2);
-        result.firstOnly.removeAll(intersection);
-        result.secondOnly.removeAll(intersection);
         return result;
     }
 

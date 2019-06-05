@@ -93,6 +93,10 @@ public class CsvCols
         return result;
     }
 
+    public int size() {
+        return grid.size() - 1;
+    }
+
     public Stream<CsvCols.CsvRow> stream() {
         return StreamSupport.stream(this.spliterator(), false);
     }
