@@ -249,7 +249,7 @@ class BiPrintStream extends PrintStream {
         // if (s == null) {
         // int debug = 3;
         // }
-        // if (s != null && s.contains("PooledByteBufAllocator")) {
+        // if (s != null && s.contains("<?xml version=")) {
         // int debug = 3;
         // }
     }

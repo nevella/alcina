@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1248,6 +1249,75 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
                 }
                 return null;
             }
+        }
+    }
+
+    public static class CmdSetResourceProperty extends DevConsoleCommand {
+        @Override
+        public String[] getCommandIds() {
+            return new String[] { "rprop" };
+        }
+
+        @Override
+        public String getDescription() {
+            return "set resource property";
+        }
+
+        @Override
+        public String getUsage() {
+            return "rprop name=value";
+        }
+
+        @Override
+        public String run(String[] argv) throws Exception {
+            if (argv.length == 0) {
+                Map<String, String> map = new TreeMap<String, String>();
+                map.putAll(ResourceUtilities.getCustomProperties());
+                Ax.out(CommonUtils.join(map.entrySet(), "\n"));
+                return "";
+            }
+            String prop = SEUtilities.normalizeWhitespaceAndTrim(argv[0]);
+            Matcher m = Pattern.compile("(.+?)=(.+)").matcher(prop);
+            m.matches();
+            String key = m.group(1);
+            String existingValue = ResourceUtilities.getCustomProperties()
+                    .get(key);
+            String value = m.group(2);
+            ResourceUtilities.set(key, value);
+            return Ax.format("%s : '%s' => '%s'", key, existingValue, value);
+        }
+    }
+
+    public static class CmdSetSystemProperty extends DevConsoleCommand {
+        @Override
+        public String[] getCommandIds() {
+            return new String[] { "sprop" };
+        }
+
+        @Override
+        public String getDescription() {
+            return "set system property";
+        }
+
+        @Override
+        public String getUsage() {
+            return "sprop name=value";
+        }
+
+        @Override
+        public String run(String[] argv) throws Exception {
+            if (argv.length == 0) {
+                System.getProperties().list(System.out);
+                return "";
+            }
+            String prop = SEUtilities.normalizeWhitespaceAndTrim(argv[0]);
+            Matcher m = Pattern.compile("(.+?)=(.+)").matcher(prop);
+            m.matches();
+            String key = m.group(1);
+            String existingValue = System.getProperty(key);
+            String value = m.group(2);
+            System.setProperty(key, value);
+            return Ax.format("%s : '%s' => '%s'", key, existingValue, value);
         }
     }
 
