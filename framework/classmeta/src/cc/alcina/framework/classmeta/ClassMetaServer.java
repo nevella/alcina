@@ -1,9 +1,5 @@
 package cc.alcina.framework.classmeta;
 
-import java.util.EnumSet;
-
-import javax.servlet.DispatcherType;
-
 import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
@@ -13,9 +9,6 @@ import org.apache.log4j.PatternLayout;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -28,7 +21,6 @@ import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
-import cc.alcina.framework.jscodeserver.XhrTcpBridge;
 
 public class ClassMetaServer {
     public static void main(String[] args) {
@@ -69,7 +61,6 @@ public class ClassMetaServer {
     private void initRegistry() {
         Registry.registerSingleton(TimerWrapperProvider.class,
                 new TimerWrapperProviderJvm());
-        Registry.registerSingleton(XhrTcpBridge.class, new XhrTcpBridge());
     }
 
     private void start() throws Exception {
@@ -94,27 +85,6 @@ public class ClassMetaServer {
             ContextHandler ctx = new ContextHandler(handlers, "/ant");
             ctx.setHandler(new AntHandler());
             handlers.addHandler(ctx);
-        }
-        FilterHolder cors = new FilterHolder(CrossOriginFilter.class);
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
-        cors.setInitParameter(
-                CrossOriginFilter.ACCESS_CONTROL_ALLOW_ORIGIN_HEADER, "*");
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM,
-                "OPTIONS,GET,POST,HEAD");
-        cors.setInitParameter(CrossOriginFilter.EXPOSED_HEADERS_PARAM,
-                "XhrTcpBridge.handle_id,XhrTcpBridge.message_id");
-        cors.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM,
-                "X-Requested-With,Content-Type,Accept,Origin,Cache-Control,xhrtcpbridge.codeserver_port,XhrTcpBridge.handle_id,XhrTcpBridge.message_id,XhrTcpBridge.meta,mixed-content");
-        cors.setInitParameter(CrossOriginFilter.CHAIN_PREFLIGHT_PARAM, "false");
-        {
-            ServletContextHandler jsCodeServerHandler = new ServletContextHandler(
-                    handlers, "/jsCodeServer.tcp");
-            jsCodeServerHandler.addServlet(
-                    new ServletHolder(new JsCodeServerServlet()), "/*");
-            jsCodeServerHandler.setAllowNullPathInfo(true);
-            handlers.addHandler(jsCodeServerHandler);
-            jsCodeServerHandler.addFilter(cors, "/*",
-                    EnumSet.of(DispatcherType.REQUEST));
         }
         server.setHandler(handlers);
         server.start();

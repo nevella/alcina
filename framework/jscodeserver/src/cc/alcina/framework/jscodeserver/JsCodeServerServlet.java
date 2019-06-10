@@ -1,4 +1,4 @@
-package cc.alcina.framework.classmeta;
+package cc.alcina.framework.jscodeserver;
 
 import java.io.IOException;
 
@@ -9,8 +9,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import cc.alcina.framework.jscodeserver.XhrTcpBridge;
 
 public class JsCodeServerServlet extends HttpServlet {
     static Logger logger = LoggerFactory.getLogger(JsCodeServerServlet.class);

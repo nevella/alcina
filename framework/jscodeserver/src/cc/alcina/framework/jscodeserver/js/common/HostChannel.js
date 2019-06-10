@@ -13,7 +13,7 @@ class gwt_hm_HostChannel {
         //
         //correction, always use local (rather than routing through remote) - network round trips more than compensates
         //      this.host = "";
-        this.host = "http://127.0.0.1:10005"
+        this.host = "http://127.0.0.1:"+(parseInt(port)+1);
         this.port = port;
     }
     init(handler, minVersion, maxVersion,

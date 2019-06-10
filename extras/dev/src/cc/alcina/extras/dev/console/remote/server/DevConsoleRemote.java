@@ -24,12 +24,12 @@ import org.eclipse.jetty.util.resource.Resource;
 
 import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.extras.dev.console.DevConsole.DevConsoleStyle;
-import cc.alcina.framework.classmeta.JsCodeServerServlet;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.jscodeserver.JsCodeServerServlet;
 
 public class DevConsoleRemote {
     public static final transient String CONTEXT_CALLER_CLIENT_INSTANCE_UID = DevConsoleRemote.class

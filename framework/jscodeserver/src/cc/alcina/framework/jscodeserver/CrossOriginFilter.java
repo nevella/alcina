@@ -15,7 +15,7 @@
 //  You may elect to redistribute this code under either of these licenses.
 //  ========================================================================
 //
-package cc.alcina.framework.classmeta;
+package cc.alcina.framework.jscodeserver;
 
 import java.io.IOException;
 import java.util.ArrayList;
