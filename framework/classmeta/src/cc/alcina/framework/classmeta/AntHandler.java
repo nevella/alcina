@@ -85,8 +85,15 @@ public class AntHandler extends AbstractHandler {
                     if (Ax.isBlank(project.rebuildCommand)) {
                         continue;
                     }
-                    String script = Ax.format("cd %s && /usr/local/bin/%s",
-                            project.path, project.rebuildCommand);
+                    String script = null;
+                    if (project.rebuildCommand.startsWith("ant")) {
+                        script = Ax.format("cd %s && /usr/local/bin/%s",
+                                project.path, project.rebuildCommand);
+                    } else if (project.rebuildCommand.startsWith("bpx")) {
+                        script = Ax.format("/dk/%s", project.rebuildCommand);
+                    } else {
+                        throw new UnsupportedOperationException();
+                    }
                     try {
                         new ShellWrapper().runBashScript(script);
                     } catch (Exception e) {
