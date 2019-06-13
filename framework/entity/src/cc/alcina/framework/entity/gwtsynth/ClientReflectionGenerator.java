@@ -312,7 +312,7 @@ public class ClientReflectionGenerator extends Generator {
                 "public native <T> T newInstance0(Class<T> clazz, long objectId, long localId) /*-{");
         sw.indent();
         sw.println(String.format(
-                "var constructor = this.@%s::createLookup[clazz];",
+                "var constructor = this.@%s::createLookup.get(clazz);",
                 qualifiedImplName));
         sw.println("return constructor ? constructor() : null;");
         sw.outdent();
@@ -437,15 +437,16 @@ public class ClientReflectionGenerator extends Generator {
             sw.println(String.format("private native void %s(Class clazz)/*-{",
                     registerMethodName));
             sw.indent();
-            sw.println("var closure=this;");
-            sw.println(String.format(
-                    "this.@%s::createLookup[clazz] = function() {",
-                    qualifiedImplName));
+            sw.println("var closure = this;");
+            sw.println(
+                    String.format("var fn = function() {", qualifiedImplName));
             sw.indent();
             sw.println(String.format("return closure.@%s::%s()();",
                     qualifiedImplName, createMethodName));
             sw.outdent();
             sw.println("};");
+            sw.println(String.format("this.@%s::createLookup.set(clazz,fn);",
+                    qualifiedImplName));
             sw.outdent();
             sw.println("}-*/;");
             sw.println();
@@ -453,7 +454,7 @@ public class ClientReflectionGenerator extends Generator {
         }
         sw.println("private native void initCreateLookup0()/*-{");
         sw.indent();
-        sw.println(String.format("this.@%s::createLookup = [];",
+        sw.println(String.format("this.@%s::createLookup = new Map();",
                 qualifiedImplName));
         sw.outdent();
         sw.println("}-*/;");

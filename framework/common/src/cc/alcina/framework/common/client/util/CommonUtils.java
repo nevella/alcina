@@ -1317,6 +1317,17 @@ public class CommonUtils {
         return dedupe;
     }
 
+    public static String renderWholeOrTwoPlaces(double d) {
+        if (d == Math.floor(d)) {
+            return String.valueOf((int) d);
+        } else {
+            int whole = (int) Math.floor(d);
+            int fractional = (int) Math.round((d - whole) * 100);
+            return formatJ("%s.%s", whole,
+                    padStringLeft(String.valueOf(fractional), 2, ' '));
+        }
+    }
+
     public static <T> Collection<T> reverse(Collection<T> collection) {
         List list = new ArrayList<>(collection);
         Collections.reverse(list);

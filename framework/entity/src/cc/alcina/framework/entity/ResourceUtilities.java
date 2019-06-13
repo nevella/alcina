@@ -511,6 +511,12 @@ public class ResourceUtilities {
         }
     }
 
+    @SuppressWarnings("deprecation")
+    public static String readClazzp(String path) {
+        return readClassPathResourceAsString(
+                sun.reflect.Reflection.getCallerClass(2), path);
+    }
+
     public static byte[] readFileToByteArray(File f) throws IOException {
         FileInputStream fis = new FileInputStream(f);
         return readStreamToByteArray(fis);
