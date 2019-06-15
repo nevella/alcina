@@ -184,7 +184,7 @@ public class Publisher {
         result.content = cw.wrappedContent;
         if (deliveryModel
                 .provideContentDeliveryType() == ContentDeliveryType.PRINT) {
-            if (result.content == null & (AppPersistenceBase.isTest()
+            if (result.content == null && (AppPersistenceBase.isTest()
                     || LooseContext.is(CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT))) {
                 result.content = Base64Utils.toBase64(cw.wrappedBytes);
             }
