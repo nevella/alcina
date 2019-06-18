@@ -159,6 +159,13 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
                         lookup.remove((Object[]) tuple);
                     }
                 } else {
+                    if (isUnique()) {
+                        Object[] keys = Arrays.copyOf(values,
+                                values.length - 1);
+                        if (!lookup.checkKeys(keys)) {
+                            return;
+                        }
+                    }
                     lookup.remove(values);
                 }
             } catch (Exception e) {
