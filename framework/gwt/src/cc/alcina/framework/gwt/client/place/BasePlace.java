@@ -68,6 +68,12 @@ public abstract class BasePlace extends Place implements Serializable {
                 toTokenString());
     }
 
+    public String toTitleString() {
+        String category = getClass().getSimpleName().replaceFirst("(.*)Place",
+                "$1");
+        return category;
+    }
+
     public String toTokenString() {
         return tokenFor(this);
     }
