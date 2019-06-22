@@ -134,6 +134,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
     private Object loadTransformRequestLock = new Object();
 
+    private DomainStoreTransformSequencer transformSequencer = new DomainStoreTransformSequencer(
+            this);
+
     public DomainStoreLoaderDatabase(DomainStore store, DataSource dataSource,
             ThreadPoolExecutor warmupExecutor) {
         this.store = store;
