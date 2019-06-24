@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -174,11 +175,18 @@ public class DomainStoreTransformSequencer {
                 tableName);
         try (PreparedStatement pStatement = conn.prepareStatement(sql)) {
             HighestVisibleTransactions transactionsData = new HighestVisibleTransactions();
-            pStatement.setTimestamp(1,
-                    highestVisibleTransactions.commitTimestamp);
+            Timestamp fromTimestamp = highestVisibleTransactions.commitTimestamp;
+            if (CommonUtils.getYear(new Date(fromTimestamp.getTime())) < 1972) {
+                fromTimestamp = new Timestamp(fromTimestamp.getTime() + 1);
+                logger.info("Bumping timestamp - {}", fromTimestamp.getTime());
+            }
+            pStatement.setTimestamp(1, fromTimestamp);
             ResultSet rs = pStatement.executeQuery();
             List<DtrIdTimestamp> txData = new ArrayList<>();
-            while (rs.next()) {
+            // normally it'll be one dtr per timestamp. If more than 1000, we're
+            // looking at an initial cleanup - ignore
+            int maxCurrent = 1000;
+            while (rs.next() && maxCurrent-- > 0) {
                 DtrIdTimestamp element = new DtrIdTimestamp();
                 element.id = rs.getLong("id");
                 element.commitTimestamp = rs

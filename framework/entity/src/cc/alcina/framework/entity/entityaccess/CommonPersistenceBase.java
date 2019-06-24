@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.transaction.UserTransaction;
 
 import org.slf4j.Logger;
 
@@ -1324,6 +1325,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
     protected String getUserNamePropertyName() {
         return "userName";
     }
+
+    protected abstract UserTransaction getUserTransaction();
 
     protected SearchResultsBase projectSearchResults(SearchResultsBase result) {
         return new EntityUtils().detachedClone(result);
