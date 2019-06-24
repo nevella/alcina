@@ -413,7 +413,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
     public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
             boolean createIfNonexistent, Long ignoreId, boolean caseInsensitive,
             boolean livePermissionsManager) {
+        boolean hadException = false;
         try {
+            getEntityManager().getTransaction().begin();
             if (livePermissionsManager) {
                 connectPermissionsManagerToLiveObjects();
             }
@@ -446,7 +448,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
             }
             return (T) ((l.size() == 0) ? null : l.get(0));
         } catch (Exception e) {
+            hadException = true;
             throw new WrappedRuntimeException(e);
+        } finally {
+            try {
+                if (hadException) {
+                    getEntityManager().getTransaction().rollback();
+                } else {
+                    getEntityManager().getTransaction().commit();
+                }
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -1019,12 +1032,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
     @Override
     public void setField(Class clazz, Long id, String key, Object value)
             throws Exception {
+        getEntityManager().getTransaction().begin();
         AppPersistenceBase.checkNotReadOnly();
         Object inst = getEntityManager().find(clazz, id);
         PropertyDescriptor descriptor = SEUtilities
                 .getPropertyDescriptorByName(clazz, key);
         descriptor.getWriteMethod().invoke(inst, value);
         getEntityManager().merge(inst);
+        getEntityManager().getTransaction().commit();
     }
 
     @Override
