@@ -48,7 +48,6 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
-import cc.alcina.framework.common.client.domain.DomainDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
 import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainProjection;
@@ -102,7 +101,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
     private DomainStore store;
 
-    private DataSource dataSource;
+    DataSource dataSource;
 
     private ThreadPoolExecutor warmupExecutor;
 
@@ -126,15 +125,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
     private List<LaterLookup> warmupLaterLookups = new ArrayList<>();
 
-    private DomainDescriptor domainDescriptor;
+    DomainStoreDescriptor domainDescriptor;
 
     private boolean loadingSegment;
 
-    private Map<JoinTable, DomainClassDescriptor> joinTableClassDescriptor = new LinkedHashMap<>();;
+    private Map<JoinTable, DomainClassDescriptor> joinTableClassDescriptor = new LinkedHashMap<>();
 
-    private Object loadTransformRequestLock = new Object();
+    private Object loadTransformRequestLock = new Object();;
 
-    private DomainStoreTransformSequencer transformSequencer = new DomainStoreTransformSequencer(
+    DomainStoreTransformSequencer transformSequencer = new DomainStoreTransformSequencer(
             this);
 
     public DomainStoreLoaderDatabase(DomainStore store, DataSource dataSource,
@@ -158,6 +157,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
     @Override
     public LazyObjectLoader getLazyObjectLoader() {
         return backupLazyLoader;
+    }
+
+    public DomainStore getStore() {
+        return this.store;
+    }
+
+    @Override
+    public DomainStoreTransformSequencer getTransformSequencer() {
+        return this.transformSequencer;
     }
 
     public void invokeAllWithThrow(List tasks) throws Exception {
@@ -194,6 +202,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
     }
 
     @Override
+    public void onTransformsPersisted() {
+        try {
+            transformSequencer.ensureTransactionCommitTimes();
+        } catch (SQLException e) {
+            logger.warn("Exception in ensureTransactionCommitTimes ", e);
+        }
+    }
+
+    @Override
     public void warmup() throws Exception {
         this.domainDescriptor = store.domainDescriptor;
         joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
@@ -202,8 +219,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         oneToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
         domainStoreColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
         columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
-        createWarmupConnections();
         MetricLogging.get().start("domainStore-all");
+        transformSequencer.ensureTransactionCommitTimes();
+        createWarmupConnections();
+        {
+            Connection conn = getConnection();
+            transformSequencer.markHighestVisibleTransformList(conn);
+            releaseConn(conn);
+        }
         // get non-many-many obj
         store.threads.lock(true);
         // lazy tables, load a segment (for large db dev work)
@@ -370,27 +393,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                 throw new WrappedRuntimeException(e);
             }
         }, clazz, pd);
-    }
-
-    private Connection getConnection() {
-        if (store.initialising) {
-            try {
-                return getWarmupConnection();
-            } catch (Exception e) {
-                throw new WrappedRuntimeException(e);
-            }
-        }
-        try {
-            synchronized (postInitConnectionLock) {
-                if (postInitConn == null) {
-                    resetConnection();
-                }
-            }
-            postInitConnectionLock.lock();
-            return postInitConn;
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
     }
 
     private Class getTargetEntityType(Method rm) {
@@ -931,21 +933,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         }
     }
 
-    private void releaseConn(Connection conn) {
-        if (conn == null) {
-            return;
-        }
-        try {
-            if (store.initialising) {
-                releaseWarmupConnection(conn);
-            } else {
-                postInitConnectionLock.unlock();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     private void setupInitialJoinTableCalls(List<Callable> calls) {
         for (Entry<PropertyDescriptor, JoinTable> entry : joinTables
                 .entrySet()) {
@@ -1003,6 +990,42 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
     protected synchronized void releaseWarmupConnection(Connection conn) {
         warmupConnections.add(conn, -1);
+    }
+
+    Connection getConnection() {
+        if (store.initialising) {
+            try {
+                return getWarmupConnection();
+            } catch (Exception e) {
+                throw new WrappedRuntimeException(e);
+            }
+        }
+        try {
+            synchronized (postInitConnectionLock) {
+                if (postInitConn == null) {
+                    resetConnection();
+                }
+            }
+            postInitConnectionLock.lock();
+            return postInitConn;
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    void releaseConn(Connection conn) {
+        if (conn == null) {
+            return;
+        }
+        try {
+            if (store.initialising) {
+                releaseWarmupConnection(conn);
+            } else {
+                postInitConnectionLock.unlock();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     // calling thread already has connection lock
@@ -1459,7 +1482,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
         private String tableNameOverride;
 
-        private DomainDescriptor domainDescriptor;
+        private DomainStoreDescriptor domainDescriptor;
 
         private DomainStoreLoaderDatabase loader;
 

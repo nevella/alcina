@@ -13,7 +13,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.domain.IDomainSegmentLoader;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multiset;
@@ -25,8 +24,7 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.C
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.LaterLookup.LaterItem;
 import cc.alcina.framework.entity.util.SimpleAtomModel.AtomKey;
 
-public abstract class DomainSegmentLoader
-        implements IDomainSegmentLoader, ConnResultsReuse {
+public abstract class DomainSegmentLoader implements ConnResultsReuse {
     List<LaterItem> toResolve = new ArrayList<>();
 
     Multiset<Class, Set<Long>> toLoadIds = new Multiset<>();

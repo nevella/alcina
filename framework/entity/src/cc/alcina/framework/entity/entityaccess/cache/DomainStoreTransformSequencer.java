@@ -1,7 +1,275 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-class DomainStoreTransformSequencer {
-    public DomainStoreTransformSequencer(
-            DomainStoreLoaderDatabase loaderDatabase) {
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import javax.persistence.Table;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.projection.GraphProjection;
+
+/**
+ * dtrp - start persist time (set in persister), committime
+ * 
+ * and that's all she wrote. updater sets persist/committime to update time,
+ * 
+ * @author nick@alcina.cc
+ *
+ */
+public class DomainStoreTransformSequencer {
+    private DomainStoreLoaderDatabase loaderDatabase;
+
+    Logger logger = LoggerFactory.getLogger(getClass());
+
+    private HighestVisibleTransactions highestVisibleTransactions;
+
+    private Connection connection;
+
+    // manually synchronized
+    Map<Long, CountDownLatch> dbCommitSequencerBarriers = new LinkedHashMap<>();
+
+    Map<Long, CountDownLatch> localFireBarriers = new LinkedHashMap<>();
+
+    DomainStoreTransformSequencer(DomainStoreLoaderDatabase loaderDatabase) {
+        this.loaderDatabase = loaderDatabase;
+    }
+
+    public void finishedFiringLocalEvent(long requestId) {
+        if (!loaderDatabase.domainDescriptor
+                .isUseTransformDbCommitSequencing()) {
+            return;
+        }
+        synchronized (dbCommitSequencerBarriers) {
+            dbCommitSequencerBarriers.remove(requestId);
+        }
+        synchronized (localFireBarriers) {
+            CountDownLatch removed = localFireBarriers.remove(requestId);
+            removed.countDown();
+        }
+    }
+
+    public synchronized List<Long> getSequentialUnpublishedTransformIds() {
+        try {
+            return getSequentialUnpublishedTransformIds0();
+        } catch (Exception e) {
+            // FIXME - log. Wait for retry (which will be pushed from kafka)
+            e.printStackTrace();
+            connection = null;
+            return new ArrayList<>();
+        }
+    }
+
+    public void removeBarrier(Long id) {
+        ensureBarrier(id).countDown();
+    }
+
+    public void waitForBarrier(long firstRequestId) {
+        if (!loaderDatabase.domainDescriptor
+                .isUseTransformDbCommitSequencing()) {
+            return;
+        } else {
+            ensureLocalFireBarrier(firstRequestId);
+            CountDownLatch latch = ensureBarrier(firstRequestId);
+            loaderDatabase.getStore().getPersistenceEvents().getQueue()
+                    .sequencedTransformRequestPublished();
+            try {
+                latch.await(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void waitForLocalVmTransformEvent(Long id) {
+        try {
+            ensureLocalFireBarrier(id).await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private CountDownLatch ensureBarrier(long requestId) {
+        synchronized (dbCommitSequencerBarriers) {
+            return dbCommitSequencerBarriers.computeIfAbsent(requestId,
+                    id -> new CountDownLatch(1));
+        }
+    }
+
+    private CountDownLatch ensureLocalFireBarrier(long requestId) {
+        synchronized (localFireBarriers) {
+            return localFireBarriers.computeIfAbsent(requestId,
+                    id -> new CountDownLatch(1));
+        }
+    }
+
+    private Connection getConnection() throws SQLException {
+        if (connection == null) {
+            connection = loaderDatabase.dataSource.getConnection();
+        }
+        return connection;
+    }
+
+    private HighestVisibleTransactions getHighestVisibleTransformRequest(
+            Connection conn) throws SQLException {
+        try (Statement statement = conn.createStatement()) {
+            Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
+                    .getDomainTransformRequestPersistentClass();
+            String tableName = persistentClass.getAnnotation(Table.class)
+                    .name();
+            String sql = Ax.format(
+                    "select id, transactionCommitTime from %s where transactionCommitTime is not null order by transactionCommitTime desc limit 1",
+                    tableName);
+            HighestVisibleTransactions transactionsData = new HighestVisibleTransactions();
+            ResultSet rs = statement.executeQuery(sql);
+            transactionsData.commitTimestamp = new Timestamp(0);
+            if (rs.next()) {
+                transactionsData.commitTimestamp = rs
+                        .getTimestamp("transactionCommitTime");
+                rs.close();
+                PreparedStatement idStatement = conn.prepareStatement(Ax.format(
+                        "select id from %s where transactionCommitTime=? ",
+                        tableName));
+                idStatement.setTimestamp(1, transactionsData.commitTimestamp);
+                ResultSet idRs = idStatement.executeQuery();
+                while (idRs.next()) {
+                    transactionsData.transformListIds.add(idRs.getLong("id"));
+                }
+                logger.debug("Got highestVisible request data : {}",
+                        transactionsData);
+            }
+            return transactionsData;
+        }
+    }
+
+    private List<Long> getSequentialUnpublishedTransformIds0()
+            throws Exception {
+        List<Long> unpublishedIds = new ArrayList<>();
+        Connection conn = getConnection();
+        ensureTransactionCommitTimes();
+        Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
+                .getDomainTransformRequestPersistentClass();
+        String tableName = persistentClass.getAnnotation(Table.class).name();
+        String sql = Ax.format(
+                "select id, transactionCommitTime from %s where transactionCommitTime >=? "
+                        + "and transactionCommitTime is not null "
+                        + "order by transactionCommitTime ",
+                tableName);
+        try (PreparedStatement pStatement = conn.prepareStatement(sql)) {
+            HighestVisibleTransactions transactionsData = new HighestVisibleTransactions();
+            pStatement.setTimestamp(1,
+                    highestVisibleTransactions.commitTimestamp);
+            ResultSet rs = pStatement.executeQuery();
+            List<DtrIdTimestamp> txData = new ArrayList<>();
+            while (rs.next()) {
+                DtrIdTimestamp element = new DtrIdTimestamp();
+                element.id = rs.getLong("id");
+                element.commitTimestamp = rs
+                        .getTimestamp("transactionCommitTime");
+                if (element.commitTimestamp
+                        .equals(highestVisibleTransactions.commitTimestamp)
+                        && highestVisibleTransactions.transformListIds
+                                .contains(element.id)) {
+                    continue;// already submitted/published
+                }
+                txData.add(element);
+            }
+            txData.stream().map(txd -> txd.id).forEach(unpublishedIds::add);
+            Map<Timestamp, List<DtrIdTimestamp>> collect = txData.stream()
+                    .collect(AlcinaCollectors
+                            .toKeyMultimap(txd -> txd.commitTimestamp));
+            if (collect.isEmpty()) {
+            } else {
+                Entry<Timestamp, List<DtrIdTimestamp>> last = CommonUtils
+                        .last(collect.entrySet().iterator());
+                List<Long> lastIds = last.getValue().stream().map(txd -> txd.id)
+                        .collect(Collectors.toList());
+                if (last.getKey()
+                        .equals(highestVisibleTransactions.commitTimestamp)) {
+                    lastIds.addAll(highestVisibleTransactions.transformListIds);
+                }
+                highestVisibleTransactions = new HighestVisibleTransactions();
+                highestVisibleTransactions.commitTimestamp = last.getKey();
+                highestVisibleTransactions.transformListIds = lastIds;
+            }
+            return unpublishedIds;
+        }
+    }
+
+    void ensureTransactionCommitTimes() throws SQLException {
+        /* postgres specific */
+        Connection conn = getConnection();
+        try (Statement statement = conn.createStatement()) {
+            Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
+                    .getDomainTransformRequestPersistentClass();
+            String tableName = persistentClass.getAnnotation(Table.class)
+                    .name();
+            String sql = Ax.format(
+                    "select id,startPersistTime, pg_xact_commit_timestamp(xmin) as commit_timestamp from %s where transactionCommitTime is null",
+                    tableName);
+            ResultSet rs = statement.executeQuery(sql);
+            while (rs.next()) {
+                long id = rs.getLong("id");
+                PreparedStatement updateStatement = conn.prepareStatement(Ax
+                        .format("update %s set transactionCommitTime=? where id=?",
+                                tableName));
+                Timestamp commit_timestamp = rs
+                        .getTimestamp("commit_timestamp");
+                updateStatement.setTimestamp(1, commit_timestamp);
+                updateStatement.setLong(2, id);
+                updateStatement.executeUpdate();
+                updateStatement.close();
+                logger.debug("Updated transactionCommitTime for request {}",
+                        id);
+            }
+            rs.close();
+        }
+    }
+
+    void markHighestVisibleTransformList(Connection conn) throws SQLException {
+        if (!loaderDatabase.domainDescriptor
+                .isUseTransformDbCommitSequencing()) {
+            return;
+        }
+        highestVisibleTransactions = getHighestVisibleTransformRequest(conn);
+    }
+
+    static class DtrIdTimestamp {
+        long id;
+
+        Timestamp commitTimestamp;
+
+        @Override
+        public String toString() {
+            return GraphProjection.fieldwiseToString(this);
+        }
+    }
+
+    static class HighestVisibleTransactions {
+        List<Long> transformListIds = new ArrayList<>();
+
+        Timestamp commitTimestamp;
+
+        @Override
+        public String toString() {
+            return GraphProjection.fieldwiseToString(this);
+        }
     }
 }

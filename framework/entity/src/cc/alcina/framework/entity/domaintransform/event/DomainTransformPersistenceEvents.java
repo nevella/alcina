@@ -39,6 +39,7 @@ public class DomainTransformPersistenceEvents {
 
     public void fireDomainTransformPersistenceEvent(
             DomainTransformPersistenceEvent event) {
+        DomainStore.writableStore().onTransformsPersisted();
         fireDomainTransformPersistenceEvent0(event);
         event.getPostEventRunnables().forEach(Runnable::run);
     }
@@ -57,36 +58,51 @@ public class DomainTransformPersistenceEvents {
         queue.startEventQueue();
     }
 
-    private synchronized void fireDomainTransformPersistenceEvent0(
+    private void fireDomainTransformPersistenceEvent0(
             DomainTransformPersistenceEvent event) {
-        try {
-            queue.logFiring(event);
-            if (event.getPersistedRequestIds() != null) {
-                event.getPersistedRequestIds()
-                        .forEach(queue::transformRequestQueuedLocal);
-            }
-            for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
-                    listenerList)) {
-                // only fire ex-machine transforms to certain general listeners
-                if (event.isLocalToVm()
-                        || nonThreadListenerList.contains(listener)) {
-                    try {
-                        InternalMetrics.get().startTracker(event,
-                                () -> describeEvent(event),
-                                InternalMetricTypeAlcina.service,
-                                Thread.currentThread().getName());
-                        listener.onDomainTransformRequestPersistence(event);
-                    } finally {
-                        InternalMetrics.get().endTracker(event);
+        boolean hasRequests = event.getPersistedRequestIds() != null
+                && event.getPersistedRequestIds().size() > 0;
+        long firstRequestId = hasRequests
+                ? event.getPersistedRequestIds().get(0)
+                : 0;
+        if (hasRequests && event.isLocalToVm()) {
+            domainStore.getTransformSequencer().waitForBarrier(firstRequestId);
+        }
+        synchronized (this) {
+            try {
+                queue.logFiring(event);
+                if (hasRequests) {
+                    event.getPersistedRequestIds()
+                            .forEach(queue::transformRequestQueued);
+                }
+                for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
+                        listenerList)) {
+                    // only fire ex-machine transforms to certain general
+                    // listeners
+                    if (event.isLocalToVm()
+                            || nonThreadListenerList.contains(listener)) {
+                        try {
+                            InternalMetrics.get().startTracker(event,
+                                    () -> describeEvent(event),
+                                    InternalMetricTypeAlcina.service,
+                                    Thread.currentThread().getName());
+                            listener.onDomainTransformRequestPersistence(event);
+                        } finally {
+                            InternalMetrics.get().endTracker(event);
+                        }
                     }
                 }
+            } finally {
+                if (hasRequests) {
+                    event.getPersistedRequestIds()
+                            .forEach(queue::transformRequestPublished);
+                }
+                queue.logFired(event);
+                if (hasRequests && event.isLocalToVm()) {
+                    domainStore.getTransformSequencer()
+                            .finishedFiringLocalEvent(firstRequestId);
+                }
             }
-        } finally {
-            if (event.getPersistedRequestIds() != null) {
-                event.getPersistedRequestIds()
-                        .forEach(queue::transformRequestPublishedLocal);
-            }
-            queue.logFired(event);
         }
     }
 
@@ -94,5 +110,10 @@ public class DomainTransformPersistenceEvents {
         return Ax.format("Persistence event: id: %s - %s",
                 CommonUtils.first(event.getPersistedRequestIds()),
                 event.getPersistenceEventType());
+    }
+
+    boolean isUseTransformDbCommitSequencing() {
+        return domainStore.getDomainDescriptor()
+                .isUseTransformDbCommitSequencing();
     }
 }

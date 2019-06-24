@@ -198,7 +198,7 @@ public class DomainStore implements IDomainStore {
 
     SubgraphTransformManagerRemoteOnly transformManager;
 
-    DomainDescriptor domainDescriptor;
+    DomainStoreDescriptor domainDescriptor;
 
     Logger sqlLogger = AlcinaLogUtils.getTaggedLogger(getClass(), "sql");
 
@@ -266,7 +266,7 @@ public class DomainStore implements IDomainStore {
 
     public String name;
 
-    public DomainStore(DomainDescriptor descriptor) {
+    public DomainStore(DomainStoreDescriptor descriptor) {
         this();
         this.domainDescriptor = descriptor;
     }
@@ -320,7 +320,7 @@ public class DomainStore implements IDomainStore {
         return this.cache;
     }
 
-    public DomainDescriptor getDomainDescriptor() {
+    public DomainStoreDescriptor getDomainDescriptor() {
         return this.domainDescriptor;
     }
 
@@ -338,6 +338,10 @@ public class DomainStore implements IDomainStore {
 
     public DomainStorePersistenceListener getPersistenceListener() {
         return this.persistenceListener;
+    }
+
+    public DomainStoreTransformSequencer getTransformSequencer() {
+        return loader.getTransformSequencer();
     }
 
     public DomainStoreInstrumentation instrumentation() {
@@ -373,6 +377,10 @@ public class DomainStore implements IDomainStore {
     public DomainTransformRequestPersistent loadTransformRequest(Long id,
             Logger logger) throws Exception {
         return loader.loadTransformRequest(id, logger);
+    }
+
+    public void onTransformsPersisted() {
+        loader.onTransformsPersisted();
     }
 
     public void readLockExpectLongRunning(boolean lock) {
@@ -813,6 +821,7 @@ public class DomainStore implements IDomainStore {
             threads.lock(true);
             postProcessStart = System.currentTimeMillis();
             MetricLogging.get().start("post-process");
+            Set<Object> indexedViaUpdateAssociation = new LinkedHashSet<>();
             threads.postProcessWriterThread = Thread.currentThread();
             postProcessEvent = persistenceEvent;
             health.domainStorePostProcessStartTime = System.currentTimeMillis();
@@ -823,6 +832,17 @@ public class DomainStore implements IDomainStore {
                     dtes);
             Multimap<HiliLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
                     .multimap(filtered, new DteToLocatorMapper());
+            Set<HasIdAndLocalId> indexAtEnd = new LinkedHashSet<>();
+            Consumer<HasIdAndLocalId> beforeUpdateHandler = targetObject -> {
+                if (indexedViaUpdateAssociation.add(targetObject)) {
+                    // this may double-up with indexing via normal sequencing -
+                    // but doubling doesn't hurt for de-indexing (reverse ain't
+                    // true though)
+                    index(targetObject, false);
+                    indexAtEnd.add(targetObject);
+                }
+            };
+            transformManager.registerBeforeUpdateHandler(beforeUpdateHandler);
             Map<HiliLocator, HasIdAndLocalId> locatorOriginalSourceMap = new LinkedHashMap<HiliLocator, HasIdAndLocalId>();
             for (DomainTransformEvent dte : filtered) {
                 HiliLocator locator = HiliLocator.objectLocator(dte);
@@ -910,11 +930,14 @@ public class DomainStore implements IDomainStore {
                     }
                 }
             }
+            indexAtEnd.forEach(
+                    domainStoreObject -> index(domainStoreObject, true));
             doEvictions();
         } catch (Exception e) {
             causes.add(e);
         } finally {
             transformManager.endCommit();
+            transformManager.registerBeforeUpdateHandler(null);
             health.domainStorePostProcessStartTime = 0;
             threads.postProcessWriterThread = null;
             postProcessEvent = null;
@@ -951,7 +974,7 @@ public class DomainStore implements IDomainStore {
     }
 
     public static class Builder {
-        private DomainDescriptor descriptor;
+        private DomainStoreDescriptor descriptor;
 
         private ThreadPoolExecutor warmupExecutor;
 
@@ -981,7 +1004,7 @@ public class DomainStore implements IDomainStore {
             return domainStore;
         }
 
-        public Builder withDomainDescriptor(DomainDescriptor descriptor) {
+        public Builder withDomainDescriptor(DomainStoreDescriptor descriptor) {
             this.descriptor = descriptor;
             return this;
         }
@@ -1616,9 +1639,24 @@ public class DomainStore implements IDomainStore {
     }
 
     class SubgraphTransformManagerRemoteOnly extends SubgraphTransformManager {
+        ThreadLocal<Consumer<HasIdAndLocalId>> beforeUpdateHandlers = new ThreadLocal<>();
+
         public void addPropertyStore(DomainClassDescriptor descriptor) {
             ((PsAwareMultiplexingObjectCache) store.getCache())
                     .addPropertyStore(descriptor);
+        }
+
+        public void registerBeforeUpdateHandler(
+                Consumer<HasIdAndLocalId> beforeUpdateHandler) {
+            beforeUpdateHandlers.set(beforeUpdateHandler);
+        }
+
+        @Override
+        protected void beforeAssociationChange(HasIdAndLocalId tgt) {
+            Consumer<HasIdAndLocalId> handler = beforeUpdateHandlers.get();
+            if (handler != null) {
+                handler.accept(tgt);
+            }
         }
 
         @Override

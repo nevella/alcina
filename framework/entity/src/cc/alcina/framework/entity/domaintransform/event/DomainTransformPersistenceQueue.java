@@ -37,6 +37,7 @@ import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreTransformSequencer;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
@@ -53,7 +54,7 @@ public class DomainTransformPersistenceQueue {
 
     final Logger logger = LoggerFactory.getLogger(getClass());
 
-    Set<Long> firing = new LinkedHashSet<>();
+    Set<Long> firingLocalToVm = new LinkedHashSet<>();
 
     // most recent event
     Set<Long> lastFired = new LinkedHashSet<>();
@@ -100,8 +101,15 @@ public class DomainTransformPersistenceQueue {
 
     public void registerPersisting(DomainTransformRequestPersistent dtrp) {
         synchronized (queueModificationLock) {
-            firing.add(dtrp.getId());
+            firingLocalToVm.add(dtrp.getId());
         }
+    }
+
+    public void sequencedTransformRequestPublished() {
+        List<Long> sequentialUnpublishedTransformIds = persistenceEvents.domainStore
+                .getTransformSequencer().getSequentialUnpublishedTransformIds();
+        fireSequentialUnpublishedTransformIds(
+                sequentialUnpublishedTransformIds);
     }
 
     public void startEventQueue() {
@@ -109,17 +117,11 @@ public class DomainTransformPersistenceQueue {
         eventQueue.start();
     }
 
-    public void transformRequestPublished(long id) {
-        synchronized (queueModificationLock) {
-            if (firedOrQueued.contains(id)) {
-                return;
-            } else {
-                firedOrQueued.add(id);
-                synchronized (toFire) {
-                    toFire.add(id);
-                    toFire.notify();
-                }
-            }
+    public void transformRequestPublished(Long id) {
+        if (persistenceEvents.isUseTransformDbCommitSequencing()) {
+            sequencedTransformRequestPublished();
+        } else {
+            transformRequestPublishedSequential(id);
         }
     }
 
@@ -181,6 +183,13 @@ public class DomainTransformPersistenceQueue {
         return persistenceEvent;
     }
 
+    private void fireSequentialUnpublishedTransformIds(
+            List<Long> sequentialUnpublishedTransformIds) {
+        for (Long sequentialId : sequentialUnpublishedTransformIds) {
+            transformRequestPublishedSequential(sequentialId);
+        }
+    }
+
     private Logger getLogger(boolean localToVm) {
         return localToVm ? logger : eventQueue.fireEventThreadLogger;
     }
@@ -202,6 +211,20 @@ public class DomainTransformPersistenceQueue {
                     .setDisabledPerThreadPerObjectPermissions(false);
             ThreadedPermissionsManager.cast().popSystemUser();
             LooseContext.pop();
+        }
+    }
+
+    private void transformRequestPublishedSequential(long id) {
+        synchronized (queueModificationLock) {
+            if (firedOrQueued.contains(id)) {
+                return;
+            } else {
+                firedOrQueued.add(id);
+                synchronized (toFire) {
+                    toFire.add(id);
+                    toFire.notify();
+                }
+            }
         }
     }
 
@@ -245,15 +268,15 @@ public class DomainTransformPersistenceQueue {
                         CollectionFilters.max(persistedRequestIds)));
     }
 
-    void transformRequestPublishedLocal(long id) {
+    void transformRequestPublished(long id) {
         synchronized (queueModificationLock) {
             firedOrQueued.add(id);
             lastFired.add(id);
-            firing.remove(id);
+            firingLocalToVm.remove(id);
         }
     }
 
-    void transformRequestQueuedLocal(long id) {
+    void transformRequestQueued(long id) {
         synchronized (queueModificationLock) {
             firedOrQueued.add(id);
         }
@@ -309,33 +332,47 @@ public class DomainTransformPersistenceQueue {
             }
         }
 
-        protected void publishTransformEvent(Long id) {
-            try {
-                DomainTransformRequestPersistent request = null;
-                if (persistenceEvents.domainStore == DomainStore.stores()
-                        .writableStore()) {
-                    // TODO - could replace with the DomainStore loader - but wd
-                    // need to load modification etc user
-                    List<DomainTransformRequestPersistent> requests = runWithDisabledObjectPermissions(
-                            () -> getCommonPersistence()
-                                    .getPersistentTransformRequests(0, 0,
-                                            Collections.singletonList(id),
-                                            false, true,
-                                            fireEventThreadLogger));
-                    request = CommonUtils.first(requests);
-                } else {
-                    request = persistenceEvents.domainStore
-                            .loadTransformRequest(id, fireEventThreadLogger);
+        private void publishTransformEvent(Long id) {
+            boolean local = false;
+            synchronized (queueModificationLock) {
+                local = firingLocalToVm.contains(id);
+            }
+            if (local) {
+                DomainStoreTransformSequencer transformSequencer = DomainStore
+                        .writableStore().getTransformSequencer();
+                transformSequencer.removeBarrier(id);
+                transformSequencer.waitForLocalVmTransformEvent(id);
+                return;
+            } else {
+                try {
+                    DomainTransformRequestPersistent request = null;
+                    if (persistenceEvents.domainStore == DomainStore.stores()
+                            .writableStore()) {
+                        // TODO - could replace with the DomainStore loader -
+                        // but wd
+                        // need to load modification etc user
+                        List<DomainTransformRequestPersistent> requests = runWithDisabledObjectPermissions(
+                                () -> getCommonPersistence()
+                                        .getPersistentTransformRequests(0, 0,
+                                                Collections.singletonList(id),
+                                                false, true,
+                                                fireEventThreadLogger));
+                        request = CommonUtils.first(requests);
+                    } else {
+                        request = persistenceEvents.domainStore
+                                .loadTransformRequest(id,
+                                        fireEventThreadLogger);
+                    }
+                    if (request != null) {
+                        DomainTransformPersistenceEvent event = createPersistenceEventFromPersistedRequest(
+                                request);
+                        event.ensureTransformsValidForVm();
+                        persistenceEvents
+                                .fireDomainTransformPersistenceEvent(event);
+                    }
+                } catch (Exception e) {
+                    throw new WrappedRuntimeException(e);
                 }
-                if (request != null) {
-                    DomainTransformPersistenceEvent event = createPersistenceEventFromPersistedRequest(
-                            request);
-                    event.ensureTransformsValidForVm();
-                    persistenceEvents
-                            .fireDomainTransformPersistenceEvent(event);
-                }
-            } catch (Exception e) {
-                throw new WrappedRuntimeException(e);
             }
         }
     }
@@ -345,7 +382,7 @@ public class DomainTransformPersistenceQueue {
 
         public void pauseUntilProcessed(long timeoutMs) {
             synchronized (queueModificationLock) {
-                waiting = new LinkedHashSet<>(firing);
+                waiting = new LinkedHashSet<>(firingLocalToVm);
             }
             long startTime = System.currentTimeMillis();
             while (true) {

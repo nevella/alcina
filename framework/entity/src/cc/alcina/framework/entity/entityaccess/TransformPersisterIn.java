@@ -72,6 +72,7 @@ public class TransformPersisterIn {
             final TransformPersistenceToken token,
             CommonPersistenceBase commonPersistenceBase,
             EntityManager entityManager, DomainTransformLayerWrapper wrapper) {
+        Date startPersistTime = new Date();
         this.entityManager = entityManager;
         IUser incomingUser = PermissionsManager.get().getUser();
         commonPersistenceBase.connectPermissionsManagerToLiveObjects(true);
@@ -334,6 +335,7 @@ public class TransformPersisterIn {
                         DomainTransformRequestPersistent dtrp = dtrqImpl
                                 .newInstance();
                         tm.persist(dtrp);
+                        dtrp.setStartPersistTime(startPersistTime);
                         DomainStore.stores().writableStore()
                                 .getPersistenceEvents().getQueue()
                                 .registerPersisting(dtrp);

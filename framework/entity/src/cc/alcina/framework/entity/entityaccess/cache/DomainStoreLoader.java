@@ -8,10 +8,14 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersiste
 public interface DomainStoreLoader {
     void appShutdown();
 
+    DomainStoreTransformSequencer getTransformSequencer();
+
     LazyObjectLoader getLazyObjectLoader();
 
     DomainTransformRequestPersistent loadTransformRequest(Long id,
             Logger logger) throws Exception;
+
+    void onTransformsPersisted();
 
     void warmup() throws Exception;
 }
