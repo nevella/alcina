@@ -44,7 +44,7 @@ public class DomainStoreTransformSequencer {
 
     private Connection connection;
 
-    // manually synchronized
+    // all access via synchronized methods
     Map<Long, CountDownLatch> dbCommitSequencerBarriers = new LinkedHashMap<>();
 
     Map<Long, CountDownLatch> localFireBarriers = new LinkedHashMap<>();
@@ -53,18 +53,14 @@ public class DomainStoreTransformSequencer {
         this.loaderDatabase = loaderDatabase;
     }
 
-    public void finishedFiringLocalEvent(long requestId) {
+    public synchronized void finishedFiringLocalEvent(long requestId) {
         if (!loaderDatabase.domainDescriptor
                 .isUseTransformDbCommitSequencing()) {
             return;
         }
-        synchronized (dbCommitSequencerBarriers) {
-            dbCommitSequencerBarriers.remove(requestId);
-        }
-        synchronized (localFireBarriers) {
-            CountDownLatch removed = localFireBarriers.remove(requestId);
-            removed.countDown();
-        }
+        dbCommitSequencerBarriers.remove(requestId);
+        CountDownLatch removed = localFireBarriers.remove(requestId);
+        removed.countDown();
     }
 
     public synchronized List<Long> getSequentialUnpublishedTransformIds() {
@@ -92,7 +88,11 @@ public class DomainStoreTransformSequencer {
             loaderDatabase.getStore().getPersistenceEvents().getQueue()
                     .sequencedTransformRequestPublished();
             try {
-                latch.await(10, TimeUnit.SECONDS);
+                boolean normalExit = latch.await(10, TimeUnit.SECONDS);
+                if (!normalExit) {
+                    logger.warn("Timedout waiting for barrier - {} - \n{}",
+                            firstRequestId, debugString());
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -101,24 +101,35 @@ public class DomainStoreTransformSequencer {
 
     public void waitForLocalVmTransformEvent(Long id) {
         try {
-            ensureLocalFireBarrier(id).await();
+            boolean normalExit = ensureLocalFireBarrier(id).await(60,
+                    TimeUnit.SECONDS);
+            if (!normalExit) {
+                logger.warn(
+                        "Timedout waiting for local vm transform - {} - \n{}",
+                        id, debugString());
+                // FIXME - may need to fire a domainstoreexception here -
+                // probable issue with pg/kafka
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    private CountDownLatch ensureBarrier(long requestId) {
-        synchronized (dbCommitSequencerBarriers) {
-            return dbCommitSequencerBarriers.computeIfAbsent(requestId,
-                    id -> new CountDownLatch(1));
-        }
+    private synchronized String debugString() {
+        return Ax.format("Sequencer:\n===========\n%s\n\nQueue:\n=========\n%s",
+                GraphProjection.fieldwiseToString(this),
+                loaderDatabase.getStore().getPersistenceEvents().getQueue()
+                        .toDebugString());
     }
 
-    private CountDownLatch ensureLocalFireBarrier(long requestId) {
-        synchronized (localFireBarriers) {
-            return localFireBarriers.computeIfAbsent(requestId,
-                    id -> new CountDownLatch(1));
-        }
+    private synchronized CountDownLatch ensureBarrier(long requestId) {
+        return dbCommitSequencerBarriers.computeIfAbsent(requestId,
+                id -> new CountDownLatch(1));
+    }
+
+    private synchronized CountDownLatch ensureLocalFireBarrier(long requestId) {
+        return localFireBarriers.computeIfAbsent(requestId,
+                id -> new CountDownLatch(1));
     }
 
     private Connection getConnection() throws SQLException {

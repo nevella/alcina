@@ -39,6 +39,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreTransformSequencer;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
 /**
@@ -115,6 +116,12 @@ public class DomainTransformPersistenceQueue {
     public void startEventQueue() {
         eventQueue = new FireEventsThread();
         eventQueue.start();
+    }
+
+    public String toDebugString() {
+        synchronized (queueModificationLock) {
+            return GraphProjection.fieldwiseToString(this);
+        }
     }
 
     public void transformRequestPublished(Long id) {
