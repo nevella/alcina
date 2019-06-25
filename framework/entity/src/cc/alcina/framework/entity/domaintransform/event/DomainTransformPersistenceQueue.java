@@ -268,7 +268,7 @@ public class DomainTransformPersistenceQueue {
                         CollectionFilters.max(persistedRequestIds)));
     }
 
-    void transformRequestPublished(long id) {
+    void transformRequestFinishedFiring(long id) {
         synchronized (queueModificationLock) {
             firedOrQueued.add(id);
             lastFired.add(id);

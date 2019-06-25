@@ -95,13 +95,17 @@ public class DomainTransformPersistenceEvents {
             } finally {
                 if (hasRequests) {
                     event.getPersistedRequestIds()
-                            .forEach(queue::transformRequestPublished);
+                            .forEach(queue::transformRequestFinishedFiring);
                 }
-                queue.logFired(event);
                 if (hasRequests && event.isLocalToVm()) {
                     domainStore.getTransformSequencer()
                             .finishedFiringLocalEvent(firstRequestId);
                 }
+                /*
+                 * this can block if cascaded transforms were called, so run
+                 * after finishedFiringLocalEvent
+                 */
+                queue.logFired(event);
             }
         }
     }
