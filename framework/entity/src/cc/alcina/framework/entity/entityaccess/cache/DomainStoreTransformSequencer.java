@@ -45,9 +45,9 @@ public class DomainStoreTransformSequencer {
     private Connection connection;
 
     // all access via synchronized methods
-    Map<Long, CountDownLatch> dbCommitSequencerBarriers = new LinkedHashMap<>();
+    Map<Long, CountDownLatch> preLocalNonFireEventsThreadBarrier = new LinkedHashMap<>();
 
-    Map<Long, CountDownLatch> localFireBarriers = new LinkedHashMap<>();
+    Map<Long, CountDownLatch> postLocalFireEventsThreadBarrier = new LinkedHashMap<>();
 
     DomainStoreTransformSequencer(DomainStoreLoaderDatabase loaderDatabase) {
         this.loaderDatabase = loaderDatabase;
@@ -58,8 +58,9 @@ public class DomainStoreTransformSequencer {
                 .isUseTransformDbCommitSequencing()) {
             return;
         }
-        dbCommitSequencerBarriers.remove(requestId);
-        CountDownLatch removed = localFireBarriers.remove(requestId);
+        preLocalNonFireEventsThreadBarrier.remove(requestId);
+        CountDownLatch removed = postLocalFireEventsThreadBarrier
+                .remove(requestId);
         removed.countDown();
     }
 
@@ -74,16 +75,18 @@ public class DomainStoreTransformSequencer {
         }
     }
 
-    public void removeLocalVmTransformEventPreFireBarrier(Long id) {
-        ensureBarrier(id).countDown();
+    public void removePreLocalNonFireEventsThreadBarrier(Long id) {
+        ensurePreLocalNonFireEventsThreadBarrier(id).countDown();
     }
 
     // called by the main firing sequence thread, since the local vm transforms
     // are fired on the transforming thread
-    public void waitForLocalVmTransformEventPostFireBarrier(long requestId) {
+    public void waitForPostLocalFireEventsThreadBarrier(long requestId) {
         try {
-            boolean normalExit = ensureLocalFireBarrier(requestId).await(20,
-                    TimeUnit.SECONDS);
+            // wait longer - local transforms are more important to fire in
+            // order. if this is blocking, that be a prob...but why?
+            boolean normalExit = ensurePostLocalFireEventsThreadBarrier(
+                    requestId).await(20, TimeUnit.SECONDS);
             if (!normalExit) {
                 logger.warn(
                         "Timedout waiting for local vm transform - {} - \n{}",
@@ -98,17 +101,20 @@ public class DomainStoreTransformSequencer {
 
     // called by the transforming thread, to ensure post-fire events are fired
     // in db order
-    public void waitForLocalVmTransformEventPreFireBarrier(long requestId) {
+    public void waitForPreLocalNonFireEventsThreadBarrier(long requestId) {
         if (!loaderDatabase.domainDescriptor
                 .isUseTransformDbCommitSequencing()) {
             return;
         } else {
-            ensureLocalFireBarrier(requestId);
-            CountDownLatch latch = ensureBarrier(requestId);
+            ensurePostLocalFireEventsThreadBarrier(requestId);
+            CountDownLatch latch = ensurePreLocalNonFireEventsThreadBarrier(
+                    requestId);
             loaderDatabase.getStore().getPersistenceEvents().getQueue()
                     .sequencedTransformRequestPublished();
             try {
-                boolean normalExit = latch.await(10, TimeUnit.SECONDS);
+                // don't wait long - this *tries* to apply transforms in order,
+                // but we don't want to block local work
+                boolean normalExit = latch.await(5, TimeUnit.SECONDS);
                 if (!normalExit) {
                     logger.warn("Timedout waiting for barrier - {} - \n{}",
                             requestId, debugString());
@@ -126,13 +132,15 @@ public class DomainStoreTransformSequencer {
                         .toDebugString());
     }
 
-    private synchronized CountDownLatch ensureBarrier(long requestId) {
-        return dbCommitSequencerBarriers.computeIfAbsent(requestId,
+    private synchronized CountDownLatch ensurePostLocalFireEventsThreadBarrier(
+            long requestId) {
+        return postLocalFireEventsThreadBarrier.computeIfAbsent(requestId,
                 id -> new CountDownLatch(1));
     }
 
-    private synchronized CountDownLatch ensureLocalFireBarrier(long requestId) {
-        return localFireBarriers.computeIfAbsent(requestId,
+    private synchronized CountDownLatch ensurePreLocalNonFireEventsThreadBarrier(
+            long requestId) {
+        return preLocalNonFireEventsThreadBarrier.computeIfAbsent(requestId,
                 id -> new CountDownLatch(1));
     }
 
