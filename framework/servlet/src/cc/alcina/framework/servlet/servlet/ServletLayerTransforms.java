@@ -345,6 +345,8 @@ public class ServletLayerTransforms {
                         .transformFromServletLayer(tag);
                 // see preamble to cascading transform support
                 while (cascadingTransformSupport.hasChildren()) {
+                    logger.debug(
+                            "Servlet layer - waiting for cascading transforms");
                     synchronized (cascadingTransformSupport) {
                         if (cascadingTransformSupport.hasChildren()) {
                             cascadingTransformSupport.wait();

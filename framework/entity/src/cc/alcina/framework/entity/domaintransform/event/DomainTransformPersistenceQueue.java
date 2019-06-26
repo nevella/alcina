@@ -347,8 +347,8 @@ public class DomainTransformPersistenceQueue {
             if (local) {
                 DomainStoreTransformSequencer transformSequencer = DomainStore
                         .writableStore().getTransformSequencer();
-                transformSequencer.removeBarrier(id);
-                transformSequencer.waitForLocalVmTransformEvent(id);
+                transformSequencer.removeLocalVmTransformEventPreFireBarrier(id);
+                transformSequencer.waitForLocalVmTransformEventPostFireBarrier(id);
                 return;
             } else {
                 try {

@@ -66,7 +66,7 @@ public class DomainTransformPersistenceEvents {
                 ? event.getPersistedRequestIds().get(0)
                 : 0;
         if (hasRequests && event.isLocalToVm()) {
-            domainStore.getTransformSequencer().waitForBarrier(firstRequestId);
+            domainStore.getTransformSequencer().waitForLocalVmTransformEventPreFireBarrier(firstRequestId);
         }
         synchronized (this) {
             try {

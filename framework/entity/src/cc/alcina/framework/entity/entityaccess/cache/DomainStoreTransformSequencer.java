@@ -74,44 +74,48 @@ public class DomainStoreTransformSequencer {
         }
     }
 
-    public void removeBarrier(Long id) {
+    public void removeLocalVmTransformEventPreFireBarrier(Long id) {
         ensureBarrier(id).countDown();
     }
 
-    public void waitForBarrier(long firstRequestId) {
+    // called by the main firing sequence thread, since the local vm transforms
+    // are fired on the transforming thread
+    public void waitForLocalVmTransformEventPostFireBarrier(long requestId) {
+        try {
+            boolean normalExit = ensureLocalFireBarrier(requestId).await(20,
+                    TimeUnit.SECONDS);
+            if (!normalExit) {
+                logger.warn(
+                        "Timedout waiting for local vm transform - {} - \n{}",
+                        requestId, debugString());
+                // FIXME - may need to fire a domainstoreexception here -
+                // probable issue with pg/kafka
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // called by the transforming thread, to ensure post-fire events are fired
+    // in db order
+    public void waitForLocalVmTransformEventPreFireBarrier(long requestId) {
         if (!loaderDatabase.domainDescriptor
                 .isUseTransformDbCommitSequencing()) {
             return;
         } else {
-            ensureLocalFireBarrier(firstRequestId);
-            CountDownLatch latch = ensureBarrier(firstRequestId);
+            ensureLocalFireBarrier(requestId);
+            CountDownLatch latch = ensureBarrier(requestId);
             loaderDatabase.getStore().getPersistenceEvents().getQueue()
                     .sequencedTransformRequestPublished();
             try {
                 boolean normalExit = latch.await(10, TimeUnit.SECONDS);
                 if (!normalExit) {
                     logger.warn("Timedout waiting for barrier - {} - \n{}",
-                            firstRequestId, debugString());
+                            requestId, debugString());
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-    public void waitForLocalVmTransformEvent(Long id) {
-        try {
-            boolean normalExit = ensureLocalFireBarrier(id).await(60,
-                    TimeUnit.SECONDS);
-            if (!normalExit) {
-                logger.warn(
-                        "Timedout waiting for local vm transform - {} - \n{}",
-                        id, debugString());
-                // FIXME - may need to fire a domainstoreexception here -
-                // probable issue with pg/kafka
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
