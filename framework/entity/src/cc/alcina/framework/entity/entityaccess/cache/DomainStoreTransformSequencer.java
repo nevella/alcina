@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
@@ -31,6 +32,11 @@ import cc.alcina.framework.entity.projection.GraphProjection;
  * dtrp - start persist time (set in persister), committime
  * 
  * and that's all she wrote. updater sets persist/committime to update time,
+ * 
+ * TODO - this really bridges the db side (and in the right package for that)
+ * and domain transform queues - would be nice to split in two and reduce
+ * visibility of dtrq package methods. And re-implement as subclass
+ * (commit/dbcommit) sequencing
  * 
  * @author nick@alcina.cc
  *
@@ -88,9 +94,14 @@ public class DomainStoreTransformSequencer {
             boolean normalExit = ensurePostLocalFireEventsThreadBarrier(
                     requestId).await(20, TimeUnit.SECONDS);
             if (!normalExit) {
+                Thread blockingThread = loaderDatabase.getStore()
+                        .getPersistenceEvents().getQueue().getFiringThread();
+                String blockingThreadStacktrace = blockingThread == null
+                        ? "(No firing thread)"
+                        : SEUtilities.getFullStacktrace(blockingThread);
                 logger.warn(
-                        "Timedout waiting for local vm transform - {} - \n{}",
-                        requestId, debugString());
+                        "Timedout waiting for local vm transform - {} - \n{}\nBlocking thread:\n{}",
+                        requestId, debugString(), blockingThreadStacktrace);
                 // FIXME - may need to fire a domainstoreexception here -
                 // probable issue with pg/kafka
             }
@@ -116,8 +127,14 @@ public class DomainStoreTransformSequencer {
                 // but we don't want to block local work
                 boolean normalExit = latch.await(5, TimeUnit.SECONDS);
                 if (!normalExit) {
-                    logger.warn("Timedout waiting for barrier - {} - \n{}",
-                            requestId, debugString());
+                    Thread blockingThread = loaderDatabase.getStore()
+                            .getPersistenceEvents().getQueue()
+                            .getFireEventsThread();
+                    String blockingThreadStacktrace = SEUtilities
+                            .getFullStacktrace(blockingThread);
+                    logger.warn(
+                            "Timedout waiting for barrier - {} - \n{} - \nBlocking thread:\n{}",
+                            requestId, debugString(), blockingThreadStacktrace);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

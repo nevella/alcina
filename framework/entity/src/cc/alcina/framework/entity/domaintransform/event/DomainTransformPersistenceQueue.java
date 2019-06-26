@@ -78,6 +78,8 @@ public class DomainTransformPersistenceQueue {
 
     private DomainTransformPersistenceEvents persistenceEvents;
 
+    private Thread firingThread = null;
+
     public DomainTransformPersistenceQueue(
             DomainTransformPersistenceEvents persistenceEvents) {
         this.persistenceEvents = persistenceEvents;
@@ -91,6 +93,14 @@ public class DomainTransformPersistenceQueue {
         synchronized (toFire) {
             toFire.notifyAll();
         }
+    }
+
+    public Thread getFireEventsThread() {
+        return eventQueue;
+    }
+
+    public Thread getFiringThread() {
+        return this.firingThread;
     }
 
     public DomainTransformCommitPosition getTransformLogPosition() {
@@ -260,6 +270,7 @@ public class DomainTransformPersistenceQueue {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        firingThread = null;
     }
 
     void logFiring(DomainTransformPersistenceEvent event) {
@@ -267,6 +278,7 @@ public class DomainTransformPersistenceQueue {
         if (persistedRequestIds.isEmpty()) {
             return;
         }
+        firingThread = Thread.currentThread();
         Logger logger = getLogger(event.isLocalToVm());
         logger.info("firing - {} - {} - range {}",
                 Ax.friendly(event.getPersistenceEventType()),
