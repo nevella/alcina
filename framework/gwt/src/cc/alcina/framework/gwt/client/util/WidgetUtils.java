@@ -1013,6 +1013,16 @@ public class WidgetUtils {
         }
     }
 
+    public static void showInNewTabOrThisWindow(String url) {
+        Event currentEvent = Event.getCurrentEvent();
+        currentEvent.preventDefault();
+        if (WidgetUtils.isNewTabModifier(currentEvent)) {
+            Window.open(url, "_blank", "");
+        } else {
+            Window.Location.assign(url);
+        }
+    }
+
     public static void smoothScrollTo(int scrollTo, Widget widget) {
         new SmoothScroller(scrollTo, widget);
     }
