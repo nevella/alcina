@@ -310,7 +310,14 @@ public class TransformPersisterIn {
                 if (token.getPass() == Pass.TRY_COMMIT) {
                     if (ResourceUtilities.is(TransformPersister.class,
                             "flushWithEveryRequest")) {
-                        entityManager.flush();// any exceptions...here we are
+                        // defaults to true - remember this isn't committing -
+                        // isn't much of a speed bump given significant requests
+                        // are almost always server-side, non-'with unpublished'
+                        /*
+                         * Nice thing about this is that it means no dtrp if
+                         * there are any issues
+                         */
+                        entityManager.flush();
                     }
                     CollectionFilter<DomainTransformEvent> filterByPolicy = new CollectionFilter<DomainTransformEvent>() {
                         @Override

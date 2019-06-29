@@ -65,6 +65,7 @@ public class DomainStoreTransformSequencer {
             return;
         }
         preLocalNonFireEventsThreadBarrier.remove(requestId);
+        logger.warn("Removing post-local barrier: ", requestId);
         CountDownLatch removed = postLocalFireEventsThreadBarrier
                 .remove(requestId);
         removed.countDown();
@@ -81,8 +82,9 @@ public class DomainStoreTransformSequencer {
         }
     }
 
-    public void removePreLocalNonFireEventsThreadBarrier(Long id) {
-        ensurePreLocalNonFireEventsThreadBarrier(id).countDown();
+    public void removePreLocalNonFireEventsThreadBarrier(Long requestId) {
+        logger.warn("Remove local barrier: {}", requestId);
+        ensurePreLocalNonFireEventsThreadBarrier(requestId).countDown();
     }
 
     // called by the main firing sequence thread, since the local vm transforms
@@ -91,6 +93,7 @@ public class DomainStoreTransformSequencer {
         try {
             // wait longer - local transforms are more important to fire in
             // order. if this is blocking, that be a prob...but why?
+            logger.warn("Wait for post-local barrier: {}", requestId);
             boolean normalExit = ensurePostLocalFireEventsThreadBarrier(
                     requestId).await(20, TimeUnit.SECONDS);
             if (!normalExit) {
@@ -123,6 +126,7 @@ public class DomainStoreTransformSequencer {
             loaderDatabase.getStore().getPersistenceEvents().getQueue()
                     .sequencedTransformRequestPublished();
             try {
+                logger.warn("Wait for pre-local barrier: {}", requestId);
                 // don't wait long - this *tries* to apply transforms in order,
                 // but we don't want to block local work
                 boolean normalExit = latch.await(5, TimeUnit.SECONDS);
