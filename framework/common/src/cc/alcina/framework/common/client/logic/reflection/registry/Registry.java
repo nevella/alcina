@@ -73,7 +73,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCre
  * 
  *         <pre>
  *         // priority=RegistryLocation.MANUAL_PRIORITY means use this by preference
- *         // (when visible)
+ * // (when visible)
  *         &#64;RegistryLocation(registryPoint = DoSomethingFunky.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.MANUAL_PRIORITY)
  *         public class DoSomethingFunkyJvmImpl {
  *             public void justDoIt() {
@@ -223,6 +223,12 @@ public class Registry {
     public static void registerSingleton(Class<?> registryPoint,
             Object object) {
         get().registerSingleton(registryPoint, void.class, object);
+    }
+
+    public static void registerSingleton(Class<?> registryPoint, Object object,
+            boolean replaceExisting) {
+        get().registerSingleton(registryPoint, void.class, object,
+                replaceExisting);
     }
 
     public static void setDelegateCreator(DelegateMapCreator delegateCreator) {
@@ -482,7 +488,13 @@ public class Registry {
 
     public void registerSingleton(Class<?> registryPoint, Class<?> targetClass,
             Object object) {
-        registerSingletonInLookups(registryPoint, targetClass, object);
+        registerSingleton(registryPoint, targetClass, object, false);
+    }
+
+    public void registerSingleton(Class<?> registryPoint, Class<?> targetClass,
+            Object object, boolean removeExisting) {
+        registerSingletonInLookups(registryPoint, targetClass, object,
+                removeExisting);
         register(object.getClass(), registryPoint, targetClass,
                 ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
     }
@@ -553,11 +565,12 @@ public class Registry {
     }
 
     private synchronized <T> T registerSingletonInLookups(
-            Class<?> registryPoint, Class<?> targetClass, T t) {
+            Class<?> registryPoint, Class<?> targetClass, T t,
+            boolean removeExisting) {
         // double-check we don't have a race
         T existing = (T) singletons.get(keys.get(registryPoint),
                 keys.get(targetClass));
-        if (existing != null) {
+        if (existing != null && !removeExisting) {
             return existing;
         }
         boolean voidTarget = targetClass == void.class;
@@ -624,14 +637,14 @@ public class Registry {
         case FACTORY:
             if (singleton == null) {
                 singleton = registerSingletonInLookups(registryPoint,
-                        targetClass, obj);
+                        targetClass, obj, false);
             }
             return (V) ((RegistryFactory) singleton).create(registryPoint,
                     targetClass);
         case SINGLETON:
             if (singleton == null) {
                 singleton = registerSingletonInLookups(registryPoint,
-                        targetClass, obj);
+                        targetClass, obj, false);
             }
             return (V) singleton;
         case INSTANCE:

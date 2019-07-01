@@ -10,6 +10,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 
+import cc.alcina.framework.classmeta.rdb.RdbProxies;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -30,6 +31,9 @@ public class ClassMetaServer {
             throw new WrappedRuntimeException(e);
         }
     }
+
+    @SuppressWarnings("unused")
+    private RdbProxies rdbProxies;
 
     private void initLoggers() {
         Logger logger = Logger.getRootLogger();
@@ -70,6 +74,7 @@ public class ClassMetaServer {
         WrappedObjectHelper.withoutRegistry();
         initLoggers();
         initRegistry();
+        this.rdbProxies = new RdbProxies();
         ClassMetaHandler metaHandler = new ClassMetaHandler();
         {
             ContextHandler ctx = new ContextHandler(handlers, "/meta");
