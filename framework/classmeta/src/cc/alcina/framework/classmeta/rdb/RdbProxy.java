@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
@@ -25,6 +26,8 @@ import com.sun.jdi.event.EventSet;
 import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbProxySchemaProxyDescriptor;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 
 @SuppressWarnings("resource")
 class RdbProxy {
@@ -42,13 +45,44 @@ class RdbProxy {
 
     private VirtualMachine vm;
 
-    StreamInterceptor extDebuggerToInternalDebugger;
+    StreamInterceptor extDebuggerToExtDebugee;
 
     StreamInterceptor extDebuggeeToExternalDebugger;
 
-    CountDownLatch startLatch = new CountDownLatch(3);
+    CountDownLatch startLatch = new CountDownLatch(2);
 
     private Map<String, com.sun.jdi.connect.Connector.Argument> connectorArgs;
+
+    private State state = new State();
+
+    private StreamListener streamListener = new StreamListener() {
+        @Override
+        public synchronized void byteReceived(StreamInterceptor interceptor,
+                int b) {
+            if (state.lastSender == null) {
+            } else {
+                if (state.lastSender != interceptor) {
+                    byte[] bytes = state.lastSender.lastSent;
+                    String s = new String(bytes, StandardCharsets.UTF_8);
+                    boolean fromExtDebugger = state.lastSender == extDebuggerToExtDebugee;
+                    String dir = fromExtDebugger ? ">>>" : "<<<";
+                    s = "...";
+                    Ax.out("%s : %s %s\n", state.lastSender.name, dir, s);
+                    SEUtilities.dumpBytes(bytes, 11);
+                    if (!fromExtDebugger) {
+                        try {
+                            internalDebuggerSocket.getOutputStream()
+                                    .write(bytes);
+                        } catch (IOException e) {
+                            throw new WrappedRuntimeException(e);
+                        }
+                        Ax.out("(Echoed to local debugger)");
+                    }
+                }
+            }
+            state.lastSender = interceptor;
+        }
+    };
 
     public RdbProxy(RdbProxySchemaProxyDescriptor proxyDescriptor) {
         this.proxyDescriptor = proxyDescriptor;
@@ -67,6 +101,43 @@ class RdbProxy {
         }.start();
     }
 
+    public void startLocalReader() {
+        new Thread(Ax.format("rdb-local-reader-%s", proxyDescriptor.name)) {
+            private AtEndOfEventSeriesTimer seriesTimer = new AtEndOfEventSeriesTimer(
+                    5, new Runnable() {
+                        @Override
+                        public void run() {
+                            synchronized (buffer) {
+                                byte[] bytes = buffer.toByteArray();
+                                Ax.out("Read %s bytes from internal debugger output",
+                                        bytes.length);
+                                buffer.reset();
+                            }
+                        }
+                    }).maxDelayFromFirstAction(5);
+
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+            @Override
+            public void run() {
+                try {
+                    while (true) {
+                        int b = internalDebuggerSocket.getInputStream().read();
+                        if (b == -1) {
+                            break;
+                        }
+                        synchronized (buffer) {
+                            buffer.write(b);
+                        }
+                        seriesTimer.triggerEventOccurred();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+
     private void connectExternalDebuggee() {
         new Thread(
                 Ax.format("local-jdi-ext-debuggee-%s", proxyDescriptor.name)) {
@@ -76,6 +147,8 @@ class RdbProxy {
                     externalDebuggeeSocket = new Socket(
                             proxyDescriptor.remoteHost,
                             proxyDescriptor.remoteJdwpPort);
+                    logger.info("Ext debuggee connected to socket - {}",
+                            proxyDescriptor.name);
                     startLatch.countDown();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -86,9 +159,8 @@ class RdbProxy {
 
     private void handleEvent(Event nextEvent) throws IOException {
         Ax.out(nextEvent.getClass().getSimpleName());
-        byte[] inputBytes = extDebuggerToInternalDebugger
-                .markInterceptedBytes();
-        externalDebuggeeSocket.getOutputStream().write(inputBytes);
+        // byte[] inputBytes = extDebuggerToExtDebugee.lastSent;
+        // externalDebuggeeSocket.getOutputStream().write(inputBytes);
     }
 
     private void runVmEventsQueuePump() {
@@ -118,19 +190,18 @@ class RdbProxy {
         try {
             startLatch.await();
             logger.info("All sockets connected - {}", proxyDescriptor.name);
-            internalDebuggerSocket = new Socket("127.0.0.1",
-                    proxyDescriptor.localJdwpPort);
-            extDebuggerToInternalDebugger = new StreamInterceptor(
+            // hack
+            extDebuggerToExtDebugee = new StreamInterceptor(
                     Ax.format("local-debug-%s-extDebuggerToInternalDebuggee",
                             proxyDescriptor.name),
-                    externalDebuggerSocket.getInputStream(),
-                    internalDebuggerSocket.getOutputStream());
+                    streamListener, externalDebuggerSocket.getInputStream(),
+                    externalDebuggeeSocket.getOutputStream());
             extDebuggeeToExternalDebugger = new StreamInterceptor(
                     Ax.format("local-debug-%s-extDebuggeeToExternalDebugger",
                             proxyDescriptor.name),
-                    externalDebuggeeSocket.getInputStream(),
+                    streamListener, externalDebuggeeSocket.getInputStream(),
                     externalDebuggerSocket.getOutputStream());
-            extDebuggerToInternalDebugger.start();
+            extDebuggerToExtDebugee.start();
             extDebuggeeToExternalDebugger.start();
             // runVmEventsQueuePump();
         } catch (Exception e) {
@@ -150,6 +221,8 @@ class RdbProxy {
             connectorArgs.get("port")
                     .setValue(String.valueOf(proxyDescriptor.localJdwpPort));
             String retAddress = listener.startListening(connectorArgs);
+            internalDebuggerSocket = new Socket("127.0.0.1",
+                    proxyDescriptor.localJdwpPort);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
@@ -158,17 +231,20 @@ class RdbProxy {
             public void run() {
                 try {
                     setupLocalListeningConnection0();
-                    startLatch.countDown();
+                    logger.info("Local jdi started listening - {}",
+                            proxyDescriptor.name);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }.start();
+        startLocalReader();
     }
 
     private void setupLocalListeningConnection0() throws Exception {
         vm = listener.accept(connectorArgs);
         listener.stopListening(connectorArgs);
+        runVmEventsQueuePump();
     }
 
     private void setupLocalTunnel() {
@@ -194,6 +270,8 @@ class RdbProxy {
                             "Only one simultaneous connection allowed");
                 }
                 externalDebuggerSocket = newSocket;
+                logger.info("Ext debugger connected to stream interceptor - {}",
+                        proxyDescriptor.name);
                 startLatch.countDown();
                 connectExternalDebuggee();
             } catch (IOException e) {
@@ -202,10 +280,14 @@ class RdbProxy {
         }
     }
 
-    static class StreamInterceptor {
-        int mark = 0;
+    class State {
+        StreamInterceptor lastSender = null;
+    }
 
+    static class StreamInterceptor {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        byte[] lastSent;
 
         private String name;
 
@@ -213,20 +295,23 @@ class RdbProxy {
 
         private OutputStream toStream;
 
-        StreamInterceptor(String name, InputStream inputStream,
-                OutputStream outputStream) {
+        private StreamListener streamListener;
+
+        private AtEndOfEventSeriesTimer seriesTimer = new AtEndOfEventSeriesTimer(
+                5, new Runnable() {
+                    @Override
+                    public void run() {
+                        writeToToStream();
+                    }
+                }).maxDelayFromFirstAction(5);
+
+        StreamInterceptor(String name, StreamListener streamListener,
+                InputStream inputStream, OutputStream outputStream) {
             this.name = name;
+            this.streamListener = streamListener;
             this.fromStream = inputStream;
             this.toStream = outputStream;
-        }
-
-        public byte[] markInterceptedBytes() {
-            synchronized (buffer) {
-                byte[] bytes = new byte[buffer.size() - mark];
-                System.arraycopy(buffer, mark, bytes, 0, bytes.length);
-                mark += bytes.length;
-                return bytes;
-            }
+            Ax.out("[%s] : %s >> %s", name, fromStream, toStream);
         }
 
         public void start() {
@@ -239,10 +324,12 @@ class RdbProxy {
                             if (b == -1) {
                                 break;
                             }
+                            streamListener.byteReceived(StreamInterceptor.this,
+                                    b);
                             synchronized (buffer) {
                                 buffer.write(b);
                             }
-                            toStream.write(b);
+                            seriesTimer.triggerEventOccurred();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -250,5 +337,23 @@ class RdbProxy {
                 }
             }.start();
         }
+
+        protected void writeToToStream() {
+            try {
+                synchronized (buffer) {
+                    byte[] bytes = buffer.toByteArray();
+                    buffer.reset();
+                    lastSent = bytes;
+                    toStream.write(bytes);
+                    toStream.flush();
+                }
+            } catch (Exception e) {
+                throw new WrappedRuntimeException(e);
+            }
+        }
+    }
+
+    interface StreamListener {
+        void byteReceived(StreamInterceptor interceptor, int b);
     }
 }
