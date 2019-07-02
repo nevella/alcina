@@ -74,6 +74,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -1480,6 +1482,7 @@ public class XmlUtils {
 
         public DOMLocation(Node node, int characterOffset, int nodeIndex) {
             this.node = node;
+            Preconditions.checkArgument(characterOffset >= 0);
             this.characterOffset = characterOffset;
             this.nodeIndex = nodeIndex;
         }
