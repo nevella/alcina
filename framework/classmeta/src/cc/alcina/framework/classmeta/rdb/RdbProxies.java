@@ -22,7 +22,7 @@ public class RdbProxies {
     List<RdbProxy> proxies = new ArrayList<>();
 
     public RdbProxies() {
-        if ("disabled".length() > 0) {
+        if ("disabled".length() > 90) {
             return;
         }
         String modelXml = null;
@@ -38,7 +38,7 @@ public class RdbProxies {
             schema = WrappedObjectHelper.xmlDeserialize(RdbProxySchema.class,
                     modelXml);
         }
-        schema.proxyDescriptors.forEach(this::setupLocalTunnel);
+        schema.proxyDescriptors.forEach(this::start);
         try {
             new ShellWrapper().runBashScript(
                     "/usr/bin/java -jar /g/alcina/lib/framework/dev/eclipse_remote_control_client.jar execute_command ljda.jade DEBUG");
@@ -47,11 +47,10 @@ public class RdbProxies {
         }
     }
 
-    private void setupLocalTunnel(
-            RdbProxySchemaProxyDescriptor proxyDescriptor) {
+    private void start(RdbProxySchemaProxyDescriptor proxyDescriptor) {
         RdbProxy rdbProxy = new RdbProxy(proxyDescriptor);
         proxies.add(rdbProxy);
-        rdbProxy.setupLocal();
+        rdbProxy.start();
     }
 
     @XmlRootElement
@@ -60,9 +59,9 @@ public class RdbProxies {
     }
 
     public static class RdbProxySchemaProxyDescriptor {
-        public int localJdwpPort;
+        public int internalDebuggerPort;
 
-        public int localPort;
+        public int externalDebuggerAttachToPort;
 
         public String remoteHost;
 

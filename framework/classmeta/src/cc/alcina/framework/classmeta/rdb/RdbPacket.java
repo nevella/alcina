@@ -1,0 +1,69 @@
+package cc.alcina.framework.classmeta.rdb;
+
+import java.util.Arrays;
+
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
+
+public class RdbPacket {
+    public static int bigEndian(byte[] byteArray) {
+        return bigEndian(byteArray[0], byteArray[1], byteArray[2],
+                byteArray[3]);
+    }
+
+    static int bigEndian(byte b1, byte b2, byte b3, byte b4) {
+        return (b1 << 24) + (b2 << 16) + (b3 << 8) + b4;
+    }
+
+    public byte[] bytes;
+
+    public boolean fromDebugger;
+
+    public String fromName;
+
+    public RdbPacket copy() {
+        RdbPacket copy = ResourceUtilities.fieldwiseClone(this);
+        copy.bytes = Arrays.copyOf(bytes, bytes.length);
+        return copy;
+    }
+
+    public void dump() {
+        String dir = fromDebugger ? ">>>" : "<<<";
+        String s = "...";
+        Ax.out("%s : %s %s\n", fromName, dir, s);
+        SEUtilities.dumpBytes(bytes, 11);
+    }
+
+    public void setId(int id) {
+        bytes[4] = (byte) ((id >> 24) & 0xFF);
+        bytes[5] = (byte) ((id >> 16) & 0xFF);
+        bytes[6] = (byte) ((id >> 8) & 0xFF);
+        bytes[7] = (byte) ((id) & 0xFF);
+    }
+
+    @Override
+    public String toString() {
+        return Ax.format("%s/%s/%s", id(), commandSet(), commandId());
+    }
+
+    int commandId() {
+        return bytes[10];
+    }
+
+    int commandSet() {
+        return bytes[9];
+    }
+
+    int flags() {
+        return bytes[8];
+    }
+
+    int id() {
+        return bigEndian(bytes[4], bytes[5], bytes[6], bytes[7]);
+    }
+
+    int length() {
+        return bigEndian(bytes[0], bytes[1], bytes[2], bytes[3]);
+    }
+}

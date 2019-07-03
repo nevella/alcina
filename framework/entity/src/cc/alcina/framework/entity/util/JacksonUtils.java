@@ -20,6 +20,16 @@ public class JacksonUtils {
         }
     }
 
+    public static <T> T deserializeNoTypes(String json, Class<T> clazz) {
+        try {
+            return new JacksonJsonObjectSerializer().withIdRefs()
+                    .withAllowUnknownProperties().getObjectMapper()
+                    .readValue(json, clazz);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
     public static String serializeForLogging(Object object) {
         try {
             return defaultGraphMapper()
