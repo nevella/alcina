@@ -6,32 +6,39 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 
-public class RdbPacket {
+public class JdwpPacket {
     public static int bigEndian(byte[] byteArray) {
         return bigEndian(byteArray[0], byteArray[1], byteArray[2],
                 byteArray[3]);
     }
 
     static int bigEndian(byte b1, byte b2, byte b3, byte b4) {
-        return (b1 << 24) + (b2 << 16) + (b3 << 8) + b4;
+        return (b1 << 24) + (b2 << 16) + (b3 << 8) + un2c(b4);
     }
 
-    public byte[] bytes;
+    private static int un2c(byte b) {
+        return b < 0 ? b + 256 : b;
+    }
+
+    public byte[] bytes = new byte[11];
 
     public boolean fromDebugger;
 
     public String fromName;
 
-    public RdbPacket copy() {
-        RdbPacket copy = ResourceUtilities.fieldwiseClone(this);
+    public String messageName;
+
+    public transient JdwpMessage message;
+
+    public JdwpPacket copy() {
+        JdwpPacket copy = ResourceUtilities.fieldwiseClone(this);
         copy.bytes = Arrays.copyOf(bytes, bytes.length);
         return copy;
     }
 
     public void dump() {
         String dir = fromDebugger ? ">>>" : "<<<";
-        String s = "...";
-        Ax.out("%s : %s %s\n", fromName, dir, s);
+        Ax.out("%s : %s %s\n", fromName, dir, toString());
         SEUtilities.dumpBytes(bytes, 11);
     }
 
@@ -44,7 +51,7 @@ public class RdbPacket {
 
     @Override
     public String toString() {
-        return Ax.format("%s/%s/%s", id(), commandSet(), commandId());
+        return Ax.format("%s/%s/%s %s", id(), commandSet(), commandId(),Ax.blankToEmpty(messageName));
     }
 
     int commandId() {

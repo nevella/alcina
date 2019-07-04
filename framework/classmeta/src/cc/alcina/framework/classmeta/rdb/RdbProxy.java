@@ -14,9 +14,11 @@ import com.sun.tools.jdi.VirtualMachineImplExt;
 
 import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbProxySchemaProxyDescriptor;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.JacksonUtils;
+import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 
 @SuppressWarnings("resource")
 class RdbProxy {
@@ -28,55 +30,41 @@ class RdbProxy {
 
     Socket externalDebuggeeSocket = null;
 
-    StreamInterceptor extDebuggerToExtDebugee;
+    JdwpStreamInterceptor extDebuggerToExtDebugee;
 
-    StreamInterceptor extDebuggeeToExternalDebugger;
+    JdwpStreamInterceptor extDebuggeeToExternalDebugger;
 
     CountDownLatch startLatch = new CountDownLatch(1);
 
     private State state = new State();
 
-    boolean record = false;
+    boolean record = true;
 
-    RdbPackets packets = new RdbPackets();
+    JdwpPackets packets = new JdwpPackets();
 
     CountDownLatch waitForInternalDebugger;
-    
+
     VirtualMachineImplExt vm = new VirtualMachineImplExt();
 
     private StreamListener ioStreamListener = new StreamListener() {
-        int receivedCount = 0;
-
         @Override
-        public synchronized void byteReceived(StreamInterceptor interceptor,
-                int b) {
-            if (state.lastSender == null) {
-            } else {
-                if (state.lastSender != interceptor) {
-                    byte[] bytes = state.lastSender.lastSent;
-                    String s = new String(bytes, StandardCharsets.UTF_8);
-                    boolean fromExtDebugger = state.lastSender == extDebuggerToExtDebugee;
-                    RdbPacket packet = new RdbPacket();
-                    packet.fromDebugger = fromExtDebugger;
-                    packet.bytes = bytes;
-                    packet.fromName = state.lastSender.name;
-                    packet.dump();
-                    packets.packets.add(packet);
-                    if (record) {
-                        appendPacket(packet);
-                    }
-                    if (++receivedCount <= 8) {
-                        Ax.out("Ignoring early packet: %s", receivedCount);
-                    } else {
-                        parsePacket(packet);
-                    }
-                }
+        public void packetReceived(JdwpStreamInterceptor interceptor,
+                JdwpPacket packet) {
+            packet.fromDebugger = interceptor == extDebuggerToExtDebugee;
+            parsePacket(packet);
+            packets.add(packet);
+            packet.dump();
+            if (record) {
+                appendPacket(packet);
+                interceptor.write(packet);
             }
-            state.lastSender = interceptor;
         }
-
     };
-    private void parsePacket(RdbPacket packet) {
+
+    JdwpAccessor jwdpAccessor = new JdwpAccessor();
+
+    private void parsePacket(JdwpPacket packet) {
+        jwdpAccessor.parse(packet);
     }
 
     public RdbProxy(RdbProxySchemaProxyDescriptor proxyDescriptor) {
@@ -96,13 +84,21 @@ class RdbProxy {
         }.start();
     }
 
-    private void appendPacket(RdbPacket packet) {
-        String fn = Ax.format(
-                "/private/var/local/git/alcina/framework/classmeta/src/cc/alcina/framework/classmeta/rdb/packets-%s.json",
-                proxyDescriptor.name);
-        ResourceUtilities.write(
-                JacksonUtils.serializeForLoggingWithDefaultsNoTypes(packets),
-                fn);
+    private AtEndOfEventSeriesTimer<ClientLogRecord> appendTimer = new AtEndOfEventSeriesTimer<>(
+            200, new Runnable() {
+                @Override
+                public void run() {
+                    String fn = Ax.format(
+                            "/private/var/local/git/alcina/framework/classmeta/src/cc/alcina/framework/classmeta/rdb/packets-%s.json",
+                            proxyDescriptor.name);
+                    ResourceUtilities.write(JacksonUtils
+                            .serializeForLoggingWithDefaultsNoTypes(packets),
+                            fn);
+                }
+            }).maxDelayFromFirstAction(200);
+
+    private void appendPacket(JdwpPacket packet) {
+        appendTimer.triggerEventOccurred();
     }
 
     private void connectExternalDebuggee() {
@@ -114,12 +110,6 @@ class RdbProxy {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private void handleEvent(Event nextEvent) throws IOException {
-        Ax.out(nextEvent.getClass().getSimpleName());
-        // byte[] inputBytes = extDebuggerToExtDebugee.lastSent;
-        // externalDebuggeeSocket.getOutputStream().write(inputBytes);
     }
 
     private void listenForExternalDebuggerAttach() {
@@ -163,12 +153,12 @@ class RdbProxy {
         try {
             startLatch.await();
             logger.info("All sockets connected - {}", proxyDescriptor.name);
-            extDebuggerToExtDebugee = new StreamInterceptor(
+            extDebuggerToExtDebugee = new JdwpStreamInterceptor(
                     Ax.format("%s::extDebuggerToExtDebuggee",
                             proxyDescriptor.name),
                     ioStreamListener, externalDebuggerSocket.getInputStream(),
                     externalDebuggeeSocket.getOutputStream());
-            extDebuggeeToExternalDebugger = new StreamInterceptor(
+            extDebuggeeToExternalDebugger = new JdwpStreamInterceptor(
                     Ax.format("%s::extDebuggeeToExtDebugger",
                             proxyDescriptor.name),
                     ioStreamListener, externalDebuggeeSocket.getInputStream(),
@@ -181,10 +171,11 @@ class RdbProxy {
     }
 
     class State {
-        StreamInterceptor lastSender = null;
+        JdwpStreamInterceptor lastSender = null;
     }
 
     interface StreamListener {
-        void byteReceived(StreamInterceptor interceptor, int b);
+        void packetReceived(JdwpStreamInterceptor jwdpStreamInterceptor,
+                JdwpPacket received);
     }
 }

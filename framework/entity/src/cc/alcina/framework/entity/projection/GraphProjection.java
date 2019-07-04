@@ -199,6 +199,24 @@ public class GraphProjection {
             }
             fieldNames.add(name);
         }
+        String template = "@Override\npublic boolean equals(Object obj) {\n"
+                + "if(obj instanceof %s){%s o = (%s)obj;return CommonUtils.equals(%s);\n}else{return false;}}";
+        return String.format(template, clazz.getSimpleName(),clazz.getSimpleName(),clazz.getSimpleName(),
+                fieldNames.stream().map(n -> String.format("%s, o.%s ", n, n))
+                        .collect(Collectors.joining(", ")));
+    }
+    public static String generateFieldwiseEquivalentString(Class clazz)
+            throws Exception {
+        List<String> fieldNames = new ArrayList<>();
+        GraphProjection graphProjection = fieldwiseEqualityProjection;
+        for (Field field : graphProjection.getFieldsForClass(clazz)) {
+            String name = field.getName();
+            if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
+                    .contains(name)) {
+                continue;
+            }
+            fieldNames.add(name);
+        }
         String template = "@Override\npublic boolean equivalentTo(%s o) {\nreturn CommonUtils.equals(%s);\n}";
         return String.format(template, clazz.getSimpleName(),
                 fieldNames.stream().map(n -> String.format("%s, o.%s ", n, n))
@@ -219,6 +237,23 @@ public class GraphProjection {
             fieldNames.add(name);
         }
         String template = "@Override\npublic int equivalenceHash() {\nreturn Objects.hash(%s);\n}";
+        return String.format(template,
+                fieldNames.stream().collect(Collectors.joining(", ")));
+    }
+    public static String generateFieldwiseHashCode(Class clazz)
+            throws Exception {
+        List<String> fieldNames = new ArrayList<>();
+        GraphProjection graphProjection = new GraphProjection(
+                new AllFieldsFilter(), null);
+        for (Field field : graphProjection.getFieldsForClass(clazz)) {
+            String name = field.getName();
+            if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
+                    .contains(name)) {
+                continue;
+            }
+            fieldNames.add(name);
+        }
+        String template = "@Override\npublic int hashCode() {\nreturn Objects.hash(%s);\n}";
         return String.format(template,
                 fieldNames.stream().collect(Collectors.joining(", ")));
     }

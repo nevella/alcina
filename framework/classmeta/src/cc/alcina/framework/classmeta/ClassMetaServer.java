@@ -7,6 +7,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 
 import cc.alcina.framework.classmeta.rdb.RdbProxies;
@@ -74,25 +75,25 @@ public class ClassMetaServer {
         initLoggers();
         initRegistry();
         this.rdbProxies = new RdbProxies();
-        // ClassMetaHandler metaHandler = new ClassMetaHandler();
-        // {
-        // ContextHandler ctx = new ContextHandler(handlers, "/meta");
-        // ctx.setHandler(metaHandler);
-        // handlers.addHandler(ctx);
-        // }
-        // {
-        // ContextHandler ctx = new ContextHandler(handlers, "/persistence");
-        // ctx.setHandler(new ClassPersistenceScanHandler(metaHandler));
-        // handlers.addHandler(ctx);
-        // }
-        // {
-        // ContextHandler ctx = new ContextHandler(handlers, "/ant");
-        // ctx.setHandler(new AntHandler());
-        // handlers.addHandler(ctx);
-        // }
-        // server.setHandler(handlers);
-        // server.start();
-        // server.dumpStdErr();
-        // server.join();
+//         ClassMetaHandler metaHandler = new ClassMetaHandler();
+//         {
+//         ContextHandler ctx = new ContextHandler(handlers, "/meta");
+//         ctx.setHandler(metaHandler);
+//         handlers.addHandler(ctx);
+//         }
+//         {
+//         ContextHandler ctx = new ContextHandler(handlers, "/persistence");
+//         ctx.setHandler(new ClassPersistenceScanHandler(metaHandler));
+//         handlers.addHandler(ctx);
+//         }
+//         {
+//         ContextHandler ctx = new ContextHandler(handlers, "/ant");
+//         ctx.setHandler(new AntHandler());
+//         handlers.addHandler(ctx);
+//         }
+//         server.setHandler(handlers);
+//         server.start();
+//         server.dumpStdErr();
+//         server.join();
     }
 }
