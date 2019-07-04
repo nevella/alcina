@@ -13989,5 +13989,155 @@
     "fromDebugger" : false,
     "fromName" : "ljda::extDebuggeeToExtDebugger",
     "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAARAADwCsAAQIAAAA1TGF1L2NvbS9iYXJuZXQvamFkZS9jbGllbnQvbG9naWMvSmFkZUNvbnRlbnRQcm92aWRlcjs=",
+    "fromDebugger" : true,
+    "fromName" : "ljda::extDebuggerToExtDebuggee",
+    "messageName" : "ClassesBySignature"
+  }, {
+    "bytes" : "AAAADwADwCuAAAAAAAAA",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAPgADwCwAAQIAAAAvTGF1L2NvbS9iYXJuZXQvamFkZS9jcy9jb25zdGFudHMvSmFkZUNvbnN0YW50czs=",
+    "fromDebugger" : true,
+    "fromName" : "ljda::extDebuggerToExtDebuggee",
+    "messageName" : "ClassesBySignature"
+  }, {
+    "bytes" : "AAAAHAADwCyAAAAAAAABAQAAAAAAAADjAAAABw==",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAATQADwC0AAQIAAAA+TGF1L2NvbS9iYXJuZXQvamFkZS9jcy9jc29iamVjdHMvcHJvcHMvTm90aWZpY2F0aW9uUHJvcGVydGllczs=",
+    "fromDebugger" : true,
+    "fromName" : "ljda::extDebuggerToExtDebuggee",
+    "messageName" : "ClassesBySignature"
+  }, {
+    "bytes" : "AAAAHAADwC2AAAAAAAABAQAAAAAAAADkAAAABw==",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAOQADwC4AAQIAAAAqTGF1L2NvbS9iYXJuZXQvamFkZS9jbHVzdGVyL0NsdXN0ZXJIZWFsdGg7",
+    "fromDebugger" : true,
+    "fromName" : "ljda::extDebuggerToExtDebuggee",
+    "messageName" : "ClassesBySignature"
+  }, {
+    "bytes" : "AAAAHAADwC6AAAAAAAABAQAAAAAAAADlAAAABw==",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAPgADwC8AAQIAAAAvTGF1L2NvbS9iYXJuZXQvamFkZS9jcy9jb25zdGFudHMvSmFkZUNvbnN0YW50czs=",
+    "fromDebugger" : true,
+    "fromName" : "ljda::extDebuggerToExtDebuggee",
+    "messageName" : "ClassesBySignature"
+  }, {
+    "bytes" : "AAAAHAADwC+AAAAAAAABAQAAAAAAAADjAAAABw==",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAATQADwDAAAQIAAAA+TGF1L2NvbS9iYXJuZXQvamFkZS9jcy9jc29iamVjdHMvcHJvcHMvTm90aWZpY2F0aW9uUHJvcGVydGllczs=",
+    "fromDebugger" : true,
+    "fromName" : "ljda::extDebuggerToExtDebuggee",
+    "messageName" : "ClassesBySignature"
+  }, {
+    "bytes" : "AAAAHAADwDCAAAAAAAABAQAAAAAAAADkAAAABw==",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAOQADwDEAAQIAAAAqTGF1L2NvbS9iYXJuZXQvamFkZS9jbHVzdGVyL0NsdXN0ZXJIZWFsdGg7",
+    "fromDebugger" : true,
+    "fromName" : "ljda::extDebuggerToExtDebuggee",
+    "messageName" : "ClassesBySignature"
+  }, {
+    "bytes" : "AAAAHAADwDGAAAAAAAABAQAAAAAAAADlAAAABw==",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAEcAQGQAAAAAAQYAAAADAAAAAAAAAOY=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAEgAQGQAAAAAAQYAAAADAAAAAAAAAOc=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAEkAQGQAAAAAAQcAAAAEAAAAAAAAAOc=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAEoAQGQAAAAAAQcAAAAEAAAAAAAAAOY=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAEsAQGQAAAAAAQYAAAADAAAAAAAAAOg=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAEwAQGQAAAAAAQYAAAADAAAAAAAAAOk=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAE0AQGQAAAAAAQcAAAAEAAAAAAAAAOg=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAE4AQGQAAAAAAQcAAAAEAAAAAAAAAOk=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAE8AQGQAAAAAAQYAAAADAAAAAAAAAOo=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAFAAQGQAAAAAAQYAAAADAAAAAAAAAOs=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAFEAQGQAAAAAAQcAAAAEAAAAAAAAAOo=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAFIAQGQAAAAAAQcAAAAEAAAAAAAAAOs=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAFMAQGQAAAAAAQYAAAADAAAAAAAAAOw=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAFQAQGQAAAAAAQYAAAADAAAAAAAAAO0=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAFUAQGQAAAAAAQcAAAAEAAAAAAAAAOw=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
+  }, {
+    "bytes" : "AAAAHQAAAFYAQGQAAAAAAQcAAAAEAAAAAAAAAO0=",
+    "fromDebugger" : false,
+    "fromName" : "ljda::extDebuggeeToExtDebugger",
+    "messageName" : "(reply)"
   } ]
 }
