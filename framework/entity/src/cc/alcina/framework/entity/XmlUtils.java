@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.URL;
 import java.util.ArrayList;
@@ -875,8 +876,12 @@ public class XmlUtils {
     }
 
     public static Document loadDocument(String xml) throws Exception {
-        ByteArrayInputStream bais = null;
-        if (xml.contains("encoding=\"UTF-8\"")) {
+        return loadDocument(xml, false);
+    }
+
+    public static Document loadDocument(String xml, boolean knownUtf8) throws Exception {
+    	ByteArrayInputStream bais = null;
+        if (knownUtf8||xml.contains("encoding=\"UTF-8\"")) {
             ByteArrayOutputStream bOut = new ByteArrayOutputStream();
             OutputStreamWriter out = new OutputStreamWriter(bOut, "UTF-8");
             out.write(xml);

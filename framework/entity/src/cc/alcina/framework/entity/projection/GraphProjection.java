@@ -136,7 +136,7 @@ public class GraphProjection {
         try {
             return classSimpleName.get(clazz);
         } catch (Exception e) {
-            // strange concurrency issues have occurred...
+            // strange concurrency issues have occurred...maybe reload?
             if (clazz == null) {
                 return "(null)";
             } else {
