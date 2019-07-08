@@ -815,7 +815,7 @@ public abstract class TransformManager implements PropertyChangeListener,
                                 + "- will harm the transform. use getsource() - \n%s\n",
                         dte);
                 throw new RuntimeException(
-                        new DomainTransformException(message));
+                        new DomainTransformException(dte,DomainTransformExceptionType.UNKNOWN,message));
             }
         }
         dte.setSource(obj);

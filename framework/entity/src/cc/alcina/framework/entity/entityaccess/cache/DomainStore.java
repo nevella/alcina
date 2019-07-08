@@ -818,6 +818,8 @@ public class DomainStore implements IDomainStore {
         long postProcessStart = 0;
         DomainStoreHealth health = getHealth();
         try {
+            LooseContext.pushWithTrue(
+                    TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
             threads.lock(true);
             postProcessStart = System.currentTimeMillis();
             MetricLogging.get().start("post-process");
@@ -970,6 +972,7 @@ public class DomainStore implements IDomainStore {
             } catch (Throwable t) {
                 t.printStackTrace();
             }
+            LooseContext.pop();
         }
     }
 
