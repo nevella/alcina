@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.sun.jdi.event.Event;
 import com.sun.tools.jdi.VirtualMachineImplExt;
 
-import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbProxySchemaProxyDescriptor;
+import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.util.Ax;
@@ -24,15 +24,15 @@ import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 class RdbProxy {
     Logger logger = LoggerFactory.getLogger(getClass());
 
-    private RdbProxySchemaProxyDescriptor proxyDescriptor;
+    private RdbEndpointDescriptor proxyDescriptor;
 
     Socket externalDebuggerSocket = null;
 
     Socket externalDebuggeeSocket = null;
 
-    JdwpStreamInterceptor extDebuggerToExtDebugee;
+    JdwpStreams extDebuggerToExtDebugee;
 
-    JdwpStreamInterceptor extDebuggeeToExternalDebugger;
+    JdwpStreams extDebuggeeToExternalDebugger;
 
     CountDownLatch startLatch = new CountDownLatch(1);
 
@@ -40,7 +40,7 @@ class RdbProxy {
 
     boolean record = true;
 
-    JdwpPackets packets = new JdwpPackets();
+    Packets packets = new Packets();
 
     CountDownLatch waitForInternalDebugger;
 
@@ -48,8 +48,8 @@ class RdbProxy {
 
     private StreamListener ioStreamListener = new StreamListener() {
         @Override
-        public void packetReceived(JdwpStreamInterceptor interceptor,
-                JdwpPacket packet) {
+        public void packetReceived(JdwpStreams interceptor,
+                Packet packet) {
             packet.fromDebugger = interceptor == extDebuggerToExtDebugee;
             parsePacket(packet);
             packets.add(packet);
@@ -61,13 +61,13 @@ class RdbProxy {
         }
     };
 
-    JdwpAccessor jwdpAccessor = new JdwpAccessor();
+    Accessor jwdpAccessor = new Accessor();
 
-    private void parsePacket(JdwpPacket packet) {
+    private void parsePacket(Packet packet) {
         jwdpAccessor.parse(packet);
     }
 
-    public RdbProxy(RdbProxySchemaProxyDescriptor proxyDescriptor) {
+    public RdbProxy(RdbEndpointDescriptor proxyDescriptor) {
         this.proxyDescriptor = proxyDescriptor;
     }
 
@@ -97,7 +97,7 @@ class RdbProxy {
                 }
             }).maxDelayFromFirstAction(200);
 
-    private void appendPacket(JdwpPacket packet) {
+    private void appendPacket(Packet packet) {
         appendTimer.triggerEventOccurred();
     }
 
@@ -153,12 +153,12 @@ class RdbProxy {
         try {
             startLatch.await();
             logger.info("All sockets connected - {}", proxyDescriptor.name);
-            extDebuggerToExtDebugee = new JdwpStreamInterceptor(
+            extDebuggerToExtDebugee = new JdwpStreams(
                     Ax.format("%s::extDebuggerToExtDebuggee",
                             proxyDescriptor.name),
                     ioStreamListener, externalDebuggerSocket.getInputStream(),
                     externalDebuggeeSocket.getOutputStream());
-            extDebuggeeToExternalDebugger = new JdwpStreamInterceptor(
+            extDebuggeeToExternalDebugger = new JdwpStreams(
                     Ax.format("%s::extDebuggeeToExtDebugger",
                             proxyDescriptor.name),
                     ioStreamListener, externalDebuggeeSocket.getInputStream(),
@@ -171,11 +171,11 @@ class RdbProxy {
     }
 
     class State {
-        JdwpStreamInterceptor lastSender = null;
+        JdwpStreams lastSender = null;
     }
 
     interface StreamListener {
-        void packetReceived(JdwpStreamInterceptor jwdpStreamInterceptor,
-                JdwpPacket received);
+        void packetReceived(JdwpStreams streams,
+                Packet received);
     }
 }

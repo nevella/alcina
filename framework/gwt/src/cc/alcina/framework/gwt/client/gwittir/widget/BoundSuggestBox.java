@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.ui.FocusListener;
+import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.SuggestBox.DefaultSuggestionDisplay;
 import com.google.gwt.user.client.ui.SuggestOracle;
@@ -40,7 +41,7 @@ import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
  * @author Nick Reddel
  */
 @SuppressWarnings("deprecation")
-public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
+public class BoundSuggestBox<T> extends AbstractBoundWidget<T> implements Focusable{
 	protected SuggestBox base;
 
 	private T value;
@@ -254,7 +255,24 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> {
 		public String hint;
 	}
 
-	public void focusTextField() {
-		base.getValueBox().setFocus(true);
-	}
+
+    @Override
+    public int getTabIndex() {
+        return base.getValueBox().getTabIndex();
+    }
+
+    @Override
+    public void setAccessKey(char key) {
+         base.getValueBox().setAccessKey(key);
+    }
+
+    @Override
+    public void setFocus(boolean focused) {
+        base.getValueBox().setFocus(focused);
+    }
+
+    @Override
+    public void setTabIndex(int index) {
+        base.getValueBox().setTabIndex(index);
+    }
 }

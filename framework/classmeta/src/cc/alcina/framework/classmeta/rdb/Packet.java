@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 
-public class JdwpPacket {
+ class Packet {
     public static int bigEndian(byte[] byteArray) {
         return bigEndian(byteArray[0], byteArray[1], byteArray[2],
                 byteArray[3]);
@@ -28,10 +28,13 @@ public class JdwpPacket {
 
     public String messageName;
 
-    public transient JdwpMessage message;
+     transient Message message;
+     transient PacketEndpoint source;
+    
+    transient PacketMeta meta;
 
-    public JdwpPacket copy() {
-        JdwpPacket copy = ResourceUtilities.fieldwiseClone(this);
+    public Packet copy() {
+        Packet copy = ResourceUtilities.fieldwiseClone(this);
         copy.bytes = Arrays.copyOf(bytes, bytes.length);
         return copy;
     }
@@ -72,5 +75,11 @@ public class JdwpPacket {
 
     int length() {
         return bigEndian(bytes[0], bytes[1], bytes[2], bytes[3]);
+    }
+
+    public Packet translate(PacketEndpoint otherSource,
+            PacketEndpoint packetSource) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

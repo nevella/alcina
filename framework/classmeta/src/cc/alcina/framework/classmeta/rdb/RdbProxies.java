@@ -17,7 +17,7 @@ import cc.alcina.framework.entity.util.ShellWrapper;
 public class RdbProxies {
     Logger logger = LoggerFactory.getLogger(getClass());
 
-    RdbProxySchema schema;
+    RdbEndpointSchema schema;
 
     List<RdbProxy> proxies = new ArrayList<>();
 
@@ -33,12 +33,12 @@ public class RdbProxies {
         }
         if (modelXml == null) {
             Ax.out("No RdbProxySchema defined");
-            schema = new RdbProxySchema();
+            schema = new RdbEndpointSchema();
         } else {
-            schema = WrappedObjectHelper.xmlDeserialize(RdbProxySchema.class,
+            schema = WrappedObjectHelper.xmlDeserialize(RdbEndpointSchema.class,
                     modelXml);
         }
-        schema.proxyDescriptors.forEach(this::start);
+        schema.endpointDescriptors.forEach(this::start);
         try {
             new ShellWrapper().runBashScript(
                     "/usr/bin/java -jar /g/alcina/lib/framework/dev/eclipse_remote_control_client.jar execute_command ljda.jade DEBUG");
@@ -47,18 +47,18 @@ public class RdbProxies {
         }
     }
 
-    private void start(RdbProxySchemaProxyDescriptor proxyDescriptor) {
+    private void start(RdbEndpointDescriptor proxyDescriptor) {
         RdbProxy rdbProxy = new RdbProxy(proxyDescriptor);
         proxies.add(rdbProxy);
         rdbProxy.start();
     }
 
     @XmlRootElement
-    public static class RdbProxySchema {
-        public List<RdbProxySchemaProxyDescriptor> proxyDescriptors = new ArrayList<>();
+    public static class RdbEndpointSchema {
+        public List<RdbEndpointDescriptor> endpointDescriptors = new ArrayList<>();
     }
-
-    public static class RdbProxySchemaProxyDescriptor {
+//FIXME - add transport type 
+    public static class RdbEndpointDescriptor {
         public int internalDebuggerPort;
 
         public int externalDebuggerAttachToPort;

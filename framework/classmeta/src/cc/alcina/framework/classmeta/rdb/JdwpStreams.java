@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 
-class JdwpStreamInterceptor {
+class JdwpStreams implements PacketEndpoint{
 
     String name;
 
@@ -19,7 +19,7 @@ class JdwpStreamInterceptor {
 
     StreamListener streamListener;
 
-    JdwpStreamInterceptor(String name, StreamListener streamListener,
+    JdwpStreams(String name, StreamListener streamListener,
             InputStream inputStream, OutputStream outputStream) {
         this.name = name;
         this.streamListener = streamListener;
@@ -47,7 +47,7 @@ class JdwpStreamInterceptor {
                     while (true) {
                         byte[] in = new byte[4];
                         fromStream.read(in);
-                        int length = JdwpPacket.bigEndian(in);
+                        int length = Packet.bigEndian(in);
                         if(length>(2<<18)){
                             //hack - did we get an out of order handshake packet?
                            Ax.out("dropping malformed packet");
@@ -60,10 +60,10 @@ class JdwpStreamInterceptor {
                         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
                         buffer.write(in);
                         buffer.write(packet);
-                        JdwpPacket received = new JdwpPacket();
+                        Packet received = new Packet();
                         received.bytes = buffer.toByteArray();
                         received.fromName=name;
-                        streamListener.packetReceived(JdwpStreamInterceptor.this,received);
+                        streamListener.packetReceived(JdwpStreams.this,received);
                     }
                 } catch (Exception e) {
                    throw new WrappedRuntimeException(e);
@@ -74,7 +74,7 @@ class JdwpStreamInterceptor {
 
 
 
-    public void write(JdwpPacket packet) {
+    public void write(Packet packet) {
         try{
             toStream.write(packet.bytes);
         }

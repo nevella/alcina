@@ -6,24 +6,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class JdwpPackets {
-    public List<JdwpPacket> packets = new ArrayList<>();
+ class Packets {
+    public List<Packet> packets = new ArrayList<>();
     
-    transient Map<Integer,JdwpPacket> sentById = new LinkedHashMap<>();
+    transient Map<Integer,Packet> sentById = new LinkedHashMap<>();
 
-    public Optional<JdwpPacket> find(int commandSet, int commandId) {
-        Optional<JdwpPacket> findFirst = packets.stream()
+    public Optional<Packet> find(int commandSet, int commandId) {
+        Optional<Packet> findFirst = packets.stream()
                 .filter(p -> p.commandSet() == commandSet
                         && p.commandId() == commandId && p.fromDebugger)
                 .findFirst();
         return findFirst;
     }
 
-    public JdwpPacket findReply(int id) {
+    public Packet findReply(int id) {
         return sentById.get(id);
     }
 
-    public void add(JdwpPacket packet) {
+    public void add(Packet packet) {
         packets.add(packet);
         if(packet.commandSet()!=0){
             sentById.put(packet.id(), packet);

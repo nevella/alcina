@@ -52,6 +52,7 @@ public @interface Display {
      * ignore property permissions, let the renderer/transforms handle it
      */
     public static final int DISPLAY_EDITABLE = 64;
+    
 
     // note, if you want a r-o property, don't use DISPLAY_RO, you need to set
     // DISPLAY_AS_PROPERTY | DISPLAY_RO

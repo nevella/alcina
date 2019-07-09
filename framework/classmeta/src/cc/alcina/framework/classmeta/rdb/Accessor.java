@@ -8,8 +8,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public class JdwpAccessor {
-    Map<CommandIds, JdwpMessage> messages = new LinkedHashMap<>();
+ class Accessor {
+    Map<CommandIds, Message> messages = new LinkedHashMap<>();
 
     static class CommandIds {
         private int commandSet;
@@ -42,7 +42,7 @@ public class JdwpAccessor {
         }
     }
 
-    public JdwpAccessor() {
+    public Accessor() {
         try {
             model();
             int debug = 3;
@@ -55,7 +55,7 @@ public class JdwpAccessor {
         Class jdwp = Class.forName("com.sun.tools.jdi.JDWP");
         for (Class commandSet : jdwp.getDeclaredClasses()) {
             for (Class command : commandSet.getDeclaredClasses()) {
-                JdwpMessage message = new JdwpMessage(commandSet, command);
+                Message message = new Message(commandSet, command);
                 CommandIds ids = new CommandIds(message.getCommandSetId(),
                         message.getCommandId());
                 messages.put(ids, message);
@@ -63,14 +63,14 @@ public class JdwpAccessor {
         }
     }
 
-    public void parse(JdwpPacket packet) {
+    public void parse(Packet packet) {
         CommandIds ids = new CommandIds(packet.commandSet(),
                 packet.commandId());
         if(!packet.fromDebugger){
             packet.messageName="(reply)";
             return;
         }
-        JdwpMessage message = messages.get(ids);
+        Message message = messages.get(ids);
         packet.messageName = message.
                 name();
         packet.message = message;

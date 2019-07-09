@@ -5,7 +5,7 @@ import java.lang.reflect.Field;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 
-public class JdwpMessage {
+public class Message {
     private Class commandSet;
 
     private Class command;
@@ -14,7 +14,7 @@ public class JdwpMessage {
 
     private int commandId;
 
-    public JdwpMessage(Class commandSet, Class command) {
+    public Message(Class commandSet, Class command) {
         this.commandSet = commandSet;
         this.command = command;
         try {
