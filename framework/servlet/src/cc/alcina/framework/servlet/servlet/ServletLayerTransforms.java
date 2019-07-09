@@ -215,6 +215,8 @@ public class ServletLayerTransforms {
         return pendingTransformCount;
     }
 
+    private BackendTransformQueue backendTransformQueue;
+
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
@@ -228,6 +230,15 @@ public class ServletLayerTransforms {
     private int transformRequestCounter = 1;
 
     public void appShutdown() {
+        backendTransformQueue.appShutdown();
+    }
+
+    public synchronized void enqueueBackendTransform(Runnable runnable) {
+        if (backendTransformQueue == null) {
+            backendTransformQueue = new BackendTransformQueue();
+            backendTransformQueue.start();
+        }
+        backendTransformQueue.enqueue(runnable);
     }
 
     public HiliLocatorMap getLocatorMapForClient(
