@@ -387,6 +387,15 @@ public class DomainStore implements IDomainStore {
         threads.readLockExpectLongRunning(lock);
     }
 
+    public void runWithWriteLock(Runnable runnable) {
+        try {
+            threads.lock(true);
+            runnable.run();
+        } finally {
+            threads.unlock(true);
+        }
+    }
+
     /**
      * Normally should be true, expect in warmup (where we know threads will be
      * non-colliding)
@@ -932,8 +941,17 @@ public class DomainStore implements IDomainStore {
                     }
                 }
             }
-            indexAtEnd.forEach(
-                    domainStoreObject -> index(domainStoreObject, true));
+            indexAtEnd.forEach(domainStoreObject -> {
+                List<DomainTransformEvent> list = perObjectTransforms
+                        .get(new HiliLocator(domainStoreObject));
+                DomainTransformEvent last = list == null ? null
+                        : CommonUtils.last(list);
+                if (last != null && last
+                        .getTransformType() == TransformType.DELETE_OBJECT) {
+                } else {
+                    index(domainStoreObject, true);
+                }
+            });
             doEvictions();
         } catch (Exception e) {
             causes.add(e);
