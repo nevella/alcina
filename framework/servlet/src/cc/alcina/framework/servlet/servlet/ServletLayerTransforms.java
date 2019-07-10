@@ -77,6 +77,9 @@ public class ServletLayerTransforms {
     public static final transient String CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH = ServletLayerUtils.class
             .getName() + ".CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH";
 
+    public static final transient String CONTEXT_TRANSFORM_PRIORITY = ServletLayerUtils.class
+            .getName() + ".CONTEXT_TRANSFORM_PRIORITY";
+
     public static final transient String CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK = ServletLayerUtils.class
             .getName() + ".CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK";
 
@@ -94,6 +97,13 @@ public class ServletLayerTransforms {
 
     public static ServletLayerTransforms get() {
         return Registry.impl(ServletLayerTransforms.class);
+    }
+
+    public static boolean hasBackendTransformPriority() {
+        TransformPriority priority = LooseContext
+                .get(CONTEXT_TRANSFORM_PRIORITY);
+        return !(priority == null || priority
+                .getPriority() >= TransformPriorityStd.User.getPriority());
     }
 
     public static DomainTransformLayerWrapper pushTransforms(String tag,
@@ -151,6 +161,10 @@ public class ServletLayerTransforms {
 
     public static int pushTransformsAsRoot() {
         return pushTransforms(true);
+    }
+
+    public static void setPriority(TransformPriority priority) {
+        LooseContext.set(CONTEXT_TRANSFORM_PRIORITY, priority);
     }
 
     public static TopicSupport<TransformPersistenceToken> topicUnexpectedExceptionBeforePostTransform() {
@@ -522,5 +536,23 @@ public class ServletLayerTransforms {
 
     synchronized int nextTransformRequestId() {
         return transformRequestCounter++;
+    }
+
+    public interface TransformPriority {
+        int getPriority();
+    }
+
+    public enum TransformPriorityStd implements TransformPriority {
+        Job(20), Backend_admin(10), User(100);
+        private int priority;
+
+        private TransformPriorityStd(int priority) {
+            this.priority = priority;
+        }
+
+        @Override
+        public int getPriority() {
+            return this.priority;
+        }
     }
 }

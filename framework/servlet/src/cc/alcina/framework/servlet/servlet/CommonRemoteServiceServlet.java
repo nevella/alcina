@@ -135,6 +135,7 @@ import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.knowns.KnownsDeltaRequestHandler;
+import cc.alcina.framework.servlet.servlet.ServletLayerTransforms.TransformPriorityStd;
 
 /**
  *
@@ -1166,6 +1167,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
             onAfterSpawnedThreadRun(properties);
             LooseContext.getContext().addTopicListener(
                     JobRegistry.TOPIC_JOB_STARTED, startListener);
+            ServletLayerTransforms.setPriority(TransformPriorityStd.Job);
             performActionAndWait(this.action);
         }
     }

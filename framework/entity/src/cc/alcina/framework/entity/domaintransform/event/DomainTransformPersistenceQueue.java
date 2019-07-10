@@ -103,6 +103,12 @@ public class DomainTransformPersistenceQueue {
         return this.firingThread;
     }
 
+    public int getToFireQueueLength() {
+        synchronized (queueModificationLock) {
+            return toFire.size();
+        }
+    }
+
     public DomainTransformCommitPosition getTransformLogPosition() {
         synchronized (queueModificationLock) {
             return new DomainTransformCommitPosition(

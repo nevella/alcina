@@ -13,6 +13,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.servlet.Sx;
+import cc.alcina.framework.servlet.servlet.ServletLayerTransforms.TransformPriorityStd;
 
 class BackendTransformQueue {
     private AtEndOfEventSeriesTimer persistTimer;
@@ -56,7 +57,14 @@ class BackendTransformQueue {
                 logger.warn("(Backend queue)  - committing {} transforms",
                         events.size());
             }
-            Sx.commit();
+            try {
+                LooseContext.push();
+                ServletLayerTransforms
+                        .setPriority(TransformPriorityStd.Backend_admin);
+                Sx.commit();
+            } finally {
+                LooseContext.pop();
+            }
         }
     }
 
