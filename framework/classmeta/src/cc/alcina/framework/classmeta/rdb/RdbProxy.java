@@ -3,13 +3,11 @@ package cc.alcina.framework.classmeta.rdb;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.jdi.event.Event;
 import com.sun.tools.jdi.VirtualMachineImplExt;
 
 import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
@@ -48,8 +46,7 @@ class RdbProxy {
 
     private StreamListener ioStreamListener = new StreamListener() {
         @Override
-        public void packetReceived(JdwpStreams interceptor,
-                Packet packet) {
+        public void packetReceived(JdwpStreams interceptor, Packet packet) {
             packet.fromDebugger = interceptor == extDebuggerToExtDebugee;
             parsePacket(packet);
             packets.add(packet);
@@ -63,9 +60,18 @@ class RdbProxy {
 
     Accessor jwdpAccessor = new Accessor();
 
-    private void parsePacket(Packet packet) {
-        jwdpAccessor.parse(packet);
-    }
+    private AtEndOfEventSeriesTimer<ClientLogRecord> appendTimer = new AtEndOfEventSeriesTimer<>(
+            200, new Runnable() {
+                @Override
+                public void run() {
+                    String fn = Ax.format(
+                            "/private/var/local/git/alcina/framework/classmeta/src/cc/alcina/framework/classmeta/rdb/packets-%s.json",
+                            proxyDescriptor.name);
+                    ResourceUtilities.write(JacksonUtils
+                            .serializeForLoggingWithDefaultsNoTypes(packets),
+                            fn);
+                }
+            }).maxDelayFromFirstAction(200);
 
     public RdbProxy(RdbEndpointDescriptor proxyDescriptor) {
         this.proxyDescriptor = proxyDescriptor;
@@ -84,27 +90,14 @@ class RdbProxy {
         }.start();
     }
 
-    private AtEndOfEventSeriesTimer<ClientLogRecord> appendTimer = new AtEndOfEventSeriesTimer<>(
-            200, new Runnable() {
-                @Override
-                public void run() {
-                    String fn = Ax.format(
-                            "/private/var/local/git/alcina/framework/classmeta/src/cc/alcina/framework/classmeta/rdb/packets-%s.json",
-                            proxyDescriptor.name);
-                    ResourceUtilities.write(JacksonUtils
-                            .serializeForLoggingWithDefaultsNoTypes(packets),
-                            fn);
-                }
-            }).maxDelayFromFirstAction(200);
-
     private void appendPacket(Packet packet) {
         appendTimer.triggerEventOccurred();
     }
 
     private void connectExternalDebuggee() {
         try {
-            externalDebuggeeSocket = new Socket(proxyDescriptor.remoteHost,
-                    proxyDescriptor.remoteJdwpPort);
+            externalDebuggeeSocket = new Socket(proxyDescriptor.jdwpHost,
+                    proxyDescriptor.jdwpPort);
             logger.info("Ext debuggee connected to socket - {}",
                     proxyDescriptor.name);
         } catch (Exception e) {
@@ -128,8 +121,7 @@ class RdbProxy {
 
     private void listenForExternalDebuggerAttach0()
             throws IOException, Exception {
-        ServerSocket serverSocket = new ServerSocket(
-                proxyDescriptor.externalDebuggerAttachToPort);
+        ServerSocket serverSocket = new ServerSocket(proxyDescriptor.jdwpPort);
         while (true) {
             try {
                 Socket newSocket = serverSocket.accept();
@@ -170,12 +162,15 @@ class RdbProxy {
         }
     }
 
+    private void parsePacket(Packet packet) {
+        jwdpAccessor.parse(packet);
+    }
+
     class State {
         JdwpStreams lastSender = null;
     }
 
     interface StreamListener {
-        void packetReceived(JdwpStreams streams,
-                Packet received);
+        void packetReceived(JdwpStreams streams, Packet received);
     }
 }

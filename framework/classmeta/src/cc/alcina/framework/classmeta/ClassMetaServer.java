@@ -65,6 +65,7 @@ public class ClassMetaServer {
     private void initRegistry() {
         Registry.registerSingleton(TimerWrapperProvider.class,
                 new TimerWrapperProviderJvm());
+        Registry.registerSingleton(RdbProxies.class, new RdbProxies());
     }
 
     private void start() throws Exception {
@@ -74,26 +75,29 @@ public class ClassMetaServer {
         WrappedObjectHelper.withoutRegistry();
         initLoggers();
         initRegistry();
-//        this.rdbProxies = new RdbProxies();
-         ClassMetaHandler metaHandler = new ClassMetaHandler();
-         {
-         ContextHandler ctx = new ContextHandler(handlers, "/meta");
-         ctx.setHandler(metaHandler);
-         handlers.addHandler(ctx);
-         }
-         {
-         ContextHandler ctx = new ContextHandler(handlers, "/persistence");
-         ctx.setHandler(new ClassPersistenceScanHandler(metaHandler));
-         handlers.addHandler(ctx);
-         }
-         {
-         ContextHandler ctx = new ContextHandler(handlers, "/ant");
-         ctx.setHandler(new AntHandler());
-         handlers.addHandler(ctx);
-         }
-         server.setHandler(handlers);
-         server.start();
-         server.dumpStdErr();
-         server.join();
+        if ("ee".isEmpty()) {
+            RdbProxies.get().start();
+            return;
+        }
+        ClassMetaHandler metaHandler = new ClassMetaHandler();
+        {
+            ContextHandler ctx = new ContextHandler(handlers, "/meta");
+            ctx.setHandler(metaHandler);
+            handlers.addHandler(ctx);
+        }
+        {
+            ContextHandler ctx = new ContextHandler(handlers, "/persistence");
+            ctx.setHandler(new ClassPersistenceScanHandler(metaHandler));
+            handlers.addHandler(ctx);
+        }
+        {
+            ContextHandler ctx = new ContextHandler(handlers, "/ant");
+            ctx.setHandler(new AntHandler());
+            handlers.addHandler(ctx);
+        }
+        server.setHandler(handlers);
+        server.start();
+        server.dumpStdErr();
+        server.join();
     }
 }
