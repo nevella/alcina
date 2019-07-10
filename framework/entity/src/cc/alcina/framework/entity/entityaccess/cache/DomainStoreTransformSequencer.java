@@ -208,7 +208,16 @@ public class DomainStoreTransformSequencer {
             throws Exception {
         List<Long> unpublishedIds = new ArrayList<>();
         Connection conn = getConnection();
-        ensureTransactionCommitTimes();
+        /*
+         * normally, commit times are ensured just after the dtrp is committed
+         * in TransformPersister
+         * 
+         * if the vm crashes between dtrp commit and update, any subsequent
+         * commits will catch that missed transactionCommitTime update
+         * 
+         * so no need to ensure here
+         */
+        // ensureTransactionCommitTimes();
         Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
                 .getDomainTransformRequestPersistentClass();
         String tableName = persistentClass.getAnnotation(Table.class).name();
@@ -266,6 +275,10 @@ public class DomainStoreTransformSequencer {
     }
 
     void ensureTransactionCommitTimes() throws SQLException {
+        if (!loaderDatabase.domainDescriptor
+                .isUseTransformDbCommitSequencing()) {
+            return;
+        }
         /* postgres specific */
         Connection conn = getConnection();
         try (Statement statement = conn.createStatement()) {
