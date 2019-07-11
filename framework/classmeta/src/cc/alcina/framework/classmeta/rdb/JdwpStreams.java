@@ -7,10 +7,8 @@ import java.io.OutputStream;
 import cc.alcina.framework.classmeta.rdb.RdbProxy.StreamListener;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 
-class JdwpStreams implements PacketEndpoint{
-
+class JdwpStreams implements PacketEndpointHost {
     String name;
 
     InputStream fromStream;
@@ -26,10 +24,21 @@ class JdwpStreams implements PacketEndpoint{
         this.fromStream = inputStream;
         this.toStream = outputStream;
         Ax.out("[%s] : %s >> %s", name, fromStream, toStream);
-        
     }
 
-   
+    @Override
+    public PacketEndpoint endpoint() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public void write(Packet packet) {
+        try {
+            toStream.write(packet.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
     void start() {
         byte[] handshake = new byte[14];
@@ -48,39 +57,29 @@ class JdwpStreams implements PacketEndpoint{
                         byte[] in = new byte[4];
                         fromStream.read(in);
                         int length = Packet.bigEndian(in);
-                        if(length>(2<<18)){
-                            //hack - did we get an out of order handshake packet?
-                           Ax.out("dropping malformed packet");
-                           byte[] packet = new byte[10];
-                           fromStream.read(packet);
-                           return;
+                        if (length > (2 << 18)) {
+                            // hack - did we get an out of order handshake
+                            // packet?
+                            Ax.out("dropping malformed packet");
+                            byte[] packet = new byte[10];
+                            fromStream.read(packet);
+                            return;
                         }
-                        byte[] packet = new byte[length-4];
+                        byte[] packet = new byte[length - 4];
                         fromStream.read(packet);
                         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
                         buffer.write(in);
                         buffer.write(packet);
                         Packet received = new Packet();
                         received.bytes = buffer.toByteArray();
-                        received.fromName=name;
-                        streamListener.packetReceived(JdwpStreams.this,received);
+                        received.fromName = name;
+                        streamListener.packetReceived(JdwpStreams.this,
+                                received);
                     }
                 } catch (Exception e) {
-                   throw new WrappedRuntimeException(e);
+                    throw new WrappedRuntimeException(e);
                 }
             }
         }.start();
-    }
-
-
-
-    public void write(Packet packet) {
-        try{
-            toStream.write(packet.bytes);
-        }
-        catch(Exception e){
-            throw new WrappedRuntimeException(e);
-        }
-        
     }
 }

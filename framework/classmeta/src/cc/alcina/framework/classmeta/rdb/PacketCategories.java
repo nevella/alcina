@@ -1,9 +1,10 @@
 package cc.alcina.framework.classmeta.rdb;
 
-class PacketCategories {
+import cc.alcina.framework.classmeta.rdb.PacketEndpointHost.PacketEndpoint;
 
-    public void analysePacket(Endpoint endpoint, PacketEndpoint packetSource, Packet packet) {
+class PacketCategories {
+    public void analysePacket(Endpoint endpoint, PacketEndpoint packetSource,
+            Packet packet) {
         // TODO Auto-generated method stub
-        
     }
 }

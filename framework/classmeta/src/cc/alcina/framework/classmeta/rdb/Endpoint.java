@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sun.tools.jdi.VirtualMachineImplExt;
 
+import cc.alcina.framework.classmeta.rdb.PacketEndpointHost.PacketEndpoint;
 import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -102,7 +103,8 @@ abstract class Endpoint {
     }
 
     private PacketEndpoint otherEndpoint(PacketEndpoint packetEndpoint) {
-        return packetEndpoint == streams ? transport : streams;
+        return packetEndpoint.host == streams ? transport.endpoint()
+                : streams.endpoint();
     }
 
     private void outPackets(PacketEndpoint packetEndpoint) {
@@ -119,10 +121,10 @@ abstract class Endpoint {
                     while (true) {
                         synchronized (trafficMonitor) {
                             trafficMonitor.wait();
-                            inPackets(streams);
-                            inPackets(transport);
-                            outPackets(streams);
-                            outPackets(transport);
+                            inPackets(streams.endpoint());
+                            inPackets(transport.endpoint());
+                            outPackets(streams.endpoint());
+                            outPackets(transport.endpoint());
                         }
                     }
                 } catch (Exception e) {

@@ -2,22 +2,23 @@ package cc.alcina.framework.classmeta.rdb;
 
 import java.util.Arrays;
 
+import cc.alcina.framework.classmeta.rdb.PacketEndpointHost.PacketEndpoint;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 
- class Packet {
+class Packet {
     public static int bigEndian(byte[] byteArray) {
         return bigEndian(byteArray[0], byteArray[1], byteArray[2],
                 byteArray[3]);
     }
 
-    static int bigEndian(byte b1, byte b2, byte b3, byte b4) {
-        return (b1 << 24) + (b2 << 16) + (b3 << 8) + un2c(b4);
-    }
-
     private static int un2c(byte b) {
         return b < 0 ? b + 256 : b;
+    }
+
+    static int bigEndian(byte b1, byte b2, byte b3, byte b4) {
+        return (b1 << 24) + (b2 << 16) + (b3 << 8) + un2c(b4);
     }
 
     public byte[] bytes = new byte[11];
@@ -28,9 +29,10 @@ import cc.alcina.framework.entity.SEUtilities;
 
     public String messageName;
 
-     transient Message message;
-     transient PacketEndpoint source;
-    
+    transient Message message;
+
+    transient PacketEndpoint source;
+
     transient PacketMeta meta;
 
     public Packet copy() {
@@ -54,7 +56,14 @@ import cc.alcina.framework.entity.SEUtilities;
 
     @Override
     public String toString() {
-        return Ax.format("%s/%s/%s %s", id(), commandSet(), commandId(),Ax.blankToEmpty(messageName));
+        return Ax.format("%s/%s/%s %s", id(), commandSet(), commandId(),
+                Ax.blankToEmpty(messageName));
+    }
+
+    public Packet translate(PacketEndpoint otherSource,
+            PacketEndpoint packetSource) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     int commandId() {
@@ -75,11 +84,5 @@ import cc.alcina.framework.entity.SEUtilities;
 
     int length() {
         return bigEndian(bytes[0], bytes[1], bytes[2], bytes[3]);
-    }
-
-    public Packet translate(PacketEndpoint otherSource,
-            PacketEndpoint packetSource) {
-        // TODO Auto-generated method stub
-        return null;
     }
 }

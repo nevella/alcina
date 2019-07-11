@@ -75,7 +75,7 @@ public class ClassMetaServer {
         WrappedObjectHelper.withoutRegistry();
         initLoggers();
         initRegistry();
-        if ("ee".isEmpty()) {
+        if (Boolean.getBoolean("testRdbProxies")) {
             RdbProxies.get().start();
             return;
         }
