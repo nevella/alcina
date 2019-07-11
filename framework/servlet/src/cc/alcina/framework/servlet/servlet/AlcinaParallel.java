@@ -46,23 +46,48 @@ public class AlcinaParallel {
     }
 
     public AlcinaParallelResults run() {
-        executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-                parameters.threadCount,
-                new NamedThreadFactory(parameters.provideThreadName()));
-        jobTracker = JobRegistry.get().getContextTracker();
-        LooseContextInstance snapshot = LooseContext.getContext().snapshot();
-        List<Callable> callables = parameters.runnables.stream()
-                .map(runnable -> wrapRunnableForParallel(snapshot, runnable))
-                .collect(Collectors.toList());
-        try {
-            executor.invokeAll((List) callables);
-        } catch (InterruptedException e) {
-            // oksies, cancelled
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
+        if (parameters.serial) {
+            for (Runnable runnable : parameters.runnables) {
+                try {
+                    LooseContext.push();
+                    if (cancelled) {
+                        break;
+                    }
+                    if (jobTracker != null && jobTracker.isCancelled()) {
+                        break;
+                    }
+                    runnable.run();
+                } catch (RuntimeException e) {
+                    e.printStackTrace();
+                    if (parameters.cancelOnException) {
+                        cancelled = true;
+                    }
+                    exceptions.add(e);
+                } finally {
+                    LooseContext.pop();
+                }
+            }
+            return new AlcinaParallelResults();
+        } else {
+            executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
+                    parameters.threadCount,
+                    new NamedThreadFactory(parameters.provideThreadName()));
+            jobTracker = JobRegistry.get().getContextTracker();
+            LooseContextInstance snapshot = LooseContext.getContext()
+                    .snapshot();
+            List<Callable> callables = parameters.runnables.stream().map(
+                    runnable -> wrapRunnableForParallel(snapshot, runnable))
+                    .collect(Collectors.toList());
+            try {
+                executor.invokeAll((List) callables);
+            } catch (InterruptedException e) {
+                // oksies, cancelled
+            } catch (Exception e) {
+                throw new WrappedRuntimeException(e);
+            }
+            executor.shutdown();
+            return new AlcinaParallelResults();
         }
-        executor.shutdown();
-        return new AlcinaParallelResults();
     }
 
     Callable wrapRunnableForParallel(LooseContextInstance snapshot,
@@ -113,6 +138,8 @@ public class AlcinaParallel {
 
         private String threadName;
 
+        private boolean serial;
+
         public Parameters() {
         }
 
@@ -121,6 +148,7 @@ public class AlcinaParallel {
             this.threadCount = builder.threadCount;
             this.runnables = builder.runnables;
             this.threadName = builder.threadName;
+            this.serial = builder.withSerial;
         }
 
         public String provideThreadName() {
@@ -136,6 +164,8 @@ public class AlcinaParallel {
             private List<Runnable> runnables = Collections.emptyList();
 
             private String threadName;
+
+            private boolean withSerial;
 
             private Builder() {
             }
@@ -155,6 +185,11 @@ public class AlcinaParallel {
 
             public Builder withRunnables(List<Runnable> runnables) {
                 this.runnables = runnables;
+                return this;
+            }
+
+            public Builder withSerial(boolean withSerial) {
+                this.withSerial = withSerial;
                 return this;
             }
 
