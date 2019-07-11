@@ -7,6 +7,11 @@ class SharedVmTransport extends Transport {
         super(descriptor);
     }
 
+    @Override
+    public void send() {
+        // TODO Auto-generated method stub
+    }
+
     private Endpoint from() {
         return RdbProxies.get().endpointByName(descriptor.name);
     }
@@ -32,6 +37,6 @@ class SharedVmTransport extends Transport {
     @Override
     protected void sendPacket(Endpoint from, Packet packet) {
         Endpoint other = from == this.from() ? to() : this.from();
-        other.onPacketFromEndpoint(packet);
+        other.transport.receivePacket(packet);
     }
 }

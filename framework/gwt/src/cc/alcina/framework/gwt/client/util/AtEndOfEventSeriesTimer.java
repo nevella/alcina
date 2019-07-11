@@ -25,7 +25,11 @@ public class AtEndOfEventSeriesTimer<T> {
                     }
                     firstEventOccurred = 0;
                 }
-                action.run();
+                try {
+                    action.run();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
                 firstObject = null;
             }
         }

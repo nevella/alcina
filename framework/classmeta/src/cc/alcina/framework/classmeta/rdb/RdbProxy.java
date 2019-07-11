@@ -145,16 +145,16 @@ class RdbProxy {
         try {
             startLatch.await();
             logger.info("All sockets connected - {}", proxyDescriptor.name);
-            extDebuggerToExtDebugee = new JdwpStreams(
-                    Ax.format("%s::extDebuggerToExtDebuggee",
-                            proxyDescriptor.name),
-                    ioStreamListener, externalDebuggerSocket.getInputStream(),
-                    externalDebuggeeSocket.getOutputStream());
-            extDebuggeeToExternalDebugger = new JdwpStreams(
-                    Ax.format("%s::extDebuggeeToExtDebugger",
-                            proxyDescriptor.name),
-                    ioStreamListener, externalDebuggeeSocket.getInputStream(),
-                    externalDebuggerSocket.getOutputStream());
+            // extDebuggerToExtDebugee = new JdwpStreams(
+            // Ax.format("%s::extDebuggerToExtDebuggee",
+            // proxyDescriptor.name),
+            // ioStreamListener, externalDebuggerSocket.getInputStream(),
+            // externalDebuggeeSocket.getOutputStream());
+            // extDebuggeeToExternalDebugger = new JdwpStreams(
+            // Ax.format("%s::extDebuggeeToExtDebugger",
+            // proxyDescriptor.name),
+            // ioStreamListener, externalDebuggeeSocket.getInputStream(),
+            // externalDebuggerSocket.getOutputStream());
             extDebuggerToExtDebugee.start();
             extDebuggeeToExternalDebugger.start();
         } catch (Exception e) {

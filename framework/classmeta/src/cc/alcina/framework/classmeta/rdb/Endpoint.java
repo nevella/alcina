@@ -12,6 +12,7 @@ import com.sun.tools.jdi.VirtualMachineImplExt;
 
 import cc.alcina.framework.classmeta.rdb.PacketEndpointHost.PacketEndpoint;
 import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
+import cc.alcina.framework.classmeta.rdb.RdbProxy.StreamListener;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -33,17 +34,35 @@ abstract class Endpoint {
 
     Socket socket = null;
 
+    private StreamListener ioStreamListener = new StreamListener() {
+        @Override
+        public void packetReceived(JdwpStreams interceptor, Packet packet) {
+            int debug = 3;
+            // packet.fromDebugger = interceptor == extDebuggerToExtDebugee;
+            // parsePacket(packet);
+            // packets.add(packet);
+            // packet.dump();
+            // if (record) {
+            // appendPacket(packet);
+            // interceptor.write(packet);
+            // }
+        }
+    };
+
     public Endpoint(RdbEndpointDescriptor descriptor) {
         this.descriptor = descriptor;
     }
 
-    public void onPacketFromEndpoint(Packet packet) {
-        // TODO Auto-generated method stub
+    public void packetsReceived(Packet packet) {
+        synchronized (trafficMonitor) {
+            trafficMonitor.notifyAll();
+        }
     }
 
     private void doAttachJdwp() {
         try {
             socket = new Socket(descriptor.jdwpHost, descriptor.jdwpPort);
+            startSocketInterceptor();
             logger.info("JDWP attach - {}", descriptor.name);
         } catch (Exception e) {
             e.printStackTrace();
@@ -132,6 +151,11 @@ abstract class Endpoint {
                 }
             }
         }.start();
+    }
+
+    private void startSocketInterceptor() {
+        streams = new JdwpStreams(descriptor, socket);
+        streams.start();
     }
 
     private void startTransportStream() {
