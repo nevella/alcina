@@ -589,6 +589,14 @@ public class DevConsoleCommandTransforms {
             }
         }
 
+        public static class CmdListTransformsFilterDtrId2
+                extends CmdListTransformsFilterDtrId {
+            @Override
+            public String getKey() {
+                return "dtrid";
+            }
+        }
+
         public static class CmdListTransformsFilterMinDays
                 extends CmdListTransformsFilter {
             @Override
