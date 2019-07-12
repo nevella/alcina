@@ -99,6 +99,10 @@ public class ServletLayerTransforms {
         return Registry.impl(ServletLayerTransforms.class);
     }
 
+    public static TransformPriority getPriority() {
+        return LooseContext.get(CONTEXT_TRANSFORM_PRIORITY);
+    }
+
     public static boolean hasBackendTransformPriority() {
         TransformPriority priority = LooseContext
                 .get(CONTEXT_TRANSFORM_PRIORITY);
