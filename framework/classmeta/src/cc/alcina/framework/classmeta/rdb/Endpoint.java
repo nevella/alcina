@@ -3,59 +3,41 @@ package cc.alcina.framework.classmeta.rdb;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Iterator;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.tools.jdi.VirtualMachineImplExt;
-
 import cc.alcina.framework.classmeta.rdb.PacketEndpointHost.PacketEndpoint;
 import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
-import cc.alcina.framework.classmeta.rdb.RdbProxy.StreamListener;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 
 @SuppressWarnings("resource")
-abstract class Endpoint {
+abstract class Endpoint implements PacketListener {
     protected Transport transport;
 
     protected JdwpStreams streams;
 
     protected RdbEndpointDescriptor descriptor;
 
-    protected VirtualMachineImplExt vm = new VirtualMachineImplExt();
-
     PacketCategories categories = new PacketCategories();
-
-    private Object trafficMonitor = new Object();
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
     Socket socket = null;
 
-    private StreamListener ioStreamListener = new StreamListener() {
-        @Override
-        public void packetReceived(JdwpStreams interceptor, Packet packet) {
-            int debug = 3;
-            // packet.fromDebugger = interceptor == extDebuggerToExtDebugee;
-            // parsePacket(packet);
-            // packets.add(packet);
-            // packet.dump();
-            // if (record) {
-            // appendPacket(packet);
-            // interceptor.write(packet);
-            // }
-        }
-    };
+    AtomicInteger eventCounter = new AtomicInteger(0);
 
     public Endpoint(RdbEndpointDescriptor descriptor) {
         this.descriptor = descriptor;
     }
 
+    @Override
     public void packetsReceived(Packet packet) {
-        synchronized (trafficMonitor) {
-            trafficMonitor.notifyAll();
+        synchronized (eventCounter) {
+            eventCounter.incrementAndGet();
+            eventCounter.notify();
         }
     }
 
@@ -63,7 +45,7 @@ abstract class Endpoint {
         try {
             socket = new Socket(descriptor.jdwpHost, descriptor.jdwpPort);
             startSocketInterceptor();
-            logger.info("JDWP attach - {}", descriptor.name);
+            logger.info("JDWP attached >> {}", descriptor.name);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -71,21 +53,25 @@ abstract class Endpoint {
 
     private void inPackets(PacketEndpoint packetEndpoint) {
         PacketEndpoint otherEndpoint = otherEndpoint(packetEndpoint);
-        Iterator<Packet> packets = packetEndpoint.packets();
-        while (packets.hasNext()) {
-            // this is the naive (raw) packet from the endpoint.
-            Packet packet = packets.next();
+        Packet packet = null;
+        // this is the naive (raw) packet from the endpoint.
+        while ((packet = packetEndpoint.next()) != null) {
             // what's our coordinate space, Scotty?
             categories.analysePacket(this, packetEndpoint, packet);
+            if (packetEndpoint.host instanceof SharedVmTransport) {
+            } else {
+                logger.info("Received packet :: {}\t{}", packetEndpoint,
+                        packet);
+            }
             if (otherEndpoint.containsResponse(packet)) {
                 Packet translated = packet.translate(otherEndpoint,
                         packetEndpoint);
                 packetEndpoint.addReplyPacket(translated);
                 continue;
             }
-            packetEndpoint.addOutPacket(packet);
+            otherEndpoint.addOutPacket(packet);
             if (packet.meta.mustSend) {
-                packetEndpoint.setMustSend(true);
+                otherEndpoint.setMustSend(true);
                 break;
             }
         }
@@ -114,7 +100,8 @@ abstract class Endpoint {
                             "Only one simultaneous connection allowed");
                 }
                 socket = newSocket;
-                logger.info("JDWP attach - {}", descriptor.name);
+                startSocketInterceptor();
+                logger.info("JDWP attached << {}", descriptor.name);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -137,14 +124,31 @@ abstract class Endpoint {
             @Override
             public void run() {
                 try {
+                    int eventsProcessed = 0;
                     while (true) {
-                        synchronized (trafficMonitor) {
-                            trafficMonitor.wait();
-                            inPackets(streams.endpoint());
-                            inPackets(transport.endpoint());
-                            outPackets(streams.endpoint());
-                            outPackets(transport.endpoint());
+                        int eventsAtStartOfLoop = 0;
+                        synchronized (eventCounter) {
+                            // the main thing is to not miss wakeups - so if an
+                            // incoming packet is received on another thread
+                            // during this loop (and the counter is incremented
+                            // outside this sync block) - loop will rerun
+                            //
+                            // who knows - there may be a .concurrent class that
+                            // does this too
+                            eventsAtStartOfLoop = eventCounter.get();
+                            if (eventsAtStartOfLoop == eventsProcessed) {
+                                eventCounter.wait();
+                            }
                         }
+                        if (streams == null) {
+                            // waiting for attach
+                            continue;
+                        }
+                        inPackets(streams.endpoint());
+                        inPackets(transport.endpoint());
+                        outPackets(streams.endpoint());
+                        outPackets(transport.endpoint());
+                        eventsProcessed = eventsAtStartOfLoop;
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -154,12 +158,15 @@ abstract class Endpoint {
     }
 
     private void startSocketInterceptor() {
-        streams = new JdwpStreams(descriptor, socket);
+        streams = new JdwpStreams(descriptor, socket, this);
         streams.start();
+        synchronized (eventCounter) {
+            eventCounter.notify();
+        }
     }
 
     private void startTransportStream() {
-        transport = new SharedVmTransport(descriptor);
+        transport = new SharedVmTransport(descriptor, this);
         transport.launch();
         // FIXME - e.g. debuggee sharedvm - this
     }

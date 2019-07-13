@@ -184,6 +184,22 @@ public class DomainTransformPersistenceQueue {
         }
     }
 
+    public void waitUntilToFireQueueEmpty() {
+        while (true) {
+            synchronized (queueModificationLock) {
+                if (toFire.size() == 0) {
+                    return;
+                }
+            }
+            try {
+                Thread.sleep(1000);
+                logger.warn("Waiting for toFire queue to empty");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private DomainTransformPersistenceEvent createPersistenceEventFromPersistedRequest(
             DomainTransformRequestPersistent dtrp) {
         // create an "event" to publish in the queue

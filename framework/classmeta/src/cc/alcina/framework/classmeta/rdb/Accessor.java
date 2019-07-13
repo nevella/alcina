@@ -4,12 +4,53 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import cc.alcina.framework.classmeta.rdb.Packet.HandshakePacket;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
- class Accessor {
+class Accessor {
     Map<CommandIds, Message> messages = new LinkedHashMap<>();
+
+    public Accessor() {
+        try {
+            model();
+            int debug = 3;
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    public void parse(Packet packet) {
+        if (packet instanceof HandshakePacket) {
+            packet.messageName = "(handshake)";
+            return;
+        }
+        CommandIds ids = new CommandIds(packet.commandSet(),
+                packet.commandId());
+        if (packet.flags() == -128) {
+            packet.messageName = "(reply)";
+            return;
+        }
+        Message message = messages.get(ids);
+        if (message == null) {
+            int debug = 3;
+        }
+        packet.messageName = message.name();
+        packet.message = message;
+    }
+
+    private void model() throws Exception {
+        Class jdwp = Class.forName("com.sun.tools.jdi.JDWP");
+        for (Class commandSet : jdwp.getDeclaredClasses()) {
+            for (Class command : commandSet.getDeclaredClasses()) {
+                Message message = new Message(commandSet, command);
+                CommandIds ids = new CommandIds(message.getCommandSetId(),
+                        message.getCommandId());
+                messages.put(ids, message);
+            }
+        }
+    }
 
     static class CommandIds {
         private int commandSet;
@@ -36,43 +77,10 @@ import cc.alcina.framework.common.client.util.CommonUtils;
         public int hashCode() {
             return Objects.hash(commandSet, commandId);
         }
+
         @Override
         public String toString() {
-            return Ax.format("%s/%s", commandSet,commandId);
+            return Ax.format("%s/%s", commandSet, commandId);
         }
-    }
-
-    public Accessor() {
-        try {
-            model();
-            int debug = 3;
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
-
-    private void model() throws Exception {
-        Class jdwp = Class.forName("com.sun.tools.jdi.JDWP");
-        for (Class commandSet : jdwp.getDeclaredClasses()) {
-            for (Class command : commandSet.getDeclaredClasses()) {
-                Message message = new Message(commandSet, command);
-                CommandIds ids = new CommandIds(message.getCommandSetId(),
-                        message.getCommandId());
-                messages.put(ids, message);
-            }
-        }
-    }
-
-    public void parse(Packet packet) {
-        CommandIds ids = new CommandIds(packet.commandSet(),
-                packet.commandId());
-        if(!packet.fromDebugger){
-            packet.messageName="(reply)";
-            return;
-        }
-        Message message = messages.get(ids);
-        packet.messageName = message.
-                name();
-        packet.message = message;
     }
 }

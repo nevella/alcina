@@ -1,7 +1,7 @@
 package cc.alcina.framework.classmeta.rdb;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 interface PacketEndpointHost {
@@ -18,16 +18,26 @@ interface PacketEndpointHost {
 
         List<Packet> outPackets = new ArrayList<>();
 
-        List<Packet> inPackets = new ArrayList<>();
+        LinkedList<Packet> inPackets = new LinkedList<>();
 
         private boolean mustSend;
 
-        public PacketEndpoint(PacketEndpointHost host) {
+        private PacketListener listener;
+
+        public PacketEndpoint(PacketEndpointHost host,
+                PacketListener listener) {
             this.host = host;
+            this.listener = listener;
+        }
+
+        @Override
+        public synchronized String toString() {
+            return host.toString();
         }
 
         synchronized void addInPacket(Packet packet) {
             inPackets.add(packet);
+            listener.packetsReceived(packet);
         }
 
         synchronized void addOutPacket(Packet packet) {
@@ -42,9 +52,14 @@ interface PacketEndpointHost {
             return false;
         }
 
-        // i.e. incoming packets
-        Iterator<Packet> packets() {
-            return inPackets.iterator();
+        synchronized List<Packet> flushOutPackets() {
+            List<Packet> flush = outPackets;
+            outPackets = new ArrayList<>();
+            return flush;
+        }
+
+        synchronized Packet next() {
+            return inPackets.isEmpty() ? null : inPackets.pop();
         }
 
         void send() {
@@ -55,7 +70,7 @@ interface PacketEndpointHost {
             this.mustSend = mustSend;
         }
 
-        boolean shouldSend() {
+        synchronized boolean shouldSend() {
             return outPackets.size() > 0;
         }
     }

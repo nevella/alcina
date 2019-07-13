@@ -1,14 +1,22 @@
 package cc.alcina.framework.classmeta.rdb;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
+import cc.alcina.framework.common.client.util.Ax;
 
 abstract class Transport implements PacketEndpointHost {
     protected RdbEndpointDescriptor descriptor;
 
-    protected PacketEndpoint packetEndpoint = new PacketEndpoint(this);
+    protected PacketEndpoint packetEndpoint;
 
-    public Transport(RdbEndpointDescriptor descriptor) {
+    protected Logger logger = LoggerFactory.getLogger(getClass());
+
+    public Transport(RdbEndpointDescriptor descriptor,
+            PacketListener listener) {
         this.descriptor = descriptor;
+        this.packetEndpoint = new PacketEndpoint(this, listener);
     }
 
     @Override
@@ -16,8 +24,13 @@ abstract class Transport implements PacketEndpointHost {
         return packetEndpoint;
     }
 
+    @Override
+    public String toString() {
+        return Ax.format("%s::%s", getClass().getSimpleName(), descriptor.name);
+    }
+
     protected void launch() {
     }
 
-    protected abstract void sendPacket(Endpoint from, Packet packet);
+    protected abstract void sendPacket(Packet packet);
 }

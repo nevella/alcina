@@ -1,19 +1,21 @@
 package cc.alcina.framework.classmeta.rdb;
 
+import java.util.List;
+
 import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
 
 class SharedVmTransport extends Transport {
-    public SharedVmTransport(RdbEndpointDescriptor descriptor) {
-        super(descriptor);
+    public SharedVmTransport(RdbEndpointDescriptor descriptor,
+            PacketListener listener) {
+        super(descriptor, listener);
     }
 
     @Override
     public void send() {
-        // TODO Auto-generated method stub
-    }
-
-    private Endpoint from() {
-        return RdbProxies.get().endpointByName(descriptor.name);
+        List<Packet> packets = endpoint().flushOutPackets();
+        for (Packet packet : packets) {
+            sendPacket(packet);
+        }
     }
 
     private Endpoint to() {
@@ -35,8 +37,9 @@ class SharedVmTransport extends Transport {
     }
 
     @Override
-    protected void sendPacket(Endpoint from, Packet packet) {
-        Endpoint other = from == this.from() ? to() : this.from();
+    protected void sendPacket(Packet packet) {
+        Endpoint other = to();
+        logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
         other.transport.receivePacket(packet);
     }
 }

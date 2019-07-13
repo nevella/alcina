@@ -13,12 +13,9 @@ class Packet {
                 byteArray[3]);
     }
 
-    private static int un2c(byte b) {
-        return b < 0 ? b + 256 : b;
-    }
-
     static int bigEndian(byte b1, byte b2, byte b3, byte b4) {
-        return (b1 << 24) + (b2 << 16) + (b3 << 8) + un2c(b4);
+        return (b1 << 24) + (b2 << 16 & 0xFFFFFF) + (b3 << 8 & 0xFFFF)
+                + (b4 & 0xFF);
     }
 
     public byte[] bytes = new byte[11];
@@ -56,7 +53,7 @@ class Packet {
 
     @Override
     public String toString() {
-        return Ax.format("%s/%s/%s %s", id(), commandSet(), commandId(),
+        return Ax.format("%s/%s/%s\t%s", id(), commandSet(), commandId(),
                 Ax.blankToEmpty(messageName));
     }
 
@@ -84,5 +81,12 @@ class Packet {
 
     int length() {
         return bigEndian(bytes[0], bytes[1], bytes[2], bytes[3]);
+    }
+
+    static class HandshakePacket extends Packet {
+        @Override
+        public String toString() {
+            return "JDWP-Handshake";
+        }
     }
 }
