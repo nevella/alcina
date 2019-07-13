@@ -357,8 +357,9 @@ public class DomainTransformPersistenceQueue {
             }
         }
 
-        private void publishTransformEvent(Long id) {
+        private void publishTransformEvent(long id) {
             boolean local = false;
+            fireEventThreadLogger.warn("publishTransformEvent - dtr {}", id);
             synchronized (queueModificationLock) {
                 local = firingLocalToVm.contains(id);
             }
@@ -366,6 +367,9 @@ public class DomainTransformPersistenceQueue {
                 DomainStoreTransformSequencer transformSequencer = DomainStore
                         .writableStore().getTransformSequencer();
                 transformSequencer.removePreLocalNonFireEventsThreadBarrier(id);
+                // transforming thread will now fire...
+                // following call may happen after transformingthread has
+                // removed the barrier, so check there
                 transformSequencer.waitForPostLocalFireEventsThreadBarrier(id);
                 return;
             } else {

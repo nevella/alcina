@@ -65,7 +65,7 @@ public class DomainStoreTransformSequencer {
             return;
         }
         preLocalNonFireEventsThreadBarrier.remove(requestId);
-        logger.warn("Removing post-local barrier: ", requestId);
+        logger.warn("Removing post-local barrier: {}", requestId);
         CountDownLatch removed = postLocalFireEventsThreadBarrier
                 .remove(requestId);
         removed.countDown();
@@ -82,20 +82,29 @@ public class DomainStoreTransformSequencer {
         }
     }
 
-    public void removePreLocalNonFireEventsThreadBarrier(Long requestId) {
+    public synchronized void removePreLocalNonFireEventsThreadBarrier(
+            long requestId) {
         logger.warn("Remove local barrier: {}", requestId);
-        ensurePreLocalNonFireEventsThreadBarrier(requestId).countDown();
+        preLocalNonFireEventsThreadBarrier.get(requestId).countDown();
     }
 
     // called by the main firing sequence thread, since the local vm transforms
     // are fired on the transforming thread
     public void waitForPostLocalFireEventsThreadBarrier(long requestId) {
         try {
+            CountDownLatch barrier = null;
+            synchronized (this) {
+                barrier = postLocalFireEventsThreadBarrier.get(requestId);
+            }
+            if (barrier == null) {
+                logger.warn("Already past barrier (that was quick...) {}",
+                        requestId);
+                return;
+            }
             // wait longer - local transforms are more important to fire in
             // order. if this is blocking, that be a prob...but why?
             logger.warn("Wait for post-local barrier: {}", requestId);
-            boolean normalExit = ensurePostLocalFireEventsThreadBarrier(
-                    requestId).await(20, TimeUnit.SECONDS);
+            boolean normalExit = barrier.await(20, TimeUnit.SECONDS);
             if (!normalExit) {
                 Thread blockingThread = loaderDatabase.getStore()
                         .getPersistenceEvents().getQueue().getFiringThread();
@@ -120,8 +129,8 @@ public class DomainStoreTransformSequencer {
                 .isUseTransformDbCommitSequencing()) {
             return;
         } else {
-            ensurePostLocalFireEventsThreadBarrier(requestId);
-            CountDownLatch latch = ensurePreLocalNonFireEventsThreadBarrier(
+            createPostLocalFireEventsThreadBarrier(requestId);
+            CountDownLatch preLocalBarrier = createPreLocalNonFireEventsThreadBarrier(
                     requestId);
             loaderDatabase.getStore().getPersistenceEvents().getQueue()
                     .sequencedTransformRequestPublished();
@@ -129,7 +138,7 @@ public class DomainStoreTransformSequencer {
                 logger.warn("Wait for pre-local barrier: {}", requestId);
                 // don't wait long - this *tries* to apply transforms in order,
                 // but we don't want to block local work
-                boolean normalExit = latch.await(5, TimeUnit.SECONDS);
+                boolean normalExit = preLocalBarrier.await(5, TimeUnit.SECONDS);
                 if (!normalExit) {
                     Thread blockingThread = loaderDatabase.getStore()
                             .getPersistenceEvents().getQueue()
@@ -146,23 +155,23 @@ public class DomainStoreTransformSequencer {
         }
     }
 
-    private synchronized String debugString() {
-        return Ax.format("Sequencer:\n===========\n%s\n\nQueue:\n=========\n%s",
-                GraphProjection.fieldwiseToString(this),
-                loaderDatabase.getStore().getPersistenceEvents().getQueue()
-                        .toDebugString());
-    }
-
-    private synchronized CountDownLatch ensurePostLocalFireEventsThreadBarrier(
+    private synchronized CountDownLatch createPostLocalFireEventsThreadBarrier(
             long requestId) {
         return postLocalFireEventsThreadBarrier.computeIfAbsent(requestId,
                 id -> new CountDownLatch(1));
     }
 
-    private synchronized CountDownLatch ensurePreLocalNonFireEventsThreadBarrier(
+    private synchronized CountDownLatch createPreLocalNonFireEventsThreadBarrier(
             long requestId) {
         return preLocalNonFireEventsThreadBarrier.computeIfAbsent(requestId,
                 id -> new CountDownLatch(1));
+    }
+
+    private synchronized String debugString() {
+        return Ax.format("Sequencer:\n===========\n%s\n\nQueue:\n=========\n%s",
+                GraphProjection.fieldwiseToString(this),
+                loaderDatabase.getStore().getPersistenceEvents().getQueue()
+                        .toDebugString());
     }
 
     private Connection getConnection() throws SQLException {
@@ -236,9 +245,10 @@ public class DomainStoreTransformSequencer {
             pStatement.setTimestamp(1, fromTimestamp);
             ResultSet rs = pStatement.executeQuery();
             List<DtrIdTimestamp> txData = new ArrayList<>();
-            // normally it'll be one dtr per timestamp. If more than 1000, we're
+            // normally it'll be one dtr per timestamp. If more than 99999,
+            // we're
             // looking at an initial cleanup - ignore
-            int maxCurrent = 1000;
+            int maxCurrent = 99999;
             while (rs.next() && maxCurrent-- > 0) {
                 DtrIdTimestamp element = new DtrIdTimestamp();
                 element.id = rs.getLong("id");
@@ -251,6 +261,9 @@ public class DomainStoreTransformSequencer {
                     continue;// already submitted/published
                 }
                 txData.add(element);
+            }
+            if (maxCurrent <= 0) {
+                txData.clear();
             }
             txData.stream().map(txd -> txd.id).forEach(unpublishedIds::add);
             Map<Timestamp, List<DtrIdTimestamp>> collect = txData.stream()
@@ -270,6 +283,10 @@ public class DomainStoreTransformSequencer {
                 highestVisibleTransactions.commitTimestamp = last.getKey();
                 highestVisibleTransactions.transformListIds = lastIds;
             }
+            logger.warn(
+                    "Added unpublished ids {} - fromTimestamp {} - new timestamp {}",
+                    unpublishedIds, fromTimestamp,
+                    highestVisibleTransactions.commitTimestamp);
             return unpublishedIds;
         }
     }
