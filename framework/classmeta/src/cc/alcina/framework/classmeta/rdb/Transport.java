@@ -14,9 +14,9 @@ abstract class Transport implements PacketEndpointHost {
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
     public Transport(RdbEndpointDescriptor descriptor,
-            PacketListener listener) {
+            PacketBridge bridge) {
         this.descriptor = descriptor;
-        this.packetEndpoint = new PacketEndpoint(this, listener);
+        this.packetEndpoint = new PacketEndpoint(this, bridge);
     }
 
     @Override

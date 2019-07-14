@@ -375,7 +375,7 @@ public class DomainTransformPersistenceQueue {
 
         private void publishTransformEvent(long id) {
             boolean local = false;
-            fireEventThreadLogger.warn("publishTransformEvent - dtr {}", id);
+            fireEventThreadLogger.info("publishTransformEvent - dtr {}", id);
             synchronized (queueModificationLock) {
                 local = firingLocalToVm.contains(id);
             }

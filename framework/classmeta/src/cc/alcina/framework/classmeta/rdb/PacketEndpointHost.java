@@ -20,14 +20,19 @@ interface PacketEndpointHost {
 
         LinkedList<Packet> inPackets = new LinkedList<>();
 
+        Packets allInPackets = new Packets();
+
         private boolean mustSend;
 
-        private PacketListener listener;
+        private PacketBridge bridge;
 
-        public PacketEndpoint(PacketEndpointHost host,
-                PacketListener listener) {
+        public PacketEndpoint(PacketEndpointHost host, PacketBridge bridge) {
             this.host = host;
-            this.listener = listener;
+            this.bridge = bridge;
+        }
+
+        public Packet getCorrespondingCommandPacket(Packet packet) {
+            return allInPackets.byId(packet.id());
         }
 
         @Override
@@ -37,7 +42,8 @@ interface PacketEndpointHost {
 
         synchronized void addInPacket(Packet packet) {
             inPackets.add(packet);
-            listener.packetsReceived(packet);
+            allInPackets.add(packet);
+            bridge.packetsReceived(packet);
         }
 
         synchronized void addOutPacket(Packet packet) {
@@ -60,6 +66,10 @@ interface PacketEndpointHost {
 
         synchronized Packet next() {
             return inPackets.isEmpty() ? null : inPackets.pop();
+        }
+
+        PacketEndpoint otherPacketEndpoint() {
+            return bridge.otherPacketEndpoint(this);
         }
 
         void send() {

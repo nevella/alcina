@@ -26,7 +26,7 @@ class JdwpStreams implements PacketEndpointHost {
     Logger logger = LoggerFactory.getLogger(getClass());
 
     JdwpStreams(RdbEndpointDescriptor descriptor, Socket socket,
-            PacketListener listener) {
+            PacketBridge listener) {
         try {
             this.descriptor = descriptor;
             this.fromStream = socket.getInputStream();
@@ -74,7 +74,7 @@ class JdwpStreams implements PacketEndpointHost {
                         byte[] handshake = new byte[14];
                         // JWDP-Handshake
                         fromStream.read(handshake);
-                        Packet received = new HandshakePacket();
+                        Packet received = new HandshakePacket(packetEndpoint);
                         received.bytes = handshake;
                         received.fromName = descriptor.name;
                         logger.info("Received handshake << {}",
@@ -103,7 +103,7 @@ class JdwpStreams implements PacketEndpointHost {
                         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
                         buffer.write(in);
                         buffer.write(packet);
-                        Packet received = new Packet();
+                        Packet received = new Packet(packetEndpoint);
                         received.bytes = buffer.toByteArray();
                         received.fromName = descriptor.name;
                         endpoint().addInPacket(received);

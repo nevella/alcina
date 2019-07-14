@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 
 @SuppressWarnings("resource")
-abstract class Endpoint implements PacketListener {
+abstract class Endpoint implements PacketBridge {
     protected Transport transport;
 
     protected JdwpStreams streams;
@@ -34,7 +34,15 @@ abstract class Endpoint implements PacketListener {
     }
 
     @Override
+    public PacketEndpoint otherPacketEndpoint(PacketEndpoint packetEndpoint) {
+        return packetEndpoint.host == streams ? transport.endpoint()
+                : streams.endpoint();
+    }
+
+    @Override
     public void packetsReceived(Packet packet) {
+        packet.fromDebugger = this.isDebugger()
+                && packet.source.host == streams;
         synchronized (eventCounter) {
             eventCounter.incrementAndGet();
             eventCounter.notify();
@@ -52,12 +60,13 @@ abstract class Endpoint implements PacketListener {
     }
 
     private void inPackets(PacketEndpoint packetEndpoint) {
-        PacketEndpoint otherEndpoint = otherEndpoint(packetEndpoint);
+        PacketEndpoint otherEndpoint = otherPacketEndpoint(packetEndpoint);
         Packet packet = null;
         // this is the naive (raw) packet from the endpoint.
         while ((packet = packetEndpoint.next()) != null) {
             // what's our coordinate space, Scotty?
             categories.analysePacket(this, packetEndpoint, packet);
+            categories.handlePacket(this, packetEndpoint, packet);
             if (packetEndpoint.host instanceof SharedVmTransport) {
             } else {
                 logger.info("Received packet :: {}\t{}", packetEndpoint,
@@ -106,11 +115,6 @@ abstract class Endpoint implements PacketListener {
                 e.printStackTrace();
             }
         }
-    }
-
-    private PacketEndpoint otherEndpoint(PacketEndpoint packetEndpoint) {
-        return packetEndpoint.host == streams ? transport.endpoint()
-                : streams.endpoint();
     }
 
     private void outPackets(PacketEndpoint packetEndpoint) {
@@ -170,6 +174,10 @@ abstract class Endpoint implements PacketListener {
         transport.launch();
         // FIXME - e.g. debuggee sharedvm - this
     }
+
+    protected abstract boolean isDebuggee();
+
+    protected abstract boolean isDebugger();
 
     protected void startJdwpStream() {
         if (descriptor.jdwpAttach) {

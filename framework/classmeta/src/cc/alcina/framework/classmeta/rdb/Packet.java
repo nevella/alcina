@@ -20,7 +20,9 @@ class Packet {
 
     public byte[] bytes = new byte[11];
 
-    public boolean fromDebugger;
+    boolean fromDebugger;
+
+    boolean predictive;
 
     public String fromName;
 
@@ -30,7 +32,16 @@ class Packet {
 
     transient PacketEndpoint source;
 
-    transient PacketMeta meta;
+    PacketMeta meta;
+
+    public boolean isReply;
+
+    public Packet() {
+    }
+
+    public Packet(PacketEndpoint source) {
+        this.source = source;
+    }
 
     public Packet copy() {
         Packet copy = ResourceUtilities.fieldwiseClone(this);
@@ -44,6 +55,10 @@ class Packet {
         SEUtilities.dumpBytes(bytes, 11);
     }
 
+    public Packet getCorrespondingCommandPacket() {
+        return source.otherPacketEndpoint().getCorrespondingCommandPacket(this);
+    }
+
     public void setId(int id) {
         bytes[4] = (byte) ((id >> 24) & 0xFF);
         bytes[5] = (byte) ((id >> 16) & 0xFF);
@@ -53,8 +68,8 @@ class Packet {
 
     @Override
     public String toString() {
-        return Ax.format("%s/%s/%s\t%s", id(), commandSet(), commandId(),
-                Ax.blankToEmpty(messageName));
+        return Ax.format("%s/%s/%s\t%s\t%s", id(), commandSet(), commandId(),
+                Ax.blankToEmpty(messageName), meta == null ? "" : meta.type);
     }
 
     public Packet translate(PacketEndpoint otherSource,
@@ -84,6 +99,13 @@ class Packet {
     }
 
     static class HandshakePacket extends Packet {
+        public HandshakePacket() {
+        }
+
+        public HandshakePacket(PacketEndpoint source) {
+            super(source);
+        }
+
         @Override
         public String toString() {
             return "JDWP-Handshake";

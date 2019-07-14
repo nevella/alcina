@@ -6,7 +6,7 @@ import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
 
 class SharedVmTransport extends Transport {
     public SharedVmTransport(RdbEndpointDescriptor descriptor,
-            PacketListener listener) {
+            PacketBridge listener) {
         super(descriptor, listener);
     }
 

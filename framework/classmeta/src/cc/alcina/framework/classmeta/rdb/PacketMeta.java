@@ -1,6 +1,7 @@
 package cc.alcina.framework.classmeta.rdb;
 
 class PacketMeta {
+    boolean mustSend;
 
-    public boolean mustSend;
+    PacketType type;
 }

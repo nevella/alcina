@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
- class Packets {
+class Packets {
     public List<Packet> packets = new ArrayList<>();
-    
-    transient Map<Integer,Packet> sentById = new LinkedHashMap<>();
+
+    transient Map<Integer, Packet> byId = new LinkedHashMap<>();
 
     public Optional<Packet> find(int commandSet, int commandId) {
         Optional<Packet> findFirst = packets.stream()
@@ -19,14 +19,14 @@ import java.util.Optional;
         return findFirst;
     }
 
-    public Packet findReply(int id) {
-        return sentById.get(id);
+    void add(Packet packet) {
+        packets.add(packet);
+        if (packet.commandSet() != 0) {
+            byId.put(packet.id(), packet);
+        }
     }
 
-    public void add(Packet packet) {
-        packets.add(packet);
-        if(packet.commandSet()!=0){
-            sentById.put(packet.id(), packet);
-        }
+    Packet byId(int id) {
+        return byId.get(id);
     }
 }

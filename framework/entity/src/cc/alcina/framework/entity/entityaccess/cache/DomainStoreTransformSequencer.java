@@ -283,7 +283,7 @@ public class DomainStoreTransformSequencer {
                 highestVisibleTransactions.commitTimestamp = last.getKey();
                 highestVisibleTransactions.transformListIds = lastIds;
             }
-            logger.warn(
+            logger.info(
                     "Added unpublished ids {} - fromTimestamp {} - new timestamp {}",
                     unpublishedIds, fromTimestamp,
                     highestVisibleTransactions.commitTimestamp);

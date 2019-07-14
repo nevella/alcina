@@ -30,12 +30,10 @@ class Accessor {
                 packet.commandId());
         if (packet.flags() == -128) {
             packet.messageName = "(reply)";
+            packet.isReply = true;
             return;
         }
         Message message = messages.get(ids);
-        if (message == null) {
-            int debug = 3;
-        }
         packet.messageName = message.name();
         packet.message = message;
     }
