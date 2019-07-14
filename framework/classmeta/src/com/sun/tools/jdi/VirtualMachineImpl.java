@@ -187,13 +187,16 @@ class VirtualMachineImpl extends MirrorImpl
         sizeofObjectRef = 8;
         sizeofClassRef = 8;
         sizeofFrameRef = 8;
-        target = new TargetVM(this, connection);
         eventQueue = null;
         internalEventRequestManager = null;
         eventRequestManager = null;
         vmManager = null;
         threadGroupForJDI = null;
         sequenceNumber = 0;
+        target = new TargetVM(this, connection);
+        if (connection != null) {
+            target.start();
+        }
     }
 
     VirtualMachineImpl(VirtualMachineManager manager, Connection connection,
@@ -1344,7 +1347,7 @@ class VirtualMachineImpl extends MirrorImpl
     }
 
     void sendToTarget(Packet packet) {
-        // target.send(packet);
+        target.send(packet);
     }
 
     VMState state() {

@@ -6,13 +6,21 @@ import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
 
 class SharedVmTransport extends Transport {
     public SharedVmTransport(RdbEndpointDescriptor descriptor,
-            PacketBridge listener) {
-        super(descriptor, listener);
+            Endpoint endpoint) {
+        super(descriptor, endpoint);
+    }
+
+    @Override
+    public void addPredictivePackets(List<Packet> predictivePackets) {
+        if (predictivePackets.isEmpty()) {
+            return;
+        }
+        to().transport.receivePredictivePackets(predictivePackets);
     }
 
     @Override
     public void send() {
-        List<Packet> packets = endpoint().flushOutPackets();
+        List<Packet> packets = packetEndpoint().flushOutPackets();
         for (Packet packet : packets) {
             sendPacket(packet);
         }
@@ -34,6 +42,11 @@ class SharedVmTransport extends Transport {
         // }
         // };
         // receiver.start();
+    }
+
+    @Override
+    protected void receivePredictivePackets(List<Packet> predictivePackets) {
+        packetEndpoint.receivedPredictivePackets(predictivePackets);
     }
 
     @Override

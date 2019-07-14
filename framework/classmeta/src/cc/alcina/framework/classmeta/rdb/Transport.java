@@ -1,5 +1,7 @@
 package cc.alcina.framework.classmeta.rdb;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,14 +15,13 @@ abstract class Transport implements PacketEndpointHost {
 
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
-    public Transport(RdbEndpointDescriptor descriptor,
-            PacketBridge bridge) {
+    public Transport(RdbEndpointDescriptor descriptor, Endpoint endpoint) {
         this.descriptor = descriptor;
-        this.packetEndpoint = new PacketEndpoint(this, bridge);
+        this.packetEndpoint = new PacketEndpoint(this, endpoint);
     }
 
     @Override
-    public PacketEndpoint endpoint() {
+    public PacketEndpoint packetEndpoint() {
         return packetEndpoint;
     }
 
@@ -31,6 +32,9 @@ abstract class Transport implements PacketEndpointHost {
 
     protected void launch() {
     }
+
+    protected abstract void receivePredictivePackets(
+            List<Packet> predictivePackets);
 
     protected abstract void sendPacket(Packet packet);
 }

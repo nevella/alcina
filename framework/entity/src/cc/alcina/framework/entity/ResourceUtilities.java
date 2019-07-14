@@ -37,6 +37,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -208,7 +209,10 @@ public class ResourceUtilities {
 
     public static <T> T fieldwiseClone(T t, boolean withTransients) {
         try {
-            T instance = (T) t.getClass().newInstance();
+            Constructor<T> constructor = (Constructor<T>) t.getClass()
+                    .getConstructor(new Class[0]);
+            constructor.setAccessible(true);
+            T instance = constructor.newInstance();
             return fieldwiseCopy(t, instance, withTransients);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);

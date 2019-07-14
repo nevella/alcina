@@ -6,10 +6,12 @@ import com.sun.jdi.connect.spi.Connection;
 import com.sun.tools.jdi.RdbJdi;
 import com.sun.tools.jdi.VirtualMachineImplExt;
 
+import cc.alcina.framework.classmeta.rdb.Packet.Meta;
+import cc.alcina.framework.classmeta.rdb.Packet.Type;
 import cc.alcina.framework.classmeta.rdb.PacketEndpointHost.PacketEndpoint;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
-class PacketOracle {
+class Oracle {
     Accessor jwdpAccessor = new Accessor();
 
     VirtualMachineImplExt vm;
@@ -18,16 +20,17 @@ class PacketOracle {
 
     RdbJdi rdbJdi;
 
-    public PacketOracle() {
-        InternalVmConnection connection = new InternalVmConnection();
-        vm = new VirtualMachineImplExt(connection);
-        rdbJdi = new RdbJdi(vm);
+    private Endpoint endpoint;
+
+    private InternalVmConnection connection;
+
+    public Oracle(Endpoint endpoint) {
+        this.endpoint = endpoint;
     }
 
-    public void analysePacket(Endpoint endpoint, PacketEndpoint packetSource,
-            Packet packet) {
+    public void analysePacket(PacketEndpoint packetSource, Packet packet) {
         if (packet.meta == null) {
-            PacketMeta meta = new PacketMeta();
+            Meta meta = new Meta();
             meta.mustSend = true;
             packet.meta = meta;
             jwdpAccessor.parse(packet);
@@ -37,14 +40,12 @@ class PacketOracle {
         }
     }
 
-    public void handlePacket(Endpoint endpoint, PacketEndpoint packetSource,
-            Packet packet) {
+    public void handlePacket(PacketEndpoint packetSource, Packet packet) {
         if (packet.isReply) {
             Packet reply = packet;
             Packet command = packet.getCorrespondingCommandPacket();
             switch (command.meta.type) {
             case all_threads_handshake: {
-                int debug = 3;
                 break;
             }
             }
@@ -52,6 +53,7 @@ class PacketOracle {
                 switch (command.meta.type) {
                 case all_threads_handshake: {
                     predict_all_threads_handshake(command, reply);
+                    int debug = 3;
                     break;
                 }
                 }
@@ -59,20 +61,28 @@ class PacketOracle {
         }
     }
 
-    private void analyseDebuggerPacket(Packet packet, PacketMeta meta) {
+    public void receivedPredictivePacket() {
+        if (endpoint.isDebuggee()) {
+            synchronized (connection) {
+                connection.notifyAll();
+            }
+        }
+    }
+
+    private void analyseDebuggerPacket(Packet packet, Meta meta) {
         switch (packet.messageName) {
         case "AllThreads": {
             if (!state.calledAllThreads) {
                 state.calledAllThreads = true;
-                meta.type = PacketType.all_threads_handshake;
+                meta.type = Type.all_threads_handshake;
             }
         }
         }
-        if (meta.type == PacketType.unknown) {
+        if (meta.type == Type.unknown) {
             if (!state.calledAllThreads) {
-                meta.type = PacketType.early_handshake;
+                meta.type = Type.early_handshake;
             } else {
-                meta.type = PacketType.unknown_post_handshake;
+                meta.type = Type.unknown_post_handshake;
             }
         }
     }
@@ -85,27 +95,55 @@ class PacketOracle {
         }
     }
 
+    void start() {
+        if (endpoint.isDebuggee()) {
+            connection = new InternalVmConnection();
+        }
+        vm = new VirtualMachineImplExt(connection);
+        rdbJdi = new RdbJdi(vm);
+    }
+
     class InternalVmConnection extends Connection {
         @Override
         public void close() throws IOException {
-            // TODO Auto-generated method stub
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public boolean isOpen() {
-            // TODO Auto-generated method stub
-            return false;
+            return true;
         }
 
         @Override
         public byte[] readPacket() throws IOException {
-            // TODO Auto-generated method stub
-            return null;
+            while (true) {
+                Packet packet = streams().packetEndpoint()
+                        .nextIncomingPredictivePacket();
+                if (packet != null) {
+                    packet = streams().translateToOriginalId(packet);
+                    return packet.bytes;
+                }
+                synchronized (connection) {
+                    try {
+                        connection.wait();
+                    } catch (Exception e) {
+                        throw new WrappedRuntimeException(e);
+                    }
+                }
+            }
         }
 
         @Override
         public void writePacket(byte[] pkt) throws IOException {
-            // TODO Auto-generated method stub
+            Packet packet = new Packet(null);
+            packet.bytes = pkt;
+            packet.isPredictive = true;
+            jwdpAccessor.parse(packet);
+            streams().write(packet);
+        }
+
+        JdwpStreams streams() {
+            return endpoint.streams;
         }
     }
 }

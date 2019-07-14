@@ -22,7 +22,7 @@ class Packet {
 
     boolean fromDebugger;
 
-    boolean predictive;
+    boolean isPredictive;
 
     public String fromName;
 
@@ -32,9 +32,11 @@ class Packet {
 
     transient PacketEndpoint source;
 
-    PacketMeta meta;
+    transient PacketPayload payload;
 
     public boolean isReply;
+
+    Meta meta;
 
     public Packet() {
     }
@@ -72,12 +74,6 @@ class Packet {
                 Ax.blankToEmpty(messageName), meta == null ? "" : meta.type);
     }
 
-    public Packet translate(PacketEndpoint otherSource,
-            PacketEndpoint packetSource) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
     int commandId() {
         return bytes[10];
     }
@@ -98,6 +94,13 @@ class Packet {
         return bigEndian(bytes[0], bytes[1], bytes[2], bytes[3]);
     }
 
+    PacketPayload payload() {
+        if (payload == null) {
+            payload = new PacketPayload();
+        }
+        return payload;
+    }
+
     static class HandshakePacket extends Packet {
         public HandshakePacket() {
         }
@@ -110,5 +113,44 @@ class Packet {
         public String toString() {
             return "JDWP-Handshake";
         }
+    }
+
+    static class Meta {
+        boolean mustSend;
+
+        Type type = Type.unknown;
+    }
+
+    class PacketPayload {
+        int hash = -1;
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof PacketPayload) {
+                return Arrays.equals(zeroIdCopy().bytes,
+                        ((PacketPayload) obj).zeroIdCopy().bytes);
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            if (hash == -1) {
+                Packet copy = zeroIdCopy();
+                hash = Arrays.hashCode(copy.bytes);
+            }
+            return hash;
+        }
+
+        private Packet zeroIdCopy() {
+            Packet copy = copy();
+            copy.setId(0);
+            return copy;
+        }
+    }
+
+    enum Type {
+        early_handshake, all_threads_handshake, unknown_post_handshake, unknown
     }
 }

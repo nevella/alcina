@@ -3,6 +3,7 @@ package cc.alcina.framework.classmeta.rdb;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -14,14 +15,28 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 
 @SuppressWarnings("resource")
-abstract class Endpoint implements PacketBridge {
+/*
+ * Endpoint vs PacketEndpoint
+ * 
+ * The process has two endpoints (debugger, debuggee) represented by two
+ * Endpoint instances (either same jvm or different)
+ * 
+ * Each endpoint has two packetendpoints (that send and recevie packets):
+ * 
+ * transport (communicate with other endpoint)
+ * 
+ * streams (communicate via jdwp with debugger/debuggee jvms)
+ * 
+ * 
+ */
+abstract class Endpoint {
     protected Transport transport;
 
     protected JdwpStreams streams;
 
     protected RdbEndpointDescriptor descriptor;
 
-    PacketOracle oracle = new PacketOracle();
+    Oracle oracle = new Oracle(this);
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -29,25 +44,31 @@ abstract class Endpoint implements PacketBridge {
 
     AtomicInteger eventCounter = new AtomicInteger(0);
 
+    int inPacketCounter = 0;
+
+    int predictiveReplyPacketCounter = 0;
+
     public Endpoint(RdbEndpointDescriptor descriptor) {
         this.descriptor = descriptor;
     }
 
-    @Override
     public PacketEndpoint otherPacketEndpoint(PacketEndpoint packetEndpoint) {
-        return packetEndpoint.host == streams ? transport.endpoint()
-                : streams.endpoint();
+        return packetEndpoint.host == streams ? transport.packetEndpoint()
+                : streams.packetEndpoint();
     }
 
-    @Override
     public void packetsReceived(Packet packet) {
         if (!packet.fromDebugger) {
             packet.fromDebugger = this.isDebugger()
                     && packet.source.host == streams;
         }
-        synchronized (eventCounter) {
-            eventCounter.incrementAndGet();
-            eventCounter.notify();
+        if (packet.isPredictive) {
+            oracle.receivedPredictivePacket();
+        } else {
+            synchronized (eventCounter) {
+                eventCounter.incrementAndGet();
+                eventCounter.notify();
+            }
         }
     }
 
@@ -62,27 +83,36 @@ abstract class Endpoint implements PacketBridge {
     }
 
     private void inPackets(PacketEndpoint packetEndpoint) {
-        PacketEndpoint otherEndpoint = otherPacketEndpoint(packetEndpoint);
+        PacketEndpoint otherPacketEndpoint = otherPacketEndpoint(
+                packetEndpoint);
         Packet packet = null;
         // this is the naive (raw) packet from the endpoint.
         while ((packet = packetEndpoint.next()) != null) {
             // what's our coordinate space, Scotty?
-            oracle.analysePacket(this, packetEndpoint, packet);
-            oracle.handlePacket(this, packetEndpoint, packet);
+            if (packetEndpoint.host == streams) {
+                inPacketCounter++;
+                logger.info("Packets: {}/{}", predictiveReplyPacketCounter,
+                        inPacketCounter);
+            }
+            oracle.analysePacket(packetEndpoint, packet);
+            oracle.handlePacket(packetEndpoint, packet);
             if (packetEndpoint.host instanceof SharedVmTransport) {
             } else {
                 logger.info("Received packet :: {}\t{}", packetEndpoint,
                         packet);
             }
-            if (otherEndpoint.containsResponse(packet)) {
-                Packet translated = packet.translate(otherEndpoint,
-                        packetEndpoint);
-                packetEndpoint.addReplyPacket(translated);
-                continue;
+            Optional<Packet> predictiveResponse = otherPacketEndpoint
+                    .getPredictiveResponse(packet);
+            if (predictiveResponse.isPresent()) {
+                packetEndpoint.addReplyPacket(predictiveResponse.get());
+                predictiveReplyPacketCounter++;
+                break;
             }
-            otherEndpoint.addOutPacket(packet);
+            otherPacketEndpoint.addOutPacket(packet);
+            otherPacketEndpoint.host.addPredictivePackets(
+                    packetEndpoint.flushPredictivePackets());
             if (packet.meta.mustSend) {
-                otherEndpoint.setMustSend(true);
+                otherPacketEndpoint.setMustSend(true);
                 break;
             }
         }
@@ -150,10 +180,10 @@ abstract class Endpoint implements PacketBridge {
                             // waiting for attach
                             continue;
                         }
-                        inPackets(streams.endpoint());
-                        inPackets(transport.endpoint());
-                        outPackets(streams.endpoint());
-                        outPackets(transport.endpoint());
+                        inPackets(streams.packetEndpoint());
+                        inPackets(transport.packetEndpoint());
+                        outPackets(streams.packetEndpoint());
+                        outPackets(transport.packetEndpoint());
                         eventsProcessed = eventsAtStartOfLoop;
                     }
                 } catch (Exception e) {
@@ -192,6 +222,7 @@ abstract class Endpoint implements PacketBridge {
     void launch() {
         startJdwpStream();
         startTransportStream();
+        oracle.start();
         try {
             startMainLoop();
         } catch (Exception e) {

@@ -25,13 +25,18 @@ class JdwpStreams implements PacketEndpointHost {
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
+    protected boolean debugRead;
+
+    private Endpoint endpoint;
+
     JdwpStreams(RdbEndpointDescriptor descriptor, Socket socket,
-            PacketBridge listener) {
+            Endpoint endpoint) {
+        this.endpoint = endpoint;
         try {
             this.descriptor = descriptor;
             this.fromStream = socket.getInputStream();
             this.toStream = socket.getOutputStream();
-            this.packetEndpoint = new PacketEndpoint(this, listener);
+            this.packetEndpoint = new PacketEndpoint(this, endpoint);
             Ax.out("[%s] : %s >> %s", descriptor.name, fromStream, toStream);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
@@ -39,13 +44,21 @@ class JdwpStreams implements PacketEndpointHost {
     }
 
     @Override
-    public PacketEndpoint endpoint() {
+    public void addPredictivePackets(List<Packet> predictivePackets) {
+        if (predictivePackets.isEmpty()) {
+            return;
+        }
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public PacketEndpoint packetEndpoint() {
         return packetEndpoint;
     }
 
     @Override
     public void send() {
-        List<Packet> packets = endpoint().flushOutPackets();
+        List<Packet> packets = packetEndpoint().flushOutPackets();
         for (Packet packet : packets) {
             write(packet);
         }
@@ -56,9 +69,20 @@ class JdwpStreams implements PacketEndpointHost {
         return Ax.format("%s::%s", getClass().getSimpleName(), descriptor.name);
     }
 
+    public Packet translateToOriginalId(Packet packet) {
+        return packetEndpoint.translateToOriginalId(packet);
+    }
+
     public void write(Packet packet) {
         try {
             logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
+            if (packet.isPredictive) {
+                if (endpoint.isDebuggee()) {
+                    packet = packetEndpoint.createForPredictiveSequence(packet);
+                }
+                logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
+                // debugRead = true;
+            }
             toStream.write(packet.bytes);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
@@ -79,7 +103,7 @@ class JdwpStreams implements PacketEndpointHost {
                         received.fromName = descriptor.name;
                         logger.info("Received handshake << {}",
                                 descriptor.name);
-                        endpoint().addInPacket(received);
+                        packetEndpoint().addInPacket(received);
                     }
                     while (true) {
                         byte[] in = new byte[4];
@@ -88,6 +112,9 @@ class JdwpStreams implements PacketEndpointHost {
                             // stream closed
                             // TODO - fire event
                             return;
+                        }
+                        if (debugRead) {
+                            int debug = 3;
                         }
                         int length = Packet.bigEndian(in);
                         if (length > (2 << 18)) {
@@ -106,7 +133,7 @@ class JdwpStreams implements PacketEndpointHost {
                         Packet received = new Packet(packetEndpoint);
                         received.bytes = buffer.toByteArray();
                         received.fromName = descriptor.name;
-                        endpoint().addInPacket(received);
+                        packetEndpoint().addInPacket(received);
                     }
                 } catch (Exception e) {
                     throw new WrappedRuntimeException(e);
