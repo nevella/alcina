@@ -853,7 +853,8 @@ public class DomainStore implements IDomainStore {
                     indexAtEnd.add(targetObject);
                 }
             };
-            transformManager.registerBeforeUpdateHandler(beforeUpdateHandler);
+            // disabled - performance issues
+            // transformManager.registerBeforeUpdateHandler(beforeUpdateHandler);
             Map<HiliLocator, HasIdAndLocalId> locatorOriginalSourceMap = new LinkedHashMap<HiliLocator, HasIdAndLocalId>();
             for (DomainTransformEvent dte : filtered) {
                 HiliLocator locator = HiliLocator.objectLocator(dte);

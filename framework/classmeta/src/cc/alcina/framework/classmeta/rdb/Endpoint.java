@@ -21,7 +21,7 @@ abstract class Endpoint implements PacketBridge {
 
     protected RdbEndpointDescriptor descriptor;
 
-    PacketCategories categories = new PacketCategories();
+    PacketOracle oracle = new PacketOracle();
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -41,8 +41,10 @@ abstract class Endpoint implements PacketBridge {
 
     @Override
     public void packetsReceived(Packet packet) {
-        packet.fromDebugger = this.isDebugger()
-                && packet.source.host == streams;
+        if (!packet.fromDebugger) {
+            packet.fromDebugger = this.isDebugger()
+                    && packet.source.host == streams;
+        }
         synchronized (eventCounter) {
             eventCounter.incrementAndGet();
             eventCounter.notify();
@@ -65,8 +67,8 @@ abstract class Endpoint implements PacketBridge {
         // this is the naive (raw) packet from the endpoint.
         while ((packet = packetEndpoint.next()) != null) {
             // what's our coordinate space, Scotty?
-            categories.analysePacket(this, packetEndpoint, packet);
-            categories.handlePacket(this, packetEndpoint, packet);
+            oracle.analysePacket(this, packetEndpoint, packet);
+            oracle.handlePacket(this, packetEndpoint, packet);
             if (packetEndpoint.host instanceof SharedVmTransport) {
             } else {
                 logger.info("Received packet :: {}\t{}", packetEndpoint,
