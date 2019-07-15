@@ -49,8 +49,7 @@ class Oracle {
                 break;
             }
             }
-            if (endpoint.isDebuggee() && command.fromDebugger
-                    && "no".isEmpty()) {
+            if (endpoint.isDebuggee() && command.fromDebugger) {
                 switch (command.meta.series) {
                 case all_threads_handshake: {
                     predict_all_threads_handshake(command, reply);
