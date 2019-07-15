@@ -854,7 +854,7 @@ public class DomainStore implements IDomainStore {
                 }
             };
             // disabled - performance issues
-            // transformManager.registerBeforeUpdateHandler(beforeUpdateHandler);
+            transformManager.registerBeforeUpdateHandler(beforeUpdateHandler);
             Map<HiliLocator, HasIdAndLocalId> locatorOriginalSourceMap = new LinkedHashMap<HiliLocator, HasIdAndLocalId>();
             for (DomainTransformEvent dte : filtered) {
                 HiliLocator locator = HiliLocator.objectLocator(dte);
@@ -1690,6 +1690,16 @@ public class DomainStore implements IDomainStore {
         @Override
         protected boolean isZeroCreatedObjectLocalId(Class clazz) {
             return true;
+        }
+
+        @Override
+        protected void updateAssociation(DomainTransformEvent evt,
+                HasIdAndLocalId object, HasIdAndLocalId targetObject,
+                boolean remove, boolean collectionPropertyChange) {
+            /*
+             * Definitely *don't* need property changes/collection mods here
+             */
+            super.updateAssociation(evt, object, targetObject, remove, false);
         }
 
         void endCommit() {

@@ -814,8 +814,8 @@ public abstract class TransformManager implements PropertyChangeListener,
                         "calling getobject() on a provisional/deregistered object transform "
                                 + "- will harm the transform. use getsource() - \n%s\n",
                         dte);
-                throw new RuntimeException(
-                        new DomainTransformException(dte,DomainTransformExceptionType.UNKNOWN,message));
+                throw new RuntimeException(new DomainTransformException(dte,
+                        DomainTransformExceptionType.UNKNOWN, message));
             }
         }
         dte.setSource(obj);
@@ -1744,7 +1744,6 @@ public abstract class TransformManager implements PropertyChangeListener,
                     }
                 }
             }
-            int debug = 3;
         } finally {
             if (!deregister) {
                 registerProvisionalObject(objects);
@@ -1798,6 +1797,9 @@ public abstract class TransformManager implements PropertyChangeListener,
                     throw new WrappedRuntimeException(e);
                 }
             }
+            if (!assoc.silentUpdates()) {
+                beforeAssociationChange(targetObject);
+            }
             if (remove) {
                 boolean wasContained = c.remove(object);
                 if (!wasContained) {
@@ -1809,7 +1811,6 @@ public abstract class TransformManager implements PropertyChangeListener,
                 }
             }
             if (collectionPropertyChange && !assoc.silentUpdates()) {
-                beforeAssociationChange(targetObject);
                 propertyAccessor().setPropertyValue(targetObject,
                         assoc.propertyName(), c);
             }

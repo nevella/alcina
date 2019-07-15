@@ -207,6 +207,9 @@ public class InternalMetrics {
     }
 
     private void slice() {
+        if (!ResourceUtilities.is("enabled")) {
+            return;
+        }
         if (trackers.isEmpty()) {
             return;
         }
