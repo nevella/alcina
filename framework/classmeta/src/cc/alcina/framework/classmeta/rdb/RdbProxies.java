@@ -58,8 +58,9 @@ public class RdbProxies {
         schema.endpointDescriptors.forEach(this::start);
         EntityLayerUtils.setLevel("cc.alcina.framework.classmeta.rdb",
                 Level.DEBUG);
-        if (Boolean.getBoolean("testRdbProxies")) {
+        if (Boolean.getBoolean("testRdbProxies") || true) {
             try {
+                Thread.sleep(1000);
                 new ShellWrapper().runBashScript(
                         "/usr/bin/java -jar /g/alcina/lib/framework/dev/eclipse_remote_control_client.jar execute_command hija.app0z.jade.io DEBUG");
             } catch (Exception e) {
