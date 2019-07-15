@@ -1836,6 +1836,9 @@ public abstract class TransformManager implements PropertyChangeListener,
             // mods are very unlikely to collide in a nasty way (since
             // membership is really just a bitset, and colliding colln mods will
             // often not actually hit each other)
+            //
+            // "probably" means "at the moment we don't fire - i.e. don't mark
+            // the target object as updated"
             objectModified(targetObject, evt, true);
         }
     }

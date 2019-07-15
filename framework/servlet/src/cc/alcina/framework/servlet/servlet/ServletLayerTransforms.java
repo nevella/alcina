@@ -248,7 +248,9 @@ public class ServletLayerTransforms {
     private int transformRequestCounter = 1;
 
     public void appShutdown() {
-        backendTransformQueue.appShutdown();
+        if (backendTransformQueue != null) {
+            backendTransformQueue.appShutdown();
+        }
     }
 
     public synchronized void enqueueBackendTransform(Runnable runnable) {
