@@ -1,4 +1,4 @@
-package cc.alcina.extras.dev.console;
+package cc.alcina.framework.entity.util;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -10,6 +10,8 @@ import cc.alcina.framework.common.client.util.AlcinaConstants;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 public class BiPrintStream extends PrintStream {
+    public static String debugMarker = null;
+
     public PrintStream s1;
 
     public PrintStream s2;
@@ -245,12 +247,11 @@ public class BiPrintStream extends PrintStream {
     }
 
     private void debugPrint(Object obj) {
-        String s = String.valueOf(obj);
-        // if (s == null) {
-        // int debug = 3;
-        // }
-        if (s != null && s.contains("malformed")) {
-            int debug = 3;
+        if (debugMarker != null) {
+            String s = String.valueOf(obj);
+            if (s != null && s.matches(debugMarker)) {
+                int debug = 3;
+            }
         }
     }
 }

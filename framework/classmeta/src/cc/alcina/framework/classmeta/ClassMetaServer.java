@@ -12,7 +12,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 
-import cc.alcina.extras.dev.console.BiPrintStream;
 import cc.alcina.extras.dev.console.DevConsole.NullPrintStream;
 import cc.alcina.framework.classmeta.rdb.HttpAcceptorHandler;
 import cc.alcina.framework.classmeta.rdb.RdbProxies;
@@ -25,6 +24,7 @@ import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 
