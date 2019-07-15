@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -78,17 +80,8 @@ class JdwpStreams implements PacketEndpointHost {
             @Override
             public void run() {
                 try {
-                    {
-                        byte[] handshake = new byte[14];
-                        // JWDP-Handshake
-                        fromStream.read(handshake);
-                        Packet received = new HandshakePacket(packetEndpoint);
-                        received.bytes = handshake;
-                        received.fromName = descriptor.name;
-                        logger.info("Received handshake << {}",
-                                descriptor.name);
-                        packetEndpoint().addInPacket(received);
-                    }
+                    byte[] handshakeFirstFour = "JDWP"
+                            .getBytes(StandardCharsets.UTF_8);
                     while (true) {
                         byte[] in = new byte[4];
                         int bytesRead = fromStream.read(in);
@@ -100,13 +93,24 @@ class JdwpStreams implements PacketEndpointHost {
                         if (debugRead) {
                             int debug = 3;
                         }
+                        if (Arrays.equals(in, handshakeFirstFour)) {
+                            byte[] handshake = new byte[14];
+                            // JWDP-Handshake
+                            fromStream.read(handshake);
+                            Packet received = new HandshakePacket(
+                                    packetEndpoint);
+                            received.bytes = handshake;
+                            received.fromName = descriptor.name;
+                            logger.info("Received handshake << {}",
+                                    descriptor.name);
+                            packetEndpoint().addInPacket(received);
+                            continue;
+                        }
                         int length = Packet.bigEndian(in);
                         if (length > (2 << 18)) {
                             // hack - did we get an out of order handshake
                             // packet?
-                            Ax.out("dropping malformed packet");
-                            byte[] packet = new byte[10];
-                            fromStream.read(packet);
+                            Ax.out("received malformed packet :: panic");
                             return;
                         }
                         byte[] packet = new byte[length - 4];
