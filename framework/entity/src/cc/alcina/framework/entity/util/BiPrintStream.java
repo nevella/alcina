@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.util;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -252,6 +253,12 @@ public class BiPrintStream extends PrintStream {
             if (s != null && s.matches(debugMarker)) {
                 int debug = 3;
             }
+        }
+    }
+
+    public static class NullPrintStream extends PrintStream {
+        public NullPrintStream() {
+            super(new ByteArrayOutputStream());
         }
     }
 }

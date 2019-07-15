@@ -3,17 +3,6 @@ package com.sun.tools.jdi;
 import java.util.List;
 
 import com.sun.jdi.Location;
-import com.sun.tools.jdi.ArrayReferenceImpl;
-import com.sun.tools.jdi.ArrayTypeImpl;
-import com.sun.tools.jdi.ClassLoaderReferenceImpl;
-import com.sun.tools.jdi.ClassObjectReferenceImpl;
-import com.sun.tools.jdi.ClassTypeImpl;
-import com.sun.tools.jdi.InterfaceTypeImpl;
-import com.sun.tools.jdi.ObjectReferenceImpl;
-import com.sun.tools.jdi.ReferenceTypeImpl;
-import com.sun.tools.jdi.StringReferenceImpl;
-import com.sun.tools.jdi.ThreadGroupReferenceImpl;
-import com.sun.tools.jdi.ThreadReferenceImpl;
 
 
 /**

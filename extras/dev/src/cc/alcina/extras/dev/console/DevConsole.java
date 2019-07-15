@@ -89,6 +89,7 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.util.BiPrintStream;
+import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 import cc.alcina.framework.servlet.ServletLayerUtils;
@@ -1207,12 +1208,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
                     r.run();
                 }
             }
-        }
-    }
-
-    public static class NullPrintStream extends PrintStream {
-        public NullPrintStream() {
-            super(new ByteArrayOutputStream());
         }
     }
 
