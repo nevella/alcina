@@ -9,7 +9,7 @@ import java.util.Locale;
 import cc.alcina.framework.common.client.util.AlcinaConstants;
 import cc.alcina.framework.common.client.util.LooseContext;
 
-class BiPrintStream extends PrintStream {
+public class BiPrintStream extends PrintStream {
     public PrintStream s1;
 
     public PrintStream s2;
@@ -249,7 +249,7 @@ class BiPrintStream extends PrintStream {
         // if (s == null) {
         // int debug = 3;
         // }
-        if (s != null && s.contains("dropping malformed packet")) {
+        if (s != null && s.contains("malformed")) {
             int debug = 3;
         }
     }

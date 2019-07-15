@@ -1,5 +1,7 @@
 package cc.alcina.framework.classmeta;
 
+import java.io.ByteArrayOutputStream;
+
 import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
@@ -10,6 +12,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 
+import cc.alcina.extras.dev.console.BiPrintStream;
+import cc.alcina.extras.dev.console.DevConsole.NullPrintStream;
 import cc.alcina.framework.classmeta.rdb.HttpAcceptorHandler;
 import cc.alcina.framework.classmeta.rdb.RdbProxies;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -25,6 +29,20 @@ import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 
 public class ClassMetaServer {
+    private static BiPrintStream out;
+
+    private static BiPrintStream err;
+    static {
+        err = new BiPrintStream(new ByteArrayOutputStream());
+        err.s1 = System.err;
+        err.s2 = new NullPrintStream();
+        out = new BiPrintStream(new ByteArrayOutputStream());
+        out.s1 = System.out;
+        out.s2 = new NullPrintStream();
+        System.setErr(err);
+        System.setOut(out);
+    }
+
     public static void main(String[] args) {
         try {
             new ClassMetaServer().start();
