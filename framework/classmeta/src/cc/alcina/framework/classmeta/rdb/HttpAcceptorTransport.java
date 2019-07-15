@@ -26,6 +26,9 @@ class HttpAcceptorTransport extends Transport {
     @Override
     public synchronized void addPredictivePackets(
             List<Packet> predictivePackets) {
+        if (predictivePackets.isEmpty()) {
+            return;
+        }
         synchronized (responseModel) {
             responseModel.predictivePackets.addAll(predictivePackets);
         }
@@ -64,15 +67,17 @@ class HttpAcceptorTransport extends Transport {
     }
 
     @Override
-    public void send() {
+    synchronized public void send() {
         HttpConnectionPair pair = null;
         while (pair == null) {
             if (commandPair != null) {
                 pair = commandPair;
+                commandPair = null;
                 break;
             }
             if (listenerPair != null) {
                 pair = listenerPair;
+                listenerPair = null;
                 break;
             }
             synchronized (connectionPairMonitor) {

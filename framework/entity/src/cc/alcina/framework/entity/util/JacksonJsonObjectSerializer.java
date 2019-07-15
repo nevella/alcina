@@ -363,7 +363,11 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
         public void returnObject(ObjectMapper objectMapper) {
             if (objectPool != null) {
-                objectPool.returnObject(objectMapper);
+                try {
+                    objectPool.returnObject(objectMapper);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
 

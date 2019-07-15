@@ -34,6 +34,9 @@ abstract class Transport implements PacketEndpointHost {
     }
 
     protected void receivePredictivePackets(List<Packet> predictivePackets) {
+        if (predictivePackets.isEmpty()) {
+            return;
+        }
         packetEndpoint.receivedPredictivePackets(predictivePackets);
     }
 }
