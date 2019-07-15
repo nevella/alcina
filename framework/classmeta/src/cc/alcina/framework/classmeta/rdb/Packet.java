@@ -77,8 +77,10 @@ class Packet {
 
     @Override
     public String toString() {
-        return Ax.format("%s/%s/%s\t%s\t%s", id(), commandSet(), commandId(),
-                Ax.blankToEmpty(messageName), meta == null ? "" : meta.series);
+        return Ax.format("%s/%s/%s\t%s\t%s\t%s", id(), commandSet(),
+                commandId(), Ax.blankToEmpty(messageName),
+                isPredictive ? "(predictive)" : "(passthrough)",
+                meta == null ? "" : meta.series);
     }
 
     int commandId() {
@@ -106,6 +108,10 @@ class Packet {
             payload = new PacketPayload();
         }
         return payload;
+    }
+
+    enum EventSeries {
+        early_handshake, all_threads_handshake, unknown_post_handshake, unknown
     }
 
     static class HandshakePacket extends Packet {
@@ -155,9 +161,5 @@ class Packet {
             copy.setId(0);
             return copy;
         }
-    }
-
-    enum EventSeries {
-        early_handshake, all_threads_handshake, unknown_post_handshake, unknown
     }
 }

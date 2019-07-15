@@ -96,14 +96,18 @@ abstract class Endpoint {
                     .getPredictiveResponse(packet);
             if (predictiveResponse.isPresent()) {
                 packetEndpoint.addReplyPacket(predictiveResponse.get());
+                logger.debug("Predictive packet << {}\t{}", packetEndpoint,
+                        packet);
                 predictiveReplyPacketCounter++;
                 break;
             }
             if (packetEndpoint.host instanceof Transport) {
+                logger.debug("Received packet :: {}\t{}", packetEndpoint,
+                        packet);
             } else {
                 logger.info("Received packet :: {}\t{}", packetEndpoint,
                         packet);
-                packet.dump();
+                // packet.dump();
                 logger.info("Packets: {}/{}", predictiveReplyPacketCounter,
                         inPacketCounter);
             }
