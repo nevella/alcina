@@ -94,12 +94,15 @@ class JdwpStreams implements PacketEndpointHost {
                             int debug = 3;
                         }
                         if (Arrays.equals(in, handshakeFirstFour)) {
-                            byte[] handshake = new byte[14];
+                            byte[] restOfHandshake = new byte[10];
                             // JWDP-Handshake
-                            fromStream.read(handshake);
+                            fromStream.read(restOfHandshake);
+                            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                            buffer.write(in);
+                            buffer.write(restOfHandshake);
                             Packet received = new HandshakePacket(
                                     packetEndpoint);
-                            received.bytes = handshake;
+                            received.bytes = buffer.toByteArray();
                             received.fromName = descriptor.name;
                             logger.info("Received handshake << {}",
                                     descriptor.name);
