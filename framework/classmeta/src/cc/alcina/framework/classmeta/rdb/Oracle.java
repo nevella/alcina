@@ -53,7 +53,6 @@ class Oracle {
                 switch (command.meta.series) {
                 case all_threads_handshake: {
                     predict_all_threads_handshake(command, reply);
-                    int debug = 3;
                     break;
                 }
                 }

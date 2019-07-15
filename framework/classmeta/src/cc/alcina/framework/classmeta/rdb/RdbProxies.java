@@ -57,7 +57,7 @@ public class RdbProxies {
         if (Boolean.getBoolean("testRdbProxies")) {
             try {
                 new ShellWrapper().runBashScript(
-                        "/usr/bin/java -jar /g/alcina/lib/framework/dev/eclipse_remote_control_client.jar execute_command ljda.jade DEBUG");
+                        "/usr/bin/java -jar /g/alcina/lib/framework/dev/eclipse_remote_control_client.jar execute_command hija.app0z.jade.io DEBUG");
             } catch (Exception e) {
                 throw new WrappedRuntimeException(e);
             }
@@ -86,6 +86,8 @@ public class RdbProxies {
         public String transportUrl;
 
         public String transportEndpointName;
+
+        public int transportDelay;
     }
 
     @XmlRootElement

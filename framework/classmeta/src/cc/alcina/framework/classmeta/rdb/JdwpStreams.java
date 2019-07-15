@@ -73,22 +73,6 @@ class JdwpStreams implements PacketEndpointHost {
         return packetEndpoint.translateToOriginalId(packet);
     }
 
-    public void write(Packet packet) {
-        try {
-            logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
-            if (packet.isPredictive) {
-                if (endpoint.isDebuggee()) {
-                    packet = packetEndpoint.createForPredictiveSequence(packet);
-                }
-                logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
-                // debugRead = true;
-            }
-            toStream.write(packet.bytes);
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
-
     void start() {
         new Thread(Ax.format("%s::jdwp-reader", descriptor.name)) {
             @Override
@@ -140,5 +124,21 @@ class JdwpStreams implements PacketEndpointHost {
                 }
             };
         }.start();
+    }
+
+    synchronized void write(Packet packet) {
+        try {
+            logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
+            if (packet.isPredictive) {
+                if (endpoint.isDebuggee()) {
+                    packet = packetEndpoint.createForPredictiveSequence(packet);
+                }
+                logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
+                // debugRead = true;
+            }
+            toStream.write(packet.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
     }
 }
