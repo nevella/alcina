@@ -127,10 +127,10 @@ class JdwpStreams implements PacketEndpointHost {
                             len -= count;
                             off += count;
                         }
-                        Packet received = new Packet(packetEndpoint);
-                        received.bytes = b;
-                        received.fromName = descriptor.name;
-                        packetEndpoint().addInPacket(received);
+                        Packet packet = new Packet(packetEndpoint);
+                        packet.bytes = b;
+                        packet.fromName = descriptor.name;
+                        packetEndpoint().addInPacket(packet);
                     }
                 } catch (Exception e) {
                     throw new WrappedRuntimeException(e);
@@ -141,13 +141,17 @@ class JdwpStreams implements PacketEndpointHost {
 
     synchronized void write(Packet packet) {
         try {
-            logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
             if (packet.isPredictive) {
                 if (endpoint.isDebuggee()) {
                     packet = packetEndpoint.createForPredictiveSequence(packet);
                 }
                 logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
                 // debugRead = true;
+            } else {
+                if (packet.isReply) {
+                    // end of stanza
+                    Ax.out("");
+                }
             }
             toStream.write(packet.bytes);
         } catch (Exception e) {
