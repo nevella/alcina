@@ -56,7 +56,7 @@ public class RdbProxies {
         schema.endpointDescriptors.forEach(this::start);
         // EntityLayerUtils.setLevel("cc.alcina.framework.classmeta.rdb",
         // Level.DEBUG);
-        if (Boolean.getBoolean("testRdbProxies") || "".isEmpty()) {
+        if (Boolean.getBoolean("testRdbProxies") || "ee".isEmpty()) {
             try {
                 Thread.sleep(1000);
                 new ShellWrapper().runBashScript(
