@@ -87,6 +87,10 @@ public class RdbJdi {
             }
             mockDetermineIfDaemonThread(thread);
             thread.status();
+            /*
+             * More than eclipse does - but we want to cache
+             */
+            thread.name();
             if (thread.isSuspended()) {
                 thread.currentContendedMonitor();
             }

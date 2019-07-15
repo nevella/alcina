@@ -36,13 +36,13 @@ abstract class Endpoint {
 
     protected RdbEndpointDescriptor descriptor;
 
-    Oracle oracle = new Oracle(this);
+    Oracle oracle;
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
     Socket socket = null;
 
-    AtomicInteger eventCounter = new AtomicInteger(0);
+    AtomicInteger receivedPacketCounter = new AtomicInteger(0);
 
     int inPacketCounter = 0;
 
@@ -59,15 +59,15 @@ abstract class Endpoint {
 
     public void packetsReceived(Packet packet) {
         if (!packet.fromDebugger) {
-            packet.fromDebugger = this.isDebugger()
+            packet.fromDebugger = this.isDebugger() && packet.source != null
                     && packet.source.host == streams;
         }
         if (packet.isPredictive) {
             oracle.receivedPredictivePacket();
         } else {
-            synchronized (eventCounter) {
-                eventCounter.incrementAndGet();
-                eventCounter.notify();
+            synchronized (receivedPacketCounter) {
+                receivedPacketCounter.incrementAndGet();
+                receivedPacketCounter.notify();
             }
         }
     }
@@ -89,18 +89,9 @@ abstract class Endpoint {
         // this is the naive (raw) packet from the endpoint.
         while ((packet = packetEndpoint.next()) != null) {
             // what's our coordinate space, Scotty?
-            if (packetEndpoint.host == streams) {
-                inPacketCounter++;
-                logger.info("Packets: {}/{}", predictiveReplyPacketCounter,
-                        inPacketCounter);
-            }
+            inPacketCounter++;
             oracle.analysePacket(packetEndpoint, packet);
             oracle.handlePacket(packetEndpoint, packet);
-            if (packetEndpoint.host instanceof SharedVmTransport) {
-            } else {
-                logger.info("Received packet :: {}\t{}", packetEndpoint,
-                        packet);
-            }
             Optional<Packet> predictiveResponse = otherPacketEndpoint
                     .getPredictiveResponse(packet);
             if (predictiveResponse.isPresent()) {
@@ -108,6 +99,20 @@ abstract class Endpoint {
                 predictiveReplyPacketCounter++;
                 break;
             }
+            if (packetEndpoint.host instanceof Transport) {
+            } else {
+                logger.info("Received packet :: {}\t{}", packetEndpoint,
+                        packet);
+                packet.dump();
+                logger.info("Packets: {}/{}", predictiveReplyPacketCounter,
+                        inPacketCounter);
+            }
+            /*
+             * logic: if the predicitive packets can't answer all jdwp requests,
+             * they may be out of date...
+             */
+            otherPacketEndpoint.onPredictivePacketMiss();
+            oracle.onPredictivePacketMiss();
             otherPacketEndpoint.addOutPacket(packet);
             otherPacketEndpoint.host.addPredictivePackets(
                     packetEndpoint.flushPredictivePackets());
@@ -163,7 +168,7 @@ abstract class Endpoint {
                     int eventsProcessed = 0;
                     while (true) {
                         int eventsAtStartOfLoop = 0;
-                        synchronized (eventCounter) {
+                        synchronized (receivedPacketCounter) {
                             // the main thing is to not miss wakeups - so if an
                             // incoming packet is received on another thread
                             // during this loop (and the counter is incremented
@@ -171,14 +176,22 @@ abstract class Endpoint {
                             //
                             // who knows - there may be a .concurrent class that
                             // does this too
-                            eventsAtStartOfLoop = eventCounter.get();
+                            eventsAtStartOfLoop = receivedPacketCounter.get();
                             if (eventsAtStartOfLoop == eventsProcessed) {
-                                eventCounter.wait();
+                                receivedPacketCounter.wait();
                             }
                         }
                         if (streams == null) {
-                            // waiting for attach
-                            continue;
+                            if (descriptor.jdwpAttach) {
+                                doAttachJdwp();
+                            } else {
+                                // waiting for attach
+                                continue;
+                            }
+                        }
+                        if (oracle == null) {
+                            oracle = new Oracle(Endpoint.this);
+                            oracle.start();
                         }
                         inPackets(streams.packetEndpoint());
                         inPackets(transport.packetEndpoint());
@@ -196,15 +209,26 @@ abstract class Endpoint {
     private void startSocketInterceptor() {
         streams = new JdwpStreams(descriptor, socket, this);
         streams.start();
-        synchronized (eventCounter) {
-            eventCounter.notify();
+        synchronized (receivedPacketCounter) {
+            receivedPacketCounter.notify();
         }
     }
 
     private void startTransportStream() {
-        transport = new SharedVmTransport(descriptor, this);
+        switch (descriptor.transportType) {
+        case shared_vm:
+            transport = new SharedVmTransport(descriptor, this);
+            break;
+        case http_initiator:
+            transport = new HttpInitiatorTransport(descriptor, this);
+            break;
+        case http_acceptor:
+            transport = new HttpAcceptorTransport(descriptor, this);
+            break;
+        default:
+            throw new UnsupportedOperationException();
+        }
         transport.launch();
-        // FIXME - e.g. debuggee sharedvm - this
     }
 
     protected abstract boolean isDebuggee();
@@ -213,7 +237,8 @@ abstract class Endpoint {
 
     protected void startJdwpStream() {
         if (descriptor.jdwpAttach) {
-            doAttachJdwp();
+            // doAttachJdwp();
+            // wait for first received packet
         } else {
             listenForJdwpAttach();
         }
@@ -222,7 +247,6 @@ abstract class Endpoint {
     void launch() {
         startJdwpStream();
         startTransportStream();
-        oracle.start();
         try {
             startMainLoop();
         } catch (Exception e) {

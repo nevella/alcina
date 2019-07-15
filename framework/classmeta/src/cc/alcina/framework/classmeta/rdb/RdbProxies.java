@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.util.ShellWrapper;
@@ -38,49 +38,29 @@ public class RdbProxies {
     }
 
     public void start() {
-        if ("disabled".length() > 90) {
-            return;
-        }
         String modelXml = null;
         try {
             modelXml = ResourceUtilities
                     .readClazzp("../schema/rdbEndpointSchema.xml");
         } catch (Exception e) {
+            if (!CommonUtils.hasCauseOfClass(e, NullPointerException.class)) {
+                e.printStackTrace();
+            }
         }
         if (modelXml == null) {
-            Ax.out("No RdbEndpointSchema defined");
-            schema = new RdbEndpointSchema();
-            {
-                RdbEndpointDescriptor descriptor = new RdbEndpointDescriptor();
-                descriptor.jdwpHost = "127.0.0.1";
-                descriptor.jdwpPort = 11001;
-                descriptor.name = "ljda";
-                descriptor.name = "ljda.jade.app.dev";
-                descriptor.transportType = TransportType.shared_vm;
-                descriptor.transportEndpointName = "jda";
-                schema.endpointDescriptors.add(descriptor);
-            }
-            {
-                RdbEndpointDescriptor descriptor = new RdbEndpointDescriptor();
-                descriptor.jdwpHost = "jda";
-                descriptor.jdwpPort = 5126;
-                descriptor.jdwpAttach = true;
-                descriptor.name = "jda";
-                descriptor.name = "jda.jade.app.dev";
-                schema.endpointDescriptors.add(descriptor);
-            }
-            Ax.out(WrappedObjectHelper.xmlSerialize(schema));
-            System.exit(0);
+            return;
         } else {
             schema = WrappedObjectHelper.xmlDeserialize(RdbEndpointSchema.class,
                     modelXml);
         }
         schema.endpointDescriptors.forEach(this::start);
-        try {
-            new ShellWrapper().runBashScript(
-                    "/usr/bin/java -jar /g/alcina/lib/framework/dev/eclipse_remote_control_client.jar execute_command ljda.jade DEBUG");
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
+        if (Boolean.getBoolean("testRdbProxies")) {
+            try {
+                new ShellWrapper().runBashScript(
+                        "/usr/bin/java -jar /g/alcina/lib/framework/dev/eclipse_remote_control_client.jar execute_command ljda.jade DEBUG");
+            } catch (Exception e) {
+                throw new WrappedRuntimeException(e);
+            }
         }
     }
 
@@ -103,7 +83,7 @@ public class RdbProxies {
 
         public TransportType transportType;
 
-        public String transportEndpointUrl;
+        public String transportUrl;
 
         public String transportEndpointName;
     }
@@ -114,6 +94,6 @@ public class RdbProxies {
     }
 
     public enum TransportType {
-        shared_vm, tcp_ip;
+        shared_vm, http_initiator, http_acceptor;
     }
 }

@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.classmeta.rdb.Packet.PacketPayload;
 
@@ -16,6 +17,18 @@ class Packets {
     private transient Map<Integer, Packet> byIdReply = new LinkedHashMap<>();
 
     private transient Map<PacketPayload, Packet> byPayload = new LinkedHashMap<>();
+
+    public void clear() {
+        packets.clear();
+        ;
+        byIdCommand.clear();
+        byIdReply.clear();
+        byPayload.clear();
+    }
+
+    public boolean hasPackets() {
+        return packets.size() > 0;
+    }
 
     synchronized void add(Packet packet) {
         packets.add(packet);
@@ -52,5 +65,12 @@ class Packets {
                         && p.commandId() == commandId && p.fromDebugger)
                 .findFirst();
         return findFirst;
+    }
+
+    synchronized void removeIf(Predicate<Packet> test) {
+        // if (packets.isEmpty()) {
+        // return;
+        // }
+        // packets.removeIf(test);
     }
 }

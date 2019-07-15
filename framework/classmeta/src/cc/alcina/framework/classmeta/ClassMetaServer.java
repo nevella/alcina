@@ -10,6 +10,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 
+import cc.alcina.framework.classmeta.rdb.HttpAcceptorHandler;
 import cc.alcina.framework.classmeta.rdb.RdbProxies;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -75,10 +76,6 @@ public class ClassMetaServer {
         WrappedObjectHelper.withoutRegistry();
         initLoggers();
         initRegistry();
-        if (Boolean.getBoolean("testRdbProxies")) {
-            RdbProxies.get().start();
-            return;
-        }
         ClassMetaHandler metaHandler = new ClassMetaHandler();
         {
             ContextHandler ctx = new ContextHandler(handlers, "/meta");
@@ -95,9 +92,15 @@ public class ClassMetaServer {
             ctx.setHandler(new AntHandler());
             handlers.addHandler(ctx);
         }
+        {
+            ContextHandler ctx = new ContextHandler(handlers, "/rdb");
+            ctx.setHandler(new HttpAcceptorHandler());
+            handlers.addHandler(ctx);
+        }
         server.setHandler(handlers);
         server.start();
         server.dumpStdErr();
+        RdbProxies.get().start();
         server.join();
     }
 }

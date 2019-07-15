@@ -6,8 +6,8 @@ import com.sun.jdi.connect.spi.Connection;
 import com.sun.tools.jdi.RdbJdi;
 import com.sun.tools.jdi.VirtualMachineImplExt;
 
+import cc.alcina.framework.classmeta.rdb.Packet.EventSeries;
 import cc.alcina.framework.classmeta.rdb.Packet.Meta;
-import cc.alcina.framework.classmeta.rdb.Packet.Type;
 import cc.alcina.framework.classmeta.rdb.PacketEndpointHost.PacketEndpoint;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
@@ -41,16 +41,16 @@ class Oracle {
     }
 
     public void handlePacket(PacketEndpoint packetSource, Packet packet) {
-        if (packet.isReply) {
+        if (packet.isReply && packetSource.host == endpoint.streams) {
             Packet reply = packet;
             Packet command = packet.getCorrespondingCommandPacket();
-            switch (command.meta.type) {
+            switch (command.meta.series) {
             case all_threads_handshake: {
                 break;
             }
             }
             if (endpoint.isDebuggee() && command.fromDebugger) {
-                switch (command.meta.type) {
+                switch (command.meta.series) {
                 case all_threads_handshake: {
                     predict_all_threads_handshake(command, reply);
                     int debug = 3;
@@ -58,6 +58,21 @@ class Oracle {
                 }
                 }
             }
+        }
+    }
+
+    public boolean isCacheable(Packet packet) {
+        if (packet.messageName == null) {
+            // we're not trying to prune objects, just get rid of uncacheable
+            // values - if the key (command) is gone, this (reply) is
+            // unreachable
+            return true;
+        }
+        switch (packet.messageName) {
+        case "Name":
+            return true;
+        default:
+            return false;
         }
     }
 
@@ -74,16 +89,14 @@ class Oracle {
         case "AllThreads": {
             if (!state.calledAllThreads) {
                 state.calledAllThreads = true;
-                meta.type = Type.all_threads_handshake;
+                state.expectingPredictive = true;
+                state.updateState();
             }
+            break;
         }
         }
-        if (meta.type == Type.unknown) {
-            if (!state.calledAllThreads) {
-                meta.type = Type.early_handshake;
-            } else {
-                meta.type = Type.unknown_post_handshake;
-            }
+        if (meta.series == EventSeries.unknown) {
+            meta.series = state.currentSeries;
         }
     }
 
@@ -93,6 +106,11 @@ class Oracle {
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
+    }
+
+    void onPredictivePacketMiss() {
+        state.expectingPredictive = false;
+        state.updateState();
     }
 
     void start() {

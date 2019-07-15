@@ -249,8 +249,8 @@ class BiPrintStream extends PrintStream {
         // if (s == null) {
         // int debug = 3;
         // }
-        // if (s != null && s.contains("<?xml version=")) {
-        // int debug = 3;
-        // }
+        if (s != null && s.contains("dropping malformed packet")) {
+            int debug = 3;
+        }
     }
 }

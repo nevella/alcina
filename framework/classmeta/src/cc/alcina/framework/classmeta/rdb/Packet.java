@@ -2,6 +2,9 @@ package cc.alcina.framework.classmeta.rdb;
 
 import java.util.Arrays;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.classmeta.rdb.PacketEndpointHost.PacketEndpoint;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -57,10 +60,14 @@ class Packet {
         SEUtilities.dumpBytes(bytes, 11);
     }
 
+    @JsonIgnore
     public Packet getCorrespondingCommandPacket() {
+        Preconditions.checkNotNull(source,
+                "can only be applied to packets generated/streamed from this vm");
         return source.otherPacketEndpoint().getCorrespondingCommandPacket(this);
     }
 
+    @JsonIgnore
     public void setId(int id) {
         bytes[4] = (byte) ((id >> 24) & 0xFF);
         bytes[5] = (byte) ((id >> 16) & 0xFF);
@@ -71,7 +78,7 @@ class Packet {
     @Override
     public String toString() {
         return Ax.format("%s/%s/%s\t%s\t%s", id(), commandSet(), commandId(),
-                Ax.blankToEmpty(messageName), meta == null ? "" : meta.type);
+                Ax.blankToEmpty(messageName), meta == null ? "" : meta.series);
     }
 
     int commandId() {
@@ -118,7 +125,7 @@ class Packet {
     static class Meta {
         boolean mustSend;
 
-        Type type = Type.unknown;
+        EventSeries series = EventSeries.unknown;
     }
 
     class PacketPayload {
@@ -150,7 +157,7 @@ class Packet {
         }
     }
 
-    enum Type {
+    enum EventSeries {
         early_handshake, all_threads_handshake, unknown_post_handshake, unknown
     }
 }

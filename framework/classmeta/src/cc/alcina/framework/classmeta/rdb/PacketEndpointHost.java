@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -40,6 +41,9 @@ interface PacketEndpointHost {
 
         Packets usablePredictiveReplies = new Packets();
 
+        // starts true => i.e. no predictive packets we expect to be usable
+        AtomicBoolean predictivePacketMissMonitor = new AtomicBoolean(true);
+
         private boolean mustSend;
 
         private Endpoint endpoint;
@@ -66,24 +70,6 @@ interface PacketEndpointHost {
             List<Packet> result = predictivePacketsOutBuffer;
             predictivePacketsOutBuffer = new ArrayList<>();
             return result;
-        }
-
-        public Packet getCorrespondingCommandPacket(Packet packet) {
-            return allInPackets.byId(packet.id(), true);
-        }
-
-        public Optional<Packet> getPredictiveResponse(Packet packet) {
-            Optional<Packet> byPayloadResponse = usablePredictiveReplies
-                    .byPayloadResponse(packet);
-            return byPayloadResponse.map(response -> {
-                response = response.copy();
-                response.setId(packet.id());
-                return response;
-            });
-        }
-
-        public void receivedPredictivePackets(List<Packet> predictivePackets) {
-            predictivePackets.forEach(usablePredictiveReplies::add);
         }
 
         @Override
@@ -126,6 +112,20 @@ interface PacketEndpointHost {
             return flush;
         }
 
+        synchronized Packet getCorrespondingCommandPacket(Packet packet) {
+            return allInPackets.byId(packet.id(), true);
+        }
+
+        synchronized Optional<Packet> getPredictiveResponse(Packet packet) {
+            Optional<Packet> byPayloadResponse = usablePredictiveReplies
+                    .byPayloadResponse(packet);
+            return byPayloadResponse.map(response -> {
+                response = response.copy();
+                response.setId(packet.id());
+                return response;
+            });
+        }
+
         synchronized Packet next() {
             return inPackets.isEmpty() ? null : inPackets.pop();
         }
@@ -142,8 +142,30 @@ interface PacketEndpointHost {
             return null;
         }
 
+        synchronized void onPredictivePacketMiss() {
+            if (!usablePredictiveReplies.hasPackets()) {
+                return;
+            }
+            usablePredictiveReplies
+                    .removeIf(packet -> !endpoint.oracle.isCacheable(packet));
+            synchronized (predictivePacketMissMonitor) {
+                predictivePacketMissMonitor.set(true);
+                predictivePacketMissMonitor.notify();
+            }
+        }
+
         PacketEndpoint otherPacketEndpoint() {
             return endpoint.otherPacketEndpoint(this);
+        }
+
+        synchronized void receivedPredictivePackets(
+                List<Packet> predictivePackets) {
+            predictivePackets.forEach(usablePredictiveReplies::add);
+            if (predictivePackets.size() > 0) {
+                synchronized (predictivePacketMissMonitor) {
+                    predictivePacketMissMonitor.set(false);
+                }
+            }
         }
 
         void send() {
@@ -167,6 +189,17 @@ interface PacketEndpointHost {
             Packet copy = packet.copy();
             copy.setId(predictiveToOriginalIds.get(packet.id()));
             return copy;
+        }
+
+        void waitForPredictivePacketMiss() {
+            synchronized (predictivePacketMissMonitor) {
+                while (!predictivePacketMissMonitor.get()) {
+                    try {
+                        predictivePacketMissMonitor.wait();
+                    } catch (InterruptedException e) {
+                    }
+                }
+            }
         }
     }
 }

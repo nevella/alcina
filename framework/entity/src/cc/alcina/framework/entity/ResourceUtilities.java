@@ -608,6 +608,9 @@ public class ResourceUtilities {
             StringMap headers) throws Exception {
         InputStream in = null;
         HttpURLConnection connection = null;
+        if (headers == null) {
+            headers = new StringMap();
+        }
         try {
             URL url = new URL(strUrl);
             connection = (HttpURLConnection) (url.openConnection());

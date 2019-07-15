@@ -26,6 +26,12 @@ class SharedVmTransport extends Transport {
         }
     }
 
+    private void sendPacket(Packet packet) {
+        Endpoint other = to();
+        logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
+        other.transport.receivePacket(packet);
+    }
+
     private Endpoint to() {
         return RdbProxies.get()
                 .endpointByName(descriptor.transportEndpointName);
@@ -34,25 +40,5 @@ class SharedVmTransport extends Transport {
     @Override
     protected void launch() {
         // no need, other endpoint main
-        // receiver = new Thread(Ax.format("%s::transport::receiver",
-        // descriptor.name)) {
-        // @Override
-        // public void run() {
-        // transport.run();
-        // }
-        // };
-        // receiver.start();
-    }
-
-    @Override
-    protected void receivePredictivePackets(List<Packet> predictivePackets) {
-        packetEndpoint.receivedPredictivePackets(predictivePackets);
-    }
-
-    @Override
-    protected void sendPacket(Packet packet) {
-        Endpoint other = to();
-        logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
-        other.transport.receivePacket(packet);
     }
 }
