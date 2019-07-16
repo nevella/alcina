@@ -3,9 +3,8 @@ package cc.alcina.framework.classmeta.rdb;
 import java.util.List;
 
 import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.ResourceUtilities.SimplePost;
 import cc.alcina.framework.entity.util.JacksonUtils;
 
 class HttpInitiatorTransport extends Transport {
@@ -51,13 +50,20 @@ class HttpInitiatorTransport extends Transport {
         receiver.start();
     }
 
+    @Override
+    void close() {
+        HttpTransportModel model = new HttpTransportModel();
+        model.close = true;
+        dispatchModel(model);
+    }
+
     void dispatchModel(HttpTransportModel model) {
         String url = descriptor.transportUrl;
         model.endpointName = descriptor.transportEndpointName;
         String payload = JacksonUtils.serialize(model);
         try {
-            String strResponse = ResourceUtilities.readUrlAsStringWithPost(url,
-                    payload, null);
+            SimplePost post = new SimplePost(url, payload, null);
+            String strResponse = post.asString();
             HttpTransportModel response = JacksonUtils.deserialize(strResponse,
                     HttpTransportModel.class);
             if (response.eventListener) {
@@ -74,7 +80,8 @@ class HttpInitiatorTransport extends Transport {
             receivePredictivePackets(response.predictivePackets);
             response.passthroughPackets.forEach(this::receivePacket);
         } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
+            e.printStackTrace();
+            packetEndpoint().close();
         }
     }
 }

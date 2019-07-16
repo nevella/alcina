@@ -13,6 +13,7 @@ import cc.alcina.framework.classmeta.rdb.PacketEndpointHost.PacketEndpoint;
 import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TimeConstants;
 
 @SuppressWarnings("resource")
 /*
@@ -46,10 +47,47 @@ abstract class Endpoint {
 
     int inPacketCounter = 0;
 
+    long lastPacketFromOtherEndpointMs = 0;
+
     int predictiveReplyPacketCounter = 0;
+
+    private ServerSocket serverSocket;
+
+    boolean closed = false;
 
     public Endpoint(RdbEndpointDescriptor descriptor) {
         this.descriptor = descriptor;
+    }
+
+    public void close() {
+        if (closed) {
+            return;
+        }
+        logger.warn("Closing :: {}", descriptor);
+        closed = true;
+        streams.setClosed(true);
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (serverSocket != null) {
+            try {
+                serverSocket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        transport.close();
+        synchronized (receivedPacketCounter) {
+            receivedPacketCounter.notify();
+        }
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        RdbProxies.get().replaceEndpoint(this);
     }
 
     public PacketEndpoint otherPacketEndpoint(PacketEndpoint packetEndpoint) {
@@ -90,17 +128,38 @@ abstract class Endpoint {
         while ((packet = packetEndpoint.next()) != null) {
             // what's our coordinate space, Scotty?
             inPacketCounter++;
-            oracle.analysePacket(packetEndpoint, packet);
-            oracle.handlePacket(packetEndpoint, packet);
+            if (packet.source == transport.packetEndpoint()) {
+                lastPacketFromOtherEndpointMs = System.currentTimeMillis();
+            } else {
+                if (lastPacketFromOtherEndpointMs != 0
+                        && System.currentTimeMillis()
+                                - lastPacketFromOtherEndpointMs > 5
+                                        * TimeConstants.ONE_MINUTE_MS) {
+                    close();
+                    return;
+                }
+            }
+            oracle.preparePacket(packetEndpoint, packet);
             Optional<Packet> predictiveResponse = otherPacketEndpoint
                     .getPredictiveResponse(packet);
             if (predictiveResponse.isPresent()) {
+                // if (packet.messageName.equals("Status")) {
+                // int debug = 3;
+                // }
                 packetEndpoint.addReplyPacket(predictiveResponse.get());
                 logger.debug("Predictive packet << {}\t{}", packetEndpoint,
                         packet);
                 predictiveReplyPacketCounter++;
                 break;
             }
+            oracle.analysePacket(packet);
+            oracle.handlePacket(packetEndpoint, packet);
+            /*
+             * logic: if the predicitive packets can't answer all jdwp requests,
+             * they may be out of date...
+             */
+            otherPacketEndpoint.onPredictivePacketMiss();
+            oracle.onPredictivePacketMiss();
             if (packetEndpoint.host instanceof Transport) {
                 logger.debug("Received packet :: {}\t{}", packetEndpoint,
                         packet);
@@ -111,12 +170,6 @@ abstract class Endpoint {
                 logger.info("Packets: {}/{}", predictiveReplyPacketCounter,
                         inPacketCounter);
             }
-            /*
-             * logic: if the predicitive packets can't answer all jdwp requests,
-             * they may be out of date...
-             */
-            otherPacketEndpoint.onPredictivePacketMiss();
-            oracle.onPredictivePacketMiss();
             otherPacketEndpoint.addOutPacket(packet);
             otherPacketEndpoint.host.addPredictivePackets(
                     packetEndpoint.flushPredictivePackets());
@@ -141,7 +194,7 @@ abstract class Endpoint {
     }
 
     private void listenForJdwpAttach0() throws IOException, Exception {
-        ServerSocket serverSocket = new ServerSocket(descriptor.jdwpPort);
+        serverSocket = new ServerSocket(descriptor.jdwpPort);
         while (true) {
             try {
                 Socket newSocket = serverSocket.accept();
@@ -153,7 +206,10 @@ abstract class Endpoint {
                 startSocketInterceptor();
                 logger.info("JDWP attached << {}", descriptor.name);
             } catch (IOException e) {
-                e.printStackTrace();
+                if (!closed) {
+                    e.printStackTrace();
+                }
+                break;
             }
         }
     }
@@ -184,6 +240,9 @@ abstract class Endpoint {
                             if (eventsAtStartOfLoop == eventsProcessed) {
                                 receivedPacketCounter.wait();
                             }
+                        }
+                        if (closed) {
+                            return;
                         }
                         if (streams == null) {
                             if (descriptor.jdwpAttach) {

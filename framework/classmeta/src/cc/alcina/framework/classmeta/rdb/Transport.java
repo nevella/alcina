@@ -37,8 +37,8 @@ abstract class Transport implements PacketEndpointHost {
         if (predictivePackets.isEmpty()) {
             return;
         }
-        // Ax.err("receive predictive:\n");
-        // Ax.out(predictivePackets);
         packetEndpoint.receivedPredictivePackets(predictivePackets);
     }
+
+    abstract void close();
 }

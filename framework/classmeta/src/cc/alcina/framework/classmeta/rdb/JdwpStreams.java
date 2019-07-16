@@ -29,6 +29,8 @@ class JdwpStreams implements PacketEndpointHost {
 
     private Endpoint endpoint;
 
+    boolean closed;
+
     JdwpStreams(RdbEndpointDescriptor descriptor, Socket socket,
             Endpoint endpoint) {
         this.endpoint = endpoint;
@@ -51,6 +53,10 @@ class JdwpStreams implements PacketEndpointHost {
         throw new UnsupportedOperationException();
     }
 
+    public boolean isClosed() {
+        return this.closed;
+    }
+
     @Override
     public PacketEndpoint packetEndpoint() {
         return packetEndpoint;
@@ -62,6 +68,10 @@ class JdwpStreams implements PacketEndpointHost {
         for (Packet packet : packets) {
             write(packet);
         }
+    }
+
+    public void setClosed(boolean closed) {
+        this.closed = closed;
     }
 
     @Override
@@ -90,6 +100,9 @@ class JdwpStreams implements PacketEndpointHost {
                         packetEndpoint().addInPacket(received);
                     }
                     while (true) {
+                        if (isClosed()) {
+                            return;
+                        }
                         int b1, b2, b3, b4;
                         // length
                         b1 = fromStream.read();
@@ -98,7 +111,7 @@ class JdwpStreams implements PacketEndpointHost {
                         b4 = fromStream.read();
                         // EOF
                         if (b1 < 0) {
-                            return;
+                            break;
                         }
                         if (b2 < 0 || b3 < 0 || b4 < 0) {
                             throw new IOException(
@@ -134,6 +147,8 @@ class JdwpStreams implements PacketEndpointHost {
                     }
                 } catch (Exception e) {
                     throw new WrappedRuntimeException(e);
+                } finally {
+                    packetEndpoint().close();
                 }
             };
         }.start();

@@ -17,6 +17,7 @@ interface PacketEndpointHost {
     PacketEndpoint packetEndpoint();
 
     default void receivePacket(Packet packet) {
+        packet.source = packetEndpoint();
         packetEndpoint().addInPacket(packet);
     }
 
@@ -93,6 +94,14 @@ interface PacketEndpointHost {
 
         void addReplyPacket(Packet translated) {
             addOutPacket(translated);
+        }
+
+        synchronized void clearPredictivePacketsForPayload(Packet packet) {
+            usablePredictiveReplies.byPayloadResponse(packet);
+        }
+
+        void close() {
+            endpoint.close();
         }
 
         boolean containsResponse(Packet packet) {

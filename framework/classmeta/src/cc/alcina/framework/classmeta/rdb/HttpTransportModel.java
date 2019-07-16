@@ -11,4 +11,6 @@ class HttpTransportModel {
     boolean eventListener;
 
     String endpointName;
+
+    public boolean close;
 }

@@ -28,33 +28,22 @@ class Oracle {
         this.endpoint = endpoint;
     }
 
-    public void analysePacket(PacketEndpoint packetSource, Packet packet) {
-        if (packet.meta == null) {
-            Meta meta = new Meta();
-            meta.mustSend = true;
-            packet.meta = meta;
-            jwdpAccessor.parse(packet);
-        }
-        if (endpoint.isDebugger()) {
-            analyseDebuggerPacket(packet, packet.meta);
-        }
-    }
-
     public void handlePacket(PacketEndpoint packetSource, Packet packet) {
-        if (packet.isReply && packetSource.host == endpoint.streams) {
+        if (packet.isReply) {
             Packet reply = packet;
             Packet command = packet.getCorrespondingCommandPacket();
-            switch (command.meta.series) {
-            case all_threads_handshake: {
-                break;
-            }
-            }
-            if (endpoint.isDebuggee() && command.fromDebugger) {
-                switch (command.meta.series) {
-                case all_threads_handshake: {
-                    predict_all_threads_handshake(command, reply);
-                    break;
-                }
+            if (command.fromDebugger) {
+                if (endpoint.isDebuggee()) {
+                    switch (command.meta.series) {
+                    case all_threads_handshake: {
+                        predict_all_threads_handshake(command, reply);
+                        break;
+                    }
+                    case frames: {
+                        predict_frames(command, reply);
+                        break;
+                    }
+                    }
                 }
             }
         }
@@ -83,22 +72,6 @@ class Oracle {
         }
     }
 
-    private void analyseDebuggerPacket(Packet packet, Meta meta) {
-        switch (packet.messageName) {
-        case "AllThreads": {
-            if (!state.calledAllThreads) {
-                state.calledAllThreads = true;
-                state.expectingPredictive = true;
-                state.updateState();
-            }
-            break;
-        }
-        }
-        if (meta.series == EventSeries.unknown) {
-            meta.series = state.currentSeries;
-        }
-    }
-
     private void predict_all_threads_handshake(Packet command, Packet reply) {
         try {
             rdbJdi.predict_all_threads_handshake(command.bytes, reply.bytes);
@@ -107,9 +80,38 @@ class Oracle {
         }
     }
 
+    private void predict_frames(Packet command, Packet reply) {
+        try {
+            rdbJdi.predict_frames(command.bytes, reply.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    void analysePacket(Packet packet) {
+        if (endpoint.isDebugger()
+                && packet.source == endpoint.streams.packetEndpoint()) {
+            state.currentPacket = packet;
+            state.updateState();
+            if (packet.meta.series == EventSeries.unknown) {
+                packet.meta.series = state.currentSeries;
+            }
+        }
+    }
+
     void onPredictivePacketMiss() {
-        state.expectingPredictive = false;
+        Packet currentPacket = state.currentPacket;
+        state.setExpectingPredictiveAfter(null);
         state.updateState();
+    }
+
+    void preparePacket(PacketEndpoint packetSource, Packet packet) {
+        if (packet.meta == null) {
+            Meta meta = new Meta();
+            meta.mustSend = true;
+            packet.meta = meta;
+            jwdpAccessor.parse(packet);
+        }
     }
 
     void start() {

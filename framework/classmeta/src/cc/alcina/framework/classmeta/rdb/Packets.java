@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.classmeta.rdb.Packet.PacketPayload;
 
@@ -20,7 +21,6 @@ class Packets {
 
     public void clear() {
         packets.clear();
-        ;
         byIdCommand.clear();
         byIdReply.clear();
         byPayload.clear();
@@ -28,6 +28,14 @@ class Packets {
 
     public boolean hasPackets() {
         return packets.size() > 0;
+    }
+
+    private void removeFromLookups(Packet packet) {
+        if (packet.id() != 0) {
+            byIdReply.remove(packet.id());
+            byIdCommand.remove(packet.id());
+            byPayload.remove(packet.payload());
+        }
     }
 
     synchronized void add(Packet packet) {
@@ -68,9 +76,14 @@ class Packets {
     }
 
     synchronized void removeIf(Predicate<Packet> test) {
-        // if (packets.isEmpty()) {
-        // return;
-        // }
-        // packets.removeIf(test);
+        if (packets.isEmpty()) {
+            return;
+        }
+        List<Packet> toRemove = packets.stream().filter(test)
+                .collect(Collectors.toList());
+        packets.removeIf(test);
+        for (Packet packet : toRemove) {
+            removeFromLookups(packet);
+        }
     }
 }

@@ -41,4 +41,8 @@ class SharedVmTransport extends Transport {
     protected void launch() {
         // no need, other endpoint main
     }
+
+    @Override
+    void close() {
+    }
 }

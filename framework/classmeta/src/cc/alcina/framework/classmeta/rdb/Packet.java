@@ -11,6 +11,8 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 
 class Packet {
+    static boolean debugPredictivePassthrough = false;
+
     public static int bigEndian(byte[] byteArray) {
         return bigEndian(byteArray[0], byteArray[1], byteArray[2],
                 byteArray[3]);
@@ -77,10 +79,18 @@ class Packet {
 
     @Override
     public String toString() {
+        String predictiveMarker = isPredictive ? "(predictive)"
+                : "(passthrough)";
+        if (!debugPredictivePassthrough) {
+            predictiveMarker = "";
+        }
+        String seriesMarker = meta == null ? "" : meta.series.toString();
+        if (!fromDebugger || isReply) {
+            seriesMarker = "";
+        }
         return Ax.format("%s/%s/%s\t%s\t%s\t%s", id(), commandSet(),
-                commandId(), Ax.blankToEmpty(messageName),
-                isPredictive ? "(predictive)" : "(passthrough)",
-                meta == null ? "" : meta.series);
+                commandId(), Ax.blankToEmpty(messageName), predictiveMarker,
+                seriesMarker);
     }
 
     int commandId() {
@@ -111,7 +121,9 @@ class Packet {
     }
 
     enum EventSeries {
-        early_handshake, all_threads_handshake, unknown_post_handshake, unknown
+        early_handshake, all_threads_handshake, unknown_post_handshake, unknown,
+        admin_post_handshake, breakpoint_set, contended_monitor_check, suspend,
+        frames
     }
 
     static class HandshakePacket extends Packet {

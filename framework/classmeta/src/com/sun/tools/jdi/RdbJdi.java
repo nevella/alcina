@@ -5,8 +5,10 @@ import com.sun.jdi.ReferenceType;
 import com.sun.jdi.Value;
 import com.sun.tools.jdi.JDWP.ThreadGroupReference;
 import com.sun.tools.jdi.JDWP.ThreadGroupReference.Parent;
+import com.sun.tools.jdi.JDWP.ThreadReference.Frames;
 import com.sun.tools.jdi.JDWP.ThreadReference.ThreadGroup;
 import com.sun.tools.jdi.JDWP.VirtualMachine.AllThreads;
+import com.sun.tools.jdi.JDWP.VirtualMachine.CapabilitiesNew;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
@@ -71,6 +73,11 @@ public class RdbJdi {
         this.vm = vm;
     }
 
+    public byte[] getThreadStatusCommandBytes(byte[] bytes) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     public void predict_all_threads_handshake(byte[] command, byte[] reply)
             throws Exception {
         PredictorToken token = new PredictorToken(command, reply);
@@ -97,6 +104,22 @@ public class RdbJdi {
         }
     }
 
+    public void predict_frames(byte[] command, byte[] reply) throws Exception {
+        PredictorToken token = new PredictorToken(command, reply);
+        Frames frames = Frames.waitForReply(vm, token.replyStream());
+    }
+
+    public void tmpParse(byte[] bytes) {
+        try {
+            PredictorToken token = new PredictorToken(null, bytes);
+            CapabilitiesNew o = CapabilitiesNew.waitForReply(vm,
+                    token.replyStream());
+            int debug = 3;
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
     private void mockDetermineIfDaemonThread(ThreadReferenceImpl thread) {
         ReferenceType referenceType = thread.referenceType();
         Field field = referenceType.fieldByName("daemon"); //$NON-NLS-1$
@@ -117,7 +140,8 @@ public class RdbJdi {
 
         public PredictorToken(byte[] command, byte[] reply) {
             try {
-                this.command = Packet.fromByteArray(command);
+                this.command = command == null ? null
+                        : Packet.fromByteArray(command);
                 this.reply = Packet.fromByteArray(reply);
                 this.reply.replied = true;
             } catch (Exception e) {

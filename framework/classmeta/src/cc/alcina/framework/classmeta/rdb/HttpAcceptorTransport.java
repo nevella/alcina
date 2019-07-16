@@ -1,5 +1,6 @@
 package cc.alcina.framework.classmeta.rdb;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +37,10 @@ class HttpAcceptorTransport extends Transport {
 
     public void receiveTransportModel(HttpTransportModel requestModel,
             HttpConnectionPair pair) {
+        if (requestModel.close) {
+            packetEndpoint().close();
+            return;
+        }
         responseModel.eventListener = requestModel.eventListener;
         if (requestModel.eventListener) {
             synchronized (connectionPairMonitor) {
@@ -104,7 +109,28 @@ class HttpAcceptorTransport extends Transport {
                 pair.notify();
             }
         } catch (Exception e) {
+            packetEndpoint().close();
             throw new WrappedRuntimeException(e);
+        }
+    }
+
+    @Override
+    void close() {
+        if (commandPair != null) {
+            try {
+                commandPair.response.getOutputStream().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            commandPair = null;
+        }
+        if (listenerPair != null) {
+            try {
+                listenerPair.response.getOutputStream().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            listenerPair = null;
         }
     }
 

@@ -606,45 +606,7 @@ public class ResourceUtilities {
 
     public static byte[] readUrlAsBytesWithPost(String strUrl, String postBody,
             StringMap headers) throws Exception {
-        InputStream in = null;
-        HttpURLConnection connection = null;
-        if (headers == null) {
-            headers = new StringMap();
-        }
-        try {
-            URL url = new URL(strUrl);
-            connection = (HttpURLConnection) (url.openConnection());
-            connection.setDoOutput(true);
-            connection.setDoInput(true);
-            connection.setUseCaches(false);
-            connection.setRequestMethod("POST");
-            for (Entry<String, String> e : headers.entrySet()) {
-                connection.setRequestProperty(e.getKey(), e.getValue());
-            }
-            OutputStream out = connection.getOutputStream();
-            Writer wout = new OutputStreamWriter(out, "UTF-8");
-            wout.write(postBody);
-            wout.flush();
-            wout.close();
-            in = connection.getInputStream();
-            byte[] input = readStreamToByteArray(in);
-            return input;
-        } catch (IOException ioe) {
-            if (connection != null) {
-                InputStream err = connection.getErrorStream();
-                String input = err == null ? null : readStreamToString(err);
-                throw new IOException(input, ioe);
-            } else {
-                throw ioe;
-            }
-        } finally {
-            if (in != null) {
-                in.close();
-            }
-            if (connection != null) {
-                connection.disconnect();
-            }
-        }
+        return new SimplePost(strUrl, postBody, headers).asBytes();
     }
 
     public static String readUrlAsString(String strUrl) throws Exception {
@@ -908,5 +870,67 @@ public class ResourceUtilities {
 
     public static interface BeanInfoHelper {
         BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
+    }
+
+    public static class SimplePost {
+        private String strUrl;
+
+        private String postBody;
+
+        private StringMap headers;
+
+        private HttpURLConnection connection;
+
+        public SimplePost(String strUrl, String postBody, StringMap headers) {
+            this.strUrl = strUrl;
+            this.postBody = postBody;
+            this.headers = headers;
+        }
+
+        public byte[] asBytes() throws Exception {
+            InputStream in = null;
+            connection = null;
+            if (headers == null) {
+                headers = new StringMap();
+            }
+            try {
+                URL url = new URL(strUrl);
+                connection = (HttpURLConnection) (url.openConnection());
+                connection.setDoOutput(true);
+                connection.setDoInput(true);
+                connection.setUseCaches(false);
+                connection.setRequestMethod("POST");
+                for (Entry<String, String> e : headers.entrySet()) {
+                    connection.setRequestProperty(e.getKey(), e.getValue());
+                }
+                OutputStream out = connection.getOutputStream();
+                Writer wout = new OutputStreamWriter(out, "UTF-8");
+                wout.write(postBody);
+                wout.flush();
+                wout.close();
+                in = connection.getInputStream();
+                byte[] input = readStreamToByteArray(in);
+                return input;
+            } catch (IOException ioe) {
+                if (connection != null) {
+                    InputStream err = connection.getErrorStream();
+                    String input = err == null ? null : readStreamToString(err);
+                    throw new IOException(input, ioe);
+                } else {
+                    throw ioe;
+                }
+            } finally {
+                if (in != null) {
+                    in.close();
+                }
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+        }
+
+        public String asString() throws Exception {
+            return new String(asBytes(), StandardCharsets.UTF_8);
+        }
     }
 }

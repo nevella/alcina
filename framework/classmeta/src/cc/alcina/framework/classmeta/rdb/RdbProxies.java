@@ -37,6 +37,11 @@ public class RdbProxies {
                 .findFirst().get();
     }
 
+    public synchronized void replaceEndpoint(Endpoint endpoint) {
+        endpoints.remove(endpoint);
+        start(endpoint.descriptor);
+    }
+
     public void start() {
         String modelXml = null;
         try {
@@ -67,7 +72,7 @@ public class RdbProxies {
         }
     }
 
-    private void start(RdbEndpointDescriptor descriptor) {
+    private synchronized void start(RdbEndpointDescriptor descriptor) {
         Endpoint endpoint = descriptor.jdwpAttach
                 ? new DebuggeeEndpoint(descriptor)
                 : new DebuggerEndpoint(descriptor);
@@ -91,6 +96,11 @@ public class RdbProxies {
         public String transportEndpointName;
 
         public int transportDelay;
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 
     @XmlRootElement
