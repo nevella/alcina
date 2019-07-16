@@ -123,7 +123,7 @@ class Packet {
     enum EventSeries {
         early_handshake, all_threads_handshake, unknown_post_handshake, unknown,
         admin_post_handshake, breakpoint_set, contended_monitor_check, suspend,
-        frames
+        frames, variable_table
     }
 
     static class HandshakePacket extends Packet {

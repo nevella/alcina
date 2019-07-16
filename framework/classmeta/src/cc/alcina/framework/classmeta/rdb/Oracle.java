@@ -40,7 +40,16 @@ class Oracle {
                         break;
                     }
                     case frames: {
-                        predict_frames(command, reply);
+                        if (command.messageName.equals("Frames")) {
+                            predict_frames(command, reply);
+                        }
+                        break;
+                    }
+                    case variable_table: {
+                        if (command.messageName
+                                .equals("VariableTableWithGeneric")) {
+                            predict_variable_table(command, reply);
+                        }
                         break;
                     }
                     }
@@ -58,6 +67,14 @@ class Oracle {
         }
         switch (packet.messageName) {
         case "Name":
+            // valid per frame (which is discarded)
+        case "ThisObject":
+            // valid for vm lifetime
+        case "Signature":
+        case "SignatureWithGeneric":
+        case "ReferenceType":
+        case "LineTable":
+        case "SourceDebugExtension":
             return true;
         default:
             return false;
@@ -83,6 +100,14 @@ class Oracle {
     private void predict_frames(Packet command, Packet reply) {
         try {
             rdbJdi.predict_frames(command.bytes, reply.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    private void predict_variable_table(Packet command, Packet reply) {
+        try {
+            rdbJdi.predict_variable_table(command.bytes, reply.bytes);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }

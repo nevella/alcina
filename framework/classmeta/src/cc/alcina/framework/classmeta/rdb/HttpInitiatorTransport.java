@@ -63,7 +63,9 @@ class HttpInitiatorTransport extends Transport {
         String payload = JacksonUtils.serialize(model);
         try {
             SimplePost post = new SimplePost(url, payload, null);
+            Thread.sleep(descriptor.transportDelay);
             String strResponse = post.asString();
+            Thread.sleep(descriptor.transportDelay);
             HttpTransportModel response = JacksonUtils.deserialize(strResponse,
                     HttpTransportModel.class);
             if (response.eventListener) {

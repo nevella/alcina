@@ -9,6 +9,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.classmeta.rdb.Packet.PacketPayload;
+import cc.alcina.framework.common.client.util.Ax;
 
 class Packets {
     private List<Packet> packets = new ArrayList<>();
@@ -67,12 +68,11 @@ class Packets {
                 .map(byPayloadCommand -> byId(byPayloadCommand.id(), false));
     }
 
-    synchronized Optional<Packet> find(int commandSet, int commandId) {
-        Optional<Packet> findFirst = packets.stream()
+    synchronized List<Packet> listByIds(int commandSet, int commandId) {
+        return packets.stream()
                 .filter(p -> p.commandSet() == commandSet
                         && p.commandId() == commandId && p.fromDebugger)
-                .findFirst();
-        return findFirst;
+                .collect(Collectors.toList());
     }
 
     synchronized void removeIf(Predicate<Packet> test) {
@@ -81,6 +81,10 @@ class Packets {
         }
         List<Packet> toRemove = packets.stream().filter(test)
                 .collect(Collectors.toList());
+        if (toRemove.isEmpty()) {
+            return;
+        }
+        Ax.err("Removing predictive packets...");
         packets.removeIf(test);
         for (Packet packet : toRemove) {
             removeFromLookups(packet);

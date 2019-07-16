@@ -3,6 +3,7 @@ package cc.alcina.framework.classmeta.rdb;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -142,6 +143,15 @@ abstract class Endpoint {
             oracle.preparePacket(packetEndpoint, packet);
             Optional<Packet> predictiveResponse = otherPacketEndpoint
                     .getPredictiveResponse(packet);
+            if ("ThisObject".equals(packet.messageName) && packet.fromDebugger
+                    && isDebugger()
+                    && packet.source == transport.packetEndpoint()) {
+                if (!predictiveResponse.isPresent()) {
+                    List<Packet> like = otherPacketEndpoint
+                            .getPredictivePacketsByIds(packet);
+                    int debug = 3;
+                }
+            }
             if (predictiveResponse.isPresent()) {
                 // if (packet.messageName.equals("Status")) {
                 // int debug = 3;

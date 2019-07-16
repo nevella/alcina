@@ -75,6 +75,9 @@ class DebuggerState {
                 case "Frames":
                     next = EventSeries.frames;
                     break;
+                case "VariableTableWithGeneric":
+                    next = EventSeries.variable_table;
+                    break;
                 default:
                     next = EventSeries.unknown_post_handshake;
                     break;
@@ -116,12 +119,23 @@ class DebuggerState {
                 break;
             }
             case frames: {
-                int debug = 3;
                 switch (name) {
                 case "Frames":
+                case "FrameCount":
+                    break;
+                default:
+                    next = EventSeries.unknown_post_handshake;
+                    break;
+                }
+                break;
+            }
+            case variable_table: {
+                switch (name) {
+                case "VariableTableWithGeneric":
                     break;
                 default:
                     // next = EventSeries.unknown_post_handshake;
+                    int debug = 3;
                     break;
                 }
                 break;

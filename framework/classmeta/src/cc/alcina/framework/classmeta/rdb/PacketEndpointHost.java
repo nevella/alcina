@@ -125,6 +125,11 @@ interface PacketEndpointHost {
             return allInPackets.byId(packet.id(), true);
         }
 
+        List<Packet> getPredictivePacketsByIds(Packet like) {
+            return usablePredictiveReplies.listByIds(like.commandSet(),
+                    like.commandId());
+        }
+
         synchronized Optional<Packet> getPredictiveResponse(Packet packet) {
             Optional<Packet> byPayloadResponse = usablePredictiveReplies
                     .byPayloadResponse(packet);
