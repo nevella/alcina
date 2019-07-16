@@ -15,7 +15,8 @@ public class TopicPublisher {
     // listener, key - there may be multiple refs
     private UnsortedMultikeyMap<TopicListenerAdapter> lookup = new UnsortedMultikeyMap<TopicListenerAdapter>();
 
-    public void addTopicListener(String key, TopicListener listener) {
+    public synchronized void addTopicListener(String key,
+            TopicListener listener) {
         TopicListenerAdapter adapter = new TopicListenerAdapter(listener);
         if (key == null) {
             support.addPropertyChangeListener(adapter);
@@ -33,11 +34,12 @@ public class TopicPublisher {
         }
     }
 
-    public void publishTopic(String key, Object message) {
+    public synchronized void publishTopic(String key, Object message) {
         support.firePropertyChange(key, message == null ? "" : null, message);
     }
 
-    public void removeTopicListener(String key, TopicListener listener) {
+    public synchronized void removeTopicListener(String key,
+            TopicListener listener) {
         TopicListenerAdapter adapter = lookup.get(listener, key);
         if (key == null) {
             support.removePropertyChangeListener(adapter);
