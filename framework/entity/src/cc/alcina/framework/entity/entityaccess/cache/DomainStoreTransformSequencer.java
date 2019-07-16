@@ -177,6 +177,7 @@ public class DomainStoreTransformSequencer {
     private Connection getConnection() throws SQLException {
         if (connection == null) {
             connection = loaderDatabase.dataSource.getConnection();
+            connection.setAutoCommit(false);
         }
         return connection;
     }
@@ -304,7 +305,8 @@ public class DomainStoreTransformSequencer {
             String tableName = persistentClass.getAnnotation(Table.class)
                     .name();
             String sql = Ax.format(
-                    "select id,startPersistTime, pg_xact_commit_timestamp(xmin) as commit_timestamp from %s where transactionCommitTime is null",
+                    "select id,startPersistTime, pg_xact_commit_timestamp(xmin) as commit_timestamp "
+                            + "from %s where transactionCommitTime is null order by pg_xact_commit_timestamp(xmin)",
                     tableName);
             ResultSet rs = statement.executeQuery(sql);
             while (rs.next()) {
@@ -321,6 +323,7 @@ public class DomainStoreTransformSequencer {
                 logger.debug("Updated transactionCommitTime for request {}",
                         id);
             }
+            conn.commit();
             rs.close();
         }
     }
