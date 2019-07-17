@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
+import cc.alcina.framework.classmeta.rdb.Packet.PacketPair;
 import cc.alcina.framework.common.client.util.Ax;
 
 interface PacketEndpointHost {
@@ -32,6 +34,8 @@ interface PacketEndpointHost {
 
         Map<Integer, Integer> predictiveToOriginalIds = new LinkedHashMap<>();
 
+        Map<Integer, String> predictiveToOriginalMessageNames = new LinkedHashMap<>();
+
         int predictiveIdCounter = -1;
 
         LinkedList<Packet> inPackets = new LinkedList<>();
@@ -40,12 +44,12 @@ interface PacketEndpointHost {
 
         List<Packet> predictivePacketsOutBuffer = new ArrayList<>();
 
+        private List<Packet> currentPredictivePacketsHit = new ArrayList<>();
+
         Packets usablePredictiveReplies = new Packets();
 
         // starts true => i.e. no predictive packets we expect to be usable
         AtomicBoolean predictivePacketMissMonitor = new AtomicBoolean(true);
-
-        private boolean mustSend;
 
         private Endpoint endpoint;
 
@@ -61,6 +65,7 @@ interface PacketEndpointHost {
             int mappedId = predictiveIdCounter++;
             originalToPredictiveIds.put(packet.id(), mappedId);
             predictiveToOriginalIds.put(mappedId, packet.id());
+            predictiveToOriginalMessageNames.put(mappedId, packet.messageName);
             Packet copy = packet.copy();
             copy.setId(mappedId);
             predictivePacketsOutBuffer.add(copy);
@@ -82,6 +87,8 @@ interface PacketEndpointHost {
             if (predictiveToOriginalIds.containsKey(packet.id())) {
                 packet.isPredictive = true;
                 packet.isReply = true;
+                packet.messageName = predictiveToOriginalMessageNames
+                        .get(packet.id());
             }
             inPackets.add(packet);
             allInPackets.add(packet);
@@ -108,6 +115,10 @@ interface PacketEndpointHost {
             return false;
         }
 
+        synchronized List<Packet> currentPredictivePacketsHit() {
+            return currentPredictivePacketsHit;
+        }
+
         void ensureMessageName(Packet packet) {
             Packet command = allInPackets.byId(packet.id(), true);
             if (command != null) {
@@ -125,19 +136,33 @@ interface PacketEndpointHost {
             return allInPackets.byId(packet.id(), true);
         }
 
-        List<Packet> getPredictivePacketsByIds(Packet like) {
-            return usablePredictiveReplies.listByIds(like.commandSet(),
-                    like.commandId());
+        synchronized List<PacketPair> getMostRecentPredictivePacketList() {
+            return usablePredictiveReplies.streamRecentReplies()
+                    .filter(p -> p.isReply)
+                    .map(usablePredictiveReplies::toPacketPair)
+                    .collect(Collectors.toList());
+        }
+
+        List<PacketPair> getPredictivePacketsLike(Packet like) {
+            return usablePredictiveReplies.streamByName(like.messageName)
+                    .filter(p -> p.isReply)
+                    .map(usablePredictiveReplies::toPacketPair)
+                    .collect(Collectors.toList());
         }
 
         synchronized Optional<Packet> getPredictiveResponse(Packet packet) {
             Optional<Packet> byPayloadResponse = usablePredictiveReplies
                     .byPayloadResponse(packet);
-            return byPayloadResponse.map(response -> {
-                response = response.copy();
-                response.setId(packet.id());
-                return response;
-            });
+            Optional<Packet> predictiveResponse = byPayloadResponse
+                    .map(response -> {
+                        response = response.copy();
+                        response.setId(packet.id());
+                        return response;
+                    });
+            if (predictiveResponse.isPresent()) {
+                currentPredictivePacketsHit.add(predictiveResponse.get());
+            }
+            return predictiveResponse;
         }
 
         synchronized Packet next() {
@@ -166,6 +191,7 @@ interface PacketEndpointHost {
                 predictivePacketMissMonitor.set(true);
                 predictivePacketMissMonitor.notify();
             }
+            currentPredictivePacketsHit.clear();
         }
 
         PacketEndpoint otherPacketEndpoint() {
@@ -174,6 +200,7 @@ interface PacketEndpointHost {
 
         synchronized void receivedPredictivePackets(
                 List<Packet> predictivePackets) {
+            usablePredictiveReplies.clearRecentList();
             predictivePackets.forEach(usablePredictiveReplies::add);
             if (predictivePackets.size() > 0) {
                 synchronized (predictivePacketMissMonitor) {
@@ -184,10 +211,6 @@ interface PacketEndpointHost {
 
         void send() {
             host.send();
-        }
-
-        void setMustSend(boolean mustSend) {
-            this.mustSend = mustSend;
         }
 
         synchronized boolean shouldSend() {

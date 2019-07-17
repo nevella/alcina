@@ -146,6 +146,22 @@ class Packet {
         EventSeries series = EventSeries.unknown;
     }
 
+    static class PacketPair {
+        Packet command;
+
+        Packet reply;
+
+        public PacketPair(Packet command, Packet reply) {
+            this.command = command;
+            this.reply = reply;
+        }
+
+        @Override
+        public String toString() {
+            return Ax.format("(pair) :: %s", command);
+        }
+    }
+
     class PacketPayload {
         int hash = -1;
 

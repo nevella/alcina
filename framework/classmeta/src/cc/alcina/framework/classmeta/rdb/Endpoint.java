@@ -3,7 +3,6 @@ package cc.alcina.framework.classmeta.rdb;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -140,18 +139,9 @@ abstract class Endpoint {
                     return;
                 }
             }
-            oracle.preparePacket(packetEndpoint, packet);
+            oracle.preparePacket(packet);
             Optional<Packet> predictiveResponse = otherPacketEndpoint
                     .getPredictiveResponse(packet);
-            if ("ThisObject".equals(packet.messageName) && packet.fromDebugger
-                    && isDebugger()
-                    && packet.source == transport.packetEndpoint()) {
-                if (!predictiveResponse.isPresent()) {
-                    List<Packet> like = otherPacketEndpoint
-                            .getPredictivePacketsByIds(packet);
-                    int debug = 3;
-                }
-            }
             if (predictiveResponse.isPresent()) {
                 // if (packet.messageName.equals("Status")) {
                 // int debug = 3;
@@ -161,6 +151,10 @@ abstract class Endpoint {
                         packet);
                 predictiveReplyPacketCounter++;
                 break;
+            }
+            if (packet.fromDebugger && isDebugger()
+                    && packet.source == streams.packetEndpoint()) {
+                oracle.beforePacketMiss(packet);
             }
             oracle.analysePacket(packet);
             oracle.handlePacket(packetEndpoint, packet);
@@ -184,7 +178,6 @@ abstract class Endpoint {
             otherPacketEndpoint.host.addPredictivePackets(
                     packetEndpoint.flushPredictivePackets());
             if (packet.meta.mustSend) {
-                otherPacketEndpoint.setMustSend(true);
                 break;
             }
         }

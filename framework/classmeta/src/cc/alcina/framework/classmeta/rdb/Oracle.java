@@ -1,6 +1,7 @@
 package cc.alcina.framework.classmeta.rdb;
 
 import java.io.IOException;
+import java.util.List;
 
 import com.sun.jdi.connect.spi.Connection;
 import com.sun.tools.jdi.RdbJdi;
@@ -8,8 +9,10 @@ import com.sun.tools.jdi.VirtualMachineImplExt;
 
 import cc.alcina.framework.classmeta.rdb.Packet.EventSeries;
 import cc.alcina.framework.classmeta.rdb.Packet.Meta;
+import cc.alcina.framework.classmeta.rdb.Packet.PacketPair;
 import cc.alcina.framework.classmeta.rdb.PacketEndpointHost.PacketEndpoint;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 
 class Oracle {
     Accessor jwdpAccessor = new Accessor();
@@ -75,6 +78,9 @@ class Oracle {
         case "ReferenceType":
         case "LineTable":
         case "SourceDebugExtension":
+        case "SourceFile":
+        case "FieldsWithGeneric":
+        case "Modifiers":
             return true;
         default:
             return false;
@@ -124,13 +130,44 @@ class Oracle {
         }
     }
 
+    void beforePacketMiss(Packet packet) {
+        switch (packet.messageName) {
+        case "Suspend":
+        case "VariableTableWithGeneric":
+            // cool, not an unforced miss
+            return;
+        }
+        switch (state.currentSeries) {
+        case frames:
+        case variable_table:
+            List<Packet> hits = packet.source.otherPacketEndpoint()
+                    .currentPredictivePacketsHit();
+            List<PacketPair> like = packet.source.otherPacketEndpoint()
+                    .getPredictivePacketsLike(packet);
+            List<PacketPair> last = packet.source.otherPacketEndpoint()
+                    .getMostRecentPredictivePacketList();
+            Ax.out("***hits***");
+            Ax.out(hits);
+            Ax.out("\n***like***");
+            Ax.out(like);
+            Ax.out("\n***last***");
+            Ax.out(last);
+            Ax.out("");
+            if (packet.messageName.equals("ThisObject")) {
+                rdbJdi.debugThisObject(packet.bytes);
+            }
+            int debug = 3;
+            break;
+        }
+    }
+
     void onPredictivePacketMiss() {
         Packet currentPacket = state.currentPacket;
         state.setExpectingPredictiveAfter(null);
         state.updateState();
     }
 
-    void preparePacket(PacketEndpoint packetSource, Packet packet) {
+    void preparePacket(Packet packet) {
         if (packet.meta == null) {
             Meta meta = new Meta();
             meta.mustSend = true;

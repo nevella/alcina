@@ -29,7 +29,11 @@ class Accessor {
         CommandIds ids = new CommandIds(packet.commandSet(),
                 packet.commandId());
         if (packet.flags() == -128) {
-            packet.messageName = "(reply)";
+            if (packet.messageName != null) {
+                packet.messageName += " (reply)";
+            } else {
+                packet.messageName = "(reply)";
+            }
             packet.isReply = true;
             return;
         }

@@ -2,12 +2,17 @@ package cc.alcina.framework.classmeta.rdb;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import cc.alcina.framework.classmeta.rdb.Packet.PacketPair;
 import cc.alcina.framework.classmeta.rdb.Packet.PacketPayload;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -18,6 +23,8 @@ class Packets {
 
     private transient Map<Integer, Packet> byIdReply = new LinkedHashMap<>();
 
+    private Set<Integer> recentIds = new LinkedHashSet<>();
+
     private transient Map<PacketPayload, Packet> byPayload = new LinkedHashMap<>();
 
     public void clear() {
@@ -27,8 +34,16 @@ class Packets {
         byPayload.clear();
     }
 
+    public void clearRecentList() {
+        recentIds.clear();
+    }
+
     public boolean hasPackets() {
         return packets.size() > 0;
+    }
+
+    public Stream<Packet> streamRecentReplies() {
+        return recentIds.stream().map(id -> byIdReply.get(id));
     }
 
     private void removeFromLookups(Packet packet) {
@@ -40,6 +55,7 @@ class Packets {
     }
 
     synchronized void add(Packet packet) {
+        recentIds.add(packet.id());
         packets.add(packet);
         if (packet.id() != 0) {
             if (packet.isReply) {
@@ -89,5 +105,14 @@ class Packets {
         for (Packet packet : toRemove) {
             removeFromLookups(packet);
         }
+    }
+
+    synchronized Stream<Packet> streamByName(String name) {
+        return packets.stream()
+                .filter(p -> Objects.equals(p.messageName, name));
+    }
+
+    PacketPair toPacketPair(Packet replyPacket) {
+        return new PacketPair(byIdCommand.get(replyPacket.id()), replyPacket);
     }
 }

@@ -34,6 +34,12 @@ class HttpInitiatorTransport extends Transport {
         }
     }
 
+    private void maybeSimulateTransportDelay() throws InterruptedException {
+        if (descriptor.transportDelay > 0) {
+            Thread.sleep(descriptor.transportDelay);
+        }
+    }
+
     @Override
     protected void launch() {
         receiver = new Thread(
@@ -63,9 +69,9 @@ class HttpInitiatorTransport extends Transport {
         String payload = JacksonUtils.serialize(model);
         try {
             SimplePost post = new SimplePost(url, payload, null);
-            Thread.sleep(descriptor.transportDelay);
+            maybeSimulateTransportDelay();
             String strResponse = post.asString();
-            Thread.sleep(descriptor.transportDelay);
+            maybeSimulateTransportDelay();
             HttpTransportModel response = JacksonUtils.deserialize(strResponse,
                     HttpTransportModel.class);
             if (response.eventListener) {
