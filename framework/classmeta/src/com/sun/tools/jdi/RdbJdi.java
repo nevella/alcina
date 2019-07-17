@@ -2,16 +2,23 @@ package com.sun.tools.jdi;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.sun.jdi.Field;
+import com.sun.jdi.LocalVariable;
 import com.sun.jdi.Method;
 import com.sun.jdi.ObjectReference;
 import com.sun.jdi.ReferenceType;
 import com.sun.jdi.StackFrame;
+import com.sun.jdi.Type;
 import com.sun.jdi.Value;
+import com.sun.tools.jdi.JDWP.ClassType.Superclass;
+import com.sun.tools.jdi.JDWP.ReferenceType.Interfaces;
+import com.sun.tools.jdi.JDWP.ReferenceType.Signature;
 import com.sun.tools.jdi.JDWP.ThreadGroupReference;
 import com.sun.tools.jdi.JDWP.ThreadGroupReference.Parent;
 import com.sun.tools.jdi.JDWP.ThreadReference.Frames;
@@ -81,6 +88,8 @@ public class RdbJdi {
 
     Map<RefTypeMethodKey, List<StackFrameImpl>> stackFrameByTypeMethod = new LinkedHashMap<>();
 
+    Set<ReferenceType> referenceTypeMetadataCalled = new LinkedHashSet<>();
+
     public RdbJdi(VirtualMachineImplExt vm) {
         this.vm = vm;
     }
@@ -126,17 +135,7 @@ public class RdbJdi {
             Method method = frame.location.method();
             ReferenceType declaringType = frame.location.declaringType();
             forceSignature(declaringType);
-            declaringType.signature();
-            try {
-                declaringType.sourceDebugExtension();
-            } catch (Exception e) {
-                // squelch
-            }
-            try {
-                declaringType.sourcePaths(null);
-            } catch (Exception e) {
-                // squelch
-            }
+            getClassMetadata(declaringType);
         }
         ThreadReferenceImpl threadRef = token.commandStream()
                 .readThreadReference();
@@ -150,17 +149,7 @@ public class RdbJdi {
             debug("+++thisObject: %s - %s\n", threadRef.ref, frameId(frame));
             if (thisObject != null) {
                 ReferenceType referenceType = thisObject.referenceType();
-                forceSignature(referenceType);
-                try {
-                    referenceType.sourceDebugExtension();
-                } catch (Exception e) {
-                    // squelch
-                }
-                try {
-                    referenceType.sourcePaths(null);
-                } catch (Exception e) {
-                    // squelch
-                }
+                getClassMetadata(referenceType);
             }
             MethodImpl method = (MethodImpl) frame.location().method();
             if (method instanceof ConcreteMethodImpl) {
@@ -176,6 +165,19 @@ public class RdbJdi {
         }
     }
 
+    public void predict_get_values_stack_frame(byte[] command, byte[] reply)
+            throws Exception {
+        PredictorToken token = new PredictorToken(command, reply);
+        PacketStream commandStream = token.commandStream();
+        ThreadReferenceImpl threadRef = commandStream.readThreadReference();
+        long frameRef = commandStream.readFrameRef();
+        for (StackFrame frame : threadRef.frames()) {
+            if (frameId(frame) == frameRef) {
+                predictStackFrame((StackFrameImpl) frame);
+            }
+        }
+    }
+
     public void predict_variable_table(byte[] command, byte[] reply)
             throws Exception {
         PredictorToken token = new PredictorToken(command, reply);
@@ -187,7 +189,7 @@ public class RdbJdi {
                 k -> new ArrayList<>());
         if (zeen.size() > 0) {
             StackFrameImpl guessingFrame = zeen.get(zeen.size() - 1);
-            guessingFrame.visibleVariables().forEach(guessingFrame::getValue);
+            predictStackFrame(guessingFrame);
         }
     }
 
@@ -226,6 +228,41 @@ public class RdbJdi {
         }
     }
 
+    private void getClassMetadata(ReferenceType type) {
+        if (!referenceTypeMetadataCalled.add(type)) {
+            return;
+        }
+        type.signature();
+        type.modifiers();
+        type.allFields();
+        type.allMethods();
+        try {
+            type.sourceDebugExtension();
+        } catch (Exception e) {
+            // squelch
+        }
+        try {
+            type.sourcePaths(null);
+        } catch (Exception e) {
+            // squelch
+        }
+        ReferenceTypeImpl impl = (ReferenceTypeImpl) type;
+        impl.getInterfaces().forEach(this::getClassMetadata);
+        impl.inheritedTypes().forEach(this::getClassMetadata);
+        try {
+            /*
+             * force call because eclipse does
+             */
+            Signature.process(vm, impl);
+            if (impl instanceof ClassTypeImpl) {
+                Superclass.process(vm, (ClassTypeImpl) impl);
+            }
+            Interfaces.process(vm, impl);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
     private void mockDetermineIfDaemonThread(ThreadReferenceImpl thread) {
         ReferenceType referenceType = thread.referenceType();
         Field field = referenceType.fieldByName("daemon"); //$NON-NLS-1$
@@ -235,6 +272,20 @@ public class RdbJdi {
         if (field != null) {
             if (field.signature().equals(SIG_BOOLEAN)) {
                 Value value = thread.getValue(field);
+            }
+        }
+    }
+
+    private void predictStackFrame(StackFrameImpl frame) throws Exception {
+        List<LocalVariable> visibleVariables = frame.visibleVariables();
+        for (LocalVariable localVariable : visibleVariables) {
+            Value value = frame.getValue(localVariable);
+            if (value != null) {
+                Type type = value.type();
+                if (type instanceof ReferenceTypeImpl) {
+                    ReferenceTypeImpl refType = (ReferenceTypeImpl) type;
+                    getClassMetadata(refType);
+                }
             }
         }
     }

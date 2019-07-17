@@ -55,6 +55,12 @@ class Oracle {
                         }
                         break;
                     }
+                    case get_values_stack_frame: {
+                        if (command.messageName.equals("GetValues")) {
+                            predict_get_values_stack_frame(command, reply);
+                        }
+                        break;
+                    }
                     }
                 }
             }
@@ -81,6 +87,8 @@ class Oracle {
         case "SourceFile":
         case "FieldsWithGeneric":
         case "Modifiers":
+        case "Superclass":
+        case "Interfaces":
             return true;
         default:
             return false;
@@ -111,6 +119,14 @@ class Oracle {
         }
     }
 
+    private void predict_get_values_stack_frame(Packet command, Packet reply) {
+        try {
+            rdbJdi.predict_get_values_stack_frame(command.bytes, reply.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
     private void predict_variable_table(Packet command, Packet reply) {
         try {
             rdbJdi.predict_variable_table(command.bytes, reply.bytes);
@@ -134,12 +150,17 @@ class Oracle {
         switch (packet.messageName) {
         case "Suspend":
         case "VariableTableWithGeneric":
+        case "FrameCount":
             // cool, not an unforced miss
             return;
+        // case "Signature":
+        // // not cool but livable
+        // return;
         }
         switch (state.currentSeries) {
         case frames:
         case variable_table:
+        case get_values_stack_frame:
             List<Packet> hits = packet.source.otherPacketEndpoint()
                     .currentPredictivePacketsHit();
             List<PacketPair> like = packet.source.otherPacketEndpoint()

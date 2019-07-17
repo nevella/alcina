@@ -43,7 +43,8 @@ class Packets {
     }
 
     public Stream<Packet> streamRecentReplies() {
-        return recentIds.stream().map(id -> byIdReply.get(id));
+        return recentIds.stream().filter(byIdReply::containsKey)
+                .map(id -> byIdReply.get(id));
     }
 
     private void removeFromLookups(Packet packet) {

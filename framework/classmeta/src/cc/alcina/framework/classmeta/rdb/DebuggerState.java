@@ -1,6 +1,9 @@
 package cc.alcina.framework.classmeta.rdb;
 
+import java.util.Arrays;
+
 import cc.alcina.framework.classmeta.rdb.Packet.EventSeries;
+import cc.alcina.framework.classmeta.rdb.Packet.HandshakePacket;
 
 class DebuggerState {
     boolean calledAllThreads = false;
@@ -26,6 +29,9 @@ class DebuggerState {
 
     void updateState() {
         String name = currentPacket == null ? "" : currentPacket.messageName;
+        CommandSet commandSet = currentPacket == null
+                || currentPacket instanceof HandshakePacket ? null
+                        : CommandSet.byId(currentPacket.commandSet());
         switch (name) {
         case "Composite":
         case "IsCollected":
@@ -77,6 +83,16 @@ class DebuggerState {
                     break;
                 case "VariableTableWithGeneric":
                     next = EventSeries.variable_table;
+                    break;
+                case "GetValues":
+                    switch (commandSet) {
+                    case StackFrame:
+                        next = EventSeries.get_values_stack_frame;
+                        break;
+                    default:
+                        next = EventSeries.unknown_post_handshake;
+                        break;
+                    }
                     break;
                 default:
                     next = EventSeries.unknown_post_handshake;
@@ -134,8 +150,24 @@ class DebuggerState {
                 case "VariableTableWithGeneric":
                     break;
                 default:
-                    // next = EventSeries.unknown_post_handshake;
-                    int debug = 3;
+                    next = EventSeries.unknown_post_handshake;
+                    break;
+                }
+                break;
+            }
+            case get_values_stack_frame: {
+                switch (name) {
+                case "GetValues":
+                    switch (commandSet) {
+                    case StackFrame:
+                        break;
+                    default:
+                        next = EventSeries.unknown_post_handshake;
+                        break;
+                    }
+                    break;
+                default:
+                    next = EventSeries.unknown_post_handshake;
                     break;
                 }
                 break;
@@ -150,6 +182,24 @@ class DebuggerState {
         }
         if (currentPacket != null && currentPacket.meta != null && hadDelta) {
             currentPacket.meta.series = currentSeries;
+        }
+    }
+
+    enum CommandSet {
+        VirtualMachine(1), ReferenceType(2), ClassType(3), ArrayType(4),
+        InterfaceType(5), Method(6), Field(8), ObjectReference(9),
+        StringReference(10), ThreadReference(11), ThreadGroupReference(12),
+        ArrayReference(13), ClassLoaderReference(14), EventRequest(15),
+        StackFrame(16), ClassObjectReference(17), Event(64);
+        static CommandSet byId(int id) {
+            return Arrays.stream(values()).filter(v -> v.id == id).findAny()
+                    .get();
+        }
+
+        private int id;
+
+        CommandSet(int id) {
+            this.id = id;
         }
     }
 }
