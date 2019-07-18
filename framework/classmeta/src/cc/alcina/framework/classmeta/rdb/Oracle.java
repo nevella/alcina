@@ -76,12 +76,15 @@ class Oracle {
         }
         switch (packet.messageName) {
         case "Name":
+        case "ThreadGroup":
             // valid per frame (which is discarded)
         case "ThisObject":
             // valid for vm lifetime
         case "Signature":
         case "SignatureWithGeneric":
+        case "ClassesBySignature":
         case "ReferenceType":
+        case "MethodsWithGeneric":
         case "LineTable":
         case "SourceDebugExtension":
         case "SourceFile":
