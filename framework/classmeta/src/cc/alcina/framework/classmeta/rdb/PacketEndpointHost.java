@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.classmeta.rdb.Packet.EventSeries;
 import cc.alcina.framework.classmeta.rdb.Packet.PacketPair;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -25,6 +26,10 @@ interface PacketEndpointHost {
 
     void send();
 
+    default boolean shouldSend() {
+        return true;
+    }
+
     static class PacketEndpoint {
         PacketEndpointHost host;
 
@@ -35,6 +40,8 @@ interface PacketEndpointHost {
         Map<Integer, Integer> predictiveToOriginalIds = new LinkedHashMap<>();
 
         Map<Integer, String> predictiveToOriginalMessageNames = new LinkedHashMap<>();
+
+        Map<Integer, EventSeries> predictiveToOriginalPredictiveFor = new LinkedHashMap<>();
 
         int predictiveIdCounter = -1;
 
@@ -66,6 +73,8 @@ interface PacketEndpointHost {
             originalToPredictiveIds.put(packet.id(), mappedId);
             predictiveToOriginalIds.put(mappedId, packet.id());
             predictiveToOriginalMessageNames.put(mappedId, packet.messageName);
+            predictiveToOriginalPredictiveFor.put(mappedId,
+                    packet.predictiveFor);
             Packet copy = packet.copy();
             copy.setId(mappedId);
             predictivePacketsOutBuffer.add(copy);
@@ -88,6 +97,8 @@ interface PacketEndpointHost {
                 packet.isPredictive = true;
                 packet.isReply = true;
                 packet.messageName = predictiveToOriginalMessageNames
+                        .get(packet.id());
+                packet.predictiveFor = predictiveToOriginalPredictiveFor
                         .get(packet.id());
             }
             inPackets.add(packet);
@@ -198,6 +209,10 @@ interface PacketEndpointHost {
             return endpoint.otherPacketEndpoint(this);
         }
 
+        synchronized int outPacketCount() {
+            return outPackets.size();
+        }
+
         synchronized void receivedPredictivePackets(
                 List<Packet> predictivePackets) {
             usablePredictiveReplies.clearRecentList();
@@ -214,7 +229,7 @@ interface PacketEndpointHost {
         }
 
         synchronized boolean shouldSend() {
-            return outPackets.size() > 0;
+            return outPackets.size() > 0 && host.shouldSend();
         }
 
         synchronized Packet translateToOriginalId(Packet packet) {

@@ -99,6 +99,8 @@ public class RdbProxies {
 
         public int transportDelay;
 
+        public long transportNotificationBundleWait;
+
         @Override
         public String toString() {
             return name;

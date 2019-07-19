@@ -33,6 +33,8 @@ class Packet {
 
     public String messageName;
 
+    EventSeries predictiveFor;
+
     transient Message message;
 
     transient PacketEndpoint source;

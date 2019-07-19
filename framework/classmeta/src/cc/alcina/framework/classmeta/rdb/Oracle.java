@@ -27,6 +27,8 @@ class Oracle {
 
     private InternalVmConnection connection;
 
+    EventSeries predictForSeries = null;
+
     public Oracle(Endpoint endpoint) {
         this.endpoint = endpoint;
     }
@@ -37,6 +39,7 @@ class Oracle {
             Packet command = packet.getCorrespondingCommandPacket();
             if (command.fromDebugger) {
                 if (endpoint.isDebuggee()) {
+                    predictForSeries = command.meta.series;
                     switch (command.meta.series) {
                     case all_threads_handshake: {
                         predict_all_threads_handshake(command, reply);
@@ -75,11 +78,12 @@ class Oracle {
             return true;
         }
         switch (packet.messageName) {
+        // can be forcibly invalidated if need be
         case "Name":
-        case "ThreadGroup":
-            // valid per frame (which is discarded)
+            // valid for the frame lifetime (and the frame is discarded)
         case "ThisObject":
             // valid for vm lifetime
+        case "ThreadGroup":
         case "Signature":
         case "SignatureWithGeneric":
         case "ClassesBySignature":
@@ -93,6 +97,16 @@ class Oracle {
         case "Superclass":
         case "Interfaces":
             return true;
+        case "Set":
+            return false;
+        case "GetValues":
+            // not after any invalidation, unless early in the allthreads phase
+            if (packet.predictiveFor == EventSeries.admin_post_handshake
+                    && !state.seenSuspend) {
+                return true;
+            } else {
+                return false;
+            }
         default:
             return false;
         }
@@ -243,6 +257,7 @@ class Oracle {
             Packet packet = new Packet(null);
             packet.bytes = pkt;
             packet.isPredictive = true;
+            packet.predictiveFor = predictForSeries;
             jwdpAccessor.parse(packet);
             streams().write(packet);
         }

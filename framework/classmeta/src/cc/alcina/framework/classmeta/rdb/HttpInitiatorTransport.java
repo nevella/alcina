@@ -71,7 +71,7 @@ class HttpInitiatorTransport extends Transport {
             SimplePost post = new SimplePost(url, payload, null);
             maybeSimulateTransportDelay();
             String strResponse = post.asString();
-            Ax.err("received: %s chars", strResponse.length());
+            // Ax.err("received: %s chars", strResponse.length());
             maybeSimulateTransportDelay();
             HttpTransportModel response = JacksonUtils.deserialize(strResponse,
                     HttpTransportModel.class);

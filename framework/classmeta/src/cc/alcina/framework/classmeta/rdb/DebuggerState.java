@@ -14,6 +14,8 @@ class DebuggerState {
 
     public Packet currentPacket;
 
+    boolean seenSuspend;
+
     public DebuggerState() {
         updateState();
     }
@@ -37,6 +39,11 @@ class DebuggerState {
         case "IsCollected":
             // doesn't change state
             return;
+        }
+        switch (name) {
+        case "Suspend":
+            seenSuspend = true;
+            break;
         }
         boolean expectingPredictive = expectingPredictiveAfterPacket != null;
         boolean hadDelta = false;

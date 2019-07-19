@@ -2,6 +2,8 @@ package cc.alcina.framework.classmeta.rdb;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,9 +21,22 @@ class HttpAcceptorTransport extends Transport {
 
     HttpTransportModel responseModel = new HttpTransportModel();
 
+    private Timer notificationTimer = new Timer();
+
+    long lastListenerCall = 0;
+
     public HttpAcceptorTransport(RdbEndpointDescriptor descriptor,
             Endpoint endpoint) {
         super(descriptor, endpoint);
+        notificationTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (lastListenerCall != 0) {
+                    endpoint.nudge();
+                }
+            }
+        }, descriptor.transportNotificationBundleWait,
+                descriptor.transportNotificationBundleWait);
     }
 
     @Override
@@ -45,6 +60,7 @@ class HttpAcceptorTransport extends Transport {
         if (requestModel.eventListener) {
             synchronized (connectionPairMonitor) {
                 listenerPair = pair;
+                lastListenerCall = System.currentTimeMillis();
                 connectionPairMonitor.notify();
             }
         } else {
@@ -111,6 +127,26 @@ class HttpAcceptorTransport extends Transport {
         } catch (Exception e) {
             packetEndpoint().close();
             throw new WrappedRuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean shouldSend() {
+        // don't lock - worst that can happen is that we send an unneccesarily
+        // early reply. Makes logic muuuch simpler
+        //
+        // if this call returns false (because we have a recent listener call),
+        // wait a bit
+        if (commandPair != null) {
+            return true;
+        } else {
+            boolean should = lastListenerCall != 0 && System.currentTimeMillis()
+                    - lastListenerCall > descriptor.transportNotificationBundleWait;
+            if (should) {
+                logger.info("Sending event notifications - {} events",
+                        packetEndpoint.outPacketCount());
+            }
+            return should;
         }
     }
 
