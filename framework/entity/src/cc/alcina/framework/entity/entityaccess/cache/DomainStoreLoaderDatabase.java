@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,6 +46,7 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
@@ -54,12 +56,18 @@ import cc.alcina.framework.common.client.domain.DomainProjection;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
+import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -74,6 +82,7 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
+import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentLoaderPhase;
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentLoaderProperty;
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentPropertyType;
@@ -136,6 +145,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
     DomainStoreTransformSequencer transformSequencer = new DomainStoreTransformSequencer(
             this);
 
+    ThreadPoolExecutor iLoaderExecutor = (ThreadPoolExecutor) Executors
+            .newFixedThreadPool(8,
+                    new NamedThreadFactory("domainStore-iLoader"));
+
     public DomainStoreLoaderDatabase(DomainStore store, DataSource dataSource,
             ThreadPoolExecutor warmupExecutor) {
         this.store = store;
@@ -168,18 +181,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         return this.transformSequencer;
     }
 
-    public void invokeAllWithThrow(List tasks) throws Exception {
-        if (warmupExecutor != null) {
-            List<Future> futures = (List) warmupExecutor
-                    .invokeAll((List) tasks);
-            for (Future future : futures) {
-                // will throw if there was an exception
-                future.get();
-            }
-            tasks.clear();
-        }
-    }
-
     public <T extends HasIdAndLocalId> List<T> loadTable(Class clazz,
             String sqlFilter, ClassIdLock sublock) throws Exception {
         assert sublock != null;
@@ -194,10 +195,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
     }
 
     @Override
-    public DomainTransformRequestPersistent loadTransformRequest(Long id,
-            Logger logger) throws Exception {
+    public List<DomainTransformRequestPersistent> loadTransformRequests(
+            Collection<Long> ids, Logger logger) throws Exception {
         synchronized (loadTransformRequestLock) {
-            return DomainReader.get(() -> loadTransformRequest0(id, logger));
+            return DomainReader.get(() -> loadTransformRequests0(ids, logger));
         }
     }
 
@@ -423,6 +424,22 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         DomainSegmentLoader segmentLoader = (DomainSegmentLoader) domainDescriptor
                 .getDomainSegmentLoader();
         segmentLoader.initialise();
+    }
+
+    private void invokeAllWithThrow(List tasks) throws Exception {
+        invokeAllWithThrow(tasks, warmupExecutor);
+    }
+
+    private void invokeAllWithThrow(List tasks, ThreadPoolExecutor executor)
+            throws Exception {
+        if (executor != null) {
+            List<Future> futures = (List) executor.invokeAll((List) tasks);
+            for (Future future : futures) {
+                // will throw if there was an exception
+                future.get();
+            }
+            tasks.clear();
+        }
     }
 
     private void loadDomainSegment() throws Exception {
@@ -678,55 +695,62 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
     private List<HasId> loadTable0(Class clazz, String sqlFilter,
             ClassIdLock sublock, LaterLookup laterLookup,
             boolean ignoreIfExisting, boolean keepDetached) throws Exception {
-        keepDetached |= LooseContext
-                .is(DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
         Connection conn = getConnection();
-        List<HasId> loaded;
         try {
-            ConnResults connResults = ConnResults.builder().withClazz(clazz)
-                    .withConn(conn)
-                    .withColumnDescriptors(columnDescriptors.get(clazz))
-                    .withLoader(this).withSqlFilter(sqlFilter).build();
-            List<PdOperator> pds = descriptors.get(clazz);
-            loaded = new ArrayList<>();
-            PdOperator idOperator = pds.stream()
-                    .filter(pd -> pd.name.equals("id")).findFirst().get();
-            for (Object[] objects : connResults) {
-                HasId hasId = (HasId) clazz.newInstance();
-                if (ignoreIfExisting) {
-                    if (store.transformManager.store.contains(clazz,
-                            (Long) objects[idOperator.idx])) {
-                        continue;
-                    }
-                }
-                if (sublock != null) {
-                    loaded.add(hasId);
-                }
-                if (hasId != null) {
-                    store.ensureModificationChecker(hasId);
-                }
-                for (int i = 0; i < objects.length; i++) {
-                    PdOperator pdOperator = pds.get(i);
-                    Method rm = pdOperator.readMethod;
-                    if (pdOperator.manyToOne != null
-                            || pdOperator.oneToOne != null) {
-                        Long id = (Long) objects[i];
-                        if (id != null) {
-                            if (hasId != null) {
-                                laterLookup.add(id, pdOperator, hasId);
-                            }
-                        }
-                    } else {
-                        pdOperator.field.set(hasId, objects[i]);
-                    }
-                }
-                if (!keepDetached && hasId instanceof HasIdAndLocalId) {
-                    store.transformManager.store
-                            .mapObject((HasIdAndLocalId) hasId);
-                }
-            }
+            return loadTable0(conn, clazz, sqlFilter, sublock, laterLookup,
+                    ignoreIfExisting, keepDetached, true);
         } finally {
             releaseConn(conn);
+        }
+    }
+
+    private List<HasId> loadTable0(Connection conn, Class clazz,
+            String sqlFilter, ClassIdLock sublock, LaterLookup laterLookup,
+            boolean ignoreIfExisting, boolean keepDetached,
+            boolean ensureModificationChecker) throws Exception {
+        keepDetached |= LooseContext
+                .is(DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
+        List<HasId> loaded;
+        ConnResults connResults = ConnResults.builder().withClazz(clazz)
+                .withConn(conn)
+                .withColumnDescriptors(columnDescriptors.get(clazz))
+                .withLoader(this).withSqlFilter(sqlFilter).build();
+        List<PdOperator> pds = descriptors.get(clazz);
+        loaded = new ArrayList<>();
+        PdOperator idOperator = pds.stream().filter(pd -> pd.name.equals("id"))
+                .findFirst().get();
+        for (Object[] objects : connResults) {
+            HasId hasId = (HasId) clazz.newInstance();
+            if (ignoreIfExisting) {
+                if (store.transformManager.store.contains(clazz,
+                        (Long) objects[idOperator.idx])) {
+                    continue;
+                }
+            }
+            if (sublock != null) {
+                loaded.add(hasId);
+            }
+            if (hasId != null && ensureModificationChecker) {
+                store.ensureModificationChecker(hasId);
+            }
+            for (int i = 0; i < objects.length; i++) {
+                PdOperator pdOperator = pds.get(i);
+                Method rm = pdOperator.readMethod;
+                if (pdOperator.manyToOne != null
+                        || pdOperator.oneToOne != null) {
+                    Long id = (Long) objects[i];
+                    if (id != null) {
+                        if (hasId != null) {
+                            laterLookup.add(id, pdOperator, hasId);
+                        }
+                    }
+                } else {
+                    pdOperator.field.set(hasId, objects[i]);
+                }
+            }
+            if (!keepDetached && hasId instanceof HasIdAndLocalId) {
+                store.transformManager.store.mapObject((HasIdAndLocalId) hasId);
+            }
         }
         return loaded;
     }
@@ -748,15 +772,20 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         }
     }
 
-    private DomainTransformRequestPersistent loadTransformRequest0(Long id,
-            Logger logger) throws Exception {
-        store.logger.warn("{} - loading transform request {}", store.name, id);
+    private List<DomainTransformRequestPersistent> loadTransformRequests0(
+            Collection<Long> ids, Logger logger) throws Exception {
+        store.logger.warn("{} - loading transform request {}", store.name, ids);
         Connection conn = getConnection();
         try {
-            DomainTransformRequestPersistent request = CommonPersistenceProvider
-                    .get().getCommonPersistenceExTransaction()
-                    .getNewImplementationInstance(
-                            DomainTransformRequestPersistent.class);
+            CachingMap<Long, DomainTransformRequestPersistent> loadedRequests = new CachingMap<>(
+                    id -> {
+                        DomainTransformRequestPersistent request = CommonPersistenceProvider
+                                .get().getCommonPersistenceExTransaction()
+                                .getNewImplementationInstance(
+                                        DomainTransformRequestPersistent.class);
+                        request.setId(id);
+                        return request;
+                    });
             Class<? extends DomainTransformEvent> transformEventImplClass = domainDescriptor
                     .getShadowDomainTransformEventPersistentClass();
             Class<? extends ClassRef> classRefImplClass = domainDescriptor
@@ -767,12 +796,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                 prepareTable(classDescriptor);
             }
             String sqlFilter = Ax.format(
-                    " domainTransformRequestPersistent_id = %s order by id",
-                    id);
+                    " domainTransformRequestPersistent_id in %s order by id",
+                    EntityUtils.longsToIdClause(ids));
             LaterLookup laterLookup = new LaterLookup();
-            List<? extends DomainTransformEventPersistent> events = (List) loadTable0(
+            List<? extends DomainTransformEventPersistent> transforms = (List) loadTable0(
                     transformEventImplClass, sqlFilter,
-                    new ClassIdLock(DomainTransformRequestPersistent.class, id),
+                    new ClassIdLock(DomainTransformRequestPersistent.class,
+                            ids.iterator().next()),
                     laterLookup, false, true);
             laterLookup.resolve(new CustomResolver() {
                 @Override
@@ -780,6 +810,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     switch (pdOperator.name) {
                     case "objectClassRef":
                     case "valueClassRef":
+                    case "domainTransformRequestPersistent":
                         return true;
                     default:
                         return false;
@@ -789,28 +820,59 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                 @Override
                 public Object resolveCustom(PdOperator pdOperator,
                         LaterItem item) {
-                    long storeDomainClassRefId = item.id;
-                    ClassRef storeClassRef = store.findRaw(classRefImplClass,
-                            storeDomainClassRefId);
-                    ClassRef writableDomainClassRef = ClassRef
-                            .forName(storeClassRef.getRefClassName());
-                    return writableDomainClassRef;
+                    switch (pdOperator.name) {
+                    case "objectClassRef":
+                    case "valueClassRef":
+                        long storeDomainClassRefId = item.id;
+                        ClassRef storeClassRef = store.findRaw(
+                                classRefImplClass, storeDomainClassRefId);
+                        ClassRef writableDomainClassRef = ClassRef
+                                .forName(storeClassRef.getRefClassName());
+                        return writableDomainClassRef;
+                    case "domainTransformRequestPersistent":
+                        return loadedRequests.get(item.id);
+                    default:
+                        throw new UnsupportedOperationException();
+                    }
                 }
             });
-            events.removeIf(event -> event.getObjectClassRef() == null
+            transforms.removeIf(event -> event.getObjectClassRef() == null
                     || event.getObjectClassRef().notInVm()
                     || (event.getValueClassRef() != null
                             && event.getValueClassRef().notInVm()));
-            if (events.isEmpty()) {
-                return null;
-            }
             // TODO - populate source - see
             // cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceQueue.FireEventsThread.publishTransformEvent(Long)
-            request.setId(id);
-            events.forEach(request.getEvents()::add);
-            events.forEach(event -> event
-                    .setDomainTransformRequestPersistent(request));
-            return request;
+            MultikeyMap<HasIdAndLocalId> classIdTransformee = new UnsortedMultikeyMap<>();
+            for (DomainTransformEventPersistent transform : transforms) {
+                transform.getDomainTransformRequestPersistent().getEvents()
+                        .add(transform);
+                Class<? extends HasIdAndLocalId> transformeeClass = transform
+                        .getObjectClass();
+                long id = transform.getObjectId();
+                if (transform
+                        .getTransformType() == TransformType.DELETE_OBJECT) {
+                    classIdTransformee.remove(transformeeClass, id);
+                } else {
+                    HasIdAndLocalId source = classIdTransformee.ensure(() -> {
+                        HasIdAndLocalId instance = Reflections.classLookup()
+                                .newInstance(transformeeClass);
+                        instance.setId(id);
+                        return instance;
+                    }, transformeeClass, id);
+                    transform.setSource(source);
+                }
+            }
+            List<Callable> tasks = new ArrayList<>();
+            for (Class clazz : (Set<Class>) (Set) classIdTransformee.keySet()) {
+                if (IVersionable.class.isAssignableFrom(clazz)) {
+                    Collection<HasIdAndLocalId> iversionables = classIdTransformee
+                            .asMap(clazz).allValues();
+                    tasks.add(new ILoaderTask(conn, clazz, iversionables));
+                }
+            }
+            invokeAllWithThrow(tasks, iLoaderExecutor);
+            return loadedRequests.values().stream()
+                    .collect(Collectors.toList());
         } finally {
             releaseConn(conn);
         }
@@ -1112,14 +1174,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                 for (LaterItem item : this.items) {
                     try {
                         PdOperator pdOperator = item.pdOperator;
-                        pdOperator.resolveHelper.ensure(item.source.getClass(),
-                                customResolver);
+                        pdOperator.resolveHelper.ensure(item.source.getClass());
                         Method rm = pdOperator.readMethod;
                         long id = item.id;
-                        if (pdOperator.resolveHelper.isCustom()) {
+                        if (pdOperator.resolveHelper.isCustom(customResolver)) {
                             pdOperator.writeMethod.invoke(item.source,
-                                    pdOperator.resolveHelper
-                                            .resolveCustom(item));
+                                    pdOperator.resolveHelper.resolveCustom(
+                                            customResolver, item));
                         } else if (pdOperator.resolveHelper.inJoinTables) {
                             if (keepDetached) {
                                 throw new RuntimeException(
@@ -1280,12 +1341,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
             boolean ensured = false;
 
-            private CustomResolver customResolver;
-
-            public void ensure(Class<? extends HasId> sourceClass,
-                    CustomResolver customResolver) {
+            public void ensure(Class<? extends HasId> sourceClass) {
                 if (!ensured) {
-                    this.customResolver = customResolver;
                     inJoinTables = joinTables.containsKey(PdOperator.this.pd);
                     targetPd = manyToOneRev.get(sourceClass, name);
                     oneToOnePd = oneToOneRev.get(sourceClass, name);
@@ -1295,13 +1352,110 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                 }
             }
 
-            public boolean isCustom() {
+            public boolean isCustom(CustomResolver customResolver) {
                 return customResolver != null
                         && customResolver.handles(PdOperator.this);
             }
 
-            public Object resolveCustom(LaterItem item) {
+            public Object resolveCustom(CustomResolver customResolver,
+                    LaterItem item) {
                 return customResolver.resolveCustom(PdOperator.this, item);
+            }
+        }
+    }
+
+    private class ILoaderTask implements Callable<Void> {
+        private Class<HasIdAndLocalId> clazz;
+
+        private Collection<HasIdAndLocalId> sources;
+
+        private Connection conn;
+
+        public ILoaderTask(Connection conn, Class<HasIdAndLocalId> clazz,
+                Collection<HasIdAndLocalId> sources) {
+            this.conn = conn;
+            this.clazz = clazz;
+            this.sources = sources;
+        }
+
+        @Override
+        public Void call() {
+            try {
+                LaterLookup laterLookup = new LaterLookup();
+                String sqlFilter = Ax.format(" id in %s ",
+                        EntityUtils.hasIdsToIdClause(sources));
+                ClassIdLock dummySublock = new ClassIdLock(clazz, 0L);
+                List<? extends HasIdAndLocalId> persistentSources = (List) loadTable0(
+                        conn, clazz, sqlFilter, dummySublock, laterLookup,
+                        false, true, false);
+                Map<Long, ? extends HasIdAndLocalId> idMap = HiliHelper
+                        .toIdMap(sources);
+                Class<? extends IUser> userImplCass = CommonPersistenceProvider
+                        .get().getCommonPersistenceExTransaction()
+                        .getImplementation(IUser.class);
+                laterLookup.resolve(new CustomResolver() {
+                    @Override
+                    public boolean handles(PdOperator pdOperator) {
+                        switch (pdOperator.name) {
+                        case "lastModficationUser":
+                        case "creationUser":
+                            return true;
+                        default:
+                            return false;
+                        }
+                    }
+
+                    @Override
+                    public Object resolveCustom(PdOperator pdOperator,
+                            LaterItem item) {
+                        switch (pdOperator.name) {
+                        case "lastModficationUser":
+                        case "creationUser":
+                            return store.cache.get(userImplCass, item.id);
+                        default:
+                            throw new UnsupportedOperationException();
+                        }
+                    }
+                });
+                for (HasIdAndLocalId persistentSource : persistentSources) {
+                    HasIdAndLocalId transformee = idMap
+                            .get(persistentSource.getId());
+                    if (transformee instanceof HasVersionNumber) {
+                        ((HasVersionNumber) transformee).setVersionNumber(
+                                ((HasVersionNumber) persistentSource)
+                                        .getVersionNumber());
+                    }
+                    if (transformee instanceof IVersionable) {
+                        IVersionable iVersionable = (IVersionable) transformee;
+                        IVersionable persistent = (IVersionable) persistentSource;
+                        iVersionable.setCreationDate(SEUtilities
+                                .toJavaDate(persistent.getCreationDate()));
+                        iVersionable.setLastModificationDate(
+                                SEUtilities.toJavaDate((persistent
+                                        .getLastModificationDate())));
+                        Class<? extends IUser> iUserClass = store.domainDescriptor
+                                .getIUserClass();
+                        if (iUserClass == null) {
+                            return null;
+                        }
+                        Long persistentCreationUserId = HiliHelper
+                                .getIdOrNull(persistent.getCreationUser());
+                        IUser creationUser = store.cache.get(iUserClass,
+                                persistentCreationUserId);
+                        iVersionable.setCreationUser(creationUser);
+                        Long persistentLastModificationUserId = HiliHelper
+                                .getIdOrNull(
+                                        persistent.getLastModificationUser());
+                        IUser lastModificationUser = store.cache.get(iUserClass,
+                                persistentLastModificationUserId);
+                        iVersionable
+                                .setLastModificationUser(lastModificationUser);
+                    }
+                }
+                return null;
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new WrappedRuntimeException(e);
             }
         }
     }

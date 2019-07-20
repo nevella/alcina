@@ -2,10 +2,11 @@ package cc.alcina.framework.entity.domaintransform.event;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -341,6 +342,8 @@ public class DomainTransformPersistenceQueue {
     public class FireEventsThread extends Thread {
         Logger fireEventThreadLogger = LoggerFactory.getLogger(getClass());
 
+        Map<Long, DomainTransformRequestPersistent> loadedRequests = new LinkedHashMap<>();
+
         @Override
         public void run() {
             setName("DomainTransformPersistenceQueue-fire");
@@ -391,33 +394,38 @@ public class DomainTransformPersistenceQueue {
             } else {
                 try {
                     DomainTransformRequestPersistent request = null;
-                    if (persistenceEvents.domainStore == DomainStore.stores()
-                            .writableStore()) {
-                        // TODO - could replace with the DomainStore loader -
-                        // but wd
-                        // need to load modification etc user
-                        List<DomainTransformRequestPersistent> requests = runWithDisabledObjectPermissions(
-                                () -> getCommonPersistence()
-                                        .getPersistentTransformRequests(0, 0,
-                                                Collections.singletonList(id),
-                                                false, true,
-                                                fireEventThreadLogger));
-                        request = CommonUtils.first(requests);
-                    } else {
-                        request = persistenceEvents.domainStore
-                                .loadTransformRequest(id,
-                                        fireEventThreadLogger);
-                    }
+                    ensureRequestsLoaded(id);
+                    request = loadedRequests.get(id);
                     if (request != null) {
                         DomainTransformPersistenceEvent event = createPersistenceEventFromPersistedRequest(
                                 request);
                         event.ensureTransformsValidForVm();
                         persistenceEvents
                                 .fireDomainTransformPersistenceEvent(event);
+                        loadedRequests.remove(id);
+                    } else {
+                        fireEventThreadLogger.warn(
+                                "publishTransformEvent - missed (no transforms?) dtr {}",
+                                id);
                     }
                 } catch (Exception e) {
                     throw new WrappedRuntimeException(e);
                 }
+            }
+        }
+
+        void ensureRequestsLoaded(long ensureId) throws Exception {
+            Set<Long> idsRequired = new LinkedHashSet<>();
+            idsRequired.add(ensureId);
+            synchronized (toFire) {
+                toFire.stream().filter(id -> !loadedRequests.containsKey(id))
+                        .forEach(idsRequired::add);
+            }
+            if (!idsRequired.isEmpty()) {
+                List<DomainTransformRequestPersistent> requests = persistenceEvents.domainStore
+                        .loadTransformRequests(idsRequired,
+                                fireEventThreadLogger);
+                requests.forEach(r -> loadedRequests.put(r.getId(), r));
             }
         }
     }

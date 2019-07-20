@@ -6,13 +6,11 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -59,8 +57,6 @@ import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
-import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -71,8 +67,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCacheObjectStore;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
-import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -374,9 +368,9 @@ public class DomainStore implements IDomainStore {
         return initialised;
     }
 
-    public DomainTransformRequestPersistent loadTransformRequest(Long id,
-            Logger logger) throws Exception {
-        return loader.loadTransformRequest(id, logger);
+    public List<DomainTransformRequestPersistent> loadTransformRequests(
+            Collection<Long> ids, Logger logger) throws Exception {
+        return loader.loadTransformRequests(ids, logger);
     }
 
     public void onTransformsPersisted() {
@@ -591,41 +585,6 @@ public class DomainStore implements IDomainStore {
         }
     }
 
-    private Date timestampToDate(Date date) {
-        if (date instanceof Timestamp) {
-            return new Date(((Timestamp) date).getTime());
-        }
-        return date;
-    }
-
-    private void updateIVersionable(HasIdAndLocalId obj,
-            Object persistentLayerSource) {
-        IVersionable graph = (IVersionable) obj;
-        IVersionable persistent = (IVersionable) persistentLayerSource;
-        graph.setCreationDate(timestampToDate(persistent.getCreationDate()));
-        graph.setLastModificationDate(
-                timestampToDate(persistent.getCreationDate()));
-        Class<? extends IUser> iUserClass = domainDescriptor.getIUserClass();
-        if (iUserClass == null) {
-            return;
-        }
-        Long persistentCreationUserId = HiliHelper
-                .getIdOrNull(persistent.getCreationUser());
-        IUser creationUser = cache.get(iUserClass, persistentCreationUserId);
-        graph.setCreationUser(creationUser);
-        Long persistentLastModificationUserId = HiliHelper
-                .getIdOrNull(persistent.getLastModificationUser());
-        IUser lastModificationUser = cache.get(iUserClass,
-                persistentLastModificationUserId);
-        graph.setLastModificationUser(lastModificationUser);
-    }
-
-    private void updateVersionNumber(HasIdAndLocalId obj,
-            DomainTransformEvent dte) {
-        ((HasVersionNumber) obj).setVersionNumber(
-                ((HasVersionNumber) dte.getSource()).getVersionNumber());
-    }
-
     void addValues(DomainListener listener) {
         for (Object o : cache.values(listener.getListenedClass())) {
             listener.insert((HasIdAndLocalId) o);
@@ -795,32 +754,44 @@ public class DomainStore implements IDomainStore {
     // reader thread
     synchronized void postProcess(
             DomainTransformPersistenceEvent persistenceEvent) {
-        // preload outside of the writer lock - this uses a db conn, and there
-        // have been some odd networking issues...
-        try {
-            threads.lock(false);
-            // we may lazy load - so need a read lock
-            // note that since method is synchronized, nothing will be evicted
-            // from hereonin
+        DomainModificationMetadataProvider metadataProvider = persistenceEvent
+                .getMetadataProvider();
+        if (metadataProvider == null) {
+            metadataProvider = new SourceMetadataProvider(this);
+        }
+        {
             List<DomainTransformEvent> dtes = (List) persistenceEvent
                     .getDomainTransformLayerWrapper().persistentEvents;
-            List<DomainTransformEvent> filtered = filterInterestedTransforms(
-                    dtes);
-            Multimap<HiliLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
-                    .multimap(filtered, new DteToLocatorMapper());
-            for (DomainTransformEvent dte : filtered) {
-                DomainTransformEvent first = CommonUtils
-                        .first(perObjectTransforms
-                                .get(HiliLocator.objectLocator(dte)));
-                DomainTransformEvent last = CommonUtils.last(perObjectTransforms
-                        .get(HiliLocator.objectLocator(dte)));
-                if (dte.getTransformType() != TransformType.CREATE_OBJECT
-                        && first == dte) {
-                    HasIdAndLocalId obj = transformManager.getObject(dte, true);
+            metadataProvider.registerTransforms(dtes);
+            // preload outside of the writer lock - this uses a db conn, and
+            // there
+            // have been some odd networking issues...
+            try {
+                threads.lock(false);
+                // we may lazy load - so need a read lock
+                // note that since method is synchronized, nothing will be
+                // evicted
+                // from hereonin
+                List<DomainTransformEvent> filtered = filterInterestedTransforms(
+                        dtes);
+                Multimap<HiliLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
+                        .multimap(filtered, new DteToLocatorMapper());
+                for (DomainTransformEvent dte : filtered) {
+                    DomainTransformEvent first = CommonUtils
+                            .first(perObjectTransforms
+                                    .get(HiliLocator.objectLocator(dte)));
+                    DomainTransformEvent last = CommonUtils
+                            .last(perObjectTransforms
+                                    .get(HiliLocator.objectLocator(dte)));
+                    if (dte.getTransformType() != TransformType.CREATE_OBJECT
+                            && first == dte) {
+                        HasIdAndLocalId obj = transformManager.getObject(dte,
+                                true);
+                    }
                 }
+            } finally {
+                threads.unlock(false);
             }
-        } finally {
-            threads.unlock(false);
         }
         Set<Throwable> causes = new LinkedHashSet<Throwable>();
         StringBuilder warnBuilder = new StringBuilder();
@@ -855,11 +826,7 @@ public class DomainStore implements IDomainStore {
             };
             // disabled - performance issues
             transformManager.registerBeforeUpdateHandler(beforeUpdateHandler);
-            Map<HiliLocator, HasIdAndLocalId> locatorOriginalSourceMap = new LinkedHashMap<HiliLocator, HasIdAndLocalId>();
-            for (DomainTransformEvent dte : filtered) {
-                HiliLocator locator = HiliLocator.objectLocator(dte);
-                locatorOriginalSourceMap.put(locator, dte.getSource());
-            }
+            metadataProvider.registerTransforms(filtered);
             if (domainDescriptor instanceof PreApplyPersistListener) {
                 ((PreApplyPersistListener) domainDescriptor)
                         .loadLazyPreApplyPersist(persistenceEvent);
@@ -899,7 +866,6 @@ public class DomainStore implements IDomainStore {
                                 HiliLocator.objectLocator(dte));
                     }
                 }
-                HasIdAndLocalId persistentLayerSource = dte.getSource();
                 try {
                     transformManager.consume(dte);
                 } catch (DomainTransformException dtex) {
@@ -918,22 +884,10 @@ public class DomainStore implements IDomainStore {
                 }
                 if (dte.getTransformType() != TransformType.DELETE_OBJECT
                         && last == dte) {
-                    HasIdAndLocalId dbObj = locatorOriginalSourceMap
-                            .get(HiliLocator.objectLocator(dte));
                     HasIdAndLocalId domainStoreObject = transformManager
                             .getObject(dte, true);
                     if (domainStoreObject != null) {
-                        // query - why do we have different versions of 'source'
-                        // (i.e. db object)
-                        //
-                        //
-                        if (dbObj instanceof HasVersionNumber) {
-                            updateVersionNumber(domainStoreObject, dte);
-                        }
-                        if (dbObj instanceof IVersionable) {
-                            updateIVersionable(domainStoreObject,
-                                    persistentLayerSource);
-                        }
+                        metadataProvider.updateMetadata(dte, domainStoreObject);
                         ensureModificationChecker(domainStoreObject);
                         index(domainStoreObject, true);
                     } else {
