@@ -39,7 +39,7 @@ public class TopicPublisher {
 
     public void removeTopicListener(String key, TopicListener listener) {
         synchronized (lookup) {
-            lookup.remove(key, listener);
+            lookup.subtract(key, listener);
         }
     }
 
