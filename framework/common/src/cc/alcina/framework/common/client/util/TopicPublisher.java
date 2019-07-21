@@ -2,6 +2,8 @@ package cc.alcina.framework.common.client.util;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.ArrayList;
+import java.util.List;
 
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -15,15 +17,21 @@ public class TopicPublisher {
     // listener, key - there may be multiple refs
     private UnsortedMultikeyMap<TopicListenerAdapter> lookup = new UnsortedMultikeyMap<TopicListenerAdapter>();
 
-    public synchronized void addTopicListener(String key,
-            TopicListener listener) {
-        TopicListenerAdapter adapter = new TopicListenerAdapter(listener);
-        if (key == null) {
-            support.addPropertyChangeListener(adapter);
-        } else {
-            support.addPropertyChangeListener(key, adapter);
+    private List<Runnable> deltas = new ArrayList<>();
+
+    public void addTopicListener(String key, TopicListener listener) {
+        synchronized (deltas) {
+            deltas.add(() -> {
+                TopicListenerAdapter adapter = new TopicListenerAdapter(
+                        listener);
+                if (key == null) {
+                    support.addPropertyChangeListener(adapter);
+                } else {
+                    support.addPropertyChangeListener(key, adapter);
+                }
+                lookup.put(listener, key, adapter);
+            });
         }
-        lookup.put(listener, key, adapter);
     }
 
     public void listenerDelta(String key, TopicListener listener, boolean add) {
@@ -34,19 +42,26 @@ public class TopicPublisher {
         }
     }
 
-    public synchronized void publishTopic(String key, Object message) {
+    public void publishTopic(String key, Object message) {
+        synchronized (deltas) {
+            deltas.forEach(Runnable::run);
+            deltas.clear();
+        }
         support.firePropertyChange(key, message == null ? "" : null, message);
     }
 
-    public synchronized void removeTopicListener(String key,
-            TopicListener listener) {
-        TopicListenerAdapter adapter = lookup.get(listener, key);
-        if (key == null) {
-            support.removePropertyChangeListener(adapter);
-        } else {
-            support.removePropertyChangeListener(key, adapter);
+    public void removeTopicListener(String key, TopicListener listener) {
+        synchronized (deltas) {
+            deltas.add(() -> {
+                TopicListenerAdapter adapter = lookup.get(listener, key);
+                if (key == null) {
+                    support.removePropertyChangeListener(adapter);
+                } else {
+                    support.removePropertyChangeListener(key, adapter);
+                }
+                lookup.remove(listener, key);
+            });
         }
-        lookup.remove(listener, key);
     }
 
     @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
