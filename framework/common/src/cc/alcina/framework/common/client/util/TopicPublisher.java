@@ -1,36 +1,20 @@
 package cc.alcina.framework.common.client.util;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public class TopicPublisher {
-    private MutablePropertyChangeSupport support = new MutablePropertyChangeSupport(
-            this);
-
-    // listener, key - there may be multiple refs
-    private UnsortedMultikeyMap<TopicListenerAdapter> lookup = new UnsortedMultikeyMap<TopicListenerAdapter>();
-
-    private List<Runnable> deltas = new ArrayList<>();
+    // use a list - the listener may be added/removed multiple times (although
+    // that's probably not what's wanted)
+    private Multimap<String, List<TopicListener>> lookup = new Multimap<>();
 
     public void addTopicListener(String key, TopicListener listener) {
-        synchronized (deltas) {
-            deltas.add(() -> {
-                TopicListenerAdapter adapter = new TopicListenerAdapter(
-                        listener);
-                if (key == null) {
-                    support.addPropertyChangeListener(adapter);
-                } else {
-                    support.addPropertyChangeListener(key, adapter);
-                }
-                lookup.put(listener, key, adapter);
-            });
+        synchronized (lookup) {
+            lookup.add(key, listener);
         }
     }
 
@@ -43,24 +27,19 @@ public class TopicPublisher {
     }
 
     public void publishTopic(String key, Object message) {
-        synchronized (deltas) {
-            deltas.forEach(Runnable::run);
-            deltas.clear();
+        List<TopicListener> listeners = null;
+        synchronized (lookup) {
+            listeners = lookup.getAndEnsure(key).stream()
+                    .collect(Collectors.toList());
         }
-        support.firePropertyChange(key, message == null ? "" : null, message);
+        for (TopicListener listener : listeners) {
+            listener.topicPublished(key, message);
+        }
     }
 
     public void removeTopicListener(String key, TopicListener listener) {
-        synchronized (deltas) {
-            deltas.add(() -> {
-                TopicListenerAdapter adapter = lookup.get(listener, key);
-                if (key == null) {
-                    support.removePropertyChangeListener(adapter);
-                } else {
-                    support.removePropertyChangeListener(key, adapter);
-                }
-                lookup.remove(listener, key);
-            });
+        synchronized (lookup) {
+            lookup.remove(key, listener);
         }
     }
 
@@ -145,31 +124,6 @@ public class TopicPublisher {
 
         public void remove(TopicListener<T> listener) {
             delta(listener, false);
-        }
-    }
-
-    private static class TopicListenerAdapter<T>
-            implements PropertyChangeListener {
-        private final TopicListener listener;
-
-        public TopicListenerAdapter(TopicListener listener) {
-            this.listener = listener;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            return obj instanceof TopicListenerAdapter
-                    && listener.equals(((TopicListenerAdapter) obj).listener);
-        }
-
-        @Override
-        public int hashCode() {
-            return listener.hashCode();
-        }
-
-        @Override
-        public void propertyChange(PropertyChangeEvent evt) {
-            listener.topicPublished(evt.getPropertyName(), evt.getNewValue());
         }
     }
 }
