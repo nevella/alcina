@@ -1195,6 +1195,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                                         new Object[] { set });
                             }
                             set.add(item.target);
+                        } else if (customResolver != null) {
+                            // ignore, customResolver exists and not custom
+                            // resolvable
                         } else {
                             Class type = propertyDescriptorFetchTypes
                                     .get(pdOperator.pd);
