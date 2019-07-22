@@ -864,7 +864,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
             }
             List<Callable> tasks = new ArrayList<>();
             for (Class clazz : (Set<Class>) (Set) classIdTransformee.keySet()) {
-                if (IVersionable.class.isAssignableFrom(clazz)) {
+                if (IVersionable.class.isAssignableFrom(clazz)
+                        && store.isCached(clazz)) {
                     Collection<HasIdAndLocalId> iversionables = classIdTransformee
                             .asMap(clazz).allValues();
                     tasks.add(new ILoaderTask(conn, clazz, iversionables));
