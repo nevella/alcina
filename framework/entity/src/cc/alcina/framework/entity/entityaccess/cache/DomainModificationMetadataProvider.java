@@ -49,8 +49,8 @@ public abstract class DomainModificationMetadataProvider {
     }
 
     protected void updateVersionNumber(HasIdAndLocalId obj,
-            DomainTransformEvent dte) {
+            HasIdAndLocalId persistentLayerSource) {
         ((HasVersionNumber) obj).setVersionNumber(
-                ((HasVersionNumber) dte.getSource()).getVersionNumber());
+                ((HasVersionNumber) persistentLayerSource).getVersionNumber());
     }
 }

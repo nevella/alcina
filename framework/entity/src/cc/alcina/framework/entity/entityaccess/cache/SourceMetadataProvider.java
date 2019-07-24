@@ -33,7 +33,7 @@ class SourceMetadataProvider extends DomainModificationMetadataProvider {
         HasIdAndLocalId dbObj = locatorOriginalSourceMap
                 .get(HiliLocator.objectLocator(dte));
         if (domainStoreObject instanceof HasVersionNumber) {
-            updateVersionNumber(domainStoreObject, dte);
+            updateVersionNumber(domainStoreObject, dbObj);
         }
         if (domainStoreObject instanceof IVersionable) {
             updateIVersionable(domainStoreObject, dbObj);

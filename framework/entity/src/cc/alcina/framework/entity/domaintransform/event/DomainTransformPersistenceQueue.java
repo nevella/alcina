@@ -438,15 +438,22 @@ public class DomainTransformPersistenceQueue {
             }
             if (!idsRequired.isEmpty()) {
                 List<DomainTransformRequestPersistent> requests = null;
+                requests = persistenceEvents.domainStore.loadTransformRequests(
+                        idsRequired, fireEventThreadLogger);
                 if (Ax.isTest()) {
-                    requests = CommonPersistenceProvider.get()
-                            .getCommonPersistence()
+                    List<DomainTransformRequestPersistent> extraRequestData = CommonPersistenceProvider
+                            .get().getCommonPersistence()
                             .getPersistentTransformRequests(0, 0, idsRequired,
                                     false, true, null);
-                } else {
-                    requests = persistenceEvents.domainStore
-                            .loadTransformRequests(idsRequired,
-                                    fireEventThreadLogger);
+                    List<DomainTransformRequestPersistent> f_requests = requests;
+                    extraRequestData.forEach(r -> {
+                        f_requests.stream()
+                                .filter(r2 -> r2.getId() == r.getId())
+                                .forEach(r2 -> {
+                                    r2.setRequestId(r.getRequestId());
+                                    r2.setClientInstance(r.getClientInstance());
+                                });
+                    });
                 }
                 requests.forEach(r -> loadedRequests.put(r.getId(), r));
             }
