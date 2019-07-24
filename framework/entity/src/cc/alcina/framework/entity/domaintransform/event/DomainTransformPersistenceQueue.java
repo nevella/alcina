@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPositionProvider;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -397,6 +398,20 @@ public class DomainTransformPersistenceQueue {
                     ensureRequestsLoaded(id);
                     request = loadedRequests.get(id);
                     if (request != null) {
+                        if (Ax.isTest() && request.getClientInstance()
+                                .getId() == PermissionsManager.get()
+                                        .getClientInstanceId()) {
+                            // local persisted via server
+                            DomainStoreTransformSequencer transformSequencer = DomainStore
+                                    .writableStore().getTransformSequencer();
+                            transformSequencer
+                                    .removePreLocalNonFireEventsThreadBarrier(
+                                            id);
+                            transformSequencer
+                                    .waitForPostLocalFireEventsThreadBarrier(
+                                            id);
+                            return;
+                        }
                         DomainTransformPersistenceEvent event = createPersistenceEventFromPersistedRequest(
                                 request);
                         event.ensureTransformsValidForVm();
@@ -422,9 +437,17 @@ public class DomainTransformPersistenceQueue {
                         .forEach(idsRequired::add);
             }
             if (!idsRequired.isEmpty()) {
-                List<DomainTransformRequestPersistent> requests = persistenceEvents.domainStore
-                        .loadTransformRequests(idsRequired,
-                                fireEventThreadLogger);
+                List<DomainTransformRequestPersistent> requests = null;
+                if (Ax.isTest()) {
+                    requests = CommonPersistenceProvider.get()
+                            .getCommonPersistence()
+                            .getPersistentTransformRequests(0, 0, idsRequired,
+                                    false, true, null);
+                } else {
+                    requests = persistenceEvents.domainStore
+                            .loadTransformRequests(idsRequired,
+                                    fireEventThreadLogger);
+                }
                 requests.forEach(r -> loadedRequests.put(r.getId(), r));
             }
         }
