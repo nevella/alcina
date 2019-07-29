@@ -772,6 +772,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         }
     }
 
+    /*
+     * Logger parameter currently unused
+     */
     private List<DomainTransformRequestPersistent> loadTransformRequests0(
             Collection<Long> ids, Logger logger) throws Exception {
         store.logger.warn("{} - loading transform request {}", store.name, ids);

@@ -66,6 +66,13 @@ public class DomainTransformPersistenceEvents {
                 ? event.getPersistedRequestIds().get(0)
                 : 0;
         if (hasRequests && event.isLocalToVm()) {
+            if (Ax.isTest()) {
+                // won't know that the companion dev server is persisting this
+                // persistent rq id (and is logically "local") until now
+                queue.registerPersisting(event
+                        .getDomainTransformLayerWrapper().persistentRequests
+                                .get(0));
+            }
             domainStore.getTransformSequencer()
                     .waitForPreLocalNonFireEventsThreadBarrier(firstRequestId);
         }
