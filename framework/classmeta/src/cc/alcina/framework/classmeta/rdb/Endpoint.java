@@ -93,7 +93,9 @@ abstract class Endpoint {
     // bit of an abuse of the counter - but it's logically the "should I send"
     // monitor
     public void nudge() {
-        receivedPacketCounter.notify();
+        synchronized (receivedPacketCounter) {
+            receivedPacketCounter.notify();
+        }
     }
 
     public PacketEndpoint otherPacketEndpoint(PacketEndpoint packetEndpoint) {
