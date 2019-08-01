@@ -87,6 +87,10 @@ interface PacketEndpointHost {
             return result;
         }
 
+        public void ignoreRepliesWithId(int id) {
+            // TODO Auto-generated method stub
+        }
+
         @Override
         public synchronized String toString() {
             return host.toString();

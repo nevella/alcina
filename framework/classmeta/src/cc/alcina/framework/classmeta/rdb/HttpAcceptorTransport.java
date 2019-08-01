@@ -53,6 +53,21 @@ class HttpAcceptorTransport extends Transport {
     public void receiveTransportModel(HttpTransportModel requestModel,
             HttpConnectionPair pair) {
         if (requestModel.close) {
+            pair.response.setContentType("application/json");
+            pair.response.setStatus(HttpServletResponse.SC_OK);
+            try {
+                pair.response.getWriter().close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (lastListenerCall == 0) {
+                // received 'close' on new listener/endpoint - could make this
+                // drop more precise with a per debugger/debuggee uid but
+                // probably no need
+                //
+                // ignore
+                return;
+            }
             packetEndpoint().close();
             return;
         }
@@ -118,8 +133,8 @@ class HttpAcceptorTransport extends Transport {
         }
         try {
             pair.response.setContentType("application/json");
-            pair.response.setStatus(HttpServletResponse.SC_OK);
             pair.response.getWriter().write(payload);
+            pair.response.setStatus(HttpServletResponse.SC_OK);
             synchronized (pair) {
                 pair.responseSent = true;
                 pair.notify();
@@ -151,7 +166,12 @@ class HttpAcceptorTransport extends Transport {
     }
 
     @Override
-    void close() {
+    synchronized void close() {
+        closed = true;
+        if (notificationTimer != null) {
+            notificationTimer.cancel();
+            notificationTimer = null;
+        }
         if (commandPair != null) {
             try {
                 commandPair.response.getOutputStream().close();

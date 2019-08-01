@@ -25,7 +25,11 @@ class HttpInitiatorTransport extends Transport {
 
     @Override
     public void send() {
-        // main loop, so blocks - no need to queue
+        if (receiver == null) {
+            // only start event listener after first command
+            startEventListener();
+        }
+        // main loop, so blocks - no need to queue/synchronize
         List<Packet> packets = packetEndpoint().flushOutPackets();
         if (!packets.isEmpty()) {
             HttpTransportModel model = new HttpTransportModel();
@@ -40,8 +44,7 @@ class HttpInitiatorTransport extends Transport {
         }
     }
 
-    @Override
-    protected void launch() {
+    private void startEventListener() {
         receiver = new Thread(
                 Ax.format("%s::transport::receiver", descriptor.name)) {
             @Override
@@ -50,6 +53,9 @@ class HttpInitiatorTransport extends Transport {
                     HttpTransportModel model = new HttpTransportModel();
                     model.eventListener = true;
                     dispatchModel(model);
+                    if (closed) {
+                        break;
+                    }
                 }
             }
         };
@@ -57,10 +63,16 @@ class HttpInitiatorTransport extends Transport {
     }
 
     @Override
+    protected void launch() {
+    }
+
+    @Override
     void close() {
+        closed = true;
         HttpTransportModel model = new HttpTransportModel();
         model.close = true;
-        dispatchModel(model);
+        // currently broken event listener conn means unnecessary (and blocks)
+        // dispatchModel(model);
     }
 
     void dispatchModel(HttpTransportModel model) {
@@ -73,6 +85,9 @@ class HttpInitiatorTransport extends Transport {
             String strResponse = post.asString();
             // Ax.err("received: %s chars", strResponse.length());
             maybeSimulateTransportDelay();
+            if (Ax.isBlank(strResponse)) {
+                return;
+            }
             HttpTransportModel response = JacksonUtils.deserialize(strResponse,
                     HttpTransportModel.class);
             if (response.eventListener) {

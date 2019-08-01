@@ -163,6 +163,7 @@ class JdwpStreams implements PacketEndpointHost {
                 logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
                 // debugRead = true;
             } else {
+                logger.debug("Send packet :: {}\n\t{}", packetEndpoint, packet);
                 if (packet.isReply) {
                     // end of stanza
                     Ax.out("");

@@ -148,17 +148,25 @@ abstract class Endpoint {
                 }
             }
             oracle.preparePacket(packet);
+            if (packet.fromDebugger && isDebuggee() && packet.isReply) {
+                // event reply
+                int debug = 3;
+            }
             Optional<Packet> predictiveResponse = otherPacketEndpoint
                     .getPredictiveResponse(packet);
             if (predictiveResponse.isPresent()) {
-                // if (packet.messageName.equals("Status")) {
-                // int debug = 3;
-                // }
                 packetEndpoint.addReplyPacket(predictiveResponse.get());
                 logger.debug("Predictive packet << {}\t{}", packetEndpoint,
                         packet);
                 predictiveReplyPacketCounter++;
                 break;
+            }
+            if (!packet.fromDebugger && isDebuggee() && !packet.isReply) {
+                // event packet
+                int debug = 3;
+                // Packet ack = oracle.createAckPacket(packet);
+                // packetEndpoint.addOutPacket(ack);
+                // packetEndpoint.ignoreRepliesWithId(ack.id());
             }
             if (packet.fromDebugger && isDebugger()
                     && packet.source == streams.packetEndpoint()) {

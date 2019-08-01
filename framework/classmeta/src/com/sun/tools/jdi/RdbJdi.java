@@ -17,17 +17,24 @@ import com.sun.jdi.StackFrame;
 import com.sun.jdi.Type;
 import com.sun.jdi.Value;
 import com.sun.tools.jdi.JDWP.ClassType.Superclass;
+import com.sun.tools.jdi.JDWP.Event.Composite;
+import com.sun.tools.jdi.JDWP.Event.Composite.Events;
+import com.sun.tools.jdi.JDWP.Event.Composite.Events.Breakpoint;
+import com.sun.tools.jdi.JDWP.Event.Composite.Events.EventsCommon;
+import com.sun.tools.jdi.JDWP.Event.Composite.Events.ThreadStart;
 import com.sun.tools.jdi.JDWP.ReferenceType.Interfaces;
 import com.sun.tools.jdi.JDWP.ReferenceType.Signature;
 import com.sun.tools.jdi.JDWP.ThreadGroupReference;
 import com.sun.tools.jdi.JDWP.ThreadGroupReference.Parent;
 import com.sun.tools.jdi.JDWP.ThreadReference.Frames;
 import com.sun.tools.jdi.JDWP.ThreadReference.Frames.Frame;
+import com.sun.tools.jdi.JDWP.ThreadReference.Resume;
 import com.sun.tools.jdi.JDWP.ThreadReference.ThreadGroup;
 import com.sun.tools.jdi.JDWP.VirtualMachine.AllThreads;
 import com.sun.tools.jdi.JDWP.VirtualMachine.CapabilitiesNew;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class RdbJdi {
     /**
@@ -94,6 +101,16 @@ public class RdbJdi {
         this.vm = vm;
     }
 
+    public void debug_is_collected(byte[] bytes) {
+        try {
+            PredictorToken token = new PredictorToken(bytes, null);
+            long objectRefId = token.commandStream().readObjectRef();
+            int debug = 3;
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
     public void debugThisObject(byte[] command) {
         PredictorToken token = new PredictorToken(command, null);
         PacketStream commandStream = token.commandStream();
@@ -139,6 +156,14 @@ public class RdbJdi {
         }
         ThreadReferenceImpl threadRef = token.commandStream()
                 .readThreadReference();
+        /*
+         * Reset manually (for normal jdwp usage resetting would be done by
+         * threadRef.resume())
+         */
+        java.lang.reflect.Method resetLocalCache = threadRef.getClass()
+                .getDeclaredMethod("resetLocalCache");
+        resetLocalCache.setAccessible(true);
+        resetLocalCache.invoke(threadRef);
         int frameCount = threadRef.frameCount();
         for (StackFrame frame : threadRef.frames()) {
             /*
@@ -190,6 +215,36 @@ public class RdbJdi {
         if (zeen.size() > 0) {
             StackFrameImpl guessingFrame = zeen.get(zeen.size() - 1);
             predictStackFrame(guessingFrame);
+        }
+    }
+
+    public void send_composite_reply(byte[] bytes) {
+        try {
+            PredictorToken token = new PredictorToken(bytes, null);
+            Composite composite = new Composite(vm, token.commandStream());
+            Ax.out("Composite: suspend: " + composite.suspendPolicy);
+            for (Events events : composite.events) {
+                Ax.out(events.aEventsCommon);
+                EventsCommon common = events.aEventsCommon;
+                if (common instanceof ThreadStart) {
+                    Ax.out("Thread start: ref %s",
+                            ((ThreadStart) common).thread.ref);
+                }
+                if (common instanceof Breakpoint) {
+                    Breakpoint breakpoint = (Breakpoint) common;
+                    Ax.out("Breakpoint: ref %s", breakpoint.thread.ref);
+                    if (breakpoint.location.declaringType().name()
+                            .equals("java.lang.Thread")) {
+                        // instantly resume - this was set by Eclipse to monitor
+                        // name changes
+                        Resume.enqueueCommand(vm, breakpoint.thread);
+                    }
+                }
+            }
+            Ax.out("--------\n");
+            int debug = 3;
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
         }
     }
 

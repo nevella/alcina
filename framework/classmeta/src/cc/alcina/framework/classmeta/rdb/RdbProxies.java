@@ -41,7 +41,18 @@ public class RdbProxies {
 
     public synchronized void replaceEndpoint(Endpoint endpoint) {
         endpoints.remove(endpoint);
-        start(endpoint.descriptor);
+        // restart with a delay to make sure we don't answer old calls
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(1000);
+                    RdbProxies.this.start(endpoint.descriptor);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            };
+        }.start();
     }
 
     public void start() {

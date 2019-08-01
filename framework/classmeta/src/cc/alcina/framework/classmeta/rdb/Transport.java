@@ -15,6 +15,8 @@ abstract class Transport implements PacketEndpointHost {
 
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
+    protected boolean closed = false;
+
     public Transport(RdbEndpointDescriptor descriptor, Endpoint endpoint) {
         this.descriptor = descriptor;
         this.packetEndpoint = new PacketEndpoint(this, endpoint);

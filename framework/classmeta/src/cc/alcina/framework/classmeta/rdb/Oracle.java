@@ -33,6 +33,11 @@ class Oracle {
         this.endpoint = endpoint;
     }
 
+    public Packet createAckPacket(Packet packet) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     public void handlePacket(PacketEndpoint packetSource, Packet packet) {
         if (packet.isReply) {
             Packet reply = packet;
@@ -65,6 +70,15 @@ class Oracle {
                         break;
                     }
                     }
+                }
+            }
+        } else {
+            Packet command = packet;
+            if (endpoint.isDebuggee()) {
+                if (command.messageName.equals("Composite")) {
+                    send_composite_reply(command);
+                } else if (command.messageName.equals("IsCollected")) {
+                    debug_is_collected(command);
                 }
             }
         }
@@ -120,6 +134,14 @@ class Oracle {
         }
     }
 
+    private void debug_is_collected(Packet command) {
+        try {
+            rdbJdi.debug_is_collected(command.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
     private void predict_all_threads_handshake(Packet command, Packet reply) {
         try {
             rdbJdi.predict_all_threads_handshake(command.bytes, reply.bytes);
@@ -147,6 +169,14 @@ class Oracle {
     private void predict_variable_table(Packet command, Packet reply) {
         try {
             rdbJdi.predict_variable_table(command.bytes, reply.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    private void send_composite_reply(Packet command) {
+        try {
+            rdbJdi.send_composite_reply(command.bytes);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
