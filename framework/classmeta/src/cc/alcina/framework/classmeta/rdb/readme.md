@@ -18,3 +18,6 @@
 		* packetTransport (interface)
 			* __sameProcess
 			* __http
+			
+### eclipse timeouts
+	<workspace>/.metadata/.plugins/org.eclipse.core.runtime/.settings			
