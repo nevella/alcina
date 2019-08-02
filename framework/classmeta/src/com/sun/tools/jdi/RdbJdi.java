@@ -218,24 +218,31 @@ public class RdbJdi {
             /*
              * force call because eclipse does (even if static/native)
              */
-            JDWP.StackFrame.ThisObject.process(vm, threadRef, frameId(frame));
-            ObjectReference thisObject = frame.thisObject();
-            debug("+++thisObject: %s - %s\n", threadRef.ref, frameId(frame));
-            if (thisObject != null) {
-                ReferenceType referenceType = thisObject.referenceType();
-                getClassMetadata(referenceType);
+            try {
+                JDWP.StackFrame.ThisObject.process(vm, threadRef,
+                        frameId(frame));
+                ObjectReference thisObject = frame.thisObject();
+                debug("+++thisObject: %s - %s\n", threadRef.ref,
+                        frameId(frame));
+                if (thisObject != null) {
+                    ReferenceType referenceType = thisObject.referenceType();
+                    getClassMetadata(referenceType);
+                }
+                MethodImpl method = (MethodImpl) frame.location().method();
+                if (method instanceof ConcreteMethodImpl) {
+                    JDWP.Method.LineTable.process(vm, method.declaringType,
+                            method.ref);
+                }
+                method.location();
+                RefTypeMethodKey key = new RefTypeMethodKey(
+                        ((ReferenceTypeImpl) method.declaringType()).ref,
+                        ((MethodImpl) method).ref);
+                stackFrameByTypeMethod
+                        .computeIfAbsent(key, k -> new ArrayList<>())
+                        .add((StackFrameImpl) frame);
+            } catch (JDWPException e) {
+                e.printStackTrace();
             }
-            MethodImpl method = (MethodImpl) frame.location().method();
-            if (method instanceof ConcreteMethodImpl) {
-                JDWP.Method.LineTable.process(vm, method.declaringType,
-                        method.ref);
-            }
-            method.location();
-            RefTypeMethodKey key = new RefTypeMethodKey(
-                    ((ReferenceTypeImpl) method.declaringType()).ref,
-                    ((MethodImpl) method).ref);
-            stackFrameByTypeMethod.computeIfAbsent(key, k -> new ArrayList<>())
-                    .add((StackFrameImpl) frame);
         }
     }
 
