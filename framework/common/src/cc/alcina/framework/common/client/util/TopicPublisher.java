@@ -7,6 +7,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
+/*
+ * Key 'null' (when passed to addTopicListener) receives all topics
+ */
 public class TopicPublisher {
     // use a list - the listener may be added/removed multiple times (although
     // that's probably not what's wanted)
@@ -31,6 +34,7 @@ public class TopicPublisher {
         synchronized (lookup) {
             listeners = lookup.getAndEnsure(key).stream()
                     .collect(Collectors.toList());
+            lookup.getAndEnsure(null).stream().forEach(listeners::add);
         }
         for (TopicListener listener : listeners) {
             listener.topicPublished(key, message);
