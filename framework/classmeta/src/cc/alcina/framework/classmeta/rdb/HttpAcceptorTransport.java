@@ -153,7 +153,7 @@ class HttpAcceptorTransport extends Transport {
         // if this call returns false (because we have a recent listener call),
         // wait a bit
         if (commandPair != null) {
-            return true;
+            return packetEndpoint.hasOutReplyPacket();
         } else {
             boolean should = lastListenerCall != 0 && System.currentTimeMillis()
                     - lastListenerCall > descriptor.transportNotificationBundleWait;

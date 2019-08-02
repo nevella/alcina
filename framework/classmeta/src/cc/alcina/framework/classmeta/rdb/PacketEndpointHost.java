@@ -180,6 +180,10 @@ interface PacketEndpointHost {
             return predictiveResponse;
         }
 
+        synchronized boolean hasOutReplyPacket() {
+            return outPackets.stream().anyMatch(p -> p.isReply);
+        }
+
         synchronized Packet next() {
             return inPackets.isEmpty() ? null : inPackets.pop();
         }
