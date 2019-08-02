@@ -38,7 +38,10 @@ class Oracle {
         return null;
     }
 
-    public void handlePacket(PacketEndpoint packetSource, Packet packet) {
+    public boolean handlePacket(PacketEndpoint packetSource, Packet packet) {
+        if (packet.messageName.equals("Resume")) {
+            int debug = 3;
+        }
         if (packet.isReply) {
             Packet reply = packet;
             Packet command = packet.getCorrespondingCommandPacket();
@@ -47,7 +50,9 @@ class Oracle {
                     predictForSeries = command.meta.series;
                     switch (command.meta.series) {
                     case all_threads_handshake: {
-                        predict_all_threads_handshake(command, reply);
+                        if (command.messageName.equals("AllThreads")) {
+                            predict_all_threads_handshake(command, reply);
+                        }
                         break;
                     }
                     case frames: {
@@ -79,9 +84,16 @@ class Oracle {
                     send_composite_reply(command);
                 } else if (command.messageName.equals("IsCollected")) {
                     debug_is_collected(command);
+                } else if (command.messageName.equals("Resume")) {
+                    return send_resume_command(command);
+                }
+            } else {
+                if (command.isBreakpoint) {
+                    state.seenSuspend = true;
                 }
             }
         }
+        return true;
     }
 
     public boolean isCacheable(Packet packet) {
@@ -110,17 +122,24 @@ class Oracle {
         case "Modifiers":
         case "Superclass":
         case "Interfaces":
+        case "Parent":
+        case "Version":
             return true;
         case "Set":
             return false;
         case "GetValues":
+        case "Status":
             // not after any invalidation, unless early in the allthreads phase
-            if (packet.predictiveFor == EventSeries.admin_post_handshake
-                    && !state.seenSuspend) {
-                return true;
-            } else {
-                return false;
+            if (!state.seenSuspend && packet.predictiveFor != null) {
+                switch (packet.predictiveFor) {
+                case admin_post_handshake:
+                case all_threads_handshake:
+                    return true;
+                default:
+                    return false;
+                }
             }
+            return false;
         default:
             return false;
         }
@@ -144,8 +163,12 @@ class Oracle {
 
     private void predict_all_threads_handshake(Packet command, Packet reply) {
         try {
+            Ax.out(Thread.currentThread() + ":"
+                    + Thread.currentThread().getId());
             rdbJdi.predict_all_threads_handshake(command.bytes, reply.bytes);
         } catch (Exception e) {
+            Ax.out(Thread.currentThread() + ":"
+                    + Thread.currentThread().getId());
             throw new WrappedRuntimeException(e);
         }
     }
@@ -176,7 +199,16 @@ class Oracle {
 
     private void send_composite_reply(Packet command) {
         try {
-            rdbJdi.send_composite_reply(command.bytes);
+            boolean isBreakpoint = rdbJdi.handle_composite(command.bytes);
+            command.isBreakpoint = isBreakpoint;
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    private boolean send_resume_command(Packet command) {
+        try {
+            return rdbJdi.send_resume_command(command.bytes);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }

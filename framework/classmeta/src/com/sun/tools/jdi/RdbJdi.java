@@ -1,6 +1,7 @@
 package com.sun.tools.jdi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -28,7 +29,6 @@ import com.sun.tools.jdi.JDWP.ThreadGroupReference;
 import com.sun.tools.jdi.JDWP.ThreadGroupReference.Parent;
 import com.sun.tools.jdi.JDWP.ThreadReference.Frames;
 import com.sun.tools.jdi.JDWP.ThreadReference.Frames.Frame;
-import com.sun.tools.jdi.JDWP.ThreadReference.Resume;
 import com.sun.tools.jdi.JDWP.ThreadReference.ThreadGroup;
 import com.sun.tools.jdi.JDWP.VirtualMachine.AllThreads;
 import com.sun.tools.jdi.JDWP.VirtualMachine.CapabilitiesNew;
@@ -97,6 +97,9 @@ public class RdbJdi {
 
     Set<ReferenceType> referenceTypeMetadataCalled = new LinkedHashSet<>();
 
+    Map<Long, Integer> earlyBreakpointResumes = Collections
+            .synchronizedMap(new LinkedHashMap<>());
+
     public RdbJdi(VirtualMachineImplExt vm) {
         this.vm = vm;
     }
@@ -117,6 +120,45 @@ public class RdbJdi {
         ThreadReferenceImpl threadRef = commandStream.readThreadReference();
         long frameRef = commandStream.readFrameRef();
         debug("%s :: %s\n", threadRef.ref(), frameRef);
+    }
+
+    public boolean handle_composite(byte[] bytes) {
+        try {
+            boolean isBreakpoint = false;
+            PredictorToken token = new PredictorToken(bytes, null);
+            Composite composite = new Composite(vm, token.commandStream());
+            Ax.out("Composite: suspend: " + composite.suspendPolicy);
+            for (Events events : composite.events) {
+                Ax.out(events.aEventsCommon);
+                EventsCommon common = events.aEventsCommon;
+                if (common instanceof ThreadStart) {
+                    Ax.out("Thread start: ref %s",
+                            ((ThreadStart) common).thread.ref);
+                }
+                if (common instanceof Breakpoint) {
+                    Breakpoint breakpoint = (Breakpoint) common;
+                    Ax.out("Breakpoint: ref %s", breakpoint.thread.ref);
+                    if (breakpoint.location.declaringType().name()
+                            .equals("java.lang.Thread")) {
+                        // instantly resume - this was set by Eclipse to monitor
+                        // name changes
+                        // Resume.enqueueCommand(vm, breakpoint.thread);
+                        // earlyBreakpointResumes.merge(breakpoint.thread.ref,
+                        // 1,
+                        // (k, v) -> v + 1);
+                        int debug = 3;
+                    } else {
+                        Ax.out("Breakpoint: ref %s (real breakpoint)",
+                                breakpoint.thread.ref);
+                        isBreakpoint = true;
+                    }
+                }
+            }
+            Ax.out("--------\n");
+            return isBreakpoint;
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
     }
 
     public void predict_all_threads_handshake(byte[] command, byte[] reply)
@@ -147,7 +189,14 @@ public class RdbJdi {
 
     public void predict_frames(byte[] command, byte[] reply) throws Exception {
         PredictorToken token = new PredictorToken(command, reply);
-        Frames frames = Frames.waitForReply(vm, token.replyStream());
+        Frames frames = null;
+        try {
+            frames = Frames.waitForReply(vm, token.replyStream());
+        } catch (JDWPException e) {
+            if (e.errorCode() == 13) {// thread not suspended{
+                return;
+            }
+        }
         for (Frame frame : frames.frames) {
             Method method = frame.location.method();
             ReferenceType declaringType = frame.location.declaringType();
@@ -218,31 +267,17 @@ public class RdbJdi {
         }
     }
 
-    public void send_composite_reply(byte[] bytes) {
+    public boolean send_resume_command(byte[] bytes) {
         try {
             PredictorToken token = new PredictorToken(bytes, null);
-            Composite composite = new Composite(vm, token.commandStream());
-            Ax.out("Composite: suspend: " + composite.suspendPolicy);
-            for (Events events : composite.events) {
-                Ax.out(events.aEventsCommon);
-                EventsCommon common = events.aEventsCommon;
-                if (common instanceof ThreadStart) {
-                    Ax.out("Thread start: ref %s",
-                            ((ThreadStart) common).thread.ref);
-                }
-                if (common instanceof Breakpoint) {
-                    Breakpoint breakpoint = (Breakpoint) common;
-                    Ax.out("Breakpoint: ref %s", breakpoint.thread.ref);
-                    if (breakpoint.location.declaringType().name()
-                            .equals("java.lang.Thread")) {
-                        // instantly resume - this was set by Eclipse to monitor
-                        // name changes
-                        Resume.enqueueCommand(vm, breakpoint.thread);
-                    }
-                }
+            long thread = token.commandStream().readThreadReference().ref;
+            int sentCount = earlyBreakpointResumes.getOrDefault(thread, 0);
+            earlyBreakpointResumes.put(thread,
+                    sentCount <= 0 ? 0 : sentCount - 1);
+            if (sentCount != 0) {
+                int debug = 3;
             }
-            Ax.out("--------\n");
-            int debug = 3;
+            return sentCount == 0;
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }

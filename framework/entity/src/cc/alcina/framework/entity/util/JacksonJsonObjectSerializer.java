@@ -172,11 +172,12 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
     private <T> T runWithObjectMapper(
             Function<ObjectMapper, T> mapperFunction) {
-        ObjectMapper mapper = objectMappersPool.get(this).borrow();
+        ObjectMapperPool pool = objectMappersPool.get(this);
+        ObjectMapper mapper = pool.borrow();
         try {
             return mapperFunction.apply(mapper);
         } finally {
-            objectMappersPool.get(this).returnObject(mapper);
+            pool.returnObject(mapper);
         }
     }
 

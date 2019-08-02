@@ -64,8 +64,14 @@ class DebuggerState {
                 }
                 break;
             case all_threads_handshake: {
-                if (!expectingPredictive) {
-                    next = EventSeries.admin_post_handshake;
+                switch (name) {
+                case "CapabilitiesNew":
+                case "IsCollected":
+                    break;
+                default:
+                    if (!expectingPredictive) {
+                        next = EventSeries.admin_post_handshake;
+                    }
                 }
                 break;
             }

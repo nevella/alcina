@@ -173,7 +173,7 @@ abstract class Endpoint {
                 oracle.beforePacketMiss(packet);
             }
             oracle.analysePacket(packet);
-            oracle.handlePacket(packetEndpoint, packet);
+            boolean send = oracle.handlePacket(packetEndpoint, packet);
             /*
              * logic: if the predicitive packets can't answer all jdwp requests,
              * they may be out of date...
@@ -190,11 +190,16 @@ abstract class Endpoint {
                 logger.info("Packets: {}/{}", predictiveReplyPacketCounter,
                         inPacketCounter);
             }
-            otherPacketEndpoint.addOutPacket(packet);
-            otherPacketEndpoint.host.addPredictivePackets(
-                    packetEndpoint.flushPredictivePackets());
-            if (packet.meta.mustSend) {
-                break;
+            if (send) {
+                otherPacketEndpoint.addOutPacket(packet);
+                otherPacketEndpoint.host.addPredictivePackets(
+                        packetEndpoint.flushPredictivePackets());
+                if (packet.meta.mustSend) {
+                    break;
+                }
+            } else {
+                logger.info("Dropping packet :: {}\t{}", packetEndpoint,
+                        packet);
             }
         }
     }

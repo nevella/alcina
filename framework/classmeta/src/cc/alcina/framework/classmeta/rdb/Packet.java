@@ -29,6 +29,8 @@ class Packet {
 
     boolean isPredictive;
 
+    boolean isBreakpoint;
+
     public String fromName;
 
     public String messageName;
