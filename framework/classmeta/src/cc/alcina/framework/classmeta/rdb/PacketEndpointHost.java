@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.classmeta.rdb.Packet.EventSeries;
+import cc.alcina.framework.classmeta.rdb.Packet.HandshakePacket;
 import cc.alcina.framework.classmeta.rdb.Packet.PacketPair;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -181,7 +182,8 @@ interface PacketEndpointHost {
         }
 
         synchronized boolean hasOutReplyPacket() {
-            return outPackets.stream().anyMatch(p -> p.isReply);
+            return outPackets.stream()
+                    .anyMatch(p -> p.isReply || p instanceof HandshakePacket);
         }
 
         synchronized Packet next() {
