@@ -186,6 +186,10 @@ interface PacketEndpointHost {
                     .anyMatch(p -> p.isReply || p instanceof HandshakePacket);
         }
 
+        synchronized boolean hasPendingInPackets() {
+            return inPackets.size() > 0;
+        }
+
         synchronized Packet next() {
             return inPackets.isEmpty() ? null : inPackets.pop();
         }

@@ -261,7 +261,13 @@ abstract class Endpoint {
                             // who knows - there may be a .concurrent class that
                             // does this too
                             eventsAtStartOfLoop = receivedPacketCounter.get();
-                            if (eventsAtStartOfLoop == eventsProcessed) {
+                            boolean pendingInPackets = streams != null
+                                    && (streams.packetEndpoint
+                                            .hasPendingInPackets()
+                                            || transport.packetEndpoint
+                                                    .hasPendingInPackets());
+                            if (eventsAtStartOfLoop == eventsProcessed
+                                    && !pendingInPackets) {
                                 receivedPacketCounter.wait();
                             }
                         }
