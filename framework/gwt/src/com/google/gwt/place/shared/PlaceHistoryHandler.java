@@ -52,6 +52,8 @@ public class PlaceHistoryHandler {
 
     private String lastFiredToken = null;
 
+    private String defaultPlaceToken = "";
+
     /**
      * Create a new PlaceHistoryHandler with a {@link DefaultHistorian}. The
      * DefaultHistorian is created via a call to GWT.create(), so an alternative
@@ -76,6 +78,10 @@ public class PlaceHistoryHandler {
     public PlaceHistoryHandler(PlaceHistoryMapper mapper, Historian historian) {
         this.mapper = mapper;
         this.historian = historian;
+    }
+
+    public String getDefaultPlaceToken() {
+        return this.defaultPlaceToken;
     }
 
     /**
@@ -142,6 +148,10 @@ public class PlaceHistoryHandler {
         };
     }
 
+    public void setDefaultPlaceToken(String defaultPlaceToken) {
+        this.defaultPlaceToken = defaultPlaceToken;
+    }
+
     private void handleHistoryToken(String token) {
         Place newPlace = null;
         if (Ax.isBlank(token)) {
@@ -162,7 +172,7 @@ public class PlaceHistoryHandler {
 
     private String tokenForPlace(Place newPlace) {
         if (defaultPlaceSupplier.get().equals(newPlace)) {
-            return "";
+            return defaultPlaceToken;
         }
         String token = mapper.getToken(newPlace);
         if (token != null) {

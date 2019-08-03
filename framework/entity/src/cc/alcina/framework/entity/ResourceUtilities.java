@@ -881,6 +881,8 @@ public class ResourceUtilities {
 
         private HttpURLConnection connection;
 
+        private boolean gzip;
+
         public SimplePost(String strUrl, String postBody, StringMap headers) {
             this.strUrl = strUrl;
             this.postBody = postBody;
@@ -900,7 +902,9 @@ public class ResourceUtilities {
                 connection.setDoInput(true);
                 connection.setUseCaches(false);
                 connection.setRequestMethod("POST");
-                headers.put("accept-encoding", "gzip");
+                if (gzip) {
+                    headers.put("accept-encoding", "gzip");
+                }
                 for (Entry<String, String> e : headers.entrySet()) {
                     connection.setRequestProperty(e.getKey(), e.getValue());
                 }
@@ -932,6 +936,11 @@ public class ResourceUtilities {
 
         public String asString() throws Exception {
             return new String(asBytes(), StandardCharsets.UTF_8);
+        }
+
+        public SimplePost withGzip(boolean gzip) {
+            this.gzip = gzip;
+            return this;
         }
     }
 }
