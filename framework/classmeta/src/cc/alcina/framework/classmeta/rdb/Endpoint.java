@@ -252,6 +252,10 @@ abstract class Endpoint {
                     int eventsProcessed = 0;
                     while (true) {
                         int eventsAtStartOfLoop = 0;
+                        boolean pendingInPackets = streams != null
+                                && (streams.packetEndpoint.hasPendingInPackets()
+                                        || transport.packetEndpoint
+                                                .hasPendingInPackets());
                         synchronized (receivedPacketCounter) {
                             // the main thing is to not miss wakeups - so if an
                             // incoming packet is received on another thread
@@ -261,11 +265,6 @@ abstract class Endpoint {
                             // who knows - there may be a .concurrent class that
                             // does this too
                             eventsAtStartOfLoop = receivedPacketCounter.get();
-                            boolean pendingInPackets = streams != null
-                                    && (streams.packetEndpoint
-                                            .hasPendingInPackets()
-                                            || transport.packetEndpoint
-                                                    .hasPendingInPackets());
                             if (eventsAtStartOfLoop == eventsProcessed
                                     && !pendingInPackets) {
                                 receivedPacketCounter.wait();
