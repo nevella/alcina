@@ -213,6 +213,11 @@ public class InternalMetrics {
         if (trackers.isEmpty()) {
             return;
         }
+        boolean noSliceBecauseNoLongRunningMetrics = sliceOracle
+                .noSliceBecauseNoLongRunningMetrics(trackers.values());
+        if (noSliceBecauseNoLongRunningMetrics) {
+            return;
+        }
         long time = System.currentTimeMillis();
         sliceOracle.beforeSlicePass(threadMxBean);
         List<Long> ids = trackers.values().stream()
