@@ -11,6 +11,7 @@ import org.apache.log4j.PatternLayout;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.servlets.gzip.GzipHandler;
 
 import cc.alcina.framework.classmeta.rdb.HttpAcceptorHandler;
 import cc.alcina.framework.classmeta.rdb.RdbProxies;
@@ -110,13 +111,16 @@ public class ClassMetaServer {
             ctx.setHandler(new AntHandler());
             handlers.addHandler(ctx);
         }
+        GzipHandler gzipHandler = new GzipHandler();
         {
             ContextHandler ctx = new ContextHandler(handlers, "/rdb");
-            ctx.setHandler(new HttpAcceptorHandler());
+            gzipHandler.setHandler(new HttpAcceptorHandler());
+            ctx.setHandler(gzipHandler);
             handlers.addHandler(ctx);
         }
         server.setHandler(handlers);
         server.start();
+        gzipHandler.start();
         server.dumpStdErr();
         RdbProxies.get().start();
         server.join();

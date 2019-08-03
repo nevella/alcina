@@ -900,6 +900,7 @@ public class ResourceUtilities {
                 connection.setDoInput(true);
                 connection.setUseCaches(false);
                 connection.setRequestMethod("POST");
+                headers.put("accept-encoding", "gzip");
                 for (Entry<String, String> e : headers.entrySet()) {
                     connection.setRequestProperty(e.getKey(), e.getValue());
                 }

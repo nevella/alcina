@@ -30,7 +30,7 @@
 	<classpathentry kind="lib" path="lib/framework/entity/log4j-1.2.17.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-log4j-1.2.17/"/>
 	<classpathentry kind="lib" path="lib/framework/entity/xercesImpl_2.9.jar" sourcepath="/Users/ouiji/Documents/programmin/java/xerces-2_9_1/"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwtx-1.5.2.jar"/>
-	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar" sourcepath="/g/gwt"/>
+	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar" sourcepath="/g/minor/jetty.project"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwittir-trunk.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-html5-database.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA-sources.jar"/>
