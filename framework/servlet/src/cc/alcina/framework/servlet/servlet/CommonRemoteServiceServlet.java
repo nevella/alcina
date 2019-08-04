@@ -657,7 +657,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
             InternalMetrics.get().startTracker(rpcRequest,
                     () -> describeRpcRequest(f_rpcRequest, ""),
                     InternalMetricTypeAlcina.client,
-                    Thread.currentThread().getName());
+                    Thread.currentThread().getName(), () -> true);
             Method method;
             try {
                 method = this.getClass().getMethod(name,
@@ -1044,7 +1044,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                     InternalMetrics.get().startTracker(action,
                             () -> describeRemoteAction(action, ""),
                             InternalMetricTypeAlcina.service,
-                            action.getClass().getSimpleName());
+                            action.getClass().getSimpleName(), () -> true);
                 }
                 LooseContext.getContext().addTopicListener(
                         JobRegistry.TOPIC_JOB_STARTED, startListener);

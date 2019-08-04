@@ -105,7 +105,8 @@ public class DomainTransformPersistenceEvents {
                             InternalMetrics.get().startTracker(event,
                                     () -> describeEvent(event),
                                     InternalMetricTypeAlcina.service,
-                                    Thread.currentThread().getName());
+                                    Thread.currentThread().getName(),
+                                    () -> true);
                             listener.onDomainTransformRequestPersistence(event);
                         } finally {
                             InternalMetrics.get().endTracker(event);

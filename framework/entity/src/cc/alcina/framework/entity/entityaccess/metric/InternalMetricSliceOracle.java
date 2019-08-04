@@ -73,6 +73,8 @@ public class InternalMetricSliceOracle {
             return false;
         } else if (imd.type == InternalMetricTypeAlcina.health) {
             return true;
+        } else if (imd.type == InternalMetricTypeAlcina.api) {
+            return true;
         } else {
             throw new UnsupportedOperationException();
         }
