@@ -96,7 +96,6 @@ public class LightSet<H> extends AbstractSet<H>
         }
     }
 
-    @Override
     public Object clone() {
         return new LightSet<H>(this);
     }
