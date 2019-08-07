@@ -85,7 +85,9 @@ public class DomainStoreTransformSequencer {
     public synchronized void removePreLocalNonFireEventsThreadBarrier(
             long requestId) {
         logger.warn("Remove local barrier: {}", requestId);
-        preLocalNonFireEventsThreadBarrier.get(requestId).countDown();
+        CountDownLatch latch = preLocalNonFireEventsThreadBarrier
+                .get(requestId);
+        latch.countDown();
     }
 
     // called by the main firing sequence thread, since the local vm transforms
