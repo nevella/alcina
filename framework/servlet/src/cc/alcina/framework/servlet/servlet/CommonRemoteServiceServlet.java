@@ -135,6 +135,7 @@ import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.knowns.KnownsDeltaRequestHandler;
+import cc.alcina.framework.servlet.servlet.ServletLayerTransforms.TransformPriorityStd;
 
 /**
  *
@@ -656,7 +657,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
             InternalMetrics.get().startTracker(rpcRequest,
                     () -> describeRpcRequest(f_rpcRequest, ""),
                     InternalMetricTypeAlcina.client,
-                    Thread.currentThread().getName());
+                    Thread.currentThread().getName(), () -> true);
             Method method;
             try {
                 method = this.getClass().getMethod(name,
@@ -1043,7 +1044,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                     InternalMetrics.get().startTracker(action,
                             () -> describeRemoteAction(action, ""),
                             InternalMetricTypeAlcina.service,
-                            action.getClass().getSimpleName());
+                            action.getClass().getSimpleName(), () -> true);
                 }
                 LooseContext.getContext().addTopicListener(
                         JobRegistry.TOPIC_JOB_STARTED, startListener);
@@ -1166,6 +1167,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
             onAfterSpawnedThreadRun(properties);
             LooseContext.getContext().addTopicListener(
                     JobRegistry.TOPIC_JOB_STARTED, startListener);
+            ServletLayerTransforms.setPriority(TransformPriorityStd.Job);
             performActionAndWait(this.action);
         }
     }

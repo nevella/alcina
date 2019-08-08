@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.transaction.UserTransaction;
 
 import org.slf4j.Logger;
 
@@ -413,6 +414,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
     public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
             boolean createIfNonexistent, Long ignoreId, boolean caseInsensitive,
             boolean livePermissionsManager) {
+        boolean hadException = false;
         try {
             if (livePermissionsManager) {
                 connectPermissionsManagerToLiveObjects();
@@ -446,6 +448,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
             }
             return (T) ((l.size() == 0) ? null : l.get(0));
         } catch (Exception e) {
+            hadException = true;
             throw new WrappedRuntimeException(e);
         }
     }
@@ -1322,6 +1325,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
     protected String getUserNamePropertyName() {
         return "userName";
     }
+
+    protected abstract UserTransaction getUserTransaction();
 
     protected SearchResultsBase projectSearchResults(SearchResultsBase result) {
         return new EntityUtils().detachedClone(result);

@@ -268,6 +268,9 @@ public class Multimap<K, V extends List>
         return this.map.remove(key);
     }
 
+    // public boolean remove(Object key, Object value) {
+    //
+    // }
     public void removeValue(Object value) {
         for (V v : values()) {
             v.remove(value);

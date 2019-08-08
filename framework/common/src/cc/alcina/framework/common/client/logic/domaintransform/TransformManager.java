@@ -324,11 +324,11 @@ public abstract class TransformManager implements PropertyChangeListener,
     public void consume(DomainTransformEvent event)
             throws DomainTransformException {
         currentEvent = event;
-        HasIdAndLocalId obj = null;
+        HasIdAndLocalId object = null;
         TransformType transformType = event.getTransformType();
         if (transformType != TransformType.CREATE_OBJECT) {
-            obj = getObject(event);
-            if (obj == null) {
+            object = getObject(event);
+            if (object == null) {
                 throw new DomainTransformException(event,
                         DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND);
             }
@@ -344,18 +344,26 @@ public abstract class TransformManager implements PropertyChangeListener,
         }
         existingTargetValue = ensureEndpointInTransformGraph(
                 existingTargetValue);
+        HasIdAndLocalId existingTargetObject = null;
+        if (existingTargetValue instanceof HasIdAndLocalId) {
+            existingTargetObject = (HasIdAndLocalId) existingTargetValue;
+        }
         Object newTargetValue = transformType == null ? null
                 : getTargetObject(event, false);
-        if (!checkPermissions(obj, event, event.getPropertyName(),
+        HasIdAndLocalId newTargetObject = null;
+        if (newTargetValue instanceof HasIdAndLocalId) {
+            newTargetObject = (HasIdAndLocalId) newTargetValue;
+        }
+        if (!checkPermissions(object, event, event.getPropertyName(),
                 existingTargetValue)) {
             return;
         }
-        if (!checkPermissions(obj, event, event.getPropertyName(),
+        if (!checkPermissions(object, event, event.getPropertyName(),
                 newTargetValue)) {
             return;
         }
         getUndoManager().prepareUndo(event);
-        checkVersion(obj, event);
+        checkVersion(object, event);
         switch (transformType) {
         case CHANGE_PROPERTY_SIMPLE_VALUE:
         case ADD_REF_TO_COLLECTION:
@@ -370,28 +378,27 @@ public abstract class TransformManager implements PropertyChangeListener,
         // these cases will fire a new transform event (temp obj > domain obj),
         // so should not be processed further
         case NULL_PROPERTY_REF: {
-            int tmpDebug = 0;
         }
         case CHANGE_PROPERTY_REF:
         case CHANGE_PROPERTY_SIMPLE_VALUE:
-            if (isReplayingRemoteEvent() && obj == null) {
+            if (isReplayingRemoteEvent() && object == null) {
                 // it's been deleted on the client, but we've just now got the
                 // creation id
                 // note, should never occur TODO: notify server
                 return;
             }
-            propertyAccessor().setPropertyValue(obj, event.getPropertyName(),
+            propertyAccessor().setPropertyValue(object, event.getPropertyName(),
                     newTargetValue);
             String pn = event.getPropertyName();
             if (pn.equals(TransformManager.ID_FIELD_NAME)
                     || pn.equals(TransformManager.LOCAL_ID_FIELD_NAME)) {
-                getDomainObjects().changeMapping(obj, event.getObjectId(),
+                getDomainObjects().changeMapping(object, event.getObjectId(),
                         event.getObjectLocalId());
             }
             if (event.getCommitType() == CommitType.TO_LOCAL_BEAN) {
                 removeTransform(event);
             }
-            objectModified(obj, event, false);
+            objectModified(object, event, false);
             switch (transformType) {
             case NULL_PROPERTY_REF:
             case CHANGE_PROPERTY_REF:
@@ -415,9 +422,9 @@ public abstract class TransformManager implements PropertyChangeListener,
                      */
                     boolean fireCollectionMods = !equivalentValues
                             || alwaysFireObjectOwnerCollectionModifications();
-                    updateAssociation(event, obj, existingTargetValue, true,
+                    updateAssociation(event, object, existingTargetObject, true,
                             fireCollectionMods);
-                    updateAssociation(event, obj, newTargetValue, false,
+                    updateAssociation(event, object, newTargetObject, false,
                             fireCollectionMods);
                 }
                 break;
@@ -426,33 +433,33 @@ public abstract class TransformManager implements PropertyChangeListener,
         // add and removeref will not cause a property change, so no transform
         // removal
         case ADD_REF_TO_COLLECTION: {
-            maybeModifyAsPropertyChange(obj, event.getPropertyName(),
+            maybeModifyAsPropertyChange(object, event.getPropertyName(),
                     newTargetValue, CollectionModificationType.ADD);
-            Set set = (Set) propertyAccessor().getPropertyValue(obj,
+            Set set = (Set) propertyAccessor().getPropertyValue(object,
                     event.getPropertyName());
             if (!set.contains(newTargetValue)) {
                 doubleCheckAddition(set, newTargetValue);
             }
-            objectModified(obj, event, false);
-            updateAssociation(event, obj, newTargetValue, false, true);
-            collectionChanged(obj, newTargetValue);
+            objectModified(object, event, false);
+            updateAssociation(event, object, newTargetObject, false, true);
+            collectionChanged(object, newTargetValue);
         }
             break;
         case REMOVE_REF_FROM_COLLECTION: {
-            maybeModifyAsPropertyChange(obj, event.getPropertyName(),
+            maybeModifyAsPropertyChange(object, event.getPropertyName(),
                     newTargetValue, CollectionModificationType.REMOVE);
-            Set set = (Set) propertyAccessor().getPropertyValue(obj,
+            Set set = (Set) propertyAccessor().getPropertyValue(object,
                     event.getPropertyName());
             boolean wasContained = set.remove(newTargetValue);
             if (!wasContained) {
                 doubleCheckRemoval(set, newTargetValue);
             }
         }
-            updateAssociation(event, obj, newTargetValue, true, true);
-            collectionChanged(obj, newTargetValue);
+            updateAssociation(event, object, newTargetObject, true, true);
+            collectionChanged(object, newTargetValue);
             break;
         case DELETE_OBJECT:
-            performDeleteObject((HasIdAndLocalId) obj);
+            performDeleteObject((HasIdAndLocalId) object);
             break;
         case CREATE_OBJECT:
             if (event.getObjectId() != 0) {
@@ -807,8 +814,8 @@ public abstract class TransformManager implements PropertyChangeListener,
                         "calling getobject() on a provisional/deregistered object transform "
                                 + "- will harm the transform. use getsource() - \n%s\n",
                         dte);
-                throw new RuntimeException(
-                        new DomainTransformException(message));
+                throw new RuntimeException(new DomainTransformException(dte,
+                        DomainTransformExceptionType.UNKNOWN, message));
             }
         }
         dte.setSource(obj);
@@ -1535,6 +1542,9 @@ public abstract class TransformManager implements PropertyChangeListener,
         return false;
     }
 
+    protected void beforeAssociationChange(HasIdAndLocalId tgt) {
+    }
+
     /**
      * For subclasses Transform manager (client) explicitly doesn't check -
      * that's handled by (what's) the presented UI note - problems are mostly
@@ -1734,7 +1744,6 @@ public abstract class TransformManager implements PropertyChangeListener,
                     }
                 }
             }
-            int debug = 3;
         } finally {
             if (!deregister) {
                 registerProvisionalObject(objects);
@@ -1754,19 +1763,19 @@ public abstract class TransformManager implements PropertyChangeListener,
     }
 
     protected void updateAssociation(DomainTransformEvent evt,
-            HasIdAndLocalId obj, Object tgt, boolean remove,
-            boolean collectionPropertyChange) {
-        Association assoc = obj == null ? null
-                : propertyAccessor().getAnnotationForProperty(obj.getClass(),
+            HasIdAndLocalId object, HasIdAndLocalId targetObject,
+            boolean remove, boolean collectionPropertyChange) {
+        Association assoc = object == null ? null
+                : propertyAccessor().getAnnotationForProperty(object.getClass(),
                         Association.class, evt.getPropertyName());
-        if (tgt == null || assoc == null
+        if (targetObject == null || assoc == null
                 || assoc.propertyName().length() == 0) {
             return;
         }
-        HasIdAndLocalId hTgt = (HasIdAndLocalId) tgt;
-        hTgt = (HasIdAndLocalId) ensureEndpointInTransformGraph(hTgt);
-        Object associatedObject = propertyAccessor().getPropertyValue(tgt,
-                assoc.propertyName());
+        targetObject = (HasIdAndLocalId) ensureEndpointInTransformGraph(
+                targetObject);
+        Object associatedObject = propertyAccessor()
+                .getPropertyValue(targetObject, assoc.propertyName());
         associatedObject = ensureEndpointInTransformGraph(associatedObject);
         boolean assocObjIsCollection = associatedObject instanceof Collection;
         TransformType tt = assocObjIsCollection
@@ -1776,7 +1785,7 @@ public abstract class TransformManager implements PropertyChangeListener,
                         : TransformType.CHANGE_PROPERTY_REF;
         evt = new DomainTransformEvent();
         evt.setTransformType(tt);
-        maybeAddVersionNumbers(evt, obj, tgt);
+        maybeAddVersionNumbers(evt, object, targetObject);
         // No! Only should check one end of the relation for permissions
         // checkPermissions(hTgt, evt, assoc.propertyName());
         if (assocObjIsCollection) {
@@ -1788,19 +1797,22 @@ public abstract class TransformManager implements PropertyChangeListener,
                     throw new WrappedRuntimeException(e);
                 }
             }
+            if (!assoc.silentUpdates()) {
+                beforeAssociationChange(targetObject);
+            }
             if (remove) {
-                boolean wasContained = c.remove(obj);
+                boolean wasContained = c.remove(object);
                 if (!wasContained) {
-                    doubleCheckRemoval(c, obj);
+                    doubleCheckRemoval(c, object);
                 }
             } else {
-                if (!c.contains(obj)) {
-                    doubleCheckAddition(c, obj);
+                if (!c.contains(object)) {
+                    doubleCheckAddition(c, object);
                 }
             }
             if (collectionPropertyChange && !assoc.silentUpdates()) {
-                propertyAccessor().setPropertyValue(tgt, assoc.propertyName(),
-                        c);
+                propertyAccessor().setPropertyValue(targetObject,
+                        assoc.propertyName(), c);
             }
         } else {
             /*
@@ -1810,21 +1822,24 @@ public abstract class TransformManager implements PropertyChangeListener,
              * null if the assoc prop is the old value
              */
             if (remove) {
-                Object current = propertyAccessor().getPropertyValue(tgt,
-                        assoc.propertyName());
-                if (current == obj) {
-                    propertyAccessor().setPropertyValue(tgt,
+                Object current = propertyAccessor()
+                        .getPropertyValue(targetObject, assoc.propertyName());
+                if (current == object) {
+                    propertyAccessor().setPropertyValue(targetObject,
                             assoc.propertyName(), null);
                 }
             } else {
-                propertyAccessor().setPropertyValue(tgt, assoc.propertyName(),
-                        obj);
+                propertyAccessor().setPropertyValue(targetObject,
+                        assoc.propertyName(), object);
             }
             // shouldn't fire for collection props, probly. also, collection
             // mods are very unlikely to collide in a nasty way (since
             // membership is really just a bitset, and colliding colln mods will
             // often not actually hit each other)
-            objectModified(hTgt, evt, true);
+            //
+            // "probably" means "at the moment we don't fire - i.e. don't mark
+            // the target object as updated"
+            objectModified(targetObject, evt, true);
         }
     }
 

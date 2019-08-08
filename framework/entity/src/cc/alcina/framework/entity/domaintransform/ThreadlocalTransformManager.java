@@ -1262,16 +1262,17 @@ public class ThreadlocalTransformManager extends TransformManager
     // No need for property changes here - if in entitylayer
     // TODO - isn't this a huge hit?
     protected void updateAssociation(DomainTransformEvent evt,
-            HasIdAndLocalId obj, Object tgt, boolean remove,
-            boolean collectionPropertyChange) {
+            HasIdAndLocalId object, HasIdAndLocalId targetObject,
+            boolean remove, boolean collectionPropertyChange) {
         if (getEntityManager() == null) {
-            super.updateAssociation(evt, obj, tgt, remove, false);
+            super.updateAssociation(evt, object, targetObject, remove, false);
         } else {
             ManyToMany manyToMany = Reflections.propertyAccessor()
                     .getAnnotationForProperty(evt.getObjectClass(),
                             ManyToMany.class, evt.getPropertyName());
             if (manyToMany != null && manyToMany.mappedBy().length() != 0) {
-                super.updateAssociation(evt, obj, tgt, remove, false);
+                super.updateAssociation(evt, object, targetObject, remove,
+                        false);
             }
         }
     }

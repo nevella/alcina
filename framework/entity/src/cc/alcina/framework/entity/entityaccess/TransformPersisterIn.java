@@ -72,6 +72,7 @@ public class TransformPersisterIn {
             final TransformPersistenceToken token,
             CommonPersistenceBase commonPersistenceBase,
             EntityManager entityManager, DomainTransformLayerWrapper wrapper) {
+        Date startPersistTime = new Date();
         this.entityManager = entityManager;
         IUser incomingUser = PermissionsManager.get().getUser();
         commonPersistenceBase.connectPermissionsManagerToLiveObjects(true);
@@ -309,7 +310,14 @@ public class TransformPersisterIn {
                 if (token.getPass() == Pass.TRY_COMMIT) {
                     if (ResourceUtilities.is(TransformPersister.class,
                             "flushWithEveryRequest")) {
-                        entityManager.flush();// any exceptions...here we are
+                        // defaults to true - remember this isn't committing -
+                        // isn't much of a speed bump given significant requests
+                        // are almost always server-side, non-'with unpublished'
+                        /*
+                         * Nice thing about this is that it means no dtrp if
+                         * there are any issues
+                         */
+                        entityManager.flush();
                     }
                     CollectionFilter<DomainTransformEvent> filterByPolicy = new CollectionFilter<DomainTransformEvent>() {
                         @Override
@@ -334,6 +342,7 @@ public class TransformPersisterIn {
                         DomainTransformRequestPersistent dtrp = dtrqImpl
                                 .newInstance();
                         tm.persist(dtrp);
+                        dtrp.setStartPersistTime(startPersistTime);
                         DomainStore.stores().writableStore()
                                 .getPersistenceEvents().getQueue()
                                 .registerPersisting(dtrp);

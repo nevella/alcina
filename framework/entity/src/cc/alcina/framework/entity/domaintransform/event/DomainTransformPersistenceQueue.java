@@ -2,10 +2,11 @@ package cc.alcina.framework.entity.domaintransform.event;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,6 +21,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPositionProvider;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -37,7 +39,9 @@ import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreTransformSequencer;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
 /**
@@ -53,7 +57,7 @@ public class DomainTransformPersistenceQueue {
 
     final Logger logger = LoggerFactory.getLogger(getClass());
 
-    Set<Long> firing = new LinkedHashSet<>();
+    Set<Long> firingLocalToVm = new LinkedHashSet<>();
 
     // most recent event
     Set<Long> lastFired = new LinkedHashSet<>();
@@ -76,6 +80,8 @@ public class DomainTransformPersistenceQueue {
 
     private DomainTransformPersistenceEvents persistenceEvents;
 
+    private Thread firingThread = null;
+
     public DomainTransformPersistenceQueue(
             DomainTransformPersistenceEvents persistenceEvents) {
         this.persistenceEvents = persistenceEvents;
@@ -91,6 +97,20 @@ public class DomainTransformPersistenceQueue {
         }
     }
 
+    public Thread getFireEventsThread() {
+        return eventQueue;
+    }
+
+    public Thread getFiringThread() {
+        return this.firingThread;
+    }
+
+    public int getToFireQueueLength() {
+        synchronized (queueModificationLock) {
+            return toFire.size();
+        }
+    }
+
     public DomainTransformCommitPosition getTransformLogPosition() {
         synchronized (queueModificationLock) {
             return new DomainTransformCommitPosition(
@@ -100,8 +120,15 @@ public class DomainTransformPersistenceQueue {
 
     public void registerPersisting(DomainTransformRequestPersistent dtrp) {
         synchronized (queueModificationLock) {
-            firing.add(dtrp.getId());
+            firingLocalToVm.add(dtrp.getId());
         }
+    }
+
+    public void sequencedTransformRequestPublished() {
+        List<Long> sequentialUnpublishedTransformIds = persistenceEvents.domainStore
+                .getTransformSequencer().getSequentialUnpublishedTransformIds();
+        fireSequentialUnpublishedTransformIds(
+                sequentialUnpublishedTransformIds);
     }
 
     public void startEventQueue() {
@@ -109,17 +136,17 @@ public class DomainTransformPersistenceQueue {
         eventQueue.start();
     }
 
-    public void transformRequestPublished(long id) {
+    public String toDebugString() {
         synchronized (queueModificationLock) {
-            if (firedOrQueued.contains(id)) {
-                return;
-            } else {
-                firedOrQueued.add(id);
-                synchronized (toFire) {
-                    toFire.add(id);
-                    toFire.notify();
-                }
-            }
+            return GraphProjection.fieldwiseToString(this);
+        }
+    }
+
+    public void transformRequestPublished(Long id) {
+        if (persistenceEvents.isUseTransformDbCommitSequencing()) {
+            sequencedTransformRequestPublished();
+        } else {
+            transformRequestPublishedSequential(id);
         }
     }
 
@@ -159,6 +186,22 @@ public class DomainTransformPersistenceQueue {
         }
     }
 
+    public void waitUntilToFireQueueEmpty() {
+        while (true) {
+            synchronized (queueModificationLock) {
+                if (toFire.size() == 0) {
+                    return;
+                }
+            }
+            try {
+                Thread.sleep(1000);
+                logger.warn("Waiting for toFire queue to empty");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private DomainTransformPersistenceEvent createPersistenceEventFromPersistedRequest(
             DomainTransformRequestPersistent dtrp) {
         // create an "event" to publish in the queue
@@ -179,6 +222,13 @@ public class DomainTransformPersistenceQueue {
         DomainTransformPersistenceEvent persistenceEvent = new DomainTransformPersistenceEvent(
                 persistenceToken, wrapper, false);
         return persistenceEvent;
+    }
+
+    private void fireSequentialUnpublishedTransformIds(
+            List<Long> sequentialUnpublishedTransformIds) {
+        for (Long sequentialId : sequentialUnpublishedTransformIds) {
+            transformRequestPublishedSequential(sequentialId);
+        }
     }
 
     private Logger getLogger(boolean localToVm) {
@@ -202,6 +252,20 @@ public class DomainTransformPersistenceQueue {
                     .setDisabledPerThreadPerObjectPermissions(false);
             ThreadedPermissionsManager.cast().popSystemUser();
             LooseContext.pop();
+        }
+    }
+
+    private void transformRequestPublishedSequential(long id) {
+        synchronized (queueModificationLock) {
+            if (firedOrQueued.contains(id)) {
+                return;
+            } else {
+                firedOrQueued.add(id);
+                synchronized (toFire) {
+                    toFire.add(id);
+                    toFire.notify();
+                }
+            }
         }
     }
 
@@ -230,6 +294,7 @@ public class DomainTransformPersistenceQueue {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        firingThread = null;
     }
 
     void logFiring(DomainTransformPersistenceEvent event) {
@@ -237,6 +302,7 @@ public class DomainTransformPersistenceQueue {
         if (persistedRequestIds.isEmpty()) {
             return;
         }
+        firingThread = Thread.currentThread();
         Logger logger = getLogger(event.isLocalToVm());
         logger.info("firing - {} - {} - range {}",
                 Ax.friendly(event.getPersistenceEventType()),
@@ -245,15 +311,15 @@ public class DomainTransformPersistenceQueue {
                         CollectionFilters.max(persistedRequestIds)));
     }
 
-    void transformRequestPublishedLocal(long id) {
+    void transformRequestFinishedFiring(long id) {
         synchronized (queueModificationLock) {
             firedOrQueued.add(id);
             lastFired.add(id);
-            firing.remove(id);
+            firingLocalToVm.remove(id);
         }
     }
 
-    void transformRequestQueuedLocal(long id) {
+    void transformRequestQueued(long id) {
         synchronized (queueModificationLock) {
             firedOrQueued.add(id);
         }
@@ -276,6 +342,8 @@ public class DomainTransformPersistenceQueue {
 
     public class FireEventsThread extends Thread {
         Logger fireEventThreadLogger = LoggerFactory.getLogger(getClass());
+
+        Map<Long, DomainTransformRequestPersistent> loadedRequests = new LinkedHashMap<>();
 
         @Override
         public void run() {
@@ -309,33 +377,85 @@ public class DomainTransformPersistenceQueue {
             }
         }
 
-        protected void publishTransformEvent(Long id) {
-            try {
-                DomainTransformRequestPersistent request = null;
-                if (persistenceEvents.domainStore == DomainStore.stores()
-                        .writableStore()) {
-                    // TODO - could replace with the DomainStore loader - but wd
-                    // need to load modification etc user
-                    List<DomainTransformRequestPersistent> requests = runWithDisabledObjectPermissions(
-                            () -> getCommonPersistence()
-                                    .getPersistentTransformRequests(0, 0,
-                                            Collections.singletonList(id),
-                                            false, true,
-                                            fireEventThreadLogger));
-                    request = CommonUtils.first(requests);
-                } else {
-                    request = persistenceEvents.domainStore
-                            .loadTransformRequest(id, fireEventThreadLogger);
+        private void publishTransformEvent(long id) {
+            boolean local = false;
+            fireEventThreadLogger.info("publishTransformEvent - dtr {}", id);
+            synchronized (queueModificationLock) {
+                local = firingLocalToVm.contains(id);
+            }
+            if (local) {
+                DomainStoreTransformSequencer transformSequencer = DomainStore
+                        .writableStore().getTransformSequencer();
+                transformSequencer.removePreLocalNonFireEventsThreadBarrier(id);
+                // transforming thread will now fire...
+                // following call may happen after transformingthread has
+                // removed the barrier, so check there
+                transformSequencer.waitForPostLocalFireEventsThreadBarrier(id);
+                return;
+            } else {
+                try {
+                    DomainTransformRequestPersistent request = null;
+                    ensureRequestsLoaded(id);
+                    request = loadedRequests.get(id);
+                    if (request != null) {
+                        if (Ax.isTest() && request.getClientInstance()
+                                .getId() == PermissionsManager.get()
+                                        .getClientInstanceId()) {
+                            // local persisted via server
+                            DomainStoreTransformSequencer transformSequencer = DomainStore
+                                    .writableStore().getTransformSequencer();
+                            transformSequencer
+                                    .removePreLocalNonFireEventsThreadBarrier(
+                                            id);
+                            transformSequencer
+                                    .waitForPostLocalFireEventsThreadBarrier(
+                                            id);
+                            return;
+                        }
+                        DomainTransformPersistenceEvent event = createPersistenceEventFromPersistedRequest(
+                                request);
+                        event.ensureTransformsValidForVm();
+                        persistenceEvents
+                                .fireDomainTransformPersistenceEvent(event);
+                        loadedRequests.remove(id);
+                    } else {
+                        fireEventThreadLogger.warn(
+                                "publishTransformEvent - missed (no transforms?) dtr {}",
+                                id);
+                    }
+                } catch (Exception e) {
+                    throw new WrappedRuntimeException(e);
                 }
-                if (request != null) {
-                    DomainTransformPersistenceEvent event = createPersistenceEventFromPersistedRequest(
-                            request);
-                    event.ensureTransformsValidForVm();
-                    persistenceEvents
-                            .fireDomainTransformPersistenceEvent(event);
+            }
+        }
+
+        void ensureRequestsLoaded(long ensureId) throws Exception {
+            Set<Long> idsRequired = new LinkedHashSet<>();
+            idsRequired.add(ensureId);
+            synchronized (toFire) {
+                toFire.stream().filter(id -> !loadedRequests.containsKey(id))
+                        .forEach(idsRequired::add);
+            }
+            if (!idsRequired.isEmpty()) {
+                List<DomainTransformRequestPersistent> requests = null;
+                requests = persistenceEvents.domainStore.loadTransformRequests(
+                        idsRequired, fireEventThreadLogger);
+                if (Ax.isTest()) {
+                    List<DomainTransformRequestPersistent> extraRequestData = CommonPersistenceProvider
+                            .get().getCommonPersistence()
+                            .getPersistentTransformRequests(0, 0, idsRequired,
+                                    false, true, null);
+                    List<DomainTransformRequestPersistent> f_requests = requests;
+                    extraRequestData.forEach(r -> {
+                        f_requests.stream()
+                                .filter(r2 -> r2.getId() == r.getId())
+                                .forEach(r2 -> {
+                                    r2.setRequestId(r.getRequestId());
+                                    r2.setClientInstance(r.getClientInstance());
+                                });
+                    });
                 }
-            } catch (Exception e) {
-                throw new WrappedRuntimeException(e);
+                requests.forEach(r -> loadedRequests.put(r.getId(), r));
             }
         }
     }
@@ -345,7 +465,7 @@ public class DomainTransformPersistenceQueue {
 
         public void pauseUntilProcessed(long timeoutMs) {
             synchronized (queueModificationLock) {
-                waiting = new LinkedHashSet<>(firing);
+                waiting = new LinkedHashSet<>(firingLocalToVm);
             }
             long startTime = System.currentTimeMillis();
             while (true) {

@@ -1,5 +1,7 @@
 package cc.alcina.framework.classmeta;
 
+import java.io.ByteArrayOutputStream;
+
 import org.apache.log4j.Appender;
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
@@ -9,7 +11,10 @@ import org.apache.log4j.PatternLayout;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.servlets.gzip.GzipHandler;
 
+import cc.alcina.framework.classmeta.rdb.HttpAcceptorHandler;
+import cc.alcina.framework.classmeta.rdb.RdbProxies;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -19,10 +24,26 @@ import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.util.BiPrintStream;
+import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 
 public class ClassMetaServer {
+    private static BiPrintStream out;
+
+    private static BiPrintStream err;
+    static {
+        err = new BiPrintStream(new ByteArrayOutputStream());
+        err.s1 = System.err;
+        err.s2 = new NullPrintStream();
+        out = new BiPrintStream(new ByteArrayOutputStream());
+        out.s1 = System.out;
+        out.s2 = new NullPrintStream();
+        System.setErr(err);
+        System.setOut(out);
+    }
+
     public static void main(String[] args) {
         try {
             new ClassMetaServer().start();
@@ -30,6 +51,9 @@ public class ClassMetaServer {
             throw new WrappedRuntimeException(e);
         }
     }
+
+    @SuppressWarnings("unused")
+    private RdbProxies rdbProxies;
 
     private void initLoggers() {
         Logger logger = Logger.getRootLogger();
@@ -61,6 +85,7 @@ public class ClassMetaServer {
     private void initRegistry() {
         Registry.registerSingleton(TimerWrapperProvider.class,
                 new TimerWrapperProviderJvm());
+        Registry.registerSingleton(RdbProxies.class, new RdbProxies());
     }
 
     private void start() throws Exception {
@@ -86,9 +111,18 @@ public class ClassMetaServer {
             ctx.setHandler(new AntHandler());
             handlers.addHandler(ctx);
         }
+        GzipHandler gzipHandler = new GzipHandler();
+        {
+            ContextHandler ctx = new ContextHandler(handlers, "/rdb");
+            gzipHandler.setHandler(new HttpAcceptorHandler());
+            ctx.setHandler(gzipHandler);
+            handlers.addHandler(ctx);
+        }
         server.setHandler(handlers);
         server.start();
+        gzipHandler.start();
         server.dumpStdErr();
+        RdbProxies.get().start();
         server.join();
     }
 }

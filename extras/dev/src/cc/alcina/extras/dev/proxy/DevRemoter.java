@@ -7,7 +7,9 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -27,8 +29,12 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
+import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
+import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.PostTransactionEntityResolver;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
 
@@ -110,6 +116,19 @@ public class DevRemoter {
                         .setPostTransactionEntityResolver(
                                 (PostTransactionEntityResolver) container
                                         .get(1));
+                DomainTransformLayerWrapper wrapper = (DomainTransformLayerWrapper) container
+                        .get(0);
+                List<Long> ids = wrapper.persistentRequests.stream()
+                        .map(rq -> rq.getId()).collect(Collectors.toList());
+                // reload bcoz won't have dte.source filled
+                List<DomainTransformRequestPersistent> requests = DomainStore
+                        .writableStore().loadTransformRequests(ids, null);
+                wrapper.persistentRequests = requests;
+                wrapper.persistentEvents = (List<DomainTransformEventPersistent>) (List) requests
+                        .stream()
+                        .map(DomainTransformRequestPersistent::getEvents)
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toList());
             }
             return obj;
         } finally {

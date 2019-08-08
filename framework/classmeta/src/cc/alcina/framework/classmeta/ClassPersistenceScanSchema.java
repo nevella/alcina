@@ -9,27 +9,22 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 @XmlRootElement
 public class ClassPersistenceScanSchema {
-	public List<String> classPathUrls = new ArrayList<>();
+    public List<String> classPathUrls = new ArrayList<>();
 
-	public String targetPath;
+    public String targetPath;
 
-	public String sourceScanPath;
+    public String scanResourcePath;
 
-	public String sourceNoScanPath;
-	
-	public String scanResourcePath;
+    public String scanClasspathCachePath;
 
-	public String scanClasspathCachePath;
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof ClassPersistenceScanSchema) {
-			ClassPersistenceScanSchema o = (ClassPersistenceScanSchema) obj;
-			return CommonUtils.equals(classPathUrls, o.classPathUrls,
-					targetPath, o.targetPath, sourceScanPath, o.sourceScanPath,
-					sourceNoScanPath, o.sourceNoScanPath);
-		} else {
-			return false;
-		}
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ClassPersistenceScanSchema) {
+            ClassPersistenceScanSchema o = (ClassPersistenceScanSchema) obj;
+            return CommonUtils.equals(classPathUrls, o.classPathUrls,
+                    targetPath, o.targetPath);
+        } else {
+            return false;
+        }
+    }
 }

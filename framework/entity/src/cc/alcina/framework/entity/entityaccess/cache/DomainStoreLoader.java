@@ -1,5 +1,8 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import java.util.Collection;
+import java.util.List;
+
 import org.slf4j.Logger;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
@@ -10,8 +13,12 @@ public interface DomainStoreLoader {
 
     LazyObjectLoader getLazyObjectLoader();
 
-    DomainTransformRequestPersistent loadTransformRequest(Long id,
-            Logger logger) throws Exception;
+    DomainStoreTransformSequencer getTransformSequencer();
+
+    List<DomainTransformRequestPersistent> loadTransformRequests(
+            Collection<Long> ids, Logger logger) throws Exception;
+
+    void onTransformsPersisted();
 
     void warmup() throws Exception;
 }

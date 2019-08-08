@@ -165,11 +165,14 @@ public class InternalMetrics {
 
     public void startTracker(Object markerObject,
             Supplier<String> callContextProvider, InternalMetricType type,
-            String metricName) {
+            String metricName, Supplier<Boolean> trackMetricsEnabled) {
         if (!started) {
             return;
         }
         if (!ResourceUtilities.is(InternalMetrics.class, "enabled")) {
+            return;
+        }
+        if (!trackMetricsEnabled.get()) {
             return;
         }
         if (trackers.size() > MAX_TRACKERS) {
@@ -207,7 +210,15 @@ public class InternalMetrics {
     }
 
     private void slice() {
+        if (!ResourceUtilities.is("enabled")) {
+            return;
+        }
         if (trackers.isEmpty()) {
+            return;
+        }
+        boolean noSliceBecauseNoLongRunningMetrics = sliceOracle
+                .noSliceBecauseNoLongRunningMetrics(trackers.values());
+        if (noSliceBecauseNoLongRunningMetrics) {
             return;
         }
         long time = System.currentTimeMillis();
@@ -393,6 +404,6 @@ public class InternalMetrics {
     }
 
     public enum InternalMetricTypeAlcina implements InternalMetricType {
-        client, service, health;
+        client, service, health, api;
     }
 }

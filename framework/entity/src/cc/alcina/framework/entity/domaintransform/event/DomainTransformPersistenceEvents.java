@@ -39,6 +39,7 @@ public class DomainTransformPersistenceEvents {
 
     public void fireDomainTransformPersistenceEvent(
             DomainTransformPersistenceEvent event) {
+        DomainStore.writableStore().onTransformsPersisted();
         fireDomainTransformPersistenceEvent0(event);
         event.getPostEventRunnables().forEach(Runnable::run);
     }
@@ -57,36 +58,76 @@ public class DomainTransformPersistenceEvents {
         queue.startEventQueue();
     }
 
-    private synchronized void fireDomainTransformPersistenceEvent0(
+    private void fireDomainTransformPersistenceEvent0(
             DomainTransformPersistenceEvent event) {
-        try {
-            queue.logFiring(event);
-            if (event.getPersistedRequestIds() != null) {
-                event.getPersistedRequestIds()
-                        .forEach(queue::transformRequestQueuedLocal);
+        boolean hasRequests = event.getPersistedRequestIds() != null
+                && event.getPersistedRequestIds().size() > 0;
+        long firstRequestId = hasRequests
+                ? event.getPersistedRequestIds().get(0)
+                : 0;
+        if (hasRequests && event.isLocalToVm()) {
+            if (Ax.isTest()) {
+                // won't know that the companion dev server is persisting this
+                // persistent rq id (and is logically "local") until now
+                queue.registerPersisting(event
+                        .getDomainTransformLayerWrapper().persistentRequests
+                                .get(0));
             }
-            for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
-                    listenerList)) {
-                // only fire ex-machine transforms to certain general listeners
+            domainStore.getTransformSequencer()
+                    .waitForPreLocalNonFireEventsThreadBarrier(firstRequestId);
+        }
+        for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
+                listenerList)) {
+            if (listener.isSequencingListener()) {
                 if (event.isLocalToVm()
                         || nonThreadListenerList.contains(listener)) {
-                    try {
-                        InternalMetrics.get().startTracker(event,
-                                () -> describeEvent(event),
-                                InternalMetricTypeAlcina.service,
-                                Thread.currentThread().getName());
-                        listener.onDomainTransformRequestPersistence(event);
-                    } finally {
-                        InternalMetrics.get().endTracker(event);
-                    }
+                    listener.onDomainTransformRequestPersistence(event);
                 }
             }
-        } finally {
-            if (event.getPersistedRequestIds() != null) {
-                event.getPersistedRequestIds()
-                        .forEach(queue::transformRequestPublishedLocal);
+        }
+        synchronized (this) {
+            try {
+                queue.logFiring(event);
+                if (hasRequests) {
+                    event.getPersistedRequestIds()
+                            .forEach(queue::transformRequestQueued);
+                }
+                for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
+                        listenerList)) {
+                    if (listener.isSequencingListener()) {
+                        continue;
+                    }
+                    // only fire ex-machine transforms to certain general
+                    // listeners
+                    if (event.isLocalToVm()
+                            || nonThreadListenerList.contains(listener)) {
+                        try {
+                            InternalMetrics.get().startTracker(event,
+                                    () -> describeEvent(event),
+                                    InternalMetricTypeAlcina.service,
+                                    Thread.currentThread().getName(),
+                                    () -> true);
+                            listener.onDomainTransformRequestPersistence(event);
+                        } finally {
+                            InternalMetrics.get().endTracker(event);
+                        }
+                    }
+                }
+            } finally {
+                if (hasRequests) {
+                    event.getPersistedRequestIds()
+                            .forEach(queue::transformRequestFinishedFiring);
+                }
+                if (hasRequests && event.isLocalToVm()) {
+                    domainStore.getTransformSequencer()
+                            .finishedFiringLocalEvent(firstRequestId);
+                }
+                /*
+                 * this can block if cascaded transforms were called, so run
+                 * after finishedFiringLocalEvent
+                 */
+                queue.logFired(event);
             }
-            queue.logFired(event);
         }
     }
 
@@ -94,5 +135,10 @@ public class DomainTransformPersistenceEvents {
         return Ax.format("Persistence event: id: %s - %s",
                 CommonUtils.first(event.getPersistedRequestIds()),
                 event.getPersistenceEventType());
+    }
+
+    boolean isUseTransformDbCommitSequencing() {
+        return domainStore.getDomainDescriptor()
+                .isUseTransformDbCommitSequencing();
     }
 }

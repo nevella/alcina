@@ -162,7 +162,7 @@ public class AntHandler extends AbstractHandler {
                         public void run() {
                             runBuildTargets();
                         }
-                    }).maxDelayFromFirstAction(500);
+                    }).maxDelayFromFirstAction(9999);
 
             private CachingAntProject project;
 

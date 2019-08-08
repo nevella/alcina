@@ -10,137 +10,154 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor.IdLookupDescriptor;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class DomainClassDescriptor<T extends HasIdAndLocalId> {
-	public Class<T> clazz;
+    public Class<T> clazz;
 
-	public List<DomainStoreLookupDescriptor> lookupDescriptors = new ArrayList<DomainStoreLookupDescriptor>();
+    public List<DomainStoreLookupDescriptor> lookupDescriptors = new ArrayList<DomainStoreLookupDescriptor>();
 
-	public List<DomainProjection> projections = new ArrayList<DomainProjection>();
+    public List<DomainProjection> projections = new ArrayList<DomainProjection>();
 
-	private StringMap propertyAlia = new StringMap();
-	
-	private Map<Object,DomainStoreLookupDescriptor> aliasedFunctionLookups = new LinkedHashMap<>();
+    private StringMap propertyAlia = new StringMap();
 
-	public boolean lazy = false;
+    private Map<Object, DomainStoreLookupDescriptor> aliasedFunctionLookups = new LinkedHashMap<>();
 
-	public DomainClassDescriptor(Class<T> clazz) {
-		this.clazz = clazz;
-	}
+    public boolean lazy = false;
 
-	public DomainClassDescriptor(Class<T> clazz, boolean idLookups,
-			String... propertyIndicies) {
-		this.clazz = clazz;
-		for (String propertyIndex : propertyIndicies) {
-			addLookup(new IdLookupDescriptor(clazz, propertyIndex));
-		}
-	}
+    Logger logger = LoggerFactory.getLogger(getClass());
 
-	public DomainClassDescriptor(Class<T> clazz, String... propertyIndicies) {
-		this.clazz = clazz;
-		for (String propertyIndex : propertyIndicies) {
-			addLookup(new DomainStoreLookupDescriptor(clazz, propertyIndex));
-		}
-	}
+    public DomainClassDescriptor(Class<T> clazz) {
+        this.clazz = clazz;
+    }
 
-	public DomainClassDescriptor<T> addLookup(DomainStoreLookupDescriptor lookup) {
-		lookupDescriptors.add(lookup);
-		return this;
-	}
+    public DomainClassDescriptor(Class<T> clazz, boolean idLookups,
+            String... propertyIndicies) {
+        this.clazz = clazz;
+        for (String propertyIndex : propertyIndicies) {
+            addLookup(new IdLookupDescriptor(clazz, propertyIndex));
+        }
+    }
 
-	public void addPropertyAlias(String from, String to) {
-		propertyAlia.put(from, to);
-	}
+    public DomainClassDescriptor(Class<T> clazz, String... propertyIndicies) {
+        this.clazz = clazz;
+        for (String propertyIndex : propertyIndicies) {
+            addLookup(new DomainStoreLookupDescriptor(clazz, propertyIndex));
+        }
+    }
 
-	public Set<Long> evaluateFilter(DetachedEntityCache cache,
-			Set<Long> existing, CollectionFilter filter) {
-		if (existing == null) {
-			List filtered = CollectionFilters
-					.filter(cache.immutableRawValues(clazz), filter);
-			return HiliHelper.toIdSet(filtered);
-		} else {
-			CollectionFilter withIdFilter = new CollectionFilter<Long>() {
-				@Override
-				public boolean allow(Long id) {
-					return filter.allow(cache.get(clazz, id));
-				}
-			};
-			existing = new LinkedHashSet<Long>(existing);
-			CollectionFilters.filterInPlace(existing, withIdFilter);
-			return existing;
-		}
-	}
+    public DomainClassDescriptor<T> addAliasedFunction(Object alias,
+            Function<? super T, ?> function) {
+        DomainStoreLookupDescriptor lookupDescriptor = new DomainStoreLookupDescriptor<>(
+                (Class) clazz, "no-path", false, (Function) function);
+        addLookup(lookupDescriptor);
+        aliasedFunctionLookups.put(alias, lookupDescriptor);
+        return this;
+    }
 
-	public String getCanonicalPropertyPath(String propertyPath) {
-		for (DomainStoreLookupDescriptor desc : lookupDescriptors) {
-			String path = desc.getCanonicalPropertyPath(propertyPath);
-			if (path != null) {
-				return path;
-			}
-		}
-		if (propertyAlia.containsKey(propertyPath)) {
-			return propertyAlia.get(propertyPath);
-		}
-		return propertyPath;
-	}
+    public DomainClassDescriptor<T> addLookup(
+            DomainStoreLookupDescriptor lookup) {
+        lookupDescriptors.add(lookup);
+        return this;
+    }
 
-	public Collection<HasIdAndLocalId>
-			getDependentObjectsWithDerivedProjections(HasIdAndLocalId obj) {
-		return new ArrayList<>();
-	}
+    public void addPropertyAlias(String from, String to) {
+        propertyAlia.put(from, to);
+    }
 
-	public List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
-		ArrayList<T> raw = new ArrayList<T>(ids.size());
-		for (Long id : ids) {
-			T value = (T) cache.get(clazz, id);
-			if (value != null) {
-				raw.add(value);
-			}
-		}
-		return raw;
-	}
+    public Set<Long> evaluateFilter(DetachedEntityCache cache,
+            Set<Long> existing, CollectionFilter filter) {
+        if (existing == null) {
+            List filtered = CollectionFilters
+                    .filter(cache.immutableRawValues(clazz), filter);
+            return HiliHelper.toIdSet(filtered);
+        } else {
+            CollectionFilter withIdFilter = new CollectionFilter<Long>() {
+                @Override
+                public boolean allow(Long id) {
+                    return filter.allow(cache.get(clazz, id));
+                }
+            };
+            existing = new LinkedHashSet<Long>(existing);
+            CollectionFilters.filterInPlace(existing, withIdFilter);
+            return existing;
+        }
+    }
 
-	public boolean ignoreField(String name) {
-		return false;
-	}
+    public Optional<DomainStoreLookupDescriptor> findDescriptorByAlias(
+            Object alias) {
+        return Optional.ofNullable(aliasedFunctionLookups.get(alias));
+    }
 
-	public void index(HasIdAndLocalId obj, boolean add) {
-		for (DomainStoreLookupDescriptor lookupDescriptor : lookupDescriptors) {
-			DomainLookup lookup = lookupDescriptor.getLookup();
-			if (add) {
-				lookup.insert(obj);
-			} else {
-				lookup.remove(obj);
-			}
-		}
-		for (DomainProjection projection : projections) {
-			if (add) {
-				projection.insert(obj);
-			} else {
-				projection.remove(obj);
-			}
-		}
-	}
+    public String getCanonicalPropertyPath(String propertyPath) {
+        for (DomainStoreLookupDescriptor desc : lookupDescriptors) {
+            String path = desc.getCanonicalPropertyPath(propertyPath);
+            if (path != null) {
+                return path;
+            }
+        }
+        if (propertyAlia.containsKey(propertyPath)) {
+            return propertyAlia.get(propertyPath);
+        }
+        return propertyPath;
+    }
 
-	public boolean isTransactional() {
-		return true;
-	}
+    public Collection<HasIdAndLocalId> getDependentObjectsWithDerivedProjections(
+            HasIdAndLocalId obj) {
+        return new ArrayList<>();
+    }
 
-	public DomainClassDescriptor<T> addAliasedFunction(Object alias, Function<? super T,?> function) {
-		DomainStoreLookupDescriptor lookupDescriptor = new DomainStoreLookupDescriptor<>((Class)clazz, "no-path",false,(Function)function);
-		addLookup(lookupDescriptor);
-		aliasedFunctionLookups.put(alias, lookupDescriptor);
-		return this;
-	}
+    public List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
+        ArrayList<T> raw = new ArrayList<T>(ids.size());
+        for (Long id : ids) {
+            T value = (T) cache.get(clazz, id);
+            if (value != null) {
+                raw.add(value);
+            }
+        }
+        return raw;
+    }
 
-	public Optional<DomainStoreLookupDescriptor> findDescriptorByAlias(Object alias) {
-		return Optional.ofNullable(aliasedFunctionLookups.get(alias));
-	}
+    public boolean ignoreField(String name) {
+        return false;
+    }
+
+    public void index(HasIdAndLocalId obj, boolean add) {
+        for (DomainStoreLookupDescriptor lookupDescriptor : lookupDescriptors) {
+            DomainLookup lookup = lookupDescriptor.getLookup();
+            if (add) {
+                lookup.insert(obj);
+            } else {
+                lookup.remove(obj);
+            }
+        }
+        for (DomainProjection projection : projections) {
+            try {
+                if (add) {
+                    projection.insert(obj);
+                } else {
+                    projection.remove(obj);
+                }
+            } catch (Exception e) {
+                String msg = Ax.format(
+                        "Issue indexing: projection: %s  - add: %s - object: %s",
+                        projection, add, obj);
+                logger.warn(msg, e);
+            }
+        }
+    }
+
+    public boolean isTransactional() {
+        return true;
+    }
 }

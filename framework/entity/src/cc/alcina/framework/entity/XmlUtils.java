@@ -74,6 +74,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -873,8 +875,12 @@ public class XmlUtils {
     }
 
     public static Document loadDocument(String xml) throws Exception {
-        ByteArrayInputStream bais = null;
-        if (xml.contains("encoding=\"UTF-8\"")) {
+        return loadDocument(xml, false);
+    }
+
+    public static Document loadDocument(String xml, boolean knownUtf8) throws Exception {
+    	ByteArrayInputStream bais = null;
+        if (knownUtf8||xml.contains("encoding=\"UTF-8\"")) {
             ByteArrayOutputStream bOut = new ByteArrayOutputStream();
             OutputStreamWriter out = new OutputStreamWriter(bOut, "UTF-8");
             out.write(xml);
@@ -1480,6 +1486,7 @@ public class XmlUtils {
 
         public DOMLocation(Node node, int characterOffset, int nodeIndex) {
             this.node = node;
+            Preconditions.checkArgument(characterOffset >= 0);
             this.characterOffset = characterOffset;
             this.nodeIndex = nodeIndex;
         }

@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.CachingMap;
@@ -26,8 +25,6 @@ public abstract class DomainDescriptor {
             clazz -> preProvideTasks.stream().filter(
                     task -> task.forClazz() == null || task.forClazz() == clazz)
                     .collect(Collectors.toList()));
-
-    protected IDomainSegmentLoader domainSegmentLoader;
 
     public DomainDescriptor() {
     }
@@ -62,23 +59,11 @@ public abstract class DomainDescriptor {
         return true;
     }
 
-    public IDomainSegmentLoader getDomainSegmentLoader() {
-        return domainSegmentLoader;
-    }
-
     public abstract Class<? extends IUser> getIUserClass();
 
     public synchronized <T> List<PreProvideTask<T>> getPreProvideTasks(
             Class<T> clazz) {
         return (List) perClassTasks.get(clazz);
-    }
-
-    public Class<? extends ClassRef> getShadowClassRefClass() {
-        throw new UnsupportedOperationException();
-    }
-
-    public Class<? extends DomainTransformEvent> getShadowDomainTransformEventPersistentClass() {
-        throw new UnsupportedOperationException();
     }
 
     public boolean joinPropertyCached(Class clazz) {
@@ -89,10 +74,6 @@ public abstract class DomainDescriptor {
         preProvideTasks.stream()
                 .forEach(task -> task.registerStore(domainStore));
         postLoadTasks.stream().forEach(task -> task.registerStore(domainStore));
-    }
-
-    public void saveSegmentData() {
-        throw new UnsupportedOperationException();
     }
 
     public static interface DomainStoreTask {

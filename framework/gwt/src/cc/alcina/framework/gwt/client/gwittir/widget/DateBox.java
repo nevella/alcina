@@ -18,6 +18,8 @@ import java.util.Date;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.user.client.ui.Focusable;
+import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.datepicker.client.DateBox.DefaultFormat;
 import com.google.gwt.user.datepicker.client.DateBox.Format;
 import com.google.gwt.user.datepicker.client.DatePicker;
@@ -39,60 +41,88 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  * @author Nick Reddel
  */
 public class DateBox extends AbstractBoundWidget<Date>
-		implements ValueChangeHandler {
-	private com.google.gwt.user.datepicker.client.DateBox base;;
+        implements ValueChangeHandler, Focusable {
+    private com.google.gwt.user.datepicker.client.DateBox base;;
 
-	private DateTimeFormat unAmerican = DateTimeFormat.getFormat("dd/MM/yyyy");
+    private DateTimeFormat unAmerican = DateTimeFormat.getFormat("dd/MM/yyyy");
 
-	private String text;
+    private String text;
 
-	private Date value;
+    private Date value;
 
-	public DateBox() {
-		Format dtFormat = new DefaultFormat(getDateTimeFormat());
-		DatePicker picker = new DatePicker();
-		picker.addStyleName("alcina-DatePicker");
-		base = new com.google.gwt.user.datepicker.client.DateBox(picker, null,
-				dtFormat);
-		base.getTextBox().addValueChangeHandler(this);
-		base.addValueChangeHandler(this);
-		base.addStyleName("alcina-DateBox");
-		initWidget(base);
-	}
+    public DateBox() {
+        Format dtFormat = new DefaultFormat(getDateTimeFormat());
+        DatePicker picker = new DatePicker();
+        picker.addStyleName("alcina-DatePicker");
+        base = new com.google.gwt.user.datepicker.client.DateBox(picker, null,
+                dtFormat);
+        base.getTextBox().addValueChangeHandler(this);
+        base.addValueChangeHandler(this);
+        base.addStyleName("alcina-DateBox");
+        initWidget(base);
+    }
 
-	public Date getValue() {
-		return base.getValue();
-	}
+    @Override
+    public int getTabIndex() {
+        return getTextBox().getTabIndex();
+    }
 
-	public void onValueChange(ValueChangeEvent event) {
-		fireChangesFromBase();
-	}
+    @Override
+    public Date getValue() {
+        return base.getValue();
+    }
 
-	public void setValue(Date value) {
-		Date oldDate = this.value;
-		this.value = value;
-		base.setValue(value, false);
-		changes.firePropertyChange("value", oldDate, this.value);
-	}
+    @Override
+    public void onValueChange(ValueChangeEvent event) {
+        fireChangesFromBase();
+    }
 
-	private void fireChangesFromBase() {
-		String oldText = this.text;
-		this.text = base.getTextBox().getText();
-		if (base.getStyleName().contains("dateBoxFormatError")) {
-			changes.firePropertyChange("value", oldText, this.text);
-			return;
-		}
-		setValue(base.getValue());
-	}
+    @Override
+    public void setAccessKey(char key) {
+        getTextBox().setAccessKey(key);
+    }
 
-	protected DateTimeFormat getDateTimeFormat() {
-		return unAmerican;
-	}
+    @Override
+    public void setFocus(boolean focused) {
+        getTextBox().setFocus(focused);
+    }
 
-	public static class DateBoxProvider
-			implements BoundWidgetProvider<DateBox> {
-		public DateBox get() {
-			return new DateBox();
-		}
-	}
+    @Override
+    public void setTabIndex(int index) {
+        getTextBox().setTabIndex(index);
+    }
+
+    @Override
+    public void setValue(Date value) {
+        Date oldDate = this.value;
+        this.value = value;
+        base.setValue(value, false);
+        changes.firePropertyChange("value", oldDate, this.value);
+    }
+
+    private void fireChangesFromBase() {
+        String oldText = this.text;
+        this.text = base.getTextBox().getText();
+        if (base.getStyleName().contains("dateBoxFormatError")) {
+            changes.firePropertyChange("value", oldText, this.text);
+            return;
+        }
+        setValue(base.getValue());
+    }
+
+    private TextBox getTextBox() {
+        return base.getTextBox();
+    }
+
+    protected DateTimeFormat getDateTimeFormat() {
+        return unAmerican;
+    }
+
+    public static class DateBoxProvider
+            implements BoundWidgetProvider<DateBox> {
+        @Override
+        public DateBox get() {
+            return new DateBox();
+        }
+    }
 }

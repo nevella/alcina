@@ -1,0 +1,46 @@
+.console {
+	
+}
+
+.console>.output {
+	font-family: 'Courier New';
+	white-space: pre;
+}
+
+.console  .output-scroll {
+	height: calc(100vh - 128px);
+}
+
+.console  .output-inner {
+	padding: 1em;
+}
+.console  .output-inner .command{
+	color:rgb(0, 127, 174);
+	
+}
+.console  .output-inner .ok{
+	color:rgb(0, 174, 127);
+	
+}
+.console  .output-inner .err{
+	color:rgb(210, 20, 20);
+	
+}
+.console>.command-bar {
+	border: solid 1px #eee;
+	margin: 0 calc(50vw - 500px);
+	padding: 2px;
+	position: fixed;
+	bottom: 30px;
+	left: 15px;
+	height: 33px;
+	background-color: rgba(238, 238, 247, 0.3);
+	width: calc(1000px - 35px);
+	font-size: 20px;
+}
+
+.console input {
+	width: calc(100% - 10px);
+	padding: 3px;
+	font-size: 20px;
+}

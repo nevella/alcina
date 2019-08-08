@@ -203,7 +203,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
                     .getCommonPersistence().createClientInstance(
                             "servlet: " + EntityLayerUtils.getLocalHostName(),
                             null, null);
-            Registry.impl(ServletLayerTransforms.class)
+            ServletLayerTransforms.get()
                     .setServerAsClientInstance(serverAsClientInstance);
         } finally {
             ThreadedPermissionsManager.cast().popSystemUser();

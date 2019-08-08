@@ -1,0 +1,32 @@
+.nav-module .bar .center .menu {
+	width: 40px;
+	display: inline-block;
+	border-radius: var(- -nav-bar-center-border-radius) 0 0
+		var(- -nav-bar-center-border-radius);
+	border-left-style: solid;
+	border-left-width: 1px;
+	border-left-color: transparent;
+}
+.nav-module .bar .center .menu-button {
+	position: relative;
+	padding-left: 1.25em;
+}
+.nav-module .bar .center .menu-button span{
+	height: 1px;
+	background: white;
+	border: solid 1px white;
+	border-radius:1.5px;
+	position: absolute;
+	left: 0.4em;
+	width: 1px;
+	display:block;
+}
+.nav-module .bar .center .menu-button span.d1 {
+	top: 3px;
+}
+.nav-module .bar .center .menu-button span.d2 {
+	top: 9px;
+}
+.nav-module .bar .center .menu-button span.d3 {
+	top: 15px;
+}

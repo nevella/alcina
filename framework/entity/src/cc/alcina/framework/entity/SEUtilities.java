@@ -718,6 +718,11 @@ public class SEUtilities {
         return sw.toString();
     }
 
+    public static String getFullStacktrace(Thread t) {
+        return Ax.format("Thread: %s\n==================\n%s", t,
+                getStacktraceSlice(t, Integer.MAX_VALUE, 0));
+    }
+
     public static String getHomeDir() {
         return (System.getenv("USERPROFILE") != null)
                 ? System.getenv("USERPROFILE")

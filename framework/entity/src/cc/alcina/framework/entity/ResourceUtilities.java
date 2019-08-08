@@ -37,6 +37,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -208,7 +209,10 @@ public class ResourceUtilities {
 
     public static <T> T fieldwiseClone(T t, boolean withTransients) {
         try {
-            T instance = (T) t.getClass().newInstance();
+            Constructor<T> constructor = (Constructor<T>) t.getClass()
+                    .getConstructor(new Class[0]);
+            constructor.setAccessible(true);
+            T instance = constructor.newInstance();
             return fieldwiseCopy(t, instance, withTransients);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
@@ -602,42 +606,7 @@ public class ResourceUtilities {
 
     public static byte[] readUrlAsBytesWithPost(String strUrl, String postBody,
             StringMap headers) throws Exception {
-        InputStream in = null;
-        HttpURLConnection connection = null;
-        try {
-            URL url = new URL(strUrl);
-            connection = (HttpURLConnection) (url.openConnection());
-            connection.setDoOutput(true);
-            connection.setDoInput(true);
-            connection.setUseCaches(false);
-            connection.setRequestMethod("POST");
-            for (Entry<String, String> e : headers.entrySet()) {
-                connection.setRequestProperty(e.getKey(), e.getValue());
-            }
-            OutputStream out = connection.getOutputStream();
-            Writer wout = new OutputStreamWriter(out, "UTF-8");
-            wout.write(postBody);
-            wout.flush();
-            wout.close();
-            in = connection.getInputStream();
-            byte[] input = readStreamToByteArray(in);
-            return input;
-        } catch (IOException ioe) {
-            if (connection != null) {
-                InputStream err = connection.getErrorStream();
-                String input = err == null ? null : readStreamToString(err);
-                throw new IOException(input, ioe);
-            } else {
-                throw ioe;
-            }
-        } finally {
-            if (in != null) {
-                in.close();
-            }
-            if (connection != null) {
-                connection.disconnect();
-            }
-        }
+        return new SimpleQuery(strUrl, postBody, headers).asBytes();
     }
 
     public static String readUrlAsString(String strUrl) throws Exception {
@@ -901,5 +870,92 @@ public class ResourceUtilities {
 
     public static interface BeanInfoHelper {
         BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
+    }
+
+    public static class SimpleQuery {
+        private String strUrl;
+
+        private String postBody;
+
+        private StringMap headers;
+
+        private HttpURLConnection connection;
+
+        private boolean gzip;
+
+        private boolean decodeGz;
+
+        public SimpleQuery(String strUrl, String postBody, StringMap headers) {
+            this.strUrl = strUrl;
+            this.postBody = postBody;
+            this.headers = headers;
+        }
+
+        public byte[] asBytes() throws Exception {
+            InputStream in = null;
+            connection = null;
+            if (headers == null) {
+                headers = new StringMap();
+            }
+            try {
+                URL url = new URL(strUrl);
+                connection = (HttpURLConnection) (url.openConnection());
+                connection.setDoOutput(true);
+                connection.setDoInput(true);
+                connection.setUseCaches(false);
+                if (postBody != null) {
+                    connection.setRequestMethod("POST");
+                }
+                if (gzip) {
+                    headers.put("accept-encoding", "gzip");
+                }
+                for (Entry<String, String> e : headers.entrySet()) {
+                    connection.setRequestProperty(e.getKey(), e.getValue());
+                }
+                if (postBody != null) {
+                    OutputStream out = connection.getOutputStream();
+                    Writer wout = new OutputStreamWriter(out, "UTF-8");
+                    wout.write(postBody);
+                    wout.flush();
+                    wout.close();
+                }
+                in = connection.getInputStream();
+                byte[] input = readStreamToByteArray(in);
+                if (decodeGz) {
+                    input = readStreamToByteArray(new GZIPInputStream(
+                            new ByteArrayInputStream(input)));
+                }
+                return input;
+            } catch (IOException ioe) {
+                if (connection != null) {
+                    InputStream err = connection.getErrorStream();
+                    String input = err == null ? null : readStreamToString(err);
+                    throw new IOException(input, ioe);
+                } else {
+                    throw ioe;
+                }
+            } finally {
+                if (in != null) {
+                    in.close();
+                }
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
+        }
+
+        public String asString() throws Exception {
+            return new String(asBytes(), StandardCharsets.UTF_8);
+        }
+
+        public SimpleQuery withDecodeGz(boolean decodeGz) {
+            this.decodeGz = decodeGz;
+            return this;
+        }
+
+        public SimpleQuery withGzip(boolean gzip) {
+            this.gzip = gzip;
+            return this;
+        }
     }
 }

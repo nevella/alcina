@@ -9,74 +9,86 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
+import cc.alcina.framework.entity.entityaccess.cache.DomainModificationMetadataProvider;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
 public class DomainTransformPersistenceEvent {
-	private final TransformPersistenceToken transformPersistenceToken;
+    private final TransformPersistenceToken transformPersistenceToken;
 
-	private final DomainTransformLayerWrapper domainTransformLayerWrapper;
+    private final DomainTransformLayerWrapper domainTransformLayerWrapper;
 
-	private final DomainTransformPersistenceEventType persistenceEventType;
+    private final DomainTransformPersistenceEventType persistenceEventType;
 
-	private List<Runnable> postEventRunnables = new ArrayList<>();
+    private List<Runnable> postEventRunnables = new ArrayList<>();
 
-	private boolean localToVm;
+    private boolean localToVm;
 
-	public DomainTransformPersistenceEvent(
-			TransformPersistenceToken transformPersistenceToken,
-			DomainTransformLayerWrapper domainTransformLayerWrapper,
-			boolean localToVm) {
-		this.localToVm = localToVm;
-		this.transformPersistenceToken = transformPersistenceToken;
-		this.domainTransformLayerWrapper = domainTransformLayerWrapper;
-		persistenceEventType = domainTransformLayerWrapper == null
-				? DomainTransformPersistenceEventType.PRE_COMMIT
-				: domainTransformLayerWrapper.response
-						.getResult() == DomainTransformResponseResult.OK
-								? DomainTransformPersistenceEventType.COMMIT_OK
-								: DomainTransformPersistenceEventType.COMMIT_ERROR;
-	}
+    private DomainModificationMetadataProvider metadataProvider;
 
-	public void ensureTransformsValidForVm() {
-		domainTransformLayerWrapper.persistentEvents
-				.removeIf(evt -> evt.getObjectClassRef().notInVm()
-						|| (evt.getValueClassRef() != null
-								&& evt.getValueClassRef().notInVm()));
-	}
+    public DomainTransformPersistenceEvent(
+            TransformPersistenceToken transformPersistenceToken,
+            DomainTransformLayerWrapper domainTransformLayerWrapper,
+            boolean localToVm) {
+        this.localToVm = localToVm;
+        this.transformPersistenceToken = transformPersistenceToken;
+        this.domainTransformLayerWrapper = domainTransformLayerWrapper;
+        persistenceEventType = domainTransformLayerWrapper == null
+                ? DomainTransformPersistenceEventType.PRE_COMMIT
+                : domainTransformLayerWrapper.response
+                        .getResult() == DomainTransformResponseResult.OK
+                                ? DomainTransformPersistenceEventType.COMMIT_OK
+                                : DomainTransformPersistenceEventType.COMMIT_ERROR;
+    }
 
-	public DomainTransformLayerWrapper getDomainTransformLayerWrapper() {
-		return this.domainTransformLayerWrapper;
-	}
+    public void ensureTransformsValidForVm() {
+        domainTransformLayerWrapper.persistentEvents
+                .removeIf(evt -> evt.getObjectClassRef().notInVm()
+                        || (evt.getValueClassRef() != null
+                                && evt.getValueClassRef().notInVm()));
+    }
 
-	public long getMaxPersistedRequestId() {
-		return CommonUtils.lv(CollectionFilters.max(getPersistedRequestIds()));
-	}
+    public DomainTransformLayerWrapper getDomainTransformLayerWrapper() {
+        return this.domainTransformLayerWrapper;
+    }
 
-	public List<Long> getPersistedRequestIds() {
-		return domainTransformLayerWrapper == null
-				|| domainTransformLayerWrapper.persistentRequests == null
-						? Collections.EMPTY_LIST
-						: EntityUtils.hasIdsToIdList(
-								domainTransformLayerWrapper.persistentRequests);
-	}
+    public long getMaxPersistedRequestId() {
+        return CommonUtils.lv(CollectionFilters.max(getPersistedRequestIds()));
+    }
 
-	public DomainTransformPersistenceEventType getPersistenceEventType() {
-		return this.persistenceEventType;
-	}
+    public DomainModificationMetadataProvider getMetadataProvider() {
+        return this.metadataProvider;
+    }
 
-	public List<Runnable> getPostEventRunnables() {
-		return this.postEventRunnables;
-	}
+    public List<Long> getPersistedRequestIds() {
+        return domainTransformLayerWrapper == null
+                || domainTransformLayerWrapper.persistentRequests == null
+                        ? Collections.EMPTY_LIST
+                        : EntityUtils.hasIdsToIdList(
+                                domainTransformLayerWrapper.persistentRequests);
+    }
 
-	public TransformPersistenceToken getTransformPersistenceToken() {
-		return this.transformPersistenceToken;
-	}
+    public DomainTransformPersistenceEventType getPersistenceEventType() {
+        return this.persistenceEventType;
+    }
 
-	public boolean isLocalToVm() {
-		return this.localToVm;
-	}
+    public List<Runnable> getPostEventRunnables() {
+        return this.postEventRunnables;
+    }
 
-	public void setPostEventRunnables(List<Runnable> postEventRunnables) {
-		this.postEventRunnables = postEventRunnables;
-	}
+    public TransformPersistenceToken getTransformPersistenceToken() {
+        return this.transformPersistenceToken;
+    }
+
+    public boolean isLocalToVm() {
+        return this.localToVm;
+    }
+
+    public void setMetadataProvider(
+            DomainModificationMetadataProvider metadataProvider) {
+        this.metadataProvider = metadataProvider;
+    }
+
+    public void setPostEventRunnables(List<Runnable> postEventRunnables) {
+        this.postEventRunnables = postEventRunnables;
+    }
 }

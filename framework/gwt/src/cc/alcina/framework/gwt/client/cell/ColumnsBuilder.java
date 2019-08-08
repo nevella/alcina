@@ -51,7 +51,6 @@ public class ColumnsBuilder<T> {
 
 	private List<ColumnBuilder> pending = new ArrayList<>();
 
-	private ColumnTotaller<T> totaller;
 
 	public ColumnsBuilder(AbstractCellTable<T> table, Class<T> clazz) {
 		this.table = table;
@@ -101,10 +100,6 @@ public class ColumnsBuilder<T> {
 		return this;
 	}
 
-	public ColumnsBuilder columnTotaller(ColumnTotaller<T> totaller) {
-		this.totaller = totaller;
-		return this;
-	}
 
 	public ColumnsBuilder editable(boolean edit) {
 		this.edit = edit;
@@ -125,9 +120,6 @@ public class ColumnsBuilder<T> {
 		return this.pending;
 	}
 
-	public ColumnTotaller<T> getTotaller() {
-		return this.totaller;
-	}
 
 	public class ColumnBuilder {
 		private String name;
@@ -425,13 +417,6 @@ public class ColumnsBuilder<T> {
 		}
 	}
 
-	public interface ColumnTotaller<T> {
-		List<T> getList();
-
-		Object getTotalValue(String columnName);
-
-		boolean isTotalRow(T t);
-	}
 
 	public static class SortableColumn<T> extends Column<T, Object> {
 		private Function<T, Comparable> sortFunction;
@@ -511,15 +496,7 @@ public class ColumnsBuilder<T> {
 		public Object getValue(T t) {
 			try {
 				Object value = null;
-				if (columnsBuilder.totaller != null) {
-					if (columnsBuilder.totaller.isTotalRow(t)) {
-						value = columnsBuilder.totaller.getTotalValue(name);
-					} else {
-						value = function.apply(t);
-					}
-				} else {
 					value = function.apply(t);
-				}
 				if (cell == null && (editInfo.cell.getClass() == TextCell.class
 						|| editInfo.cell
 								.getClass() == PropertyTextCell.class)) {

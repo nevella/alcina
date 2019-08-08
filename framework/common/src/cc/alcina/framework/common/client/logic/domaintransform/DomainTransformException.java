@@ -61,7 +61,14 @@ public class DomainTransformException extends Exception
 		super(t);
 	}
 
-	public String getDetail() {
+	public DomainTransformException(DomainTransformEvent event,
+            DomainTransformExceptionType type, String message) {
+	    this(message);
+	    this.event = event;
+        this.type = type;
+    }
+
+    public String getDetail() {
 		return detail;
 	}
 

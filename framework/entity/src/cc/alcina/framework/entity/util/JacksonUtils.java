@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.util;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -8,24 +7,39 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public class JacksonUtils {
     public static ObjectMapper defaultGraphMapper() {
+        return defaultSerializer().createObjectMapper();
+    }
+
+    public static JacksonJsonObjectSerializer defaultSerializer() {
         return new JacksonJsonObjectSerializer().withIdRefs().withTypeInfo()
-                .withAllowUnknownProperties().getObjectMapper();
+                .withDefaults(true).withAllowUnknownProperties()
+                .withPrettyPrint();
     }
 
     public static <T> T deserialize(String json, Class<T> clazz) {
         try {
-            return defaultGraphMapper().readValue(json, clazz);
+            return defaultSerializer().deserialize(json, clazz);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
     }
 
+    public static <T> T deserializeNoTypes(String json, Class<T> clazz) {
+        try {
+            return new JacksonJsonObjectSerializer().withIdRefs()
+                    .withAllowUnknownProperties().deserialize(json, clazz);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    public static String serialize(Object object) {
+        return defaultSerializer().serialize(object);
+    }
+
     public static String serializeForLogging(Object object) {
         try {
-            return defaultGraphMapper()
-                    .setSerializationInclusion(Include.NON_DEFAULT)
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(object);
+            return defaultSerializer().withDefaults(false).serialize(object);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
@@ -34,9 +48,8 @@ public class JacksonUtils {
     public static String serializeForLoggingWithDefaultsNoTypes(Object object) {
         try {
             return new JacksonJsonObjectSerializer().withIdRefs()
-                    .withAllowUnknownProperties().getObjectMapper()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(object);
+                    .withAllowUnknownProperties().withPrettyPrint()
+                    .serialize(object);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
@@ -44,10 +57,7 @@ public class JacksonUtils {
 
     public static String serializeWithDefaultsAndTypes(Object object) {
         try {
-            return new JacksonJsonObjectSerializer().withIdRefs().withTypeInfo()
-                    .withAllowUnknownProperties().getObjectMapper()
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(object);
+            return serialize(object);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }

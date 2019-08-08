@@ -125,14 +125,6 @@ public class SubgraphTransformManager extends TransformManager {
     }
 
     @Override
-    protected void updateAssociation(DomainTransformEvent evt,
-            HasIdAndLocalId obj, Object tgt, boolean remove,
-            boolean collectionPropertyChange) {
-        super.updateAssociation(evt, obj, tgt, remove,
-                collectionPropertyChange);
-    }
-
-    @Override
     protected boolean updateAssociationsWithoutNoChangeCheck() {
         return true;
     }

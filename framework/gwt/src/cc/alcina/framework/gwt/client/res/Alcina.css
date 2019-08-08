@@ -1895,9 +1895,10 @@ input.alcina-Filter {
 }
 
 div.has-help-text span:after {
-	content: ' (*)';
+	content: ' †';
 	font-size: 85%;
 	padding-left: 0.5em;
+	vertical-align: super;
 }
 
 div.has-help-text:hover {
@@ -1906,7 +1907,8 @@ div.has-help-text:hover {
 }
 
 div.has-help-text:hover span:after {
-	visibility: hidden
+	visibility: visible;
+	text-decoration:none;
 }
 .alcina-BeanPanel button, .alcina-BeanPanel .gwt-Button{
 	padding: 4px 9px 4px;

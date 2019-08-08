@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.entity.domaintransform;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
@@ -31,9 +33,19 @@ public abstract class DomainTransformRequestPersistent
 
     private Long originatingUserId;
 
+    private Date startPersistTime;
+
+    private Date transactionCommitTime;
+
     public void clearForSimplePersistence() {
         setClientInstance(null);
         setEvents(null);
+    }
+
+    @Override
+    @Column(name = "chunk_uuid")
+    public String getChunkUuidString() {
+        return super.getChunkUuidString();
     }
 
     @Override
@@ -46,6 +58,14 @@ public abstract class DomainTransformRequestPersistent
         return this.originatingUserId;
     }
 
+    public Date getStartPersistTime() {
+        return this.startPersistTime;
+    }
+
+    public Date getTransactionCommitTime() {
+        return this.transactionCommitTime;
+    }
+
     @Override
     public void setId(long id) {
         this.id = id;
@@ -55,11 +75,13 @@ public abstract class DomainTransformRequestPersistent
         this.originatingUserId = originatingUserId;
     }
 
-    public abstract void wrap(DomainTransformRequest dtr);
-
-    @Override
-    @Column(name = "chunk_uuid")
-    public String getChunkUuidString() {
-        return super.getChunkUuidString();
+    public void setStartPersistTime(Date startPersistTime) {
+        this.startPersistTime = startPersistTime;
     }
+
+    public void setTransactionCommitTime(Date transactionCommitTime) {
+        this.transactionCommitTime = transactionCommitTime;
+    }
+
+    public abstract void wrap(DomainTransformRequest dtr);
 }

@@ -15,8 +15,6 @@
  */
 package com.google.gwt.dev.shell;
 
-import com.google.gwt.dev.shell.BrowserChannel.RemoteObjectRef;
-
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
@@ -26,6 +24,8 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.gwt.dev.shell.BrowserChannel.RemoteObjectRef;
 
 /**
  * Keeps track of references to remote objects.  When the objects are no longer
