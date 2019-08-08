@@ -1,22 +1,26 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 public class MvccTransaction {
     private static ThreadLocal<MvccTransaction> threadLocalInstance = new ThreadLocal() {
     };
 
+    public static void end() {
+        threadLocalInstance.remove();
+    }
+
     public static void start() {
-        start(DomainStore.stores().writableStore());
+        threadLocalInstance.set(new MvccTransaction());
     }
 
-    public static void start(DomainStore store) {
-        threadLocalInstance.set(new MvccTransaction(store));
-    }
+    private Map<DomainStore, StoreTransaction> storeTransactions = new LinkedHashMap<>();
 
-    private DomainStore store;
-
-    public MvccTransaction(DomainStore store) {
-        this.store = store;
+    public MvccTransaction() {
+        DomainStore.stores().stream().forEach(store -> storeTransactions
+                .put(store, new StoreTransaction(store)));
     }
 }

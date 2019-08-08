@@ -113,6 +113,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccTransaction;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetricData;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -629,6 +630,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
         RPCRequest rpcRequest = null;
         String threadName = Thread.currentThread().getName();
         try {
+            MvccTransaction.start();
             LooseContext.push();
             initUserStateWithCookie(getThreadLocalRequest(),
                     getThreadLocalResponse());
