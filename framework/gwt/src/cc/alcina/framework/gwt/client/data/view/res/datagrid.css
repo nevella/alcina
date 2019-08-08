@@ -1,0 +1,43 @@
+@def selectionBorderWidth 0px;
+.dataGridHeader, .dataGridFooter {
+	color: #333;
+	text-shadow: none;
+}
+
+.dataGridHeader {
+	border-bottom-width: 1px;
+	border-color:rgb(227, 227, 227);
+}
+
+.dataGridFooter {
+	text-align: center;
+	border-top-width: 1px;
+	border-color:rgb(227, 227, 227);
+	font-weight: normal;
+}
+
+.dataGridCell {
+	padding: 6px 10px 4px;
+	vertical-align: top;
+}
+
+.dataGridOddRow {
+	background: #f7f9ff;
+}
+/* copy from gwt dataGrid css so as to override odd row */
+.dataGridSelectedRow {
+	background: #628cd5;
+	color: white;
+	height: auto;
+	overflow: auto;
+}
+
+.dataGridHoveredRow {
+	background: #fed2b6;
+	cursor:pointer;
+}
+
+.dataGridHoveredRowCell {
+	background: #fed2b6;
+	cursor:pointer;
+}
