@@ -606,7 +606,7 @@ public class ResourceUtilities {
 
     public static byte[] readUrlAsBytesWithPost(String strUrl, String postBody,
             StringMap headers) throws Exception {
-        return new SimplePost(strUrl, postBody, headers).asBytes();
+        return new SimpleQuery(strUrl, postBody, headers).asBytes();
     }
 
     public static String readUrlAsString(String strUrl) throws Exception {
@@ -872,7 +872,7 @@ public class ResourceUtilities {
         BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
     }
 
-    public static class SimplePost {
+    public static class SimpleQuery {
         private String strUrl;
 
         private String postBody;
@@ -883,7 +883,9 @@ public class ResourceUtilities {
 
         private boolean gzip;
 
-        public SimplePost(String strUrl, String postBody, StringMap headers) {
+        private boolean decodeGz;
+
+        public SimpleQuery(String strUrl, String postBody, StringMap headers) {
             this.strUrl = strUrl;
             this.postBody = postBody;
             this.headers = headers;
@@ -901,20 +903,28 @@ public class ResourceUtilities {
                 connection.setDoOutput(true);
                 connection.setDoInput(true);
                 connection.setUseCaches(false);
-                connection.setRequestMethod("POST");
+                if (postBody != null) {
+                    connection.setRequestMethod("POST");
+                }
                 if (gzip) {
                     headers.put("accept-encoding", "gzip");
                 }
                 for (Entry<String, String> e : headers.entrySet()) {
                     connection.setRequestProperty(e.getKey(), e.getValue());
                 }
-                OutputStream out = connection.getOutputStream();
-                Writer wout = new OutputStreamWriter(out, "UTF-8");
-                wout.write(postBody);
-                wout.flush();
-                wout.close();
+                if (postBody != null) {
+                    OutputStream out = connection.getOutputStream();
+                    Writer wout = new OutputStreamWriter(out, "UTF-8");
+                    wout.write(postBody);
+                    wout.flush();
+                    wout.close();
+                }
                 in = connection.getInputStream();
                 byte[] input = readStreamToByteArray(in);
+                if (decodeGz) {
+                    input = readStreamToByteArray(new GZIPInputStream(
+                            new ByteArrayInputStream(input)));
+                }
                 return input;
             } catch (IOException ioe) {
                 if (connection != null) {
@@ -938,7 +948,12 @@ public class ResourceUtilities {
             return new String(asBytes(), StandardCharsets.UTF_8);
         }
 
-        public SimplePost withGzip(boolean gzip) {
+        public SimpleQuery withDecodeGz(boolean decodeGz) {
+            this.decodeGz = decodeGz;
+            return this;
+        }
+
+        public SimpleQuery withGzip(boolean gzip) {
             this.gzip = gzip;
             return this;
         }

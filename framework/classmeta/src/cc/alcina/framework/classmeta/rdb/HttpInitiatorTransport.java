@@ -4,7 +4,7 @@ import java.util.List;
 
 import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.ResourceUtilities.SimplePost;
+import cc.alcina.framework.entity.ResourceUtilities.SimpleQuery;
 import cc.alcina.framework.entity.util.JacksonUtils;
 
 class HttpInitiatorTransport extends Transport {
@@ -80,7 +80,7 @@ class HttpInitiatorTransport extends Transport {
         model.endpointName = descriptor.transportEndpointName;
         String payload = JacksonUtils.serialize(model);
         try {
-            SimplePost post = new SimplePost(url, payload, null).withGzip(true);
+            SimpleQuery post = new SimpleQuery(url, payload, null).withGzip(true);
             maybeSimulateTransportDelay();
             String strResponse = post.asString();
             // Ax.err("received: %s chars", strResponse.length());
