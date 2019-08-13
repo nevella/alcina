@@ -929,8 +929,16 @@ public class ResourceUtilities {
             } catch (IOException ioe) {
                 if (connection != null) {
                     InputStream err = connection.getErrorStream();
-                    String input = err == null ? null : readStreamToString(err);
-                    throw new IOException(input, ioe);
+                    String errString = null;
+                    if (err != null) {
+                        byte[] input = readStreamToByteArray(err);
+                        if (decodeGz) {
+                            input = readStreamToByteArray(new GZIPInputStream(
+                                    new ByteArrayInputStream(input)));
+                        }
+                        errString = new String(input, StandardCharsets.UTF_8);
+                    }
+                    throw new IOException(errString, ioe);
                 } else {
                     throw ioe;
                 }

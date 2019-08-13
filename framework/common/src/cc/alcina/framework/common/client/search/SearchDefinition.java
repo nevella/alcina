@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -318,6 +319,11 @@ public abstract class SearchDefinition extends WrapperPersistable
     }
 
     public void onBeforeRunSearch() {
+    }
+
+    public <V extends SearchCriterion> Optional<V> optionalFirstCriterion(
+            Class<V> clazz) {
+        return Optional.<V> ofNullable(firstCriterion(clazz));
     }
 
     public String orderDescription(boolean html) {

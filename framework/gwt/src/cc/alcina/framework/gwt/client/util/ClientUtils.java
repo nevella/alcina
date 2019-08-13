@@ -170,6 +170,10 @@ public class ClientUtils {
         return builder;
     }
 
+    public static native int getDateTzOffsetMinutes() /*-{
+    return new Date().getTimezoneOffset();
+    }-*/;
+
     public static String getHashIfSelfrefUrl(Element anchor) {
         String href = anchor.getAttribute("href");
         String selfHref = Window.Location.getHref();

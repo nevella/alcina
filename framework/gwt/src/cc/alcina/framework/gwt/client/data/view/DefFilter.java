@@ -34,7 +34,7 @@ public class DefFilter extends Composite implements
 
     private SearchDefinition searchDefinition;
 
-    private FilterWidget simpleFilter;
+    protected FilterWidget simpleFilter;
 
     private SearchDefinition attachedDef = null;
 
@@ -122,12 +122,7 @@ public class DefFilter extends Composite implements
             }
         }
         if (def != null && simpleFilter != null) {
-            TxtCriterion txtCriterion = searchDefinition
-                    .firstCriterion(TxtCriterion.class);
-            if (txtCriterion != null
-                    && !txtCriterion.equivalentTo(ignoreCriterion)) {
-                simpleFilter.setValue(txtCriterion.getText());
-            }
+            populateFilterFromSearch();
             Scheduler.get().scheduleDeferred(() -> {
                 // FIXME - localdom2, can drop?
                 if (simpleFilter.isAttached()) {
@@ -195,6 +190,15 @@ public class DefFilter extends Composite implements
             } finally {
                 RenderContext.merge();
             }
+        }
+    }
+
+    protected void populateFilterFromSearch() {
+        TxtCriterion txtCriterion = searchDefinition
+                .firstCriterion(TxtCriterion.class);
+        if (txtCriterion != null
+                && !txtCriterion.equivalentTo(ignoreCriterion)) {
+            simpleFilter.setValue(txtCriterion.getText());
         }
     }
 }
