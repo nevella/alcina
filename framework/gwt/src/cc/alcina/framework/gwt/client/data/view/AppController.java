@@ -20,7 +20,6 @@ import cc.alcina.framework.gwt.client.data.HasDataAction;
 import cc.alcina.framework.gwt.client.data.entity.DataDomainBase;
 import cc.alcina.framework.gwt.client.data.export.RowExportContentDefinition;
 import cc.alcina.framework.gwt.client.data.place.DataPlace;
-import cc.alcina.framework.gwt.client.data.place.DataSubPlace;
 import cc.alcina.framework.gwt.client.data.search.DataSearchDefinition;
 import cc.alcina.framework.gwt.client.data.search.GroupingParameters;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -72,7 +71,7 @@ public class AppController {
         if (object == null) {
             return;
         }
-        DataSubPlace target = (DataSubPlace) RegistryHistoryMapper.get()
+        DataPlace target = (DataPlace) RegistryHistoryMapper.get()
                 .getPlaceByModelClass(object.getClass());
         target.action = DataAction.EDIT;
         target.id = object.getId();
@@ -80,7 +79,7 @@ public class AppController {
     }
 
     public void doSearch(Class<? extends HasIdAndLocalId> clazz, String text) {
-        DataSubPlace target = (DataSubPlace) RegistryHistoryMapper.get()
+        DataPlace target = (DataPlace) RegistryHistoryMapper.get()
                 .getPlaceByModelClass(clazz);
         target.getSearchDefinition().toTextSearch(text);
         target.action = DataAction.VIEW;
@@ -91,7 +90,7 @@ public class AppController {
         if (def == null) {
             return;
         }
-        DataSubPlace target = (DataSubPlace) RegistryHistoryMapper.get()
+        DataPlace target = (DataPlace) RegistryHistoryMapper.get()
                 .getPlaceByModelClass(def.resultClass());
         target.action = DataAction.VIEW;
         target.def = def;
@@ -111,7 +110,7 @@ public class AppController {
     }
 
     public void doViewObject(Class clazz, long objectId) {
-        DataSubPlace target = (DataSubPlace) RegistryHistoryMapper.get()
+        DataPlace target = (DataPlace) RegistryHistoryMapper.get()
                 .getPlaceByModelClass(clazz);
         target.action = DataAction.VIEW;
         target.id = objectId;
@@ -187,7 +186,8 @@ public class AppController {
         ClientFactory.refreshCurrentPlace();
     }
 
-    protected void addObjectCriterion(Object model, DataSubPlace place) {
+    protected void addObjectCriterion(Object model, DataPlace place) {
+        // for subclasses
     }
 
     protected void delete0(DataDomainBase object) {

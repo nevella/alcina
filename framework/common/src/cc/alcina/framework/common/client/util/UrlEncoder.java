@@ -13,12 +13,18 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+
 /**
  *
  * @author Nick Reddel
  */
 public interface UrlEncoder {
-	public String decode(String componentText);
+    public static UrlEncoder get() {
+        return Registry.impl(UrlEncoder.class);
+    }
 
-	public String encode(String text);
+    public String decode(String componentText);
+
+    public String encode(String text);
 }
