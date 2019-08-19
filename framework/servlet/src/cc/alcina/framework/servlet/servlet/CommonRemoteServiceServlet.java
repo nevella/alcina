@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -196,6 +197,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
     private int actionCount = 0;
 
     private ThreadLocal<Integer> looseContextDepth = new ThreadLocal<>();
+
+    private AtomicInteger callCounter = new AtomicInteger(0);
 
     @Override
     @WebMethod(readonlyPermitted = true)
@@ -650,7 +653,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                     payload);
             String name = rpcRequest.getMethod().getName();
             RPCRequest f_rpcRequest = rpcRequest;
-            Thread.currentThread().setName(Ax.format("gwt-rpc:%s", name));
+            Thread.currentThread().setName(Ax.format("gwt-rpc:%s:%s", name,
+                    callCounter.incrementAndGet()));
             onAfterAlcinaAuthentication(name);
             LooseContext.set(CONTEXT_RPC_USER_ID,
                     PermissionsManager.get().getUserId());
