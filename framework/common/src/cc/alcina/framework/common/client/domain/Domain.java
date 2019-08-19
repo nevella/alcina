@@ -172,6 +172,11 @@ public class Domain {
         Domain.handler = singleton;
     }
 
+    public static <V extends HasIdAndLocalId> V resolve(V v) {
+        // allow api compatibility with mvcc
+        return v;
+    }
+
     public static <V extends HasIdAndLocalId> V resolveTransactional(
             DomainListener listener, V value, Object[] path) {
         return handler.resolveTransactional(listener, value, path);

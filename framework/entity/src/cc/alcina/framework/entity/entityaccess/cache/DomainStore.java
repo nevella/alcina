@@ -463,7 +463,7 @@ public class DomainStore implements IDomainStore {
             return dte;
         } else {
             DomainTransformEvent translated = ResourceUtilities
-                    .fieldwiseClone(dte, true);
+                    .fieldwiseClone(dte, true, false);
             translated.setPropertyName(ann.toIdProperty());
             translated.setNewValue(translated.getValueId());
             TransformManager.get().convertToTargetObject(translated);

@@ -56,17 +56,15 @@
 	<classpathentry kind="lib" path="lib/framework/entity/jackson-core-2.7.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/jackson-databind-2.7.1.jar" sourcepath="/g/minor/jackson-databind"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev-patch.jar"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-3.5.13-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-generators-3.5.13-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-metamodel-generator-3.5.13-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-core-3.5.13-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-logic-3.5.13-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-model-3.5.13-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-3.14.11-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-generators-3.14.11-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-core-3.14.11-SNAPSHOT.jar" sourcepath="/g/minor/javaparser"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-logic-3.14.11-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-model-3.14.11-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/extras/jetty/jetty-all-uber.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/barbary-watchservice-2.0-SNAPSHOT.jar" sourcepath="/barbary_watch"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/jna-4.5.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/jna-platform-4.5.1.jar"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javassist.jar"/>
 	<classpathentry kind="lib" path="lib/extras/dev/httpclient-4.5.jar"/>
 	<classpathentry kind="lib" path="lib/extras/dev/httpcore-4.4.3.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/slf4j-api-1.7.25.jar" sourcepath="/private/var/local/git/minor/jars/slf4j-api-1.7.2.jbossorg-1-sources.jar"/>
@@ -76,5 +74,8 @@
 	<classpathentry kind="lib" path="lib/framework/entity/slf4j-log4j12-1.7.25.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/javax.transaction-api-1.3.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/tools.jar" sourcepath="/g/minor/jdk"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-metamodel-generator-3.14.11-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-serialization-3.14.11-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javassist-3.18.1-GA.jar" sourcepath="/g/minor/javassist"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
