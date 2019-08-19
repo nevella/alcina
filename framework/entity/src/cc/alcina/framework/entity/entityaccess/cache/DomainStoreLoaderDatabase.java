@@ -88,6 +88,8 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainS
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentPropertyType;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.LaterLookup.LaterItem;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
 public class DomainStoreLoaderDatabase implements DomainStoreLoader {
@@ -148,6 +150,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
     ThreadPoolExecutor iLoaderExecutor = (ThreadPoolExecutor) Executors
             .newFixedThreadPool(8,
                     new NamedThreadFactory("domainStore-iLoader"));
+
+    private Transaction warmupTransaction;
 
     public DomainStoreLoaderDatabase(DomainStore store, DataSource dataSource,
             ThreadPoolExecutor warmupExecutor) {
@@ -220,8 +224,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         oneToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
         domainStoreColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
         columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
-        MetricLogging.get().start("domainStore-all");
         transformSequencer.ensureTransactionCommitTimes();
+        warmupTransaction = Transaction.current();
         createWarmupConnections();
         {
             Connection conn = getConnection();
@@ -356,7 +360,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         // single-threaded
         warmupConnections.keySet().forEach(conn -> closeWarmupConnection(conn));
         warmupExecutor = null;
-        MetricLogging.get().end("domainStore-all");
+        warmupTransaction = null;
+        Transaction.current().toCommitted(
+                transformSequencer.getHighestVisibleTransactionTimestamp());
     }
 
     private void addColumnName(Class clazz, PropertyDescriptor pd,
@@ -396,6 +402,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         }, clazz, pd);
     }
 
+    private Class getEntityType(Class entityType) {
+        if (MvccObject.class.isAssignableFrom(entityType)) {
+            return entityType.getSuperclass();
+        } else {
+            return entityType;
+        }
+    }
+
     private Class getTargetEntityType(Method rm) {
         ManyToOne manyToOne = rm.getAnnotation(ManyToOne.class);
         if (manyToOne != null && manyToOne.targetEntity() != void.class) {
@@ -432,14 +446,16 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
     private void invokeAllWithThrow(List tasks, ThreadPoolExecutor executor)
             throws Exception {
-        if (executor != null) {
-            List<Future> futures = (List) executor.invokeAll((List) tasks);
-            for (Future future : futures) {
-                // will throw if there was an exception
-                future.get();
-            }
-            tasks.clear();
+        if (executor == warmupExecutor) {
+            tasks = (List) tasks.stream().map(WarmupTxCallable::new)
+                    .collect(Collectors.toList());
         }
+        List<Future> futures = (List) executor.invokeAll(tasks);
+        for (Future future : futures) {
+            // will throw if there was an exception
+            future.get();
+        }
+        tasks.clear();
     }
 
     private void loadDomainSegment() throws Exception {
@@ -719,8 +735,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         loaded = new ArrayList<>();
         PdOperator idOperator = pds.stream().filter(pd -> pd.name.equals("id"))
                 .findFirst().get();
+        Transaction transaction = Transaction.current();
+        boolean transactional = DomainStore.stores().storeFor(clazz) != null;
         for (Object[] objects : connResults) {
-            HasId hasId = (HasId) clazz.newInstance();
+            HasId hasId = (HasId) (transactional
+                    ? transaction.create(clazz, store)
+                    : clazz.newInstance());
             if (ignoreIfExisting) {
                 if (store.transformManager.store.contains(clazz,
                         (Long) objects[idOperator.idx])) {
@@ -802,11 +822,17 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     " domainTransformRequestPersistent_id in %s order by id",
                     EntityUtils.longsToIdClause(ids));
             LaterLookup laterLookup = new LaterLookup();
-            List<? extends DomainTransformEventPersistent> transforms = (List) loadTable0(
-                    transformEventImplClass, sqlFilter,
-                    new ClassIdLock(DomainTransformRequestPersistent.class,
-                            ids.iterator().next()),
-                    laterLookup, false, true);
+            List<? extends DomainTransformEventPersistent> transforms = null;
+            try {
+                Transaction.begin();
+                transforms = (List) loadTable0(transformEventImplClass,
+                        sqlFilter,
+                        new ClassIdLock(DomainTransformRequestPersistent.class,
+                                ids.iterator().next()),
+                        laterLookup, false, true);
+            } finally {
+                Transaction.end();
+            }
             laterLookup.resolve(new CustomResolver() {
                 @Override
                 public boolean handles(PdOperator pdOperator) {
@@ -991,9 +1017,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
                     }
                 }
                 addColumnName(clazz, pd,
-                        getTargetEntityType(pd.getReadMethod()));
+                        getEntityType(getTargetEntityType(pd.getReadMethod())));
             } else {
-                addColumnName(clazz, pd, pd.getPropertyType());
+                addColumnName(clazz, pd, getEntityType(pd.getPropertyType()));
             }
             mapped.add(ensurePdOperator(pd, clazz));
         }
@@ -1388,6 +1414,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
         @Override
         public Void call() {
             try {
+                Transaction.begin();
                 LaterLookup laterLookup = new LaterLookup();
                 String sqlFilter = Ax.format(" id in %s ",
                         EntityUtils.hasIdsToIdClause(sources));
@@ -1463,6 +1490,26 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new WrappedRuntimeException(e);
+            } finally {
+                Transaction.end();
+            }
+        }
+    }
+
+    private class WarmupTxCallable implements Callable {
+        private Callable delegate;
+
+        WarmupTxCallable(Object delegate) {
+            this.delegate = (Callable) delegate;
+        }
+
+        @Override
+        public Object call() throws Exception {
+            try {
+                Transaction.join(warmupTransaction);
+                return delegate.call();
+            } finally {
+                Transaction.separate();
             }
         }
     }

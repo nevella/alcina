@@ -290,8 +290,8 @@ public class ThreadlocalTransformManager extends TransformManager
         // process in consume() if obj exists
         // if (newInstance.getId() == 0) {
         registerDomainObject(newInstance);
-        fireCreateObjectEvent(newInstance.getClass(), newInstance.getId(),
-                newInstance.getLocalId());
+        fireCreateObjectEvent(newInstance.provideEntityClass(),
+                newInstance.getId(), newInstance.getLocalId());
         // }
         return newInstance;
     }

@@ -1,6 +1,8 @@
 package cc.alcina.framework.entity.entityaccess;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
@@ -342,7 +344,12 @@ public class TransformPersisterIn {
                         DomainTransformRequestPersistent dtrp = dtrqImpl
                                 .newInstance();
                         tm.persist(dtrp);
-                        dtrp.setStartPersistTime(startPersistTime);
+                        Calendar defaultCalendar = Calendar.getInstance();
+                        int offset = defaultCalendar.getTimeZone()
+                                .getOffset(startPersistTime.getTime());
+                        Timestamp utcStartPersistTime = new Timestamp(
+                                startPersistTime.getTime() - offset);
+                        dtrp.setStartPersistTime(utcStartPersistTime);
                         DomainStore.stores().writableStore()
                                 .getPersistenceEvents().getQueue()
                                 .registerPersisting(dtrp);

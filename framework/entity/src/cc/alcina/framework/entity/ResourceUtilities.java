@@ -204,23 +204,25 @@ public class ResourceUtilities {
     }
 
     public static <T> T fieldwiseClone(T t) {
-        return fieldwiseClone(t, false);
+        return fieldwiseClone(t, false, false);
     }
 
-    public static <T> T fieldwiseClone(T t, boolean withTransients) {
+    public static <T> T fieldwiseClone(T t, boolean withTransients,
+            boolean withCollectionProjection) {
         try {
             Constructor<T> constructor = (Constructor<T>) t.getClass()
                     .getConstructor(new Class[0]);
             constructor.setAccessible(true);
             T instance = constructor.newInstance();
-            return fieldwiseCopy(t, instance, withTransients);
+            return fieldwiseCopy(t, instance, withTransients,
+                    withCollectionProjection);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
     }
 
-    public static <T> T fieldwiseCopy(T t, T toInstance,
-            boolean withTransients) {
+    public static <T> T fieldwiseCopy(T t, T toInstance, boolean withTransients,
+            boolean withCollectionProjection) {
         try {
             List<Field> allFields = new ArrayList<Field>();
             Class c = t.getClass();
@@ -243,7 +245,28 @@ public class ResourceUtilities {
                 c = c.getSuperclass();
             }
             for (Field field : allFields) {
-                field.set(toInstance, field.get(t));
+                Object value = field.get(t);
+                boolean project = false;
+                if (value != null && withCollectionProjection) {
+                    if (value instanceof Map || value instanceof Collection) {
+                        project = true;
+                    }
+                }
+                if (project) {
+                    if (value instanceof Map) {
+                        Map map = (Map) value;
+                        Map newMap = (Map) map.getClass().newInstance();
+                        newMap.putAll(map);
+                        value = newMap;
+                    } else {
+                        Collection collection = (Collection) value;
+                        Collection newCollection = (Collection) collection
+                                .getClass().newInstance();
+                        newCollection.addAll(collection);
+                        value = newCollection;
+                    }
+                }
+                field.set(toInstance, value);
             }
             return toInstance;
         } catch (Exception e) {

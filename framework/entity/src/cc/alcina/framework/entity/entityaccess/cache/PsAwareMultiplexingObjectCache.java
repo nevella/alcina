@@ -114,7 +114,7 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 
     @Override
     public void put(HasIdAndLocalId hili) {
-        getSubCache(hili.getClass()).put(hili);
+        getSubCache(hili.provideEntityClass()).put(hili);
     }
 
     @Override
@@ -130,7 +130,7 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 
     @Override
     public void remove(HasIdAndLocalId hili) {
-        getSubCache(hili.getClass()).remove(hili);
+        getSubCache(hili.provideEntityClass()).remove(hili);
     }
 
     @Override

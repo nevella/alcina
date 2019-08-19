@@ -31,110 +31,113 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public interface HasIdAndLocalId extends HasId {
-	public static Function<?, HasIdAndLocalId> caster() {
-		return o -> (HasIdAndLocalId) o;
-	}
+    public static Function<?, HasIdAndLocalId> caster() {
+        return o -> (HasIdAndLocalId) o;
+    }
 
-	/**
-	 * Used for object referencing within a client domain. Generated from a
-	 * thread-safe increment counter (one counter per domain, not
-	 * per-object-type.
-	 */
-	public long getLocalId();
+    /**
+     * Used for object referencing within a client domain. Generated from a
+     * thread-safe increment counter (one counter per domain, not
+     * per-object-type.
+     */
+    public long getLocalId();
 
-	public void setLocalId(long localId);
+    public void setLocalId(long localId);
 
-	default void delete() {
-		Domain.delete(this);
-	}
+    default void delete() {
+        Domain.delete(this);
+    }
 
-	default <V extends AbstractDomainBase> AbstractDomainBase<V>.DomainSupport
-			domain() {
-		return ((AbstractDomainBase<V>) this).domain();
-	}
+    default <V extends AbstractDomainBase> AbstractDomainBase<V>.DomainSupport domain() {
+        return ((AbstractDomainBase<V>) this).domain();
+    }
 
-	default boolean provideIsNonDomain() {
-		return getId() == 0 && getLocalId() == 0;
-	}
+    default Class<? extends HasIdAndLocalId> provideEntityClass() {
+        return getClass();
+    }
 
-	default String provideStringId() {
-		return getId() == 0 ? null : String.valueOf(getId());
-	}
+    default boolean provideIsNonDomain() {
+        return getId() == 0 && getLocalId() == 0;
+    }
 
-	default boolean provideWasPersisted() {
-		return getId() != 0;
-	}
+    default String provideStringId() {
+        return getId() == 0 ? null : String.valueOf(getId());
+    }
 
-	default String toStringHili() {
-		return new HiliLocator(this).toString();
-	}
+    default boolean provideWasPersisted() {
+        return getId() != 0;
+    }
 
-	public static class HiliByIdFilter
-			implements CollectionFilter<HasIdAndLocalId> {
-		private final boolean allowAllExceptId;
+    default String toStringHili() {
+        return new HiliLocator(this).toString();
+    }
 
-		private final long id;
+    public static class HiliByIdFilter
+            implements CollectionFilter<HasIdAndLocalId> {
+        private final boolean allowAllExceptId;
 
-		public HiliByIdFilter(long id, boolean allowAllExceptId) {
-			this.id = id;
-			this.allowAllExceptId = allowAllExceptId;
-		}
+        private final long id;
 
-		@Override
-		public boolean allow(HasIdAndLocalId o) {
-			return o != null && (o.getId() == id ^ allowAllExceptId);
-		}
-	}
+        public HiliByIdFilter(long id, boolean allowAllExceptId) {
+            this.id = id;
+            this.allowAllExceptId = allowAllExceptId;
+        }
 
-	public static class HiliComparator implements Comparator<HasIdAndLocalId> {
-		public static final HiliComparator INSTANCE = new HiliComparator();
+        @Override
+        public boolean allow(HasIdAndLocalId o) {
+            return o != null && (o.getId() == id ^ allowAllExceptId);
+        }
+    }
 
-		public static final Comparator<HasIdAndLocalId> REVERSED_INSTANCE = new HiliComparator()
-				.reversed();
+    public static class HiliComparator implements Comparator<HasIdAndLocalId> {
+        public static final HiliComparator INSTANCE = new HiliComparator();
 
-		@Override
-		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
-			return HiliHelper.compare(o1, o2);
-		}
-	}
+        public static final Comparator<HasIdAndLocalId> REVERSED_INSTANCE = new HiliComparator()
+                .reversed();
 
-	public static class HiliComparatorLocalsHigh
-			implements Comparator<HasIdAndLocalId> {
-		public static final HiliComparatorLocalsHigh INSTANCE = new HiliComparatorLocalsHigh();
+        @Override
+        public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+            return HiliHelper.compare(o1, o2);
+        }
+    }
 
-		@Override
-		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
-			return HiliHelper.compareLocalsHigh(o1, o2);
-		}
-	}
+    public static class HiliComparatorLocalsHigh
+            implements Comparator<HasIdAndLocalId> {
+        public static final HiliComparatorLocalsHigh INSTANCE = new HiliComparatorLocalsHigh();
 
-	public static class HiliComparatorPreferLocals
-			implements Comparator<HasIdAndLocalId> {
-		@Override
-		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
-			int i = o1.getClass().getName().compareTo(o2.getClass().getName());
-			if (i != 0) {
-				return i;
-			}
-			i = CommonUtils.compareLongs(o1.getLocalId(), o2.getLocalId());
-			if (i != 0) {
-				return i;
-			}
-			i = CommonUtils.compareLongs(o1.getId(), o2.getId());
-			if (i != 0) {
-				return i;
-			}
-			return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
-		}
-	}
+        @Override
+        public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+            return HiliHelper.compareLocalsHigh(o1, o2);
+        }
+    }
 
-	public static class HiliNoLocalComparator
-			implements Comparator<HasIdAndLocalId> {
-		public static final HiliNoLocalComparator INSTANCE = new HiliNoLocalComparator();
+    public static class HiliComparatorPreferLocals
+            implements Comparator<HasIdAndLocalId> {
+        @Override
+        public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+            int i = o1.getClass().getName().compareTo(o2.getClass().getName());
+            if (i != 0) {
+                return i;
+            }
+            i = CommonUtils.compareLongs(o1.getLocalId(), o2.getLocalId());
+            if (i != 0) {
+                return i;
+            }
+            i = CommonUtils.compareLongs(o1.getId(), o2.getId());
+            if (i != 0) {
+                return i;
+            }
+            return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
+        }
+    }
 
-		@Override
-		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
-			return HiliHelper.compareNoLocals(o1, o2);
-		}
-	}
+    public static class HiliNoLocalComparator
+            implements Comparator<HasIdAndLocalId> {
+        public static final HiliNoLocalComparator INSTANCE = new HiliNoLocalComparator();
+
+        @Override
+        public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+            return HiliHelper.compareNoLocals(o1, o2);
+        }
+    }
 }

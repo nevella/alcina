@@ -142,7 +142,11 @@ public class FsObjectCache<T> {
                 logger.info("refreshing cache object - {} - {}",
                         clazz.getSimpleName(), path);
                 T value = pathToValue.apply(path);
-                KryoUtils.serializeToFile(value, cacheFile);
+                if (value != null) {
+                    KryoUtils.serializeToFile(value, cacheFile);
+                } else {
+                    return null;
+                }
             } catch (Exception e) {
                 if (!cacheFile.exists()) {
                     throw new WrappedRuntimeException(e);

@@ -6,12 +6,15 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -87,7 +90,11 @@ public class DomainStoreTransformSequencer {
         logger.warn("Remove local barrier: {}", requestId);
         CountDownLatch latch = preLocalNonFireEventsThreadBarrier
                 .get(requestId);
-        latch.countDown();
+        // can be confusing with jboss server firing for devconsole (latch will
+        // be null for jboss server)
+        if (latch != null) {
+            latch.countDown();
+        }
     }
 
     // called by the main firing sequence thread, since the local vm transforms
@@ -202,7 +209,7 @@ public class DomainStoreTransformSequencer {
                         .getTimestamp("transactionCommitTime");
                 rs.close();
                 PreparedStatement idStatement = conn.prepareStatement(Ax.format(
-                        "select id from %s where transactionCommitTime=? ",
+                        "select id from %s where transactionCommitTime=? order by id",
                         tableName));
                 idStatement.setTimestamp(1, transactionsData.commitTimestamp);
                 ResultSet idRs = idStatement.executeQuery();
@@ -294,6 +301,12 @@ public class DomainStoreTransformSequencer {
         }
     }
 
+    private Timestamp translateToUtc(Timestamp timestamp) {
+        Calendar defaultCalendar = Calendar.getInstance();
+        return new Timestamp(timestamp.getTime()
+                - defaultCalendar.getTimeZone().getOffset(timestamp.getTime()));
+    }
+
     void ensureTransactionCommitTimes() throws SQLException {
         if (!loaderDatabase.domainDescriptor
                 .isUseTransformDbCommitSequencing()) {
@@ -311,6 +324,8 @@ public class DomainStoreTransformSequencer {
                             + "from %s where transactionCommitTime is null order by pg_xact_commit_timestamp(xmin)",
                     tableName);
             ResultSet rs = statement.executeQuery(sql);
+            Calendar utcCalendar = Calendar
+                    .getInstance(TimeZone.getTimeZone(ZoneId.of("GMT")));
             while (rs.next()) {
                 long id = rs.getLong("id");
                 PreparedStatement updateStatement = conn.prepareStatement(Ax
@@ -318,7 +333,8 @@ public class DomainStoreTransformSequencer {
                                 tableName));
                 Timestamp commit_timestamp = rs
                         .getTimestamp("commit_timestamp");
-                updateStatement.setTimestamp(1, commit_timestamp);
+                Timestamp utcTimestamp = commit_timestamp;
+                updateStatement.setTimestamp(1, utcTimestamp);
                 updateStatement.setLong(2, id);
                 updateStatement.executeUpdate();
                 updateStatement.close();
@@ -328,6 +344,10 @@ public class DomainStoreTransformSequencer {
             conn.commit();
             rs.close();
         }
+    }
+
+    Timestamp getHighestVisibleTransactionTimestamp() {
+        return highestVisibleTransactions.commitTimestamp;
     }
 
     void markHighestVisibleTransformList(Connection conn) throws SQLException {

@@ -108,6 +108,8 @@ public class SEUtilities {
     private static UnsortedMultikeyMap<PropertyDescriptor> pdLookup = new UnsortedMultikeyMap<PropertyDescriptor>(
             2);
 
+    private static Map<Class, List<Method>> allMethodsPerClass = new LinkedHashMap<>();
+
     private static Map<Class, List<Field>> allFieldsPerClass = new LinkedHashMap<>();
 
     private static Pattern sq_1 = Pattern.compile("(?<=\\s|^|\\(|\\[)\"");
@@ -121,6 +123,27 @@ public class SEUtilities {
     private static Pattern sq_5 = Pattern.compile("[`'´]+");
 
     private static Pattern sq_6 = Pattern.compile("[`'´]{2,}");
+
+    /**
+     * Does not return interface (default) methods
+     */
+    public static List<Method> allClassMethods(Class clazz0) {
+        return allMethodsPerClass.computeIfAbsent(clazz0, clazz -> {
+            List<Method> result = new ArrayList<>();
+            try {
+                while (clazz != Object.class) {
+                    for (Method m : clazz.getDeclaredMethods()) {
+                        m.setAccessible(true);
+                        result.add(m);
+                    }
+                    clazz = clazz.getSuperclass();
+                }
+            } catch (Exception e) {
+                throw new WrappedRuntimeException(e);
+            }
+            return result;
+        });
+    }
 
     public static List<Field> allFields(Class clazz0) {
         return allFieldsPerClass.computeIfAbsent(clazz0, clazz -> {

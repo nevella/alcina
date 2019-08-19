@@ -172,6 +172,10 @@ public class Domain {
         Domain.handler = singleton;
     }
 
+    public static <V extends HasIdAndLocalId> V resolve(V v) {
+        return handler.resolve(v);
+    }
+
     public static <V extends HasIdAndLocalId> V resolveTransactional(
             DomainListener listener, V value, Object[] path) {
         return handler.resolveTransactional(listener, value, path);
@@ -249,6 +253,10 @@ public class Domain {
         }
 
         <V extends HasIdAndLocalId> DomainQuery<V> query(Class<V> clazz);
+
+        default <V extends HasIdAndLocalId> V resolve(V v) {
+            return v;
+        }
 
         <V extends HasIdAndLocalId> V transactionalVersion(V v);
     }

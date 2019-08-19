@@ -22,6 +22,10 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor {
         throw new UnsupportedOperationException();
     }
 
+    public boolean isAddMvccObjectResolutionChecks() {
+        return false;
+    }
+
     public boolean isUseTransformDbCommitSequencing() {
         return true;
     }

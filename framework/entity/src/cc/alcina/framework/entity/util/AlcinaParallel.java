@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.servlet;
+package cc.alcina.framework.entity.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,16 +10,17 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.servlet.job.JobRegistry;
-import cc.alcina.framework.servlet.servlet.AlcinaParallel.Parameters.Builder;
+import cc.alcina.framework.entity.util.AlcinaParallel.Parameters.Builder;
 
 public class AlcinaParallel {
     public static Builder builder() {
@@ -34,7 +35,7 @@ public class AlcinaParallel {
 
     private Parameters parameters;
 
-    private JobTracker jobTracker;
+    private AlcinaParallelJobChecker jobChecker;
 
     public AlcinaParallel(Parameters parameters) {
         this.parameters = parameters;
@@ -46,6 +47,7 @@ public class AlcinaParallel {
     }
 
     public AlcinaParallelResults run() {
+        jobChecker = Registry.impl(AlcinaParallelJobChecker.class);
         if (parameters.serial) {
             for (Runnable runnable : parameters.runnables) {
                 try {
@@ -53,7 +55,7 @@ public class AlcinaParallel {
                     if (cancelled) {
                         break;
                     }
-                    if (jobTracker != null && jobTracker.isCancelled()) {
+                    if (jobChecker.isCancelled()) {
                         break;
                     }
                     runnable.run();
@@ -72,7 +74,6 @@ public class AlcinaParallel {
             executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
                     parameters.threadCount,
                     new NamedThreadFactory(parameters.provideThreadName()));
-            jobTracker = JobRegistry.get().getContextTracker();
             LooseContextInstance snapshot = LooseContext.getContext()
                     .snapshot();
             List<Callable> callables = parameters.runnables.stream().map(
@@ -100,7 +101,7 @@ public class AlcinaParallel {
                 if (cancelled) {
                     return null;
                 }
-                if (jobTracker != null && jobTracker.isCancelled()) {
+                if (jobChecker.isCancelled()) {
                     return null;
                 }
                 permissionsManagerState.copyTo(PermissionsManager.get());
@@ -119,6 +120,13 @@ public class AlcinaParallel {
             }
             return null;
         };
+    }
+
+    @RegistryLocation(registryPoint = AlcinaParallelJobChecker.class, implementationType = ImplementationType.INSTANCE)
+    public static class AlcinaParallelJobChecker {
+        public boolean isCancelled() {
+            return false;
+        }
     }
 
     public class AlcinaParallelResults {

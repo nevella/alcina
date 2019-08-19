@@ -77,7 +77,7 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
     }
 
     public boolean contains(HasIdAndLocalId hili) {
-        Class<? extends HasIdAndLocalId> clazz = hili.getClass();
+        Class<? extends HasIdAndLocalId> clazz = hili.provideEntityClass();
         ensureMaps(clazz);
         long id = hili.getId();
         return detached.get(clazz).containsKey(id);
@@ -112,7 +112,7 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 
     @Override
     public <T extends HasIdAndLocalId> T getExisting(T hili) {
-        return (T) get(hili.getClass(), hili.getId());
+        return (T) get(hili.provideEntityClass(), hili.getId());
     }
 
     public Map<Long, HasIdAndLocalId> getMap(Class clazz) {
@@ -171,7 +171,7 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
 
     @Override
     public void put(HasIdAndLocalId hili) {
-        Class<? extends HasIdAndLocalId> clazz = hili.getClass();
+        Class<? extends HasIdAndLocalId> clazz = hili.provideEntityClass();
         ensureMaps(clazz);
         long id = hili.getId();
         if (throwOnExisting) {
@@ -200,7 +200,7 @@ public class DetachedEntityCache implements Serializable, PrivateObjectCache {
     }
 
     public void remove(HasIdAndLocalId hili) {
-        Class<? extends HasIdAndLocalId> clazz = hili.getClass();
+        Class<? extends HasIdAndLocalId> clazz = hili.provideEntityClass();
         ensureMaps(clazz);
         long id = hili.getId();
         detached.get(clazz).remove(id);

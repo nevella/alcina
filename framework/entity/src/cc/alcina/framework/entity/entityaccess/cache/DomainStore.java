@@ -6,11 +6,13 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -91,6 +93,9 @@ import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreHealth;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreInstrumentation;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjections;
 
@@ -199,6 +204,8 @@ public class DomainStore implements IDomainStore {
     Logger metricLogger = AlcinaLogUtils.getMetricLogger(getClass());
 
     Logger logger = LoggerFactory.getLogger(getClass());
+
+    Mvcc mvcc;
 
     private ThreadLocal<PerThreadTransaction> transactions = new ThreadLocal() {
     };
@@ -326,6 +333,10 @@ public class DomainStore implements IDomainStore {
         return threads.getLockDumpString(lockDumpCause, full);
     }
 
+    public Mvcc getMvcc() {
+        return this.mvcc;
+    }
+
     public DomainTransformPersistenceEvents getPersistenceEvents() {
         return this.persistenceEvents;
     }
@@ -414,6 +425,7 @@ public class DomainStore implements IDomainStore {
     }
 
     public void warmup() throws Exception {
+        MetricLogging.get().start("domainStore.warmup");
         initialised = false;
         initialising = true;
         transformManager = new SubgraphTransformManagerRemoteOnly();
@@ -428,13 +440,23 @@ public class DomainStore implements IDomainStore {
         domainDescriptor.registerStore(this);
         domainDescriptor.perClass.values().stream()
                 .forEach(this::prepareClassDescriptor);
+        mvcc = new Mvcc(this, domainDescriptor, cache);
+        MetricLogging.get().start("mvcc");
+        mvcc.init();
+        MetricLogging.get().end("mvcc");
+        Transaction.ensureActive();
+        Transaction.current().setBaseTransaction(true, this);
         loader.warmup();
+        // loader responsible for this
+        // Transaction.current().toCommitted();
+        Transaction.endAndBeginNew();
         initialising = false;
         initialised = true;
         threads.startLongLockHolderCheck();
         if (ResourceUtilities.is("checkAccessWithoutLock")) {
             threads.setupLockedAccessCheck();
         }
+        MetricLogging.get().end("domainStore.warmup");
     }
 
     private void doEvictions() {
@@ -463,7 +485,7 @@ public class DomainStore implements IDomainStore {
             return dte;
         } else {
             DomainTransformEvent translated = ResourceUtilities
-                    .fieldwiseClone(dte, true);
+                    .fieldwiseClone(dte, true, false);
             translated.setPropertyName(ann.toIdProperty());
             translated.setNewValue(translated.getValueId());
             TransformManager.get().convertToTargetObject(translated);
@@ -627,7 +649,7 @@ public class DomainStore implements IDomainStore {
     }
 
     <T extends HasIdAndLocalId> T findRaw(T t) {
-        return (T) findRaw(t.getClass(), t.getId());
+        return (T) findRaw(t.provideEntityClass(), t.getId());
     }
 
     String getCanonicalPropertyPath(Class clazz, String propertyPath) {
@@ -648,7 +670,7 @@ public class DomainStore implements IDomainStore {
     }
 
     void index(HasIdAndLocalId obj, boolean add) {
-        Class<? extends HasIdAndLocalId> clazz = obj.getClass();
+        Class<? extends HasIdAndLocalId> clazz = obj.provideEntityClass();
         if (obj instanceof DomainProxy) {
             clazz = (Class<? extends HasIdAndLocalId>) clazz.getSuperclass();
         }
@@ -676,7 +698,7 @@ public class DomainStore implements IDomainStore {
                 throw new WrappedRuntimeException(e);
             }
         }
-        V existing = (V) cache.get(v.getClass(), v.getId());
+        V existing = (V) cache.get(v.provideEntityClass(), v.getId());
         return existing == v;
     }
 
@@ -803,6 +825,9 @@ public class DomainStore implements IDomainStore {
             threads.lock(true);
             postProcessStart = System.currentTimeMillis();
             MetricLogging.get().start("post-process");
+            Transaction.ensureEnded();
+            Transaction.begin();
+            Transaction.current().toCommitting();
             Set<Object> indexedViaUpdateAssociation = new LinkedHashSet<>();
             threads.postProcessWriterThread = Thread.currentThread();
             postProcessEvent = persistenceEvent;
@@ -908,7 +933,13 @@ public class DomainStore implements IDomainStore {
                 }
             });
             doEvictions();
+            Date transactionCommitTime = persistenceEvent
+                    .getDomainTransformLayerWrapper().persistentRequests.get(0)
+                            .getTransactionCommitTime();
+            Transaction.current().toCommitted(
+                    new Timestamp(transactionCommitTime.getTime()));
         } catch (Exception e) {
+            Transaction.current().toAborted();
             causes.add(e);
         } finally {
             transformManager.endCommit();
@@ -922,6 +953,7 @@ public class DomainStore implements IDomainStore {
                     .max(health.domainStoreMaxPostProcessTime, postProcessTime);
             MetricLogging.get().end("post-process", metricLogger);
             threads.unlock(true);
+            Transaction.endAndBeginNew();
             try {
                 if (warnBuilder.length() > 0) {
                     Exception warn = new Exception(warnBuilder.toString());
@@ -1048,7 +1080,7 @@ public class DomainStore implements IDomainStore {
                     && descriptorMap.get(domainDescriptor).initialised;
         }
 
-        public synchronized <V extends HasIdAndLocalId> DomainStoreQuery<V> query(
+        public <V extends HasIdAndLocalId> DomainStoreQuery<V> query(
                 Class<V> clazz) {
             return new DomainStoreQuery(clazz, storeFor(clazz));
         }
@@ -1061,27 +1093,26 @@ public class DomainStore implements IDomainStore {
             });
         }
 
-        public synchronized DomainStore storeFor(Class clazz) {
+        public DomainStore storeFor(Class clazz) {
             return classMap.get(clazz);
         }
 
-        public synchronized DomainStore storeFor(
-                DomainDescriptor domainDescriptor) {
+        public DomainStore storeFor(DomainDescriptor domainDescriptor) {
             return descriptorMap.get(domainDescriptor);
         }
 
-        public synchronized Stream<DomainStore> stream() {
+        public Stream<DomainStore> stream() {
             return descriptorMap.values().stream().collect(Collectors.toList())
                     .stream();
         }
 
-        public synchronized DomainStore writableStore() {
+        public DomainStore writableStore() {
             DomainStore store = writableStore0();
             Preconditions.checkNotNull(store);
             return store;
         }
 
-        private synchronized DomainStore writableStore0() {
+        private DomainStore writableStore0() {
             if (writableStore == null) {
                 writableStore = descriptorMap.values().stream()
                         .filter(d -> d.writable).findFirst().orElse(null);
@@ -1105,7 +1136,8 @@ public class DomainStore implements IDomainStore {
             @Override
             public <V extends HasIdAndLocalId> V detachedVersion(V v) {
                 return v == null ? null
-                        : storeHandler(v.getClass()).detachedVersion(v);
+                        : storeHandler(v.provideEntityClass())
+                                .detachedVersion(v);
             }
 
             @Override
@@ -1115,7 +1147,8 @@ public class DomainStore implements IDomainStore {
 
             @Override
             public <V extends HasIdAndLocalId> V find(V v) {
-                return v == null ? null : storeHandler(v.getClass()).find(v);
+                return v == null ? null
+                        : storeHandler(v.provideEntityClass()).find(v);
             }
 
             @Override
@@ -1126,7 +1159,8 @@ public class DomainStore implements IDomainStore {
             @Override
             public <V extends HasIdAndLocalId> boolean isDomainVersion(V v) {
                 return v == null ? null
-                        : storeHandler(v.getClass()).isDomainVersion(v);
+                        : storeHandler(v.provideEntityClass())
+                                .isDomainVersion(v);
             }
 
             @Override
@@ -1157,7 +1191,8 @@ public class DomainStore implements IDomainStore {
             @Override
             public <V extends HasIdAndLocalId> V transactionalVersion(V v) {
                 return v == null ? null
-                        : storeHandler(v.getClass()).transactionalVersion(v);
+                        : storeHandler(v.provideEntityClass())
+                                .transactionalVersion(v);
             }
 
             @Override
@@ -1169,7 +1204,7 @@ public class DomainStore implements IDomainStore {
             @Override
             public <V extends HasIdAndLocalId> V writeable(V v) {
                 return v == null ? null
-                        : storeHandler(v.getClass()).writeable(v);
+                        : storeHandler(v.provideEntityClass()).writeable(v);
             }
 
             DomainHandler storeHandler(Class clazz) {
@@ -1278,8 +1313,8 @@ public class DomainStore implements IDomainStore {
         public <V extends HasIdAndLocalId> V resolveTransactional(
                 DomainListener listener, V value, Object[] path) {
             PerThreadTransaction perThreadTransaction = transactions.get();
-            if (perThreadTransaction == null
-                    || (value != null && !isCached(value.getClass()))) {
+            if (perThreadTransaction == null || (value != null
+                    && !isCached(value.provideEntityClass()))) {
                 return value;
             }
             return perThreadTransaction.getListenerValue(listener, value, path);
@@ -1395,7 +1430,8 @@ public class DomainStore implements IDomainStore {
 
         @Override
         public <V extends HasIdAndLocalId> V detachedVersion(V v) {
-            return (V) Domain.query(v.getClass()).id(v.getId()).find();
+            return (V) Domain.query(v.provideEntityClass()).id(v.getId())
+                    .find();
         }
 
         @Override
@@ -1412,10 +1448,10 @@ public class DomainStore implements IDomainStore {
                 if (locator == null) {
                     return null;
                 } else {
-                    return (V) cache.get(v.getClass(), locator.id);
+                    return (V) cache.get(v.provideEntityClass(), locator.id);
                 }
             } else {
-                return (V) cache.get(v.getClass(), v.getId());
+                return (V) cache.get(v.provideEntityClass(), v.getId());
             }
         }
 
@@ -1445,6 +1481,11 @@ public class DomainStore implements IDomainStore {
         public <V extends HasIdAndLocalId> DomainQuery<V> query(
                 Class<V> clazz) {
             return new DomainStoreQuery<>(clazz, DomainStore.this);
+        }
+
+        @Override
+        public <V extends HasIdAndLocalId> V resolve(V v) {
+            return Transactions.resolve(v, false);
         }
 
         @Override

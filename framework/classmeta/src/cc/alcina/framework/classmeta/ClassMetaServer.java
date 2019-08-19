@@ -121,7 +121,7 @@ public class ClassMetaServer {
         server.setHandler(handlers);
         server.start();
         gzipHandler.start();
-        server.dumpStdErr();
+        // server.dumpStdErr();
         RdbProxies.get().start();
         server.join();
     }

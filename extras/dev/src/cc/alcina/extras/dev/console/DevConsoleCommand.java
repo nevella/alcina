@@ -52,6 +52,8 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.Sx;
@@ -467,6 +469,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
                     try {
                         LooseContext.pushWithKey(
                                 DevConsoleRunnable.CONTEXT_ACTION_RESULT, "");
+                        if (Transactions.isInitialised()) {
+                            Transaction.begin();
+                        }
                         runnable.run();
                         String msg = LooseContext.getString(
                                 DevConsoleRunnable.CONTEXT_ACTION_RESULT);
@@ -491,6 +496,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
                         return String.format("'%s' was run%s", runnableName,
                                 msg);
                     } finally {
+                        if (Transactions.isInitialised()) {
+                            Transaction.end();
+                        }
                         LooseContext.pop();
                     }
                 }
