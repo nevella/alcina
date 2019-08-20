@@ -237,11 +237,12 @@ public class SEUtilities {
     }
 
     public static int copyFile(File in, File out) throws IOException {
-        return copyFile(in, out, true);
+        return copyFile(in, out, true, false);
     }
 
     public static int copyFile(File in, File out,
-            boolean replaceExistingDirectories) throws IOException {
+            boolean replaceExistingDirectories, boolean overwriteNewer)
+            throws IOException {
         if (in.isDirectory()) {
             return copyDirectory(in, out, replaceExistingDirectories);
         }
@@ -249,7 +250,7 @@ public class SEUtilities {
             out.getParentFile().mkdirs();
             out.createNewFile();
         } else {
-            if (out.lastModified() >= in.lastModified()) {
+            if (out.lastModified() >= in.lastModified() && !overwriteNewer) {
                 return 0;
             }
         }
