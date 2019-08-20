@@ -2,6 +2,7 @@ package com.sun.tools.jdi;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -96,6 +97,9 @@ public class RdbJdi {
     Map<RefTypeMethodKey, List<StackFrameImpl>> stackFrameByTypeMethod = new LinkedHashMap<>();
 
     Set<ReferenceType> referenceTypeMetadataCalled = new LinkedHashSet<>();
+
+    Map<ReferenceType, List<Field>> allFields = Collections
+            .synchronizedMap(new LinkedHashMap<>());
 
     Map<Long, Integer> earlyBreakpointResumes = Collections
             .synchronizedMap(new LinkedHashMap<>());
@@ -246,6 +250,97 @@ public class RdbJdi {
         }
     }
 
+    public void predict_get_values_array_reference(byte[] command, byte[] reply)
+            throws Exception {
+        PredictorToken token = new PredictorToken(command, reply);
+        PacketStream commandStream = token.commandStream();
+        ArrayReferenceImpl arrayRef = (ArrayReferenceImpl) commandStream
+                .readObjectReference();
+        int firstIndex = commandStream.readInt();
+        int length = commandStream.readInt();
+        if (length == 1) {
+            for (int idx = firstIndex; idx < arrayRef.length()
+                    && idx < firstIndex + 100; idx++) {
+                arrayRef.getValue(idx);
+            }
+        }
+        // ThreadReferenceImpl threadRef = commandStream.readThreadReference();
+        // long frameRef = commandStream.readFrameRef();
+        // for (StackFrame frame : threadRef.frames()) {
+        // if (frameId(frame) == frameRef) {
+        // predictStackFrame((StackFrameImpl) frame);
+        // }
+        // }
+    }
+
+    public void predict_get_values_object_reference(byte[] command,
+            byte[] reply) throws Exception {
+        Ax.err("predict_get_values_object_reference");
+        PredictorToken token = new PredictorToken(command, reply);
+        PacketStream commandStream = token.commandStream();
+        ObjectReferenceImpl objectRef = commandStream.readObjectReference();
+        int fieldCount = commandStream.readInt();
+        List<Field> allFields = objectRef.referenceType().allFields();
+        /*
+         * cache 'em all
+         */
+        for (Field field : allFields) {
+            Value value = objectRef.getValue(field);
+            if (value instanceof ObjectReferenceImpl) {
+                getClassMetadata(((ObjectReferenceImpl) value).referenceType());
+            }
+            if (value instanceof ArrayReferenceImpl) {
+                ((ArrayReferenceImpl) value).length();
+            }
+        }
+        // ThreadReferenceImpl threadRef = commandStream.readThreadReference();
+        // long frameRef = commandStream.readFrameRef();
+        // for (StackFrame frame : threadRef.frames()) {
+        // if (frameId(frame) == frameRef) {
+        // predictStackFrame((StackFrameImpl) frame);
+        // }
+        // }
+    }
+
+    public void predict_get_values_reference_type(byte[] command, byte[] reply)
+            throws Exception {
+        Ax.err("predict_get_values_reference_type");
+        PredictorToken token = new PredictorToken(command, reply);
+        PacketStream commandStream = token.commandStream();
+        ClassObjectReferenceImpl classObject = commandStream
+                .readClassObjectReference();
+        Ax.out("Class object: id:%s name:%s", classObject.ref, classObject);
+        int fieldCount = commandStream.readInt();
+        Ax.out("Field count: %s", fieldCount);
+        ReferenceTypeImpl referenceType = (ReferenceTypeImpl) classObject
+                .reflectedType();
+        for (int idx = 0; idx < fieldCount; idx++) {
+            long fieldRef = commandStream.readFieldRef();
+            Field field = referenceType.getFieldMirror(fieldRef);
+            Ax.out("Field id: %s", fieldRef);
+        }
+        List<Field> allFields = allFields(referenceType);
+        /*
+         * cache 'em all
+         */
+        for (Field field : allFields) {
+            if (!field.isStatic()) {
+                continue;
+            }
+            Value value = referenceType.getValue(field);
+            if (value instanceof ObjectReferenceImpl) {
+                getClassMetadata(((ObjectReferenceImpl) value).referenceType());
+            }
+        }
+        // ThreadReferenceImpl threadRef = commandStream.readThreadReference();
+        // long frameRef = commandStream.readFrameRef();
+        // for (StackFrame frame : threadRef.frames()) {
+        // if (frameId(frame) == frameRef) {
+        // predictStackFrame((StackFrameImpl) frame);
+        // }
+        // }
+    }
+
     public void predict_get_values_stack_frame(byte[] command, byte[] reply)
             throws Exception {
         PredictorToken token = new PredictorToken(command, reply);
@@ -299,6 +394,10 @@ public class RdbJdi {
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
+    }
+
+    private List<Field> allFields(ReferenceTypeImpl type) {
+        return allFields.computeIfAbsent(type, t -> t.allFields());
     }
 
     private void debug(String template, Object... args) {
@@ -358,6 +457,20 @@ public class RdbJdi {
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
+    }
+
+    private Field getFieldMirror(ReferenceTypeImpl referenceType, long ref) {
+        // Fetch all fields for the class, check performance impact
+        // Needs no synchronization now, since fields() returns
+        // unmodifiable local data
+        Iterator<Field> it = allFields(referenceType).iterator();
+        while (it.hasNext()) {
+            FieldImpl field = (FieldImpl) it.next();
+            if (field.ref() == ref) {
+                return field;
+            }
+        }
+        throw new IllegalArgumentException("Invalid field id: " + ref);
     }
 
     private void mockDetermineIfDaemonThread(ThreadReferenceImpl thread) {

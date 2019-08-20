@@ -74,6 +74,24 @@ class Oracle {
                         }
                         break;
                     }
+                    case get_values_reference_type: {
+                        if (command.messageName.equals("GetValues")) {
+                            predict_get_values_reference_type(command, reply);
+                        }
+                        break;
+                    }
+                    case get_values_object_reference: {
+                        if (command.messageName.equals("GetValues")) {
+                            predict_get_values_object_reference(command, reply);
+                        }
+                        break;
+                    }
+                    case get_values_array_reference: {
+                        if (command.messageName.equals("GetValues")) {
+                            predict_get_values_array_reference(command, reply);
+                        }
+                        break;
+                    }
                     }
                 }
             }
@@ -181,6 +199,36 @@ class Oracle {
         }
     }
 
+    private void predict_get_values_array_reference(Packet command,
+            Packet reply) {
+        try {
+            rdbJdi.predict_get_values_array_reference(command.bytes,
+                    reply.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    private void predict_get_values_object_reference(Packet command,
+            Packet reply) {
+        try {
+            rdbJdi.predict_get_values_object_reference(command.bytes,
+                    reply.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    private void predict_get_values_reference_type(Packet command,
+            Packet reply) {
+        try {
+            rdbJdi.predict_get_values_reference_type(command.bytes,
+                    reply.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
     private void predict_get_values_stack_frame(Packet command, Packet reply) {
         try {
             rdbJdi.predict_get_values_stack_frame(command.bytes, reply.bytes);
@@ -236,16 +284,33 @@ class Oracle {
         // // not cool but livable
         // return;
         }
+        boolean debugHits = false;
         switch (state.currentSeries) {
         case frames:
         case variable_table:
         case get_values_stack_frame:
+        case get_values_array_reference:
+        case get_values_object_reference:
+            break;
+        case get_values_reference_type:
+            debugHits = true;
+            int debug = 3;
+            break;
+        }
+        if (debugHits) {
+            Ax.out("\n==============\nDebug packet miss\n============\n");
+            Ax.out("Packet dump:\n");
+            packet.dump();
             List<Packet> hits = packet.source.otherPacketEndpoint()
                     .currentPredictivePacketsHit();
             List<PacketPair> like = packet.source.otherPacketEndpoint()
                     .getPredictivePacketsLike(packet);
             List<PacketPair> last = packet.source.otherPacketEndpoint()
                     .getMostRecentPredictivePacketList();
+            if (like.size() > 0) {
+                Ax.out("First like packet dump:\n");
+                like.get(0).command.dump();
+            }
             Ax.out("***hits***");
             Ax.out(hits);
             Ax.out("\n***like***");
@@ -256,8 +321,6 @@ class Oracle {
             if (packet.messageName.equals("ThisObject")) {
                 rdbJdi.debugThisObject(packet.bytes);
             }
-            int debug = 3;
-            break;
         }
     }
 

@@ -210,8 +210,9 @@ interface PacketEndpointHost {
             if (!usablePredictiveReplies.hasPackets()) {
                 return;
             }
-            usablePredictiveReplies
-                    .removeIf(packet -> !endpoint.oracle.isCacheable(packet));
+            usablePredictiveReplies.removeIf(
+                    packet -> !endpoint.oracle.isCacheable(packet),
+                    currentPredictivePacketsHit.size());
             synchronized (predictivePacketMissMonitor) {
                 predictivePacketMissMonitor.set(true);
                 predictivePacketMissMonitor.notify();
