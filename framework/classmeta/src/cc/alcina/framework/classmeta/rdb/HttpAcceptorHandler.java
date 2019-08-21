@@ -15,6 +15,13 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.JacksonUtils;
 
 public class HttpAcceptorHandler extends AbstractHandler {
+    public static void main(String[] args) {
+        String requestJson = ResourceUtilities.readClazzp("tmp.json");
+        HttpTransportModel transportRequest = JacksonUtils
+                .deserialize(requestJson, HttpTransportModel.class);
+        int debug = 3;
+    }
+
     @Override
     public void handle(String target, Request baseRequest,
             HttpServletRequest request, HttpServletResponse response)

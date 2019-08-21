@@ -26,6 +26,7 @@ import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
+import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 
@@ -93,6 +94,7 @@ public class ClassMetaServer {
         Server server = new Server(port);
         HandlerCollection handlers = new HandlerCollection(true);
         WrappedObjectHelper.withoutRegistry();
+        JacksonJsonObjectSerializer.usePool = false;
         initLoggers();
         initRegistry();
         ClassMetaHandler metaHandler = new ClassMetaHandler();
