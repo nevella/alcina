@@ -36,10 +36,8 @@ import cc.alcina.framework.entity.ResourceUtilities;
 
 @RegistryLocation(registryPoint = JsonObjectSerializer.class, implementationType = ImplementationType.INSTANCE)
 public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
-    public static boolean usePool = true;
-
     private static CachingMap<JacksonJsonObjectSerializer, ObjectMapperPool> objectMappersPool = new CachingConcurrentMap<>(
-            serializer -> new ObjectMapperPool(serializer, usePool), 10);
+            serializer -> new ObjectMapperPool(serializer), 10);
 
     private boolean withIdRefs;
 
@@ -358,13 +356,10 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
         private JacksonJsonObjectSerializer serializer;
 
-        public ObjectMapperPool(JacksonJsonObjectSerializer serializer,
-                boolean usePool) {
+        public ObjectMapperPool(JacksonJsonObjectSerializer serializer) {
             this.serializer = serializer;
-            if (usePool) {
-                objectPool = new GenericObjectPool<ObjectMapper>(factory);
-                objectPool.setMaxTotal(10);
-            }
+            objectPool = new GenericObjectPool<ObjectMapper>(factory);
+            objectPool.setMaxTotal(10);
         }
 
         public void returnObject(ObjectMapper objectMapper) {
