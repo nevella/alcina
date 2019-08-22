@@ -653,8 +653,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                     payload);
             String name = rpcRequest.getMethod().getName();
             RPCRequest f_rpcRequest = rpcRequest;
-            Thread.currentThread().setName(Ax.format("gwt-rpc:%s:%s", name,
-                    callCounter.incrementAndGet()));
+            String suffix = getRpcHandlerThreadNameSuffix(rpcRequest);
+            Thread.currentThread().setName(Ax.format("gwt-rpc:%s:%s%s", name,
+                    callCounter.incrementAndGet(), suffix));
             onAfterAlcinaAuthentication(name);
             LooseContext.set(CONTEXT_RPC_USER_ID,
                     PermissionsManager.get().getUserId());
@@ -869,6 +870,21 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
     protected String getRemoteAddress() {
         return getThreadLocalRequest() == null ? null
                 : getThreadLocalRequest().getRemoteAddr();
+    }
+
+    protected String getRpcHandlerThreadNameSuffix(RPCRequest rpcRequest) {
+        try {
+            Method method = this.getClass().getMethod(
+                    rpcRequest.getMethod().getName(),
+                    rpcRequest.getMethod().getParameterTypes());
+            if (method.isAnnotationPresent(WebMethod.class)) {
+                WebMethod webMethod = method.getAnnotation(WebMethod.class);
+                return webMethod.rpcHandlerThreadNameSuffix();
+            }
+            return "";
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
     }
 
     protected HttpSession getSession() {

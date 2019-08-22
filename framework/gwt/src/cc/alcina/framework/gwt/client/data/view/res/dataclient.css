@@ -433,6 +433,11 @@ span.square {
 	padding-right: 2em;
 }
 
+.simple-tab a.tab-caption-2 {
+font-size: 14.4px;
+	padding-bottom:0;
+}
+
 .tab-caption-2.unselected {
 	/*opacity: 0.5;
 	color: #1471e6;
@@ -1399,10 +1404,9 @@ table.gwittir-GridForm td.id div.nowrap {
 	font-size: 12px;
 }
 
-.simple-tab a {
-	font-size: 14.4px;
-}
 
 .pane-container {
-	margin-top: 2px;
+	margin-top: 10px;
+	padding-bottom:0;
+	font-weight:bold;
 }

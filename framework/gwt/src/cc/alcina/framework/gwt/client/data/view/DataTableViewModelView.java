@@ -162,8 +162,7 @@ public abstract class DataTableViewModelView<VM extends ViewModelWithDataProvide
     }
 
     public void renderTable() {
-        TableRes resources = isEditing() ? GWT.create(TableResEditable.class)
-                : GWT.create(TableRes.class);
+        TableRes resources = createTableResources();
         DataGridWithScrollAccess grid = new DataGridWithScrollAccess<T>(100,
                 resources);
         table = grid;
@@ -192,6 +191,11 @@ public abstract class DataTableViewModelView<VM extends ViewModelWithDataProvide
         ShowMorePager pager = new ShowMorePager();
         pager.attachTo(table,
                 ((DataGridWithScrollAccess) table).getBodyScrollPanel());
+    }
+
+    protected TableRes createTableResources() {
+        return isEditing() ? GWT.create(TableResEditable.class)
+                : GWT.create(TableRes.class);
     }
 
     public Set<Long> selectedIds() {
