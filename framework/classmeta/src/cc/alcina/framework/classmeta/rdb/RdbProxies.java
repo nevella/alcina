@@ -36,7 +36,7 @@ public class RdbProxies {
 
     public Endpoint endpointByName(String name) {
         return endpoints.stream().filter(e -> e.descriptor.name.equals(name))
-                .findFirst().get();
+                .findFirst().orElse(null);
     }
 
     public synchronized void replaceEndpoint(Endpoint endpoint) {
