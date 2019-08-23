@@ -382,6 +382,10 @@ public class XmlNode {
         }
     }
 
+    public String streamNCleanForBrowserHtmlFragment() {
+        return XmlUtils.streamNCleanForBrowserHtmlFragment(node);
+    }
+
     public void strip() {
         DocumentFragment frag = domDoc().createDocumentFragment();
         XmlNode fragNode = new XmlNode(frag, doc);
@@ -767,11 +771,12 @@ public class XmlNode {
     }
 
     public class XmlNodeHtml {
-        public void addClassName(String string) {
+        public XmlNode addClassName(String string) {
             Set<String> classes = Arrays.stream(attr("class").split(" "))
                     .filter(Ax::notBlank).collect(J8Utils.toLinkedHashSet());
             classes.add(string);
             setAttr("class", classes.stream().collect(Collectors.joining(" ")));
+            return XmlNode.this;
         }
 
         public XmlNode addLink(String text, String href, String target) {
