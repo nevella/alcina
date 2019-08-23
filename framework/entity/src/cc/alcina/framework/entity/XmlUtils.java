@@ -101,7 +101,7 @@ public class XmlUtils {
 
     private static DocumentBuilder db;
 
-    public static final int A4_MAX_PIXEL_WIDTH = 700;
+    public static final int A4_MAX_PIXEL_WIDTH = 550;
 
     public static final int A4_MAX_PIXEL_HEIGHT = 950;
 
@@ -878,9 +878,10 @@ public class XmlUtils {
         return loadDocument(xml, false);
     }
 
-    public static Document loadDocument(String xml, boolean knownUtf8) throws Exception {
-    	ByteArrayInputStream bais = null;
-        if (knownUtf8||xml.contains("encoding=\"UTF-8\"")) {
+    public static Document loadDocument(String xml, boolean knownUtf8)
+            throws Exception {
+        ByteArrayInputStream bais = null;
+        if (knownUtf8 || xml.contains("encoding=\"UTF-8\"")) {
             ByteArrayOutputStream bOut = new ByteArrayOutputStream();
             OutputStreamWriter out = new OutputStreamWriter(bOut, "UTF-8");
             out.write(xml);
