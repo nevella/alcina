@@ -77,9 +77,12 @@ public abstract class AbstractViewModelView<VM extends ViewModel>
         if (!isEditing()) {
             if (model instanceof ViewModelWithDataProvider) {
                 ViewModelWithDataProvider castModel = (ViewModelWithDataProvider) model;
-                DataDomainBase object = (DataDomainBase) castModel.dataProvider
-                        .getAllResults().get(index);
-                AppController.get().doView(object);
+                List allResults = castModel.dataProvider.getAllResults();
+                if (allResults.size() > index) {
+                    DataDomainBase object = (DataDomainBase) allResults
+                            .get(index);
+                    AppController.get().doView(object);
+                }
             }
         }
     }

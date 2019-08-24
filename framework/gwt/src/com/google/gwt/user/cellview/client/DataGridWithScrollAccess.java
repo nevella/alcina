@@ -15,9 +15,11 @@
  */
 package com.google.gwt.user.cellview.client;
 
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.cellview.client.LoadingStateChangeEvent.LoadingState;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -73,6 +75,10 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T>
         return image;
     }
 
+    private boolean expandToFitScreen;
+
+    private boolean scrollToBottomOnLoad;
+
     public DataGridWithScrollAccess(int pageSize,
             com.google.gwt.user.cellview.client.DataGrid.Resources resources) {
         super(pageSize, resources, null,
@@ -94,6 +100,14 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T>
         return (ScrollPanel) tableData.getParent();
     }
 
+    public boolean isExpandToFitScreen() {
+        return this.expandToFitScreen;
+    }
+
+    public boolean isScrollToBottomOnLoad() {
+        return this.scrollToBottomOnLoad;
+    }
+
     @Override
     public void onLoadingStateChanged(LoadingState state) {
         if (state == LoadingState.LOADING && getRowCount() > 0) {
@@ -102,8 +116,26 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T>
         super.onLoadingStateChanged(state);
     }
 
+    public void setExpandToFitScreen(boolean expandToFitScreen) {
+        this.expandToFitScreen = expandToFitScreen;
+    }
+
+    public void setScrollToBottomOnLoad(boolean scrollToBottomOnLoad) {
+        this.scrollToBottomOnLoad = scrollToBottomOnLoad;
+    }
+
     private void forceReflow() {
         // -webkit-transform: translate3d(0,0,0);
+        if (isExpandToFitScreen()) {
+            int clientHeight = Window.getClientHeight();
+            int absoluteTop = getAbsoluteTop();
+            getElement().getStyle().setHeight(
+                    Math.max(500, clientHeight - absoluteTop - 50), Unit.PX);
+        }
+        if (isScrollToBottomOnLoad() && getVisibleItemCount() < getPageSize()) {
+            Scheduler.get().scheduleDeferred(
+                    () -> getBodyScrollPanel().scrollToBottom());
+        }
         getElement().getStyle().setProperty("webkitTransform",
                 "translate3d(0,0,0)");
     }
