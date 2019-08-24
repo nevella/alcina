@@ -265,10 +265,13 @@ interface PacketEndpointHost {
         }
 
         void waitForPredictivePacketMiss() {
+            long start = System.currentTimeMillis();
+            int maxWait = 100;
             synchronized (predictivePacketMissMonitor) {
-                while (!predictivePacketMissMonitor.get()) {
+                while (!predictivePacketMissMonitor.get()
+                        && System.currentTimeMillis() - start < maxWait) {
                     try {
-                        predictivePacketMissMonitor.wait();
+                        predictivePacketMissMonitor.wait(maxWait);
                     } catch (InterruptedException e) {
                     }
                 }

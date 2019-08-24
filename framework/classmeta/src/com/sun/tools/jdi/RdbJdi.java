@@ -260,15 +260,27 @@ public class RdbJdi {
             throws Exception {
         PredictorToken token = new PredictorToken(command, reply);
         PacketStream commandStream = token.commandStream();
-        ArrayReferenceImpl arrayRef = (ArrayReferenceImpl) commandStream
-                .readObjectReference();
-        int firstIndex = commandStream.readInt();
-        int length = commandStream.readInt();
-        if (length == 1) {
-            for (int idx = firstIndex; idx < arrayRef.length()
-                    && idx < firstIndex + 100; idx++) {
-                arrayRef.getValue(idx);
+        try {
+            ArrayReferenceImpl arrayRef = (ArrayReferenceImpl) commandStream
+                    .readObjectReference();
+            int firstIndex = commandStream.readInt();
+            int length = commandStream.readInt();
+            if (length == 1) {
+                for (int idx = firstIndex; idx < arrayRef.length()
+                        && idx < firstIndex + 100; idx++) {
+                    Value value = arrayRef.getValue(idx);
+                    if (value instanceof ObjectReferenceImpl) {
+                        getClassMetadata(
+                                ((ObjectReferenceImpl) value).referenceType());
+                    }
+                    if (value instanceof ArrayReferenceImpl) {
+                        ((ArrayReferenceImpl) value).length();
+                    }
+                }
             }
+        } catch (Exception e) {
+            // TODO ...hmmmm arrayref classcast?
+            e.printStackTrace();
         }
         // ThreadReferenceImpl threadRef = commandStream.readThreadReference();
         // long frameRef = commandStream.readFrameRef();
@@ -359,6 +371,23 @@ public class RdbJdi {
             if (frameId(frame) == frameRef) {
                 predictStackFrame((StackFrameImpl) frame);
             }
+        }
+    }
+
+    public void predict_reference_type(byte[] command, byte[] reply)
+            throws Exception {
+        PredictorToken token = new PredictorToken(command, reply);
+        com.sun.tools.jdi.JDWP.ObjectReference.ReferenceType rt = com.sun.tools.jdi.JDWP.ObjectReference.ReferenceType
+                .waitForReply(vm, token.replyStream());
+        try {
+            ReferenceTypeImpl referenceTypeImpl = vm.referenceType(rt.typeID,
+                    rt.refTypeTag);
+            getClassMetadata(referenceTypeImpl);
+            for (Method method : referenceTypeImpl.allMethods()) {
+                getMethodData((MethodImpl) method);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

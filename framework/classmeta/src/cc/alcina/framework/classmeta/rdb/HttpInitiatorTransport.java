@@ -80,7 +80,8 @@ class HttpInitiatorTransport extends Transport {
         model.endpointName = descriptor.transportEndpointName;
         String payload = JacksonUtils.serialize(model);
         try {
-            SimpleQuery post = new SimpleQuery(url, payload, null).withGzip(true);
+            SimpleQuery post = new SimpleQuery(url, payload, null)
+                    .withGzip(true);
             maybeSimulateTransportDelay();
             String strResponse = post.asString();
             // Ax.err("received: %s chars", strResponse.length());
@@ -97,6 +98,9 @@ class HttpInitiatorTransport extends Transport {
                  * 
                  * cos once the debugger sends a packet that predictives can't
                  * handle, all bets are off...
+                 * 
+                 * only wait a lil bit (say 100ms) - all processing our side shd
+                 * be done by then
                  * 
                  */
                 packetEndpoint().waitForPredictivePacketMiss();

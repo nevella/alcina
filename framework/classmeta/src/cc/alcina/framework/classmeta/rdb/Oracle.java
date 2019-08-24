@@ -55,6 +55,9 @@ class Oracle {
                     case "ClassesBySignature":
                         predict_classes_by_signature(command, reply);
                         break;
+                    case "ReferenceType":
+                        predict_reference_type(command, reply);
+                        break;
                     }
                     switch (command.series) {
                     case all_threads_handshake: {
@@ -276,6 +279,18 @@ class Oracle {
         try {
             rdbJdi.predict_get_values_stack_frame(command.bytes, reply.bytes);
         } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    private void predict_reference_type(Packet command, Packet reply) {
+        try {
+            Ax.out(Thread.currentThread() + ":"
+                    + Thread.currentThread().getId());
+            rdbJdi.predict_reference_type(command.bytes, reply.bytes);
+        } catch (Exception e) {
+            Ax.out(Thread.currentThread() + ":"
+                    + Thread.currentThread().getId());
             throw new WrappedRuntimeException(e);
         }
     }
