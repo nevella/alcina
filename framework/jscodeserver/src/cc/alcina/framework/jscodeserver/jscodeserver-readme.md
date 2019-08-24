@@ -12,3 +12,6 @@
 		... at which point we go hoora
 	* in js impl, copy structure of npapi and common
 	
+###debugging weird f() objects in browser (exceptions)
+//com.google.gwt.dev.shell.BrowserChannel.SessionHandler.ExceptionOrReturnValue.ExceptionOrReturnValue(boolean, Value)
+

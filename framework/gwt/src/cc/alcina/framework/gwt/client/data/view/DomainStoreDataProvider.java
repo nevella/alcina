@@ -48,13 +48,13 @@ import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.WaitForTransformsClient;
 
-public class MemcacheDataProvider<T extends HasIdAndLocalId>
+public class DomainStoreDataProvider<T extends HasIdAndLocalId>
         extends AsyncDataProvider<T>
         implements ColumnSortEvent.Handler, HasDataChangeHandlers<T> {
-    public static final String CONTEXT_NO_SEARCH = MemcacheDataProvider.class
+    public static final String CONTEXT_NO_SEARCH = DomainStoreDataProvider.class
             .getName() + ".CONTEXT_NO_SEARCH";
 
-    public static final String TOPIC_INVALIDATE_ALL = MemcacheDataProvider.class
+    public static final String TOPIC_INVALIDATE_ALL = DomainStoreDataProvider.class
             .getName() + ".TOPIC_INVALIDATE_ALL";
 
     public static void invalidateAll() {
@@ -89,7 +89,9 @@ public class MemcacheDataProvider<T extends HasIdAndLocalId>
 
     int pageSize = 0;
 
-    private MemcacheDataProvider<T>.SearchCallback activeCallback;
+    private int visibleRecordsSize = 100;
+
+    private DomainStoreDataProvider<T>.SearchCallback activeCallback;
 
     private boolean handleOnClient;
 
@@ -99,7 +101,7 @@ public class MemcacheDataProvider<T extends HasIdAndLocalId>
 
     private DomainTransformCommitPosition transformLogPosition;
 
-    public MemcacheDataProvider(Class<T> clazz) {
+    public DomainStoreDataProvider(Class<T> clazz) {
         this.clazz = clazz;
         CommitToStorageTransformListener.topicTransformsCommitted()
                 .add((k, m) -> lastSearchDefinition = null);
@@ -196,6 +198,10 @@ public class MemcacheDataProvider<T extends HasIdAndLocalId>
 
     public SearchDefinition getSearchDefinition() {
         return this.searchDefinition;
+    }
+
+    public int getVisibleRecordsSize() {
+        return this.visibleRecordsSize;
     }
 
     public void invalidate() {
@@ -356,6 +362,10 @@ public class MemcacheDataProvider<T extends HasIdAndLocalId>
         this.searchDefinition = def;
     }
 
+    public void setVisibleRecordsSize(int visibleRecordsSize) {
+        this.visibleRecordsSize = visibleRecordsSize;
+    }
+
     @Override
     public void updateRowCount(int size, boolean exact) {
         this.rowCount = size;
@@ -371,12 +381,15 @@ public class MemcacheDataProvider<T extends HasIdAndLocalId>
             if (vr.getStart() == 0) {
                 int length = vr.getLength();
                 int available = start + values.size();
-                // FIXME - hardcoded 100 - this is sort of tricky (I almost
+                // FIXME - hardcoded visible size - this is sort of tricky (I
+                // almost
                 // think design issue with gwt)
-                if (available <= 100 && length > 100) {
+                if (available <= visibleRecordsSize
+                        && length > visibleRecordsSize) {
                     hasData.setVisibleRange(0, available);
                 } else if (length < values.size()) {
-                    hasData.setVisibleRange(0, Math.min(values.size(), 100));
+                    hasData.setVisibleRange(0,
+                            Math.min(values.size(), visibleRecordsSize));
                 }
             }
         }

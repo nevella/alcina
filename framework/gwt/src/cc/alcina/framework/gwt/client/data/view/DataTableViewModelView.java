@@ -163,7 +163,7 @@ public abstract class DataTableViewModelView<VM extends ViewModelWithDataProvide
 
     public void renderTable() {
         TableRes resources = createTableResources();
-        DataGridWithScrollAccess grid = new DataGridWithScrollAccess<T>(100,
+        DataGridWithScrollAccess grid = new DataGridWithScrollAccess<T>(getPageSize(),
                 resources);
         table = grid;
         new KeyboardActionHandler().setup(this, 'R', () -> refresh());
@@ -191,6 +191,10 @@ public abstract class DataTableViewModelView<VM extends ViewModelWithDataProvide
         ShowMorePager pager = new ShowMorePager();
         pager.attachTo(table,
                 ((DataGridWithScrollAccess) table).getBodyScrollPanel());
+    }
+
+    protected int getPageSize() {
+        return 100;
     }
 
     protected TableRes createTableResources() {

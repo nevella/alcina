@@ -103,6 +103,11 @@ public abstract class SearchDefinition extends WrapperPersistable
         }
     }
 
+    public void addToSoleCriteriaGroupAndRemoveExisting(SearchCriterion sc) {
+        removeFromSoleCriteriaGroup(sc);
+        addCriterionToSoleCriteriaGroup(sc, false);
+    }
+
     public Set<SearchCriterion> allCriteria() {
         LinkedHashSet<SearchCriterion> result = new LinkedHashSet<SearchCriterion>();
         for (CriteriaGroup cg : getCriteriaGroups()) {
@@ -393,6 +398,12 @@ public abstract class SearchDefinition extends WrapperPersistable
             }
             sc.removePropertyChangeListener(listener);
         }
+    }
+
+    public void removeFromSoleCriteriaGroup(SearchCriterion sc) {
+        assert criteriaGroups.size() == 1;
+        criteriaGroups.iterator().next().getCriteria()
+                .removeIf(sco -> sco.getClass() == sc.getClass());
     }
 
     public void resetLookups() {
