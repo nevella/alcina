@@ -14,7 +14,7 @@ class DebuggerState {
 
     public Packet currentPacket;
 
-    boolean seenSuspend;
+    long currentSuspendId;
 
     public DebuggerState() {
         updateState();
@@ -42,7 +42,7 @@ class DebuggerState {
         }
         switch (name) {
         case "Suspend":
-            seenSuspend = true;
+            // don't set the suspend id (wait for the breakpoint)x
             break;
         }
         boolean expectingPredictive = expectingPredictiveAfterPacket != null;
@@ -253,8 +253,8 @@ class DebuggerState {
                 currentSeries = next;
             }
         }
-        if (currentPacket != null && currentPacket.meta != null && hadDelta) {
-            currentPacket.meta.series = currentSeries;
+        if (currentPacket != null && hadDelta) {
+            currentPacket.series = currentSeries;
         }
     }
 

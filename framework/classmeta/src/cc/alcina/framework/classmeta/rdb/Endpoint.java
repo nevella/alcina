@@ -155,11 +155,15 @@ abstract class Endpoint {
             Optional<Packet> predictiveResponse = otherPacketEndpoint
                     .getPredictiveResponse(packet);
             if (predictiveResponse.isPresent()) {
-                packetEndpoint.addReplyPacket(predictiveResponse.get());
-                logger.debug("Predictive packet << {}\t{}", packetEndpoint,
-                        packet);
-                predictiveReplyPacketCounter++;
-                break;
+                if (oracle.onPredictivePacketHit(packet,
+                        predictiveResponse.get())) {
+                    packetEndpoint.addReplyPacket(predictiveResponse.get());
+                    predictiveResponse.get().predictivePacketUsed = true;
+                    logger.debug("Predictive packet << {}\t{}", packetEndpoint,
+                            packet);
+                    predictiveReplyPacketCounter++;
+                    break;
+                }
             }
             if (!packet.fromDebugger && isDebuggee() && !packet.isReply) {
                 // event packet
@@ -194,7 +198,7 @@ abstract class Endpoint {
                 otherPacketEndpoint.addOutPacket(packet);
                 otherPacketEndpoint.host.addPredictivePackets(
                         packetEndpoint.flushPredictivePackets());
-                if (packet.meta.mustSend) {
+                if (packet.mustSend) {
                     break;
                 }
             } else {

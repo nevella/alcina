@@ -152,6 +152,10 @@ interface PacketEndpointHost {
             return allInPackets.byId(packet.id(), true);
         }
 
+        synchronized Packet getCorrespondingReplyPacket(Packet packet) {
+            return allInPackets.byId(packet.id(), false);
+        }
+
         synchronized List<PacketPair> getMostRecentPredictivePacketList() {
             return usablePredictiveReplies.streamRecentReplies()
                     .filter(p -> p.isReply)
@@ -231,6 +235,8 @@ interface PacketEndpointHost {
         synchronized void receivedPredictivePackets(
                 List<Packet> predictivePackets) {
             usablePredictiveReplies.clearRecentList();
+            predictivePackets.forEach(
+                    packet -> packet.suspendId = endpoint.oracle.state.currentSuspendId);
             predictivePackets.forEach(usablePredictiveReplies::add);
             if (predictivePackets.size() > 0) {
                 synchronized (predictivePacketMissMonitor) {
