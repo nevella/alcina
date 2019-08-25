@@ -133,8 +133,11 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T>
                     Math.max(500, clientHeight - absoluteTop - 50), Unit.PX);
         }
         if (isScrollToBottomOnLoad() && getVisibleItemCount() < getPageSize()) {
-            Scheduler.get().scheduleDeferred(
-                    () -> getBodyScrollPanel().scrollToBottom());
+            Scheduler.get().scheduleDeferred(() -> {
+                if (getBodyScrollPanel() != null) {
+                    getBodyScrollPanel().scrollToBottom();
+                }
+            });
         }
         getElement().getStyle().setProperty("webkitTransform",
                 "translate3d(0,0,0)");
