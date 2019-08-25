@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -238,6 +239,7 @@ public class InternalMetrics {
                 debugMonitors, debugMonitors);
         // MetricLogging.get().end(key);
         Map<Long, ThreadInfo> threadInfoById = Arrays.stream(threadInfos)
+                .filter(Objects::nonNull)
                 .collect(J8Utils.toKeyMap(ti -> ti.getThreadId()));
         trackers.values().stream().filter(imd -> !imd.isFinished())
                 .filter(imd -> shouldSlice(imd)).forEach(imd -> {
