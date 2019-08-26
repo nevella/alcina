@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -683,11 +684,20 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
             Set<DevConsoleCommand> seen = new LinkedHashSet<DevConsoleCommand>();
             String descPad = "\n" + CommonUtils.padStringLeft("", 73, " ");
             String filter = argv.length > 0 ? argv[0] : null;
+            Predicate<DevConsoleCommand> consoleFilter = c -> true;
+            if (filter.equals("cons")) {
+                consoleFilter = c -> DevConsole.getInstance()
+                        .isConsoleInstanceCommand(c);
+                filter = null;
+            }
             for (String k : keys) {
                 Map<String, DevConsoleCommand> commandsById = console.commandsById;
                 DevConsoleCommand cmd2 = commandsById.get(k);
                 if (seen.contains(cmd2) || (filter != null
                         && !filter.equals(cmd2.getCommandIds()[0]))) {
+                    continue;
+                }
+                if (!consoleFilter.test(cmd2)) {
                     continue;
                 }
                 seen.add(cmd2);

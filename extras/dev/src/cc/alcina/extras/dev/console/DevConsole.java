@@ -902,6 +902,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
         }
     }
 
+    protected boolean isConsoleInstanceCommand(DevConsoleCommand c) {
+        return false;
+    }
+
     protected abstract P newConsoleProperties();
 
     protected void performCommandInThread(List<String> args,
