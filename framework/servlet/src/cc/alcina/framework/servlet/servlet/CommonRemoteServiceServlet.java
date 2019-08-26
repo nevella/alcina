@@ -194,7 +194,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
-    private int actionCount = 0;
+    private AtomicInteger actionCounter = new AtomicInteger();
 
     private ThreadLocal<Integer> looseContextDepth = new ThreadLocal<>();
 
@@ -407,7 +407,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
         // getting to the countDown() in the spawned thread before the await()
         // in the launcher
         ActionLauncherAsync async = new ActionLauncherAsync(
-                performer.getClass().getSimpleName() + " - " + (++actionCount),
+                performer.getClass().getSimpleName() + "-"
+                        + (actionCounter.incrementAndGet()),
                 action);
         JobTracker tracker = async.launchAndWaitForTracker();
         return tracker.getId();
