@@ -18,103 +18,110 @@ package cc.alcina.framework.gwt.client.cell;
 import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.dom.client.ScrollHandler;
 import com.google.gwt.user.cellview.client.AbstractPager;
+import com.google.gwt.user.cellview.client.DataGridWithScrollAccess;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.view.client.HasRows;
 import com.google.gwt.view.client.Range;
 
 public class ShowMorePager extends AbstractPager {
-	/**
-	 * The default increment size.
-	 */
-	private static final int DEFAULT_INCREMENT = 100;
+    /**
+     * The default increment size.
+     */
+    private static final int DEFAULT_INCREMENT = 100;
 
-	/**
-	 * The increment size.
-	 */
-	private int incrementSize = DEFAULT_INCREMENT;
+    /**
+     * The increment size.
+     */
+    private int incrementSize = DEFAULT_INCREMENT;
 
-	/**
-	 * The last scroll position.
-	 */
-	private int lastScrollPos = 0;
+    /**
+     * The last scroll position.
+     */
+    private int lastScrollPos = 0;
 
-	/**
-	 * Construct a new {@link ShowMorePager}.
-	 */
-	public ShowMorePager() {
-		// initWidget(scrollable);
-	}
+    /**
+     * Construct a new {@link ShowMorePager}.
+     */
+    public ShowMorePager() {
+        // initWidget(scrollable);
+    }
 
-	public void attachTo(HasRows display, ScrollPanel scrollable) {
-		setDisplay(display);
-		// Handle scroll events.
-		scrollable.addScrollHandler(new ScrollHandler() {
-			@Override
-			public void onScroll(ScrollEvent event) {
-				// If scrolling up, ignore the event.
-				int oldScrollPos = lastScrollPos;
-				lastScrollPos = scrollable.getVerticalScrollPosition();
-				if (oldScrollPos >= lastScrollPos) {
-					return;
-				}
-				HasRows display = getDisplay();
-				if (display == null) {
-					return;
-				}
-				int scrollPanelContentsHeight = scrollable.getWidget()
-						.getOffsetHeight();
-				int scrollPanelHeight = scrollable.getOffsetHeight();
-				int maxScrollTop = scrollPanelContentsHeight - scrollPanelHeight
-						- 20;
-				// hack but not sure how to deal with said autoscrolls
-				if (Math.abs(lastScrollPos - oldScrollPos) > 500) {
-					// handle autoscroll to end
-					return;
-				}
-				if (lastScrollPos >= maxScrollTop) {
-					// We are near the end, so increase the page size.
-					int newPageSize = Math
-							.min(display.getVisibleRange().getLength()
-									+ incrementSize, display.getRowCount());
-					if (newPageSize != 0) {
-						Range newRange = new Range(0, newPageSize);
-						if (display.getVisibleRange().getStart() == newRange
-								.getStart()
-								&& display.getVisibleRange()
-										.getLength() >= newRange.getLength()) {
-							// don't show a smaller visible range (which would
-							// force a search)
-							return;
-						}
-						display.setVisibleRange(0, newPageSize);
-					}
-				}
-			}
-		});
-	}
+    public void attachTo(HasRows display, ScrollPanel scrollable) {
+        setDisplay(display);
+        // Handle scroll events.
+        scrollable.addScrollHandler(new ScrollHandler() {
+            @Override
+            public void onScroll(ScrollEvent event) {
+                // If scrolling up, ignore the event.
+                int oldScrollPos = lastScrollPos;
+                lastScrollPos = scrollable.getVerticalScrollPosition();
+                if (oldScrollPos >= lastScrollPos) {
+                    return;
+                }
+                HasRows display = getDisplay();
+                if (display == null) {
+                    return;
+                }
+                if (display instanceof DataGridWithScrollAccess) {
+                    if (((DataGridWithScrollAccess) display)
+                            .isScrollToBottomOnLoad()) {
+                        return;
+                    }
+                }
+                int scrollPanelContentsHeight = scrollable.getWidget()
+                        .getOffsetHeight();
+                int scrollPanelHeight = scrollable.getOffsetHeight();
+                int maxScrollTop = scrollPanelContentsHeight - scrollPanelHeight
+                        - 20;
+                // hack but not sure how to deal with said autoscrolls
+                if (Math.abs(lastScrollPos - oldScrollPos) > 500) {
+                    // handle autoscroll to end
+                    return;
+                }
+                if (lastScrollPos >= maxScrollTop) {
+                    // We are near the end, so increase the page size.
+                    int newPageSize = Math
+                            .min(display.getVisibleRange().getLength()
+                                    + incrementSize, display.getRowCount());
+                    if (newPageSize != 0) {
+                        Range newRange = new Range(0, newPageSize);
+                        if (display.getVisibleRange().getStart() == newRange
+                                .getStart()
+                                && display.getVisibleRange()
+                                        .getLength() >= newRange.getLength()) {
+                            // don't show a smaller visible range (which would
+                            // force a search)
+                            return;
+                        }
+                        display.setVisibleRange(0, newPageSize);
+                    }
+                }
+            }
+        });
+    }
 
-	/**
-	 * Get the number of rows by which the range is increased when the scrollbar
-	 * reaches the bottom.
-	 *
-	 * @return the increment size
-	 */
-	public int getIncrementSize() {
-		return incrementSize;
-	}
+    /**
+     * Get the number of rows by which the range is increased when the scrollbar
+     * reaches the bottom.
+     *
+     * @return the increment size
+     */
+    public int getIncrementSize() {
+        return incrementSize;
+    }
 
-	/**
-	 * Set the number of rows by which the range is increased when the scrollbar
-	 * reaches the bottom.
-	 *
-	 * @param incrementSize
-	 *            the incremental number of rows
-	 */
-	public void setIncrementSize(int incrementSize) {
-		this.incrementSize = incrementSize;
-	}
+    /**
+     * Set the number of rows by which the range is increased when the scrollbar
+     * reaches the bottom.
+     *
+     * @param incrementSize
+     *            the incremental number of rows
+     */
+    public void setIncrementSize(int incrementSize) {
+        this.incrementSize = incrementSize;
+    }
 
-	@Override
-	protected void onRangeOrRowCountChanged() {
-	}
+    @Override
+    protected void onRangeOrRowCountChanged() {
+    }
 }

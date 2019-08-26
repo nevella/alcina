@@ -6,42 +6,59 @@ import com.google.gwt.user.cellview.client.AbstractCellTable;
 import com.google.gwt.user.cellview.client.Header;
 import com.google.gwt.user.cellview.client.LoadingStateChangeEvent.LoadingState;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class RangeFooter extends Header<String> {
-	private AbstractCellTable table;
+    private AbstractCellTable table;
 
-	boolean loading = true;
+    boolean loading = true;
 
-	// unused for the mo (since always false)
-	boolean neverLoading = false;
+    private boolean searchReturnsLastResults;
 
-	public RangeFooter(AbstractCellTable table) {
-		super(new TextCell());
-		this.table = table;
-		table.addLoadingStateChangeHandler(
-				evt -> refresh(evt.getLoadingState()));
-	}
+    // unused for the mo (since always false)
+    boolean neverLoading = false;
 
-	@Override
-	public String getValue() {
-		boolean empty = table.getRowCount() == 0;
-		if (empty) {
-			String message = loading || neverLoading ? "Loading"
-					: "No records match";
-			return message;
-		} else {
-			String message = CommonUtils.formatJ("%s-%s of %s%s",
-					table.getVisibleItemCount() == 0 ? 0 : 1,
-					table.getVisibleItemCount(), table.getRowCount(),
-					loading ? " (Loading)" : "");
-			return message;
-		}
-	}
+    public RangeFooter(AbstractCellTable table) {
+        super(new TextCell());
+        this.table = table;
+        table.addLoadingStateChangeHandler(
+                evt -> refresh(evt.getLoadingState()));
+    }
 
-	private void refresh(LoadingState loadingState) {
-		loading = loadingState != LoadingState.LOADED;
-		neverLoading &= !loading;
-		Scheduler.get().scheduleDeferred(() -> table.redrawFooters());
-	}
+    @Override
+    public String getValue() {
+        boolean empty = table.getRowCount() == 0;
+        if (empty) {
+            String message = loading || neverLoading ? "Loading"
+                    : "No records match";
+            return message;
+        } else {
+            String rangeMessage = Ax.format("%s-%s",
+                    table.getVisibleItemCount() == 0 ? 0 : 1,
+                    table.getVisibleItemCount());
+            if (isSearchReturnsLastResults()
+                    && table.getVisibleItemCount() > 0) {
+                rangeMessage = Ax.format("%s-%s",
+                        table.getRowCount() - table.getVisibleItemCount(),
+                        table.getRowCount());
+            }
+            String message = Ax.format("%s of %s%s", rangeMessage,
+                    table.getRowCount(), loading ? " (Loading)" : "");
+            return message;
+        }
+    }
+
+    public boolean isSearchReturnsLastResults() {
+        return this.searchReturnsLastResults;
+    }
+
+    public void setSearchReturnsLastResults(boolean searchReturnsLastResults) {
+        this.searchReturnsLastResults = searchReturnsLastResults;
+    }
+
+    private void refresh(LoadingState loadingState) {
+        loading = loadingState != LoadingState.LOADED;
+        neverLoading &= !loading;
+        Scheduler.get().scheduleDeferred(() -> table.redrawFooters());
+    }
 }

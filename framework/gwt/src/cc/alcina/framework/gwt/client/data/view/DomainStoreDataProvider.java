@@ -366,6 +366,12 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
         this.visibleRecordsSize = visibleRecordsSize;
     }
 
+    public void tail() {
+        // nudge by changing the range
+        lastRange = new Range(0, 0);
+        search();
+    }
+
     @Override
     public void updateRowCount(int size, boolean exact) {
         this.rowCount = size;

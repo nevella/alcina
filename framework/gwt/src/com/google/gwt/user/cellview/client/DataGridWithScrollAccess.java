@@ -132,7 +132,7 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T>
             getElement().getStyle().setHeight(
                     Math.max(500, clientHeight - absoluteTop - 50), Unit.PX);
         }
-        if (isScrollToBottomOnLoad() && getVisibleItemCount() < getPageSize()) {
+        if (isScrollToBottomOnLoad()) {
             Scheduler.get().scheduleDeferred(() -> {
                 if (getBodyScrollPanel() != null) {
                     getBodyScrollPanel().scrollToBottom();

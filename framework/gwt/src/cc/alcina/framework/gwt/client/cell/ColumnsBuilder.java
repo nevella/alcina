@@ -116,6 +116,10 @@ public class ColumnsBuilder<T> {
         return Comparator.comparing(columnBuilder.sortFunction);
     }
 
+    public Header<String> getFooter() {
+        return this.footer;
+    }
+
     public List<ColumnBuilder> getPending() {
         return this.pending;
     }
