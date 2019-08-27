@@ -932,6 +932,17 @@ public class XmlNode {
             return wrapper;
         }
 
+        public void swapWith(XmlNode other) {
+            XmlNode parent = parent();
+            XmlNode insertBefore = nextSibling();
+            other.relative().insertBeforeThis(XmlNode.this);
+            if (insertBefore != null) {
+                insertBefore.relative().insertBeforeThis(other);
+            } else {
+                parent.children.append(other);
+            }
+        }
+
         public XmlNode wrap(String tag) {
             XmlNode wrapper = doc.nodeFor(doc.domDoc().createElement(tag));
             replaceWith(wrapper);
