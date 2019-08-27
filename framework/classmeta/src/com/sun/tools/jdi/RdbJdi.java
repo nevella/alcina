@@ -574,7 +574,7 @@ public class RdbJdi {
             }
         } catch (Exception e) {
             Ax.out("predictThreadMetadataCalls-%s:: %s",
-                    e.getClass().getSimpleName(), thread);
+                    e.getClass().getSimpleName(), thread.ref);
         }
     }
 
