@@ -526,10 +526,15 @@ public class CommonUtils {
         return result;
     }
 
-    @SuppressWarnings("deprecation")
     public static String formatDate(Date date, DateStyle style) {
+        return formatDate(date, style, " ");
+    }
+
+    @SuppressWarnings("deprecation")
+    public static String formatDate(Date date, DateStyle style,
+            String nullMarker) {
         if (date == null) {
-            return " ";
+            return nullMarker;
         }
         switch (style) {
         case AU_DATE_SLASH:
