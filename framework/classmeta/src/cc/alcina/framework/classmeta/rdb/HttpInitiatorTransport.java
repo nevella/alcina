@@ -84,7 +84,9 @@ class HttpInitiatorTransport extends Transport {
                     .withGzip(true);
             maybeSimulateTransportDelay();
             String strResponse = post.asString();
-            // Ax.err("received: %s chars", strResponse.length());
+            if (strResponse.length() > 500000) {
+                Ax.out("received: %s chars", strResponse.length());
+            }
             maybeSimulateTransportDelay();
             if (Ax.isBlank(strResponse)) {
                 return;
