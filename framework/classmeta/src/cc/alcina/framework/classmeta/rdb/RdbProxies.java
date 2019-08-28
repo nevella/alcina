@@ -32,6 +32,8 @@ public class RdbProxies {
     List<Endpoint> endpoints = new ArrayList<>();
 
     public RdbProxies() {
+        ResourceUtilities.set("JacksonJsonObjectSerializer.maxLength",
+                "50000000");
     }
 
     public Endpoint endpointByName(String name) {
