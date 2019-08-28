@@ -616,6 +616,12 @@ public class XmlNode {
                     .orElse(null);
         }
 
+        public XmlNode firstNonWhitespaceNode() {
+            return nodes().stream()
+                    .filter(n -> !(n.isText() && n.isWhitespaceTextContent()))
+                    .findFirst().orElse(null);
+        }
+
         public Stream<XmlNode> flat() {
             return flatten();
         }
@@ -654,6 +660,11 @@ public class XmlNode {
 
         public boolean isFirstChild(XmlNode xmlNode) {
             return xmlNode != null && firstNode() == xmlNode.asXmlNode();
+        }
+
+        public boolean isFirstNonWhitespaceChild(XmlNode xmlNode) {
+            return xmlNode != null && firstNonWhitespaceNode() != null
+                    && firstNonWhitespaceNode().domNode() == xmlNode.domNode();
         }
 
         public boolean isLastChild(XmlNode node) {
@@ -795,6 +806,10 @@ public class XmlNode {
 
         public XmlNode body() {
             return xpath("//body").node();
+        }
+
+        public XmlNode getContainingBlock() {
+            return XmlNode.from(XmlUtils.getContainingBlock(node));
         }
 
         public boolean hasClassName(String className) {
