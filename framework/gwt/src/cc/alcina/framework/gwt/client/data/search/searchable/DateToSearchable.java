@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.data.search.searchable;
 
 import cc.alcina.framework.gwt.client.data.search.CreatedToCriterion;
 import cc.alcina.framework.gwt.client.objecttree.search.DateCriterionSearchable;
+import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class DateToSearchable
 		extends DateCriterionSearchable<CreatedToCriterion> {
@@ -10,6 +11,7 @@ public class DateToSearchable
 	}
 
 	public DateToSearchable(String category, String name) {
-		super(CreatedToCriterion.class, category, name);
+		super(CreatedToCriterion.class, category, name,
+				StandardSearchOperator.EQUAL);
 	}
 }

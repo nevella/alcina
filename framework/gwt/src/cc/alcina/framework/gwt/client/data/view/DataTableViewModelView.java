@@ -188,10 +188,15 @@ public abstract class DataTableViewModelView<VM extends ViewModelWithDataProvide
         multiSelectionSupport.updateKeyboardSelectionMode(isEditing());
         table.setStyleName("editing", isEditing());
         container.add(table);
-        ShowMorePager pager = new ShowMorePager();
+        ShowMorePager pager = createTablePager();
         pager.attachTo(table,
                 ((DataGridWithScrollAccess) table).getBodyScrollPanel());
     }
+
+	protected ShowMorePager createTablePager() {
+		ShowMorePager pager = new ShowMorePager();
+		return pager;
+	}
 
     protected int getPageSize() {
         return 100;

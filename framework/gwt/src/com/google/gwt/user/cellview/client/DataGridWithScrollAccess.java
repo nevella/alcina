@@ -15,7 +15,6 @@
  */
 package com.google.gwt.user.cellview.client;
 
-import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.cellview.client.LoadingStateChangeEvent.LoadingState;
@@ -63,88 +62,71 @@ import com.google.gwt.view.client.SelectionModel;
  *            the data type of each row
  */
 public class DataGridWithScrollAccess<T> extends DataGrid<T>
-        implements HasDataWidget<T> {
-    private static Widget createDefaultLoadingIndicator(Resources resources) {
-        ImageResource loadingImg = resources.dataGridLoading();
-        if (loadingImg == null) {
-            return null;
-        }
-        Image image = new Image(loadingImg);
-        image.getElement().getStyle().setMarginTop(30.0, Unit.PX);
-        image.setStyleName("dg-loading-image");
-        return image;
-    }
+		implements HasDataWidget<T> {
+	private static Widget createDefaultLoadingIndicator(Resources resources) {
+		ImageResource loadingImg = resources.dataGridLoading();
+		if (loadingImg == null) {
+			return null;
+		}
+		Image image = new Image(loadingImg);
+		image.getElement().getStyle().setMarginTop(30.0, Unit.PX);
+		image.setStyleName("dg-loading-image");
+		return image;
+	}
 
-    private boolean expandToFitScreen;
+	private boolean expandToFitScreen;
 
-    private boolean scrollToBottomOnLoad;
+	public DataGridWithScrollAccess(int pageSize,
+			com.google.gwt.user.cellview.client.DataGrid.Resources resources) {
+		super(pageSize, resources, null,
+				createDefaultLoadingIndicator(resources));
+		addRedrawHandler(() -> forceReflow());
+		setRowStyles(new RowStyles<T>() {
+			@Override
+			public String getStyleNames(T rowValue, int rowIndex) {
+				SelectionModel<? super T> selectionModel = getSelectionModel();
+				boolean isSelected = (selectionModel == null
+						|| rowValue == null) ? false
+								: selectionModel.isSelected(rowValue);
+				return isSelected ? "dg-selected-row" : null;
+			}
+		});
+	}
 
-    public DataGridWithScrollAccess(int pageSize,
-            com.google.gwt.user.cellview.client.DataGrid.Resources resources) {
-        super(pageSize, resources, null,
-                createDefaultLoadingIndicator(resources));
-        addRedrawHandler(() -> forceReflow());
-        setRowStyles(new RowStyles<T>() {
-            @Override
-            public String getStyleNames(T rowValue, int rowIndex) {
-                SelectionModel<? super T> selectionModel = getSelectionModel();
-                boolean isSelected = (selectionModel == null
-                        || rowValue == null) ? false
-                                : selectionModel.isSelected(rowValue);
-                return isSelected ? "dg-selected-row" : null;
-            }
-        });
-    }
+	public ScrollPanel getBodyScrollPanel() {
+		return (ScrollPanel) tableData.getParent();
+	}
 
-    public ScrollPanel getBodyScrollPanel() {
-        return (ScrollPanel) tableData.getParent();
-    }
+	public boolean isExpandToFitScreen() {
+		return this.expandToFitScreen;
+	}
 
-    public boolean isExpandToFitScreen() {
-        return this.expandToFitScreen;
-    }
+	@Override
+	public void onLoadingStateChanged(LoadingState state) {
+		if (state == LoadingState.LOADING && getRowCount() > 0) {
+			return;
+		}
+		super.onLoadingStateChanged(state);
+	}
 
-    public boolean isScrollToBottomOnLoad() {
-        return this.scrollToBottomOnLoad;
-    }
+	public void setExpandToFitScreen(boolean expandToFitScreen) {
+		this.expandToFitScreen = expandToFitScreen;
+	}
 
-    @Override
-    public void onLoadingStateChanged(LoadingState state) {
-        if (state == LoadingState.LOADING && getRowCount() > 0) {
-            return;
-        }
-        super.onLoadingStateChanged(state);
-    }
+	private void forceReflow() {
+		// -webkit-transform: translate3d(0,0,0);
+		if (isExpandToFitScreen()) {
+			int clientHeight = Window.getClientHeight();
+			int absoluteTop = getAbsoluteTop();
+			getElement().getStyle().setHeight(
+					Math.max(500, clientHeight - absoluteTop - 50), Unit.PX);
+		}
+		getElement().getStyle().setProperty("webkitTransform",
+				"translate3d(0,0,0)");
+	}
 
-    public void setExpandToFitScreen(boolean expandToFitScreen) {
-        this.expandToFitScreen = expandToFitScreen;
-    }
-
-    public void setScrollToBottomOnLoad(boolean scrollToBottomOnLoad) {
-        this.scrollToBottomOnLoad = scrollToBottomOnLoad;
-    }
-
-    private void forceReflow() {
-        // -webkit-transform: translate3d(0,0,0);
-        if (isExpandToFitScreen()) {
-            int clientHeight = Window.getClientHeight();
-            int absoluteTop = getAbsoluteTop();
-            getElement().getStyle().setHeight(
-                    Math.max(500, clientHeight - absoluteTop - 50), Unit.PX);
-        }
-        if (isScrollToBottomOnLoad()) {
-            Scheduler.get().scheduleDeferred(() -> {
-                if (getBodyScrollPanel() != null) {
-                    getBodyScrollPanel().scrollToBottom();
-                }
-            });
-        }
-        getElement().getStyle().setProperty("webkitTransform",
-                "translate3d(0,0,0)");
-    }
-
-    @Override
-    protected void onAttach() {
-        super.onAttach();
-    }
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+	}
 }
