@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
@@ -25,11 +24,13 @@ import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 @Introspectable
 public class SearchOrders<T> implements Comparator<T>, Serializable,
 		HasEquivalence<SearchOrders<T>> {
+	/*
+	 * Don't access directly - even when altering (call refreshSerializable when
+	 * altering)
+	 */
 	private Map<SearchOrder<T, ?>, Boolean> cmps = new LinkedHashMap<>();
 
 	private List<SerializableSearchOrder> serializableSearchOrders = new ArrayList<>();
-
-	private transient Entry<SearchOrder<T, ?>, Boolean> soleOrder = null;
 
 	public SearchOrders() {
 	}
@@ -51,13 +52,6 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 
 	@Override
 	public int compare(T o1, T o2) {
-		if (soleOrder == null && _getCmps().size() == 1) {
-			soleOrder = CommonUtils.first(_getCmps().entrySet());
-		}
-		if (soleOrder != null) {
-			return soleOrder.getKey().compare(o1, o2)
-					* (soleOrder.getValue() ? 1 : -1);
-		}
 		for (Entry<SearchOrder<T, ?>, Boolean> entry : _getCmps().entrySet()) {
 			SearchOrder<T, ?> cmp = entry.getKey();
 			int i = cmp.compare(o1, o2);
@@ -81,7 +75,8 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	}
 
 	public boolean hasOrder(Class<SearchOrder> clazz) {
-		return cmps.keySet().stream().anyMatch(cmp -> cmp.getClass() == clazz);
+		return _getCmps().keySet().stream()
+				.anyMatch(cmp -> cmp.getClass() == clazz);
 	}
 
 	public boolean isEmpty() {
@@ -89,8 +84,11 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	}
 
 	public boolean removeOrder(Class<SearchOrder> clazz) {
-		int size = cmps.size();
-		return cmps.keySet().removeIf(cmp -> cmp.getClass() == clazz);
+		int size = _getCmps().size();
+		boolean result = _getCmps().keySet()
+				.removeIf(cmp -> cmp.getClass() == clazz);
+		refreshSerializable();
+		return result;
 	}
 
 	public void setSerializableSearchOrders(
@@ -99,16 +97,16 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	}
 
 	public boolean startsWith(SearchOrder order) {
-		return cmps.size() > 0 && cmps.keySet().iterator().next()
+		return _getCmps().size() > 0 && _getCmps().keySet().iterator().next()
 				.getClass() == order.getClass();
 	}
 
 	@Override
 	public String toString() {
-		return cmps.entrySet().isEmpty() ? ""
+		return _getCmps().entrySet().isEmpty() ? ""
 				: new FormatBuilder().prefix("Order by: ").separator(", ")
-						.appendIfNotBlank(
-								cmps.entrySet().stream().map(this::cmpMapper))
+						.appendIfNotBlank(_getCmps().entrySet().stream()
+								.map(this::cmpMapper))
 						.toString();
 	}
 
@@ -118,13 +116,14 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	}
 
 	private void refreshSerializable() {
-		soleOrder = null;
+		// direct access ok
 		serializableSearchOrders = cmps.entrySet().stream()
 				.map(e -> new SerializableSearchOrder(e.getKey(), e.getValue()))
 				.collect(Collectors.toList());
 	}
 
 	Map<SearchOrder<T, ?>, Boolean> _getCmps() {
+		// direct access ok
 		if (cmps.isEmpty() && serializableSearchOrders.size() > 0) {
 			cmps = (Map) serializableSearchOrders.stream()
 					.collect(Collectors.toMap(sso -> {
@@ -169,6 +168,9 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 
 	@ClientInstantiable
 	public static class IdOrder<H extends HasId> extends SearchOrder<H, Long> {
+		public IdOrder() {
+		}
+
 		@Override
 		public Long apply(H t) {
 			return t.getId();

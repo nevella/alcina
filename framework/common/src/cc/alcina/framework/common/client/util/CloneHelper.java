@@ -80,9 +80,6 @@ public class CloneHelper {
 		if (createdMap.containsKey(o)) {
 			return (T) createdMap.get(o);
 		}
-		// if (o instanceof ReflectCloneable) {
-		// return (T) ((ReflectCloneable) o).deepClone();
-		// }
 		T ret = newInstance(o);
 		createdMap.put(o, ret);
 		Property[] prs = Reflections.beanDescriptorProvider().getDescriptor(ret)
@@ -106,7 +103,8 @@ public class CloneHelper {
 			if (val != null) {
 				if (!ignore(o.getClass(), pr.getName(), o)) {
 					args[0] = deepProperty(o, pr.getName())
-							? deepObjectClone(val) : shallowishObjectClone(val);
+							? deepObjectClone(val)
+							: shallowishObjectClone(val);
 					pr.getMutatorMethod().invoke(ret, args);
 				}
 			}
