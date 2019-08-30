@@ -169,7 +169,7 @@ public abstract class DataTableViewModelView<VM extends ViewModelWithDataProvide
         new KeyboardActionHandler().setup(this, 'R', () -> refresh());
         ColumnsBuilder<T> builder = new ColumnsBuilder<T>(table, getRowClass());
         builder.editable(isEditing());
-        builder.footer(new RangeFooter(table));
+        builder.footer(createRangeFooter());
         if (!suppressDevIdColumn()) {
             idCol = builder.col("ID").sortFunction(new IdOrder())
                     .function(o -> {
@@ -192,6 +192,10 @@ public abstract class DataTableViewModelView<VM extends ViewModelWithDataProvide
         pager.attachTo(table,
                 ((DataGridWithScrollAccess) table).getBodyScrollPanel());
     }
+
+	protected RangeFooter createRangeFooter() {
+		return new RangeFooter(table);
+	}
 
 	protected ShowMorePager createTablePager() {
 		ShowMorePager pager = new ShowMorePager();

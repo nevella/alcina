@@ -80,8 +80,17 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		return this.serializableSearchOrders;
 	}
 
+	public boolean hasOrder(Class<SearchOrder> clazz) {
+		return cmps.keySet().stream().anyMatch(cmp -> cmp.getClass() == clazz);
+	}
+
 	public boolean isEmpty() {
 		return _getCmps().size() == 0;
+	}
+
+	public boolean removeOrder(Class<SearchOrder> clazz) {
+		int size = cmps.size();
+		return cmps.keySet().removeIf(cmp -> cmp.getClass() == clazz);
 	}
 
 	public void setSerializableSearchOrders(
@@ -109,6 +118,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	}
 
 	private void refreshSerializable() {
+		soleOrder = null;
 		serializableSearchOrders = cmps.entrySet().stream()
 				.map(e -> new SerializableSearchOrder(e.getKey(), e.getValue()))
 				.collect(Collectors.toList());
