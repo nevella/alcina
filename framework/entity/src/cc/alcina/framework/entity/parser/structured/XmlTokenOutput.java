@@ -77,7 +77,7 @@ public class XmlTokenOutput {
 	public void ensureOpenClass(XmlStructuralJoin join, String tag,
 			String className) {
 		if (!writeCursor.ancestors().orSelf().list().stream().anyMatch(c -> c
-				.has(tag)
+				.tagIs(tag)
 				&& (className == null || c.attrIs("class", className)))) {
 			open(join, tag);
 		}
