@@ -130,6 +130,10 @@ public class XmlNode {
 		return new XmlNodeBuilder(this);
 	}
 
+	public boolean classIs(String value) {
+		return attrIs("class", value);
+	}
+
 	public XmlNode clearAttributes() {
 		attributes().keySet()
 				.forEach(k -> node.getAttributes().removeNamedItem(k));
