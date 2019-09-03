@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -32,6 +33,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.J8Utils;
+import cc.alcina.framework.entity.MatcherIterator;
 import cc.alcina.framework.entity.OptimizingXpathEvaluator;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
@@ -1011,8 +1013,20 @@ public class XmlNode {
 			stream().forEach(consumer);
 		}
 
+		public Stream<MatcherIterator> matchers(String regex, int group) {
+			Pattern pattern = Pattern.compile(regex);
+			return stream().filter(n -> pattern.matcher(n.textContent()).find())
+					.map(n -> pattern.matcher(n.textContent()))
+					.map(m -> new MatcherIterator(m, group));
+		}
+
 		public boolean matchExists() {
 			return node() != null;
+		}
+
+		public Stream<XmlNode> matching(String regex) {
+			Pattern pattern = Pattern.compile(regex);
+			return stream().filter(n -> pattern.matcher(n.ntc()).find());
 		}
 
 		public XmlNode node() {
