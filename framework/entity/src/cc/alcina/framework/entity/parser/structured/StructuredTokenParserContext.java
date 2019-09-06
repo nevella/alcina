@@ -28,7 +28,7 @@ public class StructuredTokenParserContext {
 
 	private Map<XmlNode, XmlStructuralJoin> nodeToken = new LinkedHashMap<>();
 
-	StructuredTokenParser parser;
+	public StructuredTokenParser parser;
 
 	StringMap properties = new StringMap();
 
@@ -139,6 +139,15 @@ public class StructuredTokenParserContext {
 		properties.setBooleanOrRemove(key, add);
 	}
 
+	public void pushWrapper(XmlStructuralJoin join) {
+		openNodes.push(join);
+		if (out.debug) {
+			System.out.format("open wrapper - %s - %s\n",
+					join.token.getOutputContext(join).getTag(),
+					join.hashCode());
+		}
+	}
+
 	public void skip(XmlNode node) {
 		stream.skip(node);
 	}
@@ -194,16 +203,8 @@ public class StructuredTokenParserContext {
 		if (join.token.getOutputContext(join).hasTag()) {
 			out.open(join, join.token.getOutputContext(join).getTag(),
 					join.token.getOutputContext(join).getEmitAttributes());
+			join.token.getOutputContext(join).onOpen(out, join);
 			pushWrapper(join);
-		}
-	}
-
-	public void pushWrapper(XmlStructuralJoin join) {
-		openNodes.push(join);
-		if (out.debug) {
-			System.out.format("open wrapper - %s - %s\n",
-					join.token.getOutputContext(join).getTag(),
-					join.hashCode());
 		}
 	}
 
@@ -321,6 +322,7 @@ public class StructuredTokenParserContext {
 			}
 		}
 
+		@Override
 		public NodeAncestorsContext contexts() {
 			return new NodeAncestorsContext(this, isTarget());
 		}

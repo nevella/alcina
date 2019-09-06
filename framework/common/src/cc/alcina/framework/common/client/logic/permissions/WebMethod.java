@@ -27,10 +27,11 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  * @author Nick Reddel
  */
 public @interface WebMethod {
+	String comment() default "";
+
 	Permission customPermission() default @Permission(access = AccessLevel.LOGGED_IN);
 
 	boolean readonlyPermitted() default false;
-	
-	String comment() default "";
-	
+
+	String rpcHandlerThreadNameSuffix() default "";
 }

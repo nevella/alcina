@@ -204,23 +204,25 @@ public class ResourceUtilities {
     }
 
     public static <T> T fieldwiseClone(T t) {
-        return fieldwiseClone(t, false);
+        return fieldwiseClone(t, false, false);
     }
 
-    public static <T> T fieldwiseClone(T t, boolean withTransients) {
+    public static <T> T fieldwiseClone(T t, boolean withTransients,
+            boolean withCollectionProjection) {
         try {
             Constructor<T> constructor = (Constructor<T>) t.getClass()
                     .getConstructor(new Class[0]);
             constructor.setAccessible(true);
             T instance = constructor.newInstance();
-            return fieldwiseCopy(t, instance, withTransients);
+            return fieldwiseCopy(t, instance, withTransients,
+                    withCollectionProjection);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
     }
 
-    public static <T> T fieldwiseCopy(T t, T toInstance,
-            boolean withTransients) {
+    public static <T> T fieldwiseCopy(T t, T toInstance, boolean withTransients,
+            boolean withCollectionProjection) {
         try {
             List<Field> allFields = new ArrayList<Field>();
             Class c = t.getClass();
@@ -243,7 +245,28 @@ public class ResourceUtilities {
                 c = c.getSuperclass();
             }
             for (Field field : allFields) {
-                field.set(toInstance, field.get(t));
+                Object value = field.get(t);
+                boolean project = false;
+                if (value != null && withCollectionProjection) {
+                    if (value instanceof Map || value instanceof Collection) {
+                        project = true;
+                    }
+                }
+                if (project) {
+                    if (value instanceof Map) {
+                        Map map = (Map) value;
+                        Map newMap = (Map) map.getClass().newInstance();
+                        newMap.putAll(map);
+                        value = newMap;
+                    } else {
+                        Collection collection = (Collection) value;
+                        Collection newCollection = (Collection) collection
+                                .getClass().newInstance();
+                        newCollection.addAll(collection);
+                        value = newCollection;
+                    }
+                }
+                field.set(toInstance, value);
             }
             return toInstance;
         } catch (Exception e) {
@@ -606,7 +629,7 @@ public class ResourceUtilities {
 
     public static byte[] readUrlAsBytesWithPost(String strUrl, String postBody,
             StringMap headers) throws Exception {
-        return new SimplePost(strUrl, postBody, headers).asBytes();
+        return new SimpleQuery(strUrl, postBody, headers).asBytes();
     }
 
     public static String readUrlAsString(String strUrl) throws Exception {
@@ -872,7 +895,7 @@ public class ResourceUtilities {
         BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
     }
 
-    public static class SimplePost {
+    public static class SimpleQuery {
         private String strUrl;
 
         private String postBody;
@@ -883,7 +906,9 @@ public class ResourceUtilities {
 
         private boolean gzip;
 
-        public SimplePost(String strUrl, String postBody, StringMap headers) {
+        private boolean decodeGz;
+
+        public SimpleQuery(String strUrl, String postBody, StringMap headers) {
             this.strUrl = strUrl;
             this.postBody = postBody;
             this.headers = headers;
@@ -901,26 +926,40 @@ public class ResourceUtilities {
                 connection.setDoOutput(true);
                 connection.setDoInput(true);
                 connection.setUseCaches(false);
-                connection.setRequestMethod("POST");
+                if (postBody != null) {
+                    connection.setRequestMethod("POST");
+                }
                 if (gzip) {
                     headers.put("accept-encoding", "gzip");
                 }
                 for (Entry<String, String> e : headers.entrySet()) {
                     connection.setRequestProperty(e.getKey(), e.getValue());
                 }
-                OutputStream out = connection.getOutputStream();
-                Writer wout = new OutputStreamWriter(out, "UTF-8");
-                wout.write(postBody);
-                wout.flush();
-                wout.close();
+                if (postBody != null) {
+                    OutputStream out = connection.getOutputStream();
+                    Writer wout = new OutputStreamWriter(out, "UTF-8");
+                    wout.write(postBody);
+                    wout.flush();
+                    wout.close();
+                }
                 in = connection.getInputStream();
                 byte[] input = readStreamToByteArray(in);
+                if (decodeGz) {
+                    input = maybeDecodeGzip(input);
+                }
                 return input;
             } catch (IOException ioe) {
                 if (connection != null) {
                     InputStream err = connection.getErrorStream();
-                    String input = err == null ? null : readStreamToString(err);
-                    throw new IOException(input, ioe);
+                    String errString = null;
+                    if (err != null) {
+                        byte[] input = readStreamToByteArray(err);
+                        if (decodeGz) {
+                            input = maybeDecodeGzip(input);
+                        }
+                        errString = new String(input, StandardCharsets.UTF_8);
+                    }
+                    throw new IOException(errString, ioe);
                 } else {
                     throw ioe;
                 }
@@ -938,9 +977,23 @@ public class ResourceUtilities {
             return new String(asBytes(), StandardCharsets.UTF_8);
         }
 
-        public SimplePost withGzip(boolean gzip) {
+        public SimpleQuery withDecodeGz(boolean decodeGz) {
+            this.decodeGz = decodeGz;
+            return this;
+        }
+
+        public SimpleQuery withGzip(boolean gzip) {
             this.gzip = gzip;
             return this;
+        }
+
+        private byte[] maybeDecodeGzip(byte[] input) throws IOException {
+            if ("gzip".equals(connection.getHeaderField("content-encoding"))) {
+                return readStreamToByteArray(
+                        new GZIPInputStream(new ByteArrayInputStream(input)));
+            } else {
+                return input;
+            }
         }
     }
 }

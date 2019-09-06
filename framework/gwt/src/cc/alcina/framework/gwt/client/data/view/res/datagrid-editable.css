@@ -1,0 +1,27 @@
+/* copy from gwt dataGrid css so as to override odd row */
+.dataGridSelectedRow {
+	background: inherit;
+	color: inherit;
+	height: auto;
+	overflow: auto;
+}
+
+.dataGridHoveredRow {
+	background: inherit;
+	cursor: pointer;
+}
+
+.dataGridHoveredRowCell {
+	background: inherit;
+	cursor: pointer;
+}
+/*recopy to override selected styles
+*/
+.dataGridOddRow {
+	background: #f7f9ff;
+}
+
+.dataGridCell {
+	padding: 6px 10px 4px;
+	vertical-align: top;
+}

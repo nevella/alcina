@@ -27,9 +27,10 @@ public class XmlStructuralJoin {
 		return new XmlStructuralJoin(sourceNode, token);
 	}
 
-	public <T extends XmlTokenContext> T nodeContext(Supplier<T> supplier) {
+	public <T extends XmlTokenContext> T
+			nodeContext(Supplier<T> newNodeContextSupplier) {
 		if (nodeContext == null) {
-			nodeContext = supplier.get();
+			nodeContext = newNodeContextSupplier.get();
 		}
 		return (T) nodeContext;
 	}

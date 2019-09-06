@@ -34,7 +34,7 @@ public class SubgraphTransformManager extends TransformManager {
                     // cheap hack to let local transforms work with
                     // DetachedEntityCache
                     DomainTransformEvent copy = ResourceUtilities
-                            .fieldwiseClone(dte, true);
+                            .fieldwiseClone(dte, true, false);
                     long objectLocalId = copy.getObjectLocalId();
                     if (objectLocalId != 0) {
                         if (locatorMap.containsKey(objectLocalId)) {

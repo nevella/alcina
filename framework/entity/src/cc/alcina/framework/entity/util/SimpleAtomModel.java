@@ -52,7 +52,7 @@ public class SimpleAtomModel {
 
 	@XmlAccessorType(XmlAccessType.FIELD)
 	public static abstract class AtomKey {
-		private int hash = 0;
+		private transient int hash = 0;
 
 		@Override
 		public boolean equals(Object obj) {

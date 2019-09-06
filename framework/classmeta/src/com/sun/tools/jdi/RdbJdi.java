@@ -2,6 +2,7 @@ package com.sun.tools.jdi;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -22,6 +23,7 @@ import com.sun.tools.jdi.JDWP.Event.Composite;
 import com.sun.tools.jdi.JDWP.Event.Composite.Events;
 import com.sun.tools.jdi.JDWP.Event.Composite.Events.Breakpoint;
 import com.sun.tools.jdi.JDWP.Event.Composite.Events.EventsCommon;
+import com.sun.tools.jdi.JDWP.Event.Composite.Events.SingleStep;
 import com.sun.tools.jdi.JDWP.Event.Composite.Events.ThreadStart;
 import com.sun.tools.jdi.JDWP.ReferenceType.Interfaces;
 import com.sun.tools.jdi.JDWP.ReferenceType.Signature;
@@ -32,6 +34,8 @@ import com.sun.tools.jdi.JDWP.ThreadReference.Frames.Frame;
 import com.sun.tools.jdi.JDWP.ThreadReference.ThreadGroup;
 import com.sun.tools.jdi.JDWP.VirtualMachine.AllThreads;
 import com.sun.tools.jdi.JDWP.VirtualMachine.CapabilitiesNew;
+import com.sun.tools.jdi.JDWP.VirtualMachine.ClassesBySignature;
+import com.sun.tools.jdi.JDWP.VirtualMachine.ClassesBySignature.ClassInfo;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -97,6 +101,9 @@ public class RdbJdi {
 
     Set<ReferenceType> referenceTypeMetadataCalled = new LinkedHashSet<>();
 
+    Map<ReferenceType, List<Field>> allFields = Collections
+            .synchronizedMap(new LinkedHashMap<>());
+
     Map<Long, Integer> earlyBreakpointResumes = Collections
             .synchronizedMap(new LinkedHashMap<>());
 
@@ -124,7 +131,7 @@ public class RdbJdi {
 
     public boolean handle_composite(byte[] bytes) {
         try {
-            boolean isBreakpoint = false;
+            boolean notifySuspended = false;
             PredictorToken token = new PredictorToken(bytes, null);
             Composite composite = new Composite(vm, token.commandStream());
             Ax.out("Composite: suspend: " + composite.suspendPolicy);
@@ -132,11 +139,13 @@ public class RdbJdi {
                 Ax.out(events.aEventsCommon);
                 EventsCommon common = events.aEventsCommon;
                 if (common instanceof ThreadStart) {
-                    Ax.out("Thread start: ref %s",
-                            ((ThreadStart) common).thread.ref);
+                    ThreadReferenceImpl thread = ((ThreadStart) common).thread;
+                    Ax.out("Thread start: ref %s", thread.ref);
+                    predictThreadMetadataCalls(thread);
                 }
                 if (common instanceof Breakpoint) {
                     Breakpoint breakpoint = (Breakpoint) common;
+                    // predictThreadMetadataCalls(breakpoint.thread);
                     Ax.out("Breakpoint: ref %s", breakpoint.thread.ref);
                     if (breakpoint.location.declaringType().name()
                             .equals("java.lang.Thread")) {
@@ -150,12 +159,18 @@ public class RdbJdi {
                     } else {
                         Ax.out("Breakpoint: ref %s (real breakpoint)",
                                 breakpoint.thread.ref);
-                        isBreakpoint = true;
+                        notifySuspended = true;
                     }
+                }
+                if (common instanceof SingleStep) {
+                    notifySuspended = true;
+                }
+                if (common instanceof com.sun.tools.jdi.JDWP.Event.Composite.Events.Exception) {
+                    notifySuspended = true;
                 }
             }
             Ax.out("--------\n");
-            return isBreakpoint;
+            return notifySuspended;
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
@@ -167,22 +182,21 @@ public class RdbJdi {
         AllThreads allThreads = AllThreads.waitForReply(vm,
                 token.replyStream());
         for (ThreadReferenceImpl thread : allThreads.threads) {
-            ThreadGroup threadGroup = ThreadGroup.process(vm, thread);
-            ThreadGroupReferenceImpl threadGroupRef = threadGroup.group;
-            while (threadGroupRef != null) {
-                ThreadGroupReference.Name.process(vm, threadGroupRef);
-                Parent process = ThreadGroupReference.Parent.process(vm,
-                        threadGroupRef);
-                threadGroupRef = process.parentGroup;
-            }
-            mockDetermineIfDaemonThread(thread);
-            thread.status();
-            /*
-             * More than eclipse does - but we want to cache
-             */
-            thread.name();
-            if (thread.isSuspended()) {
-                thread.currentContendedMonitor();
+            predictThreadMetadataCalls(thread);
+        }
+    }
+
+    public void predict_classes_by_signature(byte[] command, byte[] reply)
+            throws Exception {
+        PredictorToken token = new PredictorToken(command, reply);
+        ClassesBySignature classesBySignature = ClassesBySignature
+                .waitForReply(vm, token.replyStream());
+        for (ClassInfo classInfo : classesBySignature.classes) {
+            ReferenceTypeImpl referenceTypeImpl = vm
+                    .referenceType(classInfo.typeID, classInfo.refTypeTag);
+            getClassMetadata(referenceTypeImpl);
+            for (Method method : referenceTypeImpl.allMethods()) {
+                getMethodData((MethodImpl) method);
             }
         }
     }
@@ -229,11 +243,7 @@ public class RdbJdi {
                     getClassMetadata(referenceType);
                 }
                 MethodImpl method = (MethodImpl) frame.location().method();
-                if (method instanceof ConcreteMethodImpl) {
-                    JDWP.Method.LineTable.process(vm, method.declaringType,
-                            method.ref);
-                }
-                method.location();
+                getMethodData(method);
                 RefTypeMethodKey key = new RefTypeMethodKey(
                         ((ReferenceTypeImpl) method.declaringType()).ref,
                         ((MethodImpl) method).ref);
@@ -244,6 +254,111 @@ public class RdbJdi {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void predict_get_values_array_reference(byte[] command, byte[] reply)
+            throws Exception {
+        PredictorToken token = new PredictorToken(command, reply);
+        PacketStream commandStream = token.commandStream();
+        try {
+            ArrayReferenceImpl arrayRef = (ArrayReferenceImpl) commandStream
+                    .readObjectReference();
+            int firstIndex = commandStream.readInt();
+            int length = commandStream.readInt();
+            if (length == 1) {
+                for (int idx = firstIndex; idx < arrayRef.length()
+                        && idx < firstIndex + 100; idx++) {
+                    Value value = arrayRef.getValue(idx);
+                    if (value instanceof ObjectReferenceImpl) {
+                        getClassMetadata(
+                                ((ObjectReferenceImpl) value).referenceType());
+                    }
+                    if (value instanceof ArrayReferenceImpl) {
+                        ((ArrayReferenceImpl) value).length();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // TODO ...hmmmm arrayref classcast?
+            e.printStackTrace();
+        }
+        // ThreadReferenceImpl threadRef = commandStream.readThreadReference();
+        // long frameRef = commandStream.readFrameRef();
+        // for (StackFrame frame : threadRef.frames()) {
+        // if (frameId(frame) == frameRef) {
+        // predictStackFrame((StackFrameImpl) frame);
+        // }
+        // }
+    }
+
+    public void predict_get_values_object_reference(byte[] command,
+            byte[] reply) throws Exception {
+        Ax.err("predict_get_values_object_reference");
+        PredictorToken token = new PredictorToken(command, reply);
+        PacketStream commandStream = token.commandStream();
+        ObjectReferenceImpl objectRef = commandStream.readObjectReference();
+        getClassMetadata(objectRef.referenceType());
+        int fieldCount = commandStream.readInt();
+        List<Field> allFields = objectRef.referenceType().allFields();
+        /*
+         * cache 'em all
+         */
+        for (Field field : allFields) {
+            Value value = objectRef.getValue(field);
+            if (value instanceof ObjectReferenceImpl) {
+                getClassMetadata(((ObjectReferenceImpl) value).referenceType());
+            }
+            if (value instanceof ArrayReferenceImpl) {
+                ((ArrayReferenceImpl) value).length();
+            }
+        }
+        // ThreadReferenceImpl threadRef = commandStream.readThreadReference();
+        // long frameRef = commandStream.readFrameRef();
+        // for (StackFrame frame : threadRef.frames()) {
+        // if (frameId(frame) == frameRef) {
+        // predictStackFrame((StackFrameImpl) frame);
+        // }
+        // }
+    }
+
+    public void predict_get_values_reference_type(byte[] command, byte[] reply)
+            throws Exception {
+        Ax.err("predict_get_values_reference_type");
+        PredictorToken token = new PredictorToken(command, reply);
+        PacketStream commandStream = token.commandStream();
+        ClassObjectReferenceImpl classObject = commandStream
+                .readClassObjectReference();
+        getClassMetadata(classObject.referenceType());
+        Ax.out("Class object: id:%s name:%s", classObject.ref, classObject);
+        int fieldCount = commandStream.readInt();
+        Ax.out("Field count: %s", fieldCount);
+        ReferenceTypeImpl referenceType = (ReferenceTypeImpl) classObject
+                .reflectedType();
+        for (int idx = 0; idx < fieldCount; idx++) {
+            long fieldRef = commandStream.readFieldRef();
+            Field field = referenceType.getFieldMirror(fieldRef);
+            Ax.out("Field id: %s", fieldRef);
+        }
+        List<Field> allFields = allFields(referenceType);
+        /*
+         * cache 'em all
+         */
+        for (Field field : allFields) {
+            if (!field.isStatic()) {
+                continue;
+            }
+            Value value = referenceType.getValue(field);
+            if (value instanceof ObjectReferenceImpl) {
+                getClassMetadata(((ObjectReferenceImpl) value).referenceType());
+            }
+        }
+        // ThreadReferenceImpl threadRef = commandStream.readThreadReference();
+        // long frameRef = commandStream.readFrameRef();
+        // for (StackFrame frame : threadRef.frames()) {
+        // if (frameId(frame) == frameRef) {
+        // predictStackFrame((StackFrameImpl) frame);
+        // }
+        // }
     }
 
     public void predict_get_values_stack_frame(byte[] command, byte[] reply)
@@ -259,6 +374,23 @@ public class RdbJdi {
         }
     }
 
+    public void predict_reference_type(byte[] command, byte[] reply)
+            throws Exception {
+        PredictorToken token = new PredictorToken(command, reply);
+        com.sun.tools.jdi.JDWP.ObjectReference.ReferenceType rt = com.sun.tools.jdi.JDWP.ObjectReference.ReferenceType
+                .waitForReply(vm, token.replyStream());
+        try {
+            ReferenceTypeImpl referenceTypeImpl = vm.referenceType(rt.typeID,
+                    rt.refTypeTag);
+            getClassMetadata(referenceTypeImpl);
+            for (Method method : referenceTypeImpl.allMethods()) {
+                getMethodData((MethodImpl) method);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void predict_variable_table(byte[] command, byte[] reply)
             throws Exception {
         PredictorToken token = new PredictorToken(command, reply);
@@ -270,7 +402,23 @@ public class RdbJdi {
                 k -> new ArrayList<>());
         if (zeen.size() > 0) {
             StackFrameImpl guessingFrame = zeen.get(zeen.size() - 1);
-            predictStackFrame(guessingFrame);
+            try {
+                predictStackFrame(guessingFrame);
+            } catch (Exception e) {
+                // invalidate, retry, notify exception if recurs
+                // this exception is reasonable - our frame prediction is a
+                // little wooly
+                stackFrameByTypeMethod.clear();
+                zeen = stackFrameByTypeMethod.computeIfAbsent(key,
+                        k -> new ArrayList<>());
+                if (zeen.size() > 0) {
+                    try {
+                        guessingFrame = zeen.get(zeen.size() - 1);
+                    } catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                }
+            }
         }
     }
 
@@ -299,6 +447,10 @@ public class RdbJdi {
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
+    }
+
+    private List<Field> allFields(ReferenceTypeImpl type) {
+        return allFields.computeIfAbsent(type, t -> t.allFields());
     }
 
     private void debug(String template, Object... args) {
@@ -360,6 +512,20 @@ public class RdbJdi {
         }
     }
 
+    private Field getFieldMirror(ReferenceTypeImpl referenceType, long ref) {
+        // Fetch all fields for the class, check performance impact
+        // Needs no synchronization now, since fields() returns
+        // unmodifiable local data
+        Iterator<Field> it = allFields(referenceType).iterator();
+        while (it.hasNext()) {
+            FieldImpl field = (FieldImpl) it.next();
+            if (field.ref() == ref) {
+                return field;
+            }
+        }
+        throw new IllegalArgumentException("Invalid field id: " + ref);
+    }
+
     private void mockDetermineIfDaemonThread(ThreadReferenceImpl thread) {
         ReferenceType referenceType = thread.referenceType();
         Field field = referenceType.fieldByName("daemon"); //$NON-NLS-1$
@@ -385,6 +551,38 @@ public class RdbJdi {
                 }
             }
         }
+    }
+
+    private void predictThreadMetadataCalls(ThreadReferenceImpl thread) {
+        try {
+            ThreadGroup threadGroup = ThreadGroup.process(vm, thread);
+            ThreadGroupReferenceImpl threadGroupRef = threadGroup.group;
+            while (threadGroupRef != null) {
+                ThreadGroupReference.Name.process(vm, threadGroupRef);
+                Parent process = ThreadGroupReference.Parent.process(vm,
+                        threadGroupRef);
+                threadGroupRef = process.parentGroup;
+            }
+            mockDetermineIfDaemonThread(thread);
+            thread.status();
+            /*
+             * More than eclipse does - but we want to cache
+             */
+            thread.name();
+            if (thread.isSuspended()) {
+                thread.currentContendedMonitor();
+            }
+        } catch (Exception e) {
+            Ax.out("predictThreadMetadataCalls-%s:: %s",
+                    e.getClass().getSimpleName(), thread.ref);
+        }
+    }
+
+    protected void getMethodData(MethodImpl method) throws JDWPException {
+        if (method instanceof ConcreteMethodImpl) {
+            JDWP.Method.LineTable.process(vm, method.declaringType, method.ref);
+        }
+        method.location();
     }
 
     public static class RefTypeMethodKey {

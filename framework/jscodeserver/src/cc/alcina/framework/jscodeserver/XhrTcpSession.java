@@ -30,6 +30,8 @@ public class XhrTcpSession {
 
     private XhrTcpBridge xhrTcpBridge;
 
+    int messageLogPer = 100;
+
     public XhrTcpSession(XhrTcpBridge xhrTcpBridge) {
         this.xhrTcpBridge = xhrTcpBridge;
     }
@@ -61,10 +63,10 @@ public class XhrTcpSession {
         byte[] messageBytes = client.receiveMessageBytes();
         // Ax.out("<<<to browser - %s bytes - %s", messageBytes.length,
         // client.getLastMessageName());
-        if (messageId % 100 == 0) {
+        if (messageId % messageLogPer == 0) {
             Ax.out("%s :: %s :: %s :: %s",
                     CommonUtils.formatDate(new Date(),
-                            DateStyle.TIMESTAMP_HUMAN_NO_DATE),
+                            DateStyle.TIMESTAMP_NO_DAY),
                     messageId, client.getLastMessageName(),
                     client.getLastMessageDetails());
         }

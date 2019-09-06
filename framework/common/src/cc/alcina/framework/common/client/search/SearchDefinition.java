@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -100,6 +101,11 @@ public abstract class SearchDefinition extends WrapperPersistable
                 listener.propertyChange(event);
             }
         }
+    }
+
+    public void addToSoleCriteriaGroupAndRemoveExisting(SearchCriterion sc) {
+        removeFromSoleCriteriaGroup(sc);
+        addCriterionToSoleCriteriaGroup(sc, false);
     }
 
     public Set<SearchCriterion> allCriteria() {
@@ -320,6 +326,11 @@ public abstract class SearchDefinition extends WrapperPersistable
     public void onBeforeRunSearch() {
     }
 
+    public <V extends SearchCriterion> Optional<V> optionalFirstCriterion(
+            Class<V> clazz) {
+        return Optional.<V> ofNullable(firstCriterion(clazz));
+    }
+
     public String orderDescription(boolean html) {
         StringBuffer result = new StringBuffer();
         for (OrderGroup orderGroup : orderGroups) {
@@ -387,6 +398,12 @@ public abstract class SearchDefinition extends WrapperPersistable
             }
             sc.removePropertyChangeListener(listener);
         }
+    }
+
+    public void removeFromSoleCriteriaGroup(SearchCriterion sc) {
+        assert criteriaGroups.size() == 1;
+        criteriaGroups.iterator().next().getCriteria()
+                .removeIf(sco -> sco.getClass() == sc.getClass());
     }
 
     public void resetLookups() {

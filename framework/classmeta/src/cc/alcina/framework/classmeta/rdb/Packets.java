@@ -92,7 +92,8 @@ class Packets {
                 .collect(Collectors.toList());
     }
 
-    synchronized void removeIf(Predicate<Packet> test) {
+    synchronized void removeIf(Predicate<Packet> test,
+            int predictivePacketsHit) {
         if (packets.isEmpty()) {
             return;
         }
@@ -101,7 +102,8 @@ class Packets {
         if (toRemove.isEmpty()) {
             return;
         }
-        Ax.err("Removing predictive packets...");
+        Ax.err("Removing predictive packets... (%s hits)",
+                predictivePacketsHit);
         packets.removeIf(test);
         for (Packet packet : toRemove) {
             removeFromLookups(packet);

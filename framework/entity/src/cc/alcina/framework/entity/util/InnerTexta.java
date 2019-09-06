@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,6 +48,12 @@ public class InnerTexta {
 
 	private List<Integer> newLineInsertLocations;
 
+	private Predicate<Element> blockElementMatcher = XmlUtils::isBlockHTMLElement;
+
+	public Predicate<Element> getBlockElementMatcher() {
+		return this.blockElementMatcher;
+	}
+
 	public List<Integer> getNewLineInsertLocations() {
 		return this.newLineInsertLocations;
 	}
@@ -72,7 +79,7 @@ public class InnerTexta {
 			if (n2.getNodeType() == Node.ELEMENT_NODE) {
 				Element elt = (Element) n2;
 				String tag = elt.getTagName().toLowerCase();
-				if (XmlUtils.isBlockHTMLElement(elt)) {
+				if (blockElementMatcher.test(elt)) {
 					markNewline(result, showNls);
 				}
 				if (isListElement(elt)) {
@@ -95,7 +102,8 @@ public class InnerTexta {
 						}
 						result.append(
 								(listElt.getTagName().equalsIgnoreCase("UL")
-										? "*" : listIndex + ".") + " ");
+										? "*"
+										: listIndex + ".") + " ");
 						listIndicies.put(listElt, listIndex + 1);
 					}
 				}
@@ -106,8 +114,7 @@ public class InnerTexta {
 						if (n2 == null && first) {
 							finished = true;
 						}
-						if (n2 == null
-								|| !XmlUtils.isAncestorOf(elt, n2)) {
+						if (n2 == null || !XmlUtils.isAncestorOf(elt, n2)) {
 							walker.previousNode();
 							break;
 						}
@@ -136,6 +143,10 @@ public class InnerTexta {
 			s = s.replace("\n", "\n\n");
 		}
 		return s;
+	}
+
+	public void setBlockElementMatcher(Predicate<Element> blockElementMatcher) {
+		this.blockElementMatcher = blockElementMatcher;
 	}
 
 	public void test() {

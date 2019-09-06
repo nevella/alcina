@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.parser.structured;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -25,6 +26,8 @@ public class XmlTokenContext implements Cloneable {
 	private NodeAncestorsContextProvider contextProvider;
 
 	private String tag;
+
+	BiConsumer<XmlTokenOutput, XmlStructuralJoin> onOpenHandler;
 
 	@Override
 	public XmlTokenContext clone() {
@@ -54,7 +57,7 @@ public class XmlTokenContext implements Cloneable {
 		newInstance.seenKeys = new LinkedHashSet<>(seenKeys);
 	}
 
-	public XmlTokenContext emit(String key, String value) {
+	public XmlTokenContext emitAttribute(String key, String value) {
 		emitAttributes.put(key, value);
 		return this;
 	}
@@ -89,6 +92,12 @@ public class XmlTokenContext implements Cloneable {
 
 	public boolean isContextResolutionRoot() {
 		return is(P_contextResolutionRoot);
+	}
+
+	public void onOpen(XmlTokenOutput out, XmlStructuralJoin join) {
+		if (onOpenHandler != null) {
+			onOpenHandler.accept(out, join);
+		}
 	}
 
 	public XmlTokenContext outputTag(String tag) {
@@ -140,6 +149,12 @@ public class XmlTokenContext implements Cloneable {
 	public String toString() {
 		return String.format("Ctx:\nproperties: %s\nemit-attr: %s", properties,
 				emitAttributes);
+	}
+
+	public XmlTokenContext withOnOpenHandler(
+			BiConsumer<XmlTokenOutput, XmlStructuralJoin> onOpenHandler) {
+		this.onOpenHandler = onOpenHandler;
+		return this;
 	}
 
 	protected XmlTokenContext empty() {

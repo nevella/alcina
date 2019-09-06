@@ -1,14 +1,15 @@
 package cc.alcina.framework.classmeta.rdb;
 
 import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.sun.jdi.connect.spi.Connection;
 import com.sun.tools.jdi.RdbJdi;
 import com.sun.tools.jdi.VirtualMachineImplExt;
 
 import cc.alcina.framework.classmeta.rdb.Packet.EventSeries;
-import cc.alcina.framework.classmeta.rdb.Packet.Meta;
 import cc.alcina.framework.classmeta.rdb.Packet.PacketPair;
 import cc.alcina.framework.classmeta.rdb.PacketEndpointHost.PacketEndpoint;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -29,6 +30,8 @@ class Oracle {
 
     EventSeries predictForSeries = null;
 
+    Set<String> unknownNames = new LinkedHashSet<>();
+
     public Oracle(Endpoint endpoint) {
         this.endpoint = endpoint;
     }
@@ -39,16 +42,24 @@ class Oracle {
     }
 
     public boolean handlePacket(PacketEndpoint packetSource, Packet packet) {
-        if (packet.messageName.equals("Resume")) {
-            int debug = 3;
-        }
         if (packet.isReply) {
             Packet reply = packet;
             Packet command = packet.getCorrespondingCommandPacket();
             if (command.fromDebugger) {
                 if (endpoint.isDebuggee()) {
-                    predictForSeries = command.meta.series;
-                    switch (command.meta.series) {
+                    if (command.messageName.equals("FieldsWithGeneric")) {
+                        int debug = 3;
+                    }
+                    predictForSeries = command.series;
+                    switch (command.messageName) {
+                    case "ClassesBySignature":
+                        predict_classes_by_signature(command, reply);
+                        break;
+                    case "ReferenceType":
+                        predict_reference_type(command, reply);
+                        break;
+                    }
+                    switch (command.series) {
                     case all_threads_handshake: {
                         if (command.messageName.equals("AllThreads")) {
                             predict_all_threads_handshake(command, reply);
@@ -74,6 +85,24 @@ class Oracle {
                         }
                         break;
                     }
+                    case get_values_reference_type: {
+                        if (command.messageName.equals("GetValues")) {
+                            predict_get_values_reference_type(command, reply);
+                        }
+                        break;
+                    }
+                    case get_values_object_reference: {
+                        if (command.messageName.equals("GetValues")) {
+                            predict_get_values_object_reference(command, reply);
+                        }
+                        break;
+                    }
+                    case get_values_array_reference: {
+                        if (command.messageName.equals("GetValues")) {
+                            predict_get_values_array_reference(command, reply);
+                        }
+                        break;
+                    }
                     }
                 }
             }
@@ -88,8 +117,10 @@ class Oracle {
                     return send_resume_command(command);
                 }
             } else {
-                if (command.isBreakpoint) {
-                    state.seenSuspend = true;
+                if (command.notifySuspended) {
+                    Ax.err("Supsend id: %s = > %s", state.currentSuspendId,
+                            command.id());
+                    state.currentSuspendId = command.id();
                 }
             }
         }
@@ -106,8 +137,6 @@ class Oracle {
         switch (packet.messageName) {
         // can be forcibly invalidated if need be
         case "Name":
-            // valid for the frame lifetime (and the frame is discarded)
-        case "ThisObject":
             // valid for vm lifetime
         case "ThreadGroup":
         case "Signature":
@@ -124,25 +153,48 @@ class Oracle {
         case "Interfaces":
         case "Parent":
         case "Version":
+        case "Capabilities":
+        case "CapabilitiesNew":
+        case "ClassLoader":
+        case "ReflectedType":
+        case "VariableTableWithGeneric":
             return true;
         case "Set":
             return false;
         case "GetValues":
+            // case "Value":
+        case "Frames":
+        case "FrameCount":
+        case "Length":
+        case "CurrentContendedMonitor":
+            // valid for the frame lifetime (and the frame is discarded)
+        case "ThisObject":
+            if (packet.suspendId == state.currentSuspendId) {
+                // TODO - what about code execution? (as in the eclipse display
+                // view)?
+                return true;
+            } else {
+                return false;
+            }
         case "Status":
-            // not after any invalidation, unless early in the allthreads phase
-            if (!state.seenSuspend && packet.predictiveFor != null) {
-                switch (packet.predictiveFor) {
-                case admin_post_handshake:
-                case all_threads_handshake:
-                    return true;
-                default:
-                    return false;
-                }
+            return !packet.predictivePacketUsed;
+        // not after any invalidation, unless early in the allthreads phase
+        default:
+            if (unknownNames.add(packet.messageName)) {
+                Ax.err("Invalidating unknown packet :: %s", packet.messageName);
             }
             return false;
-        default:
-            return false;
         }
+    }
+
+    public boolean onPredictivePacketHit(Packet command,
+            Packet predictiveResponse) {
+        switch (command.messageName) {
+        case "Frames":
+            int debug = 3;
+            break;
+        }
+        return isCacheable(predictiveResponse);
     }
 
     public void receivedPredictivePacket() {
@@ -173,9 +225,51 @@ class Oracle {
         }
     }
 
+    private void predict_classes_by_signature(Packet command, Packet reply) {
+        try {
+            Ax.out(Thread.currentThread() + ":"
+                    + Thread.currentThread().getId());
+            rdbJdi.predict_classes_by_signature(command.bytes, reply.bytes);
+        } catch (Exception e) {
+            Ax.out(Thread.currentThread() + ":"
+                    + Thread.currentThread().getId());
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
     private void predict_frames(Packet command, Packet reply) {
         try {
             rdbJdi.predict_frames(command.bytes, reply.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    private void predict_get_values_array_reference(Packet command,
+            Packet reply) {
+        try {
+            rdbJdi.predict_get_values_array_reference(command.bytes,
+                    reply.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    private void predict_get_values_object_reference(Packet command,
+            Packet reply) {
+        try {
+            rdbJdi.predict_get_values_object_reference(command.bytes,
+                    reply.bytes);
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    private void predict_get_values_reference_type(Packet command,
+            Packet reply) {
+        try {
+            rdbJdi.predict_get_values_reference_type(command.bytes,
+                    reply.bytes);
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
@@ -185,6 +279,18 @@ class Oracle {
         try {
             rdbJdi.predict_get_values_stack_frame(command.bytes, reply.bytes);
         } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    private void predict_reference_type(Packet command, Packet reply) {
+        try {
+            Ax.out(Thread.currentThread() + ":"
+                    + Thread.currentThread().getId());
+            rdbJdi.predict_reference_type(command.bytes, reply.bytes);
+        } catch (Exception e) {
+            Ax.out(Thread.currentThread() + ":"
+                    + Thread.currentThread().getId());
             throw new WrappedRuntimeException(e);
         }
     }
@@ -199,8 +305,8 @@ class Oracle {
 
     private void send_composite_reply(Packet command) {
         try {
-            boolean isBreakpoint = rdbJdi.handle_composite(command.bytes);
-            command.isBreakpoint = isBreakpoint;
+            boolean notifySuspended = rdbJdi.handle_composite(command.bytes);
+            command.notifySuspended = notifySuspended;
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }
@@ -219,8 +325,8 @@ class Oracle {
                 && packet.source == endpoint.streams.packetEndpoint()) {
             state.currentPacket = packet;
             state.updateState();
-            if (packet.meta.series == EventSeries.unknown) {
-                packet.meta.series = state.currentSeries;
+            if (packet.series == EventSeries.unknown) {
+                packet.series = state.currentSeries;
             }
         }
     }
@@ -236,16 +342,32 @@ class Oracle {
         // // not cool but livable
         // return;
         }
+        boolean debugHits = false;
         switch (state.currentSeries) {
         case frames:
         case variable_table:
         case get_values_stack_frame:
+        case get_values_array_reference:
+        case get_values_object_reference:
+            break;
+        case get_values_reference_type:
+            debugHits = true;
+            break;
+        }
+        if (debugHits) {
+            Ax.out("\n==============\nDebug packet miss\n============\n");
+            Ax.out("Packet dump:\n");
+            packet.dump();
             List<Packet> hits = packet.source.otherPacketEndpoint()
                     .currentPredictivePacketsHit();
             List<PacketPair> like = packet.source.otherPacketEndpoint()
                     .getPredictivePacketsLike(packet);
             List<PacketPair> last = packet.source.otherPacketEndpoint()
                     .getMostRecentPredictivePacketList();
+            if (like.size() > 0) {
+                Ax.out("First like packet dump:\n");
+                like.get(0).command.dump();
+            }
             Ax.out("***hits***");
             Ax.out(hits);
             Ax.out("\n***like***");
@@ -256,8 +378,6 @@ class Oracle {
             if (packet.messageName.equals("ThisObject")) {
                 rdbJdi.debugThisObject(packet.bytes);
             }
-            int debug = 3;
-            break;
         }
     }
 
@@ -268,10 +388,9 @@ class Oracle {
     }
 
     void preparePacket(Packet packet) {
-        if (packet.meta == null) {
-            Meta meta = new Meta();
-            meta.mustSend = true;
-            packet.meta = meta;
+        if (!packet.preparedByOracle) {
+            packet.preparedByOracle = true;
+            packet.mustSend = true;
             jwdpAccessor.parse(packet);
         }
     }

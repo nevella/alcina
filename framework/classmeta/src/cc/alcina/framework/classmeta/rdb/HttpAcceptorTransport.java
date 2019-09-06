@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.util.JacksonUtils;
 
 class HttpAcceptorTransport extends Transport {
@@ -133,6 +134,9 @@ class HttpAcceptorTransport extends Transport {
         }
         try {
             pair.response.setContentType("application/json");
+            if (payload.length() > 500000) {
+                Ax.out("sending: %s chars", payload.length());
+            }
             pair.response.getWriter().write(payload);
             pair.response.setStatus(HttpServletResponse.SC_OK);
             synchronized (pair) {

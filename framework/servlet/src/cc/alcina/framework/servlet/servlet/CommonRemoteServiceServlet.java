@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -193,9 +194,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
     protected Logger logger = LoggerFactory.getLogger(getClass());
 
-    private int actionCount = 0;
+    private AtomicInteger actionCounter = new AtomicInteger();
 
     private ThreadLocal<Integer> looseContextDepth = new ThreadLocal<>();
+
+    private AtomicInteger callCounter = new AtomicInteger(0);
 
     @Override
     @WebMethod(readonlyPermitted = true)
@@ -404,7 +407,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
         // getting to the countDown() in the spawned thread before the await()
         // in the launcher
         ActionLauncherAsync async = new ActionLauncherAsync(
-                performer.getClass().getSimpleName() + " - " + (++actionCount),
+                performer.getClass().getSimpleName() + "-"
+                        + (actionCounter.incrementAndGet()),
                 action);
         JobTracker tracker = async.launchAndWaitForTracker();
         return tracker.getId();
@@ -650,7 +654,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                     payload);
             String name = rpcRequest.getMethod().getName();
             RPCRequest f_rpcRequest = rpcRequest;
-            Thread.currentThread().setName(Ax.format("gwt-rpc:%s", name));
+            String suffix = getRpcHandlerThreadNameSuffix(rpcRequest);
+            Thread.currentThread().setName(Ax.format("gwt-rpc:%s:%s%s", name,
+                    callCounter.incrementAndGet(), suffix));
             onAfterAlcinaAuthentication(name);
             LooseContext.set(CONTEXT_RPC_USER_ID,
                     PermissionsManager.get().getUserId());
@@ -865,6 +871,21 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
     protected String getRemoteAddress() {
         return getThreadLocalRequest() == null ? null
                 : getThreadLocalRequest().getRemoteAddr();
+    }
+
+    protected String getRpcHandlerThreadNameSuffix(RPCRequest rpcRequest) {
+        try {
+            Method method = this.getClass().getMethod(
+                    rpcRequest.getMethod().getName(),
+                    rpcRequest.getMethod().getParameterTypes());
+            if (method.isAnnotationPresent(WebMethod.class)) {
+                WebMethod webMethod = method.getAnnotation(WebMethod.class);
+                return webMethod.rpcHandlerThreadNameSuffix();
+            }
+            return "";
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
     }
 
     protected HttpSession getSession() {

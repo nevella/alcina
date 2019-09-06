@@ -1,0 +1,27 @@
+.alcina-TwoPaneLayout {
+	position: relative;
+}
+
+.alcina-TwoPaneLayout .leftPanel,.alcina-TwoPaneLayout .rightPanel {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+}
+
+.alcina-TwoPaneLayout .leftPanel {
+	position: absolute;
+	left: 0;
+	right: 50%;
+}
+
+.alcina-TwoPaneLayout .rightPanel {
+	position: absolute;
+	left: 50%;
+	right: 0;
+}
+
+.alcina-TwoPaneLayout.onePanelHidden .leftPanel,.alcina-TwoPaneLayout.onePanelHidden .rightPanel
+	{
+	left: 0;
+	right: 0
+}

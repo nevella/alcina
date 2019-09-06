@@ -1,0 +1,1412 @@
+.alcina-Header {
+	display: none;
+}
+
+.alcina-MainMenuContainer {
+	padding: 0;
+}
+
+.demeter-logo {
+	color: rgb(16, 72, 96);
+	font-weight: bold;
+	padding: 2px 0 0 10px;
+}
+
+body {
+	background-color: white;
+}
+
+body, table td, input, select, textarea, button {
+	font-family: "Khula", Arial;
+	font-size: 12px;
+}
+
+a, a:link, a:visited {
+	text-decoration: none;
+	color: #4a86d1;
+}
+
+a.disabled, a.disabled:link, a.disabled:visited, a.disabled:hover {
+	text-decoration: none;
+	color: #333;
+}
+
+div.toolbar2 .links-panel a, div.toolbar2 .links-panel a:link, div.toolbar2 .links-panel a:visited
+	{
+	color: hsla(36, 56%, 57%, 0.8)
+}
+
+a:hover, div.toolbar2 .links-panel a:hover {
+	color: hsla(36, 56%, 57%, 1.0);
+}
+
+.alcina-ContentLeft .gwt-StackPanelItem, .alcina-ContentLeft .gwt-StackPanelItem-selected
+	{
+	background: none;
+	border: none;
+}
+
+.alcina-ContentLeft .gwt-StackPanelItem a {
+	border: none;
+	font-weight: bold;
+}
+
+.workspaceViews .alcina-FilterHolder {
+	display: none;
+}
+
+.workspaceViews .gwt-StackPanelContent {
+	border-right: none;
+	border-top: none;
+}
+
+.workspaceViews  div.toolbar {
+	background: none;
+	border-bottom: none;
+	padding-left: 1em;
+	padding-bottom: 0.5em;
+}
+
+.workspaceViews a.button-grey, .workspaceViews a.button-grey:active,
+	.workspaceViews a.button-grey:visited, .workspaceViews a.button-grey.disabled:hover
+	{
+	padding: 3px;
+	background: none;
+}
+
+.workspaceViews .gwt-StackPanelContent, .alcina-ContentLeft .gwt-StackPanelItem
+	{
+	padding-left: 10px;
+}
+
+.alcina-MainMenu .tab-container, .main-search {
+	display: inline-block;
+	vertical-align: top;
+	max-width: 350px;
+}
+
+.main-search .alcina-FilterHolder {
+	background-color: white;
+	padding: 0px;
+	border-bottom: none;
+	margin: 2px 20px;
+}
+
+.main-search input.alcina-Filter {
+	background: white;
+	width: 450px;
+	font-size: 14px;
+	border: solid 1px #888;
+	height: 20px;
+	display: none;
+}
+
+table.mainTabPanel .alcina-MainMenu {
+	border: none;
+	background: #4291f4;
+	font-family: "Montserrat";
+	position: relative;
+	height: 41px;
+}
+
+table.mainTabPanel .alcina-MainMenu td {
+	font-family: "Montserrat";
+	font-size: 13px;
+	line-height: 1.6em;
+	text-transform: none;
+	text-decoration: none;
+	letter-spacing: 0px;
+	font-weight: 400;
+}
+
+.mainMenuContainer-tabButtonHolder {
+	text-align: center;
+}
+
+.mainMenuContainer-tabButtonHolder .gwt-TabBar {
+	width: auto;
+	margin: 0 auto;
+}
+
+.mainMenuContainer-tabButtonHolder .gwt-TabBar .gwt-TabBarRest-wrapper {
+	display: none;
+}
+
+.alcina-MainMenuRight .gwt-Label {
+	padding: 13px;
+}
+
+.mainMenuContainer-rightButtonHolder {
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+
+.alcina-MainMenu a, .alcina-MainMenu a:link, .alcina-MainMenu a:visited,
+	.alcina-MainMenu a:active {
+	font-size: 13px;
+	line-height: 1em;
+	background: none;
+	padding: 0;
+	display: inline-block;
+	padding: 13px 13px;
+	/*color: rgba(255, 255, 255, .6);
+	blink bug?
+	*/
+	color: hsl(213.4, 89%, 85%);
+}
+
+.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a,
+	.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a:active,
+	.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a:visited,
+	.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a:hover {
+	background: none;
+	font-weight: normal;
+	color: #fff;
+}
+
+.alcina-MainMenu  a:hover {
+	color: #fff;
+	background: none;
+}
+
+div.gwt-SplitLayoutPanel-HDragger {
+	background-image: none;
+	background-color: rgb(208, 228, 246);
+}
+
+.alcina-Header {
+	display: none;
+}
+
+div.toolbar2 {
+	padding: 8px 6px 12px;
+	border-bottom: solid 1px #e3e3e3;
+	display: flex;
+	justify-content: space-between;
+	align-items: stretch;
+	position: relative;
+	background-color: white;
+	font-size: 13px;
+	font-family: "Khula", Arial;
+}
+
+div.toolbar2 .links-panel a {
+	padding: 10px 12px 0;
+	display: inline-block;
+}
+
+input.alcina-Filter, div.toolbar2 .links-panel, div.alcina-ObjectTree input
+	{
+	line-height: 16px;
+	font-size: 12px;
+	height: 20px;
+}
+
+div.toolbar2 .links-panel {
+	font-size: 13px;
+}
+
+div.toolbar2 .links-panel {
+	position: absolute;
+	margin-left: auto;
+	margin-right: auto;
+	left: 0;
+	right: 0;
+	top: 7px;
+	text-align: center;
+	width: 200px;
+	white-space: nowrap;
+	float: none;
+}
+
+.alcina-TwoPaneLayout div.toolbar2 .links-panel {
+	float: right;
+	position: static;
+	left: 45%;
+	top: 7px;
+	width: auto;
+	text-align: right;
+	margin-left: inherit;
+	margin-right: inherit;
+}
+
+input.alcina-Filter, div.alcina-ObjectTree input, .flat-search-row input[type="text"],
+	.alcina-BeanPanel input[type='text'], .data-grid  input[type='text'],
+	select.no-chrome, textarea, .alcina-BeanPanel textarea,
+	.alcina-BeanPanel td.no-chrome table.flat-search.alcina-SelectorFrame {
+	background: none;
+	background-color: #fff;
+	color: #000;
+	border-radius: 0;
+	border-color: #aaa;
+	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+	border: 1px solid rgb(206, 206, 206);
+}
+
+input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus,
+	input[type="text"]:focus, .input_focus, textarea:focus {
+	box-shadow: hsla(36, 27%, 85%, 1) 0 0 3px;
+	outline: 0;
+	border-color: hsla(36, 27%, 85%, 1) !important;
+}
+
+div.alcina-FilterHolder {
+	display: inline-block;
+	background-color: transparent;
+	border: none;
+}
+
+.dropdown-popup div.alcina-FilterHolder {
+	display: block;
+	padding: 0px 2px 1px 0px;
+}
+
+input.alcina-Filter {
+	padding-left: 5px;
+	width: calc(100% - 5px);
+}
+
+div.def-filter {
+	padding: 6px 8px 4px;
+	background-color: hsl(36, 53%, 91%);
+}
+
+.pane-container {
+	width: 1350px;
+	width: calc(100% - 4em);
+	margin: 0 auto;
+}
+
+.alcina-TwoPaneLayout .pane-container {
+	width: auto;
+	margin: unset;
+	padding-left: 1em;
+}
+
+input.alcina-FilterHint {
+	color: rgb(170, 170, 170);
+	font-style: normal;
+}
+
+.toolbar2 input.alcina-Filter {
+	width: 20em;
+}
+
+div.alcina-ObjectTree input {
+	font-size: 12px;
+	line-height: 16px;
+}
+
+div.alcina-ObjectTree td {
+	padding: 2px 0;
+}
+
+div.alcina-ObjectTree {
+	border: none;
+}
+
+div.alcina-ObjectTree {
+	padding-right: 0;
+}
+
+div.alcina-ObjectTree span.level-1 {
+	font-weight: bold;
+	padding-left: 10px;
+	padding-bottom: 2px;
+	display: inline-block;
+}
+
+div.alcina-ObjectTree input[type="text"] {
+	background-position: 5px 5px;
+	padding-left: 20px;
+}
+
+.right-align {
+	text-align: right;
+}
+
+.data-grid {
+	width: 100%;
+	height: 500px;
+	margin-top: 6px;
+}
+
+.payments .alcina-TwoPaneLayout .rightPanel {
+	margin-top: 0px;
+	padding: 0px 3em 0;
+}
+
+.content-view-sections {
+	padding: 0 1em;
+	position: relative;
+}
+
+.content-view-sections .section-label {
+	padding: 1.0em 0 0.5em;
+	position: relative;
+	z-index: 1;
+	margin-top: 1em;
+}
+
+.content-view-sections .section-label span {
+	background: #fff;
+	padding: 0 15px 0 10px;
+	font-weight: normal;
+	color: #1471e6;
+}
+
+table.gwittir-GridForm td.label {
+	font-weight: normal;
+	color: hsl(213, 70%, 35%);
+}
+
+.content-view-sections .section-label:before {
+	border-top: 1px solid #eeeeff;
+	content: "";
+	margin: 0 auto; /* this centers the line to the full width specified */
+	position: absolute;
+	/* positioning must be absolute here, and relative positioning must be applied to the parent */
+	top: 50%;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: 95%;
+	z-index: -1;
+}
+
+.content-view-sections .section-label span:after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	border-bottom: 1px solid #eeeeff;;
+	width: 300px;
+	margin: 0 20px;
+}
+
+.content-view-sections .section-label>div {
+	background: white;
+	padding: 0 1em;
+	position: relative;
+	display: inline-block;
+}
+
+.content-view-sections .alcina-BeanPanel {
+	padding: 0;
+	padding-left: 2em;
+}
+
+span.square {
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	margin-top: 7px;
+	margin-right: 8px;
+	margin-bottom: 0;
+	border-width: 1px;
+	border-style: solid;
+	border-color: #000;
+}
+
+.options td {
+	padding: 0 8px 0 0;
+}
+
+.options {
+	padding-left: 40px;
+}
+
+.options .tcap {
+	font-weight: bold;
+	padding-top: 4px;
+	vertical-align: top;
+}
+
+.simple-tab {
+	margin-top: 0.1em;
+	margin-bottom: 0.7em;
+	text-align: center;
+}
+
+.simple-tab .tab-caption-2 {
+	display: inline-block;
+	padding-right: 2em;
+}
+
+.simple-tab a.tab-caption-2 {
+font-size: 14.4px;
+	padding-bottom:0;
+}
+
+.tab-caption-2.unselected {
+	/*opacity: 0.5;
+	color: #1471e6;
+	*/
+	color: hsla(36, 56%, 57%, 1.0)
+}
+
+div.alcina-MainContent {
+	margin: 10px 40px 0px;
+}
+
+.tab-caption-2.unselected:hover {
+	opacity: 1;
+	color: hsla(36, 56%, 57%, 1.0)
+}
+
+.tab-caption-2, .tab-form-caption {
+	font-size: 1.2em;
+	padding: 0.5em 0 1em 0;
+}
+
+.tab-caption-2, .tab-caption-3, a.tab-caption-2, a.tab-caption-3, .index .section .header,
+	.tab-form-caption {
+	color: hsla(36, 56%, 57%, 1.0)
+}
+
+.tab-caption-2, .tab-caption-3, a.tab-caption-2, a.tab-caption-3, .index .section .header
+	{
+	margin-left: 3.0em;
+}
+
+.tab-caption-3 {
+	padding: 8px 0 2px;
+	font-size: 1.0em;
+}
+
+.doc-widget {
+	width: 500px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.ignore-for-reconciliation, .futureish, .all-links .futureish a:link,
+	.all-links .futureish a {
+	color: #999;
+}
+
+.all-links a, .all-links a:link {
+	color: #333;
+}
+
+.all-links a:hover, .all-links .futureish a:hover {
+	color: #0062df;
+}
+
+.flat-search-row input[type="text"] {
+	line-height: 21px;
+	height: 21px;
+	padding-left: 8px;
+}
+
+.flat-search-row .editor {
+	width: 184px;
+}
+
+.flat-search-row div.editor {
+	margin-right: 1em
+}
+
+.alcina-BeanPanel table.flat-search  div.select-item-container:empty {
+	color: #777;
+	height: 18px;
+}
+
+.alcina-BeanPanel table.flat-search  div.select-item-container:empty:after
+	{
+	content: "(No items selected)";
+	display: block;
+	padding-top: 1px;
+}
+
+.flat-search-row .editor  table.alcina-SelectorFrame.minimal .select-item-container
+	{
+	width: 180px;
+	max-width: 180px;
+	padding-top: 3px;
+	padding-bottom: 2px;
+	min-width: 180px;
+}
+
+table.flat-search .selectx {
+	display: inline-block;
+	border: none;
+	padding: 0 0 0 0;
+	margin-top: 1px;
+	margin-bottom: 1px;
+	position: relative;
+	background-color: #eeeeff;
+}
+
+table.flat-search .selectx a {
+	display: inline-block;
+	vertical-align: bottom;
+	padding-right: 5px;
+	line-height: 16px;
+	padding-bottom: 1px;
+}
+
+table.flat-search .selectx .text {
+	margin-top: 0;
+	margin-bottom: 0;
+	line-height: 14px;
+	margin-left: 4px;
+	margin-right: 4px;
+}
+
+table.flat-search  div.alcina-Selector.selected {
+	line-height: 5px;
+}
+
+table.flat-search  div.alcina-Selector.selected a:hover {
+	background-color: inherit;
+	cursor: pointer
+}
+
+.flat-search-row .alcina-Button {
+	margin-right: 10px;
+	border-radius: 11px;
+	border: solid 1px #ccc;
+	width: 22px;
+	height: 22px;
+	text-align: center;
+	background-color: hsl(36, 71%, 66%);
+	color: #f3f3f3;
+	font-weight: bold;
+	padding: 2px 7px;
+}
+
+.flat-search-row .alcina-Button[disabled] {
+	background-color: hsl(36, 60%, 75%);
+	color: #e7e7e7;
+}
+
+.flat-search-row .single-item div.alcina-Selector.selected div.select-item-container
+	{
+	padding-top: 4px;
+}
+
+.flat-search-row div.single-item.editor div.alcina-Selector.selected div.select-item-container
+	{
+	line-height: 18px;
+}
+
+table.flat-search  div.select-item-container:empty {
+	height: 12px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+	min-height: 20px;
+}
+
+.contacts-panel div.flat-search-row>div:first-child table.alcina-SelectorFrame.minimal .select-item-container
+	{
+	width: 210px;
+	text-overflow: ellipsis;
+	overflow-x: hidden;
+	padding-right: 15px
+}
+
+.contacts-panel div.flat-search-row>div.editor table.alcina-SelectorFrame.minimal .select-item-container
+	{
+	width: 190px;
+}
+
+.contacts-panel div.flat-search-row>.editor {
+	width: 185px;
+}
+
+/* Spinner Circle Rotation */
+.demeter-startup .loading2 {
+	border: 4px rgba(106, 161, 230, 0.25) solid;
+	border-top: 4px rgba(106, 161, 230, 1) solid;
+	border-radius: 50%;
+	-webkit-animation: spCircRot .9s infinite linear;
+	animation: spCircRot .9s infinite linear;
+	width: 50px;
+	height: 50px;
+	margin: auto;
+}
+
+.demeter-startup {
+	text-align: center;
+	width: 100px;
+	margin: 0 auto;
+	padding-top: 4em;
+	width: 110px;
+}
+
+.doc tr.head {
+	font-weight: bold;
+}
+
+.doc td {
+	padding-right: 3em;
+	vertical-align: top;
+}
+
+.alcina-BeanPanel input[type='text'], .alcina-BeanPanel select,
+	.alcina-BeanPanel table.flat-search  .select-item-container {
+	width: 300px;
+}
+
+.alcina-BeanPanel table.flat-search  .select-item-container {
+	background-image: url('_pix/arrow-selector-down-2.png');
+	padding: 4px 2px 2px 8px;
+	background-repeat: no-repeat;
+	background-position: right center;
+}
+
+.alcina-BeanPanel table.flat-search {
+	padding-right: 5px;
+}
+
+.alcina-BeanPanel input[type='text'] {
+	padding: 2px 3px 0px;
+}
+
+.data-grid input[type='text'] {
+	padding: 0 2px;
+	line-height: 14px;
+	width: 100%;
+}
+
+.data-grid td.editing {
+	overflow: inherit;
+	padding: 0 2px 0 5px;
+}
+
+div.gwt-PopupPanel.property-selector {
+	border-color: rgba(255, 255, 255, 0.5);
+	border-width: 1px;
+	padding: 0;
+}
+
+div.gwt-PopupPanel.property-selector .empty-items {
+	color: #aaa;
+	padding: 0 3em 0 1em;
+}
+
+span.property-text-cell {
+	display: inline-block;
+	width: 100%;
+}
+
+.data-grid.editing  td.editable:hover {
+	background-color: #eaf0f9;
+}
+
+.data-grid.editing  td.editable {
+	cursor: pointer;
+}
+
+.index {
+	margin: 1em 3em;
+}
+
+.index .section {
+	margin-bottom: 1em;
+	position: relative;
+}
+
+.index .section a.part {
+	margin-left: 3em;
+	display: block;
+	color: #555;
+}
+
+.index .section a.part.selected {
+	color: #90b6e7;
+}
+
+.index .section a.part.selected:before {
+	content: '';
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 4px 0 4px 8px;
+	border-color: transparent transparent transparent #6aa6f0;
+	width: 0;
+	position: absolute;
+	margin-left: -12px;
+	margin-top: 2px;
+}
+
+.contactDetail .alcina-TwoPaneLayout .rightPanel {
+	padding: 0 1em 0 2em;
+	border: none;
+}
+
+.contactDetail .alcina-TwoPaneLayout .rightPanel>div {
+	border-left: solid 1px #eeeeff;
+	margin-left: -2em;
+}
+
+.contactDetail .alcina-TwoPaneLayout .rightPanel .linksPanel {
+	padding: 1em 2em 0 3em;
+}
+
+.linksPanel a {
+	white-space: nowrap;
+}
+
+.contactDetail .alcina-TwoPaneLayout .rightPanel .actions {
+	margin-bottom: 3em;
+}
+
+.contactDetail .alcina-TwoPaneLayout .rightPanel a {
+	color: rgb(74, 134, 209);
+}
+
+.standalone-form {
+	text-align: center;
+}
+
+.standalone-form td {
+	text-align: left;
+}
+
+.standalone-form-inner {
+	display: inline-block;
+	text-align: left;
+}
+
+.standalone-form-card .standalone-form-inner {
+	border: solid 1px #ccc;
+	background-color: white;
+	padding: 3em 4em 6em;
+	margin-top: 4em;
+}
+
+.doc img {
+	max-width: 90%;
+	height: auto;
+}
+
+.doc img.border {
+	border: solid 1px #ccc;
+	padding: 5px;
+	margin: 2em 1em;
+}
+
+img.dg-loading-image {
+	border: 4px rgba(106, 161, 230, 0.25) solid;
+	border-top: 4px rgba(106, 161, 230, 1) solid;
+	border-radius: 50%;
+	-webkit-animation: spCircRot .9s infinite linear;
+	animation: spCircRot .9s infinite linear;
+	width: 25px;
+	height: 25px;
+	margin: auto;
+}
+
+.dg-selected-row a {
+	color: yellow;
+}
+
+.payments  .sources {
+	margin: 0 auto;
+	padding-top: 1em;
+}
+
+.payments .sources .tcap {
+	font-weight: bold;
+}
+
+table.tools-table {
+	width: 100%;
+	height: 20px;
+	padding: 2px 2px 2px 6px;
+}
+
+table.tools-table a {
+	display: block;
+}
+
+table.tools-table.tight {
+	height: 16px;
+}
+
+div.tools-header {
+	font-weight: bold;
+	padding: 0 0 0px 2px;
+	margin-bottom: 4px;
+}
+
+table.tools-table.separator-above {
+	margin-top: 3px;
+	border-top: 1px solid #b0b0b0;
+	padding-top: 6px;
+}
+
+table.tools-table  td.tools-cell-left {
+	width: 30px;
+}
+
+table.tools-table td {
+	font-size: 12px;
+	line-height: 18px;
+	height: 22px;
+}
+
+table.tools-table td a, table.tools-table td a:visited, table.tools-table td a:link,
+	table.tools-table td a:hover {
+	text-decoration: none;
+	color: #222;
+	padding-right: 15px;
+}
+
+table.tools-table * {
+	-moz-user-select: -moz-none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+table.tools-table.action:hover, table.tools-table.action.zeroclipboard-is-hover
+	{
+	background-color: #C0D0E0;
+	cursor: pointer;
+}
+
+div.search-popdown-menu {
+	padding: 0.4em 0;
+	margin: 0px;
+	border: 1px solid #eef;
+}
+
+div.search-popdown-menu table.tools-table {
+	padding-left: 12px;
+}
+
+div.search-popdown-menu table.tools-table.separator-above {
+	/*padding-top: 12px;
+	margin-top: 8px;
+	*/
+	
+}
+
+.tools-popup {
+	z-index: 1;
+}
+
+.dropdown-popup.alcina-Selector {
+	z-index: 1;
+}
+
+.processPanel {
+	display: table;
+	margin-top: 1em;
+	width: 100%;
+}
+
+.processPanel .gwt-Label {
+	padding-left: 4em;
+}
+
+.processPanel span.processing:first-child {
+	width: 30px;
+}
+
+.processPanel span {
+	vertical-align: middle;
+	display: table-cell;
+}
+
+.processPanel a.button-grey {
+	float: none;
+	display: inline-block;
+}
+
+.process-error {
+	font-family: monospace;
+	width: 900px;
+	overflow-x: scroll;
+	margin-left: -300px;
+}
+
+a.button-grey {
+	padding-top: 7px;
+}
+
+.process-charges .data-grid {
+	height: 200px;
+}
+
+.validate-client-emails {
+	margin: 30px auto;
+	width: 300px;
+}
+
+.standard-action-with-param-form {
+	margin: 30px auto;
+	width: 600px;
+	padding: 20px 0 0 60px;;
+	border: none;
+}
+
+.standalone-form .alcina-BeanPanel .alcina-SavePanel {
+	margin-top: 3em;
+}
+
+table.gwittir-GridForm table.alcina-SelectorFrame.minimal div.alcina-FilterHolder
+	{
+	background-image: none;
+}
+
+table.gwittir-GridForm table.alcina-SelectorFrame.minimal div.alcina-FilterHolder input
+	{
+	box-shadow: none;
+}
+
+.alcina-GlassPopup {
+	z-index: 2;
+}
+
+.gwt-DialogBox {
+	z-index: 3;
+}
+
+.gwt-DialogBox.glass-hidden {
+	z-index: 0;
+}
+
+.alcina-grid.alcina-BeanPanel input[type="text"], .alcina-grid.alcina-BeanPanel select
+	{
+	width: 100px;
+}
+
+.wide-inputs .alcina-grid.alcina-BeanPanel input[type="text"],
+	.wide-inputs .alcina-grid.alcina-BeanPanel select {
+	width: 250px;
+}
+
+.alcina-BeanPanel td.w-200>* {
+	width: 200px;
+}
+
+.alcina-BeanPanel td.w-300>* {
+	width: 300px;
+}
+
+.alcina-grid.alcina-BeanPanel td.w-100>* {
+	width: 100px;
+}
+
+.alcina-grid.alcina-BeanPanel td.w-150>* {
+	width: 150px;
+}
+
+td.col-150 {
+	width: 150px;
+}
+
+.alcina-grid.alcina-BeanPanel td.w-50>* {
+	width: 50px;
+}
+
+.alcina-grid.alcina-BeanPanel td.w-250>* {
+	width: 250px;
+}
+
+.table-toolbar-holder .alcina-ToolbarSmall {
+	border: none;
+	background-color: transparent;
+	margin-bottom: 0.5em;
+}
+
+.alcina-grid.alcina-BeanPanel table.gwittir-BoundTable tr.header td {
+	border: none;
+	background: none;
+	border-bottom: 1px solid rgb(206, 206, 206)
+}
+
+.alcina-grid.alcina-BeanPanel table.gwittir-BoundTable {
+	border: none;
+}
+
+.alcina-grid.alcina-BeanPanel table.gwittir-BoundTable tr.header {
+	background: none;
+	border: none;
+}
+
+.table-toolbar-holder  .alcina-SavePanel {
+	margin: 2em 6em;
+}
+
+table.gwittir-GridForm td.label {
+	/*vertical-align:top;*/
+	
+}
+
+.numeric, th.numeric {
+	text-align: right;
+	white-space: nowrap;
+}
+
+.multi-line-editor {
+	border: solid 1px #ddd;
+	border: none;
+	margin-bottom: 2.5em;
+}
+
+.multi-line-editor .table-toolbar {
+	background-color: #f3f3f3;
+	border: none;
+	border-bottom: solid 1px #ddd;
+	margin-bottom: 6px;
+}
+
+.multi-line-editor  .alcina-BeanPanel {
+	padding-left: 0;
+}
+
+.multi-line-editor div.table-toolbar {
+	padding-left: 0px;
+}
+
+.multi-line-editor table.gwittir-BoundTable {
+	width: 100%;
+}
+
+.multi-line-editor.empty {
+	border: none;
+	margin-bottom: 0;
+}
+
+.multi-line-editor.empty table.gwittir-BoundTable .no-content {
+	padding: 0;
+	text-align: left;
+}
+
+.gwt-TextArea-readonly.empty {
+	max-height: 1em;
+	visibility: hidden;
+}
+
+.multi-line-editor.grid .table-toolbar {
+	border: none;
+	background-color: transparent;
+}
+
+.multi-line-editor.grid table.gwittir-GridForm {
+	margin: 0 0 0 1em;
+}
+
+.multi-line-editor.grid {
+	border: none;
+}
+
+.multi-line-editor.grid .per-object-links {
+	border-bottom: solid 1px #eee;
+	margin-left: 2em;
+	margin-top: 1em;
+	margin-bottom: 2em;
+}
+
+.multi-line-editor.grid div.table-toolbar a.button-grey {
+	margin-left: 0;
+	margin-right: 2em;
+	color: rgb(74, 134, 209);
+	border: none;
+	background: none;
+	background-color: transparent;
+	padding: 0;
+	font-size: 12px;
+	margin-top: -3px;
+}
+
+.multi-line-editor.grid div.table-toolbar a.button-grey:hover {
+	background: none;
+	text-decoration: underline;
+}
+
+.content-view-sections .alcina-ChildBean {
+	border: none;
+	margin-top: -6px;
+}
+
+div.loading-panel {
+	text-align: center;
+	margin-top: 8em;
+}
+
+.alcina-MainMenu>.version-label {
+	font-size: 9px;
+	opacity: 0.75;
+	position: absolute;
+	right: 40px;
+	bottom: 10px;
+	color: #f7f7f7;
+}
+
+.mail-frame-container iframe {
+	border: solid 1px #eee;
+	margin: 2em;
+	width: 90%;
+	height: 70vh;
+	padding: 1em;
+}
+
+.standalone-form .low-title {
+	font-size: 125%;
+	color: #555;
+}
+
+.standard-action-with-param-form div.message {
+	font-family: Courier New;
+}
+
+.ellipsis-nowrap {
+	text-overflow: ellipsis;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.ellipsis-nowrap:hover {
+	white-space: normal;
+}
+
+.ellipsis-nowrap>div {
+	display: inline;
+}
+
+.action-widget-warning {
+	margin-top: 4em;
+	height: 8em;
+	padding: 2em;
+	width: 500px;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+	border: solid 1px #ccc;
+}
+
+div.data-grid tr.totalRow td {
+	border-top: solid 1px gray;
+	margin-top: 2px;
+}
+
+.nowrap-nobreak {
+	white-space: nowrap;
+}
+
+.editable-order-view .horizontal-grid td.address-spacing>div.alcina-expandableLabel
+	{
+	padding-top: 5px;
+	line-height: 15px;
+}
+
+table.gwittir-GridForm td div.nowrap {
+	white-space: normal;
+	word-break: break-all;
+}
+
+table.gwittir-GridForm td.nowrap-nobreak div.nowrap {
+	white-space: nowrap;
+	word-break: normal;
+}
+
+body.has-card {
+	background-color: #f9f9f9;
+}
+
+body.has-card div.alcina-MainContent {
+	margin: 0;
+}
+
+.card {
+	position: relative;
+	background-color: #fff;
+	border-radius: 3px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #ddd #ddd #d8d8d8;
+	box-shadow: 0 0 2px rgba(175, 175, 175, .16);
+	padding: 20px 36px;
+	margin-bottom: 20px;
+	border-style: solid;
+	border-width: 1px;
+}
+
+.bound-suggest-box-popup {
+	background-color: #fff;
+	color: #000;
+	border-radius: 0;
+	box-shadow: #5299e3 0 0 3px;
+	outline: 0;
+	border: none;
+	padding: 2px;
+	margin-top: 2px;
+	z-index: 2;
+}
+
+.bound-suggest-box-popup .item {
+	padding: 2px 6px;
+	color: #424242;
+	cursor: default;
+}
+
+.bound-suggest-box-popup .item-selected {
+	background: #b7d6f6;
+}
+
+.dropdown-popup .popupMiddleLeft {
+	display: none;
+}
+
+.dropdown-popup .popupMiddleRight {
+	display: none;
+}
+
+.dropdown-popup .popupBottomLeft {
+	display: none;
+}
+
+.dropdown-popup .popupBottomRight {
+	display: none;
+}
+
+.dropdown-popup .popupBottomCenter {
+	display: none;
+}
+
+.dropdown-popup .popup-content {
+	box-shadow: #5299e3 0 0 3px;
+}
+
+.dropdown-popup {
+	margin-left: 2px;
+}
+
+div.doc {
+	margin-top: 1em;
+}
+
+table.gwittir-GridForm td.id div.nowrap {
+	white-space: nowrap;
+	word-break: normal;
+}
+
+.multi-line-editor  div.alcina-BeanPanel {
+	padding: 0;
+}
+
+.max-50-vh {
+	max-height: calc(100vh/ 2);
+	overflow-y: scroll;
+}
+
+.alcina-MainMenu .site-message {
+	display: none;
+	position: absolute;
+	top: 14px;
+	left: 180px;
+	color: #fff;
+	opacity: 0.5;
+}
+
+.alcina-Status-Holder.alcina-Status-Center {
+	background-color: #fff;
+	border: 1px solid #7777ff;
+	display: inline-block;
+	padding: 1.5em 2em;
+	-webkit-box-shadow: 0 2px .6em #555;
+	color: black;
+	position: fixed;
+	text-align: center;
+	top: 100px;
+	max-width: 600px;
+	z-index: 2;
+}
+
+.report-links a {
+	padding: 0 1em;
+}
+
+.report-links {
+	margin-left: 1em;
+}
+
+.toolbar2 .tab-caption-3 {
+	z-index: 1;
+}
+
+.contact-activities-table .alcina-FilterHolder {
+	margin-left: 2.7em;
+	margin-bottom: 1em;
+}
+
+.contact-activities-table .alcina-FilterHolder input {
+	border-left: none;
+	border-top: none;
+	border-right: none;
+	-webkit-box-shadow: none;
+	width: 300px;
+}
+
+.alcina-BeanPanel .gwt-TextArea-readonly {
+	border: none;
+	padding: 0;
+	resize: none;
+	-webkit-box-shadow: none;
+}
+
+.dash-issues-report {
+	border: 1px solid #fff;
+	padding: 5px;
+	background-color: #fff;
+	width: 600px;
+	height: 300px;
+	min-height: 300px;
+}
+
+.static-notification-box {
+	margin: 1em 3em;
+	border: solid 1px #ddd;
+	background-color: hsl(213, 60%, 97%);
+	padding: 1.5em;
+}
+
+.two-panes-flex {
+	display: flex;
+	flex-flow: row;
+}
+
+.two-panes-flex>div {
+	flex: 0 0 50%;
+}
+
+.recurrent-order-recipients-table-container {
+	display: flex;
+	flex-flow: row;
+	justify-content: center;
+}
+
+.recurrent-order-recipients-table-container table tr:first-child {
+	font-weight: bold;
+}
+
+.recurrent-order-recipients-table-container td {
+	padding: 2px 5px;
+}
+
+.mail-log {
+	width: 500px;
+	margin-top: 3em;
+	padding: 2em;
+	border: solid 1px #eee;
+	white-space: normal;
+	font-family: "Courier New", "Fixed-Width";
+	text-align: left;
+	min-height: 20em;
+}
+
+.pane-container td, .pane-container th {
+	font-size: 12px;
+}
+
+
+.pane-container {
+	margin-top: 10px;
+	padding-bottom:0;
+	font-weight:bold;
+}

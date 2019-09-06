@@ -152,6 +152,10 @@ interface PacketEndpointHost {
             return allInPackets.byId(packet.id(), true);
         }
 
+        synchronized Packet getCorrespondingReplyPacket(Packet packet) {
+            return allInPackets.byId(packet.id(), false);
+        }
+
         synchronized List<PacketPair> getMostRecentPredictivePacketList() {
             return usablePredictiveReplies.streamRecentReplies()
                     .filter(p -> p.isReply)
@@ -210,8 +214,9 @@ interface PacketEndpointHost {
             if (!usablePredictiveReplies.hasPackets()) {
                 return;
             }
-            usablePredictiveReplies
-                    .removeIf(packet -> !endpoint.oracle.isCacheable(packet));
+            usablePredictiveReplies.removeIf(
+                    packet -> !endpoint.oracle.isCacheable(packet),
+                    currentPredictivePacketsHit.size());
             synchronized (predictivePacketMissMonitor) {
                 predictivePacketMissMonitor.set(true);
                 predictivePacketMissMonitor.notify();
@@ -230,6 +235,8 @@ interface PacketEndpointHost {
         synchronized void receivedPredictivePackets(
                 List<Packet> predictivePackets) {
             usablePredictiveReplies.clearRecentList();
+            predictivePackets.forEach(
+                    packet -> packet.suspendId = endpoint.oracle.state.currentSuspendId);
             predictivePackets.forEach(usablePredictiveReplies::add);
             if (predictivePackets.size() > 0) {
                 synchronized (predictivePacketMissMonitor) {
@@ -258,10 +265,13 @@ interface PacketEndpointHost {
         }
 
         void waitForPredictivePacketMiss() {
+            long start = System.currentTimeMillis();
+            int maxWait = 100;
             synchronized (predictivePacketMissMonitor) {
-                while (!predictivePacketMissMonitor.get()) {
+                while (!predictivePacketMissMonitor.get()
+                        && System.currentTimeMillis() - start < maxWait) {
                     try {
-                        predictivePacketMissMonitor.wait();
+                        predictivePacketMissMonitor.wait(maxWait);
                     } catch (InterruptedException e) {
                     }
                 }
