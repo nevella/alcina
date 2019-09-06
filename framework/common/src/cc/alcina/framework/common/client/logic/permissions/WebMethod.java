@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.logic.permissions;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -20,6 +21,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 
 @Retention(RetentionPolicy.RUNTIME)
+@Documented
 /**
  *
  * @author Nick Reddel
@@ -28,4 +30,7 @@ public @interface WebMethod {
 	Permission customPermission() default @Permission(access = AccessLevel.LOGGED_IN);
 
 	boolean readonlyPermitted() default false;
+	
+	String comment() default "";
+	
 }
