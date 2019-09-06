@@ -4,11 +4,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public abstract class FilterPeer<T> {
 	public String text = "";
 
 	private Map<T, Boolean> cachedFilter = new HashMap<T, Boolean>();
+
+	protected Predicate<T> additionalFilter;
+
+	public FilterPeer() {
+	}
+
+	public FilterPeer(Predicate<T> additionalFilter) {
+		this.additionalFilter = additionalFilter;
+	}
 
 	public abstract List<T> children(T t);
 
@@ -42,11 +52,14 @@ public abstract class FilterPeer<T> {
 		return result;
 	}
 
-	public abstract static class AlwaysPermitFilterPeer<T>
-			extends FilterPeer<T> {
+	public abstract static class BasicFilterPeer<T> extends FilterPeer<T> {
+		public BasicFilterPeer(Predicate<T> additionalFilter) {
+			super(additionalFilter);
+		}
+
 		@Override
 		public boolean satisfiesFilter(T t) {
-			return true;
+			return additionalFilter.test(t);
 		}
 	}
 }

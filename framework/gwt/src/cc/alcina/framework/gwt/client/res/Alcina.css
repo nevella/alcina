@@ -1965,3 +1965,21 @@ info-button
 	white-space: pre-wrap;
 	max-width: 300px;
 }
+/*
+link-selector
+*/
+.link-selector > div.selected{
+	color:#227e4d;
+}
+.link-selector > div:hover{
+	color:#227e4d;
+	cursor:pointer;
+}
+.link-selector.horizontal > div{
+	display:inline-block;
+}
+.link-selector.horizontal > div+div:before{
+	content:'•';
+	display:inline-block;
+	padding:0 0.5em;
+} 

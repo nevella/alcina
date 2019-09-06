@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -244,6 +245,10 @@ public class XmlNode {
 		return XmlUtils.isAncestorOf(node, xmlNode.node);
 	}
 
+	public boolean isAttachedToDocument() {
+		return doc.getDocumentElementNode().isAncestorOf(this);
+	}
+
 	public boolean isComment() {
 		return node.getNodeType() == Node.COMMENT_NODE;
 	}
@@ -270,6 +275,10 @@ public class XmlNode {
 
 	public boolean isText() {
 		return node.getNodeType() == Node.TEXT_NODE;
+	}
+
+	public boolean isWhitespaceOrEmptyTextContent() {
+		return !isNonWhitespaceTextContent();
 	}
 
 	public boolean isWhitespaceTextContent() {
@@ -1065,6 +1074,8 @@ public class XmlNode {
 	public class XmlRange {
 		private XmlNode end;
 
+		private boolean startAfterThis;
+
 		public DocumentFragment asFragment() {
 			return (DocumentFragment) toNode().node;
 		}
@@ -1110,6 +1121,11 @@ public class XmlNode {
 			return result;
 		}
 
+		public XmlRange startAfterThis() {
+			startAfterThis = true;
+			return this;
+		}
+
 		public XmlNode toNode() {
 			Range range = createRange();
 			DocumentFragment frag = range.cloneContents();
@@ -1117,18 +1133,38 @@ public class XmlNode {
 			return doc.nodeFor(frag);
 		}
 
-		public XmlNode toWrappedNode(String tag) {
+		public XmlNode toWrappedNode(String tag, boolean clone) {
 			Element wrapper = doc.domDoc().createElement(tag);
 			Range range = createRange();
 			DocumentFragment frag = range.cloneContents();
 			range.detach();
 			wrapper.appendChild(frag);
+			if (!clone) {
+				Objects.requireNonNull(end);
+				while (true) {
+					TreeWalker tw = ((DocumentTraversal) doc.domDoc())
+							.createTreeWalker(doc.domDoc(), NodeFilter.SHOW_ALL,
+									null, true);
+					tw.setCurrentNode(node);
+					if (startAfterThis) {
+						tw.nextNode();
+					}
+					XmlNode.from(tw.getCurrentNode()).removeFromParent();
+					if (tw.nextNode() == null || !end.isAttachedToDocument()) {
+						break;
+					}
+				}
+			}
 			return doc.nodeFor(wrapper);
 		}
 
 		private Range createRange() {
 			Range range = ((DocumentRange) doc.domDoc()).createRange();
-			range.setStartBefore(node);
+			if (startAfterThis) {
+				range.setStartAfter(node);
+			} else {
+				range.setStartBefore(node);
+			}
 			range.setEndAfter(end == null ? node : end.node);
 			return range;
 		}
