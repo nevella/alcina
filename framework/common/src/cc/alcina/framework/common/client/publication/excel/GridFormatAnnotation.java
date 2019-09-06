@@ -25,7 +25,7 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @author Nick Reddel
  */
-public @interface ExcelFormatAnnotation {
+public @interface GridFormatAnnotation {
 	public static final int DEFAULT_ORDER_POS = 100;
 
 	String displayName() default "";

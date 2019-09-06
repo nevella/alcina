@@ -1,7 +1,8 @@
-package cc.alcina.framework.servlet.excel;
+package cc.alcina.framework.servlet.grid;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -18,40 +19,58 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 import cc.alcina.framework.common.client.publication.PublicationContent;
-import cc.alcina.framework.common.client.publication.excel.BasicExcelContentDefinition;
-import cc.alcina.framework.common.client.publication.excel.BasicExcelRequest;
+import cc.alcina.framework.common.client.publication.excel.BasicGridContentDefinition;
+import cc.alcina.framework.common.client.publication.excel.BasicGridRequest;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.entity.util.CsvCols;
 import cc.alcina.framework.servlet.CommonRemoteServletProvider;
 import cc.alcina.framework.servlet.publication.ContentModelHandler;
 import cc.alcina.framework.servlet.publication.ContentRenderer;
 import cc.alcina.framework.servlet.publication.ContentRenderer.RenderTransformWrapper;
 
-public class BasicExcelPublisher {
+public class BasicGridPublisher {
 	public static final int PUB_MAX_RESULTS = 100000;
 
-	// debug
-	public static final String CONTEXT_WRITE_HTML_TABLE = BasicExcelPublisher.class
-			.getName() + ".CONTEXT_WRITE_HTML_TABLE";
+	@RegistryLocation(registryPoint = ContentModelHandler.class, targetClass = BasicGridContentDefinition.class)
+	public static class BasicExcelPublisherContentHandler extends
+			ContentModelHandler<BasicGridContentDefinition, BasicGridPublicationModel, BasicGridRequest> {
+		@Override
+		protected void prepareContent() throws Exception {
+			publicationContent = new BasicGridPublicationModel();
+			deliveryModel.setNoPersistence(true);
+			deliveryModel.setFooter(false);
+			deliveryModel.setCoverPage(false);
+			SingleTableSearchDefinition def = contentDefinition
+					.getSearchDefinition();
+			def.setResultsPerPage(PUB_MAX_RESULTS);
+			deliveryModel.setSuggestedFileName(SEUtilities
+					.sanitiseFileName(def.toString().replace(" ", "_")));
+			SearchResultsBase results = Registry
+					.impl(CommonRemoteServletProvider.class)
+					.getCommonRemoteServiceServlet().search(def, 0);
+			publicationContent.searchResults = results;
+			hasResults = true;
+		}
+	}
 
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
-	public static class BasicExcelInfo extends RenderTransformWrapper {
-		public BasicExcelContentDefinition cd;
+	public static class BasicGridInfo extends RenderTransformWrapper {
+		public BasicGridContentDefinition cd;
 
 		public String description;
 
-		public BasicExcelPublicationModel pc;
+		public BasicGridPublicationModel pc;
 
 		public ContentRequestBase<ContentDefinition> dm;
 
-		public BasicExcelInfo() {
+		public BasicGridInfo() {
 		}
 	}
 
@@ -59,19 +78,19 @@ public class BasicExcelPublisher {
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
 	// Unused
-	public static class BasicExcelPublicationModel
+	public static class BasicGridPublicationModel
 			implements PublicationContent {
 		@XmlTransient
 		public SearchResultsBase searchResults;
 
-		public BasicExcelPublicationModel() {
+		public BasicGridPublicationModel() {
 		}
 	}
 
-	@RegistryLocation(registryPoint = ContentRenderer.class, targetClass = BasicExcelPublicationModel.class)
-	public static class BasicExcelPublicationModelRenderer extends
-			ContentRenderer<BasicExcelContentDefinition, BasicExcelPublicationModel, ContentRequestBase> {
-		public BasicExcelPublicationModelRenderer() {
+	@RegistryLocation(registryPoint = ContentRenderer.class, targetClass = BasicGridPublicationModel.class)
+	public static class BasicGridPublicationModelRenderer extends
+			ContentRenderer<BasicGridContentDefinition, BasicGridPublicationModel, ContentRequestBase> {
+		public BasicGridPublicationModelRenderer() {
 		}
 
 		@Override
@@ -79,7 +98,7 @@ public class BasicExcelPublisher {
 		protected void renderContent(long publicationId, long publicationUserId)
 				throws Exception {
 			// choose an xsl template based on
-			BasicExcelInfo wr = new BasicExcelInfo();
+			BasicGridInfo wr = new BasicGridInfo();
 			wr.cd = contentDefinition;
 			wr.description = "";// wr.cd.toString();
 			wr.pc = publicationContent;
@@ -92,7 +111,12 @@ public class BasicExcelPublisher {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			OutputStreamWriter writer = new OutputStreamWriter(baos, "UTF-8");
 			XmlUtils.streamXML(doc, writer);
-			if (LooseContext.is(CONTEXT_WRITE_HTML_TABLE)) {
+			if (deliveryModel
+					.provideTargetFormat() == FormatConversionTarget.XLSX) {
+				results.bytes = baos.toByteArray();
+			} else if (deliveryModel
+					.provideTargetFormat() == FormatConversionTarget.HTML) {
+				results.bytes = baos.toByteArray();
 				List<List> cellList = ee.getCellList();
 				FormatBuilder fb = new FormatBuilder();
 				fb.format("<table>\n");
@@ -111,32 +135,14 @@ public class BasicExcelPublisher {
 				}
 				fb.format("</table>\n");
 				results.htmlContent = fb.toString();
+			} else if (deliveryModel
+					.provideTargetFormat() == FormatConversionTarget.CSV) {
+				CsvCols csvCols = new CsvCols((List) ee.getCellList());
+				results.bytes = csvCols.toCsv()
+						.getBytes(StandardCharsets.UTF_8);
 			} else {
-				results.bytes = baos.toByteArray();
+				throw new UnsupportedOperationException();
 			}
-		}
-	}
-
-	@RegistryLocation(registryPoint = ContentModelHandler.class, targetClass = BasicExcelContentDefinition.class)
-	public static class BasicExcelPublisherContentHandler extends
-			ContentModelHandler<BasicExcelContentDefinition, BasicExcelPublicationModel, BasicExcelRequest> {
-		@Override
-		protected void prepareContent() throws Exception {
-			publicationContent = new BasicExcelPublicationModel();
-			deliveryModel.putFormatConversionTarget(FormatConversionTarget.XLS);
-			deliveryModel.setNoPersistence(true);
-			deliveryModel.setFooter(false);
-			deliveryModel.setCoverPage(false);
-			SingleTableSearchDefinition def = contentDefinition
-					.getSearchDefinition();
-			def.setResultsPerPage(PUB_MAX_RESULTS);
-			deliveryModel.setSuggestedFileName(SEUtilities
-					.sanitiseFileName(def.toString().replace(" ", "_")));
-			SearchResultsBase results = Registry
-					.impl(CommonRemoteServletProvider.class)
-					.getCommonRemoteServiceServlet().search(def, 0);
-			publicationContent.searchResults = results;
-			hasResults = true;
 		}
 	}
 }

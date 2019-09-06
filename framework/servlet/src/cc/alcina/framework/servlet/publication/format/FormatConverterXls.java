@@ -10,7 +10,7 @@ import org.w3c.dom.Document;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FormatConversionTarget_XLS;
 import cc.alcina.framework.entity.XmlUtils;
-import cc.alcina.framework.servlet.excel.ExcelExporter;
+import cc.alcina.framework.servlet.grid.ExcelExporter;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 

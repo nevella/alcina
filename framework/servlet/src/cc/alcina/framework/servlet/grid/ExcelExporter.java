@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.servlet.excel;
+package cc.alcina.framework.servlet.grid;
 
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
@@ -36,7 +36,7 @@ import org.w3c.dom.Text;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.CollectionFilters.ConverterFilter;
 import cc.alcina.framework.common.client.logic.reflection.Display;
-import cc.alcina.framework.common.client.publication.excel.ExcelFormatAnnotation;
+import cc.alcina.framework.common.client.publication.excel.GridFormatAnnotation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -270,8 +270,8 @@ public class ExcelExporter {
 		if (pd.getReadMethod() == null) {
 			return true;
 		}
-		ExcelFormatAnnotation ann = pd.getReadMethod()
-				.getAnnotation(ExcelFormatAnnotation.class);
+		GridFormatAnnotation ann = pd.getReadMethod()
+				.getAnnotation(GridFormatAnnotation.class);
 		return (pd.getName().equals("class")
 				|| pd.getName().equals("propertyChangeListeners")
 				|| pd.getName().equals("localId")
@@ -323,7 +323,7 @@ public class ExcelExporter {
 	}
 
 	static class PdMultiplexer implements Comparable<PdMultiplexer> {
-		private ExcelFormatAnnotation xfa;
+		private GridFormatAnnotation xfa;
 
 		private Display dia;
 
@@ -332,7 +332,7 @@ public class ExcelExporter {
 		public PdMultiplexer(PropertyDescriptor pd) {
 			this.pd = pd;
 			Method readMethod = pd.getReadMethod();
-			this.xfa = readMethod.getAnnotation(ExcelFormatAnnotation.class);
+			this.xfa = readMethod.getAnnotation(GridFormatAnnotation.class);
 			this.dia = readMethod.getAnnotation(Display.class);
 		}
 
@@ -350,7 +350,7 @@ public class ExcelExporter {
 		public int order() {
 			return xfa != null ? xfa.order()
 					: dia != null ? dia.orderingHint()
-							: ExcelFormatAnnotation.DEFAULT_ORDER_POS;
+							: GridFormatAnnotation.DEFAULT_ORDER_POS;
 		}
 
 		public String styleId() {

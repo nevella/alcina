@@ -11,12 +11,13 @@ import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 @XmlRootElement
-public class BasicExcelContentDefinition extends WrapperPersistable
+public class BasicGridContentDefinition extends WrapperPersistable
 		implements ContentDefinition, GwtMultiplePersistable {
 	private SingleTableSearchDefinition searchDefinition;
 
+	@Override
 	public String getPublicationType() {
-		return "Excel export";
+		return "Grid export";
 	}
 
 	public SingleTableSearchDefinition getSearchDefinition() {
