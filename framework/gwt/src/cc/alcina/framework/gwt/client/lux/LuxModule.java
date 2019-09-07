@@ -27,8 +27,6 @@ public class LuxModule {
 
 	public LuxResources resources = GWT.create(LuxResources.class);
 
-	int logCter = 0;
-
 	private LuxModule() {
 	}
 
