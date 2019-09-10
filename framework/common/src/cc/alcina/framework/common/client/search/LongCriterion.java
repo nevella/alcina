@@ -47,6 +47,7 @@ public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 		return value;
 	}
 
+	@Override
 	public Long getValue() {
 		return getLong();
 	}
@@ -55,6 +56,7 @@ public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 		this.value = value;
 	}
 
+	@Override
 	public void setValue(Long value) {
 		setLong(value);
 	}
@@ -62,5 +64,10 @@ public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 	@Override
 	public String toString() {
 		return value == null ? "" : value.toString();
+	}
+
+	public <T extends LongCriterion> T withValue(Long value) {
+		setValue(value);
+		return (T) this;
 	}
 }

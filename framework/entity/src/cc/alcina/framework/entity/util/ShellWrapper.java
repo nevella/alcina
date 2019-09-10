@@ -10,6 +10,7 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -207,6 +208,13 @@ public class ShellWrapper {
 
         public boolean failed() {
             return exitValue != 0;
+        }
+
+        public void throwOnException() {
+            if (failed()) {
+                throw Ax.runtimeException("ShellOutputTuple exit code %s\n%s",
+                        exitValue, error);
+            }
         }
     }
 }

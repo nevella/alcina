@@ -117,7 +117,7 @@ public class AppController {
         ClientFactory.goTo(target);
     }
 
-    public void export(MemcacheDataProvider dataProvider,
+    public void export(DomainStoreDataProvider dataProvider,
             GroupingParameters exportDefinition,
             RowExportContentDefinition exportContentDefinition,
             Set<Long> selectedIds) {

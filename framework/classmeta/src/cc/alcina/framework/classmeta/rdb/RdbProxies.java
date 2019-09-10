@@ -32,11 +32,13 @@ public class RdbProxies {
     List<Endpoint> endpoints = new ArrayList<>();
 
     public RdbProxies() {
+        ResourceUtilities.set("JacksonJsonObjectSerializer.maxLength",
+                "50000000");
     }
 
     public Endpoint endpointByName(String name) {
         return endpoints.stream().filter(e -> e.descriptor.name.equals(name))
-                .findFirst().get();
+                .findFirst().orElse(null);
     }
 
     public synchronized void replaceEndpoint(Endpoint endpoint) {
@@ -59,7 +61,7 @@ public class RdbProxies {
         String modelXml = null;
         try {
             modelXml = ResourceUtilities
-                    .readClazzp("../schema/rdbEndpointSchema.xml");
+                    .readClazzp("../schema/rdb/rdbEndpointSchema.xml");
         } catch (Exception e) {
             if (!CommonUtils.hasCauseOfClass(e, NullPointerException.class)) {
                 e.printStackTrace();

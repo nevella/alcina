@@ -25,7 +25,7 @@
 	</target>
 	<target name="compile-task" description="Compiles the ${project.module.description} module" depends="">
 			<mkdir dir="${project.build.dir}" />
-			<javac includeantruntime="false" debug="on" sourcepath="" destdir="${project.build.dir}">
+			<javac includeantruntime="false" debug="on" sourcepath="" destdir="${project.build.dir}" verbose="false">
 
 				<src path="${project.src.dirs}" />
 				<classpath>

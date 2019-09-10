@@ -29,12 +29,15 @@ class Packet {
 
     boolean isPredictive;
 
-    boolean isBreakpoint;
+    boolean notifySuspended;
 
     public String fromName;
 
     public String messageName;
 
+    /*
+     * FIXME - may not need this. May handle invalidation differently
+     */
     EventSeries predictiveFor;
 
     transient Message message;
@@ -45,7 +48,15 @@ class Packet {
 
     public boolean isReply;
 
-    Meta meta;
+    transient boolean predictivePacketUsed;
+
+    boolean mustSend;
+
+    EventSeries series = EventSeries.unknown;
+
+    boolean preparedByOracle;
+
+    public long suspendId;
 
     public Packet() {
     }
@@ -88,7 +99,7 @@ class Packet {
         if (!debugPredictivePassthrough) {
             predictiveMarker = "";
         }
-        String seriesMarker = meta == null ? "" : meta.series.toString();
+        String seriesMarker = series.toString();
         if (!fromDebugger || isReply) {
             seriesMarker = "";
         }
@@ -127,7 +138,9 @@ class Packet {
     enum EventSeries {
         early_handshake, all_threads_handshake, unknown_post_handshake, unknown,
         admin_post_handshake, breakpoint_set, contended_monitor_check, suspend,
-        frames, variable_table, get_values_stack_frame
+        frames, variable_table, get_values_stack_frame,
+        get_values_reference_type, get_values_object_reference,
+        get_values_array_reference
     }
 
     static class HandshakePacket extends Packet {
@@ -142,12 +155,6 @@ class Packet {
         public String toString() {
             return "JDWP-Handshake";
         }
-    }
-
-    static class Meta {
-        boolean mustSend;
-
-        EventSeries series = EventSeries.unknown;
     }
 
     static class PacketPair {

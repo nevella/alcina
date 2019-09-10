@@ -26,6 +26,10 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 
 	public abstract boolean matches(C context, XmlNode node);
 
+	public boolean matchesExit(C context, XmlNode node) {
+		return false;
+	}
+
 	public XmlToken matchOrderBefore() {
 		return null;
 	}

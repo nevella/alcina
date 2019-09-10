@@ -50,12 +50,10 @@ import com.google.gwt.user.client.ui.HTMLTable;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
-import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TabPanel;
-import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -191,20 +189,9 @@ public class WidgetUtils {
     }
 
     public static void copyTextToClipboard(String text) {
-        FlowPanel fp = new FlowPanel();
-        TextArea ta = new TextArea();
-        ta.setSize("600px", "300px");
-        ta.setText(text);
-        fp.add(ta);
-        PopupPanel pp = new PopupPanel();
-        pp.add(fp);
-        pp.setAnimationEnabled(false);
-        pp.show();
-        ta.setSelectionRange(0, text.length());
         try {
-            execCopy();
+            copyTextToClipboard0(text);
         } catch (JavaScriptException e) {
-            pp.hide();
             if (e.getMessage().contains("NS_ERROR_XPC_NOT_ENOUGH_ARGS")) {
                 Registry.impl(ClientNotifications.class).showMessage(
                         new HTML("<div class='info'>Sorry, clipboard operations"
@@ -216,7 +203,6 @@ public class WidgetUtils {
                 throw e;
             }
         }
-        pp.hide();
     }
 
     public static NativeEvent createZeroClick() {
@@ -1063,6 +1049,15 @@ public class WidgetUtils {
     } catch (e) {
 
     }
+    }-*/;
+
+    private static native void copyTextToClipboard0(String text) /*-{
+    var textField = $doc.createElement('textarea');
+    textField.innerText = text;
+    $doc.body.appendChild(textField);
+    textField.select();
+    $doc.execCommand('copy');
+    textField.remove();
     }-*/;
 
     private static void debugScroll(String message) {

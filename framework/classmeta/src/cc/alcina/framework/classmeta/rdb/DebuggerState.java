@@ -14,7 +14,7 @@ class DebuggerState {
 
     public Packet currentPacket;
 
-    boolean seenSuspend;
+    long currentSuspendId;
 
     public DebuggerState() {
         updateState();
@@ -42,7 +42,7 @@ class DebuggerState {
         }
         switch (name) {
         case "Suspend":
-            seenSuspend = true;
+            // don't set the suspend id (wait for the breakpoint)x
             break;
         }
         boolean expectingPredictive = expectingPredictiveAfterPacket != null;
@@ -101,6 +101,15 @@ class DebuggerState {
                     switch (commandSet) {
                     case StackFrame:
                         next = EventSeries.get_values_stack_frame;
+                        break;
+                    case ReferenceType:
+                        next = EventSeries.get_values_reference_type;
+                        break;
+                    case ObjectReference:
+                        next = EventSeries.get_values_object_reference;
+                        break;
+                    case ArrayReference:
+                        next = EventSeries.get_values_array_reference;
                         break;
                     default:
                         next = EventSeries.unknown_post_handshake;
@@ -185,6 +194,57 @@ class DebuggerState {
                 }
                 break;
             }
+            case get_values_array_reference: {
+                switch (name) {
+                case "GetValues":
+                    switch (commandSet) {
+                    case ArrayReference:
+                        break;
+                    default:
+                        next = EventSeries.unknown_post_handshake;
+                        break;
+                    }
+                    break;
+                default:
+                    next = EventSeries.unknown_post_handshake;
+                    break;
+                }
+                break;
+            }
+            case get_values_object_reference: {
+                switch (name) {
+                case "GetValues":
+                    switch (commandSet) {
+                    case ObjectReference:
+                        break;
+                    default:
+                        next = EventSeries.unknown_post_handshake;
+                        break;
+                    }
+                    break;
+                default:
+                    next = EventSeries.unknown_post_handshake;
+                    break;
+                }
+                break;
+            }
+            case get_values_reference_type: {
+                switch (name) {
+                case "GetValues":
+                    switch (commandSet) {
+                    case ReferenceType:
+                        break;
+                    default:
+                        next = EventSeries.unknown_post_handshake;
+                        break;
+                    }
+                    break;
+                default:
+                    next = EventSeries.unknown_post_handshake;
+                    break;
+                }
+                break;
+            }
             default:
                 throw new UnsupportedOperationException();
             }
@@ -193,8 +253,8 @@ class DebuggerState {
                 currentSeries = next;
             }
         }
-        if (currentPacket != null && currentPacket.meta != null && hadDelta) {
-            currentPacket.meta.series = currentSeries;
+        if (currentPacket != null && hadDelta) {
+            currentPacket.series = currentSeries;
         }
     }
 

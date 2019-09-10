@@ -4,44 +4,55 @@ import java.util.regex.Pattern;
 
 import org.w3c.dom.Node;
 
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.entity.XmlUtils;
 
 public interface ParserToken<C extends ParserContext, S extends AbstractParserSlice> {
-	public static final String IGNORE_STATUTE_MATCH_PREFIXED_BY = "in the matter of the ";
+    public static final String IGNORE_STATUTE_MATCH_PREFIXED_BY = "in the matter of the ";
 
-	public S createSlice(C context, XmlUtils.DOMLocation start,
-			XmlUtils.DOMLocation end, int startOffsetInRun);
+    public static final String TOPIC_RESET_TOKEN_PATTERNS = ParserToken.class
+            .getName() + ".TOPIC_RESET_TOKEN_PATTERNS";
 
-	public S createSlice(Node node);
+    public static TopicSupport<Void> topicResetTokenPatterns() {
+        return new TopicSupport<>(TOPIC_RESET_TOKEN_PATTERNS);
+    }
 
-	public S extractSubstringAndMatch(C context);
+    public S createSlice(C context, XmlUtils.DOMLocation start,
+            XmlUtils.DOMLocation end, int startOffsetInRun);
 
-	public Class getCategory();
+    public S createSlice(Node node);
 
-	public abstract Pattern getPattern(C context);
+    public S extractSubstringAndMatch(C context);
 
-	public boolean isIgnoreable(C context);
+    public Class getCategory();
 
-	public boolean isStopToken(C context);
+    public abstract Pattern getPattern(C context);
 
-	public S match(C context, String visibleSubstring);
+    public boolean isIgnoreable(C context);
 
-	public MatchesEmphasisTypes matchesEmphasisTypes();
+    public boolean isStopToken(C context);
 
-	public S matchWithFollowCheck(C context);
+    public S match(C context, String visibleSubstring);
 
-	public void onMatch(C context, S slice);
+    public MatchesEmphasisTypes matchesEmphasisTypes();
 
-	public abstract boolean overridesAtSameLocation(S slice);
+    public S matchWithFollowCheck(C context);
 
-	public boolean shouldStartNewSequence(C context);
+    public void onMatch(C context, S slice);
 
-	public boolean skipMatchingWhitespace(C context, String stringToMatch,
-			int start);
+    public abstract boolean overridesAtSameLocation(S slice);
 
-	boolean canFollow(C context);
+    public boolean shouldStartNewSequence(C context);
 
-	S currentRangeAsSliceAndIncrementOffset(C context, int trimFromEnd);
+    public boolean skipMatchingWhitespace(C context, String stringToMatch,
+            int start);
 
-	boolean isGreedy(C context, S bestMatch);
+    boolean canFollow(C context);
+
+    S currentRangeAsSliceAndIncrementOffset(C context, int trimFromEnd);
+
+    boolean isGreedy(C context, S bestMatch);
+
+    default void resetPattern() {
+    }
 }

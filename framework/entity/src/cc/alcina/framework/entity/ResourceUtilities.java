@@ -945,8 +945,7 @@ public class ResourceUtilities {
                 in = connection.getInputStream();
                 byte[] input = readStreamToByteArray(in);
                 if (decodeGz) {
-                    input = readStreamToByteArray(new GZIPInputStream(
-                            new ByteArrayInputStream(input)));
+                    input = maybeDecodeGzip(input);
                 }
                 return input;
             } catch (IOException ioe) {
@@ -956,8 +955,7 @@ public class ResourceUtilities {
                     if (err != null) {
                         byte[] input = readStreamToByteArray(err);
                         if (decodeGz) {
-                            input = readStreamToByteArray(new GZIPInputStream(
-                                    new ByteArrayInputStream(input)));
+                            input = maybeDecodeGzip(input);
                         }
                         errString = new String(input, StandardCharsets.UTF_8);
                     }
@@ -987,6 +985,15 @@ public class ResourceUtilities {
         public SimpleQuery withGzip(boolean gzip) {
             this.gzip = gzip;
             return this;
+        }
+
+        private byte[] maybeDecodeGzip(byte[] input) throws IOException {
+            if ("gzip".equals(connection.getHeaderField("content-encoding"))) {
+                return readStreamToByteArray(
+                        new GZIPInputStream(new ByteArrayInputStream(input)));
+            } else {
+                return input;
+            }
         }
     }
 }

@@ -24,8 +24,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
@@ -34,24 +33,13 @@ import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
  * @author Nick Reddel
  */
 public class ServerValidator implements ParameterisedValidator, Serializable {
-	public static final transient String TOPIC_SERVER_VALIDATION_RESULT = ServerValidator.class
+	private static final transient String TOPIC_SERVER_VALIDATION_RESULT = ServerValidator.class
 			.getName() + ".TOPIC_SERVER_VALIDATION_RESULT";
 
-	public static final String TOPIC_SERVER_VALIDATION_BEFORE_SEND = ServerValidator.class
+	private static final String TOPIC_SERVER_VALIDATION_BEFORE_SEND = ServerValidator.class
 			.getName() + ".TOPIC_SERVER_VALIDATION_BEFORE_SEND";
 
 	public static boolean performingBeanValidation = false;
-
-	public static void beforeServerValidation(ServerValidator validator) {
-		GlobalTopicPublisher.get()
-				.publishTopic(TOPIC_SERVER_VALIDATION_BEFORE_SEND, validator);
-	}
-
-	public static void beforeServerValidationListenerDelta(
-			TopicListener<ServerValidator> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(
-				TOPIC_SERVER_VALIDATION_BEFORE_SEND, listener, add);
-	}
 
 	public static boolean listIsValid(List<ServerValidator> svs) {
 		for (ServerValidator sv : svs) {
@@ -62,10 +50,13 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 		return true;
 	}
 
-	public static void notifyServerValidationResultListenerDelta(
-			TopicListener<ServerValidator> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_SERVER_VALIDATION_RESULT,
-				listener, add);
+	public static TopicSupport<ServerValidator>
+			topicBeforeServerValidationSend() {
+		return new TopicSupport<>(TOPIC_SERVER_VALIDATION_BEFORE_SEND);
+	}
+
+	public static TopicSupport<ServerValidator> topicServerValidationResult() {
+		return new TopicSupport<>(TOPIC_SERVER_VALIDATION_RESULT);
 	}
 
 	private String message;
@@ -110,6 +101,7 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 		this.message = message;
 	}
 
+	@Override
 	public void setParameters(NamedParameter[] params) {
 	}
 
@@ -118,6 +110,7 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 		this.serverValidationResult = serverValidationResult;
 	}
 
+	@Override
 	public Object validate(final Object value) throws ValidationException {
 		if (ignoreValidation) {
 			return value;
@@ -150,6 +143,7 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 			final ProcessingServerValidationException psve = new ProcessingServerValidationException(
 					getValidatingMessage(), null);
 			AsyncCallback<List<ServerValidator>> callback = new AsyncCallback<List<ServerValidator>>() {
+				@Override
 				public void onFailure(Throwable caught) {
 					setMessage("Validator error");
 					resolveFeedback(null);
@@ -158,6 +152,7 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 							caught);
 				}
 
+				@Override
 				public void onSuccess(List<ServerValidator> result) {
 					setMessage(null);
 					ServerValidator lastValidatorWithException = null;
@@ -166,8 +161,7 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 							lastValidatorWithException = sv;
 							handleServerValidationException(sv);
 						}
-						GlobalTopicPublisher.get().publishTopic(
-								TOPIC_SERVER_VALIDATION_RESULT, sv);
+						topicServerValidationResult().publish(sv);
 					}
 					resolveFeedback(lastValidatorWithException);
 					cleanUp();
@@ -222,7 +216,7 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 					}
 				}
 			};
-			beforeServerValidation(this);
+			topicBeforeServerValidationSend().publish(this);
 			validateWithCallback(callback);
 			throw psve;
 		}

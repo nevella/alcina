@@ -162,15 +162,14 @@ public abstract class DataTableViewModelView<VM extends ViewModelWithDataProvide
     }
 
     public void renderTable() {
-        TableRes resources = isEditing() ? GWT.create(TableResEditable.class)
-                : GWT.create(TableRes.class);
-        DataGridWithScrollAccess grid = new DataGridWithScrollAccess<T>(100,
+        TableRes resources = createTableResources();
+        DataGridWithScrollAccess grid = new DataGridWithScrollAccess<T>(getPageSize(),
                 resources);
         table = grid;
         new KeyboardActionHandler().setup(this, 'R', () -> refresh());
         ColumnsBuilder<T> builder = new ColumnsBuilder<T>(table, getRowClass());
         builder.editable(isEditing());
-        builder.footer(new RangeFooter(table));
+        builder.footer(createRangeFooter());
         if (!suppressDevIdColumn()) {
             idCol = builder.col("ID").sortFunction(new IdOrder())
                     .function(o -> {
@@ -189,9 +188,27 @@ public abstract class DataTableViewModelView<VM extends ViewModelWithDataProvide
         multiSelectionSupport.updateKeyboardSelectionMode(isEditing());
         table.setStyleName("editing", isEditing());
         container.add(table);
-        ShowMorePager pager = new ShowMorePager();
+        ShowMorePager pager = createTablePager();
         pager.attachTo(table,
                 ((DataGridWithScrollAccess) table).getBodyScrollPanel());
+    }
+
+	protected RangeFooter createRangeFooter() {
+		return new RangeFooter(table);
+	}
+
+	protected ShowMorePager createTablePager() {
+		ShowMorePager pager = new ShowMorePager();
+		return pager;
+	}
+
+    protected int getPageSize() {
+        return 100;
+    }
+
+    protected TableRes createTableResources() {
+        return isEditing() ? GWT.create(TableResEditable.class)
+                : GWT.create(TableRes.class);
     }
 
     public Set<Long> selectedIds() {

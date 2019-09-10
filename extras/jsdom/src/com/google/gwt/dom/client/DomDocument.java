@@ -1,8 +1,8 @@
 package com.google.gwt.dom.client;
 
 /**
- * all default methods should actually call through to domdocument_static ...
- * when i get the time
+ * all methods should actually call through to domdocument_static ... when i get
+ * the time
  * 
  * @author nick@alcina.cc
  *
@@ -13,67 +13,47 @@ public interface DomDocument extends DomNode {
 	 * 
 	 * @return the newly created element
 	 */
-	default AnchorElement createAnchorElement() {
-		return (AnchorElement) DOMImpl.impl.createElement(documentFor(),
-				AnchorElement.TAG);
-	}
+	AnchorElement createAnchorElement();
 
 	/**
 	 * Creates an &lt;area&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default AreaElement createAreaElement() {
-		return (AreaElement) DOMImpl.impl.createElement(documentFor(),
-				AreaElement.TAG);
-	}
+	AreaElement createAreaElement();
 
 	/**
 	 * Creates an &lt;audio&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default AudioElement createAudioElement() {
-		return (AudioElement) DOMImpl.impl.createElement(documentFor(),
-				AudioElement.TAG);
-	}
+	AudioElement createAudioElement();
 
 	/**
 	 * Creates a &lt;base&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default BaseElement createBaseElement() {
-		return (BaseElement) DOMImpl.impl.createElement(documentFor(),
-				BaseElement.TAG);
-	}
+	BaseElement createBaseElement();
 
 	/**
 	 * Creates a &lt;blockquote&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default QuoteElement createBlockQuoteElement() {
-		return (QuoteElement) DOMImpl.impl.createElement(documentFor(),
-				QuoteElement.TAG_BLOCKQUOTE);
-	}
+	QuoteElement createBlockQuoteElement();
 
 	/**
 	 * Creates a 'blur' event.
 	 */
-	default NativeEvent createBlurEvent() {
-		return createHtmlEvent(BrowserEvents.BLUR, false, false);
-	}
+	NativeEvent createBlurEvent();
 
 	/**
 	 * Creates a &lt;br&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default BRElement createBRElement() {
-		return (BRElement) DOMImpl.impl.createElement(documentFor(),
-				BRElement.TAG);
-	}
+	BRElement createBRElement();
 
 	/**
 	 * Creates a &lt;button&gt; element.
@@ -87,55 +67,40 @@ public interface DomDocument extends DomNode {
 	 *             {@link #createSubmitButtonElement()} instead.
 	 */
 	@Deprecated
-	default ButtonElement createButtonElement() {
-		return (ButtonElement) DOMImpl.impl.createElement(documentFor(),
-				ButtonElement.TAG);
-	}
+	ButtonElement createButtonElement();
 
 	/**
 	 * Creates an &lt;input type='button'&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default InputElement createButtonInputElement() {
-		return DOMImpl.impl.createInputElement(documentFor(), "button");
-	}
+	InputElement createButtonInputElement();
 
 	/**
 	 * Creates a &lt;canvas&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default CanvasElement createCanvasElement() {
-		return (CanvasElement) DOMImpl.impl.createElement(documentFor(),
-				CanvasElement.TAG);
-	}
+	CanvasElement createCanvasElement();
 
 	/**
 	 * Creates a &lt;caption&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default TableCaptionElement createCaptionElement() {
-		return (TableCaptionElement) DOMImpl.impl.createElement(documentFor(),
-				TableCaptionElement.TAG);
-	}
+	TableCaptionElement createCaptionElement();
 
 	/**
 	 * Creates a 'change' event.
 	 */
-	default NativeEvent createChangeEvent() {
-		return createHtmlEvent(BrowserEvents.CHANGE, false, true);
-	}
+	NativeEvent createChangeEvent();
 
 	/**
 	 * Creates an &lt;input type='checkbox'&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default InputElement createCheckInputElement() {
-		return DOMImpl.impl.createCheckInputElement(documentFor());
-	}
+	InputElement createCheckInputElement();
 
 	/**
 	 * Creates a 'click' event.
@@ -165,35 +130,23 @@ public interface DomDocument extends DomNode {
 	 *            <code>true</code> if the meta key is depressed
 	 * @return the event object
 	 */
-	default NativeEvent createClickEvent(int detail, int screenX, int screenY,
+	NativeEvent createClickEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey) {
-		// We disallow setting the button here, because IE doesn't provide the
-		// button property for click events.
-		return createMouseEvent(BrowserEvents.CLICK, true, true, detail,
-				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
-				metaKey, NativeEvent.BUTTON_LEFT, null);
-	}
+			boolean shiftKey, boolean metaKey);
 
 	/**
 	 * Creates a &lt;col&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default TableColElement createColElement() {
-		return (TableColElement) DOMImpl.impl.createElement(documentFor(),
-				TableColElement.TAG_COL);
-	}
+	TableColElement createColElement();
 
 	/**
 	 * Creates a &lt;colgroup&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default TableColElement createColGroupElement() {
-		return (TableColElement) DOMImpl.impl.createElement(documentFor(),
-				TableColElement.TAG_COLGROUP);
-	}
+	TableColElement createColGroupElement();
 
 	/**
 	 * Creates a 'contextmenu' event.
@@ -203,9 +156,7 @@ public interface DomDocument extends DomNode {
 	 * 
 	 * @return the event object
 	 */
-	default NativeEvent createContextMenuEvent() {
-		return createHtmlEvent(BrowserEvents.CONTEXTMENU, true, true);
-	}
+	NativeEvent createContextMenuEvent();
 
 	/**
 	 * Creates a 'dblclick' event.
@@ -240,45 +191,30 @@ public interface DomDocument extends DomNode {
 	 *            <code>true</code> if the meta key is depressed
 	 * @return the event object
 	 */
-	default NativeEvent createDblClickEvent(int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey) {
-		// We disallow setting the button here, because IE doesn't provide the
-		// button property for click events.
-		return createMouseEvent(BrowserEvents.DBLCLICK, true, true, detail,
-				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
-				metaKey, NativeEvent.BUTTON_LEFT, null);
-	}
+	NativeEvent createDblClickEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey);
 
 	/**
 	 * Creates a &lt;del&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default ModElement createDelElement() {
-		return (ModElement) DOMImpl.impl.createElement(documentFor(),
-				ModElement.TAG_DEL);
-	}
+	ModElement createDelElement();
 
 	/**
 	 * Creates a &lt;div&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default DivElement createDivElement() {
-		return (DivElement) DOMImpl.impl.createElement(documentFor(),
-				DivElement.TAG);
-	}
+	DivElement createDivElement();
 
 	/**
 	 * Creates a &lt;dl&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default DListElement createDLElement() {
-		return (DListElement) DOMImpl.impl.createElement(documentFor(),
-				DListElement.TAG);
-	}
+	DListElement createDLElement();
 
 	/**
 	 * Creates a new element.
@@ -287,86 +223,63 @@ public interface DomDocument extends DomNode {
 	 *            the tag name of the element to be created
 	 * @return the newly created element
 	 */
-	default Element createElement(String tagName) {
-		return DOMImpl.impl.createElement(documentFor(), tagName);
-	}
+	Element createElement(String tagName);
 
 	/**
 	 * Creates an 'error' event.
 	 * 
 	 * @return the event object
 	 */
-	default NativeEvent createErrorEvent() {
-		return createHtmlEvent(BrowserEvents.ERROR, false, false);
-	}
+	NativeEvent createErrorEvent();
 
 	/**
 	 * Creates a &lt;fieldset&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default FieldSetElement createFieldSetElement() {
-		return (FieldSetElement) DOMImpl.impl.createElement(documentFor(),
-				FieldSetElement.TAG);
-	}
+	FieldSetElement createFieldSetElement();
 
 	/**
 	 * Creates an &lt;input type='file'&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default InputElement createFileInputElement() {
-		return DOMImpl.impl.createInputElement(documentFor(), "file");
-	}
+	InputElement createFileInputElement();
 
 	/**
 	 * Creates a 'focus' event.
 	 * 
 	 * @return the event object
 	 */
-	default NativeEvent createFocusEvent() {
-		return createHtmlEvent(BrowserEvents.FOCUS, false, false);
-	}
+	NativeEvent createFocusEvent();
 
 	/**
 	 * Creates a &lt;form&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default FormElement createFormElement() {
-		return (FormElement) DOMImpl.impl.createElement(documentFor(),
-				FormElement.TAG);
-	}
+	FormElement createFormElement();
 
 	/**
 	 * Creates a &lt;frame&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default FrameElement createFrameElement() {
-		return (FrameElement) DOMImpl.impl.createElement(documentFor(),
-				FrameElement.TAG);
-	}
+	FrameElement createFrameElement();
 
 	/**
 	 * Creates a &lt;frameset&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default FrameSetElement createFrameSetElement() {
-		return (FrameSetElement) DOMImpl.impl.createElement(documentFor(),
-				FrameSetElement.TAG);
-	}
+	FrameSetElement createFrameSetElement();
 
 	/**
 	 * Creates a &lt;head&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default HeadElement createHeadElement() {
-		return (HeadElement) DOMImpl.impl.createElement(documentFor(),
-				HeadElement.TAG);
-	}
+	HeadElement createHeadElement();
 
 	/**
 	 * Creates an &lt;h(n)&gt; element.
@@ -375,30 +288,21 @@ public interface DomDocument extends DomNode {
 	 *            the type of heading, from 1 to 6 inclusive
 	 * @return the newly created element
 	 */
-	default HeadingElement createHElement(int n) {
-		assert (n >= 1) && (n <= 6);
-		return (HeadingElement) DOMImpl.impl.createElement(documentFor(),
-				"h" + n);
-	}
+	HeadingElement createHElement(int n);
 
 	/**
 	 * Creates an &lt;input type='hidden'&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default InputElement createHiddenInputElement() {
-		return DOMImpl.impl.createInputElement(documentFor(), "hidden");
-	}
+	InputElement createHiddenInputElement();
 
 	/**
 	 * Creates an &lt;hr&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default HRElement createHRElement() {
-		return (HRElement) DOMImpl.impl.createElement(documentFor(),
-				HRElement.TAG);
-	}
+	HRElement createHRElement();
 
 	/**
 	 * Creates an event.
@@ -424,57 +328,41 @@ public interface DomDocument extends DomNode {
 	 *            <code>true</code> if the event should be cancelable
 	 * @return the event object
 	 */
-	default NativeEvent createHtmlEvent(String type, boolean canBubble,
-			boolean cancelable) {
-		return DOMImpl.impl.createHtmlEvent(documentFor(), type, canBubble,
-				cancelable);
-	}
+	NativeEvent createHtmlEvent(String type, boolean canBubble,
+			boolean cancelable);
 
 	/**
 	 * Creates an &lt;iframe&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default IFrameElement createIFrameElement() {
-		return (IFrameElement) DOMImpl.impl.createElement(documentFor(),
-				IFrameElement.TAG);
-	}
+	IFrameElement createIFrameElement();
 
 	/**
 	 * Creates an &lt;img&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default ImageElement createImageElement() {
-		return (ImageElement) DOMImpl.impl.createElement(documentFor(),
-				ImageElement.TAG);
-	}
+	ImageElement createImageElement();
 
 	/**
 	 * Creates an &lt;input type='image'&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default InputElement createImageInputElement() {
-		return DOMImpl.impl.createInputElement(documentFor(), "image");
-	}
+	InputElement createImageInputElement();
 
 	/**
 	 * Creates an 'input' event.
 	 */
-	default NativeEvent createInputEvent() {
-		return createHtmlEvent(BrowserEvents.INPUT, true, false);
-	}
+	NativeEvent createInputEvent();
 
 	/**
 	 * Creates an &lt;ins&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default ModElement createInsElement() {
-		return (ModElement) DOMImpl.impl.createElement(documentFor(),
-				ModElement.TAG_INS);
-	}
+	ModElement createInsElement();
 
 	/**
 	 * Creates a key-code event ('keydown' or 'keyup').
@@ -501,11 +389,8 @@ public interface DomDocument extends DomNode {
 	 *            the key-code to be set on the event
 	 * @return the event object
 	 */
-	default NativeEvent createKeyCodeEvent(String type, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode) {
-		return DOMImpl.impl.createKeyCodeEvent(documentFor(), type, ctrlKey,
-				altKey, shiftKey, metaKey, keyCode);
-	}
+	NativeEvent createKeyCodeEvent(String type, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode);
 
 	/**
 	 * Creates a 'keydown' event.
@@ -522,11 +407,8 @@ public interface DomDocument extends DomNode {
 	 *            the key-code to be set on the event
 	 * @return the event object
 	 */
-	default NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int keyCode) {
-		return createKeyCodeEvent(BrowserEvents.KEYDOWN, ctrlKey, altKey,
-				shiftKey, metaKey, keyCode);
-	}
+	NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode);
 
 	/**
 	 * Creates a 'keydown' event.
@@ -549,11 +431,8 @@ public interface DomDocument extends DomNode {
 	 *             {@link #createKeyDownEvent(boolean, boolean, boolean, boolean, int)}
 	 */
 	@Deprecated
-	default NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return createKeyEvent(BrowserEvents.KEYDOWN, true, true, ctrlKey,
-				altKey, shiftKey, metaKey, keyCode, charCode);
-	}
+	NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode, int charCode);
 
 	/**
 	 * Creates a key event.
@@ -598,13 +477,9 @@ public interface DomDocument extends DomNode {
 	 *             {@link #createKeyPressEvent(boolean, boolean, boolean, boolean, int)}
 	 */
 	@Deprecated
-	default NativeEvent createKeyEvent(String type, boolean canBubble,
+	NativeEvent createKeyEvent(String type, boolean canBubble,
 			boolean cancelable, boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return DOMImpl.impl.createKeyEvent(documentFor(), type, canBubble,
-				cancelable, ctrlKey, altKey, shiftKey, metaKey, keyCode,
-				charCode);
-	}
+			boolean shiftKey, boolean metaKey, int keyCode, int charCode);
 
 	/**
 	 * Creates a 'keypress' event.
@@ -621,11 +496,8 @@ public interface DomDocument extends DomNode {
 	 *            the char-code to be set on the event
 	 * @return the event object
 	 */
-	default NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int charCode) {
-		return DOMImpl.impl.createKeyPressEvent(documentFor(), ctrlKey, altKey,
-				shiftKey, metaKey, charCode);
-	}
+	NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int charCode);
 
 	/**
 	 * Creates a 'keypress' event.
@@ -648,11 +520,8 @@ public interface DomDocument extends DomNode {
 	 *             {@link #createKeyPressEvent(boolean, boolean, boolean, boolean, int)}
 	 */
 	@Deprecated
-	default NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return createKeyEvent(BrowserEvents.KEYPRESS, true, true, ctrlKey,
-				altKey, shiftKey, metaKey, keyCode, charCode);
-	}
+	NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode, int charCode);
 
 	/**
 	 * Creates a 'keyup' event.
@@ -669,11 +538,8 @@ public interface DomDocument extends DomNode {
 	 *            the key-code to be set on the event
 	 * @return the event object
 	 */
-	default NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int keyCode) {
-		return createKeyCodeEvent(BrowserEvents.KEYUP, ctrlKey, altKey,
-				shiftKey, metaKey, keyCode);
-	}
+	NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode);
 
 	/**
 	 * Creates a 'keyup' event.
@@ -696,80 +562,57 @@ public interface DomDocument extends DomNode {
 	 *             {@link #createKeyUpEvent(boolean, boolean, boolean, boolean, int)}
 	 */
 	@Deprecated
-	default NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		return createKeyEvent(BrowserEvents.KEYUP, true, true, ctrlKey, altKey,
-				shiftKey, metaKey, keyCode, charCode);
-	}
+	NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode, int charCode);
 
 	/**
 	 * Creates a &lt;label&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default LabelElement createLabelElement() {
-		return (LabelElement) DOMImpl.impl.createElement(documentFor(),
-				LabelElement.TAG);
-	}
+	LabelElement createLabelElement();
 
 	/**
 	 * Creates a &lt;legend&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default LegendElement createLegendElement() {
-		return (LegendElement) DOMImpl.impl.createElement(documentFor(),
-				LegendElement.TAG);
-	}
+	LegendElement createLegendElement();
 
 	/**
 	 * Creates a &lt;li&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default LIElement createLIElement() {
-		return (LIElement) DOMImpl.impl.createElement(documentFor(),
-				LIElement.TAG);
-	}
+	LIElement createLIElement();
 
 	/**
 	 * Creates a &lt;link&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default LinkElement createLinkElement() {
-		return (LinkElement) DOMImpl.impl.createElement(documentFor(),
-				LinkElement.TAG);
-	}
+	LinkElement createLinkElement();
 
 	/**
 	 * Creates a 'load' event.
 	 * 
 	 * @return the event object
 	 */
-	default NativeEvent createLoadEvent() {
-		return createHtmlEvent(BrowserEvents.LOAD, false, false);
-	}
+	NativeEvent createLoadEvent();
 
 	/**
 	 * Creates a &lt;map&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default MapElement createMapElement() {
-		return (MapElement) DOMImpl.impl.createElement(documentFor(),
-				MapElement.TAG);
-	}
+	MapElement createMapElement();
 
 	/**
 	 * Creates a &lt;meta&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default MetaElement createMetaElement() {
-		return (MetaElement) DOMImpl.impl.createElement(documentFor(),
-				MetaElement.TAG);
-	}
+	MetaElement createMetaElement();
 
 	/**
 	 * Creates a 'mousedown' event.
@@ -797,13 +640,9 @@ public interface DomDocument extends DomNode {
 	 *            {@link NativeEvent#BUTTON_LEFT} et al)
 	 * @return the event object
 	 */
-	default NativeEvent createMouseDownEvent(int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return createMouseEvent(BrowserEvents.MOUSEDOWN, true, true, detail,
-				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
-				metaKey, button, null);
-	}
+	NativeEvent createMouseDownEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int button);
 
 	/**
 	 * Creates an mouse event.
@@ -854,15 +693,11 @@ public interface DomDocument extends DomNode {
 	 *            mouseout events)
 	 * @return the event object
 	 */
-	default NativeEvent createMouseEvent(String type, boolean canBubble,
+	NativeEvent createMouseEvent(String type, boolean canBubble,
 			boolean cancelable, int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
 			boolean shiftKey, boolean metaKey, int button,
-			Element relatedTarget) {
-		return DOMImpl.impl.createMouseEvent(documentFor(), type, canBubble,
-				cancelable, detail, screenX, screenY, clientX, clientY, ctrlKey,
-				altKey, shiftKey, metaKey, button, relatedTarget);
-	}
+			Element relatedTarget);
 
 	/**
 	 * Creates a 'mousemove' event.
@@ -890,13 +725,9 @@ public interface DomDocument extends DomNode {
 	 *            {@link NativeEvent#BUTTON_LEFT} et al)
 	 * @return the event object
 	 */
-	default NativeEvent createMouseMoveEvent(int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		return createMouseEvent(BrowserEvents.MOUSEMOVE, true, true, detail,
-				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
-				metaKey, button, null);
-	}
+	NativeEvent createMouseMoveEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int button);
 
 	/**
 	 * Creates a 'mouseout' event.
@@ -929,14 +760,10 @@ public interface DomDocument extends DomNode {
 	 *            the event's related target
 	 * @return the event object
 	 */
-	default NativeEvent createMouseOutEvent(int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button,
-			Element relatedTarget) {
-		return createMouseEvent(BrowserEvents.MOUSEOUT, true, true, detail,
-				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
-				metaKey, button, relatedTarget);
-	}
+	NativeEvent createMouseOutEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int button,
+			Element relatedTarget);
 
 	/**
 	 * Creates a 'mouseover' event.
@@ -969,14 +796,10 @@ public interface DomDocument extends DomNode {
 	 *            the event's related target
 	 * @return the event object
 	 */
-	default NativeEvent createMouseOverEvent(int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button,
-			Element relatedTarget) {
-		return createMouseEvent(BrowserEvents.MOUSEOVER, true, true, detail,
-				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
-				metaKey, button, relatedTarget);
-	}
+	NativeEvent createMouseOverEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int button,
+			Element relatedTarget);
 
 	/**
 	 * Creates a 'mouseup' event.
@@ -1004,111 +827,79 @@ public interface DomDocument extends DomNode {
 	 *            {@link NativeEvent#BUTTON_LEFT} et al)
 	 * @return the event object
 	 */
-	default NativeEvent createMouseUpEvent(int detail, int screenX, int screenY,
+	NativeEvent createMouseUpEvent(int detail, int screenX, int screenY,
 			int clientX, int clientY, boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int button) {
-		return createMouseEvent(BrowserEvents.MOUSEUP, true, true, detail,
-				screenX, screenY, clientX, clientY, ctrlKey, altKey, shiftKey,
-				metaKey, button, null);
-	}
+			boolean shiftKey, boolean metaKey, int button);
 
 	/**
 	 * Creates a &lt;object&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default ObjectElement createObjectElement() {
-		return (ObjectElement) DOMImpl.impl.createElement(documentFor(),
-				ObjectElement.TAG);
-	}
+	ObjectElement createObjectElement();
 
 	/**
 	 * Creates an &lt;ol&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default OListElement createOLElement() {
-		return (OListElement) DOMImpl.impl.createElement(documentFor(),
-				OListElement.TAG);
-	}
+	OListElement createOLElement();
 
 	/**
 	 * Creates an &lt;optgroup&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default OptGroupElement createOptGroupElement() {
-		return (OptGroupElement) DOMImpl.impl.createElement(documentFor(),
-				OptGroupElement.TAG);
-	}
+	OptGroupElement createOptGroupElement();
 
 	/**
 	 * Creates an &lt;option&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default OptionElement createOptionElement() {
-		return (OptionElement) DOMImpl.impl.createElement(documentFor(),
-				OptionElement.TAG);
-	}
+	OptionElement createOptionElement();
 
 	/**
 	 * Creates a &lt;param&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default ParamElement createParamElement() {
-		return (ParamElement) DOMImpl.impl.createElement(documentFor(),
-				ParamElement.TAG);
-	}
+	ParamElement createParamElement();
 
 	/**
 	 * Creates an &lt;input type='password'&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default InputElement createPasswordInputElement() {
-		return DOMImpl.impl.createInputElement(documentFor(), "password");
-	}
+	InputElement createPasswordInputElement();
 
 	/**
 	 * Creates a &lt;p&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default ParagraphElement createPElement() {
-		return (ParagraphElement) DOMImpl.impl.createElement(documentFor(),
-				ParagraphElement.TAG);
-	}
+	ParagraphElement createPElement();
 
 	/**
 	 * Creates a &lt;pre&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default PreElement createPreElement() {
-		return (PreElement) DOMImpl.impl.createElement(documentFor(),
-				PreElement.TAG);
-	}
+	PreElement createPreElement();
 
 	/**
 	 * Creates a &lt;button type='button'&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default ButtonElement createPushButtonElement() {
-		return DOMImpl.impl.createButtonElement(documentFor(), "button");
-	}
+	ButtonElement createPushButtonElement();
 
 	/**
 	 * Creates a &lt;q&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default QuoteElement createQElement() {
-		return (QuoteElement) DOMImpl.impl.createElement(documentFor(),
-				QuoteElement.TAG_Q);
-	}
+	QuoteElement createQElement();
 
 	/**
 	 * Creates an &lt;input type='radio'&gt; element.
@@ -1117,37 +908,28 @@ public interface DomDocument extends DomNode {
 	 *            the name of the radio input (used for grouping)
 	 * @return the newly created element
 	 */
-	default InputElement createRadioInputElement(String name) {
-		return DOMImpl.impl.createInputRadioElement(documentFor(), name);
-	}
+	InputElement createRadioInputElement(String name);
 
 	/**
 	 * Creates a &lt;button type='reset'&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default ButtonElement createResetButtonElement() {
-		return DOMImpl.impl.createButtonElement(documentFor(), "reset");
-	}
+	ButtonElement createResetButtonElement();
 
 	/**
 	 * Creates an &lt;input type='reset'&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default InputElement createResetInputElement() {
-		return DOMImpl.impl.createInputElement(documentFor(), "reset");
-	}
+	InputElement createResetInputElement();
 
 	/**
 	 * Creates a &lt;script&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default ScriptElement createScriptElement() {
-		return (ScriptElement) DOMImpl.impl.createElement(documentFor(),
-				ScriptElement.TAG);
-	}
+	ScriptElement createScriptElement();
 
 	/**
 	 * Creates a &lt;script&gt; element.
@@ -1156,9 +938,7 @@ public interface DomDocument extends DomNode {
 	 *            the source code to set inside the element
 	 * @return the newly created element
 	 */
-	default ScriptElement createScriptElement(String source) {
-		return DOMImpl.impl.createScriptElement(documentFor(), source);
-	}
+	ScriptElement createScriptElement(String source);
 
 	/**
 	 * Creates a 'scroll' event.
@@ -1168,19 +948,14 @@ public interface DomDocument extends DomNode {
 	 * 
 	 * @return the event object
 	 */
-	default NativeEvent createScrollEvent() {
-		return createHtmlEvent(BrowserEvents.SCROLL, false, false);
-	}
+	NativeEvent createScrollEvent();
 
 	/**
 	 * Creates a &lt;select&gt; element.
 	 *
 	 * @return the newly created element
 	 */
-	default SelectElement createSelectElement() {
-		return (SelectElement) DOMImpl.impl.createElement(documentFor(),
-				SelectElement.TAG);
-	}
+	SelectElement createSelectElement();
 
 	/**
 	 * Creates a &lt;select&gt; element.
@@ -1194,108 +969,77 @@ public interface DomDocument extends DomNode {
 	 *              multiple-selection.
 	 */
 	@Deprecated
-	default SelectElement createSelectElement(boolean multiple) {
-		SelectElement el = createSelectElement();
-		el.setMultiple(multiple);
-		return el;
-	}
+	SelectElement createSelectElement(boolean multiple);
 
 	/**
 	 * Creates an &lt;source&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default SourceElement createSourceElement() {
-		return (SourceElement) DOMImpl.impl.createElement(documentFor(),
-				SourceElement.TAG);
-	}
+	SourceElement createSourceElement();
 
 	/**
 	 * Creates a &lt;span&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default SpanElement createSpanElement() {
-		return (SpanElement) DOMImpl.impl.createElement(documentFor(),
-				SpanElement.TAG);
-	}
+	SpanElement createSpanElement();
 
 	/**
 	 * Creates a &lt;style&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default StyleElement createStyleElement() {
-		return (StyleElement) DOMImpl.impl.createElement(documentFor(),
-				StyleElement.TAG);
-	}
+	StyleElement createStyleElement();
 
 	/**
 	 * Creates a &lt;button type='submit'&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default ButtonElement createSubmitButtonElement() {
-		return DOMImpl.impl.createButtonElement(documentFor(), "submit");
-	}
+	ButtonElement createSubmitButtonElement();
 
 	/**
 	 * Creates an &lt;input type='submit'&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default InputElement createSubmitInputElement() {
-		return DOMImpl.impl.createInputElement(documentFor(), "submit");
-	}
+	InputElement createSubmitInputElement();
 
 	/**
 	 * Creates a &lt;table&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default TableElement createTableElement() {
-		return (TableElement) DOMImpl.impl.createElement(documentFor(),
-				TableElement.TAG);
-	}
+	TableElement createTableElement();
 
 	/**
 	 * Creates a &lt;tbody&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default TableSectionElement createTBodyElement() {
-		return (TableSectionElement) DOMImpl.impl.createElement(documentFor(),
-				TableSectionElement.TAG_TBODY);
-	}
+	TableSectionElement createTBodyElement();
 
 	/**
 	 * Creates a &lt;td&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default TableCellElement createTDElement() {
-		return (TableCellElement) DOMImpl.impl.createElement(documentFor(),
-				TableCellElement.TAG_TD);
-	}
+	TableCellElement createTDElement();
 
 	/**
 	 * Creates a &lt;textarea&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default TextAreaElement createTextAreaElement() {
-		return (TextAreaElement) DOMImpl.impl.createElement(documentFor(),
-				TextAreaElement.TAG);
-	}
+	TextAreaElement createTextAreaElement();
 
 	/**
 	 * Creates an &lt;input type='text'&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default InputElement createTextInputElement() {
-		return DOMImpl.impl.createInputElement(documentFor(), "text");
-	}
+	InputElement createTextInputElement();
 
 	Text createTextNode(String data);
 
@@ -1304,60 +1048,42 @@ public interface DomDocument extends DomNode {
 	 * 
 	 * @return the newly created element
 	 */
-	default TableSectionElement createTFootElement() {
-		return (TableSectionElement) DOMImpl.impl.createElement(documentFor(),
-				TableSectionElement.TAG_TFOOT);
-	}
+	TableSectionElement createTFootElement();
 
 	/**
 	 * Creates a &lt;thead&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default TableSectionElement createTHeadElement() {
-		return (TableSectionElement) DOMImpl.impl.createElement(documentFor(),
-				TableSectionElement.TAG_THEAD);
-	}
+	TableSectionElement createTHeadElement();
 
 	/**
 	 * Creates a &lt;th&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default TableCellElement createTHElement() {
-		return (TableCellElement) DOMImpl.impl.createElement(documentFor(),
-				TableCellElement.TAG_TH);
-	}
+	TableCellElement createTHElement();
 
 	/**
 	 * Creates a &lt;title&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default TitleElement createTitleElement() {
-		return (TitleElement) DOMImpl.impl.createElement(documentFor(),
-				TitleElement.TAG);
-	}
+	TitleElement createTitleElement();
 
 	/**
 	 * Creates a &lt;tr&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default TableRowElement createTRElement() {
-		return (TableRowElement) DOMImpl.impl.createElement(documentFor(),
-				TableRowElement.TAG);
-	}
+	TableRowElement createTRElement();
 
 	/**
 	 * Creates a &lt;ul&gt; element.
 	 * 
 	 * @return the newly created element
 	 */
-	default UListElement createULElement() {
-		return (UListElement) DOMImpl.impl.createElement(documentFor(),
-				UListElement.TAG);
-	}
+	UListElement createULElement();
 
 	String createUniqueId();
 
@@ -1366,128 +1092,69 @@ public interface DomDocument extends DomNode {
 	 * 
 	 * @return the newly created element
 	 */
-	default VideoElement createVideoElement() {
-		return (VideoElement) DOMImpl.impl.createElement(documentFor(),
-				VideoElement.TAG);
-	}
+	VideoElement createVideoElement();
 
 	Document documentFor();
 
-	default void enableScrolling(boolean enable) {
-		throw new UnsupportedOperationException();
-	}
+	void enableScrolling(boolean enable);
 
 	BodyElement getBody();
 
-	default int getBodyOffsetLeft() {
-		throw new UnsupportedOperationException();
-	}
+	int getBodyOffsetLeft();
 
-	default int getBodyOffsetTop() {
-		throw new UnsupportedOperationException();
-	}
+	int getBodyOffsetTop();
 
-	default int getClientHeight() {
-		throw new UnsupportedOperationException();
-	}
+	int getClientHeight();
 
-	default int getClientWidth() {
-		throw new UnsupportedOperationException();
-	}
+	int getClientWidth();
 
-	default String getCompatMode() {
-		throw new UnsupportedOperationException();
-	}
+	String getCompatMode();
 
-	default Element getDocumentElement() {
-		throw new UnsupportedOperationException();
-	}
+	Element getDocumentElement();
 
-	default String getDomain() {
-		throw new UnsupportedOperationException();
-	}
+	String getDomain();
 
-	default Element getElementById(String elementId) {
-		throw new UnsupportedOperationException();
-	}
+	Element getElementById(String elementId);
 
-	default NodeList<Element> getElementsByTagName(String tagName) {
-		throw new UnsupportedOperationException();
-	}
+	NodeList<Element> getElementsByTagName(String tagName);
 
-	default HeadElement getHead() {
-		throw new UnsupportedOperationException();
-	}
+	HeadElement getHead();
 
 	@Override
-	default String getNodeName() {
-		return "#document";
-	}
+	String getNodeName();
 
 	@Override
-	default short getNodeType() {
-		return Node.DOCUMENT_NODE;
-	}
+	short getNodeType();
 
 	@Override
-	default String getNodeValue() {
-		return null;
-	}
+	String getNodeValue();
 
-	default String getReferrer() {
-		throw new UnsupportedOperationException();
-	}
+	String getReferrer();
 
-	default int getScrollHeight() {
-		throw new UnsupportedOperationException();
-	}
+	int getScrollHeight();
 
-	default int getScrollLeft() {
-		throw new UnsupportedOperationException();
-	}
+	int getScrollLeft();
 
-	default int getScrollTop() {
-		throw new UnsupportedOperationException();
-	}
+	int getScrollTop();
 
-	default int getScrollWidth() {
-		throw new UnsupportedOperationException();
-	}
+	int getScrollWidth();
 
-	default String getTitle() {
-		throw new UnsupportedOperationException();
-	}
+	String getTitle();
 
-	default String getURL() {
-		throw new UnsupportedOperationException();
-	}
+	String getURL();
 
-	default Element getViewportElement() {
-		throw new UnsupportedOperationException();
-	}
+	Element getViewportElement();
 
-	default void importNode(Node node, boolean deep) {
-		throw new UnsupportedOperationException();
-	}
+	void importNode(Node node, boolean deep);
 
-	default boolean isCSS1Compat() {
-		throw new UnsupportedOperationException();
-	}
+	boolean isCSS1Compat();
 
 	@Override
-	default void setNodeValue(String nodeValue) {
-		throw new UnsupportedOperationException();
-	}
+	void setNodeValue(String nodeValue);
 
-	default void setScrollLeft(int left) {
-		throw new UnsupportedOperationException();
-	}
+	void setScrollLeft(int left);
 
-	default void setScrollTop(int top) {
-		throw new UnsupportedOperationException();
-	}
+	void setScrollTop(int top);
 
-	default void setTitle(String title) {
-		throw new UnsupportedOperationException();
-	}
+	void setTitle(String title);
 }

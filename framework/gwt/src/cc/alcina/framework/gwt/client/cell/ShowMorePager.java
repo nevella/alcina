@@ -38,6 +38,8 @@ public class ShowMorePager extends AbstractPager {
 	 */
 	private int lastScrollPos = 0;
 
+	private boolean pagingDisabled;
+
 	/**
 	 * Construct a new {@link ShowMorePager}.
 	 */
@@ -59,6 +61,9 @@ public class ShowMorePager extends AbstractPager {
 				}
 				HasRows display = getDisplay();
 				if (display == null) {
+					return;
+				}
+				if (isPagingDisabled()) {
 					return;
 				}
 				int scrollPanelContentsHeight = scrollable.getWidget()
@@ -103,6 +108,10 @@ public class ShowMorePager extends AbstractPager {
 		return incrementSize;
 	}
 
+	public boolean isPagingDisabled() {
+		return this.pagingDisabled;
+	}
+
 	/**
 	 * Set the number of rows by which the range is increased when the scrollbar
 	 * reaches the bottom.
@@ -112,6 +121,10 @@ public class ShowMorePager extends AbstractPager {
 	 */
 	public void setIncrementSize(int incrementSize) {
 		this.incrementSize = incrementSize;
+	}
+
+	public void setPagingDisabled(boolean pagingDisabled) {
+		this.pagingDisabled = pagingDisabled;
 	}
 
 	@Override

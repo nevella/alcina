@@ -106,7 +106,7 @@ public abstract class ViewModel<P extends Place> extends BaseBindable {
 
 	public static abstract class ViewModelWithDataProvider<P extends Place, T extends HasIdAndLocalId>
 			extends ViewModel<P> {
-		public MemcacheDataProvider<T> dataProvider;
+		public DomainStoreDataProvider<T> dataProvider;
 
 		public void deltaDataProviderConnection(boolean active,
 				HasData hasData) {

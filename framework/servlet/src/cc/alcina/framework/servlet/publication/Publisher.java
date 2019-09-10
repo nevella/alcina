@@ -213,8 +213,6 @@ public class Publisher {
                 && !AppPersistenceBase.isInstanceReadOnly()) {
             postDeliveryPersistence(publicationId);
             crh.getResults().htmlContent = cw.wrappedContent;
-            persist(contentDefinition, deliveryModel, publicationUserId,
-                    original, publicationContentPersister, result);
             if (crh.getResults().persist && publicationContentPersister != null
                     && result.publicationId != 0) {
                 publicationContentPersister.persistContentRendererResults(

@@ -16,12 +16,12 @@ public class AppViewModel {
 		return Registry.impl(AppViewModel.class);
 	}
 
-	private Map<Class, MemcacheDataProvider> providers = new LinkedHashMap<>();
+	private Map<Class, DomainStoreDataProvider> providers = new LinkedHashMap<>();
 
 	public AppViewModel() {
 	}
 
-	public <T extends DataDomainBase> MemcacheDataProvider<T>
+	public <T extends DataDomainBase> DomainStoreDataProvider<T>
 			getDataProvider(Class<T> clazz) {
 		if (!providers.containsKey(clazz)) {
 			providers.put(clazz, createProvider(clazz));
@@ -33,8 +33,8 @@ public class AppViewModel {
 		getDataProvider(clazz).invalidate();
 	}
 
-	protected <T extends DataDomainBase> MemcacheDataProvider<T>
+	protected <T extends DataDomainBase> DomainStoreDataProvider<T>
 			createProvider(Class<T> clazz) {
-		return new MemcacheDataProvider<>(clazz);
+		return new DomainStoreDataProvider<>(clazz);
 	}
 }
