@@ -6,15 +6,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -85,19 +82,6 @@ public class DomainStoreTransformSequencer {
 		}
 	}
 
-<<<<<<< HEAD
-    public synchronized void removePreLocalNonFireEventsThreadBarrier(
-            long requestId) {
-        logger.warn("Remove local barrier: {}", requestId);
-        CountDownLatch latch = preLocalNonFireEventsThreadBarrier
-                .get(requestId);
-        // can be confusing with jboss server firing for devconsole (latch will
-        // be null for jboss server)
-        if (latch != null) {
-            latch.countDown();
-        }
-    }
-=======
 	public synchronized void
 			removePreLocalNonFireEventsThreadBarrier(long requestId) {
 		logger.trace("Remove local barrier: {}", requestId);
@@ -105,7 +89,6 @@ public class DomainStoreTransformSequencer {
 				.get(requestId);
 		latch.countDown();
 	}
->>>>>>> master
 
 	// called by the main firing sequence thread, since the local vm transforms
 	// are fired on the transforming thread
@@ -201,39 +184,6 @@ public class DomainStoreTransformSequencer {
 		return connection;
 	}
 
-<<<<<<< HEAD
-    private HighestVisibleTransactions getHighestVisibleTransformRequest(
-            Connection conn) throws SQLException {
-        try (Statement statement = conn.createStatement()) {
-            Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
-                    .getDomainTransformRequestPersistentClass();
-            String tableName = persistentClass.getAnnotation(Table.class)
-                    .name();
-            String sql = Ax.format(
-                    "select id, transactionCommitTime from %s where transactionCommitTime is not null order by transactionCommitTime desc limit 1",
-                    tableName);
-            HighestVisibleTransactions transactionsData = new HighestVisibleTransactions();
-            ResultSet rs = statement.executeQuery(sql);
-            transactionsData.commitTimestamp = new Timestamp(0);
-            if (rs.next()) {
-                transactionsData.commitTimestamp = rs
-                        .getTimestamp("transactionCommitTime");
-                rs.close();
-                PreparedStatement idStatement = conn.prepareStatement(Ax.format(
-                        "select id from %s where transactionCommitTime=? order by id",
-                        tableName));
-                idStatement.setTimestamp(1, transactionsData.commitTimestamp);
-                ResultSet idRs = idStatement.executeQuery();
-                while (idRs.next()) {
-                    transactionsData.transformListIds.add(idRs.getLong("id"));
-                }
-                logger.debug("Got highestVisible request data : {}",
-                        transactionsData);
-            }
-            return transactionsData;
-        }
-    }
-=======
 	private HighestVisibleTransactions getHighestVisibleTransformRequest(
 			Connection conn) throws SQLException {
 		try (Statement statement = conn.createStatement()) {
@@ -265,7 +215,6 @@ public class DomainStoreTransformSequencer {
 			return transactionsData;
 		}
 	}
->>>>>>> master
 
 	private List<Long> getSequentialUnpublishedTransformIds0()
 			throws Exception {
@@ -345,64 +294,6 @@ public class DomainStoreTransformSequencer {
 		}
 	}
 
-<<<<<<< HEAD
-    private Timestamp translateToUtc(Timestamp timestamp) {
-        Calendar defaultCalendar = Calendar.getInstance();
-        return new Timestamp(timestamp.getTime()
-                - defaultCalendar.getTimeZone().getOffset(timestamp.getTime()));
-    }
-
-    void ensureTransactionCommitTimes() throws SQLException {
-        if (!loaderDatabase.domainDescriptor
-                .isUseTransformDbCommitSequencing()) {
-            return;
-        }
-        /* postgres specific */
-        Connection conn = getConnection();
-        try (Statement statement = conn.createStatement()) {
-            Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
-                    .getDomainTransformRequestPersistentClass();
-            String tableName = persistentClass.getAnnotation(Table.class)
-                    .name();
-            String sql = Ax.format(
-                    "select id,startPersistTime, pg_xact_commit_timestamp(xmin) as commit_timestamp "
-                            + "from %s where transactionCommitTime is null order by pg_xact_commit_timestamp(xmin)",
-                    tableName);
-            ResultSet rs = statement.executeQuery(sql);
-            Calendar utcCalendar = Calendar
-                    .getInstance(TimeZone.getTimeZone(ZoneId.of("GMT")));
-            while (rs.next()) {
-                long id = rs.getLong("id");
-                PreparedStatement updateStatement = conn.prepareStatement(Ax
-                        .format("update %s set transactionCommitTime=? where id=?",
-                                tableName));
-                Timestamp commit_timestamp = rs
-                        .getTimestamp("commit_timestamp");
-                Timestamp utcTimestamp = commit_timestamp;
-                updateStatement.setTimestamp(1, utcTimestamp);
-                updateStatement.setLong(2, id);
-                updateStatement.executeUpdate();
-                updateStatement.close();
-                logger.debug("Updated transactionCommitTime for request {}",
-                        id);
-            }
-            conn.commit();
-            rs.close();
-        }
-    }
-
-    Timestamp getHighestVisibleTransactionTimestamp() {
-        return highestVisibleTransactions.commitTimestamp;
-    }
-
-    void markHighestVisibleTransformList(Connection conn) throws SQLException {
-        if (!loaderDatabase.domainDescriptor
-                .isUseTransformDbCommitSequencing()) {
-            return;
-        }
-        highestVisibleTransactions = getHighestVisibleTransformRequest(conn);
-    }
-=======
 	void ensureTransactionCommitTimes() throws SQLException {
 		if (!loaderDatabase.domainDescriptor
 				.isUseTransformDbCommitSequencing()) {
@@ -439,6 +330,10 @@ public class DomainStoreTransformSequencer {
 		}
 	}
 
+    Timestamp getHighestVisibleTransactionTimestamp() {
+        return highestVisibleTransactions.commitTimestamp;
+    }
+
 	void markHighestVisibleTransformList(Connection conn) throws SQLException {
 		if (!loaderDatabase.domainDescriptor
 				.isUseTransformDbCommitSequencing()) {
@@ -446,7 +341,6 @@ public class DomainStoreTransformSequencer {
 		}
 		highestVisibleTransactions = getHighestVisibleTransformRequest(conn);
 	}
->>>>>>> master
 
 	static class DtrIdTimestamp {
 		long id;
