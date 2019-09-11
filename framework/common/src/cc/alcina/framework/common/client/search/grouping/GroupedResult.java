@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.rpc.GwtTransient;
@@ -20,7 +21,7 @@ public class GroupedResult implements Serializable {
 	public String json;
 
 	private List<Row> rows = new ArrayList<>();
-
+	@XmlTransient
 	private List<Col> cols = new ArrayList<>();
 
 	private Row totalRow;
@@ -29,7 +30,7 @@ public class GroupedResult implements Serializable {
 		return getRows().stream().map(row -> row.cells)
 				.collect(AlcinaCollectors.toItemStream());
 	}
-
+	@XmlTransient
 	public List<Col> getCols() {
 		return this.cols;
 	}
@@ -104,6 +105,7 @@ public class GroupedResult implements Serializable {
 
 		public double width;
 
+		@XmlTransient
 		public Unit unit;
 
 		public GroupKey key;
