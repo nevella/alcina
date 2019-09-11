@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlTransient;
 
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.rpc.GwtTransient;
@@ -104,6 +105,7 @@ public class GroupedResult implements Serializable {
 
 		public double width;
 
+		@XmlTransient
 		public Unit unit;
 
 		public GroupKey key;
