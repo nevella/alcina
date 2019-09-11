@@ -78,7 +78,7 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 			if (peer.ignoreNode(n)) {
 				continue;
 			}
-			if (nodeCount > 10000) {
+			if (nodeCount > 30000) {
 				if (nodeIndex % 10000 == 0) {
 					Ax.out(" ---->>>> Parsed: %s/%s", nodeIndex, nodeCount);
 				}
