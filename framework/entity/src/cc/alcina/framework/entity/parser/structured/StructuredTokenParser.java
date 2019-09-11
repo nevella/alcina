@@ -45,7 +45,7 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 			if (!shouldContinue.get()) {
 				break;
 			}
-			if (all > 10000 && counter++ % 1000 == 0) {
+			if (all > 30000 && counter++ % 5000 == 0) {
 				Ax.out("%s/%s", counter, all);
 			}
 		}
