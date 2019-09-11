@@ -21,7 +21,7 @@ public class GroupedResult implements Serializable {
 	public String json;
 
 	private List<Row> rows = new ArrayList<>();
-
+	@XmlTransient
 	private List<Col> cols = new ArrayList<>();
 
 	private Row totalRow;
@@ -30,7 +30,7 @@ public class GroupedResult implements Serializable {
 		return getRows().stream().map(row -> row.cells)
 				.collect(AlcinaCollectors.toItemStream());
 	}
-
+	@XmlTransient
 	public List<Col> getCols() {
 		return this.cols;
 	}
