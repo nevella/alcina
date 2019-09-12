@@ -4,10 +4,18 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.util.function.Supplier;
 
 import javax.sql.DataSource;
 
 public class DataSourceAdapter implements DataSource {
+	private Supplier<Connection> supplier;
+
+	public DataSourceAdapter() {
+	}
+	public DataSourceAdapter(Supplier<Connection> supplier) {
+		this.supplier = supplier;
+	}
     @Override
     public Connection getConnection() throws SQLException {
         return null;
@@ -16,7 +24,7 @@ public class DataSourceAdapter implements DataSource {
     @Override
     public Connection getConnection(String username, String password)
             throws SQLException {
-        return null;
+        return supplier.get();
     }
 
     @Override
