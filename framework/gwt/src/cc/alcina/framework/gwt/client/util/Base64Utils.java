@@ -18,6 +18,9 @@
  */
 package cc.alcina.framework.gwt.client.util;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 /**
  * A utility to decode and encode byte arrays as Strings, using only "safe"
  * characters.
@@ -190,5 +193,18 @@ public class Base64Utils {
 			sb.append(base64Chars[digit]);
 		}
 		return haveNonZero;
+	}
+	public static boolean isBase64(String value) {
+		Set<Character> lookup =new LinkedHashSet<>();
+		for (char c : base64Chars) {
+			lookup.add(c);
+		}
+		for(int idx=0;idx<value.length();idx++) {
+			char c = value.charAt(idx);
+			if(!lookup.contains(c)) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
