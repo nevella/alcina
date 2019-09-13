@@ -48,7 +48,7 @@ class Packet {
 
     public boolean isReply;
 
-    transient boolean predictivePacketUsed;
+    transient int predictivePacketUseCount;
 
     boolean mustSend;
 
