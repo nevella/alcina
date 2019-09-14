@@ -30,8 +30,12 @@ public abstract class UserStoryTeller
 
 	}-*/;
 
+	/*
+	 * The 5000 ms timer is so that editors can see - vaguely live - what peeps
+	 * are doing
+	 */
 	private AtEndOfEventSeriesTimer<ClientLogRecord> seriesTimer = new AtEndOfEventSeriesTimer<>(
-			20000, new Runnable() {
+			5000, new Runnable() {
 				@Override
 				public void run() {
 					publish();
@@ -60,6 +64,10 @@ public abstract class UserStoryTeller
 							Ax.format("Started logging - url: %s",
 									Window.Location.getHref())));
 		}
+	}
+
+	public UserStory getStory() {
+		return this.story;
 	}
 
 	public native void registerWithJs()
