@@ -19,10 +19,11 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
-import cc.alcina.framework.common.client.entity.UserStory;
+import cc.alcina.framework.common.client.entity.IUserStory;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
@@ -66,7 +67,7 @@ public class UserStories {
 	public void build(long id, String delta) {
 		JsonNodeFactory nodeFactory = JsonNodeFactory.instance;
 		storyNode = nodeFactory.objectNode();
-		UserStory userStory = Domain.find(getImplementation(), id);
+		IUserStory userStory = Domain.find(getImplementation(), id);
 		ClientInstance clientInstance = null;
 		long clientInstanceId = userStory.getClientInstanceId();
 		if (clientInstanceId != 0) {
@@ -224,7 +225,7 @@ public class UserStories {
 		html = doc.prettyToString();
 	}
 
-	public void persist(UserStory incoming) {
+	public void persist(IUserStory incoming) {
 		if (ResourceUtilities.is("disabled")) {
 			return;
 		}
@@ -232,11 +233,12 @@ public class UserStories {
 				.getAuthenticatedSessionClientInstance(
 						CommonRemoteServiceServlet
 								.getContextThreadLocalRequest());
-		Optional<? extends UserStory> o_story = getUserStory(clientInstance,
+		Optional<? extends IUserStory> o_story = getUserStory(clientInstance,
 				incoming.getClientInstanceUid());
-		UserStory story = null;
+		IUserStory story = null;
 		if (o_story.isPresent()) {
-			story = (UserStory) o_story.get().writeable();
+			story = (IUserStory) ((AbstractDomainBase) o_story.get())
+					.writeable();
 		} else {
 			story = Domain.create(getImplementation());
 			postCreateStory(story, clientInstance);
@@ -253,7 +255,7 @@ public class UserStories {
 		topicUserStoriesEvents().publish(storyNode);
 	}
 
-	private String getDelta(UserStory incoming, UserStory story) {
+	private String getDelta(IUserStory incoming, IUserStory story) {
 		String s1 = incoming.getStory();
 		String s2 = story.getStory();
 		List<String> lines1 = Arrays
@@ -264,15 +266,15 @@ public class UserStories {
 				.collect(Collectors.joining("\n"));
 	}
 
-	private Class<? extends UserStory> getImplementation() {
+	private Class<? extends IUserStory> getImplementation() {
 		return CommonPersistenceProvider.get()
 				.getCommonPersistenceExTransaction()
-				.getImplementation(UserStory.class);
+				.getImplementation(IUserStory.class);
 	}
 
-	private Optional<? extends UserStory> getUserStory(
+	private Optional<? extends IUserStory> getUserStory(
 			ClientInstance clientInstance, String clientInstanceUid) {
-		Predicate<UserStory> predicate = us -> clientInstanceUid != null
+		Predicate<IUserStory> predicate = us -> clientInstanceUid != null
 				? clientInstanceUid.equals(us.getClientInstanceUid())
 				: us.getClientInstanceId() == clientInstance.getId();
 		return Domain.query(getImplementation()).filter(predicate).stream()
@@ -327,7 +329,7 @@ public class UserStories {
 		return out;
 	}
 
-	protected void postCreateStory(UserStory story,
+	protected void postCreateStory(IUserStory story,
 			ClientInstance clientInstance) {
 		story.setDate(new Date());
 	}

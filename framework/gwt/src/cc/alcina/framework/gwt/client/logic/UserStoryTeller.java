@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.logic;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
-import cc.alcina.framework.common.client.entity.UserStory;
+import cc.alcina.framework.common.client.entity.IUserStory;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -44,7 +44,7 @@ public abstract class UserStoryTeller
 
 	protected boolean listening = false;
 
-	protected UserStory story;
+	protected IUserStory story;
 
 	protected boolean publishDisabled = false;
 
@@ -66,7 +66,7 @@ public abstract class UserStoryTeller
 		}
 	}
 
-	public UserStory getStory() {
+	public IUserStory getStory() {
 		return this.story;
 	}
 
@@ -98,7 +98,7 @@ public abstract class UserStoryTeller
 		}
 	}
 
-	protected abstract UserStory createUserStory();
+	protected abstract IUserStory createUserStory();
 
 	protected void persistLocal() {
 	}
