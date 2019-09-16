@@ -160,6 +160,8 @@ public class LogStore {
 
 	private boolean localPersistencePaused;
 
+	private boolean emittedLogStoreException = false;
+
 	protected LogStore() {
 		if (!AlcinaProperties.is(AlcinaProperties.class,
 				AlcinaProperties.NON_BROWSER)) {
@@ -278,6 +280,11 @@ public class LogStore {
 		} catch (Exception e) {
 			if (!GWT.isScript()) {
 				e.printStackTrace();
+			} else {
+				if (!emittedLogStoreException) {
+					emittedLogStoreException = true;
+					throw new RuntimeException(e);
+				}
 			}
 		}
 	}

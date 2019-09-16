@@ -175,9 +175,10 @@ interface PacketEndpointHost {
                     .byPayloadResponse(packet);
             Optional<Packet> predictiveResponse = byPayloadResponse
                     .map(response -> {
-                        response = response.copy();
-                        response.setId(packet.id());
-                        return response;
+                        Packet copy = response.copy();
+                        copy.predictivePacketUseCount=response.predictivePacketUseCount;
+                        copy.setId(packet.id());
+                        return copy;
                     });
             if (predictiveResponse.isPresent()) {
                 currentPredictivePacketsHit.add(predictiveResponse.get());
@@ -277,5 +278,11 @@ interface PacketEndpointHost {
                 }
             }
         }
+
+		public void predictivePacketUsed(Packet commandPacket) {
+			Optional<Packet> byPayloadResponse = usablePredictiveReplies
+                    .byPayloadResponse(commandPacket);
+			byPayloadResponse.get().predictivePacketUseCount++;
+		}
     }
 }

@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.logic;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
-import cc.alcina.framework.common.client.entity.UserStory;
+import cc.alcina.framework.common.client.entity.IUserStory;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -30,8 +30,12 @@ public abstract class UserStoryTeller
 
 	}-*/;
 
+	/*
+	 * The 5000 ms timer is so that editors can see - vaguely live - what peeps
+	 * are doing
+	 */
 	private AtEndOfEventSeriesTimer<ClientLogRecord> seriesTimer = new AtEndOfEventSeriesTimer<>(
-			20000, new Runnable() {
+			5000, new Runnable() {
 				@Override
 				public void run() {
 					publish();
@@ -40,7 +44,7 @@ public abstract class UserStoryTeller
 
 	protected boolean listening = false;
 
-	protected UserStory story;
+	protected IUserStory story;
 
 	protected boolean publishDisabled = false;
 
@@ -60,6 +64,10 @@ public abstract class UserStoryTeller
 							Ax.format("Started logging - url: %s",
 									Window.Location.getHref())));
 		}
+	}
+
+	public IUserStory getStory() {
+		return this.story;
 	}
 
 	public native void registerWithJs()
@@ -90,7 +98,7 @@ public abstract class UserStoryTeller
 		}
 	}
 
-	protected abstract UserStory createUserStory();
+	protected abstract IUserStory createUserStory();
 
 	protected void persistLocal() {
 	}

@@ -8,7 +8,6 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.SpecificIdOrder;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TxtCriterion;
