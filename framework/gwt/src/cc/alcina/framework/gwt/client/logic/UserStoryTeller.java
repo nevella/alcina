@@ -31,11 +31,11 @@ public abstract class UserStoryTeller
 	}-*/;
 
 	/*
-	 * The 5000 ms timer is so that editors can see - vaguely live - what peeps
+	 * The 4000 ms timer is so that editors can see - vaguely live - what peeps
 	 * are doing
 	 */
 	private AtEndOfEventSeriesTimer<ClientLogRecord> seriesTimer = new AtEndOfEventSeriesTimer<>(
-			5000, new Runnable() {
+			4000, new Runnable() {
 				@Override
 				public void run() {
 					publish();

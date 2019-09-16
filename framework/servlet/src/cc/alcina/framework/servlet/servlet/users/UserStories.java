@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.entity.parser.structured.node.XmlNodeHtmlTableBuilder;
@@ -266,19 +267,18 @@ public class UserStories {
 				.collect(Collectors.joining("\n"));
 	}
 
-	private Class<? extends IUserStory> getImplementation() {
-		return CommonPersistenceProvider.get()
-				.getCommonPersistenceExTransaction()
-				.getImplementation(IUserStory.class);
-	}
-
 	private Optional<? extends IUserStory> getUserStory(
 			ClientInstance clientInstance, String clientInstanceUid) {
-		Predicate<IUserStory> predicate = us -> clientInstanceUid != null
-				? clientInstanceUid.equals(us.getClientInstanceUid())
-				: us.getClientInstanceId() == clientInstance.getId();
-		return Domain.query(getImplementation()).filter(predicate).stream()
-				.findFirst();
+		return ThreadedPermissionsManager.cast()
+				.callWithPushedSystemUserIfNeededNoThrow(() -> {
+					Predicate<IUserStory> predicate = us -> clientInstanceUid != null
+							? clientInstanceUid
+									.equals(us.getClientInstanceUid())
+							: us.getClientInstanceId() == clientInstance
+									.getId();
+					return Domain.query(getImplementation()).filter(predicate)
+							.stream().findFirst();
+				});
 	}
 
 	private String untilFirstCamel(String text) {
@@ -295,6 +295,12 @@ public class UserStories {
 			}
 		}
 		return out.stream().collect(Collectors.joining(" "));
+	}
+
+	protected Class<? extends IUserStory> getImplementation() {
+		return CommonPersistenceProvider.get()
+				.getCommonPersistenceExTransaction()
+				.getImplementation(IUserStory.class);
 	}
 
 	protected List<String> getUserStoryPropertiesNotPopulatedByClient() {
