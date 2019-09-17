@@ -13,51 +13,53 @@ public class DataSourceAdapter implements DataSource {
 
 	public DataSourceAdapter() {
 	}
+
 	public DataSourceAdapter(Supplier<Connection> supplier) {
 		this.supplier = supplier;
 	}
-    @Override
-    public Connection getConnection() throws SQLException {
-        return null;
-    }
 
-    @Override
-    public Connection getConnection(String username, String password)
-            throws SQLException {
-        return supplier.get();
-    }
+	@Override
+	public Connection getConnection() throws SQLException {
+		return supplier.get();
+	}
 
-    @Override
-    public int getLoginTimeout() throws SQLException {
-        return 0;
-    }
+	@Override
+	public Connection getConnection(String username, String password)
+			throws SQLException {
+		return supplier.get();
+	}
 
-    @Override
-    public PrintWriter getLogWriter() throws SQLException {
-        return null;
-    }
+	@Override
+	public int getLoginTimeout() throws SQLException {
+		return 0;
+	}
 
-    @Override
-    public java.util.logging.Logger getParentLogger()
-            throws SQLFeatureNotSupportedException {
-        return null;
-    }
+	@Override
+	public PrintWriter getLogWriter() throws SQLException {
+		return null;
+	}
 
-    @Override
-    public boolean isWrapperFor(Class<?> iface) throws SQLException {
-        return false;
-    }
+	@Override
+	public java.util.logging.Logger getParentLogger()
+			throws SQLFeatureNotSupportedException {
+		return null;
+	}
 
-    @Override
-    public void setLoginTimeout(int seconds) throws SQLException {
-    }
+	@Override
+	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+		return false;
+	}
 
-    @Override
-    public void setLogWriter(PrintWriter out) throws SQLException {
-    }
+	@Override
+	public void setLoginTimeout(int seconds) throws SQLException {
+	}
 
-    @Override
-    public <T> T unwrap(Class<T> iface) throws SQLException {
-        return null;
-    }
+	@Override
+	public void setLogWriter(PrintWriter out) throws SQLException {
+	}
+
+	@Override
+	public <T> T unwrap(Class<T> iface) throws SQLException {
+		return null;
+	}
 }

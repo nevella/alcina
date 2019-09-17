@@ -151,6 +151,11 @@ public class ThreadlocalTransformManager extends TransformManager
 		return TransformManager.get() instanceof ThreadlocalTransformManager;
 	}
 
+	public static boolean isIgnoreTransformPermissions() {
+		return ResourceUtilities.getBoolean(ThreadlocalTransformManager.class,
+				"ignoreTransformPermissions");
+	}
+
 	public static boolean isInEntityManagerTransaction() {
 		return get() instanceof ThreadlocalTransformManager
 				&& cast().getEntityManager() != null;
@@ -996,8 +1001,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	private boolean checkPermissions(HasIdAndLocalId hili,
 			DomainTransformEvent evt, String propertyName, Object change,
 			boolean muteLogging) {
-		if (ResourceUtilities.getBoolean(ThreadlocalTransformManager.class,
-				"ignoreTransformPermissions")) {
+		if (isIgnoreTransformPermissions()) {
 			return true;
 		}
 		if (explicitlyPermitted(evt)) {
