@@ -46,6 +46,7 @@ import com.google.gwt.util.tools.shared.StringUtils;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.jscodeserver.CrossOriginFilter;
 
 /**
  * This linker uses an iframe to hold the code and a script tag to download the
@@ -676,11 +677,11 @@ public class CrossSiteIframeLinker extends SelectionScriptLinker {
                     "common/CheckVersionsMessage.js",
                     "common/FreeValueMessage.js" };
             for (String fn : scriptNames) {
-                String path = Ax.format(
-                        "/g/alcina/framework/jscodeserver/src/cc/alcina/framework/jscodeserver/js/%s",
-                        fn);
+            	String scriptContents = ResourceUtilities.readClassPathResourceAsString(CrossSiteIframeLinker.class, Ax.format(
+                        "/cc/alcina/framework/jscodeserver/js/%s",
+                        fn));
                 buffer.append("\n");
-                buffer.append(ResourceUtilities.read(path));
+                buffer.append(scriptContents);
                 buffer.append("\n");
             }
         }

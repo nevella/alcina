@@ -54,3 +54,6 @@ I'm _very_ interested in people's opinions/suggestions/critiques of this project
   * Update 2 - April 21 - Well, yeah, still not there for M0.1, but close - basic conflict resolution stuff done, so just need to clean up the handshake and get the app template creator working. Call it April 30 with luck.
   * Update 1 (slipping a bit) - a preliminary version of the code is in the source tree - but Milestone0.1 is what will be the first generally useful release, and it doesn't look like it'll be out until at least April 15.
   * The code's been in production use for about a year, target date for getting (cleaned, documented) code up is March 15, 2010
+
+#### Not much change
+In 8 years - at this level, but underneath...lordy! 
