@@ -86,13 +86,13 @@ public class AbstractDateCriterion extends SearchCriterion
 		setDate(value);
 	}
 
-	public AbstractDateCriterion withValue(Date date) {
-		setDate(date);
+	public AbstractDateCriterion withDate(int year, int month, int dayOfMonth) {
+		setDate(CommonUtils.oldDate(year, month, dayOfMonth));
 		return this;
 	}
 
-	public AbstractDateCriterion withDate(int year, int month, int dayOfMonth) {
-		setDate(CommonUtils.oldDate(year, month, dayOfMonth));
+	public AbstractDateCriterion withValue(Date date) {
+		setDate(date);
 		return this;
 	}
 }
