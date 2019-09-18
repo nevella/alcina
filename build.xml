@@ -24,6 +24,7 @@
 		<delete dir="${framework.jvmclient.build.dir}" />
 		<delete dir="${framework.clientreflectorjvm.build.dir}" />
 		<delete dir="${framework.classmeta.build.dir}" />
+		<delete dir="${framework.jscodeserver.build.dir}" />
 		<mkdir dir="${framework.dist.dir}" />
 	</target>
 	<target name="compile" description="Compiles all J2SE modules" depends="compile-task">
