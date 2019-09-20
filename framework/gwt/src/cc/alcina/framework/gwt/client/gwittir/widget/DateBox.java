@@ -14,6 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Date;
+import java.util.function.Function;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
@@ -25,6 +26,9 @@ import com.google.gwt.user.datepicker.client.DateBox.Format;
 import com.google.gwt.user.datepicker.client.DatePicker;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+
+import cc.alcina.framework.common.client.collections.BidiConverter;
+import cc.alcina.framework.common.client.collections.BidiConverter.BidiIdentityConverter;
 
 /**
  * This class is a bit hacked, to support Gwittir validation. It requires an
@@ -61,6 +65,17 @@ public class DateBox extends AbstractBoundWidget<Date>
 		base.addStyleName("alcina-DateBox");
 		initWidget(base);
 	}
+	
+	private BidiConverter<Date,Date> dateTranslator = new BidiIdentityConverter<Date>();
+
+
+	public BidiConverter<Date, Date> getDateTranslator() {
+		return this.dateTranslator;
+	}
+
+	public void setDateTranslator(BidiConverter<Date, Date> dateTranslator) {
+		this.dateTranslator = dateTranslator;
+	}
 
 	@Override
 	public int getTabIndex() {
@@ -69,7 +84,7 @@ public class DateBox extends AbstractBoundWidget<Date>
 
 	@Override
 	public Date getValue() {
-		return base.getValue();
+		return dateTranslator.rightToLeft(base.getValue());
 	}
 
 	@Override
@@ -96,7 +111,7 @@ public class DateBox extends AbstractBoundWidget<Date>
 	public void setValue(Date value) {
 		Date oldDate = this.value;
 		this.value = value;
-		base.setValue(value, false);
+		base.setValue(dateTranslator.leftToRight(value), false);
 		changes.firePropertyChange("value", oldDate, this.value);
 	}
 
@@ -107,7 +122,7 @@ public class DateBox extends AbstractBoundWidget<Date>
 			changes.firePropertyChange("value", oldText, this.text);
 			return;
 		}
-		setValue(base.getValue());
+		setValue(dateTranslator.rightToLeft(base.getValue()));
 	}
 
 	private TextBox getTextBox() {
