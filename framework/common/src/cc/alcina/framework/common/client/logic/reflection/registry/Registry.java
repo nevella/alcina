@@ -454,6 +454,9 @@ public class Registry {
     public synchronized void register(RegistryKey registeringClassKey,
             RegistryKey registryPointKey, RegistryKey targetClassKey,
             ImplementationType implementationType, int infoPriority) {
+    	if(implementationType==ImplementationType.NONE){
+    		return;
+    	}
         MultikeyMap<RegistryKey> registered = registry.asMapEnsure(true,
                 registryPointKey, targetClassKey);
         UnsortedMultikeyMap<RegistryKey> pointMap = null;

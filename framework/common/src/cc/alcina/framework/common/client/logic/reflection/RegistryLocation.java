@@ -57,6 +57,8 @@ public @interface RegistryLocation {
 		// registree is a factory, instantiate as a singleton
 		FACTORY,
 		// registree is the impl, should be instantiated as a singleton
-		SINGLETON
+		SINGLETON,
+		// none (override inherited) - do not register
+		NONE
 	}
 }

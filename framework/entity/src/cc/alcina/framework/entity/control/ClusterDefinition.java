@@ -20,6 +20,8 @@ public class ClusterDefinition {
     public String bpxGroup;
 
     public boolean supportsClusterHealth;
+    
+    public String zkNamespace;
 
     public List<ClusterMember> clusterMembers = new ArrayList<>();
 
