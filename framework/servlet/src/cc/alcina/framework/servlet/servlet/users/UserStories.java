@@ -248,6 +248,7 @@ public class UserStories {
 		ResourceUtilities.copyBeanProperties(incoming, story, null, false,
 				getUserStoryPropertiesNotPopulatedByClient());
 		story.setClientInstanceId(clientInstance.getId());
+		story.setIid(clientInstance.getIid());
 		long creationId = ServletLayerTransforms
 				.pushTransformsAndGetFirstCreationId(true);
 		long storyId = creationId == 0 ? story.getId() : creationId;
@@ -307,6 +308,7 @@ public class UserStories {
 		List<String> properties = Domain.DOMAIN_BASE_VERSIONABLE_PROPERTY_NAMES
 				.stream().collect(Collectors.toList());
 		properties.add("date");
+		properties.add("iid");
 		return properties;
 	}
 
