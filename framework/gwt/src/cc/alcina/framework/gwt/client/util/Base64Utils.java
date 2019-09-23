@@ -201,7 +201,7 @@ public class Base64Utils {
 		}
 		for(int idx=0;idx<value.length();idx++) {
 			char c = value.charAt(idx);
-			if(!lookup.contains(c)) {
+			if(!lookup.contains(c)&& c!='=') {
 				return false;
 			}
 		}
