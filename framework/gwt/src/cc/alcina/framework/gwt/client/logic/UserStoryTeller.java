@@ -110,6 +110,7 @@ public abstract class UserStoryTeller
 			return;
 		}
 		story.setStory(LogStore.get().dumpLogsAsString());
+		story.obfuscateClientEvents();
 		persistRemote();
 		Ax.out("persisted user story");
 	}

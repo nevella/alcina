@@ -23,6 +23,7 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ReplayInstruction;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -135,7 +136,7 @@ public class LogStoreInterceptors {
 			if (blur || focus) {
 				String value = Element.as(eTarget).getPropertyString("value");
 				String ih = Element.as(eTarget).getInnerHTML();
-				valueMessage = CommonUtils.formatJ("%s%s",
+				valueMessage = Ax.format("%s%s",
 						ClientLogRecord.VALUE_SEPARATOR, value);
 				if (focus) {
 					lastFocussedValueMessage = valueMessage;
@@ -150,7 +151,7 @@ public class LogStoreInterceptors {
 			AlcinaTopics.logCategorisedMessage(new StringPair(
 					click ? AlcinaTopics.LOG_CATEGORY_CLICK
 							: AlcinaTopics.LOG_CATEGORY_CHANGE,
-					ReplayInstruction.createReplayBody(text, path,
+					ReplayInstruction.createReplayBody( path,text,
 							valueMessage)));
 		}
 	}

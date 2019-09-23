@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.entity;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
 
@@ -15,9 +16,10 @@ public class ReplayInstruction {
 
 	public static final String REPLAY_TEXT_WILDCARD = "::replay-wildcard";
 
-	public static String createReplayBody(String text, String path,
+	public static String createReplayBody( String path,String text,
 			String valueMessage) {
-		return CommonUtils.formatJ("%s :: [%s]%s", path, text, valueMessage);
+		String body = Ax.format("%s :: [%s]%s", path, text, valueMessage);
+		return body;
 	}
 
 	public static String escape(String str) {
