@@ -65,7 +65,7 @@ import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
-import cc.alcina.framework.servlet.misc.AppServletStatusFileNotifier;
+import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
     protected ServletConfig initServletConfig;
@@ -124,7 +124,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
     @Override
     public void destroy() {
         try {
-            new AppServletStatusFileNotifier().destroyed();
+            getStatusNotifier().destroyed();
             SEUtilities.appShutdown();
             ResourceUtilities.appShutdown();
             Registry.impl(ServletLayerTransforms.class).appShutdown();
@@ -158,12 +158,14 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             // push to registry
             Registry.setProvider(new ClassLoaderAwareRegistryProvider());
             initBootstrapRegistry();
-            new AppServletStatusFileNotifier().deploying();
             initNames();
             loadCustomProperties();
             initDevConsoleAndWebApp();
             initJPA();
             initServices();
+            initEntityLayerRegistry();
+            initCluster();
+            getStatusNotifier().deploying();
             initEntityLayer();
             createServletTransformClientInstance();
             initCustom();
@@ -175,8 +177,20 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             initServletConfig = null;
         }
         MetricLogging.get().end("Web app startup");
-        new AppServletStatusFileNotifier().ready();
+        getStatusNotifier().ready();
     }
+
+	protected  void initEntityLayerRegistry() throws Exception{
+		
+	}
+
+	protected  void initCluster(){
+		
+	}
+
+	protected AppServletStatusNotifier getStatusNotifier() {
+		return new AppServletStatusNotifier();
+	}
 
     public void refreshProperties() {
         loadCustomProperties();

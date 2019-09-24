@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * @param <C>
  *            the type that this Cell represents
  */
-public class UnsafeHtmlCell extends AbstractCell<FunctionalTuple> {
+public class UnsafeHtmlCell extends AbstractCell<Object> {
 	/**
 	 * Construct a new {@link UnsafeHtmlCell}.
 	 *
@@ -41,15 +41,22 @@ public class UnsafeHtmlCell extends AbstractCell<FunctionalTuple> {
 	}
 
 	@Override
-	public void render(Context context, FunctionalTuple value,
-			SafeHtmlBuilder sb) {
-		String prelude = "<div>";
-		if (Ax.notBlank(value.title)) {
-			prelude = Ax.format("<div title='%s'>",
-					SafeHtmlUtils.htmlEscape(value.title));
+	public void render(Context context, Object value, SafeHtmlBuilder sb) {
+		if (value instanceof FunctionalTuple) {
+			FunctionalTuple tuple = (FunctionalTuple) value;
+			String prelude = "<div>";
+			if (Ax.notBlank(tuple.title)) {
+				prelude = Ax.format("<div title='%s'>",
+						SafeHtmlUtils.htmlEscape(tuple.title));
+			}
+			sb.append(SafeHtmlUtils.fromTrustedString(prelude));
+			sb.append(SafeHtmlUtils
+					.fromTrustedString(Ax.blankToEmpty(tuple.text)));
+			sb.append(SafeHtmlUtils.fromTrustedString("</div>"));
+		} else {
+			sb.append(SafeHtmlUtils.fromTrustedString("<div>"));
+			sb.append(SafeHtmlUtils.fromTrustedString(value.toString()));
+			sb.append(SafeHtmlUtils.fromTrustedString("</div>"));
 		}
-		sb.append(SafeHtmlUtils.fromTrustedString(prelude));
-		sb.append(SafeHtmlUtils.fromTrustedString(Ax.blankToEmpty(value.text)));
-		sb.append(SafeHtmlUtils.fromTrustedString("</div>"));
 	}
 }

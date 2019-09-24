@@ -207,6 +207,8 @@
 		<touch file="${j2ee-server.unear.target}/../${j2ee-server.unear.name}.dodeploy" />
 	</target>
 	<target name="restart-from-staging" description="Dev :: copy and restart from staging dir" depends="">
+		<delete file="${deploy.j2ee-server.deploy.dir}/../deployments/${j2ee-server.unear.name}.dodeploy" />
+		<delete file="${deploy.j2ee-server.deploy.dir}/../deployments/${j2ee-server.unear.name}.deployed" />
 		<sync todir="${deploy.j2ee-server.deploy.dir}/../deployments/${j2ee-server.unear.name}">
 			<fileset dir="${deploy.j2ee-server.deploy.dir}/${j2ee-server.unear.name}">
 			</fileset>

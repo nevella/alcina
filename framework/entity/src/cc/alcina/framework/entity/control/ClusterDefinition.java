@@ -44,6 +44,8 @@ public class ClusterDefinition {
         public String containerName;
 
         public String dockerHostName;
+        
+        public String sshUserName="root";
 
         public String deploymentPath;
 

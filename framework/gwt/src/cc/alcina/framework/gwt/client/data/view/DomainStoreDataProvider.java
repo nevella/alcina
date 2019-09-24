@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.data.view;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -102,6 +103,16 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 	private DomainTransformCommitPosition transformLogPosition;
 
 	boolean useColumnSearchOrders = true;
+	
+	private boolean reverseResults = false;
+
+	public boolean isReverseResults() {
+		return this.reverseResults;
+	}
+
+	public void setReverseResults(boolean reverseResults) {
+		this.reverseResults = reverseResults;
+	}
 
 	public DomainStoreDataProvider(Class<T> clazz) {
 		this.clazz = clazz;
@@ -538,6 +549,9 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 			cleanup();
 			transformLogPosition = result.transformLogPosition;
 			results = (List) result.queriedResultObjects;
+			if(reverseResults){
+				Collections.reverse(results);
+			}
 			allResults.addAll(results);
 			resultsDelta(result.recordCount, this.fSearchRange.i1, true);
 			groupedResult = result.groupedResult;
