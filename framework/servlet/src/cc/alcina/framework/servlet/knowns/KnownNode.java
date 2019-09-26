@@ -8,13 +8,14 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.entityaccess.KnownNodePersistent;
+import cc.alcina.framework.entity.entityaccess.KnownNodePersistentDomainStore;
 
 public abstract class KnownNode {
-	transient KnownNodePersistent persistent;
+	public transient KnownNodePersistent persistent;
 
-	transient KnownNode parent;
+	public transient KnownNode parent;
 
-	transient String name;
+	public transient String name;
 
 	public KnownNode(KnownNode parent, String name) {
 		this.parent = parent;
