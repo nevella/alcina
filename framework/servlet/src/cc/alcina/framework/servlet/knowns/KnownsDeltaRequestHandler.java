@@ -25,6 +25,10 @@ public class KnownsDeltaRequestHandler {
 			}
 		}
 		KnownsDelta delta = new KnownsDelta();
+		//essentially disabling - use the ZK version instead!
+		if("".isEmpty()){
+			return delta;
+		}
 		// build tree
 		// TODO - freeze mods?
 		delta.timeStamp = Knowns.lastModified;
