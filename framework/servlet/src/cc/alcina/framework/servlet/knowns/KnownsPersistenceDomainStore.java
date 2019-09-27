@@ -24,12 +24,10 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.servlet.knowns.Knowns.ValueType;
 import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
-@RegistryLocation(registryPoint =KnownsPersistence.class,implementationType = ImplementationType.SINGLETON)
 public class KnownsPersistenceDomainStore implements KnownsPersistence {
 
 	@Override
 	public void toPersistent(KnownNode node) {
-		KnownsPersistence.get().toPersistent(node);
         Stack<KnownNode> nodes = new Stack<KnownNode>();
         nodes.push(node);
         GraphProjection graphProjection = new GraphProjection();

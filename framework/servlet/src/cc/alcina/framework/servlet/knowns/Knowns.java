@@ -91,10 +91,10 @@ public class Knowns {
 
     private static synchronized KnownRenderableNode fromPersistent0(
             KnownNode node) {
-       return KnownsPersistence.get().fromPersistent(node);
+       return node.persistence.fromPersistent(node);
     }
 
-     static Object fromStringValue(String value, Field field,
+     public static Object fromStringValue(String value, Field field,
             ValueType valueType) throws ParseException {
         Class type = field.getType();
         if (value == null) {
@@ -156,7 +156,7 @@ public class Knowns {
         return ValueType.KRYO_PERSISTABLE;
     }
 
-     static void handleStatusRule(KnownRenderableNode node) {
+     public static void handleStatusRule(KnownRenderableNode node) {
         Field field = (Field) node.field;
         if (field == null) {
             return;// root
@@ -169,7 +169,7 @@ public class Knowns {
                 rule.name(), "ruleName", true).handleRule(field, node, rule);
     }
 
-     static void mapToRenderablePropertyNode(KnownRenderableNode parent,
+     public static void mapToRenderablePropertyNode(KnownRenderableNode parent,
             String value, Object typedValue, Field field) {
         KnownRenderableNode propertyNode = new KnownRenderableNode();
         propertyNode.parent = parent;
@@ -185,7 +185,7 @@ public class Knowns {
         if (ResourceUtilities.is(Knowns.class, "persistenceDisabled")) {
             return;
         }
-        
+        node.persistence.toPersistent(node);
     }
 
      public static String toStringValue(Object value, Field field,

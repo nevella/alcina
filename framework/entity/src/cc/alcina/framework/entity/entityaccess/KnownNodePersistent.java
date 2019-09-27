@@ -10,19 +10,10 @@ import javax.persistence.MappedSuperclass;
 
 public interface KnownNodePersistent {
 
-	public String getName();
 
 
 	public String getProperties();
 
 
-	default String path() {
-		KnownNodePersistent cursor = this;
-		List<String> segments = new ArrayList<>();
-		while (cursor != null) {
-			segments.add(cursor.getName());
-		}
-		Collections.reverse(segments);
-		return segments.stream().collect(Collectors.joining("/"));
-	}
+	
 }

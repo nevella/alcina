@@ -16,10 +16,16 @@ public abstract class KnownNode {
 	public transient KnownNode parent;
 
 	public transient String name;
+	
+	public transient KnownsPersistence persistence;
 
-	public KnownNode(KnownNode parent, String name) {
+	public KnownNode(KnownsPersistence persistence,KnownNode parent, String name) {
+		this.persistence = persistence;
 		this.parent = parent;
 		this.name = name;
+	}
+	public KnownNode(KnownNode parent, String name) {
+		this(parent.persistence,parent,name);
 	}
 
 	public <T extends KnownNode> T forName(Object key) {

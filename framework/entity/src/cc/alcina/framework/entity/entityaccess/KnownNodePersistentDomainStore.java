@@ -90,7 +90,15 @@ public abstract class KnownNodePersistentDomainStore extends
 		propertyChangeSupport().firePropertyChange("properties", old_properties,
 				properties);
 	}
-
+	private String path() {
+		KnownNodePersistentDomainStore cursor = this;
+		List<String> segments = new ArrayList<>();
+		while (cursor != null) {
+			segments.add(cursor.getName());
+		}
+		Collections.reverse(segments);
+		return segments.stream().collect(Collectors.joining("/"));
+	}
 	@Override
 	public String toString() {
 		return CommonUtils.formatJ("%s : %s", id, path());
