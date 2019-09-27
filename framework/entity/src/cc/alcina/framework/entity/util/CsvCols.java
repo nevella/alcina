@@ -31,6 +31,9 @@ public class CsvCols
 
 	public CsvCols(List<List<String>> grid) {
 		this.grid = grid;
+		if (grid.size() == 0) {
+			grid.add(new ArrayList<>());
+		}
 		grid.get(0).forEach(s -> colLookup
 				.put(s.trim().replace("\"", "").replace("\ufeff", ""), idx++));
 		colLookup.forEach((k, v) -> colLcLookup.put(k.toLowerCase(), v));

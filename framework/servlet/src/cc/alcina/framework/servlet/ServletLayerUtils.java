@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet;
 import javax.servlet.http.HttpServletRequest;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 
 public class ServletLayerUtils {
@@ -41,4 +42,6 @@ public class ServletLayerUtils {
 	public static void setAppServletInitialised(boolean appServletInitialised) {
 		ServletLayerUtils.appServletInitialised = appServletInitialised;
 	}
+
+	
 }
