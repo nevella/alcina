@@ -439,10 +439,7 @@ font-size: 14.4px;
 }
 
 .tab-caption-2.unselected {
-	/*opacity: 0.5;
-	color: #1471e6;
-	*/
-	color: hsla(36, 56%, 57%, 1.0)
+	color: hsla(36, 56%, 57%, 0.5)
 }
 
 div.alcina-MainContent {

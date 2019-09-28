@@ -170,12 +170,12 @@ public class Knowns {
     }
 
      public static void mapToRenderablePropertyNode(KnownRenderableNode parent,
-            String value, Object typedValue, Field field) {
+            String value, Object typedValue, String name,Field field) {
         KnownRenderableNode propertyNode = new KnownRenderableNode();
         propertyNode.parent = parent;
         parent.children.add(propertyNode);
         propertyNode.value = value;
-        propertyNode.name = field.getName();
+        propertyNode.name = name;
         propertyNode.property = true;
         propertyNode.typedValue = typedValue;
         propertyNode.field = field;
