@@ -21,7 +21,7 @@ import org.apache.log4j.Layout;
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.ThrowableInformation;
 
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 
 /**
  * 
@@ -50,10 +50,10 @@ public class DbAppender extends AppenderSkeleton {
 			ti.getThrowable().printStackTrace(pw);
 		}
 		if (split.length == 2) {
-			EntityLayerUtils.persistentLog(
+			EntityLayerLogging.persistentLog(
 					String.format("%s\n%s", split[1], sw.toString()), split[0]);
 		} else {
-			EntityLayerUtils.persistentLog(
+			EntityLayerLogging.persistentLog(
 					String.format("%s\n%s", renderedMessage, sw.toString()),
 					"Unknown exception type");
 		}

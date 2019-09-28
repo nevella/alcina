@@ -87,7 +87,7 @@ import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
@@ -810,7 +810,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		// EntityLayerUtils.setStandardAppender(
 		// AlcinaLogUtils.getTaggedLogger(DomainStore.class, "sql"),
 		// Level.DEBUG);
-		EntityLayerUtils.setLevel(
+		EntityLayerLogging.setLevel(
 				AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.WARN);
 	}
 

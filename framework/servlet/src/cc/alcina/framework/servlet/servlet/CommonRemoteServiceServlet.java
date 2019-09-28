@@ -117,7 +117,7 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetricData;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.DataFolderProvider;
@@ -812,7 +812,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                 WrappedRuntimeException e = new WrappedRuntimeException(
                         "Permission denied for action " + o,
                         SuggestedAction.NOTIFY_WARNING);
-                EntityLayerUtils.log(LogMessageType.TRANSFORM_EXCEPTION,
+                EntityLayerLogging.log(LogMessageType.TRANSFORM_EXCEPTION,
                         "Domain transform permissions exception", e);
                 throw e;
             }

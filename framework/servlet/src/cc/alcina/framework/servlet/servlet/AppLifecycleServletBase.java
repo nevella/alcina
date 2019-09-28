@@ -56,6 +56,7 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
@@ -344,7 +345,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             dbLogger.addAppender(appender);
             EntityLayerObjects.get().setPersistentLogger(dbLogger);
         }
-        EntityLayerUtils.setLogLevelsFromCustomProperties();
+        EntityLayerLogging.setLogLevelsFromCustomProperties();
     }
 
     protected abstract void initNames();
@@ -397,7 +398,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
                 ResourceUtilities.set(key, v);
             }
         });
-        EntityLayerUtils.setLogLevelsFromCustomProperties();
+        EntityLayerLogging.setLogLevelsFromCustomProperties();
     }
 
     protected void loadCustomProperties() {

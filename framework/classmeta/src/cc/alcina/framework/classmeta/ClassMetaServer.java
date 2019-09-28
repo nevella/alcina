@@ -23,7 +23,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
@@ -79,7 +79,7 @@ public class ClassMetaServer {
             }
             metricLogger.setLevel(Level.DEBUG);
         }
-        EntityLayerUtils.setLevel(AntHandler.class, Level.DEBUG);
+        EntityLayerLogging.setLevel(AntHandler.class, Level.DEBUG);
     }
 
     private void initRegistry() {

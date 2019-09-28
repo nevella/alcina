@@ -91,7 +91,7 @@ import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
 @SuppressWarnings("unchecked")
@@ -1074,7 +1074,7 @@ public class ThreadlocalTransformManager extends TransformManager
 				evt.setPropertyName(propertyName);
 			}
 			if (!muteLogging) {
-				EntityLayerUtils.log(LogMessageType.TRANSFORM_EXCEPTION,
+				EntityLayerLogging.log(LogMessageType.TRANSFORM_EXCEPTION,
 						"Domain transform permissions exception", e);
 			}
 			throw new WrappedRuntimeException(e);

@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 
 public abstract class AlcinaChildRunnable implements Runnable {
     public static <T> void parallelStream(String name, List<T> items,
@@ -113,7 +113,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
         } catch (Throwable throwable) {
             if (getRunContext().logExceptions) {
                 throwable.printStackTrace();
-                EntityLayerUtils.persistentLog(
+                EntityLayerLogging.persistentLog(
                         LogMessageType.WORKER_THREAD_EXCEPTION,
                         SEUtilities.getFullExceptionMessage(throwable));
             }
