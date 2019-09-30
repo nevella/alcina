@@ -173,6 +173,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             ServletLayerUtils.setAppServletInitialised(true);
             launchPostInitTasks();
         } catch (Throwable e) {
+        	Ax.out("Exception in lifecycle servlet init");
+        	e.printStackTrace();
             throw new ServletException(e);
         } finally {
             initServletConfig = null;
