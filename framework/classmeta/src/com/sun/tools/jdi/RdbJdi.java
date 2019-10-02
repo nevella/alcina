@@ -39,6 +39,7 @@ import com.sun.tools.jdi.JDWP.VirtualMachine.ClassesBySignature.ClassInfo;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class RdbJdi {
     /**
@@ -540,17 +541,22 @@ public class RdbJdi {
     }
 
     private void predictStackFrame(StackFrameImpl frame) throws Exception {
-        List<LocalVariable> visibleVariables = frame.visibleVariables();
-        for (LocalVariable localVariable : visibleVariables) {
-            Value value = frame.getValue(localVariable);
-            if (value != null) {
-                Type type = value.type();
-                if (type instanceof ReferenceTypeImpl) {
-                    ReferenceTypeImpl refType = (ReferenceTypeImpl) type;
-                    getClassMetadata(refType);
-                }
-            }
-        }
+        try {
+			List<LocalVariable> visibleVariables = frame.visibleVariables();
+			for (LocalVariable localVariable : visibleVariables) {
+			    Value value = frame.getValue(localVariable);
+			    if (value != null) {
+			        Type type = value.type();
+			        if (type instanceof ReferenceTypeImpl) {
+			            ReferenceTypeImpl refType = (ReferenceTypeImpl) type;
+			            getClassMetadata(refType);
+			        }
+			    }
+			}
+		} catch (Exception e) {
+			  Ax.out("predictStackFrame-%s:: %s",
+	                   CommonUtils.toSimpleExceptionMessage(e),frame);
+		}
     }
 
     private void predictThreadMetadataCalls(ThreadReferenceImpl thread) {
