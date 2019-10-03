@@ -226,6 +226,11 @@ public class StatusDisplayer {
                 setVisible(false);
             }
         };
+        @Override
+        protected void onDetach() {
+        	// TODO Auto-generated method stub
+        	super.onDetach();
+        }
 
         public SimplePanelWClick(Label label) {
             super(label);

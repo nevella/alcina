@@ -174,6 +174,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
     public static final String CONTEXT_THREAD_LOCAL_HTTP_REQUEST = CommonRemoteServiceServlet.class
             .getName() + ".CONTEXT_THREAD_LOCAL_HTTP_REQUEST";
+    
+    public static final String CONTEXT_THREAD_LOCAL_HTTP_RESPONSE = CommonRemoteServiceServlet.class
+            .getName() + ".CONTEXT_THREAD_LOCAL_HTTP_RESPONSE";
 
     public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
             .getName() + ".CONTEXT_NO_ACTION_LOG";
@@ -186,6 +189,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
     public static HttpServletRequest getContextThreadLocalRequest() {
         return LooseContext.get(
                 CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_REQUEST);
+    }
+    public static HttpServletResponse getContextThreadLocalResponse() {
+        return LooseContext.get(
+                CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_RESPONSE);
     }
 
     public static String getUserAgent(HttpServletRequest rq) {
@@ -638,6 +645,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
                     getThreadLocalResponse());
             LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
                     getThreadLocalRequest());
+            LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
+                    getThreadLocalResponse());
             LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
                     ServletLayerUtils
                             .robustGetRemoteAddr(getThreadLocalRequest()));
