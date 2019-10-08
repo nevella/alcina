@@ -134,7 +134,12 @@ public class Knowns {
 				Date epochDate = new Date(zdt.toInstant().toEpochMilli());
 				return epochDate;
 			} catch (Exception e) {
-				return dateFormat.parse(value);
+				try {
+					return dateFormat.parse(value);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+					return null;
+				}
 			}
 		}
 		if (type.isEnum()) {
