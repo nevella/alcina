@@ -5,9 +5,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -130,7 +132,8 @@ public class Knowns {
 		}
 		if (type == Date.class) {
 			try {
-				ZonedDateTime zdt = DateTimeFormatter.ISO_DATE_TIME.parse(value, ZonedDateTime::from);
+				ZonedDateTime zdt = DateTimeFormatter.ISO_DATE_TIME.parse(value,
+						ZonedDateTime::from);
 				Date epochDate = new Date(zdt.toInstant().toEpochMilli());
 				return epochDate;
 			} catch (Exception e) {
@@ -168,7 +171,11 @@ public class Knowns {
 		return ValueType.KRYO_PERSISTABLE;
 	}
 
+	private static String debugStatusPath=null;
 	public static void handleStatusRule(KnownRenderableNode node) {
+		if(Objects.equals(debugStatusPath,node.path())){
+			int debug=3;
+		}
 		if (node.field != null) {
 			Field field = (Field) node.field;
 			KnownStatusRule rule = field.getAnnotation(KnownStatusRule.class);
@@ -243,9 +250,9 @@ public class Knowns {
 				|| value.getClass() == Long.class || value instanceof Enum) {
 			return value.toString();
 		} else if (value.getClass() == Date.class) {
-			return DateTimeFormatter.ISO_DATE_TIME
-					.format(SEUtilities.toLocalDateTime((Date) value));
-			// return dateFormat.format((Date) value);
+			ZonedDateTime zdt = ZonedDateTime
+					.ofInstant(((Date) value).toInstant(), ZoneId.of("UTC"));
+			return DateTimeFormatter.ISO_DATE_TIME.format(zdt);
 		}
 		throw new RuntimeException("not implemented");
 	}
