@@ -1,40 +1,35 @@
 package cc.alcina.framework.servlet.knowns;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.Stack;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.KnownNodeMetadata.KnownNodeProperty;
 import cc.alcina.framework.common.client.csobjects.KnownRenderableNode;
 import cc.alcina.framework.common.client.csobjects.KnownStatusRule;
-import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.csobjects.OpStatus;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
-import cc.alcina.framework.entity.entityaccess.KnownNodePersistentDomainStore;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.DomainRunner;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.util.SynchronizedDateFormat;
-import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
 /*
  * FIXME - a lot of public statics here that should be encapsulated (consequence of subclassing persistence)
@@ -100,6 +95,11 @@ public class Knowns {
 	public static Object fromStringValue(String value, Field field,
 			ValueType valueType) throws ParseException {
 		Class type = field.getType();
+		return fromStringValue(value, field.getName(), type, valueType);
+	}
+
+	public static Object fromStringValue(String value, String fieldName,
+			Class type, ValueType valueType) throws ParseException {
 		if (value == null) {
 			return null;
 		}
@@ -107,9 +107,9 @@ public class Knowns {
 			try {
 				return KryoUtils.deserializeFromBase64(value, type);
 			} catch (Exception e) {
-				Ax.err("Unable to deserialize %s", field.getName());
+				Ax.err("Unable to deserialize %s", fieldName);
 				try {
-					return field.getType().newInstance();
+					return type.newInstance();
 				} catch (Exception e1) {
 					throw new WrappedRuntimeException(e1);
 				}
@@ -131,7 +131,12 @@ public class Knowns {
 			return Boolean.valueOf(value);
 		}
 		if (type == Date.class) {
-			return dateFormat.parse(value);
+			try {
+				LocalDateTime ldt = DateTimeFormatter.ISO_DATE_TIME.parse(value, LocalDateTime::from);
+				return SEUtilities.toOldDate(ldt);
+			} catch (Exception e) {
+				return dateFormat.parse(value);
+			}
 		}
 		if (type.isEnum()) {
 			return Enum.valueOf(type, value);
@@ -160,28 +165,57 @@ public class Knowns {
 	}
 
 	public static void handleStatusRule(KnownRenderableNode node) {
-		Field field = (Field) node.field;
-		if (field == null) {
-			return;// root
+		if (node.field != null) {
+			Field field = (Field) node.field;
+			KnownStatusRule rule = field.getAnnotation(KnownStatusRule.class);
+			if (rule == null) {
+				return;
+			}
+			Registry.get()
+					.lookupImplementation(KnownStatusRuleHandler.class,
+							rule.name(), "ruleName", true)
+					.handleRule(field, node, rule);
+		} else {
+			if (node.nodeMetadata != null) {
+				KnownStatusRule rule = node.nodeMetadata.statusRule;
+				if (rule == null) {
+					return;
+				}
+				Registry.get()
+						.lookupImplementation(KnownStatusRuleHandler.class,
+								rule.name(), "ruleName", true)
+						.handleRule(node.nodeMetadata, node, rule);
+			}
 		}
-		KnownStatusRule rule = field.getAnnotation(KnownStatusRule.class);
-		if (rule == null) {
-			return;
-		}
-		Registry.get().lookupImplementation(KnownStatusRuleHandler.class,
-				rule.name(), "ruleName", true).handleRule(field, node, rule);
 	}
 
 	public static void mapToRenderablePropertyNode(KnownRenderableNode parent,
-			String value, Object typedValue, String name, Field field) {
-		KnownRenderableNode propertyNode = new KnownRenderableNode();
-		propertyNode.parent = parent;
-		parent.children.add(propertyNode);
-		propertyNode.value = value;
-		propertyNode.name = name;
-		propertyNode.property = true;
-		propertyNode.typedValue = typedValue;
-		propertyNode.field = field;
+			String value, Object typedValue, String name, Field field,
+			KnownNodeProperty propertyMetadata) {
+		try {
+			KnownRenderableNode propertyNode = new KnownRenderableNode();
+			propertyNode.parent = parent;
+			parent.children.add(propertyNode);
+			propertyNode.value = value;
+			propertyNode.name = name;
+			propertyNode.property = true;
+			propertyNode.typedValue = typedValue;
+			propertyNode.field = field;
+			propertyNode.propertyMetadata = propertyMetadata;
+			if (propertyMetadata != null) {
+				Class typeClass = Class
+						.forName(propertyNode.propertyMetadata.typeName);
+				if (typeClass == Date.class) {
+					propertyNode.dateValue = (Date) fromStringValue(value, name,
+							typeClass, ValueType.DATA_TYPE);
+				} else if (typeClass == OpStatus.class) {
+					propertyNode.opStatusValue = (OpStatus) fromStringValue(
+							value, name, typeClass, ValueType.DATA_TYPE);
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	private static synchronized void toPersistent(KnownNode node) {
@@ -205,7 +239,9 @@ public class Knowns {
 				|| value.getClass() == Long.class || value instanceof Enum) {
 			return value.toString();
 		} else if (value.getClass() == Date.class) {
-			return dateFormat.format((Date) value);
+			return DateTimeFormatter.ISO_DATE_TIME
+					.format(SEUtilities.toLocalDateTime((Date) value));
+			// return dateFormat.format((Date) value);
 		}
 		throw new RuntimeException("not implemented");
 	}

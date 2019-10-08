@@ -149,7 +149,7 @@ public class KnownsPersistenceDomainStore implements KnownsPersistence {
 	                                valueType);
 	                        field.set(node, typedValue);
 	                        Knowns.mapToRenderablePropertyNode(renderableNode, value,
-	                                typedValue, field.getName(),field);
+	                                typedValue, field.getName(),field,null);
 	                        break;
 	                    }
 	                    case KNOWN_NODE: {
