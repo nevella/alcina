@@ -5,9 +5,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Set;
@@ -132,8 +130,9 @@ public class Knowns {
 		}
 		if (type == Date.class) {
 			try {
-				LocalDateTime ldt = DateTimeFormatter.ISO_DATE_TIME.parse(value, LocalDateTime::from);
-				return SEUtilities.toOldDate(ldt);
+				ZonedDateTime zdt = DateTimeFormatter.ISO_DATE_TIME.parse(value, ZonedDateTime::from);
+				Date epochDate = new Date(zdt.toInstant().toEpochMilli());
+				return epochDate;
 			} catch (Exception e) {
 				return dateFormat.parse(value);
 			}
