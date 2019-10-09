@@ -145,7 +145,7 @@ public class KnownsPersistenceDomainStore implements KnownsPersistence {
 	                    case DATA_TYPE:
 	                    case KRYO_PERSISTABLE: {
 	                        String value = properties.get(field.getName());
-	                        Object typedValue = Knowns.fromStringValue(value, field,
+	                        Object typedValue = Knowns.fromStringValue(renderableNode.path(),value, field,
 	                                valueType);
 	                        field.set(node, typedValue);
 	                        Knowns.mapToRenderablePropertyNode(renderableNode, value,

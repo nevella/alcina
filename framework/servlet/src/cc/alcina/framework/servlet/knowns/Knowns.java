@@ -92,13 +92,13 @@ public class Knowns {
 		return node.persistence.fromPersistent(node);
 	}
 
-	public static Object fromStringValue(String value, Field field,
+	public static Object fromStringValue(String path, String value, Field field,
 			ValueType valueType) throws ParseException {
 		Class type = field.getType();
-		return fromStringValue(value, field.getName(), type, valueType);
+		return fromStringValue(path,value, field.getName(), type, valueType);
 	}
 
-	public static Object fromStringValue(String value, String fieldName,
+	public static Object fromStringValue(String path,String value, String fieldName,
 			Class type, ValueType valueType) throws ParseException {
 		if (value == null) {
 			return null;
@@ -107,7 +107,7 @@ public class Knowns {
 			try {
 				return KryoUtils.deserializeFromBase64(value, type);
 			} catch (Exception e) {
-				Ax.err("Unable to deserialize %s", fieldName);
+				Ax.err("Unable to deserialize %s:%s", path,fieldName);
 				try {
 					return type.newInstance();
 				} catch (Exception e1) {
@@ -140,6 +140,7 @@ public class Knowns {
 				try {
 					return dateFormat.parse(value);
 				} catch (Exception e1) {
+					Ax.err("Unable to parse %s:%s", path,fieldName);
 					e1.printStackTrace();
 					return null;
 				}
@@ -217,10 +218,10 @@ public class Knowns {
 				Class typeClass = Class
 						.forName(propertyNode.propertyMetadata.typeName);
 				if (typeClass == Date.class) {
-					propertyNode.dateValue = (Date) fromStringValue(value, name,
+					propertyNode.dateValue = (Date) fromStringValue(parent.path(),value, name,
 							typeClass, ValueType.DATA_TYPE);
 				} else if (typeClass == OpStatus.class) {
-					propertyNode.opStatusValue = (OpStatus) fromStringValue(
+					propertyNode.opStatusValue = (OpStatus) fromStringValue(parent.path(),
 							value, name, typeClass, ValueType.DATA_TYPE);
 				}
 			}
