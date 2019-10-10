@@ -152,7 +152,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (CommonUtils.isNullOrEmpty(str)) {
 			return result;
 		}
-		if (!str.matches("[0-9, \r\n\t()\\[\\]]+")) {
+		if (!str.matches("[\\-0-9, \r\n\t()\\[\\]]+")) {
 			return result;
 		}
 		String[] strs = str.replace("(", "").replace(")", "").replace("[", "")
