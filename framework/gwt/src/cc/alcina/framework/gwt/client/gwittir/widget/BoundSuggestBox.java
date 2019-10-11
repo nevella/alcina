@@ -41,7 +41,8 @@ import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
  * @author Nick Reddel
  */
 @SuppressWarnings("deprecation")
-public class BoundSuggestBox<T> extends AbstractBoundWidget<T> implements Focusable{
+public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
+		implements Focusable {
 	protected SuggestBox base;
 
 	private T value;
@@ -116,7 +117,8 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> implements Focusa
 		}
 	}
 
-	private String placeholderText="Type for suggestions";
+	private String placeholderText = "Type for suggestions";
+
 	public String getPlaceholderText() {
 		return this.placeholderText;
 	}
@@ -155,14 +157,16 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> implements Focusa
 				String baseTextAtFocusTime = base.getText();
 				if (showOnFocus || !Ax.isBlank(baseTextAtFocusTime)) {
 					showOnFocus = false;
-					if (!Ax.isBlank(baseTextAtFocusTime)
-							&& !base.isInSuggestionCallback()) {
-						Scheduler.get().scheduleDeferred(() -> {
-							if (baseBox.getText().equals(baseTextAtFocusTime)) {
-								baseBox.setSelectionRange(0,
-										baseBox.getText().length());
-							}
-						});
+					if (!base.isInSuggestionCallback()) {
+						if (!Ax.isBlank(baseTextAtFocusTime)) {
+							Scheduler.get().scheduleDeferred(() -> {
+								if (baseBox.getText()
+										.equals(baseTextAtFocusTime)) {
+									baseBox.setSelectionRange(0,
+											baseBox.getText().length());
+								}
+							});
+						}
 						base.showSuggestions(baseTextAtFocusTime);
 					}
 				}
@@ -255,24 +259,23 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T> implements Focusa
 		public String hint;
 	}
 
+	@Override
+	public int getTabIndex() {
+		return base.getValueBox().getTabIndex();
+	}
 
-    @Override
-    public int getTabIndex() {
-        return base.getValueBox().getTabIndex();
-    }
+	@Override
+	public void setAccessKey(char key) {
+		base.getValueBox().setAccessKey(key);
+	}
 
-    @Override
-    public void setAccessKey(char key) {
-         base.getValueBox().setAccessKey(key);
-    }
+	@Override
+	public void setFocus(boolean focused) {
+		base.getValueBox().setFocus(focused);
+	}
 
-    @Override
-    public void setFocus(boolean focused) {
-        base.getValueBox().setFocus(focused);
-    }
-
-    @Override
-    public void setTabIndex(int index) {
-        base.getValueBox().setTabIndex(index);
-    }
+	@Override
+	public void setTabIndex(int index) {
+		base.getValueBox().setTabIndex(index);
+	}
 }
