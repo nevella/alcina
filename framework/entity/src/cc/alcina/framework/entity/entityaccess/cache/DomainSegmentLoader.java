@@ -22,6 +22,7 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.C
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResultsReuse;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.LaterLookup.LaterItem;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.SimpleAtomModel.AtomKey;
 
 public abstract class DomainSegmentLoader implements ConnResultsReuse {
@@ -234,6 +235,10 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
                 return false;
             }
             return this.phase.isIgnoreForPhase(forPhase);
+        }
+        @Override
+        public String toString() {
+        	return GraphProjection.fieldwiseToStringOneLine(this);
         }
     }
 
