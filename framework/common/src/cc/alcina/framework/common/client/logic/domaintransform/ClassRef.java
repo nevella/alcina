@@ -29,6 +29,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -47,6 +48,7 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 	private static Map<Long, ClassRef> idMap = new HashMap<Long, ClassRef>();
 
 	@RegistryLocation(registryPoint = ClassRefChecker.class, implementationType = ImplementationType.INSTANCE)
+	@ClientInstantiable
 	public static class ClassRefChecker {
 
 		public void check(ClassRef classRef) {
