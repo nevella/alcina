@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 
 /**
@@ -142,6 +143,22 @@ public class ThreadedPermissionsManager extends PermissionsManager {
     }
 
     public void runWithPushedSystemUserIfNeeded(Runnable runnable) {
+        try {
+            if (isRoot()) {
+                runnable.run();
+            } else {
+                try {
+                    pushSystemUser();
+                    runnable.run();
+                } finally {
+                    popSystemUser();
+                }
+            }
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+    public void runThrowingWithPushedSystemUserIfNeeded(ThrowingRunnable runnable) {
         try {
             if (isRoot()) {
                 runnable.run();
