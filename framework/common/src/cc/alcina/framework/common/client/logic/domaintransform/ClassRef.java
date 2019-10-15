@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @MappedSuperclass
@@ -162,5 +163,9 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 			return o == null ? "(undefined)"
 					: CommonUtils.simpleClassName(o.getRefClass());
 		}
+	}
+	@Override
+	public String toString() {
+		return Ax.format("Classref - id: %s className: %s", getId(),getRefClassName());
 	}
 }
