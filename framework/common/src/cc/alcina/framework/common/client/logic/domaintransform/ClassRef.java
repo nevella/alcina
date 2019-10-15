@@ -30,6 +30,8 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -44,10 +46,21 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 
 	private static Map<Long, ClassRef> idMap = new HashMap<Long, ClassRef>();
 
+	@RegistryLocation(registryPoint = ClassRefChecker.class, implementationType = ImplementationType.INSTANCE)
+	public static class ClassRefChecker {
+
+		public void check(ClassRef classRef) {
+			
+		}
+		
+	}
+
 	public static void add(Collection<? extends ClassRef> refs) {
+		ClassRefChecker refChecker = Registry.impl(ClassRefChecker.class);
 		for (ClassRef classRef : refs) {
 			refMap.put(classRef.getRefClassName(), classRef);
 			idMap.put(classRef.getId(), classRef);
+			refChecker.check(classRef);
 		}
 	}
 
@@ -164,8 +177,10 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 					: CommonUtils.simpleClassName(o.getRefClass());
 		}
 	}
+
 	@Override
 	public String toString() {
-		return Ax.format("Classref - id: %s className: %s", getId(),getRefClassName());
+		return Ax.format("Classref - id: %s className: %s", getId(),
+				getRefClassName());
 	}
 }
