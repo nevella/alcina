@@ -44,7 +44,7 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 	public static class UtcDateRenderer implements Renderer<Date, String> {
 		@Override
 		public String render(Date date) {
-			return render0(date.getTime());
+			return date==null?"":render0(date.getTime());
 		}
 
 		public static final native String render0(double millis) /*-{
