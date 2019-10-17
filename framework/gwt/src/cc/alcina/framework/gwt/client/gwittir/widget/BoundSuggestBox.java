@@ -156,7 +156,6 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 				TextBoxBase baseBox = (TextBoxBase) base.getValueBox();
 				String baseTextAtFocusTime = base.getText();
 				if (showOnFocus || !Ax.isBlank(baseTextAtFocusTime)) {
-					showOnFocus = false;
 					if (!base.isInSuggestionCallback()) {
 						if (!Ax.isBlank(baseTextAtFocusTime)) {
 							Scheduler.get().scheduleDeferred(() -> {
