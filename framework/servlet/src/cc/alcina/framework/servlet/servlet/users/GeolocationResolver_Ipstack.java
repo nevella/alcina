@@ -38,7 +38,7 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
         }
         try {
             String url = Ax.format(
-                    "http://api.ipstack.com/%s/?access_key=708236baaf4e5df6c68934e4bd11df6c&output=json",
+                    "http://api.ipstack.com/%s/?access_key=b16f9aff294aa3292256fd13cb0b9e80&output=json",
                     ipAddress);
             String result = ResourceUtilities.readUrlAsString(url);
             ObjectNode node = (ObjectNode) new ObjectMapper().readTree(result);
