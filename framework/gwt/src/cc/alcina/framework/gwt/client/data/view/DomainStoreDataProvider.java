@@ -89,9 +89,9 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 	private List allResults;
 
 	int pageSize = 0;
-	
-	public void resetPageSize(){
-		pageSize=0;
+
+	public void resetPageSize() {
+		pageSize = 0;
 	}
 
 	private int visibleRecordsSize = 100;
@@ -107,7 +107,7 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 	private DomainTransformCommitPosition transformLogPosition;
 
 	boolean useColumnSearchOrders = true;
-	
+
 	private boolean reverseResults = false;
 
 	public boolean isReverseResults() {
@@ -278,7 +278,7 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 				&& range.equals(lastRange)
 				&& !Objects.equals(transformLogPosition,
 						this.transformLogPosition)) {
-			if (activeCallback != null) {
+			if (activeCallback != null && !activeCallback.isCancelled()) {
 				return;
 			}
 		} else {
@@ -293,7 +293,7 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 				defCopy.setResultsPerPage(100);
 				paginationSearch = lastDefCopy.equivalentTo(defCopy);
 			}
-			if (activeCallback != null) {
+			if (activeCallback != null && !activeCallback.isCancelled()) {
 				new Timer() {
 					@Override
 					public void run() {
@@ -353,9 +353,8 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 				}
 				activeCallback = new SearchCallback(fSearchRange, dd1);
 				Ax.out("calling searchmodel:\n\t%s %s %s", searchDefinition,
-						searchRange,this);
+						searchRange, this);
 				searchDefinition.setPageNumber(pageNumber);
-				
 				Registry.impl(SearchModelPerformer.class)
 						.searchModel(searchDefinition, activeCallback);
 			}
@@ -554,7 +553,7 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 			cleanup();
 			transformLogPosition = result.transformLogPosition;
 			results = (List) result.queriedResultObjects;
-			if(reverseResults){
+			if (reverseResults) {
 				Collections.reverse(results);
 			}
 			allResults.addAll(results);
@@ -570,7 +569,7 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 	}
 
 	public void cancelCurrentSearch() {
-		if(activeCallback!=null){
+		if (activeCallback != null) {
 			activeCallback.setCancelled(true);
 		}
 	}
