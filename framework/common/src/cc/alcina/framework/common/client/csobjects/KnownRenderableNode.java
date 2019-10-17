@@ -168,4 +168,7 @@ public class KnownRenderableNode implements Serializable {
 		return children.stream().filter(child -> child.name.equals(childName))
 				.findFirst();
 	}
+	public int depth() {
+		return parent==null?0:parent.depth()+1;
+	}
 }

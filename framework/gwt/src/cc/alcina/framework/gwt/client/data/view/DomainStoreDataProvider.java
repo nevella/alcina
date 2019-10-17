@@ -89,6 +89,10 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 	private List allResults;
 
 	int pageSize = 0;
+	
+	public void resetPageSize(){
+		pageSize=0;
+	}
 
 	private int visibleRecordsSize = 100;
 
@@ -348,9 +352,10 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 							e.getMessage());
 				}
 				activeCallback = new SearchCallback(fSearchRange, dd1);
-				Ax.out("calling searchmodel:\n\t%s %s", searchDefinition,
-						searchRange);
+				Ax.out("calling searchmodel:\n\t%s %s %s", searchDefinition,
+						searchRange,this);
 				searchDefinition.setPageNumber(pageNumber);
+				
 				Registry.impl(SearchModelPerformer.class)
 						.searchModel(searchDefinition, activeCallback);
 			}
@@ -561,6 +566,12 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 		private void cleanup() {
 			activeCallback = null;
 			maybeUpdateLoadingState(dd1, LoadingState.LOADED);
+		}
+	}
+
+	public void cancelCurrentSearch() {
+		if(activeCallback!=null){
+			activeCallback.setCancelled(true);
 		}
 	}
 }
