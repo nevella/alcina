@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.util;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -23,7 +22,6 @@ import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.ui.RootPanel;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -33,9 +31,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.XmlUtils;
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
 /**
@@ -438,6 +433,8 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	Map<Element, Node> unwrappedFirstChildren = new LinkedHashMap<>();
 
+	private BackupNodeResolver backupNodeResolver;
+
 	public DomUtils() {
 		invalidateUnwrapOrIgnoreCache();
 	}
@@ -511,6 +508,11 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	@Override
 	public Node findXpathWithIndexedText(String xpathStr, Node container) {
+		return findXpathWithIndexedText(xpathStr, container, -1);
+	}
+
+	public Node findXpathWithIndexedText(String xpathStr, Node container,
+			Integer backupAbsTextOffset) {
 		if (nodeProvider != null) {
 			return nodeProvider.findXpathWithIndexedText(xpathStr, container);
 		}
@@ -532,7 +534,13 @@ public class DomUtils implements NodeFromXpathProvider {
 					notifications.metricLogEnd(DOM_XPATH_MAP);
 				}
 			}
-			Node node = xpathMap.get(ucXpath);
+			Node node = null;
+			if (backupNodeResolver != null && backupAbsTextOffset != null) {
+				node = backupNodeResolver.resolve(xpathStr,
+						backupAbsTextOffset);
+			} else {
+				node = xpathMap.get(ucXpath);
+			}
 			String singleTextPoss = "TEXT()[1]";
 			String possiblyWrappedTextPost = "TEXT()";
 			if (node == null && ucXpath.endsWith(singleTextPoss)) {
@@ -560,7 +568,6 @@ public class DomUtils implements NodeFromXpathProvider {
 					}
 				}
 				if (node == null) {
-					int debug = 3;
 				}
 			}
 			return node;
@@ -625,6 +632,10 @@ public class DomUtils implements NodeFromXpathProvider {
 		generateMap0(elt, prefix, xpathMap);
 	}
 
+	public BackupNodeResolver getBackupNodeResolver() {
+		return this.backupNodeResolver;
+	}
+
 	public NodeFromXpathProvider getNodeProvider() {
 		return nodeProvider;
 	}
@@ -637,12 +648,20 @@ public class DomUtils implements NodeFromXpathProvider {
 		return precededByNonHtmlDomNodes.get(text);
 	}
 
+	public Map<String, Node> getXpathMap() {
+		return this.xpathMap;
+	}
+
 	public void invalidateUnwrapOrIgnoreCache() {
 		// unwrapOrIgnoreCache = new IdentityHashMap<Node, Node>(10000);
 	}
 
 	public boolean isUseXpathMap() {
 		return this.useXpathMap;
+	}
+
+	public void setBackupNodeResolver(BackupNodeResolver backupNodeResolver) {
+		this.backupNodeResolver = backupNodeResolver;
 	}
 
 	public void setNodeProvider(NodeFromXpathProvider nodeProvider) {
@@ -656,6 +675,10 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public void setUseXpathMap(boolean useXpathMap) {
 		this.useXpathMap = useXpathMap;
+	}
+
+	public void setXpathMap(Map<String, Node> xpathMap) {
+		this.xpathMap = xpathMap;
 	}
 
 	public void unwrap(Element el) {
@@ -746,17 +769,23 @@ public class DomUtils implements NodeFromXpathProvider {
 		// ignore sequential texts (with wrapping), as per non-map version
 		WrappingAwareNodeIterator awareNodeIterator = new WrappingAwareNodeIterator(
 				container);
-		try {
-			Field field = SEUtilities.getFieldByName(Node.class, "node");
-			XmlNode xn = XmlNode.from((org.w3c.dom.Node) field.get(container));
-			if (xn.tagIs("p") && xn.fullToString().contains("KHB")
-					&& xn.fullToString().contains("bnj_a_220_ct_71681")) {
-				int debug = 3;
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 		Node node = null;
+		while ((node = awareNodeIterator.next()) != null) {
+			short nodeType = node.getNodeType();
+			if (include(lastNodeType, nodeType, node)) {
+				String marker = nodeType == Node.TEXT_NODE
+						? DomUtils.TEXT_MARKER
+						: node.getNodeName().toUpperCase();
+				int c = total.containsKey(marker) ? total.get(marker) : 0;
+				total.put(marker, c + 1);
+			}
+			lastNodeType = nodeType;
+		}
+		lastNodeType = Node.DOCUMENT_NODE;
+		awareNodeIterator = new WrappingAwareNodeIterator(container);
+		node = null;
+		// double count totals due to strange issues with overlays (jcv)
+		total = mapSupplier.get();
 		while ((node = awareNodeIterator.next()) != null) {
 			short nodeType = node.getNodeType();
 			if (include(lastNodeType, nodeType, node)) {
@@ -830,6 +859,10 @@ public class DomUtils implements NodeFromXpathProvider {
 			return true;
 		}
 		return false;
+	}
+
+	public interface BackupNodeResolver {
+		Node resolve(String xpathStr, int backupAbsTextOffset);
 	}
 
 	public static class HighlightInfo {
@@ -948,15 +981,6 @@ public class DomUtils implements NodeFromXpathProvider {
 			}
 			String expandoId = splitFrom.getAttribute(ATTR_UNWRAP_EXPANDO_ID);
 			Element grand = splitFrom.getParentElement();
-			try {
-				Field field = SEUtilities.getFieldByName(Node.class, "node");
-				XmlNode xn = XmlNode.from((org.w3c.dom.Node) field.get(grand));
-				if (xn.tagIs("P") && xn.textContains("R v KHB")) {
-					int debug = 3;
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
 			NodeList<Node> nl = splitFrom.getChildNodes();
 			splitEnd = (Element) splitFrom.cloneNode(false);
 			if (splitAround == null) {
@@ -1013,13 +1037,6 @@ public class DomUtils implements NodeFromXpathProvider {
 					maybeRedundantSplits.get(i).removeFromParent();
 				}
 			}
-			try {
-				Field field = SEUtilities.getFieldByName(Node.class, "node");
-				XmlNode xn = XmlNode.from((org.w3c.dom.Node) field.get(grand));
-				int debug = 3;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
 		}
 
 		public void unsplit() {
@@ -1048,17 +1065,6 @@ public class DomUtils implements NodeFromXpathProvider {
 			boolean inWrap = false;
 			String currentUnwrapId = null;
 			List<Node> unwrapped = new ArrayList<>();
-			XmlNode xn = null;
-			List<org.w3c.dom.Element> w3List = null;
-			try {
-				Field field = SEUtilities.getFieldByName(Node.class, "node");
-				org.w3c.dom.Node w3Node = (org.w3c.dom.Node) field.get(parent);
-				w3List = XmlUtils.nodeListToElementList(w3Node.getChildNodes());
-				xn = XmlNode.from(w3Node);
-				int debug = 3;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
 			for (int i = 0; i < length; i++) {
 				Node n = list.get(i);
 				if (n.getNodeType() == Node.ELEMENT_NODE) {

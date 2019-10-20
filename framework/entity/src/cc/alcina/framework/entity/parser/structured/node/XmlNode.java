@@ -47,7 +47,12 @@ public class XmlNode {
 	 * Basically, don't use in a loop - more a debugging aid
 	 */
 	public static XmlNode from(Node n) {
-		XmlDoc doc = new XmlDoc(n.getOwnerDocument());
+		XmlDoc doc = null;
+		if (n.getNodeType() == Node.DOCUMENT_NODE) {
+			doc = new XmlDoc((Document) n);
+		} else {
+			doc = new XmlDoc(n.getOwnerDocument());
+		}
 		return doc.nodeFor(n);
 	}
 
