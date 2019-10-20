@@ -1,16 +1,18 @@
 package cc.alcina.framework.gwt.client.util;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Stack;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -21,16 +23,48 @@ import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.ui.RootPanel;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
+/**
+ * FIXME - this and SEDomUtils - there's too much patchery and hackery
+ * (particularly with findXpathWithIndexedText and removing/not removing roots)
+ * 
+ * Why does [1] sometimes need to be suffixed?
+ * 
+ * <h2>Wrapping and unwrapping - 1</h2>
+ * <p>
+ * DomUtils uses expandos heavily, mostly to allow a consistent node addressing
+ * scheme even if nodes have been decorated (this mostly happens in
+ * OverlaidHtmlWriter - there may be some legacy client usage but I think that's
+ * mostly gone).
+ * </p>
+ * <p>
+ * When a (text) node is decorated (wrapped) by an element, that element has its
+ * __j_wrap_id set to '1'. If there's an 'A' element in the nodes ancestor
+ * chain, things get trickier because we can't have nested 'A' elements - so the
+ * existing 'A' is split.
+ * </p>
+ * <p>
+ * Splitting adds an '__j_unwrap_id' expando to split nodes - indicating they
+ * should be combined during traversal. Currently...dodgy
+ * </p>
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class DomUtils implements NodeFromXpathProvider {
 	private static final String DOM_XPATH_MAP = "dom-xpath-map";
@@ -390,11 +424,9 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	private Map<String, Node> xpathMap;
 
-	private boolean debug = false;
+	boolean debug = false;
 
 	private NodeFromXpathProvider nodeProvider = null;
-
-	private ClientNodeIterator walker;
 
 	Map<Element, DomRequiredSplitInfo> domRequiredSplitInfo = mapSupplier.get();
 
@@ -403,6 +435,8 @@ public class DomUtils implements NodeFromXpathProvider {
 	private Map<Node, StringBuilder> exactTextMap;
 
 	private Map<Node, Node> precededByNonHtmlDomNodes = mapSupplier.get();
+
+	Map<Element, Node> unwrappedFirstChildren = new LinkedHashMap<>();
 
 	public DomUtils() {
 		invalidateUnwrapOrIgnoreCache();
@@ -533,9 +567,6 @@ public class DomUtils implements NodeFromXpathProvider {
 		} else {
 			if (lastContainer != container) {
 				lastContainer = container;
-				walker = new ClientNodeIterator(container,
-						ClientNodeIterator.SHOW_ELEMENT
-								| ClientNodeIterator.SHOW_TEXT);
 			}
 		}
 		// keep in sync with sedomutils
@@ -561,9 +592,13 @@ public class DomUtils implements NodeFromXpathProvider {
 					foundIndexed = node.getNodeType() == Node.TEXT_NODE;
 					if (foundIndexed && last != null
 							&& last.getNodeType() == Node.TEXT_NODE) {
-						continue;// ignore - this was orginally a single text
-									// node, now split (and "siblings" because
-									// of wrapping)
+						// FIXME - 2019.10 - throw a runtime exception (our
+						// iterator is more woke)
+						throw new RuntimeException(
+								"Split text node from aware iterator");
+						// continue;// ignore - this was orginally a single text
+						// node, now split (and "siblings" because
+						// of wrapping)
 					}
 				} else {
 					foundIndexed = node.getNodeType() == Node.ELEMENT_NODE
@@ -587,65 +622,7 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public void generateMap(Element elt, String prefix,
 			Map<String, Node> xpathMap) {
-		walker = new ClientNodeIterator(elt,
-				ClientNodeIterator.SHOW_ELEMENT | ClientNodeIterator.SHOW_TEXT);
 		generateMap0(elt, prefix, xpathMap);
-	}
-
-	public void generateMapItr(XpathMapPoint point) {
-		Map<String, Integer> total = mapSupplier.get();
-		Map<String, Integer> current = mapSupplier.get();
-		Element elt = point.elt;
-		String prefix = point.prefix;
-		NodeList<Node> nodes = elt.getChildNodes();
-		if (prefix.length() <= 1) {
-			xpathMap.put(prefix, elt);
-		}
-		int length = nodes.getLength();
-		for (int i = 0; i < length; i++) {
-			Node node = nodes.getItem(i);
-			short nodeType = node.getNodeType();
-			if (nodeType == Node.TEXT_NODE || nodeType == Node.ELEMENT_NODE) {
-				String marker = nodeType == Node.TEXT_NODE
-						? DomUtils.TEXT_MARKER
-						: node.getNodeName().toUpperCase();
-				int c = total.containsKey(marker) ? total.get(marker) : 0;
-				total.put(marker, c + 1);
-			}
-		}
-		for (int i = 0; i < length; i++) {
-			Node node = nodes.getItem(i);
-			short nodeType = node.getNodeType();
-			if (nodeType == Node.TEXT_NODE || nodeType == Node.ELEMENT_NODE) {
-				String marker = nodeType == Node.TEXT_NODE
-						? DomUtils.TEXT_MARKER
-						: node.getNodeName().toUpperCase();
-				String post = marker;
-				if (total.get(marker) != 1) {
-					int c = current.containsKey(marker) ? current.get(marker)
-							: 0;
-					current.put(marker, ++c);
-					post += "[" + c + "]";
-				}
-				String xp = prefix + post;
-				if (debug && !xp.contains("TBODY")) {
-					System.out.println(xp);
-				}
-				xpathMap.put(xp, node);
-				if (nodeType == Node.ELEMENT_NODE) {
-					itrStack.push(new XpathMapPoint((Element) node, xp + "/"));
-					// this won't cause ambiguity
-					if (post.equals("TBODY")) {
-						itrStack.push(
-								new XpathMapPoint((Element) node, prefix));
-					}
-				} else {
-					if (debug && !xp.contains("TBODY")) {
-						System.out.println("\t\t" + node.getNodeValue());
-					}
-				}
-			}
-		}
 	}
 
 	public NodeFromXpathProvider getNodeProvider() {
@@ -666,36 +643,6 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public boolean isUseXpathMap() {
 		return this.useXpathMap;
-	}
-
-	public boolean iterateCache(int numberIterations) {
-		for (int i = 0; i < numberIterations && !itrStack.isEmpty(); i++) {
-			generateMapItr(itrStack.pop());
-		}
-		if (itrStack.isEmpty()) {
-			ClientNotifications notifications = Registry
-					.implOrNull(ClientNotifications.class);
-			if (notifications != null) {
-				notifications.metricLogEnd(DOM_XPATH_MAP);
-			}
-		}
-		return !itrStack.isEmpty();
-	}
-
-	public void resetCache(Node container) {
-		if (useXpathMap) {
-			if (lastContainer != container) {
-				lastContainer = container;
-				xpathMap = mapSupplier.get();
-				ClientNotifications notifications = Registry
-						.implOrNull(ClientNotifications.class);
-				if (notifications != null) {
-					notifications.metricLogStart(DOM_XPATH_MAP);
-				}
-				itrStack = new Stack<DomUtils.XpathMapPoint>();
-				itrStack.add(new XpathMapPoint((Element) container, ""));
-			}
-		}
 	}
 
 	public void setNodeProvider(NodeFromXpathProvider nodeProvider) {
@@ -799,6 +746,16 @@ public class DomUtils implements NodeFromXpathProvider {
 		// ignore sequential texts (with wrapping), as per non-map version
 		WrappingAwareNodeIterator awareNodeIterator = new WrappingAwareNodeIterator(
 				container);
+		try {
+			Field field = SEUtilities.getFieldByName(Node.class, "node");
+			XmlNode xn = XmlNode.from((org.w3c.dom.Node) field.get(container));
+			if (xn.tagIs("p") && xn.fullToString().contains("KHB")
+					&& xn.fullToString().contains("bnj_a_220_ct_71681")) {
+				int debug = 3;
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 		Node node = null;
 		while ((node = awareNodeIterator.next()) != null) {
 			short nodeType = node.getNodeType();
@@ -845,10 +802,6 @@ public class DomUtils implements NodeFromXpathProvider {
 					}
 				}
 			}
-			// if (debug && !xp.contains("TBODY") && nodeType == Node.TEXT_NODE)
-			// {
-			//
-			// }
 			if (exactTextMap != null && nodeType == Node.TEXT_NODE) {
 				cumulativeText.append(node.getNodeValue());
 			}
@@ -995,6 +948,15 @@ public class DomUtils implements NodeFromXpathProvider {
 			}
 			String expandoId = splitFrom.getAttribute(ATTR_UNWRAP_EXPANDO_ID);
 			Element grand = splitFrom.getParentElement();
+			try {
+				Field field = SEUtilities.getFieldByName(Node.class, "node");
+				XmlNode xn = XmlNode.from((org.w3c.dom.Node) field.get(grand));
+				if (xn.tagIs("P") && xn.textContains("R v KHB")) {
+					int debug = 3;
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 			NodeList<Node> nl = splitFrom.getChildNodes();
 			splitEnd = (Element) splitFrom.cloneNode(false);
 			if (splitAround == null) {
@@ -1022,6 +984,20 @@ public class DomUtils implements NodeFromXpathProvider {
 				}
 				grand.insertAfter(splitAround, splitFrom);
 				grand.insertAfter(splitEnd, splitAround);
+				if (splitAround.getNodeType() == Node.TEXT_NODE) {
+					Element splitAroundWrap = splitFrom.getOwnerDocument()
+							.createElement("span");
+					splitAroundWrap.setAttribute(ATTR_UNWRAP_EXPANDO_ID,
+							expandoId);
+					grand.insertAfter(splitAroundWrap, splitAround);
+					splitAroundWrap.appendChild(splitAround);
+				} else {
+					Element splitAroundElt = (Element) splitAround;
+					if (!splitAroundElt.hasAttribute(ATTR_UNWRAP_EXPANDO_ID)) {
+						splitAroundElt.setAttribute(ATTR_UNWRAP_EXPANDO_ID,
+								expandoId);
+					}
+				}
 			}
 			List<Element> maybeRedundantSplits = new ArrayList<Element>();
 			List<Element> childElements = DomUtils
@@ -1037,6 +1013,13 @@ public class DomUtils implements NodeFromXpathProvider {
 					maybeRedundantSplits.get(i).removeFromParent();
 				}
 			}
+			try {
+				Field field = SEUtilities.getFieldByName(Node.class, "node");
+				XmlNode xn = XmlNode.from((org.w3c.dom.Node) field.get(grand));
+				int debug = 3;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 
 		public void unsplit() {
@@ -1049,164 +1032,128 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 	}
 
-	interface MaybeWrappedNodeCollection {
-		public abstract Node getItem(int index);
-
-		public abstract int getLength();
-	}
-
-	static class MaybeWrappedNodeCollectionList
-			implements MaybeWrappedNodeCollection {
-		List<Node> aList = new ArrayList<Node>();
-
-		public MaybeWrappedNodeCollectionList(NodeList list) {
-			int length = list.getLength();
-			boolean inWrap = false;
-			for (int i = 0; i < length; i++) {
-				Node n = list.getItem(i);
-				boolean nHasUnwrap = false;
-				if (!inWrap) {
-					aList.add(n);
-				}
-				if (n.getNodeType() == Node.ELEMENT_NODE) {
-					Element e = (Element) n;
-					nHasUnwrap = e.getAttribute(ATTR_UNWRAP_EXPANDO_ID)
-							.length() > 0;
-					if (nHasUnwrap) {
-						inWrap = !inWrap;
-					}
-				}
-			}
-		}
-
-		@Override
-		public final Node getItem(int index) {
-			return aList.get(index);
-		}
-
-		@Override
-		public final int getLength() {
-			return aList.size();
-		}
-	}
-
 	/*
-	 * this makes a linear list of unwrapped elts - including wrapped (they're
-	 * filtered elsewhere) e.g.
-	 * <a-uw><span></a-uw><a-w>blah</a-w><a-uw><i></a-uw> becomes
-	 * <span><a-w>blah</a-w><i>
+	 * this makes a linear list of unwrapped elts - and unwraps wrapped - e.g.
+	 * <a-uw><span>trux</span></a-uw><a-w>blah</a-w><a-uw><i>trix</i></a-uw>
+	 * becomes <span>trux</span>blah<i>trix</i>
 	 */
-	static class NodeWrapList implements MaybeWrappedNodeCollection {
+	class NodeWrapList {
 		List<Node> kids = new ArrayList<Node>();
 
-		public NodeWrapList(Element hasUnwrap) {
-			Node parentNode = hasUnwrap.getParentNode();
-			List<Node> sibs = parentNode == null ? Arrays.asList(hasUnwrap)
-					: nodeListToArrayList(parentNode.getChildNodes());
-			int length = sibs.size();
+		List<Element> currentToUnwrap = new ArrayList<>();
+
+		public NodeWrapList(Element parent) {
+			List<Node> list = nodeListToArrayList(parent.getChildNodes());
+			int length = list.size();
 			boolean inWrap = false;
-			String expandoId = hasUnwrap.getAttribute(ATTR_UNWRAP_EXPANDO_ID);
+			String currentUnwrapId = null;
+			List<Node> unwrapped = new ArrayList<>();
+			XmlNode xn = null;
+			List<org.w3c.dom.Element> w3List = null;
+			try {
+				Field field = SEUtilities.getFieldByName(Node.class, "node");
+				org.w3c.dom.Node w3Node = (org.w3c.dom.Node) field.get(parent);
+				w3List = XmlUtils.nodeListToElementList(w3Node.getChildNodes());
+				xn = XmlNode.from(w3Node);
+				int debug = 3;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 			for (int i = 0; i < length; i++) {
-				Node n = sibs.get(i);
-				boolean nHasUnwrap = false;
-				if (!inWrap) {
-					if (n == hasUnwrap) {
-						inWrap = true;
-					} else {
-						continue;
-					}
-				}
+				Node n = list.get(i);
 				if (n.getNodeType() == Node.ELEMENT_NODE) {
 					Element e = (Element) n;
-					String currentEltExpandoId = e
+					String currentEltUnwrapId = e
 							.getAttribute(ATTR_UNWRAP_EXPANDO_ID);
-					nHasUnwrap = currentEltExpandoId.length() > 0;
-					if (nHasUnwrap) {
-						kids.addAll(nodeListToArrayList(e.getChildNodes()));
-						if (n != hasUnwrap
-								&& expandoId.equals(currentEltExpandoId)) {
-							break;// finished expando
+					String currentEltWrapId = e
+							.getAttribute(ATTR_WRAP_EXPANDO_ID);
+					if (e.getAttribute("id").startsWith("bnj_")) {
+						continue;
+					}
+					if (Ax.notBlank(currentEltWrapId)) {
+						flushToUnwrap();
+						Preconditions.checkState(e.getChildCount() == 1);
+						Preconditions.checkState(e.getChildNodes().getItem(0)
+								.getNodeType() == Node.TEXT_NODE);
+						kids.add(e.getChildNodes().getItem(0));
+					} else {
+						if (Ax.notBlank(currentEltUnwrapId)) {
+							if (!Objects.equals(currentEltUnwrapId,
+									currentUnwrapId)) {
+								flushToUnwrap();
+								currentUnwrapId = currentEltUnwrapId;
+							}
+							currentToUnwrap.add(e);
 						} else {
-							continue;// ignore this (different) expando id
+							flushToUnwrap();
+							kids.add(n);
 						}
-					} // normal elementnode
-					else {
-						kids.add(n);
+					}
+					if (unwrappedFirstChildren.containsKey(e)) {
+						kids.add(unwrappedFirstChildren.get(e));
 					}
 				} else {
+					flushToUnwrap();
 					kids.add(n);// text
 				}
 			}
+			flushToUnwrap();
 		}
 
-		@Override
 		public final Node getItem(int index) {
 			return kids.get(index);
 		}
 
-		@Override
 		public final int getLength() {
 			return kids.size();
 		}
+
+		private void flushToUnwrap() {
+			// the interesting bit - here we merge...
+			if (currentToUnwrap.size() > 0) {
+				Preconditions.checkState(currentToUnwrap.get(0)
+						.getNodeType() == Node.ELEMENT_NODE);
+				Element firstUnwrap = currentToUnwrap.get(0);
+				kids.add(firstUnwrap);
+				if (firstUnwrap.getChildNodes().getLength() == 0) {
+					if (!unwrappedFirstChildren.containsKey(firstUnwrap)) {
+						Element unwrappedFirstChild = currentToUnwrap.get(1);
+						unwrappedFirstChildren.put(firstUnwrap,
+								unwrappedFirstChild);
+					}
+				}
+				currentToUnwrap.clear();
+			}
+		}
 	}
 
+	/**
+	 * 2019.10 - retry. Because wrapped/unwrapped structures will never
+	 * completely match (duplicate text nodes e.g.) - drop what won't
+	 * 
+	 * Mostly the app is interested (post-wrap) in extracts - which just use
+	 * locations to find ranges. So mildly truncated text nodes will be ok.
+	 * 
+	 * @author nick@alcina.cc
+	 *
+	 */
 	class WrappingAwareNodeIterator {
-		private MaybeWrappedNodeCollection nodes;
+		private NodeWrapList nodes;
 
 		private int length;
 
 		private int idx = 0;
 
-		private boolean parentHasUnwrap = false;
-
 		WrappingAwareNodeIterator(Node parent) {
-			nodes = new MaybeWrappedNodeCollectionList(parent.getChildNodes());
-			if (parent.getNodeType() == Node.ELEMENT_NODE) {
-				Element parentElt = (Element) parent;
-				parentHasUnwrap = parentElt.getAttribute(ATTR_UNWRAP_EXPANDO_ID)
-						.length() > 0;
-				if (parentHasUnwrap) {
-					nodes = new NodeWrapList(parentElt);
-				}
-			}
+			Preconditions.checkState(parent.getNodeType() == Node.ELEMENT_NODE);
+			Element parentElt = (Element) parent;
+			nodes = new NodeWrapList(parentElt);
 			length = nodes.getLength();
 		}
 
-		// covers both old and new variants of wrap() {span id=bnj_ or a
-		// __unwrap =}
 		Node next() {
-			while (idx < length) {
-				Node node = nodes.getItem(idx++);
-				short nodeType = node.getNodeType();
-				if (nodeType != Node.ELEMENT_NODE) {
-					return node;
-				}
-				Element e = (Element) node;
-				if (e.getAttribute("id").startsWith(ignoreableElementIdPrefix)
-						|| e.getAttribute(ATTR_WRAP_EXPANDO_ID).length() > 0) {
-					if (node.getNodeName().equalsIgnoreCase("span") || e
-							.getAttribute(ATTR_WRAP_EXPANDO_ID).length() > 0) {
-						walker.setCurrentNode(node);
-						while (walker.nextNode() != null) {
-							node = walker.getCurrentNode();
-							if (node.getNodeType() == Node.ELEMENT_NODE
-									&& ((Element) node).getAttribute("id")
-											.startsWith(
-													ignoreableElementIdPrefix)) {
-							} else {
-								return node;
-							}
-						}
-					} else {
-						// fallthrough, continue while
-					}
-				} else if (e.getAttribute(ATTR_UNWRAP_EXPANDO_ID).length() > 0
-						&& e.getChildCount() == 0) {
-					return e;
-					// empty unwrap node, ignore
-				} else {
-					return e;
-				}
+			if (idx < length) {
+				return nodes.getItem(idx++);
 			}
 			return null;
 		}
