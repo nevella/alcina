@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.KnownRenderableNode;
 import cc.alcina.framework.entity.entityaccess.KnownNodePersistent;
-import cc.alcina.framework.entity.entityaccess.KnownNodePersistentDomainStore;
 
 public abstract class KnownNode {
 	public transient KnownNodePersistent persistent;
@@ -17,18 +16,20 @@ public abstract class KnownNode {
 	public transient KnownNode parent;
 
 	public transient String name;
-	
+
 	public transient KnownsPersistence persistence;
-	
+
 	public transient KnownRenderableNode renderableNode;
 
-	public KnownNode(KnownsPersistence persistence,KnownNode parent, String name) {
+	public KnownNode(KnownNode parent, String name) {
+		this(parent.persistence, parent, name);
+	}
+
+	public KnownNode(KnownsPersistence persistence, KnownNode parent,
+			String name) {
 		this.persistence = persistence;
 		this.parent = parent;
 		this.name = name;
-	}
-	public KnownNode(KnownNode parent, String name) {
-		this(parent.persistence,parent,name);
 	}
 
 	public <T extends KnownNode> T forName(Object key) {
@@ -55,6 +56,10 @@ public abstract class KnownNode {
 
 	public void persist() {
 		Knowns.reconcile(this, false);
+	}
+
+	public void refresh() {
+		restore();
 	}
 
 	public void restore() {
