@@ -483,7 +483,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				LaterLookup lastPassLookup = new LaterLookup();
 				lastPassLookup.list.addAll(segmentLoader.toResolve);
 				segmentLoader.toResolve.clear();
-				laterLookups.add(lastPassLookup);
 				lastPassLookup.resolve(segmentLoader);
 				laterLookups.forEach(ll -> ll.resolve(segmentLoader));
 				laterLookups.clear();
@@ -1208,18 +1207,17 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 									.get(pdOperator.pd);
 							Object target = store.cache.get(type, id);
 							if (target == null) {
-								if (missingWarningCount++ < 5) {
-									if (segmentLoader == null) {
+								if (segmentLoader == null) {
+									if (missingWarningCount++ < 5) {
 										store.logger.warn(
 												"later-lookup -- missing target: {}, {} for  {}.{} #{}",
 												type, id,
 												item.source.getClass(),
 												pdOperator.name,
 												item.source.getId());
-									} else {
-										segmentLoader.notifyLater(item, type,
-												id);
 									}
+								} else {
+									segmentLoader.notifyLater(item, type, id);
 								}
 							}
 							pdOperator.writeMethod.invoke(item.source, target);
