@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="project-build" basedir="." default="make-jars" xmlns:if="ant:if">
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+	  <classpath>
+	    <pathelement location="${framework.lib.dir}/entity/ant-contrib.jar"/>
+	  </classpath>
+	</taskdef>
 	<property name="project.src.dir.2" location="${project.src.dir}" />
 	<property name="project.src.dir.3" location="${project.src.dir}" />
 	<property name="project.src.dir.4" location="${project.src.dir}" />
@@ -13,15 +18,27 @@
 		Please create a local.ant.properties file,
 		template is local.ant.properties.template in appropriate (alcina or project/entity) directory</fail>
 	<target name="clean" description="Delete all generated files">
+		<mkdir dir="${project.build.dir}" />
+		<mkdir dir="${project.dist.dir}" />
 		<delete includeEmptyDirs="true">
 			<fileset dir="${project.build.dir}" includes="**/*" defaultexcludes="no" />
 		</delete>
-		<delete includeEmptyDirs="true">
-			<fileset dir="${project.dist.dir}" includes="**/*" defaultexcludes="no" />
-		</delete>
-		<delete includeEmptyDirs="true" quiet="true">
-			<fileset dir="${project.web-inf.classes.dir}" includes="**/*" defaultexcludes="no" />
-		</delete>
+		<if>
+			<available file="${project.dist.dir}" type="dir" />
+			<then>
+				<delete includeEmptyDirs="true">
+					<fileset dir="${project.dist.dir}" includes="**/*" defaultexcludes="no" />
+				</delete>
+			</then>
+		</if>
+		<if>
+			<available file="${project.web-inf.classes.dir}" type="dir" />
+			<then>
+				<delete includeEmptyDirs="true">
+					<fileset dir="${project.web-inf.classes.dir}" includes="**/*" defaultexcludes="no" />
+				</delete>
+			</then>
+		</if>
 	</target>
 	<target name="clean-gwt">
 		<delete dir="${project.gwt.build.dir}" />
