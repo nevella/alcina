@@ -7,15 +7,21 @@
 	<property name="project.src.dir.6" location="${project.src.dir}" />
 	<property name="project.src.dir.7" location="${project.src.dir}" />
 	<property name="project.src.dir.8" location="${project.src.dir}" />
-	<!-- should never be called directly, used by projects based on alcina-->
+	<!-- should never be called directly, used by projects based on alcina -->
 	<fail unless="gwt.codestyle">
-			...
-			Please create a local.ant.properties file,
-			template is local.ant.properties.template in appropriate (alcina or project/entity) directory</fail>
+		...
+		Please create a local.ant.properties file,
+		template is local.ant.properties.template in appropriate (alcina or project/entity) directory</fail>
 	<target name="clean" description="Delete all generated files">
-		<delete dir="${project.build.dir}/**" />
-		<delete dir="${project.dist.dir}/**" />
-		<delete dir="${project.web-inf.classes.dir}/**" quiet="true" />
+		<delete includeEmptyDirs="true">
+			<fileset dir="${project.build.dir}" includes="**/*" defaultexcludes="no" />
+		</delete>
+		<delete includeEmptyDirs="true">
+			<fileset dir="${project.dist.dir}" includes="**/*" defaultexcludes="no" />
+		</delete>
+		<delete includeEmptyDirs="true" quiet="true">
+			<fileset dir="${project.web-inf.classes.dir}" includes="**/*" defaultexcludes="no" />
+		</delete>
 	</target>
 	<target name="clean-gwt">
 		<delete dir="${project.gwt.build.dir}" />
@@ -24,26 +30,26 @@
 		<!-- override in the top-level-project build script -->
 	</target>
 	<target name="compile-task" description="Compiles the ${project.module.description} module" depends="">
-			<mkdir dir="${project.build.dir}" />
-			<javac includeantruntime="false" debug="on" sourcepath="" destdir="${project.build.dir}" verbose="false">
+		<mkdir dir="${project.build.dir}" />
+		<javac includeantruntime="false" debug="on" sourcepath="" destdir="${project.build.dir}" verbose="false">
 
-				<src path="${project.src.dirs}" />
-				<classpath>
-					<path refid="project.classpath" />
-				</classpath>
-				<patternset refid="project.compile.filter.sources" />
-				<compilerarg value="${alcina.compiler.args}" />
-			</javac>
-			<!-- a hack, but then...maybe I don't understand Ant? -->
-			<delete dir="${project.build.dir}/com/totsp" />
-		</target>
+			<src path="${project.src.dirs}" />
+			<classpath>
+				<path refid="project.classpath" />
+			</classpath>
+			<patternset refid="project.compile.filter.sources" />
+			<compilerarg value="${alcina.compiler.args}" />
+		</javac>
+		<!-- a hack, but then...maybe I don't understand Ant? -->
+		<delete dir="${project.build.dir}/com/totsp" />
+	</target>
 	<target name="compile" description="Compiles the ${project.module.description} module" depends="build-dependencies,compile-task">
 	</target>
 	<target name="make-jars" description="Make ${project.module.description} jar" depends="compile,make-jars-task">
-		</target>
+	</target>
 	<target name="make-jars-task" description="Make ${project.module.description} jar" depends="">
 		<mkdir dir="${project.dist.dir}" />
-		<delete file="${project.dist.dir}/${ant.project.name}.jar" if:true="${alcina.delete-before-jars}"/>
+		<delete file="${project.dist.dir}/${ant.project.name}.jar" if:true="${alcina.delete-before-jars}" />
 		<copy todir="${project.build.dir}">
 			<fileset dir="${project.src.dir}">
 				<include name="**/*.*" />
@@ -67,25 +73,25 @@
 			</fileset>
 			<fileset dir="${project.src.dir.5}">
 				<include name="**/*.*" />
-								<exclude name="**/*.java" />
+				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${project.src.dir.6}">
 				<include name="**/*.*" />
-								<exclude name="**/*.java" />
+				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${project.src.dir.7}">
 				<include name="**/*.*" />
-								<exclude name="**/*.java" />
+				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${project.src.dir.8}">
 				<include name="**/*.*" />
-								<exclude name="**/*.java" />
+				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
-			
+
 		</copy>
 		<jar update="${alcina.update-jars}" destfile="${project.dist.dir}/${ant.project.name}.jar" manifest="${project.meta-inf.dir}/MANIFEST.MF">
 			<metainf dir="${project.meta-inf.dir}" />
