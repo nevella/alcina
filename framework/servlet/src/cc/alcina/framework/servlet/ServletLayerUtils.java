@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet;
 
+import java.util.Enumeration;
+
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
@@ -17,6 +19,25 @@ public class ServletLayerUtils {
 
 	public static String getUserAgent(HttpServletRequest request) {
 		return request.getHeader("User-Agent");
+	}
+
+	public static String generateRequestStr(HttpServletRequest request) {
+		String out = "";
+		Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+			String headerName = headerNames.nextElement();
+			if (headerName.equals("Cookie")) {
+				// Dumps too much info, so we'll filter it out
+				continue;
+			}
+            out += CommonUtils.formatJ("%s: ", headerName);
+            Enumeration<String> headers = request.getHeaders(headerName);
+            while (headers.hasMoreElements()) {
+                out += CommonUtils.formatJ("%s, ", headers.nextElement());
+            }
+			out += "\n";
+        }
+		return out;
 	}
 
 	public static boolean isAppServletInitialised() {
