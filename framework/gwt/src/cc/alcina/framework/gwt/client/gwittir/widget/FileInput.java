@@ -118,4 +118,8 @@ public class FileInput extends Widget
 			return true;
 		}
 	}
+
+	public void clear() {
+		inputElement.setValue(null);
+	}
 }
