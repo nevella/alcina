@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.group;
 
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -12,6 +13,7 @@ import cc.alcina.framework.common.client.search.grouping.GroupedResult.Cell;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.GroupKey;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ColumnMapper;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRendererFunction;
@@ -58,6 +60,20 @@ public class GroupingMapper<V> {
 		result.columnMapper = new GroupingColumnMapper();
 		result.keyMapper = row -> row.key;
 		return result;
+	}
+
+	public List<V> filter(List<V> list, String rowKey, String colKey,
+			boolean debugTest) {
+		return list.stream().filter(v -> {
+			if (debugTest) {
+				Ax.out("(%s,%s) (%s,%s)", rowClassifier.classify(v).toString(),
+						rowKey, columnClassifier.classify(v).toString(),
+						colKey);
+			}
+			return Objects.equals(rowClassifier.classify(v).toString(), rowKey)
+					&& Objects.equals(columnClassifier.classify(v).toString(),
+							colKey);
+		}).collect(Collectors.toList());
 	}
 
 	public GroupingMapper<V> withColumnClassifier(
