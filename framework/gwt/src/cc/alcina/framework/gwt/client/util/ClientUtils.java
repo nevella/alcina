@@ -506,7 +506,12 @@ public class ClientUtils {
     }
     }-*/;
 
-    public static class EditContentViewWidgets {
+    public static native String prettyFormatJson(String json)/*-{
+	var obj = JSON.parse(json);
+	return JSON.stringify(obj, null, 2);
+	}-*/;
+
+	public static class EditContentViewWidgets {
         public PaneWrapperWithObjects wrapper;
 
         public GlassDialogBox gdb;
