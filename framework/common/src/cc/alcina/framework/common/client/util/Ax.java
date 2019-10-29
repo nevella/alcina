@@ -63,6 +63,10 @@ public class Ax {
 		return CommonUtils.formatJ(template, args);
 	}
 
+	public static double fourPlaces(double d) {
+		return CommonUtils.roundNumeric(d, 4);
+	}
+
 	public static String friendly(Object o) {
 		return CommonUtils.friendlyConstant(o);
 	}
