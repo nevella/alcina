@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.domain.search.LockingDomainQuery;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
@@ -33,6 +34,7 @@ public class LockingDomainQueryParallel<V extends HasIdAndLocalId>
 
 	protected boolean filter(V v) {
 		if (debugMatch != null && debugMatch.test(v)) {
+			Ax.out(v);
 			int debug = 3;
 		}
 		for (DomainFilter filter : getFilters()) {
