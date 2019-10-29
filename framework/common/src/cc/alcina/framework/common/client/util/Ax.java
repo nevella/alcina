@@ -98,6 +98,10 @@ public class Ax {
 		return !isBlank(string);
 	}
 
+	public static boolean notPresent(Optional<?> optional) {
+		return !optional.isPresent();
+	}
+
 	public static String nullSafe(String string) {
 		return string == null ? "" : string;
 	}
