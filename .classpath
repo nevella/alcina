@@ -76,5 +76,7 @@
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-metamodel-generator-3.14.11-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-serialization-3.14.11-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javassist-3.18.1-GA.jar" sourcepath="/g/minor/javassist"/>
+	<classpathentry kind="lib" path="lib/framework/entity/jsonld-java-0.12.5.jar" sourcepath="/Users/mxblue/Downloads/jsonld-java-0.12.5/core/src"/>
+	<classpathentry kind="lib" path="lib/framework/entity/schemaorg-java-1.0.1.jar" sourcepath="/Users/mxblue/Downloads/schemaorg-java-1.0.1-sources.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
