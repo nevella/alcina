@@ -56,8 +56,6 @@ public class GroupingSupport<GP extends GroupingParameters> {
 	}
 
 	public void addToLinkPanel(FlowPanel linksPanel, boolean withMultiline) {
-		exportLink = new Link("Export", c -> exportSelected());
-		linksPanel.add(exportLink);
 		if (withMultiline) {
 			multilineLink = new ToggleLink("Multi line ", "Single line",
 					evt -> {
