@@ -20,6 +20,8 @@ public class GroupedResult implements Serializable {
 
 	public String json;
 
+	public String html;
+
 	private List<Row> rows = new ArrayList<>();
 
 	private List<Col> cols = new ArrayList<>();

@@ -1,7 +1,14 @@
 package cc.alcina.framework.common.client.util;
 
+import java.io.Serializable;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.search.grouping.GroupedResult.GroupKey;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder;
 
 public abstract class ColumnMapper<T> {
@@ -28,10 +35,41 @@ public abstract class ColumnMapper<T> {
 		return totalBuilder.getPending();
 	}
 
-	protected abstract Class<T> mappedClass();
-
 	protected abstract void defineMappings();
 
 	protected void defineTotalMappings() {
+	}
+
+	protected abstract Class<T> mappedClass();
+
+	@XmlAccessorType(XmlAccessType.FIELD)
+	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+	public static class RowModel_SingleCell implements Serializable {
+		public String value;
+
+		public RowModel_SingleCell() {
+		}
+
+		public RowModel_SingleCell(String value) {
+			this.value = value;
+		}
+
+		public GroupKey asRowKey() {
+			return new GroupKey();
+		}
+	}
+
+	public static class SingleCellColumnMapper
+			extends ColumnMapper<RowModel_SingleCell> {
+		@Override
+		protected void defineMappings() {
+			builder.col("Value").function(row -> row.value).asUnsafeHtml(true)
+					.add();
+		}
+
+		@Override
+		protected Class<RowModel_SingleCell> mappedClass() {
+			return RowModel_SingleCell.class;
+		}
 	}
 }
