@@ -1,20 +1,23 @@
 package cc.alcina.framework.gwt.client.util;
 
-import cc.alcina.framework.entity.util.RichMetadata;
-
 import com.google.gwt.dom.client.ScriptElement;
+
+import cc.alcina.framework.gwt.client.util.JavascriptInjector;
 
 public class MetadataInjector {
     
-    RichMetadata metadata;
+    String metadata;
 
     ScriptElement metadataElement;
 
-    public MetadataInjector(RichMetadata metadata) {
+    public MetadataInjector() {
+    }
+
+    public MetadataInjector(String metadata) {
         this.metadata = metadata;
     }
 
-    public RichMetadata getMetadata() {
+    public String getMetadata() {
         return metadata;
     }
 
@@ -22,7 +25,7 @@ public class MetadataInjector {
         return metadataElement != null;
     }
 
-    public void setMetadata(RichMetadata metadata) {
+    public void setMetadata(String metadata) {
         if (metadataElement != null) {
             detach();
         }
@@ -33,7 +36,7 @@ public class MetadataInjector {
         if (metadataElement != null) {
             detach();
         }
-        metadataElement = JavascriptInjector.injectJsonLd(metadata.getJsonld());
+        metadataElement = JavascriptInjector.injectJsonLd(metadata);
     }
 
     public void detach() {
