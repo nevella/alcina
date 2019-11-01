@@ -410,7 +410,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			if (isOsX()) {
 				try {
 					ShellOutputTuple outputTuple = new ShellWrapper()
-							.runShell("", "pbpaste");
+							.noLogging().runShell("", "pbpaste");
 					return outputTuple.output;
 				} catch (Exception e2) {
 					throw new WrappedRuntimeException(e2);
