@@ -190,7 +190,21 @@ public class ConsolePanel extends Composite {
 		}
 
 		public void addHtml(String outputHtml) {
-			if (htmlCharCount > 500000) {
+			if (outputHtml.length() > 200000) {
+				clearContents();
+				inner.add(new InlineHTML("...truncated <br>"));
+				outputHtml = outputHtml.substring(outputHtml.length() - 200000);
+				int idx = outputHtml.indexOf("<");
+				if (idx != -1) {
+					outputHtml = outputHtml.substring(idx);
+				}
+				idx = outputHtml.indexOf("</");
+				if (idx == 0) {
+					idx = outputHtml.indexOf("<", 1);
+					outputHtml = outputHtml.substring(idx);
+				}
+			}
+			if (htmlCharCount > 200000) {
 				clearContents();
 				htmlCharCount = 0;
 				inner.add(new InlineHTML("...truncated <br>"));
