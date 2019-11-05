@@ -11,7 +11,7 @@ public class LuxWidgets {
         return LuxWidgets.with(new LuxContainer());
     }
 
-    public static LuxWidgets with(String text) {
+    public static LuxWidgets withText(String text) {
         return with(Widgets.unstyledText(text));
     }
 

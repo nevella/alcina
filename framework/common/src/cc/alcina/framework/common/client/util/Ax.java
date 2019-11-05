@@ -75,6 +75,10 @@ public class Ax {
 		return CommonUtils.isNullOrEmpty(string);
 	}
 
+	public static boolean isNull(Object object) {
+		return object == null;
+	}
+
 	public static boolean isTest() {
 		return test;
 	}

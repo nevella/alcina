@@ -1005,6 +1005,19 @@ public class XmlNode {
 			Node next = tw.nextNode();
 			return doc.nodeFor(next);
 		}
+
+		public String nextNonWhitespaceText() {
+			while (true) {
+				Node next = tw.nextNode();
+				if (next == null) {
+					return null;
+				}
+				XmlNode xNext = XmlNode.from(next);
+				if (xNext.isText() && xNext.isNonWhitespaceTextContent()) {
+					return xNext.ntc();
+				}
+			}
+		}
 	}
 
 	public class XmlNodeXpath {
