@@ -280,7 +280,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	public void dumpDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
+	public void printDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
 			boolean ignoreLatterSubstring,
 			boolean ignoreWhitespaceAndPunctuation, File f1, String s1, File f2,
 			String s2) {
@@ -337,10 +337,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				f2.getPath());
 	}
 
-	public void dumpDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
+	public void printDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
 			boolean ignoreLatterSubstring, File f1, String s1, File f2,
 			String s2) {
-		dumpDiff(ignoreEqualLength, ignoreInsertions, ignoreLatterSubstring,
+		printDiff(ignoreEqualLength, ignoreInsertions, ignoreLatterSubstring,
 				false, f1, s1, f2, s2);
 	}
 
