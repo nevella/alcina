@@ -6,7 +6,7 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.InlineHTML;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TextBox;
 
@@ -192,7 +192,7 @@ public class ConsolePanel extends Composite {
 		public void addHtml(String outputHtml) {
 			if (outputHtml.length() > 200000) {
 				clearContents();
-				inner.add(new InlineHTML("...truncated <br>"));
+				inner.add(new HTML("...truncated <br>"));
 				outputHtml = outputHtml.substring(outputHtml.length() - 200000);
 				int idx = outputHtml.indexOf("<");
 				if (idx != -1) {
@@ -207,9 +207,9 @@ public class ConsolePanel extends Composite {
 			if (htmlCharCount > 200000) {
 				clearContents();
 				htmlCharCount = 0;
-				inner.add(new InlineHTML("...truncated <br>"));
+				inner.add(new HTML("...truncated <br>"));
 			}
-			inner.add(new InlineHTML(outputHtml));
+			inner.add(new HTML(outputHtml));
 			htmlCharCount += outputHtml.length();
 			Scheduler.get()
 					.scheduleDeferred(() -> scrollPanel.scrollToBottom());
