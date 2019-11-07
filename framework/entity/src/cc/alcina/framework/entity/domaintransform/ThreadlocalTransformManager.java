@@ -75,6 +75,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -89,9 +90,10 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
-import cc.alcina.framework.entity.logic.EntityLayerLogging;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
 @SuppressWarnings("unchecked")
@@ -1315,8 +1317,6 @@ public class ThreadlocalTransformManager extends TransformManager
 					.forEach(dte -> {
 						locatorMap.putToLookups(HiliLocator.objectLocator(dte));
 					});
-			int debug = 3;
-			// TODO Auto-generated method stub
 		}
 
 		public void merge(HiliLocatorMap locatorMap) {
@@ -1351,13 +1351,22 @@ public class ThreadlocalTransformManager extends TransformManager
 			if (locator != null) {
 				return locator;
 			}
+			/*
+			 * If root (system user / server-side commits), we *shouldn't* have
+			 * any missing mappings - these
+			 */
 			if (!reconstituted
 					&& PermissionsManager.get().getClientInstance() != null) {
-				locatorMap = CommonPersistenceProvider.get()
-						.getCommonPersistence()
-						.reconstituteHiliMap(PermissionsManager.get()
-								.getClientInstance().getId());
-				reconstituted = true;
+				if (ThreadedPermissionsManager.cast().isSystemUser()) {
+					Ax.err("Possibly missing server client instance localId: %s",
+							localId);
+				} else {
+					locatorMap = CommonPersistenceProvider.get()
+							.getCommonPersistence()
+							.reconstituteHiliMap(PermissionsManager.get()
+									.getClientInstance().getId());
+					reconstituted = true;
+				}
 			}
 			locator = locatorMap.getForLocalId(localId);
 			return locator;
