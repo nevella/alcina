@@ -513,10 +513,7 @@ public class XmlNode {
 
 		public XmlNode get(String... tags) {
 			List<String> tagList = Arrays.asList(tags);
-			if (orSelf && tagIsOneOf(tagList)) {
-				return XmlNode.this;
-			}
-			XmlNode cursor = XmlNode.this;
+			XmlNode cursor = getStartingCursor();
 			while (cursor != null) {
 				if (cursor.tagIsOneOf(tagList)) {
 					return cursor;
@@ -532,7 +529,7 @@ public class XmlNode {
 
 		public boolean has(XmlNode test) {
 			test = test.asXmlNode();
-			XmlNode node = XmlNode.this.asXmlNode();
+			XmlNode node = getStartingCursor();
 			while (node != null) {
 				if (node == test) {
 					return true;
@@ -548,7 +545,7 @@ public class XmlNode {
 
 		public List<XmlNode> list() {
 			List<XmlNode> result = new ArrayList<>();
-			XmlNode cursor = XmlNode.this;
+			XmlNode cursor = getStartingCursor();
 			while (cursor != null) {
 				result.add(cursor);
 				cursor = cursor.parent();
@@ -557,7 +554,7 @@ public class XmlNode {
 		}
 
 		public Optional<XmlNode> match(Predicate<XmlNode> predicate) {
-			XmlNode cursor = XmlNode.this;
+			XmlNode cursor = getStartingCursor();
 			while (cursor != null) {
 				if (predicate.test(cursor)) {
 					return Optional.of(cursor);
@@ -583,6 +580,10 @@ public class XmlNode {
 				}
 			}
 			return false;
+		}
+
+		private XmlNode getStartingCursor() {
+			return orSelf ? XmlNode.this : XmlNode.this.parent();
 		}
 	}
 
@@ -999,6 +1000,10 @@ public class XmlNode {
 			tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(
 					doc.domDoc(), NodeFilter.SHOW_ALL, null, true);
 			tw.setCurrentNode(node);
+		}
+
+		public XmlNode currentNode() {
+			return doc.nodeFor(tw.getCurrentNode());
 		}
 
 		public XmlNode nextLogicalNode() {

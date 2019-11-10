@@ -25,6 +25,13 @@ public class AbstractParserSlice<T extends ParserToken> {
 
 	public T token;
 
+	/*
+	 * Used to find the best slice (with the lowest start offset in the 'run' -
+	 * i.e. the visible substring)
+	 * 
+	 * When matched, the startOffset of the context is moved to after the *end*
+	 * of the match
+	 */
 	public int startOffsetInRun;
 
 	private String cachedContents = null;

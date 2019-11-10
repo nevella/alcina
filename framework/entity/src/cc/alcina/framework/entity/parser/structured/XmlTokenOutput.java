@@ -42,7 +42,8 @@ public class XmlTokenOutput {
 			}
 			Ax.out("Node stack: closing unmatched tag : %s -> %s",
 					nameAndClass(), tag);
-			writeCursor.ancestors().list().forEach(n -> Ax.out(n.name()));
+			writeCursor.ancestors().orSelf().list()
+					.forEach(n -> Ax.out(n.name()));
 			outDoc.logPretty();
 			System.err.println("see /tmp/log/log.xml for details");
 			throw new RuntimeException(String.format(
@@ -58,15 +59,18 @@ public class XmlTokenOutput {
 		close(join, tag, className, null);
 	}
 
-	public void ensureClosed(XmlStructuralJoin join, String tag) {
-		ensureClosedClass(join, tag, null);
+	public boolean ensureClosed(XmlStructuralJoin join, String tag) {
+		return ensureClosedClass(join, tag, null);
 	}
 
-	public void ensureClosedClass(XmlStructuralJoin join, String tag,
+	public boolean ensureClosedClass(XmlStructuralJoin join, String tag,
 			String className) {
 		if (writeCursor.tagIs(tag) && (className == null
 				|| writeCursor.attrIs("class", className))) {
 			close(join, tag);
+			return true;
+		} else {
+			return false;
 		}
 	}
 
