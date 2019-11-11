@@ -390,6 +390,27 @@ public class SEUtilities {
 		}
 	}
 
+	public static void dumpAllThreads() {
+		Ax.out(dumpAllThreadsToString());
+	}
+
+	public static String dumpAllThreadsToString() {
+		StringBuilder sb = new StringBuilder();
+		Set<Entry<Thread, StackTraceElement[]>> allStackTraces = Thread
+				.getAllStackTraces().entrySet();
+		for (Entry<Thread, StackTraceElement[]> entry : allStackTraces) {
+			sb.append(entry.getKey());
+			sb.append("\n");
+			StackTraceElement[] value = entry.getValue();
+			for (StackTraceElement stackTraceElement : value) {
+				sb.append("\t");
+				sb.append(stackTraceElement);
+				sb.append("\n");
+			}
+		}
+		return sb.toString();
+	}
+
 	public static void dumpBytes(byte[] bs, int width) {
 		dumpBytes(bs, width, true);
 	}
@@ -1251,35 +1272,6 @@ public class SEUtilities {
 
 	public static String stripWhitespace(String input) {
 		return doWhitespace(input, false, '-');
-	}
-
-	public static void threadDump() {
-		Set<Entry<Thread, StackTraceElement[]>> allStackTraces = Thread
-				.getAllStackTraces().entrySet();
-		for (Entry<Thread, StackTraceElement[]> entry : allStackTraces) {
-			System.out.println(entry.getKey());
-			StackTraceElement[] value = entry.getValue();
-			for (StackTraceElement stackTraceElement : value) {
-				System.out.println("\t" + stackTraceElement);
-			}
-		}
-	}
-
-	public static String threadDumpToString() {
-		StringBuilder sb = new StringBuilder();
-		Set<Entry<Thread, StackTraceElement[]>> allStackTraces = Thread
-				.getAllStackTraces().entrySet();
-		for (Entry<Thread, StackTraceElement[]> entry : allStackTraces) {
-			sb.append(entry.getKey());
-			sb.append("\n");
-			StackTraceElement[] value = entry.getValue();
-			for (StackTraceElement stackTraceElement : value) {
-				sb.append("\t");
-				sb.append(stackTraceElement);
-				sb.append("\n");
-			}
-		}
-		return sb.toString();
 	}
 
 	public static void throwFutureException(List<Future<Object>> futures)

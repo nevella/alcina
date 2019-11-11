@@ -933,7 +933,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			System.out.println("Payload:");
 			System.out.println(payload);
 			e.printStackTrace();
-			SEUtilities.threadDump();
+			SEUtilities.dumpAllThreads();
 		}
 	}
 
