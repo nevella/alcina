@@ -48,14 +48,20 @@ public class DateBox extends AbstractBoundWidget<Date>
 		implements ValueChangeHandler, Focusable {
 	private com.google.gwt.user.datepicker.client.DateBox base;;
 
-	private DateTimeFormat unAmericanFormat = DateTimeFormat
-			.getFormat("dd/MM/yyyy");
+	private DateTimeFormat dateTimeFormat; 
 
 	private String text;
 
 	private Date value;
 
 	public DateBox() {
+		this(DateTimeFormat
+				.getFormat("dd/MM/yyyy"));
+		
+	}
+	
+	public DateBox(DateTimeFormat dateTimeFormat) {
+		this.dateTimeFormat = dateTimeFormat;
 		Format dtFormat = new DefaultFormat(getDateTimeFormat());
 		DatePicker picker = new DatePicker();
 		picker.addStyleName("alcina-DatePicker");
@@ -136,7 +142,7 @@ public class DateBox extends AbstractBoundWidget<Date>
 	}
 
 	protected DateTimeFormat getDateTimeFormat() {
-		return unAmericanFormat;
+		return dateTimeFormat;
 	}
 
 	public static class DateBoxProvider

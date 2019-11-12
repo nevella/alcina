@@ -90,7 +90,8 @@ public class DomainTransformException extends Exception
 
 	public boolean irresolvable() {
 		return type == DomainTransformExceptionType.INVALID_AUTHENTICATION
-				|| type == DomainTransformExceptionType.TOO_MANY_EXCEPTIONS;
+				|| type == DomainTransformExceptionType.TOO_MANY_EXCEPTIONS
+						|| type == DomainTransformExceptionType.UNKNOWN;
 	}
 
 	public boolean isSilent() {

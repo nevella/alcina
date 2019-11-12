@@ -48,6 +48,10 @@ public class ShortDateValidator implements Validator {
 		}
 		String sValue = value.toString();
 		String[] splits = sValue.split("/");
+		boolean iso8601probable = sValue.matches("\\d+.*T.*");
+		if(iso8601probable) {
+			throw new ValidationException("Date must match the ISO 8601 spec (e.g. 2019-11-08T00:00:00.000-08:00)");
+		}
 		if (splits.length != 3) {
 			throw new ValidationException(ERR_FMT);
 		}

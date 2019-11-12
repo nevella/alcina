@@ -1983,3 +1983,6 @@ link-selector
 	display:inline-block;
 	padding:0 0.5em;
 } 
+ input.calendarText.alcina-DateBox.iso8601, div.alcina-ObjectTree input.gwt-DateBox.alcina-DateBox.iso8601,input.iso8601{
+	width:300px;
+}
