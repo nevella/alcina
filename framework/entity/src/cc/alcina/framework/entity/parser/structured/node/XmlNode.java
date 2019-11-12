@@ -834,10 +834,6 @@ public class XmlNode {
 			return xpath("//body").node();
 		}
 
-		public XmlNode getContainingBlock() {
-			return XmlNode.from(XmlUtils.getContainingBlock(node));
-		}
-
 		public boolean hasClassName(String className) {
 			return isElement() && Arrays.stream(attr("class").split(" "))
 					.anyMatch(cn -> cn.equals(className));
