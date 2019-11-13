@@ -18,6 +18,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.widget.FileSelector;
 
 @ClientInstantiable
@@ -26,21 +27,28 @@ import cc.alcina.framework.gwt.client.gwittir.widget.FileSelector;
  * @author Nick Reddel
  */
 public class FileSelectorCustomiser implements Customiser {
+	public static final String ACCEPT_FILTER = "ACCEPT_FILTER";
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
-		return new FileSelectorProvider(editable);
+		NamedParameter[] parameters = info.parameters();
+		String accept = NamedParameter.Support.stringValue(parameters,
+				ACCEPT_FILTER, "");
+		return new FileSelectorProvider(editable,accept);
 	}
 
 	public static class FileSelectorProvider implements BoundWidgetProvider {
 		private boolean editable;
+		private String accept;
 
-		public FileSelectorProvider(boolean editable) {
+		public FileSelectorProvider(boolean editable,String accept) {
 			this.editable = editable;
+			this.accept=accept;
 		}
 
 		public BoundWidget get() {
 			FileSelector selector = new FileSelector();
 			selector.setEnabled(editable);
+			selector.setAccept(accept);
 			return selector;
 		}
 	}

@@ -32,6 +32,16 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 	private FileInput base;
 
 	private FileSelectorInfo value;
+	
+	private String accept;
+
+	public String getAccept() {
+		return this.accept;
+	}
+
+	public void setAccept(String accept) {
+		this.accept = accept;
+	}
 
 	private TopicListener<FileSelectorInfo> clearListener = (k, v) -> base
 			.clear();
@@ -40,6 +50,11 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 		this.base = new FileInput();
 		initWidget(base);
 		base.addChangeHandler(this);
+	}
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		base.setAccept(accept);
 	}
 
 	public FileSelectorInfo getValue() {
