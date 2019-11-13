@@ -1020,6 +1020,7 @@ table.results-table {
 	color: #F33;
 	text-align: left;
 	background-color: #FEE;
+	white-space: pre-wrap;
 }
 
 .popupContent {
