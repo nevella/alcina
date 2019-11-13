@@ -248,13 +248,28 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		return commonContainer;
 	}
 
-	public Optional<XmlNode> getContainingNode(IntPair containingRange) {
-		containingRange = containingRange.shiftRight(startOffset);
+	public Optional<XmlNode> getContainingNode(int absoluteOffset) {
 		int offset = 0;
 		for (Text text : allTexts) {
 			int length = text.getLength();
 			IntPair textRange = new IntPair(offset, offset + length);
-			if (containingRange.contains(textRange)) {
+			if (textRange.containsExEnd(absoluteOffset)) {
+				return Optional.of(XmlNode.from(text));
+			}
+			offset += length;
+		}
+		return Optional.empty();
+	}
+
+	public Optional<XmlNode>
+			getContainingNode(IntPair containingRangeRelativeToStartOffset) {
+		containingRangeRelativeToStartOffset = containingRangeRelativeToStartOffset
+				.shiftRight(startOffset);
+		int offset = 0;
+		for (Text text : allTexts) {
+			int length = text.getLength();
+			IntPair textRange = new IntPair(offset, offset + length);
+			if (containingRangeRelativeToStartOffset.contains(textRange)) {
 				return Optional.of(XmlNode.from(text));
 			}
 			offset += length;
