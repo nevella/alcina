@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
@@ -88,6 +89,8 @@ public class CookieHelper {
 				Cookie cookie = new Cookie(IID, iid);
 				cookie.setPath("/");
 				cookie.setMaxAge(86400 * 365 * 10);
+				cookie.setHttpOnly(true);
+				cookie.setSecure(ResourceUtilities.is("secure"));
 				addToRqAndRsp(request, response, cookie);
 				CommonPersistenceLocal up = Registry
 						.impl(CommonPersistenceProvider.class)
