@@ -40,7 +40,12 @@ public class AbstractParserSlice<T extends ParserToken> {
 
 	public AbstractParserSlice(Node node, T token) {
 		this.start = new XmlUtils.DOMLocation(node, 0, 0);
-		this.end = new XmlUtils.DOMLocation(node, 0, 0);
+		if (node.getNodeType() == Node.TEXT_NODE) {
+			this.end = new XmlUtils.DOMLocation(node,
+					node.getTextContent().length(), 0);
+		} else {
+			this.end = new XmlUtils.DOMLocation(node, 0, 0);
+		}
 		this.token = token;
 	}
 
