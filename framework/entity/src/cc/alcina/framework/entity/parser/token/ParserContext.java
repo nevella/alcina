@@ -48,6 +48,8 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 
 	public List<Text> emphasisedTexts = new ArrayList<Text>();
 
+	public List<Text> superscriptTexts = new ArrayList<Text>();
+
 	public List<Text> boldTexts = new ArrayList<Text>();
 
 	public SortedMap<IntPair, Element> aTagContents = new TreeMap<IntPair, Element>();
@@ -87,9 +89,12 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		}
 	}
 
-	public void addText(Text t, boolean emphasised, boolean bold) {
+	public void addText(Text t, boolean emphasised, boolean bold,
+			boolean superscript) {
 		String textContent = t.getTextContent();
-		if (emphasised) {
+		if (superscript) {
+			superscriptTexts.add(t);
+		} else if (emphasised) {
 			emphasisedTexts.add(t);
 		} else {
 			nonEmphasisTexts.add(t);
@@ -151,6 +156,7 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		boldRanges.clear();
 		boldTexts.clear();
 		emphasisedTexts.clear();
+		superscriptTexts.clear();
 		normalisedTextContents.clear();
 		textRanges.clear();
 		startOffset = 0;
@@ -479,26 +485,35 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 
 	public void textsToRanges() {
 		textRanges = new ArrayList<TextRange>();
-		TextRange tr = null;
-		boolean emph = false;
+		TextRange textRange = null;
+		boolean emphasis = false;
+		boolean superscript = false;
 		int offset = 0;
 		for (Text t : allTexts) {
 			String ntc = normalisedTextContents.get(t);
-			boolean newEmph = emphasisedTexts.contains(t);
-			if (ntc.trim().length() != 0 && tr != null) {
-				if (newEmph != emph) {
-					tr = null;
+			boolean newEmphasis = emphasisedTexts.contains(t);
+			boolean newSuperscript = superscriptTexts.contains(t);
+			if (ntc.trim().length() != 0 && textRange != null) {
+				if (newEmphasis != emphasis) {
+					textRange = null;
 				}
 			}
-			if (tr == null) {
-				emph = newEmph;
-				tr = new TextRange();
-				tr.emphasised = emph;
-				tr.offset = offset;
-				textRanges.add(tr);
+			if (textRange != null) {
+				if (newSuperscript != superscript) {
+					textRange = null;
+				}
 			}
-			tr.textContent += ntc;
-			tr.texts.add(t);
+			if (textRange == null) {
+				emphasis = newEmphasis;
+				superscript = newSuperscript;
+				textRange = new TextRange();
+				textRange.emphasised = emphasis;
+				textRange.superscript = superscript;
+				textRange.offset = offset;
+				textRanges.add(textRange);
+			}
+			textRange.textContent += ntc;
+			textRange.texts.add(t);
 			if (boldTexts.contains(t)) {
 				boldRanges.add(new IntPair(offset, offset + ntc.length()));
 			}
@@ -618,8 +633,10 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		}
 	}
 
-	// a group of emphasised (or not) texts
+	// a group of texts of the same style
 	public class TextRange {
+		public boolean superscript;
+
 		public boolean emphasised;
 
 		public List<Text> texts = new ArrayList<Text>();
@@ -643,8 +660,9 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 
 		@Override
 		public String toString() {
-			return String.format("(%s) (%s) %s", offset,
-					(emphasised ? "emph" : "not-emph"), textContent);
+			return String.format("(%s) (%s%s) %s", offset,
+					(emphasised ? "emph" : "not-emph"),
+					(superscript ? ":super" : ""), textContent);
 		}
 	}
 

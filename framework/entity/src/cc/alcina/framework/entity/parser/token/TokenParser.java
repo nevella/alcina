@@ -135,7 +135,8 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 				Text t = (Text) n;
 				boolean bold = peer.isBold(n);
 				boolean emphasised = peer.isEmphasised((Text) n);
-				context.addText(t, emphasised, bold);
+				boolean superscript = peer.isSuperscript((Text) n);
+				context.addText(t, emphasised, bold, superscript);
 			}
 		}
 		if (lastSurroundingTuple != null) {
