@@ -245,6 +245,10 @@ public class CellTree extends AbstractCellTree
 		return animation;
 	}
 
+	public String getCellTreeEmptyMessage() {
+		return "no data";
+	}
+
 	/**
 	 * Get the default maximum number of children to display under each tree
 	 * node.
@@ -261,6 +265,7 @@ public class CellTree extends AbstractCellTree
 		return rootNode.getTreeNode();
 	}
 
+	@Override
 	public int getTabIndex() {
 		return tabIndex;
 	}
@@ -273,6 +278,7 @@ public class CellTree extends AbstractCellTree
 		}
 	}
 
+	@Override
 	public boolean isAnimationEnabled() {
 		return isAnimationEnabled;
 	}
@@ -360,6 +366,7 @@ public class CellTree extends AbstractCellTree
 	 *
 	 * @see #getAccessKey()
 	 */
+	@Override
 	public void setAccessKey(char key) {
 		this.accessKey = key;
 		keyboardSelectedNode.setKeyboardSelected(true, false);
@@ -380,6 +387,7 @@ public class CellTree extends AbstractCellTree
 		this.animation = animation;
 	}
 
+	@Override
 	public void setAnimationEnabled(boolean enable) {
 		this.isAnimationEnabled = enable;
 		if (!enable && animation != null) {
@@ -401,10 +409,12 @@ public class CellTree extends AbstractCellTree
 		this.defaultNodeSize = defaultNodeSize;
 	}
 
+	@Override
 	public void setFocus(boolean focused) {
 		keyboardSelectedNode.setKeyboardSelected(true, true);
 	}
 
+	@Override
 	public void setTabIndex(int index) {
 		this.tabIndex = index;
 		keyboardSelectedNode.setKeyboardSelected(true, false);
@@ -700,6 +710,7 @@ public class CellTree extends AbstractCellTree
 	 */
 	void resetFocus() {
 		CellBasedWidgetImpl.get().resetFocus(new Scheduler.ScheduledCommand() {
+			@Override
 			public void execute() {
 				if (isFocused && !keyboardSelectedNode.isDestroyed()
 						&& !keyboardSelectedNode.resetFocusOnCell()) {
@@ -713,19 +724,23 @@ public class CellTree extends AbstractCellTree
 	 * Resources that match the GWT standard style theme.
 	 */
 	public interface BasicResources extends Resources {
+		@Override
 		@ImageOptions(flipRtl = true)
 		ImageResource cellTreeClosedItem();
 
+		@Override
 		@ImageOptions(flipRtl = true)
 		@Source("cellTreeLoadingBasic.gif")
 		ImageResource cellTreeLoading();
 
+		@Override
 		@ImageOptions(flipRtl = true)
 		ImageResource cellTreeOpenItem();
 
 		/**
 		 * The styles used in this widget.
 		 */
+		@Override
 		@Source(BasicStyle.DEFAULT_CSS)
 		BasicStyle cellTreeStyle();
 	}
