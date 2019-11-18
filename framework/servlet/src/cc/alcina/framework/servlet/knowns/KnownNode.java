@@ -19,7 +19,7 @@ public abstract class KnownNode {
 
 	public transient KnownsPersistence persistence;
 
-	public transient KnownRenderableNode renderableNode;
+	private transient KnownRenderableNode renderableNode;
 
 	public KnownNode(KnownNode parent, String name) {
 		this(parent.persistence, parent, name);
@@ -43,6 +43,10 @@ public abstract class KnownNode {
 		}
 	}
 
+	public KnownRenderableNode getRenderableNode() {
+		return renderableNode;
+	}
+
 	public String path() {
 		KnownNode cursor = this;
 		List<String> segments = new ArrayList<>();
@@ -64,5 +68,12 @@ public abstract class KnownNode {
 
 	public void restore() {
 		Knowns.reconcile(this, true);
+	}
+
+	public void setRenderableNode(KnownRenderableNode renderableNode) {
+		if (this.renderableNode != null && this.renderableNode.field != null) {
+			renderableNode.field = this.renderableNode.field;
+		}
+		this.renderableNode = renderableNode;
 	}
 }

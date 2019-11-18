@@ -10,8 +10,6 @@ import java.util.Optional;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
-import com.google.gwt.user.client.rpc.GwtTransient;
-
 import cc.alcina.framework.common.client.csobjects.KnownNodeMetadata.KnownNodeProperty;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.util.Ax;
@@ -48,6 +46,9 @@ public class KnownRenderableNode implements Serializable {
 
 	public KnownNodeProperty propertyMetadata;
 
+	public KnownRenderableNode() {
+	}
+
 	public List<KnownRenderableNode> allNodes() {
 		Stack<KnownRenderableNode> stack = new Stack<KnownRenderableNode>();
 		stack.push(this);
@@ -58,8 +59,6 @@ public class KnownRenderableNode implements Serializable {
 			node.children.stream().forEach(stack::add);
 		}
 		return nodes;
-	}
-	public KnownRenderableNode() {
 	}
 
 	public KnownRenderableNode byPath(String path) {
@@ -75,8 +74,16 @@ public class KnownRenderableNode implements Serializable {
 				.reduce((first, second) -> second).orElse(null);
 	}
 
+	public int depth() {
+		return parent == null ? 0 : parent.depth() + 1;
+	}
+
 	public boolean hasProperties() {
 		return children.stream().anyMatch(child -> child.property);
+	}
+
+	public boolean hasProperty(String childName) {
+		return namedChild(childName).isPresent();
 	}
 
 	public void merge(KnownsDelta clusterDelta) {
@@ -116,6 +123,21 @@ public class KnownRenderableNode implements Serializable {
 						: Ax.format("[%s]", children.size()));
 	}
 
+	public <T> T typedChildValue(Class<T> clazz, String childName) {
+		KnownRenderableNode namedChild = namedChild(childName).get();
+		String childValue = namedChild.value;
+		if (childValue == null) {
+			return null;
+		}
+		if (clazz == Date.class) {
+			return (T) namedChild.dateValue;
+		}
+		if (clazz == OpStatus.class) {
+			return (T) namedChild.opStatusValue;
+		}
+		return (T) childValue;
+	}
+
 	private KnownRenderableNode byPath(String path, boolean first) {
 		if (path == null) {
 			return name == null ? this : null;
@@ -145,30 +167,8 @@ public class KnownRenderableNode implements Serializable {
 		}
 	}
 
-	public <T> T typedChildValue(Class<T> clazz, String childName) {
-		KnownRenderableNode namedChild = namedChild(childName).get();
-		String childValue = namedChild.value;
-		if (childValue == null) {
-			return null;
-		}
-		if (clazz == Date.class) {
-			return (T) namedChild.dateValue;
-		}
-		if (clazz == OpStatus.class) {
-			return (T) namedChild.opStatusValue;
-		}
-		return (T) childValue;
-	}
-
-	public boolean hasProperty(String childName) {
-		return namedChild(childName).isPresent();
-	}
-
 	private Optional<KnownRenderableNode> namedChild(String childName) {
 		return children.stream().filter(child -> child.name.equals(childName))
 				.findFirst();
-	}
-	public int depth() {
-		return parent==null?0:parent.depth()+1;
 	}
 }

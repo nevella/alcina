@@ -21,6 +21,9 @@ public abstract class KnownStatusRuleHandler {
 	public abstract void handleRule(Field field, KnownRenderableNode node,
 			KnownStatusRule rule);
 
+	public abstract void handleRule(KnownNodeMetadata nodeMetadata,
+			KnownRenderableNode node, KnownStatusRule rule);
+
 	public static class KnownStatusRuleHandler_Max_Age
 			extends KnownStatusRuleHandler {
 		@Override
@@ -33,6 +36,9 @@ public abstract class KnownStatusRuleHandler {
 				KnownStatusRule rule) {
 			Preconditions.checkArgument(field.getType() == KnownJob.class);
 			KnownJob value = (KnownJob) node.typedValue;
+			if (value == null) {
+				return;
+			}
 			Date lastOkDate = value.lastOk;
 			KnownTagAlcina status = null;
 			if (value.status != null) {
@@ -104,7 +110,4 @@ public abstract class KnownStatusRuleHandler {
 			}
 		}
 	}
-
-	public abstract void handleRule(KnownNodeMetadata nodeMetadata,
-			KnownRenderableNode node, KnownStatusRule rule);
 }
