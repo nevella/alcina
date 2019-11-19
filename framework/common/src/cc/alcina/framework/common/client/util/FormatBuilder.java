@@ -56,6 +56,10 @@ public class FormatBuilder {
 		return this;
 	}
 
+	public void friendly(Object toFriendly) {
+		appendIfNotBlank(Ax.friendly(toFriendly));
+	}
+
 	public FormatBuilder line(String template, Object... args) {
 		return format(template, args).newLine();
 	}

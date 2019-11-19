@@ -41,6 +41,9 @@ import com.google.gwt.safehtml.shared.annotations.SuppressIsSafeHtmlCastCheck;
  * <p>
  * The accumulated XSS-safe HTML can be obtained in the form of a
  * {@link SafeHtml} via the {@link #toSafeHtml()} method.
+ * 
+ * <p>
+ * (Nick) - called unsafehtmlbuilder for a reason...
  *
  * <p>
  * This class is not thread-safe.
@@ -53,7 +56,7 @@ public final class UnsafeHtmlBuilder {
 	private final StringBuilder sb = new StringBuilder();
 
 	/**
-	 * Constructs an empty SafeHtmlBuilder.
+	 * Constructs an empty UnsafeSafeHtmlBuilder.
 	 */
 	public UnsafeHtmlBuilder() {
 	}

@@ -61,7 +61,6 @@
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-core-3.14.11-SNAPSHOT.jar" sourcepath="/g/minor/javaparser"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-logic-3.14.11-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-model-3.14.11-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="lib/extras/jetty/jetty-all-uber.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/barbary-watchservice-2.0-SNAPSHOT.jar" sourcepath="/barbary_watch"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/jna-4.5.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/jna-platform-4.5.1.jar"/>

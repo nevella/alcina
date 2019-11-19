@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 public class Domain {
     private static DomainHandler handler = new DomainHandlerNonTransactional();
 
-    public static final List<String> domainBaseVersionablePropertyNames = Arrays
+    public static final List<String> DOMAIN_BASE_VERSIONABLE_PROPERTY_NAMES = Arrays
             .asList(new String[] { "id", "localId", "lastModificationDate",
                     "lastModificationUser", "creationDate", "creationUser",
                     "versionNumber" });

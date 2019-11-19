@@ -9,5 +9,5 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
         @RegistryLocation(registryPoint = KnownsRegistrar.class, implementationType = ImplementationType.SINGLETON),
         @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class) })
 public abstract class KnownsRegistrar {
-    public abstract void register();
+    public abstract void register(KnownsPersistence persistence);
 }

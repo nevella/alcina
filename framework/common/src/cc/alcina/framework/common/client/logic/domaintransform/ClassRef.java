@@ -29,7 +29,11 @@ import com.totsp.gwittir.client.ui.Renderer;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @MappedSuperclass
@@ -42,6 +46,8 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 	private static Map<String, ClassRef> refMap = new HashMap<String, ClassRef>();
 
 	private static Map<Long, ClassRef> idMap = new HashMap<Long, ClassRef>();
+
+	
 
 	public static void add(Collection<? extends ClassRef> refs) {
 		for (ClassRef classRef : refs) {
@@ -162,5 +168,11 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 			return o == null ? "(undefined)"
 					: CommonUtils.simpleClassName(o.getRefClass());
 		}
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("Classref - id: %s className: %s", getId(),
+				getRefClassName());
 	}
 }

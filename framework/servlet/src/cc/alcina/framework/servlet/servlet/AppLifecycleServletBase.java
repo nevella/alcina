@@ -56,6 +56,7 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
@@ -65,7 +66,7 @@ import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
-import cc.alcina.framework.servlet.misc.AppServletStatusFileNotifier;
+import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
     protected ServletConfig initServletConfig;
@@ -124,7 +125,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
     @Override
     public void destroy() {
         try {
-            new AppServletStatusFileNotifier().destroyed();
+            getStatusNotifier().destroyed();
             SEUtilities.appShutdown();
             ResourceUtilities.appShutdown();
             Registry.impl(ServletLayerTransforms.class).appShutdown();
@@ -158,25 +159,41 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             // push to registry
             Registry.setProvider(new ClassLoaderAwareRegistryProvider());
             initBootstrapRegistry();
-            new AppServletStatusFileNotifier().deploying();
             initNames();
             loadCustomProperties();
             initDevConsoleAndWebApp();
             initJPA();
             initServices();
+            initEntityLayerRegistry();
+            initCluster();
+            getStatusNotifier().deploying();
             initEntityLayer();
             createServletTransformClientInstance();
             initCustom();
             ServletLayerUtils.setAppServletInitialised(true);
             launchPostInitTasks();
         } catch (Throwable e) {
+        	Ax.out("Exception in lifecycle servlet init");
+        	e.printStackTrace();
             throw new ServletException(e);
         } finally {
             initServletConfig = null;
         }
         MetricLogging.get().end("Web app startup");
-        new AppServletStatusFileNotifier().ready();
+        getStatusNotifier().ready();
     }
+
+	protected  void initEntityLayerRegistry() throws Exception{
+		
+	}
+
+	protected  void initCluster(){
+		
+	}
+
+	protected AppServletStatusNotifier getStatusNotifier() {
+		return new AppServletStatusNotifier();
+	}
 
     public void refreshProperties() {
         loadCustomProperties();
@@ -330,7 +347,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
             dbLogger.addAppender(appender);
             EntityLayerObjects.get().setPersistentLogger(dbLogger);
         }
-        EntityLayerUtils.setLogLevelsFromCustomProperties();
+        EntityLayerLogging.setLogLevelsFromCustomProperties();
     }
 
     protected abstract void initNames();
@@ -383,7 +400,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
                 ResourceUtilities.set(key, v);
             }
         });
-        EntityLayerUtils.setLogLevelsFromCustomProperties();
+        EntityLayerLogging.setLogLevelsFromCustomProperties();
     }
 
     protected void loadCustomProperties() {

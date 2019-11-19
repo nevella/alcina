@@ -5,7 +5,7 @@ import java.io.File;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 
-public class AppServletStatusFileNotifier {
+public class AppServletStatusNotifier {
 	File dataFolder = DataFolderProvider.get().getDataFolder();
 
 	File ready = new File(dataFolder.getPath() + "/" + "webapp.ready");

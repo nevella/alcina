@@ -30,7 +30,7 @@ public class AppViewModel {
 	}
 
 	public void resetProviderFor(Class<? extends DataDomainBase> clazz) {
-		getDataProvider(clazz).invalidate();
+		providers.get(clazz).invalidate();
 	}
 
 	protected <T extends DataDomainBase> DomainStoreDataProvider<T>

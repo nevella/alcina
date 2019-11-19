@@ -656,6 +656,19 @@ public class DevConsoleCommandTransforms {
 				return "user";
 			}
 		}
+		public static class CmdListTransformsFilterUserNot
+		extends CmdListTransformsFilter {
+	@Override
+	public String getFilter(String arg1) {
+		return arg1.matches("\\d+") ? String.format("u.id!=%s", arg1)
+				: String.format("u.username!='%s'", arg1);
+	}
+
+	@Override
+	public String getKey() {
+		return "usernot";
+	}
+}
 
 		public static class CmdListTransformsFilterValueId
 				extends CmdListTransformsFilter {

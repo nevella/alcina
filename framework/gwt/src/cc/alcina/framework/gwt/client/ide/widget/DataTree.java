@@ -14,19 +14,20 @@
 package cc.alcina.framework.gwt.client.ide.widget;
 
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.TreeItem;
 
-import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventEvent;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventListener;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventSource;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventSupport;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventType;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
+import cc.alcina.framework.gwt.client.widget.TreeNodeWalker.TreeNodeWalkerCallback;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithFirst;
 
 /**
@@ -58,10 +59,10 @@ public class DataTree extends FilterableTree
 		this.extraTreeEventSupport.fireActionsAvailbleChange(event);
 	}
 
-	public TreeItem getNodeForObject(final Object obj) {
+	public TreeItem getNodeForObject(Object obj) {
 		result = null;
 		final boolean classNameTest = (obj instanceof String);
-		Callback<TreeItem> callback = new Callback<TreeItem>() {
+		TreeNodeWalkerCallback callback = new TreeNodeWalkerCallback() {
 			public void apply(TreeItem target) {
 				Object userObject = target.getUserObject();
 				if (userObject != null) {
@@ -69,7 +70,22 @@ public class DataTree extends FilterableTree
 							.replace("$", ".").equals(obj))
 							|| Objects.equals(obj, userObject)) {
 						result = target;
+						cancel();
 					}
+				}
+			}
+		};
+		new TreeNodeWalker().walk(this, callback);
+		return result;
+	}
+
+	public TreeItem findNode(Predicate<TreeItem> predicate) {
+		result = null;
+		TreeNodeWalkerCallback callback = new TreeNodeWalkerCallback() {
+			public void apply(TreeItem target) {
+				if (predicate.test(target)) {
+					result = target;
+					cancel();
 				}
 			}
 		};
@@ -128,7 +144,7 @@ public class DataTree extends FilterableTree
 	}
 
 	public void reselectCurrentItem() {
-		TreeItem current = getSelectedItem();	
+		TreeItem current = getSelectedItem();
 		setSelectedItem(null);
 		setSelectedItem(current);
 		ensureSelectedItemVisible();

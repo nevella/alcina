@@ -7,6 +7,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.TextBox;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 
 public abstract class CellFilter extends Composite implements KeyUpHandler {
@@ -35,6 +36,10 @@ public abstract class CellFilter extends Composite implements KeyUpHandler {
 
 	public void focus() {
 		textBox.setFocus(true);
+	}
+
+	public boolean hasFilteringText() {
+		return Ax.notBlank(textBox.getValue());
 	}
 
 	@Override

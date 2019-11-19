@@ -208,7 +208,6 @@ div.toolbar2 .links-panel {
 }
 
 div.toolbar2 .links-panel {
-	position: absolute;
 	margin-left: auto;
 	margin-right: auto;
 	left: 0;
@@ -353,12 +352,13 @@ div.alcina-ObjectTree input[type="text"] {
 	background: #fff;
 	padding: 0 15px 0 10px;
 	font-weight: normal;
-	color: #1471e6;
+	color: hsla(36, 56%, 57%);
+	font-size: 12px;
 }
 
 table.gwittir-GridForm td.label {
 	font-weight: normal;
-	color: hsl(213, 70%, 35%);
+	color: hsla(36, 56%, 57%);
 }
 
 .content-view-sections .section-label:before {
@@ -434,15 +434,12 @@ span.square {
 }
 
 .simple-tab a.tab-caption-2 {
-font-size: 14.4px;
-	padding-bottom:0;
+	font-size: 14.4px;
+	padding-bottom: 0;
 }
 
 .tab-caption-2.unselected {
-	/*opacity: 0.5;
-	color: #1471e6;
-	*/
-	color: hsla(36, 56%, 57%, 1.0)
+	color: hsla(36, 56%, 57%, 0.5)
 }
 
 div.alcina-MainContent {
@@ -1404,9 +1401,8 @@ table.gwittir-GridForm td.id div.nowrap {
 	font-size: 12px;
 }
 
-
 .pane-container {
 	margin-top: 10px;
-	padding-bottom:0;
-	font-weight:bold;
+	padding-bottom: 0;
+	font-weight: bold;
 }

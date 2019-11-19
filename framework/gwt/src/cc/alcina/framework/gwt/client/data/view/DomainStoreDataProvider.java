@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.data.view;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -89,6 +90,10 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 
 	int pageSize = 0;
 
+	public void resetPageSize() {
+		pageSize = 0;
+	}
+
 	private int visibleRecordsSize = 100;
 
 	private DomainStoreDataProvider<T>.SearchCallback activeCallback;
@@ -102,6 +107,16 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 	private DomainTransformCommitPosition transformLogPosition;
 
 	boolean useColumnSearchOrders = true;
+
+	private boolean reverseResults = false;
+
+	public boolean isReverseResults() {
+		return this.reverseResults;
+	}
+
+	public void setReverseResults(boolean reverseResults) {
+		this.reverseResults = reverseResults;
+	}
 
 	public DomainStoreDataProvider(Class<T> clazz) {
 		this.clazz = clazz;
@@ -263,7 +278,7 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 				&& range.equals(lastRange)
 				&& !Objects.equals(transformLogPosition,
 						this.transformLogPosition)) {
-			if (activeCallback != null) {
+			if (activeCallback != null && !activeCallback.isCancelled()) {
 				return;
 			}
 		} else {
@@ -278,7 +293,7 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 				defCopy.setResultsPerPage(100);
 				paginationSearch = lastDefCopy.equivalentTo(defCopy);
 			}
-			if (activeCallback != null) {
+			if (activeCallback != null && !activeCallback.isCancelled()) {
 				new Timer() {
 					@Override
 					public void run() {
@@ -337,8 +352,8 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 							e.getMessage());
 				}
 				activeCallback = new SearchCallback(fSearchRange, dd1);
-				Ax.out("calling searchmodel:\n\t%s %s", searchDefinition,
-						searchRange);
+				Ax.out("calling searchmodel:\n\t%s %s %s", searchDefinition,
+						searchRange, this);
 				searchDefinition.setPageNumber(pageNumber);
 				Registry.impl(SearchModelPerformer.class)
 						.searchModel(searchDefinition, activeCallback);
@@ -538,6 +553,9 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 			cleanup();
 			transformLogPosition = result.transformLogPosition;
 			results = (List) result.queriedResultObjects;
+			if (reverseResults) {
+				Collections.reverse(results);
+			}
 			allResults.addAll(results);
 			resultsDelta(result.recordCount, this.fSearchRange.i1, true);
 			groupedResult = result.groupedResult;
@@ -547,6 +565,12 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 		private void cleanup() {
 			activeCallback = null;
 			maybeUpdateLoadingState(dd1, LoadingState.LOADED);
+		}
+	}
+
+	public void cancelCurrentSearch() {
+		if (activeCallback != null) {
+			activeCallback.setCancelled(true);
 		}
 	}
 }

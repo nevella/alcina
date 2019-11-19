@@ -63,12 +63,20 @@ public class Ax {
 		return CommonUtils.formatJ(template, args);
 	}
 
+	public static double fourPlaces(double d) {
+		return CommonUtils.roundNumeric(d, 4);
+	}
+
 	public static String friendly(Object o) {
 		return CommonUtils.friendlyConstant(o);
 	}
 
 	public static boolean isBlank(String string) {
 		return CommonUtils.isNullOrEmpty(string);
+	}
+
+	public static boolean isNull(Object object) {
+		return object == null;
 	}
 
 	public static boolean isTest() {
@@ -92,6 +100,10 @@ public class Ax {
 
 	public static boolean notBlank(String string) {
 		return !isBlank(string);
+	}
+
+	public static boolean notPresent(Optional<?> optional) {
+		return !optional.isPresent();
 	}
 
 	public static String nullSafe(String string) {

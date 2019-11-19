@@ -23,6 +23,7 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
@@ -77,6 +78,7 @@ public abstract class ActionViewProviderBase
 
 	protected RemoteAction action;
 
+	@Override
 	public Widget getViewForObject(Object obj) {
 		action = (RemoteAction) obj;
 		wrapper = new PaneWrapper();
@@ -89,6 +91,7 @@ public abstract class ActionViewProviderBase
 		return wrapper;
 	}
 
+	@Override
 	public void vetoableAction(PermissibleActionEvent evt) {
 		// no response at the mo'
 	}
@@ -135,6 +138,7 @@ public abstract class ActionViewProviderBase
 		private FlowPanel progressHolder;
 
 		private PropertyChangeListener progressPcl = new PropertyChangeListener() {
+			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (actionProgress.getJobInfo().isComplete()) {
 					redraw();
@@ -195,23 +199,28 @@ public abstract class ActionViewProviderBase
 			this.hasChildHandlersSupport.detachHandlers();
 		}
 
+		@Override
 		public boolean equals(Object obj) {
 			return this.hasChildHandlersSupport.equals(obj);
 		}
 
+		@Override
 		public int hashCode() {
 			return this.hasChildHandlersSupport.hashCode();
 		}
 
+		@Override
 		public void onClick(ClickEvent event) {
 			boolean running = runningLabel.isVisible();
 			runningLabel.setText(RUNNING);
 			AsyncCallback<String> asyncCallback = new AsyncCallback<String>() {
+				@Override
 				public void onFailure(Throwable caught) {
 					redraw();
 					throw new WrappedRuntimeException(caught);
 				}
 
+				@Override
 				public void onSuccess(String id) {
 					if (actionProgress != null) {
 						actionProgress
@@ -233,11 +242,13 @@ public abstract class ActionViewProviderBase
 				}
 			};
 			AsyncCallback<ActionLogItem> syncCallback = new AsyncCallback<ActionLogItem>() {
+				@Override
 				public void onFailure(Throwable caught) {
 					redraw();
 					throw new WrappedRuntimeException(caught);
 				}
 
+				@Override
 				public void onSuccess(ActionLogItem ali) {
 					if (handler != null) {
 						// actually a combined client-server action
@@ -257,6 +268,7 @@ public abstract class ActionViewProviderBase
 			performAction(asyncCallback, syncCallback);
 		}
 
+		@Override
 		public String toString() {
 			return this.hasChildHandlersSupport.toString();
 		}
@@ -271,10 +283,12 @@ public abstract class ActionViewProviderBase
 			WidgetUtils.clearChildren(fp);
 			hasChildHandlersSupport.detachHandlers();
 			AsyncCallback<List<ActionLogItem>> outerCallback = new AsyncCallback<List<ActionLogItem>>() {
+				@Override
 				public void onFailure(Throwable caught) {
 					throw new WrappedRuntimeException(caught);
 				}
 
+				@Override
 				public void onSuccess(List<ActionLogItem> result) {
 					int idx = 0;
 					for (ActionLogItem actionLogItem : result) {
@@ -290,6 +304,7 @@ public abstract class ActionViewProviderBase
 						final int fc = c;
 						more.add(
 								new Link(String.valueOf(c), new ClickHandler() {
+									@Override
 									public void onClick(ClickEvent event) {
 										logItemCount = fc;
 										redraw();
@@ -319,6 +334,7 @@ public abstract class ActionViewProviderBase
 	}
 
 	public static class ActionViewProvider extends ActionViewProviderBase {
+		@Override
 		protected void performAction(AsyncCallback<String> asyncCallback,
 				AsyncCallback<ActionLogItem> syncCallback) {
 			if (action instanceof SynchronousAction) {
@@ -350,9 +366,9 @@ public abstract class ActionViewProviderBase
 			if (actionLog == null) {
 				actionLog = "{no log}";
 			}
-			boolean customHtml = actionLog.contains("div");
-			this.html = new HTML(
-					customHtml ? actionLog : "<pre>" + actionLog + "</pre>",
+			boolean customHtml = actionLog.contains("<div>");
+			this.html = new HTML(customHtml ? actionLog
+					: "<pre>" + SafeHtmlUtils.htmlEscape(actionLog) + "</pre>",
 					true);
 			html.setVisible(first
 					&& (actionLog.length() < 2000 || alwaysExpandFirst()));
@@ -364,6 +380,7 @@ public abstract class ActionViewProviderBase
 			initWidget(vp);
 		}
 
+		@Override
 		public void onClick(ClickEvent event) {
 			html.setVisible(!html.isVisible());
 		}
@@ -378,6 +395,7 @@ public abstract class ActionViewProviderBase
 		@SuppressWarnings("unused")
 		private Button saveButton;
 
+		@Override
 		public void
 				addVetoableActionListener(PermissibleActionListener listener) {
 			this.support.addVetoableActionListener(listener);
@@ -391,6 +409,7 @@ public abstract class ActionViewProviderBase
 			return action;
 		}
 
+		@Override
 		public void onClick(ClickEvent event) {
 			PermissibleActionEvent action = new PermissibleActionEvent(
 					this.action,
@@ -398,6 +417,7 @@ public abstract class ActionViewProviderBase
 			fireVetoableActionEvent(action);
 		}
 
+		@Override
 		public void removeVetoableActionListener(
 				PermissibleActionListener listener) {
 			this.support.removeVetoableActionListener(listener);

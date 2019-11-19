@@ -20,6 +20,8 @@ public class ClusterDefinition {
     public String bpxGroup;
 
     public boolean supportsClusterHealth;
+    
+    public String zkNamespace;
 
     public List<ClusterMember> clusterMembers = new ArrayList<>();
 
@@ -42,6 +44,10 @@ public class ClusterDefinition {
         public String containerName;
 
         public String dockerHostName;
+        
+        public String comment;
+        
+        public String sshUserName="root";
 
         public String deploymentPath;
 

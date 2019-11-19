@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.domain.DomainFilter;
@@ -11,6 +12,7 @@ import cc.alcina.framework.common.client.domain.search.LockingDomainQuery;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
@@ -23,12 +25,18 @@ public class LockingDomainQueryParallel<V extends HasIdAndLocalId>
 	private CachingConcurrentMap<Thread, DomainQueryThread> contexts = new CachingConcurrentMap<Thread, DomainQueryThread>(
 			DomainQueryThread::new, 20);
 
+	private Predicate<V> debugMatch;
+
 	@Override
 	protected void disposeStream() {
 		contexts.getMap().values().forEach(DomainQueryThread::cleanup);
 	}
 
 	protected boolean filter(V v) {
+		if (debugMatch != null && debugMatch.test(v)) {
+			Ax.out(v);
+			int debug = 3;
+		}
 		for (DomainFilter filter : getFilters()) {
 			if (!filter.asCollectionFilter().allow(v)) {
 				return false;
@@ -40,6 +48,7 @@ public class LockingDomainQueryParallel<V extends HasIdAndLocalId>
 	@Override
 	protected Stream<V> getStream(Collection<V> values) {
 		boolean serial = LooseContext.is(CONTEXT_USE_SERIAL_STREAM);
+		this.debugMatch = LooseContext.get(CONTEXT_DEBUG_MATCH);
 		if (serial) {
 			return values.stream().filter(this::filter);
 		}

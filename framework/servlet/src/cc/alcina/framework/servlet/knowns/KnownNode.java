@@ -7,16 +7,27 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.KnownRenderableNode;
 import cc.alcina.framework.entity.entityaccess.KnownNodePersistent;
 
 public abstract class KnownNode {
-	transient KnownNodePersistent persistent;
+	public transient KnownNodePersistent persistent;
 
-	transient KnownNode parent;
+	public transient KnownNode parent;
 
-	transient String name;
+	public transient String name;
+
+	public transient KnownsPersistence persistence;
+
+	private transient KnownRenderableNode renderableNode;
 
 	public KnownNode(KnownNode parent, String name) {
+		this(parent.persistence, parent, name);
+	}
+
+	public KnownNode(KnownsPersistence persistence, KnownNode parent,
+			String name) {
+		this.persistence = persistence;
 		this.parent = parent;
 		this.name = name;
 	}
@@ -30,6 +41,10 @@ public abstract class KnownNode {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public KnownRenderableNode getRenderableNode() {
+		return renderableNode;
 	}
 
 	public String path() {
@@ -47,7 +62,18 @@ public abstract class KnownNode {
 		Knowns.reconcile(this, false);
 	}
 
+	public void refresh() {
+		restore();
+	}
+
 	public void restore() {
 		Knowns.reconcile(this, true);
+	}
+
+	public void setRenderableNode(KnownRenderableNode renderableNode) {
+		if (this.renderableNode != null && this.renderableNode.field != null) {
+			renderableNode.field = this.renderableNode.field;
+		}
+		this.renderableNode = renderableNode;
 	}
 }

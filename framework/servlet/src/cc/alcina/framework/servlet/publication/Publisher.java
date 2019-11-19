@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
@@ -47,191 +48,191 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
  *
  */
 public class Publisher {
-    public static final String CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT = Publisher.class
-            .getName() + ".CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT";
+	public static final String CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT = Publisher.class
+			.getName() + ".CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT";
 
-    private PublicationContext ctx;
+	private PublicationContext ctx;
 
-    public PublicationContext getContext() {
-        return this.ctx;
-    }
+	public PublicationContext getContext() {
+		return this.ctx;
+	}
 
-    public PublicationResult publish(ContentDefinition contentDefinition,
-            DeliveryModel deliveryModel) throws Exception {
-        return publish(contentDefinition, deliveryModel, null);
-    }
+	public PublicationResult publish(ContentDefinition contentDefinition,
+			DeliveryModel deliveryModel) throws Exception {
+		return publish(contentDefinition, deliveryModel, null);
+	}
 
-    @SuppressWarnings("unchecked")
-    public PublicationResult publish(ContentDefinition contentDefinition,
-            DeliveryModel deliveryModel, Publication original)
-            throws Exception {
-        int depth = LooseContext.depth();
-        try {
-            ctx = PublicationContext.setupContext(contentDefinition,
-                    deliveryModel);
-            LooseContext.pushWithKey(
-                    PublicationContext.CONTEXT_PUBLICATION_CONTEXT, ctx);
-            return publish0(contentDefinition, deliveryModel, original);
-        } catch (Exception e) {
-            ctx.logPublicationException(e);
-            throw e;
-        } finally {
-            LooseContext.pop();
-            LooseContext.confirmDepth(depth);
-        }
-    }
+	@SuppressWarnings("unchecked")
+	public PublicationResult publish(ContentDefinition contentDefinition,
+			DeliveryModel deliveryModel, Publication original)
+			throws Exception {
+		int depth = LooseContext.depth();
+		try {
+			ctx = PublicationContext.setupContext(contentDefinition,
+					deliveryModel);
+			LooseContext.pushWithKey(
+					PublicationContext.CONTEXT_PUBLICATION_CONTEXT, ctx);
+			return publish0(contentDefinition, deliveryModel, original);
+		} catch (Exception e) {
+			ctx.logPublicationException(e);
+			throw e;
+		} finally {
+			LooseContext.pop();
+			LooseContext.confirmDepth(depth);
+		}
+	}
 
-    private void persist(ContentDefinition contentDefinition,
-            DeliveryModel deliveryModel, Long publicationUserId,
-            Publication original,
-            PublicationContentPersister publicationContentPersister,
-            PublicationResult result) {
-        Publication publication = publicationContentPersister
-                .newPublicationInstance();
-        if (contentDefinition instanceof HasId) {
-            HasId hasId = (HasId) contentDefinition;
-            hasId.setId(0);
-            // force new
-        }
-        if (deliveryModel instanceof HasId) {
-            HasId hasId = (HasId) deliveryModel;
-            hasId.setId(0);
-            // force new
-        }
-        publication.setContentDefinition(contentDefinition);
-        publication.setDeliveryModel(deliveryModel);
-        publication.setUser(PermissionsManager.get().getUser());
-        publication.setPublicationDate(new Date());
-        publication.setOriginalPublication(original);
-        publication.setUserPublicationId(publicationUserId);
-        publication.setPublicationUid(SEUtilities.generateId());
-        publication.setPublicationType(contentDefinition.getPublicationType());
-        try {
-            PermissionsManager.get().pushCurrentUser();
-            long id = Registry.impl(CommonPersistenceProvider.class)
-                    .getCommonPersistence().merge(publication);
-            result.publicationId = id;
-            result.publicationUid = publication.getPublicationUid();
-        } finally {
-            PermissionsManager.get().popUser();
-        }
-    }
+	private void persist(ContentDefinition contentDefinition,
+			DeliveryModel deliveryModel, Long publicationUserId,
+			Publication original,
+			PublicationContentPersister publicationContentPersister,
+			PublicationResult result) {
+		Publication publication = publicationContentPersister
+				.newPublicationInstance();
+		if (contentDefinition instanceof HasId) {
+			HasId hasId = (HasId) contentDefinition;
+			hasId.setId(0);
+			// force new
+		}
+		if (deliveryModel instanceof HasId) {
+			HasId hasId = (HasId) deliveryModel;
+			hasId.setId(0);
+			// force new
+		}
+		publication.setContentDefinition(contentDefinition);
+		publication.setDeliveryModel(deliveryModel);
+		publication.setUser(PermissionsManager.get().getUser());
+		publication.setPublicationDate(new Date());
+		publication.setOriginalPublication(original);
+		publication.setUserPublicationId(publicationUserId);
+		publication.setPublicationUid(SEUtilities.generateId());
+		publication.setPublicationType(contentDefinition.getPublicationType());
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			long id = Registry.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence().merge(publication);
+			result.publicationId = id;
+			result.publicationUid = publication.getPublicationUid();
+		} finally {
+			PermissionsManager.get().popUser();
+		}
+	}
 
-    private void postDeliveryPersistence(Long publicationId) {
-        if (getContext().mimeMessageId != null) {
-            Registry.impl(CommonPersistenceProvider.class)
-                    .getCommonPersistence().updatePublicationMimeMessageId(
-                            publicationId, getContext().mimeMessageId);
-        }
-    }
+	private void postDeliveryPersistence(Long publicationId) {
+		if (getContext().mimeMessageId != null) {
+			Registry.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence().updatePublicationMimeMessageId(
+							publicationId, getContext().mimeMessageId);
+		}
+	}
 
-    @SuppressWarnings("unchecked")
-    private PublicationResult publish0(ContentDefinition contentDefinition,
-            DeliveryModel deliveryModel, Publication original)
-            throws Exception {
-        ContentModelHandler cmh = (ContentModelHandler) Registry.get()
-                .instantiateSingle(ContentModelHandler.class,
-                        contentDefinition.getClass());
-        cmh.prepareContent(contentDefinition, deliveryModel);
-        if (!cmh.hasResults) {
-            return null;// throw exception??
-        }
-        PublicationResult result = new PublicationResult();
-        ctx.publicationResult = result;
-        long publicationUserId = 0;
-        boolean forPublication = !deliveryModel.isNoPersistence()
-                && deliveryModel.provideContentDeliveryType().isRepublishable();
-        PublicationContentPersister publicationContentPersister = Registry
-                .implOrNull(PublicationContentPersister.class);
-        PublicationContent publicationContent = cmh.getPublicationContent();
-        ctx.publicationContent = publicationContent;
-        result.publicationUid = deliveryModel.getPublicationUid();
-        if (forPublication && publicationContentPersister != null
-                && !AppPersistenceBase.isInstanceReadOnly()) {
-            IUser user = PermissionsManager.get().getUser();
-            if (user == null) {
-                user = CommonPersistenceProvider.get().getCommonPersistence()
-                        .getSystemUser(true);
-            }
-            publicationUserId = Registry.impl(PublicationPersistence.class)
-                    .getNextPublicationIdForUser(user);
-            persist(contentDefinition, deliveryModel, publicationUserId,
-                    original, publicationContentPersister, result);
-            ctx.getVisitorOrNoop()
-                    .afterPublicationPersistence(result.publicationId);
-        }
-        long publicationId = CommonUtils.lv(result.publicationId);
-        ContentRenderer crh = (ContentRenderer) Registry.get()
-                .instantiateSingle(ContentRenderer.class,
-                        publicationContent.getClass());
-        crh.renderContent(contentDefinition, publicationContent, deliveryModel,
-                publicationId, publicationUserId);
-        ctx.renderedContent = crh.results;
-        if (crh.getResults().persist && publicationContentPersister != null
-                && publicationId != 0) {
-            publicationContentPersister.persistContentRendererResults(
-                    crh.getResults(), publicationId);
-        }
-        ContentWrapper cw = (ContentWrapper) Registry.get().instantiateSingle(
-                ContentWrapper.class, publicationContent.getClass());
-        ctx.getVisitorOrNoop().beforeWrapContent();
-        cw.wrapContent(contentDefinition, publicationContent, deliveryModel,
-                crh.getResults(), publicationId, publicationUserId);
-        ctx.getVisitorOrNoop().afterWrapContent(cw);
-        if (deliveryModel.provideContentDeliveryType().getClass() == null) {
-            return null;
-        }
-        result.content = cw.wrappedContent;
-        if (deliveryModel
-                .provideContentDeliveryType() == ContentDeliveryType.PRINT) {
-            if (result.content == null && (AppPersistenceBase.isTest()
-                    || LooseContext.is(CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT))) {
-                result.content = Base64Utils.toBase64(cw.wrappedBytes);
-            }
-            return result;
-        }
-        FormatConverter fc = (FormatConverter) Registry.get().instantiateSingle(
-                FormatConverter.class,
-                deliveryModel.provideTargetFormat().getClass());
-        FormatConversionModel fcm = new FormatConversionModel();
-        fcm.html = cw.wrappedContent;
-        fcm.footer = cw.wrappedFooter;
-        fcm.bytes = cw.wrappedBytes;
-        fcm.rows = cw.wrapper.gridRows;
-        fcm.custom = cw.custom;
-        ctx.formatConversionModel = fcm;
-        InputStream convertedContent = fc.convert(ctx, fcm);
-        convertedContent = ctx.getVisitorOrNoop()
-                .transformConvertedContent(convertedContent);
-        ctx.getVisitorOrNoop().beforeDelivery();
-        ContentDelivery deliverer = (ContentDelivery) Registry.get()
-                .instantiateSingle(ContentDeliveryType.class,
-                        deliveryModel.provideContentDeliveryType().getClass());
-        String token = deliverer.deliver(ctx, convertedContent, deliveryModel,
-                fc);
-        if (forPublication && publicationContentPersister != null
-                && !AppPersistenceBase.isInstanceReadOnly()) {
-            postDeliveryPersistence(publicationId);
-            crh.getResults().htmlContent = cw.wrappedContent;
-            if (crh.getResults().persist && publicationContentPersister != null
-                    && result.publicationId != 0) {
-                publicationContentPersister.persistContentRendererResults(
-                        crh.getResults(), result.publicationId);
-            }
-        }
-        result.content = null;
-        result.contentToken = token;
-        ctx.getVisitorOrNoop().publicationFinished(result);
-        return result;
-    }
+	@SuppressWarnings("unchecked")
+	private PublicationResult publish0(ContentDefinition contentDefinition,
+			DeliveryModel deliveryModel, Publication original)
+			throws Exception {
+		ContentModelHandler cmh = (ContentModelHandler) Registry.get()
+				.instantiateSingle(ContentModelHandler.class,
+						contentDefinition.getClass());
+		cmh.prepareContent(contentDefinition, deliveryModel);
+		if (!cmh.hasResults) {
+			return null;// throw exception??
+		}
+		PublicationResult result = new PublicationResult();
+		ctx.publicationResult = result;
+		long publicationUserId = 0;
+		boolean forPublication = !deliveryModel.isNoPersistence()
+				&& deliveryModel.provideContentDeliveryType().isRepublishable();
+		PublicationContentPersister publicationContentPersister = Registry
+				.implOrNull(PublicationContentPersister.class);
+		PublicationContent publicationContent = cmh.getPublicationContent();
+		ctx.publicationContent = publicationContent;
+		result.publicationUid = deliveryModel.getPublicationUid();
+		if (forPublication && publicationContentPersister != null
+				&& !AppPersistenceBase.isInstanceReadOnly() && !Ax.isTest()) {
+			IUser user = PermissionsManager.get().getUser();
+			if (user == null) {
+				user = CommonPersistenceProvider.get().getCommonPersistence()
+						.getSystemUser(true);
+			}
+			publicationUserId = Registry.impl(PublicationPersistence.class)
+					.getNextPublicationIdForUser(user);
+			persist(contentDefinition, deliveryModel, publicationUserId,
+					original, publicationContentPersister, result);
+			ctx.getVisitorOrNoop()
+					.afterPublicationPersistence(result.publicationId);
+		}
+		long publicationId = CommonUtils.lv(result.publicationId);
+		ContentRenderer crh = (ContentRenderer) Registry.get()
+				.instantiateSingle(ContentRenderer.class,
+						publicationContent.getClass());
+		crh.renderContent(contentDefinition, publicationContent, deliveryModel,
+				publicationId, publicationUserId);
+		ctx.renderedContent = crh.results;
+		if (crh.getResults().persist && publicationContentPersister != null
+				&& publicationId != 0) {
+			publicationContentPersister.persistContentRendererResults(
+					crh.getResults(), publicationId);
+		}
+		ContentWrapper cw = (ContentWrapper) Registry.get().instantiateSingle(
+				ContentWrapper.class, publicationContent.getClass());
+		ctx.getVisitorOrNoop().beforeWrapContent();
+		cw.wrapContent(contentDefinition, publicationContent, deliveryModel,
+				crh.getResults(), publicationId, publicationUserId);
+		ctx.getVisitorOrNoop().afterWrapContent(cw);
+		if (deliveryModel.provideContentDeliveryType().getClass() == null) {
+			return null;
+		}
+		result.content = cw.wrappedContent;
+		if (deliveryModel
+				.provideContentDeliveryType() == ContentDeliveryType.PRINT) {
+			if (result.content == null && (AppPersistenceBase.isTest()
+					|| LooseContext.is(CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT))) {
+				result.content = Base64Utils.toBase64(cw.wrappedBytes);
+			}
+			return result;
+		}
+		FormatConverter fc = (FormatConverter) Registry.get().instantiateSingle(
+				FormatConverter.class,
+				deliveryModel.provideTargetFormat().getClass());
+		FormatConversionModel fcm = new FormatConversionModel();
+		fcm.html = cw.wrappedContent;
+		fcm.footer = cw.wrappedFooter;
+		fcm.bytes = cw.wrappedBytes;
+		fcm.rows = cw.wrapper.gridRows;
+		fcm.custom = cw.custom;
+		ctx.formatConversionModel = fcm;
+		InputStream convertedContent = fc.convert(ctx, fcm);
+		convertedContent = ctx.getVisitorOrNoop()
+				.transformConvertedContent(convertedContent);
+		ctx.getVisitorOrNoop().beforeDelivery();
+		ContentDelivery deliverer = (ContentDelivery) Registry.get()
+				.instantiateSingle(ContentDeliveryType.class,
+						deliveryModel.provideContentDeliveryType().getClass());
+		String token = deliverer.deliver(ctx, convertedContent, deliveryModel,
+				fc);
+		if (forPublication && publicationContentPersister != null
+				&& !AppPersistenceBase.isInstanceReadOnly() && !Ax.isTest()) {
+			postDeliveryPersistence(publicationId);
+			crh.getResults().htmlContent = cw.wrappedContent;
+			if (crh.getResults().persist && publicationContentPersister != null
+					&& result.publicationId != 0) {
+				publicationContentPersister.persistContentRendererResults(
+						crh.getResults(), result.publicationId);
+			}
+		}
+		result.content = null;
+		result.contentToken = token;
+		ctx.getVisitorOrNoop().publicationFinished(result);
+		return result;
+	}
 
-    public interface PublicationContentPersister {
-        public ContentRendererResults getContentRendererResults(
-                long publicationId);
+	public interface PublicationContentPersister {
+		public ContentRendererResults
+				getContentRendererResults(long publicationId);
 
-        public Publication newPublicationInstance();
+		public Publication newPublicationInstance();
 
-        public void persistContentRendererResults(
-                ContentRendererResults results, long publicationId);
-    }
+		public void persistContentRendererResults(
+				ContentRendererResults results, long publicationId);
+	}
 }

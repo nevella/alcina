@@ -210,4 +210,8 @@ public class SimpleWorkspaceVisualiser extends Composite
 			SimpleWorkspaceVisualiser.this.hsp.setHeight(hsph + "px");
 		}
 	}
+
+	public void showView(WorkspaceView view) {
+		viewHolder.showStack(viewHolder.getWidgetIndex(view));
+	}
 }

@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.util.ShellWrapper;
 
 @RegistryLocation(registryPoint = RdbProxies.class, implementationType = ImplementationType.SINGLETON)
@@ -74,7 +74,7 @@ public class RdbProxies {
                     modelXml);
         }
         schema.endpointDescriptors.forEach(this::start);
-        EntityLayerUtils.setLevel("cc.alcina.framework.classmeta.rdb",
+        EntityLayerLogging.setLevel("cc.alcina.framework.classmeta.rdb",
                 Level.INFO);
         if (Boolean.getBoolean("testRdbProxies") || "ee".isEmpty()) {
             try {

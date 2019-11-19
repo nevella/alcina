@@ -19,6 +19,9 @@ public class LockingDomainQuery<V extends HasIdAndLocalId>
 	public static final transient String CONTEXT_USE_SERIAL_STREAM = LockingDomainQuery.class
 			.getName() + ".CONTEXT_USE_SERIAL_STREAM";
 
+	public static final transient String CONTEXT_DEBUG_MATCH = LockingDomainQuery.class
+			.getName() + ".CONTEXT_DEBUG_MATCH";
+
 	protected SearchDefinition def;
 
 	public LockingDomainQuery() {

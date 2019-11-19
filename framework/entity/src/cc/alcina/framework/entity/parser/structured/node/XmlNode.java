@@ -47,7 +47,12 @@ public class XmlNode {
 	 * Basically, don't use in a loop - more a debugging aid
 	 */
 	public static XmlNode from(Node n) {
-		XmlDoc doc = new XmlDoc(n.getOwnerDocument());
+		XmlDoc doc = null;
+		if (n.getNodeType() == Node.DOCUMENT_NODE) {
+			doc = new XmlDoc((Document) n);
+		} else {
+			doc = new XmlDoc(n.getOwnerDocument());
+		}
 		return doc.nodeFor(n);
 	}
 
@@ -508,10 +513,7 @@ public class XmlNode {
 
 		public XmlNode get(String... tags) {
 			List<String> tagList = Arrays.asList(tags);
-			if (orSelf && tagIsOneOf(tagList)) {
-				return XmlNode.this;
-			}
-			XmlNode cursor = XmlNode.this;
+			XmlNode cursor = getStartingCursor();
 			while (cursor != null) {
 				if (cursor.tagIsOneOf(tagList)) {
 					return cursor;
@@ -527,7 +529,7 @@ public class XmlNode {
 
 		public boolean has(XmlNode test) {
 			test = test.asXmlNode();
-			XmlNode node = XmlNode.this.asXmlNode();
+			XmlNode node = getStartingCursor();
 			while (node != null) {
 				if (node == test) {
 					return true;
@@ -543,7 +545,7 @@ public class XmlNode {
 
 		public List<XmlNode> list() {
 			List<XmlNode> result = new ArrayList<>();
-			XmlNode cursor = XmlNode.this;
+			XmlNode cursor = getStartingCursor();
 			while (cursor != null) {
 				result.add(cursor);
 				cursor = cursor.parent();
@@ -552,7 +554,7 @@ public class XmlNode {
 		}
 
 		public Optional<XmlNode> match(Predicate<XmlNode> predicate) {
-			XmlNode cursor = XmlNode.this;
+			XmlNode cursor = getStartingCursor();
 			while (cursor != null) {
 				if (predicate.test(cursor)) {
 					return Optional.of(cursor);
@@ -578,6 +580,10 @@ public class XmlNode {
 				}
 			}
 			return false;
+		}
+
+		private XmlNode getStartingCursor() {
+			return orSelf ? XmlNode.this : XmlNode.this.parent();
 		}
 	}
 
@@ -828,10 +834,6 @@ public class XmlNode {
 			return xpath("//body").node();
 		}
 
-		public XmlNode getContainingBlock() {
-			return XmlNode.from(XmlUtils.getContainingBlock(node));
-		}
-
 		public boolean hasClassName(String className) {
 			return isElement() && Arrays.stream(attr("class").split(" "))
 					.anyMatch(cn -> cn.equals(className));
@@ -996,9 +998,26 @@ public class XmlNode {
 			tw.setCurrentNode(node);
 		}
 
+		public XmlNode currentNode() {
+			return doc.nodeFor(tw.getCurrentNode());
+		}
+
 		public XmlNode nextLogicalNode() {
 			Node next = tw.nextNode();
 			return doc.nodeFor(next);
+		}
+
+		public String nextNonWhitespaceText() {
+			while (true) {
+				Node next = tw.nextNode();
+				if (next == null) {
+					return null;
+				}
+				XmlNode xNext = XmlNode.from(next);
+				if (xNext.isText() && xNext.isNonWhitespaceTextContent()) {
+					return xNext.ntc();
+				}
+			}
 		}
 	}
 
@@ -1076,22 +1095,44 @@ public class XmlNode {
 
 		private boolean startAfterThis;
 
+		private boolean endBefore;
+
 		public DocumentFragment asFragment() {
 			return (DocumentFragment) toNode().node;
 		}
 
-		public void clearNodes() {
+		public void clearContents() {
 			List<XmlNode> kids = doc.getDocumentElementNode().children.flat()
 					.collect(Collectors.toList());
 			boolean inRange = false;
-			for (XmlNode xmlNode : kids) {
-				if (xmlNode == XmlNode.this) {
+			List<XmlNode> toRemoveNodes = new ArrayList<>();
+			Objects.requireNonNull(end);
+			XmlNode keepAncestorsOf = end;
+			if (!endBefore) {
+				TreeWalker tw = ((DocumentTraversal) doc.domDoc())
+						.createTreeWalker(doc.domDoc(), NodeFilter.SHOW_ALL,
+								null, true);
+				tw.setCurrentNode(end.node);
+				Node keep = tw.nextNode();
+				keepAncestorsOf = keep == null ? null : XmlNode.from(keep);
+			}
+			for (XmlNode cursor : kids) {
+				if (cursor == XmlNode.this) {
 					inRange = true;
+					if (startAfterThis) {
+						continue;
+					}
+				}
+				if (cursor == end && endBefore) {
+					break;
 				}
 				if (inRange) {
-					xmlNode.removeFromParent();
+					if (keepAncestorsOf == null
+							|| !cursor.isAncestorOf(keepAncestorsOf)) {
+						cursor.removeFromParent();
+					}
 				}
-				if (xmlNode == end) {
+				if (cursor == end) {
 					break;
 				}
 			}
@@ -1103,11 +1144,8 @@ public class XmlNode {
 		}
 
 		public XmlRange endBefore(XmlNode endBefore) {
-			TreeWalker tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(
-					doc.domDoc(), NodeFilter.SHOW_ALL, null, true);
-			tw.setCurrentNode(endBefore.node);
-			tw.previousNode();
-			end = doc.nodeFor(tw.getCurrentNode());
+			this.end = endBefore;
+			this.endBefore = true;
 			return this;
 		}
 
@@ -1116,6 +1154,15 @@ public class XmlNode {
 			Range r2 = other.range().createRange();
 			boolean result = r1.compareBoundaryPoints(Range.START_TO_START,
 					r2) < 0;
+			r1.detach();
+			r2.detach();
+			return result;
+		}
+
+		public boolean isEndAfter(XmlNode other) {
+			Range r1 = createRange();
+			Range r2 = other.range().createRange();
+			boolean result = r1.compareBoundaryPoints(Range.END_TO_END, r2) > 0;
 			r1.detach();
 			r2.detach();
 			return result;
@@ -1140,20 +1187,7 @@ public class XmlNode {
 			range.detach();
 			wrapper.appendChild(frag);
 			if (!clone) {
-				Objects.requireNonNull(end);
-				while (true) {
-					TreeWalker tw = ((DocumentTraversal) doc.domDoc())
-							.createTreeWalker(doc.domDoc(), NodeFilter.SHOW_ALL,
-									null, true);
-					tw.setCurrentNode(node);
-					if (startAfterThis) {
-						tw.nextNode();
-					}
-					XmlNode.from(tw.getCurrentNode()).removeFromParent();
-					if (tw.nextNode() == null || !end.isAttachedToDocument()) {
-						break;
-					}
-				}
+				clearContents();
 			}
 			return doc.nodeFor(wrapper);
 		}
@@ -1165,7 +1199,11 @@ public class XmlNode {
 			} else {
 				range.setStartBefore(node);
 			}
-			range.setEndAfter(end == null ? node : end.node);
+			if (endBefore) {
+				range.setEndBefore(end.node);
+			} else {
+				range.setEndAfter(end == null ? node : end.node);
+			}
 			return range;
 		}
 	}

@@ -141,12 +141,13 @@ public class ControlServletHandlers {
 
         @Override
         public void init() {
-            updateReadonly(WriterMode.READ_ONLY);
+//            updateReadonly(WriterMode.READ_ONLY);
         }
 
         private void updateReadonly(WriterMode toState) {
-            AppPersistenceBase
-                    .setInstanceReadOnly(toState == WriterMode.READ_ONLY);
+        	//utter crud - set via properties - this needs to happen very early, and can't be changed during webapp lifetime
+//            AppPersistenceBase
+//                    .setInstanceReadOnly(toState == WriterMode.READ_ONLY);
         }
     }
 

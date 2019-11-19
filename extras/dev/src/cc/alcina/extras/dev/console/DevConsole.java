@@ -87,7 +87,7 @@ import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
@@ -280,7 +280,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	public void dumpDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
+	public void printDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
 			boolean ignoreLatterSubstring,
 			boolean ignoreWhitespaceAndPunctuation, File f1, String s1, File f2,
 			String s2) {
@@ -337,10 +337,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				f2.getPath());
 	}
 
-	public void dumpDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
+	public void printDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
 			boolean ignoreLatterSubstring, File f1, String s1, File f2,
 			String s2) {
-		dumpDiff(ignoreEqualLength, ignoreInsertions, ignoreLatterSubstring,
+		printDiff(ignoreEqualLength, ignoreInsertions, ignoreLatterSubstring,
 				false, f1, s1, f2, s2);
 	}
 
@@ -410,7 +410,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			if (isOsX()) {
 				try {
 					ShellOutputTuple outputTuple = new ShellWrapper()
-							.runShell("", "pbpaste");
+							.noLogging().runShell("", "pbpaste");
 					return outputTuple.output;
 				} catch (Exception e2) {
 					throw new WrappedRuntimeException(e2);
@@ -810,7 +810,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		// EntityLayerUtils.setStandardAppender(
 		// AlcinaLogUtils.getTaggedLogger(DomainStore.class, "sql"),
 		// Level.DEBUG);
-		EntityLayerUtils.setLevel(
+		EntityLayerLogging.setLevel(
 				AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.WARN);
 	}
 

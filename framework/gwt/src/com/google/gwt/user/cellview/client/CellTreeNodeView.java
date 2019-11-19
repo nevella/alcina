@@ -300,9 +300,10 @@ class CellTreeNodeView<T> extends UIObject {
 		if (this.open == open) {
 			return this.open;
 		}
-		// If this node is a leaf node, do not call TreeViewModel.getNodeInfo().
-		if (open && isLeaf()) {
-			// NR - change - because sometimes we need the leaf...
+		// Optimisation - if this node is a leaf node (and not root), do not
+		// call TreeViewModel.getNodeInfo().
+		if (open && isLeaf() && !isRootNode()) {
+			// NR - change - because sometimes we need the leaf "open"...
 			return true;
 		}
 		// The animation clears the innerHtml of the childContainer. If we
@@ -605,7 +606,7 @@ class CellTreeNodeView<T> extends UIObject {
 			ensureAnimationFrame().appendChild(contentContainer);
 			// TODO(jlabanca): I18N no data string.
 			emptyMessageElem = Document.get().createDivElement();
-			emptyMessageElem.setInnerHTML("no data");
+			emptyMessageElem.setInnerHTML(tree.getCellTreeEmptyMessage());
 			setStyleName(emptyMessageElem,
 					tree.getStyle().cellTreeEmptyMessage(), true);
 			showOrHide(emptyMessageElem, false);
@@ -978,7 +979,8 @@ class CellTreeNodeView<T> extends UIObject {
 						.getClosedImageHtml(isRootNode);
 				int imageWidth = nodeView.tree.getImageWidth();
 				String paddingDirection = LocaleInfo.getCurrentLocale().isRTL()
-						? "right" : "left";
+						? "right"
+						: "left";
 				int paddingAmount = imageWidth * nodeView.depth;
 				// Create a set of currently open nodes.
 				Set<Object> openNodes = new HashSet<Object>();

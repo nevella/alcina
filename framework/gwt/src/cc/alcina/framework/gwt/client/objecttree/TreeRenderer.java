@@ -54,7 +54,7 @@ public interface TreeRenderer<T extends TreeRenderable> {
 
 	public AbstractBoundWidget getBoundWidget();
 
-	public LooseContextInstance getContext();
+	public RenderContext getContext();
 
 	public T getRenderable();
 

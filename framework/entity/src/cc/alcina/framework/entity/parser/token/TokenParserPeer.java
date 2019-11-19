@@ -8,46 +8,50 @@ import org.w3c.dom.Text;
 import cc.alcina.framework.entity.XmlUtils.SurroundingBlockTuple;
 
 public interface TokenParserPeer<T extends ParserToken, S extends AbstractParserSlice<T>> {
-    default void addMatchedToken(ParserContext context, S next) {
-        context.addMatchedToken(next);
-    }
+	default void addMatchedToken(ParserContext context, S next) {
+		context.addMatchedToken(next);
+	}
 
-    default void beforeMatchTokens() {
-    }
+	default void beforeMatchTokens() {
+	}
 
-    boolean continueBlock(SurroundingBlockTuple lastSurroundingTuple,
-            SurroundingBlockTuple surroundingTuple);
+	boolean continueBlock(SurroundingBlockTuple lastSurroundingTuple,
+			SurroundingBlockTuple surroundingTuple);
 
-    void flushRunContextAndCatch(boolean end);
+	void flushRunContextAndCatch(boolean end);
 
-    ParserContext getContext();
+	ParserContext getContext();
 
-    default SurroundingBlockTuple getSurroundingBlockTuple(Node n) {
-        return null;
-    }
+	default SurroundingBlockTuple getSurroundingBlockTuple(Node n) {
+		return null;
+	}
 
-    List<T> getTokens();
+	List<T> getTokens();
 
-    boolean ignoreCitationsInBlock(String content);
+	boolean ignoreCitationsInBlock(String content);
 
-    boolean ignoreNode(Node n);
+	boolean ignoreNode(Node n);
 
-    default boolean ignorePrecedingExceptions() {
-        return false;
-    }
+	default boolean ignorePrecedingExceptions() {
+		return false;
+	}
 
-    boolean isBold(Node n);
+	boolean isBold(Node n);
 
-    boolean isEmphasised(Text t);
+	boolean isEmphasised(Text t);
 
-    boolean isMultiLine();
+	boolean isMultiLine();
 
-    boolean processMatch() throws TokenParserException;
+	default boolean isSuperscript(Text n) {
+		return false;
+	}
 
-    void resetContext(boolean clearMatched);
+	boolean processMatch() throws TokenParserException;
 
-    boolean reverseItalicsForBlocklikeAround(Text txt,
-            SurroundingBlockTuple surroundingTuple);
+	void resetContext(boolean clearMatched);
 
-    S validateMatch(S bestMatch);
+	boolean reverseItalicsForBlocklikeAround(Text txt,
+			SurroundingBlockTuple surroundingTuple);
+
+	S validateMatch(S bestMatch);
 }

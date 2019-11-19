@@ -328,6 +328,12 @@ public class ObjectTreeRenderer {
 				if (renderer != null) {
 					((ListBoxEnumProvider) f.getCellProvider())
 							.setRenderer(renderer);
+				}else{
+					renderer=node.getContext().getNodeTypeRenderer(node);
+					if (renderer != null) {
+						((ListBoxEnumProvider) f.getCellProvider())
+								.setRenderer(renderer);
+					}
 				}
 			}
 			AbstractBoundWidget bw = null;

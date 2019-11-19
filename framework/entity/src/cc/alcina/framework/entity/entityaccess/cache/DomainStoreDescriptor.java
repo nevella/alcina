@@ -6,31 +6,33 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 
 public abstract class DomainStoreDescriptor extends DomainDescriptor {
-    protected DomainSegmentLoader domainSegmentLoader;
+	protected DomainSegmentLoader domainSegmentLoader;
 
-    public DomainSegmentLoader getDomainSegmentLoader() {
-        return domainSegmentLoader;
-    }
+	public DomainSegmentLoader getDomainSegmentLoader() {
+		return domainSegmentLoader;
+	}
 
-    public abstract Class<? extends DomainTransformRequestPersistent> getDomainTransformRequestPersistentClass();
+	public abstract Class<? extends DomainTransformRequestPersistent>
+			getDomainTransformRequestPersistentClass();
 
-    public Class<? extends ClassRef> getShadowClassRefClass() {
-        throw new UnsupportedOperationException();
-    }
+	public Class<? extends ClassRef> getShadowClassRefClass() {
+		throw new UnsupportedOperationException();
+	}
 
-    public Class<? extends DomainTransformEvent> getShadowDomainTransformEventPersistentClass() {
-        throw new UnsupportedOperationException();
-    }
+	public Class<? extends DomainTransformEvent>
+			getShadowDomainTransformEventPersistentClass() {
+		throw new UnsupportedOperationException();
+	}
 
-    public boolean isAddMvccObjectResolutionChecks() {
-        return false;
-    }
+	public boolean isAddMvccObjectResolutionChecks() {
+		return false;
+	}
 
-    public boolean isUseTransformDbCommitSequencing() {
-        return true;
-    }
+	public boolean isUseTransformDbCommitSequencing() {
+		return true;
+	}
 
-    public void saveSegmentData() {
-        throw new UnsupportedOperationException();
-    }
+	public void saveSegmentData() {
+		throw new UnsupportedOperationException();
+	}
 }

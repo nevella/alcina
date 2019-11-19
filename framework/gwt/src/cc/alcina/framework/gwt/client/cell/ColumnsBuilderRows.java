@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.cell;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -14,6 +15,8 @@ import cc.alcina.framework.common.client.search.grouping.GroupedResult.GroupKey;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.ColumnMapper;
+import cc.alcina.framework.common.client.util.ColumnMapper.RowModel_SingleCell;
+import cc.alcina.framework.common.client.util.ColumnMapper.SingleCellColumnMapper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.group.GroupingMapper.GroupingMapperResult;
 import cc.alcina.framework.gwt.client.group.GroupingMapper.GroupingMapperRow;
@@ -92,6 +95,14 @@ public class ColumnsBuilderRows {
 		}
 		groupedResult.name = name;
 		return groupedResult;
+	}
+
+	public GroupedResult toSingleCellGroupedResult(String html, String name) {
+		SingleCellColumnMapper mapper = new SingleCellColumnMapper();
+		List<RowModel_SingleCell> model = Arrays
+				.asList(new RowModel_SingleCell(html));
+		return new ColumnsBuilderRows().toGroupedResult(model.stream(), mapper,
+				name, row -> row.asRowKey());
 	}
 
 	private <T> void mapValue(ColumnsBuilder<T>.ColumnBuilder cm, Cell cell,
