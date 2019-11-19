@@ -1940,7 +1940,7 @@ div.has-help-text:hover span:after {
 info-button
 */
 .info-button.info-button {
-    border: solid 1px hsla(213, 30%, 35%, 0.5);
+    border: solid 1px hsla(213, 30%, 35%, 0.2);
     color: hsl(213, 50%, 35%);
     font-weight: bold;
     font-size: 90%;
@@ -1953,10 +1953,11 @@ info-button
     line-height: 14px;
     font-size: 12px;
     font-family: courier;
+    cursor:pointer;
 }
 
 .info-button:hover {
-	background-color: hsl(213, 30%, 35%,0.2);
+	background-color: hsl(213, 30%, 35%,0.1);
 }
 .info-button-panel {
 	background: white;

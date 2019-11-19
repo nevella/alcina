@@ -78,6 +78,8 @@ public abstract class AbstractTaskPerformer implements Runnable {
 			if (knownJob != null) {
 				knownJob.startJob();
 			}
+			actionLogger
+					.info(Ax.format("Started job: %s", getClass().getName()));
 			run0();
 			if (knownJob != null) {
 				getKnownJob().jobOk(result);
