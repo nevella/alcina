@@ -686,7 +686,7 @@ public class DomainStore implements IDomainStore {
 		try {
 			threads.lock(false);
 			List<T> raw = null;
-			Set<Long> ids = query.getIds();
+			Set<Long> ids = query.getFilterByIds();
 			boolean transaction = transactions()
 					.transactionActiveInCurrentThread();
 			boolean debugMetrics = isDebug()
@@ -715,7 +715,7 @@ public class DomainStore implements IDomainStore {
 						break;
 					}
 				}
-				if (debugMetrics && CommonUtils.isNullOrEmpty(query.getIds())) {
+				if (debugMetrics && CommonUtils.isNullOrEmpty(query.getFilterByIds())) {
 					metricLogger.debug("Query metrics:\n========\n{}\n{}",
 							query, debugMetricBuilder.toString());
 				}
@@ -1396,7 +1396,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public <V extends HasIdAndLocalId> V detachedVersion(V v) {
-			return (V) Domain.query(v.getClass()).id(v.getId()).find();
+			return (V) Domain.query(v.getClass()).filterById(v.getId()).find();
 		}
 
 		@Override
@@ -1510,7 +1510,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		<T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
-			return Domain.query(clazz).ids(Domain.ids(clazz)).raw().list();
+			return Domain.query(clazz).filterByIds(Domain.ids(clazz)).raw().list();
 		}
 	}
 
