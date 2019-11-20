@@ -91,7 +91,7 @@ public class SearchUtils {
 	}
 
 	public static long toId(String s) {
-		return s == null || !s.matches("(?:id:)?[0-9]+") ? -1L
+		return s == null || !s.matches("(?:id:)?[0-9]+") ? Integer.MIN_VALUE
 				: Long.parseLong(s.replaceFirst("(?:id:)?([0-9]+)", "$1"));
 		// return stringIdLookup.get(text);
 	}
@@ -135,7 +135,7 @@ public class SearchUtils {
 		}
 		return idsHelper.matches(query, hili);
 	}
-	
+
 	public static class SearchTextMatcher {
 		private String[] targets;
 
