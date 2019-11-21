@@ -14,9 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.Date;
-import java.util.function.Function;
 
-import com.google.gwt.dom.client.Element;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;

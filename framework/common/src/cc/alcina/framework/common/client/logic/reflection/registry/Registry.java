@@ -43,7 +43,6 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCreator;
-import cc.alcina.framework.gwt.persistence.client.LogStore;
 
 /**
  *

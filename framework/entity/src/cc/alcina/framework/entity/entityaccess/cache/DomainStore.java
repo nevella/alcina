@@ -54,6 +54,10 @@ import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
 import cc.alcina.framework.common.client.domain.IDomainStore;
+import cc.alcina.framework.common.client.domain.MemoryStat;
+import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
+import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
+import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.domain.ModificationChecker;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
@@ -332,6 +336,17 @@ public class DomainStore implements IDomainStore {
 
 	public String getLockDumpString(String lockDumpCause, boolean full) {
 		return threads.getLockDumpString(lockDumpCause, full);
+	}
+
+	public MemoryStat getMemoryStats(StatType type) {
+		MemoryStat top = new MemoryStat(this);
+		top.setObjectMemory(Registry.impl(ObjectMemory.class));
+		/*
+		 * Add cache stats first (notionally it's the owner of the hilis)
+		 */
+		cache.addMemoryStats(top, type);
+		getDomainDescriptor().addMemoryStats(top, type);
+		return top;
 	}
 
 	public Mvcc getMvcc() {
@@ -1077,10 +1092,10 @@ public class DomainStore implements IDomainStore {
 		}
 
 		public synchronized boolean
-				isInitialised(DomainDescriptor domainDescriptor) {
-			return descriptorMap.containsKey(domainDescriptor)
-					&& descriptorMap.get(domainDescriptor).initialised;
-		}
+		isInitialised(DomainDescriptor domainDescriptor) {
+	return descriptorMap.containsKey(domainDescriptor)
+			&& descriptorMap.get(domainDescriptor).initialised;
+}
 
 		public <V extends HasIdAndLocalId> DomainStoreQuery<V>
 				query(Class<V> clazz) {
@@ -1099,7 +1114,7 @@ public class DomainStore implements IDomainStore {
 			return classMap.get(clazz);
 		}
 
-		public DomainStore storeFor(DomainDescriptor domainDescriptor) {
+		public DomainStore storeFor(MemoryStatProvider domainDescriptor) {
 			return descriptorMap.get(domainDescriptor);
 		}
 

@@ -46,7 +46,6 @@ import com.google.gwt.util.tools.shared.StringUtils;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.jscodeserver.CrossOriginFilter;
 
 /**
  * This linker uses an iframe to hold the code and a script tag to download the

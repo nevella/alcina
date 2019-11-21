@@ -446,6 +446,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private void invokeAllWithThrow(List tasks, ThreadPoolExecutor executor)
 			throws Exception {
+		List initialList = tasks;
 		if (executor == warmupExecutor) {
 			tasks = (List) tasks.stream().map(WarmupTxCallable::new)
 					.collect(Collectors.toList());
@@ -455,7 +456,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			// will throw if there was an exception
 			future.get();
 		}
-		tasks.clear();
+		initialList.clear();
 	}
 
 	private void loadDomainSegment() throws Exception {

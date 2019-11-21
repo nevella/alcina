@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -31,274 +32,282 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
  * @param <T>
  */
 public abstract class BaseProjection<T extends HasIdAndLocalId>
-        implements DomainProjection<T> {
-    protected MultikeyMap<T> lookup = createLookup();
+		implements DomainProjection<T> {
+	protected MultikeyMap<T> lookup = createLookup();
 
-    private List<Class> types = null;
+	private List<Class> types = null;
 
-    private boolean derived = false;
+	private boolean derived = false;
 
-    private boolean enabled = true;
+	private boolean enabled = true;
 
-    private ModificationChecker modificationChecker;
+	private ModificationChecker modificationChecker;
 
-    protected final transient Logger logger = LoggerFactory
-            .getLogger(getClass());
+	protected final transient Logger logger = LoggerFactory
+			.getLogger(getClass());
 
-    private IDomainStore domainStore;
+	private IDomainStore domainStore;
 
-    public MultikeyMap<T> asMap(Object... objects) {
-        return (MultikeyMap<T>) lookup.asMap(objects);
-    }
+	@Override
+	public MemoryStat addMemoryStats(MemoryStat parent, StatType type) {
+		MemoryStat self = new MemoryStat(this);
+		parent.addChild(self);
+		self.objectMemory.walkStats(this, self.counter);
+		return self;
+	}
 
-    public <V> V first(Object... objects) {
-        return (V) CommonUtils.first(items(objects));
-    }
+	public MultikeyMap<T> asMap(Object... objects) {
+		return (MultikeyMap<T>) lookup.asMap(objects);
+	}
 
-    public <V> V get(Object... objects) {
-        V nonTransactional = (V) lookup.get(objects);
-        return (V) Domain.resolveTransactional(this,
-                (HasIdAndLocalId) nonTransactional, objects);
-    }
+	public <V> V first(Object... objects) {
+		return (V) CommonUtils.first(items(objects));
+	}
 
-    @Override
-    public IDomainStore getDomainStore() {
-        return this.domainStore;
-    }
+	public <V> V get(Object... objects) {
+		V nonTransactional = (V) lookup.get(objects);
+		return (V) Domain.resolveTransactional(this,
+				(HasIdAndLocalId) nonTransactional, objects);
+	}
 
-    public MultikeyMap<T> getLookup() {
-        return this.lookup;
-    }
+	@Override
+	public IDomainStore getDomainStore() {
+		return this.domainStore;
+	}
 
-    public ModificationChecker getModificationChecker() {
-        return modificationChecker;
-    }
+	public MultikeyMap<T> getLookup() {
+		return this.lookup;
+	}
 
-    public List<Class> getTypes() {
-        return this.types;
-    }
+	public ModificationChecker getModificationChecker() {
+		return modificationChecker;
+	}
 
-    @Override
-    public void insert(T t) {
-        checkModification("insert");
-        Object[] values = project(t);
-        if (values != null) {
-            try {
-                if (values.length > 0 && values[0] != null
-                        && values[0].getClass().isArray()) {
-                    for (Object tuple : values) {
-                        lookup.put((Object[]) tuple);
-                    }
-                } else {
-                    if (isUnique()) {
-                        Object[] keys = Arrays.copyOf(values,
-                                values.length - 1);
-                        if (!lookup.checkKeys(keys)) {
-                            return;
-                        }
-                        T existing = lookup.get(keys);
-                        if (existing != null) {
-                            logDuplicateMapping(values, existing);
-                            return;
-                        }
-                    }
-                    lookup.put(values);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println("Cause - " + t);
-                if (t instanceof HasIdAndLocalId) {
-                    System.out.println(new HiliLocator(t));
-                }
-            }
-        }
-    }
+	public List<Class> getTypes() {
+		return this.types;
+	}
 
-    @Override
-    public boolean isDerived() {
-        return this.derived;
-    }
+	@Override
+	public void insert(T t) {
+		checkModification("insert");
+		Object[] values = project(t);
+		if (values != null) {
+			try {
+				if (values.length > 0 && values[0] != null
+						&& values[0].getClass().isArray()) {
+					for (Object tuple : values) {
+						lookup.put((Object[]) tuple);
+					}
+				} else {
+					if (isUnique()) {
+						Object[] keys = Arrays.copyOf(values,
+								values.length - 1);
+						if (!lookup.checkKeys(keys)) {
+							return;
+						}
+						T existing = lookup.get(keys);
+						if (existing != null) {
+							logDuplicateMapping(values, existing);
+							return;
+						}
+					}
+					lookup.put(values);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("Cause - " + t);
+				if (t instanceof HasIdAndLocalId) {
+					System.out.println(new HiliLocator(t));
+				}
+			}
+		}
+	}
 
-    @Override
-    public boolean isEnabled() {
-        return this.enabled;
-    }
+	@Override
+	public boolean isDerived() {
+		return this.derived;
+	}
 
-    public boolean isUnique() {
-        return false;
-    }
+	@Override
+	public boolean isEnabled() {
+		return this.enabled;
+	}
 
-    public <V> Collection<V> items(Object... objects) {
-        Collection<V> items = lookup.items(objects);
-        return items == null ? Collections.EMPTY_LIST : items;
-    }
+	public boolean isUnique() {
+		return false;
+	}
 
-    @Override
-    public boolean matches(T t, Object[] keys) {
-        Object[] tKeys = project(t);
-        if (keys == null || tKeys == null) {
-            return keys == tKeys;
-        }
-        for (int i = 0; i < keys.length && i < tKeys.length; i++) {
-            if (!CommonUtils.equalsWithNullEquality(keys[i], tKeys[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
+	public <V> Collection<V> items(Object... objects) {
+		Collection<V> items = lookup.items(objects);
+		return items == null ? Collections.EMPTY_LIST : items;
+	}
 
-    @Override
-    public void remove(T t) {
-        checkModification("remove");
-        Object[] values = project(t);
-        if (values != null) {
-            try {
-                if (values.length > 0 && values[0] != null
-                        && values[0].getClass().isArray()) {
-                    for (Object tuple : values) {
-                        lookup.remove((Object[]) tuple);
-                    }
-                } else {
-                    if (isUnique()) {
-                        Object[] keys = Arrays.copyOf(values,
-                                values.length - 1);
-                        if (!lookup.checkKeys(keys)) {
-                            return;
-                        }
-                    }
-                    lookup.remove(values);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
+	@Override
+	public boolean matches(T t, Object[] keys) {
+		Object[] tKeys = project(t);
+		if (keys == null || tKeys == null) {
+			return keys == tKeys;
+		}
+		for (int i = 0; i < keys.length && i < tKeys.length; i++) {
+			if (!CommonUtils.equalsWithNullEquality(keys[i], tKeys[i])) {
+				return false;
+			}
+		}
+		return true;
+	}
 
-    public <V> Collection<V> reverseItems(Object... objects) {
-        Collection<V> items = lookup.reverseItems(objects);
-        return items == null ? Collections.EMPTY_LIST : items;
-    }
+	@Override
+	public void remove(T t) {
+		checkModification("remove");
+		Object[] values = project(t);
+		if (values != null) {
+			try {
+				if (values.length > 0 && values[0] != null
+						&& values[0].getClass().isArray()) {
+					for (Object tuple : values) {
+						lookup.remove((Object[]) tuple);
+					}
+				} else {
+					if (isUnique()) {
+						Object[] keys = Arrays.copyOf(values,
+								values.length - 1);
+						if (!lookup.checkKeys(keys)) {
+							return;
+						}
+					}
+					lookup.remove(values);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
-    public void setDerived(boolean derived) {
-        this.derived = derived;
-    }
+	public <V> Collection<V> reverseItems(Object... objects) {
+		Collection<V> items = lookup.reverseItems(objects);
+		return items == null ? Collections.EMPTY_LIST : items;
+	}
 
-    public void setDomainStore(IDomainStore domainStore) {
-        this.domainStore = domainStore;
-    }
+	public void setDerived(boolean derived) {
+		this.derived = derived;
+	}
 
-    @Override
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
+	public void setDomainStore(IDomainStore domainStore) {
+		this.domainStore = domainStore;
+	}
 
-    public void setModificationChecker(
-            ModificationChecker modificationChecker) {
-        this.modificationChecker = modificationChecker;
-    }
+	@Override
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
 
-    public void setTypes(List<Class> types) {
-        this.types = types;
-    }
+	public void
+			setModificationChecker(ModificationChecker modificationChecker) {
+		this.modificationChecker = modificationChecker;
+	}
 
-    protected void checkModification(String modificationType) {
-        if (getModificationChecker() != null) {
-            getModificationChecker().check("fire");
-        }
-    }
+	public void setTypes(List<Class> types) {
+		this.types = types;
+	}
 
-    protected MultikeyMap<T> createLookup() {
-        if (this instanceof OrderableProjection) {
-            return new BaseProjectionLookupBuilder(this).navigable()
-                    .createMultikeyMap();
-        } else {
-            return new BaseProjectionLookupBuilder(this).sorted()
-                    .createMultikeyMap();
-        }
-    }
+	protected void checkModification(String modificationType) {
+		if (getModificationChecker() != null) {
+			getModificationChecker().check("fire");
+		}
+	}
 
-    protected abstract int getDepth();
+	protected MultikeyMap<T> createLookup() {
+		if (this instanceof OrderableProjection) {
+			return new BaseProjectionLookupBuilder(this).navigable()
+					.createMultikeyMap();
+		} else {
+			return new BaseProjectionLookupBuilder(this).sorted()
+					.createMultikeyMap();
+		}
+	}
 
-    protected void logDuplicateMapping(Object[] values, T existing) {
-        logger.warn(CommonUtils.formatJ(
-                "Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
-                this, Arrays.asList(values), existing));
-    }
+	protected abstract int getDepth();
 
-    // count:=-1 --> all
-    /**
-     * Expose if subclass is instance of OrderableProjection
-     */
-    protected Collection<T> order0(int count, CollectionFilter<T> filter,
-            boolean targetsOfFinalKey, boolean reverse,
-            boolean finishAfterFirstFilterFail, Object... objects) {
-        Collection source = (Collection) (reverse ? reverseItems(objects)
-                : items(objects));
-        PossibleSubIterator sub = new PossibleSubIterator(source,
-                targetsOfFinalKey, objects);
-        List<T> result = new ArrayList<T>();
-        while (count != 0 && sub.hasNext()) {
-            T next = sub.next();
-            if (filter == null || filter.allow(next)) {
-                count--;
-                result.add(next);
-            } else {
-                if (finishAfterFirstFilterFail) {
-                    break;
-                }
-            }
-        }
-        return result;
-    }
+	protected void logDuplicateMapping(Object[] values, T existing) {
+		logger.warn(CommonUtils.formatJ(
+				"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
+				this, Arrays.asList(values), existing));
+	}
 
-    protected abstract Object[] project(T t);
+	// count:=-1 --> all
+	/**
+	 * Expose if subclass is instance of OrderableProjection
+	 */
+	protected Collection<T> order0(int count, CollectionFilter<T> filter,
+			boolean targetsOfFinalKey, boolean reverse,
+			boolean finishAfterFirstFilterFail, Object... objects) {
+		Collection source = (Collection) (reverse ? reverseItems(objects)
+				: items(objects));
+		PossibleSubIterator sub = new PossibleSubIterator(source,
+				targetsOfFinalKey, objects);
+		List<T> result = new ArrayList<T>();
+		while (count != 0 && sub.hasNext()) {
+			T next = sub.next();
+			if (filter == null || filter.allow(next)) {
+				count--;
+				result.add(next);
+			} else {
+				if (finishAfterFirstFilterFail) {
+					break;
+				}
+			}
+		}
+		return result;
+	}
 
-    // non-transactional
-    class PossibleSubIterator {
-        Collection source;
+	protected abstract Object[] project(T t);
 
-        boolean targetsOfFinalKey;
+	// non-transactional
+	class PossibleSubIterator {
+		Collection source;
 
-        Object[] objects;
+		boolean targetsOfFinalKey;
 
-        private Iterator itemIterator;
+		Object[] objects;
 
-        private Iterator subIterator;
+		private Iterator itemIterator;
 
-        private Object[] keys;
+		private Iterator subIterator;
 
-        public PossibleSubIterator(Collection source, boolean targetsOfFinalKey,
-                Object[] objects) {
-            this.targetsOfFinalKey = targetsOfFinalKey;
-            this.objects = objects;
-            itemIterator = source.iterator();
-            keys = new Object[objects.length + 1];
-            System.arraycopy(objects, 0, keys, 0, objects.length);
-        }
+		private Object[] keys;
 
-        public boolean hasNext() {
-            if (targetsOfFinalKey) {
-                ensureSubIterator();
-                return subIterator != null && subIterator.hasNext();
-            }
-            return itemIterator.hasNext();
-        }
+		public PossibleSubIterator(Collection source, boolean targetsOfFinalKey,
+				Object[] objects) {
+			this.targetsOfFinalKey = targetsOfFinalKey;
+			this.objects = objects;
+			itemIterator = source.iterator();
+			keys = new Object[objects.length + 1];
+			System.arraycopy(objects, 0, keys, 0, objects.length);
+		}
 
-        public T next() {
-            return (T) (targetsOfFinalKey ? subIterator.next()
-                    : itemIterator.next());
-        }
+		public boolean hasNext() {
+			if (targetsOfFinalKey) {
+				ensureSubIterator();
+				return subIterator != null && subIterator.hasNext();
+			}
+			return itemIterator.hasNext();
+		}
 
-        private void ensureSubIterator() {
-            while (subIterator == null || !subIterator.hasNext()) {
-                if (itemIterator.hasNext()) {
-                    Object key = itemIterator.next();
-                    keys[keys.length - 1] = key;
-                    subIterator = lookup.asMap(keys).keySet().iterator();
-                } else {
-                    break;
-                }
-            }
-        }
-    }
+		public T next() {
+			return (T) (targetsOfFinalKey ? subIterator.next()
+					: itemIterator.next());
+		}
+
+		private void ensureSubIterator() {
+			while (subIterator == null || !subIterator.hasNext()) {
+				if (itemIterator.hasNext()) {
+					Object key = itemIterator.next();
+					keys[keys.length - 1] = key;
+					subIterator = lookup.asMap(keys).keySet().iterator();
+				} else {
+					break;
+				}
+			}
+		}
+	}
 }
