@@ -6,7 +6,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletException;
@@ -27,277 +29,299 @@ import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 
+/*
+ * Locking - only have one system-wide compile job run at once - use the file "/tmp/classmeta-anthandler.lock" to lock externally
+ */
 public class AntHandler extends AbstractHandler {
-    static Logger logger = LoggerFactory.getLogger(AntHandler.class);
+	static Logger logger = LoggerFactory.getLogger(AntHandler.class);
 
-    CachingAntModel model;
+	static String lockPath = "/tmp/classmeta-anthandler.lock";
 
-    public AntHandler() {
-        String modelXml = ResourceUtilities
-                .read(ClassPersistenceScanHandler.class, "schema/antModel.xml");
-        model = WrappedObjectHelper.xmlDeserialize(CachingAntModel.class,
-                modelXml);
-    }
+	CachingAntModel model;
 
-    @Override
-    public synchronized void handle(String target, Request baseRequest,
-            HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
-        String cmd = request.getParameter("cmd");
-        String cwd = request.getParameter("cwd");
-        CachingAntTask task = new CachingAntTask(cmd, cwd);
-        model.runningTask = task;
-        model.updateTasks(this);
-        response.setContentType("text/plain");
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().write(task.returnCmd);
-        baseRequest.setHandled(true);
-    }
+	public AntHandler() {
+		String modelXml = ResourceUtilities
+				.read(ClassPersistenceScanHandler.class, "schema/antModel.xml");
+		model = WrappedObjectHelper.xmlDeserialize(CachingAntModel.class,
+				modelXml);
+	}
 
-    @XmlRootElement
-    static class CachingAntModel {
-        public transient CachingAntTask runningTask;
+	@Override
+	public synchronized void handle(String target, Request baseRequest,
+			HttpServletRequest request, HttpServletResponse response)
+			throws IOException, ServletException {
+		String cmd = request.getParameter("cmd");
+		String cwd = request.getParameter("cwd");
+		CachingAntTask task = new CachingAntTask(cmd, cwd);
+		model.runningTask = task;
+		model.updateTasks(this);
+		response.setContentType("text/plain");
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.getWriter().write(task.returnCmd);
+		baseRequest.setHandled(true);
+	}
 
-        public transient CachingAntTask currentTask;
+	@XmlRootElement
+	static class CachingAntModel {
+		public transient CachingAntTask runningTask;
 
-        public List<CachingAntProject> projects = new ArrayList<>();
+		public transient CachingAntTask currentTask;
 
-        private transient CachingAntListener currentListener;
+		public List<CachingAntProject> projects = new ArrayList<>();
 
-        private transient AntHandler antHandler;
+		private transient CachingAntListener currentListener;
 
-        private Exception lastBuildException;
+		private transient AntHandler antHandler;
 
-        public void runBuildTargets() {
-            synchronized (antHandler) {
-                List<CachingAntProject> resolved = new ArrayList<>(
-                        currentListener.pendingBuilds);
-                currentListener.pendingBuilds.stream()
-                        .map(this::getDependentProjects)
-                        .flatMap(Collection::stream).forEach(resolved::add);
-                resolved = resolved.stream().distinct().sorted()
-                        .collect(Collectors.toList());
-                resolved.removeIf(project -> !currentListener.project.depends
-                        .contains(project.name)
-                        && project != currentListener.project);
-                logger.debug("Building resolved projects {}", resolved);
-                lastBuildException = null;
-                for (CachingAntProject project : resolved) {
-                    if (Ax.isBlank(project.rebuildCommand)) {
-                        continue;
-                    }
-                    String script = null;
-                    if (project.rebuildCommand.startsWith("ant")) {
-                        script = Ax.format("cd %s && /usr/local/bin/%s",
-                                project.path, project.rebuildCommand);
-                    } else if (project.rebuildCommand.startsWith("bpx")) {
-                        script = Ax.format("/dk/%s", project.rebuildCommand);
-                    } else {
-                        throw new UnsupportedOperationException();
-                    }
-                    try {
-                        ShellOutputTuple result = new ShellWrapper()
-                                .runBashScript(script);
-                        result.throwOnException();
-                    } catch (Exception e) {
-                        lastBuildException = e;
-                        throw new WrappedRuntimeException(e);
-                    }
-                }
-                currentListener.pendingBuilds.clear();
-            }
-        }
+		private Exception lastBuildException;
 
-        public void updateTasks(AntHandler antHandler) {
-            this.antHandler = antHandler;
-            if (currentTask != null
-                    && currentTask.cwd.equals(runningTask.cwd)) {
-                currentListener.flush();
-                if (lastBuildException == null
-                        && (runningTask.returnCmd.endsWith("hot-deploy")
-                                || runningTask.returnCmd.endsWith("build-all"))
-                        && !runningTask.returnCmd.contains("compile-gwt")) {
-                    runningTask.returnCmd = "";
-                }
-            } else {
-                if (currentListener != null) {
-                    currentListener.removeFsListeners();
-                }
-                currentTask = runningTask;
-                CachingAntProject project = getProjectByCwd(runningTask.cwd);
-                currentListener = new CachingAntListener(project);
-                currentListener.addFsListeners();
-            }
-        }
+		public void runBuildTargets() {
+			synchronized (antHandler) {
+				while (true) {
+					if (!new File(lockPath).exists()) {
+						break;
+					}
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				List<CachingAntProject> resolved = new ArrayList<>(
+						currentListener.pendingBuilds);
+				currentListener.pendingBuilds.stream()
+						.map(this::getDependentProjects)
+						.flatMap(Collection::stream).forEach(resolved::add);
+				resolved = resolved.stream().distinct().sorted()
+						.collect(Collectors.toList());
+				resolved.removeIf(project -> !currentListener.project.depends
+						.contains(project.name)
+						&& project != currentListener.project);
+				logger.debug("Building resolved projects {}", resolved);
+				lastBuildException = null;
+				for (CachingAntProject project : resolved) {
+					if (Ax.isBlank(project.rebuildCommand)) {
+						continue;
+					}
+					String script = null;
+					if (project.rebuildCommand.startsWith("ant")) {
+						script = Ax.format("cd %s && /usr/local/bin/%s",
+								project.path, project.rebuildCommand);
+					} else if (project.rebuildCommand.startsWith("bpx")) {
+						script = Ax.format("/dk/%s", project.rebuildCommand);
+					} else {
+						throw new UnsupportedOperationException();
+					}
+					try {
+						ShellOutputTuple result = new ShellWrapper()
+								.runBashScript(script);
+						result.throwOnException();
+					} catch (Exception e) {
+						lastBuildException = e;
+						throw new WrappedRuntimeException(e);
+					}
+				}
+				currentListener.pendingBuilds.clear();
+			}
+		}
 
-        private List<CachingAntProject> getDependentProjects(
-                CachingAntProject dependentsOf) {
-            return projects.stream().filter(
-                    project -> project.depends.contains(dependentsOf.name))
-                    .collect(Collectors.toList());
-        }
+		public void updateTasks(AntHandler antHandler) {
+			this.antHandler = antHandler;
+			if (currentTask != null
+					&& currentTask.cwd.equals(runningTask.cwd)) {
+				currentListener.flush();
+				if (lastBuildException == null
+						&& (runningTask.returnCmd.endsWith("hot-deploy")
+								|| runningTask.returnCmd.endsWith("build-all"))
+						&& !runningTask.returnCmd.contains("compile-gwt")) {
+					runningTask.returnCmd = "";
+				} else {
+					try {
+						// don't build until external process deletes lock
+						new File(lockPath).createNewFile();
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+			} else {
+				if (currentListener != null) {
+					currentListener.removeFsListeners();
+				}
+				currentTask = runningTask;
+				CachingAntProject project = getProjectByCwd(runningTask.cwd);
+				currentListener = new CachingAntListener(project);
+				currentListener.addFsListeners();
+			}
+		}
 
-        private CachingAntProject getProjectByCwd(String cwd) {
-            return projects.stream().filter(project -> project.path.equals(cwd))
-                    .findFirst().get();
-        }
+		private List<CachingAntProject>
+				getDependentProjects(CachingAntProject dependentsOf) {
+			return projects.stream().filter(
+					project -> project.depends.contains(dependentsOf.name))
+					.collect(Collectors.toList());
+		}
 
-        private CachingAntProject getProjectByName(String name) {
-            return projects.stream()
-                    .filter(project -> project.name.equals(name)).findFirst()
-                    .get();
-        }
+		private CachingAntProject getProjectByCwd(String cwd) {
+			return projects.stream().filter(project -> project.path.equals(cwd))
+					.findFirst().get();
+		}
 
-        private List<CachingAntProject> orderedDependentProjects(
-                CachingAntProject project) {
-            List<CachingAntProject> result = new ArrayList<>();
-            result.add(project);
-            project.depends.stream().map(this::getProjectByName)
-                    .forEach(result::add);
-            result.sort(null);
-            return result;
-        }
+		private CachingAntProject getProjectByName(String name) {
+			return projects.stream()
+					.filter(project -> project.name.equals(name)).findFirst()
+					.get();
+		}
 
-        class CachingAntListener {
-            private AtEndOfEventSeriesTimer seriesTimer = new AtEndOfEventSeriesTimer(
-                    200, new Runnable() {
-                        @Override
-                        public void run() {
-                            runBuildTargets();
-                        }
-                    }).maxDelayFromFirstAction(9999);
+		private List<CachingAntProject>
+				orderedDependentProjects(CachingAntProject project) {
+			List<CachingAntProject> result = new ArrayList<>();
+			result.add(project);
+			project.depends.stream().map(this::getProjectByName)
+					.forEach(result::add);
+			result.sort(null);
+			return result;
+		}
 
-            private CachingAntProject project;
+		class CachingAntListener {
+			private AtEndOfEventSeriesTimer seriesTimer = new AtEndOfEventSeriesTimer(
+					200, new Runnable() {
+						@Override
+						public void run() {
+							runBuildTargets();
+						}
+					}).maxDelayFromFirstAction(9999);
 
-            List<CachingAntProject> pendingBuilds = new ArrayList<>();
+			private CachingAntProject project;
 
-            List<AntListenerDirOsX> fsListeners = new ArrayList<>();
+			Set<CachingAntProject> pendingBuilds = new LinkedHashSet<>();
 
-            public CachingAntListener(CachingAntProject project) {
-                this.project = project;
-            }
+			List<AntListenerDirOsX> fsListeners = new ArrayList<>();
 
-            public void addFsListeners() {
-                logger.debug("Adding fs listeners - {}", project);
-                List<CachingAntProject> dependentProjects = orderedDependentProjects(
-                        project);
-                for (CachingAntProject dependentProject : dependentProjects) {
-                    Path listeningPath = Paths.get(dependentProject.path);
-                    try {
-                        AntListenerDirOsX listener = new AntListenerDirOsX(
-                                listeningPath, dependentProject);
-                        listener.trace = false;
-                        fsListeners.add(listener);
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                try {
-                                    listener.processEvents();
-                                } catch (Exception e) {
-                                    throw new WrappedRuntimeException(e);
-                                }
-                            };
-                        }.start();
-                    } catch (Exception e) {
-                        throw new WrappedRuntimeException(e);
-                    }
-                    logger.debug("Added fs listener - {} {}", dependentProject,
-                            dependentProject.path);
-                }
-            }
+			public CachingAntListener(CachingAntProject project) {
+				this.project = project;
+			}
 
-            public void addPendingBuild(CachingAntProject project) {
-                pendingBuilds.add(project);
-                seriesTimer.triggerEventOccurred();
-            }
+			public void addFsListeners() {
+				logger.debug("Adding fs listeners - {}", project);
+				List<CachingAntProject> dependentProjects = orderedDependentProjects(
+						project);
+				for (CachingAntProject dependentProject : dependentProjects) {
+					Path listeningPath = Paths.get(dependentProject.path);
+					try {
+						AntListenerDirOsX listener = new AntListenerDirOsX(
+								listeningPath, dependentProject);
+						listener.trace = false;
+						fsListeners.add(listener);
+						new Thread() {
+							@Override
+							public void run() {
+								try {
+									listener.processEvents();
+								} catch (Exception e) {
+									throw new WrappedRuntimeException(e);
+								}
+							};
+						}.start();
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+					logger.debug("Added fs listener - {} {}", dependentProject,
+							dependentProject.path);
+				}
+			}
 
-            public void flush() {
-                seriesTimer.cancel();
-                runBuildTargets();
-            }
+			public void addPendingBuild(CachingAntProject project) {
+				pendingBuilds.add(project);
+				seriesTimer.triggerEventOccurred();
+			}
 
-            public void removeFsListeners() {
-                fsListeners.forEach(WatchDirOsX::close);
-            }
+			public void flush() {
+				seriesTimer.cancel();
+				runBuildTargets();
+			}
 
-            class AntListenerDirOsX extends WatchDirOsX {
-                private CachingAntProject project;
+			public void removeFsListeners() {
+				fsListeners.forEach(WatchDirOsX::close);
+			}
 
-                AntListenerDirOsX(Path dir, CachingAntProject project)
-                        throws IOException {
-                    super(dir);
-                    this.project = project;
-                }
+			class AntListenerDirOsX extends WatchDirOsX {
+				private CachingAntProject project;
 
-                @Override
-                protected void handleEvent(
-                        com.barbarysoftware.watchservice.WatchEvent<?> event,
-                        File file) {
-                    if (file.isDirectory()) {
-                        return;
-                    }
-                    String path = file.getPath();
-                    if (path.matches(".+\\.(jar|class|lock)")) {
-                        // build artifact
-                        return;
-                    }
-                    if (file.getPath().matches(
-                            ".+/(?:build|bin|dist|classmeta/schema)/.+")) {
-                        // build path
-                        return;
-                    }
-                    if (file.getPath().matches(".+/api-request.*\\.json")) {
-                        // debug file
-                        return;
-                    }
-                    logger.debug("Intersting fs event - {} {}", project, path);
-                    addPendingBuild(project);
-                }
-            }
-        }
-    }
+				AntListenerDirOsX(Path dir, CachingAntProject project)
+						throws IOException {
+					super(dir);
+					this.project = project;
+				}
 
-    static class CachingAntProject implements Comparable<CachingAntProject> {
-        public String name;
+				@Override
+				protected void handleEvent(
+						com.barbarysoftware.watchservice.WatchEvent<?> event,
+						File file) {
+					if (file.isDirectory()) {
+						return;
+					}
+					String path = file.getPath();
+					if (path.matches(".+\\.(jar|class|lock)")) {
+						// build artifact
+						return;
+					}
+					if (file.getPath().matches(
+							".+/(?:build|bin|dist|classmeta/schema)/.+")) {
+						// build path
+						return;
+					}
+					if (file.getPath().matches(".+/api-request.*\\.json")) {
+						// debug file
+						return;
+					}
+					logger.debug("Intersting fs event - {} {}", project, path);
+					addPendingBuild(project);
+				}
+			}
+		}
+	}
 
-        public String rebuildCommand;
+	static class CachingAntProject implements Comparable<CachingAntProject> {
+		public String name;
 
-        public String path;
+		public String rebuildCommand;
 
-        public List<String> depends = new ArrayList<>();
+		public String path;
 
-        @Override
-        public int compareTo(CachingAntProject o) {
-            if (this.dependsOn(o)) {
-                return 1;
-            }
-            if (o.dependsOn(this)) {
-                return -1;
-            }
-            return 0;
-        }
+		public List<String> depends = new ArrayList<>();
 
-        @Override
-        public String toString() {
-            return name;
-        }
+		@Override
+		public int compareTo(CachingAntProject o) {
+			if (this.dependsOn(o)) {
+				return 1;
+			}
+			if (o.dependsOn(this)) {
+				return -1;
+			}
+			return 0;
+		}
 
-        private boolean dependsOn(CachingAntProject o) {
-            return depends.contains(o.name);
-        }
-    }
+		@Override
+		public String toString() {
+			return name;
+		}
 
-    static class CachingAntTask {
-        String returnCmd;
+		private boolean dependsOn(CachingAntProject o) {
+			return depends.contains(o.name);
+		}
+	}
 
-        String cmd;
+	static class CachingAntTask {
+		String returnCmd;
 
-        String cwd;
+		String cmd;
 
-        public CachingAntTask(String cmd, String cwd) {
-            this.cmd = cmd;
-            this.cwd = cwd;
-            this.returnCmd = cmd;
-        }
-    }
+		String cwd;
+
+		public CachingAntTask(String cmd, String cwd) {
+			this.cmd = cmd;
+			this.cwd = cwd;
+			this.returnCmd = cmd;
+		}
+	}
 }

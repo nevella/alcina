@@ -12,8 +12,13 @@ public class FormatBuilder {
 
 	private String prefix;
 
+	private int indent;
+
+	boolean indented = false;
+
 	public FormatBuilder appendIfBuilderEmpty(String optional) {
 		if (sb.length() == 0) {
+			ensureIndent();
 			sb.append(optional);
 		}
 		return this;
@@ -21,6 +26,7 @@ public class FormatBuilder {
 
 	public void appendIfBuilderNonEmpty(String optional) {
 		if (sb.length() > 0) {
+			ensureIndent();
 			sb.append(optional);
 		}
 	}
@@ -45,12 +51,14 @@ public class FormatBuilder {
 
 	public void appendIfNotBlank(String optional) {
 		if (Ax.notBlank(optional)) {
+			ensureIndent();
 			maybeAppendSeparator();
 			sb.append(optional);
 		}
 	}
 
 	public FormatBuilder format(String template, Object... args) {
+		ensureIndent();
 		maybeAppendSeparator();
 		sb.append(CommonUtils.formatJ(template, args));
 		return this;
@@ -60,12 +68,17 @@ public class FormatBuilder {
 		appendIfNotBlank(Ax.friendly(toFriendly));
 	}
 
+	public void indent(int indent) {
+		this.indent = indent;
+	}
+
 	public FormatBuilder line(String template, Object... args) {
 		return format(template, args).newLine();
 	}
 
 	public FormatBuilder newLine() {
 		sb.append("\n");
+		indented = false;
 		return this;
 	}
 
@@ -85,9 +98,17 @@ public class FormatBuilder {
 		return sb.toString();
 	}
 
+	private void ensureIndent() {
+		if (!indented && indent != 0) {
+			indented = true;
+			sb.append(CommonUtils.padStringLeft("", indent, ' '));
+		}
+	}
+
 	private void maybeAppendSeparator() {
 		if (sb.length() > 0 && separator.length() > 0
 				&& !(prefix != null && prefix.length() == sb.length())) {
+			ensureIndent();
 			sb.append(separator);
 		}
 	}
