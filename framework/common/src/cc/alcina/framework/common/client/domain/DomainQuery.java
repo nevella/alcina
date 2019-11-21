@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class DomainQuery<V extends HasIdAndLocalId> {
-	protected Collection<Long> ids = new LinkedHashSet<Long>();
+	protected Collection<Long> filterByIds = new LinkedHashSet<Long>();
 
 	private List<DomainFilter> filters = new ArrayList<DomainFilter>();
 
@@ -77,18 +77,18 @@ public abstract class DomainQuery<V extends HasIdAndLocalId> {
 		return this.filters;
 	}
 
-	public Set<Long> getIds() {
-		return (this.ids instanceof Set) ? (Set<Long>) this.ids
-				: new LinkedHashSet<Long>(this.ids);
+	public Set<Long> getFilterByIds() {
+		return (this.filterByIds instanceof Set) ? (Set<Long>) this.filterByIds
+				: new LinkedHashSet<Long>(this.filterByIds);
 	}
 
-	public DomainQuery<V> id(long id) {
-		this.ids = Collections.singleton(id);
+	public DomainQuery<V> filterById(long id) {
+		this.filterByIds = Collections.singleton(id);
 		return this;
 	}
 
-	public DomainQuery<V> ids(Collection<Long> ids) {
-		this.ids = ids;
+	public DomainQuery<V> filterByIds(Collection<Long> ids) {
+		this.filterByIds = ids;
 		return this;
 	}
 

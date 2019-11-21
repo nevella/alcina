@@ -26,7 +26,7 @@ public class DomainStoreQuery<V extends HasIdAndLocalId>
 
 	public List<V> allRaw() {
 		raw = true;
-		ids = Domain.ids(clazz);
+		filterByIds = Domain.ids(clazz);
 		return list();
 	}
 
