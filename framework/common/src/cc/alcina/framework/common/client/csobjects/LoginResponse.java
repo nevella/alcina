@@ -26,6 +26,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 public class LoginResponse implements Serializable {
 	private boolean ok;
 
+	private boolean twoFactorAuthenticationRequired;
+
 	private String errorMsg;
 
 	private ClientInstance clientInstance;
@@ -51,6 +53,10 @@ public class LoginResponse implements Serializable {
 		return this.ok;
 	}
 
+	public boolean isTwoFactorAuthenticationRequired() {
+		return this.twoFactorAuthenticationRequired;
+	}
+
 	public void setClientInstance(ClientInstance clientInstance) {
 		this.clientInstance = clientInstance;
 	}
@@ -65,5 +71,10 @@ public class LoginResponse implements Serializable {
 
 	public void setProperties(Map<String, String> properties) {
 		this.properties = properties;
+	}
+
+	public void setTwoFactorAuthenticationRequired(
+			boolean twoFactorAuthenticationRequired) {
+		this.twoFactorAuthenticationRequired = twoFactorAuthenticationRequired;
 	}
 }
