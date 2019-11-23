@@ -1056,9 +1056,18 @@ public class XmlNode {
 			return node() != null;
 		}
 
+		/**
+		 * Warning - uses 'find', not 'matches'
+		 */
 		public Stream<XmlNode> matching(String regex) {
 			Pattern pattern = Pattern.compile(regex);
 			return stream().filter(n -> pattern.matcher(n.ntc()).find());
+		}
+
+		public Stream<XmlNode> matchingAttr(String attrName, String regex) {
+			Pattern pattern = Pattern.compile(regex);
+			return stream()
+					.filter(n -> pattern.matcher(n.attr(attrName)).matches());
 		}
 
 		public XmlNode node() {
