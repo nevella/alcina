@@ -40,6 +40,10 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 		int all = (int) stream.getDoc().children.flat().count();
 		while (stream.hasNext()) {
 			XmlNode node = stream.next();
+			if (node.tagIs("A")
+					&& node.fullToString().contains("_Toc381872538")) {
+				int debug = 3;
+			}
 			closeOpenNodes(node, context);
 			handleNode(node, context);
 			if (!shouldContinue.get()) {
