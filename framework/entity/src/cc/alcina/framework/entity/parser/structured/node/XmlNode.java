@@ -700,6 +700,11 @@ public class XmlNode {
 			return node != null && lastElementNode() == node.asXmlNode();
 		}
 
+		public boolean isLastNonWhitespaceChild(XmlNode node) {
+			return node != null
+					&& lastNonWhitespaceNode().domNode() == node.domNode();
+		}
+
 		public XmlNode lastElementNode() {
 			List<XmlNode> nodes = nodes();
 			for (int idx = nodes.size() - 1; idx >= 0; idx--) {
@@ -725,6 +730,12 @@ public class XmlNode {
 				}
 			}
 			return null;
+		}
+
+		public XmlNode lastNonWhitespaceNode() {
+			return nodes().stream()
+					.filter(n -> !(n.isText() && n.isWhitespaceTextContent()))
+					.reduce((n1, n2) -> n2).orElse(null);
 		}
 
 		public List<XmlNode> nodes() {
