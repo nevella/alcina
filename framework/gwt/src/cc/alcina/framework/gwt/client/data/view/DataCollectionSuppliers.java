@@ -12,9 +12,6 @@ import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreIdMapCreator;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreLongSetCreator;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreMultisetCreator;
-import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStorePrivateObjectCacheCreator;
-import cc.alcina.framework.common.client.domain.PrivateObjectCache;
-import cc.alcina.framework.common.client.domain.PrivateObjectCache.PrivateObjectCacheSingleClass;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
@@ -29,9 +26,10 @@ public class DataCollectionSuppliers {
 		return GWT.isScript();// GWT.isClient();
 	}
 
-	@RegistryLocation(registryPoint = DomainStoreIdMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@RegistryLocation(registryPoint = DomainStoreIdMapCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
-	public static class CacheIdMapCreatorDemeter implements DomainStoreIdMapCreator {
+	public static class CacheIdMapCreatorDemeter
+			implements DomainStoreIdMapCreator {
 		@Override
 		public Map<Long, HasIdAndLocalId> get() {
 			return useJsMaps() ? JsUniqueMap.create(Long.class, false)
@@ -39,7 +37,7 @@ public class DataCollectionSuppliers {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainStoreLongSetCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@RegistryLocation(registryPoint = DomainStoreLongSetCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
 	public static class CacheLongSetCreatorDemeter
 			implements DomainStoreLongSetCreator {
@@ -50,25 +48,14 @@ public class DataCollectionSuppliers {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainStoreMultisetCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@RegistryLocation(registryPoint = DomainStoreMultisetCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
 	public static class CacheMultisetCreatorDemeter<T>
 			implements DomainStoreMultisetCreator<T> {
 		@Override
-		public SortedMultiset<T, Set<Long>> get(DomainLookup cacheLookup,
-				boolean concurrent) {
+		public SortedMultiset<T, Set<Long>> get(DomainLookup cacheLookup) {
 			return useJsMaps() ? new SortedMultisetDemeter<>(cacheLookup)
 					: new SortedMultiset<>();
-		}
-	}
-
-	@RegistryLocation(registryPoint = DomainStorePrivateObjectCacheCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-	@ClientInstantiable
-	public static class CachePrivateObjectCacheCreatorDemeter
-			implements DomainStorePrivateObjectCacheCreator {
-		@Override
-		public PrivateObjectCache get() {
-			return new PrivateObjectCacheSingleClass();
 		}
 	}
 

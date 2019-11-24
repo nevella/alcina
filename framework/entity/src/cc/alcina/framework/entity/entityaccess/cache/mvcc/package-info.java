@@ -28,16 +28,19 @@
  * <li>Facade class code creation (yep)
  * <li>Facade object creation (domain.create => mvcc.create) (yep)
  * <li>MvMaps (domaincache; indicies)
+ * <li>Transaction phase management (local; remote)
  * <li>Graph projection
  * <li>Remove locks (make em just notational)(altho post-process remains
  * synchronized)
  * <li>Post-process and transaction cleanup
  * <li>Check no field assignment within hili private methods, and no calls to
- * setters
+ * setters (pretty sure checked as part of bytecode generation)
  * </ul>
  * *
  * <h2>Tests (1)</h2>
  * <ul>
+ * <li>Does the transactionalmap/layer/iterator work as intended? Any possible
+ * multithreaded races??
  * <li>Does post-process work (devconsole) - do we get new obj versions derived
  * from correct version
  * <li>Does post-process work (devconsole) - ditto lookups

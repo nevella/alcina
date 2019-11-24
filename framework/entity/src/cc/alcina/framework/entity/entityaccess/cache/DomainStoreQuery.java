@@ -1,6 +1,9 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainQuery;
@@ -28,6 +31,11 @@ public class DomainStoreQuery<V extends HasIdAndLocalId>
 		raw = true;
 		filterByIds = Domain.ids(clazz);
 		return list();
+	}
+
+	@Override
+	public Set<V> asSet() {
+		return store.query(clazz, this);
 	}
 
 	public DomainStoreQuery<V>
@@ -66,6 +74,11 @@ public class DomainStoreQuery<V extends HasIdAndLocalId>
 
 	@Override
 	public List<V> list() {
-		return store.list(clazz, this);
+		return asSet().stream().collect(Collectors.toList());
+	}
+
+	@Override
+	public Stream<V> stream() {
+		return asSet().stream();
 	}
 }

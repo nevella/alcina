@@ -1,22 +1,28 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
+import java.util.AbstractCollection;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction.TransactionComparator;
+import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 /*
  * Synchronization:
@@ -39,10 +45,15 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 
 	private ConcurrentSkipListMap<Transaction, Layer> layers;
 
-	
 	private List<Layer> baseLayerList;
 
-	public TransactionalMap() {
+	private Class<K> keyClass;
+
+	private Class<V> valueClass;
+
+	public TransactionalMap(Class<K> keyClass, Class<V> valueClass) {
+		this.keyClass = keyClass;
+		this.valueClass = valueClass;
 		base = new Layer(Transaction.current());
 		baseLayerList = Collections.singletonList(base);
 	}
@@ -61,10 +72,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 		List<TransactionalMap<K, V>.Layer> visibleLayers = visibleLayers();
 		for (int idx = visibleLayers.size() - 1; idx > 0; idx--) {
 			Layer layer = visibleLayers.get(idx);
-			if (layer.containsKey(key)) {
+			if (layer.wasModifiedOrRemoved(key)) {
 				return layer.get(key);
 			}
-			if(layer.wasRemoved(key)){
+			if (layer.wasRemoved(key)) {
 				return null;
 			}
 		}
@@ -72,7 +83,16 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 	}
 
 	@Override
+	public Set<K> keySet() {
+		return new KeySet();
+	}
+
+	@Override
 	public V put(K key, V value) {
+		/*
+		 * May need to relax this (projections with null keys) - or have null
+		 * markers
+		 */
 		Objects.requireNonNull(key);
 		Objects.requireNonNull(value);
 		V existing = get(key);
@@ -90,9 +110,28 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 		return existing;
 	}
 
+	@Override
+	public Collection<V> values() {
+		if (HasIdAndLocalId.class.isAssignableFrom(valueClass)) {
+			return new ValuesSet();
+		} else {
+			return new ValuesCollection();
+		}
+	}
+
 	private TransactionalMap<K, V>.Layer ensureLayer() {
-//TEST
+		// TEST
 		Transaction transaction = Transaction.current();
+		if (transaction.isBaseTransaction()) {
+			if (base == null) {
+				synchronized (this) {
+					if (base == null) {
+						base = new Layer(transaction);
+					}
+				}
+			}
+			return base;
+		}
 		if (layers == null || !layers.containsKey(transaction)) {
 			// double-checked
 			synchronized (this) {
@@ -129,24 +168,92 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 		}
 	}
 
+	protected <K1, V1> Map<K1, V1> createNonSynchronizedMap(Class<K1> keyClass,
+			Class<V1> valueClass) {
+		if (keyClass == Long.class) {
+			if (valueClass == Boolean.class) {
+				return (Map<K1, V1>) new Long2BooleanLinkedOpenHashMap();
+			} else {
+				return (Map<K1, V1>) new Long2ObjectLinkedOpenHashMap<>();
+			}
+		} else {
+			// FIXME - some more optimisations would be great
+			return (Map<K1, V1>) new Object2ObjectLinkedOpenHashMap<>();
+		}
+	}
+
+	private class KeySet extends AbstractSet<K> {
+		private Set<Entry<K, V>> entrySet;
+
+		public KeySet() {
+			this.entrySet = entrySet();
+		}
+
+		@Override
+		public Iterator<K> iterator() {
+			return new MappingIterator<Entry<K, V>, K>(entrySet.iterator(),
+					e -> e.getKey());
+		}
+
+		@Override
+		public int size() {
+			return entrySet.size();
+		}
+	}
+
+	private class ValuesCollection extends AbstractCollection<V> {
+		private Set<Entry<K, V>> entrySet;
+
+		public ValuesCollection() {
+			this.entrySet = entrySet();
+		}
+
+		@Override
+		public Iterator<V> iterator() {
+			return new MappingIterator<Entry<K, V>, V>(entrySet.iterator(),
+					e -> e.getValue());
+		}
+
+		@Override
+		public int size() {
+			return entrySet.size();
+		}
+	}
+
+	private class ValuesSet extends AbstractSet<V> {
+		private Set<Entry<K, V>> entrySet;
+
+		public ValuesSet() {
+			this.entrySet = entrySet();
+		}
+
+		@Override
+		public Iterator<V> iterator() {
+			return new MappingIterator<Entry<K, V>, V>(entrySet.iterator(),
+					e -> e.getValue());
+		}
+
+		@Override
+		public int size() {
+			return entrySet.size();
+		}
+	}
+
 	class Layer {
 		int added;
 
 		/*
 		 * FIXME - these should be specialised. Removed should be lazy
 		 */
-		Map<K, Boolean> removed = new LinkedHashMap<>();
+		Map<K, Boolean> removed = createNonSynchronizedMap(keyClass,
+				Boolean.class);
 
-		Map<K, V> modified = new LinkedHashMap<>();
+		Map<K, V> modified = createNonSynchronizedMap(keyClass, valueClass);
 
 		Transaction transaction;
 
 		public Layer(Transaction transaction) {
 			this.transaction = transaction;
-		}
-
-		public boolean containsKey(Object key) {
-			return removed.containsKey(key) || modified.containsKey(key);
 		}
 
 		public V get(Object key) {
@@ -163,6 +270,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 
 		public void remove(K key) {
 			removed.put(key, Boolean.TRUE);
+		}
+
+		public boolean wasModifiedOrRemoved(Object key) {
+			return removed.containsKey(key) || modified.containsKey(key);
 		}
 
 		public boolean wasRemoved(Object key) {
@@ -191,17 +302,18 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 					.toArray(new Iterator[iterators.size()]);
 			MultiIterator<Entry<K, V>> layerIterator = new MultiIterator<Entry<K, V>>(
 					false, iteratorArray);
-			Function<Entry<K, V>, Entry<K, V>> mapping = e -> {
+			Predicate<Entry<K, V>> mapping = e -> {
 				int idx = layerIterator.getCurrentIteratorIndex();
 				idx++;// check if modified in any subsequent layers
 				for (; idx < visibleLayers.size(); idx++) {
-					if (visibleLayers.get(idx).containsKey(e.getKey())) {
+					if (visibleLayers.get(idx)
+							.wasModifiedOrRemoved(e.getKey())) {
 						// will be returned (or not, if removed in a subsequent
 						// layer) by the subsequent layer iterator
-						return null;
+						return false;
 					}
 				}
-				return e;
+				return true;
 			};
 			FilteringIterator<Entry<K, V>> filteringIterator = new FilteringIterator<>(
 					layerIterator, mapping);

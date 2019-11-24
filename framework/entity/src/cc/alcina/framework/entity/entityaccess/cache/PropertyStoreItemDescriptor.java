@@ -1,7 +1,6 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -14,6 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.entity.entityaccess.cache.DomainProxy.DomainProxyContext;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.PdOperator;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
 public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId>
 		extends DomainClassDescriptor<T> {
@@ -51,8 +51,9 @@ public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId>
 	}
 
 	@Override
-	public List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
-		ArrayList<T> raw = new ArrayList<T>(ids.size());
+	public Set<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
+		ObjectLinkedOpenHashSet<T> raw = new ObjectLinkedOpenHashSet<T>(
+				ids.size());
 		for (Long id : ids) {
 			T proxy = getProxy(cache, id, false);
 			if (proxy != null) {

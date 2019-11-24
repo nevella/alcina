@@ -7,25 +7,27 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
  * FIXME - not sure why the various db ids are here. Probably incorrect, early
  * thinking about transaction writing...see package-info
  * 
+ * Could be that they're just informational too...
+ * 
  * @author nick@alcina.cc
  *
  */
 class StoreTransaction {
-    long committedDbDomainTransformRequestId;
+	long committedDbDomainTransformRequestId;
 
-    /*
-     * This *must* be in sync with the db transaction when performing initial
-     * load
-     */
-    long committedKafkaDomainTransformRequestIdLogId;
+	/*
+	 * This *must* be in sync with the db transaction when performing initial
+	 * load
+	 */
+	long committedKafkaDomainTransformRequestIdLogId;
 
-    DomainStore store;
+	DomainStore store;
 
-    public StoreTransaction(DomainStore store) {
-        this.store = store;
-    }
+	public StoreTransaction(DomainStore store) {
+		this.store = store;
+	}
 
-    public Mvcc getMvcc() {
-        return store.getMvcc();
-    }
+	public Mvcc getMvcc() {
+		return store.getMvcc();
+	}
 }

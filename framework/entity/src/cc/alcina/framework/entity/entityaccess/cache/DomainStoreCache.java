@@ -5,7 +5,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
-interface MultiplexableCache {
+interface DomainStoreCache {
 	public <T> List<T> fieldValues(Class<? extends HasIdAndLocalId> clazz,
 			String propertyName);
 

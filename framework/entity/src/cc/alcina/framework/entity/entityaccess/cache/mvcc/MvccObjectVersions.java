@@ -43,9 +43,10 @@ public class MvccObjectVersions<T extends HasIdAndLocalId> {
 		 * modification of the base transaction version.
 		 * 
 		 * In that case, create an initial copy, keyed to the base transaction -
-		 * if developing this allows users to directly modify their copy without
-		 * needing to swap to a writeable version. In production, force the swap
-		 * (there's a tiny risk of a race)
+		 * if developing (console, not server - assume single-task) this allows
+		 * users to directly modify their copy without needing to swap to a
+		 * writeable version. In production, force the swap (there's a tiny risk
+		 * of a race)
 		 */
 		if (initialTransaction.phase == TransactionPhase.PREPARING
 				&& t.provideWasPersisted()) {

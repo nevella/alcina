@@ -91,7 +91,7 @@ public class SubgraphTransformManager extends TransformManager {
     @Override
     protected void createObjectLookup() {
         store = new DetachedCacheObjectStore(
-                new DetachedEntityCacheArrayBacked());
+                new DetachedEntityCacheTransactionalMap());
         setDomainObjects(store);
     }
 

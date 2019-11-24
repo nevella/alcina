@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor.IdLookupDescriptor;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -23,7 +22,11 @@ import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
+/*
+ * Call initialise once all infrastructure (mvcc) is ready 
+ */
 public class DomainClassDescriptor<T extends HasIdAndLocalId>
 		implements MemoryStatProvider {
 	public Class<T> clazz;
@@ -40,38 +43,15 @@ public class DomainClassDescriptor<T extends HasIdAndLocalId>
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	public DomainClassDescriptor(Class<T> clazz) {
-		this.clazz = clazz;
-	}
+	private String[] propertyIndicies;
 
-	public DomainClassDescriptor(Class<T> clazz, boolean idLookups,
-			String... propertyIndicies) {
-		this.clazz = clazz;
-		for (String propertyIndex : propertyIndicies) {
-			addLookup(new IdLookupDescriptor(clazz, propertyIndex));
-		}
+	public DomainClassDescriptor(Class<T> clazz) {
+		this(clazz, new String[0]);
 	}
 
 	public DomainClassDescriptor(Class<T> clazz, String... propertyIndicies) {
 		this.clazz = clazz;
-		for (String propertyIndex : propertyIndicies) {
-			addLookup(new DomainStoreLookupDescriptor(clazz, propertyIndex));
-		}
-	}
-
-	public DomainClassDescriptor<T> addAliasedFunction(Object alias,
-			Function<? super T, ?> function) {
-		DomainStoreLookupDescriptor lookupDescriptor = new DomainStoreLookupDescriptor<>(
-				(Class) clazz, "no-path", false, (Function) function);
-		addLookup(lookupDescriptor);
-		aliasedFunctionLookups.put(alias, lookupDescriptor);
-		return this;
-	}
-
-	public DomainClassDescriptor<T>
-			addLookup(DomainStoreLookupDescriptor lookup) {
-		lookupDescriptors.add(lookup);
-		return this;
+		this.propertyIndicies = propertyIndicies;
 	}
 
 	@Override
@@ -131,8 +111,9 @@ public class DomainClassDescriptor<T extends HasIdAndLocalId>
 		return new ArrayList<>();
 	}
 
-	public List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
-		ArrayList<T> raw = new ArrayList<T>(ids.size());
+	public Set<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
+		ObjectLinkedOpenHashSet<T> raw = new ObjectLinkedOpenHashSet<T>(
+				ids.size());
 		for (Long id : ids) {
 			T value = (T) cache.get(clazz, id);
 			if (value != null) {
@@ -171,6 +152,12 @@ public class DomainClassDescriptor<T extends HasIdAndLocalId>
 		}
 	}
 
+	public void initialise() {
+		for (String propertyIndex : propertyIndicies) {
+			addLookup(new DomainStoreLookupDescriptor(clazz, propertyIndex));
+		}
+	}
+
 	public boolean isTransactional() {
 		return true;
 	}
@@ -178,5 +165,20 @@ public class DomainClassDescriptor<T extends HasIdAndLocalId>
 	@Override
 	public String toString() {
 		return Ax.format("DomainClassDescriptor: %s", clazz.getName());
+	}
+
+	protected DomainClassDescriptor<T> addAliasedFunction(Object alias,
+			Function<? super T, ?> function) {
+		DomainStoreLookupDescriptor lookupDescriptor = new DomainStoreLookupDescriptor<>(
+				(Class) clazz, "no-path", (Function) function);
+		addLookup(lookupDescriptor);
+		aliasedFunctionLookups.put(alias, lookupDescriptor);
+		return this;
+	}
+
+	protected DomainClassDescriptor<T>
+			addLookup(DomainStoreLookupDescriptor lookup) {
+		lookupDescriptors.add(lookup);
+		return this;
 	}
 }

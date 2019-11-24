@@ -28,21 +28,18 @@ public class DomainStoreLookupDescriptor<T extends HasIdAndLocalId>
 
 	private CollectionFilter<T> relevanceFilter;
 
-	protected boolean concurrent;
-
 	Function<? super T, ?> valueFunction;
 
 	private IDomainStore domainStore;
 
 	public DomainStoreLookupDescriptor(Class clazz, String propertyPath) {
-		this(clazz, propertyPath, false, null);
+		this(clazz, propertyPath, null);
 	}
 
 	public DomainStoreLookupDescriptor(Class clazz, String propertyPath,
-			boolean concurrent, Function<? super T, ?> valueFunction) {
+			Function<? super T, ?> valueFunction) {
 		this.clazz = clazz;
 		this.propertyPath = propertyPath;
-		this.concurrent = concurrent;
 		this.valueFunction = valueFunction;
 	}
 
@@ -61,13 +58,6 @@ public class DomainStoreLookupDescriptor<T extends HasIdAndLocalId>
 	public void createLookup() {
 		if (lookup == null) {
 			this.lookup = new DomainLookup(this);
-		}
-	}
-
-	public void ensureLookupWithPrivateCache() {
-		if (lookup == null) {
-			createLookup();
-			lookup.createPrivateCache();
 		}
 	}
 
@@ -135,18 +125,13 @@ public class DomainStoreLookupDescriptor<T extends HasIdAndLocalId>
 		private IdLookup idLookup;
 
 		public IdLookupDescriptor(Class clazz, String propertyPath) {
-			this(clazz, propertyPath, false);
-		}
-
-		public IdLookupDescriptor(Class clazz, String propertyPath,
-				boolean concurrent) {
-			super(clazz, propertyPath, concurrent, null);
+			super(clazz, propertyPath, null);
 		}
 
 		@Override
 		public void createLookup() {
 			if (lookup == null) {
-				idLookup = new IdLookup(this, concurrent);
+				idLookup = new IdLookup(this);
 				lookup = idLookup;
 			}
 		}

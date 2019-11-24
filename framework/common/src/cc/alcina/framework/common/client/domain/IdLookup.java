@@ -15,9 +15,8 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends DomainLookup<T, H> {
 	protected final transient Logger logger = LoggerFactory
 			.getLogger(getClass());
 
-	public IdLookup(DomainStoreLookupDescriptor descriptor,
-			boolean concurrent) {
-		super(descriptor, concurrent);
+	public IdLookup(DomainStoreLookupDescriptor descriptor) {
+		super(descriptor);
 	}
 
 	public H getObject(T key) {

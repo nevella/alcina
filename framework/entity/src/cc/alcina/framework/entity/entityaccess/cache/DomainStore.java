@@ -55,7 +55,6 @@ import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.domain.MemoryStat;
-import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.domain.ModificationChecker;
@@ -159,10 +158,11 @@ public class DomainStore implements IDomainStore {
 	}
 
 	public static void checkInLockedSection() {
-		if (stores().hasInitialisedDatabaseStore()
-				&& !writableStore().threads.isCurrentThreadHoldingLock()) {
-			topicNonLoggedAccess().publish(null);
-		}
+		// mvcc.end - remove
+		// if (stores().hasInitialisedDatabaseStore()
+		// && !writableStore().threads.isCurrentThreadHoldingLock()) {
+		// topicNonLoggedAccess().publish(null);
+		// }
 	}
 
 	// FIXME - this is over-called, probably should be changed to strict
@@ -462,6 +462,8 @@ public class DomainStore implements IDomainStore {
 		MetricLogging.get().end("mvcc");
 		Transaction.ensureActive();
 		Transaction.current().setBaseTransaction(true, this);
+		domainDescriptor.perClass.values().stream()
+				.forEach(DomainClassDescriptor::initialise);
 		loader.warmup();
 		// loader responsible for this
 		// Transaction.current().toCommitted();
@@ -568,14 +570,6 @@ public class DomainStore implements IDomainStore {
 		final CollectionFilter filter = cacheFilter.asCollectionFilter();
 		return domainDescriptor.perClass.get(clazz).evaluateFilter(cache,
 				existing, filter);
-	}
-
-	private Set getFilteredTransactional(final Class clazz,
-			DomainFilter cacheFilter, Set existing) {
-		CollectionFilter filter = cacheFilter.asCollectionFilter();
-		existing = existing != null ? existing
-				: transactions().immutableRawValues(clazz);
-		return CollectionFilters.filterAsSet(existing, filter);
 	}
 
 	private DomainLookup getLookupFor(Class clazz, String propertyName) {
@@ -716,77 +710,6 @@ public class DomainStore implements IDomainStore {
 		}
 		V existing = (V) cache.get(v.provideEntityClass(), v.getId());
 		return existing == v;
-	}
-
-	<T extends HasIdAndLocalId> List<T> list(Class<T> clazz,
-			DomainStoreQuery<T> query) {
-		try {
-			threads.lock(false);
-			List<T> raw = null;
-			Set<Long> ids = query.getFilterByIds();
-			boolean transaction = transactions()
-					.transactionActiveInCurrentThread();
-			boolean debugMetrics = isDebug()
-					&& LooseContext.is(CONTEXT_DEBUG_QUERY_METRICS);
-			StringBuilder debugMetricBuilder = new StringBuilder();
-			int filterSize = query.getFilters().size();
-			if (!transaction || !ids.isEmpty() || query.isNonTransactional()) {
-				FilterContext ctx = new FilterContext();
-				for (; ctx.idx < filterSize; ctx.idx++) {
-					int idx = ctx.idx;
-					long start = System.nanoTime();
-					DomainFilter cacheFilter = query.getFilters().get(idx);
-					DomainFilter nextFilter = idx == filterSize - 1 ? null
-							: query.getFilters().get(idx + 1);
-					ids = (idx == 0 && ids.isEmpty()) ? null : ids;
-					ids = getFiltered(clazz, cacheFilter, nextFilter, ctx, ids);
-					if (debugMetrics) {
-						double ms = (double) (System.nanoTime() - start)
-								/ 1000000.0;
-						String filters = ctx.lastFilterString;
-						debugMetricBuilder.append(String.format(
-								"\t%.3f ms - %s\n", ms,
-								CommonUtils.trimToWsChars(filters, 100, true)));
-					}
-					if (ids.isEmpty()) {
-						break;
-					}
-				}
-				if (debugMetrics
-						&& CommonUtils.isNullOrEmpty(query.getFilterByIds())) {
-					metricLogger.debug("Query metrics:\n========\n{}\n{}",
-							query, debugMetricBuilder.toString());
-				}
-				raw = (List) domainDescriptor.perClass.get(clazz)
-						.getRawValues(ids, cache);
-			} else {
-				Set<T> rawTransactional = null;
-				for (int i = 0; i < filterSize; i++) {
-					rawTransactional = getFilteredTransactional(clazz,
-							query.getFilters().get(i),
-							(i == 0) ? null : rawTransactional);
-				}
-				raw = new ArrayList<T>();
-				if (rawTransactional == null) {
-				} else {
-					raw = new ArrayList<T>(rawTransactional);
-				}
-			}
-			try {
-				for (PreProvideTask task : domainDescriptor.preProvideTasks) {
-					task.run(clazz, raw, true);
-				}
-				if (query.isRaw() || isWillProjectLater()) {
-					return raw;
-				}
-				return new GraphProjection(query.getFieldFilter(),
-						query.getDataFilter()).project(raw, null);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		} finally {
-			threads.unlock(false);
-		}
 	}
 
 	// we only have one thread allowed here - but they won't start blocking the
@@ -998,6 +921,65 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	<T extends HasIdAndLocalId> Set<T> query(Class<T> clazz,
+			DomainStoreQuery<T> query) {
+		try {
+			threads.lock(false);
+			Set<T> raw = null;
+			Set<Long> ids = query.getFilterByIds();
+			boolean debugMetrics = isDebug()
+					&& LooseContext.is(CONTEXT_DEBUG_QUERY_METRICS);
+			StringBuilder debugMetricBuilder = new StringBuilder();
+			int filterSize = query.getFilters().size();
+			FilterContext ctx = new FilterContext();
+			for (; ctx.idx < filterSize; ctx.idx++) {
+				int idx = ctx.idx;
+				long start = System.nanoTime();
+				DomainFilter cacheFilter = query.getFilters().get(idx);
+				DomainFilter nextFilter = idx == filterSize - 1 ? null
+						: query.getFilters().get(idx + 1);
+				ids = (idx == 0 && ids.isEmpty()) ? null : ids;
+				ids = getFiltered(clazz, cacheFilter, nextFilter, ctx, ids);
+				if (debugMetrics) {
+					double ms = (double) (System.nanoTime() - start)
+							/ 1000000.0;
+					String filters = ctx.lastFilterString;
+					debugMetricBuilder.append(String.format("\t%.3f ms - %s\n",
+							ms, CommonUtils.trimToWsChars(filters, 100, true)));
+				}
+				if (ids.isEmpty()) {
+					break;
+				}
+			}
+			if (debugMetrics
+					&& CommonUtils.isNullOrEmpty(query.getFilterByIds())) {
+				metricLogger.debug("Query metrics:\n========\n{}\n{}", query,
+						debugMetricBuilder.toString());
+			}
+			if (filterSize == 0 && ids.isEmpty()) {
+				// Domain.list()
+				raw = cache.values(clazz);
+			} else {
+				raw = (Set<T>) domainDescriptor.perClass.get(clazz)
+						.getRawValues(ids, cache);
+			}
+			try {
+				for (PreProvideTask task : domainDescriptor.preProvideTasks) {
+					task.run(clazz, raw, true);
+				}
+				if (query.isRaw() || isWillProjectLater()) {
+					return raw;
+				}
+				return new GraphProjection(query.getFieldFilter(),
+						query.getDataFilter()).project(raw, null);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		} finally {
+			threads.unlock(false);
+		}
+	}
+
 	public static class Builder {
 		private DomainStoreDescriptor descriptor;
 
@@ -1092,10 +1074,10 @@ public class DomainStore implements IDomainStore {
 		}
 
 		public synchronized boolean
-		isInitialised(DomainDescriptor domainDescriptor) {
-	return descriptorMap.containsKey(domainDescriptor)
-			&& descriptorMap.get(domainDescriptor).initialised;
-}
+				isInitialised(DomainDescriptor domainDescriptor) {
+			return descriptorMap.containsKey(domainDescriptor)
+					&& descriptorMap.get(domainDescriptor).initialised;
+		}
 
 		public <V extends HasIdAndLocalId> DomainStoreQuery<V>
 				query(Class<V> clazz) {
@@ -1112,10 +1094,6 @@ public class DomainStore implements IDomainStore {
 
 		public DomainStore storeFor(Class clazz) {
 			return classMap.get(clazz);
-		}
-
-		public DomainStore storeFor(MemoryStatProvider domainDescriptor) {
-			return descriptorMap.get(domainDescriptor);
 		}
 
 		public Stream<DomainStore> stream() {
@@ -1146,8 +1124,20 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
+			public <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
+					String propertyName, Object value) {
+				return storeHandler(clazz).byProperty(clazz, propertyName,
+						value);
+			}
+
+			@Override
 			public void commitPoint() {
 				// Noop
+			}
+
+			@Override
+			public <V extends HasIdAndLocalId> V create(Class<V> clazz) {
+				return storeHandler(clazz).create(clazz);
 			}
 
 			@Override
@@ -1230,6 +1220,9 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	/*
+	 * Will be removed (mvcc)
+	 */
 	public class DomainStoreTransactions {
 		public volatile int transactionCount;
 
@@ -1305,14 +1298,11 @@ public class DomainStore implements IDomainStore {
 			}
 		}
 
+		/*
+		 * FIXME - mvcc - make this the TransactionalMap.values
+		 */
 		public Set immutableRawValues(Class clazz) {
-			checkInLockedSection();
-			PerThreadTransaction perThreadTransaction = transactions.get();
-			if (perThreadTransaction == null) {
-				return Collections
-						.unmodifiableSet((Set) cache.immutableRawValues(clazz));
-			}
-			return perThreadTransaction.immutableRawValues(clazz, cache);
+			return cache.values(clazz);
 		}
 
 		public <T> Map<Long, T> lookup(Class<T> clazz) {
@@ -1415,7 +1405,7 @@ public class DomainStore implements IDomainStore {
 
 	class DetachedCacheObjectStorePsAware extends DetachedCacheObjectStore {
 		public DetachedCacheObjectStorePsAware() {
-			super(new PsAwareMultiplexingObjectCache());
+			super(new PropertyStoreAwareMultiplexingObjectCache());
 		}
 
 		@Override
@@ -1443,6 +1433,11 @@ public class DomainStore implements IDomainStore {
 		@Override
 		public void commitPoint() {
 			// do nothing, assume explicit commit in servlet layer
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> V create(Class<V> clazz) {
+			return Transaction.current().create(clazz, DomainStore.this);
 		}
 
 		@Override
@@ -1567,8 +1562,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		<T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
-			return Domain.query(clazz).filterByIds(Domain.ids(clazz)).raw()
-					.list();
+			return Domain.query(clazz).raw().list();
 		}
 	}
 
@@ -1673,11 +1667,14 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	/*
+	 * MVCC - remove
+	 */
 	class SubgraphTransformManagerRemoteOnly extends SubgraphTransformManager {
 		ThreadLocal<Consumer<HasIdAndLocalId>> beforeUpdateHandlers = new ThreadLocal<>();
 
 		public void addPropertyStore(DomainClassDescriptor descriptor) {
-			((PsAwareMultiplexingObjectCache) store.getCache())
+			((PropertyStoreAwareMultiplexingObjectCache) store.getCache())
 					.addPropertyStore(descriptor);
 		}
 
@@ -1716,11 +1713,13 @@ public class DomainStore implements IDomainStore {
 		}
 
 		void endCommit() {
-			((PsAwareMultiplexingObjectCache) store.getCache()).endCommit();
+			((PropertyStoreAwareMultiplexingObjectCache) store.getCache())
+					.endCommit();
 		}
 
 		void startCommit() {
-			((PsAwareMultiplexingObjectCache) store.getCache()).startCommit();
+			((PropertyStoreAwareMultiplexingObjectCache) store.getCache())
+					.startCommit();
 		}
 	}
 }

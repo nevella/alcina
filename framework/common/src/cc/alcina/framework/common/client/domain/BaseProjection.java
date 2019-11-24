@@ -221,8 +221,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 			return new BaseProjectionLookupBuilder(this).navigable()
 					.createMultikeyMap();
 		} else {
-			return new BaseProjectionLookupBuilder(this).sorted()
-					.createMultikeyMap();
+			return new BaseProjectionLookupBuilder(this).createMultikeyMap();
 		}
 	}
 

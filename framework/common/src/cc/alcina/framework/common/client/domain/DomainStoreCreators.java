@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.util.SortedMultiset;
+import cc.alcina.framework.common.client.util.Multiset;
 
 public interface DomainStoreCreators {
 	public static interface DomainStoreIdMapCreator
@@ -19,13 +19,6 @@ public interface DomainStoreCreators {
 	}
 
 	public static interface DomainStoreMultisetCreator<T> {
-		public SortedMultiset<T, Set<Long>> get(DomainLookup lookup,
-				boolean concurrent);
-	}
-
-	public static interface DomainStorePrivateObjectCacheCreator
-			extends Supplier<PrivateObjectCache> {
-		@Override
-		public PrivateObjectCache get();
+		public Multiset<T, Set<Long>> get(DomainLookup lookup);
 	}
 }

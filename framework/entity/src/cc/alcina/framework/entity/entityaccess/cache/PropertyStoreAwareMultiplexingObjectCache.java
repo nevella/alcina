@@ -11,14 +11,14 @@ import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 
-class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
+class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
     private volatile boolean committing;
 
-    private DetachedEntityCacheArrayBacked main = new DetachedEntityCacheArrayBacked();
+    private DetachedEntityCacheTransactionalMap main = new DetachedEntityCacheTransactionalMap();
 
     private List<PropertyStoreCacheWrapper> psWrappers = new ArrayList<>();
 
-    public PsAwareMultiplexingObjectCache() {
+    public PropertyStoreAwareMultiplexingObjectCache() {
         // main.setThrowOnExisting(true);
         //
         // double-put can happen due to incomplete transaction isolation on PG
@@ -148,7 +148,7 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
         return main.values(clazz);
     }
 
-    private <T> MultiplexableCache getSubCache(Class<T> clazz) {
+    private <T> DomainStoreCache getSubCache(Class<T> clazz) {
         for (PropertyStoreCacheWrapper psWrapper : psWrappers) {
             if (psWrapper.getCachedClass() == clazz) {
                 return psWrapper;
@@ -174,7 +174,7 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
     }
 
     class PropertyStoreCacheWrapper<V extends HasIdAndLocalId>
-            implements MultiplexableCache {
+            implements DomainStoreCache {
         private PropertyStoreItemDescriptor<V> descriptor;
 
         Map<Long, V> commitLookup = new LinkedHashMap<>();
