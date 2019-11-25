@@ -429,6 +429,8 @@ public class DomainStore implements IDomainStore {
 		domainDescriptor.registerStore(this);
 		domainDescriptor.perClass.values().stream()
 				.forEach(this::prepareClassDescriptor);
+		domainDescriptor.perClass.values().stream()
+				.forEach(DomainClassDescriptor::initialise);
 		loader.warmup();
 		initialising = false;
 		initialised = true;
@@ -715,7 +717,8 @@ public class DomainStore implements IDomainStore {
 						break;
 					}
 				}
-				if (debugMetrics && CommonUtils.isNullOrEmpty(query.getFilterByIds())) {
+				if (debugMetrics
+						&& CommonUtils.isNullOrEmpty(query.getFilterByIds())) {
 					metricLogger.debug("Query metrics:\n========\n{}\n{}",
 							query, debugMetricBuilder.toString());
 				}
@@ -1510,7 +1513,8 @@ public class DomainStore implements IDomainStore {
 		}
 
 		<T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
-			return Domain.query(clazz).filterByIds(Domain.ids(clazz)).raw().list();
+			return Domain.query(clazz).filterByIds(Domain.ids(clazz)).raw()
+					.list();
 		}
 	}
 
