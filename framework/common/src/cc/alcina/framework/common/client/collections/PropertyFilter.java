@@ -40,8 +40,17 @@ public class PropertyFilter<T> implements CollectionFilter<T> {
 		Object tupleValue = tuple.propertyValue;
 		switch (tuple.operator) {
 		case EQ:
-			match = CommonUtils.equalsWithNullEquality(propertyValue,
-					tupleValue);
+			/*
+			 * special-case querying with an int where the field is long
+			 */
+			if (propertyValue instanceof Long
+					&& tupleValue instanceof Integer) {
+				match = ((Long) propertyValue)
+						.longValue() == ((Integer) tupleValue).longValue();
+			} else {
+				match = CommonUtils.equalsWithNullEquality(propertyValue,
+						tupleValue);
+			}
 			break;
 		case IS_NOT_NULL:
 			match = propertyValue != null;
