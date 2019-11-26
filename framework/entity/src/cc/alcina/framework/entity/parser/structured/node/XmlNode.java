@@ -140,6 +140,16 @@ public class XmlNode {
 		return attrIs("class", value);
 	}
 
+	public boolean classIsOneOf(String... names) {
+		String className = getClassName();
+		for (int idx = 0; idx < names.length; idx++) {
+			if (className.equals(names[idx])) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public XmlNode clearAttributes() {
 		attributes().keySet()
 				.forEach(k -> node.getAttributes().removeNamedItem(k));
@@ -735,6 +745,12 @@ public class XmlNode {
 		public XmlNode lastNonWhitespaceNode() {
 			return nodes().stream()
 					.filter(n -> !(n.isText() && n.isWhitespaceTextContent()))
+					.reduce((n1, n2) -> n2).orElse(null);
+		}
+
+		public XmlNode lastNonWhitespaceTextNode() {
+			return nodes().stream()
+					.filter(n -> n.isText() && !n.isWhitespaceTextContent())
 					.reduce((n1, n2) -> n2).orElse(null);
 		}
 
