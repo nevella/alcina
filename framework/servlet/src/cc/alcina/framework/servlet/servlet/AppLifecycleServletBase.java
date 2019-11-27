@@ -69,382 +69,380 @@ import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
-    protected ServletConfig initServletConfig;
+	protected ServletConfig initServletConfig;
 
-    private Date startupTime;
+	private Date startupTime;
 
-    protected ServletClassMetadataCacheProvider classMetadataCacheProvider = new CachingServletClassMetadataCacheProvider();
+	protected ServletClassMetadataCacheProvider classMetadataCacheProvider = new CachingServletClassMetadataCacheProvider();
 
-    public void clearJarCache() {
-        try {
-            String testJar = "jsr173_api.jar";
-            File testJarFile = new File("/tmp/" + testJar);
-            if (!testJarFile.exists()) {
-                byte[] bytes = ResourceUtilities
-                        .readClassPathResourceAsByteArray(
-                                AppLifecycleServletBase.class,
-                                "res/" + testJar);
-                ResourceUtilities.writeBytesToFile(bytes, testJarFile);
-            }
-            URL url = new URL(
-                    Ax.format("jar:file://%s!/javax/xml/XMLConstants.class",
-                            testJarFile.getPath()));
-            URLConnection conn = url.openConnection();
-            // Class clazz = Class
-            // .forName("sun.net.www.protocol.jar.JarURLConnection");
-            Class clazz = conn.getClass();
-            Field factoryField = clazz.getDeclaredField("factory");
-            factoryField.setAccessible(true);
-            Object factory = factoryField.get(null);
-            Field fileCacheField = factory.getClass()
-                    .getDeclaredField("fileCache");
-            fileCacheField.setAccessible(true);
-            Field urlCacheField = factory.getClass()
-                    .getDeclaredField("urlCache");
-            urlCacheField.setAccessible(true);
-            HashMap<String, JarFile> fileCache = (HashMap<String, JarFile>) fileCacheField
-                    .get(factory);
-            HashMap<JarFile, URL> urlCache = (HashMap<JarFile, URL>) urlCacheField
-                    .get(factory);
-            for (Entry<String, JarFile> entry : fileCache.entrySet().stream()
-                    .collect(Collectors.toList())) {
-                // if (entry.getKey().matches(
-                // ".*(cc.alcina|com.barnet|com.victorian|com.nswlr|com.littlewill).*"))
-                // {
-                // Ax.out("Cleared jar cache - %s", entry.getKey());
-                entry.getValue().close();
-                urlCache.remove(entry.getValue());
-                fileCache.remove(entry.getKey());
-                // }
-            }
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void destroy() {
-        try {
-            getStatusNotifier().destroyed();
-            SEUtilities.appShutdown();
-            ResourceUtilities.appShutdown();
-            Registry.impl(ServletLayerTransforms.class).appShutdown();
-            Registry.appShutdown();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public String dumpCustomProperties() {
-        Map<String, String> map = new TreeMap<String, String>();
-        map.putAll(ResourceUtilities.getCustomProperties());
-        return CommonUtils.join(map.entrySet(), "\n");
-    }
-
-    public String getDefaultLoggerLevels() {
-        return ResourceUtilities.read(AppLifecycleServletBase.class,
-                "loglevels.properties");
-    }
-
-    public Date getStartupTime() {
-        return this.startupTime;
-    }
-
-    @Override
-    public void init(ServletConfig servletConfig) throws ServletException {
-        MetricLogging.get().start("Web app startup");
-        startupTime = new Date();
-        try {
-            initServletConfig = servletConfig;
-            // push to registry
-            Registry.setProvider(new ClassLoaderAwareRegistryProvider());
-            initBootstrapRegistry();
-            initNames();
-            loadCustomProperties();
-            initDevConsoleAndWebApp();
-            initJPA();
-            initServices();
-            initEntityLayerRegistry();
-            initCluster();
-            getStatusNotifier().deploying();
-            initEntityLayer();
-            createServletTransformClientInstance();
-            initCustom();
-            ServletLayerUtils.setAppServletInitialised(true);
-            launchPostInitTasks();
-        } catch (Throwable e) {
-        	Ax.out("Exception in lifecycle servlet init");
-        	e.printStackTrace();
-            throw new ServletException(e);
-        } finally {
-            initServletConfig = null;
-        }
-        MetricLogging.get().end("Web app startup");
-        getStatusNotifier().ready();
-    }
-
-	protected  void initEntityLayerRegistry() throws Exception{
-		
+	public void clearJarCache() {
+		try {
+			String testJar = "jsr173_api.jar";
+			File testJarFile = new File("/tmp/" + testJar);
+			if (!testJarFile.exists()) {
+				byte[] bytes = ResourceUtilities
+						.readClassPathResourceAsByteArray(
+								AppLifecycleServletBase.class,
+								"res/" + testJar);
+				ResourceUtilities.writeBytesToFile(bytes, testJarFile);
+			}
+			URL url = new URL(
+					Ax.format("jar:file://%s!/javax/xml/XMLConstants.class",
+							testJarFile.getPath()));
+			URLConnection conn = url.openConnection();
+			// Class clazz = Class
+			// .forName("sun.net.www.protocol.jar.JarURLConnection");
+			Class clazz = conn.getClass();
+			Field factoryField = clazz.getDeclaredField("factory");
+			factoryField.setAccessible(true);
+			Object factory = factoryField.get(null);
+			Field fileCacheField = factory.getClass()
+					.getDeclaredField("fileCache");
+			fileCacheField.setAccessible(true);
+			Field urlCacheField = factory.getClass()
+					.getDeclaredField("urlCache");
+			urlCacheField.setAccessible(true);
+			HashMap<String, JarFile> fileCache = (HashMap<String, JarFile>) fileCacheField
+					.get(factory);
+			HashMap<JarFile, URL> urlCache = (HashMap<JarFile, URL>) urlCacheField
+					.get(factory);
+			for (Entry<String, JarFile> entry : fileCache.entrySet().stream()
+					.collect(Collectors.toList())) {
+				// if (entry.getKey().matches(
+				// ".*(cc.alcina|com.barnet|com.victorian|com.nswlr|com.littlewill).*"))
+				// {
+				// Ax.out("Cleared jar cache - %s", entry.getKey());
+				entry.getValue().close();
+				urlCache.remove(entry.getValue());
+				fileCache.remove(entry.getKey());
+				// }
+			}
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 	}
 
-	protected  void initCluster(){
-		
+	@Override
+	public void destroy() {
+		try {
+			getStatusNotifier().destroyed();
+			SEUtilities.appShutdown();
+			ResourceUtilities.appShutdown();
+			Registry.impl(ServletLayerTransforms.class).appShutdown();
+			Registry.appShutdown();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public String dumpCustomProperties() {
+		Map<String, String> map = new TreeMap<String, String>();
+		map.putAll(ResourceUtilities.getCustomProperties());
+		return CommonUtils.join(map.entrySet(), "\n");
+	}
+
+	public String getDefaultLoggerLevels() {
+		return ResourceUtilities.read(AppLifecycleServletBase.class,
+				"loglevels.properties");
+	}
+
+	public Date getStartupTime() {
+		return this.startupTime;
+	}
+
+	@Override
+	public void init(ServletConfig servletConfig) throws ServletException {
+		MetricLogging.get().start("Web app startup");
+		startupTime = new Date();
+		try {
+			initServletConfig = servletConfig;
+			// push to registry
+			Registry.setProvider(new ClassLoaderAwareRegistryProvider());
+			initBootstrapRegistry();
+			initNames();
+			loadCustomProperties();
+			initDevConsoleAndWebApp();
+			initJPA();
+			initServices();
+			initEntityLayerRegistry();
+			initCluster();
+			getStatusNotifier().deploying();
+			initEntityLayer();
+			createServletTransformClientInstance();
+			initCustom();
+			ServletLayerUtils.setAppServletInitialised(true);
+			launchPostInitTasks();
+		} catch (Throwable e) {
+			Ax.out("Exception in lifecycle servlet init");
+			e.printStackTrace();
+			throw new ServletException(e);
+		} finally {
+			initServletConfig = null;
+		}
+		MetricLogging.get().end("Web app startup");
+		getStatusNotifier().ready();
+	}
+
+	public void refreshProperties() {
+		loadCustomProperties();
+	}
+
+	@Override
+	public void service(ServletRequest arg0, ServletResponse arg1)
+			throws ServletException, IOException {
+	}
+
+	public void setStartupTime(Date startupTime) {
+		this.startupTime = startupTime;
+	}
+
+	protected void createServletTransformClientInstance() {
+		if (Registry.impl(ServletLayerTransforms.class)
+				.getServerAsClientInstance() != null) {
+			return;
+		}
+		try {
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			ClientInstance serverAsClientInstance = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence().createClientInstance(
+							"servlet: " + EntityLayerUtils.getLocalHostName(),
+							null, null);
+			ServletLayerTransforms.get()
+					.setServerAsClientInstance(serverAsClientInstance);
+		} finally {
+			ThreadedPermissionsManager.cast().popSystemUser();
+		}
 	}
 
 	protected AppServletStatusNotifier getStatusNotifier() {
 		return new AppServletStatusNotifier();
 	}
 
-    public void refreshProperties() {
-        loadCustomProperties();
-    }
+	protected void initBootstrapRegistry() {
+		AlcinaServerConfig config = new AlcinaServerConfig();
+		config.setStartDate(new Date());
+		Registry.registerSingleton(AlcinaServerConfig.class, config);
+	}
 
-    @Override
-    public void service(ServletRequest arg0, ServletResponse arg1)
-            throws ServletException, IOException {
-    }
+	protected void initCluster() {
+	}
 
-    public void setStartupTime(Date startupTime) {
-        this.startupTime = startupTime;
-    }
+	/*
+	 * Commented services must/can all be initialised with appropriate app
+	 * equivalents
+	 */
+	protected abstract void initCommonImplServices();
 
-    protected void createServletTransformClientInstance() {
-        if (Registry.impl(ServletLayerTransforms.class)
-                .getServerAsClientInstance() != null) {
-            return;
-        }
-        try {
-            ThreadedPermissionsManager.cast().pushSystemUser();
-            ClientInstance serverAsClientInstance = Registry
-                    .impl(CommonPersistenceProvider.class)
-                    .getCommonPersistence().createClientInstance(
-                            "servlet: " + EntityLayerUtils.getLocalHostName(),
-                            null, null);
-            ServletLayerTransforms.get()
-                    .setServerAsClientInstance(serverAsClientInstance);
-        } finally {
-            ThreadedPermissionsManager.cast().popSystemUser();
-        }
-    }
+	protected void initCommonServices() {
+		PermissionsManager permissionsManager = PermissionsManager.get();
+		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
+		ObjectPersistenceHelper.get();
+		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
+		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
+		Registry.registerSingleton(TimerWrapperProvider.class,
+				new TimerWrapperProviderJvm());
+	}
 
-    protected void initBootstrapRegistry() {
-        AlcinaServerConfig config = new AlcinaServerConfig();
-        config.setStartDate(new Date());
-        Registry.registerSingleton(AlcinaServerConfig.class, config);
-    }
+	protected abstract void initCustom();
 
-    /*
-     * Commented services must/can all be initialised with appropriate app
-     * equivalents
-     */
-    protected abstract void initCommonImplServices();
+	protected abstract void initCustomServices();
 
-    protected void initCommonServices() {
-        PermissionsManager permissionsManager = PermissionsManager.get();
-        PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
-        ObjectPersistenceHelper.get();
-        PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
-        LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
-        Registry.registerSingleton(TimerWrapperProvider.class,
-                new TimerWrapperProviderJvm());
-    }
+	protected abstract void initDataFolder();
 
-    protected abstract void initCustom();
+	@SuppressWarnings("deprecation")
+	protected void initDevConsoleAndWebApp() {
+		ResourceUtilities.loadSystemPropertiesFromCustomProperties();
+		if (ResourceUtilities.is("allowAllHostnameVerifier")) {
+			try {
+				HttpsURLConnection.setDefaultHostnameVerifier(
+						SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+			} catch (Throwable e) {
+				Ax.out("No hostname verification bypass: %s",
+						CommonUtils.toSimpleExceptionMessage(e));
+			}
+		}
+		initLoggers();
+	}
 
-    protected abstract void initCustomServices();
+	protected abstract void initEntityLayer() throws Exception;
 
-    protected abstract void initDataFolder();
+	protected void initEntityLayerRegistry() throws Exception {
+	}
 
-    @SuppressWarnings("deprecation")
-    protected void initDevConsoleAndWebApp() {
-        ResourceUtilities.loadSystemPropertiesFromCustomProperties();
-        if (ResourceUtilities.is("allowAllHostnameVerifier")) {
-            try {
-                HttpsURLConnection.setDefaultHostnameVerifier(
-                        SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-            } catch (Throwable e) {
-                Ax.out("No hostname verification bypass: %s",
-                        CommonUtils.toSimpleExceptionMessage(e));
-            }
-        }
-        initLoggers();
-    }
+	protected abstract void initJPA();
 
-    protected abstract void initEntityLayer() throws Exception;
+	protected void initLoggers() {
+		Logger logger = Logger.getRootLogger();
+		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
+		// JBoss will have deadlocks if we try and use console appender, leave
+		// its appender structure in place
+		//
+		// Note the customised jboss-logmanager.jar (default to strong map)
+		if (Ax.isTest()) {
+			logger.removeAllAppenders();
+			Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
+			Appender appender = new SafeConsoleAppender(layout);
+			String mainLoggerAppenderName = AlcinaServerConfig.MAIN_LOGGER_APPENDER;
+			appender.setName(mainLoggerAppenderName);
+			logger.addAppender(appender);
+		}
+		logger.setAdditivity(true);
+		logger.setLevel(Level.INFO);
+		if (!Ax.isTest()) {
+			// setup wildfly root logger appenders
+			try {
+				Field jblmLoggerField = SEUtilities
+						.getFieldByName(logger.getClass(), "jblmLogger");
+				jblmLoggerField.setAccessible(true);
+				Object jblmLogger = jblmLoggerField.get(logger);
+				Field loggerNodeField = SEUtilities
+						.getFieldByName(jblmLogger.getClass(), "loggerNode");
+				loggerNodeField.setAccessible(true);
+				Object loggerNode = loggerNodeField.get(jblmLogger);
+				Field handlersField = SEUtilities
+						.getFieldByName(loggerNode.getClass(), "handlers");
+				handlersField.setAccessible(true);
+				Object[] handlers = (Object[]) handlersField.get(loggerNode);
+				for (Object handler : handlers) {
+					if (handler.getClass().getName().equals(
+							"org.jboss.logmanager.handlers.ConsoleHandler")) {
+						Field logLevelField = SEUtilities
+								.getFieldByName(handler.getClass(), "logLevel");
+						logLevelField.setAccessible(true);
+						logLevelField.set(handler,
+								java.util.logging.Level.FINE);
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		{
+			Logger metricLogger = Logger.getLogger(MetricLogging.class);
+			if (Ax.isTest()) {
+				metricLogger.removeAllAppenders();
+				Layout metricLayout = new PatternLayout(
+						AppPersistenceBase.METRIC_LOGGER_PATTERN);
+				metricLogger.addAppender(new SafeConsoleAppender(metricLayout));
+				metricLogger.setAdditivity(false);
+			} else {
+				metricLogger.setAdditivity(true);
+			}
+			metricLogger.setLevel(Level.DEBUG);
+			ServletLayerObjects.get().setMetricLogger(metricLogger);
+			EntityLayerObjects.get().setMetricLogger(metricLogger);
+		}
+		String databaseEventLoggerName = AlcinaServerConfig.get()
+				.getDatabaseEventLoggerName();
+		if (EntityLayerObjects.get().getPersistentLogger() == null) {
+			Logger dbLogger = Logger.getLogger(databaseEventLoggerName);
+			dbLogger.removeAllAppenders();
+			dbLogger.setLevel(Level.INFO);
+			Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
+			Appender appender = new DbAppender(layout);
+			appender.setName(databaseEventLoggerName);
+			dbLogger.addAppender(appender);
+			EntityLayerObjects.get().setPersistentLogger(dbLogger);
+		}
+		EntityLayerLogging.setLogLevelsFromCustomProperties();
+	}
 
-    protected abstract void initJPA();
+	protected abstract void initNames();
 
-    protected void initLoggers() {
-        Logger logger = Logger.getRootLogger();
-        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
-        // JBoss will have deadlocks if we try and use console appender, leave
-        // its appender structure in place
-        //
-        // Note the customised jboss-logmanager.jar (default to strong map)
-        if (Ax.isTest()) {
-            logger.removeAllAppenders();
-            Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
-            Appender appender = new SafeConsoleAppender(layout);
-            String mainLoggerAppenderName = AlcinaServerConfig.MAIN_LOGGER_APPENDER;
-            appender.setName(mainLoggerAppenderName);
-            logger.addAppender(appender);
-        }
-        logger.setAdditivity(true);
-        logger.setLevel(Level.INFO);
-        if (!Ax.isTest()) {
-            // setup wildfly root logger appenders
-            try {
-                Field jblmLoggerField = SEUtilities
-                        .getFieldByName(logger.getClass(), "jblmLogger");
-                jblmLoggerField.setAccessible(true);
-                Object jblmLogger = jblmLoggerField.get(logger);
-                Field loggerNodeField = SEUtilities
-                        .getFieldByName(jblmLogger.getClass(), "loggerNode");
-                loggerNodeField.setAccessible(true);
-                Object loggerNode = loggerNodeField.get(jblmLogger);
-                Field handlersField = SEUtilities
-                        .getFieldByName(loggerNode.getClass(), "handlers");
-                handlersField.setAccessible(true);
-                Object[] handlers = (Object[]) handlersField.get(loggerNode);
-                for (Object handler : handlers) {
-                    if (handler.getClass().getName().equals(
-                            "org.jboss.logmanager.handlers.ConsoleHandler")) {
-                        Field logLevelField = SEUtilities
-                                .getFieldByName(handler.getClass(), "logLevel");
-                        logLevelField.setAccessible(true);
-                        logLevelField.set(handler,
-                                java.util.logging.Level.FINE);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        {
-            Logger metricLogger = Logger.getLogger(MetricLogging.class);
-            if (Ax.isTest()) {
-                metricLogger.removeAllAppenders();
-                Layout metricLayout = new PatternLayout(
-                        AppPersistenceBase.METRIC_LOGGER_PATTERN);
-                metricLogger.addAppender(new SafeConsoleAppender(metricLayout));
-                metricLogger.setAdditivity(false);
-            } else {
-                metricLogger.setAdditivity(true);
-            }
-            metricLogger.setLevel(Level.DEBUG);
-            ServletLayerObjects.get().setMetricLogger(metricLogger);
-            EntityLayerObjects.get().setMetricLogger(metricLogger);
-        }
-        String databaseEventLoggerName = AlcinaServerConfig.get()
-                .getDatabaseEventLoggerName();
-        if (EntityLayerObjects.get().getPersistentLogger() == null) {
-            Logger dbLogger = Logger.getLogger(databaseEventLoggerName);
-            dbLogger.removeAllAppenders();
-            dbLogger.setLevel(Level.INFO);
-            Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
-            Appender appender = new DbAppender(layout);
-            appender.setName(databaseEventLoggerName);
-            dbLogger.addAppender(appender);
-            EntityLayerObjects.get().setPersistentLogger(dbLogger);
-        }
-        EntityLayerLogging.setLogLevelsFromCustomProperties();
-    }
+	protected void initRegistry() {
+		Logger logger = Logger
+				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
+		try {
+			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
+			ClassMetadataCache classes = classMetadataCacheProvider
+					.getClassInfo(logger, false);
+			Registry servletLayerRegistry = Registry.get();
+			new RegistryScanner().scan(classes, new ArrayList<String>(),
+					servletLayerRegistry, "servlet-layer");
+			servletLayerRegistry
+					.registerBootstrapServices(ObjectPersistenceHelper.get());
+			EntityLayerObjects.get()
+					.setServletLayerRegistry(servletLayerRegistry);
+		} catch (Exception e) {
+			logger.warn("", e);
+		} finally {
+			Registry.impl(JPAImplementation.class)
+					.muteClassloaderLogging(false);
+		}
+	}
 
-    protected abstract void initNames();
+	protected void initServices() {
+		Logger logger = Logger
+				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
+		String key = "server layer init";
+		MetricLogging.get().start(key);
+		initCommonServices();
+		initDataFolder();
+		clearJarCache();
+		initRegistry();
+		initCommonImplServices();
+		initCustomServices();
+		MetricLogging.get().end(key);
+	}
 
-    protected void initRegistry() {
-        Logger logger = Logger
-                .getLogger(AlcinaServerConfig.get().getMainLoggerName());
-        try {
-            Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
-            ClassMetadataCache classes = classMetadataCacheProvider
-                    .getClassInfo(logger, false);
-            Registry servletLayerRegistry = Registry.get();
-            new RegistryScanner().scan(classes, new ArrayList<String>(),
-                    servletLayerRegistry, "servlet-layer");
-            servletLayerRegistry
-                    .registerBootstrapServices(ObjectPersistenceHelper.get());
-            EntityLayerObjects.get()
-                    .setServletLayerRegistry(servletLayerRegistry);
-        } catch (Exception e) {
-            logger.warn("", e);
-        } finally {
-            Registry.impl(JPAImplementation.class)
-                    .muteClassloaderLogging(false);
-        }
-    }
+	protected void launchPostInitTasks() {
+		Pattern pattern = Pattern.compile("post\\.init\\.(.+)");
+		StringMap stringMap = new StringMap(
+				ResourceUtilities.getCustomProperties());
+		stringMap.forEach((k, v) -> {
+			Matcher matcher = pattern.matcher(k);
+			if (matcher.matches()) {
+				String key = matcher.group(1);
+				Ax.out("Enabled post-init startup property: %s => %s", key, v);
+				ResourceUtilities.set(key, v);
+			}
+		});
+		EntityLayerLogging.setLogLevelsFromCustomProperties();
+	}
 
-    protected void initServices() {
-        Logger logger = Logger
-                .getLogger(AlcinaServerConfig.get().getMainLoggerName());
-        String key = "server layer init";
-        MetricLogging.get().start(key);
-        initCommonServices();
-        initDataFolder();
-        clearJarCache();
-        initRegistry();
-        initCommonImplServices();
-        initCustomServices();
-        MetricLogging.get().end(key);
-    }
+	protected void loadCustomProperties() {
+		try {
+			String loggerLevels = getDefaultLoggerLevels();
+			ResourceUtilities.registerCustomProperties(new ByteArrayInputStream(
+					loggerLevels.getBytes(StandardCharsets.UTF_8)));
+			File propertiesFile = new File(
+					AlcinaServerConfig.get().getCustomPropertiesFilePath());
+			if (propertiesFile.exists()) {
+				FileInputStream fis = new FileInputStream(propertiesFile);
+				ResourceUtilities.registerCustomProperties(fis);
+			} else {
+				File propertiesListFile = SEUtilities.getChildFile(
+						propertiesFile.getParentFile(),
+						"alcina-properties-files.txt");
+				if (propertiesListFile.exists()) {
+					String[] paths = ResourceUtilities
+							.readFileToString(propertiesListFile).split("\n");
+					for (String path : paths) {
+						FileInputStream fis = new FileInputStream(path);
+						ResourceUtilities.registerCustomProperties(fis);
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
-    protected void launchPostInitTasks() {
-        Pattern pattern = Pattern.compile("post\\.init\\.(.+)");
-        StringMap stringMap = new StringMap(
-                ResourceUtilities.getCustomProperties());
-        stringMap.forEach((k, v) -> {
-            Matcher matcher = pattern.matcher(k);
-            if (matcher.matches()) {
-                String key = matcher.group(1);
-                Ax.out("Enabled post-init startup property: %s => %s", key, v);
-                ResourceUtilities.set(key, v);
-            }
-        });
-        EntityLayerLogging.setLogLevelsFromCustomProperties();
-    }
+	static class CachingServletClassMetadataCacheProvider
+			extends ServletClassMetadataCacheProvider {
+		public CachingServletClassMetadataCacheProvider() {
+		}
 
-    protected void loadCustomProperties() {
-        try {
-            String loggerLevels = getDefaultLoggerLevels();
-            ResourceUtilities.registerCustomProperties(new ByteArrayInputStream(
-                    loggerLevels.getBytes(StandardCharsets.UTF_8)));
-            File propertiesFile = new File(
-                    AlcinaServerConfig.get().getCustomPropertiesFilePath());
-            if (propertiesFile.exists()) {
-                FileInputStream fis = new FileInputStream(propertiesFile);
-                ResourceUtilities.registerCustomProperties(fis);
-            } else {
-                File propertiesListFile = SEUtilities.getChildFile(
-                        propertiesFile.getParentFile(),
-                        "alcina-properties-files.txt");
-                if (propertiesListFile.exists()) {
-                    String[] paths = ResourceUtilities
-                            .readFileToString(propertiesListFile).split("\n");
-                    for (String path : paths) {
-                        FileInputStream fis = new FileInputStream(path);
-                        ResourceUtilities.registerCustomProperties(fis);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new WrappedRuntimeException(e);
-        }
-    }
-
-    static class CachingServletClassMetadataCacheProvider
-            extends ServletClassMetadataCacheProvider {
-        public CachingServletClassMetadataCacheProvider() {
-        }
-
-        @Override
-        public ClassMetadataCache getClassInfo(Logger mainLogger,
-                boolean entityLayer) throws Exception {
-            return new CachingClasspathScanner("*", true, false, mainLogger,
-                    Registry.MARKER_RESOURCE,
-                    entityLayer ? Arrays.asList(
-                            new String[] { "WEB-INF/classes", "WEB-INF/lib" })
-                            : Arrays.asList(new String[] {})).getClasses();
-        }
-    }
+		@Override
+		public ClassMetadataCache getClassInfo(Logger mainLogger,
+				boolean entityLayer) throws Exception {
+			return new CachingClasspathScanner("*", true, false, mainLogger,
+					Registry.MARKER_RESOURCE,
+					entityLayer ? Arrays.asList(
+							new String[] { "WEB-INF/classes", "WEB-INF/lib" })
+							: Arrays.asList(new String[] {})).getClasses();
+		}
+	}
 }

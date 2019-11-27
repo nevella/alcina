@@ -51,7 +51,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
-import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainProjection;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -290,15 +289,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		MetricLogging.get().start("lookups");
 		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
 				.values()) {
-			for (DomainProjection projection : descriptor.projections) {
-				if (projection instanceof DomainLookup) {
-					((DomainLookup) projection)
-							.setModificationChecker(store.modificationChecker);
-				}
-			}
-		}
-		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
-				.values()) {
 			calls.add(new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
@@ -325,8 +315,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							.getAndEnsure(projection.getListenedClass());
 				}
 				if (projection instanceof BaseProjection) {
-					((BaseProjection) projection)
-							.setModificationChecker(store.modificationChecker);
 					((BaseProjection) projection).setDomainStore(store);
 				}
 			}
@@ -749,9 +737,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 			if (sublock != null) {
 				loaded.add(hasId);
-			}
-			if (hasId != null && ensureModificationChecker) {
-				store.ensureModificationChecker(hasId);
 			}
 			for (int i = 0; i < objects.length; i++) {
 				PdOperator pdOperator = pds.get(i);

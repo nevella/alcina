@@ -41,8 +41,6 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 
 	private boolean enabled = true;
 
-	private ModificationChecker modificationChecker;
-
 	protected final transient Logger logger = LoggerFactory
 			.getLogger(getClass());
 
@@ -79,17 +77,12 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 		return this.lookup;
 	}
 
-	public ModificationChecker getModificationChecker() {
-		return modificationChecker;
-	}
-
 	public List<Class> getTypes() {
 		return this.types;
 	}
 
 	@Override
 	public void insert(T t) {
-		checkModification("insert");
 		Object[] values = project(t);
 		if (values != null) {
 			try {
@@ -158,7 +151,6 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 
 	@Override
 	public void remove(T t) {
-		checkModification("remove");
 		Object[] values = project(t);
 		if (values != null) {
 			try {
@@ -201,19 +193,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 		this.enabled = enabled;
 	}
 
-	public void
-			setModificationChecker(ModificationChecker modificationChecker) {
-		this.modificationChecker = modificationChecker;
-	}
-
 	public void setTypes(List<Class> types) {
 		this.types = types;
-	}
-
-	protected void checkModification(String modificationType) {
-		if (getModificationChecker() != null) {
-			getModificationChecker().check("fire");
-		}
 	}
 
 	protected MultikeyMap<T> createLookup() {

@@ -1545,9 +1545,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return false;
 	}
 
-	protected void beforeAssociationChange(HasIdAndLocalId tgt) {
-	}
-
 	/**
 	 * For subclasses Transform manager (client) explicitly doesn't check -
 	 * that's handled by (what's) the presented UI note - problems are mostly
@@ -1801,9 +1798,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
-			}
-			if (!assoc.silentUpdates()) {
-				beforeAssociationChange(targetObject);
 			}
 			if (remove) {
 				boolean wasContained = c.remove(object);
