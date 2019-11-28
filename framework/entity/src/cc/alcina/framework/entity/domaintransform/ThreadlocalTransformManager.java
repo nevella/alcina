@@ -90,6 +90,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
@@ -129,9 +130,9 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 	};
 
-	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();;
+	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();
 
-	private static ThreadLocalSequentialIdGenerator tlIdGenerator = new ThreadLocalSequentialIdGenerator();
+	private static ThreadLocalSequentialIdGenerator tlIdGenerator = new ThreadLocalSequentialIdGenerator();;
 
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
@@ -1289,6 +1290,29 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	protected boolean updateAssociationsWithoutNoChangeCheck() {
 		return getEntityManager() == null;
+	}
+
+	public static class AssociationPropogationTransformListener
+			implements DomainTransformListener {
+		@Override
+		public void domainTransform(DomainTransformEvent evt)
+				throws DomainTransformException {
+			if (!Transaction.current().isPreCommit()) {
+				return;
+			} /*
+				 * reuse some consume() code here
+				 */
+			ThreadlocalTransformManager tltm = ThreadlocalTransformManager
+					.cast();
+			TransformType transformType = evt.getTransformType();
+			switch (transformType) {
+			case NULL_PROPERTY_REF:
+			case CHANGE_PROPERTY_REF: {
+				// tltm.updateAssociation(evt, object, targetObject, remove,
+				// collectionPropertyChange);
+			}
+			}
+		}
 	}
 
 	public static class PostTransactionEntityResolver {

@@ -324,47 +324,18 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public void consume(DomainTransformEvent event)
 			throws DomainTransformException {
 		currentEvent = event;
-		HasIdAndLocalId object = null;
-		TransformType transformType = event.getTransformType();
-		if (transformType != TransformType.CREATE_OBJECT) {
-			object = getObject(event);
-			if (object == null) {
-				throw new DomainTransformException(event,
-						DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND);
-			}
-		}
-		Object existingTargetValue = null;
-		if (event.isInImmediatePropertyChangeCommit()) {
-			existingTargetValue = event.getOldValue();
-		} else if (event.getSource() == null
-				|| event.getPropertyName() == null) {
-		} else {
-			existingTargetValue = propertyAccessor().getPropertyValue(
-					event.getSource(), event.getPropertyName());
-		}
-		existingTargetValue = ensureEndpointInTransformGraph(
-				existingTargetValue);
-		HasIdAndLocalId existingTargetObject = null;
-		if (existingTargetValue instanceof HasIdAndLocalId) {
-			existingTargetObject = (HasIdAndLocalId) existingTargetValue;
-		}
-		Object newTargetValue = transformType == null ? null
-				: getTargetObject(event, false);
-		HasIdAndLocalId newTargetObject = null;
-		if (newTargetValue instanceof HasIdAndLocalId) {
-			newTargetObject = (HasIdAndLocalId) newTargetValue;
-		}
-		if (!checkPermissions(object, event, event.getPropertyName(),
-				existingTargetValue)) {
+		ProcessEventToken token = new ProcessEventToken(event);
+		if (!checkPermissions(token.object, event, event.getPropertyName(),
+				token.existingTargetValue)) {
 			return;
 		}
-		if (!checkPermissions(object, event, event.getPropertyName(),
-				newTargetValue)) {
+		if (!checkPermissions(token.object, event, event.getPropertyName(),
+				token.newTargetValue)) {
 			return;
 		}
 		getUndoManager().prepareUndo(event);
-		checkVersion(object, event);
-		switch (transformType) {
+		checkVersion(token.object, event);
+		switch (token.transformType) {
 		case CHANGE_PROPERTY_SIMPLE_VALUE:
 		case ADD_REF_TO_COLLECTION:
 		case REMOVE_REF_FROM_COLLECTION:
@@ -374,58 +345,46 @@ public abstract class TransformManager implements PropertyChangeListener,
 						"null value class for modification requiring a class");
 			}
 		}
-		switch (transformType) {
+		switch (token.transformType) {
 		// these cases will fire a new transform event (temp obj > domain obj),
 		// so should not be processed further
 		case NULL_PROPERTY_REF: {
 		}
 		case CHANGE_PROPERTY_REF:
 		case CHANGE_PROPERTY_SIMPLE_VALUE:
-			if (isReplayingRemoteEvent() && object == null) {
+			if (isReplayingRemoteEvent() && token.object == null) {
 				// it's been deleted on the client, but we've just now got the
 				// creation id
 				// note, should never occur TODO: notify server
 				return;
 			}
-			propertyAccessor().setPropertyValue(object, event.getPropertyName(),
-					newTargetValue);
+			propertyAccessor().setPropertyValue(token.object,
+					event.getPropertyName(), token.newTargetValue);
 			String pn = event.getPropertyName();
 			if (pn.equals(TransformManager.ID_FIELD_NAME)
 					|| pn.equals(TransformManager.LOCAL_ID_FIELD_NAME)) {
-				getDomainObjects().changeMapping(object, event.getObjectId(),
-						event.getObjectLocalId());
+				getDomainObjects().changeMapping(token.object,
+						event.getObjectId(), event.getObjectLocalId());
 			}
 			if (event.getCommitType() == CommitType.TO_LOCAL_BEAN) {
 				removeTransform(event);
 			}
-			objectModified(object, event, false);
-			switch (transformType) {
+			objectModified(token.object, event, false);
+			switch (token.transformType) {
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_REF:
-				boolean equivalentValues = CommonUtils.equalsWithNullEquality(
-						existingTargetValue, newTargetValue);
-				boolean equalValues = existingTargetValue == newTargetValue;
-				if (!equalValues && (updateAssociationsWithoutNoChangeCheck()
-						|| !equivalentValues)) {
-					if (existingTargetValue instanceof Collection) {
+				if (token.existingTargetValue != token.newTargetValue) {
+					if (token.existingTargetValue instanceof Collection) {
 						throw new RuntimeException(
 								"Should not null a collection property:\n "
 										+ event.toString());
 					}
-					/*
-					 * sort of gnarly here - when we're using transactional
-					 * domainStore we may want to replace the collection member
-					 * (non-transactional) with a transactional clone - which
-					 * equals() - but we definitely don't want to get stuck in a
-					 * loop. on the other hand, the client should always fire
-					 * collection mods
-					 */
-					boolean fireCollectionMods = !equivalentValues
-							|| alwaysFireObjectOwnerCollectionModifications();
-					updateAssociation(event, object, existingTargetObject, true,
+					boolean fireCollectionMods = true;
+					updateAssociation(event, token.object,
+							token.existingTargetObject, true,
 							fireCollectionMods);
-					updateAssociation(event, object, newTargetObject, false,
-							fireCollectionMods);
+					updateAssociation(event, token.object,
+							token.newTargetObject, false, fireCollectionMods);
 				}
 				break;
 			}
@@ -433,33 +392,35 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// add and removeref will not cause a property change, so no transform
 		// removal
 		case ADD_REF_TO_COLLECTION: {
-			maybeModifyAsPropertyChange(object, event.getPropertyName(),
-					newTargetValue, CollectionModificationType.ADD);
-			Set set = (Set) propertyAccessor().getPropertyValue(object,
+			maybeModifyAsPropertyChange(token.object, event.getPropertyName(),
+					token.newTargetValue, CollectionModificationType.ADD);
+			Set set = (Set) propertyAccessor().getPropertyValue(token.object,
 					event.getPropertyName());
-			if (!set.contains(newTargetValue)) {
-				doubleCheckAddition(set, newTargetValue);
+			if (!set.contains(token.newTargetValue)) {
+				doubleCheckAddition(set, token.newTargetValue);
 			}
-			objectModified(object, event, false);
-			updateAssociation(event, object, newTargetObject, false, true);
-			collectionChanged(object, newTargetValue);
+			objectModified(token.object, event, false);
+			updateAssociation(event, token.object, token.newTargetObject, false,
+					true);
+			collectionChanged(token.object, token.newTargetValue);
 		}
 			break;
 		case REMOVE_REF_FROM_COLLECTION: {
-			maybeModifyAsPropertyChange(object, event.getPropertyName(),
-					newTargetValue, CollectionModificationType.REMOVE);
-			Set set = (Set) propertyAccessor().getPropertyValue(object,
+			maybeModifyAsPropertyChange(token.object, event.getPropertyName(),
+					token.newTargetValue, CollectionModificationType.REMOVE);
+			Set set = (Set) propertyAccessor().getPropertyValue(token.object,
 					event.getPropertyName());
-			boolean wasContained = set.remove(newTargetValue);
+			boolean wasContained = set.remove(token.newTargetValue);
 			if (!wasContained) {
-				doubleCheckRemoval(set, newTargetValue);
+				doubleCheckRemoval(set, token.newTargetValue);
 			}
 		}
-			updateAssociation(event, object, newTargetObject, true, true);
-			collectionChanged(object, newTargetValue);
+			updateAssociation(event, token.object, token.newTargetObject, true,
+					true);
+			collectionChanged(token.object, token.newTargetValue);
 			break;
 		case DELETE_OBJECT:
-			performDeleteObject((HasIdAndLocalId) object);
+			performDeleteObject((HasIdAndLocalId) token.object);
 			break;
 		case CREATE_OBJECT:
 			if (event.getObjectId() != 0) {
@@ -495,7 +456,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 			break;
 		default:
-			assert false : "Transform type not implemented: " + transformType;
+			assert false : "Transform type not implemented: "
+					+ token.transformType;
 		}
 		currentEvent = null;
 	}
@@ -1989,6 +1951,53 @@ public abstract class TransformManager implements PropertyChangeListener,
 				evt.setEventId(tm.nextEventIdCounter());
 				tm.setTransformCommitType(evt, CommitType.TO_LOCAL_GRAPH);
 				return;
+			}
+		}
+	}
+
+	class ProcessEventToken {
+		HasIdAndLocalId object;
+
+		private TransformType transformType;
+
+		private Object existingTargetValue;
+
+		private HasIdAndLocalId existingTargetObject;
+
+		private Object newTargetValue;
+
+		private HasIdAndLocalId newTargetObject;
+
+		ProcessEventToken(DomainTransformEvent event)
+				throws DomainTransformException {
+			transformType = event.getTransformType();
+			if (transformType != TransformType.CREATE_OBJECT) {
+				object = getObject(event);
+				if (object == null) {
+					throw new DomainTransformException(event,
+							DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND);
+				}
+			}
+			existingTargetValue = null;
+			if (event.isInImmediatePropertyChangeCommit()) {
+				existingTargetValue = event.getOldValue();
+			} else if (event.getSource() == null
+					|| event.getPropertyName() == null) {
+			} else {
+				existingTargetValue = propertyAccessor().getPropertyValue(
+						event.getSource(), event.getPropertyName());
+			}
+			existingTargetValue = ensureEndpointInTransformGraph(
+					existingTargetValue);
+			existingTargetObject = null;
+			if (existingTargetValue instanceof HasIdAndLocalId) {
+				existingTargetObject = (HasIdAndLocalId) existingTargetValue;
+			}
+			newTargetValue = transformType == null ? null
+					: getTargetObject(event, false);
+			newTargetObject = null;
+			if (newTargetValue instanceof HasIdAndLocalId) {
+				newTargetObject = (HasIdAndLocalId) newTargetValue;
 			}
 		}
 	}

@@ -85,6 +85,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.AssociationPropogationTransformListener;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
@@ -1346,17 +1347,6 @@ public class DomainStore implements IDomainStore {
 				}
 			}
 			return input;
-		}
-	}
-
-	static class AssociationPropogationTransformListener
-			implements DomainTransformListener {
-		@Override
-		public void domainTransform(DomainTransformEvent evt)
-				throws DomainTransformException {
-			if (!Transaction.current().isPreCommit()) {
-				return;
-			}
 		}
 	}
 
