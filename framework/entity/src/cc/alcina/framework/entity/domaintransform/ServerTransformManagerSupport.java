@@ -129,10 +129,17 @@ public class ServerTransformManagerSupport {
 					}
 					if (hiliTarget != null && !(hiliTarget instanceof IUser)
 							&& !(hiliTarget instanceof IGroup)) {
-						TransformManager.get().registerDomainObject(
-								((AbstractDomainBase) hiliTarget).writeable());
+						AbstractDomainBase writeable = ((AbstractDomainBase) hiliTarget)
+								.writeable();
+						if (writeable == null) {
+							/*
+							 * not part of domain - use the target
+							 */
+							writeable = (AbstractDomainBase) hiliTarget;
+						}
+						TransformManager.get().registerDomainObject(writeable);
 						try {
-							pd.getWriteMethod().invoke(hili,
+							pd.getWriteMethod().invoke(writeable,
 									new Object[] { null });
 						} catch (InvocationTargetException e) {
 							if (e.getTargetException() instanceof UnsupportedOperationException) {

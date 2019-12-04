@@ -1172,8 +1172,14 @@ public class DomainStore implements IDomainStore {
 
 			@Override
 			public <V extends HasIdAndLocalId> V writeable(V v) {
-				return v == null ? null
-						: storeHandler(v.getClass()).writeable(v);
+				if (v == null) {
+					return null;
+				}
+				DomainHandler storeHandler = storeHandler(v.getClass());
+				if (storeHandler == null) {
+					return null;
+				}
+				return storeHandler.writeable(v);
 			}
 
 			DomainHandler storeHandler(Class clazz) {
