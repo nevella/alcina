@@ -24,147 +24,148 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainProxy;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 public class ServerTransformManagerSupport {
-    public static final String CONTEXT_NO_ASSOCIATION_CHECK = ServerTransformManagerSupport.class
-            .getName() + ".CONTEXT_NO_ASSOCIATION_CHECK";
+	public static final String CONTEXT_NO_ASSOCIATION_CHECK = ServerTransformManagerSupport.class
+			.getName() + ".CONTEXT_NO_ASSOCIATION_CHECK";
 
-    public void removeAssociations(HasIdAndLocalId hili) {
-        if (LooseContext.is(CONTEXT_NO_ASSOCIATION_CHECK)) {
-            return;
-        }
-        try {
-            PropertyDescriptor[] pds = Introspector.getBeanInfo(hili.getClass())
-                    .getPropertyDescriptors();
-            for (PropertyDescriptor pd : pds) {
-                if (Set.class.isAssignableFrom(pd.getPropertyType())) {
-                    Association info = pd.getReadMethod()
-                            .getAnnotation(Association.class);
-                    Set set = (Set) pd.getReadMethod().invoke(hili,
-                            CommonUtils.EMPTY_OBJECT_ARRAY);
-                    if (info != null && set != null) {
-                        for (Object o2 : set) {
-                            String accessorName = "get" + CommonUtils
-                                    .capitaliseFirst(info.propertyName());
-                            Object o3 = o2.getClass()
-                                    .getMethod(accessorName, new Class[0])
-                                    .invoke(o2, CommonUtils.EMPTY_OBJECT_ARRAY);
-                            if (o3 instanceof Set) {
-                                Set assocSet = (Set) o3;
-                                assocSet.remove(hili);
-                            }
-                            if (info.dereferenceOnDelete()) {
-                                if (!ThreadlocalTransformManager
-                                        .isInEntityManagerTransaction()) {
-                                    TransformManager.get().registerDomainObject(
-                                            (HasIdAndLocalId) o2);
-                                    Reflections.propertyAccessor()
-                                            .setPropertyValue(o2,
-                                                    info.propertyName(), null);
-                                }
-                            }
-                            /*
-                             * direct references (parent/one-one) are not
-                             * removed, throw a referential integrity exception
-                             * instead i.e. these *must* be handled explicity in
-                             * code three years later, not sure why I opted for
-                             * the above but I guess, if it's server layer, the
-                             * programmer has more control and there may be a
-                             * decent reason hmm - for domainStore, we need
-                             * auto-removal of parent/child relations if
-                             * transforming from servlet layer. possibly the
-                             * "no-auto" was answer.getsurveyresponse
-                             * performance in cosa? ..ahah - permissions
-                             * reasons. if we null user/group (and are not
-                             * root), may cause unwanted permissions probs - so
-                             * only do in removeParentAssociations(), which is
-                             * effectively root-only
-                             */
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
+	public void removeAssociations(HasIdAndLocalId hili) {
+		if (LooseContext.is(CONTEXT_NO_ASSOCIATION_CHECK)) {
+			return;
+		}
+		try {
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(hili.getClass())
+					.getPropertyDescriptors();
+			for (PropertyDescriptor pd : pds) {
+				if (Set.class.isAssignableFrom(pd.getPropertyType())) {
+					Association info = pd.getReadMethod()
+							.getAnnotation(Association.class);
+					Set set = (Set) pd.getReadMethod().invoke(hili,
+							CommonUtils.EMPTY_OBJECT_ARRAY);
+					if (info != null && set != null) {
+						for (Object o2 : set) {
+							String accessorName = "get" + CommonUtils
+									.capitaliseFirst(info.propertyName());
+							Object o3 = o2.getClass()
+									.getMethod(accessorName, new Class[0])
+									.invoke(o2, CommonUtils.EMPTY_OBJECT_ARRAY);
+							if (o3 instanceof Set) {
+								Set assocSet = (Set) o3;
+								assocSet.remove(hili);
+							}
+							if (info.dereferenceOnDelete()) {
+								if (!ThreadlocalTransformManager
+										.isInEntityManagerTransaction()) {
+									TransformManager.get().registerDomainObject(
+											(HasIdAndLocalId) o2);
+									Reflections.propertyAccessor()
+											.setPropertyValue(o2,
+													info.propertyName(), null);
+								}
+							}
+							/*
+							 * direct references (parent/one-one) are not
+							 * removed, throw a referential integrity exception
+							 * instead i.e. these *must* be handled explicity in
+							 * code three years later, not sure why I opted for
+							 * the above but I guess, if it's server layer, the
+							 * programmer has more control and there may be a
+							 * decent reason hmm - for domainStore, we need
+							 * auto-removal of parent/child relations if
+							 * transforming from servlet layer. possibly the
+							 * "no-auto" was answer.getsurveyresponse
+							 * performance in cosa? ..ahah - permissions
+							 * reasons. if we null user/group (and are not
+							 * root), may cause unwanted permissions probs - so
+							 * only do in removeParentAssociations(), which is
+							 * effectively root-only
+							 */
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
-    public void removeParentAssociations(HasIdAndLocalId hili) {
-        try {
-            PropertyDescriptor[] pds = Introspector.getBeanInfo(hili.getClass())
-                    .getPropertyDescriptors();
-            AbstractDomainBase domainVersion = null;
-            if (hili instanceof AbstractDomainBase
-                    && DomainStore.writableStore().isCached(hili.getClass())) {
-                domainVersion = hili.domain().domainVersion();
-                if (domainVersion instanceof DomainProxy) {
-                    // don't run against proxies, it's a little tricky - keep
-                    // these manual for the moment
-                    domainVersion = null;
-                }
-            }
-            for (PropertyDescriptor pd : pds) {
-                if (HasIdAndLocalId.class.isAssignableFrom(pd.getPropertyType())
-                        && pd.getWriteMethod() != null && pd.getReadMethod()
-                                .getAnnotation(SyntheticGetter.class) == null) {
-                    HasIdAndLocalId hiliTarget = (HasIdAndLocalId) pd
-                            .getReadMethod()
-                            .invoke(hili, CommonUtils.EMPTY_OBJECT_ARRAY);
-                    if (hiliTarget == null) {
-                        if (domainVersion != null) {
-                            hiliTarget = (HasIdAndLocalId) pd.getReadMethod()
-                                    .invoke(domainVersion,
-                                            CommonUtils.EMPTY_OBJECT_ARRAY);
-                            if (hiliTarget != null) {
-                                try {
-                                    // just so it can be nulled
-                                    pd.getWriteMethod().invoke(hili,
-                                            new Object[] { hiliTarget });
-                                } catch (InvocationTargetException e) {
-                                    if (e.getTargetException() instanceof UnsupportedOperationException) {
-                                    } else {
-                                        throw e;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (hiliTarget != null && !(hiliTarget instanceof IUser)
-                            && !(hiliTarget instanceof IGroup)) {
-                        TransformManager.get().registerDomainObject(hiliTarget);
-                        try {
-                            pd.getWriteMethod().invoke(hili,
-                                    new Object[] { null });
-                        } catch (InvocationTargetException e) {
-                            if (e.getTargetException() instanceof UnsupportedOperationException) {
-                            } else {
-                                throw e;
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
+	public void removeParentAssociations(HasIdAndLocalId hili) {
+		try {
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(hili.getClass())
+					.getPropertyDescriptors();
+			AbstractDomainBase domainVersion = null;
+			if (hili instanceof AbstractDomainBase
+					&& DomainStore.writableStore().isCached(hili.getClass())) {
+				domainVersion = hili.domain().domainVersion();
+				if (domainVersion instanceof DomainProxy) {
+					// don't run against proxies, it's a little tricky - keep
+					// these manual for the moment
+					domainVersion = null;
+				}
+			}
+			for (PropertyDescriptor pd : pds) {
+				if (HasIdAndLocalId.class.isAssignableFrom(pd.getPropertyType())
+						&& pd.getWriteMethod() != null && pd.getReadMethod()
+								.getAnnotation(SyntheticGetter.class) == null) {
+					HasIdAndLocalId hiliTarget = (HasIdAndLocalId) pd
+							.getReadMethod()
+							.invoke(hili, CommonUtils.EMPTY_OBJECT_ARRAY);
+					if (hiliTarget == null) {
+						if (domainVersion != null) {
+							hiliTarget = (HasIdAndLocalId) pd.getReadMethod()
+									.invoke(domainVersion,
+											CommonUtils.EMPTY_OBJECT_ARRAY);
+							if (hiliTarget != null) {
+								try {
+									// just so it can be nulled
+									pd.getWriteMethod().invoke(hili,
+											new Object[] { hiliTarget });
+								} catch (InvocationTargetException e) {
+									if (e.getTargetException() instanceof UnsupportedOperationException) {
+									} else {
+										throw e;
+									}
+								}
+							}
+						}
+					}
+					if (hiliTarget != null && !(hiliTarget instanceof IUser)
+							&& !(hiliTarget instanceof IGroup)) {
+						TransformManager.get().registerDomainObject(
+								((AbstractDomainBase) hiliTarget).writeable());
+						try {
+							pd.getWriteMethod().invoke(hili,
+									new Object[] { null });
+						} catch (InvocationTargetException e) {
+							if (e.getTargetException() instanceof UnsupportedOperationException) {
+							} else {
+								throw e;
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
-    protected void doCascadeDeletes(final HasIdAndLocalId hili) {
-        PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
-        SEUtilities.iterateForPropertyWithAnnotation(hili, Association.class,
-                new HasAnnotationCallback<Association>() {
-                    @Override
-                    public void apply(Association association,
-                            PropertyReflector propertyReflector) {
-                        if (association.cascadeDeletes()) {
-                            Object object = propertyReflector
-                                    .getPropertyValue(hili);
-                            if (object instanceof Set) {
-                                for (HasIdAndLocalId target : (Set<HasIdAndLocalId>) object) {
-                                    ThreadlocalTransformManager.get()
-                                            .deleteObject(target, true);
-                                }
-                            }
-                        }
-                    }
-                });
-    }
+	protected void doCascadeDeletes(final HasIdAndLocalId hili) {
+		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
+		SEUtilities.iterateForPropertyWithAnnotation(hili, Association.class,
+				new HasAnnotationCallback<Association>() {
+					@Override
+					public void apply(Association association,
+							PropertyReflector propertyReflector) {
+						if (association.cascadeDeletes()) {
+							Object object = propertyReflector
+									.getPropertyValue(hili);
+							if (object instanceof Set) {
+								for (HasIdAndLocalId target : (Set<HasIdAndLocalId>) object) {
+									ThreadlocalTransformManager.get()
+											.deleteObject(target, true);
+								}
+							}
+						}
+					}
+				});
+	}
 }
