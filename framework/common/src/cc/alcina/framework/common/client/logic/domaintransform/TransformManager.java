@@ -320,11 +320,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		promoteToDomain(c, false);
 	}
 
-	@SuppressWarnings("incomplete-switch")
 	public void consume(DomainTransformEvent event)
 			throws DomainTransformException {
 		currentEvent = event;
-		ProcessEventToken token = new ProcessEventToken(event);
+		ProcessEventToken token = createProcessEventToken(event);
 		if (!checkPermissions(token.object, event, event.getPropertyName(),
 				token.existingTargetValue)) {
 			return;
@@ -348,14 +347,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 		switch (token.transformType) {
 		// these cases will fire a new transform event (temp obj > domain obj),
 		// so should not be processed further
-		case NULL_PROPERTY_REF: {
-		}
+		case NULL_PROPERTY_REF:
 		case CHANGE_PROPERTY_REF:
 		case CHANGE_PROPERTY_SIMPLE_VALUE:
 			if (isReplayingRemoteEvent() && token.object == null) {
 				// it's been deleted on the client, but we've just now got the
-				// creation id
-				// note, should never occur TODO: notify server
+				// creation id - should be very rare occurrence.
+				// TODO: notify server
 				return;
 			}
 			propertyAccessor().setPropertyValue(token.object,
@@ -366,6 +364,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				getDomainObjects().changeMapping(token.object,
 						event.getObjectId(), event.getObjectLocalId());
 			}
+			// MVCC - needed?
 			if (event.getCommitType() == CommitType.TO_LOCAL_BEAN) {
 				removeTransform(event);
 			}
@@ -379,18 +378,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 								"Should not null a collection property:\n "
 										+ event.toString());
 					}
-					boolean fireCollectionMods = true;
-					updateAssociation(event, token.object,
-							token.existingTargetObject, true,
-							fireCollectionMods);
-					updateAssociation(event, token.object,
-							token.newTargetObject, false, fireCollectionMods);
 				}
 				break;
 			}
 			break;
 		// add and removeref will not cause a property change, so no transform
 		// removal
+		//
+		// on the client, if replaying, we want to refire these for the UI to
+		// notice ('maybeModifyAsPropertyChange'). on the server (db commit),
+		// it's a lot more efficient to not do that
 		case ADD_REF_TO_COLLECTION: {
 			maybeModifyAsPropertyChange(token.object, event.getPropertyName(),
 					token.newTargetValue, CollectionModificationType.ADD);
@@ -400,8 +397,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 				doubleCheckAddition(set, token.newTargetValue);
 			}
 			objectModified(token.object, event, false);
-			updateAssociation(event, token.object, token.newTargetObject, false,
-					true);
 			collectionChanged(token.object, token.newTargetValue);
 		}
 			break;
@@ -414,11 +409,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 			if (!wasContained) {
 				doubleCheckRemoval(set, token.newTargetValue);
 			}
-		}
-			updateAssociation(event, token.object, token.newTargetObject, true,
-					true);
 			collectionChanged(token.object, token.newTargetValue);
 			break;
+		}
 		case DELETE_OBJECT:
 			performDeleteObject((HasIdAndLocalId) token.object);
 			break;
@@ -1275,8 +1268,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		HasIdAndLocalId hili = (HasIdAndLocalId) evt.getSource();
 		if (this.getDomainObjects() != null) {
-			if (provisionalObjects.isEmpty()
-					|| !provisionalObjects.containsKey(hili)) {
+			if (!provisionalObjects.containsKey(hili)) {
 				maybeFireCollectionModificationEvent(hili.provideEntityClass(),
 						true);
 			}
@@ -1499,6 +1491,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return sb.toString();
 	}
 
+	private ProcessEventToken createProcessEventToken(
+			DomainTransformEvent event) throws DomainTransformException {
+		return new ProcessEventToken(event);
+	}
+
 	protected boolean allowUnregisteredHiliTargetObject() {
 		return false;
 	}
@@ -1531,7 +1528,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	protected void collectionChanged(Object obj, Object tgt) {
-		// changes won't be noticed unless we do this
+		// changes won't be noticed unless we do this -
+		//
+		// FIXME maybe can get rid
+		// of this (check if all wrapperpersistable changes use new collections)
 		if (obj instanceof WrapperPersistable) {
 			((WrapperPersistable) obj)
 					.fireNullPropertyChange(UNSPECIFIC_PROPERTY_CHANGE);
@@ -1727,7 +1727,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected void updateAssociation(DomainTransformEvent evt,
 			HasIdAndLocalId object, HasIdAndLocalId targetObject,
-			boolean remove, boolean collectionPropertyChange) {
+			boolean remove) {
 		Association assoc = object == null ? null
 				: propertyAccessor().getAnnotationForProperty(
 						object.provideEntityClass(), Association.class,
@@ -1754,12 +1754,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// checkPermissions(hTgt, evt, assoc.propertyName());
 		if (assocObjIsCollection) {
 			Collection c = (Collection) associatedObject;
-			if (collectionPropertyChange && !assoc.silentUpdates()) {
-				try {
-					c = CommonUtils.shallowCollectionClone(c);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
+			try {
+				c = CommonUtils.shallowCollectionClone(c);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
 			}
 			if (remove) {
 				boolean wasContained = c.remove(object);
@@ -1771,10 +1769,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 					doubleCheckAddition(c, object);
 				}
 			}
-			if (collectionPropertyChange && !assoc.silentUpdates()) {
-				propertyAccessor().setPropertyValue(targetObject,
-						assoc.propertyName(), c);
-			}
+			propertyAccessor().setPropertyValue(targetObject,
+					assoc.propertyName(), c);
 		} else {
 			/*
 			 * we can get in an ugly loop in the following case: x.parent=p1
@@ -1808,12 +1804,59 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return true;
 	}
 
+	/*
+	 * Called directly on the client (from
+	 * CommitToLocalDomainTransformListener), during mvcc transactions after
+	 * property changes (server)
+	 */
+	public static class AssociationPropogationTransformListener
+			implements DomainTransformListener {
+		private CommitType filterType;
+
+		public AssociationPropogationTransformListener(CommitType filterType) {
+			this.filterType = filterType;
+		}
+
+		@Override
+		public void domainTransform(DomainTransformEvent event)
+				throws DomainTransformException {
+			if (event.getCommitType() != filterType) {
+				return;
+			}
+			TransformManager tm = TransformManager.get();
+			ProcessEventToken token = tm.createProcessEventToken(event);
+			switch (token.transformType) {
+			case NULL_PROPERTY_REF:
+			case CHANGE_PROPERTY_REF: {
+				tm.updateAssociation(event, token.object,
+						token.existingTargetObject, true);
+				tm.updateAssociation(event, token.object, token.newTargetObject,
+						false);
+				break;
+			}
+			case ADD_REF_TO_COLLECTION: {
+				tm.updateAssociation(event, token.object, token.newTargetObject,
+						false);
+				break;
+			}
+			case REMOVE_REF_FROM_COLLECTION: {
+				tm.updateAssociation(event, token.object, token.newTargetObject,
+						true);
+				break;
+			}
+			}
+		}
+	}
+
 	public enum CollectionModificationType {
 		ADD, REMOVE
 	}
 
 	public static class CommitToLocalDomainTransformListener
 			implements DomainTransformListener {
+		AssociationPropogationTransformListener associationPropogation = new AssociationPropogationTransformListener(
+				CommitType.TO_LOCAL_GRAPH);
+
 		/**
 		 * Until 23/11/2010, case NULL_PROPERTY_REF: case CHANGE_PROPERTY_REF:
 		 * were not in the case
@@ -1834,6 +1877,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				case CHANGE_PROPERTY_REF:
 					try {
 						tm.consume(evt);
+						associationPropogation.domainTransform(evt);
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
 					}

@@ -106,10 +106,10 @@ public class DomainLookup<T, H extends HasIdAndLocalId>
 		if (v1 instanceof Collection) {
 			Set deduped = new LinkedHashSet((Collection) v1);
 			for (Object v2 : deduped) {
-				add(normalise((T) v2), hili.getId());
+				add(normalise((T) v2), hili.provideTransactionalId());
 			}
 		} else {
-			add(normalise((T) v1), hili.getId());
+			add(normalise((T) v1), hili.provideTransactionalId());
 		}
 	}
 

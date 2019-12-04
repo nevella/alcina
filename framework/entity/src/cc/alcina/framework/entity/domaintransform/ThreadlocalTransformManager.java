@@ -31,7 +31,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.persistence.EntityManager;
-import javax.persistence.ManyToMany;
 import javax.persistence.Query;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -44,6 +43,7 @@ import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
@@ -475,11 +475,11 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> clazz,
 			long id, long localId) {
-		if (!HasIdAndLocalId.class.isAssignableFrom(c)) {
+		if (!HasIdAndLocalId.class.isAssignableFrom(clazz)) {
 			throw new WrappedRuntimeException(
-					"Attempting to obtain incompatible bean: " + c,
+					"Attempting to obtain incompatible bean: " + clazz,
 					SuggestedAction.NOTIFY_WARNING);
 		}
 		if (id == 0) {
@@ -499,35 +499,41 @@ public class ThreadlocalTransformManager extends TransformManager
 				}
 			}
 		}
-		if (id != 0 && getEntityManager() != null) {
-			if (WrapperPersistable.class.isAssignableFrom(c)) {
-				try {
-					WrappedObject wrapper = Registry
-							.impl(WrappedObjectProvider.class)
-							.getObjectWrapperForUser((Class) c, id,
-									entityManager);
-					maybeListenToObjectWrapper(wrapper);
-					T wofu = (T) wrapper.getObject();
-					return (T) wofu;
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
+		if (id != 0) {
+			if (getEntityManager() != null) {
+				if (WrapperPersistable.class.isAssignableFrom(clazz)) {
+					try {
+						WrappedObject wrapper = Registry
+								.impl(WrappedObjectProvider.class)
+								.getObjectWrapperForUser((Class) clazz, id,
+										entityManager);
+						maybeListenToObjectWrapper(wrapper);
+						T wofu = (T) wrapper.getObject();
+						return (T) wofu;
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
 				}
+				T t = getEntityManager().find(clazz, id);
+				// this may be a performance hit - but worth it - otherwise all
+				// sorts of potential problems
+				// basically, transform events should (must) always have refs to
+				// "real" objects, not wrappers
+				t = ensureNonProxy(t);
+				if (listenToFoundObjects
+						&& t instanceof SourcesPropertyChangeEvents) {
+					((SourcesPropertyChangeEvents) t)
+							.addPropertyChangeListener(this);
+				}
+				if (localId != 0 && t != null) {
+					localIdToEntityMap.put(localId, t);
+				}
+				return t;
+			} else {
+				T t = Domain.find(clazz, id);
+				registerDomainObject(t);
+				return t;
 			}
-			T t = getEntityManager().find(c, id);
-			// this may be a performance hit - but worth it - otherwise all
-			// sorts of potential problems
-			// basically, transform events should (must) always have refs to
-			// "real" objects, not wrappers
-			t = ensureNonProxy(t);
-			if (listenToFoundObjects
-					&& t instanceof SourcesPropertyChangeEvents) {
-				((SourcesPropertyChangeEvents) t)
-						.addPropertyChangeListener(this);
-			}
-			if (localId != 0 && t != null) {
-				localIdToEntityMap.put(localId, t);
-			}
-			return t;
 		}
 		return null;
 	}
@@ -672,8 +678,13 @@ public class ThreadlocalTransformManager extends TransformManager
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		try {
 			if (HasIdAndLocalId.class.isAssignableFrom(clazz)) {
-				HasIdAndLocalId newInstance = (HasIdAndLocalId) clazz
-						.newInstance();
+				HasIdAndLocalId newInstance = null;
+				if (entityManager == null) {
+					newInstance = Transaction.current().create((Class) clazz,
+							DomainStore.stores().storeFor(clazz));
+				} else {
+					newInstance = (HasIdAndLocalId) clazz.newInstance();
+				}
 				localIdToEntityMap.put(localId, newInstance);
 				if (entityManager != null) {
 					if (isUseObjectCreationId() && objectId != 0) {
@@ -1269,50 +1280,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	// No need for property changes here - if in entitylayer
-	// TODO - isn't this a huge hit?
-	protected void updateAssociation(DomainTransformEvent evt,
-			HasIdAndLocalId object, HasIdAndLocalId targetObject,
-			boolean remove, boolean collectionPropertyChange) {
-		if (getEntityManager() == null) {
-			super.updateAssociation(evt, object, targetObject, remove, false);
-		} else {
-			ManyToMany manyToMany = Reflections.propertyAccessor()
-					.getAnnotationForProperty(evt.getObjectClass(),
-							ManyToMany.class, evt.getPropertyName());
-			if (manyToMany != null && manyToMany.mappedBy().length() != 0) {
-				super.updateAssociation(evt, object, targetObject, remove,
-						false);
-			}
-		}
-	}
-
-	@Override
 	protected boolean updateAssociationsWithoutNoChangeCheck() {
 		return getEntityManager() == null;
-	}
-
-	public static class AssociationPropogationTransformListener
-			implements DomainTransformListener {
-		@Override
-		public void domainTransform(DomainTransformEvent evt)
-				throws DomainTransformException {
-			if (!Transaction.current().isPreCommit()) {
-				return;
-			} /*
-				 * reuse some consume() code here
-				 */
-			ThreadlocalTransformManager tltm = ThreadlocalTransformManager
-					.cast();
-			TransformType transformType = evt.getTransformType();
-			switch (transformType) {
-			case NULL_PROPERTY_REF:
-			case CHANGE_PROPERTY_REF: {
-				// tltm.updateAssociation(evt, object, targetObject, remove,
-				// collectionPropertyChange);
-			}
-			}
-		}
 	}
 
 	public static class PostTransactionEntityResolver {

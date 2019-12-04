@@ -54,11 +54,4 @@ public @interface Association {
 	 * propertyName "books"
 	 */
 	String propertyName() default "";
-
-	/**
-	 * Do not update the other end of this association when consuming a
-	 * DomainTransformEvent - this is useful for performance reasons
-	 * (parent-child associations with 1000s of kids spring to mind)
-	 */
-	boolean silentUpdates() default false;
 }

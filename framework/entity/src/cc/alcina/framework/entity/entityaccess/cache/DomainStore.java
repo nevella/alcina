@@ -85,7 +85,6 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.AssociationPropogationTransformListener;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
@@ -149,7 +148,8 @@ public class DomainStore implements IDomainStore {
 			.getTaggedLogger(DomainStore.class, "wrapped_object_ref_integrity");
 	static {
 		ThreadlocalTransformManager.addThreadLocalDomainTransformListener(
-				new AssociationPropogationTransformListener());
+				new TransformManager.AssociationPropogationTransformListener(
+						CommitType.TO_LOCAL_BEAN));
 		ThreadlocalTransformManager.addThreadLocalDomainTransformListener(
 				new IndexingTransformListener());
 	}
@@ -909,6 +909,14 @@ public class DomainStore implements IDomainStore {
 			} else {
 				raw = (Set<T>) domainDescriptor.perClass.get(clazz)
 						.getRawValues(ids, cache);
+				/*
+				 * add tltm-local
+				 */
+				ids.stream().filter(id -> id < 0)
+						.map(id -> ThreadlocalTransformManager.cast().getObject(
+								clazz, 0L,
+								HasIdAndLocalId.provideUnpackedLocalId(id)))
+						.forEach(raw::add);
 			}
 			try {
 				for (PreProvideTask task : domainDescriptor.preProvideTasks) {
@@ -1080,11 +1088,6 @@ public class DomainStore implements IDomainStore {
 			@Override
 			public void commitPoint() {
 				// Noop
-			}
-
-			@Override
-			public <V extends HasIdAndLocalId> V create(Class<V> clazz) {
-				return storeHandler(clazz).create(clazz);
 			}
 
 			@Override
@@ -1383,11 +1386,6 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V create(Class<V> clazz) {
-			return Transaction.current().create(clazz, DomainStore.this);
-		}
-
-		@Override
 		public <V extends HasIdAndLocalId> V detachedVersion(V v) {
 			return (V) Domain.query(v.provideEntityClass())
 					.filterById(v.getId()).find();
@@ -1538,8 +1536,41 @@ public class DomainStore implements IDomainStore {
 
 	static class IndexingTransformListener implements DomainTransformListener {
 		@Override
-		public void domainTransform(DomainTransformEvent evt)
+		public void domainTransform(DomainTransformEvent event)
 				throws DomainTransformException {
+			if (event.getCommitType() != CommitType.TO_LOCAL_BEAN) {
+				return;
+			}
+			DomainStore store = DomainStore.stores()
+					.storeFor(event.getObjectClass());
+			HasIdAndLocalId object = TransformManager.get().getObject(event);
+			if (event.getTransformType() != TransformType.CREATE_OBJECT) {
+				switch (event.getTransformType()) {
+				case CHANGE_PROPERTY_REF:
+				case CHANGE_PROPERTY_SIMPLE_VALUE:
+				case NULL_PROPERTY_REF: {
+					TransformManager.get().setIgnorePropertyChanges(true);
+					/*
+					 * undo last property change
+					 */
+					Reflections.propertyAccessor().setPropertyValue(object,
+							event.getPropertyName(), event.getOldValue());
+					store.index(object, false);
+					/*
+					 * redo
+					 */
+					Reflections.propertyAccessor().setPropertyValue(object,
+							event.getPropertyName(), event.getNewValue());
+					TransformManager.get().setIgnorePropertyChanges(false);
+					break;
+				}
+				default:
+					store.index(object, false);
+				}
+			}
+			if (event.getTransformType() != TransformType.DELETE_OBJECT) {
+				store.index(object, true);
+			}
 		}
 	}
 
@@ -1576,16 +1607,6 @@ public class DomainStore implements IDomainStore {
 		@Override
 		protected boolean isZeroCreatedObjectLocalId(Class clazz) {
 			return true;
-		}
-
-		@Override
-		protected void updateAssociation(DomainTransformEvent evt,
-				HasIdAndLocalId object, HasIdAndLocalId targetObject,
-				boolean remove, boolean collectionPropertyChange) {
-			/*
-			 * Definitely *don't* need property changes/collection mods here
-			 */
-			super.updateAssociation(evt, object, targetObject, remove, false);
 		}
 
 		void endCommit() {

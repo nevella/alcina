@@ -116,6 +116,9 @@ public class DomainTransformEvent
 				&& CommonUtils.equalsWithNullEquality(newValue, o.newValue);
 	}
 
+	/*
+	 * Better naming would have been 'CommitPhase' but this is good enough
+	 */
 	public CommitType getCommitType() {
 		return this.commitType;
 	}

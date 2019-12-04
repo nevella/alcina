@@ -37,6 +37,13 @@ public class MvccObjectVersions<T extends HasIdAndLocalId> {
 
 	Object versionCreationMonitor = new Object();
 
+	/*
+	 * debugging aids
+	 */
+	T __mostRecentReffed;
+
+	T __mostRecentWritable;
+
 	public MvccObjectVersions(T t, Transaction initialTransaction) {
 		/*
 		 * If in the 'preparing' phase, and t is non-local, this is a
@@ -47,6 +54,10 @@ public class MvccObjectVersions<T extends HasIdAndLocalId> {
 		 * users to directly modify their copy without needing to swap to a
 		 * writeable version. In production, force the swap (there's a tiny risk
 		 * of a race)
+		 * 
+		 * If developing, make sure to abort the transaction if not committing
+		 * (dangling transforms will modify the base graph)
+		 * 
 		 */
 		if (initialTransaction.phase == TransactionPhase.PREPARING
 				&& t.provideWasPersisted()) {
@@ -90,7 +101,7 @@ public class MvccObjectVersions<T extends HasIdAndLocalId> {
 		}
 	}
 
-	T resolve(boolean write) {
+	private T resolve0(boolean write) {
 		Transaction transaction = Transaction.current();
 		ObjectVersion<T> version = versions.get(transaction);
 		if (version != null) {
@@ -114,5 +125,14 @@ public class MvccObjectVersions<T extends HasIdAndLocalId> {
 			}
 		}
 		return version.object;
+	}
+
+	T resolve(boolean write) {
+		T resolved = resolve0(write);
+		__mostRecentReffed = resolved;
+		if (write) {
+			__mostRecentWritable = resolved;
+		}
+		return resolved;
 	}
 }

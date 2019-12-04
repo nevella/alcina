@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
@@ -20,6 +19,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringI
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction.TransactionComparator;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
@@ -38,6 +38,8 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
  *   
  *    Operations are resolved to return the most recent value
  *   for the combined sequence of layers, from (per-transaction) youngest-to-oldest
+ *   
+ *   This class allows null keys and values
  *   
  */
 public class TransactionalMap<K, V> extends AbstractMap<K, V> {
@@ -65,18 +67,17 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 
 	@Override
 	public V get(Object key) {
-		Objects.requireNonNull(key);
 		if (layers == null) {
 			return base.get(key);
 		}
 		List<TransactionalMap<K, V>.Layer> visibleLayers = visibleLayers();
 		for (int idx = visibleLayers.size() - 1; idx > 0; idx--) {
 			Layer layer = visibleLayers.get(idx);
-			if (layer.wasModifiedOrRemoved(key)) {
-				return layer.get(key);
-			}
 			if (layer.wasRemoved(key)) {
 				return null;
+			}
+			if (layer.wasModifiedOrRemoved(key)) {
+				return layer.get(key);
 			}
 		}
 		return null;
@@ -89,12 +90,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 
 	@Override
 	public V put(K key, V value) {
-		/*
-		 * May need to relax this (projections with null keys) - or have null
-		 * markers
-		 */
-		Objects.requireNonNull(key);
-		Objects.requireNonNull(value);
 		V existing = get(key);
 		Layer layer = ensureLayer();
 		layer.put(key, value, existing);
@@ -103,7 +98,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 
 	@Override
 	public V remove(Object key) {
-		Objects.requireNonNull(key);
 		V existing = get(key);
 		Layer layer = ensureLayer();
 		layer.remove((K) key);
@@ -159,10 +153,14 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 			 */
 			for (Transaction committed : transaction.committedTransactions
 					.values()) {
-				TransactionalMap<K, V>.Layer layer = layers.get(committed);
+				Layer layer = layers.get(committed);
 				if (layer != null) {
 					visibleLayers.add(layer);
 				}
+			}
+			Layer currentLayer = layers.get(Transaction.current());
+			if (currentLayer != null) {
+				visibleLayers.add(currentLayer);
 			}
 			return visibleLayers;
 		}
@@ -270,6 +268,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 
 		public void remove(K key) {
 			removed.put(key, Boolean.TRUE);
+		}
+
+		@Override
+		public String toString() {
+			return GraphProjection.fieldwiseToString(this);
 		}
 
 		public boolean wasModifiedOrRemoved(Object key) {

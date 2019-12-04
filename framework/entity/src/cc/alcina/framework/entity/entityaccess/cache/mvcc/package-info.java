@@ -35,6 +35,10 @@
  * <li>Post-process and transaction cleanup
  * <li>Check no field assignment within hili private methods, and no calls to
  * setters (pretty sure checked as part of bytecode generation)
+ * <li>Tx abort - devconsole - write backup version fields to base object (see
+ * MvccObjectVersions constructor). Tx finish - remove tltm listeners. Make tltm
+ * listeners thread-specific (actually no - that would only be needed for
+ * devconsole, since non-dc listeners always ref unique-to-tltm object versions)
  * </ul>
  * *
  * <h2>Tests (1)</h2>
@@ -46,6 +50,7 @@
  * <li>Does post-process work (devconsole) - ditto lookups
  * <li>Does post-process work (devconsole) - modify an object in two
  * transactions
+ * <li>Do UI tree and collection UI selectors work?
  * </ul>
  * <h2>TODO - post</h2>
  * <ul>

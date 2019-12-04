@@ -30,4 +30,5 @@ public interface HasId extends Serializable {
 	public long getId();
 
 	public void setId(long id);
+	
 }

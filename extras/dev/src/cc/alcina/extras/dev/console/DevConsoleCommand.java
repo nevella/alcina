@@ -501,10 +501,15 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						return String.format("'%s' was run%s", runnableName,
 								msg);
 					} finally {
-						if (Transactions.isInitialised()) {
-							Transaction.end();
+						try {
+							if (Transactions.isInitialised()) {
+								Transaction.end();
+							}
+						} catch (Exception e2) {
+							e2.printStackTrace();
+						} finally {
+							LooseContext.pop();
 						}
-						LooseContext.pop();
 					}
 				}
 			}
