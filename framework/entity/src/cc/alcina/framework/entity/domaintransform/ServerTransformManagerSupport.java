@@ -138,7 +138,7 @@ public class ServerTransformManagerSupport {
 					if (hiliTarget != null && !(hiliTarget instanceof IUser)
 							&& !(hiliTarget instanceof IGroup)) {
 						try {
-							pd.getWriteMethod().invoke(hiliTarget,
+							pd.getWriteMethod().invoke(hili,
 									new Object[] { null });
 						} catch (InvocationTargetException e) {
 							if (e.getTargetException() instanceof UnsupportedOperationException) {
