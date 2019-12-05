@@ -114,6 +114,14 @@ public class ServerTransformManagerSupport {
 									.invoke(domainVersion,
 											CommonUtils.EMPTY_OBJECT_ARRAY);
 							if (hiliTarget != null) {
+								AbstractDomainBase writeable = ((AbstractDomainBase) hiliTarget)
+										.writeable();
+								if (writeable != null) {
+									/*
+									 * not part of domain - use the target
+									 */
+									hiliTarget = writeable;
+								}
 								try {
 									// just so it can be nulled
 									pd.getWriteMethod().invoke(hili,
@@ -129,17 +137,8 @@ public class ServerTransformManagerSupport {
 					}
 					if (hiliTarget != null && !(hiliTarget instanceof IUser)
 							&& !(hiliTarget instanceof IGroup)) {
-						AbstractDomainBase writeable = ((AbstractDomainBase) hiliTarget)
-								.writeable();
-						if (writeable == null) {
-							/*
-							 * not part of domain - use the target
-							 */
-							writeable = (AbstractDomainBase) hiliTarget;
-						}
-						TransformManager.get().registerDomainObject(writeable);
 						try {
-							pd.getWriteMethod().invoke(writeable,
+							pd.getWriteMethod().invoke(hiliTarget,
 									new Object[] { null });
 						} catch (InvocationTargetException e) {
 							if (e.getTargetException() instanceof UnsupportedOperationException) {
