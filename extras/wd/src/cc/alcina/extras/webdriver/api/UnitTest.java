@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.openqa.selenium.WebDriver;
@@ -221,9 +222,17 @@ public abstract class UnitTest {
 	}
 
 	protected void getAndLog(WebDriver driver, String uri) {
+		getAndLog(driver, uri, false);
+	}
+
+	protected void getAndLog(WebDriver driver, String uri, boolean refresh) {
 		String key = "Load: " + uri;
 		MetricLogging.get().start(key);
-		driver.get(uri);
+		if (refresh && Objects.equals(uri, driver.getCurrentUrl())) {
+			driver.navigate().refresh();
+		} else {
+			driver.get(uri);
+		}
 		MetricLogging.get().end(key);
 	}
 
