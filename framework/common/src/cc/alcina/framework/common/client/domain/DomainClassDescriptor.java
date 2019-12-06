@@ -22,7 +22,6 @@ import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
-import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
 /*
  * Call initialise once all infrastructure (mvcc) is ready 
@@ -69,6 +68,16 @@ public class DomainClassDescriptor<T extends HasIdAndLocalId>
 		propertyAlia.put(from, to);
 	}
 
+	public void addRawValues(Set<Long> ids, DetachedEntityCache cache,
+			Set<T> rawValues) {
+		for (Long id : ids) {
+			T value = (T) cache.get(clazz, id);
+			if (value != null) {
+				rawValues.add(value);
+			}
+		}
+	}
+
 	public Set<Long> evaluateFilter(DetachedEntityCache cache,
 			Set<Long> existing, CollectionFilter filter) {
 		if (existing == null) {
@@ -109,18 +118,6 @@ public class DomainClassDescriptor<T extends HasIdAndLocalId>
 	public Collection<HasIdAndLocalId>
 			getDependentObjectsWithDerivedProjections(HasIdAndLocalId obj) {
 		return new ArrayList<>();
-	}
-
-	public Set<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
-		ObjectLinkedOpenHashSet<T> raw = new ObjectLinkedOpenHashSet<T>(
-				ids.size());
-		for (Long id : ids) {
-			T value = (T) cache.get(clazz, id);
-			if (value != null) {
-				raw.add(value);
-			}
-		}
-		return raw;
 	}
 
 	public boolean ignoreField(String name) {

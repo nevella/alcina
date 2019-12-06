@@ -97,6 +97,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjections;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
 /**
  * <h3>Locking notes:</h3>
@@ -913,8 +914,9 @@ public class DomainStore implements IDomainStore {
 				// Domain.list()
 				raw = cache.values(clazz);
 			} else {
-				raw = (Set<T>) domainDescriptor.perClass.get(clazz)
-						.getRawValues(ids, cache);
+				raw = new ObjectLinkedOpenHashSet<T>(ids.size());
+				domainDescriptor.perClass.get(clazz).addRawValues(ids, cache,
+						(Set) raw);
 				/*
 				 * add tltm-local
 				 */
