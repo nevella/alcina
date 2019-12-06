@@ -201,6 +201,12 @@ public class DomainStore implements IDomainStore {
 		return stores().writableStore();
 	}
 
+	static Timestamp testSensitiveTimestamp(Date transactionCommitTime) {
+		return transactionCommitTime == null
+				? new Timestamp(System.currentTimeMillis())
+				: new Timestamp(transactionCommitTime.getTime());
+	}
+
 	private DomainTransformPersistenceEvents persistenceEvents;
 
 	SubgraphTransformManagerPostProcess transformManager;
@@ -733,7 +739,11 @@ public class DomainStore implements IDomainStore {
 			MetricLogging.get().start("post-process");
 			Transaction.ensureEnded();
 			Transaction.begin();
-			Transaction.current().toCommitting();
+			Date transactionCommitTime = persistenceEvent
+					.getDomainTransformLayerWrapper().persistentRequests.get(0)
+							.getTransactionCommitTime();
+			Transaction.current().toDomainCommitting(
+					testSensitiveTimestamp(transactionCommitTime));
 			threads.postProcessWriterThread = Thread.currentThread();
 			postProcessEvent = persistenceEvent;
 			health.domainStorePostProcessStartTime = System.currentTimeMillis();
@@ -822,13 +832,9 @@ public class DomainStore implements IDomainStore {
 				}
 			});
 			doEvictions();
-			Date transactionCommitTime = persistenceEvent
-					.getDomainTransformLayerWrapper().persistentRequests.get(0)
-							.getTransactionCommitTime();
-			Transaction.current().toCommitted(
-					new Timestamp(transactionCommitTime.getTime()));
+			Transaction.current().toDomainCommitted();
 		} catch (Exception e) {
-			Transaction.current().toAborted();
+			Transaction.current().toDomainAborted();
 			causes.add(e);
 		} finally {
 			transformManager.endCommit();

@@ -231,6 +231,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			transformSequencer.markHighestVisibleTransformList(conn);
 			releaseConn(conn);
 		}
+		warmupTransaction.toDomainCommitting(
+				transformSequencer.getHighestVisibleTransactionTimestamp());
 		// get non-many-many obj
 		store.threads.lock(true);
 		// lazy tables, load a segment (for large db dev work)
@@ -349,8 +351,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		warmupConnections.keySet().forEach(conn -> closeWarmupConnection(conn));
 		warmupExecutor = null;
 		warmupTransaction = null;
-		Transaction.current().toCommitted(
-				transformSequencer.getHighestVisibleTransactionTimestamp());
+		Transaction.current().toDomainCommitted();
+		Transaction.endAndBeginNew();
 	}
 
 	private void addColumnName(Class clazz, PropertyDescriptor pd,
@@ -808,16 +810,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					EntityUtils.longsToIdClause(ids));
 			LaterLookup laterLookup = new LaterLookup();
 			List<? extends DomainTransformEventPersistent> transforms = null;
-			try {
-				Transaction.begin();
-				transforms = (List) loadTable0(transformEventImplClass,
-						sqlFilter,
-						new ClassIdLock(DomainTransformRequestPersistent.class,
-								ids.iterator().next()),
-						laterLookup, false, true);
-			} finally {
-				Transaction.end();
-			}
+			Transaction.ensureActive();
+			transforms = (List) loadTable0(transformEventImplClass, sqlFilter,
+					new ClassIdLock(DomainTransformRequestPersistent.class,
+							ids.iterator().next()),
+					laterLookup, false, true);
 			laterLookup.resolve(new CustomResolver() {
 				@Override
 				public boolean handles(PdOperator pdOperator) {
@@ -882,7 +879,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						&& store.isCached(clazz)) {
 					Collection<HasIdAndLocalId> iversionables = classIdTransformee
 							.asMap(clazz).allValues();
-					tasks.add(new ILoaderTask(conn, clazz, iversionables));
+					tasks.add(new ILoaderTask(conn, clazz, iversionables,
+							Transaction.current()));
 				}
 			}
 			invokeAllWithThrow(tasks, iLoaderExecutor);
@@ -1394,17 +1392,20 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		private Connection conn;
 
+		private Transaction transaction;
+
 		public ILoaderTask(Connection conn, Class<HasIdAndLocalId> clazz,
-				Collection<HasIdAndLocalId> sources) {
+				Collection<HasIdAndLocalId> sources, Transaction transaction) {
 			this.conn = conn;
 			this.clazz = clazz;
 			this.sources = sources;
+			this.transaction = transaction;
 		}
 
 		@Override
 		public Void call() {
 			try {
-				Transaction.begin();
+				Transaction.join(transaction);
 				LaterLookup laterLookup = new LaterLookup();
 				String sqlFilter = Ax.format(" id in %s ",
 						EntityUtils.hasIdsToIdClause(sources));
@@ -1480,8 +1481,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new WrappedRuntimeException(e);
-			} finally {
-				Transaction.end();
 			}
 		}
 	}

@@ -1,10 +1,13 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
+import java.lang.reflect.Field;
 import java.util.concurrent.ConcurrentHashMap;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 /**
  * Note that like a TransactionalMap, the owning MvccObject will not be
@@ -33,10 +36,6 @@ public class MvccObjectVersions<T extends HasIdAndLocalId> {
 
 	ConcurrentHashMap<Transaction, ObjectVersion<T>> versions = new ConcurrentHashMap<>();
 
-	StoreTransaction baseStoreTransaction;
-
-	Object versionCreationMonitor = new Object();
-
 	/*
 	 * debugging aids
 	 */
@@ -59,9 +58,9 @@ public class MvccObjectVersions<T extends HasIdAndLocalId> {
 		 * (dangling transforms will modify the base graph)
 		 * 
 		 */
-		if (initialTransaction.phase == TransactionPhase.PREPARING
+		if (initialTransaction.phase == TransactionPhase.TO_DB_PREPARING
 				&& t.provideWasPersisted()) {
-			if (Ax.isTest()) {
+			if (Ax.isTest() && false) {
 				{
 					ObjectVersion<T> version = new ObjectVersion<>();
 					version.transaction = Transactions
@@ -87,6 +86,7 @@ public class MvccObjectVersions<T extends HasIdAndLocalId> {
 					ObjectVersion<T> version = new ObjectVersion<>();
 					version.transaction = initialTransaction;
 					version.object = Transactions.copyObject(t);
+					((MvccObject) version.object).__setMvccVersions__(this);
 					versions.put(version.transaction, version);
 				}
 			}
@@ -99,6 +99,22 @@ public class MvccObjectVersions<T extends HasIdAndLocalId> {
 				versions.put(version.transaction, version);
 			}
 		}
+		Ax.err(toString());
+	}
+
+	@Override
+	public String toString() {
+		try {
+			ObjectVersion<T> firstVersion = versions.values().iterator().next();
+			T object = firstVersion.object;
+			Field field = SEUtilities.getFieldByName(object.getClass(), "id");
+			Object id = field.get(object);
+			return Ax.format("versions: %s : base: %s/%s : initial-tx: %s",
+					versions.size(), object.getClass(), id,
+					firstVersion.transaction);
+		} catch (Exception e) {
+			return "exception..";
+		}
 	}
 
 	private T resolve0(boolean write) {
@@ -107,15 +123,20 @@ public class MvccObjectVersions<T extends HasIdAndLocalId> {
 		if (version != null) {
 			return version.object;
 		}
-		synchronized (versionCreationMonitor) {
+		// use versions as a monitor on creation
+		synchronized (versions) {
 			version = versions.get(transaction);
 			if (version != null) {
 				return version.object;
 			}
+			Ax.err(toString());
 			version = new ObjectVersion<>();
 			version.transaction = transaction;
 			Transaction mostRecent = transaction.mostRecentPriorTransaction(
-					versions.keys(), baseStoreTransaction.store);
+					versions.keys(),
+					DomainStore.stores()
+							.storeFor(versions.values().iterator().next().object
+									.provideEntityClass()));
 			version.object = Transactions
 					.copyObject(versions.get(mostRecent).object);
 			versions.put(transaction, version);

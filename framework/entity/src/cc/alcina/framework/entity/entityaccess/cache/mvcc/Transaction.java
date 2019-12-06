@@ -7,16 +7,24 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 public class Transaction {
 	private static ThreadLocal<Transaction> threadLocalInstance = new ThreadLocal() {
 	};
+
+	static Logger logger = LoggerFactory.getLogger(Transaction.class);
 
 	public static void begin() {
 		threadLocalInstance.set(new Transaction());
@@ -41,6 +49,10 @@ public class Transaction {
 	}
 
 	public static void endAndBeginNew() {
+		if (TransformManager.get().getTransforms().size() == 0
+				&& current().getPhase() == TransactionPhase.TO_DB_PREPARING) {
+			return;// reuse
+		}
 		end();
 		begin();
 	}
@@ -81,6 +93,7 @@ public class Transaction {
 		DomainStore.stores().stream().forEach(store -> storeTransactions
 				.put(store, new StoreTransaction(store)));
 		Transactions.get().initialiseTransaction(this);
+		logger.warn("Created tx: {}", this);
 	}
 
 	public <T extends HasIdAndLocalId> T create(Class<T> clazz,
@@ -98,8 +111,7 @@ public class Transaction {
 	public boolean equals(Object obj) {
 		if (obj instanceof Transaction) {
 			Transaction other = (Transaction) obj;
-			return Objects.equals(this.id, other.id)
-					&& this.phase == other.phase;
+			return Objects.equals(this.id, other.id);
 		} else {
 			return super.equals(obj);
 		}
@@ -111,7 +123,7 @@ public class Transaction {
 
 	@Override
 	public int hashCode() {
-		return id.hashCode() ^ phase.hashCode();
+		return id.hashCode();
 	}
 
 	public boolean isBaseTransaction() {
@@ -119,7 +131,7 @@ public class Transaction {
 	}
 
 	public boolean isPreCommit() {
-		return phase == TransactionPhase.PREPARING;
+		return phase == TransactionPhase.TO_DB_PREPARING;
 	}
 
 	public Transaction mostRecentPriorTransaction(Enumeration<Transaction> keys,
@@ -127,7 +139,7 @@ public class Transaction {
 		Transaction result = null;
 		while (keys.hasMoreElements()) {
 			Transaction element = keys.nextElement();
-			if (element.phase == TransactionPhase.COMMITTED) {
+			if (element.phase == TransactionPhase.TO_DOMAIN_COMMITTED) {
 				if (committedTransactions.containsKey(element.id)
 						|| element.isBaseTransaction()) {
 					if (result == null
@@ -152,18 +164,44 @@ public class Transaction {
 		this.committedTransactions = committedTransactions;
 	}
 
-	public void toAborted() {
-		setPhase(TransactionPhase.ABORTED);
+	public void toDbAborted() {
+		Preconditions.checkState(getPhase() == TransactionPhase.TO_DB_PERSISTING
+				|| getPhase() == TransactionPhase.TO_DB_PREPARING);
+		setPhase(TransactionPhase.TO_DB_ABORTED);
 	}
 
-	public void toCommitted(Timestamp timestamp) {
+	public void toDbPersisted(Timestamp timestamp) {
+		Preconditions
+				.checkState(getPhase() == TransactionPhase.TO_DB_PERSISTING);
 		this.databaseCommitTimestamp = timestamp;
-		setPhase(TransactionPhase.COMMITTED);
+		setPhase(TransactionPhase.TO_DB_PERSISTED);
+	}
+
+	public void toDbPersisting() {
+		Preconditions
+				.checkState(getPhase() == TransactionPhase.TO_DB_PREPARING);
+		setPhase(TransactionPhase.TO_DB_PERSISTING);
+	}
+
+	public void toDomainAborted() {
+		Preconditions
+				.checkState(getPhase() == TransactionPhase.TO_DOMAIN_COMMITTING
+						|| getPhase() == TransactionPhase.TO_DB_PREPARING);
+		setPhase(TransactionPhase.TO_DOMAIN_ABORTED);
+	}
+
+	public void toDomainCommitted() {
+		Preconditions.checkState(
+				getPhase() == TransactionPhase.TO_DOMAIN_COMMITTING);
+		setPhase(TransactionPhase.TO_DOMAIN_COMMITTED);
 		Transactions.get().onTransactionCommited(this);
 	}
 
-	public void toCommitting() {
-		setPhase(TransactionPhase.COMMITING);
+	public void toDomainCommitting(Timestamp timestamp) {
+		Preconditions.checkState(getPhase() == TransactionPhase.TO_DB_PREPARING
+				&& ThreadlocalTransformManager.get().getTransforms().isEmpty());
+		this.databaseCommitTimestamp = timestamp;
+		setPhase(TransactionPhase.TO_DOMAIN_COMMITTING);
 	}
 
 	@Override
@@ -181,6 +219,21 @@ public class Transaction {
 	}
 
 	void endTransaction() {
+		switch (getPhase()) {
+		case TO_DB_PERSISTED:
+		case TO_DB_ABORTED:
+		case TO_DOMAIN_COMMITTED:
+		case TO_DOMAIN_ABORTED:
+			break;
+		case TO_DB_PREPARING:
+			if (TransformManager.get().getTransforms().size() == 0) {
+				break;
+			}
+			// fallthrough
+		default:
+			throw new MvccException("Ending on invalid phase");
+		}
+		logger.warn("Ended tx: {}", this);
 		Transactions.get().onTransactionEnded(this);
 	}
 
@@ -198,23 +251,24 @@ public class Transaction {
 
 	void setPhase(TransactionPhase phase) {
 		this.phase = phase;
+		logger.warn("Transition tx: {}", this);
 	}
 
 	/*
-	 * Committed transactions are 'before' non-committed
+	 * Domain-committed transactions are 'before' non-committed
 	 */
 	static class TransactionComparator implements Comparator<Transaction> {
 		@Override
 		public int compare(Transaction o1, Transaction o2) {
-			if (o1.phase == TransactionPhase.COMMITTED
-					&& o2.phase == TransactionPhase.COMMITTED) {
-				return o1.databaseCommitTimestamp
-						.compareTo(o2.databaseCommitTimestamp);
+			if (o1.phase.isDomain() && o2.phase.isDomain()) {
+				return CommonUtils.compareLongs(
+						o1.databaseCommitTimestamp.getTime(),
+						o2.databaseCommitTimestamp.getTime());
 			}
-			if (o1.phase == TransactionPhase.COMMITTED) {
+			if (o1.phase.isDomain()) {
 				return -1;
 			}
-			if (o2.phase == TransactionPhase.COMMITTED) {
+			if (o2.phase.isDomain()) {
 				return 1;
 			}
 			return CommonUtils.compareLongs(o1.id.id, o2.id.id);

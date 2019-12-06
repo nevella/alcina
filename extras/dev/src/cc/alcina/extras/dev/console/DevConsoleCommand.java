@@ -471,6 +471,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					runnable.value = argv.length == 1 ? null : argv[1];
 					runnable.actionLogger = console.devHelper.getActionLogger();
 					runnable.argv = argv;
+					boolean runSuccess = false;
 					try {
 						LooseContext.pushWithKey(
 								DevConsoleRunnable.CONTEXT_ACTION_RESULT, "");
@@ -498,6 +499,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 							}
 						}
 						msg = Ax.isBlank(msg) ? msg : "\n\t" + msg;
+						runSuccess = true;
 						return String.format("'%s' was run%s", runnableName,
 								msg);
 					} finally {
@@ -506,7 +508,11 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 								Transaction.end();
 							}
 						} catch (Exception e2) {
-							e2.printStackTrace();
+							if (runSuccess) {
+								e2.printStackTrace();
+							} // otherwise squelch, we'll often get an
+								// additional exception (tx phase) that ain't
+								// helpful
 						} finally {
 							LooseContext.pop();
 						}

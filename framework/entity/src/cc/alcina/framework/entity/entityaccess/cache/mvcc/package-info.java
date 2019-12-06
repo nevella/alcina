@@ -27,8 +27,12 @@
  * <ul>
  * <li>Facade class code creation (yep)
  * <li>Facade object creation (domain.create => mvcc.create) (yep)
- * <li>MvMaps (domaincache; indicies)
+ * <li>MvMaps (domaincache; indicies)(yep)
  * <li>Transaction phase management (local; remote)
+ * <p>
+ * This is actually easyish - a local transaction can be aborted (unsupp for the
+ * mo) - a db-committed
+ * </p>
  * <li>Graph projection
  * <li>Remove locks (make em just notational)(altho post-process remains
  * synchronized)

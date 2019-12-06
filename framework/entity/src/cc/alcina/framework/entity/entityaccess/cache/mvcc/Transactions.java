@@ -96,7 +96,7 @@ public class Transactions {
             TransactionId transactionId = new TransactionId(
                     this.transactionIdCounter.getAndIncrement());
             transaction.setId(transactionId);
-            transaction.phase = TransactionPhase.PREPARING;
+            transaction.phase = TransactionPhase.TO_DB_PREPARING;
             transaction.setCommittedTransactions(
                     new LinkedHashMap<>(committedTransactions));
             activeTransactions.put(transactionId, transaction);
