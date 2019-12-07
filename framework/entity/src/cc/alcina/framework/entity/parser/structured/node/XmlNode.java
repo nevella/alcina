@@ -428,6 +428,10 @@ public class XmlNode {
 		removeFromParent();
 	}
 
+	public boolean tagAndClassIs(String tagName, String className) {
+		return tagIs(tagName) && classIs(className);
+	}
+
 	public boolean tagIs(String tagName) {
 		return isElement()
 				&& getElement().getTagName().equalsIgnoreCase(tagName)
