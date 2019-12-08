@@ -23,12 +23,24 @@
  * <li>And then of course there's ... eventual consistency
  * </ul>
  * 
+ * <h2>Notes/think</h2>
+ * <ul>
+ * <li>Get rid of baselayerlist (transactionalmap)(special case the code)
+ * <li>Use baseobject more in mvccversions (want to eventually have no ref to
+ * base transaction)
+ * <li>(Pre-jade) Cherry-pick memory usage to alcina.master. Compare memory
+ * usage of a segment using propertystore vs regular objects for citaions/ccs.
+ * Make framework-level 'populate DomainStoreTransient' - fingers crossed re
+ * propertystore abandonment
+ * </ul>
+ * 
+ * 
  * <h2>TODO</h2>
  * <ul>
  * <li>Facade class code creation (yep)
  * <li>Facade object creation (domain.create => mvcc.create) (yep)
  * <li>MvMaps (domaincache; indicies)(yep)
- * <li>Transaction phase management (local; remote)
+ * <li>Transaction phase management (local; remote)(vacuum) (yap)
  * <p>
  * This is actually easyish - a local transaction can be aborted (unsupp for the
  * mo) - a db-committed
@@ -36,13 +48,17 @@
  * <li>Graph projection
  * <li>Remove locks (make em just notational)(altho post-process remains
  * synchronized)
- * <li>Post-process and transaction cleanup
+ * <li>Post-process and transaction cleanup. Delete cascade can be a lot less
+ * brutal (just associations)
  * <li>Check no field assignment within hili private methods, and no calls to
  * setters (pretty sure checked as part of bytecode generation)
- * <li>Tx abort - devconsole - write backup version fields to base object (see
- * MvccObjectVersions constructor). Tx finish - remove tltm listeners. Make tltm
- * listeners thread-specific (actually no - that would only be needed for
- * devconsole, since non-dc listeners always ref unique-to-tltm object versions)
+ * <li>Tx abort - check hits vacuum etc
+ * </ul>
+ * <h2>Vacuum</h2>
+ * <ul>
+ * <li>MvccObject - just remove invisible versions
+ * <li>Transactional map - make new, squash, hot swap (10x 'levelled compaction'
+ * scaling down)
  * </ul>
  * *
  * <h2>Tests (1)</h2>
@@ -58,6 +74,8 @@
  * </ul>
  * <h2>TODO - post</h2>
  * <ul>
+ * <li>Should transactionid be used more?
+ * <li>Divide transaction phases into categories
  * <li>fix non-safety of method comparisonString() (by removing - this
  * comparator shd be client only - have a real, caching comparator)
  * <li>Associations! General plan!

@@ -810,7 +810,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					EntityUtils.longsToIdClause(ids));
 			LaterLookup laterLookup = new LaterLookup();
 			List<? extends DomainTransformEventPersistent> transforms = null;
-			Transaction.ensureActive();
+			Transaction.ensureDomainPreparingActive();
 			transforms = (List) loadTable0(transformEventImplClass, sqlFilter,
 					new ClassIdLock(DomainTransformRequestPersistent.class,
 							ids.iterator().next()),

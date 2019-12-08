@@ -27,7 +27,11 @@ public class Transaction {
 	static Logger logger = LoggerFactory.getLogger(Transaction.class);
 
 	public static void begin() {
-		threadLocalInstance.set(new Transaction());
+		begin(TransactionPhase.TO_DB_PREPARING);
+	}
+
+	public static void beginDomainPreparing() {
+		begin(TransactionPhase.TO_DOMAIN_PREPARING);
 	}
 
 	public static Transaction current() {
@@ -49,17 +53,22 @@ public class Transaction {
 	}
 
 	public static void endAndBeginNew() {
-		if (TransformManager.get().getTransforms().size() == 0
-				&& current().getPhase() == TransactionPhase.TO_DB_PREPARING) {
-			return;// reuse
-		}
+		/*
+		 * Definitely don't 'reuse' - because transactions are sequence
+		 * dependent (if we don't start a new transaction, commits between start
+		 * of old transaction and now won't be visible)
+		 */
+		// if (TransformManager.get().getTransforms().size() == 0
+		// && current().getPhase() == TransactionPhase.TO_DB_PREPARING) {
+		// return;// reuse
+		// }
 		end();
 		begin();
 	}
 
-	public static void ensureActive() {
+	public static void ensureDomainPreparingActive() {
 		if (threadLocalInstance.get() == null) {
-			begin();
+			begin(TransactionPhase.TO_DOMAIN_PREPARING);
 		}
 	}
 
@@ -77,6 +86,20 @@ public class Transaction {
 		threadLocalInstance.remove();
 	}
 
+	static void begin(TransactionPhase initialPhase) {
+		switch (initialPhase) {
+		case TO_DB_PREPARING:
+		case TO_DOMAIN_PREPARING:
+		case VACUUM_BEGIN:
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
+		threadLocalInstance.set(new Transaction(initialPhase));
+	}
+
+	boolean ended;
+
 	private Timestamp databaseCommitTimestamp;
 
 	private boolean baseTransaction;
@@ -89,11 +112,12 @@ public class Transaction {
 
 	TransactionPhase phase;
 
-	public Transaction() {
+	public Transaction(TransactionPhase initialPhase) {
 		DomainStore.stores().stream().forEach(store -> storeTransactions
 				.put(store, new StoreTransaction(store)));
+		this.phase = initialPhase;
 		Transactions.get().initialiseTransaction(this);
-		logger.warn("Created tx: {}", this);
+		logger.debug("Created tx: {}", this);
 	}
 
 	public <T extends HasIdAndLocalId> T create(Class<T> clazz,
@@ -194,12 +218,14 @@ public class Transaction {
 		Preconditions.checkState(
 				getPhase() == TransactionPhase.TO_DOMAIN_COMMITTING);
 		setPhase(TransactionPhase.TO_DOMAIN_COMMITTED);
-		Transactions.get().onTransactionCommited(this);
+		Transactions.get().onDomainTransactionCommited(this);
 	}
 
 	public void toDomainCommitting(Timestamp timestamp) {
-		Preconditions.checkState(getPhase() == TransactionPhase.TO_DB_PREPARING
-				&& ThreadlocalTransformManager.get().getTransforms().isEmpty());
+		Preconditions
+				.checkState(getPhase() == TransactionPhase.TO_DOMAIN_PREPARING
+						&& ThreadlocalTransformManager.get().getTransforms()
+								.isEmpty());
 		this.databaseCommitTimestamp = timestamp;
 		setPhase(TransactionPhase.TO_DOMAIN_COMMITTING);
 	}
@@ -207,6 +233,11 @@ public class Transaction {
 	@Override
 	public String toString() {
 		return Ax.format("%s::%s", id, phase);
+	}
+
+	public void toVacuumEnded() {
+		Preconditions.checkState(getPhase() == TransactionPhase.VACUUM_BEGIN);
+		setPhase(TransactionPhase.VACUUM_ENDED);
 	}
 
 	private boolean hasHigherCommitIdThan(Transaction otherTransaction,
@@ -224,6 +255,7 @@ public class Transaction {
 		case TO_DB_ABORTED:
 		case TO_DOMAIN_COMMITTED:
 		case TO_DOMAIN_ABORTED:
+		case VACUUM_ENDED:
 			break;
 		case TO_DB_PREPARING:
 			if (TransformManager.get().getTransforms().size() == 0) {
@@ -233,7 +265,8 @@ public class Transaction {
 		default:
 			throw new MvccException("Ending on invalid phase");
 		}
-		logger.warn("Ended tx: {}", this);
+		ended = true;
+		logger.debug("Ended tx: {}", this);
 		Transactions.get().onTransactionEnded(this);
 	}
 
@@ -251,11 +284,12 @@ public class Transaction {
 
 	void setPhase(TransactionPhase phase) {
 		this.phase = phase;
-		logger.warn("Transition tx: {}", this);
+		logger.debug("Transition tx: {}", this);
 	}
 
 	/*
-	 * Domain-committed transactions are 'before' non-committed
+	 * Domain-committed transactions are 'before' non-committed - this ordering
+	 * only makes sense for visible transactions
 	 */
 	static class TransactionComparator implements Comparator<Transaction> {
 		@Override

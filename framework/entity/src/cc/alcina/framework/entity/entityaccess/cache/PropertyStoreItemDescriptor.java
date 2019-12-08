@@ -26,6 +26,17 @@ public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId>
 		createPropertyStore();
 	}
 
+	@Override
+	public void addRawValues(Set<Long> ids, DetachedEntityCache cache,
+			Set<T> rawValues) {
+		for (Long id : ids) {
+			T proxy = getProxy(cache, id, false);
+			if (proxy != null) {
+				rawValues.add(proxy);
+			}
+		}
+	}
+
 	public void addRow(Object[] row) throws SQLException {
 		propertyStore.addRow(row);
 	}
@@ -50,17 +61,11 @@ public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId>
 		return CollectionFilters.filterAsSet(existing, withIdFilter);
 	}
 
-	@Override
 	public Set<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
-		ObjectLinkedOpenHashSet<T> raw = new ObjectLinkedOpenHashSet<T>(
+		ObjectLinkedOpenHashSet<T> rawValues = new ObjectLinkedOpenHashSet<T>(
 				ids.size());
-		for (Long id : ids) {
-			T proxy = getProxy(cache, id, false);
-			if (proxy != null) {
-				raw.add(proxy);
-			}
-		}
-		return raw;
+		addRawValues(ids, cache, rawValues);
+		return rawValues;
 	}
 
 	@Override

@@ -6,34 +6,34 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreDescriptor;
 
 public class Mvcc {
-    public static DomainStore getStore(HasIdAndLocalId hili) {
-        return DomainStore.stores().storeFor(hili.provideEntityClass());
-    }
+	public static DomainStore getStore(HasIdAndLocalId hili) {
+		return DomainStore.stores().storeFor(hili.provideEntityClass());
+	}
 
-    private DomainStore domainStore;
+	private DomainStore domainStore;
 
-    DomainStoreDescriptor domainDescriptor;
+	DomainStoreDescriptor domainDescriptor;
 
-    private DetachedEntityCache cache;
+	private DetachedEntityCache cache;
 
-    private ClassTransformer classTransformer;
+	private ClassTransformer classTransformer;
 
-    public Mvcc(DomainStore domainStore, DomainStoreDescriptor domainDescriptor,
-            DetachedEntityCache cache) {
-        Transactions.ensureInitialised();
-        this.domainStore = domainStore;
-        this.domainDescriptor = domainDescriptor;
-        this.cache = cache;
-        this.classTransformer = new ClassTransformer(this);
-        this.classTransformer.setAddObjectResolutionChecks(
-                domainDescriptor.isAddMvccObjectResolutionChecks());
-    }
+	public Mvcc(DomainStore domainStore, DomainStoreDescriptor domainDescriptor,
+			DetachedEntityCache cache) {
+		Transactions.ensureInitialised();
+		this.domainStore = domainStore;
+		this.domainDescriptor = domainDescriptor;
+		this.cache = cache;
+		this.classTransformer = new ClassTransformer(this);
+		this.classTransformer.setAddObjectResolutionChecks(
+				domainDescriptor.isAddMvccObjectResolutionChecks());
+	}
 
-    public <T extends HasIdAndLocalId> T create(Class<T> clazz) {
-        return classTransformer.create(clazz);
-    }
+	public <T extends HasIdAndLocalId> T create(Class<T> clazz) {
+		return classTransformer.create(clazz);
+	}
 
-    public void init() {
-        classTransformer.generateTransformedClasses();
-    }
+	public void init() {
+		classTransformer.generateTransformedClasses();
+	}
 }

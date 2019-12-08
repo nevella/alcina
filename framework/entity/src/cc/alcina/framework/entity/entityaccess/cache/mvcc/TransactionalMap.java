@@ -18,7 +18,9 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction.TransactionComparator;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
@@ -31,23 +33,32 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
  * 
  * This class is intended for transaction-aware indices and lookups
  * 
- * The map is composed of a base layer, a list of (transactional or merged-transactional) layers corresponding to deltas
- *  at the time of the transaction(s) (note that these layers are visible to all current transactions) 
- *  and a third grouping of transactional layers 
- *   ('layers') whose resolution is transaction-depdendent.
+ * The map is composed of a base layer, a list of (transactional or merged-transactional) layers ('merged') corresponding to deltas
+ *  note that these layers are visible to all current transactions (these are generated during vacuum, and are intended to avoid runaway map layers for heavily written maps) 
+ *  and a third grouping of transactional layers ('layers') whose resolution is transaction-depdendent.
+ *  
+ *  Note that vacuum is probably the most interesting part of this class - it's like sliding plates
+ *   (B=merged A1, A2) under other plates (A1, A2) - it would be nice 
+ *   to formally prove that the combination (B,A2) === (B) === (B,A1,A2) (in layer order)
+ * 
  *   
- *    Operations are resolved to return the most recent value
+ *   Operations are resolved to return the most recent value
  *   for the combined sequence of layers, from (per-transaction) youngest-to-oldest
  *   
  *   This class allows null keys and values
  *   
+ *   TODO - baseLayerList can be implemented by this class (so avoid having an extra list per map) 
+ *   
  */
-public class TransactionalMap<K, V> extends AbstractMap<K, V> {
+public class TransactionalMap<K, V> extends AbstractMap<K, V>
+		implements Vacuumable {
 	private Layer base;
 
-	private ConcurrentSkipListMap<Transaction, Layer> layers;
+	private volatile ConcurrentSkipListMap<Transaction, Layer> transactionLayers;
 
 	private List<Layer> baseLayerList;
+
+	private volatile List<Layer> mergedLayerList;
 
 	private Class<K> keyClass;
 
@@ -67,16 +78,16 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 
 	@Override
 	public V get(Object key) {
-		if (layers == null) {
+		if (transactionLayers == null) {
 			return base.get(key);
 		}
-		List<TransactionalMap<K, V>.Layer> visibleLayers = visibleLayers();
+		List<Layer> visibleLayers = visibleLayers();
 		for (int idx = visibleLayers.size() - 1; idx > 0; idx--) {
 			Layer layer = visibleLayers.get(idx);
 			if (layer.wasRemoved(key)) {
 				return null;
 			}
-			if (layer.wasModifiedOrRemoved(key)) {
+			if (layer.wasModified(key)) {
 				return layer.get(key);
 			}
 		}
@@ -105,6 +116,35 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 	}
 
 	@Override
+	public void vacuum(Transaction transaction) {
+		Layer layer = transactionLayers.get(transaction);
+		List<Layer> mergedReplace = new ArrayList<>(mergedLayerList);
+		mergedReplace.add(layer);
+		/*
+		 * now compact - this is a 'levelled' strategy a la cassandra, chrome
+		 * etc - layer iteration cost is ~ log10(n) and copy cost is ~
+		 * n.log10(n) for n = total delta size
+		 */
+		boolean modified = false;
+		do {
+			for (int idx = 0; idx < mergedReplace.size() - 1; idx++) {
+				Layer layer0 = mergedReplace.get(idx);
+				Layer layer1 = mergedReplace.get(idx + 1);
+				if (layer1.combinedMapSize() * 10 > layer0.combinedMapSize()) {
+					Layer merged = layer0.merge(layer1);
+					mergedReplace.remove(idx);
+					mergedReplace.remove(idx + 1);
+					mergedReplace.add(idx, merged);
+					modified = true;
+					break;
+				}
+			}
+		} while (modified);
+		mergedLayerList = mergedReplace;
+		transactionLayers.remove(transaction);
+	}
+
+	@Override
 	public Collection<V> values() {
 		if (HasIdAndLocalId.class.isAssignableFrom(valueClass)) {
 			return new ValuesSet();
@@ -114,54 +154,66 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 	}
 
 	private TransactionalMap<K, V>.Layer ensureLayer() {
-		// TEST
 		Transaction transaction = Transaction.current();
 		if (transaction.isBaseTransaction()) {
-			if (base == null) {
-				synchronized (this) {
-					if (base == null) {
-						base = new Layer(transaction);
-					}
-				}
-			}
 			return base;
 		}
-		if (layers == null || !layers.containsKey(transaction)) {
+		if (transactionLayers == null
+				|| !transactionLayers.containsKey(transaction)) {
 			// double-checked
 			synchronized (this) {
-				if (layers == null || !layers.containsKey(transaction)) {
-					if (layers == null) {
-						layers = new ConcurrentSkipListMap<>(
+				if (transactionLayers == null
+						|| !transactionLayers.containsKey(transaction)) {
+					if (transactionLayers == null) {
+						transactionLayers = new ConcurrentSkipListMap<>(
 								new TransactionComparator());
+						mergedLayerList = new ArrayList<>();
 					}
-					layers.put(transaction, new Layer(transaction));
+					transactionLayers.put(transaction, new Layer(transaction));
+					Transactions.get().onAddedVacuumable(this);
 				}
 			}
 		}
-		return layers.get(transaction);
+		return transactionLayers.get(transaction);
 	}
 
 	private List<Layer> visibleLayers() {
-		if (layers == null) {
+		if (transactionLayers == null) {
 			return baseLayerList;
 		} else {
-			List<Layer> visibleLayers = new ArrayList<>();
-			visibleLayers.add(base);
 			Transaction transaction = Transaction.current();
+			List<Layer> visibleLayers = new ArrayList<>();
+			List<Layer> transactionLayersSnapshot = new ArrayList<>();
+			visibleLayers.add(base);
 			/*
-			 * for the moment, assume visible tx size not >> layer size
+			 * To avoid synchronization, copy visible layers *before* merged
+			 * layers (because vacuum modifies visible layers *after* merged
+			 * layers)
 			 */
 			for (Transaction committed : transaction.committedTransactions
 					.values()) {
-				Layer layer = layers.get(committed);
+				Layer layer = transactionLayers.get(committed);
 				if (layer != null) {
-					visibleLayers.add(layer);
+					transactionLayersSnapshot.add(layer);
 				}
 			}
-			Layer currentLayer = layers.get(Transaction.current());
+			/*
+			 * Note that merged layer list is swapped during vacuum, rather than
+			 * modified (its length is logarithmic wrt element size) - so we can
+			 * add without a synchronization risk.
+			 */
+			visibleLayers.addAll(mergedLayerList);
+			/*
+			 * now add our snapshot
+			 */
+			visibleLayers.addAll(transactionLayersSnapshot);
+			Layer currentLayer = transactionLayers.get(Transaction.current());
 			if (currentLayer != null) {
 				visibleLayers.add(currentLayer);
 			}
+			/*
+			 * et voila!
+			 */
 			return visibleLayers;
 		}
 	}
@@ -258,6 +310,20 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 			return modified.get(key);
 		}
 
+		/*
+		 * returns a new non-transaction layer containing the union of these two
+		 */
+		public Layer merge(Layer higherLayer) {
+			Layer merged = new Layer(null);
+			merged.removed.putAll(removed);
+			merged.modified.putAll(modified);
+			merged.removed.keySet().removeAll(higherLayer.modified.keySet());
+			merged.modified.keySet().removeAll(higherLayer.removed.keySet());
+			merged.removed.putAll(higherLayer.removed);
+			merged.modified.putAll(higherLayer.modified);
+			return merged;
+		}
+
 		public void put(K key, V value, V existing) {
 			modified.put(key, value);
 			if (existing == null) {
@@ -272,7 +338,15 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 
 		@Override
 		public String toString() {
-			return GraphProjection.fieldwiseToString(this);
+			FormatBuilder fb = new FormatBuilder();
+			fb.line("tx:%s", transaction);
+			fb.line("%s", GraphProjection.fieldwiseToString(this, false, false,
+					999, "transaction", "this$0"));
+			return fb.toString();
+		}
+
+		public boolean wasModified(Object key) {
+			return modified.containsKey(key);
 		}
 
 		public boolean wasModifiedOrRemoved(Object key) {
@@ -281,6 +355,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V> {
 
 		public boolean wasRemoved(Object key) {
 			return removed.containsKey(key);
+		}
+
+		int combinedMapSize() {
+			return removed.size() + modified.size();
 		}
 
 		Iterator<Entry<K, V>> modifiedEntrySetIterator() {

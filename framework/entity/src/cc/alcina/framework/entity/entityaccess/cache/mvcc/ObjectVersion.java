@@ -9,6 +9,8 @@ class ObjectVersion<T extends HasIdAndLocalId> {
 
 	Transaction transaction;
 
+	boolean writeable;
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof ObjectVersion) {
@@ -25,5 +27,12 @@ class ObjectVersion<T extends HasIdAndLocalId> {
 	@Override
 	public int hashCode() {
 		return transaction.hashCode();
+	}
+
+	/*
+	 * only incorrect if state is write and we're not a writeable version
+	 */
+	public boolean isCorrectWriteableState(boolean write) {
+		return !write || writeable;
 	}
 }

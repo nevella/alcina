@@ -467,7 +467,7 @@ public class DomainStore implements IDomainStore {
 		MetricLogging.get().start("mvcc");
 		mvcc.init();
 		MetricLogging.get().end("mvcc");
-		Transaction.ensureActive();
+		Transaction.beginDomainPreparing();
 		Transaction.current().setBaseTransaction(true, this);
 		domainDescriptor.perClass.values().stream()
 				.forEach(DomainClassDescriptor::initialise);
@@ -739,7 +739,7 @@ public class DomainStore implements IDomainStore {
 			postProcessStart = System.currentTimeMillis();
 			MetricLogging.get().start("post-process");
 			Transaction.ensureEnded();
-			Transaction.begin();
+			Transaction.beginDomainPreparing();
 			Date transactionCommitTime = persistenceEvent
 					.getDomainTransformLayerWrapper().persistentRequests.get(0)
 							.getTransactionCommitTime();
