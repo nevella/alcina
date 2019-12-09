@@ -8,11 +8,18 @@ class gwt_hm_HostChannel {
     channelId;
     closeSocket = false;
     tcpHost = "";
+    /*
+     * Performance timing - is most of our overhead in http?
+     */
+    xhrTimingData = [];
+    xhrTimingCumulativeMilliseconds = 0;
+    
     connectToHost(host, port) {
         // ignore host (for the mo) - assume local, otherwise will need CORS
         //
-        //correction, always use local (rather than routing through remote) - network round trips more than compensates
-        //      this.host = "";
+        // correction, always use local (rather than routing through remote) -
+        // network round trips more than compensates
+        // this.host = "";
         this.host = "http://127.0.0.1:"+(parseInt(port)+1);
         this.port = port;
     }
@@ -126,7 +133,7 @@ class gwt_hm_HostChannel {
     }
     sendByte(c) {
         if (this.buf_out.length == 0) {
-//            console.log(`send >> ${c}`);
+// console.log(`send >> ${c}`);
         }
         this.buf_out += String.fromCharCode(c);
     }
@@ -146,7 +153,8 @@ class gwt_hm_HostChannel {
         this.buf_out += utf8;
     }
     utf8BinaryStringToStr(str) {
-      var buf = new ArrayBuffer(str.length); // 1 bytes for each utf-8 codepoint
+      var buf = new ArrayBuffer(str.length); // 1 bytes for each utf-8
+                                              // codepoint
       var bufView = new Uint8Array(buf);
       for (var i=0, strLen=str.length; i < strLen; i++) {
         bufView[i] = str.charCodeAt(i);
@@ -283,13 +291,14 @@ class gwt_hm_HostChannel {
         while (true) {
             this.flush();
             var type = this.readByte(type);
-//            console.log(`message: ${this.messageId} :: ${type} `);
+// console.log(`message: ${this.messageId} :: ${type} `);
             switch (type) {
                 case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKE:
                     {
                         var message = gwt_hm_InvokeMessage.receive(this);
                         if (parseInt(this.messageId) > 0) {
-//                            console.log(`invoke: ${this.messageId} :: ${message.methodName} [${message.thisRef.intValue}]`);
+// console.log(`invoke: ${this.messageId} :: ${message.methodName}
+// [${message.thisRef.intValue}]`);
                         }
                         var result = handler.invoke(this, message.thisRef, message.methodName,
                             message.numArgs, message.args);
@@ -353,6 +362,7 @@ class gwt_hm_HostChannel {
         this.flushWithBody(body);
     }
     flushWithBody(body) {
+        var t0 = performance.now();
         var xhr = new XMLHttpRequest();
         var url = `${this.host}/jsCodeServer.tcp`;
         xhr.open("POST", url, false);
@@ -387,6 +397,13 @@ class gwt_hm_HostChannel {
         this.channelId = xhrChannelId;
         this.buf_in = atob(xhr.responseText);
         this.buf_in_idx = 0;
+        var t1 = performance.now();
+        var xhrTime = t1-t0;
+        this.xhrTimingData.push(xhrTime);
+        this.xhrTimingCumulativeMicroseconds+=xhrTime;
+        if(this.xhrTimingData.length%1000==0){
+          console.log(`timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMicroseconds} `);
+        }
     }
     ensureClear() {
         if (this.buf_out.length > 0) {
