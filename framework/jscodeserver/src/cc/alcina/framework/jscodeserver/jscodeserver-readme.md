@@ -29,3 +29,6 @@ bpx web opsol
 docker cp /private/var/local/git/alcina/framework/jscodeserver/src/cc/alcina/framework/jscodeserver/js/GwtJsPlugin.js opsol.app.dev:/opt/jboss/wildfly/standalone/deployments/opsol_server.ear/opsol_server.war/jscodeserver/GwtJsPlugin.js &&
 docker cp /private/var/local/git/alcina/framework/jscodeserver/src/cc/alcina/framework/jscodeserver/js/common/ opsol.app.dev:/opt/jboss/wildfly/standalone/deployments/opsol_server.ear/opsol_server.war/jscodeserver/ &&
 docker cp /private/var/local/git/alcina/framework/jscodeserver/src/cc/alcina/framework/jscodeserver/js/impl/ opsol.app.dev:/opt/jboss/wildfly/standalone/deployments/opsol_server.ear/opsol_server.war/jscodeserver/
+
+cd /private/var/local/git/alcina/framework/jscodeserver/src/cc/alcina/framework/jscodeserver/js && \
+js-beautify -r * && js-beautify -r ../GwtJsPlugin.js && js-beautify -r ../impl/*
