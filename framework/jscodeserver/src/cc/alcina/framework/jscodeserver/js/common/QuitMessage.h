@@ -1,5 +1,5 @@
-#ifndef __H_QuitMessage
-#define __H_QuitMessage
+#
+ifndef __H_QuitMessage# define __H_QuitMessage
 /*
  * Copyright 2008 Google Inc.
  *
@@ -17,26 +17,26 @@
  */
 
 #include <string>
+
 #include "Message.h"
+
 #include "BrowserChannel.h"
 
 /**
  * This class represents a Quit message sent to the server, indicating the
  * channel should be closed down.
  */
-class QuitMessage : public Message {
-public:
-  static const char TYPE = MESSAGE_TYPE_QUIT;
-private:
-  QuitMessage() {}
+class QuitMessage: public Message {
+    public: static
+    const char TYPE = MESSAGE_TYPE_QUIT;
+    private: QuitMessage() {}
 
-public:
-  virtual char getType() const {
-    return TYPE;
-  }
+    public: virtual char getType() const {
+        return TYPE;
+    }
 
-  static bool send(HostChannel& channel) {
-    return channel.sendByte(TYPE);
-  }
-};
-#endif
+    static bool send(HostChannel & channel) {
+        return channel.sendByte(TYPE);
+    }
+};#
+endif

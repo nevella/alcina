@@ -43,6 +43,15 @@ public class JsCodeServerHttp {
 			jsCodeServerHandler.addFilter(cors, "/*",
 					EnumSet.of(DispatcherType.REQUEST));
 		}
+		{
+			ServletContextHandler handler = new ServletContextHandler(
+					ServletContextHandler.SESSIONS);
+			handler.setContextPath("/");
+			handlers.addHandler(handler);
+			handler.addServlet(JsCodeServerWsServlet.class,
+					"/jsCodeServerWs.tcp");
+			handler.addFilter(cors, "/*", EnumSet.of(DispatcherType.REQUEST));
+		}
 		server.setHandler(handlers);
 		server.start();
 		server.dumpStdErr();

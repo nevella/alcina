@@ -15,35 +15,36 @@
  */
 
 #include "SwitchTransportMessage.h"
+
 #include "HostChannel.h"
+
 #include "scoped_ptr/scoped_ptr.h"
 
-SwitchTransportMessage::~SwitchTransportMessage() {
-}
+SwitchTransportMessage::~SwitchTransportMessage() {}
 
 char SwitchTransportMessage::getType() const {
-  return TYPE;
+    return TYPE;
 }
 
 /**
  * Receive a SwitchTransport message from the server.
  */
-SwitchTransportMessage* SwitchTransportMessage::receive(HostChannel& channel) {
-  std::string transport;
-  if (!channel.readString(transport)) {
-    // TODO(jat): error handling
-    printf("Failed to read transport\n");
-    return 0;
-  }
-  return new SwitchTransportMessage(transport);
+SwitchTransportMessage * SwitchTransportMessage::receive(HostChannel & channel) {
+    std::string transport;
+    if (!channel.readString(transport)) {
+        // TODO(jat): error handling
+        printf("Failed to read transport\n");
+        return 0;
+    }
+    return new SwitchTransportMessage(transport);
 }
 
 /**
  * Send a fatal error message on the channel.
  */
-bool SwitchTransportMessage::send(HostChannel& channel,
-    const std::string& transport) {
-  if (!channel.sendByte(TYPE)) return false;
-  if (!channel.sendString(transport)) return false;
-  return true;
+bool SwitchTransportMessage::send(HostChannel & channel,
+    const std::string & transport) {
+    if (!channel.sendByte(TYPE)) return false;
+    if (!channel.sendString(transport)) return false;
+    return true;
 }

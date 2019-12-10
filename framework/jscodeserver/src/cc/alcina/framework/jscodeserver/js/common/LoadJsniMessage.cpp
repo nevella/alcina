@@ -16,11 +16,11 @@
 
 #include "LoadJsniMessage.h"
 
-LoadJsniMessage* LoadJsniMessage::receive(HostChannel& channel) {
-  std::string js;
-  if (!channel.readString(js)) {
-    // TODO(jat): error handling
-    return 0;
-  }
-  return new LoadJsniMessage(js);
+LoadJsniMessage * LoadJsniMessage::receive(HostChannel & channel) {
+    std::string js;
+    if (!channel.readString(js)) {
+        // TODO(jat): error handling
+        return 0;
+    }
+    return new LoadJsniMessage(js);
 }

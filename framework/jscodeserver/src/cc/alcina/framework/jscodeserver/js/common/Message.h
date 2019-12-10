@@ -1,5 +1,5 @@
-#ifndef __MESSAGE_H
-#define __MESSAGE_H
+#
+ifndef __MESSAGE_H# define __MESSAGE_H
 /*
  * Copyright 2008 Google Inc.
  * 
@@ -17,12 +17,13 @@
  */
 
 class Message {
-public:
-  virtual char getType() const = 0;
-  virtual bool isAsynchronous() const {
-    return false;
-  }
-  virtual ~Message() {}
+    public:
+        virtual char getType() const = 0;
+    virtual bool isAsynchronous() const {
+        return false;
+    }
+    virtual~Message() {}
 };
 
-#endif
+#
+endif

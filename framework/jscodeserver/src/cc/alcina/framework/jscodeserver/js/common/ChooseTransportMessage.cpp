@@ -15,16 +15,19 @@
  */
 
 #include <cstdarg>
+
 #include <vector>
+
 #include "ChooseTransportMessage.h"
+
 #include "HostChannel.h"
+
 #include "scoped_ptr/scoped_ptr.h"
 
-ChooseTransportMessage::~ChooseTransportMessage() {
-}
+ChooseTransportMessage::~ChooseTransportMessage() {}
 
 char ChooseTransportMessage::getType() const {
-  return TYPE;
+    return TYPE;
 }
 
 /**
@@ -32,36 +35,36 @@ char ChooseTransportMessage::getType() const {
  * type has already been read).  Caller is responsible for destroying
  * returned message.  Returns null on error.
  */
-ChooseTransportMessage* ChooseTransportMessage::receive(HostChannel& channel) {
-  int length;
-  if (!channel.readInt(length)) {
-    // TODO(jat): error handling
-    printf("Failed to read transport\n");
-    return 0;
-  }
-  std::vector<std::string> transports;
-  for (int i = 0; i < length; ++i) {
-    std::string transport;
-    if (!channel.readString(transport)) {
-      // TODO(jat): error handling
-      printf("Failed to read transport\n");
-      return 0;
+ChooseTransportMessage * ChooseTransportMessage::receive(HostChannel & channel) {
+    int length;
+    if (!channel.readInt(length)) {
+        // TODO(jat): error handling
+        printf("Failed to read transport\n");
+        return 0;
     }
-    transports.push_back(transport);
-  }
-  return new ChooseTransportMessage(transports);
+    std::vector < std::string > transports;
+    for (int i = 0; i < length; ++i) {
+        std::string transport;
+        if (!channel.readString(transport)) {
+            // TODO(jat): error handling
+            printf("Failed to read transport\n");
+            return 0;
+        }
+        transports.push_back(transport);
+    }
+    return new ChooseTransportMessage(transports);
 }
 
 /**
  * Send this ChooseTransport message on the channel.
  */
-bool ChooseTransportMessage::send(HostChannel& channel,
-    const std::vector<std::string>& transports) {
-  if (!channel.sendByte(TYPE)) return false;
-  int n = transports.size();
-  if (!channel.sendInt(n)) return false;
-  for (int i = 0; i < n; ++i) {
-    if (!channel.sendString(transports[i])) return false;
-  }
-  return true;
+bool ChooseTransportMessage::send(HostChannel & channel,
+    const std::vector < std::string > & transports) {
+    if (!channel.sendByte(TYPE)) return false;
+    int n = transports.size();
+    if (!channel.sendInt(n)) return false;
+    for (int i = 0; i < n; ++i) {
+        if (!channel.sendString(transports[i])) return false;
+    }
+    return true;
 }

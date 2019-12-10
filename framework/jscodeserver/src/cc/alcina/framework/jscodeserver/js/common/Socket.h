@@ -1,5 +1,5 @@
-#ifndef _H_Socket
-#define _H_Socket
+#
+ifndef _H_Socket# define _H_Socket
 /*
  * Copyright 2008 Google Inc.
  * 
@@ -17,154 +17,164 @@
  */
 
 #include "Platform.h"
+
 #include "Debug.h"
 
 #include <string>
 
-#ifdef _WINDOWS
-#include <winsock2.h>
+# ifdef _WINDOWS#include <winsock2.h>
+
 #include <ws2tcpip.h>
-#else
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <sys/time.h>
-#endif
+
+#
+else#include <netdb.h>
+
+    #include <sys/socket.h>
+
+    #include <netinet/in.h>
+
+    #include <arpa/inet.h>
+
+    #include <unistd.h>
+
+    #include <sys/time.h>
+
+    # endif
 
 /**
  * Encapsulates platform dependencies regarding buffered sockets.
  */
 class Socket {
-private:
-  // Buffer size, chosen to fit in a single packet after TCP/IP overhead.
-  static const int BUF_SIZE = 1400;
-  
-  // Can't rely on a sentinel value for the socket descriptor
-  bool connected;
-  
-  SOCKETTYPE sock;
-  
-  // Read buffer
-  char* readBuf;
-  
-  // One bye past end of valid data in readBuf
-  char* readValid;
-  
-  // Current read pointer
-  char* readBufPtr;
+    private:
+        // Buffer size, chosen to fit in a single packet after TCP/IP overhead.
+        static
+    const int BUF_SIZE = 1400;
 
-  // Write buffer
-  char* writeBuf;
-  
-  // Current write pointer
-  char* writeBufPtr;
+    // Can't rely on a sentinel value for the socket descriptor
+    bool connected;
 
-  // Stats
-  unsigned long numReads;
-  unsigned long long totReadBytes;
-  size_t maxReadBytes;
+    SOCKETTYPE sock;
 
-  unsigned long numWrites;
-  unsigned long long totWriteBytes;
-  size_t maxWriteBytes;
+    // Read buffer
+    char * readBuf;
 
-private:
-  void init();
-  bool fillReadBuf();
-  bool emptyWriteBuf();
+    // One bye past end of valid data in readBuf
+    char * readValid;
 
-public:
-  Socket() : connected(false), readBuf(new char[BUF_SIZE]), writeBuf(new char[BUF_SIZE]) {
-    readBufPtr = readValid = readBuf;
-    writeBufPtr = writeBuf;
-    numReads = numWrites = 0;
-    maxReadBytes = maxWriteBytes = 0;
-    totReadBytes = totWriteBytes = 0;
-    init();
-  }
-  
-  ~Socket() {
-    disconnect();
-#ifdef _WINDOWS
-    if (0) WSACleanup();
-#endif
-    // TODO(jat): LEAK LEAK LEAK
-    // delete[] readBuf;
-    // delete[] writeBuf;
-    Debug::log(Debug::Debugging) << "Socket: #r=" << numReads << ", bytes/read="
-        << (numReads ? totReadBytes / numReads : 0) << ", maxr=" << maxReadBytes << "; #w="
-        << numWrites << ", bytes/write=" << (numWrites ? totWriteBytes / numWrites : 0) << ", maxw="
-        << maxWriteBytes << Debug::flush;
-  }
+    // Current read pointer
+    char * readBufPtr;
 
-  /**
-   * Connects this socket to a specified port on a host.
-   * 
-   * @param host host name or IP address to connect to
-   * @param port TCP port to connect to
-   * @return true if the connection succeeds
-   */ 
-  bool connect(const char* host, int port);
-  
-  /**
-   * Returns true if the socket is connected.
-   */
-  bool isConnected() const {
-    return connected;
-  }
-  
-  /**
-   * Disconnect this socket.
-   * 
-   * @param doFlush true (the default value) if the socket should be flushed.
-   * @return true if disconnect succeeds
-   */
-  bool disconnect(bool doFlush = true);
-  
-  /**
-   * Read a single byte from the socket.
-   *
-   * @return -1 on error, otherwise unsigned byte read.
-   */
-  int readByte() {
-    if (readBufPtr >= readValid) {
-      if (!fillReadBuf()) {
-        return -1;
-      }
+    // Write buffer
+    char * writeBuf;
+
+    // Current write pointer
+    char * writeBufPtr;
+
+    // Stats
+    unsigned long numReads;
+    unsigned long long totReadBytes;
+    size_t maxReadBytes;
+
+    unsigned long numWrites;
+    unsigned long long totWriteBytes;
+    size_t maxWriteBytes;
+
+    private:
+        void init();
+    bool fillReadBuf();
+    bool emptyWriteBuf();
+
+    public:
+        Socket(): connected(false), readBuf(new char[BUF_SIZE]), writeBuf(new char[BUF_SIZE]) {
+            readBufPtr = readValid = readBuf;
+            writeBufPtr = writeBuf;
+            numReads = numWrites = 0;
+            maxReadBytes = maxWriteBytes = 0;
+            totReadBytes = totWriteBytes = 0;
+            init();
+        }
+
+        ~Socket() {
+            disconnect();#
+            ifdef _WINDOWS
+            if (0) WSACleanup();#
+            endif
+            // TODO(jat): LEAK LEAK LEAK
+            // delete[] readBuf;
+            // delete[] writeBuf;
+            Debug::log(Debug::Debugging) << "Socket: #r=" << numReads << ", bytes/read=" <<
+                (numReads ? totReadBytes / numReads : 0) << ", maxr=" << maxReadBytes << "; #w=" <<
+                numWrites << ", bytes/write=" << (numWrites ? totWriteBytes / numWrites : 0) << ", maxw=" <<
+                maxWriteBytes << Debug::flush;
+        }
+
+    /**
+     * Connects this socket to a specified port on a host.
+     * 
+     * @param host host name or IP address to connect to
+     * @param port TCP port to connect to
+     * @return true if the connection succeeds
+     */
+    bool connect(const char * host, int port);
+
+    /**
+     * Returns true if the socket is connected.
+     */
+    bool isConnected() const {
+        return connected;
     }
-    return static_cast<unsigned char>(*readBufPtr++);
-  }
-  
-  /**
-   * Write a single byte to the socket.
-   * 
-   * @return true on success.
-   */
-  bool writeByte(char c) {
-    if (writeBufPtr >= writeBuf + BUF_SIZE) {
-      if (!emptyWriteBuf()) {
-        return false;
-      }
+
+    /**
+     * Disconnect this socket.
+     * 
+     * @param doFlush true (the default value) if the socket should be flushed.
+     * @return true if disconnect succeeds
+     */
+    bool disconnect(bool doFlush = true);
+
+    /**
+     * Read a single byte from the socket.
+     *
+     * @return -1 on error, otherwise unsigned byte read.
+     */
+    int readByte() {
+        if (readBufPtr >= readValid) {
+            if (!fillReadBuf()) {
+                return -1;
+            }
+        }
+        return static_cast < unsigned char > ( * readBufPtr++);
     }
-    *writeBufPtr++ = c;
-    return true;
-  }
-  
-  /**
-   * Flush any pending writes on the socket.
-   *
-   * @return true on success
-   */
-  bool flush() {
-    if (writeBufPtr > writeBuf) {
-      if (!emptyWriteBuf()) {
-        return false;
-      }
+
+    /**
+     * Write a single byte to the socket.
+     * 
+     * @return true on success.
+     */
+    bool writeByte(char c) {
+        if (writeBufPtr >= writeBuf + BUF_SIZE) {
+            if (!emptyWriteBuf()) {
+                return false;
+            }
+        }
+        * writeBufPtr++ = c;
+        return true;
     }
-    return true;
-  }
+
+    /**
+     * Flush any pending writes on the socket.
+     *
+     * @return true on success
+     */
+    bool flush() {
+        if (writeBufPtr > writeBuf) {
+            if (!emptyWriteBuf()) {
+                return false;
+            }
+        }
+        return true;
+    }
 };
 
-#endif
+#
+endif

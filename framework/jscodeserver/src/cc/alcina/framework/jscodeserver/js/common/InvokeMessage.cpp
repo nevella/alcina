@@ -15,15 +15,17 @@
  */
 
 #include "InvokeMessage.h"
+
 #include "HostChannel.h"
+
 #include "scoped_ptr/scoped_ptr.h"
 
 InvokeMessage::~InvokeMessage() {
-  delete[] args;
+    delete[] args;
 }
 
 char InvokeMessage::getType() const {
-  return TYPE;
+    return TYPE;
 }
 
 /**
@@ -31,34 +33,34 @@ char InvokeMessage::getType() const {
  * type has already been read).  Caller is responsible for destroying
  * returned message.  Returns null on error.
  */
-InvokeMessage* InvokeMessage::receive(HostChannel& channel) {
-  std::string methodName;
-  if (!channel.readString(methodName)) {
-    // TODO(jat): error handling
-    printf("Failed to read method name\n");
-    return 0;
-  }
-  gwt::Value thisRef;
-  if (!channel.readValue(thisRef)) {
-    // TODO(jat): error handling
-    printf("Failed to read thisRef\n");
-    return 0;
-  }
-  int numArgs;
-  if (!channel.readInt(numArgs)) {
-    // TODO(jat): error handling
-    printf("Failed to read #args\n");
-    return 0;
-  }
-  scoped_array<gwt::Value> args(new gwt::Value[numArgs]);
-  for (int i = 0; i < numArgs; ++i) {
-    if (!channel.readValue(args[i])) {
-      // TODO(jat): error handling
-      printf("Failed to read arg[%d]\n", i);
-      return 0;
+InvokeMessage * InvokeMessage::receive(HostChannel & channel) {
+    std::string methodName;
+    if (!channel.readString(methodName)) {
+        // TODO(jat): error handling
+        printf("Failed to read method name\n");
+        return 0;
     }
-  }
-  return new InvokeMessage(thisRef, methodName, numArgs, args.release());
+    gwt::Value thisRef;
+    if (!channel.readValue(thisRef)) {
+        // TODO(jat): error handling
+        printf("Failed to read thisRef\n");
+        return 0;
+    }
+    int numArgs;
+    if (!channel.readInt(numArgs)) {
+        // TODO(jat): error handling
+        printf("Failed to read #args\n");
+        return 0;
+    }
+    scoped_array < gwt::Value > args(new gwt::Value[numArgs]);
+    for (int i = 0; i < numArgs; ++i) {
+        if (!channel.readValue(args[i])) {
+            // TODO(jat): error handling
+            printf("Failed to read arg[%d]\n", i);
+            return 0;
+        }
+    }
+    return new InvokeMessage(thisRef, methodName, numArgs, args.release());
 }
 
 /**
@@ -66,14 +68,16 @@ InvokeMessage* InvokeMessage::receive(HostChannel& channel) {
  * 
  * Note that the method to be invoked is sent as an integer (a dispatch id) to the server.
  */
-bool InvokeMessage::send(HostChannel& channel, const gwt::Value& thisRef, int methodDispatchId,
-    int numArgs, const gwt::Value* args) {
-  if (!channel.sendByte(TYPE)) return false;
-  if (!channel.sendInt(methodDispatchId)) return false;
-  if (!channel.sendValue(thisRef)) return false;
-  if (!channel.sendInt(numArgs)) return false;
-  for (int i = 0; i < numArgs; ++i) {
-    if (!channel.sendValue(args[i])) return false;
-  }
-  return true;
+bool InvokeMessage::send(HostChannel & channel,
+    const gwt::Value & thisRef, int methodDispatchId,
+        int numArgs,
+        const gwt::Value * args) {
+    if (!channel.sendByte(TYPE)) return false;
+    if (!channel.sendInt(methodDispatchId)) return false;
+    if (!channel.sendValue(thisRef)) return false;
+    if (!channel.sendInt(numArgs)) return false;
+    for (int i = 0; i < numArgs; ++i) {
+        if (!channel.sendValue(args[i])) return false;
+    }
+    return true;
 }

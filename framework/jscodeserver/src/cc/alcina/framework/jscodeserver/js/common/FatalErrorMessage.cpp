@@ -15,14 +15,15 @@
  */
 
 #include "FatalErrorMessage.h"
+
 #include "HostChannel.h"
+
 #include "scoped_ptr/scoped_ptr.h"
 
-FatalErrorMessage::~FatalErrorMessage() {
-}
+FatalErrorMessage::~FatalErrorMessage() {}
 
 char FatalErrorMessage::getType() const {
-  return TYPE;
+    return TYPE;
 }
 
 /**
@@ -30,21 +31,22 @@ char FatalErrorMessage::getType() const {
  * type has already been read).  Caller is responsible for destroying
  * returned message.  Returns null on error.
  */
-FatalErrorMessage* FatalErrorMessage::receive(HostChannel& channel) {
-  std::string error;
-  if (!channel.readString(error)) {
-    // TODO(jat): error handling
-    printf("Failed to read error message\n");
-    return 0;
-  }
-  return new FatalErrorMessage(error);
+FatalErrorMessage * FatalErrorMessage::receive(HostChannel & channel) {
+    std::string error;
+    if (!channel.readString(error)) {
+        // TODO(jat): error handling
+        printf("Failed to read error message\n");
+        return 0;
+    }
+    return new FatalErrorMessage(error);
 }
 
 /**
  * Send a fatal error message on the channel.
  */
-bool FatalErrorMessage::send(HostChannel& channel, const std::string& error) {
-  if (!channel.sendByte(TYPE)) return false;
-  if (!channel.sendString(error)) return false;
-  return true;
+bool FatalErrorMessage::send(HostChannel & channel,
+    const std::string & error) {
+    if (!channel.sendByte(TYPE)) return false;
+    if (!channel.sendString(error)) return false;
+    return true;
 }

@@ -15,11 +15,11 @@ gwt_hm_ServerMethods.setProperty = function(channel, handler, objectId, dispId, 
     return channel.reactToMessagesWhileWaitingForReturn(handler);
 }
 gwt_hm_ServerMethods.getProperty = function(channel, handler, objectId, dispId) {
-  let args = [];
-  args[0] = new gwt_hm_Value();
-  args[1] = new gwt_hm_Value();
-  args[0].setInt(objectId);
-  args[1].setInt(dispId);
-  gwt_hm_InvokeSpecialMessage.send(channel, gwt_hm_BrowserChannel.SPECIAL_GET_PROPERTY, 2, args);
-  return channel.reactToMessagesWhileWaitingForReturn(handler);
+    let args = [];
+    args[0] = new gwt_hm_Value();
+    args[1] = new gwt_hm_Value();
+    args[0].setInt(objectId);
+    args[1].setInt(dispId);
+    gwt_hm_InvokeSpecialMessage.send(channel, gwt_hm_BrowserChannel.SPECIAL_GET_PROPERTY, 2, args);
+    return channel.reactToMessagesWhileWaitingForReturn(handler);
 }

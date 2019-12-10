@@ -1,5 +1,5 @@
-#ifndef __H_LoadJsniMessage
-#define __H_LoadJsniMessage
+#
+ifndef __H_LoadJsniMessage# define __H_LoadJsniMessage
 /*
  * Copyright 2008 Google Inc.
  * 
@@ -17,27 +17,28 @@
  */
 
 #include <string>
+
 #include "Message.h"
+
 #include "BrowserChannel.h"
+
 #include "HostChannel.h"
 
-class LoadJsniMessage : public Message {
-public:  
-  static const char TYPE = MESSAGE_TYPE_LOADJSNI;
-private:
-  const std::string js;
-  
-  LoadJsniMessage(const std::string& js) : js(js) {}
-  
-public:  
-  virtual char getType() const {
-    return TYPE;
-  }
-  
-  std::string getJs() const {
-    return js;
-  }
+class LoadJsniMessage: public Message {
+    public: static
+    const char TYPE = MESSAGE_TYPE_LOADJSNI;
+    private: const std::string js;
 
-  static LoadJsniMessage* receive(HostChannel& channel);
-};
-#endif
+    LoadJsniMessage(const std::string & js): js(js) {}
+
+    public: virtual char getType() const {
+        return TYPE;
+    }
+
+    std::string getJs() const {
+        return js;
+    }
+
+    static LoadJsniMessage * receive(HostChannel & channel);
+};#
+endif

@@ -1,5 +1,5 @@
-#ifndef _H_HashMap
-#define _H_HashMap
+#
+ifndef _H_HashMap# define _H_HashMap
 /*
  * Copyright 2008 Google Inc.
  * 
@@ -18,41 +18,43 @@
 
 // Portability wrapper for hash maps, since they aren't part of the standard C++ library
 
-#ifdef __GNUC__
-#ifdef CXX_TR1
+# ifdef __GNUC__# ifdef CXX_TR1
 // future support
 #include <unordered_map>
-#define hash_map std::tr1::unordered_map
 
-namespace HashFunctions = std;
-#else
-#include <ext/hash_map>
-using __gnu_cxx::hash_map;
+# define hash_map std::tr1::unordered_map
+
+namespace HashFunctions = std;#
+else#include <ext/hash_map>
+
+    using __gnu_cxx::hash_map;
 
 // TODO(jat): surely this exists somewhere already?
 // TODO(jat): portability issues
 namespace __gnu_cxx {
-  using std::size_t;
+    using std::size_t;
 
-  template<> struct hash<std::string> {
-    size_t operator()(const std::string& str) const {
-      return hash<const char*>()(str.c_str());
-    }
-  };
+    template < > struct hash < std::string > {
+        size_t operator()(const std::string & str) const {
+            return hash <
+                const char * > ()(str.c_str());
+        }
+    };
 };
-namespace HashFunctions = __gnu_cxx;
-#endif
-#elif sun
+namespace HashFunctions = __gnu_cxx;#
+endif# elif sun
 // TODO(jat): find a hash_map implementation for Solaris
 #include <map>
-namespace HashFunctions = std;
-#define hash_map map
-using std::map;
-#else
-// Try something reasonably standard, which works in Windows
-#include <hash_map>
-using stdext::hash_map;
-namespace HashFunctions = stdext;
-#endif
 
-#endif
+namespace HashFunctions = std;#
+define hash_map map
+using std::map;#
+else
+    // Try something reasonably standard, which works in Windows
+    #include <hash_map>
+
+    using stdext::hash_map;
+namespace HashFunctions = stdext;#
+endif
+
+# endif

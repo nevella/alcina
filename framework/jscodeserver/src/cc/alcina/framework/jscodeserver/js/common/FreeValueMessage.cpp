@@ -15,33 +15,36 @@
  */
 
 #include "FreeValueMessage.h"
+
 #include "HostChannel.h"
+
 #include "scoped_ptr/scoped_ptr.h"
 
 FreeValueMessage::~FreeValueMessage() {
-  delete[] ids;
+    delete[] ids;
 }
 
-FreeValueMessage* FreeValueMessage::receive(HostChannel& channel) {
-  int idCount;
-  if (!channel.readInt(idCount)) {
-    // TODO(jat): error handling
-    return 0;
-  }
-  // TODO: validate idCount
-  scoped_array<int> ids(new int[idCount]);
+FreeValueMessage * FreeValueMessage::receive(HostChannel & channel) {
+    int idCount;
+    if (!channel.readInt(idCount)) {
+        // TODO(jat): error handling
+        return 0;
+    }
+    // TODO: validate idCount
+    scoped_array < int > ids(new int[idCount]);
 
-  for (int i = 0; i < idCount; ++i) {
-    if (!channel.readInt(ids[i])) return 0;
-  }
-  return new FreeValueMessage(idCount, ids.release());
+    for (int i = 0; i < idCount; ++i) {
+        if (!channel.readInt(ids[i])) return 0;
+    }
+    return new FreeValueMessage(idCount, ids.release());
 }
 
-bool FreeValueMessage::send(HostChannel& channel, int idCount, const int* ids) {
-  if (!channel.sendByte(TYPE)) return false;
-  if (!channel.sendInt(idCount)) return false;
-  for (int i = 0; i < idCount; ++i) {
-    if (!channel.sendInt(ids[i])) return false;
-  }
-  return true;
+bool FreeValueMessage::send(HostChannel & channel, int idCount,
+    const int * ids) {
+    if (!channel.sendByte(TYPE)) return false;
+    if (!channel.sendInt(idCount)) return false;
+    for (int i = 0; i < idCount; ++i) {
+        if (!channel.sendInt(ids[i])) return false;
+    }
+    return true;
 }

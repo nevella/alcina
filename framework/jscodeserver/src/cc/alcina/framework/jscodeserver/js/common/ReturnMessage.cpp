@@ -15,28 +15,30 @@
  */
 
 #include "ReturnMessage.h"
+
 #include "HostChannel.h"
 
 char ReturnMessage::getType() const {
-  return TYPE;
-}
-  
-ReturnMessage* ReturnMessage::receive(HostChannel& channel) {
-  char isException;
-  if (!channel.readByte(isException)) {
-    // TODO(jat): error handling
-    return 0;
-  }
-  gwt::Value retval;
-  if (!channel.readValue(retval)) {
-    // TODO(jat): error handling
-    return 0;
-  }
-  return new ReturnMessage(isException != 0, retval);
+    return TYPE;
 }
 
-bool ReturnMessage::send(HostChannel& channel, bool isException, const gwt::Value& retval) {
-  if (!channel.sendByte(TYPE)) return false;
-  if (!channel.sendByte(isException ? 1 : 0)) return false;
-  return channel.sendValue(retval);
+ReturnMessage * ReturnMessage::receive(HostChannel & channel) {
+    char isException;
+    if (!channel.readByte(isException)) {
+        // TODO(jat): error handling
+        return 0;
+    }
+    gwt::Value retval;
+    if (!channel.readValue(retval)) {
+        // TODO(jat): error handling
+        return 0;
+    }
+    return new ReturnMessage(isException != 0, retval);
+}
+
+bool ReturnMessage::send(HostChannel & channel, bool isException,
+    const gwt::Value & retval) {
+    if (!channel.sendByte(TYPE)) return false;
+    if (!channel.sendByte(isException ? 1 : 0)) return false;
+    return channel.sendValue(retval);
 }

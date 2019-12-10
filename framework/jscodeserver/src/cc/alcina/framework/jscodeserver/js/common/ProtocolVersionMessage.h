@@ -1,5 +1,5 @@
-#ifndef __PROTOCOLVERSIONMESSAGE_H
-#define __PROTOCOLVERSIONMESSAGE_H
+#
+ifndef __PROTOCOLVERSIONMESSAGE_H# define __PROTOCOLVERSIONMESSAGE_H
 /*
  * Copyright 2009 Google Inc.
  *
@@ -17,8 +17,11 @@
  */
 
 #include <string>
+
 #include "Message.h"
+
 #include "BrowserChannel.h"
+
 #include "Value.h"
 
 class HostChannel;
@@ -30,25 +33,26 @@ class HostChannel;
  * This message indicates which version of the protocol the server has chosen
  * for the remainder of the communication.
  */
-class ProtocolVersionMessage : public Message {
-public:
-  static const char TYPE = MESSAGE_TYPE_PROTOCOL_VERSION;
-private:
-  int version;
+class ProtocolVersionMessage: public Message {
+    public: static
+    const char TYPE = MESSAGE_TYPE_PROTOCOL_VERSION;
+    private: int version;
 
-protected:
-  /**
-   * @param version selected protocol version
-   */
-  ProtocolVersionMessage(int version) : version(version) {}
+    protected:
+        /**
+         * @param version selected protocol version
+         */
+        ProtocolVersionMessage(int version): version(version) {}
 
-public:
-  ~ProtocolVersionMessage();
-  virtual char getType() const;
+    public:
+        ~ProtocolVersionMessage();
+    virtual char getType() const;
 
-  int getVersion() const { return version; }
+    int getVersion() const {
+        return version;
+    }
 
-  static ProtocolVersionMessage* receive(HostChannel& channel);
-  static bool send(HostChannel& channel, int version);
-};
-#endif
+    static ProtocolVersionMessage * receive(HostChannel & channel);
+    static bool send(HostChannel & channel, int version);
+};#
+endif

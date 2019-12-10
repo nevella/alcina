@@ -1,5 +1,5 @@
-#ifndef __SWITCHTRANSPORTMESSAGE_H
-#define __SWITCHTRANSPORTMESSAGE_H
+#
+ifndef __SWITCHTRANSPORTMESSAGE_H# define __SWITCHTRANSPORTMESSAGE_H
 /*
  * Copyright 2009 Google Inc.
  *
@@ -17,8 +17,11 @@
  */
 
 #include <string>
+
 #include "Message.h"
+
 #include "BrowserChannel.h"
+
 #include "Value.h"
 
 class HostChannel;
@@ -32,22 +35,23 @@ class HostChannel;
  * advertised by the client.  The empty string represents the in-band channel,
  * and is always an acceptable response.
  */
-class SwitchTransportMessage : public Message {
-public:
-  static const char TYPE = MESSAGE_TYPE_SWITCH_TRANSPORT;
-private:
-  std::string transport;
+class SwitchTransportMessage: public Message {
+    public: static
+    const char TYPE = MESSAGE_TYPE_SWITCH_TRANSPORT;
+    private: std::string transport;
 
-protected:
-  SwitchTransportMessage(const std::string& transport) : transport(transport) {}
+    protected: SwitchTransportMessage(const std::string & transport): transport(transport) {}
 
-public:
-  ~SwitchTransportMessage();
-  virtual char getType() const;
+    public:
+        ~SwitchTransportMessage();
+    virtual char getType() const;
 
-  const std::string& getTransport() const { return transport; }
+    const std::string & getTransport() const {
+        return transport;
+    }
 
-  static SwitchTransportMessage* receive(HostChannel& channel);
-  static bool send(HostChannel& channel, const std::string& transport);
-};
-#endif
+    static SwitchTransportMessage * receive(HostChannel & channel);
+    static bool send(HostChannel & channel,
+        const std::string & transport);
+};#
+endif

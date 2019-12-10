@@ -1,5 +1,5 @@
-#ifndef _H_SessionHandler
-#define _H_SessionHandler
+#
+ifndef _H_SessionHandler# define _H_SessionHandler
 /*
  * Copyright 2008 Google Inc.
  *
@@ -17,6 +17,7 @@
  */
 
 #include "BrowserChannel.h"
+
 #include "Value.h"
 
 class HostChannel;
@@ -40,72 +41,79 @@ class HostChannel;
  * };
  */
 class SessionHandler {
-  friend class HostChannel;
-public:
-  enum SpecialMethodId {
-    HasMethod = SPECIAL_HAS_METHOD,
-    HasProperty = SPECIAL_HAS_PROPERTY,
-    GetProperty = SPECIAL_GET_PROPERTY,
-    SetProperty = SPECIAL_SET_PROPERTY
-  };
-protected:
-  SessionHandler(): alreadyDisconnected(false) {
-  }
+    friend class HostChannel;
+    public:
+        enum SpecialMethodId {
+            HasMethod = SPECIAL_HAS_METHOD,
+                HasProperty = SPECIAL_HAS_PROPERTY,
+                GetProperty = SPECIAL_GET_PROPERTY,
+                SetProperty = SPECIAL_SET_PROPERTY
+        };
+    protected:
+        SessionHandler(): alreadyDisconnected(false) {}
 
-  /**
-   * Called by the server socket when it cannot read, write, or flush.
-   */
-  void disconnectDetected() {
-    if (!alreadyDisconnected) {
-      alreadyDisconnected = true;
-      disconnectDetectedImpl();
+    /**
+     * Called by the server socket when it cannot read, write, or flush.
+     */
+    void disconnectDetected() {
+        if (!alreadyDisconnected) {
+            alreadyDisconnected = true;
+            disconnectDetectedImpl();
+        }
     }
-  }
 
-  /**
-   * Implementors should invoke __gwt_disconnected() in the hosted.html window
-   * to "glass" the screen with a disconnect message.
-   */
-  virtual void disconnectDetectedImpl() = 0;
+    /**
+     * Implementors should invoke __gwt_disconnected() in the hosted.html window
+     * to "glass" the screen with a disconnect message.
+     */
+    virtual void disconnectDetectedImpl() = 0;
 
-  /**
-   * Report a fatal error -- the channel will be closed after this method
-   * returns.
-   */
-  virtual void fatalError(HostChannel& channel, const std::string& message) = 0;
+    /**
+     * Report a fatal error -- the channel will be closed after this method
+     * returns.
+     */
+    virtual void fatalError(HostChannel & channel,
+        const std::string & message) = 0;
 
-  virtual void freeValue(HostChannel& channel, int idCount, const int* ids) = 0;
+    virtual void freeValue(HostChannel & channel, int idCount,
+        const int * ids) = 0;
 
-  virtual void loadJsni(HostChannel& channel, const std::string& js) = 0;
+    virtual void loadJsni(HostChannel & channel,
+        const std::string & js) = 0;
 
-  /**
-   * Does not own any of its args -- must copy them if it wants them and should not free the
-   * ones passed in.
-   *
-   * Returns true if an exception occurred.
-   */
-  virtual bool invoke(HostChannel& channel, const gwt::Value& thisObj,
-      const std::string& methodName, int numArgs, const gwt::Value* const args,
-      gwt::Value* returnValue) = 0;
+    /**
+     * Does not own any of its args -- must copy them if it wants them and should not free the
+     * ones passed in.
+     *
+     * Returns true if an exception occurred.
+     */
+    virtual bool invoke(HostChannel & channel,
+        const gwt::Value & thisObj,
+            const std::string & methodName, int numArgs,
+                const gwt::Value *
+                    const args,
+                        gwt::Value * returnValue) = 0;
 
-  /**
-   * Invoke a plugin-provided method with the given args.  As above, this method does not own
-   * any of its args.
-   *
-   * Returns true if an exception occurred.
-   */
-  virtual bool invokeSpecial(HostChannel& channel, SpecialMethodId method, int numArgs,
-      const gwt::Value* const args, gwt::Value* returnValue) = 0;
+    /**
+     * Invoke a plugin-provided method with the given args.  As above, this method does not own
+     * any of its args.
+     *
+     * Returns true if an exception occurred.
+     */
+    virtual bool invokeSpecial(HostChannel & channel, SpecialMethodId method, int numArgs,
+        const gwt::Value *
+            const args, gwt::Value * returnValue) = 0;
 
-  /**
-   * Send any queued up free values back to the server.
-   */
-  virtual void sendFreeValues(HostChannel& channel) = 0;
+    /**
+     * Send any queued up free values back to the server.
+     */
+    virtual void sendFreeValues(HostChannel & channel) = 0;
 
-  virtual ~SessionHandler() {}
+    virtual~SessionHandler() {}
 
-private:
-  bool alreadyDisconnected;
+    private:
+        bool alreadyDisconnected;
 };
 
-#endif
+#
+endif

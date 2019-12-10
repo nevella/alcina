@@ -1,0 +1,132 @@
+/*
+ * cleanup - make hostedmode aware of 'am worker' (and make worker load from that file if need be)
+ */
+class WebSocketTransport {
+
+    static MESSAGE_WAIT = 0;
+    static MESSAGE_CONNECT = 1;
+    static MESSAGE_DATA_PACKET = 2;
+    static BUFFER_SIZE = 5000000;
+    constructor() {
+
+    };
+    setBuffers(inBuffer, outBuffer) {
+        this.inBuffer = new WebSocketTransportBuffer(inBuffer);
+        this.outBuffer = new WebSocketTransportBuffer(outBuffer);
+    }
+    sendConnect() {
+        return this.sendPacket(WebSocketTransport.MESSAGE_CONNECT, new TextEncoder().encode(""));
+    }
+    send(string) {
+        return this.sendPacket(WebSocketTransport.MESSAGE_DATA_PACKET, new TextEncoder().encode(string));
+    }
+    read(timeout) {
+        return this.inBuffer.read(timeout);
+    }
+    sendPacket(message, data) {
+        this.outBuffer.write(message, data);
+        return this.read(10000);
+    }
+}
+class WebSocketTransportBuffer {
+    /*
+     * buffer write operation (byte array b[n]) int0 => op (0: noop - 1: connect -
+     * 2: data packet) int1 : n (as int) byte 2->2+n-1 : data
+     */
+    constructor(sharedArrayBuffer) {
+        this.sharedArrayBuffer = sharedArrayBuffer;
+        this.int32 = new Int32Array(sharedArrayBuffer);
+    }
+    read(timeout) {
+        if (WebSocketTransport_is_worker) {
+            /*
+             * should not be needed (worker will already have a message saying
+             * 'packet ready')
+             */
+            Atomics.wait(this.int32, 0, WebSocketTransport.MESSAGE_WAIT, timeout);
+        } else {
+            let t0 = performance.now();
+            let counter = 0;
+            while (Atomics.load(this.int32, 0) == 0) {
+                if (counter++ % 1000000 == 0) {
+                    var t1 = performance.now();
+                    if (t1 - t0 > timeout) {
+                        throw "Read timeout";
+                    }
+                }
+                // don't spook a spectre...?
+            }
+        }
+        var len = this.int32[1];
+        /*
+         * prep for next read (could probably make this array copy nicer, but
+         * dev tools got hung up...?)
+         */
+        Atomics.store(this.int32, 0, WebSocketTransport.MESSAGE_WAIT);
+        let result = [];
+        for (let idx = 0; idx < len; idx++) {
+            result[idx] = this.int32[idx + 2];
+        }
+        return result;
+    }
+    write(message, data) {
+        var v = data.length;
+        Atomics.store(this.int32, 1, data.length);
+        this.int32.set(data, 2);
+        /*
+         * and now...store the messaage code and wake one sleeping thread
+         * 
+         */
+        Atomics.store(this.int32, 0, message);
+        Atomics.notify(this.int32, 0, 1);
+    }
+}
+class WebSocketTransportSocketChannel extends WebSocketTransport {
+    constructor() {
+        super();
+        onmessage = e => {
+            switch (e.data.message) {
+                case "start":
+                    this.codeServerWs = e.data.codeServerWs;
+                    this.codeServer = e.data.codeServer;
+                    this.setBuffers(e.data.inBuffer.sharedArrayBuffer, e.data.outBuffer.sharedArrayBuffer);
+                    this.start();
+                    break;
+                case "data":
+                    this.onData();
+                    break;
+            }
+        };
+    };
+    start() {
+        this.socket = new WebSocket(`ws://${this.codeServerWs}/jsCodeServerWs.tcp?gwt.codesvr=${this.codeServer}`);
+        this.socket.addEventListener('open', e => {
+            this.onOpen();
+        });
+        this.socket.onmessage = e => this.onMessage(e);
+    }
+    onOpen() {
+        postMessage({
+            message: "connected"
+        });
+    }
+    onData() {
+        let bytes = this.read(); //will be int array (but int in byte range - in fact ascii ) - in our case b64 text
+        let packet = "";
+        for (var idx = 0; idx < bytes.length; idx++) {
+            packet += String.fromCharCode(bytes[idx]);
+        }
+        this.socket.send(packet);
+    }
+    onMessage(e) {
+        this.send(e.data);
+    }
+}
+
+function WebSocketTransport_maybeStartWorker() {
+    if (WebSocketTransport_is_worker) {
+        new WebSocketTransportSocketChannel();
+    }
+}
+var WebSocketTransport_is_worker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+WebSocketTransport_maybeStartWorker();

@@ -1,5 +1,5 @@
-#ifndef __FATALERRORMESSAGE_H
-#define __FATALERRORMESSAGE_H
+#
+ifndef __FATALERRORMESSAGE_H# define __FATALERRORMESSAGE_H
 /*
  * Copyright 2009 Google Inc.
  *
@@ -17,8 +17,11 @@
  */
 
 #include <string>
+
 #include "Message.h"
+
 #include "BrowserChannel.h"
+
 #include "Value.h"
 
 class HostChannel;
@@ -30,25 +33,27 @@ class HostChannel;
  * of the previous message from the client and the connection should be
  * aborted.
  */
-class FatalErrorMessage : public Message {
-public:
-  static const char TYPE = MESSAGE_TYPE_FATAL_ERROR;
-private:
-  std::string error;
+class FatalErrorMessage: public Message {
+    public: static
+    const char TYPE = MESSAGE_TYPE_FATAL_ERROR;
+    private: std::string error;
 
-protected:
-  /**
-   * @param error error message
-   */
-  FatalErrorMessage(const std::string& error) : error(error) {}
+    protected:
+        /**
+         * @param error error message
+         */
+        FatalErrorMessage(const std::string & error): error(error) {}
 
-public:
-  ~FatalErrorMessage();
-  virtual char getType() const;
+    public:
+        ~FatalErrorMessage();
+    virtual char getType() const;
 
-  const std::string& getError() const { return error; }
+    const std::string & getError() const {
+        return error;
+    }
 
-  static FatalErrorMessage* receive(HostChannel& channel);
-  static bool send(HostChannel& channel, const std::string& error);
-};
-#endif
+    static FatalErrorMessage * receive(HostChannel & channel);
+    static bool send(HostChannel & channel,
+        const std::string & error);
+};#
+endif

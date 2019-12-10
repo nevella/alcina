@@ -15,14 +15,15 @@
  */
 
 #include "CheckVersionsMessage.h"
+
 #include "HostChannel.h"
+
 #include "scoped_ptr/scoped_ptr.h"
 
-CheckVersionsMessage::~CheckVersionsMessage() {
-}
+CheckVersionsMessage::~CheckVersionsMessage() {}
 
 char CheckVersionsMessage::getType() const {
-  return TYPE;
+    return TYPE;
 }
 
 /**
@@ -30,36 +31,37 @@ char CheckVersionsMessage::getType() const {
  * type has already been read).  Caller is responsible for destroying
  * returned message.  Returns null on error.
  */
-CheckVersionsMessage* CheckVersionsMessage::receive(HostChannel& channel) {
-  int minVersion;
-  if (!channel.readInt(minVersion)) {
-    // TODO(jat): error handling
-    printf("Failed to read minimum version\n");
-    return 0;
-  }
-  int maxVersion;
-  if (!channel.readInt(maxVersion)) {
-    // TODO(jat): error handling
-    printf("Failed to read maximum version\n");
-    return 0;
-  }
-  std::string hostedHtmlVersion;
-  if (!channel.readString(hostedHtmlVersion)) {
-    // TODO(jat): error handling
-    printf("Failed to read hosted.html version\n");
-    return 0;
-  }
-  return new CheckVersionsMessage(minVersion, maxVersion, hostedHtmlVersion);
+CheckVersionsMessage * CheckVersionsMessage::receive(HostChannel & channel) {
+    int minVersion;
+    if (!channel.readInt(minVersion)) {
+        // TODO(jat): error handling
+        printf("Failed to read minimum version\n");
+        return 0;
+    }
+    int maxVersion;
+    if (!channel.readInt(maxVersion)) {
+        // TODO(jat): error handling
+        printf("Failed to read maximum version\n");
+        return 0;
+    }
+    std::string hostedHtmlVersion;
+    if (!channel.readString(hostedHtmlVersion)) {
+        // TODO(jat): error handling
+        printf("Failed to read hosted.html version\n");
+        return 0;
+    }
+    return new CheckVersionsMessage(minVersion, maxVersion, hostedHtmlVersion);
 }
 
 /**
  * Send a fatal error message on the channel.
  */
-bool CheckVersionsMessage::send(HostChannel& channel, int minVersion,
-    int maxVersion, const std::string& hostedHtmlVersion) {
-  if (!channel.sendByte(TYPE)) return false;
-  if (!channel.sendInt(minVersion)) return false;
-  if (!channel.sendInt(maxVersion)) return false;
-  if (!channel.sendString(hostedHtmlVersion)) return false;
-  return true;
+bool CheckVersionsMessage::send(HostChannel & channel, int minVersion,
+    int maxVersion,
+    const std::string & hostedHtmlVersion) {
+    if (!channel.sendByte(TYPE)) return false;
+    if (!channel.sendInt(minVersion)) return false;
+    if (!channel.sendInt(maxVersion)) return false;
+    if (!channel.sendString(hostedHtmlVersion)) return false;
+    return true;
 }

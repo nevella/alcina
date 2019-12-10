@@ -146,6 +146,7 @@
 			</fileset>
 			<fileset dir="${alcina.home}/framework/classmeta/build">
 				<include name="**/CrossSiteIframeLinker.class" />
+				<include name="**/DirectInstallLinker.class" />
 				<include name="**/CrossSiteIframeLinker$1.class" />
 			</fileset>
 			<fileset dir="${alcina.home}/extras/jsdom/res">
