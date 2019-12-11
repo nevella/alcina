@@ -31,8 +31,15 @@ class WebSocketTransport {
 class WebSocketTransportBuffer {
     closed = false;
     /*
-     * buffer write operation (byte array b[n]) int0 => op (0: noop - 1: connect -
-     * 2: data packet) int1 : n (as int) byte 2->2+n-1 : data
+     * buffer write operation (byte array b[n] - for Atomics.wait to work we
+     * need int32)
+     * 
+     * [0] ::op (0: noop - 1: connect - 2: data packet)
+     * 
+     * [1] : n (as int) byte
+     * 
+     * [2=>2+n-1] : data
+     * 
      */
     constructor(sharedArrayBuffer) {
         this.sharedArrayBuffer = sharedArrayBuffer;
@@ -42,15 +49,23 @@ class WebSocketTransportBuffer {
         if (this.closed) {
             throw "Socket closed";
         }
+        /*
+         * Wait fot the other thread
+         */
         if (WebSocketTransport_is_worker) {
             /*
              * should not be needed (worker will already have a message saying
-             * 'packet ready')
+             * 'packet ready'). Can't use this on main thread cos 'javascript
+             * doesn't block on main thread'...much
              */
             Atomics.wait(this.int32, 0, WebSocketTransport.MESSAGE_WAIT, timeout);
         } else {
             let t0 = performance.now();
             let counter = 0;
+            /*
+             * This works! On the main thread! (this.int32 underlying buffer is
+             * changed by write() on the worker thread)
+             */
             while (Atomics.load(this.int32, 0) == 0) {
                 if (counter++ % 1000000 == 0) {
                     var t1 = performance.now();
@@ -119,7 +134,8 @@ class WebSocketTransportSocketChannel extends WebSocketTransport {
         /*
          * received data from gwt.hosted js - send to codeserver
          */
-        let bytes = this.read(); //will be int array (but int in byte range - in fact ascii ) - in our case b64 text
+        let bytes = this.read(); // will be int array (but int in byte range -
+                                  // in fact ascii ) - in our case b64 text
         let packet = "";
         for (var idx = 0; idx < bytes.length; idx++) {
             packet += String.fromCharCode(bytes[idx]);
