@@ -14,7 +14,7 @@ class gwt_hm_HostChannel {
     xhrTimingData = [];
     xhrTimingCumulativeMilliseconds = 0;
 
-    connectToHost(host, port, codeServerWs) {
+    connectToHost(host, port, codeServerWs, moduleName) {
         // ignore host (for the mo) - assume local, otherwise will need CORS
         //
         // correction, always use local (rather than routing through remote) -
@@ -25,7 +25,7 @@ class gwt_hm_HostChannel {
         this.host = "http://127.0.0.1:" + (parseInt(port) + 1);
         this.port = port;
         if (codeServerWs) {
-            this.socketClient = new WebSocketTransportClient(`${host}:${port}`, codeServerWs);
+            this.socketClient = new WebSocketTransportClient(`${host}:${port}`, codeServerWs, moduleName);
             return new Promise(resolve => {
                 this.socketClient.connect(resolve);
             });
@@ -380,7 +380,7 @@ class gwt_hm_HostChannel {
         this.xhrTimingData.push(xhrTime);
         this.xhrTimingCumulativeMilliseconds += xhrTime;
         if (this.xhrTimingData.length % 1000 == 0) {
-            console.log(`timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMilliseconds} `);
+            console.debug(`codeserver ws timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMilliseconds} `);
         }
     }
     flushWithBodyXhr(body) {

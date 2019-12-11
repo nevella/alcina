@@ -21,11 +21,11 @@ class gwt_hm_ScriptableInstance {
         var idx = codeServer.indexOf(":");
         var host = codeServer.substring(0, idx);
         var port = parseInt(codeServer.substring(idx + 1));
-        this.doConnect(host, port, codeServerWs);
+        this.doConnect(host, port, codeServerWs, moduleName);
 
     }
-    async doConnect(host, port, codeServerWs) {
-        await this.channel.connectToHost(host, port, codeServerWs);
+    async doConnect(host, port, codeServerWs, moduleName) {
+        await this.channel.connectToHost(host, port, codeServerWs, moduleName);
         if (!this.channel.init(this, gwt_hm_BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION,
                 gwt_hm_BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION, this.hostedHtmlVersion)) {
             return false;

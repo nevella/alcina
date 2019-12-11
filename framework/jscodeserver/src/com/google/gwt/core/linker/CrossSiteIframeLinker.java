@@ -655,7 +655,7 @@ public class CrossSiteIframeLinker extends SelectionScriptLinker {
 		long lastModified = System.currentTimeMillis();
 		StringBuffer buffer = readFileToStringBuffer(
 				"com/google/gwt/core/ext/linker/impl/" + filename, logger);
-		boolean injectJsCodeServerFiles = false;
+		boolean injectJsCodeServerFiles = true;
 		if (injectJsCodeServerFiles) {
 			String[] scriptNames = { "GwtJsPlugin.js", "common/Message.js",
 					"common/BrowserChannel.js", "impl/JavaObject.js",
@@ -688,6 +688,17 @@ public class CrossSiteIframeLinker extends SelectionScriptLinker {
 				buffer.append(scriptContents);
 				buffer.append("\n");
 			}
+		}
+		/*
+		 * Add the WebSocketTransport.js to the root
+		 */
+		{
+			String script = ResourceUtilities.readClassPathResourceAsString(
+					CrossSiteIframeLinker.class,
+					"/cc/alcina/framework/jscodeserver/js/common/WebSocketTransport.js");
+			EmittedArtifact devArtifact = emitString(logger, script,
+					"WebSocketTransport.js", lastModified);
+			artifacts.add(devArtifact);
 		}
 		// Ax.out(buffer);
 		String outputFilename = filename;

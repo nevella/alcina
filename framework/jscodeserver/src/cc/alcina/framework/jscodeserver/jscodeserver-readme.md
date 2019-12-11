@@ -20,9 +20,9 @@
 rsync -av /private/var/local/git/alcina/framework/jscodeserver/src/cc/alcina/framework/jscodeserver/js/ /private/var/local/build/opsol/dev/app0/staging/opsol_server.ear/opsol_server.war/jscodeserver/
 turn packed on/off via injectJsCodeServerFiles CrossSiteIframeLinker
 
-519  cd /g/alcina
-535  ant make-gwt-dev-jar
-536  cp /private/var/local/git/alcina/dist-extras/gwt-dev-patch.jar /private/var/local/git/barnet-common-java/lib/alcina/framework/gwt/gwt-dev-patch.jar
+cd /g/alcina
+ant make-gwt-dev-jar
+cp /private/var/local/git/alcina/dist-extras/gwt-dev-patch.jar /private/var/local/git/barnet-common-java/lib/alcina/framework/gwt/gwt-dev-patch.jar
 
 bpx web opsol
 

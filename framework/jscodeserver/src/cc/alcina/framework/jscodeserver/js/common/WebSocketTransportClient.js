@@ -1,16 +1,17 @@
 class WebSocketTransportClient extends WebSocketTransport {
     connected;
-    constructor(codeServer, codeServerWs) {
+    constructor(codeServer, codeServerWs, moduleName) {
         super();
         this.codeServer = codeServer;
         this.codeServerWs = codeServerWs;
+        this.moduleName = moduleName;
     }
     connect(onConnect) {
         /*
          * load socket worker, wait for connect event
          */
         this.setBuffers(new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE), new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE));
-        this.socketWorker = new Worker('/jscodeserver/common/WebSocketTransport.js');
+        this.socketWorker = new Worker(`/${this.moduleName}/WebSocketTransport.js`);
         this.socketWorker.postMessage({
             message: "start",
             codeServerWs: this.codeServerWs,

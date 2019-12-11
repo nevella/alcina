@@ -22,6 +22,12 @@ public class JsCodeServerWsServlet extends WebSocketServlet {
 	public static class JsCodeServerWsAdapter extends WebSocketAdapter {
 		private WsTcpSession codeserverSession;
 
+		int packetCount = 0;
+
+		double packetEvalTime = 0;
+
+		Logger logger = LoggerFactory.getLogger(getClass());
+
 		@Override
 		public void onWebSocketClose(int statusCode, String reason) {
 			super.onWebSocketClose(statusCode, reason);
@@ -44,9 +50,18 @@ public class JsCodeServerWsServlet extends WebSocketServlet {
 		@Override
 		public void onWebSocketText(String b64payload) {
 			try {
+				long t0 = System.nanoTime();
 				String response = codeserverSession
 						.sendPacketToCodeServer(b64payload);
 				getSession().getRemote().sendString(response);
+				long t1 = System.nanoTime();
+				double millis = (t1 - t0) / 1000000.0;
+				packetCount++;
+				packetEvalTime += millis;
+				if (packetCount % 1000 == 0) {
+					logger.debug("timing data: {} : {}", packetCount,
+							packetEvalTime);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				getSession().close();
