@@ -29,6 +29,7 @@ class WebSocketTransport {
     }
 }
 class WebSocketTransportBuffer {
+    closed = false;
     /*
      * buffer write operation (byte array b[n]) int0 => op (0: noop - 1: connect -
      * 2: data packet) int1 : n (as int) byte 2->2+n-1 : data
@@ -38,6 +39,9 @@ class WebSocketTransportBuffer {
         this.int32 = new Int32Array(sharedArrayBuffer);
     }
     read(timeout) {
+        if (this.closed) {
+            throw "Socket closed";
+        }
         if (WebSocketTransport_is_worker) {
             /*
              * should not be needed (worker will already have a message saying
@@ -51,6 +55,7 @@ class WebSocketTransportBuffer {
                 if (counter++ % 1000000 == 0) {
                     var t1 = performance.now();
                     if (t1 - t0 > timeout) {
+                        this.closed = true;
                         throw "Read timeout";
                     }
                 }
@@ -111,6 +116,9 @@ class WebSocketTransportSocketChannel extends WebSocketTransport {
         });
     }
     onData() {
+        /*
+         * received data from gwt.hosted js - send to codeserver
+         */
         let bytes = this.read(); //will be int array (but int in byte range - in fact ascii ) - in our case b64 text
         let packet = "";
         for (var idx = 0; idx < bytes.length; idx++) {
@@ -119,7 +127,11 @@ class WebSocketTransportSocketChannel extends WebSocketTransport {
         this.socket.send(packet);
     }
     onMessage(e) {
-        this.send(e.data);
+        /*
+         * received data from codeserver - send to gwt.hosted js
+         */
+        this.outBuffer.write(WebSocketTransport.MESSAGE_DATA_PACKET, new TextEncoder().encode(e.data));
+
     }
 }
 

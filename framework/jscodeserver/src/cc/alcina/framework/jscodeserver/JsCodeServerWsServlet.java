@@ -15,6 +15,7 @@ public class JsCodeServerWsServlet extends WebSocketServlet {
 
 	@Override
 	public void configure(WebSocketServletFactory factory) {
+		factory.getPolicy().setMaxTextMessageSize(9999999);
 		factory.register(JsCodeServerWsAdapter.class);
 	}
 

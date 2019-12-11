@@ -355,7 +355,6 @@ class gwt_hm_HostChannel {
         } catch (e) {
             debugger;
         }
-        console.log(`sending packet - ${this.buf_out.length} bytes`);
         this.buf_out = "";
         if (this.socketClient) {
             this.flushWithBodyWs(body);
@@ -375,14 +374,13 @@ class gwt_hm_HostChannel {
             response += String.fromCharCode(bytes[idx]);
         }
         this.buf_in = atob(response);
-        console.log(`received packet - ${this.buf_in.length} bytes`);
         this.buf_in_idx = 0;
         var t1 = performance.now();
         var xhrTime = t1 - t0;
         this.xhrTimingData.push(xhrTime);
-        this.xhrTimingCumulativeMicroseconds += xhrTime;
+        this.xhrTimingCumulativeMilliseconds += xhrTime;
         if (this.xhrTimingData.length % 1000 == 0) {
-            console.log(`timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMicroseconds} `);
+            console.log(`timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMilliseconds} `);
         }
     }
     flushWithBodyXhr(body) {

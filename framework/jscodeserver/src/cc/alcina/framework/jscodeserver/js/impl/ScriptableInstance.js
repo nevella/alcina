@@ -31,7 +31,7 @@ class gwt_hm_ScriptableInstance {
             return false;
         }
         gwt_hm_LoadModuleMessage.send(this.channel, this.url, "", this.sessionId,
-           this.moduleName, window.navigator.userAgent, this);
+            this.moduleName, window.navigator.userAgent, this);
     }
     loadJsni(channel, js) {
         window.eval(js);

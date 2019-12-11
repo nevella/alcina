@@ -36,7 +36,6 @@ public class WsTcpSession {
 			initSocket();
 		}
 		byte[] bytes = Base64.getDecoder().decode(payload);
-		Ax.out("received packet - %s bytes", bytes.length);
 		socket.getOutputStream().write(bytes);
 		byte[] responseBytes = client.receiveMessageBytes();
 		if (messageId % messageLogPer == 0) {
@@ -47,7 +46,6 @@ public class WsTcpSession {
 					client.getLastMessageDetails());
 		}
 		messageId++;
-		Ax.out("sending packet - %s bytes", responseBytes.length);
 		return Base64.getEncoder().encodeToString(responseBytes);
 	}
 
