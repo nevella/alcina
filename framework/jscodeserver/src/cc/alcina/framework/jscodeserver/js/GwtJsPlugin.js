@@ -14,9 +14,15 @@ class GwtJsPlugin {
         this.moduleName = moduleName;
         this.hostedHtmlVersion = hostedHtmlVersion;
         let codeServerWs = null;
-        if (window.location.search.indexOf("gwt.ws.server=") != -1) {
-            codeServerWs = window.location.search.replace(/.*gwt.ws.server=([a-zA-Z0-9_:]+).*/, "$1");
-        }
+        //
+        // always use codeServerWs
+        //
+        //
+        //        if (window.location.search.indexOf("gwt.ws.server=") != -1) {
+        //            codeServerWs = window.location.search.replace(/.*gwt.ws.server=([a-zA-Z0-9_:]+).*/, "$1");
+        //        }
+        let regexp = /(.+):([0-9]+)/;
+        codeServerWs = codeServer.replace(regexp, "$1") + ":" + (parseInt(codeServer.replace(regexp, "$2")) + 1);
         this.codeServerWs = codeServerWs;
         var self = this;
         if (typeof gwt_hm_Message != "undefined") {

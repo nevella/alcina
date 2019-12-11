@@ -6,6 +6,8 @@ class WebSocketTransport {
     static MESSAGE_WAIT = 0;
     static MESSAGE_CONNECT = 1;
     static MESSAGE_DATA_PACKET = 2;
+    static MESSAGE_WINDOW_UNLOAD = 3;
+    static MESSAGE_SOCKET_CLOSED = 4;
     static BUFFER_SIZE = 5000000;
     constructor() {
 
@@ -25,7 +27,10 @@ class WebSocketTransport {
     }
     sendPacket(message, data) {
         this.outBuffer.write(message, data);
-        return this.read(10000);
+        /*
+         * we may pause in the java codeserver debugger, so make timeout biiiig (5 minutes)
+         */
+        return this.read(300000);
     }
 }
 class WebSocketTransportBuffer {
@@ -34,7 +39,7 @@ class WebSocketTransportBuffer {
      * buffer write operation (byte array b[n] - for Atomics.wait to work we
      * need int32)
      * 
-     * [0] ::op (0: noop - 1: connect - 2: data packet)
+     * [0] ::op (0: wait - 1: connect - 2: data packet...etc, see MESSAGE constants in WebSocketTransport)
      * 
      * [1] : n (as int) byte
      * 
@@ -75,6 +80,15 @@ class WebSocketTransportBuffer {
                     }
                 }
                 // don't spook a spectre...?
+            }
+            let message = Atomics.load(this.int32, 0);
+            switch (message) {
+                case WebSocketTransport.MESSAGE_SOCKET_CLOSED:
+                  this.closed=true;
+                    throw "WebSocketTransportClient: received MESSAGE_SOCKET_CLOSED";
+                case WebSocketTransport.MESSAGE_WINDOW_UNLOAD:
+                  this.closed=true;
+                    throw "WebSocketTransportClient: received MESSAGE_WINDOW_UNLOAD";
             }
         }
         var len = this.int32[1];
@@ -117,6 +131,13 @@ class WebSocketTransportSocketChannel extends WebSocketTransport {
                     break;
             }
         };
+        /*
+         * worker receives close event (caused by window unload) 
+         */
+        self.addEventListener('close', e => {
+            this.outBuffer.write(WebSocketTransport.MESSAGE_WINDOW_UNLOAD, new TextEncoder().encode(""));
+        });
+        
     };
     start() {
         this.socket = new WebSocket(`ws://${this.codeServerWs}/jsCodeServerWs.tcp?gwt.codesvr=${this.codeServer}`);
@@ -124,6 +145,9 @@ class WebSocketTransportSocketChannel extends WebSocketTransport {
             this.onOpen();
         });
         this.socket.onmessage = e => this.onMessage(e);
+        this.socket.onclose = e => {
+            this.outBuffer.write(WebSocketTransport.MESSAGE_SOCKET_CLOSED, new TextEncoder().encode(""));
+        };
     }
     onOpen() {
         postMessage({
@@ -135,7 +159,7 @@ class WebSocketTransportSocketChannel extends WebSocketTransport {
          * received data from gwt.hosted js - send to codeserver
          */
         let bytes = this.read(); // will be int array (but int in byte range -
-                                  // in fact ascii ) - in our case b64 text
+        // in fact ascii ) - in our case b64 text
         let packet = "";
         for (var idx = 0; idx < bytes.length; idx++) {
             packet += String.fromCharCode(bytes[idx]);
