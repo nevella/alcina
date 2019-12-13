@@ -9,6 +9,10 @@ class WebSocketTransport {
     static MESSAGE_WINDOW_UNLOAD = 3;
     static MESSAGE_SOCKET_CLOSED = 4;
     static BUFFER_SIZE = 5000000;
+    /*
+     * we may pause in the java codeserver debugger, so make timeout biiiig (5 minutes)
+     */
+    static READ_TIMEOUT = 300000;
     constructor() {
 
     };
@@ -27,10 +31,8 @@ class WebSocketTransport {
     }
     sendPacket(message, data) {
         this.outBuffer.write(message, data);
-        /*
-         * we may pause in the java codeserver debugger, so make timeout biiiig (5 minutes)
-         */
-        return this.read(300000);
+       
+        return this.read(WebSocketTransport.READ_TIMEOUT);
     }
 }
 class WebSocketTransportBuffer {

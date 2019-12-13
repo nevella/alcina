@@ -40,7 +40,7 @@ class WebSocketTransportClient extends WebSocketTransport {
         this.socketWorker.postMessage({
             message: "data"
         });
-        return this.read(3000);
+        return this.read(WebSocketTransport.READ_TIMEOUT);
     }
 
 }
