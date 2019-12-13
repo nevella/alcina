@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction.TransactionComparator;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
@@ -116,9 +117,20 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	}
 
 	@Override
+	public String toString() {
+		return Ax.format("tx.map: %s=>%s : %s layers : %s objects in this tx",
+				keyClass.getSimpleName(), valueClass.getSimpleName(),
+				transactionLayers == null ? 0 : transactionLayers.size(),
+				entrySet().size());
+	}
+
+	@Override
 	public void vacuum(Transaction transaction) {
 		Layer layer = transactionLayers.get(transaction);
 		List<Layer> mergedReplace = new ArrayList<>(mergedLayerList);
+		if (layer == null) {
+			int debug = 3;
+		}
 		mergedReplace.add(layer);
 		/*
 		 * now compact - this is a 'levelled' strategy a la cassandra, chrome
@@ -127,13 +139,16 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		 */
 		boolean modified = false;
 		do {
+			modified = false;
 			for (int idx = 0; idx < mergedReplace.size() - 1; idx++) {
 				Layer layer0 = mergedReplace.get(idx);
 				Layer layer1 = mergedReplace.get(idx + 1);
 				if (layer1.combinedMapSize() * 10 > layer0.combinedMapSize()) {
 					Layer merged = layer0.merge(layer1);
 					mergedReplace.remove(idx);
-					mergedReplace.remove(idx + 1);
+					// not idx+1 - we've just removed idx (but essentially
+					// removing both old layers)
+					mergedReplace.remove(idx);
 					mergedReplace.add(idx, merged);
 					modified = true;
 					break;

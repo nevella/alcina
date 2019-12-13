@@ -125,7 +125,8 @@ public class Transaction {
 		StoreTransaction storeTransaction = storeTransactions.get(store);
 		T t = storeTransaction.getMvcc().create(clazz);
 		if (!isBaseTransaction()) {
-			MvccObjectVersions<T> versions = new MvccObjectVersions<>(t, this);
+			MvccObjectVersions<T> versions = new MvccObjectVersions<>(t, this,
+					true);
 			((MvccObject<T>) t).__setMvccVersions__(versions);
 		}
 		return t;
@@ -230,6 +231,17 @@ public class Transaction {
 		setPhase(TransactionPhase.TO_DOMAIN_COMMITTING);
 	}
 
+	public void toNoActiveTransaction() {
+		if (this.phase == TransactionPhase.NO_ACTIVE_TRANSACTION) {
+			return;
+		}
+		// FIXME - tx phases
+		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
+				|| phase == TransactionPhase.TO_DOMAIN_PREPARING)
+				&& TransformManager.get().getTransforms().isEmpty());
+		this.phase = TransactionPhase.NO_ACTIVE_TRANSACTION;
+	}
+
 	@Override
 	public String toString() {
 		return Ax.format("%s::%s", id, phase);
@@ -256,6 +268,7 @@ public class Transaction {
 		case TO_DOMAIN_COMMITTED:
 		case TO_DOMAIN_ABORTED:
 		case VACUUM_ENDED:
+		case NO_ACTIVE_TRANSACTION:
 			break;
 		case TO_DB_PREPARING:
 			if (TransformManager.get().getTransforms().size() == 0) {

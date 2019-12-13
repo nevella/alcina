@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,8 @@ public class Transactions {
 					return t;
 				} else {
 					if (versions == null) {
-						versions = MvccObjectVersions.ensure(t, transaction);
+						versions = MvccObjectVersions.ensure(t, transaction,
+								false);
 					}
 					return versions.resolve(write);
 				}
@@ -81,6 +83,8 @@ public class Transactions {
 	// these will be in commit order
 	private Map<TransactionId, Transaction> committedTransactions = new LinkedHashMap<>();
 
+	private List<Transaction> completedNonDomainCommittedTransactions = new ArrayList<>();
+
 	// these will be in start order
 	private Map<TransactionId, Transaction> activeTransactions = new LinkedHashMap<>();
 
@@ -95,6 +99,14 @@ public class Transactions {
 		}
 	}
 
+	public List<Transaction> getCompletedNonDomainTransactions() {
+		synchronized (transactionMetadataLock) {
+			List<Transaction> result = completedNonDomainCommittedTransactions;
+			completedNonDomainCommittedTransactions = new ArrayList<>();
+			return result;
+		}
+	}
+
 	public void onDomainTransactionCommited(Transaction transaction) {
 		synchronized (transactionMetadataLock) {
 			committedTransactions.put(transaction.getId(), transaction);
@@ -104,6 +116,14 @@ public class Transactions {
 	public void onTransactionEnded(Transaction transaction) {
 		synchronized (transactionMetadataLock) {
 			activeTransactions.remove(transaction.getId());
+			switch (transaction.phase) {
+			case TO_DOMAIN_COMMITTED:
+			case VACUUM_ENDED:
+				break;
+			default:
+				completedNonDomainCommittedTransactions.add(transaction);
+				break;
+			}
 			if (transaction.phase != TransactionPhase.VACUUM_ENDED) {
 				vacuum.enqueueVacuum();
 			}

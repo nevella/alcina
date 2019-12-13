@@ -27,15 +27,23 @@ class Vacuum {
 		if (!vacuumables.containsKey(transaction)) {
 			synchronized (queueCreationMonitor) {
 				if (!vacuumables.containsKey(transaction)) {
+					logger.warn("added vacuumable transaction: {}",
+							transaction);
 					vacuumables.put(transaction, new ConcurrentHashMap<>());
 				}
 			}
 		}
+		logger.warn("added vacuumable object: {}=>{}:{}", transaction,
+				vacuumable.getClass().getSimpleName(), vacuumable);
 		vacuumables.get(transaction).put(vacuumable, vacuumable);
 	}
 
 	public void enqueueVacuum() {
-		if (executor.getQueue().size() > 10) {
+		/*
+		 * really, there will only ever be one truly 'active' (because of the
+		 * synchronized block), but this lets us keep calling
+		 */
+		if (executor.getActiveCount() > 2) {
 			return;
 		}
 		executor.execute(() -> vacuum());
@@ -46,7 +54,8 @@ class Vacuum {
 	 */
 	private synchronized void vacuum() {
 		Transaction.begin(TransactionPhase.VACUUM_BEGIN);
-		logger.warn("transactions with vacuumables: {}", vacuumables.size());
+		logger.warn("transactions with vacuumables: {} : {}",
+				vacuumables.size(), vacuumables.keySet());
 		Optional<TransactionId> vacuumableTransactionId = Transactions.get()
 				.getHighestCommonComittedTransactionId();
 		if (!vacuumableTransactionId.isPresent()) {
@@ -55,10 +64,15 @@ class Vacuum {
 		List<Transaction> vacuumableTransactions = Transactions.get()
 				.getCommittedTransactionsBeforeOrAt(
 						vacuumableTransactionId.get());
+		vacuumableTransactions
+				.addAll(Transactions.get().getCompletedNonDomainTransactions());
 		for (Transaction transaction : vacuumableTransactions) {
 			if (vacuumables.containsKey(transaction)) {
+				logger.warn("vaccuming transaction: {}", transaction);
 				vacuumables.get(transaction).keySet()
 						.forEach(v -> this.vacuum(v, transaction));
+				vacuumables.remove(transaction);
+				logger.warn("removed vacuumable transaction: {}", transaction);
 			}
 		}
 		Transaction.current().toVacuumEnded();

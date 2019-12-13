@@ -30,6 +30,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.TransformPersisterIn;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
@@ -63,6 +64,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
 					true);
 			LooseContext.setTrue(
 					TransformPersisterIn.CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM);
+			Transaction.begin();
+			Transaction.current().toNoActiveTransaction();
 			if (!ResourceUtilities.getBoolean(DevRemoterServlet.class,
 					"enabled")) {
 				throw new Exception("DevRemoterServlet disabled");
@@ -88,6 +91,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			}
 			throw new ServletException(e);
 		} finally {
+			Transaction.current().toNoActiveTransaction();
 			LooseContext.pop();
 		}
 	}

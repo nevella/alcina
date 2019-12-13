@@ -40,6 +40,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreTransformSequencer;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
@@ -414,6 +415,7 @@ public class DomainTransformPersistenceQueue {
 											id);
 							return;
 						}
+						Transaction.current().toNoActiveTransaction();
 						DomainTransformPersistenceEvent event = createPersistenceEventFromPersistedRequest(
 								request);
 						event.ensureTransformsValidForVm();

@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
 import java.lang.reflect.Field;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
 import cc.alcina.framework.common.client.domain.Domain;
@@ -22,14 +23,15 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
 public class MvccObjectVersions<T extends HasIdAndLocalId>
 		implements Vacuumable {
 	public static <T extends HasIdAndLocalId> MvccObjectVersions<T> ensure(T t,
-			Transaction transaction) {
+			Transaction transaction, boolean initialObjectIsWriteable) {
 		MvccObject mvccObject = (MvccObject) t;
 		MvccObjectVersions<T> versions = null;
 		// double-check
 		synchronized (mvccObject) {
 			versions = mvccObject.__getMvccVersions__();
 			if (versions == null) {
-				versions = new MvccObjectVersions<T>(t, transaction);
+				versions = new MvccObjectVersions<T>(t, transaction,
+						initialObjectIsWriteable);
 				mvccObject.__setMvccVersions__(versions);
 			}
 			return versions;
@@ -47,7 +49,8 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 
 	T __mostRecentWritable;
 
-	public MvccObjectVersions(T t, Transaction initialTransaction) {
+	public MvccObjectVersions(T t, Transaction initialTransaction,
+			boolean initialObjectIsWriteable) {
 		/*
 		 * If in the 'preparing' phase, and t is non-local, this is a
 		 * modification of the base transaction version.
@@ -82,23 +85,38 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 				ObjectVersion<T> version = new ObjectVersion<>();
 				version.transaction = initialTransaction;
 				version.object = t;
+				version.writeable = initialObjectIsWriteable;
 				putVersion(version);
 			}
 		}
 		baseObject = t;
-		Ax.err(toString());
+		Ax.err("created object version: %s : %s", toString(), hashCode());
 	}
 
 	@Override
 	public String toString() {
 		try {
-			ObjectVersion<T> firstVersion = versions.values().iterator().next();
-			T object = firstVersion.object;
-			Field field = SEUtilities.getFieldByName(object.getClass(), "id");
-			Object id = field.get(object);
-			return Ax.format("versions: %s : base: %s/%s : initial-tx: %s",
+			T object = baseObject;
+			Transaction transaction = null;
+			synchronized (versions) {
+				Iterator<ObjectVersion<T>> itr = versions.values().iterator();
+				if (itr.hasNext()) {
+					ObjectVersion<T> firstVersion = itr.next();
+					object = firstVersion.object;
+					transaction = firstVersion.transaction;
+				}
+			}
+			/*
+			 * use field rather than getters to not resolve
+			 */
+			Field idField = SEUtilities.getFieldByName(object.getClass(), "id");
+			Field localIdField = SEUtilities.getFieldByName(object.getClass(),
+					"localId");
+			Object id = idField.get(object);
+			return Ax.format("versions: %s : base: %s/%s/%s : initial-tx: %s",
 					versions.size(), object.getClass(), id,
-					firstVersion.transaction);
+					System.identityHashCode(object),
+					transaction == null ? transaction : "base");
 		} catch (Exception e) {
 			return "exception..";
 		}
@@ -114,11 +132,15 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 		if (transaction.getPhase() == TransactionPhase.TO_DOMAIN_COMMITTED) {
 			baseObject = version.object;
 		}
-		versions.remove(transaction);
+		synchronized (versions) {
+			versions.remove(transaction);
+		}
 	}
 
 	private void putVersion(ObjectVersion<T> version) {
-		versions.put(version.transaction, version);
+		synchronized (versions) {
+			versions.put(version.transaction, version);
+		}
 		Transactions.get().onAddedVacuumable(this);
 	}
 
@@ -136,27 +158,36 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 		}
 		// use versions as a monitor on creation
 		synchronized (versions) {
+			if (versions.isEmpty()) {
+				return baseObject;
+			}
 			version = versions.get(transaction);
 			if (version != null && version.isCorrectWriteableState(write)) {
 				return version.object;
 			}
-			Ax.err(toString());
 			version = new ObjectVersion<>();
 			version.transaction = transaction;
-			Transaction mostRecent = transaction.mostRecentPriorTransaction(
-					versions.keys(),
-					DomainStore.stores()
-							.storeFor(versions.values().iterator().next().object
-									.provideEntityClass()));
+			Transaction mostRecentTransaction = transaction
+					.mostRecentPriorTransaction(versions.keys(),
+							DomainStore.stores().storeFor(
+									versions.values().iterator().next().object
+											.provideEntityClass()));
 			T mostRecentObject = null;
-			ObjectVersion<T> mostRecentVersion = versions.get(mostRecent);
+			/*
+			 * mostRecent will be null if just created
+			 */
+			ObjectVersion<T> mostRecentVersion = mostRecentTransaction == null
+					? null
+					: versions.get(mostRecentTransaction);
 			if (mostRecentVersion != null) {
 				mostRecentObject = mostRecentVersion.object;
 			} else {
 				mostRecentObject = baseObject;
 			}
 			if (write) {
+				Ax.err(toString());
 				version.object = Transactions.copyObject(mostRecentObject);
+				version.writeable = true;
 				Domain.register(version.object);
 				putVersion(version);
 				return version.object;
