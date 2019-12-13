@@ -1,5 +1,5 @@
-#ifndef JAVAOBJECT_H_
-#define JAVAOBJECT_H_
+#
+ifndef JAVAOBJECT_H_# define JAVAOBJECT_H_
 /*
  * Copyright 2008 Google Inc.
  * 
@@ -17,51 +17,57 @@
  */
 
 #include <string>
+
 #include <vector>
 
 #include "mozincludes.h"
+
 #include "Plugin.h"
+
 #include "ScriptableInstance.h"
+
 #include "Debug.h"
+
 #include "HashMap.h"
 
-class JavaObject : public NPObjectWrapper<JavaObject> {
-  friend class ScriptableInstance;
-private:
-  ScriptableInstance* plugin;
-  int objectId;
-  
-  NPIdentifier idID;
+class JavaObject: public NPObjectWrapper < JavaObject > {
+    friend class ScriptableInstance;
+    private: ScriptableInstance * plugin;
+    int objectId;
 
-public:
-  JavaObject(NPP npp) : NPObjectWrapper<JavaObject>(npp),
-      plugin(reinterpret_cast<Plugin*>(npp->pdata)->getScriptableInstance()),
-      idID(NPN_GetStringIdentifier("id")) {}
-  virtual ~JavaObject();
-  static JavaObject* create(ScriptableInstance* plugin, int id);
-  static bool isInstance(NPObject* obj);
-  
-  virtual bool enumeration(NPIdentifier** names, uint32_t* count);
-  virtual bool hasMethod(NPIdentifier name);
-  virtual bool invoke(NPIdentifier name, const NPVariant *args, uint32_t num_args,
-      NPVariant *result);
-  virtual bool invokeDefault(const NPVariant *args, uint32_t num_args, NPVariant *result);
-  virtual bool hasProperty(NPIdentifier name);
-  virtual bool getProperty(NPIdentifier name, NPVariant *result);
-  virtual bool setProperty(NPIdentifier name, const NPVariant *value);
-  
-  void setObjectId(int objectId) {
-    this->objectId = objectId;
-  }
+    NPIdentifier idID;
 
-  int getObjectId() const {
-    return objectId;
-  }
-private:
-  // Called by a Plugin instance when it is about to be destroyed.
-  void disconnectPlugin() {
-    plugin = 0;
-  }
+    public: JavaObject(NPP npp): NPObjectWrapper < JavaObject > (npp),
+    plugin(reinterpret_cast < Plugin * > (npp - > pdata) - > getScriptableInstance()),
+    idID(NPN_GetStringIdentifier("id")) {}
+    virtual~JavaObject();
+    static JavaObject * create(ScriptableInstance * plugin, int id);
+    static bool isInstance(NPObject * obj);
+
+    virtual bool enumeration(NPIdentifier ** names, uint32_t * count);
+    virtual bool hasMethod(NPIdentifier name);
+    virtual bool invoke(NPIdentifier name,
+        const NPVariant * args, uint32_t num_args,
+            NPVariant * result);
+    virtual bool invokeDefault(const NPVariant * args, uint32_t num_args, NPVariant * result);
+    virtual bool hasProperty(NPIdentifier name);
+    virtual bool getProperty(NPIdentifier name, NPVariant * result);
+    virtual bool setProperty(NPIdentifier name,
+        const NPVariant * value);
+
+    void setObjectId(int objectId) {
+        this - > objectId = objectId;
+    }
+
+    int getObjectId() const {
+        return objectId;
+    }
+    private:
+        // Called by a Plugin instance when it is about to be destroyed.
+        void disconnectPlugin() {
+            plugin = 0;
+        }
 };
 
-#endif /*JAVAOBJECT_H_*/
+#
+endif /*JAVAOBJECT_H_*/

@@ -1,5 +1,5 @@
-#ifndef __CHECKVERSIONSMESSAGE_H
-#define __CHECKVERSIONSMESSAGE_H
+#
+ifndef __CHECKVERSIONSMESSAGE_H# define __CHECKVERSIONSMESSAGE_H
 /*
  * Copyright 2009 Google Inc.
  *
@@ -17,8 +17,11 @@
  */
 
 #include <string>
+
 #include "Message.h"
+
 #include "BrowserChannel.h"
+
 #include "Value.h"
 
 class HostChannel;
@@ -30,27 +33,28 @@ class HostChannel;
  * understands as well as the hosted.html version (so stale copies of it can
  * be detected).
  */
-class CheckVersionsMessage : public Message {
-public:
-  static const char TYPE = MESSAGE_TYPE_CHECK_VERSIONS;
-private:
-  int minVersion;
-  int maxVersion;
-  const std::string& hostedHtmlVersion;
+class CheckVersionsMessage: public Message {
+    public: static
+    const char TYPE = MESSAGE_TYPE_CHECK_VERSIONS;
+    private: int minVersion;
+    int maxVersion;
+    const std::string & hostedHtmlVersion;
 
-protected:
-  CheckVersionsMessage(int minVersion, int maxVersion,
-      const std::string& hostedHtmlVersion) : minVersion(minVersion),
-      maxVersion(maxVersion), hostedHtmlVersion(hostedHtmlVersion) {}
+    protected: CheckVersionsMessage(int minVersion, int maxVersion,
+        const std::string & hostedHtmlVersion): minVersion(minVersion),
+    maxVersion(maxVersion),
+    hostedHtmlVersion(hostedHtmlVersion) {}
 
-public:
-  ~CheckVersionsMessage();
-  virtual char getType() const;
+    public:
+        ~CheckVersionsMessage();
+    virtual char getType() const;
 
-  const std::string& getHostedHtmlVersion() const { return hostedHtmlVersion; }
+    const std::string & getHostedHtmlVersion() const {
+        return hostedHtmlVersion;
+    }
 
-  static CheckVersionsMessage* receive(HostChannel& channel);
-  static bool send(HostChannel& channel, int minVersion, int maxVersion,
-      const std::string& hostedHtmlVersion);
-};
-#endif
+    static CheckVersionsMessage * receive(HostChannel & channel);
+    static bool send(HostChannel & channel, int minVersion, int maxVersion,
+        const std::string & hostedHtmlVersion);
+};#
+endif

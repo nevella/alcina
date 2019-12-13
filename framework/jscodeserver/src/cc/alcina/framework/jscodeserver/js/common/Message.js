@@ -1,11 +1,11 @@
 class gwt_hm_Message {
-  constructor(){
-    
-  }
-  getType() {
-    throw "abstract";
-  }
-  isAsynchronous() {
-    return false;
-  }
+    constructor() {
+
+    }
+    getType() {
+        throw "abstract";
+    }
+    isAsynchronous() {
+        return false;
+    }
 }

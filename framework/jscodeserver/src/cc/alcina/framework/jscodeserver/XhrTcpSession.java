@@ -8,7 +8,7 @@ import java.util.Date;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.google.gwt.dev.shell.XhrTcpClientJava;
+import com.google.gwt.dev.shell.JsCodeserverTcpClientJava;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -26,7 +26,7 @@ public class XhrTcpSession {
 
     ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-    private XhrTcpClientJava client;
+    private JsCodeserverTcpClientJava client;
 
     private XhrTcpBridge xhrTcpBridge;
 
@@ -84,6 +84,6 @@ public class XhrTcpSession {
         socketPort = Integer.parseInt(
                 request.getHeader(XhrTcpBridge.HEADER_CODE_SERVER_PORT));
         socket = new Socket(ResourceUtilities.get("host"), socketPort);
-        client = new XhrTcpClientJava(socket);
+        client = new JsCodeserverTcpClientJava(socket);
     }
 }

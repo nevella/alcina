@@ -28,7 +28,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class SearchUtils {
 	static SearchUtilsIdsHelper idsHelper;
 
-	public static final String IDS_REGEX = "(?:ids: ?)[0-9, ]+";
+	static SearchUtilsRegExpHelper regexpHelper;
+
+	public static final String IDS_REGEX = "(?:ids?: ?)[0-9, ]+";
+
+	public static final String REGEX_REGEX = "(?:regex:)(.+)";
 
 	public static boolean containsIgnoreCase(String text,
 			List<String> strings) {
@@ -131,9 +135,20 @@ public class SearchUtils {
 
 	private static boolean matchesIds(String query, HasIdAndLocalId hili) {
 		if (idsHelper == null) {
-			idsHelper = Registry.impl(SearchUtilsIdsHelper.class);
+			synchronized (SearchUtils.class) {
+				if (idsHelper == null) {
+					idsHelper = Registry.impl(SearchUtilsIdsHelper.class);
+					regexpHelper = Registry.impl(SearchUtilsRegExpHelper.class);
+				}
+			}
 		}
-		return idsHelper.matches(query, hili);
+		if (idsHelper.matches(query, hili)) {
+			return true;
+		}
+		if (regexpHelper.matches(query, hili)) {
+			return true;
+		}
+		return false;
 	}
 
 	public static class SearchTextMatcher {
@@ -211,6 +226,32 @@ public class SearchUtils {
 		}
 
 		protected Map<String, Set<Long>> getMap() {
+			return new LinkedHashMap<>();
+		}
+	}
+
+	@RegistryLocation(registryPoint = SearchUtilsRegExpHelper.class)
+	public static abstract class SearchUtilsRegExpHelper {
+		public boolean matches(String query, HasIdAndLocalId hili) {
+			return false;
+		}
+	}
+
+	@RegistryLocation(registryPoint = SearchUtilsRegExpHelper.class, implementationType = ImplementationType.SINGLETON)
+	public static class SearchUtilsRegExpHelperSingleThreaded
+			extends SearchUtilsRegExpHelper {
+		private CachingMap<String, RegExp> stringRegexpLookup = new CachingMap<>(
+				s -> s == null || !s.matches(REGEX_REGEX) ? null
+						: RegExp.compile(s.replaceFirst(REGEX_REGEX, "$1")),
+				getMap());
+
+		@Override
+		public boolean matches(String query, HasIdAndLocalId hili) {
+			return hili != null && stringRegexpLookup.get(query)
+					.exec(hili.toString()) != null;
+		}
+
+		protected Map<String, RegExp> getMap() {
 			return new LinkedHashMap<>();
 		}
 	}

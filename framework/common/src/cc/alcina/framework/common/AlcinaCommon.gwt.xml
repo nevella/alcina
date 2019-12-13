@@ -28,6 +28,6 @@
     <set-property name="gwt.logging.developmentModeHandler" value="DISABLED"/>
 	<source path="client" />
 	<!-- chromium 73 issues with iframe loader -->
-	  <add-linker name="direct_install" />
+	<add-linker name="direct_install" />
 	
 </module>

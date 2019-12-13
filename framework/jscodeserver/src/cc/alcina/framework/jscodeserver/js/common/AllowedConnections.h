@@ -1,5 +1,5 @@
-#ifndef _H_AllowedConnections
-#define _H_AllowedConnections
+#
+ifndef _H_AllowedConnections# define _H_AllowedConnections
 /*
  * Copyright 2008 Google Inc.
  *
@@ -17,7 +17,9 @@
  */
 
 #include <string>
+
 #include <vector>
+
 #include <utility>
 
 /**
@@ -27,99 +29,98 @@
  * behind a firewall.
  */
 class AllowedConnections {
-public:
-  /**
-   * Add a rule to match new requests against.
-   *
-   * @param pattern pattern to match
-   * @param exclude true if matches should be excluded instead of included
-   */
-  static void addRule(const std::string& webHost,
-      const std::string& codeServer,
-      bool exclude = false);
+    public:
+        /**
+         * Add a rule to match new requests against.
+         *
+         * @param pattern pattern to match
+         * @param exclude true if matches should be excluded instead of included
+         */
+        static void addRule(const std::string & webHost,
+            const std::string & codeServer,
+                bool exclude = false);
 
-  /**
-   * Clear all rules.
-   */
-  static void clearRules();
+    /**
+     * Clear all rules.
+     */
+    static void clearRules();
 
-  /**
-   * Get the host portion of the URL, not including the port.
-   *
-   * @return the host portion of the URL, or the unmodified URL if it does not
-   *     appear to be valid
-   */
-  static std::string getHostFromUrl(const std::string& url);
+    /**
+     * Get the host portion of the URL, not including the port.
+     *
+     * @return the host portion of the URL, or the unmodified URL if it does not
+     *     appear to be valid
+     */
+    static std::string getHostFromUrl(const std::string & url);
 
-  /**
-   * Get the code server  value from the URL, not including the port
-   *
-   * @return the first found server in the URL, or the unmodified URL if it
-   *     does not appear to be valid
-   */
-  static std::string getCodeServerFromUrl(const std::string& url);
+    /**
+     * Get the code server  value from the URL, not including the port
+     *
+     * @return the first found server in the URL, or the unmodified URL if it
+     *     does not appear to be valid
+     */
+    static std::string getCodeServerFromUrl(const std::string & url);
 
-  /**
-   * Clear any existing rules and reinitialize from the supplied access list.
-   *
-   * This access list is of the form:
-   *    [!]pattern,[!]pattern...
-   * where the optional exclamation indicates the following pattern is to be
-   * excluded, and an arbitrary number of patterns may be supplied with the
-   * first match being used.  Each pattern currently is only an exact literal
-   * match against the host name, but will be extended to support simple
-   * wildcard patterns.
-   */
-  static void initFromAccessList(const std::string& accessList);
+    /**
+     * Clear any existing rules and reinitialize from the supplied access list.
+     *
+     * This access list is of the form:
+     *    [!]pattern,[!]pattern...
+     * where the optional exclamation indicates the following pattern is to be
+     * excluded, and an arbitrary number of patterns may be supplied with the
+     * first match being used.  Each pattern currently is only an exact literal
+     * match against the host name, but will be extended to support simple
+     * wildcard patterns.
+     */
+    static void initFromAccessList(const std::string & accessList);
 
-  /**
-   * Returns true if the server for the requested URL matched any rule in
-   * our access list, and sets a flag based on whether that rule permits or
-   * denies the request.  A host name of localhost or 127.0.0.1 is always
-   * allowed.
-   *
-   * @param hostname host name of webserver or codeserver
-   * @param allowed pointer to return value indiciating that this URL should
-   *     be allowed to initiate GWT development mode connections
-   * @return true if url matched a rule
-   */
-  static bool matchesRule(const std::string& webHost, 
-      const std::string& codeServer,
-      bool* allowed);
+    /**
+     * Returns true if the server for the requested URL matched any rule in
+     * our access list, and sets a flag based on whether that rule permits or
+     * denies the request.  A host name of localhost or 127.0.0.1 is always
+     * allowed.
+     *
+     * @param hostname host name of webserver or codeserver
+     * @param allowed pointer to return value indiciating that this URL should
+     *     be allowed to initiate GWT development mode connections
+     * @return true if url matched a rule
+     */
+    static bool matchesRule(const std::string & webHost,
+        const std::string & codeServer,
+            bool * allowed);
 
-private:
-  AllowedConnections() {
-  }
+    private:
+        AllowedConnections() {}
 
-  /**
-   * Internal class used for representing a rule.
-   */
-  class Rule {
-  public:
-    Rule(const std::string& webHost,
-        const std::string& codeServer,
-        bool exclude)
-        : webhost(webHost), codesvr(codeServer), excluded(exclude) {}
+    /**
+     * Internal class used for representing a rule.
+     */
+    class Rule {
+        public:
+            Rule(const std::string & webHost,
+                const std::string & codeServer,
+                    bool exclude): webhost(webHost), codesvr(codeServer), excluded(exclude) {}
 
-    const std::string& getWebHost() const {
-      return webhost;
-    }
+        const std::string & getWebHost() const {
+            return webhost;
+        }
 
-    const std::string& getCodeServer() const {
-      return codesvr;
-    }
+        const std::string & getCodeServer() const {
+            return codesvr;
+        }
 
-    bool isExcluded() const {
-      return excluded;
-    }
+        bool isExcluded() const {
+            return excluded;
+        }
 
-  private:
-    std::string webhost;
-    std::string codesvr;
-    bool        excluded;
-  };
+        private:
+            std::string webhost;
+        std::string codesvr;
+        bool excluded;
+    };
 
-  static std::vector<Rule> rules;
+    static std::vector < Rule > rules;
 };
 
-#endif
+#
+endif

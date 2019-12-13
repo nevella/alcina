@@ -10,23 +10,28 @@ class gwt_hm_ScriptableInstance {
         return true;
     }
     connect(url, sessionId, codeServer, moduleName,
-        hostedHtmlVersion) {
+        hostedHtmlVersion, codeServerWs) {
         this.url = url;
         this.sessionId = sessionId;
         this.codeServer = codeServer;
+        this.codeServerWs = codeServerWs;
         this.moduleName = moduleName;
         this.hostedHtmlVersion = hostedHtmlVersion;
         this.channel = new gwt_hm_HostChannel();
         var idx = codeServer.indexOf(":");
         var host = codeServer.substring(0, idx);
         var port = parseInt(codeServer.substring(idx + 1));
-        this.channel.connectToHost(host, port);
+        this.doConnect(host, port, codeServerWs, moduleName);
+
+    }
+    async doConnect(host, port, codeServerWs, moduleName) {
+        await this.channel.connectToHost(host, port, codeServerWs, moduleName);
         if (!this.channel.init(this, gwt_hm_BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION,
                 gwt_hm_BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION, this.hostedHtmlVersion)) {
             return false;
         }
-        gwt_hm_LoadModuleMessage.send(this.channel, this.url, "", sessionId,
-            moduleName, window.navigator.userAgent, this);
+        gwt_hm_LoadModuleMessage.send(this.channel, this.url, "", this.sessionId,
+            this.moduleName, window.navigator.userAgent, this);
     }
     loadJsni(channel, js) {
         window.eval(js);
@@ -155,17 +160,17 @@ class gwt_hm_ScriptableInstance {
         return retArr;
     }
     javaObjectSet(objectId, dispId, value) {
-      var ret = gwt_hm_ServerMethods.setProperty(this.channel, this, objectId, dispId, this.getAsValue(value));
-      if(ret.isException){
-      //tostring
-        throw ret.retValue.toString();
-      }
+        var ret = gwt_hm_ServerMethods.setProperty(this.channel, this, objectId, dispId, this.getAsValue(value));
+        if (ret.isException) {
+            //tostring
+            throw ret.retValue.toString();
+        }
     }
     javaObjectGet(objectId, dispId) {
         var ret = gwt_hm_ServerMethods.getProperty(this.channel, this, objectId, dispId);
-        if(ret.isException){
-          //tostring
-          throw ret.retValue.toString();
+        if (ret.isException) {
+            //tostring
+            throw ret.retValue.toString();
         }
         return this.resolveLocal(ret.retValue);
     }

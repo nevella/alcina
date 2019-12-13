@@ -7,6 +7,8 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import com.google.gwt.regexp.shared.RegExp;
+
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.search.LockingDomainQuery;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -18,6 +20,8 @@ import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.SearchUtilsIdsHelper;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.SearchUtilsIdsHelperSingleThreaded;
+import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.SearchUtilsRegExpHelper;
+import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.SearchUtilsRegExpHelperSingleThreaded;
 
 @RegistryLocation(registryPoint = LockingDomainQuery.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 public class LockingDomainQueryParallel<V extends HasIdAndLocalId>
@@ -64,6 +68,15 @@ public class LockingDomainQueryParallel<V extends HasIdAndLocalId>
 			extends SearchUtilsIdsHelperSingleThreaded {
 		@Override
 		protected Map<String, Set<Long>> getMap() {
+			return Collections.synchronizedMap(super.getMap());
+		}
+	}
+
+	@RegistryLocation(registryPoint = SearchUtilsRegExpHelper.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	public static class SearchUtilsRegExpHelperMultiThreaded
+			extends SearchUtilsRegExpHelperSingleThreaded {
+		@Override
+		protected Map<String, RegExp> getMap() {
 			return Collections.synchronizedMap(super.getMap());
 		}
 	}

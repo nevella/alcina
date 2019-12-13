@@ -1,5 +1,5 @@
-#ifndef _H_Platform
-#define _H_Platform
+#
+ifndef _H_Platform# define _H_Platform
 /*
  * Copyright 2008 Google Inc.
  * 
@@ -17,30 +17,25 @@
  */
 
 // Platform-specific hacks to enable more shared code elsewhere
-#ifdef _WINDOWS
+# ifdef _WINDOWS
 typedef __int32 int32_t;
-typedef unsigned __int32 uint32_t; 
+typedef unsigned __int32 uint32_t;
 typedef __int16 int16_t;
 typedef unsigned __int16 uint16_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 uint64_t;
 typedef long ssize_t;
 
-#define snprintf sprintf_s
-#define SOCKETTYPE SOCKET
+#
+define snprintf sprintf_s# define SOCKETTYPE SOCKET
 // Bogus conversion from size_t -> unsigned int warnings.
-#pragma warning(disable:4267)
-#else
-#define SOCKETTYPE int
-#endif
+# pragma warning(disable: 4267)#
+else# define SOCKETTYPE int# endif
 
 // Set the float byte-order if we know it -- see ByteOrder.h FloatByteOrder
-#if defined(i386) || defined(i586) || defined(i686) || defined(_x86)
-#define PLATFORM_FLOAT_ENDIANESS FLOAT_LITTLE_ENDIAN
-#endif
+# if defined(i386) || defined(i586) || defined(i686) || defined(_x86)# define PLATFORM_FLOAT_ENDIANESS FLOAT_LITTLE_ENDIAN# endif
 
-#if defined(__sparc)
-#define PLATFORM_FLOAT_ENDIANESS FLOAT_BIG_ENDIAN
-#endif
+#
+if defined(__sparc)# define PLATFORM_FLOAT_ENDIANESS FLOAT_BIG_ENDIAN# endif
 
-#endif
+# endif

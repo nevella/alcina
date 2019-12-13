@@ -1,5 +1,5 @@
-#ifndef __INVOKESPECIALMESSAGE_H
-#define __INVOKESPECIALMESSAGE_H
+#
+ifndef __INVOKESPECIALMESSAGE_H# define __INVOKESPECIALMESSAGE_H
 /*
  * Copyright 2008 Google Inc.
  *
@@ -17,9 +17,13 @@
  */
 
 #include <string>
+
 #include "Message.h"
+
 #include "BrowserChannel.h"
+
 #include "SessionHandler.h"
+
 #include "Value.h"
 
 class HostChannel;
@@ -28,32 +32,40 @@ class HostChannel;
  * Class representing an InvokeSpecial message received from the server, and a
  * way to send an invoke message to the server.
  */
-class InvokeSpecialMessage : public Message {
-public:
-  static const char TYPE = MESSAGE_TYPE_INVOKESPECIAL;
-private:
-  SessionHandler::SpecialMethodId dispatchId;
-  int numArgs;
-  const gwt::Value* args;
+class InvokeSpecialMessage: public Message {
+    public: static
+    const char TYPE = MESSAGE_TYPE_INVOKESPECIAL;
+    private: SessionHandler::SpecialMethodId dispatchId;
+    int numArgs;
+    const gwt::Value * args;
 
-protected:
-  /**
-   * @param args array of arguments -- InvokeMessage takes ownership and will
-   *     destroy when it is destroyed.
-   */
-  InvokeSpecialMessage(SessionHandler::SpecialMethodId dispatchId, int numArgs,
-      const gwt::Value* args) : dispatchId(dispatchId), numArgs(numArgs), args(args) {}
+    protected:
+        /**
+         * @param args array of arguments -- InvokeMessage takes ownership and will
+         *     destroy when it is destroyed.
+         */
+        InvokeSpecialMessage(SessionHandler::SpecialMethodId dispatchId, int numArgs,
+            const gwt::Value * args): dispatchId(dispatchId),
+    numArgs(numArgs),
+    args(args) {}
 
-public:
-  ~InvokeSpecialMessage();
-  virtual char getType() const;
+    public:
+        ~InvokeSpecialMessage();
+    virtual char getType() const;
 
-  SessionHandler::SpecialMethodId getDispatchId() const { return dispatchId; }
-  int getNumArgs() const { return numArgs; }
-  const gwt::Value* const getArgs() const { return args; }
+    SessionHandler::SpecialMethodId getDispatchId() const {
+        return dispatchId;
+    }
+    int getNumArgs() const {
+        return numArgs;
+    }
+    const gwt::Value *
+        const getArgs() const {
+            return args;
+        }
 
-  static InvokeSpecialMessage* receive(HostChannel& channel);
-  static bool send(HostChannel& channel, int dispatchId, int numArgs,
-      const gwt::Value* args);
-};
-#endif
+    static InvokeSpecialMessage * receive(HostChannel & channel);
+    static bool send(HostChannel & channel, int dispatchId, int numArgs,
+        const gwt::Value * args);
+};#
+endif

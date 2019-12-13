@@ -15,34 +15,35 @@
  */
 
 #include "ProtocolVersionMessage.h"
+
 #include "HostChannel.h"
+
 #include "scoped_ptr/scoped_ptr.h"
 
-ProtocolVersionMessage::~ProtocolVersionMessage() {
-}
+ProtocolVersionMessage::~ProtocolVersionMessage() {}
 
 char ProtocolVersionMessage::getType() const {
-  return TYPE;
+    return TYPE;
 }
 
 /**
  * Receive a ProtocolVersion message from the server.
  */
-ProtocolVersionMessage* ProtocolVersionMessage::receive(HostChannel& channel) {
-  int version;
-  if (!channel.readInt(version)) {
-    // TODO(jat): error handling
-    printf("Failed to read version\n");
-    return 0;
-  }
-  return new ProtocolVersionMessage(version);
+ProtocolVersionMessage * ProtocolVersionMessage::receive(HostChannel & channel) {
+    int version;
+    if (!channel.readInt(version)) {
+        // TODO(jat): error handling
+        printf("Failed to read version\n");
+        return 0;
+    }
+    return new ProtocolVersionMessage(version);
 }
 
 /**
  * Send a ProtocolVersion message on the channel.
  */
-bool ProtocolVersionMessage::send(HostChannel& channel, int version) {
-  if (!channel.sendByte(TYPE)) return false;
-  if (!channel.sendInt(version)) return false;
-  return true;
+bool ProtocolVersionMessage::send(HostChannel & channel, int version) {
+    if (!channel.sendByte(TYPE)) return false;
+    if (!channel.sendInt(version)) return false;
+    return true;
 }

@@ -41,10 +41,10 @@ class gwt_hm_LocalObjectTable {
         return this.ids.get(object);
     }
     ensureObjectRef(obj) {
-      if (!this.ids.has(obj)) {
-          this.add(obj);
-      }
-      return this.ids.get(obj);
-  }
-   
+        if (!this.ids.has(obj)) {
+            this.add(obj);
+        }
+        return this.ids.get(obj);
+    }
+
 }

@@ -1,5 +1,5 @@
-#ifndef __H_FreeValueMessage
-#define __H_FreeValueMessage
+#
+ifndef __H_FreeValueMessage# define __H_FreeValueMessage
 /*
  * Copyright 2008 Google Inc.
  *
@@ -17,8 +17,11 @@
  */
 
 #include <string>
+
 #include "Message.h"
+
 #include "BrowserChannel.h"
+
 #include "HostChannel.h"
 
 /**
@@ -30,31 +33,34 @@
  * another invoke.  Special care must be taken to ensure that any freed values
  * referenced by the succeeding invoke/return are resurrected instead of freed.
  */
-class FreeValueMessage : public Message {
-public:
-  static const char TYPE = MESSAGE_TYPE_FREEVALUE;
-private:
-  int idCount;
-  const int* ids;
+class FreeValueMessage: public Message {
+    public: static
+    const char TYPE = MESSAGE_TYPE_FREEVALUE;
+    private: int idCount;
+    const int * ids;
 
-  FreeValueMessage(int idCount, const int* ids) : idCount(idCount), ids(ids) {}
+    FreeValueMessage(int idCount,
+        const int * ids): idCount(idCount),
+    ids(ids) {}
 
-public:
-  ~FreeValueMessage();
+    public:
+        ~FreeValueMessage();
 
-  virtual char getType() const {
-    return TYPE;
-  }
+    virtual char getType() const {
+        return TYPE;
+    }
 
-  int getIdCount() const {
-    return idCount;
-  }
+    int getIdCount() const {
+        return idCount;
+    }
 
-  const int* const getIds() const {
-    return ids;
-  }
+    const int *
+        const getIds() const {
+            return ids;
+        }
 
-  static FreeValueMessage* receive(HostChannel& channel);
-  static bool send(HostChannel& channel, int idCount, const int* ids);
-};
-#endif
+    static FreeValueMessage * receive(HostChannel & channel);
+    static bool send(HostChannel & channel, int idCount,
+        const int * ids);
+};#
+endif

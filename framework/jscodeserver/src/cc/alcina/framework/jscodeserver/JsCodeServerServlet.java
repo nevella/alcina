@@ -11,18 +11,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JsCodeServerServlet extends HttpServlet {
-    static Logger logger = LoggerFactory.getLogger(JsCodeServerServlet.class);
+	static Logger logger = LoggerFactory.getLogger(JsCodeServerServlet.class);
 
-    public JsCodeServerServlet() {
-    }
+	public JsCodeServerServlet() {
+	}
 
-    @Override
-    protected void doPost(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
-        try {
-            XhrTcpBridge.get().handle(request, response);
-        } catch (Exception e) {
-            throw new ServletException(e);
-        }
-    }
+	@Override
+	protected void doPost(HttpServletRequest request,
+			HttpServletResponse response) throws ServletException, IOException {
+		try {
+			XhrTcpBridge.get().handle(request, response);
+		} catch (Exception e) {
+			throw new ServletException(e);
+		}
+	}
 }

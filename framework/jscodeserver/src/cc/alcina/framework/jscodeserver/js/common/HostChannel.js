@@ -12,16 +12,29 @@ class gwt_hm_HostChannel {
      * Performance timing - is most of our overhead in http?
      */
     xhrTimingData = [];
-    xhrTimingCumulativeMicroseconds = 0;
-    
-    connectToHost(host, port) {
+    xhrTimingCumulativeMilliseconds = 0;
+
+    connectToHost(host, port, codeServerWs, moduleName) {
         // ignore host (for the mo) - assume local, otherwise will need CORS
         //
         // correction, always use local (rather than routing through remote) -
         // network round trips more than compensates
         // this.host = "";
-        this.host = "http://127.0.0.1:"+(parseInt(port)+1);
+
+
+        this.host = "http://127.0.0.1:" + (parseInt(port) + 1);
         this.port = port;
+        if (codeServerWs) {
+            this.socketClient = new WebSocketTransportClient(`${host}:${port}`, codeServerWs, moduleName);
+            return new Promise(resolve => {
+                this.socketClient.connect(resolve);
+            });
+        } else {
+            /*
+             * use xhr
+             */
+            return new Promise(resolve => resolve());
+        }
     }
     init(handler, minVersion, maxVersion,
         hostedHtmlVersion) {
@@ -29,17 +42,15 @@ class gwt_hm_HostChannel {
         gwt_hm_CheckVersionsMessage.send(this, minVersion, maxVersion, hostedHtmlVersion);
         var type = this.readByte();
         switch (type) {
-            case gwt_hm_BrowserChannel.MESSAGE_TYPE_PROTOCOL_VERSION:
-                {
-                    var message = gwt_hm_ProtocolVersionMessage.receive(this);
-                    break;
-                }
-            case MESSAGE_TYPE_FATAL_ERROR:
-                {
-                    var message = gwt_hm_FatalErrorMessage.receive(this);
-                    handler.fatalError(this, message.getError());
-                    return false;
-                }
+            case gwt_hm_BrowserChannel.MESSAGE_TYPE_PROTOCOL_VERSION: {
+                var message = gwt_hm_ProtocolVersionMessage.receive(this);
+                break;
+            }
+            case MESSAGE_TYPE_FATAL_ERROR: {
+                var message = gwt_hm_FatalErrorMessage.receive(this);
+                handler.fatalError(this, message.getError());
+                return false;
+            }
             default:
                 return false;
         }
@@ -133,7 +144,7 @@ class gwt_hm_HostChannel {
     }
     sendByte(c) {
         if (this.buf_out.length == 0) {
-// console.log(`send >> ${c}`);
+            // console.log(`send >> ${c}`);
         }
         this.buf_out += String.fromCharCode(c);
     }
@@ -153,21 +164,21 @@ class gwt_hm_HostChannel {
         this.buf_out += utf8;
     }
     utf8BinaryStringToStr(str) {
-      var buf = new ArrayBuffer(str.length); // 1 bytes for each utf-8
-                                              // codepoint
-      var bufView = new Uint8Array(buf);
-      for (var i=0, strLen=str.length; i < strLen; i++) {
-        bufView[i] = str.charCodeAt(i);
-      }
-      var str = new TextDecoder("UTF-8").decode(buf);
-      return str;
+        var buf = new ArrayBuffer(str.length); // 1 bytes for each utf-8
+        // codepoint
+        var bufView = new Uint8Array(buf);
+        for (var i = 0, strLen = str.length; i < strLen; i++) {
+            bufView[i] = str.charCodeAt(i);
+        }
+        var str = new TextDecoder("UTF-8").decode(buf);
+        return str;
     }
     utf16ToUtf8(str) {
         var u8a = new TextEncoder().encode(str);
         var CHUNK_SZ = 0x8000;
         var c = [];
-        for (var i=0; i < u8a.length; i+=CHUNK_SZ) {
-          c.push(String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ)));
+        for (var i = 0; i < u8a.length; i += CHUNK_SZ) {
+            c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
         }
         return c.join("");
     }
@@ -181,68 +192,58 @@ class gwt_hm_HostChannel {
             case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
                 value.setUndefined();
                 return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
-                {
-                    var val = this.readByte();
-                    value.setBoolean(val != 0);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
-                {
-                    var val = this.readByte();
-                    value.setByte(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
-                {
-                    var val = this.readShort();
-                    value.setChar(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
-                {
-                    var val = this.readShort();
-                    value.setShort(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
-                {
-                    var val = this.readString();
-                    value.setString(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
-                {
-                    var val = this.readInt();
-                    value.setInt(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
-                {
-                    var val = this.readLong();
-                    value.setLong(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
-                {
-                    var val = this.readDouble();
-                    value.setDouble(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
-                {
-                    var val = this.readInt();
-                    value.setJavaObjectId(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
-                {
-                    var val = this.readInt();
-                    value.setJsObjectId(val);
-                }
-                return value;
-            default:
-                throw "Unhandled value type sent from server: " + type;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN: {
+                var val = this.readByte();
+                value.setBoolean(val != 0);
+            }
+            return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE: {
+            var val = this.readByte();
+            value.setByte(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR: {
+            var val = this.readShort();
+            value.setChar(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT: {
+            var val = this.readShort();
+            value.setShort(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_STRING: {
+            var val = this.readString();
+            value.setString(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_INT: {
+            var val = this.readInt();
+            value.setInt(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_LONG: {
+            var val = this.readLong();
+            value.setLong(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE: {
+            var val = this.readDouble();
+            value.setDouble(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT: {
+            var val = this.readInt();
+            value.setJavaObjectId(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT: {
+            var val = this.readInt();
+            value.setJsObjectId(val);
+        }
+        return value;
+        default:
+            throw "Unhandled value type sent from server: " + type;
         }
         return false;
     }
@@ -291,60 +292,56 @@ class gwt_hm_HostChannel {
         while (true) {
             this.flush();
             var type = this.readByte(type);
-// console.log(`message: ${this.messageId} :: ${type} `);
+            // console.log(`message: ${this.messageId} :: ${type} `);
             switch (type) {
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKE:
-                    {
-                        var message = gwt_hm_InvokeMessage.receive(this);
-                        if (parseInt(this.messageId) > 0) {
-// console.log(`invoke: ${this.messageId} :: ${message.methodName}
-// [${message.thisRef.intValue}]`);
-                        }
-                        var result = handler.invoke(this, message.thisRef, message.methodName,
-                            message.numArgs, message.args);
-                        handler.sendFreeValues(this);
-                        gwt_hm_ReturnMessage.send(this, result.exception, result.value);
+                case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKE: {
+                    var message = gwt_hm_InvokeMessage.receive(this);
+                    if (parseInt(this.messageId) > 0) {
+                        // console.log(`invoke: ${this.messageId} :: ${message.methodName}
+                        // [${message.thisRef.intValue}]`);
                     }
-                    break;
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKESPECIAL:
-                    {
-                        // scottb: I think this is never used; I think server
-                        // never sends invokeSpecial
-                        var message = gwt_hm_InvokeSpecialMessage.receive(this);
-                        var result = handler.invokeSpecial(this, message._dispatchId, message.methodName,
-                            message.numArgs, message.args);
-                        handler.sendFreeValues(this);
-                        gwt_hm_ReturnMessage.send(this, result.exception, result.value);
-                    }
-                    break;
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_FREEVALUE:
-                    {
-                        var message = gwt_hm_FreeValueMessage.receive(this);
-                        handler.freeValue(this, message.idCount, message.ids);
-                    }
-                    // do not send a response
-                    break;
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_LOADJSNI:
-                    {
-                        var message = gwt_hm_LoadJsniMessage.receive(this);
-                        handler.loadJsni(this, message.js);
-                    }
-                    // do not send a response
-                    break;
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_RETURN:
-                    if (!expectReturn) {
-                        throw "Received unexpected RETURN";
-                    }
-                    return gwt_hm_ReturnMessage.receive(this);
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_QUIT:
-                    if (expectReturn) {
-                        throw "Received QUIT while waiting for return";
-                    }
-                    this.disconnectFromHost();
-                    return 0;
-                default:
-                    // TODO(jat): error handling
-                    throw "Unexpected message type " + type;
+                    var result = handler.invoke(this, message.thisRef, message.methodName,
+                        message.numArgs, message.args);
+                    handler.sendFreeValues(this);
+                    gwt_hm_ReturnMessage.send(this, result.exception, result.value);
+                }
+                break;
+            case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKESPECIAL: {
+                // scottb: I think this is never used; I think server
+                // never sends invokeSpecial
+                var message = gwt_hm_InvokeSpecialMessage.receive(this);
+                var result = handler.invokeSpecial(this, message._dispatchId, message.methodName,
+                    message.numArgs, message.args);
+                handler.sendFreeValues(this);
+                gwt_hm_ReturnMessage.send(this, result.exception, result.value);
+            }
+            break;
+            case gwt_hm_BrowserChannel.MESSAGE_TYPE_FREEVALUE: {
+                var message = gwt_hm_FreeValueMessage.receive(this);
+                handler.freeValue(this, message.idCount, message.ids);
+            }
+            // do not send a response
+            break;
+            case gwt_hm_BrowserChannel.MESSAGE_TYPE_LOADJSNI: {
+                var message = gwt_hm_LoadJsniMessage.receive(this);
+                handler.loadJsni(this, message.js);
+            }
+            // do not send a response
+            break;
+            case gwt_hm_BrowserChannel.MESSAGE_TYPE_RETURN:
+                if (!expectReturn) {
+                    throw "Received unexpected RETURN";
+                }
+                return gwt_hm_ReturnMessage.receive(this);
+            case gwt_hm_BrowserChannel.MESSAGE_TYPE_QUIT:
+                if (expectReturn) {
+                    throw "Received QUIT while waiting for return";
+                }
+                this.disconnectFromHost();
+                return 0;
+            default:
+                // TODO(jat): error handling
+                throw "Unexpected message type " + type;
             }
         }
     }
@@ -359,9 +356,34 @@ class gwt_hm_HostChannel {
             debugger;
         }
         this.buf_out = "";
-        this.flushWithBody(body);
+        if (this.socketClient) {
+            this.flushWithBodyWs(body);
+        } else {
+            this.flushWithBodyXhr(body);
+        }
     }
-    flushWithBody(body) {
+    flushWithBodyWs(body) {
+        var t0 = performance.now();
+        var bytes = this.socketClient.send(body);
+        if (this.closeSocket) {
+            this.socketClient.close();
+            return;
+        }
+        let response = "";
+        for (var idx = 0; idx < bytes.length; idx++) {
+            response += String.fromCharCode(bytes[idx]);
+        }
+        this.buf_in = atob(response);
+        this.buf_in_idx = 0;
+        var t1 = performance.now();
+        var xhrTime = t1 - t0;
+        this.xhrTimingData.push(xhrTime);
+        this.xhrTimingCumulativeMilliseconds += xhrTime;
+        if (this.xhrTimingData.length % 1000 == 0) {
+            console.debug(`codeserver ws timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMilliseconds} `);
+        }
+    }
+    flushWithBodyXhr(body) {
         var t0 = performance.now();
         var xhr = new XMLHttpRequest();
         var url = `${this.host}/jsCodeServer.tcp`;
@@ -398,11 +420,11 @@ class gwt_hm_HostChannel {
         this.buf_in = atob(xhr.responseText);
         this.buf_in_idx = 0;
         var t1 = performance.now();
-        var xhrTime = t1-t0;
+        var xhrTime = t1 - t0;
         this.xhrTimingData.push(xhrTime);
-        this.xhrTimingCumulativeMicroseconds+=xhrTime;
-        if(this.xhrTimingData.length%1000==0){
-          console.log(`timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMicroseconds} `);
+        this.xhrTimingCumulativeMicroseconds += xhrTime;
+        if (this.xhrTimingData.length % 1000 == 0) {
+            console.log(`timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMicroseconds} `);
         }
     }
     ensureClear() {

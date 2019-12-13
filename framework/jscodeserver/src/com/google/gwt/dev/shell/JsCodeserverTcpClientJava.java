@@ -26,12 +26,12 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 /**
  * Implementation of the BrowserChannel for the client side.
  */
-public class XhrTcpClientJava extends BrowserChannel {
+public class JsCodeserverTcpClientJava extends BrowserChannel {
     private DataOutputStream out;
 
     private Message lastMessage;
 
-    public XhrTcpClientJava(Socket socket) throws IOException {
+    public JsCodeserverTcpClientJava(Socket socket) throws IOException {
         super(socket, new ClientObjectRefFactory());
     }
 

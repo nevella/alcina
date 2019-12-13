@@ -1,5 +1,5 @@
-#ifndef __H_ByteOrder
-#define __H_ByteOrder
+#
+ifndef __H_ByteOrder# define __H_ByteOrder
 /*
  * Copyright 2008 Google Inc.
  *
@@ -17,125 +17,132 @@
  */
 
 #include "Platform.h"
+
 #include <cstring>
 
 class ByteOrder {
-private:
-  enum FloatByteOrder {
-    FLOAT_BIG_ENDIAN,
-    FLOAT_LITTLE_ENDIAN,
-    // TODO(jat): do we need to consider anything other than straight
-    // big-endian or little-endian?  PDP-11 (irrelevant), ARM (probably
-    // relevant for mobile devices), MIPS (probably not relevant, but maybe)
-    // and others have some intermediate endianess.  Also, FP-endianess is not
-    // necessarily the same as that for integers.
-  };
-#ifdef PLATFORM_FLOAT_ENDIANESS
-  static const FloatByteOrder floatByteOrder = PLATFORM_FLOAT_ENDIANESS;
-#else
-  FloatByteOrder floatByteOrder;
-#endif
+    private:
+        enum FloatByteOrder {
+            FLOAT_BIG_ENDIAN,
+            FLOAT_LITTLE_ENDIAN,
+            // TODO(jat): do we need to consider anything other than straight
+            // big-endian or little-endian?  PDP-11 (irrelevant), ARM (probably
+            // relevant for mobile devices), MIPS (probably not relevant, but maybe)
+            // and others have some intermediate endianess.  Also, FP-endianess is not
+            // necessarily the same as that for integers.
+        };#
+    ifdef PLATFORM_FLOAT_ENDIANESS
+    static
+    const FloatByteOrder floatByteOrder = PLATFORM_FLOAT_ENDIANESS;#
+    else
+        FloatByteOrder floatByteOrder;#
+    endif
 
-  typedef union {
-    float v;
-    char b[sizeof(float)];
-  } FloatUnion;
-
-  typedef union {
-    double v;
-    char b[sizeof(double)];
-  } DoubleUnion;
-
-  /**
-   * Copy src to dest, reversing the order of the bytes.
-   * Assumes src and dest do not overlap.
-   */
-  void memcpyrev(char* dest, const char* src, size_t n) {
-    src += n;
-    while (n-- > 0) {
-      *dest++ = *--src;
+    typedef union {
+        float v;
+        char b[sizeof(float)];
     }
-  }
-public:
-  ByteOrder() {
-#ifndef PLATFORM_FLOAT_ENDIANESS
-    DoubleUnion u;
-    memset(u.b, 0, sizeof(u.b));
-    u.b[0] = (char) 0x80;
-    u.b[7] = (char) 0x02;
-    // TODO(jat): add more tests here if we support other endianess
-    floatByteOrder = u.v > 0 ? FLOAT_LITTLE_ENDIAN : FLOAT_BIG_ENDIAN;
-    if (Debug::level(Debug::Debugging)) {
-      std::string str = "Unknown";
-      switch (floatByteOrder) {
-         case FLOAT_LITTLE_ENDIAN:
-           str = "little-endian";
-           break;
-         case FLOAT_BIG_ENDIAN:
-           str = "big-endian";
-           break;
-      }
-      Debug::log(Debug::Debugging) << "Dynamically detected float byte order: "
-          << str << Debug::flush;
-    }
-#endif
-  }
+    FloatUnion;
 
-  void bytesFromDouble(double v, char* bytes) {
-    DoubleUnion u;
-    u.v = v;
-    switch (floatByteOrder) {
-      case FLOAT_LITTLE_ENDIAN:
-        memcpyrev(bytes, u.b, sizeof(u.b));
-        break;
-      case FLOAT_BIG_ENDIAN:
-        memcpy(bytes, u.b, sizeof(u.b));
-        break;
+    typedef union {
+        double v;
+        char b[sizeof(double)];
     }
-  }
+    DoubleUnion;
 
-  void bytesFromFloat(float v, char* bytes) {
-    FloatUnion u;
-    u.v = v;
-    switch (floatByteOrder) {
-      case FLOAT_LITTLE_ENDIAN:
-        memcpyrev(bytes, u.b, sizeof(u.b));
-        break;
-      case FLOAT_BIG_ENDIAN:
-        memcpy(bytes, u.b, sizeof(u.b));
-        break;
+    /**
+     * Copy src to dest, reversing the order of the bytes.
+     * Assumes src and dest do not overlap.
+     */
+    void memcpyrev(char * dest,
+        const char * src, size_t n) {
+        src += n;
+        while (n-- > 0) {
+            * dest++ = * --src;
+        }
     }
-  }
+    public:
+        ByteOrder() {
+            #
+            ifndef PLATFORM_FLOAT_ENDIANESS
+            DoubleUnion u;
+            memset(u.b, 0, sizeof(u.b));
+            u.b[0] = (char) 0x80;
+            u.b[7] = (char) 0x02;
+            // TODO(jat): add more tests here if we support other endianess
+            floatByteOrder = u.v > 0 ? FLOAT_LITTLE_ENDIAN : FLOAT_BIG_ENDIAN;
+            if (Debug::level(Debug::Debugging)) {
+                std::string str = "Unknown";
+                switch (floatByteOrder) {
+                    case FLOAT_LITTLE_ENDIAN:
+                        str = "little-endian";
+                        break;
+                    case FLOAT_BIG_ENDIAN:
+                        str = "big-endian";
+                        break;
+                }
+                Debug::log(Debug::Debugging) << "Dynamically detected float byte order: " <<
+                    str << Debug::flush;
+            }#
+            endif
+        }
 
-  double doubleFromBytes(const char* bytes) {
-    DoubleUnion u;
-    switch (floatByteOrder) {
-      case FLOAT_LITTLE_ENDIAN:
-        memcpyrev(u.b, bytes, sizeof(u.b));
-        break;
-      case FLOAT_BIG_ENDIAN:
-        // TODO(jat): find a way to avoid the extra copy while keeping the
-        // compiler happy.
-        memcpy(u.b, bytes, sizeof(u.b));
-        break;
+    void bytesFromDouble(double v, char * bytes) {
+        DoubleUnion u;
+        u.v = v;
+        switch (floatByteOrder) {
+            case FLOAT_LITTLE_ENDIAN:
+                memcpyrev(bytes, u.b, sizeof(u.b));
+                break;
+            case FLOAT_BIG_ENDIAN:
+                memcpy(bytes, u.b, sizeof(u.b));
+                break;
+        }
     }
-    return u.v;
-  }
 
-  float floatFromBytes(const char* bytes) {
-    FloatUnion u;
-    switch (floatByteOrder) {
-      case FLOAT_LITTLE_ENDIAN:
-        memcpyrev(u.b, bytes, sizeof(u.b));
-        break;
-      case FLOAT_BIG_ENDIAN:
-        // TODO(jat): find a way to avoid the extra copy while keeping the
-        // compiler happy.
-        memcpy(u.b, bytes, sizeof(u.b));
-        break;
+    void bytesFromFloat(float v, char * bytes) {
+        FloatUnion u;
+        u.v = v;
+        switch (floatByteOrder) {
+            case FLOAT_LITTLE_ENDIAN:
+                memcpyrev(bytes, u.b, sizeof(u.b));
+                break;
+            case FLOAT_BIG_ENDIAN:
+                memcpy(bytes, u.b, sizeof(u.b));
+                break;
+        }
     }
-    return u.v;
-  }
+
+    double doubleFromBytes(const char * bytes) {
+        DoubleUnion u;
+        switch (floatByteOrder) {
+            case FLOAT_LITTLE_ENDIAN:
+                memcpyrev(u.b, bytes, sizeof(u.b));
+                break;
+            case FLOAT_BIG_ENDIAN:
+                // TODO(jat): find a way to avoid the extra copy while keeping the
+                // compiler happy.
+                memcpy(u.b, bytes, sizeof(u.b));
+                break;
+        }
+        return u.v;
+    }
+
+    float floatFromBytes(const char * bytes) {
+        FloatUnion u;
+        switch (floatByteOrder) {
+            case FLOAT_LITTLE_ENDIAN:
+                memcpyrev(u.b, bytes, sizeof(u.b));
+                break;
+            case FLOAT_BIG_ENDIAN:
+                // TODO(jat): find a way to avoid the extra copy while keeping the
+                // compiler happy.
+                memcpy(u.b, bytes, sizeof(u.b));
+                break;
+        }
+        return u.v;
+    }
 };
 
-#endif
+#
+endif

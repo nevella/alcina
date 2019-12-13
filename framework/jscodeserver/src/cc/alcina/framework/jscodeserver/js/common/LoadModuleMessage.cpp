@@ -17,33 +17,38 @@
 #include "Debug.h"
 
 #include <cstring>
+
 #include <string>
 
 #include "LoadModuleMessage.h"
+
 #include "scoped_ptr/scoped_ptr.h"
 
 char LoadModuleMessage::getType() const {
-  return LoadModuleMessage::TYPE;
+    return LoadModuleMessage::TYPE;
 }
 
-bool LoadModuleMessage::send(HostChannel& channel, const std::string& url,
-    const std::string& tabKey, const std::string& sessionKey,
-    const std::string& moduleName, const std::string& userAgent,
-    SessionHandler* handler) {
-  Debug::log(Debug::Debugging) << "LoadModule(url=\"" << url << "\", tabKey=\""
-      << "\", sessionKey=\"" << sessionKey << "\", module=\"" << moduleName
-      << "\")" << Debug::flush;
-  if (!channel.sendByte(TYPE) || !channel.sendString(url)
-      || !channel.sendString(tabKey)
-      || !channel.sendString(sessionKey)
-      || !channel.sendString(moduleName)
-      || !channel.sendString(userAgent)) {
-    return false;
-  }
-  scoped_ptr<ReturnMessage> ret(channel.reactToMessagesWhileWaitingForReturn(
-      handler));
-  if (!ret.get()) {
-    return false;
-  }
-  return !ret.get()->isException();
+bool LoadModuleMessage::send(HostChannel & channel,
+    const std::string & url,
+        const std::string & tabKey,
+            const std::string & sessionKey,
+                const std::string & moduleName,
+                    const std::string & userAgent,
+                        SessionHandler * handler) {
+    Debug::log(Debug::Debugging) << "LoadModule(url=\"" << url << "\", tabKey=\"" <<
+        "\", sessionKey=\"" << sessionKey << "\", module=\"" << moduleName <<
+        "\")" << Debug::flush;
+    if (!channel.sendByte(TYPE) || !channel.sendString(url) ||
+        !channel.sendString(tabKey) ||
+        !channel.sendString(sessionKey) ||
+        !channel.sendString(moduleName) ||
+        !channel.sendString(userAgent)) {
+        return false;
+    }
+    scoped_ptr < ReturnMessage > ret(channel.reactToMessagesWhileWaitingForReturn(
+        handler));
+    if (!ret.get()) {
+        return false;
+    }
+    return !ret.get() - > isException();
 }
