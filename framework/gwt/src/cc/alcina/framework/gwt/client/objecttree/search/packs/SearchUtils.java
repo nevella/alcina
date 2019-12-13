@@ -247,8 +247,14 @@ public class SearchUtils {
 
 		@Override
 		public boolean matches(String query, HasIdAndLocalId hili) {
-			return hili != null && stringRegexpLookup.get(query)
-					.exec(hili.toString()) != null;
+			if (hili == null) {
+				return false;
+			}
+			RegExp regExp = stringRegexpLookup.get(query);
+			if (regExp == null) {
+				return false;
+			}
+			return regExp.exec(hili.toString()) != null;
 		}
 
 		protected Map<String, RegExp> getMap() {
