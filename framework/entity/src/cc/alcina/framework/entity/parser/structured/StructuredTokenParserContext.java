@@ -70,6 +70,7 @@ public class StructuredTokenParserContext {
 		}
 		String depthInSpacer = CommonUtils.padStringLeft("",
 				(depthIn - initialDepthIn) * 2, " ");
+		join.sourceNode.logToFile();
 		String outStr = targetNode == null ? "(no output)"
 				: targetNode.debug().shortRepresentation();
 		String inStr = sourceNode == null ? "(no input)"
