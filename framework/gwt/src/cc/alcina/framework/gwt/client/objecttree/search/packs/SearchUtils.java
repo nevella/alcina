@@ -71,7 +71,7 @@ public class SearchUtils {
 
 	public static Set<Long> idsTextToSet(String idsText) {
 		return TransformManager
-				.idListToLongSet(idsText.replaceFirst("ids: ?", ""));
+				.idListToLongSet(idsText.replaceFirst("ids?: ?", ""));
 	}
 
 	public static boolean matchesEnum(String query, Enum e) {
