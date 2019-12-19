@@ -156,7 +156,9 @@ public class WDUtils {
 		}
 		try {
 			driver.manage().window().setPosition(new Point(0, 0));
-			java.awt.Dimension screenSize = new java.awt.Dimension(1440, 900);
+			java.awt.Dimension screenSize = new java.awt.Dimension(
+					ResourceUtilities.getInteger(WDUtils.class, "width"),
+					ResourceUtilities.getInteger(WDUtils.class, "height"));
 			try {
 				screenSize = java.awt.Toolkit.getDefaultToolkit()
 						.getScreenSize();

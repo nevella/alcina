@@ -221,6 +221,10 @@ public abstract class UnitTest {
 		}
 	}
 
+	private String excludeHash(String url) {
+		return url.contains("#") ? url.substring(0, url.indexOf("#")) : url;
+	}
+
 	protected void getAndLog(WebDriver driver, String uri) {
 		getAndLog(driver, uri, false);
 	}
@@ -228,7 +232,9 @@ public abstract class UnitTest {
 	protected void getAndLog(WebDriver driver, String uri, boolean refresh) {
 		String key = "Load: " + uri;
 		MetricLogging.get().start(key);
-		if (refresh && Objects.equals(uri, driver.getCurrentUrl())) {
+		if (refresh && Objects.equals(excludeHash(uri),
+				excludeHash(driver.getCurrentUrl()))) {
+			driver.get(uri);
 			driver.navigate().refresh();
 		} else {
 			driver.get(uri);

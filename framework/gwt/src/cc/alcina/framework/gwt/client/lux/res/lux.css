@@ -1,1 +1,7 @@
-/*placeholder - application-themed*/
+/*most styles - application-themed*/
+.lux-screen-center{
+	display:flex;
+	justify-content:center;
+	align-items:center;
+	min-height:100vh;
+}
