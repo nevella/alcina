@@ -44,6 +44,10 @@ public class StructuredTokenParserContext {
 
 	Map<XmlStructuralJoin, OutputContextRoot> outputContextRoots = new LinkedHashMap<>();
 
+	public int count(XmlToken token) {
+		return matched.containsKey(token) ? matched.get(token).size() : 0;
+	}
+
 	public void end() {
 	}
 
@@ -70,6 +74,7 @@ public class StructuredTokenParserContext {
 		}
 		String depthInSpacer = CommonUtils.padStringLeft("",
 				(depthIn - initialDepthIn) * 2, " ");
+		join.sourceNode.logToFile();
 		String outStr = targetNode == null ? "(no output)"
 				: targetNode.debug().shortRepresentation();
 		String inStr = sourceNode == null ? "(no input)"

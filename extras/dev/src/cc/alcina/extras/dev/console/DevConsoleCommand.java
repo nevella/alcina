@@ -1357,7 +1357,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public static class CmdTags extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
-			return new String[] { "t" };
+			return new String[] { "tag" };
 		}
 
 		@Override
@@ -1367,7 +1367,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String getUsage() {
-			return "t a|d|l|lt name tags content";
+			return "tag a|d|l|lt name tags content";
 		}
 
 		@Override

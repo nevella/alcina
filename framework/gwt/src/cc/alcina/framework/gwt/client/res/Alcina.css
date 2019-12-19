@@ -22,7 +22,7 @@ div.alcina-TopContainer {
 }
 
 div.alcina-Header {
-	background: #217d4d url(_pix/bg-header.jpg) 0 0 repeat-x;
+	background: #217d4d url(/_pix/bg-header.jpg) 0 0 repeat-x;
 	height: 67px;
 	position: relative;
 }
@@ -80,12 +80,12 @@ div.alcina-MainContent div.alcina-NoLayoutContentRight {
 }
 
 .alcina-ContentLeft .gwt-StackPanelItem {
-	background: #b3d6e4 url(_pix/bg-tabs-left-blue-down.gif) right top
+	background: #b3d6e4 url(/_pix/bg-tabs-left-blue-down.gif) right top
 		repeat-x;
 }
 
 .alcina-ContentLeft .gwt-StackPanelItem-selected {
-	background: #b3d6e4 url(_pix/bg-tabs-left-blue-up.gif) right top
+	background: #b3d6e4 url(/_pix/bg-tabs-left-blue-up.gif) right top
 		repeat-x;
 }
 
@@ -114,7 +114,7 @@ div.alcina-MainContent.content-100pc-lhs {
 }
 
 table.mainTabPanel .alcina-MainMenu {
-	background: #73b8d4 url(_pix/bg-nav.gif) bottom left repeat-x;
+	background: #73b8d4 url(/_pix/bg-nav.gif) bottom left repeat-x;
 	height: 28px;
 	border-top: 1px solid #b9deec;
 	border-bottom: 4px solid #104860;
@@ -127,7 +127,7 @@ table.mainTabPanel .alcina-MainMenu {
 	display: block;
 	text-decoration: none;
 	line-height: 1em;
-	background-image: url(_pix/bg-border-nav.gif);
+	background-image: url(/_pix/bg-border-nav.gif);
 	background-repeat: repeat-y;
 	font-size: 1.15em;
 	white-space: nowrap;
@@ -196,7 +196,7 @@ div.alcina-ContentFrame {
 /* Breadcrumb/sub-title bar*/
 div.alcina-BreadcrumbBar {
 	height: 22px;
-	background: url(_pix/bg-breadcrumb.gif) 0 0 repeat-x;
+	background: url(/_pix/bg-breadcrumb.gif) 0 0 repeat-x;
 	font-size: 0.9em;
 	line-height: 0.9em;
 	border-bottom: 1px solid #cecece;
@@ -214,7 +214,7 @@ div.alcina-BreadcrumbBar p span {
 div.alcina-BreadcrumbBar div.right {
 	float: right;
 	padding-left: 3px;
-	background: url(_pix/bg-seperator-toolbar.gif) left bottom repeat-y;
+	background: url(/_pix/bg-seperator-toolbar.gif) left bottom repeat-y;
 }
 
 div.alcina-BreadcrumbBar div.right a.button, div.alcina-BreadcrumbBar div.right a.dropdown
@@ -226,11 +226,11 @@ div.alcina-BreadcrumbBar div.right a.button, div.alcina-BreadcrumbBar div.right 
 }
 
 div.alcina-BreadcrumbBar div.right a.dropdown {
-	background: url(_pix/breadcrumb-dropdown.png) right bottom repeat-y;
+	background: url(/_pix/breadcrumb-dropdown.png) right bottom repeat-y;
 }
 
 div.alcina-BreadcrumbBar div a.dropdown:hover {
-	background: url(_pix/breadcrumb-dropdown-over.png) right bottom repeat-y;
+	background: url(/_pix/breadcrumb-dropdown-over.png) right bottom repeat-y;
 }
 
 div.alcina-BreadcrumbBar div a.button:hover, div.alcina-BreadcrumbBar div a.dropdown:hover
@@ -277,7 +277,7 @@ div.alcina-BreadcrumbBar p.breadcrumb {
 
 div.alcina-BreadcrumbBar p.breadcrumb-next {
 	padding: 6px 15px 6px 8px;
-	background: url(_pix/bg-breadcrumb-next.gif) right top no-repeat;
+	background: url(/_pix/bg-breadcrumb-next.gif) right top no-repeat;
 	margin: 0;
 	float: left;
 	color: rgb(113, 113, 113);
@@ -411,7 +411,7 @@ a.button-grey.disabled, a.button-grey.disabled:hover {
 
 a.button-grey:hover, .alcina-ToolbarSmall a.button-grey:hover {
 	color: #333333;
-	background: #ffffff url(_pix/bg-button-large-grey.gif) bottom left
+	background: #ffffff url(/_pix/bg-button-large-grey.gif) bottom left
 		repeat-x;
 	border-left: 1px solid #ffffff;
 	border-top: 1px solid #ffffff;
@@ -420,67 +420,67 @@ a.button-grey:hover, .alcina-ToolbarSmall a.button-grey:hover {
 }
 /* Button icons */
 a.b-viewing-options span {
-	background: url(_pix/icon-viewing-options.gif) 0 0 no-repeat;
+	background: url(/_pix/icon-viewing-options.gif) 0 0 no-repeat;
 	padding-left: 20px;
 }
 
 a.b-options-small span {
-	background: url(_pix/icon-options-small.gif) 1px 1px no-repeat;
+	background: url(/_pix/icon-options-small.gif) 1px 1px no-repeat;
 	padding-left: 15px;
 }
 
 a.b-delete-small span {
-	background: url(_pix/icon-delete-small.gif) 1px 1px no-repeat;
+	background: url(/_pix/icon-delete-small.gif) 1px 1px no-repeat;
 	padding-left: 15px;
 }
 
 a.b-color-small span {
-	background: url(_pix/icon-color-small.gif) 1px 1px no-repeat;
+	background: url(/_pix/icon-color-small.gif) 1px 1px no-repeat;
 	padding-left: 15px;
 }
 
 a.b-share-small span {
-	background: url(_pix/icon-share-small.gif) 1px 1px no-repeat;
+	background: url(/_pix/icon-share-small.gif) 1px 1px no-repeat;
 	padding-left: 15px;
 }
 
 a.b-save span {
-	background: url(_pix/icon-save.gif) 0 0 no-repeat;
+	background: url(/_pix/icon-save.gif) 0 0 no-repeat;
 	padding-left: 20px;
 }
 
 a.b-add span {
-	background: url(_pix/icon-add.gif) 0 0 no-repeat;
+	background: url(/_pix/icon-add.gif) 0 0 no-repeat;
 	padding-left: 20px;
 }
 
 a.b-tree span {
-	background: url(_pix/icon-tree.gif) 0 0 no-repeat;
+	background: url(/_pix/icon-tree.gif) 0 0 no-repeat;
 	padding-left: 20px;
 }
 
 a.b-link span {
-	background: url(_pix/icon-link.gif) 0 0 no-repeat;
+	background: url(/_pix/icon-link.gif) 0 0 no-repeat;
 	padding-left: 20px;
 }
 
 a.b-return span {
-	background: url(_pix/icon-return-2.gif) 0 0 no-repeat;
+	background: url(/_pix/icon-return-2.gif) 0 0 no-repeat;
 	padding-left: 20px;
 }
 
 a.b-print span {
-	background: url(_pix/icon-print.gif) 0 0 no-repeat;
+	background: url(/_pix/icon-print.gif) 0 0 no-repeat;
 	padding-left: 20px;
 }
 
 a.b-previous-page span {
-	background: url(_pix/icon-prev.gif) left 2px no-repeat;
+	background: url(/_pix/icon-prev.gif) left 2px no-repeat;
 	padding-left: 12px;
 }
 
 a.b-next-page span {
-	background: url(_pix/icon-next.gif) right 2px no-repeat;
+	background: url(/_pix/icon-next.gif) right 2px no-repeat;
 	padding-right: 12px;
 }
 
@@ -524,7 +524,7 @@ input, select, textarea {
 }
 
 input.button-submit, button.button-submit {
-	background: #78a3b6 url(_pix/bg-button-blue.gif) left top repeat;
+	background: #78a3b6 url(/_pix/bg-button-blue.gif) left top repeat;
 	border: 1px solid #114a62;
 	font-family: Arial, Helvetica, sans-serif;
 	margin: 0;
@@ -812,7 +812,7 @@ div.alcina-Selector.available {
 
 .alcina-SelectorFrame div.header.available {
 	color: #666666;
-	background: transparent url(_pix/bg-breadcrumb.gif) repeat-x scroll 0 0;
+	background: transparent url(/_pix/bg-breadcrumb.gif) repeat-x scroll 0 0;
 	border-right: 1px solid #cdcdcd;
 }
 
@@ -983,7 +983,7 @@ div.alcina-ObjectTree .level-2-widget {
 }
 
 div.alcina-ObjectTree input[type="text"] {
-	background: #FFFFFF url(_pix/icon-magnify.gif) no-repeat scroll 3px 2px;
+	background: #FFFFFF url(/_pix/icon-magnify.gif) no-repeat scroll 3px 2px;
 	border: 1px solid #CECECE;
 	padding: 1px 1px 1px 15px;
 	width: 200px;
@@ -1043,7 +1043,7 @@ table.results-table {
 }
 
 .gwittir-ServerValidation {
-	background: #FFFFFF url(_pix/wait.gif) no-repeat scroll 3px 2px;
+	background: #FFFFFF url(/_pix/wait.gif) no-repeat scroll 3px 2px;
 	padding-left: 25px;
 	color: black;
 }
@@ -1067,7 +1067,7 @@ table.results-table {
 
 /** Filter widget **/
 input.alcina-Filter {
-	background: #FFFFFF url(_pix/icon-magnify.gif) no-repeat scroll 3px 2px;
+	background: #FFFFFF url(/_pix/icon-magnify.gif) no-repeat scroll 3px 2px;
 	border: 1px solid #CECECE;
 	width: 85%;
 	padding: 1px 1px 1px 15px;
@@ -1168,7 +1168,7 @@ div.table-toolbar a.button-grey, div.table-toolbar a.button-grey:active,
 
 div.toolbar div.group {
 	padding: 6px 0 6px 6px;
-	background: url(_pix/bg-seperator-toolbar.gif) right bottom repeat-y;
+	background: url(/_pix/bg-seperator-toolbar.gif) right bottom repeat-y;
 	display: block;
 	float: left;
 }
@@ -1329,19 +1329,19 @@ table.gwittir-BoundTable tr.header td.first {
 }
 
 table.gwittir-BoundTable tr.header td.ascending div {
-	background: transparent url(_pix/bg-ascending.png) no-repeat scroll left
+	background: transparent url(/_pix/bg-ascending.png) no-repeat scroll left
 		center;
 	padding-left: 10px;
 }
 
 table.gwittir-BoundTable tr.header td.descending div {
-	background: transparent url(_pix/bg-descending.png) no-repeat scroll
+	background: transparent url(/_pix/bg-descending.png) no-repeat scroll
 		left center;
 	padding-left: 10px;
 }
 
 table.gwittir-BoundTable tr.header td {
-	background: transparent url(_pix/bg-seperator-toolbar.gif) repeat-y
+	background: transparent url(/_pix/bg-seperator-toolbar.gif) repeat-y
 		scroll left bottom;
 	white-space: nowrap;
 	color: #505050;
@@ -1359,7 +1359,7 @@ table.gwittir-BoundTable tr.header td.sortable:hover {
 }
 
 table.gwittir-BoundTable tr.header {
-	background: #f4f4f4 url(_pix/bg-breadcrumb.gif) repeat-x scroll 0 0;
+	background: #f4f4f4 url(/_pix/bg-breadcrumb.gif) repeat-x scroll 0 0;
 	border-left: 1px solid #CECECE;
 	line-height: 0.9em;
 	position: relative;
@@ -1547,31 +1547,31 @@ div.max .gwt-RichTextArea {
 }
 
 .dropdown-popup .popupMiddleLeft {
-	background: url(_pix/dropdown-shadow/l.png);
+	background: url(/_pix/dropdown-shadow/l.png);
 	background-repeat: repeat-y;
 	width: 8px;
 }
 
 .dropdown-popup .popupMiddleRight {
-	background: url(_pix/dropdown-shadow/r.png);
+	background: url(/_pix/dropdown-shadow/r.png);
 	background-repeat: repeat-y;
 	width: 8px;
 }
 
 .dropdown-popup .popupBottomLeft {
-	background: url(_pix/dropdown-shadow/lb.png);
+	background: url(/_pix/dropdown-shadow/lb.png);
 	width: 8px;
 	height: 14px;
 }
 
 .dropdown-popup .popupBottomRight {
-	background: url(_pix/dropdown-shadow/rb.png);
+	background: url(/_pix/dropdown-shadow/rb.png);
 	width: 8px;
 	height: 14px;
 }
 
 .dropdown-popup .popupBottomCenter {
-	background: url(_pix/dropdown-shadow/b.png);
+	background: url(/_pix/dropdown-shadow/b.png);
 	background-repeat: repeat-x;
 	height: 14px;
 }
