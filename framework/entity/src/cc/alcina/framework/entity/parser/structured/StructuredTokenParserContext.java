@@ -44,6 +44,10 @@ public class StructuredTokenParserContext {
 
 	Map<XmlStructuralJoin, OutputContextRoot> outputContextRoots = new LinkedHashMap<>();
 
+	public int count(XmlToken token) {
+		return matched.containsKey(token) ? matched.get(token).size() : 0;
+	}
+
 	public void end() {
 	}
 
