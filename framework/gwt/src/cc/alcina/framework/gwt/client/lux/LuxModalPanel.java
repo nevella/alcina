@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.client.lux;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
@@ -9,6 +12,9 @@ import cc.alcina.framework.gwt.client.ide.ContentViewSections;
 
 public abstract class LuxModalPanel extends Composite {
 	FlowPanel fp = new FlowPanel();
+
+	// FIXME - move to 'validation support'
+	protected List<ContentViewSections> builders = new ArrayList<>();
 
 	public LuxModalPanel() {
 		initWidget(fp);
@@ -43,5 +49,16 @@ public abstract class LuxModalPanel extends Composite {
 		if (footer != null) {
 			fp.add(footer);
 		}
+	}
+
+	protected boolean validate() {
+		for (ContentViewSections sectionsBuilder : builders) {
+			// FIXME - scroll into view - validate should return a
+			// validationresult w widget
+			if (!sectionsBuilder.validateSync()) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
