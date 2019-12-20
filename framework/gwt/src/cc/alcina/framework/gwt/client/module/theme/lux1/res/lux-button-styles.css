@@ -1,0 +1,49 @@
+.lux-button,a.lux-button {
+	color: white;
+	background-color: var(- -button-background-color);
+	font-size: 14px;
+	font-weight: bold;
+	margin: 8px 4px;
+	border-radius: 4px;
+	min-width: 70px;
+	display: block;
+	text-align: center;
+	padding: 11px 20px 9px;
+	line-height: 16px;
+}
+.lux-button.optional-button{
+	background-color: white;
+	color: var(- -button-background-color);
+}
+
+.lux-button:hover {
+	box-shadow: 0 1px 1px 0 var(--button-background-color-shadow-1), 0 1px 3px 1px
+		var(--button-background-color-shadow-2);
+	text-decoration: none;
+}
+
+.lux-button:active {
+	background-color: var(- -button-background-color-active);
+}
+.lux-button.optional-button:active{
+	background-color: white;
+	color: var(- -button-background-color-active);
+}
+
+.lux-button-panel {
+	display: flex;
+	margin-top: 2em;
+	padding-top: 1em;
+}
+
+.lux-button-panel .optional {
+	display: flex;
+	justify-content: flex-start;
+	flex-grow: 1;
+}
+
+.lux-button-panel .actions {
+	display: flex;
+	justify-content: flex-end;
+	flex-grow: 1;
+}

@@ -1,0 +1,22 @@
+.lux-modal-panel .head {
+	margin: 0 0 1.5em 0;
+	text-align:center;
+}
+
+.lux-modal-panel .head .title {
+	font-size: var(- -h2-font-size);
+	line-height: var(- -h2-line-height);
+	color: var(- -h2-font-color);
+	font-weight: var(- -h2-font-weight);
+}
+
+.lux-modal-panel .head .subtitle {
+	font-size: var(- -lesser-subtitle-font-size);
+	line-height: var(- -lesser-subtitle-line-height);
+	color: var(- -lesser-subtitle-font-color);
+	font-weight: var(- -lesser-subtitle-font-weight);
+}
+
+.lux-modal-panel{
+	margin-bottom:2em;
+}

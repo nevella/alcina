@@ -9,6 +9,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.gwt.client.ide.ContentViewSections;
+import cc.alcina.framework.gwt.client.lux.LuxStyle.LuxStyleModal;
 
 public abstract class LuxModalPanel extends Composite {
 	FlowPanel fp = new FlowPanel();
@@ -18,6 +19,8 @@ public abstract class LuxModalPanel extends Composite {
 
 	public LuxModalPanel() {
 		initWidget(fp);
+		LuxStyleModal.LUX_MODAL_PANEL.add(this);
+		LuxStyle.LUX.add(this);
 	}
 
 	protected ContentViewSections createBuilder() {
@@ -42,7 +45,7 @@ public abstract class LuxModalPanel extends Composite {
 	}
 
 	protected void render() {
-		fp.add(createHeaderPanel());
+		fp.add(LuxStyleModal.LUX_MODAL_PANEL.add(createHeaderPanel()));
 		fp.add(createContentPanel());
 		fp.add(createButtonsPanel());
 		Widget footer = createFooterPanel();

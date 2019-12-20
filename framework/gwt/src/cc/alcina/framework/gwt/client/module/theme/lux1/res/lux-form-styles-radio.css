@@ -1,0 +1,68 @@
+/* Customize the label (the container) */
+.lux-form .lux-form-element.radio {
+	display: block;
+	position: relative;
+	padding-left: 25px;
+	margin-bottom: -2px;
+	cursor: pointer;
+}
+
+/* Hide the browser's default radio button */
+.lux-form .lux-form-element.radio input {
+	position: absolute;
+	opacity: 0;
+	cursor: pointer;
+	height: 0;
+	width: 0;
+}
+
+/* Create a custom radio button */
+.lux-form .checkmark {
+	position: absolute;
+	top: .25rem;
+	left: 0;
+	display: block;
+	width: 17px;
+	height: 17px;
+	line-height: 17px;
+	font-size: 65%;
+	background-color: #eee;
+	border-radius: 50%;
+}
+
+/* On mouse-over, add a grey background color */
+.lux-form .lux-form-element.radio:hover input ~ .checkmark {
+	background-color: #ccc;
+}
+
+/* When the radio button is checked, add a blue background */
+.lux-form .lux-form-element.radio input:checked ~ .checkmark {
+	background-color: var(- -radio-checked-color);
+}
+
+/* Create the indicator (the dot/circle - hidden when not checked) */
+.lux-form .checkmark:after {
+	content: "";
+	position: absolute;
+	display: none;
+}
+
+/* Show the indicator (dot/circle) when checked */
+.lux-form .lux-form-element.radio input:checked ~ .checkmark:after {
+	display: block;
+}
+
+/* Style the indicator (dot/circle) */
+.lux-form .lux-form-element.radio .checkmark:after {
+	top: 5px;
+	left: 5px;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: white;
+}
+
+.lux-form .lux-form-element.radio label {
+	display: block;
+	padding-top: 2px;
+}

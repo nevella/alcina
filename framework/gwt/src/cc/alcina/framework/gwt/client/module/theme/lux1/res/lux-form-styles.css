@@ -1,0 +1,56 @@
+.lux-form .lux-form-element.no-label .lux-form-label {
+	display: none;
+}
+
+.lux-form td {
+	font-size: inherit;
+}
+
+.lux-form .radio-group {
+	margin-bottom: 1em;
+}
+
+.lux-form {
+	font-size: 18px;
+	margin-top: 1em;
+}
+
+.lux-form-container .content-view-sections+.content-view-sections {
+	margin-top: 2em;
+}
+
+.lux-form-element {
+	margin-bottom: 1em;
+	position: relative;
+}
+/*
+FIXME
+*/
+.gwittir-ValidationPopup {
+	color: var(- -error-color);
+	font-size: 12px;
+	text-align: right;
+	padding-right: 4px;
+}
+
+.lux-form-feedback{
+	color: var(- -error-color);
+	font-size: 14px;
+	text-align: right;
+	padding-right: 4px;
+}
+/*
+.lux-form .lux-form-element.required .lux-form-label:after {
+	content: '*';
+	font-size: 80%;
+	position: absolute;
+	top: -20%;
+	right: -1px;
+}
+*/
+.lux .content-view-sections{
+	padding:0;
+}
+.lux .content-view-sections .alcina-BeanPanel{
+	padding:0;
+}

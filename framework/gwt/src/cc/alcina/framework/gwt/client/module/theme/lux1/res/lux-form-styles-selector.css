@@ -1,0 +1,431 @@
+/*
+FIXME-alcina spam
+*/
+.lux .flat-search-row .editor  table.alcina-SelectorFrame.minimal .select-item-container
+	{
+	width: 180px;
+	max-width: 180px;
+	padding-top: 3px;
+	padding-bottom: 2px;
+	min-width: 180px;
+}
+
+.lux table.flat-search .selectx {
+	display: inline-block;
+	border: none;
+	padding: 0 0 0 0;
+	margin-top: 1px;
+	margin-bottom: 1px;
+	position: relative;
+	background-color: #eeeeff;
+}
+
+.lux table.flat-search .selectx a {
+	display: inline-block;
+	vertical-align: bottom;
+	padding-right: 5px;
+	line-height: 16px;
+	padding-bottom: 1px;
+}
+
+.lux table.flat-search .selectx .text {
+	margin-top: 0;
+	margin-bottom: 0;
+	line-height: 14px;
+	margin-left: 4px;
+	margin-right: 4px;
+}
+
+.lux table.flat-search  div.alcina-Selector.selected {
+	line-height: 5px;
+}
+
+.lux table.flat-search  div.alcina-Selector.selected a:hover {
+	background-color: inherit;
+	cursor: pointer
+}
+
+.lux .flat-search-row .alcina-Button {
+	margin-right: 10px;
+	border-radius: 11px;
+	border: solid 1px #ccc;
+	width: 22px;
+	height: 22px;
+	text-align: center;
+	background-color: #6aa1e6;
+	color: #f3f3f3;
+	font-weight: bold;
+	padding: 2px 7px;
+}
+
+.lux .flat-search-row .alcina-Button[disabled] {
+	background-color: #9bbce6;
+	color: #e7e7e7;
+}
+
+.lux .flat-search-row .single-item div.alcina-Selector.selected div.select-item-container
+	{
+	padding-top: 4px;
+}
+
+.lux .flat-search-row div.single-item.editor div.alcina-Selector.selected div.select-item-container
+	{
+	line-height: 18px;
+}
+
+.lux table.flat-search  div.select-item-container:empty {
+	height: 12px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+	min-height: 22px;
+}
+
+
+.lux table.alcina-SelectorFrame {
+	border: 1px solid #cdcdcd;
+	background-color: white;
+}
+
+.lux table.gwittir-GridForm table.alcina-SelectorFrame td {
+	padding: 0px;
+}
+
+.lux div.alcina-Selector .chooser-item.selected, div.select-item-container .chooser-item.selected
+	{
+	background-color: #A8D3E6;
+}
+
+.lux div.alcina-Selector {
+	width: 250px;
+	height: 138px;
+}
+
+.lux div.alcina-Selector .scroller {
+	height: 115px;
+}
+
+.lux div.alcina-Selector div.alcina-FilterHolder {
+	background-color: transparent;
+}
+
+.lux div.alcina-Selector.available {
+	border-right: 1px solid #cdcdcd;
+}
+
+.lux .alcina-SelectorFrame div.header {
+	font-weight: bold;
+	padding: 1px;
+	padding-left: 10px;
+	border-bottom: 1px solid #cdcdcd;
+}
+
+.lux .alcina-SelectorFrame div.header.available {
+	color: #666666;
+	background: transparent url(/_pix/bg-breadcrumb.gif) repeat-x scroll 0 0;
+	border-right: 1px solid #cdcdcd;
+}
+
+.lux div.alcina-Selector div.header.selected {
+	color: #333333;
+}
+
+.lux div.alcina-Selector ul {
+	margin-left: 10px;
+}
+
+.lux div.alcina-Selector div.select-item-container {
+	padding-left: 4px;
+}
+
+.lux div.alcina-Selector a, div.alcina-Selector a:link, div.alcina-Selector a:visited
+	{
+	color: black;
+	text-decoration: none;
+}
+
+.lux div.alcina-Selector a:hover {
+	background-color: #dddddd;
+}
+
+.lux .alcina-BeanPanel table.flat-search  div.select-item-container:empty {
+	color: #777;
+	height: 18px;
+}
+
+.lux .flat-search-row .editor  table.alcina-SelectorFrame.minimal .select-item-container
+	{
+	width: 180px;
+	max-width: 180px;
+	padding-top: 3px;
+	padding-bottom: 2px;
+	min-width: 180px;
+}
+
+.lux table.flat-search .selectx {
+	display: inline-block;
+	border: none;
+	padding: 0 0 0 0;
+	margin-top: 1px;
+	margin-bottom: 1px;
+	position: relative;
+	background-color: #eeeeff;
+}
+
+.lux table.flat-search .selectx a {
+	display: inline-block;
+	vertical-align: bottom;
+	padding-right: 5px;
+	line-height: 16px;
+	padding-bottom: 1px;
+}
+
+.lux table.flat-search .selectx .text {
+	margin-top: 0;
+	margin-bottom: 0;
+	line-height: 14px;
+	margin-left: 4px;
+	margin-right: 4px;
+}
+
+.lux table.flat-search  div.alcina-Selector.selected {
+	line-height: 5px;
+}
+
+.lux table.flat-search  div.alcina-Selector.selected a:hover {
+	background-color: inherit;
+	cursor: pointer
+}
+
+.lux .flat-search-row .alcina-Button {
+	margin-right: 10px;
+	border-radius: 11px;
+	border: solid 1px #ccc;
+	width: 22px;
+	height: 22px;
+	text-align: center;
+	background-color: #6aa1e6;
+	color: #f3f3f3;
+	font-weight: bold;
+	padding: 2px 7px;
+}
+
+.lux .flat-search-row .alcina-Button[disabled] {
+	background-color: #9bbce6;
+	color: #e7e7e7;
+}
+
+.lux .flat-search-row .single-item div.alcina-Selector.selected div.select-item-container
+	{
+	padding-top: 4px;
+}
+
+.lux .flat-search-row div.single-item.editor div.alcina-Selector.selected div.select-item-container
+	{
+	line-height: 22px;
+}
+
+.lux table.flat-search  div.select-item-container:empty {
+	height: 12px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+	min-height: 22px;
+}
+
+.lux .contacts-panel div.flat-search-row>div:first-child table.alcina-SelectorFrame.minimal .select-item-container
+	{
+	width: 210px;
+	text-overflow: ellipsis;
+	overflow-x: hidden;
+	padding-right: 15px
+}
+
+.lux .contacts-panel div.flat-search-row>div.editor table.alcina-SelectorFrame.minimal .select-item-container
+	{
+	width: 190px;
+}
+
+.lux .contacts-panel div.flat-search-row>.editor {
+	width: 185px;
+}
+
+.lux table.alcina-SelectorFrame.minimal .invisible {
+	display: none;
+}
+
+.lux table.alcina-SelectorFrame.minimal .select-item-container {
+	padding: 1px 2px 1px 2px;
+	line-height: 22px;
+}
+
+.lux table.alcina-SelectorFrame.minimal div.alcina-Selector.selected {
+	margin: 0px 6px 0px 2px;
+}
+
+.lux table.alcina-SelectorFrame.minimal div.alcina-FilterHolder {
+	border: none;
+	padding-top: 0px;
+	padding-bottom: 0px;
+	background-image: url('_pix/arrow-selector-down.gif');
+	background-repeat: no-repeat;
+	background-position: right center;
+}
+
+.lux table.alcina-SelectorFrame.minimal div.alcina-Selector.available {
+	border-right: none;
+}
+
+.lux table.alcina-SelectorFrame.minimal input.alcina-Filter {
+	border: none;
+}
+
+.lux table.alcina-SelectorFrame.minimal div.alcina-Selector input.alcina-Filter[type="text"]
+	{
+	width: 360px;
+	background: none;
+	padding: 2px;
+}
+
+.lux table.alcina-SelectorFrame.minimal input.alcina-Filter:focus {
+	outline-width: 0;
+}
+
+.lux .minimal-popDown {
+	min-width: 250px;
+}
+
+.lux table.alcina-SelectorFrame.minimal div.alcina-Selector {
+	width: auto;
+	height: auto;
+	max-width: 360px;
+}
+
+.lux .selectx {
+	padding: 1px 2px;
+	background: #DEE6EE;
+	border: 1px solid #7DB0E4;
+	-moz-border-radius: 0.3em;
+	border-radius: 0.3em;
+	-webkit-border-radius: 0.3em;
+	white-space: nowrap;
+}
+
+.lux table.alcina-SelectorFrame.minimal .selectx {
+	display: inline;
+}
+
+.lux table.alcina-SelectorFrame.minimal .selectx .text {
+	margin-right: 8px;
+	display: inline-block;
+	max-width: 450px;
+	overflow-x: hidden;
+	line-height: 16px;
+	vertical-align: bottom;
+	margin-bottom: 2px;
+	margin-left: 4px;
+}
+
+.lux table.alcina-SelectorFrame.minimal .caption-hint {
+	font-style: italic;
+}
+
+/*
+custom styles
+*/
+.lux table.alcina-SelectorFrame {
+	width: 100%;
+	border: 1px solid #e0e0e0;
+	background-color: transparent;
+	font-family: inherit;
+	border-radius: 4px;
+	font-size: 16px;
+	line-height: 16px;
+	height: 20px;
+}
+
+.lux .lux-form-element.selector .with-focus table.alcina-SelectorFrame {
+	border-color: var(- -radio-checked-color);
+	border-width: 1px;
+	box-shadow: 0px 0px 0px 1px var(- -radio-checked-color);
+}
+
+.lux table.alcina-SelectorFrame.minimal div.alcina-Selector.selected {
+	margin: 0px 6px 0px 2px;
+	padding: 7px 9px 2px 9px !important;
+}
+
+.lux .lux-form-element.selector>label {
+	position: absolute;
+	left: 6px;
+	top: -5px;
+	background-color: var(- -body-background-color);
+	color: #555;
+	font-size: 65%;
+	padding: 0 5px;
+	line-height: 100%;
+}
+
+.lux .lux-form-element.selector .with-focus+label {
+	color: var(- -radio-checked-color);
+}
+
+.lux .lux-form-element.selector {
+	display: flex;
+	flex-flow: column-reverse;
+}
+
+.lux table.alcina-SelectorFrame.minimal .select-item-container {
+	display: block;
+}
+
+.lux table.alcina-SelectorFrame.minimal .alcina-Selector.selected:after {
+	content: '';
+	border: solid #557;
+	border-width: 0 2px 2px 0;
+	position: absolute;
+	padding: 1px;
+	transform: rotate(45deg);
+	-webkit-transform: rotate(45deg);
+	height: 3px;
+	width: 3px;
+	line-height: 3px;
+	right: 0.9rem;
+	top: 0.75rem;
+	border-top-right-radius: 2px;
+	border-bottom-left-radius: 2px;
+}
+
+.lux .with-focus table.alcina-SelectorFrame.minimal .alcina-Selector.selected:after
+	{
+	border-color: var(- -radio-checked-color);
+}
+
+.lux .lux-form-element.selector .alcina-FilterHolder-pad {
+	display: none;
+}
+
+.lux .dropdown-popup  .alcina-FilterHolder {
+	visibility: hidden;
+	height: 1px;
+}
+
+.lux .dropdown-popup .popupContent {
+	box-shadow: #ddd 0 0 3px;
+	background-color: var(- -body-background-color);
+	border: solid 1px #eee;
+}
+
+.lux .dropdown-popup {
+	margin-left: 2px;
+}
+
+.lux .lux-form-element.selector.validation-error .with-focus table.alcina-SelectorFrame,
+	.lux .lux-form-element.selector.validation-error table.alcina-SelectorFrame
+	{
+	border-color: var(- -error-color);
+	border-width: 1px;
+	box-shadow: 0px 0px 0px 1px var(- -error-color);
+}
+
+.lux .lux-form-element.selector.validation-error>label {
+	color: var(- -error-color);
+}
