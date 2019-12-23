@@ -25,220 +25,233 @@ import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 public class TransformPersistenceToken implements Serializable {
-    private final DomainTransformRequest request;
+	private final DomainTransformRequest request;
 
-    private HiliLocatorMap locatorMap;
+	private HiliLocatorMap locatorMap;
 
-    private int dontFlushTilNthTransform = 0;
+	private int dontFlushTilNthTransform = 0;
 
-    public int ignored = 0;
+	public int ignored = 0;
 
-    private final boolean asyncClient;
+	private final boolean asyncClient;
 
-    private Pass pass = Pass.TRY_COMMIT;
+	private Pass pass = Pass.TRY_COMMIT;
 
-    private Set<DomainTransformEvent> ignoreInExceptionPass = new LinkedHashSet<DomainTransformEvent>();
+	private Set<DomainTransformEvent> ignoreInExceptionPass = new LinkedHashSet<DomainTransformEvent>();
 
-    private PersistenceLayerTransformExceptionPolicy transformExceptionPolicy;
+	private PersistenceLayerTransformExceptionPolicy transformExceptionPolicy;
 
-    private List<DomainTransformException> transformExceptions = new ArrayList<DomainTransformException>();
+	private List<DomainTransformException> transformExceptions = new ArrayList<DomainTransformException>();
 
-    private List<DomainTransformEvent> clientUpdateEvents = new ArrayList<DomainTransformEvent>();
+	private List<DomainTransformEvent> clientUpdateEvents = new ArrayList<DomainTransformEvent>();
 
-    private boolean ignoreClientAuthMismatch;
+	private boolean ignoreClientAuthMismatch;
 
-    private boolean forOfflineTransforms;
+	private boolean forOfflineTransforms;
 
-    private transient Logger logger;
+	private transient Logger logger;
 
-    private TransformLoggingPolicy transformLoggingPolicy;
+	private TransformLoggingPolicy transformLoggingPolicy;
 
-    private boolean blockUntilAllListenersNotified;
+	private boolean blockUntilAllListenersNotified;
 
-    private Long originatingUserId;
+	private Long originatingUserId;
 
-    private transient DomainStore targetStore = null;
+	private transient DomainStore targetStore = null;
 
-    public TransformPersistenceToken(DomainTransformRequest request,
-            HiliLocatorMap locatorMap,
-            TransformLoggingPolicy transformLoggingPolicy, boolean asyncClient,
-            boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
-            Logger logger, boolean blockUntilAllListenersNotified) {
-        this.request = request;
-        this.locatorMap = locatorMap;
-        this.transformLoggingPolicy = transformLoggingPolicy;
-        this.asyncClient = asyncClient;
-        this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
-        this.forOfflineTransforms = forOfflineTransforms;
-        this.logger = logger;
-        this.blockUntilAllListenersNotified = blockUntilAllListenersNotified;
-        this.transformExceptionPolicy = Registry
-                .impl(PersistenceLayerTransformExceptionPolicyFactory.class)
-                .getPolicy(this, forOfflineTransforms);
-    }
+	public TransformPersistenceToken(DomainTransformRequest request,
+			HiliLocatorMap locatorMap,
+			TransformLoggingPolicy transformLoggingPolicy, boolean asyncClient,
+			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
+			Logger logger, boolean blockUntilAllListenersNotified) {
+		this.request = request;
+		this.locatorMap = locatorMap;
+		this.transformLoggingPolicy = transformLoggingPolicy;
+		this.asyncClient = asyncClient;
+		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
+		this.forOfflineTransforms = forOfflineTransforms;
+		this.logger = logger;
+		this.blockUntilAllListenersNotified = blockUntilAllListenersNotified;
+		this.transformExceptionPolicy = Registry
+				.impl(PersistenceLayerTransformExceptionPolicyFactory.class)
+				.getPolicy(this, forOfflineTransforms);
+	}
 
-    public List<DomainTransformEvent> getClientUpdateEvents() {
-        return this.clientUpdateEvents;
-    }
+	public List<DomainTransformEvent> getClientUpdateEvents() {
+		return this.clientUpdateEvents;
+	}
 
-    public int getDontFlushTilNthTransform() {
-        return dontFlushTilNthTransform;
-    }
+	public int getDontFlushTilNthTransform() {
+		return dontFlushTilNthTransform;
+	}
 
-    public Set<DomainTransformEvent> getIgnoreInExceptionPass() {
-        return this.ignoreInExceptionPass;
-    }
+	public Set<DomainTransformEvent> getIgnoreInExceptionPass() {
+		return this.ignoreInExceptionPass;
+	}
 
-    public HiliLocatorMap getLocatorMap() {
-        return this.locatorMap;
-    }
+	public HiliLocatorMap getLocatorMap() {
+		return this.locatorMap;
+	}
 
-    public Logger getLogger() {
-        return this.logger;
-    }
+	public Logger getLogger() {
+		return this.logger;
+	}
 
-    public Long getOriginatingUserId() {
-        return this.originatingUserId;
-    }
+	public Long getOriginatingUserId() {
+		return this.originatingUserId;
+	}
 
-    public Pass getPass() {
-        return pass;
-    }
+	public Pass getPass() {
+		return pass;
+	}
 
-    public DomainTransformRequest getRequest() {
-        return this.request;
-    }
+	public DomainTransformRequest getRequest() {
+		return this.request;
+	}
 
-    public DomainStore getTargetStore() {
-        return this.targetStore;
-    }
+	public DomainStore getTargetStore() {
+		return this.targetStore;
+	}
 
-    public PersistenceLayerTransformExceptionPolicy getTransformExceptionPolicy() {
-        return transformExceptionPolicy;
-    }
+	public PersistenceLayerTransformExceptionPolicy
+			getTransformExceptionPolicy() {
+		return transformExceptionPolicy;
+	}
 
-    public List<DomainTransformException> getTransformExceptions() {
-        return this.transformExceptions;
-    }
+	public List<DomainTransformException> getTransformExceptions() {
+		return this.transformExceptions;
+	}
 
-    public TransformLoggingPolicy getTransformLoggingPolicy() {
-        return this.transformLoggingPolicy;
-    }
+	public TransformLoggingPolicy getTransformLoggingPolicy() {
+		return this.transformLoggingPolicy;
+	}
 
-    public boolean isAsyncClient() {
-        return this.asyncClient;
-    }
+	public boolean isAsyncClient() {
+		return this.asyncClient;
+	}
 
-    public boolean isBlockUntilAllListenersNotified() {
-        return this.blockUntilAllListenersNotified;
-    }
+	public boolean isBlockUntilAllListenersNotified() {
+		return this.blockUntilAllListenersNotified;
+	}
 
-    public boolean isForOfflineTransforms() {
-        return this.forOfflineTransforms;
-    }
+	public boolean isForOfflineTransforms() {
+		return this.forOfflineTransforms;
+	}
 
-    public boolean isIgnoreClientAuthMismatch() {
-        return ignoreClientAuthMismatch;
-    }
+	public boolean isIgnoreClientAuthMismatch() {
+		return ignoreClientAuthMismatch;
+	}
 
-    public boolean provideTargetsWritableStore() {
-        return targetStore == DomainStore.stores().writableStore();
-    }
+	public boolean provideTargetsWritableStore() {
+		return targetStore == DomainStore.stores().writableStore();
+	}
 
-    public void setBlockUntilAllListenersNotified(
-            boolean blockUntilAllListenersNotified) {
-        this.blockUntilAllListenersNotified = blockUntilAllListenersNotified;
-    }
+	public void setBlockUntilAllListenersNotified(
+			boolean blockUntilAllListenersNotified) {
+		this.blockUntilAllListenersNotified = blockUntilAllListenersNotified;
+	}
 
-    public void setClientUpdateEvents(
-            List<DomainTransformEvent> clientUpdateEvents) {
-        this.clientUpdateEvents = clientUpdateEvents;
-    }
+	public void setClientUpdateEvents(
+			List<DomainTransformEvent> clientUpdateEvents) {
+		this.clientUpdateEvents = clientUpdateEvents;
+	}
 
-    public void setDontFlushTilNthTransform(int dontFlushTilNthTransform) {
-        this.dontFlushTilNthTransform = dontFlushTilNthTransform;
-    }
+	public void setDontFlushTilNthTransform(int dontFlushTilNthTransform) {
+		this.dontFlushTilNthTransform = dontFlushTilNthTransform;
+	}
 
-    public void setForOfflineTransforms(boolean forClientTransforms) {
-        this.forOfflineTransforms = forClientTransforms;
-    }
+	public void setForOfflineTransforms(boolean forClientTransforms) {
+		this.forOfflineTransforms = forClientTransforms;
+	}
 
-    public void setIgnoreClientAuthMismatch(boolean ignoreClientAuthMismatch) {
-        this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
-    }
+	public void setIgnoreClientAuthMismatch(boolean ignoreClientAuthMismatch) {
+		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
+	}
 
-    public void setLocatorMap(HiliLocatorMap locatorMap) {
-        this.locatorMap = locatorMap;
-    }
+	public void setLocatorMap(HiliLocatorMap locatorMap) {
+		this.locatorMap = locatorMap;
+	}
 
-    public void setLogger(Logger logger) {
-        this.logger = logger;
-    }
+	public void setLogger(Logger logger) {
+		this.logger = logger;
+	}
 
-    public void setOriginatingUserId(Long originatingUserId) {
-        this.originatingUserId = originatingUserId;
-    }
+	public void setOriginatingUserId(Long originatingUserId) {
+		this.originatingUserId = originatingUserId;
+	}
 
-    public void setPass(Pass pass) {
-        this.pass = pass;
-    }
+	public void setPass(Pass pass) {
+		this.pass = pass;
+	}
 
-    public void setTransformExceptionPolicy(
-            PersistenceLayerTransformExceptionPolicy transformExceptionPolicy) {
-        this.transformExceptionPolicy = transformExceptionPolicy;
-    }
+	public void setTransformExceptionPolicy(
+			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy) {
+		this.transformExceptionPolicy = transformExceptionPolicy;
+	}
 
-    public void setTransformLoggingPolicy(
-            TransformLoggingPolicy transformLoggingPolicy) {
-        this.transformLoggingPolicy = transformLoggingPolicy;
-    }
+	public void setTransformLoggingPolicy(
+			TransformLoggingPolicy transformLoggingPolicy) {
+		this.transformLoggingPolicy = transformLoggingPolicy;
+	}
 
-    public List<TransformPersistenceToken> toPerStoreTokens() {
-        Set<DomainStore> targetStores = request.allTransforms().stream()
-                .map(DomainTransformEvent::getObjectClass)
-                .map(DomainStore.stores()::storeFor)
-                .map(store -> Ax.nullTo(store, DomainStore.writableStore()))
-                .collect(Collectors.toSet());
-        if (targetStores.size() == 1) {
-            Preconditions.checkState(targetStores.size() == 1);
-            targetStore = targetStores.stream().findFirst().get();
-            return Collections.singletonList(this);
-        }
-        // require only one request.
-        Preconditions.checkState(request.allRequests().size() == 1);
-        DomainTransformRequest originalRequest = request.allRequests().stream()
-                .findFirst().get();
-        int requestId = originalRequest.getRequestId();
-        CachingMap<DomainStore, TransformPersistenceToken> map = new CachingMap<>(
-                store -> {
-                    // we'll use the originating request id and uuid (only one
-                    // write with this request id per store)
-                    DomainTransformRequest request = new DomainTransformRequest();
-                    request.setRequestId(originalRequest.getRequestId());
-                    request.setChunkUuidString(
-                            originalRequest.getChunkUuidString());
-                    request.setClientInstance(
-                            originalRequest.getClientInstance());
-                    request.setTag(originalRequest.getTag());
-                    TransformPersistenceToken token = new TransformPersistenceToken(
-                            request, locatorMap, transformLoggingPolicy,
-                            asyncClient, ignoreClientAuthMismatch,
-                            forOfflineTransforms, logger,
-                            blockUntilAllListenersNotified);
-                    token.targetStore = store;
-                    return token;
-                });
-        request.getPriorRequestsWithoutResponse();
-        request.allTransforms().forEach(evt -> {
-            DomainStore store = DomainStore.stores()
-                    .storeFor(evt.getObjectClass());
-            store = Ax.nullTo(store, DomainStore.writableStore());
-            map.get(store).request.getEvents().add(evt);
-        });
-        return map.values().stream().collect(Collectors.toList());
-    }
+	public List<TransformPersistenceToken> toPerStoreTokens() {
+		Set<DomainStore> targetStores = request.allTransforms().stream()
+				.map(DomainTransformEvent::getObjectClass)
+				.map(DomainStore.stores()::storeFor)
+				.map(store -> Ax.nullTo(store, DomainStore.writableStore()))
+				.collect(Collectors.toSet());
+		if (targetStores.size() == 1) {
+			Preconditions.checkState(targetStores.size() == 1);
+			targetStore = targetStores.stream().findFirst().get();
+			return Collections.singletonList(this);
+		}
+		DomainTransformRequest originalRequest = request;
+		int requestId = originalRequest.getRequestId();
+		CachingMap<DomainStore, TransformPersistenceToken> map = new CachingMap<>(
+				store -> {
+					// we'll use the originating request id and uuid (only one
+					// write with this request id per store)
+					DomainTransformRequest request = new DomainTransformRequest();
+					request.setRequestId(originalRequest.getRequestId());
+					request.setChunkUuidString(
+							originalRequest.getChunkUuidString());
+					request.setClientInstance(
+							originalRequest.getClientInstance());
+					request.setTag(originalRequest.getTag());
+					for (DomainTransformRequest priorRequest : originalRequest
+							.getPriorRequestsWithoutResponse()) {
+						DomainTransformRequest perStorePriorRequest = new DomainTransformRequest();
+						perStorePriorRequest
+								.setRequestId(priorRequest.getRequestId());
+						perStorePriorRequest.setChunkUuidString(
+								priorRequest.getChunkUuidString());
+						perStorePriorRequest.setClientInstance(
+								priorRequest.getClientInstance());
+						perStorePriorRequest.setTag(priorRequest.getTag());
+					}
+					TransformPersistenceToken token = new TransformPersistenceToken(
+							request, locatorMap, transformLoggingPolicy,
+							asyncClient, ignoreClientAuthMismatch,
+							forOfflineTransforms, logger,
+							blockUntilAllListenersNotified);
+					token.targetStore = store;
+					return token;
+				});
+		for (DomainTransformRequest containedRequest : request.allRequests()) {
+			request.allTransforms().forEach(evt -> {
+				DomainStore store = DomainStore.stores()
+						.storeFor(evt.getObjectClass());
+				store = Ax.nullTo(store, DomainStore.writableStore());
+				map.get(store).request
+						.provideRequestForUuidString(
+								containedRequest.getChunkUuidString())
+						.getEvents().add(evt);
+			});
+		}
+		return map.values().stream().collect(Collectors.toList());
+	}
 
-    public enum Pass {
-        TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
-    }
+	public enum Pass {
+		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
+	}
 }

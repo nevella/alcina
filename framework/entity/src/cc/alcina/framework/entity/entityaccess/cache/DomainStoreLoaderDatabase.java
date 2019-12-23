@@ -1247,6 +1247,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							}
 						}
 					} catch (Exception e) {
+						if (!store.initialising) {
+							Ax.sysLogHigh(
+									"Issue with later lookup - gotta check");
+							/*
+							 * This can also be caused by very lazy loads with
+							 * multiple backing stores*
+							 */
+						}
 						// possibly a delta during warmup::
 						System.out.println(item);
 						e.printStackTrace();
