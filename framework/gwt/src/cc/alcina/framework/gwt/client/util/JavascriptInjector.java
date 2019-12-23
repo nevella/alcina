@@ -21,6 +21,20 @@ public class JavascriptInjector {
 		element.setSrc(sourceUrl);
 		head.appendChild(element);
 	}
+	
+	public static ScriptElement injectJsonLd(String json) {
+		HeadElement head = getHead();
+		ScriptElement element = createScriptElement();
+		element.setType("application/ld+json");
+		element.setText(json);
+		head.appendChild(element);
+		return element;
+	}
+
+	public static void removeScriptElement(ScriptElement element) {
+		HeadElement head = getHead();
+		head.removeChild(element);
+	}
 
 	private static ScriptElement createScriptElement() {
 		ScriptElement script = Document.get().createScriptElement();
