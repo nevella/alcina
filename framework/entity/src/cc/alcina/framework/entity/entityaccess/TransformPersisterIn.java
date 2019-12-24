@@ -46,6 +46,12 @@ import cc.alcina.framework.entity.entityaccess.TransformPersister.TransformPersi
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
+/**
+ * FIXME - guarantee uniqueness of chunkuuid (incl cross-store commits)
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 public class TransformPersisterIn {
 	public static final String CONTEXT_REPLAYING_FOR_LOGS = TransformPersisterIn.class
 			.getName() + ".CONTEXT_REPLAYING_FOR_LOGS";
