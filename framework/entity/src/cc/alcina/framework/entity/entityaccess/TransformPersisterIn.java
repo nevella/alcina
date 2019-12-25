@@ -48,6 +48,12 @@ import cc.alcina.framework.entity.entityaccess.TransformPersister.TransformPersi
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
+/**
+ * FIXME - guarantee uniqueness of chunkuuid (incl cross-store commits)
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 public class TransformPersisterIn {
 	public static final String CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM = TransformPersisterIn.class
 			.getName() + ".CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM";
