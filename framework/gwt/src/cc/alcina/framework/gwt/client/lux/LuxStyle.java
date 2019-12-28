@@ -9,4 +9,7 @@ public enum LuxStyle implements LuxStyleType {
 	public enum LuxStyleModal implements LuxStyleType {
 		LUX_MODAL_PANEL, HEAD;
 	}
+	public enum LuxStyleStatus implements LuxStyleType {
+		 LUX_STATUS_PANEL;
+	}
 }

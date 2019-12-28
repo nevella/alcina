@@ -15,7 +15,9 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 
@@ -26,13 +28,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 public class LoginResponse implements Serializable {
 	private boolean ok;
 
-	private boolean twoFactorAuthenticationRequired;
-
 	private String errorMsg;
 
 	private ClientInstance clientInstance;
 
 	private Map<String, String> properties = new LinkedHashMap<>();
+	
+	private Set<LoginResponseState> states = new LinkedHashSet<>();
 
 	public LoginResponse() {
 	}
@@ -49,12 +51,12 @@ public class LoginResponse implements Serializable {
 		return this.properties;
 	}
 
-	public boolean isOk() {
-		return this.ok;
+	public Set<LoginResponseState> getStates() {
+		return this.states;
 	}
 
-	public boolean isTwoFactorAuthenticationRequired() {
-		return this.twoFactorAuthenticationRequired;
+	public boolean isOk() {
+		return this.ok;
 	}
 
 	public void setClientInstance(ClientInstance clientInstance) {
@@ -73,8 +75,7 @@ public class LoginResponse implements Serializable {
 		this.properties = properties;
 	}
 
-	public void setTwoFactorAuthenticationRequired(
-			boolean twoFactorAuthenticationRequired) {
-		this.twoFactorAuthenticationRequired = twoFactorAuthenticationRequired;
+	public void setStates(Set<LoginResponseState> states) {
+		this.states = states;
 	}
 }

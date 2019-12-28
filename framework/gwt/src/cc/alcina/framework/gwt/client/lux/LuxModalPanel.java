@@ -17,6 +17,8 @@ public abstract class LuxModalPanel extends Composite {
 	// FIXME - move to 'validation support'
 	protected List<ContentViewSections> builders = new ArrayList<>();
 
+	protected Widget statusPanel;
+
 	public LuxModalPanel() {
 		initWidget(fp);
 		LuxStyleModal.LUX_MODAL_PANEL.add(this);
@@ -27,6 +29,7 @@ public abstract class LuxModalPanel extends Composite {
 		ContentViewSections builder = new ContentViewSections();
 		builder.editable();
 		builder.setAutoSave(true);
+		builders.add(builder);
 		return builder;
 	}
 
@@ -45,13 +48,20 @@ public abstract class LuxModalPanel extends Composite {
 	}
 
 	protected void render() {
+		builders.clear();
 		fp.add(LuxStyleModal.LUX_MODAL_PANEL.add(createHeaderPanel()));
 		fp.add(createContentPanel());
+		statusPanel = createStatusPanel();
+		fp.add(statusPanel);
 		fp.add(createButtonsPanel());
 		Widget footer = createFooterPanel();
 		if (footer != null) {
 			fp.add(footer);
 		}
+	}
+
+	protected  Widget createStatusPanel(){
+		return new LuxStatusPanel();
 	}
 
 	protected boolean validate() {

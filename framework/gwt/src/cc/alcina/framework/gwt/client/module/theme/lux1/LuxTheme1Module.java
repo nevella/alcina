@@ -27,5 +27,6 @@ public class LuxTheme1Module {
 		LuxModule.get().interpolateAndInject(resources.luxButtonStyles());
 		LuxModule.get().interpolateAndInject(resources.luxFormStyles());
 		LuxModule.get().interpolateAndInject(resources.luxModalPanelStyles());
+		LuxModule.get().interpolateAndInject(resources.luxStatusPanelStyles());
 	}
 }

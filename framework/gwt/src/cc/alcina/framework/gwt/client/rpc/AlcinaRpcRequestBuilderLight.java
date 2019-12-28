@@ -2,7 +2,13 @@ package cc.alcina.framework.gwt.client.rpc;
 
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.user.client.rpc.RpcRequestBuilder;
+import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+
+@RegistryLocation(registryPoint =AlcinaRpcRequestBuilderLight.class)
+@ClientInstantiable
 public abstract class AlcinaRpcRequestBuilderLight extends RpcRequestBuilder {
 	public AlcinaRpcRequestBuilderLight() {
 	}
@@ -15,6 +21,7 @@ public abstract class AlcinaRpcRequestBuilderLight extends RpcRequestBuilder {
 				getClientInstanceAuthString());
 	}
 
+	public abstract void adjustEndpoint(ServiceDefTarget serviceDefTarget);
 	@Override
 	protected void doFinish(RequestBuilder rb) {
 		super.doFinish(rb);

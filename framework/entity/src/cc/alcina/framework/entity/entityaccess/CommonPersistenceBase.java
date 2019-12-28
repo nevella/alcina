@@ -94,6 +94,7 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.entityaccess.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.projection.EntityUtils;
@@ -208,8 +209,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		connectPermissionsManagerToLiveObjects(false);
 	}
 
+	public <T extends HasIdAndLocalId> T resolveAlcinaMvcc(T t){
+		if(t instanceof MvccObject){
+			return (T) getEntityManager().find(t.provideEntityClass(), t.getId());
+		}else{
+			return t;
+		}
+	}
 	public void connectPermissionsManagerToLiveObjects(boolean forWriting) {
-		if (getEntityManager().contains(PermissionsManager.get().getUser())) {
+		if (getEntityManager().contains(resolveAlcinaMvcc(PermissionsManager.get().getUser()))) {
 			if (!forWriting) {
 				PermissionsManager.get().getUserGroups();
 			}

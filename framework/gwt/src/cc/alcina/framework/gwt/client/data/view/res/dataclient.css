@@ -613,7 +613,7 @@ table.flat-search  div.select-item-container:empty {
 }
 
 /* Spinner Circle Rotation */
-.demeter-startup .loading2 {
+.client-startup .loading2 {
 	border: 4px rgba(106, 161, 230, 0.25) solid;
 	border-top: 4px rgba(106, 161, 230, 1) solid;
 	border-radius: 50%;
@@ -624,7 +624,7 @@ table.flat-search  div.select-item-container:empty {
 	margin: auto;
 }
 
-.demeter-startup {
+.client-startup {
 	text-align: center;
 	width: 100px;
 	margin: 0 auto;

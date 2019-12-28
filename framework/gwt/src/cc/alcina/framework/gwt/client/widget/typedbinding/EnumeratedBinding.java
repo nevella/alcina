@@ -9,7 +9,9 @@ public interface EnumeratedBinding {
 
 	Class getBoundClass();
 
-	String getBoundPath();
+	default String getBoundPath(){
+		return toString();
+	}
 
 	default Class getBoundPropertyType() {
 		return Reflections.propertyAccessor().getPropertyType(getBoundClass(),

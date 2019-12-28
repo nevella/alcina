@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
@@ -126,16 +127,25 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				if (cached != null) {
 					return (T) cached;
 				} else {
+					T result = null;
 					if (useRawDomainStore) {
 						if (DomainStore.stores().writableStore()
 								.isCached(valueClass)) {
-							return (T) Domain.find(valueClass, hili.getId());
+							result = (T) Domain.find(valueClass, hili.getId());
 						}
 					}
-					HasIdAndLocalId clonedHili = (HasIdAndLocalId) cloned;
-					clonedHili.setId(hili.getId());
-					getCache().put(clonedHili);
-					return (T) clonedHili;
+					if (result == null) {
+						HasIdAndLocalId clonedHili = (HasIdAndLocalId) cloned;
+						clonedHili.setId(hili.getId());
+						result = (T) clonedHili;
+					}
+					if (result instanceof MvccObject) {
+						result = (T) ((HasIdAndLocalId) result)
+								.provideEntityClass().newInstance();
+						((HasIdAndLocalId) result).setId(hili.getId());
+					}
+					getCache().put((HasIdAndLocalId) result);
+					return (T) result;
 				}
 			}
 		}
