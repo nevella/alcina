@@ -163,6 +163,9 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		return !isOffline();
 	}
 
+	/*
+	 * FIXME - convert to topicpublisher
+	 */
 	public static void notifyClientInstanceChange(ClientInstance state) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_CLIENT_INSTANCE, state);
 	}

@@ -68,7 +68,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 
 	@Override
 	public <T> T filterData(T value, T cloned, GraphProjectionContext context,
-			GraphProjection graphCloner) throws Exception {
+			GraphProjection graphProjection) throws Exception {
 		if (value instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) value;
 			if (ensureInjected != null && ensureInjected.containsKey(hili)) {
@@ -77,7 +77,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				// if it does, just proceed as normal (hili will already be the
 				// key in the reached map, so .project() wouldn't work)
 				if (hili != value) {
-					hili = graphCloner.project(hili, value, context, false);
+					hili = graphProjection.project(hili, value, context, false);
 					getCache().put((HasIdAndLocalId) hili);
 					return (T) hili;
 				}
@@ -102,7 +102,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 						impl = ((HibernateProxy) value)
 								.getHibernateLazyInitializer()
 								.getImplementation();
-						impl = graphCloner.project(impl, value, context, false);
+						impl = graphProjection.project(impl, value, context, false);
 						getCache().put((HasIdAndLocalId) impl);
 					} else if (shellInstantiator != null) {
 						impl = shellInstantiator.instantiateShellObject(lazy,
@@ -139,17 +139,12 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 						clonedHili.setId(hili.getId());
 						result = (T) clonedHili;
 					}
-					if (result instanceof MvccObject) {
-						result = (T) ((HasIdAndLocalId) result)
-								.provideEntityClass().newInstance();
-						((HasIdAndLocalId) result).setId(hili.getId());
-					}
 					getCache().put((HasIdAndLocalId) result);
 					return (T) result;
 				}
 			}
 		}
-		return super.filterData(value, cloned, context, graphCloner);
+		return super.filterData(value, cloned, context, graphProjection);
 	}
 
 	public DetachedEntityCache getCache() {

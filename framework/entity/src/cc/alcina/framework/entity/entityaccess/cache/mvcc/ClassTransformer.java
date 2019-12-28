@@ -470,7 +470,7 @@ class ClassTransformer {
                      */
                     CtField f = new CtField(mvccObjectVersionsCtClass,
                             "__mvccObjectVersions__", ctClass);
-                    f.setModifiers(Modifier.PRIVATE);
+                    f.setModifiers(Modifier.PRIVATE|Modifier.TRANSIENT);
                     ctClass.addField(f);
                     tasks.add(() -> {
                         String body = "{\n\treturn __mvccObjectVersions__;}";

@@ -71,6 +71,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.DomainProxy;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
@@ -89,7 +90,13 @@ public class GraphProjection {
 			new ConcurrentHashMap(LOOKUP_SIZE));
 
 	static CachingConcurrentMap<Class, String> classSimpleName = new CachingConcurrentMap<>(
-			Class::getSimpleName, LOOKUP_SIZE);
+			clazz -> {
+				synchronized (clazz) {
+					// prevent concurrent simpleName get
+					String name = clazz.getSimpleName();
+					return name;
+				}
+			}, LOOKUP_SIZE);
 
 	static Map<Field, Boolean> genericHiliTypeLookup = new NullWrappingMap<Field, Boolean>(
 			new ConcurrentHashMap(LOOKUP_SIZE));
@@ -133,15 +140,16 @@ public class GraphProjection {
 			new AllFieldsFilter(), null);
 
 	public static String classSimpleName(Class clazz) {
+		if (clazz == null) {
+			return "(null)";
+		}
 		try {
 			return classSimpleName.get(clazz);
 		} catch (Exception e) {
-			// strange concurrency issues have occurred...maybe reload?
-			if (clazz == null) {
-				return "(null)";
-			} else {
+			synchronized (classSimpleName) {
 				return clazz.getSimpleName();
 			}
+			// strange concurrency issues have occurred...maybe reload?
 		}
 	}
 
@@ -630,6 +638,9 @@ public class GraphProjection {
 			}
 		}
 		Class sourceClass = source.getClass();
+		if (sourceClass.getName().contains("OpsolGroup")) {
+			int debug = 3;
+		}
 		boolean checkReachable = false;
 		if (!easysChecked) {
 			if (sourceClass == Timestamp.class && replaceTimestampsWithDates) {
@@ -670,12 +681,18 @@ public class GraphProjection {
 		if (dumpProjectionStats && context != null) {
 			contextStats.add(context.toPoint());
 		}
-		T projected = sourceClass.isArray()
-				? (T) Array.newInstance(sourceClass.getComponentType(),
-						Array.getLength(source))
-				: (T) ((source instanceof DomainProxy)
-						? ((DomainProxy) source).nonProxy()
-						: newInstance(sourceClass, context));
+		T projected = null;
+		if (sourceClass.isArray()) {
+			projected = (T) Array.newInstance(sourceClass.getComponentType(),
+					Array.getLength(source));
+		} else if (source instanceof DomainProxy) {
+			projected = (T) ((DomainProxy) source).nonProxy();
+		} else if (source instanceof MvccObject) {
+			projected = newInstance(
+					((HasIdAndLocalId) source).provideEntityClass(), context);
+		} else {
+			projected = newInstance(sourceClass, context);
+		}
 		boolean reachableBySinglePath = reachableBySinglePath(sourceClass);
 		if ((context == null || !reachableBySinglePath) && checkReachable) {
 			reached.put(source, projected == null ? NULL_MARKER : projected);
@@ -726,7 +743,7 @@ public class GraphProjection {
 					continue;
 				}
 			}
-			Object value = field.get(source);
+			Object value = getFieldValue(field, source);
 			if (value == null) {
 				field.set(projected, null);
 			} else {
@@ -751,7 +768,7 @@ public class GraphProjection {
 					continue;
 				}
 			}
-			Object value = field.get(source);
+			Object value = getFieldValue(field, source);
 			if (value == null) {
 				field.set(projected, null);
 			} else {
@@ -787,6 +804,14 @@ public class GraphProjection {
 			}
 		}
 		return projected;
+	}
+
+	private Object getFieldValue(Field field, Object source) throws Exception {
+		if (source instanceof MvccObject) {
+			return SEUtilities.getPropertyValue(source, field.getName());
+		} else {
+			return field.get(source);
+		}
 	}
 
 	// TODO - shouldn't this be package-private?
@@ -1136,4 +1161,5 @@ public class GraphProjection {
 		Object instantiateShellObject(T initializer,
 				GraphProjectionContext context);
 	}
+
 }
