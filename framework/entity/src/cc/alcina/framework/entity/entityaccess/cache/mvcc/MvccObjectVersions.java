@@ -72,7 +72,7 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 			{
 				ObjectVersion<T> version = new ObjectVersion<>();
 				version.transaction = initialTransaction;
-				version.object = Transactions.copyObject(t);
+				version.object = (T) Transactions.copyObject((HasIdAndLocalId & MvccObject)t);
 				((MvccObject) version.object).__setMvccVersions__(this);
 				putVersion(version);
 			}
@@ -185,11 +185,11 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 				mostRecentObject = baseObject;
 			}
 			if (write) {
-				Ax.err(toString());
-				version.object = Transactions.copyObject(mostRecentObject);
+				version.object = (T) Transactions.copyObject((HasIdAndLocalId & MvccObject)mostRecentObject);
 				version.writeable = true;
-				Domain.register(version.object);
+				//put before register (which will call resolve());
 				putVersion(version);
+				Domain.register(version.object);
 				return version.object;
 			} else {
 				/*

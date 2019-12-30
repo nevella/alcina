@@ -24,9 +24,11 @@ public class Transactions {
 		return resolve(t, false) == t;
 	}
 
-	public static <T extends HasIdAndLocalId> T copyObject(T object) {
+	public static <T extends HasIdAndLocalId & MvccObject> T copyObject(T object) {
 		// FIXME - write some byteassist classes to do direct copying
-		return ResourceUtilities.fieldwiseClone(object, false, true);
+		 T clone = ResourceUtilities.fieldwiseClone(object, false, true);
+		 clone.__setMvccVersions__(object.__getMvccVersions__());
+		 return clone;
 	}
 
 	public static synchronized void ensureInitialised() {

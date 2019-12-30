@@ -83,7 +83,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return base.get(key);
 		}
 		List<Layer> visibleLayers = visibleLayers();
-		for (int idx = visibleLayers.size() - 1; idx > 0; idx--) {
+		for (int idx = visibleLayers.size() - 1; idx >= 0; idx--) {
 			Layer layer = visibleLayers.get(idx);
 			if (layer.wasRemoved(key)) {
 				return null;

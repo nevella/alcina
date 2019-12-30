@@ -60,6 +60,8 @@ public class ContentViewSections {
     private boolean editable;
 
     private boolean autoSave = true;
+    
+    private boolean noCreateButton = false;
 
     private PermissibleActionListener createListener;
 
@@ -114,7 +116,7 @@ public class ContentViewSections {
             if (idx < sections.size() - 1) {
                 contentViewFactory.setNoButtons(true);
             }
-            if (!autoSave) {
+            if (!autoSave&&!noCreateButton) {
                 contentViewFactory.okButtonName("Create");
             }
             if (okButtonName != null) {
@@ -185,6 +187,10 @@ public class ContentViewSections {
 
     public boolean isEditable() {
         return this.editable;
+    }
+    public ContentViewSections withNoCreateButton(boolean noCreateButton) {
+    	this.noCreateButton=noCreateButton;
+        return this;
     }
 
     public ContentViewSections noAdminOverride() {

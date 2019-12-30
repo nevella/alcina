@@ -33,9 +33,10 @@ class Vacuum {
 				}
 			}
 		}
-		logger.warn("added vacuumable object: {}=>{}:{}", transaction,
-				vacuumable.getClass().getSimpleName(), vacuumable);
-		vacuumables.get(transaction).put(vacuumable, vacuumable);
+		if (vacuumables.get(transaction).put(vacuumable, vacuumable) == null) {
+			logger.warn("added vacuumable object: {}=>{}:{}", transaction,
+					vacuumable.getClass().getSimpleName(), vacuumable);
+		}
 	}
 
 	public void enqueueVacuum() {

@@ -90,6 +90,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -281,6 +282,9 @@ public class ThreadlocalTransformManager extends TransformManager
 		if (getEntityManager() != null
 				&& evt.getTransformType() != TransformType.DELETE_OBJECT) {
 			// for use in IVersionable/DomainStore
+			if(evt.getSource() instanceof MvccObject){
+				evt.setSource(null);
+			}
 			maybeEnsureSource(evt);
 		}
 	}
