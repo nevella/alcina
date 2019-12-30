@@ -21,4 +21,14 @@ public enum KnownTagAlcina implements KnownTag {
 	public KnownTag parent() {
 		return parent;
 	}
+
+	public boolean isOrAncestorIs(KnownTagAlcina test) {
+		if (this == test) {
+			return true;
+		}
+		if (parent == null) {
+			return false;
+		}
+		return ((KnownTagAlcina) parent).isOrAncestorIs(test);
+	}
 }
