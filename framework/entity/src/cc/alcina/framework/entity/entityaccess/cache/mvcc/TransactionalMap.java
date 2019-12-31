@@ -28,15 +28,17 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 /*
- * Synchronization:
  * 
- * 'this' acts as a lock on modification of the layers field (since layers may be null)
+ * This class is intended for transaction-aware indices and lookups. 
+ * A 'layer' records deltas to the map state by recording modifications and removals in separate, non-locked submaps.
  * 
- * This class is intended for transaction-aware indices and lookups
+ * The map is composed of a base layer, a list of visible-to-all-transactions merged layers 
+ * and a list of current transaction layers whose visibility is transaction-dependent.
  * 
- * The map is composed of a base layer, a list of (transactional or merged-transactional) layers ('merged') corresponding to deltas
- *  note that these layers are visible to all current transactions (these are generated during vacuum, and are intended to avoid runaway map layers for heavily written maps) 
- *  and a third grouping of transactional layers ('layers') whose resolution is transaction-depdendent.
+ * The merged layers are generated during vacuum, and are 
+ *  intended to avoid runaway map layers for heavily written maps by using the levelled compaction algorithm 
+ *   similar to that used in Cassandra and Chromium leveldb compactions.
+ *  
  *  
  *  Note that vacuum is probably the most interesting part of this class - it's like sliding plates
  *   (B=merged A1, A2) under other plates (A1, A2) - it would be nice 
@@ -48,6 +50,11 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
  *   
  *   This class allows null keys and values
  *   
+ *   Synchronization:
+ * 
+ * 'this' acts as a lock on modification of the layers field (since layers may be null)
+ * 
+ * 
  *   TODO - baseLayerList can be implemented by this class (so avoid having an extra list per map) 
  *   
  */
