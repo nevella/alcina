@@ -761,6 +761,7 @@ public class DomainStore implements IDomainStore {
 			for (DomainTransformEvent dte : filtered) {
 				dte.setNewValue(null);// force a lookup from the subgraph
 			}
+			TransformManager.get().setIgnorePropertyChanges(true);
 			for (DomainTransformEvent dte : filtered) {
 				// remove from indicies before first change - and only if
 				// preexisting object
@@ -839,6 +840,7 @@ public class DomainStore implements IDomainStore {
 			causes.add(e);
 		} finally {
 			transformManager.endCommit();
+			TransformManager.get().setIgnorePropertyChanges(false);
 			health.domainStorePostProcessStartTime = 0;
 			threads.postProcessWriterThread = null;
 			postProcessEvent = null;

@@ -1397,7 +1397,7 @@ table.gwittir-GridForm td.id div.nowrap {
 	min-height: 20em;
 }
 
-.pane-container td, .pane-container th {
+.pane-container td, .pane-container th, .pane-container button {
 	font-size: 12px;
 }
 
@@ -1405,4 +1405,12 @@ table.gwittir-GridForm td.id div.nowrap {
 	margin-top: 10px;
 	padding-bottom: 0;
 	font-weight: bold;
+}
+.alcina-SelectorFrame .alcina-FilterHolder input[type='text']{
+	    width: calc(100% - 1px);
+	    border-width:0;
+	    border-bottom-width:1px;
+}
+.alcina-SelectorFrame div.alcina-FilterHolder{
+	display:block;
 }

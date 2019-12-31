@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.gwt.client.data.DataAction;
 import cc.alcina.framework.gwt.client.data.entity.DataDomainBase;
+import cc.alcina.framework.gwt.client.data.place.DataPlace;
 import cc.alcina.framework.gwt.client.data.place.DataSubPlace;
 import cc.alcina.framework.gwt.client.data.view.ViewModel.DetailViewModel;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
@@ -31,8 +32,8 @@ public abstract class DetailView<DVM extends DetailViewModel>
         fp.setStyleName(getPanelCssName());
         new KeyboardActionHandler().setup(this, 'E', () -> {
             if (model.getPlace() != null
-                    && model.getPlace() instanceof DataSubPlace) {
-                DataSubPlace place = (DataSubPlace) model.getPlace();
+                    && model.getPlace() instanceof DataPlace) {
+                DataPlace place = (DataPlace) model.getPlace();
                 if (place.getAction() == DataAction.VIEW
                         || place.getAction() == null) {
                     AppController.get()

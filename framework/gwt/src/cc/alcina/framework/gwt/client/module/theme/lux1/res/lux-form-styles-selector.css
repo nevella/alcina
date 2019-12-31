@@ -121,7 +121,7 @@ FIXME-alcina spam
 
 .lux .alcina-SelectorFrame div.header.available {
 	color: #666666;
-	background: transparent url(/_pix/bg-breadcrumb.gif) repeat-x scroll 0 0;
+	/*background: transparent url(/_pix/bg-breadcrumb.gif) repeat-x scroll 0 0;*/
 	border-right: 1px solid #cdcdcd;
 }
 
