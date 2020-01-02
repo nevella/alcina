@@ -51,9 +51,12 @@ public class CsvUtils {
 	}
 
 	public static List<List<String>> parseCsv(String txt) {
+		return parseCsv(txt, false);
+	}
+
+	public static List<List<String>> parseCsv(String txt, boolean tsv) {
 		txt = txt.replaceAll("[\\r\\n]+[\\r\\n]*", "\n");
-		if (txt.contains("\t")) {
-			// assume unquoted TSV
+		if (tsv) {
 			StringBuilder sb = new StringBuilder();
 			int lineIdx = 0;
 			for (String line : txt.split("\n")) {
@@ -65,9 +68,13 @@ public class CsvUtils {
 					if (cellIdx++ > 0) {
 						sb.append(',');
 					}
-					sb.append('"');
-					sb.append(cell);
-					sb.append('"');
+					if (cell.matches("\".*\"")) {
+						sb.append(cell);
+					} else {
+						sb.append('"');
+						sb.append(cell);
+						sb.append('"');
+					}
 				}
 			}
 			txt = sb.toString();
@@ -87,7 +94,11 @@ public class CsvUtils {
 			if (c == '"') {
 				end = i + 1;
 				while (true) {
-					end = txt.indexOf('"', end);
+					int close = txt.indexOf('"', end);
+					if (close == -1) {
+						break;
+					}
+					end = close;
 					if (end < txt.length() - 1 && txt.charAt(end + 1) == '"') {
 						end += 2;
 					} else {

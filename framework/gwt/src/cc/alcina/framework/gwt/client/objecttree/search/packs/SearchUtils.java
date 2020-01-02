@@ -33,6 +33,10 @@ public class SearchUtils {
 	public static final String IDS_REGEX = "(?:ids?: ?)[0-9, ]+";
 
 	public static final String REGEX_REGEX = "(?:regex:)(.+)";
+	static {
+		idsHelper = Registry.impl(SearchUtilsIdsHelper.class);
+		regexpHelper = Registry.impl(SearchUtilsRegExpHelper.class);
+	}
 
 	public static boolean containsIgnoreCase(String text,
 			List<String> strings) {
@@ -134,14 +138,6 @@ public class SearchUtils {
 	}
 
 	private static boolean matchesIds(String query, HasIdAndLocalId hili) {
-		if (idsHelper == null) {
-			synchronized (SearchUtils.class) {
-				if (idsHelper == null) {
-					idsHelper = Registry.impl(SearchUtilsIdsHelper.class);
-					regexpHelper = Registry.impl(SearchUtilsRegExpHelper.class);
-				}
-			}
-		}
 		if (idsHelper.matches(query, hili)) {
 			return true;
 		}
