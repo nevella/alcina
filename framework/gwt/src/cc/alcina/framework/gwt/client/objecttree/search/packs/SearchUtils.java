@@ -13,6 +13,7 @@ import com.google.gwt.user.datepicker.client.CalendarUtil;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -33,6 +34,10 @@ public class SearchUtils {
 	public static final String IDS_REGEX = "(?:ids?: ?)[0-9, ]+";
 
 	public static final String REGEX_REGEX = "(?:regex:)(.+)";
+	static {
+		idsHelper = Registry.impl(SearchUtilsIdsHelper.class);
+		regexpHelper = Registry.impl(SearchUtilsRegExpHelper.class);
+	}
 
 	public static boolean containsIgnoreCase(String text,
 			List<String> strings) {
@@ -134,14 +139,6 @@ public class SearchUtils {
 	}
 
 	private static boolean matchesIds(String query, HasIdAndLocalId hili) {
-		if (idsHelper == null) {
-			synchronized (SearchUtils.class) {
-				if (idsHelper == null) {
-					idsHelper = Registry.impl(SearchUtilsIdsHelper.class);
-					regexpHelper = Registry.impl(SearchUtilsRegExpHelper.class);
-				}
-			}
-		}
 		if (idsHelper.matches(query, hili)) {
 			return true;
 		}
@@ -205,6 +202,7 @@ public class SearchUtils {
 	}
 
 	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class)
+	@ClientInstantiable
 	public static abstract class SearchUtilsIdsHelper {
 		public boolean matches(String query, HasIdAndLocalId hili) {
 			return false;
