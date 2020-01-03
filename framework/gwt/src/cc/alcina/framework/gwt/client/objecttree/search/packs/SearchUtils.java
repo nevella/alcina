@@ -13,6 +13,7 @@ import com.google.gwt.user.datepicker.client.CalendarUtil;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -201,6 +202,7 @@ public class SearchUtils {
 	}
 
 	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class)
+	@ClientInstantiable
 	public static abstract class SearchUtilsIdsHelper {
 		public boolean matches(String query, HasIdAndLocalId hili) {
 			return false;
