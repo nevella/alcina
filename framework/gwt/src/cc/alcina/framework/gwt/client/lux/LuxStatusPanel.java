@@ -14,8 +14,8 @@ public class LuxStatusPanel extends Composite {
 
 	public LuxStatusPanel() {
 		initWidget(fp);
-		LuxStyleStatus.LUX_STATUS_PANEL.add(this);
-		LuxStyle.LUX.add(this);
+		LuxStyleStatus.LUX_STATUS_PANEL.addTo(this);
+		LuxStyle.LUX.addTo(this);
 		addAttachHandler(e -> {
 			if (topicCallingRemote != null) {
 				topicCallingRemote.delta(callingRemoteListener, e.isAttached());
@@ -26,17 +26,20 @@ public class LuxStatusPanel extends Composite {
 		});
 	}
 
-	private TopicListener<Boolean> callingRemoteListener = (k, callingRemote) -> {
+	private TopicListener<Boolean> callingRemoteListener = (k,
+			callingRemote) -> {
 		fp.clear();
-		if(callingRemote){
-			fp.add(new Label("Calling remote"));
+		if (callingRemote) {
+			LuxWidgets.withText("Calling remote")
+					.withStyle(LuxStyleStatus.LOADING).addTo(fp);
 		}
 	};
 
 	private TopicListener<String> messageListener = (k, message) -> {
 		fp.clear();
-		if(Ax.notBlank(message)){
-			fp.add(new Label(message));
+		if (Ax.notBlank(message)) {
+			LuxWidgets.withText(message).withStyle(LuxStyleStatus.ERROR)
+					.addTo(fp);
 		}
 	};
 

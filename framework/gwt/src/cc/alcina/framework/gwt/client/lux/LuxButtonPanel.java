@@ -21,13 +21,13 @@ public class LuxButtonPanel extends Composite {
 	}
 
 	public void addActionButton(Widget button) {
-		LuxButtonStyle.LUX_BUTTON.add(button);
+		LuxButtonStyle.LUX_BUTTON.addTo(button);
 		actions.add(button);
 	}
 
 	public void addOptionalButton(Widget button) {
-		LuxButtonStyle.LUX_BUTTON.add(button);
-		LuxButtonStyle.OPTIONAL_BUTTON.add(button);
+		LuxButtonStyle.LUX_BUTTON.addTo(button);
+		LuxButtonStyle.OPTIONAL_BUTTON.addTo(button);
 		optional.add(button);
 	}
 

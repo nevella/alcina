@@ -53,26 +53,19 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 			boolean initialObjectIsWriteable) {
 		/*
 		 * If in the 'preparing' phase, and t is non-local, this is a
-		 * modification of the base transaction version.
+		 * modification of the initial transaction version.
 		 * 
-		 * In that case, create an initial copy, keyed to the base transaction.
-		 * 
-		 * 
+		 * In that case, create a copy (to be modified) from the base object
 		 * 
 		 */
 		if (initialTransaction.phase == TransactionPhase.TO_DB_PREPARING
 				&& t.provideWasPersisted()) {
-			{
-				ObjectVersion<T> version = new ObjectVersion<>();
-				version.transaction = Transactions
-						.baseTransaction(Mvcc.getStore(t));
-				version.object = t;
-				putVersion(version);
-			}
+			
 			{
 				ObjectVersion<T> version = new ObjectVersion<>();
 				version.transaction = initialTransaction;
-				version.object = (T) Transactions.copyObject((HasIdAndLocalId & MvccObject)t);
+				version.object = (T) Transactions
+						.copyObject((HasIdAndLocalId & MvccObject) t);
 				((MvccObject) version.object).__setMvccVersions__(this);
 				putVersion(version);
 			}
@@ -145,10 +138,10 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 	}
 
 	/*
-	 * Try and return a cached version if possible (if cache is not 'writeable'
-	 * and we're writing, we need to replace it for this tx with a writeable
-	 * version). Note that all this is not hit unless the domain object is
-	 * modified during the jvm lifetime -
+	 * Try and return a cached version if possible (if cached version is not
+	 * 'writeable' and we're writing, we need to replace it for this tx with a
+	 * writeable version). Note that all this is not hit unless the domain
+	 * object is modified during the jvm lifetime -
 	 */
 	private T resolve0(boolean write) {
 		Transaction transaction = Transaction.current();
@@ -172,6 +165,7 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 							DomainStore.stores().storeFor(
 									versions.values().iterator().next().object
 											.provideEntityClass()));
+			
 			T mostRecentObject = null;
 			/*
 			 * mostRecent will be null if just created
@@ -185,9 +179,10 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 				mostRecentObject = baseObject;
 			}
 			if (write) {
-				version.object = (T) Transactions.copyObject((HasIdAndLocalId & MvccObject)mostRecentObject);
+				version.object = (T) Transactions.copyObject(
+						(HasIdAndLocalId & MvccObject) mostRecentObject);
 				version.writeable = true;
-				//put before register (which will call resolve());
+				// put before register (which will call resolve());
 				putVersion(version);
 				Domain.register(version.object);
 				return version.object;

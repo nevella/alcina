@@ -80,7 +80,7 @@ public class LuxFormCellRenderer implements GridFormCellRenderer {
 		}
 		if (widget instanceof TextBox || widget instanceof PasswordTextBox
 				|| widget instanceof com.totsp.gwittir.client.ui.TextBox) {
-			LuxFormStyle.TEXT.add(container);
+			LuxFormStyle.TEXT.addTo(container);
 			widget.getElement().setPropertyString("placeholder", " ");
 			if (Ax.notBlank(field.getAutocompleteName())) {
 				widget.getElement().setPropertyString("autocomplete",
@@ -88,7 +88,7 @@ public class LuxFormCellRenderer implements GridFormCellRenderer {
 			}
 		}
 		if (widget instanceof FlatSearchSelector) {
-			LuxFormStyle.SELECTOR.add(container);
+			LuxFormStyle.SELECTOR.addTo(container);
 		}
 		container.getElement().setPropertyString("container-name",
 				field.getPropertyName());

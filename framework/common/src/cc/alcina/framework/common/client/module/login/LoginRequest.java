@@ -11,11 +11,22 @@ public class LoginRequest extends BaseBindable {
 
 	private String password;
 
-	private String twoFactorAuthentificationCode;
-
 	private boolean rememberMe;
 
 	private boolean recoverPassword;
+	
+	private String twoFactorAuthenticationCode;
+
+	public String getTwoFactorAuthenticationCode() {
+		return this.twoFactorAuthenticationCode;
+	}
+
+	public void setTwoFactorAuthenticationCode(String twoFactorAuthenticationCode) {
+		String old_twoFactorAuthenticationCode = this.twoFactorAuthenticationCode;
+		this.twoFactorAuthenticationCode = twoFactorAuthenticationCode;
+		propertyChangeSupport().firePropertyChange("twoFactorAuthenticationCode", old_twoFactorAuthenticationCode, twoFactorAuthenticationCode);
+		
+	}
 
 	private Map<String, String> properties = new LinkedHashMap<>();
 
@@ -29,10 +40,6 @@ public class LoginRequest extends BaseBindable {
 
 	public Map<String, String> getProperties() {
 		return this.properties;
-	}
-
-	public String getTwoFactorAuthentificationCode() {
-		return this.twoFactorAuthentificationCode;
 	}
 
 	@Display(name = "User name", autocompleteName = "email")
@@ -72,16 +79,6 @@ public class LoginRequest extends BaseBindable {
 		this.rememberMe = rememberMe;
 		propertyChangeSupport().firePropertyChange("rememberMe", old_rememberMe,
 				rememberMe);
-	}
-
-	public void setTwoFactorAuthentificationCode(
-			String twoFactorAuthentificationCode) {
-		String old_twoFactorAuthentificationCode = this.twoFactorAuthentificationCode;
-		this.twoFactorAuthentificationCode = twoFactorAuthentificationCode;
-		propertyChangeSupport().firePropertyChange(
-				"twoFactorAuthentificationCode",
-				old_twoFactorAuthentificationCode,
-				twoFactorAuthentificationCode);
 	}
 
 	public void setUserName(String userName) {

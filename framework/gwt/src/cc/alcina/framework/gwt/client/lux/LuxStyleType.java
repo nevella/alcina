@@ -6,11 +6,11 @@ import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 
 public interface LuxStyleType {
-	default void add(UIObject uiObject) {
+	default void addTo(UIObject uiObject) {
 		uiObject.setStyleName(toName(), true);
 	}
 
-	default Widget add(Widget widget) {
+	default Widget addTo(Widget widget) {
 		widget.setStyleName(toName(), true);
 		return widget;
 	}

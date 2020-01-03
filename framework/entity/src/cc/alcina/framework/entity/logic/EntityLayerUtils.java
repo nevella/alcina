@@ -19,4 +19,7 @@ public class EntityLayerUtils {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+	public static String getApplicationHostName() {
+		return ResourceUtilities.get("applicationHostName");
+	}
 }

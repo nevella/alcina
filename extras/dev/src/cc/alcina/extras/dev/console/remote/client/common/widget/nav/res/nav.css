@@ -37,7 +37,7 @@
 	color: var(- -nav-bar-button-color);
 }
 
-.nav-module .bar .sign-in {
+.nav-module .bar .user {
 	position: absolute;
 	top: var(- -nav-bar-top-margin);
 	right: var(- -nav-bar-button-indent);

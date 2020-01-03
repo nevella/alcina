@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.module.login;
 
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.LoginResponseState;
+import cc.alcina.framework.common.client.logic.permissions.UserWith2FA;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
@@ -30,19 +31,33 @@ public abstract class LoginRequestHandler {
 	protected void handle0() {
 		try {
 			if (!validateUserName()) {
-				loginResponse.getStates().add(LoginResponseState.Username_not_found);
+				loginResponse.getStates()
+						.add(LoginResponseState.Username_not_found);
 				return;
 			}
 			if (loginRequest.getPassword() == null) {
 				return;
 			}
 			if (!validatePassword()) {
-				loginResponse.getStates().add(LoginResponseState.Password_incorrect);
+				loginResponse.getStates()
+						.add(LoginResponseState.Password_incorrect);
 				return;
 			}
 			if (!validateAccount()) {
 				loginResponse.getStates()
 						.add(LoginResponseState.Account_cannot_login);
+				return;
+			}
+			TwoFactorAuthResult twoFactorAuthResult = validateTwoFactorAuth();
+			if (twoFactorAuthResult.requiresTwoFactorAuth) {
+				loginResponse.getStates()
+						.add(LoginResponseState.Two_factor_code_required);
+				loginResponse
+						.setTwoFactorAuthQRCode(twoFactorAuthResult.qrCode);
+				if (twoFactorAuthResult.requiresTwoFactorQrCode) {
+					loginResponse.getStates().add(
+							LoginResponseState.Two_factor_qr_code_required);
+				}
 				return;
 			}
 			processLogin();
@@ -53,6 +68,16 @@ public abstract class LoginRequestHandler {
 			loginResponse.setErrorMsg(CommonUtils.toSimpleExceptionMessage(e));
 			loginResponse.getStates().add(LoginResponseState.Unknown_exception);
 		}
+	}
+
+	protected abstract TwoFactorAuthResult validateTwoFactorAuth() throws Exception;
+
+	public static class TwoFactorAuthResult {
+		public String qrCode;
+
+		public boolean requiresTwoFactorAuth;
+
+		public boolean requiresTwoFactorQrCode;
 	}
 
 	protected abstract void processLogin() throws Exception;

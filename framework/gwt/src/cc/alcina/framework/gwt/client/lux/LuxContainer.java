@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.lux;
 
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
@@ -22,8 +23,9 @@ public class LuxContainer extends Composite {
         style.set(this);
     }
 
-    public void add(IsWidget child) {
+    public LuxContainer add(IsWidget child) {
         this.container.add(child);
+        return this;
     }
 
     public void addHeader(int level, String text) {
@@ -79,4 +81,8 @@ public class LuxContainer extends Composite {
     public void clear() {
         container.clear();
     }
+
+	public void addTo(ComplexPanel complexPanel) {
+		complexPanel.add(this);
+	}
 }

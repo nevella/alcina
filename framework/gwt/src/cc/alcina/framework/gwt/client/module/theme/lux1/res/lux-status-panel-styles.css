@@ -1,3 +1,5 @@
 .lux-status-panel{
-	min-height:1em;
+	min-height:1.6em;
+	text-align:center;
+	font-size:0.9em;
 }

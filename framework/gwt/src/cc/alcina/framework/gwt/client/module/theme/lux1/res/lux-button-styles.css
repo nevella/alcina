@@ -1,4 +1,4 @@
-.lux-button,a.lux-button {
+.lux-button, a.lux-button {
 	color: white;
 	background-color: var(- -button-background-color);
 	font-size: 14px;
@@ -11,28 +11,30 @@
 	padding: 11px 20px 9px;
 	line-height: 16px;
 }
-.lux-button.optional-button{
+
+.lux-button.optional-button {
 	background-color: white;
 	color: var(- -button-background-color);
 }
 
 .lux-button:hover {
-	box-shadow: 0 1px 1px 0 var(--button-background-color-shadow-1), 0 1px 3px 1px
-		var(--button-background-color-shadow-2);
+	box-shadow: 0 1px 1px 0 var(- -button-background-color-shadow-1), 0 1px
+		3px 1px var(- -button-background-color-shadow-2);
 	text-decoration: none;
 }
 
 .lux-button:active {
 	background-color: var(- -button-background-color-active);
 }
-.lux-button.optional-button:active{
+
+.lux-button.optional-button:active {
 	background-color: white;
 	color: var(- -button-background-color-active);
 }
 
 .lux-button-panel {
 	display: flex;
-	margin-top: 2em;
+	margin-top: 0.6em;
 	padding-top: 1em;
 }
 
@@ -46,4 +48,14 @@
 	display: flex;
 	justify-content: flex-end;
 	flex-grow: 1;
+}
+
+.lux-button .async-indicator>div {
+	border: 4px rgba(255, 255, 255, 0.25) solid;
+	border-top: 4px rgba(255, 255, 255, 1) solid;
+	border-radius: 50%;
+	animation: spCircRot .9s infinite linear;
+	width: 12px;
+	height: 12px;
+	margin: auto;
 }

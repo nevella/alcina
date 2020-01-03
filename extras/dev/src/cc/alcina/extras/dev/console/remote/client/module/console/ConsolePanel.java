@@ -50,7 +50,7 @@ public class ConsolePanel extends Composite {
 		fp.clear();
 		LuxMainPanelBuilder builder = new LuxMainPanelBuilder();
 		LuxMainPanel mainPanel = builder.build();
-		ConsoleStyles.CONSOLE.add(mainPanel);
+		ConsoleStyles.CONSOLE.addTo(mainPanel);
 		outputPanel = new OutputPanel();
 		commandBarPanel = new CommandBarPanel();
 		mainPanel.add(outputPanel);

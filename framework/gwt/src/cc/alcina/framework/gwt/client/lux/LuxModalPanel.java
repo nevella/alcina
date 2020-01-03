@@ -21,8 +21,8 @@ public abstract class LuxModalPanel extends Composite {
 
 	public LuxModalPanel() {
 		initWidget(fp);
-		LuxStyleModal.LUX_MODAL_PANEL.add(this);
-		LuxStyle.LUX.add(this);
+		LuxStyleModal.LUX_MODAL_PANEL.addTo(this);
+		LuxStyle.LUX.addTo(this);
 	}
 
 	protected ContentViewSections createBuilder() {
@@ -49,9 +49,9 @@ public abstract class LuxModalPanel extends Composite {
 
 	protected void render() {
 		builders.clear();
-		fp.add(LuxStyleModal.LUX_MODAL_PANEL.add(createHeaderPanel()));
+		fp.add(LuxStyleModal.LUX_MODAL_PANEL.addTo(createHeaderPanel()));
 		fp.add(createContentPanel());
-		statusPanel = createStatusPanel();
+		 createStatusPanel();
 		fp.add(statusPanel);
 		fp.add(createButtonsPanel());
 		Widget footer = createFooterPanel();
@@ -60,8 +60,8 @@ public abstract class LuxModalPanel extends Composite {
 		}
 	}
 
-	protected  Widget createStatusPanel(){
-		return new LuxStatusPanel();
+	protected  void createStatusPanel(){
+		statusPanel=new LuxStatusPanel();
 	}
 
 	protected boolean validate() {

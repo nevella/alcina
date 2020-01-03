@@ -35,6 +35,16 @@ public class LoginResponse implements Serializable {
 	private Map<String, String> properties = new LinkedHashMap<>();
 	
 	private Set<LoginResponseState> states = new LinkedHashSet<>();
+	
+	private String twoFactorAuthQRCode;
+
+	public String getTwoFactorAuthQRCode() {
+		return this.twoFactorAuthQRCode;
+	}
+
+	public void setTwoFactorAuthQRCode(String twoFactorAuthQRCode) {
+		this.twoFactorAuthQRCode = twoFactorAuthQRCode;
+	}
 
 	public LoginResponse() {
 	}
