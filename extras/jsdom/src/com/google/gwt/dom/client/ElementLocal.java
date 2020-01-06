@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
@@ -31,6 +32,9 @@ public class ElementLocal extends NodeLocal
 	ElementLocal(DocumentLocal document_Jvm, String tagName) {
 		ownerDocument = document_Jvm;
 		this.tagName = tagName;
+		if (!GWT.isScript()) {
+			Preconditions.checkArgument(tagName.matches("[A-Za-z0-9\\-]+"));
+		}
 	}
 
 	@Override
