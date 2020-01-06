@@ -50,7 +50,7 @@ public class OkCancelDialogBox extends GlassDialogBox {
 
     protected PermissibleActionListener vetoableActionListener;
 
-    private HorizontalPanel buttonsPanel;
+    public HorizontalPanel buttonsPanel;
 
     private boolean isCentering = false;
 
