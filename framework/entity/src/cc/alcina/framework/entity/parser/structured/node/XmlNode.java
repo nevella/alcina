@@ -330,6 +330,10 @@ public class XmlNode {
 		return name().equals(name);
 	}
 
+	public boolean normalisedTextMatches(String regex) {
+		return ntc().matches(regex);
+	}
+
 	public String ntc() {
 		if (normalisedTextContent == null) {
 			normalisedTextContent = SEUtilities
@@ -1039,14 +1043,18 @@ public class XmlNode {
 		}
 
 		public String nextNonWhitespaceText() {
+			return nextNonWhitespaceTextNode().map(XmlNode::ntc).orElse(null);
+		}
+
+		public Optional<XmlNode> nextNonWhitespaceTextNode() {
 			while (true) {
 				Node next = tw.nextNode();
 				if (next == null) {
-					return null;
+					return Optional.empty();
 				}
-				XmlNode xNext = XmlNode.from(next);
+				XmlNode xNext = doc.nodeFor(next);
 				if (xNext.isText() && xNext.isNonWhitespaceTextContent()) {
-					return xNext.ntc();
+					return Optional.of(xNext);
 				}
 			}
 		}
@@ -1057,7 +1065,7 @@ public class XmlNode {
 				if (previous == null) {
 					return null;
 				}
-				XmlNode xPrevious = XmlNode.from(previous);
+				XmlNode xPrevious = doc.nodeFor(previous);
 				if (xPrevious.isText()
 						&& xPrevious.isNonWhitespaceTextContent()) {
 					return xPrevious.ntc();
@@ -1168,7 +1176,7 @@ public class XmlNode {
 								null, true);
 				tw.setCurrentNode(end.node);
 				Node keep = tw.nextNode();
-				keepAncestorsOf = keep == null ? null : XmlNode.from(keep);
+				keepAncestorsOf = keep == null ? null : doc.nodeFor(keep);
 			}
 			for (XmlNode cursor : kids) {
 				if (cursor == XmlNode.this) {
