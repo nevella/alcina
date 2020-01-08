@@ -1050,6 +1050,20 @@ public class XmlNode {
 				}
 			}
 		}
+
+		public String previousNonWhitespaceText() {
+			while (true) {
+				Node previous = tw.previousNode();
+				if (previous == null) {
+					return null;
+				}
+				XmlNode xPrevious = XmlNode.from(previous);
+				if (xPrevious.isText()
+						&& xPrevious.isNonWhitespaceTextContent()) {
+					return xPrevious.ntc();
+				}
+			}
+		}
 	}
 
 	public class XmlNodeXpath {

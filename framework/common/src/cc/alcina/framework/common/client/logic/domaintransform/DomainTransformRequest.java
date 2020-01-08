@@ -70,10 +70,12 @@ public class DomainTransformRequest implements Serializable {
 		return new DomainTransformRequest();
 	}
 
-	public static DomainTransformRequest createPersistableRequest() {
+	public static DomainTransformRequest createPersistableRequest(int requestId,
+			long clientInstanceId) {
 		DomainTransformRequest request = new DomainTransformRequest();
 		DomainTransformRequestChunkUuid chunkUuid = new DomainTransformRequestChunkUuid();
-		chunkUuid.uuid = createUUID();
+		chunkUuid.uuid = Ax.format("%s/%s/%s", clientInstanceId, requestId,
+				generateUUID());
 		request.setChunkUuidString(chunkUuid.serialize());
 		return request;
 	}
@@ -88,7 +90,16 @@ public class DomainTransformRequest implements Serializable {
 		return request;
 	}
 
-	public static String createUUID() {
+	public static DomainTransformRequest fromString(String eventsStr,
+			String chunkUuidString) {
+		DomainTransformRequest dtr = new DomainTransformRequest();
+		new DTRProtocolSerializer().deserialize(dtr, dtr.getProtocolVersion(),
+				eventsStr);
+		dtr.setChunkUuidString(chunkUuidString);
+		return dtr;
+	}
+
+	private static String generateUUID() {
 		// http://www.ietf.org/rfc/rfc4122.txt
 		char[] chars = new char[36];
 		String hexDigits = "0123456789abcdef";
@@ -105,15 +116,6 @@ public class DomainTransformRequest implements Serializable {
 																// to 01
 		chars[8] = chars[13] = chars[18] = chars[23] = '-';
 		return String.valueOf(chars);
-	}
-
-	public static DomainTransformRequest fromString(String eventsStr,
-			String chunkUuidString) {
-		DomainTransformRequest dtr = new DomainTransformRequest();
-		new DTRProtocolSerializer().deserialize(dtr, dtr.getProtocolVersion(),
-				eventsStr);
-		dtr.setChunkUuidString(chunkUuidString);
-		return dtr;
 	}
 
 	private String chunkUuidString;

@@ -229,6 +229,7 @@ public class SearchUtils {
 	}
 
 	@RegistryLocation(registryPoint = SearchUtilsRegExpHelper.class)
+	@ClientInstantiable
 	public static abstract class SearchUtilsRegExpHelper {
 		public boolean matches(String query, HasIdAndLocalId hili) {
 			return false;

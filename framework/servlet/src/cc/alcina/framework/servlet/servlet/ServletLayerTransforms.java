@@ -205,11 +205,18 @@ public class ServletLayerTransforms {
 		TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).clear();
 		ThreadlocalTransformManager.cast().resetTltm(null);
+		/*
+		 * There's a method in this apparent madness. The big request for this
+		 * (new) client instance, rq id #1, will be committed as several chunks
+		 * (#2, #3 etc) - and we need to keep the local->remote correspondence
+		 * constant for all those chunks, hence the disposable clientinstance
+		 */
+		int requestId = 1;
 		DomainTransformRequest request = DomainTransformRequest
-				.createPersistableRequest();
+				.createPersistableRequest(requestId, commitInstance.getId());
 		request.setProtocolVersion(
 				new DTESerializationPolicy().getTransformPersistenceProtocol());
-		request.setRequestId(1);
+		request.setRequestId(requestId);
 		request.setClientInstance(commitInstance);
 		request.setEvents(transforms);
 		DeltaApplicationRecord dar = new DeltaApplicationRecord(request,
@@ -296,16 +303,18 @@ public class ServletLayerTransforms {
 			setServerAsClientInstance(ClientInstance serverAsClientInstance) {
 		this.serverAsClientInstance = serverAsClientInstance;
 	}
-
 	public DomainTransformLayerWrapper transformFromServletLayer(
 			Collection<DomainTransformEvent> transforms, String tag)
 			throws DomainTransformRequestException {
-		DomainTransformRequest request = new DomainTransformRequest();
+		int requestId = nextTransformRequestId();
 		HiliLocatorMap map = new HiliLocatorMap();
-		request.setClientInstance(Registry.impl(ServletLayerTransforms.class)
-				.getServerAsClientInstance());
+		ClientInstance clientInstance = ServletLayerTransforms.get()
+				.getServerAsClientInstance();
+		DomainTransformRequest request = DomainTransformRequest
+				.createPersistableRequest(requestId, clientInstance.getId());
+		request.setClientInstance(clientInstance);
 		request.setTag(tag);
-		request.setRequestId(nextTransformRequestId());
+		request.setRequestId(requestId);
 		for (DomainTransformEvent dte : transforms) {
 			dte.setCommitType(CommitType.TO_STORAGE);
 		}
