@@ -19,9 +19,11 @@ public class Sx {
 		return transformCount;
 	}
 
-	public static void commitIfTransformCount(int n) {
+	public static int commitIfTransformCount(int n) {
 		if (TransformManager.get().getTransforms().size() > n) {
-			commit();
+			return commit();
+		} else {
+			return 0;
 		}
 	}
 
