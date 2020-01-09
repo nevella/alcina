@@ -125,8 +125,14 @@ public class ServletLayerTransforms {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			return new DomainTransformLayerWrapper();
 		}
-		if (AppPersistenceBase.isTest() && !ResourceUtilities
-				.is(ServletLayerUtils.class, "testTransformCascade")) {
+		if (Ax.isTest() && !ResourceUtilities.is(ServletLayerUtils.class,
+				"testTransformCascade")) {
+			return new DomainTransformLayerWrapper();
+		}
+		if (Ax.isTest() && ServletLayerTransforms.get()
+				.getServerAsClientInstance() == null) {
+			// pre-login test tx (say fixing up credentials) - create dummy
+			ThreadlocalTransformManager.cast().resetTltm(null);
 			return new DomainTransformLayerWrapper();
 		}
 		int maxTransformChunkSize = ResourceUtilities.getInteger(
@@ -303,6 +309,7 @@ public class ServletLayerTransforms {
 			setServerAsClientInstance(ClientInstance serverAsClientInstance) {
 		this.serverAsClientInstance = serverAsClientInstance;
 	}
+
 	public DomainTransformLayerWrapper transformFromServletLayer(
 			Collection<DomainTransformEvent> transforms, String tag)
 			throws DomainTransformRequestException {

@@ -16,40 +16,50 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
  * reachable by any transaction started before it is committed to the domain
  * graph (unless the object is created within that transaction).
  * 
+ * synchronization - resolution of version is synchronized on the baseobject, as
+ * is vacuum.
+ * 
  * @author nick@alcina.cc
+ * 
+ * 
  *
  * @param <T>
  */
 public class MvccObjectVersions<T extends HasIdAndLocalId>
 		implements Vacuumable {
-	public static <T extends HasIdAndLocalId> MvccObjectVersions<T> ensure(T t,
-			Transaction transaction, boolean initialObjectIsWriteable) {
-		MvccObject mvccObject = (MvccObject) t;
+	// called in a synchronized block (synchronized on baseObject)
+	static <T extends HasIdAndLocalId> MvccObjectVersions<T> ensure(
+			T baseObject, Transaction transaction,
+			boolean initialObjectIsWriteable) {
+		MvccObject mvccObject = (MvccObject) baseObject;
 		MvccObjectVersions<T> versions = null;
-		// double-check
-		synchronized (mvccObject) {
-			versions = mvccObject.__getMvccVersions__();
-			if (versions == null) {
-				versions = new MvccObjectVersions<T>(t, transaction,
-						initialObjectIsWriteable);
-				mvccObject.__setMvccVersions__(versions);
-			}
-			return versions;
-		}
+		versions = new MvccObjectVersions<T>(baseObject, transaction,
+				initialObjectIsWriteable);
+		mvccObject.__setMvccVersions__(versions);
+		return versions;
 	}
 
-	volatile ConcurrentHashMap<Transaction, ObjectVersion<T>> versions = new ConcurrentHashMap<>();
+	private volatile ConcurrentHashMap<Transaction, ObjectVersion<T>> versions = new ConcurrentHashMap<>();
 
-	volatile T baseObject;
+	// never changes (for a given class/id or class/clientinstance/localid
+	// tuple). fields can be updated by vacuum if not accessible via any
+	// transaction
+	private volatile T baseObject;
 
 	/*
 	 * debugging aids
 	 */
-	T __mostRecentReffed;
+	@SuppressWarnings("unused")
+	private T __mostRecentReffed;
 
-	T __mostRecentWritable;
+	@SuppressWarnings("unused")
+	private T __mostRecentWritable;
 
-	public MvccObjectVersions(T t, Transaction initialTransaction,
+	/*
+	 * synchronization - either a object t for this domainstore (so no sync
+	 * needed), or accessed via a block synced on 't'
+	 */
+	MvccObjectVersions(T t, Transaction initialTransaction,
 			boolean initialObjectIsWriteable) {
 		/*
 		 * If in the 'preparing' phase, and t is non-local, this is a
@@ -57,10 +67,12 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 		 * 
 		 * In that case, create a copy (to be modified) from the base object
 		 * 
+		 * 
+		 * TODO - explain logic here and in resolve0
 		 */
+		baseObject = t;
 		if (initialTransaction.phase == TransactionPhase.TO_DB_PREPARING
 				&& t.provideWasPersisted()) {
-			
 			{
 				ObjectVersion<T> version = new ObjectVersion<>();
 				version.transaction = initialTransaction;
@@ -82,7 +94,6 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 				putVersion(version);
 			}
 		}
-		baseObject = t;
 		Ax.err("created object version: %s : %s", toString(), hashCode());
 	}
 
@@ -91,7 +102,7 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 		try {
 			T object = baseObject;
 			Transaction transaction = null;
-			synchronized (versions) {
+			synchronized (baseObject) {
 				Iterator<ObjectVersion<T>> itr = versions.values().iterator();
 				if (itr.hasNext()) {
 					ObjectVersion<T> firstVersion = itr.next();
@@ -117,23 +128,28 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 
 	@Override
 	public void vacuum(Transaction transaction) {
-		ObjectVersion<T> version = versions.get(transaction);
-		/*
-		 * Must change the base before removing transaction (otherwise there's a
-		 * narrow window where we'd return an older version)
-		 */
-		if (transaction.getPhase() == TransactionPhase.TO_DOMAIN_COMMITTED) {
-			baseObject = version.object;
-		}
-		synchronized (versions) {
+		synchronized (baseObject) {
+			ObjectVersion<T> version = versions.get(transaction);
+			/*
+			 * Must change the base before removing transaction (otherwise
+			 * there's a narrow window where we'd return an older version)
+			 */
+			if (transaction
+					.getPhase() == TransactionPhase.TO_DOMAIN_COMMITTED) {
+				// baseObject fields will not be reachable here to app code (all
+				// active txs will be
+				// looking at version.object fields)
+				Transactions.copyObjectFields(version.object, baseObject);
+			}
 			versions.remove(transaction);
+			if (versions.isEmpty()) {
+				((MvccObject) baseObject).__setMvccVersions__(null);
+			}
 		}
 	}
 
 	private void putVersion(ObjectVersion<T> version) {
-		synchronized (versions) {
-			versions.put(version.transaction, version);
-		}
+		versions.put(version.transaction, version);
 		Transactions.get().onAddedVacuumable(this);
 	}
 
@@ -149,50 +165,46 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 		if (version != null && version.isCorrectWriteableState(write)) {
 			return version.object;
 		}
-		// use versions as a monitor on creation
-		synchronized (versions) {
-			if (versions.isEmpty()) {
-				return baseObject;
-			}
-			version = versions.get(transaction);
-			if (version != null && version.isCorrectWriteableState(write)) {
-				return version.object;
-			}
-			version = new ObjectVersion<>();
-			version.transaction = transaction;
-			Transaction mostRecentTransaction = transaction
-					.mostRecentPriorTransaction(versions.keys(),
-							DomainStore.stores().storeFor(
-									versions.values().iterator().next().object
-											.provideEntityClass()));
-			
-			T mostRecentObject = null;
+		if (versions.isEmpty()) {
+			return baseObject;
+		}
+		version = versions.get(transaction);
+		if (version != null && version.isCorrectWriteableState(write)) {
+			return version.object;
+		}
+		version = new ObjectVersion<>();
+		version.transaction = transaction;
+		Transaction mostRecentTransaction = transaction
+				.mostRecentPriorTransaction(versions.keys(),
+						DomainStore.stores().storeFor(
+								versions.values().iterator().next().object
+										.provideEntityClass()));
+		T mostRecentObject = null;
+		/*
+		 * mostRecent will be null if just created
+		 */
+		ObjectVersion<T> mostRecentVersion = mostRecentTransaction == null
+				? null
+				: versions.get(mostRecentTransaction);
+		if (mostRecentVersion != null) {
+			mostRecentObject = mostRecentVersion.object;
+		} else {
+			mostRecentObject = baseObject;
+		}
+		if (write) {
+			version.object = (T) Transactions.copyObject(
+					(HasIdAndLocalId & MvccObject) mostRecentObject);
+			version.writeable = true;
+			// put before register (which will call resolve());
+			putVersion(version);
+			Domain.register(version.object);
+			return version.object;
+		} else {
 			/*
-			 * mostRecent will be null if just created
+			 * We could cache - by creating an ObjectVerson for this read call -
+			 * but that would require a later vacuum
 			 */
-			ObjectVersion<T> mostRecentVersion = mostRecentTransaction == null
-					? null
-					: versions.get(mostRecentTransaction);
-			if (mostRecentVersion != null) {
-				mostRecentObject = mostRecentVersion.object;
-			} else {
-				mostRecentObject = baseObject;
-			}
-			if (write) {
-				version.object = (T) Transactions.copyObject(
-						(HasIdAndLocalId & MvccObject) mostRecentObject);
-				version.writeable = true;
-				// put before register (which will call resolve());
-				putVersion(version);
-				Domain.register(version.object);
-				return version.object;
-			} else {
-				/*
-				 * We could cache - by creating an ObjectVerson for this read
-				 * call - but that would require a later vacuum
-				 */
-				return mostRecentObject;
-			}
+			return mostRecentObject;
 		}
 	}
 

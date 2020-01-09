@@ -24,13 +24,6 @@ public class Transactions {
 		return resolve(t, false) == t;
 	}
 
-	public static <T extends HasIdAndLocalId & MvccObject> T copyObject(T object) {
-		// FIXME - write some byteassist classes to do direct copying
-		 T clone = ResourceUtilities.fieldwiseClone(object, false, true);
-		 clone.__setMvccVersions__(object.__getMvccVersions__());
-		 return clone;
-	}
-
 	public static synchronized void ensureInitialised() {
 		if (instance == null) {
 			instance = new Transactions();
@@ -50,14 +43,18 @@ public class Transactions {
 				return t;
 			} else {
 				Transaction transaction = Transaction.current();
+				// TODO - possibly optimise (app level 'in warmup')
 				if (transaction.isBaseTransaction()) {
 					return t;
 				} else {
-					if (versions == null) {
-						versions = MvccObjectVersions.ensure(t, transaction,
-								false);
+					//
+					synchronized (t) {
+						if (versions == null) {
+							versions = MvccObjectVersions.ensure(t, transaction,
+									false);
+						}
+						return versions.resolve(write);
 					}
-					return versions.resolve(write);
 				}
 			}
 		} else {
@@ -67,6 +64,17 @@ public class Transactions {
 
 	static Transaction baseTransaction(DomainStore store) {
 		return baseTransactions.get(store);
+	}
+
+	static <T extends HasIdAndLocalId & MvccObject> T copyObject(T object) {
+		// FIXME - write some byteassist classes to do direct copying
+		T clone = ResourceUtilities.fieldwiseClone(object, false, true);
+		clone.__setMvccVersions__(object.__getMvccVersions__());
+		return clone;
+	}
+
+	static <T extends HasIdAndLocalId> void copyObjectFields(T from, T to) {
+		ResourceUtilities.fieldwiseCopy(from, to, false, true);
 	}
 
 	static Transactions get() {
