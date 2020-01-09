@@ -28,16 +28,24 @@ public interface IUser extends IVersionable {
 
 	public abstract String getLastName();
 
+	public abstract String getPassword();
+
 	public abstract String getPasswordHash();
 
 	public abstract IGroup getPrimaryGroup();
+
+	public abstract String getSalt();
 
 	public abstract Set<? extends IGroup> getSecondaryGroups();
 
 	public abstract String getUserName();
 
+	public void setPassword(String password);
+
+	public void setSalt(String salt);
+
 	public void setUserName(String userName);
-	
+
 	default String toIdNameString() {
 		return CommonUtils.formatJ("%s/%s", getId(), getUserName());
 	}
