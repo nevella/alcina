@@ -1,18 +1,26 @@
 package cc.alcina.framework.servlet.module.login;
 
+import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.LoginResponseState;
-import cc.alcina.framework.common.client.logic.permissions.UserWith2FA;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 @RegistryLocation(registryPoint = LoginRequestHandler.class, implementationType = ImplementationType.INSTANCE)
-public abstract class LoginRequestHandler {
+public abstract class LoginRequestHandler<U extends IUser> {
 	protected LoginRequest loginRequest;
 
 	protected LoginResponse loginResponse;
+
+	private Authenticator authenticator = createAuthenticator();
+
+	protected LoginBean loginBean;
+
+	protected LoginModel<U> loginModel;
 
 	public LoginResponse handle(LoginRequest request) {
 		this.loginRequest = request;
@@ -22,11 +30,17 @@ public abstract class LoginRequestHandler {
 		return loginResponse;
 	}
 
-	/*
-	 * for instance, remove LoginResponseState.Username_not_found from response
-	 * states to meet security requirements
-	 */
-	protected abstract void postRequestHandled();
+	protected abstract Authenticator createAuthenticator();
+
+	protected void createLoginModel() {
+		loginBean = new LoginBean();
+		loginBean.setUserName(loginRequest.getUserName());
+		loginBean.setPassword(loginRequest.getPassword());
+		loginModel = new LoginModel<>();
+		loginModel.loginRequest = loginRequest;
+		loginModel.loginBean = loginBean;
+		loginModel.loginResponse = loginResponse;
+	}
 
 	protected void handle0() {
 		try {
@@ -70,7 +84,38 @@ public abstract class LoginRequestHandler {
 		}
 	}
 
-	protected abstract TwoFactorAuthResult validateTwoFactorAuth() throws Exception;
+	/*
+	 * for instance, remove LoginResponseState.Username_not_found from response
+	 * states to meet security requirements
+	 */
+	protected void postRequestHandled() {
+	}
+
+	protected void processLogin() throws Exception {
+		authenticator.processValidLogin(
+				CommonRemoteServiceServlet.getContextThreadLocalRequest(),
+				CommonRemoteServiceServlet.getContextThreadLocalResponse(),
+				loginResponse, loginModel.user.getUserName(), true);
+	}
+
+	protected boolean validateAccount() throws Exception {
+		authenticator.validateAccount(loginModel.loginResponse,
+				loginModel.user.getUserName());
+		return loginModel.loginResponse.isOk();
+	}
+
+	protected boolean validatePassword() {
+		return authenticator.validatePassword(loginModel);
+	}
+
+	protected TwoFactorAuthResult validateTwoFactorAuth() throws Exception {
+		return authenticator.validateTwoFactorAuth(loginModel);
+	}
+
+	protected boolean validateUserName() {
+		createLoginModel();
+		return authenticator.validateUsername(loginModel);
+	}
 
 	public static class TwoFactorAuthResult {
 		public String qrCode;
@@ -79,12 +124,4 @@ public abstract class LoginRequestHandler {
 
 		public boolean requiresTwoFactorQrCode;
 	}
-
-	protected abstract void processLogin() throws Exception;
-
-	protected abstract boolean validateUserName();
-
-	protected abstract boolean validatePassword();
-
-	protected abstract boolean validateAccount() throws Exception;
 }
