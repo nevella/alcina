@@ -23,193 +23,193 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.util.AlcinaParallel.Parameters.Builder;
 
 public class AlcinaParallel {
-    public static Builder builder() {
-        return new Builder();
-    }
+	public static Builder builder() {
+		return new Builder();
+	}
 
-    private ThreadPoolExecutor executor;
+	private ThreadPoolExecutor executor;
 
-    private boolean cancelled;
+	private boolean cancelled;
 
-    public List<Throwable> exceptions = new ArrayList<>();
+	public List<Throwable> exceptions = new ArrayList<>();
 
-    private Parameters parameters;
+	private Parameters parameters;
 
-    private AlcinaParallelJobChecker jobChecker;
+	private AlcinaParallelJobChecker jobChecker;
 
-    public AlcinaParallel(Parameters parameters) {
-        this.parameters = parameters;
-    }
+	public AlcinaParallel(Parameters parameters) {
+		this.parameters = parameters;
+	}
 
-    public void cancel() {
-        cancelled = true;
-        executor.shutdownNow();
-    }
+	public void cancel() {
+		cancelled = true;
+		executor.shutdownNow();
+	}
 
-    public AlcinaParallelResults run() {
-        jobChecker = Registry.impl(AlcinaParallelJobChecker.class);
-        if (parameters.serial) {
-            for (Runnable runnable : parameters.runnables) {
-                try {
-                    LooseContext.push();
-                    if (cancelled) {
-                        break;
-                    }
-                    if (jobChecker.isCancelled()) {
-                        break;
-                    }
-                    runnable.run();
-                } catch (RuntimeException e) {
-                    e.printStackTrace();
-                    if (parameters.cancelOnException) {
-                        cancelled = true;
-                    }
-                    exceptions.add(e);
-                } finally {
-                    LooseContext.pop();
-                }
-            }
-            return new AlcinaParallelResults();
-        } else {
-            executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-                    parameters.threadCount,
-                    new NamedThreadFactory(parameters.provideThreadName()));
-            LooseContextInstance snapshot = LooseContext.getContext()
-                    .snapshot();
-            List<Callable> callables = parameters.runnables.stream().map(
-                    runnable -> wrapRunnableForParallel(snapshot, runnable))
-                    .collect(Collectors.toList());
-            try {
-                executor.invokeAll((List) callables);
-            } catch (InterruptedException e) {
-                // oksies, cancelled
-            } catch (Exception e) {
-                throw new WrappedRuntimeException(e);
-            }
-            executor.shutdown();
-            return new AlcinaParallelResults();
-        }
-    }
+	public AlcinaParallelResults run() {
+		jobChecker = Registry.impl(AlcinaParallelJobChecker.class);
+		if (parameters.serial) {
+			for (Runnable runnable : parameters.runnables) {
+				try {
+					LooseContext.push();
+					if (cancelled) {
+						break;
+					}
+					if (jobChecker.isCancelled()) {
+						break;
+					}
+					runnable.run();
+				} catch (RuntimeException e) {
+					e.printStackTrace();
+					if (parameters.cancelOnException) {
+						cancelled = true;
+					}
+					exceptions.add(e);
+				} finally {
+					LooseContext.pop();
+				}
+			}
+			return new AlcinaParallelResults();
+		} else {
+			executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
+					parameters.threadCount,
+					new NamedThreadFactory(parameters.provideThreadName()));
+			LooseContextInstance snapshot = LooseContext.getContext()
+					.snapshot();
+			List<Callable> callables = parameters.runnables.stream().map(
+					runnable -> wrapRunnableForParallel(snapshot, runnable))
+					.collect(Collectors.toList());
+			try {
+				executor.invokeAll((List) callables);
+			} catch (InterruptedException e) {
+				// oksies, cancelled
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			executor.shutdown();
+			return new AlcinaParallelResults();
+		}
+	}
 
-    Callable wrapRunnableForParallel(LooseContextInstance snapshot,
-            Runnable runnable) {
-        PermissionsManagerState permissionsManagerState = PermissionsManager
-                .get().snapshotState();
-        return () -> {
-            try {
-                LooseContext.push();
-                if (cancelled) {
-                    return null;
-                }
-                if (jobChecker.isCancelled()) {
-                    return null;
-                }
-                permissionsManagerState.copyTo(PermissionsManager.get());
-                LooseContext.putSnapshotProperties(snapshot);
-                DomainStore.ensureActiveTransaction();
-                runnable.run();
-            } catch (RuntimeException e) {
-                e.printStackTrace();
-                if (parameters.cancelOnException) {
-                    cancelled = true;
-                }
-                exceptions.add(e);
-            } finally {
-                LooseContext.pop();
-                ThreadlocalTransformManager.cast().resetTltm(null);
-            }
-            return null;
-        };
-    }
+	Callable wrapRunnableForParallel(LooseContextInstance snapshot,
+			Runnable runnable) {
+		PermissionsManagerState permissionsManagerState = PermissionsManager
+				.get().snapshotState();
+		return () -> {
+			try {
+				LooseContext.push();
+				if (cancelled) {
+					return null;
+				}
+				if (jobChecker.isCancelled()) {
+					return null;
+				}
+				permissionsManagerState.copyTo(PermissionsManager.get());
+				LooseContext.putSnapshotProperties(snapshot);
+				DomainStore.ensureActiveTransaction();
+				runnable.run();
+			} catch (RuntimeException e) {
+				e.printStackTrace();
+				if (parameters.cancelOnException) {
+					cancelled = true;
+				}
+				exceptions.add(e);
+			} finally {
+				LooseContext.pop();
+				ThreadlocalTransformManager.cast().resetTltm(null);
+			}
+			return null;
+		};
+	}
 
-    @RegistryLocation(registryPoint = AlcinaParallelJobChecker.class, implementationType = ImplementationType.INSTANCE)
-    public static class AlcinaParallelJobChecker {
-        public boolean isCancelled() {
-            return false;
-        }
-    }
+	@RegistryLocation(registryPoint = AlcinaParallelJobChecker.class, implementationType = ImplementationType.INSTANCE)
+	public static class AlcinaParallelJobChecker {
+		public boolean isCancelled() {
+			return false;
+		}
+	}
 
-    public class AlcinaParallelResults {
-        public void throwOnException() {
-            if (exceptions.size() > 0) {
-                throw new WrappedRuntimeException(exceptions.get(0));
-            }
-        }
-    }
+	public class AlcinaParallelResults {
+		public void throwOnException() {
+			if (exceptions.size() > 0) {
+				throw new WrappedRuntimeException(exceptions.get(0));
+			}
+		}
+	}
 
-    public static class Parameters {
-        private boolean cancelOnException;
+	public static class Parameters {
+		private boolean cancelOnException;
 
-        private int threadCount;
+		private int threadCount;
 
-        private List<Runnable> runnables;
+		private List<Runnable> runnables;
 
-        private String threadName;
+		private String threadName;
 
-        private boolean serial;
+		private boolean serial;
 
-        public Parameters() {
-        }
+		public Parameters() {
+		}
 
-        private Parameters(Builder builder) {
-            this.cancelOnException = builder.cancelOnException;
-            this.threadCount = builder.threadCount;
-            this.runnables = builder.runnables;
-            this.threadName = builder.threadName;
-            this.serial = builder.withSerial;
-        }
+		private Parameters(Builder builder) {
+			this.cancelOnException = builder.cancelOnException;
+			this.threadCount = builder.threadCount;
+			this.runnables = builder.runnables;
+			this.threadName = builder.threadName;
+			this.serial = builder.withSerial;
+		}
 
-        public String provideThreadName() {
-            return Optional.<String> ofNullable(threadName)
-                    .orElse("alcina-parallel");
-        }
+		public String provideThreadName() {
+			return Optional.<String> ofNullable(threadName)
+					.orElse("alcina-parallel");
+		}
 
-        public static final class Builder {
-            private boolean cancelOnException;
+		public static final class Builder {
+			private boolean cancelOnException;
 
-            private int threadCount;
+			private int threadCount;
 
-            private List<Runnable> runnables = Collections.emptyList();
+			private List<Runnable> runnables = Collections.emptyList();
 
-            private String threadName;
+			private String threadName;
 
-            private boolean withSerial;
+			private boolean withSerial;
 
-            private Builder() {
-            }
+			private Builder() {
+			}
 
-            public Parameters build() {
-                return new Parameters(this);
-            }
+			public Parameters build() {
+				return new Parameters(this);
+			}
 
-            public AlcinaParallelResults run() {
-                return new AlcinaParallel(new Parameters(this)).run();
-            }
+			public AlcinaParallelResults run() {
+				return new AlcinaParallel(new Parameters(this)).run();
+			}
 
-            public Builder withCancelOnException(boolean cancelOnException) {
-                this.cancelOnException = cancelOnException;
-                return this;
-            }
+			public Builder withCancelOnException(boolean cancelOnException) {
+				this.cancelOnException = cancelOnException;
+				return this;
+			}
 
-            public Builder withRunnables(List<Runnable> runnables) {
-                this.runnables = runnables;
-                return this;
-            }
+			public Builder withRunnables(List<Runnable> runnables) {
+				this.runnables = runnables;
+				return this;
+			}
 
-            public Builder withSerial(boolean withSerial) {
-                this.withSerial = withSerial;
-                return this;
-            }
+			public Builder withSerial(boolean withSerial) {
+				this.withSerial = withSerial;
+				return this;
+			}
 
-            public Builder withThreadCount(int threadCount) {
-                this.threadCount = threadCount;
-                return this;
-            }
+			public Builder withThreadCount(int threadCount) {
+				this.threadCount = threadCount;
+				return this;
+			}
 
-            public Builder withThreadName(String threadName) {
-                this.threadName = threadName;
-                return this;
-            }
-        }
-    }
+			public Builder withThreadName(String threadName) {
+				this.threadName = threadName;
+				return this;
+			}
+		}
+	}
 }

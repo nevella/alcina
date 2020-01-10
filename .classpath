@@ -77,5 +77,6 @@
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-metamodel-generator-3.14.11-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-serialization-3.14.11-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javassist-3.18.1-GA.jar" sourcepath="/g/minor/javassist"/>
+	<classpathentry kind="lib" path="lib/framework/servlet/scrypt-1.4.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
