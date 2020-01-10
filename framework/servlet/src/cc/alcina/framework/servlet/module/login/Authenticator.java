@@ -14,6 +14,8 @@ import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.UserWith2FA;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -29,6 +31,8 @@ public abstract class Authenticator<U extends IUser> {
 	public static final String CONTEXT_BYPASS_PASSWORD_CHECK = Authenticator.class
 			.getName() + ".CONTEXT_BYPASS_PASSWORD_CHECK";
 
+	protected LoginModel loginModel;
+
 	public Authenticator() {
 		super();
 	}
@@ -37,7 +41,7 @@ public abstract class Authenticator<U extends IUser> {
 			throws AuthenticationException {
 		LoginResponse loginResponse = new LoginResponse();
 		loginResponse.setOk(false);
-		LoginModel loginModel = new LoginModel();
+		loginModel = new LoginModel();
 		loginModel.loginBean = loginBean;
 		loginModel.loginResponse = loginResponse;
 		authenticate(loginBean, loginModel);
@@ -76,8 +80,8 @@ public abstract class Authenticator<U extends IUser> {
 		if (user.getSalt() == null) {
 			user.setSalt(user.getUserName());
 		}
-		user.setPassword(
-				ScryptSupport.encryptPassword(user.getSalt(), password));
+		user.setPassword(PasswordEncryptionSupport.get()
+				.encryptPassword(password, user.getSalt()));
 	}
 
 	public abstract U validateAccount(LoginResponse loginResponse,
@@ -142,10 +146,10 @@ public abstract class Authenticator<U extends IUser> {
 					new TwoFactorAuthentication().generateSecret());
 		}
 		Sx.commit();
-		if (!LooseContext.is(CONTEXT_BYPASS_PASSWORD_CHECK) && !ScryptSupport
-				.encryptPassword(user.getSalt(),
-						loginModel.loginBean.getPassword())
-				.equals(user.getPasswordHash())) {
+		if (!LooseContext.is(CONTEXT_BYPASS_PASSWORD_CHECK)
+				&& !PasswordEncryptionSupport.get().check(
+						loginModel.loginBean.getPassword(), user.getSalt(),
+						user.getPasswordHash())) {
 			loginModel.loginResponse.setErrorMsg("Password incorrect");
 			return false;
 		} else {
@@ -174,7 +178,26 @@ public abstract class Authenticator<U extends IUser> {
 		validateAccount(loginModel.loginResponse, loginBean.getUserName());
 	}
 
-	protected static class ScryptSupport {
+	public interface PasswordEncryptionSupport {
+		public static PasswordEncryptionSupport get() {
+			return Registry.impl(PasswordEncryptionSupport.class);
+		}
+
+		default boolean check(String password, String salt,
+				String hashedPassword) {
+			return encryptPassword(password, salt).equals(hashedPassword);
+		}
+
+		String encryptPassword(String password, String salt);
+
+		default String maybeReencrypt(String salt, String hashedPassword)
+				throws Exception {
+			return hashedPassword;
+		}
+	}
+
+	@RegistryLocation(registryPoint = PasswordEncryptionSupport.class, implementationType = ImplementationType.INSTANCE)
+	public static class ScryptSupport implements PasswordEncryptionSupport {
 		private static final int N = 16384;
 
 		private static final int r = 8;
@@ -183,7 +206,8 @@ public abstract class Authenticator<U extends IUser> {
 
 		private static final int dkLen = 64;
 
-		static String encryptPassword(String salt, String password) {
+		@Override
+		public String encryptPassword(String password, String salt) {
 			try {
 				byte[] scrypt = SCrypt.scrypt(password.getBytes("UTF-8"),
 						salt.getBytes("UTF-8"), N, r, p, dkLen);
