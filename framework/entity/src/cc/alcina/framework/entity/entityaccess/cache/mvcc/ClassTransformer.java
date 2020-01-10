@@ -59,6 +59,11 @@ import javassist.bytecode.ClassFile;
 import javassist.bytecode.LocalVariableAttribute;
 import javassist.bytecode.MethodInfo;
 
+/*
+ * TODO - rewriting
+ * 
+ * 
+ */
 class ClassTransformer {
 	static {
 		SourceFinder.sourceFinders.add(new SourceFinderFs());
@@ -122,6 +127,9 @@ class ClassTransformer {
 			ct.generateMvccClass();
 			ct.persist();
 		}
+		if (classTransforms.values().stream().anyMatch(ct -> ct.invalid)) {
+			throw new IllegalStateException();
+		}
 		AlcinaParallel.builder().withRunnables(compilationRunnables)
 				.withThreadCount(8).withCancelOnException(true).withSerial(true)
 				.withThreadName("ClassTransformer-compilation").run()
@@ -175,7 +183,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends HasIdAndLocalId> {
-		private static final transient int VERSION = 6;
+		private static final transient int VERSION = 7;
 
 		private int version;
 
@@ -188,6 +196,8 @@ class ClassTransformer {
 		private transient ClassTransform<H> lastRun;
 
 		private transient CompilationUnit compilationUnit;
+
+		private transient boolean invalid;
 
 		private transient ClassOrInterfaceDeclaration classDeclaration;
 
@@ -222,8 +232,7 @@ class ClassTransformer {
 		}
 
 		private void checkMethodModifiers() {
-			// TODO - I think this is unneeded (our issue is with field access,
-			// not method access)
+			// Old, old...methods we love. Fields terrify us
 			//
 			// SEUtilities.allClassMethods(originalClass).stream()
 			// .filter(f -> (f.getModifiers() & Modifier.PUBLIC) == 0)
@@ -271,18 +280,23 @@ class ClassTransformer {
 						originalClass.getName());
 				methodsWithProblematicFieldAccess.forEach(Ax::err);
 				Ax.out("\n");
+				// should never happen
+				throw new UnsupportedOperationException();
 			}
 			if (methodsWithProblematicAccess.size() > 0) {
 				Ax.err("\n======================\nClass: %s\nMethodsWithProblematicAccess:\n======================",
 						originalClass.getName());
 				methodsWithProblematicAccess.forEach(Ax::err);
 				Ax.out("\n");
+				// should never happen
+				throw new UnsupportedOperationException();
 			}
 			if (fieldsWithProblematicAccess.size() > 0) {
 				Ax.err("\n======================\nClass: %s\nFieldsWithProblematicAccess:\n======================",
 						originalClass.getName());
 				fieldsWithProblematicAccess.forEach(Ax::err);
 				Ax.out("\n");
+				invalid = true;
 			}
 		}
 
@@ -391,8 +405,12 @@ class ClassTransformer {
 							// OK
 							return;
 						} else {
-							methodsWithProblematicFieldAccess.add(
-									methodDeclaration.getDeclarationAsString());
+							// actually, it's still OK -
+							//
+							// the *only* access issue is non-private fields
+							//
+							// methodsWithProblematicFieldAccess.add(
+							// methodDeclaration.getDeclarationAsString());
 						}
 					}
 				} catch (Exception e) {
@@ -527,13 +545,19 @@ class ClassTransformer {
 						if (method.getDeclaringClass().isInterface()) {
 							continue;
 						}
-						if (!isPublicInstanceNonInterfaceMethod(allClassMethods,
-								method)) {
+						/*
+						 * Private methods can (and should) refer to their own
+						 * fields without resolution
+						 */
+						if (!isNonPrivateInstanceNonInterfaceMethod(
+								allClassMethods, method)) {
 							continue;
 						}
 						/*
 						 * transitional - 'writeable' will go away (at the
 						 * moment causes bytecode issues)
+						 * 
+						 * FIXME - get rid of it
 						 */
 						if (method.getName().matches("writeable")) {
 							continue;
@@ -542,10 +566,15 @@ class ClassTransformer {
 						// FIXME - deprecated. It'd be nice (performance) to not
 						// have to check every external access, but I think we
 						// have to
+						//
+						// FIXME - 2 - just get rid of it
 						if (transformer.addObjectResolutionChecks) {
 							bodyBuilder.line(
 									"cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions.checkResolved(this);");
 						}
+						// TODO - We assume only setters modify fields - which
+						// is true of how anything that respects property
+						// changes must work
 						boolean getter = method.getName().matches("get[A-Z].*")
 								&& method.getParameterTypes().length == 0;
 						boolean setter = method.getName().matches("set[A-Z].*")
@@ -637,7 +666,7 @@ class ClassTransformer {
 				return type.getName();
 			}
 
-			private boolean isPublicInstanceNonInterfaceMethod(
+			private boolean isNonPrivateInstanceNonInterfaceMethod(
 					List<Method> allClassMethods, CtMethod ctMethod)
 					throws Exception {
 				for (Method method : allClassMethods) {
@@ -669,6 +698,12 @@ class ClassTransformer {
 									& Modifier.PUBLIC) == 0) {
 								continue;
 							}
+							// FIXME-apdm - we actually want the below - but
+							// need to look at casting
+							// if ((method.getModifiers()
+							// & Modifier.PRIVATE) != 0) {
+							// continue;
+							// }
 							return true;
 						}
 					}
