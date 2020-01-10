@@ -16,7 +16,7 @@ public abstract class LoginRequestHandler<U extends IUser> {
 
 	protected LoginResponse loginResponse;
 
-	private Authenticator authenticator = createAuthenticator();
+	private Authenticator authenticator;
 
 	protected LoginBean loginBean;
 
@@ -25,6 +25,8 @@ public abstract class LoginRequestHandler<U extends IUser> {
 	public LoginResponse handle(LoginRequest request) {
 		this.loginRequest = request;
 		loginResponse = new LoginResponse();
+		createLoginModel();
+		authenticator = createAuthenticator();
 		handle0();
 		postRequestHandled();
 		return loginResponse;
@@ -113,7 +115,6 @@ public abstract class LoginRequestHandler<U extends IUser> {
 	}
 
 	protected boolean validateUserName() {
-		createLoginModel();
 		return authenticator.validateUsername(loginModel);
 	}
 

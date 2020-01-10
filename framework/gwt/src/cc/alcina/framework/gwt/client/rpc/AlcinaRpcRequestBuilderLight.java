@@ -7,7 +7,7 @@ import com.google.gwt.user.client.rpc.ServiceDefTarget;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
-@RegistryLocation(registryPoint =AlcinaRpcRequestBuilderLight.class)
+@RegistryLocation(registryPoint = AlcinaRpcRequestBuilderLight.class)
 @ClientInstantiable
 public abstract class AlcinaRpcRequestBuilderLight extends RpcRequestBuilder {
 	public AlcinaRpcRequestBuilderLight() {
@@ -15,13 +15,16 @@ public abstract class AlcinaRpcRequestBuilderLight extends RpcRequestBuilder {
 
 	public void addAlcinaHeaders(RequestBuilder rb) {
 		rb.setHeader("Cache-Control", "no-cache");
-		rb.setHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_ID_KEY,
-				getClientInstanceIdString());
-		rb.setHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_AUTH_KEY,
-				getClientInstanceAuthString());
+		if (getClientInstanceIdString() != null) {
+			rb.setHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_ID_KEY,
+					getClientInstanceIdString());
+			rb.setHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_AUTH_KEY,
+					getClientInstanceAuthString());
+		}
 	}
 
 	public abstract void adjustEndpoint(ServiceDefTarget serviceDefTarget);
+
 	@Override
 	protected void doFinish(RequestBuilder rb) {
 		super.doFinish(rb);
