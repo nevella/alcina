@@ -37,8 +37,7 @@ public abstract class LoginPage extends LuxModalPanel {
 			LuxStyleHead.LOGO.addTo(logo);
 			head.add(logo);
 		}
-		head.addStyledTextBlock(LuxStyleHead.TITLE,
-				"Opsol - openlaw.org.au ops console");
+		head.addStyledTextBlock(LuxStyleHead.TITLE, controller.getTitleText());
 		head.addStyledTextBlock(LuxStyleHead.SUBTITLE, getSubtitleText());
 		return head;
 	}

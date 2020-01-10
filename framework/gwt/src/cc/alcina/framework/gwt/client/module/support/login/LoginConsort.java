@@ -87,6 +87,8 @@ public abstract class LoginConsort extends Consort<State> {
 		return null;
 	}
 
+	protected abstract String getTitleText();
+
 	protected void handleSuccess(LoginResponse response) {
 		boolean hasRequestUsername = Ax.notBlank(request.getUserName());
 		if (!hasRequestUsername) {
