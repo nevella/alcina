@@ -262,7 +262,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
             capWidget.setStyleName("caption");
         }
         fp.add(capWidget);
-        if (!CommonUtils.isNullOrEmpty(msg)) {
+        if (!CommonUtils.isNullOrEmpty(msg)&&isViewDetail()) {
             Link nh = new Link("View detail");
             nh.addStyleName("pad-5");
             dialogHtml = new HTML("<span class='logboxpre'>"
@@ -309,7 +309,11 @@ public class ClientNotificationsImpl implements ClientNotifications {
         Scheduler.get().scheduleDeferred(() -> closeButton.setFocus(true));
     }
 
-    @Override
+    protected boolean isViewDetail() {
+		return true;
+	}
+
+	@Override
     public void showError(String msg, Throwable throwable) {
         log("error: " + msg.replace("<br>", "\n") + "\n"
                 + throwable.toString());

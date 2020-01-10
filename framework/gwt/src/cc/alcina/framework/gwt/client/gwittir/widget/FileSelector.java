@@ -20,6 +20,7 @@ import com.google.gwt.user.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
 /**
  * A very, very, very simple, rapid implementation. Very.
@@ -31,11 +32,29 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 	private FileInput base;
 
 	private FileSelectorInfo value;
+	
+	private String accept;
+
+	public String getAccept() {
+		return this.accept;
+	}
+
+	public void setAccept(String accept) {
+		this.accept = accept;
+	}
+
+	private TopicListener<FileSelectorInfo> clearListener = (k, v) -> base
+			.clear();
 
 	public FileSelector() {
 		this.base = new FileInput();
 		initWidget(base);
 		base.addChangeHandler(this);
+	}
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		base.setAccept(accept);
 	}
 
 	public FileSelectorInfo getValue() {
@@ -68,7 +87,11 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 						bytes[i] = (byte) result.charAt(i);
 					}
 					newInfo.setBytes(bytes);
+					newInfo.topicClear().add(clearListener);
 					FileSelectorInfo oldValue = value;
+					if (oldValue != null) {
+						oldValue.topicClear().remove(clearListener);
+					}
 					value = newInfo;
 					changes.firePropertyChange("value", oldValue, newInfo);
 				}
@@ -81,17 +104,18 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 		base.setEnabled(enabled);
 	}
 
+	// never actually called - 'value' only created post readBinaryString
 	public void setValue(FileSelectorInfo value) {
 		this.value = value;
 	}
 
 	private native void readAsBinaryString(Html5File file,
 			AsyncCallback<String> callback)/*-{
-											var reader=new FileReader();
-											reader.onloadend=function(){
-											callback.@com.google.gwt.user.client.rpc.AsyncCallback::onSuccess(Ljava/lang/Object;)(reader.result);
-											
-											};
-											reader.readAsBinaryString(file);
-											}-*/;
+    var reader = new FileReader();
+    reader.onloadend = function() {
+      callback.@com.google.gwt.user.client.rpc.AsyncCallback::onSuccess(Ljava/lang/Object;)(reader.result);
+
+    };
+    reader.readAsBinaryString(file);
+	}-*/;
 }

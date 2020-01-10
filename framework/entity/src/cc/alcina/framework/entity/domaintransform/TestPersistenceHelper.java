@@ -17,7 +17,6 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,6 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.MethodWrapper;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
@@ -53,7 +51,7 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
  */
 @SuppressWarnings("unchecked")
 public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
-		PropertyAccessor, CurrentUtcDateProvider, BeanDescriptorProvider {
+		PropertyAccessor,  BeanDescriptorProvider {
 	public static TestPersistenceHelper get() {
 		TestPersistenceHelper singleton = Registry
 				.checkSingleton(TestPersistenceHelper.class);
@@ -91,12 +89,6 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 
-	@SuppressWarnings("deprecation")
-	// it works...yeah, calendar shmalendar
-	public Date currentUtcDate() {
-		Date d = new Date();
-		return new Date(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
-	}
 
 	public String displayNameForObject(Object o) {
 		if (o instanceof HasGeneratedDisplayName) {

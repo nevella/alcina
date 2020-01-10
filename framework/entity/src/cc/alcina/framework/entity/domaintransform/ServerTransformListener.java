@@ -13,13 +13,13 @@
  */
 package cc.alcina.framework.entity.domaintransform;
 
+import java.util.Date;
+
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 
 /**
  * 
@@ -29,8 +29,7 @@ public class ServerTransformListener implements DomainTransformListener {
 	public void domainTransform(DomainTransformEvent evt)
 			throws DomainTransformException {
 		if (evt.getCommitType() == CommitType.TO_LOCAL_BEAN) {
-			evt.setUtcDate(Registry.impl(CurrentUtcDateProvider.class)
-					.currentUtcDate());
+			evt.setUtcDate(new Date());
 		} else if (evt.getCommitType() == CommitType.TO_STORAGE) {
 			TransformManager tm = TransformManager.get();
 			try {

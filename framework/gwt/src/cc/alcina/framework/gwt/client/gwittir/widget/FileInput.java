@@ -11,6 +11,8 @@ import com.google.gwt.user.client.ui.HasEnabled;
 import com.google.gwt.user.client.ui.HasName;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 public class FileInput extends Widget
 		implements HasName, HasChangeHandlers, HasEnabled {
 	private FileInputImpl impl;
@@ -116,6 +118,16 @@ public class FileInput extends Widget
 		@Override
 		public boolean supportsFileAPI() {
 			return true;
+		}
+	}
+
+	public void clear() {
+		inputElement.setValue(null);
+	}
+
+	public void setAccept(String accept) {
+		if(Ax.notBlank(accept)) {
+			inputElement.setAccept(accept);
 		}
 	}
 }
