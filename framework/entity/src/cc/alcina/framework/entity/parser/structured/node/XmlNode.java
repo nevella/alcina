@@ -1060,15 +1060,20 @@ public class XmlNode {
 		}
 
 		public String previousNonWhitespaceText() {
+			return previousNonWhitespaceTextNode().map(XmlNode::ntc)
+					.orElse(null);
+		}
+
+		public Optional<XmlNode> previousNonWhitespaceTextNode() {
 			while (true) {
 				Node previous = tw.previousNode();
 				if (previous == null) {
-					return null;
+					return Optional.empty();
 				}
 				XmlNode xPrevious = doc.nodeFor(previous);
 				if (xPrevious.isText()
 						&& xPrevious.isNonWhitespaceTextContent()) {
-					return xPrevious.ntc();
+					return Optional.of(xPrevious);
 				}
 			}
 		}

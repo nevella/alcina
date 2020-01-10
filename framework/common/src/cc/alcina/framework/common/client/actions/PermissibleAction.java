@@ -148,4 +148,7 @@ public class PermissibleAction implements Permissible {
 			this.delegate.setActionName(actionName);
 		}
 	}
+
+	public void wasCalled() {
+	}
 }

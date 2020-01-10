@@ -72,6 +72,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
@@ -762,8 +764,22 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformRequestException {
-		return ServletLayerTransforms.get().transform(request, false, false,
-				true).response;
+		try {
+			return ServletLayerTransforms.get().transform(request, false, false,
+					true).response;
+		} catch (DomainTransformRequestException dtre) {
+			throw dtre;
+		} catch (Exception e) {
+			DomainTransformResponse domainTransformResponse = new DomainTransformResponse();
+			domainTransformResponse.setRequest(request);
+			DomainTransformException transformException = new DomainTransformException(
+					e.getMessage(), e);
+			transformException.setRequest(request);
+			transformException.setType(DomainTransformExceptionType.UNKNOWN);
+			domainTransformResponse.getTransformExceptions()
+					.add(transformException);
+			throw new DomainTransformRequestException(domainTransformResponse);
+		}
 	}
 
 	@Override

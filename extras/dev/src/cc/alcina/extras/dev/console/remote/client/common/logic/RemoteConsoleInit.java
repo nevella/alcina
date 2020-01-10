@@ -23,8 +23,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
-import cc.alcina.framework.gwt.client.logic.ClientUTCDateProvider;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public class RemoteConsoleInit {
@@ -42,8 +40,6 @@ public class RemoteConsoleInit {
         JavascriptKeyableLookup.initJs();
         Registry.get().registerBootstrapServices(ClientReflector.get());
         Reflections.registerClassLookup(ClientReflector.get());
-        Registry.registerSingleton(CurrentUtcDateProvider.class,
-                new ClientUTCDateProvider());
         RemoteConsoleModule.get();
         RemoteConsoleRequest request = RemoteConsoleRequest.create();
         request.setType(RemoteConsoleRequestType.STARTUP);

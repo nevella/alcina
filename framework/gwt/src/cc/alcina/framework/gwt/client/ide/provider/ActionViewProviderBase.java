@@ -346,6 +346,7 @@ public abstract class ActionViewProviderBase
 						.getCommonRemoteServiceAsyncInstance())
 								.performAction(action, asyncCallback);
 			}
+			action.wasCalled();
 		}
 	}
 

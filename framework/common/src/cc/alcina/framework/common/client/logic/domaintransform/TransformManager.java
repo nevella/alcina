@@ -66,7 +66,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -1981,8 +1980,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public static class RecordTransformListener
 			implements DomainTransformListener {
-		private CurrentUtcDateProvider utcDateProvider = Registry
-				.impl(CurrentUtcDateProvider.class);
 
 		@Override
 		public void domainTransform(DomainTransformEvent evt) {
@@ -1991,7 +1988,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 				if (tm.isProvisionalObject(evt.getSource())) {
 					return;
 				}
-				evt.setUtcDate(utcDateProvider.currentUtcDate());
+				/*
+				 * Not 'UTC' date! No such thing exists - just the epoch date.
+				 */
+				evt.setUtcDate(new Date());
 				evt.setEventId(tm.nextEventIdCounter());
 				tm.setTransformCommitType(evt, CommitType.TO_LOCAL_GRAPH);
 				return;

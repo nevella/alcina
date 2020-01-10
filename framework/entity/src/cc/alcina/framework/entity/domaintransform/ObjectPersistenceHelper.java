@@ -17,7 +17,6 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,11 +38,9 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 import cc.alcina.framework.entity.util.MethodWrapper;
@@ -296,15 +293,5 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
         Reflections.registerBeanDescriptorProvider(this);
     }
 
-    @RegistryLocation(registryPoint = CurrentUtcDateProvider.class, implementationType = ImplementationType.SINGLETON)
-    public static class JvmCurrentUtcDateProvider
-            implements CurrentUtcDateProvider {
-        @Override
-        @SuppressWarnings("deprecation")
-        // it works...yeah, calendar shmalendar
-        public Date currentUtcDate() {
-            Date d = new Date();
-            return new Date(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
-        }
-    }
+    
 }

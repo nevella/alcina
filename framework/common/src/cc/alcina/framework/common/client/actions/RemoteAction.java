@@ -38,4 +38,5 @@ public class RemoteAction extends PermissibleAction implements Serializable {
 	public String getDescription() {
 		return "";
 	}
+
 }

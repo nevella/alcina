@@ -96,6 +96,7 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		for (DomainTransformException dte : exceptions) {
 			if (dte.irresolvable()) {
 				irresolvable = dte;
+				reloadRequired = true;
 			}
 			if (dte.getEvent() == null) {
 				continue;
@@ -330,9 +331,14 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		public void irresolvable(DomainTransformException dte) {
 			blurb.setVisible(false);
 			String text = "<p>A problem has occurred which requires this page to be reloaded.</p>";
-			if (dte.getType() == DomainTransformExceptionType.INVALID_AUTHENTICATION) {
+			switch (dte.getType()) {
+			case INVALID_AUTHENTICATION:
 				text += "<p>The page's authentication is invalid. You may have logged in or out in another tab to this one.</p>";
-			} else {
+				break;
+			case UNKNOWN:
+				text += "<p>Unexpected exception.</p>";
+				break;
+			default:
 				text += "<p>Too many problems occurred to be resolved automatically.</p>";
 			}
 			text += "<p><b>Detail: </b>" + dte.getMessage() + "</p>";

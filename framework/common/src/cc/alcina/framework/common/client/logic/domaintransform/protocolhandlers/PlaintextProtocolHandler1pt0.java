@@ -10,8 +10,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.common.client.util.SimpleStringParser20;
 
 @RegistryLocation(registryPoint = DTRProtocolHandler.class)
@@ -58,8 +56,6 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 
 	private SimpleStringParser20 asyncParser = null;
 
-	private CurrentUtcDateProvider utcDateProvider = Registry
-			.impl(CurrentUtcDateProvider.class);
 
 	public void appendTo(DomainTransformEvent domainTransformEvent,
 			StringBuffer sb) {
@@ -191,7 +187,7 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 			dte.setUtcDate(new Date(utcTime));
 		} else {
 			dte.setTransformType(TransformType.valueOf(p.read("", "\n")));
-			dte.setUtcDate(utcDateProvider.currentUtcDate());
+			dte.setUtcDate(new Date());
 		}
 		i = p.read(STRING_VALUE, "\n");
 		dte.setNewStringValue(i.indexOf("\\") == -1 ? i : unescape(i));
