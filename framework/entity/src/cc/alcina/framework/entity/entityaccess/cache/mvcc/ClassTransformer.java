@@ -353,21 +353,28 @@ class ClassTransformer {
 				 * 
 				 * o1::tx5.group = o2::tx3
 				 * 
-				 * So all access to that field must either both (a) in a public
-				 * method (which is itself wrapped to ensure o2::tx5 is returned
-				 * in the example above) and be a this. access, or be a
-				 * non-domain type (since we're assuming 'this' is
+				 * So all access to that field must either both (a) in a
+				 * non-private method (which is itself wrapped to ensure o2::tx5
+				 * is returned in the example above) or be a this. access, or be
+				 * a non-domain type (since we're assuming 'this' is
 				 * transactionally correct, by induction)
 				 * 
 				 * So...problematic iff::
 				 * 
-				 * field access is outside getter/setter or not 'this' in
+				 * field access is in a private method and not 'this' in
 				 * getter/setter
 				 * 
 				 * field type is hili
 				 * 
 				 * field scope is hili
 				 * 
+				 * TODO:
+				 * 
+				 * ..forbid assignment to this
+				 * 
+				 * ... inner classes
+				 * 
+				 * forbid return value of this
 				 * 
 				 * 
 				 */
@@ -608,8 +615,7 @@ class ClassTransformer {
 						 */
 						bodyBuilder.line(
 								"%s __instance__ = (%s) cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions.resolve(this,%s);",
-								originalClass.getName(),
-								originalClass.getName(), writeResolve);
+								cf.getName(), cf.getName(), writeResolve);
 						bodyBuilder.line(
 								"if (__instance__ != this){\n\t%s __instance__.%s(%s);\n}\n",
 								returnPhrase, method.getName(), parameterList);
@@ -695,7 +701,7 @@ class ClassTransformer {
 								continue;
 							}
 							if ((method.getModifiers()
-									& Modifier.PUBLIC) == 0) {
+									& Modifier.PRIVATE) != 0) {
 								continue;
 							}
 							// FIXME-apdm - we actually want the below - but
