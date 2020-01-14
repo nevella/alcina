@@ -172,9 +172,17 @@ public class JobRegistry implements RegistrableService {
 	}
 
 	public void checkCancelled() {
+		checkCancelled(false);
+	}
+
+	/*
+	 * If we're - say - in a fork join pool thread, it's enough that the
+	 * parallel stream launcher thread has a tracker
+	 */
+	public void checkCancelled(boolean suppressNullTrackerMessages) {
 		JobTracker jobTracker = getContextTracker();
 		if (jobTracker == null) {
-			if (Ax.isTest()) {
+			if (Ax.isTest() || suppressNullTrackerMessages) {
 			} else {
 				System.out.println("warn - checking null trracker");
 			}

@@ -13,13 +13,18 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 import cc.alcina.framework.entity.parser.structured.node.XmlTokenStream;
 
 public class StructuredTokenParserContext {
+	public static final String CONTEXT_DEBUG_UNMATCHED_NODES = StructuredTokenParserContext.class
+			.getName() + ".CONTEXT_DEBUG_UNMATCHED_NODES";
+
 	public XmlTokenOutput out;
 
 	public XmlTokenStream stream;
@@ -74,7 +79,13 @@ public class StructuredTokenParserContext {
 		}
 		String depthInSpacer = CommonUtils.padStringLeft("",
 				(depthIn - initialDepthIn) * 2, " ");
-		join.sourceNode.logToFile();
+		if (LooseContext.is(CONTEXT_DEBUG_UNMATCHED_NODES)) {
+			Ax.out("=== === ===");
+			Ax.out(join.sourceNode.prettyToString());
+			Ax.out("=== === ===");
+			Ax.out(matched.keySet().toString());
+			Ax.out("=== === ===");
+		}
 		String outStr = targetNode == null ? "(no output)"
 				: targetNode.debug().shortRepresentation();
 		String inStr = sourceNode == null ? "(no input)"
