@@ -10,5 +10,5 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RUNTIME)
 @Target(ElementType.METHOD)
-public @interface DirectFieldAccessOk {
+public @interface MvccAccessCorrect {
 }

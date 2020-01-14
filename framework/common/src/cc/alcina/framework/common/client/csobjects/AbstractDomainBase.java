@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.DirectFieldAccessOk;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccessCorrect;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 @MappedSuperclass
@@ -193,7 +193,7 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
         return CommonUtils.compareLongs(getId(), o.getId());
     }
 
-    @DirectFieldAccessOk
+    @MvccAccessCorrect
     protected String comparisonString() {
         throw new RuntimeException(
                 "no display name available, and using comparator");

@@ -87,7 +87,9 @@ public class DomainStoreTransformSequencer {
 		logger.trace("Remove local barrier: {}", requestId);
 		CountDownLatch latch = preLocalNonFireEventsThreadBarrier
 				.get(requestId);
-		latch.countDown();
+		if (latch != null) {
+			latch.countDown();
+		}
 	}
 
 	// called by the main firing sequence thread, since the local vm transforms
@@ -330,9 +332,9 @@ public class DomainStoreTransformSequencer {
 		}
 	}
 
-    Timestamp getHighestVisibleTransactionTimestamp() {
-        return highestVisibleTransactions.commitTimestamp;
-    }
+	Timestamp getHighestVisibleTransactionTimestamp() {
+		return highestVisibleTransactions.commitTimestamp;
+	}
 
 	void markHighestVisibleTransformList(Connection conn) throws SQLException {
 		if (!loaderDatabase.domainDescriptor

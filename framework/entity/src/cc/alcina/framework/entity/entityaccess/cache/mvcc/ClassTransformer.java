@@ -24,6 +24,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
@@ -203,8 +204,6 @@ class ClassTransformer {
 
 		private String source;
 
-		private Set<String> methodsWithProblematicFieldAccess = new LinkedHashSet<>();
-
 		private Set<String> methodsWithProblematicAccess = new LinkedHashSet<>();
 
 		private Set<String> fieldsWithProblematicAccess = new LinkedHashSet<>();
@@ -231,19 +230,6 @@ class ClassTransformer {
 					.forEach(f -> fieldsWithProblematicAccess.add(f.getName()));
 		}
 
-		private void checkMethodModifiers() {
-			// Old, old...methods we love. Fields terrify us
-			//
-			// SEUtilities.allClassMethods(originalClass).stream()
-			// .filter(f -> (f.getModifiers() & Modifier.PUBLIC) == 0)
-			// .filter(f -> (f.getModifiers() & Modifier.STATIC) == 0)
-			// .filter(f -> (f.getModifiers() & Modifier.TRANSIENT) == 0)
-			// .filter(f -> !f.getName().matches(
-			// "propertyChangeSupport|comparisonString|_compareTo"))
-			// .forEach(
-			// f -> methodsWithProblematicAccess.add(f.getName()));
-		}
-
 		private String findSource() throws Exception {
 			for (SourceFinder finder : SourceFinder.sourceFinders) {
 				String source = finder.findSource(originalClass);
@@ -261,27 +247,17 @@ class ClassTransformer {
 
 		void checkFieldAndMethodAccess() {
 			if (isSameSourceAsLastRun()) {
-				methodsWithProblematicFieldAccess = lastRun.methodsWithProblematicFieldAccess;
+				methodsWithProblematicAccess = lastRun.methodsWithProblematicAccess;
 				fieldsWithProblematicAccess = lastRun.fieldsWithProblematicAccess;
 			} else {
 				checkFieldModifiers();
-				checkMethodModifiers();
 				if (source != null) {
 					compilationUnit = StaticJavaParser.parse(source);
 					classDeclaration = compilationUnit
 							.getClassByName(originalClass.getSimpleName())
 							.get();
-					classDeclaration.accept(new CheckFieldAccessVisitor(),
-							null);
+					classDeclaration.accept(new CheckAccessVisitor(), null);
 				}
-			}
-			if (methodsWithProblematicFieldAccess.size() > 0) {
-				Ax.err("\n======================\nClass: %s\nMethodsWithProblematicFieldAccess:\n======================",
-						originalClass.getName());
-				methodsWithProblematicFieldAccess.forEach(Ax::err);
-				Ax.out("\n");
-				// should never happen
-				throw new UnsupportedOperationException();
 			}
 			if (methodsWithProblematicAccess.size() > 0) {
 				Ax.err("\n======================\nClass: %s\nMethodsWithProblematicAccess:\n======================",
@@ -325,17 +301,13 @@ class ClassTransformer {
 			}
 		}
 
-		private class CheckFieldAccessExpressionVisitor
+		private class CheckAccessExpressionVisitor
 				extends VoidVisitorAdapter<Void> {
 			private MethodDeclaration methodDeclaration;
 
-			private boolean getterOrSetter;
-
-			public CheckFieldAccessExpressionVisitor(
+			public CheckAccessExpressionVisitor(
 					MethodDeclaration methodDeclaration) {
 				this.methodDeclaration = methodDeclaration;
-				this.getterOrSetter = methodDeclaration.getName().asString()
-						.matches("(?:set|get)[A-Z].*");
 			}
 
 			@Override
@@ -346,6 +318,8 @@ class ClassTransformer {
 				}
 				/*
 				 * 
+				 * TODO - make this formal
+				 * 
 				 * Transactional access::
 				 * 
 				 * Field references in transactionally ok objects may be stale
@@ -353,11 +327,12 @@ class ClassTransformer {
 				 * 
 				 * o1::tx5.group = o2::tx3
 				 * 
-				 * So all access to that field must either both (a) in a
-				 * non-private method (which is itself wrapped to ensure o2::tx5
-				 * is returned in the example above) or be a this. access, or be
-				 * a non-domain type (since we're assuming 'this' is
-				 * transactionally correct, by induction)
+				 * So all access to a field must be a this.field access - and we
+				 * ensure the correctness of this (i.e. that the field values
+				 * are transactionally correct) by resolving 'this' in any
+				 * non-private method calls to the object.
+				 * 
+				 * 
 				 * 
 				 * So...problematic iff::
 				 * 
@@ -406,9 +381,8 @@ class ClassTransformer {
 							scopeTypeIsDomain = true;
 						}
 					}
-					if (scopeTypeIsDomain && fieldTypeIsDomain) {
-						if (expr.getScope() instanceof ThisExpr
-								&& this.getterOrSetter) {
+					if (scopeTypeIsDomain) {
+						if (expr.getScope() instanceof ThisExpr) {
 							// OK
 							return;
 						} else {
@@ -416,8 +390,8 @@ class ClassTransformer {
 							//
 							// the *only* access issue is non-private fields
 							//
-							// methodsWithProblematicFieldAccess.add(
-							// methodDeclaration.getDeclarationAsString());
+							methodsWithProblematicAccess.add(
+									methodDeclaration.getDeclarationAsString());
 						}
 					}
 				} catch (Exception e) {
@@ -425,7 +399,16 @@ class ClassTransformer {
 				}
 			}
 
-			private boolean isPartOfAnnotationExpression(FieldAccessExpr expr) {
+			@Override
+			public void visit(ThisExpr expr, Void arg) {
+				if (isPartOfAnnotationExpression(expr)) {
+					// constant expression
+					return;
+				}
+				int debug = 3;
+			}
+
+			private boolean isPartOfAnnotationExpression(Expression expr) {
 				Optional<Node> cursor = Optional.<Node> ofNullable(expr);
 				while (cursor.isPresent()) {
 					Node node = cursor.get();
@@ -438,16 +421,17 @@ class ClassTransformer {
 			}
 		}
 
-		private class CheckFieldAccessVisitor extends VoidVisitorAdapter<Void> {
+		private class CheckAccessVisitor extends VoidVisitorAdapter<Void> {
 			@Override
 			public void visit(MethodDeclaration methodDeclaration, Void arg) {
 				if (methodDeclaration
-						.getAnnotationByClass(DirectFieldAccessOk.class)
+						.getAnnotationByClass(MvccAccessCorrect.class)
 						.isPresent()) {
 					return;
 				}
-				methodDeclaration.accept(new CheckFieldAccessExpressionVisitor(
-						methodDeclaration), null);
+				methodDeclaration.accept(
+						new CheckAccessExpressionVisitor(methodDeclaration),
+						null);
 			}
 		}
 
