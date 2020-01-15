@@ -97,6 +97,10 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 		Ax.err("created object version: %s : %s", toString(), hashCode());
 	}
 
+	public T getBaseObject() {
+		return this.baseObject;
+	}
+
 	@Override
 	public String toString() {
 		try {

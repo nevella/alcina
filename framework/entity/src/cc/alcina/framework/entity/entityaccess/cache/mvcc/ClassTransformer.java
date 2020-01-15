@@ -24,10 +24,17 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.AssignExpr;
+import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
+import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
+import com.github.javaparser.ast.expr.ObjectCreationExpr;
+import com.github.javaparser.ast.expr.SuperExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
+import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
 import com.github.javaparser.resolution.types.ResolvedType;
@@ -179,7 +186,7 @@ class ClassTransformer {
 		}
 
 		private String toPath(URL sourceFileLocation) {
-			return sourceFileLocation.toString().replace("file://", "");
+			return sourceFileLocation.toString().replaceFirst("^file:/*/", "/");
 		}
 	}
 
@@ -199,8 +206,6 @@ class ClassTransformer {
 		private transient CompilationUnit compilationUnit;
 
 		private transient boolean invalid;
-
-		private transient ClassOrInterfaceDeclaration classDeclaration;
 
 		private String source;
 
@@ -253,10 +258,14 @@ class ClassTransformer {
 				checkFieldModifiers();
 				if (source != null) {
 					compilationUnit = StaticJavaParser.parse(source);
-					classDeclaration = compilationUnit
-							.getClassByName(originalClass.getSimpleName())
-							.get();
-					classDeclaration.accept(new CheckAccessVisitor(), null);
+					compilationUnit.findAll(ClassOrInterfaceDeclaration.class)
+							.forEach(classDeclaration -> {
+								String typeName = classDeclaration.getName()
+										.asString();
+								Ax.out("checking correctness: %s", typeName);
+								classDeclaration
+										.accept(new CheckAccessVisitor(), null);
+							});
 				}
 			}
 			if (methodsWithProblematicAccess.size() > 0) {
@@ -264,8 +273,7 @@ class ClassTransformer {
 						originalClass.getName());
 				methodsWithProblematicAccess.forEach(Ax::err);
 				Ax.out("\n");
-				// should never happen
-				throw new UnsupportedOperationException();
+				invalid = true;
 			}
 			if (fieldsWithProblematicAccess.size() > 0) {
 				Ax.err("\n======================\nClass: %s\nFieldsWithProblematicAccess:\n======================",
@@ -301,6 +309,10 @@ class ClassTransformer {
 			}
 		}
 
+		// TODO - all non-static inner classes must throw exceptions on identity
+		// (equals, hashcode) operations. Probably by extending a base class.
+		// Should (but can't) check for assignment of said inner classes - but
+		// enough to document as a no-no-no
 		private class CheckAccessExpressionVisitor
 				extends VoidVisitorAdapter<Void> {
 			private MethodDeclaration methodDeclaration;
@@ -386,9 +398,7 @@ class ClassTransformer {
 							// OK
 							return;
 						} else {
-							// actually, it's still OK -
-							//
-							// the *only* access issue is non-private fields
+							// nope
 							//
 							methodsWithProblematicAccess.add(
 									methodDeclaration.getDeclarationAsString());
@@ -400,12 +410,55 @@ class ClassTransformer {
 			}
 
 			@Override
+			public void visit(SuperExpr expr, Void arg) {
+				if (isPartOfAnnotationExpression(expr)) {
+					// constant expression
+					return;
+				}
+				Node parent = expr.getParentNode().get();
+				if (parent instanceof ReturnStmt) {
+					// return this
+					methodsWithProblematicAccess
+							.add(methodDeclaration.getDeclarationAsString());
+				}
+				int debug = 3;
+			}
+
+			@Override
 			public void visit(ThisExpr expr, Void arg) {
 				if (isPartOfAnnotationExpression(expr)) {
 					// constant expression
 					return;
 				}
-				int debug = 3;
+				Node parent = expr.getParentNode().get();
+				if (parent instanceof ReturnStmt) {
+					// return this
+					methodsWithProblematicAccess
+							.add(methodDeclaration.getDeclarationAsString());
+				} else if (parent instanceof VariableDeclarator) {
+					// OpsolGroup instance = this;
+					methodsWithProblematicAccess
+							.add(methodDeclaration.getDeclarationAsString());
+				} else if (parent instanceof AssignExpr) {
+					// instance = this;
+					methodsWithProblematicAccess
+							.add(methodDeclaration.getDeclarationAsString());
+				} else if (parent instanceof BinaryExpr) {
+					// boolean ok = instance == this;
+					methodsWithProblematicAccess
+							.add(methodDeclaration.getDeclarationAsString());
+				} else if (parent instanceof MethodCallExpr) {
+					// test1(this);
+					methodsWithProblematicAccess
+							.add(methodDeclaration.getDeclarationAsString());
+				} else if (parent instanceof ObjectCreationExpr) {
+					// new Test(this);
+					methodsWithProblematicAccess
+							.add(methodDeclaration.getDeclarationAsString());
+				} else {
+					// unknown
+					throw new UnsupportedOperationException();
+				}
 			}
 
 			private boolean isPartOfAnnotationExpression(Expression expr) {
@@ -509,6 +562,21 @@ class ClassTransformer {
 						CtMethod newMethod = CtNewMethod.make(Modifier.PUBLIC,
 								classCtClass, "provideEntityClass",
 								new CtClass[0], new CtClass[0], body, ctClass);
+						ctClass.addMethod(newMethod);
+					});
+					tasks.add(() -> {
+						FormatBuilder bodyBuilder = new FormatBuilder();
+						bodyBuilder.line(
+								"{\n\t%s versions = __mvccObjectVersions__;",
+								mvccObjectVersionsCtClass.getName());
+						bodyBuilder.line(
+								"\tif (versions == null){\n\t\treturn this;\n\t} else {\n\t\t"
+										+ "return (%s) versions.getBaseObject();\t\n}\n}",
+								ctClass.getName());
+						String body = bodyBuilder.toString();
+						CtMethod newMethod = CtNewMethod.make(Modifier.PUBLIC,
+								ctClass, "provideIdentity", new CtClass[0],
+								new CtClass[0], body, ctClass);
 						ctClass.addMethod(newMethod);
 					});
 					/*

@@ -65,6 +65,10 @@ public interface HasIdAndLocalId extends HasId {
 		return getClass();
 	}
 
+	default <V extends HasIdAndLocalId> V provideIdentity() {
+		return (V) this;
+	}
+
 	default boolean provideIsNonDomain() {
 		return getId() == 0 && getLocalId() == 0;
 	}
