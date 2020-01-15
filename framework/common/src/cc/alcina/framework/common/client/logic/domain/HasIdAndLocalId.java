@@ -61,12 +61,12 @@ public interface HasIdAndLocalId extends HasId {
 		return ((AbstractDomainBase<V>) this).domain();
 	}
 
-	default Class<? extends HasIdAndLocalId> provideEntityClass() {
-		return getClass();
+	default <V extends HasIdAndLocalId> V provideDomainIdentity() {
+		return (V) this;
 	}
 
-	default <V extends HasIdAndLocalId> V provideIdentity() {
-		return (V) this;
+	default Class<? extends HasIdAndLocalId> provideEntityClass() {
+		return getClass();
 	}
 
 	default boolean provideIsNonDomain() {

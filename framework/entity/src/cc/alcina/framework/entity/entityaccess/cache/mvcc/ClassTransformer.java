@@ -575,8 +575,8 @@ class ClassTransformer {
 								ctClass.getName());
 						String body = bodyBuilder.toString();
 						CtMethod newMethod = CtNewMethod.make(Modifier.PUBLIC,
-								ctClass, "provideIdentity", new CtClass[0],
-								new CtClass[0], body, ctClass);
+								ctClass, "provideDomainIdentity",
+								new CtClass[0], new CtClass[0], body, ctClass);
 						ctClass.addMethod(newMethod);
 					});
 					/*
