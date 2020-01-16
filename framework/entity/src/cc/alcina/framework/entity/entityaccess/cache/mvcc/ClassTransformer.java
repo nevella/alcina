@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
@@ -36,10 +37,12 @@ import com.github.javaparser.ast.expr.SuperExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import com.github.javaparser.resolution.MethodUsage;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserClassDeclaration;
+import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserMethodDeclaration;
 import com.github.javaparser.symbolsolver.reflectionmodel.ReflectionClassDeclaration;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
@@ -292,6 +295,7 @@ class ClassTransformer {
 			try {
 				this.source = findSource();
 				this.lastRun = transformer.cache.get(originalClass.getName());
+				this.lastRun = null;
 				if (this.lastRun != null && this.lastRun.version != VERSION) {
 					this.lastRun = null;
 				}
@@ -406,6 +410,65 @@ class ClassTransformer {
 					}
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
+				}
+			}
+
+			@Override
+			public void visit(MethodCallExpr expr, Void arg) {
+				if (isPartOfAnnotationExpression(expr)) {
+					// constant expression
+					return;
+				}
+				if (expr.getScope().isPresent()) {
+					Expression scope = expr.getScope().get();
+					if (scope instanceof ThisExpr) {
+					} else {
+						if (expr.toString().contains("pathIs0")) {
+							try {
+								ResolvedType scopeType = transformer.solver
+										.getType(scope);
+								ResolvedReferenceTypeDeclaration scopeTypeDeclaration = scopeType
+										.asReferenceType().getTypeDeclaration();
+								if (scopeTypeDeclaration instanceof ReflectionClassDeclaration) {
+									Class clazz = (Class) transformer.referenceTypeClazzAccessor
+											.get(scopeTypeDeclaration);
+									int debug = 3;
+								} else if (scopeTypeDeclaration instanceof JavaParserClassDeclaration) {
+									JavaParserClassDeclaration parserClassDeclaration = (JavaParserClassDeclaration) scopeTypeDeclaration;
+									MethodUsage methodUsage = parserClassDeclaration
+											.getAllMethods().stream()
+											.filter(mu -> mu.getName().equals(
+													expr.getNameAsString())
+													&& mu.getParamTypes()
+															.equals(expr
+																	.getArguments()
+																	.stream()
+																	.map(ex -> transformer.solver
+																			.getType(
+																					ex))
+																	.collect(
+																			Collectors
+																					.toList())))
+											.findFirst().get();
+									JavaParserMethodDeclaration declaration = (JavaParserMethodDeclaration) methodUsage
+											.getDeclaration();
+									String signature = declaration
+											.getSignature();
+									boolean privateMethod = declaration
+											.getWrappedNode().getModifiers()
+											.stream().anyMatch(m -> m
+													.getKeyword() == Keyword.PRIVATE);
+									if (privateMethod) {
+										methodsWithProblematicAccess
+												.add(methodDeclaration
+														.getDeclarationAsString());
+									}
+								}
+							} catch (Exception e) {
+								throw new WrappedRuntimeException(e);
+							}
+						}
+					}
 				}
 			}
 
