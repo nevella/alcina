@@ -38,6 +38,7 @@ public abstract class LoginRequestHandler<U extends IUser> {
 		loginBean = new LoginBean();
 		loginBean.setUserName(loginRequest.getUserName());
 		loginBean.setPassword(loginRequest.getPassword());
+		loginBean.setProperties(loginRequest.getProperties());
 		loginModel = new LoginModel<>();
 		loginModel.loginRequest = loginRequest;
 		loginModel.loginBean = loginBean;

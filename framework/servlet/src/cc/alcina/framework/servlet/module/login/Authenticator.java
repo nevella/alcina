@@ -59,6 +59,13 @@ public abstract class Authenticator<U extends IUser> {
 			HttpServletResponse httpServletResponse,
 			LoginResponse loginResponse, String userName, boolean rememberMe)
 			throws AuthenticationException {
+		if (loginModel == null) {
+			LoginBean loginBean = new LoginBean();
+			loginBean.setUserName(userName);
+			loginModel = new LoginModel();
+			loginModel.loginBean = loginBean;
+			loginModel.loginResponse = loginResponse;
+		}
 		U user = validateAccount(loginResponse, userName);
 		if (loginResponse.isOk()) {
 			Registry.impl(SessionHelper.class).setupSessionForUser(
@@ -68,11 +75,13 @@ public abstract class Authenticator<U extends IUser> {
 				Sx.commit();
 			}
 		}
-		createClientInstance(httpServletRequest, httpServletResponse,
-				loginResponse);
-		if (rememberMe) {
-			new CookieHelper().setRememberMeCookie(httpServletRequest,
-					httpServletResponse, rememberMe);
+		if (httpServletRequest != null) {
+			createClientInstance(httpServletRequest, httpServletResponse,
+					loginResponse);
+			if (rememberMe) {
+				new CookieHelper().setRememberMeCookie(httpServletRequest,
+						httpServletResponse, rememberMe);
+			}
 		}
 	}
 

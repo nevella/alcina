@@ -17,6 +17,28 @@ import cc.alcina.framework.entity.ResourceUtilities;
  * https://www.javacodegeeks.com/2011/12/google-authenticator-using-it-with-your.html
  */
 public class TwoFactorAuthentication {
+	public boolean checkCode(String secret, long code, long t)
+			throws NoSuchAlgorithmException, InvalidKeyException {
+		String codeOverride = ResourceUtilities.get("codeOverride");
+		if (Ax.notBlank(codeOverride)
+				&& String.valueOf(code).equals(codeOverride)) {
+			return true;
+		}
+		Base32 codec = new Base32();
+		byte[] decodedKey = codec.decode(secret);
+		// Window is used to check codes generated in the near past.
+		// You can use this value to tune how far you're willing to go.
+		int window = 3;
+		for (int i = -window; i <= window; ++i) {
+			long hash = verifyCode(decodedKey, t + i);
+			if (hash == code) {
+				return true;
+			}
+		}
+		// The validation code is invalid.
+		return false;
+	}
+
 	public String generateSecret() {
 		// Allocating the buffer
 		int scratchCodeSize = 12;
@@ -37,30 +59,10 @@ public class TwoFactorAuthentication {
 
 	public String getQRBarcodeURL(String user, String host,
 			String perUserSecret) {
-		String format = "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&cht=qr&chl=otpauth:%s%s@%s%%3Fsecret%%3D%s";
-		return String.format(format, "%2F%2Ftotp%2F", user, host,
-				perUserSecret);
-	}
-
-	public boolean checkCode(String secret, long code, long t)
-			throws NoSuchAlgorithmException, InvalidKeyException {
-		String codeOverride = ResourceUtilities.get("codeOverride");
-		if (Ax.notBlank(codeOverride) && String.valueOf(code).equals(codeOverride)) {
-			return true;
-		}
-		Base32 codec = new Base32();
-		byte[] decodedKey = codec.decode(secret);
-		// Window is used to check codes generated in the near past.
-		// You can use this value to tune how far you're willing to go.
-		int window = 3;
-		for (int i = -window; i <= window; ++i) {
-			long hash = verifyCode(decodedKey, t + i);
-			if (hash == code) {
-				return true;
-			}
-		}
-		// The validation code is invalid.
-		return false;
+		String format = "https://chart.googleapis.com/chart?chs=200x200&chld=M%%7C0&"
+				+ "cht=qr&chl=otpauth:%s%s%%3Fsecret%%3D%s%%26issuer%%3D%s";
+		return String.format(format, "%2F%2Ftotp%2F", user, perUserSecret,
+				host);
 	}
 
 	private int verifyCode(byte[] key, long t)

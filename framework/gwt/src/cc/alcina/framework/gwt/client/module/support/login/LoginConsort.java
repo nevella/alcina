@@ -32,7 +32,7 @@ import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilderLight;
 public abstract class LoginConsort extends Consort<State> {
 	private SimplePanel container;
 
-	LoginRequest request = new LoginRequest();
+	protected LoginRequest request = new LoginRequest();
 
 	@SuppressWarnings("unused")
 	private LoginViewModel viewModel;
