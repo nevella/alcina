@@ -44,8 +44,9 @@ public class XmlTokenOutput {
 					nameAndClass(), tag);
 			writeCursor.ancestors().orSelf().list()
 					.forEach(n -> Ax.out(n.name()));
-			outDoc.logPretty();
-			System.err.println("see /tmp/log/log.xml for details");
+			// Disabling due to permissision issue
+			// outDoc.logPretty();
+			// System.err.println("see /tmp/log/log.xml for details");
 			throw new RuntimeException(String.format(
 					"closing unmatched tag : %s -> %s", nameAndClass(), tag));
 		}

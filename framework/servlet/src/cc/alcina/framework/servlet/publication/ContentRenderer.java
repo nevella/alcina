@@ -86,7 +86,8 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
         m.marshal(wrapper, doc);
         boolean logDocXml = false;
         if (logDocXml) {
-            new XmlDoc(doc).logPretty();
+            // Disabling due to permission issue
+            // new XmlDoc(doc).logPretty();
         }
     }
 
