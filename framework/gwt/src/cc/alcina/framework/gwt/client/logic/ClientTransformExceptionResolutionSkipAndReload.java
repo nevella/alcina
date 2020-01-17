@@ -65,6 +65,7 @@ public class ClientTransformExceptionResolutionSkipAndReload
 	public ClientTransformExceptionResolutionSkipAndReload() {
 	}
 
+	@Override
 	public void resolve(DomainTransformRequestException dtre,
 			Callback<ClientTransformExceptionResolutionToken> callback) {
 		final CommitToStorageTransformListener storage = Registry
@@ -145,8 +146,10 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		if (irresolvable != null) {
 			status.irresolvable(irresolvable);
 		}
-		final String buttonText = irresolvable == null ? "Retry"
-				: "Reload application";
+		final String buttonText = irresolvable == null
+				&& Registry.impl(CommitToStorageTransformListener.class)
+						.isAllowPartialRetryRequests() ? "Retry"
+								: "Reload application";
 		dialog = new OkCancelDialogBox("Problems saving changes", fp, this) {
 			@Override
 			protected void adjustDisplay() {
@@ -154,6 +157,7 @@ public class ClientTransformExceptionResolutionSkipAndReload
 				okButton.setText(buttonText);
 			}
 
+			@Override
 			protected void onOkButtonClicked() {
 				if (!checkValid()) {
 					return;
@@ -168,6 +172,7 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		};
 	}
 
+	@Override
 	public void stateChanged(Object source, String newState) {
 		if (newState.equals(CommitToStorageTransformListener.RELOAD)) {
 			status.reloading();
@@ -186,8 +191,11 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		}
 	}
 
+	@Override
 	public void vetoableAction(PermissibleActionEvent evt) {
-		if (status.isIrresolvable()) {
+		if (status.isIrresolvable()
+				|| !Registry.impl(CommitToStorageTransformListener.class)
+						.isAllowPartialRetryRequests()) {
 			Window.Location.reload();
 		} else {
 			token.setResolverAction(
@@ -318,6 +326,9 @@ public class ClientTransformExceptionResolutionSkipAndReload
 			blurb = new Label("Problems occurred saving changes. "
 					+ "The changes you made will be altered to allow your work to be saved.");
 			blurb.setStyleName("pad-15 italic");
+			blurb.setVisible(
+					Registry.impl(CommitToStorageTransformListener.class)
+							.isAllowPartialRetryRequests());
 			fp.add(blurb);
 			fp.add(html);
 			initWidget(fp);

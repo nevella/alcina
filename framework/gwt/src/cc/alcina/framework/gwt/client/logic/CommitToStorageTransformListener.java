@@ -235,6 +235,14 @@ public class CommitToStorageTransformListener extends StateListenable
 	}
 
 	/*
+	 * Should pretty much always be false. If a transform fails, there are
+	 * consistency issues up and down the line - best to reload and try again
+	 */
+	public boolean isAllowPartialRetryRequests() {
+		return false;
+	}
+
+	/*
 	 * vaguely hacky, if we're connected but need to do some fancy footwork
 	 * before uploading offline transforms
 	 */
