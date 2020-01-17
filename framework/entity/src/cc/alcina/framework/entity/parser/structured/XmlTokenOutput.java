@@ -44,9 +44,8 @@ public class XmlTokenOutput {
 					nameAndClass(), tag);
 			writeCursor.ancestors().orSelf().list()
 					.forEach(n -> Ax.out(n.name()));
-			// Disabling due to permissision issue
-			// outDoc.logPretty();
-			// System.err.println("see /tmp/log/log.xml for details");
+			outDoc.logPretty();
+			System.err.println("see /tmp/log/log.xml for details");
 			throw new RuntimeException(String.format(
 					"closing unmatched tag : %s -> %s", nameAndClass(), tag));
 		}
@@ -137,9 +136,6 @@ public class XmlTokenOutput {
 		if (debug) {
 			System.out.format("text - %s \n",
 					CommonUtils.trimToWsCharsMiddle(text, 80));
-		}
-		if (text.matches(".*s able to.*understand.*")) {
-			int debug = 3;
 		}
 		this.lastTextNode = writeCursor.builder().text(text).append();
 	}
