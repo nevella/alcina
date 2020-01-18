@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
@@ -9,7 +11,9 @@ public class UrlBuilder {
 
 	private String path;
 
-	StringMap qsParams = new StringMap();
+	private StringMap qsParams = new StringMap();
+
+	private String queryString;
 
 	public String build() {
 		StringBuilder sb = new StringBuilder();
@@ -18,6 +22,7 @@ public class UrlBuilder {
 		// assume legal
 		sb.append(path);
 		if (qsParams.size() > 0) {
+			Preconditions.checkArgument(queryString == null);
 			String firstKey = qsParams.keySet().iterator().next();
 			qsParams.entrySet().forEach(e -> {
 				String k = e.getKey();
@@ -31,6 +36,10 @@ public class UrlBuilder {
 					throw new WrappedRuntimeException(ex);
 				}
 			});
+		}
+		if (queryString != null) {
+			sb.append("?");
+			sb.append(queryString);
 		}
 		return sb.toString();
 	}
@@ -47,6 +56,11 @@ public class UrlBuilder {
 
 	public UrlBuilder qsParam(String key, String value) {
 		qsParams.put(key, value);
+		return this;
+	}
+
+	public UrlBuilder queryString(String queryString) {
+		this.queryString = queryString;
 		return this;
 	}
 }

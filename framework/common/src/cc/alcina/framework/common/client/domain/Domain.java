@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.domain;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -16,10 +15,10 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class Domain {
@@ -229,11 +228,8 @@ public class Domain {
 
 		default <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
 				String propertyName, Object value) {
-			IndividualPropertyAccessor accessor = Reflections.propertyAccessor()
-					.cachedAccessor(clazz, propertyName);
-			return stream(clazz).filter(
-					o -> Objects.equals(accessor.getPropertyValue(o), value))
-					.findFirst().orElse(null);
+			return CommonUtils
+					.first(listByProperty(clazz, propertyName, value));
 		}
 
 		default <V extends HasIdAndLocalId> V create(Class<V> clazz) {
@@ -248,11 +244,7 @@ public class Domain {
 
 		default <V extends HasIdAndLocalId> List<V> listByProperty(
 				Class<V> clazz, String propertyName, Object value) {
-			IndividualPropertyAccessor accessor = Reflections.propertyAccessor()
-					.cachedAccessor(clazz, propertyName);
-			return stream(clazz).filter(
-					o -> Objects.equals(accessor.getPropertyValue(o), value))
-					.collect(Collectors.toList());
+			return query(clazz).filter(propertyName, value).list();
 		}
 
 		<V extends HasIdAndLocalId> DomainQuery<V> query(Class<V> clazz);

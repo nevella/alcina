@@ -137,9 +137,6 @@ public class XmlTokenOutput {
 			System.out.format("text - %s \n",
 					CommonUtils.trimToWsCharsMiddle(text, 80));
 		}
-		if (text.matches(".*s able to.*understand.*")) {
-			int debug = 3;
-		}
 		this.lastTextNode = writeCursor.builder().text(text).append();
 	}
 
