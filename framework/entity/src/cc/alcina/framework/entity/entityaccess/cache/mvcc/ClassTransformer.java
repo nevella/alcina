@@ -404,8 +404,13 @@ class ClassTransformer {
 						} else {
 							// nope
 							//
-							methodsWithProblematicAccess.add(
-									methodDeclaration.getDeclarationAsString());
+							if (methodDeclaration
+									.getAnnotationByClass(
+											MvccAccessCorrect.class)
+									.isPresent()) {
+							} else {
+								addProblematicAccess();
+							}
 						}
 					}
 				} catch (Exception e) {
@@ -459,9 +464,7 @@ class ClassTransformer {
 											.stream().anyMatch(m -> m
 													.getKeyword() == Keyword.PRIVATE);
 									if (privateMethod) {
-										methodsWithProblematicAccess
-												.add(methodDeclaration
-														.getDeclarationAsString());
+										addProblematicAccess();
 									}
 								}
 							} catch (Exception e) {
@@ -480,9 +483,7 @@ class ClassTransformer {
 				}
 				Node parent = expr.getParentNode().get();
 				if (parent instanceof ReturnStmt) {
-					// return this
-					methodsWithProblematicAccess
-							.add(methodDeclaration.getDeclarationAsString());
+					addProblematicAccess();
 				}
 				int debug = 3;
 			}
@@ -495,29 +496,18 @@ class ClassTransformer {
 				}
 				Node parent = expr.getParentNode().get();
 				if (parent instanceof ReturnStmt) {
-					// return this
-					methodsWithProblematicAccess
-							.add(methodDeclaration.getDeclarationAsString());
+					addProblematicAccess();
 				} else if (parent instanceof VariableDeclarator) {
-					// OpsolGroup instance = this;
-					methodsWithProblematicAccess
-							.add(methodDeclaration.getDeclarationAsString());
+					addProblematicAccess();
 				} else if (parent instanceof AssignExpr) {
-					// instance = this;
-					methodsWithProblematicAccess
-							.add(methodDeclaration.getDeclarationAsString());
+					addProblematicAccess();
 				} else if (parent instanceof BinaryExpr) {
-					// boolean ok = instance == this;
-					methodsWithProblematicAccess
-							.add(methodDeclaration.getDeclarationAsString());
+					addProblematicAccess();
 				} else if (parent instanceof MethodCallExpr) {
-					// test1(this);
-					methodsWithProblematicAccess
-							.add(methodDeclaration.getDeclarationAsString());
+					addProblematicAccess();
 				} else if (parent instanceof ObjectCreationExpr) {
 					// new Test(this);
-					methodsWithProblematicAccess
-							.add(methodDeclaration.getDeclarationAsString());
+					addProblematicAccess();
 				} else {
 					// unknown
 					throw new UnsupportedOperationException();
@@ -534,6 +524,11 @@ class ClassTransformer {
 					cursor = node.getParentNode();
 				}
 				return false;
+			}
+
+			protected void addProblematicAccess() {
+				methodsWithProblematicAccess
+						.add(methodDeclaration.getDeclarationAsString());
 			}
 		}
 
