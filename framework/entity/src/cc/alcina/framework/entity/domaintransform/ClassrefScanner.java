@@ -26,7 +26,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
@@ -42,7 +41,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.NonDomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -63,18 +61,6 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
  * @author Nick Reddel
  */
 public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
-	public static class ClassrefScannerMetadata
-			extends ClassMetadata<ClassrefScannerMetadata> {
-		public ClassrefScannerMetadata() {
-		}
-
-		public ClassrefScannerMetadata(String className) {
-			super(className);
-		}
-
-		public boolean isClassRef;
-	}
-
 	private LinkedHashSet<Class> persistableClasses;
 
 	private long roIdCounter = 0;
@@ -249,6 +235,9 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 	}
 
 	private void commit() throws Exception {
+		if (ResourceUtilities.is("commitDisabled")) {
+			return;
+		}
 		for (ClassrefScannerMetadata metadata : outgoingCache.classData
 				.values()) {
 			if (metadata.isClassRef) {
@@ -319,6 +308,12 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 	}
 
 	@Override
+	protected ClassrefScannerMetadata createMetadata(String className,
+			ClassMetadata found) {
+		return new ClassrefScannerMetadata(className).fromUrl(found);
+	}
+
+	@Override
 	protected ClassrefScannerMetadata process(Class clazz, String className,
 			ClassMetadata found) {
 		ClassrefScannerMetadata out = createMetadata(className, found);
@@ -349,9 +344,15 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 		return out;
 	}
 
-	@Override
-	protected ClassrefScannerMetadata createMetadata(String className,
-			ClassMetadata found) {
-		return new ClassrefScannerMetadata(className).fromUrl(found);
+	public static class ClassrefScannerMetadata
+			extends ClassMetadata<ClassrefScannerMetadata> {
+		public boolean isClassRef;
+
+		public ClassrefScannerMetadata() {
+		}
+
+		public ClassrefScannerMetadata(String className) {
+			super(className);
+		}
 	}
 }

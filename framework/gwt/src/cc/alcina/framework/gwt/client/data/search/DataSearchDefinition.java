@@ -32,7 +32,7 @@ public abstract class DataSearchDefinition extends SearchDefinition {
                         .collect(Collectors.joining(", ")))));
     }
 
-    public DataCriteriaGroup demeterCriteriaGroup() {
+    public DataCriteriaGroup dataCriteriaGroup() {
         return (DataCriteriaGroup) getCriteriaGroups().iterator().next();
     }
 

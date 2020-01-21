@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import cc.alcina.framework.common.client.domain.DomainCollections;
 import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreIdMapCreator;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreLongSetCreator;
@@ -15,12 +16,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.SortedMultiset;
+import cc.alcina.framework.common.client.util.Multiset;
 import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class DomainStoreCreatorsFastUtil {
-	@RegistryLocation(registryPoint = DomainStoreIdMapCreator.class, implementationType = ImplementationType.SINGLETON)
+	@RegistryLocation(registryPoint = DomainStoreIdMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	public static class DomainStoreIdMapCreatorJ2SE
 			implements DomainStoreIdMapCreator {
 		@Override
@@ -29,7 +30,7 @@ public class DomainStoreCreatorsFastUtil {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainStoreLongSetCreator.class, implementationType = ImplementationType.SINGLETON)
+	@RegistryLocation(registryPoint = DomainStoreLongSetCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	public static class DomainStoreLongSetCreatorFastutil
 			implements DomainStoreLongSetCreator {
 		@Override
@@ -38,22 +39,22 @@ public class DomainStoreCreatorsFastUtil {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainStoreMultisetCreator.class, implementationType = ImplementationType.SINGLETON)
+	@RegistryLocation(registryPoint = DomainStoreMultisetCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	public static class DomainStoreMultisetCreatorFastUtil<T>
 			implements DomainStoreMultisetCreator<T> {
 		DomainStoreLongSetCreator longSetCreator = Registry
 				.impl(DomainStoreLongSetCreator.class);
 
 		@Override
-		public SortedMultiset<T, Set<Long>> get(DomainLookup cacheLookup,
+		public Multiset<T, Set<Long>> get(DomainLookup cacheLookup,
 				boolean concurrent) {
 			if (concurrent) {
 				return new ConcurrentSortedMultiset<>();
 			} else {
-				return new SortedMultiset<T, Set<Long>>() {
+				return new Multiset<T, Set<Long>>() {
 					@Override
 					protected Set<Long> createSet() {
-						return longSetCreator.get();
+						return DomainCollections.get().createLightSet();
 					}
 
 					@Override
@@ -65,7 +66,7 @@ public class DomainStoreCreatorsFastUtil {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainStorePrivateObjectCacheCreator.class, implementationType = ImplementationType.SINGLETON)
+	@RegistryLocation(registryPoint = DomainStorePrivateObjectCacheCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	public static class DomainStorePrivateObjectCacheCreatorJ2SE
 			implements DomainStorePrivateObjectCacheCreator {
 		@Override

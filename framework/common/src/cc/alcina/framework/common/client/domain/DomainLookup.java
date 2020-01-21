@@ -16,378 +16,378 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
-import cc.alcina.framework.common.client.util.SortedMultiset;
 
 public class DomainLookup<T, H extends HasIdAndLocalId>
-        implements DomainListener<H> {
-    private SortedMultiset<T, Set<Long>> store;
+		implements DomainListener<H> {
+	private Multiset<T, Set<Long>> store;
 
-    protected DomainStoreLookupDescriptor descriptor;
+	protected DomainStoreLookupDescriptor descriptor;
 
-    private PropertyPathAccessor propertyPathAccesor;
+	private PropertyPathAccessor propertyPathAccesor;
 
-    protected PrivateObjectCache privateCache;
+	protected PrivateObjectCache privateCache;
 
-    private boolean enabled = true;
+	private boolean enabled = true;
 
-    private CollectionFilter<H> relevanceFilter;
+	private CollectionFilter<H> relevanceFilter;
 
-    private Converter<T, T> normaliser;
+	private Converter<T, T> normaliser;
 
-    protected boolean concurrent;
+	protected boolean concurrent;
 
-    private ModificationChecker modificationChecker;
+	private ModificationChecker modificationChecker;
 
-    private DomainStoreLongSetCreator setCreator;
+	private DomainStoreLongSetCreator setCreator;
 
-    public DomainLookup(DomainStoreLookupDescriptor descriptor) {
-        this(descriptor, false);
-    }
+	public DomainLookup(DomainStoreLookupDescriptor descriptor) {
+		this(descriptor, false);
+	}
 
-    public DomainLookup(DomainStoreLookupDescriptor descriptor,
-            boolean concurrent) {
-        this.descriptor = descriptor;
-        this.concurrent = concurrent;
-        this.propertyPathAccesor = new PropertyPathAccessor(
-                descriptor.propertyPath);
-        this.store = Registry.impl(DomainStoreMultisetCreator.class).get(this,
-                concurrent);
-        this.relevanceFilter = descriptor.getRelevanceFilter();
-        setCreator = Registry.impl(DomainStoreLongSetCreator.class);
-    }
+	public DomainLookup(DomainStoreLookupDescriptor descriptor,
+			boolean concurrent) {
+		this.descriptor = descriptor;
+		this.concurrent = concurrent;
+		this.propertyPathAccesor = new PropertyPathAccessor(
+				descriptor.propertyPath);
+		this.store = Registry.impl(DomainStoreMultisetCreator.class).get(this,
+				concurrent);
+		this.relevanceFilter = descriptor.getRelevanceFilter();
+		setCreator = Registry.impl(DomainStoreLongSetCreator.class);
+	}
 
-    public void createPrivateCache() {
-        privateCache = Registry.impl(DomainStorePrivateObjectCacheCreator.class)
-                .get();
-    }
+	public void createPrivateCache() {
+		privateCache = Registry.impl(DomainStorePrivateObjectCacheCreator.class)
+				.get();
+	}
 
-    public Set<Long> get(T k1) {
-        k1 = normalise(k1);
-        if (k1 == null && concurrent) {
-            return null;
-        }
-        return wrapWithModificationChecker(store.get(k1));
-    }
+	public Set<Long> get(T k1) {
+		k1 = normalise(k1);
+		if (k1 == null && concurrent) {
+			return null;
+		}
+		return wrapWithModificationChecker(store.get(k1));
+	}
 
-    @Override
-    public IDomainStore getDomainStore() {
-        return descriptor.getDomainStore();
-    }
+	@Override
+	public IDomainStore getDomainStore() {
+		return descriptor.getDomainStore();
+	}
 
-    @Override
-    public Class getListenedClass() {
-        return descriptor.clazz;
-    }
+	@Override
+	public Class getListenedClass() {
+		return descriptor.clazz;
+	}
 
-    public Set<Long> getMaybeCollectionKey(Object value, Set<Long> existing) {
-        if (value instanceof Collection) {
-            Set<Long> result = createLongSet();
-            for (T t : (Collection<T>) value) {
-                Set<Long> ids = get(normalise(t));
-                if (ids != null) {
-                    result.addAll(ids);
-                }
-            }
-            return result;
-        } else {
-            return get(normalise((T) value));
-        }
-    }
+	public Set<Long> getMaybeCollectionKey(Object value, Set<Long> existing) {
+		if (value instanceof Collection) {
+			Set<Long> result = createLongSet();
+			for (T t : (Collection<T>) value) {
+				Set<Long> ids = get(normalise(t));
+				if (ids != null) {
+					result.addAll(ids);
+				}
+			}
+			return result;
+		} else {
+			return get(normalise((T) value));
+		}
+	}
 
-    public ModificationChecker getModificationChecker() {
-        return modificationChecker;
-    }
+	public ModificationChecker getModificationChecker() {
+		return modificationChecker;
+	}
 
-    public Converter<T, T> getNormaliser() {
-        return this.normaliser;
-    }
+	public Converter<T, T> getNormaliser() {
+		return this.normaliser;
+	}
 
-    public Set<H> getPrivateObjects(T k1) {
-        Set<H> result = new LinkedHashSet<H>();
-        Set<Long> ids = get(k1);
-        if (ids != null) {
-            for (Long id : ids) {
-                result.add(getForResolvedId(id));
-            }
-        }
-        return result;
-    }
+	public Set<H> getPrivateObjects(T k1) {
+		Set<H> result = new LinkedHashSet<H>();
+		Set<Long> ids = get(k1);
+		if (ids != null) {
+			for (Long id : ids) {
+				result.add(getForResolvedId(id));
+			}
+		}
+		return result;
+	}
 
-    public PropertyPathAccessor getPropertyPathAccesor() {
-        return this.propertyPathAccesor;
-    }
+	public PropertyPathAccessor getPropertyPathAccesor() {
+		return this.propertyPathAccesor;
+	}
 
-    @Override
-    public void insert(H hili) {
-        if (relevanceFilter != null && !relevanceFilter.allow(hili)) {
-            return;
-        }
-        checkModification("insert");
-        Object v1 = getChainedProperty(hili);
-        if (v1 instanceof Collection) {
-            Set deduped = new LinkedHashSet((Collection) v1);
-            for (Object v2 : deduped) {
-                add(normalise((T) v2), hili.getId());
-            }
-        } else {
-            add(normalise((T) v1), hili.getId());
-        }
-        if (privateCache != null) {
-            if (descriptor.clazz != hili.getClass()) {
-                privateCache.putForSuperClass(descriptor.clazz, hili);
-            } else {
-                privateCache.put(hili);
-            }
-        }
-    }
+	@Override
+	public void insert(H hili) {
+		if (relevanceFilter != null && !relevanceFilter.allow(hili)) {
+			return;
+		}
+		checkModification("insert");
+		Object v1 = getChainedProperty(hili);
+		if (v1 instanceof Collection) {
+			Set deduped = new LinkedHashSet((Collection) v1);
+			for (Object v2 : deduped) {
+				add(normalise((T) v2), hili.getId());
+			}
+		} else {
+			add(normalise((T) v1), hili.getId());
+		}
+		if (privateCache != null) {
+			if (descriptor.clazz != hili.getClass()) {
+				privateCache.putForSuperClass(descriptor.clazz, hili);
+			} else {
+				privateCache.put(hili);
+			}
+		}
+	}
 
-    @Override
-    public boolean isEnabled() {
-        return this.enabled;
-    }
+	@Override
+	public boolean isEnabled() {
+		return this.enabled;
+	}
 
-    public Set<T> keys() {
-        return wrapWithModificationChecker(store.keySet());
-    }
+	public Set<T> keys() {
+		return wrapWithModificationChecker(store.keySet());
+	}
 
-    @Override
-    public boolean matches(H h, Object[] keys) {
-        if (keys.length != 1) {
-            throw new IllegalArgumentException("Keys length must equal one");
-        }
-        return CommonUtils.equalsWithNullEquality(getChainedProperty(h),
-                keys[0]);
-    }
+	@Override
+	public boolean matches(H h, Object[] keys) {
+		if (keys.length != 1) {
+			throw new IllegalArgumentException("Keys length must equal one");
+		}
+		return CommonUtils.equalsWithNullEquality(getChainedProperty(h),
+				keys[0]);
+	}
 
-    @Override
-    public void remove(H hili) {
-        Object v1 = getChainedProperty(hili);
-        if (v1 instanceof Collection) {
-            Set deduped = new LinkedHashSet((Collection) v1);
-            for (Object v2 : deduped) {
-                remove(normalise((T) v2), hili.getId());
-            }
-        } else {
-            remove(normalise((T) v1), hili.getId());
-        }
-    }
+	@Override
+	public void remove(H hili) {
+		Object v1 = getChainedProperty(hili);
+		if (v1 instanceof Collection) {
+			Set deduped = new LinkedHashSet((Collection) v1);
+			for (Object v2 : deduped) {
+				remove(normalise((T) v2), hili.getId());
+			}
+		} else {
+			remove(normalise((T) v1), hili.getId());
+		}
+	}
 
-    public void removeExisting(H hili) {
-        H existing = (H) privateCache.getExisting(hili);
-        if (existing != null) {
-            remove(existing);
-        }
-    }
+	public void removeExisting(H hili) {
+		H existing = (H) privateCache.getExisting(hili);
+		if (existing != null) {
+			remove(existing);
+		}
+	}
 
-    public void removeExisting(HiliLocator locator) {
-        H existing = (H) privateCache.get(locator.clazz, locator.id);
-        if (existing != null) {
-            remove(existing);
-        }
-    }
+	public void removeExisting(HiliLocator locator) {
+		H existing = (H) privateCache.get(locator.clazz, locator.id);
+		if (existing != null) {
+			remove(existing);
+		}
+	}
 
-    @Override
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
+	@Override
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
 
-    public void setModificationChecker(
-            ModificationChecker modificationChecker) {
-        this.modificationChecker = modificationChecker;
-    }
+	public void
+			setModificationChecker(ModificationChecker modificationChecker) {
+		this.modificationChecker = modificationChecker;
+	}
 
-    public void setNormaliser(Converter<T, T> normaliser) {
-        this.normaliser = normaliser;
-    }
+	public void setNormaliser(Converter<T, T> normaliser) {
+		this.normaliser = normaliser;
+	}
 
-    public int size() {
-        return store.size();
-    }
+	public int size() {
+		return store.size();
+	}
 
-    public int size(T t) {
-        Set<Long> set = get(t);
-        return set == null ? null : set.size();
-    }
+	public int size(T t) {
+		Set<Long> set = get(t);
+		return set == null ? null : set.size();
+	}
 
-    @Override
-    public String toString() {
-        return CommonUtils.formatJ("Lookup: %s [%s]",
-                getListenedClass().getSimpleName(), descriptor.propertyPath);
-    }
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("Lookup: %s [%s]",
+				getListenedClass().getSimpleName(), descriptor.propertyPath);
+	}
 
-    private T normalise(T k1) {
-        return normaliser == null || k1 == null ? k1 : normaliser.convert(k1);
-    }
+	private T normalise(T k1) {
+		return normaliser == null || k1 == null ? k1 : normaliser.convert(k1);
+	}
 
-    private void remove(T k1, Long value) {
-        checkModification("remove");
-        Set<Long> set = get(k1);
-        if (set != null) {
-            set.remove(value);
-        }
-    }
+	private void remove(T k1, Long value) {
+		checkModification("remove");
+		Set<Long> set = get(k1);
+		if (set != null) {
+			set.remove(value);
+		}
+	}
 
-    private <V> Set<V> wrapWithModificationChecker(Set<V> set) {
-        return set == null ? null
-                : set instanceof DomainLookup.ModificationCheckedSet
-                        || GWT.isClient() ? set
-                                : new ModificationCheckedSet(set);
-    }
+	private <V> Set<V> wrapWithModificationChecker(Set<V> set) {
+		return set == null ? null
+				: set instanceof DomainLookup.ModificationCheckedSet
+						|| GWT.isClient() ? set
+								: new ModificationCheckedSet(set);
+	}
 
-    protected void add(T k1, Long value) {
-        if (value == null) {
-            System.err.println(
-                    "Invalid value (null) for cache lookup put - " + k1);
-            return;
-        }
-        getAndEnsure(k1).add(value);
-    }
+	protected void add(T k1, Long value) {
+		if (value == null) {
+			System.err.println(
+					"Invalid value (null) for cache lookup put - " + k1);
+			return;
+		}
+		getAndEnsure(k1).add(value);
+	}
 
-    protected void checkModification(String modificationType) {
-        if (getModificationChecker() != null) {
-            getModificationChecker().check("fire");
-        }
-    }
+	protected void checkModification(String modificationType) {
+		if (getModificationChecker() != null) {
+			getModificationChecker().check("fire");
+		}
+	}
 
-    protected Set createLongSet() {
-        return setCreator.get();
-    }
+	protected Set createLongSet() {
+		return setCreator.get();
+	}
 
-    // write thread only!!
-    protected Set<Long> getAndEnsure(T k1) {
-        k1 = normalise(k1);
-        if (concurrent && k1 == null) {
-            return createLongSet();
-        }
-        Set<Long> result = get(k1);
-        if (result == null) {
-            result = createLongSet();
-            store.put(k1, result);
-        }
-        return wrapWithModificationChecker(result);
-    }
+	// write thread only!!
+	protected Set<Long> getAndEnsure(T k1) {
+		k1 = normalise(k1);
+		if (concurrent && k1 == null) {
+			return createLongSet();
+		}
+		Set<Long> result = get(k1);
+		if (result == null) {
+			result = createLongSet();
+			store.put(k1, result);
+		}
+		return wrapWithModificationChecker(result);
+	}
 
-    protected Object getChainedProperty(H hili) {
-        if (descriptor.valueFunction != null) {
-            return descriptor.valueFunction.apply(hili);
-        }
-        return propertyPathAccesor.getChainedProperty(hili);
-    }
+	protected Object getChainedProperty(H hili) {
+		if (descriptor.valueFunction != null) {
+			return descriptor.valueFunction.apply(hili);
+		}
+		return propertyPathAccesor.getChainedProperty(hili);
+	}
 
-    protected H getForResolvedId(long id) {
-        if (privateCache != null) {
-            return (H) privateCache.get(descriptor.clazz, id);
-        }
-        return (H) Domain.transactionalFind(descriptor.clazz, id);
-    }
+	protected H getForResolvedId(long id) {
+		if (privateCache != null) {
+			return (H) privateCache.get(descriptor.clazz, id);
+		}
+		return (H) Domain.transactionalFind(descriptor.clazz, id);
+	}
 
-    class ModificationCheckedIterator implements Iterator {
-        private Iterator iterator;
+	class ModificationCheckedIterator implements Iterator {
+		private Iterator iterator;
 
-        ModificationCheckedIterator(Iterator iterator) {
-            if (iterator == null) {
-                throw new RuntimeException("null");
-            }
-            this.iterator = iterator;
-        }
+		ModificationCheckedIterator(Iterator iterator) {
+			if (iterator == null) {
+				throw new RuntimeException("null");
+			}
+			this.iterator = iterator;
+		}
 
-        @Override
-        public boolean hasNext() {
-            return this.iterator.hasNext();
-        }
+		@Override
+		public boolean hasNext() {
+			return this.iterator.hasNext();
+		}
 
-        @Override
-        public Object next() {
-            return this.iterator.next();
-        }
+		@Override
+		public Object next() {
+			return this.iterator.next();
+		}
 
-        @Override
-        public void remove() {
-            checkModification("itr-remove");
-            this.iterator.remove();
-        }
-    }
+		@Override
+		public void remove() {
+			checkModification("itr-remove");
+			this.iterator.remove();
+		}
+	}
 
-    class ModificationCheckedSet implements Set {
-        private Set set;
+	class ModificationCheckedSet implements Set {
+		private Set set;
 
-        ModificationCheckedSet(Set set) {
-            if (set == null) {
-                throw new RuntimeException("null");
-            }
-            this.set = set;
-        }
+		ModificationCheckedSet(Set set) {
+			if (set == null) {
+				throw new RuntimeException("null");
+			}
+			this.set = set;
+		}
 
-        @Override
-        public boolean add(Object e) {
-            checkModification("add-set");
-            return this.set.add(e);
-        }
+		@Override
+		public boolean add(Object e) {
+			checkModification("add-set");
+			return this.set.add(e);
+		}
 
-        @Override
-        public boolean addAll(Collection c) {
-            checkModification("add-set");
-            return this.set.addAll(c);
-        }
+		@Override
+		public boolean addAll(Collection c) {
+			checkModification("add-set");
+			return this.set.addAll(c);
+		}
 
-        @Override
-        public void clear() {
-            checkModification("clear");
-            this.set.clear();
-        }
+		@Override
+		public void clear() {
+			checkModification("clear");
+			this.set.clear();
+		}
 
-        @Override
-        public boolean contains(Object o) {
-            return this.set.contains(o);
-        }
+		@Override
+		public boolean contains(Object o) {
+			return this.set.contains(o);
+		}
 
-        @Override
-        public boolean containsAll(Collection c) {
-            return this.set.containsAll(c);
-        }
+		@Override
+		public boolean containsAll(Collection c) {
+			return this.set.containsAll(c);
+		}
 
-        @Override
-        public boolean isEmpty() {
-            return this.set.isEmpty();
-        }
+		@Override
+		public boolean isEmpty() {
+			return this.set.isEmpty();
+		}
 
-        @Override
-        public Iterator iterator() {
-            return this.set.iterator();
-        }
+		@Override
+		public Iterator iterator() {
+			return this.set.iterator();
+		}
 
-        @Override
-        public boolean remove(Object o) {
-            checkModification("remove-set");
-            return this.set.remove(o);
-        }
+		@Override
+		public boolean remove(Object o) {
+			checkModification("remove-set");
+			return this.set.remove(o);
+		}
 
-        @Override
-        public boolean removeAll(Collection c) {
-            checkModification("remove-all");
-            return this.set.removeAll(c);
-        }
+		@Override
+		public boolean removeAll(Collection c) {
+			checkModification("remove-all");
+			return this.set.removeAll(c);
+		}
 
-        @Override
-        public boolean retainAll(Collection c) {
-            checkModification("retain-all");
-            return this.set.retainAll(c);
-        }
+		@Override
+		public boolean retainAll(Collection c) {
+			checkModification("retain-all");
+			return this.set.retainAll(c);
+		}
 
-        @Override
-        public int size() {
-            return this.set.size();
-        }
+		@Override
+		public int size() {
+			return this.set.size();
+		}
 
-        @Override
-        public Object[] toArray() {
-            return this.set.toArray();
-        }
+		@Override
+		public Object[] toArray() {
+			return this.set.toArray();
+		}
 
-        @Override
-        public Object[] toArray(Object[] a) {
-            return this.set.toArray(a);
-        }
-    }
+		@Override
+		public Object[] toArray(Object[] a) {
+			return this.set.toArray(a);
+		}
+	}
 }

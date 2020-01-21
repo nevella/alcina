@@ -43,318 +43,318 @@ import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable;
 
 public abstract class DataTableViewModelView<VM extends ViewModelWithDataProvider, T extends DataDomainBase, SD extends DataSearchDefinition>
-        extends AbstractViewModelView<VM> implements CellTableView<T> {
-    protected FlowPanel fp;
+		extends AbstractViewModelView<VM> implements CellTableView<T> {
+	protected FlowPanel fp;
 
-    protected FlowPanel container;
+	protected FlowPanel container;
 
-    protected DefFilter defFilter;
+	protected DefFilter defFilter;
 
-    protected FilterWidget filter;
+	protected FilterWidget filter;
 
-    protected VisualFilterable filterProxy = new VisualFilterable() {
-        @Override
-        public boolean filter(String filterText) {
-            return true;
-        }
-    };
+	protected VisualFilterable filterProxy = new VisualFilterable() {
+		@Override
+		public boolean filter(String filterText) {
+			return true;
+		}
+	};
 
-    protected Link filterLink;
+	protected Link filterLink;
 
-    protected FlowPanel toolbar;
+	protected FlowPanel toolbar;
 
-    protected AbstractCellTable<T> table;
+	protected AbstractCellTable<T> table;
 
-    protected AbstractCellTable<Row> groupedTable;
+	protected AbstractCellTable<Row> groupedTable;
 
-    protected SimplePanel groupedTableContainer = new SimplePanel();
+	protected SimplePanel groupedTableContainer = new SimplePanel();
 
-    boolean lastEditing = false;
+	boolean lastEditing = false;
 
-    protected MultiSelectionSupport<T> multiSelectionSupport;
+	protected MultiSelectionSupport<T> multiSelectionSupport;
 
-    protected SortableColumn idCol = null;
+	protected SortableColumn idCol = null;
 
-    private HandlerRegistration groupedDataHandlerRegistration;
+	private HandlerRegistration groupedDataHandlerRegistration;
 
-    public AbstractCellTable<Row> groupedCellTable() {
-        return this.groupedTable;
-    }
+	public AbstractCellTable<Row> groupedCellTable() {
+		return this.groupedTable;
+	}
 
-    @Override
-    public void propertyChange(PropertyChangeEvent evt) {
-        handleDataProviderDisplay(evt, table);
-        if (!model.isActive()) {
-            return;
-        }
-        if ("place".equals(evt.getPropertyName())) {
-            updatePlace();
-        }
-        // model was invalidated without place update
-        if ("updated".equals(evt.getPropertyName())
-                && model.dataProvider.getLastSearchDefinition() == null) {
-            refresh();
-        }
-        DataClientUtils.clearSelection(table);
-    }
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		handleDataProviderDisplay(evt, table);
+		if (!model.isActive()) {
+			return;
+		}
+		if ("place".equals(evt.getPropertyName())) {
+			updatePlace();
+		}
+		// model was invalidated without place update
+		if ("updated".equals(evt.getPropertyName())
+				&& model.dataProvider.getLastSearchDefinition() == null) {
+			refresh();
+		}
+		DataClientUtils.clearSelection(table);
+	}
 
-    public void renderFilter() {
-        defFilter = new DefFilter();
-        defFilter.setSimpleFilter(filter);
-        container.add(defFilter);
-        defFilter.addValueChangeHandler(
-                evt -> search((SD) defFilter.getSearchDefinition()));
-        FlatSearchDefinitionEditor editor = new FlatSearchDefinitionEditor();
-        editor.setSearchables(createSearchables());
-        defFilter.setFlatEditor(editor);
-        showFilterPanel(false);
-    }
+	public void renderFilter() {
+		defFilter = new DefFilter();
+		defFilter.setSimpleFilter(filter);
+		container.add(defFilter);
+		defFilter.addValueChangeHandler(
+				evt -> search((SD) defFilter.getSearchDefinition()));
+		FlatSearchDefinitionEditor editor = new FlatSearchDefinitionEditor();
+		editor.setSearchables(createSearchables());
+		defFilter.setFlatEditor(editor);
+		showFilterPanel(false);
+	}
 
-    public void renderGroupedTable(GroupedResult groupedResult,
-            GroupingParameters<?> groupingParameters,
-            GroupedDataChangeEvent event) {
-        GroupedCellTableView groupedView = (GroupedCellTableView) this;
-        if (groupedTable != null) {
-            groupedTable.removeFromParent();
-            model.dataProvider.removeDataDisplay(groupedTable);
-        }
-        groupedTable = new DataGridWithScrollAccess<Row>(100,
-                (TableRes) GWT.create(TableRes.class));
-        ColumnsBuilder<Row> builder = new ColumnsBuilder<Row>(groupedTable,
-                Row.class);
-        ColumnMapper<?> typedMapper = groupedView
-                .getGroupedColumnMapper(groupingParameters);
-        typedMapper.getMappings().forEach(m -> m.groupedStringMapping());
-        builder.buildFromTypedMappings(typedMapper,
-                new ColumnsBuilderRows().additionalMapper());
-        groupedView.setupGroupedTableSelectionHandler(
-                groupedView.getGroupedRowConsumer());
-        groupedTable.setRowStyles(new RowStyles() {
-            @Override
-            public String getStyleNames(Object row, int rowIndex) {
-                if (row == model.dataProvider.getGroupedResult()
-                        .getTotalRow()) {
-                    return "totalRow";
-                }
-                return "";
-            }
-        });
-        model.dataProvider.setGroupedColumnsBuilder(builder);
-        // nope. no selection, no paging
-        // DemeterClientUtils.setupKeyboardPoliciesAndStyles(groupedTable);
-        groupedTable.setStyleName("data-grid");
-        groupedTable.getColumnSortList().setLimit(1);
-        for (ColumnSearchOrder order : groupingParameters.getColumnOrders()) {
-            Column<Row, ?> col = groupedTable.getColumn(
-                    groupedResult.getColumnIndex(order.getColumnName()));
-            ColumnSortInfo sortInfo = new ColumnSortInfo(col,
-                    order.isAscending());
-            groupedTable.getColumnSortList().push(sortInfo);
-        }
-        model.dataProvider
-                .setGroupedColumnSortList(groupedTable.getColumnSortList());
-        groupedTable.addColumnSortHandler(
-                model.dataProvider.getGroupedColumnSortHandler());
-        groupedTable.setSkipRowHoverStyleUpdate(true);
-        groupedTable.setSelectionModel(new NoSelectionModel());
-        container.add(groupedTable);
-        groupedTable.setRowData(groupedResult.getRows());
-    }
+	public void renderGroupedTable(GroupedResult groupedResult,
+			GroupingParameters<?> groupingParameters,
+			GroupedDataChangeEvent event) {
+		GroupedCellTableView groupedView = (GroupedCellTableView) this;
+		if (groupedTable != null) {
+			groupedTable.removeFromParent();
+			model.dataProvider.removeDataDisplay(groupedTable);
+		}
+		groupedTable = new DataGridWithScrollAccess<Row>(100,
+				(TableRes) GWT.create(TableRes.class));
+		ColumnsBuilder<Row> builder = new ColumnsBuilder<Row>(groupedTable,
+				Row.class);
+		ColumnMapper<?> typedMapper = groupedView
+				.getGroupedColumnMapper(groupingParameters);
+		typedMapper.getMappings().forEach(m -> m.groupedStringMapping());
+		builder.buildFromTypedMappings(typedMapper,
+				new ColumnsBuilderRows().additionalMapper());
+		groupedView.setupGroupedTableSelectionHandler(
+				groupedView.getGroupedRowConsumer());
+		groupedTable.setRowStyles(new RowStyles() {
+			@Override
+			public String getStyleNames(Object row, int rowIndex) {
+				if (row == model.dataProvider.getGroupedResult()
+						.getTotalRow()) {
+					return "totalRow";
+				}
+				return "";
+			}
+		});
+		model.dataProvider.setGroupedColumnsBuilder(builder);
+		// nope. no selection, no paging
+		// DataClientUtils.setupKeyboardPoliciesAndStyles(groupedTable);
+		groupedTable.setStyleName("data-grid");
+		groupedTable.getColumnSortList().setLimit(1);
+		for (ColumnSearchOrder order : groupingParameters.getColumnOrders()) {
+			Column<Row, ?> col = groupedTable.getColumn(
+					groupedResult.getColumnIndex(order.getColumnName()));
+			ColumnSortInfo sortInfo = new ColumnSortInfo(col,
+					order.isAscending());
+			groupedTable.getColumnSortList().push(sortInfo);
+		}
+		model.dataProvider
+				.setGroupedColumnSortList(groupedTable.getColumnSortList());
+		groupedTable.addColumnSortHandler(
+				model.dataProvider.getGroupedColumnSortHandler());
+		groupedTable.setSkipRowHoverStyleUpdate(true);
+		groupedTable.setSelectionModel(new NoSelectionModel());
+		container.add(groupedTable);
+		groupedTable.setRowData(groupedResult.getRows());
+	}
 
-    public void renderTable() {
-        TableRes resources = createTableResources();
-        DataGridWithScrollAccess grid = new DataGridWithScrollAccess<T>(getPageSize(),
-                resources);
-        table = grid;
-        new KeyboardActionHandler().setup(this, 'R', () -> refresh());
-        ColumnsBuilder<T> builder = new ColumnsBuilder<T>(table, getRowClass());
-        builder.editable(isEditing());
-        builder.footer(createRangeFooter());
-        if (!suppressDevIdColumn()) {
-            idCol = builder.col("ID").sortFunction(new IdOrder())
-                    .function(o -> {
-                        HasId hi = (HasId) o;
-                        if (hi.getId() < 0) {
-                            return "(Prov) " + hi.getId();
-                        } else {
-                            return String.valueOf(hi.getId());
-                        }
-                    }).width(4.0, Unit.EM).build();
-        }
-        customSetupTable(builder);
-        table.addColumnSortHandler(model.dataProvider);
-        model.dataProvider.setColumnSortList(table.getColumnSortList());
-        DataClientUtils.setupKeyboardPoliciesAndStyles(table);
-        multiSelectionSupport.updateKeyboardSelectionMode(isEditing());
-        table.setStyleName("editing", isEditing());
-        container.add(table);
-        ShowMorePager pager = createTablePager();
-        pager.attachTo(table,
-                ((DataGridWithScrollAccess) table).getBodyScrollPanel());
-    }
+	public void renderTable() {
+		TableRes resources = createTableResources();
+		DataGridWithScrollAccess grid = new DataGridWithScrollAccess<T>(
+				getPageSize(), resources);
+		table = grid;
+		new KeyboardActionHandler().setup(this, 'R', () -> refresh());
+		ColumnsBuilder<T> builder = new ColumnsBuilder<T>(table, getRowClass());
+		builder.editable(isEditing());
+		builder.footer(createRangeFooter());
+		if (!suppressDevIdColumn()) {
+			idCol = builder.col("ID").sortFunction(new IdOrder())
+					.function(o -> {
+						HasId hi = (HasId) o;
+						if (hi.getId() < 0) {
+							return "(Prov) " + hi.getId();
+						} else {
+							return String.valueOf(hi.getId());
+						}
+					}).width(4.0, Unit.EM).build();
+		}
+		customSetupTable(builder);
+		table.addColumnSortHandler(model.dataProvider);
+		model.dataProvider.setColumnSortList(table.getColumnSortList());
+		DataClientUtils.setupKeyboardPoliciesAndStyles(table);
+		multiSelectionSupport.updateKeyboardSelectionMode(isEditing());
+		table.setStyleName("editing", isEditing());
+		container.add(table);
+		ShowMorePager pager = createTablePager();
+		pager.attachTo(table,
+				((DataGridWithScrollAccess) table).getBodyScrollPanel());
+	}
+
+	public Set<Long> selectedIds() {
+		return multiSelectionSupport.provideSelectedIds();
+	}
+
+	@Override
+	public AbstractCellTable<T> table() {
+		return table;
+	}
+
+	@Override
+	public void updateToolbar() {
+		toolbar.clear();
+		toolbar.setStyleName("toolbar2");
+		if (filter == null) {
+			filter = new FilterWidget(getFilterHint());
+			filter.registerFilterable(filterProxy);
+			filter.setEnterHandler(
+					evt -> search(filter.getTextBox().getText()));
+		}
+		toolbar.add(filter);
+		FlowPanel linksPanel = new FlowPanel();
+		linksPanel.setStyleName("links-panel");
+		toolbar.add(linksPanel);
+		filterLink = new Link("Filter",
+				c -> showFilterPanel(!defFilter.isVisible()));
+		linksPanel.add(filterLink);
+		Link link = Link.createNoUnderline("Refresh", evt -> {
+			refresh();
+		});
+		linksPanel.add(link);
+		customSetupToolbar(linksPanel);
+	}
 
 	protected RangeFooter createRangeFooter() {
 		return new RangeFooter(table);
 	}
+
+	protected abstract List<FlatSearchable> createSearchables();
 
 	protected ShowMorePager createTablePager() {
 		ShowMorePager pager = new ShowMorePager();
 		return pager;
 	}
 
-    protected int getPageSize() {
-        return 100;
-    }
+	protected TableRes createTableResources() {
+		return isEditing() ? GWT.create(TableResEditable.class)
+				: GWT.create(TableRes.class);
+	}
 
-    protected TableRes createTableResources() {
-        return isEditing() ? GWT.create(TableResEditable.class)
-                : GWT.create(TableRes.class);
-    }
+	protected abstract void customSetupTable(ColumnsBuilder<T> builder);
 
-    public Set<Long> selectedIds() {
-        return multiSelectionSupport.provideSelectedIds();
-    }
+	protected abstract void customSetupToolbar(FlowPanel linksPanel);
 
-    @Override
-    public AbstractCellTable<T> table() {
-        return table;
-    }
+	protected void deleteSelected() {
+		List<T> selectedList = multiSelectionSupport.multipleSelectionModel
+				.getSelectedList();
+		AppController.get().deleteMultiple(selectedList);
+		model.dataProvider.search();
+	}
 
-    @Override
-    public void updateToolbar() {
-        toolbar.clear();
-        toolbar.setStyleName("toolbar2");
-        if (filter == null) {
-            filter = new FilterWidget(getFilterHint());
-            filter.registerFilterable(filterProxy);
-            filter.setEnterHandler(
-                    evt -> search(filter.getTextBox().getText()));
-        }
-        toolbar.add(filter);
-        FlowPanel linksPanel = new FlowPanel();
-        linksPanel.setStyleName("links-panel");
-        toolbar.add(linksPanel);
-        filterLink = new Link("Filter",
-                c -> showFilterPanel(!defFilter.isVisible()));
-        linksPanel.add(filterLink);
-        Link link = Link.createNoUnderline("Refresh", evt -> {
-            refresh();
-        });
-        linksPanel.add(link);
-        customSetupToolbar(linksPanel);
-    }
+	protected abstract String getFilterHint();
 
-    protected abstract List<FlatSearchable> createSearchables();
+	protected int getPageSize() {
+		return 100;
+	}
 
-    protected abstract void customSetupTable(ColumnsBuilder<T> builder);
+	protected abstract Class<T> getRowClass();
 
-    protected abstract void customSetupToolbar(FlowPanel linksPanel);
+	protected DataSearchDefinition getSearchDefinitionFromPlace() {
+		DataPlace place = (DataPlace) model.getPlace();
+		DataSearchDefinition searchDefinition = place.getSearchDefinition();
+		return searchDefinition;
+	}
 
-    protected void deleteSelected() {
-        List<T> selectedList = multiSelectionSupport.multipleSelectionModel
-                .getSelectedList();
-        AppController.get().deleteMultiple(selectedList);
-        model.dataProvider.search();
-    }
+	protected abstract Widget getSubNav();
 
-    protected abstract String getFilterHint();
+	protected void init() {
+		fp = new FlowPanel();
+		initWidget(fp);
+		container = new FlowPanel();
+		container.setStyleName("searchable-container pane-container");
+		Widget subNav = getSubNav();
+		if (subNav != null) {
+			container.add(subNav);
+		}
+		fp.add(container);
+		toolbar = new FlowPanel();
+		container.add(toolbar);
+		updateToolbar();
+		renderFilter();
+	}
 
-    protected abstract Class<T> getRowClass();
+	protected void invalidate() {
+		model.dataProvider.refresh();
+	}
 
-    protected DataSearchDefinition getSearchDefinitionFromPlace() {
-        DataPlace place = (DataPlace) model.getPlace();
-        DataSearchDefinition searchDefinition = place.getSearchDefinition();
-        return searchDefinition;
-    }
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		DataClientUtils.clearSelection(table);
+	}
 
-    protected abstract Widget getSubNav();
+	@Override
+	protected void refresh() {
+		model.dataProvider.refresh();
+		MessageManager.get().showMessage("Refreshed");
+	}
 
-    protected void init() {
-        fp = new FlowPanel();
-        initWidget(fp);
-        container = new FlowPanel();
-        container.setStyleName("searchable-container pane-container");
-        Widget subNav = getSubNav();
-        if (subNav != null) {
-            container.add(subNav);
-        }
-        fp.add(container);
-        toolbar = new FlowPanel();
-        container.add(toolbar);
-        updateToolbar();
-        renderFilter();
-    }
+	protected void search(SD searchDefinition) {
+		clearTableSelectionModel();
+		AppController.get().doSearch(searchDefinition);
+	}
 
-    protected void invalidate() {
-        model.dataProvider.refresh();
-    }
+	protected void search(String text) {
+		clearTableSelectionModel();
+		AppController.get().doSearch(getRowClass(), text);
+	}
 
-    @Override
-    protected void onAttach() {
-        super.onAttach();
-        DataClientUtils.clearSelection(table);
-    }
+	protected void showFilterPanel(boolean show) {
+		defFilter.setVisible(show);
+	}
 
-    @Override
-    protected void refresh() {
-        model.dataProvider.refresh();
-        MessageManager.get().showMessage("Refreshed");
-    }
+	protected boolean suppressDevIdColumn() {
+		return false;
+	}
 
-    protected void search(SD searchDefinition) {
-        clearTableSelectionModel();
-        AppController.get().doSearch(searchDefinition);
-    }
-
-    protected void search(String text) {
-        clearTableSelectionModel();
-        AppController.get().doSearch(getRowClass(), text);
-    }
-
-    protected void showFilterPanel(boolean show) {
-        defFilter.setVisible(show);
-    }
-
-    protected boolean suppressDevIdColumn() {
-        return false;
-    }
-
-    protected void updatePlace() {
-        updateToolbar();
-        DataSearchDefinition searchDefinition = getSearchDefinitionFromPlace();
-        /*
-         * We need the place searchdef to be invariant (otherwise comparison
-         * with old place won't work)
-         */
-        searchDefinition = searchDefinition.cloneObject();
-        defFilter.setSearchDefinition(searchDefinition);
-        defFilter.makeVisibleIfNonTextSearchDef();
-        model.dataProvider.setSearchDefinition(searchDefinition);
-        if (lastEditing != isEditing()) {
-            if (table != null) {
-                table.removeFromParent();
-                table = null;
-            }
-            lastEditing = isEditing();
-        }
-        if (table == null) {
-            renderTable();
-            if (this instanceof GroupedCellTableView) {
-                if (groupedDataHandlerRegistration != null) {
-                    groupedDataHandlerRegistration.removeHandler();
-                }
-                this.groupedDataHandlerRegistration = model.dataProvider
-                        .addGroupedDataChangeHandler(
-                                new GroupedDataRenderHandler(this,
-                                        (GroupedCellTableView) this));
-                container.add(groupedTableContainer);
-            }
-        }
-        if (!model.dataProvider.getDataDisplays().contains(table)) {
-            model.dataProvider.addDataDisplay(table);
-        } else {
-            model.dataProvider.search();
-        }
-        DataClientUtils.clearSelection(table);
-    }
+	protected void updatePlace() {
+		updateToolbar();
+		DataSearchDefinition searchDefinition = getSearchDefinitionFromPlace();
+		/*
+		 * We need the place searchdef to be invariant (otherwise comparison
+		 * with old place won't work)
+		 */
+		searchDefinition = searchDefinition.cloneObject();
+		defFilter.setSearchDefinition(searchDefinition);
+		defFilter.makeVisibleIfNonTextSearchDef();
+		model.dataProvider.setSearchDefinition(searchDefinition);
+		if (lastEditing != isEditing()) {
+			if (table != null) {
+				table.removeFromParent();
+				table = null;
+			}
+			lastEditing = isEditing();
+		}
+		if (table == null) {
+			renderTable();
+			if (this instanceof GroupedCellTableView) {
+				if (groupedDataHandlerRegistration != null) {
+					groupedDataHandlerRegistration.removeHandler();
+				}
+				this.groupedDataHandlerRegistration = model.dataProvider
+						.addGroupedDataChangeHandler(
+								new GroupedDataRenderHandler(this,
+										(GroupedCellTableView) this));
+				container.add(groupedTableContainer);
+			}
+		}
+		if (!model.dataProvider.getDataDisplays().contains(table)) {
+			model.dataProvider.addDataDisplay(table);
+		} else {
+			model.dataProvider.search();
+		}
+		DataClientUtils.clearSelection(table);
+	}
 }

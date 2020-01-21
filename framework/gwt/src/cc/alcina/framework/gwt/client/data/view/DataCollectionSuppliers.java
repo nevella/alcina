@@ -29,9 +29,10 @@ public class DataCollectionSuppliers {
 		return GWT.isScript();// GWT.isClient();
 	}
 
-	@RegistryLocation(registryPoint = DomainStoreIdMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@RegistryLocation(registryPoint = DomainStoreIdMapCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
-	public static class CacheIdMapCreatorDemeter implements DomainStoreIdMapCreator {
+	public static class CacheIdMapCreatorClient
+			implements DomainStoreIdMapCreator {
 		@Override
 		public Map<Long, HasIdAndLocalId> get() {
 			return useJsMaps() ? JsUniqueMap.create(Long.class, false)
@@ -39,9 +40,9 @@ public class DataCollectionSuppliers {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainStoreLongSetCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@RegistryLocation(registryPoint = DomainStoreLongSetCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
-	public static class CacheLongSetCreatorDemeter
+	public static class CacheLongSetCreatorClient
 			implements DomainStoreLongSetCreator {
 		@Override
 		public Set<Long> get() {
@@ -50,21 +51,21 @@ public class DataCollectionSuppliers {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainStoreMultisetCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@RegistryLocation(registryPoint = DomainStoreMultisetCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
-	public static class CacheMultisetCreatorDemeter<T>
+	public static class CacheMultisetCreatorClient<T>
 			implements DomainStoreMultisetCreator<T> {
 		@Override
 		public SortedMultiset<T, Set<Long>> get(DomainLookup cacheLookup,
 				boolean concurrent) {
-			return useJsMaps() ? new SortedMultisetDemeter<>(cacheLookup)
+			return useJsMaps() ? new SortedMultisetClient<>(cacheLookup)
 					: new SortedMultiset<>();
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainStorePrivateObjectCacheCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@RegistryLocation(registryPoint = DomainStorePrivateObjectCacheCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
-	public static class CachePrivateObjectCacheCreatorDemeter
+	public static class CachePrivateObjectCacheCreatorClient
 			implements DomainStorePrivateObjectCacheCreator {
 		@Override
 		public PrivateObjectCache get() {
@@ -72,9 +73,9 @@ public class DataCollectionSuppliers {
 		}
 	}
 
-	public static class SortedMultisetDemeter<K, V extends Set>
+	public static class SortedMultisetClient<K, V extends Set>
 			extends SortedMultiset<K, V> {
-		public SortedMultisetDemeter(DomainLookup cacheLookup) {
+		public SortedMultisetClient(DomainLookup cacheLookup) {
 			Class templateClass = cacheLookup.getListenedClass();
 			Object instance = Reflections.classLookup()
 					.newInstance(templateClass);

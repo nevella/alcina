@@ -6,11 +6,6 @@
 	padding: 0;
 }
 
-.demeter-logo {
-	color: rgb(16, 72, 96);
-	font-weight: bold;
-	padding: 2px 0 0 10px;
-}
 
 body {
 	background-color: white;
@@ -610,26 +605,6 @@ table.flat-search  div.select-item-container:empty {
 
 .contacts-panel div.flat-search-row>.editor {
 	width: 185px;
-}
-
-/* Spinner Circle Rotation */
-.demeter-startup .loading2 {
-	border: 4px rgba(106, 161, 230, 0.25) solid;
-	border-top: 4px rgba(106, 161, 230, 1) solid;
-	border-radius: 50%;
-	-webkit-animation: spCircRot .9s infinite linear;
-	animation: spCircRot .9s infinite linear;
-	width: 50px;
-	height: 50px;
-	margin: auto;
-}
-
-.demeter-startup {
-	text-align: center;
-	width: 100px;
-	margin: 0 auto;
-	padding-top: 4em;
-	width: 110px;
 }
 
 .doc tr.head {
