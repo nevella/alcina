@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Multiset;
-import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class DomainStoreCreatorsFastUtil {
@@ -35,7 +35,7 @@ public class DomainStoreCreatorsFastUtil {
 			implements DomainStoreLongSetCreator {
 		@Override
 		public Set<Long> get() {
-			return new LongAVLTreeSet();
+			return new LongOpenHashSet();
 		}
 	}
 
