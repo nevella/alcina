@@ -54,6 +54,7 @@ import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreTransformSequencer.TransformPriorityProvider;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -103,7 +104,7 @@ public class ServletLayerTransforms {
 		return LooseContext.get(CONTEXT_TRANSFORM_PRIORITY);
 	}
 
-	public static boolean hasBackendTransformPriority() {
+	public static boolean hasLessThanUserTransformPriority() {
 		TransformPriority priority = LooseContext
 				.get(CONTEXT_TRANSFORM_PRIORITY);
 		return !(priority == null || priority
@@ -558,6 +559,15 @@ public class ServletLayerTransforms {
 
 	public interface TransformPriority {
 		int getPriority();
+	}
+
+	@RegistryLocation(registryPoint = TransformPriorityProvider.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	public static class TransformPriorityProviderServletLayer
+			extends TransformPriorityProvider {
+		@Override
+		public boolean hasLessThanUserTransformPriority() {
+			return ServletLayerTransforms.hasLessThanUserTransformPriority();
+		}
 	}
 
 	public enum TransformPriorityStd implements TransformPriority {
