@@ -62,6 +62,7 @@ import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 import cc.alcina.framework.servlet.CascadingTransformSupport;
 import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.actionhandlers.DtrSimpleAdminPersistenceHandler;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet.IsWrappedObjectDteFilter;
 
@@ -567,6 +568,11 @@ public class ServletLayerTransforms {
 		@Override
 		public boolean hasLessThanUserTransformPriority() {
 			return ServletLayerTransforms.hasLessThanUserTransformPriority();
+		}
+
+		@Override
+		public boolean useLongQueueWait() {
+			return !(Ax.isTest() || Sx.isTestServer());
 		}
 	}
 

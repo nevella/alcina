@@ -147,7 +147,10 @@ public class DomainStoreTransformSequencer {
 				// don't wait long - this *tries* to apply transforms in order,
 				// but we don't want to block local work
 				int wait = TransformPriorityProvider.get()
-						.hasLessThanUserTransformPriority() ? 300 : 5;
+						.hasLessThanUserTransformPriority()
+						&& TransformPriorityProvider.get().useLongQueueWait()
+								? 300
+								: 5;
 				boolean normalExit = preLocalBarrier.await(wait,
 						TimeUnit.SECONDS);
 				if (!normalExit) {
@@ -355,9 +358,9 @@ public class DomainStoreTransformSequencer {
 					DomainStoreTransformSequencer.TransformPriorityProvider.class);
 		}
 
-		public boolean hasLessThanUserTransformPriority() {
-			return false;
-		}
+		public abstract boolean hasLessThanUserTransformPriority();
+
+		public abstract boolean useLongQueueWait();
 	}
 
 	static class DtrIdTimestamp {
