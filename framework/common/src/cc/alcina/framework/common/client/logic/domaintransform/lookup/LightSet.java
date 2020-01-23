@@ -49,9 +49,6 @@ public class LightSet<H> extends AbstractSet<H>
 
 	@Override
 	public boolean add(H e) {
-		if (e == null) {
-			throw new IllegalArgumentException();
-		}
 		if (degenerate != null) {
 			return degenerate.add(e);
 		}
@@ -62,7 +59,7 @@ public class LightSet<H> extends AbstractSet<H>
 			hashes[0] = Objects.hashCode(e);
 			size++;
 			modCount++;
-			return false;
+			return true;
 		}
 		int idx = indexOf(e);
 		if (idx != -1) {
@@ -126,9 +123,6 @@ public class LightSet<H> extends AbstractSet<H>
 
 	@Override
 	public boolean remove(Object o) {
-		if (o == null) {
-			return false;
-		}
 		if (degenerate != null) {
 			return degenerate.remove(o);
 		}
@@ -168,7 +162,7 @@ public class LightSet<H> extends AbstractSet<H>
 		for (int idx = 0; idx < size; idx++) {
 			if (hashes[idx] == test) {
 				Object f = elementData[idx];
-				if (f.equals(e)) {
+				if (Objects.equals(e, f)) {
 					return idx;
 				}
 			}
