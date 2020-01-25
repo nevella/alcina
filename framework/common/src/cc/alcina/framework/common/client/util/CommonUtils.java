@@ -1671,8 +1671,8 @@ public class CommonUtils {
 				+ s.substring(1).toLowerCase();
 	}
 
-	public static boolean validateComparator(int cmp0_1, int cmp0_2,
-			int cmp1_2) {
+	public static boolean validateComparator(Object o1, Object o2, Object o3,
+			int cmp0_1, int cmp0_2, int cmp1_2) {
 		if (cmp0_1 > 0 && cmp1_2 > 0) {
 			return cmp0_2 > 0;
 		} else {
