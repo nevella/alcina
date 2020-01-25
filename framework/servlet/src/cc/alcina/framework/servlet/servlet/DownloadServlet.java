@@ -18,7 +18,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -36,7 +36,7 @@ import cc.alcina.framework.entity.SEUtilities;
  */
 public class DownloadServlet extends HttpServlet {
 	private static Map<String, DownloadItem> items = Collections
-			.synchronizedMap(new HashMap<String, DownloadItem>());
+			.synchronizedMap(new LinkedHashMap<String, DownloadItem>());
 
 	public static String add(DownloadItem item) {
 		String id = SEUtilities.generateId();
@@ -44,6 +44,7 @@ public class DownloadServlet extends HttpServlet {
 		return id;
 	}
 
+	@Override
 	public void doGet(HttpServletRequest request, HttpServletResponse res) {
 		doPost(request, res);
 	}
