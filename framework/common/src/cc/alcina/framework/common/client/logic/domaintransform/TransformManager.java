@@ -283,7 +283,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		getTransformsByCommitType(evt.getCommitType()).add(evt);
 	}
 
-	public void addTransforms(List<DomainTransformEvent> transforms,
+	public void addTransforms(Collection<DomainTransformEvent> transforms,
 			boolean fireEvents) {
 		for (DomainTransformEvent domainTransformEvent : transforms) {
 			addTransform(domainTransformEvent);
