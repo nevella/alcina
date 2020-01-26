@@ -44,6 +44,9 @@ public class Transaction {
 	}
 
 	public static void end() {
+		if (!Transactions.isInitialised()) {
+			return;
+		}
 		if (TransformManager.get().getTransforms().size() > 0) {
 			throw new MvccException(
 					"Ending transaction with uncommitted transforms");
@@ -87,6 +90,9 @@ public class Transaction {
 	}
 
 	static void begin(TransactionPhase initialPhase) {
+		if (!Transactions.isInitialised()) {
+			return;
+		}
 		switch (initialPhase) {
 		case TO_DB_PREPARING:
 		case TO_DOMAIN_PREPARING:

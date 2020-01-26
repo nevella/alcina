@@ -806,14 +806,6 @@ public class GraphProjection {
 		return projected;
 	}
 
-	private Object getFieldValue(Field field, Object source) throws Exception {
-		if (source instanceof MvccObject) {
-			return SEUtilities.getPropertyValue(source, field.getName());
-		} else {
-			return field.get(source);
-		}
-	}
-
 	// TODO - shouldn't this be package-private?
 	public Collection projectCollection(Collection coll,
 			GraphProjectionContext context) throws Exception {
@@ -921,6 +913,14 @@ public class GraphProjection {
 					annotation == null ? null : annotation.read());
 		}
 		return perClassReadPermission.get(sourceClass);
+	}
+
+	private Object getFieldValue(Field field, Object source) throws Exception {
+		if (source instanceof MvccObject) {
+			return SEUtilities.getPropertyValue(source, field.getName());
+		} else {
+			return field.get(source);
+		}
 	}
 
 	private List<Field> getNonPrimitiveOrDataFieldsForClass(Class clazz)
@@ -1161,5 +1161,4 @@ public class GraphProjection {
 		Object instantiateShellObject(T initializer,
 				GraphProjectionContext context);
 	}
-
 }
