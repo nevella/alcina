@@ -46,6 +46,7 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.gwt.user.server.rpc.UnexpectedException;
 import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
 import com.totsp.gwittir.client.beans.Converter;
+import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
@@ -53,6 +54,8 @@ import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.ActionResult;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
+import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
+import cc.alcina.framework.common.client.actions.RemoteParametersValidator;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
@@ -420,6 +423,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		final RemoteActionPerformer performer = (RemoteActionPerformer) Registry
 				.get().instantiateSingle(RemoteActionPerformer.class,
 						action.getClass());
+		if (performer instanceof RemoteParametersValidator) {
+			try {
+				((RemoteParametersValidator) performer).validate(
+						((RemoteActionWithParameters) action).getParameters());
+			} catch (ValidationException e) {
+				e.printStackTrace();
+				throw new RuntimeException(e);
+			}
+		}
 		// because we're spawning the thread, we use this pattern to allow for
 		// getting to the countDown() in the spawned thread before the await()
 		// in the launcher
