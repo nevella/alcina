@@ -43,17 +43,23 @@ public class FileSelectorInfoValidator implements ParameterisedValidator {
 	public FileSelectorInfoValidator() {
 	}
 
+	@Override
 	public void setParameters(NamedParameter[] params) {
 		NamedParameter p = NamedParameter.Support.getParameter(params,
 				PARAM_EXTENSIONS);
 		extensions = p.stringValue();
-		p = NamedParameter.Support.getParameter(params, PARAM_EXTENSIONS);
+		p = NamedParameter.Support.getParameter(params, PARAM_REQUIRED);
 		required = p.booleanValue();
 	}
 
+	@Override
 	public Object validate(Object value) throws ValidationException {
 		if (value == null) {
-			return null;
+			if (required) {
+				throw new ValidationException("Required field");
+			} else {
+				return null;
+			}
 		}
 		FileSelectorInfo info = (FileSelectorInfo) value;
 		if (info == null || info.getFileName() == null) {
@@ -66,7 +72,7 @@ public class FileSelectorInfoValidator implements ParameterisedValidator {
 					throwInvalidExtension();
 				}
 				String fileExtension = info.getFileName()
-						.replaceFirst(".+(\\..+)", "$1");
+						.replaceFirst(".+(?:\\.(.+))", "$1");
 				List<String> parts = Arrays.asList(extensions.split(", ?"));
 				if (!parts.contains(fileExtension)) {
 					throwInvalidExtension();
