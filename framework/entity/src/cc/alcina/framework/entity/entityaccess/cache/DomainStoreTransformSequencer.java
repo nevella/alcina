@@ -149,7 +149,7 @@ public class DomainStoreTransformSequencer {
 				int wait = TransformPriorityProvider.get()
 						.hasLessThanUserTransformPriority()
 						&& TransformPriorityProvider.get().useLongQueueWait()
-								? 300
+								? 20
 								: 5;
 				boolean normalExit = preLocalBarrier.await(wait,
 						TimeUnit.SECONDS);
