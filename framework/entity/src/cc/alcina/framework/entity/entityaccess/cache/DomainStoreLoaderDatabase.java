@@ -87,6 +87,7 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainS
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentPropertyType;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.LaterLookup.LaterItem;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.EntityUtils;
@@ -1380,10 +1381,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			boolean ensured = false;
 
 			public void ensure(Class<? extends HasId> sourceClass) {
-				if (MvccObject.class.isAssignableFrom(sourceClass)) {
-					sourceClass = (Class<? extends HasId>) sourceClass
-							.getSuperclass();
-				}
+				sourceClass = Mvcc.resolveEntityClass(sourceClass);
 				if (!ensured) {
 					inJoinTables = joinTables.containsKey(PdOperator.this.pd);
 					targetPd = manyToOneRev.get(sourceClass, name);

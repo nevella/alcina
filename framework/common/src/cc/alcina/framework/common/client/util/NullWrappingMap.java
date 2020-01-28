@@ -11,14 +11,17 @@ public class NullWrappingMap<K, V> implements Map<K, V> {
 		this.delegate = delegate;
 	}
 
+	@Override
 	public void clear() {
 		this.delegate.clear();
 	}
 
+	@Override
 	public boolean containsKey(Object key) {
 		return this.delegate.containsKey(key);
 	}
 
+	@Override
 	public boolean containsValue(Object value) {
 		throw new UnsupportedOperationException();
 	}
@@ -28,6 +31,7 @@ public class NullWrappingMap<K, V> implements Map<K, V> {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		return this.delegate.equals(o);
 	}
@@ -35,17 +39,20 @@ public class NullWrappingMap<K, V> implements Map<K, V> {
 	@Override
 	public V get(Object key) {
 		NullWrapper<V> wrapper = delegate.get(key);
-		return wrapper.value;
+		return wrapper == null ? null : wrapper.value;
 	}
 
+	@Override
 	public int hashCode() {
 		return this.delegate.hashCode();
 	}
 
+	@Override
 	public boolean isEmpty() {
 		return this.delegate.isEmpty();
 	}
 
+	@Override
 	public Set<K> keySet() {
 		return this.delegate.keySet();
 	}
@@ -67,6 +74,7 @@ public class NullWrappingMap<K, V> implements Map<K, V> {
 		return null;
 	}
 
+	@Override
 	public int size() {
 		return this.delegate.size();
 	}

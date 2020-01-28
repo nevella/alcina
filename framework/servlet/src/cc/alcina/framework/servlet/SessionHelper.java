@@ -72,7 +72,7 @@ public class SessionHelper {
 
     public String getClientInstanceId(HttpServletRequest request) {
         String clientInstanceId = request
-                .getHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_ID_KEY);
+                .getHeader(AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY);
         return clientInstanceId;
     }
 
@@ -92,7 +92,7 @@ public class SessionHelper {
         String clientInstanceId = getClientInstanceId(request);
         if (clientInstanceId != null) {
             String clientInstanceAuth = request.getHeader(
-                    AlcinaRpcRequestBuilder.CLIENT_INSTANCE_AUTH_KEY);
+                    AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY);
             try {
                 String userName = getValidatedClientInstanceUserName(
                         Long.parseLong(clientInstanceId),

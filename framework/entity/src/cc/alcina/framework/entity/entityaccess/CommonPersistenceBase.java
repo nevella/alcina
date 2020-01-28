@@ -58,6 +58,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstanceExpiredException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
@@ -94,7 +95,7 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.entityaccess.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.projection.EntityUtils;
@@ -209,15 +210,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		connectPermissionsManagerToLiveObjects(false);
 	}
 
-	public <T extends HasIdAndLocalId> T resolveAlcinaMvcc(T t){
-		if(t instanceof MvccObject){
-			return (T) getEntityManager().find(t.provideEntityClass(), t.getId());
-		}else{
-			return t;
-		}
-	}
 	public void connectPermissionsManagerToLiveObjects(boolean forWriting) {
-		if (getEntityManager().contains(resolveAlcinaMvcc(PermissionsManager.get().getUser()))) {
+		if (getEntityManager().contains(Mvcc.getEntity(getEntityManager(),
+				(PermissionsManager.get().getUser())))) {
 			if (!forWriting) {
 				PermissionsManager.get().getUserGroups();
 			}
@@ -1173,6 +1168,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public boolean validateClientInstance(long id, int auth) {
 		if (Registry.impl(ClientInstanceAuthenticationCache.class).isCached(id,
 				auth)) {
+			if (Registry.impl(ClientInstanceAuthenticationCache.class)
+					.checkExpired(id)) {
+				throw new ClientInstanceExpiredException();
+			}
 			return true;
 		}
 		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(

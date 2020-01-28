@@ -113,6 +113,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformConflicts;
 import cc.alcina.framework.entity.domaintransform.TransformConflicts.TransformConflictsFromOfflineSupport;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.entityaccess.ClientInstanceAuthenticationCache;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
@@ -575,11 +576,17 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				try {
 					if (useWrapperUser) {
 						if (!PermissionsManager.get().isAdmin()) {
-							if (!cp.validateClientInstance(
-									deltaRecord.getClientInstanceId(),
-									deltaRecord.getClientInstanceAuth())) {
-								throw new RuntimeException(
-										"invalid wrapper authentication");
+							try {
+								LooseContext.pushWithTrue(
+										ClientInstanceAuthenticationCache.CONTEXT_IDLE_TIMEOUT_DISABLED);
+								if (!cp.validateClientInstance(
+										deltaRecord.getClientInstanceId(),
+										deltaRecord.getClientInstanceAuth())) {
+									throw new RuntimeException(
+											"invalid wrapper authentication");
+								}
+							} finally {
+								LooseContext.pop();
 							}
 						}
 						if (wrapperUser != null && wrapperUser
@@ -664,18 +671,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			Transaction.begin();
 			LooseContext.push();
-			initUserStateWithCookie(getThreadLocalRequest(),
-					getThreadLocalResponse());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
 					getThreadLocalRequest());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
 					getThreadLocalResponse());
-			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
-					ServletLayerUtils
-							.robustGetRemoteAddr(getThreadLocalRequest()));
-			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_INSTANCE_ID,
-					SessionHelper.getAuthenticatedSessionClientInstanceId(
-							getThreadLocalRequest()));
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			if (rpcRequest
 					.getSerializationPolicy() instanceof LegacySerializationPolicy) {
@@ -685,6 +684,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_PAYLOAD,
 					payload);
 			String name = rpcRequest.getMethod().getName();
+			initUserStateWithCookie(getThreadLocalRequest(),
+					getThreadLocalResponse());
+			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
+					ServletLayerUtils
+							.robustGetRemoteAddr(getThreadLocalRequest()));
+			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_INSTANCE_ID,
+					SessionHelper.getAuthenticatedSessionClientInstanceId(
+							getThreadLocalRequest()));
 			RPCRequest f_rpcRequest = rpcRequest;
 			String suffix = getRpcHandlerThreadNameSuffix(rpcRequest);
 			Thread.currentThread().setName(Ax.format("gwt-rpc:%s:%s%s", name,

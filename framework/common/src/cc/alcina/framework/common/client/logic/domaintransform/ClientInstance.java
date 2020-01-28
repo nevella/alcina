@@ -41,128 +41,151 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  *
  */
 public abstract class ClientInstance
-        implements HasIUser, HasIdAndLocalId, Serializable, Cloneable {
-    private long id;
+		implements HasIUser, HasIdAndLocalId, Serializable, Cloneable {
+	private long id;
 
-    private long localId;
+	private long localId;
 
-    private Date helloDate;
+	private Date helloDate;
 
-    private Integer auth;
+	private Integer auth;
 
-    private String userAgent;
+	private String userAgent;
 
-    @GwtTransient
-    private Boolean botUserAgent;
+	@GwtTransient
+	private Boolean botUserAgent;
 
-    @GwtTransient
-    private String iid;
+	@GwtTransient
+	private String iid;
 
-    private String referrer;
+	private String referrer;
 
-    private String url;
+	private String url;
 
-    @GwtTransient
-    private String ipAddress;
+	@GwtTransient
+	private String ipAddress;
 
-    public abstract ClientInstance clone();
+	private Date lastAccessed;
 
-    public ClientInstance copyPropertiesTo(ClientInstance other) {
-        other.id = id;
-        other.localId = localId;
-        other.helloDate = helloDate;
-        other.auth = auth;
-        other.userAgent = userAgent;
-        other.iid = iid;
-        return other;
-    }
+	private Boolean expired;
 
-    public Integer getAuth() {
-        return auth;
-    }
+	@Override
+	public abstract ClientInstance clone();
 
-    public Boolean getBotUserAgent() {
-        return this.botUserAgent;
-    }
+	public ClientInstance copyPropertiesTo(ClientInstance other) {
+		other.id = id;
+		other.localId = localId;
+		other.helloDate = helloDate;
+		other.auth = auth;
+		other.userAgent = userAgent;
+		other.iid = iid;
+		other.lastAccessed = lastAccessed;
+		other.expired = expired;
+		return other;
+	}
 
-    public Date getHelloDate() {
-        return helloDate;
-    }
+	public Integer getAuth() {
+		return auth;
+	}
 
-    @Override
-    @Transient
-    public long getId() {
-        return id;
-    }
+	public Boolean getBotUserAgent() {
+		return this.botUserAgent;
+	}
 
-    public String getIid() {
-        return this.iid;
-    }
+	public Boolean getExpired() {
+		return this.expired;
+	}
 
-    public String getIpAddress() {
-        return this.ipAddress;
-    }
+	public Date getHelloDate() {
+		return helloDate;
+	}
 
-    @Override
-    @Transient
-    public long getLocalId() {
-        return this.localId;
-    }
+	@Override
+	@Transient
+	public long getId() {
+		return id;
+	}
 
-    public String getReferrer() {
-        return this.referrer;
-    }
+	public String getIid() {
+		return this.iid;
+	}
 
-    public String getUrl() {
-        return this.url;
-    }
+	public String getIpAddress() {
+		return this.ipAddress;
+	}
 
-    public String getUserAgent() {
-        return this.userAgent;
-    }
+	public Date getLastAccessed() {
+		return this.lastAccessed;
+	}
 
-    public void setAuth(Integer auth) {
-        this.auth = auth;
-    }
+	@Override
+	@Transient
+	public long getLocalId() {
+		return this.localId;
+	}
 
-    public void setBotUserAgent(Boolean botUserAgent) {
-        this.botUserAgent = botUserAgent;
-    }
+	public String getReferrer() {
+		return this.referrer;
+	}
 
-    public void setHelloDate(Date helloDate) {
-        this.helloDate = helloDate;
-    }
+	public String getUrl() {
+		return this.url;
+	}
 
-    @Override
-    public void setId(long id) {
-        this.id = id;
-    }
+	public String getUserAgent() {
+		return this.userAgent;
+	}
 
-    public void setIid(String iid) {
-        this.iid = iid;
-    }
+	public void setAuth(Integer auth) {
+		this.auth = auth;
+	}
 
-    public void setIpAddress(String ipAddress) {
-        this.ipAddress = ipAddress;
-    }
+	public void setBotUserAgent(Boolean botUserAgent) {
+		this.botUserAgent = botUserAgent;
+	}
 
-    @Override
-    public void setLocalId(long localId) {
-        this.localId = localId;
-    }
+	public void setExpired(Boolean expired) {
+		this.expired = expired;
+	}
 
-    public void setReferrer(String referrer) {
-        this.referrer = referrer;
-    }
+	public void setHelloDate(Date helloDate) {
+		this.helloDate = helloDate;
+	}
 
-    public void setUrl(String url) {
-        this.url = url;
-    }
+	@Override
+	public void setId(long id) {
+		this.id = id;
+	}
 
-    public void setUserAgent(String userAgent) {
-        if (userAgent != null && userAgent.length() > 200) {
-            userAgent = userAgent.substring(0, 200);
-        }
-        this.userAgent = userAgent;
-    }
+	public void setIid(String iid) {
+		this.iid = iid;
+	}
+
+	public void setIpAddress(String ipAddress) {
+		this.ipAddress = ipAddress;
+	}
+
+	public void setLastAccessed(Date lastAccessed) {
+		this.lastAccessed = lastAccessed;
+	}
+
+	@Override
+	public void setLocalId(long localId) {
+		this.localId = localId;
+	}
+
+	public void setReferrer(String referrer) {
+		this.referrer = referrer;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
+	public void setUserAgent(String userAgent) {
+		if (userAgent != null && userAgent.length() > 200) {
+			userAgent = userAgent.substring(0, 200);
+		}
+		this.userAgent = userAgent;
+	}
 }
