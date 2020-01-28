@@ -23,9 +23,10 @@ public abstract class LoginPage extends LuxModalPanel {
 	@Override
 	protected LuxButtonPanel createButtonsPanel() {
 		LuxButtonPanel buttons = new LuxButtonPanel();
-		buttons.addActionButton(
-				new LuxButton().withText("Next").withHandler(this::handleNext)
-						.withAsyncTopic(controller.topicCallingRemote));
+		defaultButton = new LuxButton().withText("Next")
+				.withHandler(this::handleNext)
+				.withAsyncTopic(controller.topicCallingRemote);
+		buttons.addActionButton(defaultButton);
 		return buttons;
 	}
 
