@@ -189,10 +189,8 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 			if (recordResult) {
 				AlcinaRpcRequestBuilder.this.response = response;
 			}
-			if (Ax.notBlank(
-					response.getHeader(RESPONSE_HEADER_CLIENT_INSTANCE_EXPIRED))
-					|| response.getText().startsWith(
-							RESPONSE_HEADER_CLIENT_INSTANCE_EXPIRED)) {
+			if (Ax.notBlank(response
+					.getHeader(RESPONSE_HEADER_CLIENT_INSTANCE_EXPIRED))) {
 				ClientInstanceExpiredExceptionToken token = new ClientInstanceExpiredExceptionToken();
 				token.exception = new ClientInstanceExpiredException();
 				AlcinaRpcTopics.topicClientInstanceExpiredException()

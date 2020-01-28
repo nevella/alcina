@@ -14,6 +14,8 @@ import cc.alcina.framework.gwt.client.lux.LuxStyle.LuxStyleModal;
 public abstract class LoginPage extends LuxModalPanel {
 	protected LoginConsort controller;
 
+	protected LuxButtonPanel buttonsPanel;
+
 	public LoginPage(LoginConsort loginConsort) {
 		super();
 		this.controller = loginConsort;
@@ -22,12 +24,12 @@ public abstract class LoginPage extends LuxModalPanel {
 
 	@Override
 	protected LuxButtonPanel createButtonsPanel() {
-		LuxButtonPanel buttons = new LuxButtonPanel();
+		buttonsPanel = new LuxButtonPanel();
 		defaultButton = new LuxButton().withText("Next")
 				.withHandler(this::handleNext)
 				.withAsyncTopic(controller.topicCallingRemote);
-		buttons.addActionButton(defaultButton);
-		return buttons;
+		buttonsPanel.addActionButton(defaultButton);
+		return buttonsPanel;
 	}
 
 	@Override

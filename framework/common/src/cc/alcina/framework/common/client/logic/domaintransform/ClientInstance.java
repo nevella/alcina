@@ -50,6 +50,7 @@ public abstract class ClientInstance
 
 	private Integer auth;
 
+	@GwtTransient
 	private String userAgent;
 
 	@GwtTransient
@@ -58,15 +59,19 @@ public abstract class ClientInstance
 	@GwtTransient
 	private String iid;
 
+	@GwtTransient
 	private String referrer;
 
+	@GwtTransient
 	private String url;
 
 	@GwtTransient
 	private String ipAddress;
 
+	@GwtTransient
 	private Date lastAccessed;
 
+	@GwtTransient
 	private Boolean expired;
 
 	@Override

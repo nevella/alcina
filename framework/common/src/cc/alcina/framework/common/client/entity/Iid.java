@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.common.client.entity;
 
+import java.util.Date;
+
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 
 /**
@@ -24,11 +26,15 @@ public interface Iid {
 
 	public abstract String getInstanceId();
 
+	public Date getLastAccessed();
+
 	public abstract IUser getRememberMeUser();
 
 	public abstract void setId(long id);
 
 	public abstract void setInstanceId(String instanceId);
+
+	public void setLastAccessed(Date lastAccessed);
 
 	public abstract void setRememberMeUser(IUser rememberMeUser);
 }

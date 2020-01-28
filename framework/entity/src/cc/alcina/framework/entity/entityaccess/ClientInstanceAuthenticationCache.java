@@ -1,8 +1,12 @@
 package cc.alcina.framework.entity.entityaccess;
 
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 
 import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -20,35 +24,62 @@ public class ClientInstanceAuthenticationCache {
 	public static final transient String CONTEXT_IDLE_TIMEOUT_DISABLED = ClientInstanceAuthenticationCache.class
 			.getName() + ".CONTEXT_IDLE_TIMEOUT_DISABLED";
 
+	HandshakeObjectProvider handshakeObjectProvider;
+
 	private Map<Long, Integer> clientInstanceAuthMap = new NullWrappingMap<Long, Integer>(
 			new ConcurrentHashMap());
 
 	private Map<Long, String> clientInstanceUserNameMap = new NullWrappingMap<Long, String>(
 			new ConcurrentHashMap());
 
-	private Map<Long, Long> clientInstanceLastAccessedMap = new NullWrappingMap<Long, Long>(
+	private Map<Long, String> clientInstanceIidMap = new NullWrappingMap<Long, String>(
 			new ConcurrentHashMap());
 
 	private Map<String, String> iidUserNameByKeyMap = new NullWrappingMap<String, String>(
 			new ConcurrentHashMap());
 
-	public void cacheAuthentication(ClientInstance clientInstance) {
+	private AccessMap<String> iidLastAccess = new AccessMap<String>(
+			(instanceId, time) -> {
+				CommonPersistenceBase commonPersistence = handshakeObjectProvider
+						.getCommonPersistence();
+				if (commonPersistence != null) {
+					Iid iid = commonPersistence.getIidByKey(instanceId);
+					if (iid == null || iid.getId() == 0) {
+						return;
+					}
+					handshakeObjectProvider.updateIidAccessTime(iid.getId(),
+							time);
+				}
+			});
+
+	private AccessMap<Long> clientInstanceLastAccess = new AccessMap<Long>(
+			(clientInstanceId, time) -> handshakeObjectProvider
+					.updateClientInstanceAccessTime(clientInstanceId, time));
+
+	public void cacheClientInstance(ClientInstance clientInstance) {
 		clientInstanceAuthMap.put(clientInstance.getId(),
 				clientInstance.getAuth());
-		ensureExpirationValues(clientInstance.getId());
 		if (clientInstance.getUser() != null) {
 			clientInstanceUserNameMap.put(clientInstance.getId(),
 					clientInstance.getUser().getUserName());
 		}
+		if (clientInstance.getIid() != null) {
+			clientInstanceIidMap.put(clientInstance.getId(),
+					clientInstance.getIid());
+		}
+		clientInstanceLastAccess.setAccessTime(clientInstance.getId(),
+				clientInstance.getLastAccessed(), false);
 	}
 
-	public void cacheIid(Iid iid) {
+	public void cacheIid(Iid iid, boolean resetAccessTime) {
 		if (iid.getInstanceId() == null) {
 			return;
 		}
 		iidUserNameByKeyMap.put(iid.getInstanceId(),
 				iid.getRememberMeUser() == null ? null
 						: iid.getRememberMeUser().getUserName());
+		iidLastAccess.setAccessTime(iid.getInstanceId(), iid.getLastAccessed(),
+				resetAccessTime);
 	}
 
 	public void cacheUserNameFor(long validatedClientInstanceId,
@@ -56,27 +87,32 @@ public class ClientInstanceAuthenticationCache {
 		clientInstanceUserNameMap.put(validatedClientInstanceId, userName);
 	}
 
-	public boolean checkExpired(long id) {
+	/**
+	 * @return false if expired
+	 */
+	public boolean checkClientInstanceExpiration(long id) {
 		int idleTimeoutSecs = ResourceUtilities.getInteger(
 				ClientInstanceAuthenticationCache.class, "idleTimeoutSecs");
 		if (idleTimeoutSecs == 0
 				|| LooseContext.is(CONTEXT_IDLE_TIMEOUT_DISABLED)) {
-			return false;
+			return true;
 		}
 		String userName = clientInstanceUserNameMap.get(id);
 		// only applies to logged in users
 		if (userName == null || Objects.equals(userName,
 				PermissionsManager.getAnonymousUserName())) {
-			return false;
-		}
-		ensureExpirationValues(id);
-		long now = System.currentTimeMillis();
-		if (now - clientInstanceLastAccessedMap.get(id) > idleTimeoutSecs
-				* TimeConstants.ONE_SECOND_MS) {
 			return true;
-		} else {
-			clientInstanceLastAccessedMap.put(id, now);
+		}
+		if (!clientInstanceLastAccess
+				.checkAccessTimeAndUpdateIfNotExpired(id)) {
 			return false;
+		} else {
+			String iid = clientInstanceIidMap.get(id);
+			if (iid != null) {
+				return iidLastAccess.checkAccessTimeAndUpdateIfNotExpired(iid);
+			} else {
+				return true;
+			}
 		}
 	}
 
@@ -87,18 +123,26 @@ public class ClientInstanceAuthenticationCache {
 		return iidUserNameByKeyMap.containsKey(iidKey);
 	}
 
+	public String getIidUserNameByKey(String iid) {
+		if (iid == null) {
+			return null;
+		}
+		String userName = iidUserNameByKeyMap.get(iid);
+		if (userName == null) {
+			return userName;
+		}
+		if (iidLastAccess.checkAccessTimeAndUpdateIfNotExpired(iid)) {
+			return iidUserNameByKeyMap.get(iid);
+		} else {
+			return null;
+		}
+	}
+
 	public String getUserNameFor(long validatedClientInstanceId) {
 		if (!clientInstanceUserNameMap.containsKey(validatedClientInstanceId)) {
 			return null;
 		}
 		return clientInstanceUserNameMap.get(validatedClientInstanceId);
-	}
-
-	public String iidUserNameByKey(String iid) {
-		if (iid == null || !iidUserNameByKeyMap.containsKey(iid)) {
-			return null;
-		}
-		return iidUserNameByKeyMap.get(iid);
 	}
 
 	public boolean isCached(Long id, Integer auth) {
@@ -108,8 +152,55 @@ public class ClientInstanceAuthenticationCache {
 						.iv(clientInstanceAuthMap.get(id));
 	}
 
-	private void ensureExpirationValues(long id) {
-		clientInstanceLastAccessedMap.putIfAbsent(id,
-				System.currentTimeMillis());
+	static class AccessMap<K> {
+		private BiConsumer<K, Long> lastAccessPersister;
+
+		Map<K, Long> lastAccessed = Collections
+				.synchronizedMap(new LinkedHashMap<>());
+
+		public AccessMap(BiConsumer<K, Long> lastAccessPersister) {
+			this.lastAccessPersister = lastAccessPersister;
+		}
+
+		public void setAccessTime(K key, Date lastAccessedDate,
+				boolean resetAccessTime) {
+			if (lastAccessed.containsKey(key) && !resetAccessTime) {
+				return;
+			}
+			long lastAccessedTime = lastAccessedDate == null || resetAccessTime
+					? now()
+					: lastAccessedDate.getTime();
+			lastAccessed.put(key, lastAccessedTime);
+			lastAccessPersister.accept(key, lastAccessedTime);
+		}
+
+		private long now() {
+			return System.currentTimeMillis();
+		}
+
+		/**
+		 * @return false if expired
+		 */
+		boolean checkAccessTimeAndUpdateIfNotExpired(K key) {
+			long now = System.currentTimeMillis();
+			int idleTimeoutSecs = ResourceUtilities.getInteger(
+					ClientInstanceAuthenticationCache.class, "idleTimeoutSecs");
+			if (idleTimeoutSecs == 0
+					|| LooseContext.is(CONTEXT_IDLE_TIMEOUT_DISABLED)) {
+			} else {
+				Long lastAccess = lastAccessed.get(key);
+				if (lastAccess != null && (now - lastAccess > idleTimeoutSecs
+						* TimeConstants.ONE_SECOND_MS)) {
+					return false;
+				}
+				if (lastAccess == null || (now - lastAccess)
+						* 10 > idleTimeoutSecs * TimeConstants.ONE_SECOND_MS) {
+					// greater than 10% delta, persist
+					lastAccessPersister.accept(key, now);
+				}
+				lastAccessed.put(key, now);
+			}
+			return true;
+		}
 	}
 }

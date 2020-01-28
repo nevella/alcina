@@ -3,9 +3,11 @@ package cc.alcina.framework.gwt.client.module.support.login;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.validator.CompositeValidationFeedback;
 
+import cc.alcina.framework.common.client.csobjects.LoginResponseState;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections.ContentViewSection;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
+import cc.alcina.framework.gwt.client.lux.LuxButton;
 import cc.alcina.framework.gwt.client.lux.LuxFormCellRenderer;
 import cc.alcina.framework.gwt.client.lux.LuxStyleValidationFeedback;
 import cc.alcina.framework.gwt.client.module.support.login.LoginPagePasswordModel.LoginPagePasswordModelBinding;
@@ -18,6 +20,21 @@ public class LoginPagePassword extends LoginPage {
 		super(loginConsort);
 		this.model = new LoginPagePasswordModel(loginConsort.request);
 		render();
+		loginConsort.topicCallingRemote.add((k, calling) -> {
+			if (!calling && isAttached()) {
+				buttonsPanel.removeOptionalButtons();
+				if (loginConsort.lastResponse.getStates()
+						.contains(LoginResponseState.Invalid_credentials)
+						|| loginConsort.lastResponse.getStates().contains(
+								LoginResponseState.Password_incorrect)) {
+					buttonsPanel.addOptionalButton(
+							new LuxButton().withText("Back").withHandler(e -> {
+								loginConsort.request.setPassword(null);
+								loginConsort.restart();
+							}));
+				}
+			}
+		});
 	}
 
 	@Override

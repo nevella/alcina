@@ -71,8 +71,8 @@ public abstract class LoginConsort extends Consort<State> {
 
 			@Override
 			public void onSuccess(LoginResponse loginResponse) {
-				topicCallingRemote.publish(false);
 				lastResponse = loginResponse;
+				topicCallingRemote.publish(false);
 				handleSuccess(loginResponse);
 			}
 		});

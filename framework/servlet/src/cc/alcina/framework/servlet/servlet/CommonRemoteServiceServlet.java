@@ -42,6 +42,7 @@ import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 import com.google.gwt.user.server.rpc.RPC;
 import com.google.gwt.user.server.rpc.RPCRequest;
+import com.google.gwt.user.server.rpc.RPCServletUtils;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.gwt.user.server.rpc.UnexpectedException;
 import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
@@ -103,6 +104,7 @@ import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -191,6 +193,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static final String PUSH_TRANSFORMS_AT_END_OF_REUQEST = CommonRemoteServiceServlet.class
 			.getName() + ".PUSH_TRANSFORMS_AT_END_OF_REUQEST";
 
+	public static final String CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS";
+
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
 	public static HttpServletRequest getContextThreadLocalRequest() {
@@ -211,6 +216,17 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			HttpServletRequest request, HttpServletResponse response) {
 		LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST, request);
 		LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE, response);
+	}
+
+	/*
+	 * Because GWT unexpected exception code resets the headers, we handle this
+	 * special
+	 */
+	protected static void setHeader(String key, String value) {
+		getContextThreadLocalResponse().setHeader(key, value);
+		StringMap cachedForUnexpectedException = LooseContext.get(
+				CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS);
+		cachedForUnexpectedException.put(key, value);
 	}
 
 	protected Logger logger = LoggerFactory.getLogger(getClass());
@@ -675,6 +691,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					getThreadLocalRequest());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
 					getThreadLocalResponse());
+			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS,
+					new StringMap());
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			if (rpcRequest
 					.getSerializationPolicy() instanceof LegacySerializationPolicy) {
@@ -913,7 +931,26 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 		} else {
 			e.printStackTrace();
-			super.doUnexpectedFailure(e);
+			try {
+				getThreadLocalResponse().reset();
+				StringMap cachedForUnexpectedException = LooseContext.get(
+						CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS);
+				cachedForUnexpectedException.forEach(
+						(k, v) -> getThreadLocalResponse().setHeader(k, v));
+			} catch (IllegalStateException ex) {
+				/*
+				 * If we can't reset the request, the only way to signal that
+				 * something has gone wrong is to throw an exception from here.
+				 * It should be the case that we call the user's implementation
+				 * code before emitting data into the response, so the only time
+				 * that gets tripped is if the object serialization code blows
+				 * up.
+				 */
+				throw new RuntimeException("Unable to report failure", e);
+			}
+			ServletContext servletContext = getServletContext();
+			RPCServletUtils.writeResponseForUnexpectedFailure(servletContext,
+					getThreadLocalResponse(), e);
 		}
 	}
 

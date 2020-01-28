@@ -13,7 +13,7 @@
 }
 
 .lux-button.optional-button {
-	background-color: white;
+	background-color: transparent;
 	color: var(- -button-background-color);
 }
 
@@ -28,7 +28,7 @@
 }
 
 .lux-button.optional-button:active {
-	background-color: white;
+	background-color: transparent;
 	color: var(- -button-background-color-active);
 }
 
@@ -55,7 +55,7 @@
 	border-top: 4px rgba(255, 255, 255, 1) solid;
 	border-radius: 50%;
 	animation: spCircRot .9s infinite linear;
-	width: 12px;
-	height: 12px;
+	width: 8px;
+	height: 8px;
 	margin: auto;
 }

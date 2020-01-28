@@ -31,6 +31,10 @@ public class LuxButtonPanel extends Composite {
 		optional.add(button);
 	}
 
+	public void removeOptionalButtons() {
+		optional.clear();
+	}
+
 	public static class Builder {
 	}
 }

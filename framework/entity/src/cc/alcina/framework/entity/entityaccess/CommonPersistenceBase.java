@@ -689,15 +689,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public String getRememberMeUserName(String iidKey) {
-		String userName = Registry.impl(ClientInstanceAuthenticationCache.class)
-				.iidUserNameByKey(iidKey);
-		if (userName == null
-				&& !Registry.impl(ClientInstanceAuthenticationCache.class)
-						.containsIIdKey(iidKey)) {
+		String userName = ensureClientInstanceAuthenticationCache()
+				.getIidUserNameByKey(iidKey);
+		if (userName == null && !ensureClientInstanceAuthenticationCache()
+				.containsIIdKey(iidKey)) {
 			Iid iid = getIidByKey(iidKey);
 			if (iid != null) {
-				Registry.impl(ClientInstanceAuthenticationCache.class)
-						.cacheIid(iid);
+				ensureClientInstanceAuthenticationCache().cacheIid(iid, false);
 				userName = iid.getRememberMeUser() == null ? null
 						: iid.getRememberMeUser().getUserName();
 			} else {
@@ -707,8 +705,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				Iid newIid = getNewImplementationInstance(Iid.class);
 				newIid.setInstanceId(iidKey);
 				getEntityManager().persist(newIid);
-				Registry.impl(ClientInstanceAuthenticationCache.class)
-						.cacheIid(newIid);
+				ensureClientInstanceAuthenticationCache().cacheIid(newIid,
+						true);
 			}
 		}
 		return userName;
@@ -764,7 +762,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	@Override
 	public String
 			getUserNameForClientInstanceId(long validatedClientInstanceId) {
-		String userName = Registry.impl(ClientInstanceAuthenticationCache.class)
+		String userName = ensureClientInstanceAuthenticationCache()
 				.getUserNameFor(validatedClientInstanceId);
 		if (userName == null) {
 			Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(
@@ -773,7 +771,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			if (ci != null) {
 				userName = ci.getUser().getUserName();
 			}
-			Registry.impl(ClientInstanceAuthenticationCache.class)
+			ensureClientInstanceAuthenticationCache()
 					.cacheUserNameFor(validatedClientInstanceId, userName);
 		}
 		return userName;
@@ -792,8 +790,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public boolean isValidIid(String iidKey) {
-		if (!Registry.impl(ClientInstanceAuthenticationCache.class)
-				.containsIIdKey(iidKey)) {
+		if (!ensureClientInstanceAuthenticationCache().containsIIdKey(iidKey)) {
 			List list = getEntityManager()
 					.createQuery("from "
 							+ getImplementationSimpleClassName(Iid.class)
@@ -802,8 +799,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			if (list.isEmpty()) {
 				return false;
 			} else {
-				Registry.impl(ClientInstanceAuthenticationCache.class)
-						.cacheIid((Iid) list.get(0));
+				ensureClientInstanceAuthenticationCache()
+						.cacheIid((Iid) list.get(0), false);
 			}
 		}
 		return true;
@@ -1166,10 +1163,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public boolean validateClientInstance(long id, int auth) {
-		if (Registry.impl(ClientInstanceAuthenticationCache.class).isCached(id,
-				auth)) {
-			if (Registry.impl(ClientInstanceAuthenticationCache.class)
-					.checkExpired(id)) {
+		if (ensureClientInstanceAuthenticationCache().isCached(id, auth)) {
+			if (!ensureClientInstanceAuthenticationCache()
+					.checkClientInstanceExpiration(id)) {
 				throw new ClientInstanceExpiredException();
 			}
 			return true;
@@ -1182,8 +1178,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		CI ci = CommonUtils.first(clientInstances);
 		boolean authorised = ci != null && ci.getAuth() == auth;
 		if (authorised) {
-			Registry.impl(ClientInstanceAuthenticationCache.class)
-					.cacheAuthentication(ci);
+			ensureClientInstanceAuthenticationCache().cacheClientInstance(ci);
 		}
 		return authorised;
 	}
@@ -1434,6 +1429,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return cache;
 	}
 
+	ClientInstanceAuthenticationCache
+			ensureClientInstanceAuthenticationCache() {
+		ClientInstanceAuthenticationCache cache = Registry
+				.impl(ClientInstanceAuthenticationCache.class);
+		cache.handshakeObjectProvider = getHandshakeObjectProvider();
+		return cache;
+	}
+
 	@RegistryLocation(registryPoint = CommonPersistenceConnectionProvider.class)
 	public abstract static class CommonPersistenceConnectionProvider {
 		public abstract Connection getConnection();
@@ -1454,7 +1457,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			implements HandshakeObjectProvider {
 		static long clientInstanceIdCounter = 0;
 
-		private CommonPersistenceBase cp;
+		private CommonPersistenceBase commonPersistence;
 
 		@Override
 		public ClientInstance createClientInstance(String userAgent, String iid,
@@ -1462,15 +1465,17 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			long newId = 0;
 			synchronized (ReadonlyHandshakeObjectProvider.class) {
 				if (clientInstanceIdCounter == 0) {
-					clientInstanceIdCounter = (Long) cp.getEntityManager()
+					clientInstanceIdCounter = (Long) commonPersistence
+							.getEntityManager()
 							.createQuery(String.format("select max(id) from %s",
-									cp.getImplementationSimpleClassName(
-											ClientInstance.class)))
+									commonPersistence
+											.getImplementationSimpleClassName(
+													ClientInstance.class)))
 							.getSingleResult();
 				}
 				newId = ++clientInstanceIdCounter;
 			}
-			Class<? extends ClientInstance> clientInstanceImpl = cp
+			Class<? extends ClientInstance> clientInstanceImpl = commonPersistence
 					.getImplementation(ClientInstance.class);
 			try {
 				ClientInstance impl = clientInstanceImpl.newInstance();
@@ -1480,7 +1485,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				impl.setAuth(Math.abs(new Random().nextInt()));
 				impl.setUserAgent(userAgent);
 				impl.setIpAddress(ipAddress);
-				IUser clonedUser = (IUser) cp
+				IUser clonedUser = (IUser) commonPersistence
 						.getNewImplementationInstance(IUser.class);
 				ResourceUtilities.copyBeanProperties(
 						PermissionsManager.get().getUser(), clonedUser, null,
@@ -1488,8 +1493,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 								"secondaryGroups", "contact" }));
 				ClientInstance instance = new EntityUtils().detachedClone(impl,
 						false);
-				Registry.impl(ClientInstanceAuthenticationCache.class)
-						.cacheAuthentication(instance);
+				commonPersistence.ensureClientInstanceAuthenticationCache()
+						.cacheClientInstance(instance);
 				instance.setUser(
 						new EntityUtils().detachedClone(clonedUser, false));
 				return instance;
@@ -1504,6 +1509,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 
 		@Override
+		public CommonPersistenceBase getCommonPersistence() {
+			return this.commonPersistence;
+		}
+
+		@Override
 		public HiliLocatorMap getLocatorMap(Long clientInstanceId) {
 			throw new UnsupportedOperationException();
 		}
@@ -1511,7 +1521,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		@Override
 		public void
 				setCommonPersistence(CommonPersistenceBase commonPersistence) {
-			this.cp = commonPersistence;
+			this.commonPersistence = commonPersistence;
+		}
+
+		@Override
+		public void updateClientInstanceAccessTime(long clientInstanceId,
+				long time) {
+			// noop
 		}
 
 		@Override
@@ -1519,17 +1535,22 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				boolean rememberMe) {
 			if (!rememberMe) {
 				try {
-					Iid impl = (Iid) cp.getImplementation(Iid.class)
-							.newInstance();
+					Iid impl = (Iid) commonPersistence
+							.getImplementation(Iid.class).newInstance();
 					impl.setInstanceId(iidKey);
-					Registry.impl(ClientInstanceAuthenticationCache.class)
-							.cacheIid(impl);
+					commonPersistence.ensureClientInstanceAuthenticationCache()
+							.cacheIid(impl, true);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
 			} else {
 				// ignore
 			}
+		}
+
+		@Override
+		public void updateIidAccessTime(long iidId, long time) {
+			// noop
 		}
 	}
 
@@ -1557,10 +1578,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 
 		@Override
+		public CommonPersistenceBase getCommonPersistence() {
+			return delegate().getCommonPersistence();
+		}
+
+		@Override
 		public HiliLocatorMap getLocatorMap(Long clientInstanceId) {
 			HiliLocatorMap map = locatorMaps.get(clientInstanceId);
 			if (map == null) {
-				CommonPersistenceBase commonPersistence = writerHandshakeObjectProvider.cp;
+				CommonPersistenceBase commonPersistence = writerHandshakeObjectProvider.commonPersistence;
 				if (commonPersistence.getEntityManager() == null) {
 					// call back in an entity context
 					return CommonPersistenceProvider.get()
@@ -1597,9 +1623,20 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 
 		@Override
+		public void updateClientInstanceAccessTime(long clientInstanceId,
+				long time) {
+			delegate().updateClientInstanceAccessTime(clientInstanceId, time);
+		}
+
+		@Override
 		public void updateIid(String iidKey, String userName,
 				boolean rememberMe) {
 			delegate().updateIid(iidKey, userName, rememberMe);
+		}
+
+		@Override
+		public void updateIidAccessTime(long iidId, long time) {
+			delegate().updateIidAccessTime(iidId, time);
 		}
 
 		HandshakeObjectProvider delegate() {
@@ -1610,29 +1647,29 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	static class WriterHandshakeObjectProvider
 			implements HandshakeObjectProvider {
-		private CommonPersistenceBase cp;
+		private CommonPersistenceBase commonPersistence;
 
 		@Override
 		public ClientInstance createClientInstance(String userAgent, String iid,
 				String ipAddress) {
 			AppPersistenceBase.checkNotReadOnly();
-			Class<? extends ClientInstance> clientInstanceImpl = cp
+			Class<? extends ClientInstance> clientInstanceImpl = commonPersistence
 					.getImplementation(ClientInstance.class);
 			try {
 				ClientInstance impl = clientInstanceImpl.newInstance();
-				cp.getEntityManager().persist(impl);
+				commonPersistence.getEntityManager().persist(impl);
 				impl.setHelloDate(new Date());
-				impl.setUser((IUser) cp.getEntityManager().find(
-						cp.getImplementation(IUser.class),
+				impl.setUser((IUser) commonPersistence.getEntityManager().find(
+						commonPersistence.getImplementation(IUser.class),
 						PermissionsManager.get().getUserId()));
 				impl.setIid(iid);
 				impl.setAuth(Math.abs(new Random().nextInt()));
 				impl.setUserAgent(userAgent);
 				impl.setIpAddress(ipAddress);
 				impl.setBotUserAgent(isBotUserAgent(userAgent));
-				cp.getEntityManager().flush();
-				cp.getEntityManager().clear();
-				IUser clonedUser = (IUser) cp
+				commonPersistence.getEntityManager().flush();
+				commonPersistence.getEntityManager().clear();
+				IUser clonedUser = (IUser) commonPersistence
 						.getNewImplementationInstance(IUser.class);
 				ResourceUtilities.copyBeanProperties(
 						PermissionsManager.get().getUser(), clonedUser, null,
@@ -1643,9 +1680,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				impl.setUser(null);
 				ClientInstance instance = new EntityUtils()
 						.detachedCloneIgnorePermissions(impl, null);
-				Registry.impl(ClientInstanceAuthenticationCache.class)
-						.cacheAuthentication(instance);
-				instance.setUser(cp.projectUserForClientInstance(clonedUser));
+				commonPersistence.ensureClientInstanceAuthenticationCache()
+						.cacheClientInstance(instance);
+				instance.setUser(commonPersistence
+						.projectUserForClientInstance(clonedUser));
 				return instance;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -1656,9 +1694,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		public ClientInstance getClientInstance(long clientInstanceId) {
 			try {
 				PermissionsManager.get().pushCurrentUser();
-				cp.connectPermissionsManagerToLiveObjects(true);
-				ClientInstance instance = (ClientInstance) cp.getEntityManager()
-						.find(cp.getImplementation(ClientInstance.class),
+				commonPersistence.connectPermissionsManagerToLiveObjects(true);
+				ClientInstance instance = (ClientInstance) commonPersistence
+						.getEntityManager().find(
+								commonPersistence.getImplementation(
+										ClientInstance.class),
 								clientInstanceId);
 				IUser user = Registry.impl(JPAImplementation.class)
 						.getInstantiatedObject(instance.getUser());
@@ -1672,6 +1712,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 
 		@Override
+		public CommonPersistenceBase getCommonPersistence() {
+			return this.commonPersistence;
+		}
+
+		@Override
 		public HiliLocatorMap getLocatorMap(Long clientInstanceId) {
 			throw new UnsupportedOperationException();
 		}
@@ -1679,23 +1724,45 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		@Override
 		public void
 				setCommonPersistence(CommonPersistenceBase commonPersistence) {
-			this.cp = commonPersistence;
+			this.commonPersistence = commonPersistence;
+		}
+
+		@Override
+		public void updateClientInstanceAccessTime(long clientInstanceId,
+				long time) {
+			ClientInstance instance = (ClientInstance) commonPersistence
+					.getEntityManager().find(commonPersistence
+							.getImplementation(ClientInstance.class),
+							clientInstanceId);
+			if (instance != null) {
+				instance.setLastAccessed(new Date(time));
+			}
 		}
 
 		@Override
 		public void updateIid(String iidKey, String userName,
 				boolean rememberMe) {
-			Iid iid = cp.getIidByKey(iidKey);
+			Iid iid = commonPersistence.getIidByKey(iidKey);
 			iid.setInstanceId(iidKey);
 			if (rememberMe) {
-				iid.setRememberMeUser(cp.getUserByName(userName));
+				iid.setRememberMeUser(
+						commonPersistence.getUserByName(userName));
 			} else {
 				iid.setRememberMeUser(null);
 			}
-			cp.iidUpdated(iid, false);
-			Registry.impl(ClientInstanceAuthenticationCache.class)
-					.cacheIid(iid);
-			cp.getEntityManager().merge(iid);
+			commonPersistence.iidUpdated(iid, false);
+			commonPersistence.ensureClientInstanceAuthenticationCache()
+					.cacheIid(iid, true);
+			commonPersistence.getEntityManager().merge(iid);
+		}
+
+		@Override
+		public void updateIidAccessTime(long iidId, long time) {
+			Iid iid = (Iid) commonPersistence.getEntityManager().find(
+					commonPersistence.getImplementation(Iid.class), iidId);
+			if (iid != null) {
+				iid.setLastAccessed(new Date(time));
+			}
 		}
 	}
 }

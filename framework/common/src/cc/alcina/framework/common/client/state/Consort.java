@@ -295,6 +295,7 @@ public class Consort<D> {
 		clearReachedStates();
 		players.addAll(removed);
 		removed.clear();
+		playing.clear();
 		replayPlayer = null;
 		start();
 	}
