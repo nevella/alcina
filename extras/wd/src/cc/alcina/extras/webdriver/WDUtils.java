@@ -312,6 +312,7 @@ public class WDUtils {
 		timeout = maybeOverrideTimeout(timeout);
 		int j = 0;
 		long start = System.currentTimeMillis();
+		Exception lastException = null;
 		while (System.currentTimeMillis() - start < timeout * 1000
 				|| timeout == 0.0) {
 			if (forceTimeout) {
@@ -325,6 +326,7 @@ public class WDUtils {
 					}
 				}
 			} catch (Exception e) {
+				lastException = e;
 				if (e instanceof InvalidSelectorException) {
 					throw e;
 				}
@@ -339,6 +341,9 @@ public class WDUtils {
 			}
 		}
 		if (required) {
+			if (!LooseContext.is(CONTEXT_DONT_LOG_EXCEPTION)) {
+				int debug = 3;
+			}
 			throw logException(context, by);
 		} else {
 			return null;
