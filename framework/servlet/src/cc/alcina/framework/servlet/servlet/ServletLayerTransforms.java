@@ -130,7 +130,8 @@ public class ServletLayerTransforms {
 		int maxTransformChunkSize = ResourceUtilities.getInteger(
 				ServletLayerUtils.class, "maxTransformChunkSize", 10000);
 		if (pendingTransformCount > maxTransformChunkSize && !LooseContext
-				.is(ServletLayerTransforms.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)) {
+				.is(ServletLayerTransforms.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)
+				&& !Ax.isTest()) {
 			commitLocalTransformsInChunks(maxTransformChunkSize);
 			return new DomainTransformLayerWrapper();
 		}

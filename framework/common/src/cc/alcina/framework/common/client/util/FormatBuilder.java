@@ -12,6 +12,10 @@ public class FormatBuilder {
 
 	private String prefix;
 
+	public void append(String string) {
+		sb.append(string);
+	}
+
 	public FormatBuilder appendIfBuilderEmpty(String optional) {
 		if (sb.length() == 0) {
 			sb.append(optional);
@@ -58,6 +62,12 @@ public class FormatBuilder {
 
 	public void friendly(Object toFriendly) {
 		appendIfNotBlank(Ax.friendly(toFriendly));
+	}
+
+	public void indent(int indentTo) {
+		for (int idx = 0; idx < indentTo; idx++) {
+			sb.append(' ');
+		}
 	}
 
 	public FormatBuilder line(String template, Object... args) {
