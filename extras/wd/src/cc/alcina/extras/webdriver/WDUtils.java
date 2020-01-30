@@ -44,6 +44,9 @@ public class WDUtils {
 
 	public static final String CONTEXT_OVERRIDE_TIMEOUT = WDUtils.class
 			.getName() + ".CONTEXT_OVERRIDE_TIMEOUT";
+
+	public static final String CONTEXT_IGNORE_OVERRIDE_TIMEOUT = WDUtils.class
+			.getName() + ".CONTEXT_IGNORE_OVERRIDE_TIMEOUT";
 	static {
 		DATE_FORMAT_T.setTimeZone(SYDNEY_TZ);
 	}
@@ -447,7 +450,8 @@ public class WDUtils {
 	}
 
 	private static int maybeOverrideTimeout(double timeout) {
-		if (LooseContext.has(CONTEXT_OVERRIDE_TIMEOUT)) {
+		if (LooseContext.has(CONTEXT_OVERRIDE_TIMEOUT)
+				&& !LooseContext.has(CONTEXT_IGNORE_OVERRIDE_TIMEOUT)) {
 			return LooseContext.getInteger(CONTEXT_OVERRIDE_TIMEOUT);
 		} else {
 			return (int) timeout;
