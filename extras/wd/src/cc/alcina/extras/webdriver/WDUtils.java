@@ -452,7 +452,9 @@ public class WDUtils {
 	private static int maybeOverrideTimeout(double timeout) {
 		if (LooseContext.has(CONTEXT_OVERRIDE_TIMEOUT)
 				&& !LooseContext.has(CONTEXT_IGNORE_OVERRIDE_TIMEOUT)) {
-			return LooseContext.getInteger(CONTEXT_OVERRIDE_TIMEOUT);
+			Integer override = LooseContext
+					.getInteger(CONTEXT_OVERRIDE_TIMEOUT);
+			return (int) (override > timeout ? override : timeout);
 		} else {
 			return (int) timeout;
 		}
