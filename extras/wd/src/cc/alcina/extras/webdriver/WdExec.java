@@ -110,6 +110,7 @@ public class WdExec {
 		throw lastException;
 	}
 
+
 	public void clickLink(String linkText) {
 		xpath(Ax.format("//a[.='%s']", linkText)).click();
 	}
@@ -146,6 +147,14 @@ public class WdExec {
 			return WDUtils.waitForElements(driver, by, timeoutSecs, true)
 					.get(oIndex);
 		}
+	}
+
+	public List<WebElement> getElements() {
+		By by = getBy();
+		if (by == null) {
+			return null;
+		}
+		return WDUtils.waitForElements(driver, by, timeoutSecs, true);
 	}
 
 	public String getOuterHtml() {
