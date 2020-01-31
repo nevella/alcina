@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.parser.structured;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
@@ -29,9 +30,7 @@ public class XmlTokenOutput {
 
 	public void close(XmlStructuralJoin join, String tag, String className,
 			ClosedPatchHandler closedPatchHandler) {
-		if (debug) {
-			System.out.format("close - %s %s\n", tag, join.hashCode());
-		}
+		debug("close - %s %s", tag, join.hashCode());
 		boolean invalidClose = !writeCursor.tagIs(tag);
 		invalidClose |= (className != null
 				&& !writeCursor.attrIs("class", className));
@@ -57,6 +56,16 @@ public class XmlTokenOutput {
 	public void closeClass(XmlStructuralJoin join, String tag,
 			String className) {
 		close(join, tag, className, null);
+	}
+
+	public void debug(String template, Object... args) {
+		if (!debug) {
+			return;
+		}
+		FormatBuilder fb = new FormatBuilder();
+		fb.indent(writeCursor.ancestors().orSelf().list().size() * 2);
+		fb.format(template, args);
+		Ax.out(fb);
 	}
 
 	public boolean ensureClosed(XmlStructuralJoin join, String tag) {
@@ -104,10 +113,7 @@ public class XmlTokenOutput {
 	}
 
 	public void open(XmlStructuralJoin join, String tag, StringMap attrs) {
-		if (debug) {
-			System.out.format("open - %s - %s - %s\n", tag, join.hashCode(),
-					attrs);
-		}
+		debug("open - %s - %s - %s", tag, join.hashCode(), attrs);
 		writeCursor = writeCursor.builder().tag(tag).attrs(attrs).append();
 		writeCursor.open = join;
 		join.targetNode = writeCursor;
@@ -133,10 +139,8 @@ public class XmlTokenOutput {
 		if (text.isEmpty()) {
 			return;
 		}
-		if (debug) {
-			System.out.format("text - %s \n",
-					CommonUtils.trimToWsCharsMiddle(text, 80));
-		}
+		debug("text - %s",
+				CommonUtils.trimToWsCharsMiddle(text, 80).replace("\n", "\\n"));
 		this.lastTextNode = writeCursor.builder().text(text).append();
 	}
 

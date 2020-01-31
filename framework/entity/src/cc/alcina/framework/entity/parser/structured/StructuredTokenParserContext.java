@@ -157,11 +157,8 @@ public class StructuredTokenParserContext {
 
 	public void pushWrapper(XmlStructuralJoin join) {
 		openNodes.push(join);
-		if (out.debug) {
-			System.out.format("open wrapper - %s - %s\n",
-					join.token.getOutputContext(join).getTag(),
-					join.hashCode());
-		}
+		out.debug("open wrapper - %s - %s",
+				join.token.getOutputContext(join).getTag(), join.hashCode());
 	}
 
 	public void skip(XmlNode node) {
@@ -206,9 +203,7 @@ public class StructuredTokenParserContext {
 					&& openNode.targetNode != null) {
 				String tag = openNode.targetNode.name();
 				closed.add(tag);
-				if (out.debug) {
-					System.out.format("close wrapper - %s\n", tag);
-				}
+				out.debug("close wrapper - %s", tag);
 				out.close(openNode, tag);
 				itr.remove();
 			}
