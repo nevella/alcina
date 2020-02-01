@@ -157,6 +157,12 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			super.text(text);
 			return this;
 		}
+
+		@Override
+		public XmlNodeHtmlTableCellBuilder title(String title) {
+			super.title(title);
+			return this;
+		}
 	}
 
 	public class XmlNodeHtmlTableRowBuilder extends XmlNodeBuilder {

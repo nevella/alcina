@@ -14,7 +14,8 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.Set;
-import java.util.TreeSet;
+
+import cc.alcina.framework.common.client.domain.DomainCollections;
 
 /**
  * 
@@ -27,6 +28,6 @@ import java.util.TreeSet;
 public class SortedMultiset<K, V extends Set> extends Multiset<K, V> {
 	@Override
 	protected Set createSet() {
-		return new TreeSet();
+		return DomainCollections.get().createSortedSet();
 	}
 }

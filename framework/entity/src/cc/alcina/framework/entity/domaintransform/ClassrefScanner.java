@@ -61,18 +61,6 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
  * @author Nick Reddel
  */
 public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
-	public static class ClassrefScannerMetadata
-			extends ClassMetadata<ClassrefScannerMetadata> {
-		public ClassrefScannerMetadata() {
-		}
-
-		public ClassrefScannerMetadata(String className) {
-			super(className);
-		}
-
-		public boolean isClassRef;
-	}
-
 	private LinkedHashSet<Class> persistableClasses;
 
 	private long roIdCounter = 0;
@@ -247,6 +235,9 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 	}
 
 	private void commit() throws Exception {
+		if (ResourceUtilities.is("commitDisabled")) {
+			return;
+		}
 		for (ClassrefScannerMetadata metadata : outgoingCache.classData
 				.values()) {
 			if (metadata.isClassRef) {
@@ -317,6 +308,12 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 	}
 
 	@Override
+	protected ClassrefScannerMetadata createMetadata(String className,
+			ClassMetadata found) {
+		return new ClassrefScannerMetadata(className).fromUrl(found);
+	}
+
+	@Override
 	protected ClassrefScannerMetadata process(Class clazz, String className,
 			ClassMetadata found) {
 		ClassrefScannerMetadata out = createMetadata(className, found);
@@ -347,9 +344,15 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 		return out;
 	}
 
-	@Override
-	protected ClassrefScannerMetadata createMetadata(String className,
-			ClassMetadata found) {
-		return new ClassrefScannerMetadata(className).fromUrl(found);
+	public static class ClassrefScannerMetadata
+			extends ClassMetadata<ClassrefScannerMetadata> {
+		public boolean isClassRef;
+
+		public ClassrefScannerMetadata() {
+		}
+
+		public ClassrefScannerMetadata(String className) {
+			super(className);
+		}
 	}
 }

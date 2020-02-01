@@ -44,6 +44,9 @@ public class WDUtils {
 
 	public static final String CONTEXT_OVERRIDE_TIMEOUT = WDUtils.class
 			.getName() + ".CONTEXT_OVERRIDE_TIMEOUT";
+
+	public static final String CONTEXT_IGNORE_OVERRIDE_TIMEOUT = WDUtils.class
+			.getName() + ".CONTEXT_IGNORE_OVERRIDE_TIMEOUT";
 	static {
 		DATE_FORMAT_T.setTimeZone(SYDNEY_TZ);
 	}
@@ -314,6 +317,7 @@ public class WDUtils {
 		timeout = maybeOverrideTimeout(timeout);
 		int j = 0;
 		long start = System.currentTimeMillis();
+		Exception lastException = null;
 		while (System.currentTimeMillis() - start < timeout * 1000
 				|| timeout == 0.0) {
 			if (forceTimeout) {
@@ -327,6 +331,7 @@ public class WDUtils {
 					}
 				}
 			} catch (Exception e) {
+				lastException = e;
 				if (e instanceof InvalidSelectorException) {
 					throw e;
 				}
@@ -341,6 +346,9 @@ public class WDUtils {
 			}
 		}
 		if (required) {
+			if (!LooseContext.is(CONTEXT_DONT_LOG_EXCEPTION)) {
+				int debug = 3;
+			}
 			throw logException(context, by);
 		} else {
 			return null;
@@ -444,8 +452,11 @@ public class WDUtils {
 	}
 
 	private static int maybeOverrideTimeout(double timeout) {
-		if (LooseContext.has(CONTEXT_OVERRIDE_TIMEOUT)) {
-			return LooseContext.getInteger(CONTEXT_OVERRIDE_TIMEOUT);
+		if (LooseContext.has(CONTEXT_OVERRIDE_TIMEOUT)
+				&& !LooseContext.has(CONTEXT_IGNORE_OVERRIDE_TIMEOUT)) {
+			Integer override = LooseContext
+					.getInteger(CONTEXT_OVERRIDE_TIMEOUT);
+			return (int) (override > timeout ? override : timeout);
 		} else {
 			return (int) timeout;
 		}

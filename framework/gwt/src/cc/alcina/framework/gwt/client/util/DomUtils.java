@@ -25,7 +25,9 @@ import com.google.gwt.user.client.ui.RootPanel;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonConstants;
@@ -79,6 +81,8 @@ public class DomUtils implements NodeFromXpathProvider {
 	public static SequentialIdGenerator expandoIdProvider = new SequentialIdGenerator();
 
 	public static Supplier<Map> mapSupplier = () -> new LinkedHashMap<>();
+
+	private static DomUtilsBlockResolver blockResolver;
 
 	public static Stream<Element> ancestorStream(Element element) {
 		// FIXME-jadex (not optimal)
@@ -236,8 +240,10 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public static boolean isBlockHTMLElement(Element e) {
-		return CommonConstants.HTML_BLOCKS
-				.contains("," + e.getTagName().toUpperCase() + ",");
+		if (blockResolver == null) {
+			blockResolver = Registry.impl(DomUtilsBlockResolver.class);
+		}
+		return blockResolver.isBlockHTMLElement(e);
 	}
 
 	public static boolean isInvisibleContentElement(Element elt) {
@@ -863,6 +869,15 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public interface BackupNodeResolver {
 		Node resolve(String xpathStr, int backupAbsTextOffset);
+	}
+
+	@RegistryLocation(registryPoint = DomUtilsBlockResolver.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class DomUtilsBlockResolver {
+		public boolean isBlockHTMLElement(Element e) {
+			return CommonConstants.HTML_BLOCKS
+					.contains("," + e.getTagName().toUpperCase() + ",");
+		}
 	}
 
 	public static class HighlightInfo {

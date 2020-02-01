@@ -102,11 +102,11 @@ public class GroupingSupport<GP extends GroupingParameters> {
 		exportDefinition = getExportDefinition();
 		ViewModelWithDataProvider model = (ViewModelWithDataProvider) groupedCellTableView
 				.getModel();
-		DataSubPlace demeterPlace = (DataSubPlace) model.getPlace();
-		if (demeterPlace.getSearchDefinition()
+		DataSubPlace dataSubPlace = (DataSubPlace) model.getPlace();
+		if (dataSubPlace.getSearchDefinition()
 				.getGroupingParameters() != null) {
 			try {
-				exportDefinition = (GP) demeterPlace.getSearchDefinition()
+				exportDefinition = (GP) dataSubPlace.getSearchDefinition()
 						.getGroupingParameters().cloneObject();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
