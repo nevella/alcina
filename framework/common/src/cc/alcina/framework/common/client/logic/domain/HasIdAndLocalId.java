@@ -61,7 +61,7 @@ public interface HasIdAndLocalId extends HasId {
 		return ((AbstractDomainBase<V>) this).domain();
 	}
 
-	default <V extends HasIdAndLocalId> V provideDomainIdentity() {
+	default <V extends HasIdAndLocalId> V domainIdentity() {
 		return (V) this;
 	}
 

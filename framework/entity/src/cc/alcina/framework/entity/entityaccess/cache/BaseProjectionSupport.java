@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import java.util.Comparator;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
@@ -25,15 +26,17 @@ public class BaseProjectionSupport {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
 			if (getBuilder().getCreators() != null) {
-				Map map = getBuilder().getCreators()[depthFromRoot].get();
+				Map map = (Map) getBuilder().getCreators()[depthFromRoot].get();
 				Preconditions.checkState(map instanceof TransactionalMap);
 				return map;
 			}
 			if (getBuilder().isNavigable()) {
-				return new TransactionalTreeMap(Object.class, Object.class);
+				return new TransactionalTreeMap(Object.class, Object.class,
+						Comparator.naturalOrder());
 			} else {
 				if (getBuilder().isSorted()) {
-					return new TransactionalTreeMap(Object.class, Object.class);
+					return new TransactionalTreeMap(Object.class, Object.class,
+							Comparator.naturalOrder());
 				} else {
 					if (depthFromRoot > 0 && depth == 1) {
 						return new TransactionalMap(Object.class, Object.class);

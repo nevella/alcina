@@ -6,6 +6,7 @@ import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
@@ -68,9 +71,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	private volatile List<Layer> mergedLayerList;
 
-	private Class<K> keyClass;
+	protected Class<K> keyClass;
 
 	private Class<V> valueClass;
+
+	Comparator<K> comparator;
 
 	public TransactionalMap(Class<K> keyClass, Class<V> valueClass) {
 		this.keyClass = keyClass;
@@ -102,6 +107,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		return null;
 	}
 
+	public boolean isSorted() {
+		return false;
+	}
+
 	@Override
 	public Set<K> keySet() {
 		return new KeySet();
@@ -109,6 +118,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	@Override
 	public V put(K key, V value) {
+		Preconditions.checkArgument(
+				key == null || keyClass.isAssignableFrom(key.getClass()));
+		Preconditions.checkArgument(
+				value == null || valueClass.isAssignableFrom(value.getClass()));
 		V existing = get(key);
 		Layer layer = ensureLayer();
 		layer.put(key, value, existing);
@@ -240,17 +253,16 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	protected <K1, V1> Map<K1, V1> createNonSynchronizedMap(Class<K1> keyClass,
-			Class<V1> valueClass) {
+	protected <V1> Map<K, V1> createNonSynchronizedMap(Class<V1> valueClass) {
 		if (keyClass == Long.class) {
 			if (valueClass == Boolean.class) {
-				return (Map<K1, V1>) new Long2BooleanLinkedOpenHashMap();
+				return (Map<K, V1>) new Long2BooleanLinkedOpenHashMap();
 			} else {
-				return (Map<K1, V1>) new Long2ObjectLinkedOpenHashMap<>();
+				return (Map<K, V1>) new Long2ObjectLinkedOpenHashMap<>();
 			}
 		} else {
 			// FIXME - some more optimisations would be great
-			return (Map<K1, V1>) new Object2ObjectLinkedOpenHashMap<>();
+			return (Map<K, V1>) new Object2ObjectLinkedOpenHashMap<>();
 		}
 	}
 
@@ -259,6 +271,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		public KeySet() {
 			this.entrySet = entrySet();
+		}
+
+		@Override
+		public boolean contains(Object o) {
+			return entrySet.contains(o);
 		}
 
 		@Override
@@ -317,10 +334,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		/*
 		 * FIXME - these should be specialised. Removed should be lazy
 		 */
-		Map<K, Boolean> removed = createNonSynchronizedMap(keyClass,
-				Boolean.class);
+		Map<K, Boolean> removed = createNonSynchronizedMap(Boolean.class);
 
-		Map<K, V> modified = createNonSynchronizedMap(keyClass, valueClass);
+		Map<K, V> modified = createNonSynchronizedMap(valueClass);
 
 		Transaction transaction;
 
@@ -397,6 +413,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
+		public boolean contains(Object o) {
+			return containsKey(o);
+		}
+
+		@Override
 		public Iterator<Entry<K, V>> iterator() {
 			List<Iterator<Entry<K, V>>> iterators = visibleLayers.stream()
 					.map(Layer::modifiedEntrySetIterator)
@@ -404,7 +425,13 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			Iterator<Entry<K, V>>[] iteratorArray = (Iterator<Entry<K, V>>[]) iterators
 					.toArray(new Iterator[iterators.size()]);
 			MultiIterator<Entry<K, V>> layerIterator = new MultiIterator<Entry<K, V>>(
-					false, iteratorArray);
+					false,
+					comparator == null ? null : new Comparator<Entry<K, V>>() {
+						@Override
+						public int compare(Entry<K, V> o1, Entry<K, V> o2) {
+							return comparator.compare(o1.getKey(), o2.getKey());
+						}
+					}, iteratorArray);
 			Predicate<Entry<K, V>> mapping = e -> {
 				int idx = layerIterator.getCurrentIteratorIndex();
 				idx++;// check if modified in any subsequent layers

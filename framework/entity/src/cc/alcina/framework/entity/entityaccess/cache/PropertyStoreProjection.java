@@ -7,7 +7,9 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 public abstract class PropertyStoreProjection<T extends HasIdAndLocalId>
 		extends BaseProjection<T> {
-	public PropertyStoreProjection(PropertyStore propertyStore) {
+	public PropertyStoreProjection(PropertyStore propertyStore,
+			Class initialType, Class... secondaryTypes) {
+		super(initialType, secondaryTypes);
 		propertyStore.addProjection(this);
 	}
 

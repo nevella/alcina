@@ -25,6 +25,11 @@ public abstract class BaseProjectionHasEquivalenceHash<T extends HasIdAndLocalId
 		}
 	};
 
+	public BaseProjectionHasEquivalenceHash(Class initialType,
+			Class... secondaryTypes) {
+		super(initialType, secondaryTypes);
+	}
+
 	public T matchesTransactional(Collection<T> perClassTransactional,
 			Object[] path) {
 		Collection<T> coll = perClassTransactional;

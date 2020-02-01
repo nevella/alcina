@@ -1187,16 +1187,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					this.items.clear();
 					return null;
 				}
-				Ax.out(items.stream()
-						.map(item -> item.source.getClass().getSimpleName())
-						.distinct().collect(Collectors.toList()));
 				for (LaterItem item : this.items) {
-					if (item.source.getClass().getName()
-							.endsWith("StudyMembership__")
-							&& item.pdOperator.field.getName()
-									.equals("study")) {
-						int debug = 3;
-					}
 					try {
 						PdOperator pdOperator = item.pdOperator;
 						pdOperator.resolveHelper.ensure(item.source.getClass());

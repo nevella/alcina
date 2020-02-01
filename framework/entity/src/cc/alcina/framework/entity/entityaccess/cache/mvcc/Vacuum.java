@@ -9,6 +9,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
 
 class Vacuum {
@@ -23,6 +24,11 @@ class Vacuum {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public void addVacuumable(Vacuumable vacuumable) {
+		if (vacuumable instanceof HasIdAndLocalId) {
+			if (((HasIdAndLocalId) vacuumable).getId() <= 0) {
+				int debug = 3;
+			}
+		}
 		Transaction transaction = Transaction.current();
 		if (!vacuumables.containsKey(transaction)) {
 			synchronized (queueCreationMonitor) {
@@ -34,7 +40,7 @@ class Vacuum {
 			}
 		}
 		if (vacuumables.get(transaction).put(vacuumable, vacuumable) == null) {
-			logger.warn("added vacuumable object: {}=>{}:{}", transaction,
+			logger.trace("added vacuumable object: {}=>{}:{}", transaction,
 					vacuumable.getClass().getSimpleName(), vacuumable);
 		}
 	}
@@ -55,7 +61,7 @@ class Vacuum {
 	 */
 	private synchronized void vacuum() {
 		Transaction.begin(TransactionPhase.VACUUM_BEGIN);
-		logger.warn("transactions with vacuumables: {} : {}",
+		logger.debug("transactions with vacuumables: {} : {}",
 				vacuumables.size(), vacuumables.keySet());
 		Optional<TransactionId> vacuumableTransactionId = Transactions.get()
 				.getHighestCommonComittedTransactionId();
@@ -69,11 +75,11 @@ class Vacuum {
 				.addAll(Transactions.get().getCompletedNonDomainTransactions());
 		for (Transaction transaction : vacuumableTransactions) {
 			if (vacuumables.containsKey(transaction)) {
-				logger.warn("vaccuming transaction: {}", transaction);
+				logger.debug("vaccuming transaction: {}", transaction);
 				vacuumables.get(transaction).keySet()
 						.forEach(v -> this.vacuum(v, transaction));
 				vacuumables.remove(transaction);
-				logger.warn("removed vacuumable transaction: {}", transaction);
+				logger.debug("removed vacuumable transaction: {}", transaction);
 			}
 		}
 		Transaction.current().toVacuumEnded();
@@ -81,7 +87,7 @@ class Vacuum {
 	}
 
 	private void vacuum(Vacuumable vacuumable, Transaction transaction) {
-		logger.warn("would vacuum: {}", vacuumable);
+		logger.trace("would vacuum: {}", vacuumable);
 		vacuumable.vacuum(transaction);
 	}
 

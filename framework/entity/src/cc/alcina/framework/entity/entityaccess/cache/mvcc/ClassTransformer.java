@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
+import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -18,6 +19,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.persistence.Transient;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -136,7 +139,6 @@ class ClassTransformer {
 			ct.init();
 			ct.checkFieldAndMethodAccess();
 			ct.generateMvccClass();
-			ct.persist();
 		}
 		if (classTransforms.values().stream().anyMatch(ct -> ct.invalid)) {
 			throw new IllegalStateException();
@@ -145,6 +147,9 @@ class ClassTransformer {
 				.withThreadCount(8).withCancelOnException(true).withSerial(true)
 				.withThreadName("ClassTransformer-compilation").run()
 				.throwOnException();
+		for (ClassTransform ct : classTransforms.values()) {
+			ct.persist();
+		}
 	}
 
 	public boolean isAddObjectResolutionChecks() {
@@ -211,6 +216,8 @@ class ClassTransformer {
 		private transient boolean invalid;
 
 		private String source;
+
+		private byte[] transformedClassBytes;
 
 		private Set<String> methodsWithProblematicAccess = new LinkedHashSet<>();
 
@@ -288,14 +295,26 @@ class ClassTransformer {
 		}
 
 		void generateMvccClass() {
-			new ClassWriter().generateMvccClassTask();
+			if (isSameSourceAsLastRun()
+					&& lastRun.transformedClassBytes != null) {
+				try {
+					CtClass ctClass = transformer.classPool
+							.makeClass(new ByteArrayInputStream(
+									lastRun.transformedClassBytes));
+					transformedClass = (Class<? extends H>) ctClass.toClass();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			} else {
+				new ClassWriter().generateMvccClassTask();
+			}
 		}
 
 		void init() {
 			try {
 				this.source = findSource();
 				this.lastRun = transformer.cache.get(originalClass.getName());
-				this.lastRun = null;
+				// this.lastRun = null;
 				if (this.lastRun != null && this.lastRun.version != VERSION) {
 					this.lastRun = null;
 				}
@@ -305,6 +324,10 @@ class ClassTransformer {
 		}
 
 		void persist() {
+			if (isSameSourceAsLastRun()
+					&& lastRun.transformedClassBytes != null) {
+				return;
+			}
 			try {
 				this.version = VERSION;
 				transformer.cache.persist(this, originalClass.getName());
@@ -633,8 +656,8 @@ class ClassTransformer {
 								ctClass.getName());
 						String body = bodyBuilder.toString();
 						CtMethod newMethod = CtNewMethod.make(Modifier.PUBLIC,
-								ctClass, "provideDomainIdentity",
-								new CtClass[0], new CtClass[0], body, ctClass);
+								ctClass, "domainIdentity", new CtClass[0],
+								new CtClass[0], body, ctClass);
 						ctClass.addMethod(newMethod);
 					});
 					/*
@@ -648,7 +671,12 @@ class ClassTransformer {
 					});
 					/*
 					 * Wrap non-private methods to ensure dispatch to
-					 * transactionally correct object
+					 * transactionally correct object.
+					 * 
+					 * FIXME - temporarily ignore @transient getters and setters
+					 * - this is incorrect (real solution is an extension of
+					 * DomainStore.postProcess to include transactional writes
+					 * to db-transient fields - only applied
 					 */
 					List<Method> allClassMethods = SEUtilities
 							.allClassMethods(originalClass);
@@ -678,6 +706,32 @@ class ClassTransformer {
 						 */
 						if (method.getName().matches("writeable")) {
 							continue;
+						}
+						/*
+						 * transitional - don't wrap transient setters/getters -
+						 * they will go to the 'base' object - assuming it has
+						 * no versions
+						 * 
+						 * this is a hack - see start of loop
+						 * 
+						 * FIXME - get rid of it
+						 */
+						if (method.getName().length() > 3
+								&& method.getName().matches("(set|get).*")) {
+							String propertyName = method.getName()
+									.substring(3, 4).toLowerCase()
+									+ method.getName().substring(4);
+							PropertyDescriptor propertyDescriptor = SEUtilities
+									.getPropertyDescriptorByName(originalClass,
+											propertyName);
+							if (propertyDescriptor != null
+									&& propertyDescriptor
+											.getReadMethod() != null
+									&& propertyDescriptor.getReadMethod()
+											.getAnnotation(
+													Transient.class) != null) {
+								continue;
+							}
 						}
 						FormatBuilder bodyBuilder = new FormatBuilder();
 						// FIXME - deprecated. It'd be nice (performance) to not
@@ -748,6 +802,7 @@ class ClassTransformer {
 						}
 					}
 					tasks.add(() -> {
+						transformedClassBytes = ctClass.toBytecode();
 						transformedClass = (Class<? extends H>) ctClass
 								.toClass();
 					});

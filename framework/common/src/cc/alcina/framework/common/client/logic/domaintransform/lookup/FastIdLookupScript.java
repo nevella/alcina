@@ -98,7 +98,7 @@ public class FastIdLookupScript implements FastIdLookup {
 
 		@Override
 		public Iterator<HasIdAndLocalId> iterator() {
-			return new MultiIterator<HasIdAndLocalId>(true,
+			return new MultiIterator<HasIdAndLocalId>(true, null,
 					localIdLookup.valuesIterator(), idLookup.valuesIterator());
 		}
 
