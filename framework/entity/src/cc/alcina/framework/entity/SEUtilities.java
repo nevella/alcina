@@ -1404,6 +1404,7 @@ public class SEUtilities {
 			case '\f':
 			case '\r':
 			case '\u00A0':
+			case '\u0085':
 				nsct++;
 				break;
 			case ' ':
