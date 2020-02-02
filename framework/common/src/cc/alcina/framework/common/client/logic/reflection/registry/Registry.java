@@ -43,7 +43,6 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCreator;
-import cc.alcina.framework.gwt.persistence.client.LogStore;
 
 /**
  *
@@ -184,6 +183,10 @@ public class Registry {
 		return provider;
 	}
 
+	public static boolean hasImpl(Class<?> clazz) {
+		return Registry.implOrNull(clazz) != null;
+	}
+
 	public static <V> V impl(Class<V> registryPoint) {
 		return get().impl0(registryPoint, void.class, false);
 	}
@@ -267,8 +270,8 @@ public class Registry {
 	protected UnsortedMultikeyMap<Object> singletons;
 
 	protected Map<String, Object> voidPointSingletons;
-	
-	private Map<Class,Object> implClassesRegistered;
+
+	private Map<Class, Object> implClassesRegistered;
 
 	public Registry() {
 		keys = new RegistryKeys();
@@ -765,9 +768,5 @@ public class Registry {
 		void appShutdown();
 
 		Registry getRegistry();
-	}
-
-	public static boolean hasImpl(Class<?> clazz) {
-		return Registry.implOrNull(clazz)!=null;
 	}
 }
