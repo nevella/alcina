@@ -135,6 +135,10 @@ public class Ax {
 		Ax.test = test;
 	}
 
+	public static void simpleExceptionOut(Throwable t) {
+		System.out.println(CommonUtils.toSimpleExceptionMessage(t));
+	}
+
 	public static void sysLogHigh(String template, Object... args) {
 		System.out.println(CommonUtils.highlightForLog(template, args));
 	}
