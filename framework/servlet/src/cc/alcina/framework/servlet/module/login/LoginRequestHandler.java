@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 @RegistryLocation(registryPoint = LoginRequestHandler.class, implementationType = ImplementationType.INSTANCE)
@@ -47,6 +48,11 @@ public abstract class LoginRequestHandler<U extends IUser> {
 
 	protected void handle0() {
 		try {
+			if (!validateLoginAttempt()) {
+				loginResponse.getStates()
+						.add(LoginResponseState.Account_locked_out);
+				return;
+			}
 			if (!validateUserName()) {
 				loginResponse.getStates()
 						.add(LoginResponseState.Username_not_found);
@@ -92,6 +98,9 @@ public abstract class LoginRequestHandler<U extends IUser> {
 	 * states to meet security requirements
 	 */
 	protected void postRequestHandled() {
+		if (ResourceUtilities.is(Authenticator.class, "recordLoginAttempts")) {
+			new LoginAttempts().handleLoginResult(loginModel);
+		}
 	}
 
 	protected void processLogin() throws Exception {
@@ -105,6 +114,10 @@ public abstract class LoginRequestHandler<U extends IUser> {
 		authenticator.validateAccount(loginModel.loginResponse,
 				loginModel.user.getUserName());
 		return loginModel.loginResponse.isOk();
+	}
+
+	protected boolean validateLoginAttempt() {
+		return authenticator.validateLoginAttempt(loginModel);
 	}
 
 	protected boolean validatePassword() {

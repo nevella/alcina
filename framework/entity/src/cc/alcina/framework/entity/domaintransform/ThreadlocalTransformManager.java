@@ -282,7 +282,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		if (getEntityManager() != null
 				&& evt.getTransformType() != TransformType.DELETE_OBJECT) {
 			// for use in IVersionable/DomainStore
-			if(evt.getSource() instanceof MvccObject){
+			if (evt.getSource() instanceof MvccObject) {
 				evt.setSource(null);
 			}
 			maybeEnsureSource(evt);
@@ -1340,7 +1340,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 		protected HiliLocator resolve(long localId) {
 			if (!AppPersistenceBase.isTest() && PermissionsManager.get()
-					.getClientInstance().getId() != clientInstanceId) {
+					.getClientInstanceId() != clientInstanceId) {
 				return null;
 			}
 			HiliLocator locator = locatorMap.getForLocalId(localId);

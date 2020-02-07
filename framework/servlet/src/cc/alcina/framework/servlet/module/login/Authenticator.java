@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.CookieHelper;
@@ -96,6 +97,15 @@ public abstract class Authenticator<U extends IUser> {
 	public abstract U validateAccount(LoginResponse loginResponse,
 			String userName) throws AuthenticationException;
 
+	public boolean validateLoginAttempt(LoginModel<U> loginModel) {
+		if (ResourceUtilities.is(Authenticator.class,
+				"validateLoginAttempts")) {
+			return new LoginAttempts().checkLockedOut(loginModel);
+		} else {
+			return true;
+		}
+	}
+
 	public TwoFactorAuthResult validateTwoFactorAuth(LoginModel<U> loginModel)
 			throws Exception {
 		TwoFactorAuthResult result = new TwoFactorAuthResult();
@@ -143,6 +153,11 @@ public abstract class Authenticator<U extends IUser> {
 	protected abstract U getUser(String userName);
 
 	protected abstract Class<U> getUserClass();
+
+	protected boolean
+			validateLoginAttemptFromHistory(LoginModel<U> loginModel) {
+		return true;
+	}
 
 	protected boolean validatePassword(LoginModel<U> loginModel) {
 		U user = loginModel.user;

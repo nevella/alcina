@@ -133,11 +133,12 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	@Override
 	public void vacuum(Transaction transaction) {
+		if (transaction.getPhase() != TransactionPhase.TO_DOMAIN_COMMITTED) {
+			transactionLayers.remove(transaction);
+			return;
+		}
 		Layer layer = transactionLayers.get(transaction);
 		List<Layer> mergedReplace = new ArrayList<>(mergedLayerList);
-		if (layer == null) {
-			int debug = 3;
-		}
 		mergedReplace.add(layer);
 		/*
 		 * now compact - this is a 'levelled' strategy a la cassandra, chrome

@@ -20,7 +20,7 @@ public abstract class DomainQuery<V extends HasIdAndLocalId> {
 
 	private List<DomainFilter> filters = new ArrayList<DomainFilter>();
 
-	protected boolean raw;
+	protected boolean raw = true;
 
 	private boolean nonTransactional;
 
@@ -65,23 +65,6 @@ public abstract class DomainQuery<V extends HasIdAndLocalId> {
 		return filter(new DomainFilter(key, value, operator));
 	}
 
-	public V find() {
-		return optional().orElse(null);
-	}
-
-	public V first() {
-		return CommonUtils.first(list());
-	}
-
-	public List<DomainFilter> getFilters() {
-		return this.filters;
-	}
-
-	public Set<Long> getFilterByIds() {
-		return (this.filterByIds instanceof Set) ? (Set<Long>) this.filterByIds
-				: new LinkedHashSet<Long>(this.filterByIds);
-	}
-
 	public DomainQuery<V> filterById(long id) {
 		this.filterByIds = Collections.singleton(id);
 		return this;
@@ -90,6 +73,23 @@ public abstract class DomainQuery<V extends HasIdAndLocalId> {
 	public DomainQuery<V> filterByIds(Collection<Long> ids) {
 		this.filterByIds = ids;
 		return this;
+	}
+
+	public V find() {
+		return optional().orElse(null);
+	}
+
+	public V first() {
+		return CommonUtils.first(list());
+	}
+
+	public Set<Long> getFilterByIds() {
+		return (this.filterByIds instanceof Set) ? (Set<Long>) this.filterByIds
+				: new LinkedHashSet<Long>(this.filterByIds);
+	}
+
+	public List<DomainFilter> getFilters() {
+		return this.filters;
 	}
 
 	public boolean isNonTransactional() {

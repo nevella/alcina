@@ -260,7 +260,6 @@ public class Domain {
 		@Override
 		public <V extends HasIdAndLocalId> void async(Class<V> clazz,
 				long objectId, boolean create, Consumer<V> resultConsumer) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
