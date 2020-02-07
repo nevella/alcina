@@ -7,8 +7,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -121,6 +123,14 @@ public class HiliHelper {
 
 	public static long getIdOrZero(Optional<? extends HasIdAndLocalId> o_hili) {
 		return o_hili.isPresent() ? o_hili.get().getId() : 0;
+	}
+
+	public static Predicate<HasIdAndLocalId> idFilter(String value) {
+		if (Ax.isBlank(value)) {
+			return id -> true;
+		}
+		Set<Long> longs = TransformManager.idListToLongSet(value);
+		return id -> longs.contains(id);
 	}
 
 	public static String strGetIdOrZero(HasId hasId) {
