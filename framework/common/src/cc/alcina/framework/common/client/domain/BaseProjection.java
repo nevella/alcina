@@ -33,9 +33,9 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
  */
 public abstract class BaseProjection<T extends HasIdAndLocalId>
 		implements DomainProjection<T> {
-	protected MultikeyMap<T> lookup = createLookup();
+	protected MultikeyMap<T> lookup;
 
-	private List<Class> types = null;
+	protected final List<Class> types;
 
 	private boolean derived = false;
 
@@ -45,6 +45,13 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 			.getLogger(getClass());
 
 	private IDomainStore domainStore;
+
+	public BaseProjection(Class initialType, Class... secondaryTypes) {
+		this.types = new ArrayList();
+		types.add(initialType);
+		types.addAll(Arrays.asList(secondaryTypes));
+		lookup = createLookup();
+	}
 
 	@Override
 	public MemoryStat addMemoryStats(MemoryStat parent, StatType type) {
@@ -191,10 +198,6 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 	@Override
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
-	}
-
-	public void setTypes(List<Class> types) {
-		this.types = types;
 	}
 
 	protected MultikeyMap<T> createLookup() {

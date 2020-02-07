@@ -15,12 +15,12 @@ package cc.alcina.framework.common.client.util;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import cc.alcina.framework.common.client.domain.DomainCollections;
 
 /**
  * 
@@ -145,10 +145,10 @@ public class Multiset<K, V extends Set> implements Serializable {
 	}
 
 	protected Set createSet() {
-		return new LinkedHashSet();
+		return DomainCollections.get().createLightSet();
 	}
 
 	protected void createTopMap() {
-		map = new LinkedHashMap<K, V>();
+		map = DomainCollections.get().createUnsortedMap();
 	}
 }

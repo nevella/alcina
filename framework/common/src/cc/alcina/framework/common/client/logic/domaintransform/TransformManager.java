@@ -283,7 +283,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		getTransformsByCommitType(evt.getCommitType()).add(evt);
 	}
 
-	public void addTransforms(List<DomainTransformEvent> transforms,
+	public void addTransforms(Collection<DomainTransformEvent> transforms,
 			boolean fireEvents) {
 		for (DomainTransformEvent domainTransformEvent : transforms) {
 			addTransform(domainTransformEvent);
@@ -460,8 +460,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return obj != null;
 	}
 
-	public void convertToTargetObject(DomainTransformEvent evt) {
-		Object value = evt.getNewValue();
+	public void convertToTargetObject(DomainTransformEvent event) {
+		Object value = event.getNewValue();
 		if (value == null) {
 			return;
 		}
@@ -473,43 +473,49 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (value instanceof List || value instanceof Map) {
 			ClassLookup classLookup = classLookup();
 			PropertyInfoLite pd = classLookup
-					.getWritableProperties(evt.getObjectClass()).stream()
+					.getWritableProperties(event.getObjectClass()).stream()
 					.filter(pd1 -> pd1.getPropertyName()
-							.equals(evt.getPropertyName()))
+							.equals(event.getPropertyName()))
 					.findFirst().get();
 			Preconditions.checkArgument(pd.hasSerializeWithBeanSerialization());
-			evt.setNewStringValue(
+			event.setNewStringValue(
 					Registry.impl(AlcinaBeanSerializer.class).serialize(value));
-			evt.setValueClass(String.class);
+			event.setValueClass(String.class);
 			return;
 		}
 		if (value instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) value;
-			evt.setValueId(hili.getId());
-			evt.setValueLocalId(hili.getLocalId());
-			evt.setValueClass(hili.provideEntityClass());
+			if (hili.getId() == 0 && hili.getLocalId() == 0) {
+				DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
+						"Set value object with zero id and localid");
+				dtre.setEvent(event);
+				throw dtre;
+			}
+			event.setValueId(hili.getId());
+			event.setValueLocalId(hili.getLocalId());
+			event.setValueClass(hili.provideEntityClass());
 			return;
 		}
 		if (value instanceof Enum) {
-			evt.setValueClass(((Enum) value).getDeclaringClass());
+			event.setValueClass(((Enum) value).getDeclaringClass());
 			// make sure the enum is reflect-instantiable (although not strictly
 			// necessary here, it's a common dev problem to miss this
 			// annotation, and here is the best place to catch it
 			Class clazz = classLookup()
-					.getClassForName(evt.getValueClassName());
-			evt.setNewStringValue(((Enum) value).name());
+					.getClassForName(event.getValueClassName());
+			event.setNewStringValue(((Enum) value).name());
 			return;
 		}
 		Class<? extends Object> valueClass = value.getClass();
-		evt.setValueClass(valueClass);
+		event.setValueClass(valueClass);
 		if (valueClass == Integer.class || valueClass == String.class
 				|| valueClass == Double.class || valueClass == Float.class
 				|| valueClass == Short.class || valueClass == Boolean.class) {
-			evt.setNewStringValue(value.toString());
+			event.setNewStringValue(value.toString());
 		} else if (valueClass == Long.class) {
-			evt.setNewStringValue(SimpleStringParser.toString((Long) value));
+			event.setNewStringValue(SimpleStringParser.toString((Long) value));
 		} else if (valueClass == Date.class) {
-			evt.setNewStringValue(
+			event.setNewStringValue(
 					SimpleStringParser.toString((((Date) value).getTime())));
 		}
 	}
@@ -1980,7 +1986,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public static class RecordTransformListener
 			implements DomainTransformListener {
-
 		@Override
 		public void domainTransform(DomainTransformEvent evt) {
 			if (evt.getCommitType() == CommitType.TO_LOCAL_BEAN) {

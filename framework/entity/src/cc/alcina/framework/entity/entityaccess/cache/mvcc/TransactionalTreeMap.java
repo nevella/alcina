@@ -1,159 +1,162 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
 import java.util.Comparator;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.SortedMap;
 
+import it.unimi.dsi.fastutil.longs.Long2BooleanAVLTreeMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectAVLTreeMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
+
 public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 		implements NavigableMap<K, V> {
-	public TransactionalTreeMap(Class<K> keyClass, Class<V> valueClass) {
+	public TransactionalTreeMap(Class<K> keyClass, Class<V> valueClass,
+			Comparator<K> comparator) {
 		super(keyClass, valueClass);
-		throw new UnsupportedOperationException();
+		this.comparator = comparator;
 	}
 
 	@Override
 	public Entry<K, V> ceilingEntry(K key) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public K ceilingKey(K key) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Comparator<? super K> comparator() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public NavigableSet<K> descendingKeySet() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public NavigableMap<K, V> descendingMap() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Entry<K, V> firstEntry() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public K firstKey() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Entry<K, V> floorEntry(K key) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public K floorKey(K key) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public SortedMap<K, V> headMap(K toKey) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public NavigableMap<K, V> headMap(K toKey, boolean inclusive) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Entry<K, V> higherEntry(K key) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public K higherKey(K key) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isSorted() {
+		return true;
 	}
 
 	@Override
 	public Entry<K, V> lastEntry() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public K lastKey() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Entry<K, V> lowerEntry(K key) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public K lowerKey(K key) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public NavigableSet<K> navigableKeySet() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Entry<K, V> pollFirstEntry() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Entry<K, V> pollLastEntry() {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public NavigableMap<K, V> subMap(K fromKey, boolean fromInclusive, K toKey,
 			boolean toInclusive) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public SortedMap<K, V> subMap(K fromKey, K toKey) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public SortedMap<K, V> tailMap(K fromKey) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public NavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected <V1> Map<K, V1> createNonSynchronizedMap(Class<V1> valueClass) {
+		if (keyClass == Long.class) {
+			if (valueClass == Boolean.class) {
+				return (Map<K, V1>) new Long2BooleanAVLTreeMap(
+						(Comparator<? super Long>) comparator);
+			} else {
+				return (Map<K, V1>) new Long2ObjectAVLTreeMap<>(
+						(Comparator<? super Long>) comparator);
+			}
+		} else {
+			// FIXME - some more optimisations would be great
+			return (Map<K, V1>) new Object2ObjectAVLTreeMap<>(comparator);
+		}
 	}
 }

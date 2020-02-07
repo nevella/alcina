@@ -44,6 +44,7 @@ public abstract class MultikeyMapBase<V>
 		this.delegate = createDelegateMap();
 	}
 
+	@Override
 	public <T> void addTupleObjects(List<T> tupleObjects,
 			Converter<T, List> converter) {
 		for (T t : tupleObjects) {
@@ -58,6 +59,7 @@ public abstract class MultikeyMapBase<V>
 		}
 	}
 
+	@Override
 	public void addValues(List<V> values) {
 		if (getDepth() == 1) {
 			values.addAll(writeableDelegate().values());
@@ -68,6 +70,7 @@ public abstract class MultikeyMapBase<V>
 		}
 	}
 
+	@Override
 	public List<V> allValues() {
 		ArrayList<V> all = new ArrayList<V>();
 		addValues(all);
@@ -84,18 +87,14 @@ public abstract class MultikeyMapBase<V>
 		return asMap(ensure, objects);
 	}
 
+	@Override
 	public <T> List<T> asTupleObjects(int maxDepth,
 			Converter<List, T> converter) {
 		List<List> tuples = asTuples(maxDepth);
 		return CollectionFilters.convert(tuples, converter);
 	}
 
-	static class MissingObject {
-		public String toString() {
-			return "Missing object";
-		};
-	}
-
+	@Override
 	public List<List> asTuples(int maxDepth) {
 		List<List> result = new ArrayList<List>();
 		result.add(new ArrayList<Object>());// empty key, depth 0
@@ -105,7 +104,7 @@ public abstract class MultikeyMapBase<V>
 				Object[] kArr = (Object[]) key.toArray(new Object[key.size()]);
 				Collection<Object> keys = keys(kArr);
 				if (keys == null) {
-//					throw new RuntimeException("mis-put, methinks");
+					// throw new RuntimeException("mis-put, methinks");
 					keys = Arrays.asList(new MissingObject());
 				}
 				for (Object k2 : keys) {
@@ -134,6 +133,7 @@ public abstract class MultikeyMapBase<V>
 		delegate.clear();
 	}
 
+	@Override
 	public boolean containsKey(Object... objects) {
 		Map m = getMapForObjects(false, 1, objects);
 		return m != null && m.containsKey(objects[objects.length - 1]);
@@ -170,11 +170,13 @@ public abstract class MultikeyMapBase<V>
 		return this.depth;
 	}
 
+	@Override
 	public V getEnsure(boolean ensure, Object... objects) {
 		assert objects.length == getDepth();
 		return (V) getWithKeys(ensure, 0, objects);
 	}
 
+	@Override
 	public boolean isEmpty() {
 		return this.delegate.isEmpty();
 	}
@@ -194,10 +196,12 @@ public abstract class MultikeyMapBase<V>
 		return m == null ? null : m.keySet();
 	}
 
+	@Override
 	public <T> Set keySet() {
 		return this.delegate.keySet();
 	}
 
+	@Override
 	public void put(Object... objects) {
 		Map m = getMapForObjects(true, 2, objects);
 		Object key = objects[objects.length - 2];
@@ -210,6 +214,7 @@ public abstract class MultikeyMapBase<V>
 		m.put(key, objects[objects.length - 1]);
 	}
 
+	@Override
 	public void putMulti(MultikeyMap<V> other) {
 		if (getDepth() != other.getDepth()) {
 			throw new RuntimeException("Incompatible depth");
@@ -224,6 +229,7 @@ public abstract class MultikeyMapBase<V>
 		}
 	}
 
+	@Override
 	public V remove(Object... objects) {
 		return remove(false, objects);
 	}
@@ -242,6 +248,7 @@ public abstract class MultikeyMapBase<V>
 		this.depth = depth;
 	}
 
+	@Override
 	public int size() {
 		return this.delegate.size();
 	}
@@ -257,6 +264,7 @@ public abstract class MultikeyMapBase<V>
 		}
 	}
 
+	@Override
 	public MultikeyMap<V> swapKeysZeroAndOne() {
 		MultikeyMap<V> swapped = createMap(getDepth());
 		for (Object k0 : writeableDelegate().keySet()) {
@@ -337,6 +345,11 @@ public abstract class MultikeyMapBase<V>
 		int last = objects.length - 1 - ignoreCount;
 		for (int i = 0; i <= last; i++) {
 			Object k = objects[i];
+			// FIXME - mvcc
+			if (k == null && this instanceof SortedMultikeyMap) {
+				// invalid key, would throw NPE on a treemap
+				return null;
+			}
 			Object o = m.writeableDelegate().get(k);
 			if (o != null) {
 				if (i == last) {
@@ -356,5 +369,12 @@ public abstract class MultikeyMapBase<V>
 			}
 		}
 		return m;
+	}
+
+	static class MissingObject {
+		@Override
+		public String toString() {
+			return "Missing object";
+		};
 	}
 }

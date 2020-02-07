@@ -6,15 +6,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.MapCreator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalTreeMap;
 
 public abstract class ReverseDateProjection<T extends HasIdAndLocalId>
 		extends BaseProjection<T> {
-	public ReverseDateProjection() {
+	public ReverseDateProjection(Class initialType, Class... secondaryTypes) {
+		super(initialType, secondaryTypes);
 	}
 
 	public List<T> getSince(Date date) {
@@ -33,9 +34,11 @@ public abstract class ReverseDateProjection<T extends HasIdAndLocalId>
 	@Override
 	protected MultikeyMap<T> createLookup() {
 		return new BaseProjectionLookupBuilder(this).navigable()
-				.mapCreators(new MapCreator[] { new TreeMapRevCreator() })
+				.mapCreators(new MapCreator[] { new TreeMapRevCreator(types) })
 				.createMultikeyMap();
 	}
+
+	protected abstract Date getDate(T t);
 
 	@Override
 	protected int getDepth() {
@@ -47,13 +50,18 @@ public abstract class ReverseDateProjection<T extends HasIdAndLocalId>
 		return new Object[] { getDate(t), t };
 	}
 
-	protected abstract Date getDate(T t);
-
 	public static class TreeMapRevCreator
 			implements BaseProjectionLookupBuilder.MapCreator {
+		private List<Class> types;
+
+		public TreeMapRevCreator(List<Class> types) {
+			this.types = types;
+		}
+
 		@Override
 		public Map get() {
-			return new TreeMap<>(Comparator.reverseOrder());
+			return new TransactionalTreeMap(types.get(0), types.get(1),
+					Comparator.reverseOrder());
 		}
 	}
 }

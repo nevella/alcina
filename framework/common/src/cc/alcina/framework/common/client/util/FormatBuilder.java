@@ -16,6 +16,10 @@ public class FormatBuilder {
 
 	boolean indented = false;
 
+	public void append(String string) {
+		sb.append(string);
+	}
+
 	public FormatBuilder appendIfBuilderEmpty(String optional) {
 		if (sb.length() == 0) {
 			ensureIndent();

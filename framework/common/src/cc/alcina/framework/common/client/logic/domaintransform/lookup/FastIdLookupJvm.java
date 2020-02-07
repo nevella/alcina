@@ -98,7 +98,7 @@ public class FastIdLookupJvm implements FastIdLookup {
 
 		@Override
 		public Iterator<HasIdAndLocalId> iterator() {
-			return new MultiIterator<HasIdAndLocalId>(false,
+			return new MultiIterator<HasIdAndLocalId>(false, null,
 					localIdLookup.values().iterator(),
 					idLookup.values().iterator());
 		}

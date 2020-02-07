@@ -107,7 +107,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			this.permissionsManagerState.copyTo(PermissionsManager.get());
 			Thread.currentThread().setContextClassLoader(contextClassLoader);
 			copyContext.forEach((k, v) -> LooseContext.set(k, v));
-			Transaction.begin();
+			Transaction.ensureBegun();
 			run0();
 		} catch (OutOfMemoryError e) {
 			SEUtilities.dumpAllThreads();
@@ -124,7 +124,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			}
 			throw new RuntimeException(throwable);
 		} finally {
-			Transaction.end();
+			Transaction.ensureEnded();
 			LooseContext.confirmDepth(getRunContext().tLooseContextDepth);
 			LooseContext.pop();
 		}

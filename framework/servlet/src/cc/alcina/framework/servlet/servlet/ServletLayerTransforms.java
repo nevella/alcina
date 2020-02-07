@@ -57,6 +57,7 @@ import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreTransformSequencer.TransformPriorityProvider;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
@@ -65,6 +66,7 @@ import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 import cc.alcina.framework.servlet.CascadingTransformSupport;
 import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.actionhandlers.DtrSimpleAdminPersistenceHandler;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet.IsWrappedObjectDteFilter;
 
@@ -107,7 +109,7 @@ public class ServletLayerTransforms {
 		return LooseContext.get(CONTEXT_TRANSFORM_PRIORITY);
 	}
 
-	public static boolean hasBackendTransformPriority() {
+	public static boolean hasLessThanUserTransformPriority() {
 		TransformPriority priority = LooseContext
 				.get(CONTEXT_TRANSFORM_PRIORITY);
 		return !(priority == null || priority
@@ -138,7 +140,8 @@ public class ServletLayerTransforms {
 		int maxTransformChunkSize = ResourceUtilities.getInteger(
 				ServletLayerUtils.class, "maxTransformChunkSize", 10000);
 		if (pendingTransformCount > maxTransformChunkSize && !LooseContext
-				.is(ServletLayerTransforms.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)) {
+				.is(ServletLayerTransforms.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)
+				&& !Ax.isTest()) {
 			commitLocalTransformsInChunks(maxTransformChunkSize);
 			return new DomainTransformLayerWrapper();
 		}
@@ -583,6 +586,20 @@ public class ServletLayerTransforms {
 
 	public interface TransformPriority {
 		int getPriority();
+	}
+
+	@RegistryLocation(registryPoint = TransformPriorityProvider.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	public static class TransformPriorityProviderServletLayer
+			extends TransformPriorityProvider {
+		@Override
+		public boolean hasLessThanUserTransformPriority() {
+			return ServletLayerTransforms.hasLessThanUserTransformPriority();
+		}
+
+		@Override
+		public boolean useLongQueueWait() {
+			return !(Ax.isTest() || Sx.isTestServer());
+		}
 	}
 
 	public enum TransformPriorityStd implements TransformPriority {

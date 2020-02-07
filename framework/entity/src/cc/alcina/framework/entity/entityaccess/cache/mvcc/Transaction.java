@@ -52,6 +52,9 @@ public class Transaction {
 					"Ending transaction with uncommitted transforms");
 		}
 		threadLocalInstance.get().endTransaction();
+		logger.trace("Removing tx - {} {} {}", threadLocalInstance.get(),
+				Thread.currentThread().getName(),
+				Thread.currentThread().getId());
 		threadLocalInstance.remove();
 	}
 
@@ -69,6 +72,12 @@ public class Transaction {
 		begin();
 	}
 
+	public static void ensureBegun() {
+		if (threadLocalInstance.get() == null) {
+			begin();
+		}
+	}
+
 	public static void ensureDomainPreparingActive() {
 		if (threadLocalInstance.get() == null) {
 			begin(TransactionPhase.TO_DOMAIN_PREPARING);
@@ -82,10 +91,17 @@ public class Transaction {
 	}
 
 	public static void join(Transaction transaction) {
+		logger.trace("Joining tx - {} {} {}", transaction,
+				Thread.currentThread().getName(),
+				Thread.currentThread().getId());
 		threadLocalInstance.set(transaction);
 	}
 
+	// inverse of join
 	public static void separate() {
+		logger.trace("Removing tx - {} {} {}", threadLocalInstance.get(),
+				Thread.currentThread().getName(),
+				Thread.currentThread().getId());
 		threadLocalInstance.remove();
 	}
 
@@ -101,7 +117,11 @@ public class Transaction {
 		default:
 			throw new UnsupportedOperationException();
 		}
-		threadLocalInstance.set(new Transaction(initialPhase));
+		Transaction transaction = new Transaction(initialPhase);
+		logger.trace("Joining tx - {} {} {}", transaction,
+				Thread.currentThread().getName(),
+				Thread.currentThread().getId());
+		threadLocalInstance.set(transaction);
 	}
 
 	boolean ended;
@@ -123,7 +143,7 @@ public class Transaction {
 				.put(store, new StoreTransaction(store)));
 		this.phase = initialPhase;
 		Transactions.get().initialiseTransaction(this);
-		logger.debug("Created tx: {}", this);
+		logger.trace("Created tx: {}", this);
 	}
 
 	public <T extends HasIdAndLocalId> T create(Class<T> clazz,
@@ -285,7 +305,7 @@ public class Transaction {
 			throw new MvccException("Ending on invalid phase");
 		}
 		ended = true;
-		logger.debug("Ended tx: {}", this);
+		logger.trace("Ended tx: {}", this);
 		Transactions.get().onTransactionEnded(this);
 	}
 
@@ -303,7 +323,7 @@ public class Transaction {
 
 	void setPhase(TransactionPhase phase) {
 		this.phase = phase;
-		logger.debug("Transition tx: {}", this);
+		logger.trace("Transition tx: {}", this);
 	}
 
 	/*

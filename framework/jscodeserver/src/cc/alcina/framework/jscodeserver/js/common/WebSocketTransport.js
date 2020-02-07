@@ -8,9 +8,16 @@ class WebSocketTransport {
     static MESSAGE_DATA_PACKET = 2;
     static MESSAGE_WINDOW_UNLOAD = 3;
     static MESSAGE_SOCKET_CLOSED = 4;
-    static BUFFER_SIZE = 5000000;
+    
+  /*
+   * bytes - given comms are byte->int, effectively divide by 4. Make *big*
+   * (5*10^6) bcoz this can occasionally be huge, and failing here hurts
+   * debugging more than helps
+   */
+    static BUFFER_SIZE = 50000000; 
     /*
-     * we may pause in the java codeserver debugger, so make timeout biiiig (5 minutes)
+     * we may pause in the java codeserver debugger, so make timeout biiiig (5
+     * minutes)
      */
     static READ_TIMEOUT = 300000;
     constructor() {
@@ -41,7 +48,8 @@ class WebSocketTransportBuffer {
      * buffer write operation (byte array b[n] - for Atomics.wait to work we
      * need int32)
      * 
-     * [0] ::op (0: wait - 1: connect - 2: data packet...etc, see MESSAGE constants in WebSocketTransport)
+     * [0] ::op (0: wait - 1: connect - 2: data packet...etc, see MESSAGE
+     * constants in WebSocketTransport)
      * 
      * [1] : n (as int) byte
      * 
@@ -108,7 +116,15 @@ class WebSocketTransportBuffer {
     write(message, data) {
         var v = data.length;
         Atomics.store(this.int32, 1, data.length);
-        this.int32.set(data, 2);
+        try{
+          if(data.length>1000000){
+           console.log("dev.ws: large message: `data.length` bytes"); 
+          }
+          this.int32.set(data, 2);
+        }catch(e){
+          debugger;
+          throw e;
+        }
         /*
          * and now...store the messaage code and wake one sleeping thread
          * 
@@ -134,7 +150,7 @@ class WebSocketTransportSocketChannel extends WebSocketTransport {
             }
         };
         /*
-         * worker receives close event (caused by window unload) 
+         * worker receives close event (caused by window unload)
          */
         self.addEventListener('close', e => {
             this.outBuffer.write(WebSocketTransport.MESSAGE_WINDOW_UNLOAD, new TextEncoder().encode(""));

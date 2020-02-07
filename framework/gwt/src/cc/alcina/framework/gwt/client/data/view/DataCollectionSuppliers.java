@@ -12,6 +12,9 @@ import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreIdMapCreator;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreLongSetCreator;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreMultisetCreator;
+import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStorePrivateObjectCacheCreator;
+import cc.alcina.framework.common.client.domain.PrivateObjectCache;
+import cc.alcina.framework.common.client.domain.PrivateObjectCache.PrivateObjectCacheSingleClass;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
@@ -28,7 +31,7 @@ public class DataCollectionSuppliers {
 
 	@RegistryLocation(registryPoint = DomainStoreIdMapCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
-	public static class CacheIdMapCreatorDemeter
+	public static class CacheIdMapCreatorClient
 			implements DomainStoreIdMapCreator {
 		@Override
 		public Map<Long, HasIdAndLocalId> get() {
@@ -39,7 +42,7 @@ public class DataCollectionSuppliers {
 
 	@RegistryLocation(registryPoint = DomainStoreLongSetCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
-	public static class CacheLongSetCreatorDemeter
+	public static class CacheLongSetCreatorClient
 			implements DomainStoreLongSetCreator {
 		@Override
 		public Set<Long> get() {
@@ -50,18 +53,28 @@ public class DataCollectionSuppliers {
 
 	@RegistryLocation(registryPoint = DomainStoreMultisetCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
-	public static class CacheMultisetCreatorDemeter<T>
+	public static class CacheMultisetCreatorClient<T>
 			implements DomainStoreMultisetCreator<T> {
 		@Override
 		public SortedMultiset<T, Set<Long>> get(DomainLookup cacheLookup) {
-			return useJsMaps() ? new SortedMultisetDemeter<>(cacheLookup)
+			return useJsMaps() ? new SortedMultisetClient<>(cacheLookup)
 					: new SortedMultiset<>();
 		}
 	}
 
-	public static class SortedMultisetDemeter<K, V extends Set>
+	@RegistryLocation(registryPoint = DomainStorePrivateObjectCacheCreator.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class CachePrivateObjectCacheCreatorClient
+			implements DomainStorePrivateObjectCacheCreator {
+		@Override
+		public PrivateObjectCache get() {
+			return new PrivateObjectCacheSingleClass();
+		}
+	}
+
+	public static class SortedMultisetClient<K, V extends Set>
 			extends SortedMultiset<K, V> {
-		public SortedMultisetDemeter(DomainLookup cacheLookup) {
+		public SortedMultisetClient(DomainLookup cacheLookup) {
 			Class templateClass = cacheLookup.getListenedClass();
 			Object instance = Reflections.classLookup()
 					.newInstance(templateClass);

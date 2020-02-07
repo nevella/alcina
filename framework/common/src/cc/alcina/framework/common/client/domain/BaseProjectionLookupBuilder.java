@@ -102,7 +102,7 @@ public class BaseProjectionLookupBuilder {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
 			if (getBuilder().getCreators() != null) {
-				return getBuilder().getCreators()[depthFromRoot].get();
+				return (Map) getBuilder().getCreators()[depthFromRoot].get();
 			}
 			if (getBuilder().isNavigable()) {
 				return new TreeMap();
@@ -113,6 +113,6 @@ public class BaseProjectionLookupBuilder {
 		}
 	}
 
-	public interface MapCreator extends Supplier<Map> {
+	public interface MapCreator<K, V> extends Supplier<Map<K, V>> {
 	}
 }

@@ -21,6 +21,9 @@ import javax.persistence.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -89,6 +92,7 @@ public class DomainStoreTransformSequencer {
 				.get(requestId);
 		if (latch != null) {
 			latch.countDown();
+			// FIXME - sometimes get NPEs here when stress testing
 		}
 	}
 
@@ -142,7 +146,13 @@ public class DomainStoreTransformSequencer {
 				logger.trace("Wait for pre-local barrier: {}", requestId);
 				// don't wait long - this *tries* to apply transforms in order,
 				// but we don't want to block local work
-				boolean normalExit = preLocalBarrier.await(5, TimeUnit.SECONDS);
+				int wait = TransformPriorityProvider.get()
+						.hasLessThanUserTransformPriority()
+						&& TransformPriorityProvider.get().useLongQueueWait()
+								? 20
+								: 5;
+				boolean normalExit = preLocalBarrier.await(wait,
+						TimeUnit.SECONDS);
 				if (!normalExit) {
 					Thread blockingThread = loaderDatabase.getStore()
 							.getPersistenceEvents().getQueue()
@@ -342,6 +352,19 @@ public class DomainStoreTransformSequencer {
 			return;
 		}
 		highestVisibleTransactions = getHighestVisibleTransformRequest(conn);
+	}
+
+	@RegistryLocation(registryPoint = TransformPriorityProvider.class, implementationType = ImplementationType.SINGLETON)
+	public static abstract class TransformPriorityProvider {
+		public static DomainStoreTransformSequencer.TransformPriorityProvider
+				get() {
+			return Registry.impl(
+					DomainStoreTransformSequencer.TransformPriorityProvider.class);
+		}
+
+		public abstract boolean hasLessThanUserTransformPriority();
+
+		public abstract boolean useLongQueueWait();
 	}
 
 	static class DtrIdTimestamp {

@@ -4,6 +4,9 @@ import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.Ax;
@@ -27,6 +30,8 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
  */
 public class MvccObjectVersions<T extends HasIdAndLocalId>
 		implements Vacuumable {
+	static Logger logger = LoggerFactory.getLogger(MvccObjectVersions.class);
+
 	// called in a synchronized block (synchronized on baseObject)
 	static <T extends HasIdAndLocalId> MvccObjectVersions<T> ensure(
 			T baseObject, Transaction transaction,
@@ -94,7 +99,8 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 				putVersion(version);
 			}
 		}
-		Ax.err("created object version: %s : %s", toString(), hashCode());
+		// TODO - remove? It's a hit
+		logger.trace("created object version: {} : {}", toString(), hashCode());
 	}
 
 	public T getBaseObject() {

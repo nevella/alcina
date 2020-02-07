@@ -157,7 +157,8 @@ public class PerThreadTransaction {
 
 		@Override
 		public Iterator iterator() {
-			return new MultiIterator(false, a.iterator(), bNotA.iterator());
+			return new MultiIterator(false, null, a.iterator(),
+					bNotA.iterator());
 		}
 
 		@Override
