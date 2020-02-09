@@ -273,6 +273,8 @@ public class DevConsoleRemote {
 	class ConsoleWriter extends StringWriter {
 		private boolean errWriter;
 
+		private StringBuilder lineBuffer = new StringBuilder();
+
 		public ConsoleWriter(boolean errWriter) {
 			this.errWriter = errWriter;
 		}
@@ -288,8 +290,14 @@ public class DevConsoleRemote {
 		}
 
 		@Override
-		public void write(final String buf, int off, int len) {
-			addRecord(new ConsoleRecord(buf, errWriter));
+		public synchronized void write(final String buf, int off, int len) {
+			if (buf.contains("\n")) {
+				addRecord(new ConsoleRecord(lineBuffer.toString() + buf,
+						errWriter));
+				lineBuffer = new StringBuilder();
+			} else {
+				lineBuffer.append(buf);
+			}
 		}
 	}
 }

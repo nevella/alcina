@@ -34,7 +34,9 @@ public class TopicPublisher {
 		synchronized (lookup) {
 			listeners = lookup.getAndEnsure(key).stream()
 					.collect(Collectors.toList());
-			lookup.getAndEnsure(null).stream().forEach(listeners::add);
+			if (key != null) {
+				lookup.getAndEnsure(null).stream().forEach(listeners::add);
+			}
 		}
 		for (TopicListener listener : listeners) {
 			listener.topicPublished(key, message);
@@ -73,6 +75,10 @@ public class TopicPublisher {
 	}
 
 	public static class TopicSupport<T> {
+		public static <T> TopicSupport<T> localAnonymousTopic() {
+			return new TopicSupport<>(null, false);
+		}
+
 		private String topic;
 
 		private TopicPublisher topicPublisher;
