@@ -1535,12 +1535,12 @@ public class CommonUtils {
 				sb.append(" ");
 			}
 			String title = upperCaseFirstLetterOnly(string);
-			if (title.contains("-")) {
+			if (title.contains("-") && title.length() > 1) {
 				title = Arrays.asList(title.split("-")).stream()
 						.map(CommonUtils::upperCaseFirstLetterOnly)
 						.collect(Collectors.joining("-"));
 			}
-			if (title.contains(".")) {
+			if (title.contains(".") && title.length() > 1) {
 				title = Arrays.asList(title.split("\\.")).stream()
 						.map(CommonUtils::upperCaseFirstLetterOnly)
 						.collect(Collectors.joining("."));
