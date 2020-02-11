@@ -15,7 +15,7 @@
  */
 package java.io;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * @skip
