@@ -1534,7 +1534,18 @@ public class CommonUtils {
 			if (sb.length() != 0) {
 				sb.append(" ");
 			}
-			sb.append(upperCaseFirstLetterOnly(string));
+			String title = upperCaseFirstLetterOnly(string);
+			if (title.contains("-")) {
+				title = Arrays.asList(title.split("-")).stream()
+						.map(CommonUtils::upperCaseFirstLetterOnly)
+						.collect(Collectors.joining("-"));
+			}
+			if (title.contains(".")) {
+				title = Arrays.asList(title.split("\\.")).stream()
+						.map(CommonUtils::upperCaseFirstLetterOnly)
+						.collect(Collectors.joining("."));
+			}
+			sb.append(title);
 		}
 		return sb.toString();
 	}
