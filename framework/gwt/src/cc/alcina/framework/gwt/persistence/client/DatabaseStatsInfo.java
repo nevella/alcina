@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 
@@ -95,35 +96,35 @@ public class DatabaseStatsInfo implements Serializable {
 		String out = "\n\nDatabase stats:\n========\n\nTransforms: \n";
 		String template = "\t%s : %s  -  %s chars\n";
 		for (Entry<String, Integer> entry : transformTexts.entrySet()) {
-			out += CommonUtils.formatJ(template,
+			out += Ax.format(template,
 					CommonUtils.padStringRight(entry.getKey(), 20, ' '),
 					transformCounts.get(entry.getKey()), entry.getValue());
 		}
-		out += CommonUtils.formatJ(template,
+		out += Ax.format(template,
 				CommonUtils.padStringRight("total", 20, ' '),
 				transformCounts.sum(), transformTexts.sum());
 		out += ("\n\nObject deltas:\n=========\n");
 		for (Entry<String, Integer> entry : deltaSizes.entrySet()) {
-			out += CommonUtils.formatJ(template,
+			out += Ax.format(template,
 					CommonUtils.padStringRight(entry.getKey(), 20, ' '),
 					deltaCounts.get(entry.getKey()), entry.getValue());
 		}
-		out += CommonUtils.formatJ(template,
+		out += Ax.format(template,
 				CommonUtils.padStringRight("total", 20, ' '), deltaCounts.sum(),
 				deltaSizes.sum());
 		out += "\nLogs: \n";
-		out += CommonUtils.formatJ(template,
+		out += Ax.format(template,
 				CommonUtils.padStringRight("total", 20, ' '), logSizes.size(),
 				logSizes.sum());
-		out += CommonUtils.formatJ("\n%s %s\n",
+		out += Ax.format("\n%s %s\n",
 				CommonUtils.padStringRight("Total chars: ", 20, ' '), size());
-		out += CommonUtils.formatJ("\n%s %s\n",
+		out += Ax.format("\n%s %s\n",
 				CommonUtils.padStringRight("Est. total bytes: ", 20, ' '),
 				estimatedBytes());
-		out += CommonUtils.formatJ("\n%s %s\n",
+		out += Ax.format("\n%s %s\n",
 				CommonUtils.padStringRight("% of tablet max (50mb): ", 20, ' '),
 				estimatedBytes() / 500000);
-		out += CommonUtils.formatJ("\n%s %s\n",
+		out += Ax.format("\n%s %s\n",
 				CommonUtils.padStringRight("Stat time: ", 20, ' '),
 				collectionTimeMs);
 		return out;

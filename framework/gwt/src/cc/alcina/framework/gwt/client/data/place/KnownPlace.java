@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.data.place;
 
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.OmniPlace;

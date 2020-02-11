@@ -21,11 +21,11 @@ public class HiliHelper {
 		}
 		if (hi instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) hi;
-			return CommonUtils.formatJ("%s : %s / %s",
+			return Ax.format("%s : %s / %s",
 					CommonUtils.simpleClassName(hili.getClass()), hili.getId(),
 					hili.getLocalId());
 		}
-		return CommonUtils.formatJ("%s : %s ",
+		return Ax.format("%s : %s ",
 				CommonUtils.simpleClassName(hi.getClass()), hi.getId());
 	}
 

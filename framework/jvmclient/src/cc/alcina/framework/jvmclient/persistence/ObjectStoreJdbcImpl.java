@@ -19,6 +19,7 @@ import java.util.Map.Entry;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -51,12 +52,12 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 
 	@Override
 	public void clear(final AsyncCallback<Void> callback) {
-		executeSql(CommonUtils.formatJ("Delete from %s", tableName), callback);
+		executeSql(Ax.format("Delete from %s", tableName), callback);
 	}
 
 	@Override
 	public void drop(final AsyncCallback<Void> callback) {
-		executeSql(CommonUtils.formatJ("DROP TABLE %s", tableName), callback);
+		executeSql(Ax.format("DROP TABLE %s", tableName), callback);
 	}
 
 	public void executeSql(final String sql, final AsyncCallback callback) {
@@ -160,14 +161,14 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		try {
 			Statement stmt = conn.createStatement();
 			stmt.executeQuery(
-					CommonUtils.formatJ("select min(id) from %s", tableName));
+					Ax.format("select min(id) from %s", tableName));
 			postInitCallback.onSuccess(null);
 		} catch (Exception e) {
 			String createSql = "CREATE TABLE  " + "%s"
 					+ " (id INT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1,\n"
 					+ " INCREMENT BY 1) ,\n"
 					+ " key_ varchar(255), value_ CLOB)  ";
-			String sql = CommonUtils.formatJ(createSql, tableName);
+			String sql = Ax.format(createSql, tableName);
 			executeSql(sql, postInitCallback);
 		}
 	}
@@ -197,7 +198,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		public void get(List<String> keys,
 				AsyncCallback<StringMap> valueCallback) {
 			try {
-				String sql = CommonUtils.formatJ(
+				String sql = Ax.format(
 						"select key_, value_ from %s where key_ in %s",
 						tableName,
 						LocalTransformPersistence.stringListToClause(keys));
@@ -219,7 +220,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 	class GetIdRageHandler {
 		public void get(AsyncCallback<IntPair> valueCallback) {
 			try {
-				String sql = CommonUtils.formatJ(
+				String sql = Ax.format(
 						"select min(id) as min_, " + "max(id) as max_ from %s",
 						tableName);
 				Statement stmt = conn.createStatement();
@@ -241,7 +242,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		public void get(String keyPrefix,
 				AsyncCallback<List<String>> valueCallback) {
 			try {
-				String sql = CommonUtils.formatJ(
+				String sql = Ax.format(
 						"select key_ from %s where key_ like '%s%'", tableName,
 						keyPrefix);
 				Statement stmt = conn.createStatement();
@@ -262,7 +263,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		public void getRange(int fromId, int toId,
 				AsyncCallback<Map<Integer, String>> valueCallback) {
 			try {
-				String sql = CommonUtils.formatJ(
+				String sql = Ax.format(
 						"select id,value_ from %s where id>=%s and id<=%s",
 						tableName, fromId, toId);
 				Statement stmt = conn.createStatement();
@@ -290,7 +291,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 					Entry<String, String> kv = kvsIterator.next();
 					if (!add) {
 						if (id == null || kvs.size() != 1) {
-							String sql = CommonUtils.formatJ(
+							String sql = Ax.format(
 									"select id from %s where key_=? ",
 									tableName);
 							stmt = conn.prepareStatement(sql);
@@ -304,7 +305,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 							}
 						}
 						if (id != null) {
-							String sql = CommonUtils.formatJ(
+							String sql = Ax.format(
 									"update %s set  value_=? where id=?",
 									tableName);
 							stmt = conn.prepareStatement(sql);
@@ -316,7 +317,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 					}
 					if (id == null) {
 						// add
-						String sql = CommonUtils.formatJ(
+						String sql = Ax.format(
 								"insert into %s (key_,value_) values(?,?)",
 								tableName);
 						stmt = conn.prepareStatement(sql);
@@ -343,7 +344,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		public void remove(List<String> keys,
 				AsyncCallback<Integer> idCallback) {
 			try {
-				String sql = CommonUtils.formatJ(
+				String sql = Ax.format(
 						"select id from %s where key_ in %s ", tableName,
 						LocalTransformPersistence.stringListToClause(keys));
 				Statement stmt = conn.createStatement();
@@ -353,7 +354,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 				while (rs.next()) {
 					ids.add(rs.getInt(1));
 				}
-				sql = CommonUtils.formatJ("delete from %s  where id in (%s)",
+				sql = Ax.format("delete from %s  where id in (%s)",
 						tableName, CommonUtils.join(ids, ", "));
 				stmt.executeUpdate(sql);
 				close(stmt);
@@ -368,7 +369,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		public void removeRange(int fromId, int toId,
 				AsyncCallback<Void> valueCallback) {
 			try {
-				String sql = CommonUtils.formatJ(
+				String sql = Ax.format(
 						"delete from %s where id>=? and id<=?", tableName);
 				PreparedStatement stmt = conn.prepareStatement(sql);
 				stmt.setInt(1, fromId);

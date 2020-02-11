@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.data.DataAction;
@@ -41,7 +42,7 @@ public class AppController {
     }
 
     public void deleteMultiple(List<? extends DataDomainBase> list) {
-        MessageManager.get().showMessage(CommonUtils.formatJ("Deleting %s",
+        MessageManager.get().showMessage(Ax.format("Deleting %s",
                 CommonUtils.pluralise("record", list.size(), true)));
         for (DataDomainBase ds : list) {
             if (!validateDelete(ds)) {
@@ -180,7 +181,7 @@ public class AppController {
     }
 
     private void afterDeleteSuccess(DataDomainBase object) {
-        MessageManager.get().showMessage(CommonUtils.formatJ("Deleted %s %s",
+        MessageManager.get().showMessage(Ax.format("Deleted %s %s",
                 object.getClass().getSimpleName(), object.getId()));
         AppViewModel.get().resetProviderFor(object.getClass());
         ClientFactory.refreshCurrentPlace();

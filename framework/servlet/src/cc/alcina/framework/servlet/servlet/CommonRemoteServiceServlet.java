@@ -225,7 +225,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 		String key = String.valueOf(System.currentTimeMillis());
 		File dir = getDataDumpsFolder();
-		String path = CommonUtils.formatJ("%s/%s.dat", dir.getPath(), key);
+		String path = Ax.format("%s/%s.dat", dir.getPath(), key);
 		File file = new File(path);
 		try {
 			ResourceUtilities.writeStringToFile(data, file);
@@ -309,7 +309,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throw new RuntimeException("Load dump not permitted");
 		}
 		File dir = getDataDumpsFolder();
-		String path = CommonUtils.formatJ("%s/%s.dat", dir.getPath(), key);
+		String path = Ax.format("%s/%s.dat", dir.getPath(), key);
 		File file = new File(path);
 		try {
 			return ResourceUtilities.readFileToString(file);
@@ -524,7 +524,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 								"requestId", requestId);
 				if (alreadyWritten != null) {
 					if (logger != null) {
-						logger.warn(CommonUtils.formatJ(
+						logger.warn(Ax.format(
 								"Request [%s/%s] already written", requestId,
 								clientInstanceId));
 					}
@@ -596,7 +596,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 								.transform(rq, true, true, true);
 						ThreadlocalTransformManager.cast().resetTltm(null);
 						if (logger != null) {
-							logger.info(CommonUtils.formatJ(
+							logger.info(Ax.format(
 									"Request [%s::%s] : %s transforms written, %s ignored",
 									requestId, clientInstanceId,
 									transformLayerWrapper.response

@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ToLowerCaseTrimmedConverter;
 
 public class ControlServletHandlers {

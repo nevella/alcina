@@ -27,9 +27,9 @@ import org.hibernate.criterion.NullExpression;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.PropertyProjection;
+import org.hibernate.criterion.SQLCriterion;
 import org.hibernate.criterion.SimpleExpression;
 import org.hibernate.transform.ResultTransformer;
-import org.hibernate.criterion.SQLCriterion;
 
 import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.Converter;

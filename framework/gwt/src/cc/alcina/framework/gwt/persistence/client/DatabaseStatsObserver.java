@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -101,7 +102,7 @@ public class DatabaseStatsObserver {
 		if (max == null) {
 			max = current;
 		}
-		return CommonUtils.formatJ("Database usage report:\nCurrent:\n"
+		return Ax.format("Database usage report:\nCurrent:\n"
 				+ "********\n%s\n\nMax:\n*****\n%s\n", current, max);
 	}
 

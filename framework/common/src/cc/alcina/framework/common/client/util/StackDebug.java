@@ -56,7 +56,7 @@ public class StackDebug {
 						}
 					}
 					if (debug == true) {
-						System.err.println(CommonUtils.formatJ(
+						System.err.println(Ax.format(
 								"***unbalanced stack***"
 										+ "\nThread - %s\npush:\n%s\n\n\npop:\n%s\n\n",
 								thread, CommonUtils.join(lastTraces, "\n"),
@@ -64,7 +64,7 @@ public class StackDebug {
 					}
 				}
 				String template = "**stack-debug: %s-%s-%s-%s - %s -: \n\t%s\n\n***end-stack-debug\n\n";
-				System.err.println(CommonUtils.formatJ(template, tId,
+				System.err.println(Ax.format(template, tId,
 						hashCode(), (push ? "PUSH" : "POP"),
 						stack == null ? 0 : stack.size(), traces.length,
 						CommonUtils.join(lines, "\n\t")));
@@ -74,8 +74,8 @@ public class StackDebug {
 						traceStack);
 				for (int idx = 0; idx < traceList.size(); idx++) {
 					System.out.println(
-							CommonUtils.formatJ("\tDebug stack - #%s\n", idx));
-					System.out.println(CommonUtils.formatJ("\t\t%s\n\t\t%s\n\n",
+							Ax.format("\tDebug stack - #%s\n", idx));
+					System.out.println(Ax.format("\t\t%s\n\t\t%s\n\n",
 							traceList.get(idx)[0], traceList.get(idx)[1]));
 				}
 			}

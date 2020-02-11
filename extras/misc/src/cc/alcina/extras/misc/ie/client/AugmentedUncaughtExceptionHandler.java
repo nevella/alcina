@@ -23,7 +23,7 @@ import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 
@@ -52,7 +52,7 @@ public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 			gwtExceptionMessage = "\n\n-------\n(gwt)\n\n" + builder.toString();
 		}
 		handler.onUncaughtException(new WrappedRuntimeException(
-				CommonUtils.formatJ("%s%s", message, gwtExceptionMessage),
+				Ax.format("%s%s", message, gwtExceptionMessage),
 				SuggestedAction.NOTIFY_WARNING));
 	}
 

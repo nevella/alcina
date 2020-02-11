@@ -83,7 +83,7 @@ public class PrintStream extends FilterOutputStream {
   public void println(String s) {
   }
   public PrintStream format(String format, Object ... args) {
-	  print(CommonUtils.formatJ(format, args));
+	  print(Ax.format(format, args));
 	  return this;
   }
 }

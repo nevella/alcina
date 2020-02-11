@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.Wrapper;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
@@ -174,7 +175,7 @@ public class WrappedObjectPersistence {
 					.isPermissible(PermissionsManager.ADMIN_PERMISSIBLE)) {
 				if (!PermissionsManager.get()
 						.isPermissible(PermissionsManager.ROOT_PERMISSIBLE)) {
-					System.err.println(CommonUtils.formatJ(
+					System.err.println(Ax.format(
 							"Warn - allowing access to %s : %s only via admin override",
 							wrapper == null ? "(null wrapper)"
 									: HiliHelper.asDomainPoint(wrapper),
@@ -182,7 +183,7 @@ public class WrappedObjectPersistence {
 				}
 				return;// permitted
 			}
-			throw new PermissionsException(CommonUtils.formatJ(
+			throw new PermissionsException(Ax.format(
 					"Permissions exception: "
 							+ "access denied to object  %s for user %s",
 					wrapped.getId(), PermissionsManager.get().getUserId()));

@@ -21,6 +21,7 @@ import java.util.List;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -217,7 +218,7 @@ public class CollectionModification {
 
 			@Override
 			public String toString() {
-				return CommonUtils.formatJ("%s - %s - %s",
+				return Ax.format("%s - %s - %s",
 						CommonUtils.simpleClassName(listenedClass),
 						CommonUtils.simpleClassName(listener.getClass()),
 						filteringListener);

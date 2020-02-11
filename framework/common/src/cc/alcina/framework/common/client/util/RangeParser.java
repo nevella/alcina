@@ -78,7 +78,7 @@ public class RangeParser {
 	}
 
 	private String err(int errStart, int errEnd, String message) {
-		return CommonUtils.formatJ("%s >>> %s <<< >>> (%s) <<< %s",
+		return Ax.format("%s >>> %s <<< >>> (%s) <<< %s",
 				text.substring(0, errStart), text.substring(errStart, errEnd),
 				message, text.substring(errEnd));
 	}

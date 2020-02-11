@@ -93,7 +93,7 @@ public class SystemoutCounter {
                 dotCtr = 0;
                 String message = messageSupplier.get();
                 if (showPercentAtEndOfLine || name != null) {
-                    message += CommonUtils.formatJ(" - %s%",
+                    message += Ax.format(" - %s%",
                             (allTicks * 100) / size);
                 }
                 if (name != null) {

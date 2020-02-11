@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
@@ -454,7 +455,7 @@ public abstract class SearchDefinition extends WrapperPersistable
     }
 
     public String toHtml() {
-        return CommonUtils.formatJ("%s%s - %s",
+        return Ax.format("%s%s - %s",
                 CommonUtils.isNullOrEmpty(getName()) ? ""
                         : "<b>" + getName() + "</b> - ",
                 filterDescription(true), orderDescription(true));

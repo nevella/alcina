@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.collections;
 
 import java.util.Collection;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 
 public class PropertyPathFilter<T> implements CollectionFilter<T> {
@@ -80,7 +80,7 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("Filter: %s%s%s", accessor.getPropertyPath(),
+		return Ax.format("Filter: %s%s%s", accessor.getPropertyPath(),
 				filterOperator.operationText(), targetValue);
 	}
 }

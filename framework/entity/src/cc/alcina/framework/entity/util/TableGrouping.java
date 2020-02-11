@@ -216,7 +216,7 @@ public abstract class TableGrouping<T> {
 
 		@Override
 		public String toString() {
-			return CommonUtils.formatJ("Path: %s - alias: %s - function: %s",
+			return Ax.format("Path: %s - alias: %s - function: %s",
 					propertyPath, alias, function);
 		}
 	}

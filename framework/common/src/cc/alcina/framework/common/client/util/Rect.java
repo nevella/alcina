@@ -42,6 +42,6 @@ public class Rect {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("(%s,%s)-(%s,%s)", x1, y1, x2, y2);
+		return Ax.format("(%s,%s)-(%s,%s)", x1, y1, x2, y2);
 	}
 }

@@ -74,6 +74,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.Validators;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
@@ -640,7 +641,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
                     null);
         } catch (Exception e) {
             throw new WrappedRuntimeException(
-                    CommonUtils.formatJ(
+                    Ax.format(
                             "Unable to get property %s for object %s",
                             propertyName, o.getClass().getName()),
                     e, SuggestedAction.NOTIFY_WARNING);
@@ -767,13 +768,13 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
                     new Object[] { value });
         } catch (Exception e) {
             try {
-                throw new WrappedRuntimeException(CommonUtils.formatJ(
+                throw new WrappedRuntimeException(Ax.format(
                         "Unable to set property %s for object %s to value %s",
                         propertyName, o, value), e,
                         SuggestedAction.NOTIFY_WARNING);
             } catch (Exception e1) {
                 // tostring problem
-                throw new WrappedRuntimeException(CommonUtils.formatJ(
+                throw new WrappedRuntimeException(Ax.format(
                         "Unable to set property %s for object %s to value %s",
                         propertyName, o.getClass(),
                         value == null ? null : value.getClass()), e,

@@ -50,7 +50,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermi
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StackDebug;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -463,7 +463,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	}
 
 	public String getUserString() {
-		return CommonUtils.formatJ("%s/%s", getUserId(), getUserName());
+		return Ax.format("%s/%s", getUserId(), getUserName());
 	}
 
 	public boolean isAdmin() {

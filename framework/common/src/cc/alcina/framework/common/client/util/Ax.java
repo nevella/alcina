@@ -60,7 +60,7 @@ public class Ax {
 	}
 
 	public static String format(String template, Object... args) {
-		return CommonUtils.formatJ(template, args);
+		return CommonUtils.format(template, args);
 	}
 
 	public static double fourPlaces(double d) {

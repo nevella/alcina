@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 import cc.alcina.framework.common.client.sync.property.PropertyModificationLog;
 import cc.alcina.framework.common.client.sync.property.PropertyModificationLogItem;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
@@ -401,7 +402,7 @@ public class SyncMerger<T> {
 
 		@Override
 		public String toString() {
-			return CommonUtils.formatJ("[%s]", propertyName);
+			return Ax.format("[%s]", propertyName);
 		}
 	}
 
@@ -524,7 +525,7 @@ public class SyncMerger<T> {
 			}
 
 			private String getMessage() {
-				String message = CommonUtils.formatJ(
+				String message = Ax.format(
 						"Property merge (left,right) %s %s -> %s", leftValue,
 						rightValue, value);
 				return message;

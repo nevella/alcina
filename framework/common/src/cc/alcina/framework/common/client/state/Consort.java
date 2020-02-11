@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -222,7 +223,7 @@ public class Consort<D> {
 
 	public void finished() {
 		running = false;
-		logger.info(CommonUtils.formatJ("%s     [%s]",
+		logger.info(Ax.format("%s     [%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				"----CONSORT FINISHED"));
 		topicPublisher.publishTopic(FINISHED, null);
@@ -275,7 +276,7 @@ public class Consort<D> {
 	}
 
 	public void removeStates(Collection<D> states) {
-		logger.info(CommonUtils.formatJ("%s rmv:[%s]",
+		logger.info(Ax.format("%s rmv:[%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				CommonUtils.join(states, ", ")));
 		modifyStates(states, false);
@@ -362,7 +363,7 @@ public class Consort<D> {
 		playing.remove(player);
 		// TODO - warn if resultantstates >1 and a non-parallel consort?
 		modifyStates(resultantStates, true);
-		metricLogger.debug(CommonUtils.formatJ("%s     %s: %s ms",
+		metricLogger.debug(Ax.format("%s     %s: %s ms",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				player.shortName(),
 				System.currentTimeMillis() - player.getStart()));
@@ -427,7 +428,7 @@ public class Consort<D> {
 		if (mod) {
 			publishTopicWithBubble(STATES,
 					new StatesDelta(reachedCopy, reachedStates));
-			logger.debug(CommonUtils.formatJ("%s     [%s]",
+			logger.debug(Ax.format("%s     [%s]",
 					CommonUtils.padStringLeft("", depth(), '\t'),
 					CommonUtils.join(states, ", ")));
 		}
@@ -476,7 +477,7 @@ public class Consort<D> {
 								if (!player.isAllowEqualPriority()
 										|| result.isAllowEqualPriority()) {
 									throw new RuntimeException(
-											CommonUtils.formatJ(
+											Ax.format(
 													PLAYERS_WITH_EQUAL_DEPS_ERR,
 													player, result,
 													providerDependencies));
@@ -504,7 +505,7 @@ public class Consort<D> {
 					if (players.size() > 0 && playing.isEmpty()) {
 						Player missed = lastAdded != null ? lastAdded
 								: players.iterator().next();
-						String message = CommonUtils.formatJ(
+						String message = Ax.format(
 								"Unable to resolve dependencies: %s\n\t%s",
 								missed.getRequires(), missed);
 						logger.info(message);
@@ -552,7 +553,7 @@ public class Consort<D> {
 	}
 
 	protected void addStates(Collection<D> states) {
-		logger.info(CommonUtils.formatJ("%s add:[%s]",
+		logger.info(Ax.format("%s add:[%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				CommonUtils.join(states, ", ")));
 		modifyStates(states, true);
@@ -577,9 +578,9 @@ public class Consort<D> {
 	}
 
 	protected void executePlayer(Player<D> player, boolean replaying) {
-		String message = CommonUtils.formatJ("%s%s%s -> %s",
+		String message = Ax.format("%s%s%s -> %s",
 				(playing.size() == 1 ? "    "
-						: CommonUtils.formatJ("[%s] ", playing.size())),
+						: Ax.format("[%s] ", playing.size())),
 				CommonUtils.padStringLeft("", depth(), "    "),
 				CommonUtils.simpleClassName(getClass()),
 				player.provideNameForTransitions());

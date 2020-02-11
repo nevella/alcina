@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 
@@ -82,7 +82,7 @@ public abstract class UnitTest {
 			int predelayMs = token.getConfiguration().predelayMs;
 			if (predelayMs != 0) {
 				token.getWriter().write(
-						CommonUtils.formatJ("Predelay: %s ms \n", predelayMs),
+						Ax.format("Predelay: %s ms \n", predelayMs),
 						level);
 				Thread.sleep(predelayMs);
 			}
@@ -101,7 +101,7 @@ public abstract class UnitTest {
 		testResult.setStartTime(System.currentTimeMillis());
 		testResult.setNoTimePayload(noTimePayload());
 		testResult.setName(getClass().getSimpleName());
-		token.getWriter().write(CommonUtils.formatJ("Test: %s - \n",
+		token.getWriter().write(Ax.format("Test: %s - \n",
 				getClass().getSimpleName()), level);
 		if (parent == null) {
 			token.setRootResult(testResult);
@@ -128,7 +128,7 @@ public abstract class UnitTest {
 			return testResult;
 		}
 		long startTime = System.currentTimeMillis();
-		token.getWriter().write(CommonUtils.formatJ("Starting test: %s - \n",
+		token.getWriter().write(Ax.format("Starting test: %s - \n",
 				getClass().getSimpleName()), level);
 		Class<? extends UnitTest>[] childTests = childTests();
 		if (childTests.length != 0) {

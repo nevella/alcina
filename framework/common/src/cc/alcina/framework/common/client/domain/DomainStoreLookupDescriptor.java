@@ -6,7 +6,7 @@ import java.util.function.Function;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class DomainStoreLookupDescriptor<T extends HasIdAndLocalId> {
     public Class<T> clazz;
@@ -115,7 +115,7 @@ public class DomainStoreLookupDescriptor<T extends HasIdAndLocalId> {
 
     @Override
     public String toString() {
-        return CommonUtils.formatJ("Lookup descriptor - %s :: %s :: (id) %s",
+        return Ax.format("Lookup descriptor - %s :: %s :: (id) %s",
                 clazz, propertyPath, idDescriptor);
     }
 

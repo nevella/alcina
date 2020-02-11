@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.servlet.control;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class ControlServletResponse {
@@ -35,7 +36,7 @@ public class ControlServletResponse {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ(
+		return Ax.format(
 				"ControlServletResponse:\n================\n"
 						+ "request:\n%s\n\nstatus:\n%s\n\nmessage:\n%s\n\n",
 				CommonUtils.nullSafeToString(request),

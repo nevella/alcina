@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
 
@@ -123,7 +124,7 @@ public class ClientLogRecord implements Serializable {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("%s :: %s :: %s :: %s -- %s",
+		return Ax.format("%s :: %s :: %s :: %s -- %s",
 				getLocalSeriesId(), getTime(), getClientInstanceId(),
 				getTopic(), CommonUtils.trimToWsChars(getMessage(), 40));
 	}
@@ -188,7 +189,7 @@ public class ClientLogRecord implements Serializable {
 
 		@Override
 		public String toString() {
-			return CommonUtils.formatJ(
+			return Ax.format(
 					"ClientLogRecords: size - %s\t records - %s\n%s", size,
 					logRecords.size(), CommonUtils.join(logRecords, "\n"));
 		}

@@ -11,7 +11,7 @@ import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 
@@ -100,7 +100,7 @@ public class ExpandableListPanel extends Composite {
 					allHolder.add(new InlineLabel(extraText));
 				}
 			}
-			showAll.setText(CommonUtils.formatJ("%s%s %s",
+			showAll.setText(Ax.format("%s%s %s",
 					(allCaption == null ? "Show all " : allCaption),
 					widgets.size(), itemNamePlural));
 		}

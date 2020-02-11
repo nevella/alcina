@@ -127,7 +127,7 @@ public class Registry {
 			if (!uniques.containsKey(loc.registryPoint())) {
 				uniques.put(loc.registryPoint(), loc);
 			} else {
-				// System.out.println(CommonUtils.formatJ("Discarded - %s, %s",
+				// System.out.println(Ax.format("Discarded - %s, %s",
 				// CommonUtils.simpleClassName(loc.registryPoint()),
 				// CommonUtils.simpleClassName(loc.targetClass())));
 			}
@@ -161,7 +161,7 @@ public class Registry {
 						// inherited, ignore
 					} else {
 						// System.out
-						// .println(CommonUtils.formatJ(
+						// .println(Ax.format(
 						// "Discarded - %s, %s", CommonUtils
 						// .simpleClassName(loc
 						// .registryPoint()),
@@ -321,7 +321,7 @@ public class Registry {
 		for (T handler : handlers) {
 			Enum key = (Enum) mapper.getKey(handler);
 			if (byKey.containsKey(key)) {
-				throw new RuntimeException(CommonUtils.formatJ(
+				throw new RuntimeException(Ax.format(
 						"Duplicate key for enum lookup - %s %s %s",
 						registryPoint.getClass().getSimpleName(), key,
 						handler.getClass().getSimpleName()));
@@ -367,7 +367,7 @@ public class Registry {
 				return new ArrayList<>(0);
 			}
 			System.out.println(registry.toString());
-			throw new RuntimeException(CommonUtils.formatJ(
+			throw new RuntimeException(Ax.format(
 					"Unable to locate %s - %s", registryPoint, targetClass));
 		}
 		for (Class sc : scChain) {
@@ -426,7 +426,7 @@ public class Registry {
 			}
 		}
 		if (cachedKey == keys.emptyLookupKey() && errorOnNull) {
-			throw new RegistryException(CommonUtils.formatJ(
+			throw new RegistryException(Ax.format(
 					"singleton/factory not registered - %s:%s",
 					CommonUtils.classSimpleName(registryPoint),
 					CommonUtils.classSimpleName(targetClass)));
@@ -470,7 +470,7 @@ public class Registry {
 		if (implementationType == ImplementationType.MULTIPLE
 				&& targetClassKey == keys.undefinedTargetKey()
 				&& infoPriority != RegistryLocation.DEFAULT_PRIORITY) {
-			throw new RegistryException(CommonUtils.formatJ(
+			throw new RegistryException(Ax.format(
 					"Non-default priority " + "with Multiple impl type -"
 							+ " probably should be instance - %s",
 					registeringClassKey.name()));
@@ -754,7 +754,7 @@ public class Registry {
 
 	public static class MultipleSingletonException extends RuntimeException {
 		public MultipleSingletonException(Class<?> clazz) {
-			super(CommonUtils.formatJ(
+			super(Ax.format(
 					"Constructor of singleton %s invoked more than once",
 					clazz.getName()));
 		}

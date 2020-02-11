@@ -33,7 +33,7 @@ public class CaptionCmp extends Composite {
 		FlowPanel panel = new FlowPanel();
 		Hyperlink hl = new Hyperlink(
 				"<img class='main-home-icon'  src='_pix/logo.png'/>", true,
-				CommonUtils.formatJ("%s=%s",
+				Ax.format("%s=%s",
 						AlcinaTemplateHistory.LOCATION_KEY,
 						AlcinaTemplateHistoryTokens.HOME_TAB));
 		SimplePanel sp = new SimplePanel();

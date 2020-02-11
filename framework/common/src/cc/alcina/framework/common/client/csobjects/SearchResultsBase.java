@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -75,8 +76,8 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 					+ def.getName() + "</span> - " + searchDef;
 		}
 		String orderDef = def.orderDescription(true);
-		return tplt == noResultsTemplate ? CommonUtils.formatJ(tplt, searchDef)
-				: CommonUtils.formatJ(tplt, pageNumber, pageCount(),
+		return tplt == noResultsTemplate ? Ax.format(tplt, searchDef)
+				: Ax.format(tplt, pageNumber, pageCount(),
 						totalResultCount, searchDef, orderDef);
 	}
 

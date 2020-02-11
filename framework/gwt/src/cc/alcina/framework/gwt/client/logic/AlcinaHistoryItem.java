@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.HistoryEventType;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SearchHistoryInfo;
@@ -262,7 +263,7 @@ public class AlcinaHistoryItem {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("%s\nNot a history token: %s Type: %s",
+		return Ax.format("%s\nNot a history token: %s Type: %s",
 				params, notAHistoryToken, type);
 	}
 

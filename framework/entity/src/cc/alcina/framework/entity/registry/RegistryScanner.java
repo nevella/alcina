@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetadata;
 import cc.alcina.framework.entity.util.AnnotationUtils;
@@ -83,7 +83,7 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 	public void scan(ClassMetadataCache<ClassMetadata> classDataCache,
 			Collection<String> ignore, Registry toRegistry, String registryName)
 			throws Exception {
-		String cachePath = CommonUtils.formatJ("%s/%s-registry-cache.ser",
+		String cachePath = Ax.format("%s/%s-registry-cache.ser",
 				getHomeDir().getPath(), registryName);
 		this.toRegistry = toRegistry;
 		scan(classDataCache, cachePath);

@@ -345,7 +345,7 @@ public final class Optional<T> {
 	 */
 	@Override
 	public String toString() {
-		return value != null ? CommonUtils.formatJ("Optional[%s]", value)
+		return value != null ? Ax.format("Optional[%s]", value)
 				: "Optional.empty";
 	}
 }

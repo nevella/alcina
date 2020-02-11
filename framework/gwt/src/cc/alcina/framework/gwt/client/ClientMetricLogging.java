@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -67,7 +68,7 @@ public class ClientMetricLogging {
 			return;
 		}
 		long elapsed = System.currentTimeMillis() - metricStartTimes.get(key);
-		String message = CommonUtils.formatJ("[Metric] %s - %s ms%s", key,
+		String message = Ax.format("[Metric] %s - %s ms%s", key,
 				elapsed,
 				CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - " + extraInfo);
 		if (!isMuted()) {

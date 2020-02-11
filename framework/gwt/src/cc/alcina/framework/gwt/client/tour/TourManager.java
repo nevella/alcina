@@ -23,7 +23,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.AllStatesConsort;
 import cc.alcina.framework.common.client.state.Consort;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.tour.StepPopupView.Action;
@@ -418,7 +418,7 @@ public abstract class TourManager implements NativePreviewHandler {
 		@Override
 		protected void timedOut(AllStatesPlayer allStatesPlayer,
 				DisplayStepPhase state) {
-			System.out.println(CommonUtils.formatJ("Timed out - %s - %s",
+			System.out.println(Ax.format("Timed out - %s - %s",
 					currentTour.getCurrentStep(), state));
 			super.timedOut(allStatesPlayer, state);
 		}

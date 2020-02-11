@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
@@ -142,7 +143,7 @@ public abstract class ClientReflector implements ClassLookup {
             return clazz;
         }
         throw new WrappedRuntimeException(
-                CommonUtils.formatJ("Class %s not reflect-instantiable", fqn),
+                Ax.format("Class %s not reflect-instantiable", fqn),
                 SuggestedAction.NOTIFY_ERROR);
     }
 

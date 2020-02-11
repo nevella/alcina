@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 
@@ -220,7 +221,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
     protected abstract int getDepth();
 
     protected void logDuplicateMapping(Object[] values, T existing) {
-        logger.warn(CommonUtils.formatJ(
+        logger.warn(Ax.format(
                 "Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
                 this, Arrays.asList(values), existing));
     }

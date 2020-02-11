@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.servlet.control;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class ControlServletRequest {
@@ -35,7 +36,7 @@ public class ControlServletRequest {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("\tcmd:\t%s\n" + "\tstates:\t%s\n",
+		return Ax.format("\tcmd:\t%s\n" + "\tstates:\t%s\n",
 				CommonUtils.nullSafeToString(command),
 				CommonUtils.nullSafeToString(modes));
 	}

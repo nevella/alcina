@@ -16,7 +16,7 @@ public class ClientNotificationsTaggedLogging {
 	// if (prefix == null) {
 	// out(message);
 	// } else {
-	// out(CommonUtils.formatJ("%s: %s", prefix, message));
+	// out(Ax.format("%s: %s", prefix, message));
 	// }
 	// }
 	//

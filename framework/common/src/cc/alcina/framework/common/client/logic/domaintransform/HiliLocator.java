@@ -142,7 +142,7 @@ public class HiliLocator implements Serializable {
 		if (id != 0) {
 			return toString();
 		}
-		return CommonUtils.formatJ("%s - %s/%s",
+		return Ax.format("%s - %s/%s",
 				clazz == null ? "??" : CommonUtils.simpleClassName(clazz),
 				localId, clientInstanceId);
 	}
@@ -154,7 +154,7 @@ public class HiliLocator implements Serializable {
 					.lv(PermissionsManager.get().getClientInstanceId());
 			return toRecoverableString(clientInstanceId);
 		}
-		return CommonUtils.formatJ("%s - %s",
+		return Ax.format("%s - %s",
 				clazz == null ? "??" : CommonUtils.simpleClassName(clazz), id);
 	}
 }

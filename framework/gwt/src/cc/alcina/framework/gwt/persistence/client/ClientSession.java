@@ -26,6 +26,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -153,12 +154,12 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 	}
 
 	public void setAppId(String appId) {
-		hasPersistedInitialObjectsCookieName = CommonUtils.formatJ("%s.%s.%s",
+		hasPersistedInitialObjectsCookieName = Ax.format("%s.%s.%s",
 				ClientSession.class.getName(), appId,
 				"initial-objects-persisted");
-		storageSessionCookieName = CommonUtils.formatJ("%s.%s.%s",
+		storageSessionCookieName = Ax.format("%s.%s.%s",
 				ClientSession.class.getName(), appId, "storage-session");
-		persistingChunkCookieName = CommonUtils.formatJ("%s.%s.%s",
+		persistingChunkCookieName = Ax.format("%s.%s.%s",
 				ClientSession.class.getName(), appId, "persisting-chunk");
 		resetCookies();
 	}

@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
@@ -105,7 +105,7 @@ public class FromOfflineConflictResolver {
 			String uploadSucceededText = getText(
 					TextItem.OFFLINE_UPLOAD_SUCCEEDED4);
 			if (uploadSucceeded) {
-				uploadSucceededText = CommonUtils.formatJ(uploadSucceededText,
+				uploadSucceededText = Ax.format(uploadSucceededText,
 						"clientinstance_ids: " + LooseContext.getContext().get(
 								LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS));
 			}
@@ -157,7 +157,7 @@ public class FromOfflineConflictResolver {
 			FlowPanel fp = new FlowPanel();
 			TextArea ta = new TextArea();
 			ta.setSize("600px", "300px");
-			String text = CommonUtils.formatJ("Unsaved transforms\n\n" + "%s",
+			String text = Ax.format("Unsaved transforms\n\n" + "%s",
 					uncommitted.toString());
 			ta.setText(text);
 			fp.add(ta);

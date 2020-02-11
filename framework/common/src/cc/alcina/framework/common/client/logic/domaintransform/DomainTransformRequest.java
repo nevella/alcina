@@ -34,7 +34,6 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 
 @MappedSuperclass
@@ -285,7 +284,7 @@ public class DomainTransformRequest implements Serializable {
 	}
 
 	public String shortId() {
-		return CommonUtils.formatJ("Dtr: cli-id: %s - rq-id: %s",
+		return Ax.format("Dtr: cli-id: %s - rq-id: %s",
 				HiliHelper.getIdOrNull(clientInstance), requestId);
 	}
 

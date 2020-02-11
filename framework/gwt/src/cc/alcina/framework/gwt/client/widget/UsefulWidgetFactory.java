@@ -20,7 +20,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * 
@@ -58,7 +58,7 @@ public class UsefulWidgetFactory {
 	}
 
 	public static Label formatLabel(String template, Object... params) {
-		return new Label(CommonUtils.formatJ(template, params));
+		return new Label(Ax.format(template, params));
 	}
 
 	public static Widget italicInline(String text) {
