@@ -7,8 +7,11 @@ import org.slf4j.Logger;
 public class SystemoutCounter {
 	static Supplier<String> emptySupplier = () -> "";
 
-	public static SystemoutCounter standardJobCounter(int size) {
-		return new SystemoutCounter(size / 400, size / 20, size, true);
+	public static SystemoutCounter standardJobCounter(int size, String name) {
+		SystemoutCounter counter = new SystemoutCounter(size / 400, size / 20,
+				size, true);
+		counter.name(name);
+		return counter;
 	}
 
 	private int dotsPerLine;

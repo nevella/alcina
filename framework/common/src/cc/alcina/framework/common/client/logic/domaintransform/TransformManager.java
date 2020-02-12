@@ -151,6 +151,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (CommonUtils.isNullOrEmpty(str)) {
 			return result;
 		}
+		str = str.replace("\n", ", ");
 		if (!str.matches("[\\-0-9, \r\n\t()\\[\\]]+")) {
 			return result;
 		}
@@ -212,9 +213,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 			for (String sPart : s.split(",")) {
 				E value = CommonUtils.getEnumValueOrNull(clazz, sPart);
 				if (value == null && sPart.length() > 0) {
-					System.out.println(Ax.format(
-							"Warning - can't deserialize %s for %s", sPart,
-							clazz));
+					System.out.println(
+							Ax.format("Warning - can't deserialize %s for %s",
+									sPart, clazz));
 				}
 				result.add(value);
 			}
