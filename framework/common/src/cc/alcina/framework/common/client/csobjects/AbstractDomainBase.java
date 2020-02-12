@@ -97,8 +97,7 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 						^ LongWrapperHash.fastHash(getLocalId())
 						^ getClass().getName().hashCode();
 			} else {
-				hash = Long.valueOf(getId()).hashCode()
-						^ Long.valueOf(getLocalId()).hashCode()
+				hash = ((int) getId()) ^ ((int) getLocalId())
 						^ getClass().getName().hashCode();
 			}
 			if (hash == 0) {

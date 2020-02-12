@@ -1,23 +1,22 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import java.util.Comparator;
 import java.util.Map;
-import java.util.TreeMap;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.DelegateMapCreator;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalMap;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalTreeMap;
 
 public class BaseProjectionSupport {
 	public static class BplDelegateMapCreatorFastUnsorted
 			extends DelegateMapCreator {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
-			return new Object2ObjectLinkedOpenHashMap();
+			return new TransactionalMap(Object.class, Object.class);
 		}
 	}
 
@@ -27,27 +26,25 @@ public class BaseProjectionSupport {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
 			if (getBuilder().getCreators() != null) {
-				return getBuilder().getCreators()[depthFromRoot].get();
+				Map map = (Map) getBuilder().getCreators()[depthFromRoot].get();
+				Preconditions.checkState(map instanceof TransactionalMap);
+				return map;
 			}
 			if (getBuilder().isNavigable()) {
-				return new TreeMap();
+				return new TransactionalTreeMap(Object.class, Object.class,
+						Comparator.naturalOrder());
 			} else {
 				if (getBuilder().isSorted()) {
-					return new Object2ObjectAVLTreeMap();
+					return new TransactionalTreeMap(Object.class, Object.class,
+							Comparator.naturalOrder());
 				} else {
 					if (depthFromRoot > 0 && depth == 1) {
-						return new Object2ObjectLinkedOpenHashMap(1);
+						return new TransactionalMap(Object.class, Object.class);
 					} else {
-						return new Object2ObjectLinkedOpenHashMap();
+						return new TransactionalMap(Object.class, Object.class);
 					}
 				}
 			}
-		}
-
-		@Override
-		public boolean isSorted(Map m) {
-			return !(m instanceof Object2ObjectLinkedOpenHashMap)
-					&& super.isSorted(m);
 		}
 	}
 
@@ -55,7 +52,8 @@ public class BaseProjectionSupport {
 			implements BaseProjectionLookupBuilder.MapCreator {
 		@Override
 		public Map get() {
-			return new Int2IntOpenHashMap();
+			throw new UnsupportedOperationException();
+			// return new Int2IntOpenHashMap();
 		}
 	}
 
@@ -63,15 +61,8 @@ public class BaseProjectionSupport {
 			implements BaseProjectionLookupBuilder.MapCreator {
 		@Override
 		public Map get() {
-			return new Int2ObjectOpenHashMap();
-		}
-	}
-
-	public static class Object2ObjectOpenHashMapCreator
-			implements BaseProjectionLookupBuilder.MapCreator {
-		@Override
-		public Map get() {
-			return new Object2ObjectOpenHashMap();
+			throw new UnsupportedOperationException();
+			// return new Int2ObjectOpenHashMap();
 		}
 	}
 }
