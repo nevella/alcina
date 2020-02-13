@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -24,8 +25,6 @@ import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -73,16 +72,11 @@ public class ExpandableLabel extends AbstractBoundWidget {
 			hiding = !hiding;
 			if (showAsPopup) {
 				if (!hiding) {
-					ScrollPanel sp = new ScrollPanel();
 					String popupText = escapeHtml
 							? SafeHtmlUtils.htmlEscape(fullTextNoBrs)
 							: fullTextNoBrs;
-					Label label = new InlineHTML(popupText);
-					sp.add(label);
-					sp.setStyleName("alcina-expandable-label-popup");
-					ClientNotifications.get().setDialogAnimationEnabled(false);
-					ClientNotifications.get().showMessage(sp);
-					ClientNotifications.get().setDialogAnimationEnabled(true);
+					ClientNotifications.get().showCodePopup(popupText,
+							Optional.empty());
 				}
 				hiding = true;
 			} else {
