@@ -8,9 +8,9 @@ public class SystemoutCounter {
 	static Supplier<String> emptySupplier = () -> "";
 
 	public static SystemoutCounter standardJobCounter(int size, String name) {
-		SystemoutCounter counter = new SystemoutCounter(size / 400, size / 20,
-				size, true);
-		counter.name(name);
+		SystemoutCounter counter = new SystemoutCounter(size / 400, 20, size,
+				true);
+		counter.name(name + "::jobProgress");
 		return counter;
 	}
 
