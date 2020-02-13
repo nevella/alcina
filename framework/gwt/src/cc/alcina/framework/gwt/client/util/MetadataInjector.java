@@ -2,8 +2,6 @@ package cc.alcina.framework.gwt.client.util;
 
 import com.google.gwt.dom.client.ScriptElement;
 
-import cc.alcina.framework.gwt.client.util.JavascriptInjector;
-
 public class MetadataInjector {
     
     String metadata;

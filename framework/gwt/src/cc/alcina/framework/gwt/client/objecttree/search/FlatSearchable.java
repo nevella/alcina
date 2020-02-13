@@ -11,7 +11,7 @@ import com.totsp.gwittir.client.validator.Validator;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class FlatSearchable<SC extends SearchCriterion>
 		implements Comparable<FlatSearchable> {
@@ -113,6 +113,6 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("%s : %s", category, name);
+		return Ax.format("%s : %s", category, name);
 	}
 }

@@ -10,7 +10,7 @@ import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
 
 public class LuxModule {
@@ -35,7 +35,7 @@ public class LuxModule {
 		String css = incoming + "";
 		for (Entry<String, String> entry : entrySet) {
 			{
-				String varDef = CommonUtils.formatJ("var(- %s)",
+				String varDef = Ax.format("var(- %s)",
 						entry.getKey());
 				boolean found = css.indexOf(varDef) != -1;
 				if (found) {
@@ -43,7 +43,7 @@ public class LuxModule {
 				}
 			}
 			{
-				String varDef = CommonUtils.formatJ("var(-%s)", entry.getKey());
+				String varDef = Ax.format("var(-%s)", entry.getKey());
 				boolean found = css.indexOf(varDef) != -1;
 				if (found) {
 					css = replace(css, varDef, entry.getValue());

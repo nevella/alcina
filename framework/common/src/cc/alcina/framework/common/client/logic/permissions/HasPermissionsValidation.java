@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public interface HasPermissionsValidation {
@@ -30,7 +31,7 @@ public interface HasPermissionsValidation {
 			}
 			for (Object o : children) {
 				if (!permissibleChildClasses.contains(o.getClass())) {
-					return CommonUtils.formatJ(
+					return Ax.format(
 							"Access not permitted (per-class): %s, child %s",
 							CommonUtils.simpleClassName(hpv.getClass()),
 							CommonUtils.simpleClassName(o.getClass()));

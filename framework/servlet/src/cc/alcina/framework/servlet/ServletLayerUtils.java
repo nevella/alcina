@@ -5,6 +5,7 @@ import java.util.Enumeration;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 
@@ -30,10 +31,10 @@ public class ServletLayerUtils {
 				// Dumps too much info, so we'll filter it out
 				continue;
 			}
-            out += CommonUtils.formatJ("%s: ", headerName);
+            out += Ax.format("%s: ", headerName);
             Enumeration<String> headers = request.getHeaders(headerName);
             while (headers.hasMoreElements()) {
-                out += CommonUtils.formatJ("%s, ", headers.nextElement());
+                out += Ax.format("%s, ", headers.nextElement());
             }
 			out += "\n";
         }

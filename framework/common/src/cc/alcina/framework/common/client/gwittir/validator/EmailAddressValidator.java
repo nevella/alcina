@@ -84,6 +84,7 @@ public class EmailAddressValidator implements ParameterisedValidator {
 		}
 	}
 
+	@Override
 	public Object validate(Object value) throws ValidationException {
 		if ((value == null) || (value.toString().length() < 1)) {
 			if (ignoreEmpties) {
@@ -111,7 +112,7 @@ public class EmailAddressValidator implements ParameterisedValidator {
 			}
 			if (!(overrideOk || replaceAll.equals(EMAIL_REGEX_REPLACE))) {
 				throw new ValidationException(CommonUtils
-						.formatJ("'%s' is not a valid email address", s),
+						.format("'%s' is not a valid email address", s),
 						EmailAddressValidator.class);
 			}
 		}

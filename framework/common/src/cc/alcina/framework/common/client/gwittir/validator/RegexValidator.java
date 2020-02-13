@@ -17,7 +17,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 @ClientInstantiable
 /**
@@ -67,7 +67,7 @@ public class RegexValidator implements ParameterisedValidator {
 		String sz = value.toString();
 		if (!sz.replaceAll(getRegex(), REGEX_REPLACE).equals(REGEX_REPLACE)) {
 			String message = feedbackMessage != null ? feedbackMessage
-					: CommonUtils.formatJ("Does not match regex ('%s')",
+					: Ax.format("Does not match regex ('%s')",
 							getRegex());
 			throw new ValidationException(feedbackMessage,
 					RegexValidator.class);

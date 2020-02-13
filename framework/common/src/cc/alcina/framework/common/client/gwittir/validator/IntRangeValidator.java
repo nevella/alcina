@@ -17,7 +17,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 
 @ClientInstantiable
@@ -58,7 +58,7 @@ public class IntRangeValidator implements ParameterisedValidator {
 		}
 		if (!range.contains(i)) {
 			throw new ValidationException(
-					CommonUtils.formatJ("Must be in the range %s", range),
+					Ax.format("Must be in the range %s", range),
 					IntRangeValidator.class);
 		}
 		return i;

@@ -7,7 +7,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 
@@ -39,7 +39,7 @@ public class DbUpdateRunner {
                 if (em == null && !dbUpdater.allowNullEntityManager()) {
                     continue;
                 }
-                System.out.println(CommonUtils.formatJ("Running update %s: %s",
+                System.out.println(Ax.format("Running update %s: %s",
                         dbUpdater.getUpdateNumber(),
                         dbUpdater.getClass().getSimpleName()));
                 dbUpdater.run(em);

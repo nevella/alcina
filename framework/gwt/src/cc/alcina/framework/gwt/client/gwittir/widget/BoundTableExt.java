@@ -84,7 +84,6 @@ import com.totsp.gwittir.client.util.ListSorter;
 
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
@@ -1101,7 +1100,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			}
 			if (!canSort) {
 				AlcinaTopics.notifyDevWarning(
-						new RuntimeException(CommonUtils.formatJ(
+						new RuntimeException(Ax.format(
 								"Field %s is not a"
 										+ " sortable field from data provider %s.",
 								this.columns[index].getPropertyName(),

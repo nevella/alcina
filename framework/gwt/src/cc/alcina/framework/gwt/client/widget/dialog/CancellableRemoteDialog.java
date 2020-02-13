@@ -24,6 +24,7 @@ import com.google.gwt.user.client.ui.Label;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
@@ -134,7 +135,7 @@ public class CancellableRemoteDialog extends GlassDialogBox
 
 	private void updateStatusLabel() {
 		statusLabel.setText(progress == null ? status
-				: CommonUtils.formatJ("%s - %s% complete", status,
+				: Ax.format("%s - %s% complete", status,
 						CommonUtils.padTwo((int) Math.round(progress * 100))));
 		center();
 	}

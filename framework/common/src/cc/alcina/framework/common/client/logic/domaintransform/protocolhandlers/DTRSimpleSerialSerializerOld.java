@@ -6,7 +6,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.EnumSerializer;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
@@ -73,7 +73,7 @@ public class DTRSimpleSerialSerializerOld
     }
 
     public String write(DeltaApplicationRecord wrapper) {
-        return CommonUtils.formatJ(DTR_SIMPLE_SERIAL_SERIALIZER_VERSION_1_0
+        return Ax.format(DTR_SIMPLE_SERIAL_SERIALIZER_VERSION_1_0
                 + "\n" + CLIENT_INSTANCE_AUTH + "%s\n" + CLIENT_INSTANCE_ID
                 + "%s\n" + REQUEST_ID + "%s\n" + TIMESTAMP + "%s\n" + USER_ID
                 + "%s\n" + DOMAIN_TRANSFORM_REQUEST_TYPE + "%s\n" + TAG2

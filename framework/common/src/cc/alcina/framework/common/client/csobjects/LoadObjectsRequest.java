@@ -8,7 +8,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * For very large object loads (to Africa), localdb-serializing on the client
@@ -93,6 +93,6 @@ public class LoadObjectsRequest implements Serializable {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("Load models request - %s", requestedModels);
+		return Ax.format("Load models request - %s", requestedModels);
 	}
 }

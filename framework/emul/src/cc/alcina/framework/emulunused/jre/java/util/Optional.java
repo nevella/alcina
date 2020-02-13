@@ -5,7 +5,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * A container object which may or may not contain a non-null value. If a value
@@ -345,7 +345,7 @@ public final class Optional<T> {
 	 */
 	@Override
 	public String toString() {
-		return value != null ? CommonUtils.formatJ("Optional[%s]", value)
+		return value != null ? Ax.format("Optional[%s]", value)
 				: "Optional.empty";
 	}
 }

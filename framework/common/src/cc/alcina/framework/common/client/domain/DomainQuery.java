@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class DomainQuery<V extends HasIdAndLocalId> {
@@ -122,7 +123,7 @@ public abstract class DomainQuery<V extends HasIdAndLocalId> {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("DomainQuery: %s\n%s",
+		return Ax.format("DomainQuery: %s\n%s",
 				clazz == null ? "(No class)" : clazz.getSimpleName(),
 				CommonUtils.join(filters, ",\n"));
 	}

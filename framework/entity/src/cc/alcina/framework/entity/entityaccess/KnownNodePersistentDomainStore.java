@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 @MappedSuperclass
 @DomainTransformPersistable
@@ -101,6 +101,6 @@ public abstract class KnownNodePersistentDomainStore extends
 	}
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("%s : %s", id, path());
+		return Ax.format("%s : %s", id, path());
 	}
 }

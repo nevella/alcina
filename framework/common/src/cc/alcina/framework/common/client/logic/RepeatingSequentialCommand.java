@@ -7,7 +7,7 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
 public class RepeatingSequentialCommand implements RepeatingCommand {
@@ -49,7 +49,7 @@ public class RepeatingSequentialCommand implements RepeatingCommand {
 				long t2 = System.currentTimeMillis();
 				if (t2 - t1 > 100) {
 					Registry.impl(ClientNotifications.class)
-							.log(CommonUtils.formatJ("Long task: %s - %sms",
+							.log(Ax.format("Long task: %s - %sms",
 									tasks.get(0).getClass().getName(),
 									t2 - t1));
 				}

@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.EnumSerializer;
 import cc.alcina.framework.common.client.util.StringPair;
@@ -284,7 +285,7 @@ public class WebDatabaseTransformPersistence
         };
         List<Integer> ids = CollectionFilters.convert(persistedWrappers,
                 getIdConverter);
-        executeSql(CommonUtils.formatJ(
+        executeSql(Ax.format(
                 "update  TransformRequests  set "
                         + "transform_request_type='%s'" + " where id in (%s)",
                 DeltaApplicationRecordType.LOCAL_TRANSFORMS_REMOTE_PERSISTED,

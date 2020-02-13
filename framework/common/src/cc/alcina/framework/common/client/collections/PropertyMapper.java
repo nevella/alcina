@@ -6,7 +6,7 @@ import java.util.List;
 import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class PropertyMapper {
 	private PropertyAccessor leftAccessor;
@@ -159,7 +159,7 @@ public class PropertyMapper {
 
 		@Override
 		public String toString() {
-			return CommonUtils.formatJ("propertyMapping: %s ->%s (custom: %s)",
+			return Ax.format("propertyMapping: %s ->%s (custom: %s)",
 					leftName, rightName, leftToRightConverter != null
 							|| rightToLeftConverter != null);
 		}

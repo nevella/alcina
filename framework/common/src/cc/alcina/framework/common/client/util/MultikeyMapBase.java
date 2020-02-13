@@ -278,7 +278,7 @@ public abstract class MultikeyMapBase<V>
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("mkm - depth %s - tuples: \n%s", depth,
+		return Ax.format("mkm - depth %s - tuples: \n%s", depth,
 				CommonUtils.join(asTuples(depth), "\n"));
 	}
 

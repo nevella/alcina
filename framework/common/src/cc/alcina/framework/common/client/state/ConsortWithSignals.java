@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -27,7 +28,7 @@ public class ConsortWithSignals<D, S> extends Consort<D> {
 	}
 
 	public void signal(S signal, AsyncCallback finishedCallback) {
-		logger.info(CommonUtils.formatJ("%s%s%s -> %s", "[SG] ",
+		logger.info(Ax.format("%s%s%s -> %s", "[SG] ",
 				CommonUtils.padStringLeft("", depth(), "    "),
 				CommonUtils.simpleClassName(getClass()), signal));
 		signalTopicPublisher.publishTopic(signal.toString(), signal);

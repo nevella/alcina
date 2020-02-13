@@ -379,7 +379,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
     protected String clearPersistedClientSql(ClientInstance exceptFor,
             int exceptForId) {
-        final String sql = CommonUtils.formatJ("DELETE from TransformRequests"
+        final String sql = Ax.format("DELETE from TransformRequests"
                 + " where (transform_request_type " +
                 // legacy
                 "in('CLIENT_OBJECT_LOAD','CLIENT_SYNC','TO_REMOTE_COMPLETED')"
@@ -424,17 +424,17 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
             clauses.add(typeClause);
         }
         if (filters.clientInstanceId != null) {
-            clauses.add(CommonUtils.formatJ("  clientInstance_id=%s ",
+            clauses.add(Ax.format("  clientInstance_id=%s ",
                     filters.clientInstanceId));
         }
         if (filters.protocolVersion != null) {
-            clauses.add(CommonUtils.formatJ("  transform_event_protocol='%s' ",
+            clauses.add(Ax.format("  transform_event_protocol='%s' ",
                     filters.protocolVersion));
         }
         if (clauses.isEmpty()) {
             throw new RuntimeException("need some type of filter");
         }
-        String sql = CommonUtils.formatJ(
+        String sql = Ax.format(
                 "select %s from TransformRequests"
                         + " where %s  order by id asc",
                 getTransformWrapperSqlFields(),

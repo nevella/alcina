@@ -31,6 +31,7 @@ import com.google.gwt.user.client.ui.RadioButton;
 import com.totsp.gwittir.client.ui.AbstractBoundCollectionWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @SuppressWarnings("deprecation")
@@ -221,7 +222,7 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget
             if (iconRenderer != null) {
                 String imgHtml = AbstractImagePrototype
                         .create(iconRenderer.render(o)).getHTML();
-                displayHtml = CommonUtils.formatJ(
+                displayHtml = Ax.format(
                         "<span class='radio-button-icon'>%s</span><span class='radio-button-icon-label'>%s</span>",
                         imgHtml, displayHtml);
             }

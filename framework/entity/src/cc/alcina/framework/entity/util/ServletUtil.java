@@ -17,7 +17,7 @@ import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  *
@@ -28,7 +28,7 @@ public class ServletUtil {
 			HttpServletResponse resp) throws IOException {
 		resp.setContentType("text/html");
 		resp.getWriter()
-				.write(CommonUtils.formatJ(
+				.write(Ax.format(
 						"<html><head>  <meta http-equiv=\"Refresh\" "
 								+ "content=\"0; URL=%s\"></head></html>",
 						targetUrl));

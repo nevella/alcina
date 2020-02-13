@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -117,7 +118,7 @@ public class DomainModelDeltaSignature implements Serializable {
 	}
 
 	public String nonVersionedSignature() {
-		return CommonUtils.formatJ("%s,%s,%s", classSimpleName, id, sid);
+		return Ax.format("%s,%s,%s", classSimpleName, id, sid);
 	}
 
 	public DomainModelDeltaSignature nonVersionedSignatureObject() {
@@ -173,7 +174,7 @@ public class DomainModelDeltaSignature implements Serializable {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("ds:%s,%s,%s,%s,%s,%s,%s", classSimpleName,
+		return Ax.format("ds:%s,%s,%s,%s,%s,%s,%s", classSimpleName,
 				id, sid, userId, contentHash, rpcSignature, contentLength);
 	}
 

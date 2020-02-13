@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class DomainStoreLookupDescriptor<T extends HasIdAndLocalId>
 		implements MemoryStatProvider {
@@ -116,8 +116,8 @@ public class DomainStoreLookupDescriptor<T extends HasIdAndLocalId>
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("Lookup descriptor - %s :: %s :: (id) %s",
-				clazz, propertyPath, idDescriptor);
+		return Ax.format("Lookup descriptor - %s :: %s :: (id) %s", clazz,
+				propertyPath, idDescriptor);
 	}
 
 	public static class IdLookupDescriptor<T extends HasIdAndLocalId>

@@ -5,113 +5,119 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 
 public class SystemoutCounter {
-    static Supplier<String> emptySupplier = () -> "";
+	static Supplier<String> emptySupplier = () -> "";
 
-    private int dotsPerLine;
+	public static SystemoutCounter standardJobCounter(int size, String name) {
+		SystemoutCounter counter = new SystemoutCounter(size / 400, 20, size,
+				true);
+		counter.name(name + "::jobProgress");
+		return counter;
+	}
 
-    private int ticks;
+	private int dotsPerLine;
 
-    private int tickCtr;
+	private int ticks;
 
-    private int dotCtr;
+	private int tickCtr;
 
-    private int allTicks;
+	private int dotCtr;
 
-    private boolean showPercentAtEndOfLine;
+	private int allTicks;
 
-    private int size;
+	private boolean showPercentAtEndOfLine;
 
-    int lines = 0;
+	private int size;
 
-    private String name;
+	int lines = 0;
 
-    private Logger logger;
+	private String name;
 
-    String buffer = "";
+	private Logger logger;
 
-    public SystemoutCounter(int ticks, int dotsPerLine) {
-        this(ticks, dotsPerLine, 1, false);
-    }
+	String buffer = "";
 
-    public SystemoutCounter(int ticks, int dotsPerLine, int size,
-            boolean showPercentAtEndOfLine) {
-        this.ticks = ticks;
-        this.dotsPerLine = dotsPerLine;
-        this.size = size;
-        this.showPercentAtEndOfLine = showPercentAtEndOfLine;
-    }
+	public SystemoutCounter(int ticks, int dotsPerLine) {
+		this(ticks, dotsPerLine, 1, false);
+	}
 
-    public void end() {
-        System.out.println();
-    }
+	public SystemoutCounter(int ticks, int dotsPerLine, int size,
+			boolean showPercentAtEndOfLine) {
+		this.ticks = ticks;
+		this.dotsPerLine = dotsPerLine;
+		this.size = size;
+		this.showPercentAtEndOfLine = showPercentAtEndOfLine;
+	}
 
-    public int getAllTicks() {
-        return this.allTicks;
-    }
+	public void end() {
+		System.out.println();
+	}
 
-    public double getFractionComplete() {
-        return (double) allTicks / (double) size;
-    }
+	public int getAllTicks() {
+		return this.allTicks;
+	}
 
-    public Logger getLogger() {
-        return this.logger;
-    }
+	public double getFractionComplete() {
+		return (double) allTicks / (double) size;
+	}
 
-    public SystemoutCounter name(String name) {
-        this.name = name;
-        return this;
-    }
+	public Logger getLogger() {
+		return this.logger;
+	}
 
-    public void newLine() {
-        outLine("");
-        tickCtr = 0;
-        dotCtr = 0;
-    }
+	public SystemoutCounter name(String name) {
+		this.name = name;
+		return this;
+	}
 
-    public void setLogger(Logger logger) {
-        this.logger = logger;
-    }
+	public void newLine() {
+		outLine("");
+		tickCtr = 0;
+		dotCtr = 0;
+	}
 
-    public void tick() {
-        tick(emptySupplier);
-    }
+	public void setLogger(Logger logger) {
+		this.logger = logger;
+	}
 
-    public void tick(String message) {
-        tick(() -> message);
-    }
+	public void tick() {
+		tick(emptySupplier);
+	}
 
-    public synchronized void tick(Supplier<String> messageSupplier) {
-        ++allTicks;
-        if (++tickCtr == ticks) {
-            tickCtr = 0;
-            if (logger == null) {
-                System.out.print(".");
-            } else {
-                buffer += ".";
-            }
-            if (++dotCtr == dotsPerLine) {
-                dotCtr = 0;
-                String message = messageSupplier.get();
-                if (showPercentAtEndOfLine || name != null) {
-                    message += CommonUtils.formatJ(" - %s%",
-                            (allTicks * 100) / size);
-                }
-                if (name != null) {
-                    message += " - " + name;
-                }
-                outLine("  " + message);
-                lines++;
-            }
-        }
-    }
+	public void tick(String message) {
+		tick(() -> message);
+	}
 
-    private void outLine(String string) {
-        string = buffer + string;
-        if (logger == null) {
-            System.out.println(string);
-        } else {
-            logger.debug(string);
-        }
-        buffer = "";
-    }
+	public synchronized void tick(Supplier<String> messageSupplier) {
+		++allTicks;
+		if (++tickCtr == ticks) {
+			tickCtr = 0;
+			if (logger == null) {
+				System.out.print(".");
+			} else {
+				buffer += ".";
+			}
+			if (++dotCtr == dotsPerLine) {
+				dotCtr = 0;
+				String message = messageSupplier.get();
+				if (showPercentAtEndOfLine || name != null) {
+					message += Ax.format(" - %s%", (allTicks * 100) / size);
+				}
+				if (name != null) {
+					message += " - " + name;
+				}
+				outLine("  " + message);
+				lines++;
+			}
+		}
+	}
+
+	private void outLine(String string) {
+		string = buffer + string;
+		if (logger == null) {
+			System.out.println(string);
+		} else {
+			logger.debug(string);
+		}
+		buffer = "";
+	}
 }

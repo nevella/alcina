@@ -9,6 +9,7 @@ import java.util.Map;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class FastIdLookupJvm implements FastIdLookup {
@@ -67,7 +68,7 @@ public class FastIdLookupJvm implements FastIdLookup {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("Lkp  - [%s,%s]", idLookup.size(),
+		return Ax.format("Lkp  - [%s,%s]", idLookup.size(),
 				localIdLookup.size());
 	}
 

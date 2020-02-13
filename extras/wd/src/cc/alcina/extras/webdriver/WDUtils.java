@@ -308,8 +308,7 @@ public class WDUtils {
 				timeout--;
 			}
 		}
-		throw new TimedOutException(CommonUtils
-				.formatJ("Wait for attr/value [%s,%s] timed out", attr, value));
+		throw new TimedOutException(Ax.format("Wait for attr/value [%s,%s] timed out", attr, value));
 	}
 
 	public static WebElement waitForElement(SearchContext context, By by,
@@ -423,15 +422,14 @@ public class WDUtils {
 				timeout--;
 			}
 		}
-		throw new TimedOutException(CommonUtils
-				.formatJ("Wait for textlength [%s] timed out", minLength));
+		throw new TimedOutException(Ax.format("Wait for textlength [%s] timed out", minLength));
 	}
 
 	private static TimedOutException logException(SearchContext context,
 			By by) {
 		if (LooseContext.is(CONTEXT_DONT_LOG_EXCEPTION)) {
 			return new TimedOutException(
-					CommonUtils.formatJ("Wait for element [%s] timed out", by));
+					Ax.format("Wait for element [%s] timed out", by));
 		}
 		byte[] bytes = ((RemoteWebDriver) context)
 				.getScreenshotAs(OutputType.BYTES);
@@ -448,7 +446,7 @@ public class WDUtils {
 			e.printStackTrace();
 		}
 		return new TimedOutException(
-				CommonUtils.formatJ("Wait for element [%s] timed out", by));
+				Ax.format("Wait for element [%s] timed out", by));
 	}
 
 	private static int maybeOverrideTimeout(double timeout) {

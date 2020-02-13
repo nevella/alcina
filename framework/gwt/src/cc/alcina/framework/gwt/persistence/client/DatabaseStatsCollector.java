@@ -11,7 +11,7 @@ import com.google.code.gwt.database.client.TransactionCallback;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class DatabaseStatsCollector {
 	private DatabaseStatsCollector.Phase phase = Phase.TRANSFORMS_DB_QUERY;
@@ -72,7 +72,7 @@ public class DatabaseStatsCollector {
 
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				tx.executeSql(CommonUtils.formatJ("select * from %s ",
+				tx.executeSql(Ax.format("select * from %s ",
 						dbStore.getTableName()), null, okCallback);
 			}
 

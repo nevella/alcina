@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.LoopingPlayer;
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasSize;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -72,7 +73,7 @@ public class UnwrapAndRegisterObjectsPlayer
 
 	@Override
 	public String describeLoop() {
-		return CommonUtils.formatJ(
+		return Ax.format(
 				"Chews through deltas in the handshakeConsortModel"
 						+ " - for each in sequence [%s] - see javadoc ",
 				CommonUtils.join(Phase.values(), ", "));
@@ -138,7 +139,7 @@ public class UnwrapAndRegisterObjectsPlayer
 			}
 		}
 		// handshakeConsortModel.ensureLoadObjectsNotifier(
-		// CommonUtils.formatJ("Register: %s - %s", deltaOrdinal,
+		// Ax.format("Register: %s - %s", deltaOrdinal,
 		// CommonUtils.friendlyConstant(phase).toLowerCase()))
 		// .modalOn();
 		switch (phase) {

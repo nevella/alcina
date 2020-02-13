@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.sync.property;
 
 import java.util.Date;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 
@@ -92,7 +93,7 @@ public class PropertyModificationLogItem {
 	}
 
 	public String toString() {
-		return CommonUtils.formatJ("%s\t%s\t%s",
+		return Ax.format("%s\t%s\t%s",
 				CommonUtils.padStringRight(source, 20, ' '),
 				CommonUtils.formatDate(new Date(modificationTime),
 						DateStyle.AU_DATE_TIME_HUMAN),

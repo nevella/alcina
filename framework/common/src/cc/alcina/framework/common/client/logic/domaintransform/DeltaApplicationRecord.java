@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
@@ -240,7 +240,7 @@ public class DeltaApplicationRecord extends BaseBindable
 
     @Override
     public String toString() {
-        return CommonUtils.formatJ(
+        return Ax.format(
                 " clientInstanceAuth: %s\n" + "clientInstanceId: %s\n"
                         + "id: %s\n" + "requestId: %s\n" + "timestamp: %s\n"
                         + "userId: %s\n" + "DeltaApplicationRecordType: %s\n"

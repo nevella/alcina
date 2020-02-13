@@ -140,7 +140,7 @@ public class ReplayInstruction {
 	public boolean changeTextSelector(String newText) {
 		ReplayLocator locator = parseReplayBody(param1);
 		if (locator.indexStr == null && !newText.equals(locator.text)) {
-			param1 = CommonUtils.formatJ("%s :: [%s]", locator.path, newText);
+			param1 = Ax.format("%s :: [%s]", locator.path, newText);
 			return true;
 		}
 		return false;
@@ -158,7 +158,7 @@ public class ReplayInstruction {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("%s\t%s\t%s", type, param1,
+		return Ax.format("%s\t%s\t%s", type, param1,
 				param2 == null ? "" : param2);
 	}
 

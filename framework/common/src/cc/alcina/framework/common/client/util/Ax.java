@@ -60,7 +60,7 @@ public class Ax {
 	}
 
 	public static String format(String template, Object... args) {
-		return CommonUtils.formatJ(template, args);
+		return CommonUtils.format(template, args);
 	}
 
 	public static double fourPlaces(double d) {
@@ -133,6 +133,10 @@ public class Ax {
 
 	public static void setTest(boolean test) {
 		Ax.test = test;
+	}
+
+	public static void simpleExceptionOut(Throwable t) {
+		System.out.println(CommonUtils.toSimpleExceptionMessage(t));
 	}
 
 	public static void sysLogHigh(String template, Object... args) {

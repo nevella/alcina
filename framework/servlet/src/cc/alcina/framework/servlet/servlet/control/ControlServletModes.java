@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.servlet.control;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 
@@ -64,7 +65,7 @@ public class ControlServletModes {
 
     @Override
     public String toString() {
-        return CommonUtils.formatJ(
+        return Ax.format(
                 "writerMode:\t%s\twriterRelayMode:\t%s\twriterServiceMode:\t%s",
                 CommonUtils.nullSafeToString(writerMode),
                 CommonUtils.nullSafeToString(writerRelayMode),

@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.parser.structured.node;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -7,11 +9,18 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.XmlUtils;
 
 public class XmlDoc extends XmlNode {
+	public static XmlDoc basicHtmlDoc() {
+		return new XmlDoc("<html><head></head><body></body></html>");
+	}
+
 	public static XmlNode createDocumentElement(String tag) {
 		return new XmlDoc(String.format("<%s/>", tag)).getDocumentElementNode();
 	}
@@ -20,6 +29,8 @@ public class XmlDoc extends XmlNode {
 			n -> n == null ? null : new XmlNode(n, this));
 
 	private String firstTag;
+
+	private boolean readonly;
 
 	public XmlDoc(Document domDocument) {
 		super(null, null);
@@ -33,12 +44,17 @@ public class XmlDoc extends XmlNode {
 		loadFromXml(xml);
 	}
 
+	@Override
 	public Document domDoc() {
 		return super.domDoc();
 	}
 
 	public XmlNode getDocumentElementNode() {
 		return nodeFor(domDoc().getDocumentElement());
+	}
+
+	public boolean isReadonly() {
+		return this.readonly;
 	}
 
 	public XmlNode nodeFor(Node domNode) {
@@ -76,6 +92,10 @@ public class XmlDoc extends XmlNode {
 		return nodeFor(domDoc().getDocumentElement());
 	}
 
+	public void setReadonly(boolean readonly) {
+		this.readonly = readonly;
+	}
+
 	private void loadFromXml(String xml) {
 		try {
 			this.node = XmlUtils.loadDocument(xml);
@@ -89,8 +109,38 @@ public class XmlDoc extends XmlNode {
 	void register(XmlNode xmlNode) {
 	}
 
+	@RegistryLocation(registryPoint = XmlReadonlyDocCache.class, implementationType = ImplementationType.SINGLETON)
+	public static class XmlReadonlyDocCache {
+		public static XmlDoc.XmlReadonlyDocCache get() {
+			return Registry.impl(XmlDoc.XmlReadonlyDocCache.class);
+		}
 
-	public static XmlDoc basicHtmlDoc() {
-		return new XmlDoc("<html><head></head><body></body></html>");
+		private int maxSize = 0;
+
+		private Map<String, XmlDoc> docs = new LinkedHashMap<String, XmlDoc>() {
+			@Override
+			protected boolean
+					removeEldestEntry(Map.Entry<String, XmlDoc> eldest) {
+				return size() > maxSize;
+			};
+		};
+
+		public synchronized XmlDoc get(String xml) {
+			XmlDoc doc = docs.get(xml);
+			if (doc == null) {
+				doc = new XmlDoc(xml);
+				doc.setReadonly(true);
+				docs.put(xml, doc);
+			}
+			return doc;
+		}
+
+		public int getMaxSize() {
+			return this.maxSize;
+		}
+
+		public void setMaxSize(int maxSize) {
+			this.maxSize = maxSize;
+		}
 	}
 }

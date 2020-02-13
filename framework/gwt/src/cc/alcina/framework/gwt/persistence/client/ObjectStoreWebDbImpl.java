@@ -18,6 +18,7 @@ import com.google.code.gwt.database.client.StatementCallback;
 import com.google.code.gwt.database.client.TransactionCallback;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -56,7 +57,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				String sql = CommonUtils.formatJ("Delete from %s;", tableName);
+				String sql = Ax.format("Delete from %s;", tableName);
 				tx.executeSql(sql, null);
 			}
 
@@ -78,7 +79,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				String sql = CommonUtils.formatJ("DROP TABLE %s;", tableName);
+				String sql = Ax.format("DROP TABLE %s;", tableName);
 				tx.executeSql(sql, null);
 			}
 
@@ -212,7 +213,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				String sql = CommonUtils.formatJ("CREATE TABLE IF NOT EXISTS "
+				String sql = Ax.format("CREATE TABLE IF NOT EXISTS "
 						+ "%s" + " (id INTEGER PRIMARY KEY AUTOINCREMENT,"
 						+ " key_ TEXT, value_ TEXT)  ", tableName);
 				tx.executeSql(sql, null);
@@ -227,7 +228,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	}
 
 	protected void onFailure(AsyncCallback callback, SQLError error) {
-		callback.onFailure(new Exception(CommonUtils.formatJ("%s: %s",
+		callback.onFailure(new Exception(Ax.format("%s: %s",
 				error.getCode(), error.getMessage())));
 	}
 
@@ -266,7 +267,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				String sql = CommonUtils.formatJ(
+				String sql = Ax.format(
 						"select key_, value_ from %s where key_ in %s",
 						tableName,
 						LocalTransformPersistence.stringListToClause(keys));
@@ -317,7 +318,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				String sql = CommonUtils.formatJ(
+				String sql = Ax.format(
 						"select ifnull(min(id),0) as min_, "
 								+ "ifnull(max(id),0) as max_ from %s",
 						tableName);
@@ -358,7 +359,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 					GenericRow row = rs.getItem(i);
 					getResult.add(row.getString("key_"));
 				}
-				System.out.println(CommonUtils.formatJ(
+				System.out.println(Ax.format(
 						"get prefixed: [%s]\n%s\n", keyPrefix, getResult));
 			}
 		};
@@ -371,7 +372,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				String sql = CommonUtils.formatJ(
+				String sql = Ax.format(
 						"select key_ from %s where key_ like '%s%'", tableName,
 						keyPrefix);
 				tx.executeSql(sql, new String[] {}, okCallback);
@@ -421,7 +422,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				String sql = CommonUtils.formatJ(
+				String sql = Ax.format(
 						"select id,value_ from %s where id>=? and id<=?",
 						tableName);
 				tx.executeSql(sql, new String[] { String.valueOf(fromId),
@@ -530,14 +531,13 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 		}
 
 		private void update() {
-			String sql = CommonUtils
-					.formatJ("update %s set  value_=? where id=?", tableName);
+			String sql = Ax.format("update %s set  value_=? where id=?", tableName);
 			tx.executeSql(sql, new String[] { kv.getValue(), id.toString() },
 					afterInsertCallback);
 		}
 
 		void add() {
-			String sql = CommonUtils.formatJ(
+			String sql = Ax.format(
 					"insert into %s (key_,value_) values(?,?)", tableName);
 			tx.executeSql(sql, new String[] { kv.getKey(), kv.getValue() },
 					afterInsertCallback);
@@ -552,7 +552,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 					if (id != null && kvs.size() == 1) {
 						update();
 					} else {
-						String sql = CommonUtils.formatJ(
+						String sql = Ax.format(
 								"select id from %s where key_=? ", tableName);
 						tx.executeSql(sql, new String[] { kv.getKey() },
 								getIdCallback);
@@ -608,7 +608,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
 				RemoveHandler.this.tx = tx;
-				String sql = CommonUtils.formatJ(
+				String sql = Ax.format(
 						"select id from %s where key_ in %s ", tableName,
 						LocalTransformPersistence.stringListToClause(keys));
 				tx.executeSql(sql, new String[0], getIdCallback);
@@ -632,7 +632,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 		}
 
 		private void remove() {
-			String sql = CommonUtils.formatJ("delete from %s  where id in (%s)",
+			String sql = Ax.format("delete from %s  where id in (%s)",
 					tableName, CommonUtils.join(ids, ", "));
 			tx.executeSql(sql, new String[0], doneCallback);
 		}
@@ -660,7 +660,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				String sql = CommonUtils.formatJ(
+				String sql = Ax.format(
 						"delete from %s where id>=? and id<=?", tableName);
 				tx.executeSql(sql, new String[] { String.valueOf(fromId),
 						String.valueOf(toId) }, okCallback);

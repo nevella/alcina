@@ -5,6 +5,7 @@ import java.util.Date;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @RegistryLocation(registryPoint = ControlServletState.class, implementationType = ImplementationType.INSTANCE)
@@ -76,7 +77,7 @@ public class ControlServletState {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ(
+		return Ax.format(
 				"\tstartup:\t%s\n" + "\tapp name:\t%s\n" + "\tapi key:\t%s\n"
 						+ "\tstates:\t\t%s\n",
 				CommonUtils.nullSafeToString(startupTime),
