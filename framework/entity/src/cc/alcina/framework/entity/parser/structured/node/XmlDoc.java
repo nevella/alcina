@@ -125,12 +125,19 @@ public class XmlDoc extends XmlNode {
 			};
 		};
 
+		int missCount = 0;
+
+		int hitCount = 0;
+
 		public synchronized XmlDoc get(String xml) {
 			XmlDoc doc = docs.get(xml);
 			if (doc == null) {
 				doc = new XmlDoc(xml);
 				doc.setReadonly(true);
 				docs.put(xml, doc);
+				missCount++;
+			} else {
+				hitCount++;
 			}
 			return doc;
 		}
