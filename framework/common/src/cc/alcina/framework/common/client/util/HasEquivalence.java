@@ -134,7 +134,7 @@ public interface HasEquivalence<T> {
 
 		public static <C extends HasEquivalence> Predicate<C>
 				deDuplicateFilter() {
-			return new DeduplicatePredicate<>();
+			return new DeduplicateHasEquivalencePredicate<>();
 		}
 
 		public static <T extends HasEquivalence> boolean
@@ -359,7 +359,7 @@ public interface HasEquivalence<T> {
 			return result;
 		}
 
-		public static class DeduplicatePredicate<C extends HasEquivalence>
+		public static class DeduplicateHasEquivalencePredicate<C extends HasEquivalence>
 				implements Predicate<C> {
 			List<C> seen = new ArrayList<>();
 

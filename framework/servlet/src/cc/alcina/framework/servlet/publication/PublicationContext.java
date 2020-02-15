@@ -22,89 +22,96 @@ import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererRe
 import cc.alcina.framework.servlet.publication.FormatConverter.FormatConversionModel;
 
 public class PublicationContext {
-    public static final String CONTEXT_PUBLICATION_CONTEXT = PublicationContext.class
-            .getName() + ".CONTEXT_PUBLICATION_CONTEXT";
+	public static final String CONTEXT_PUBLICATION_CONTEXT = PublicationContext.class
+			.getName() + ".CONTEXT_PUBLICATION_CONTEXT";
 
-    public static PublicationContext get() {
-        return LooseContext.get(CONTEXT_PUBLICATION_CONTEXT);
-    }
+	public static final String CONTEXT_PUBLICATION_VISITOR = PublicationContext.class
+			.getName() + ".CONTEXT_PUBLICATION_VISITOR";
 
-    public static String getContextInfoForPublicationExceptionT() {
-        PublicationContext ctx = get();
-        return ctx == null ? "--no publication context--"
-                : ctx.getContextInfoForPublicationException();
-    }
+	public static PublicationContext get() {
+		return LooseContext.get(CONTEXT_PUBLICATION_CONTEXT);
+	}
 
-    public static PublicationContext setupForExternalToPublisher(
-            ContentDefinition contentDefinition, DeliveryModel deliveryModel) {
-        return setupContext(contentDefinition, deliveryModel);
-    }
+	public static String getContextInfoForPublicationExceptionT() {
+		PublicationContext ctx = get();
+		return ctx == null ? "--no publication context--"
+				: ctx.getContextInfoForPublicationException();
+	}
 
-    static PublicationContext setupContext(ContentDefinition contentDefinition,
-            DeliveryModel deliveryModel) {
-        PublicationContext ctx = new PublicationContext();
-        ctx.logger = Logger.getLogger(Publisher.class);
-        ctx.contentDefinition = contentDefinition;
-        ctx.deliveryModel = deliveryModel;
-        return ctx;
-    }
+	public static PublicationContext setupForExternalToPublisher(
+			ContentDefinition contentDefinition, DeliveryModel deliveryModel) {
+		return setupContext(contentDefinition, deliveryModel);
+	}
 
-    public ContentDefinition contentDefinition;
+	static PublicationContext setupContext(ContentDefinition contentDefinition,
+			DeliveryModel deliveryModel) {
+		PublicationContext ctx = new PublicationContext();
+		ctx.logger = Logger.getLogger(Publisher.class);
+		ctx.contentDefinition = contentDefinition;
+		ctx.deliveryModel = deliveryModel;
+		if (LooseContext.has(CONTEXT_PUBLICATION_VISITOR)) {
+			ctx.setVisitor(LooseContext.get(CONTEXT_PUBLICATION_VISITOR));
+		}
+		return ctx;
+	}
 
-    public PublicationContent publicationContent;
+	public ContentDefinition contentDefinition;
 
-    public DeliveryModel deliveryModel;
+	public PublicationContent publicationContent;
 
-    public PublicationResult publicationResult;
+	public DeliveryModel deliveryModel;
 
-    public Map<String, Object> properties = new LinkedHashMap<String, Object>();
+	public PublicationResult publicationResult;
 
-    public PublicationVisitor visitor;
+	public Map<String, Object> properties = new LinkedHashMap<String, Object>();
 
-    public Logger logger;
+	public PublicationVisitor visitor;
 
-    public String mimeMessageId;
+	public Logger logger;
 
-    public ContentRendererResults renderedContent;
+	public String mimeMessageId;
 
-    public FormatConversionModel formatConversionModel;
+	public ContentRendererResults renderedContent;
 
-    public String getContextInfoForPublicationException() {
-        String xmlForm = "Unable to serialize publication request";
-        String modelString = xmlForm;
-        try {
-            Set<Class> jaxbClasses = new HashSet<Class>(
-                    Registry.get().lookup(JaxbContextRegistration.class));
-            xmlForm = String.format(
-                    "Content definition:\n%s\n\n" + "Delivery model:\n%s",
-                    WrappedObjectHelper.xmlSerialize(contentDefinition,
-                            jaxbClasses),
-                    WrappedObjectHelper.xmlSerialize(deliveryModel,
-                            jaxbClasses));
-            modelString = deliveryModel.toString();
-        } catch (Exception e2) {
-            e2.printStackTrace();
-        }
-        String message = String.format("Publication exception: %s %s\n%s",
-                PermissionsManager.get().getUserName(), modelString, xmlForm);
-        return message;
-    }
+	public FormatConversionModel formatConversionModel;
 
-    public PublicationVisitor getVisitor() {
-        return this.visitor;
-    }
+	public String getContextInfoForPublicationException() {
+		String xmlForm = "Unable to serialize publication request";
+		String modelString = xmlForm;
+		try {
+			Set<Class> jaxbClasses = new HashSet<Class>(
+					Registry.get().lookup(JaxbContextRegistration.class));
+			xmlForm = String.format(
+					"Content definition:\n%s\n\n" + "Delivery model:\n%s",
+					WrappedObjectHelper.xmlSerialize(contentDefinition,
+							jaxbClasses),
+					WrappedObjectHelper.xmlSerialize(deliveryModel,
+							jaxbClasses));
+			modelString = deliveryModel.toString();
+		} catch (Exception e2) {
+			e2.printStackTrace();
+		}
+		String message = String.format("Publication exception: %s %s\n%s",
+				PermissionsManager.get().getUserName(), modelString, xmlForm);
+		return message;
+	}
 
-    public PublicationVisitor getVisitorOrNoop() {
-        return this.visitor == null ? new PublicationVisitor() : this.visitor;
-    }
+	public PublicationVisitor getVisitor() {
+		return this.visitor;
+	}
 
-    public void setVisitor(PublicationVisitor visitor) {
-        this.visitor = visitor;
-    }
+	public PublicationVisitor getVisitorOrNoop() {
+		return this.visitor == null ? new PublicationVisitor() : this.visitor;
+	}
 
-    protected void logPublicationException(Exception e) {
-        String message = getContextInfoForPublicationException();
-        logger.warn(message, e);
-        EntityLayerLogging.log(LogMessageType.PUBLICATION_EXCEPTION, message, e);
-    }
+	public void setVisitor(PublicationVisitor visitor) {
+		this.visitor = visitor;
+	}
+
+	protected void logPublicationException(Exception e) {
+		String message = getContextInfoForPublicationException();
+		logger.warn(message, e);
+		EntityLayerLogging.log(LogMessageType.PUBLICATION_EXCEPTION, message,
+				e);
+	}
 }

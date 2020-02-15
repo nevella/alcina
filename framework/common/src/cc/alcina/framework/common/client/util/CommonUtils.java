@@ -1815,6 +1815,22 @@ public class CommonUtils {
 		AU_DATE_MONTH_NO_PAD_DAY
 	}
 
+	public static class DeduplicatePredicate<C, K> implements Predicate<C> {
+		Set<K> seen = new LinkedHashSet<>();
+
+		private Function<C, K> keyMapper;
+
+		public DeduplicatePredicate(Function<C, K> keyMapper) {
+			this.keyMapper = keyMapper;
+		}
+
+		@Override
+		public boolean test(C t) {
+			K key = keyMapper.apply(t);
+			return !seen.add(key);
+		}
+	}
+
 	public static interface IidGenerator {
 		String generate();
 	}
