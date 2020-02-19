@@ -176,7 +176,7 @@ public class DevConsoleRemote {
 		}
 		server.setHandler(handlers);
 		server.start();
-		server.dumpStdErr();
+		// server.dumpStdErr();
 		server.join();
 	}
 

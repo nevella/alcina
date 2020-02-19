@@ -1,11 +1,18 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Collection;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 
 public class SystemoutCounter {
 	static Supplier<String> emptySupplier = () -> "";
+
+	public static SystemoutCounter standardJobCounter(Collection collection,
+			Object caller) {
+		return standardJobCounter(collection.size(),
+				caller.getClass().getSimpleName());
+	}
 
 	public static SystemoutCounter standardJobCounter(int size, String name) {
 		SystemoutCounter counter = new SystemoutCounter(size / 400, 20, size,
