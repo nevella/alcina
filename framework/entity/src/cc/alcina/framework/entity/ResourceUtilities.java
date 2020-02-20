@@ -412,10 +412,6 @@ public class ResourceUtilities {
 		return loadHtmlDocumentFromInputStream(is, null);
 	}
 
-	public static XmlDoc loadHtmlDocFromStrUrl(String url) {
-		return new XmlDoc(loadHtmlDocumentFromStrUrl(url));
-	}
-
 	public static Document loadHtmlDocumentFromInputStream(InputStream is,
 			String charset) throws Exception {
 		byte[] bs = ResourceUtilities.readStreamToByteArray(is);
@@ -442,7 +438,7 @@ public class ResourceUtilities {
 				new ByteArrayInputStream(baos.toByteArray()), "UTF-8");
 	}
 
-	public static Document loadHtmlDocumentFromStrUrl(String url) {
+	public static Document loadHtmlDocumentFromUrl(String url) {
 		try {
 			return loadDocumentFromInputStream(new URL(url).openStream());
 		} catch (Exception e) {
@@ -458,6 +454,18 @@ public class ResourceUtilities {
 				System.setProperty(k, v);
 			}
 		});
+	}
+
+	public static XmlDoc loadXmlDocFromHtmlString(String html) {
+		try {
+			return new XmlDoc(loadHtmlDocumentFromString(html));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static XmlDoc loadXmlDocFromUrl(String url) {
+		return new XmlDoc(loadHtmlDocumentFromUrl(url));
 	}
 
 	public static void logToFile(String content) {

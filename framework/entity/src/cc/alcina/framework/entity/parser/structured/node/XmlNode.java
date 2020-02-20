@@ -553,6 +553,17 @@ public class XmlNode {
 			return null;
 		}
 
+		public boolean has(Predicate<XmlNode> test) {
+			XmlNode node = getStartingCursor();
+			while (node != null) {
+				if (test.test(node)) {
+					return true;
+				}
+				node = node.parent();
+			}
+			return false;
+		}
+
 		public boolean has(String... tags) {
 			return get(tags) != null;
 		}
@@ -878,7 +889,8 @@ public class XmlNode {
 		}
 
 		public XmlNode body() {
-			return xpath("//body").node();
+			return xpath("//body").optionalNode()
+					.orElse(xpath("//BODY").node());
 		}
 
 		public boolean hasClassName(String className) {
