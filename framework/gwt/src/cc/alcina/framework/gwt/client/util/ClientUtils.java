@@ -25,6 +25,7 @@ import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.NodeRemote;
 import com.google.gwt.dom.client.Style;
@@ -189,6 +190,18 @@ public class ClientUtils {
 	public static String getLocationHostPortAndProtocol() {
 		return Window.Location.getHref().replaceFirst("(https?://.+?)(?:/.*|$)",
 				"$1");
+	}
+
+	public static Element getParentElementOrSelf(Node n) {
+		if (n.getNodeType() == Node.ELEMENT_NODE) {
+			return (Element) n;
+		}
+		Node parentNode = n.getParentNode();
+		if (parentNode != null
+				&& parentNode.getNodeType() == Node.ELEMENT_NODE) {
+			return (Element) parentNode;
+		}
+		return null;
 	}
 
 	public static native void invokeJsDebugger() /*-{
