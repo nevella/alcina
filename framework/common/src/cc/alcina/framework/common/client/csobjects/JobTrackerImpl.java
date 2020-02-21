@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 
@@ -368,7 +369,7 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents
 
     @Override
     public String toString() {
-        return CommonUtils.formatJ("JobTracker: %s\n%s %s", getId(),
+        return Ax.format("JobTracker: %s\n%s %s", getId(),
                 getJobName(), CommonUtils.nullToEmpty(getJobResult()));
     }
 

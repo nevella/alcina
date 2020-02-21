@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 @XmlRootElement
@@ -59,7 +59,7 @@ public class WDConfigurationItem {
 
     public String toHtml() {
         String tplt = "<a href='test.do?%s=%s'>%s</a><br />&nbsp;&nbsp;&nbsp;%s : %s : %s";
-        return CommonUtils.formatJ(tplt, "testname", name, name, driverType,
+        return Ax.format(tplt, "testname", name, name, driverType,
                 topLevelClassName, uri);
     }
 

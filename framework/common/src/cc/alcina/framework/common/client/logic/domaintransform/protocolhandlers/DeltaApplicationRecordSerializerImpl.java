@@ -5,7 +5,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
 public class DeltaApplicationRecordSerializerImpl
@@ -88,7 +88,7 @@ public class DeltaApplicationRecordSerializerImpl
     }
 
     public String write(DeltaApplicationRecord wrapper) {
-        return CommonUtils.formatJ(
+        return Ax.format(
                 VERSION + "\n" + CLIENT_INSTANCE_AUTH + "%s\n"
                         + CLIENT_INSTANCE_ID + "%s\n" + REQUEST_ID + "%s\n"
                         + TIMESTAMP + "%s\n" + USER_ID + "%s\n" + TYPE + "%s\n"

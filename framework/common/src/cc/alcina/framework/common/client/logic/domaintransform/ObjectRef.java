@@ -17,6 +17,7 @@ import java.io.Serializable;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -78,7 +79,7 @@ public class ObjectRef implements Serializable {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("%s:%s,%s,%s",
+		return Ax.format("%s:%s,%s,%s",
 				CommonUtils.simpleClassName(classRef.getRefClass()), id,
 				localId, versionNumber);
 	}

@@ -168,7 +168,7 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
             } catch (NoSuchPropertyException e) {
                 if (isThrowOnUnrecognisedProperty()) {
                     throw new RuntimeException(
-                            CommonUtils.formatJ("property not found - %s.%s",
+                            Ax.format("property not found - %s.%s",
                                     clazz.getSimpleName(), propertyName));
                 }
             }

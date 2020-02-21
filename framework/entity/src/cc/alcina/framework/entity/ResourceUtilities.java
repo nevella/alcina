@@ -222,7 +222,7 @@ public class ResourceUtilities {
 	}
 
 	public static <T> T fieldwiseCopy(T t, T toInstance, boolean withTransients,
-			boolean withCollectionProjection) {
+			boolean withShallowCopiedCollections) {
 		try {
 			List<Field> allFields = new ArrayList<Field>();
 			Class c = t.getClass();
@@ -247,7 +247,7 @@ public class ResourceUtilities {
 			for (Field field : allFields) {
 				Object value = field.get(t);
 				boolean project = false;
-				if (value != null && withCollectionProjection) {
+				if (value != null && withShallowCopiedCollections) {
 					if (value instanceof Map || value instanceof Collection) {
 						project = true;
 					}

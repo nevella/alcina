@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -59,7 +60,7 @@ public class MetricLoggingBase {
 
 	public void average(String key) {
 		if (averageCount.containsKey(key)) {
-			String message = CommonUtils.formatJ("Metric: %s avg %sms", key,
+			String message = Ax.format("Metric: %s avg %sms", key,
 					sum.get(key) / averageCount.get(key));
 			System.out.println(message);
 		}
@@ -135,7 +136,7 @@ public class MetricLoggingBase {
 				: System.currentTimeMillis() - metricStart.get(key);
 		ticksSum.remove(key);
 		String units = "ms";
-		String message = CommonUtils.formatJ("Metric: %s - %s %s%s", key, delta,
+		String message = Ax.format("Metric: %s - %s %s%s", key, delta,
 				units,
 				CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - " + extraInfo);
 		if (!muted) {

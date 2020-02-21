@@ -7,7 +7,7 @@ import com.google.code.gwt.database.client.StatementCallback;
 import com.google.code.gwt.database.client.TransactionCallback;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class WebdbSingleSqlStatementPersistenceHandler<T>
 		implements StatementCallback<GenericRow>, TransactionCallback {
@@ -39,7 +39,7 @@ public abstract class WebdbSingleSqlStatementPersistenceHandler<T>
 
 	public void onTransactionFailure(SQLError error) {
 		postTransactionCallback
-				.onFailure(new Exception(CommonUtils.formatJ("%s :: %s",
+				.onFailure(new Exception(Ax.format("%s :: %s",
 						(statementError == null ? "<no statement error>"
 								: statementError.getMessage()),
 						error.getMessage())));

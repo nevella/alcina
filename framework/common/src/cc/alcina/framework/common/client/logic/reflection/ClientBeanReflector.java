@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -98,7 +99,7 @@ public class ClientBeanReflector {
 		Class<? extends Object> clazz = o.getClass();
 		if (clazz != beanClass) {
 			throw new WrappedRuntimeException(
-					CommonUtils.formatJ(
+					Ax.format(
 							"Object not of correct class for reflector - %s, %s",
 							clazz != null ? clazz.getName() : null,
 							beanClass.getName()),

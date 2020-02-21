@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -56,7 +57,7 @@ public abstract class ClientUIThreadWorker {
 	protected void iterate() {
 		if (isComplete()) {
 			Registry.impl(ClientNotifications.class)
-					.log(CommonUtils.formatJ("Itr [%s] [Complete] - %s ms",
+					.log(Ax.format("Itr [%s] [Complete] - %s ms",
 							CommonUtils.simpleClassName(getClass()),
 							System.currentTimeMillis() - startTime));
 			onComplete();
@@ -78,7 +79,7 @@ public abstract class ClientUIThreadWorker {
 			iterationCount = Math.max(iterationCount, 10);
 		}
 		Registry.impl(ClientNotifications.class)
-				.log(CommonUtils.formatJ("Itr [%s] [x%s] - %s ms",
+				.log(Ax.format("Itr [%s] [x%s] - %s ms",
 						CommonUtils.simpleClassName(getClass()),
 						lastPassIterationsPerformed, timeTaken));
 		Registry.impl(TimerWrapperProvider.class).getTimer(new Runnable() {

@@ -44,6 +44,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -172,7 +173,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
     @Override
     public void metricLogEnd(String key) {
         if (metricStartTimes.containsKey(key)) {
-            log(CommonUtils.formatJ("Metric: %s - %s ms", key,
+            log(Ax.format("Metric: %s - %s ms", key,
                     System.currentTimeMillis() - metricStartTimes.get(key)),
                     AlcinaTopics.LOG_CATEGORY_METRIC);
             metricStartTimes.remove(key);
@@ -332,7 +333,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
     @Override
     public void showLog() {
-        showDialog(CommonUtils.formatJ("<div>Client log</div><hr>"
+        showDialog(Ax.format("<div>Client log</div><hr>"
                 + "<div class='logboxpre' style='width:850px'>%s </div>",
                 (logString + statsString()).replace("\n", "<br>")), null, null,
                 MessageType.INFO, null, "wide");

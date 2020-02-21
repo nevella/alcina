@@ -151,6 +151,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (CommonUtils.isNullOrEmpty(str)) {
 			return result;
 		}
+		str = str.replace("\n", ", ");
 		if (!str.matches("[\\-0-9, \r\n\t()\\[\\]]+")) {
 			return result;
 		}
@@ -212,9 +213,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 			for (String sPart : s.split(",")) {
 				E value = CommonUtils.getEnumValueOrNull(clazz, sPart);
 				if (value == null && sPart.length() > 0) {
-					System.out.println(CommonUtils.formatJ(
-							"Warning - can't deserialize %s for %s", sPart,
-							clazz));
+					System.out.println(
+							Ax.format("Warning - can't deserialize %s for %s",
+									sPart, clazz));
 				}
 				result.add(value);
 			}
@@ -772,7 +773,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			// if create, natural behaviour is return null, ignoring source
 			if (dte.getTransformType() != TransformType.CREATE_OBJECT
 					&& dte.getTransformType() != TransformType.DELETE_OBJECT) {
-				String message = CommonUtils.formatJ(
+				String message = Ax.format(
 						"calling getobject() on a provisional/deregistered object transform "
 								+ "- will harm the transform. use getsource() - \n%s\n",
 						dte);

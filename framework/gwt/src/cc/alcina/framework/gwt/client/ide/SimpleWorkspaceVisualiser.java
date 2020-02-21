@@ -29,6 +29,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ide.Workspace.WSVisualModel;
 import cc.alcina.framework.gwt.client.ide.WorkspaceView.DataTreeView;
@@ -78,7 +79,7 @@ public class SimpleWorkspaceVisualiser extends Composite
 		List<WorkspaceView> views = model.getViews();
 		for (WorkspaceView view : views) {
 			viewHolder.add(view,
-					CommonUtils.formatJ("<a href='#' onfocus='blur()'>%s</a>",
+					Ax.format("<a href='#' onfocus='blur()'>%s</a>",
 							view.getName()),
 					true);
 			view.getElement().setId(Document.get().createUniqueId());

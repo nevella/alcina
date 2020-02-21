@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
@@ -117,7 +117,7 @@ public class DomainSearcher {
                         .getCriteria()) {
                     DomainCriterionHandler handler = getCriterionHandler(sc);
                     if (handler == null) {
-                        System.err.println(CommonUtils.formatJ(
+                        System.err.println(Ax.format(
                                 "No handler for def/class %s - %s\n",
                                 def.getClass().getSimpleName(),
                                 sc.getClass().getSimpleName()));

@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -30,8 +31,10 @@ import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.J8Utils;
 import cc.alcina.framework.entity.MatcherIterator;
@@ -75,6 +78,8 @@ public class XmlNode {
 	private XmlNodeAncestors ancestor;
 
 	private XmlNodeHtml xmlNodeHtml;
+
+	private transient XmlNodeReadonlyLookup lookup;
 
 	public XmlNode(Node node, XmlDoc xmlDoc) {
 		this.node = node;
@@ -507,6 +512,13 @@ public class XmlNode {
 
 	private ProcessingInstruction getProcessingInstruction() {
 		return (ProcessingInstruction) node;
+	}
+
+	private XmlNodeReadonlyLookup lookup() {
+		if (lookup == null) {
+			lookup = new XmlNodeReadonlyLookup();
+		}
+		return lookup;
 	}
 
 	protected Document domDoc() {
@@ -1129,8 +1141,13 @@ public class XmlNode {
 		}
 
 		public XmlNode node() {
-			Node domNode = eval.getNodeByXpath(query, node);
-			return doc.nodeFor(domNode);
+			if (doc.isReadonly() && lookup().handlesXpath(query)
+					&& XmlNode.this == doc) {
+				return stream().findFirst().orElse(null);
+			} else {
+				Node domNode = eval.getNodeByXpath(query, node);
+				return doc.nodeFor(domNode);
+			}
 		}
 
 		public List<XmlNode> nodes() {
@@ -1147,8 +1164,13 @@ public class XmlNode {
 		}
 
 		public Stream<XmlNode> stream() {
-			List<Node> domNodes = eval.getNodesByXpath(query, node);
-			return domNodes.stream().map(doc::nodeFor);
+			if (doc.isReadonly() && lookup().handlesXpath(query)
+					&& XmlNode.this == doc) {
+				return lookup.stream(query);
+			} else {
+				List<Node> domNodes = eval.getNodesByXpath(query, node);
+				return domNodes.stream().map(doc::nodeFor);
+			}
 		}
 
 		public String textOrEmpty() {
@@ -1272,6 +1294,63 @@ public class XmlNode {
 				range.setEndAfter(end == null ? node : end.node);
 			}
 			return range;
+		}
+	}
+
+	class XmlNodeReadonlyLookup {
+		Multimap<String, List<XmlNode>> byTag;
+
+		public XmlNodeReadonlyLookup() {
+			byTag = doc.getDocumentElementNode().children.flat()
+					.collect(AlcinaCollectors.toKeyMultimap(XmlNode::name));
+		}
+
+		public boolean handlesXpath(String xpath) {
+			return parse(xpath).valid;
+		}
+
+		XmlNodeReadonlyLookupQuery parse(String xpath) {
+			XmlNodeReadonlyLookupQuery query = new XmlNodeReadonlyLookupQuery();
+			String xmlIdentifierChars = "[a-zA-Z\\-_0-9\\.]+";
+			String tagOnlyRegex = Ax.format("//(%s)", xmlIdentifierChars);
+			String tagAttrNodeRegex = Ax.format("//(%s)/@(%s)",
+					xmlIdentifierChars, xmlIdentifierChars);
+			String tagAttrValueRegex = Ax.format("//(%s)/\\[@(%s)='(%s)'\\]",
+					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars);
+			if (xpath.matches(tagOnlyRegex)) {
+				query.tag = xpath.replaceFirst(tagOnlyRegex, "$1");
+				query.valid = true;
+			} else if (xpath.matches(tagAttrNodeRegex)) {
+				query.tag = xpath.replaceFirst(tagAttrNodeRegex, "$1");
+				String attrName = xpath.replaceFirst(tagAttrNodeRegex, "$2");
+				query.predicate = node -> node.has(attrName);
+				query.map = node -> node.doc.nodeFor(
+						((Element) node.domNode()).getAttributeNode(attrName));
+				query.valid = true;
+			} else if (xpath.matches(tagAttrValueRegex)) {
+				query.tag = xpath.replaceFirst(tagAttrValueRegex, "$1");
+				String attrName = xpath.replaceFirst(tagAttrValueRegex, "$2");
+				String attrValue = xpath.replaceFirst(tagAttrValueRegex, "$3");
+				query.predicate = node -> node.attrIs(attrName, attrValue);
+				query.valid = true;
+			}
+			return query;
+		}
+
+		Stream<XmlNode> stream(String xpath) {
+			XmlNodeReadonlyLookupQuery query = parse(xpath);
+			return byTag.getAndEnsure(query.tag).stream()
+					.filter(query.predicate).map(query.map);
+		}
+
+		class XmlNodeReadonlyLookupQuery {
+			String tag;
+
+			Predicate<XmlNode> predicate = node -> true;
+
+			Function<XmlNode, XmlNode> map = node -> node;
+
+			boolean valid = false;
 		}
 	}
 }

@@ -46,8 +46,7 @@ public class AlcinaTemplateInitAysncServicesPlayer extends InitAysncServicesPlay
 						Registry.impl(ClientNotifications.class)
 								.log(value.toString());
 						StatusPanel
-								.showMessageOrAlert(CommonUtils
-										.formatJ(
+								.showMessageOrAlert(Ax.format(
 												"<pre style='display:inline-block;text-align:left'>%s</pre>",
 												value.toString()));
 					}

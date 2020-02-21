@@ -64,7 +64,7 @@ public class FormatBuilder {
 	public FormatBuilder format(String template, Object... args) {
 		ensureIndent();
 		maybeAppendSeparator();
-		sb.append(CommonUtils.formatJ(template, args));
+		sb.append(Ax.format(template, args));
 		return this;
 	}
 

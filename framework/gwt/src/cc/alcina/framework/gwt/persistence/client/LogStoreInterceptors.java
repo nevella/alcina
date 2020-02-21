@@ -99,7 +99,7 @@ public class LogStoreInterceptors {
 						Node node = kids.getItem(idn);
 						if (node == e) {
 							parts.add(
-									CommonUtils.formatJ("[%s]", sameTagCount));
+									Ax.format("[%s]", sameTagCount));
 							break;
 						}
 						if (node.getNodeType() == Node.ELEMENT_NODE

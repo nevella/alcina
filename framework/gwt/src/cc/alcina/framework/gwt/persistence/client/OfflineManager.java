@@ -9,8 +9,8 @@ import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.appcache.client.AppCache;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
@@ -154,7 +154,7 @@ public class OfflineManager {
 	}
 
 	private void error(String err) {
-		Window.alert(CommonUtils.formatJ(
+		Window.alert(Ax.format(
 				"The application reload failed " + "- \n Reason: %s. \n\n"
 						+ " Please press 'ok' to reload the application",
 				err));
@@ -169,7 +169,7 @@ public class OfflineManager {
 			complete();
 			return;
 		}
-		cd.setStatus(CommonUtils.formatJ("%s - %s files downloaded",
+		cd.setStatus(Ax.format("%s - %s files downloaded",
 				APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT, updateCount));
 	}
 
@@ -204,7 +204,7 @@ public class OfflineManager {
 		@Override
 		public void onBrowserEvent(Event event) {
 			Registry.impl(ClientNotifications.class)
-					.log(CommonUtils.formatJ("OfflineUtils.event - %s,%s,%s,%s",
+					.log(Ax.format("OfflineUtils.event - %s,%s,%s,%s",
 							cancelled, headless,
 							(event == null ? "null" : event.getType()),
 							AppCache.getApplicationCache().getStatus()));

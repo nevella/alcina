@@ -1,8 +1,12 @@
 package cc.alcina.framework.gwt.client;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.InlineHTML;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -30,11 +34,8 @@ public interface ClientNotifications extends LogWriter {
 
 	public abstract boolean isDialogAnimationEnabled();
 
+	@Override
 	public abstract void log(String s);
-	
-	default  void log(String s, Object...args){
-		log(Ax.format(s,args));
-	}
 
 	public abstract void metricLogEnd(String key);
 
@@ -65,6 +66,25 @@ public interface ClientNotifications extends LogWriter {
 	public abstract void showWarning(String msg);
 
 	public abstract void showWarning(String msg, String detail);
+
+	default void log(String s, Object... args) {
+		log(Ax.format(s, args));
+	}
+
+	default Label showCodePopup(String popupText,
+			Optional<String> extraClassName) {
+		ScrollPanel sp = new ScrollPanel();
+		Label label = new InlineHTML(popupText);
+		sp.add(label);
+		sp.setStyleName("alcina-expandable-label-popup");
+		if (extraClassName.isPresent()) {
+			sp.addStyleName(extraClassName.get());
+		}
+		ClientNotifications.get().setDialogAnimationEnabled(false);
+		ClientNotifications.get().showMessage(sp);
+		ClientNotifications.get().setDialogAnimationEnabled(true);
+		return label;
+	}
 
 	default void showDevError(Throwable e) {
 	}

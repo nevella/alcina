@@ -21,7 +21,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
@@ -177,7 +177,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 		if (showUnselectedOnPopupClose) {
 			String searchText = search.provideFilterBoxText();
 			if (!show && searchText.length() > 0) {
-				unselectedLabel = new Label(CommonUtils.formatJ(
+				unselectedLabel = new Label(Ax.format(
 						"Nothing selected for '%s' -  please choose a match from the list",
 						searchText));
 				unselectedLabel.setStyleName("unselected-text");

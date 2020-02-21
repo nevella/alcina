@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.extras.webdriver.api.TestResultType;
 import cc.alcina.extras.webdriver.api.UnitTest;
 import cc.alcina.extras.webdriver.api.WDWriter;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 
@@ -64,7 +64,7 @@ public class WDManager {
             token.setDriverHandler(config.driverHandler());
             String cn = config.topLevelClassName;
             if (config.times != 1) {
-                writer.write(CommonUtils.formatJ("Pass <%s>", i + 1), 0);
+                writer.write(Ax.format("Pass <%s>", i + 1), 0);
             }
             UnitTest test = (UnitTest) Class.forName(cn).newInstance();
             try {

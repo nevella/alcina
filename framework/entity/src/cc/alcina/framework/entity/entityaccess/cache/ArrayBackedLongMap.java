@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 
 public class ArrayBackedLongMap<V> implements Map<Long, V> {
@@ -177,7 +177,7 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("Array-backed long map - [%s] - %s",
+		return Ax.format("Array-backed long map - [%s] - %s",
 				elementData == null ? "(failover)" + failover.size()
 						: size + "," + elementData.length,
 				entrySet().iterator().hasNext()

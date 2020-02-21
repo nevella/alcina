@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
@@ -52,7 +52,7 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
         String extraInfo = "\n\nUser agent: " + BrowserMod.getUserAgent()
                 + "\nHistory token: " + History.getToken()
                 + "\nPermutation name: " + GWT.getPermutationStrongName()
-                + CommonUtils.formatJ("\nUser name/id/cli: [%s/%s/%s]",
+                + Ax.format("\nUser name/id/cli: [%s/%s/%s]",
                         PermissionsManager.get().getUserName(),
                         PermissionsManager.get().getUserId(), clientInstanceId);
         return extraInfo;

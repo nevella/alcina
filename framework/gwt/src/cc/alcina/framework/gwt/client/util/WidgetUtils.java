@@ -59,6 +59,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Rect;
@@ -756,7 +757,7 @@ public class WidgetUtils {
 			if (widget instanceof HasLayoutInfo) {
 				String name = widget.getClass().getName();
 				if (debug) {
-					GWT.log(CommonUtils.formatJ("%s: ",
+					GWT.log(Ax.format("%s: ",
 							CommonUtils.simpleClassName(widget.getClass())),
 							null);
 				}
@@ -813,7 +814,7 @@ public class WidgetUtils {
 						availableHeight = availableHeight - usedHeight
 								- parentAdjustHeight - info.getAdjustHeight();
 						if (debug) {
-							GWT.log(CommonUtils.formatJ("%s: %s - comp %s",
+							GWT.log(Ax.format("%s: %s - comp %s",
 									CommonUtils
 											.simpleClassName(widget.getClass()),
 									availableHeight, containerHeight), null);
@@ -1064,7 +1065,7 @@ public class WidgetUtils {
 	private static void debugScroll(String message) {
 		if (debugScroll) {
 			ClientNotifications.get()
-					.log(CommonUtils.formatJ("scroll from: %s,%s",
+					.log(Ax.format("scroll from: %s,%s",
 							Window.getScrollLeft(), Window.getScrollTop()));
 			ClientNotifications.get().log(message);
 		}
@@ -1176,7 +1177,7 @@ public class WidgetUtils {
 	}
 
 	private static void scrollElementIntoView(Element e) {
-		debugScroll(CommonUtils.formatJ("elt:%s", e));
+		debugScroll(Ax.format("elt:%s", e));
 		e.scrollIntoView();
 	}
 

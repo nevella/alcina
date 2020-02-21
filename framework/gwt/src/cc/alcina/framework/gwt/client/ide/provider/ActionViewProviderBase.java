@@ -50,6 +50,7 @@ import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.ClientBase;
@@ -182,7 +183,7 @@ public abstract class ActionViewProviderBase
 			progressHolder.setVisible(false);
 			add(progressHolder);
 			if (handler == null) {
-				add(new HTML(CommonUtils.formatJ(
+				add(new HTML(Ax.format(
 						"<br /><hr /><div class='recent'>Last %s action logs</div><br />",
 						logItemCount)));
 			}

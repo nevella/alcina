@@ -111,7 +111,9 @@ public class AlcinaParallel {
 				}
 				permissionsManagerState.copyTo(PermissionsManager.get());
 				LooseContext.putSnapshotProperties(snapshot);
-				DomainStore.ensureActiveTransaction();
+				if (DomainStore.stores().hasInitialisedDatabaseStore()) {
+					DomainStore.ensureActiveTransaction();
+				}
 				runnable.run();
 			} catch (RuntimeException e) {
 				e.printStackTrace();

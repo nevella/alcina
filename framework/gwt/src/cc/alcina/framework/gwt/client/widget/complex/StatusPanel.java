@@ -14,6 +14,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.LayoutManagerBase;
@@ -189,7 +190,7 @@ public class StatusPanel extends Composite {
 		setVisible(runningHtml != null);
 		String pre = CommonUtils.isNotNullOrEmpty(preRunningHtml)
 				? preRunningHtml + "<br>" : "";
-		String running = CommonUtils.formatJ(runningTemplate, runningHtml);
+		String running = Ax.format(runningTemplate, runningHtml);
 		setContent(pre + running);
 	}
 

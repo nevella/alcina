@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class IdLookup<T, H extends HasIdAndLocalId> extends DomainLookup<T, H> {
@@ -42,7 +43,7 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends DomainLookup<T, H> {
 		set.add(value);
 		if (set.size() > 1) {
 			// throw new IllegalArgumentException("");
-			logger.warn(CommonUtils.formatJ(
+			logger.warn(Ax.format(
 					"Warning - duplicate mapping of an id lookup - %s: %s : %s",
 					this, k1, set));
 			duplicateKeys.add(k1);

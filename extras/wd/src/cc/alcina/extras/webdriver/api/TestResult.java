@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class TestResult {
 	private List<TestResult> results = new ArrayList<TestResult>();
@@ -80,10 +80,10 @@ public class TestResult {
 	@Override
 	public String toString() {
 		String template = "%s [Result]: %s %s %sms";
-		String s = CommonUtils.formatJ(template, getName(), getResultType(),
+		String s = Ax.format(template, getName(), getResultType(),
 				getMessage(), testDuration(true));
 		if (isRootResult()) {
-			s += CommonUtils.formatJ(",  %sms excl. admin, %sms total",
+			s += Ax.format(",  %sms excl. admin, %sms total",
 					testDurationExcludingAdmin(), testDuration(false));
 			s += "\n - - " + new Date();
 		}

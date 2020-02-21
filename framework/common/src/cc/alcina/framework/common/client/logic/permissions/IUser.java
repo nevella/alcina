@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client.logic.permissions;
 
 import java.util.Set;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  *
@@ -47,6 +47,6 @@ public interface IUser extends IVersionable {
 	public void setUserName(String userName);
 
 	default String toIdNameString() {
-		return CommonUtils.formatJ("%s/%s", getId(), getUserName());
+		return Ax.format("%s/%s", getId(), getUserName());
 	}
 }

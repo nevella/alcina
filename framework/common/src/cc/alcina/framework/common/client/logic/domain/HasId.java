@@ -16,12 +16,15 @@ package cc.alcina.framework.common.client.logic.domain;
 import java.io.Serializable;
 import java.util.Comparator;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  *
  * @author Nick Reddel
  */
 public interface HasId extends Serializable {
 	public static final Comparator<HasId> HAS_ID_COMPARATOR = new Comparator<HasId>() {
+		@Override
 		public int compare(HasId o1, HasId o2) {
 			return new Long(o1.getId()).compareTo(o2.getId());
 		}
@@ -30,5 +33,8 @@ public interface HasId extends Serializable {
 	public long getId();
 
 	public void setId(long id);
-	
+
+	default String toStringId() {
+		return Ax.format("%s/%s", getClass().getSimpleName(), getId());
+	}
 }

@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -373,7 +374,7 @@ public class DomainStoreThreads {
 
 	String getLockStats() {
 		Thread t = Thread.currentThread();
-		String log = CommonUtils.formatJ(
+		String log = Ax.format(
 				"\tid:%s\n\ttime: %s\n\treadHoldCount:"
 						+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ",
 				t.getId(), new Date(), mainLock.getQueuedReaderThreads().size(),

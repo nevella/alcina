@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -93,7 +94,7 @@ public class WorkspaceDeletionChecker {
 							if (dpi != null && dpi.cascadeDeletionFromRef()) {
 								cascadedDeletions.add(o);
 							} else {
-								message += CommonUtils.formatJ(template,
+								message += Ax.format(template,
 										CommonUtils
 												.simpleClassName(o.getClass()),
 										TextProvider.get().getObjectName(o),

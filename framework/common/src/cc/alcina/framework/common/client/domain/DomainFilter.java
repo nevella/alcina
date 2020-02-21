@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.collections.PropertyPathFilter;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class DomainFilter {
 	public static List<DomainFilter> fromKvs(Object... objects) {
@@ -68,10 +68,10 @@ public class DomainFilter {
 	@Override
 	public String toString() {
 		if (predicate != null) {
-			return CommonUtils.formatJ("DomainFilter: %s - %s",
+			return Ax.format("DomainFilter: %s - %s",
 					predicate.getClass().getSimpleName(), predicate);
 		}
-		return CommonUtils.formatJ("DomainFilter: %s %s %s", propertyPath,
+		return Ax.format("DomainFilter: %s %s %s", propertyPath,
 				filterOperator.operationText(), propertyValue);
 	}
 }

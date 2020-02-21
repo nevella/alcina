@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class FastIdLookupScript implements FastIdLookup {
 	private JavascriptIntLookup idLookup = JavascriptIntLookup.create();
@@ -57,7 +57,7 @@ public class FastIdLookupScript implements FastIdLookup {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("Lkp - [%s,%s]", idLookup.size(),
+		return Ax.format("Lkp - [%s,%s]", idLookup.size(),
 				localIdLookup.size());
 	}
 

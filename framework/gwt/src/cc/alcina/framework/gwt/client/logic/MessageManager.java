@@ -14,7 +14,7 @@
 package cc.alcina.framework.gwt.client.logic;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 
 /**
@@ -78,6 +78,6 @@ public class MessageManager {
 	}
 
 	public void showMessage(String string, Object... args) {
-		showMessage(CommonUtils.formatJ(string, args));
+		showMessage(Ax.format(string, args));
 	}
 }

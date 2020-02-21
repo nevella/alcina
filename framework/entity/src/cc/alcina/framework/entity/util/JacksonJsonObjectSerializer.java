@@ -49,15 +49,14 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	private int maxLength;
 
-	public JacksonJsonObjectSerializer() {
-		maxLength = ResourceUtilities
-				.getInteger(JacksonJsonObjectSerializer.class, "maxLength",10000000);
-		
-	}
-
 	private boolean withPrettyPrint;
 
 	private boolean withDefaults = true;
+
+	public JacksonJsonObjectSerializer() {
+		maxLength = ResourceUtilities.getInteger(
+				JacksonJsonObjectSerializer.class, "maxLength", 10000000);
+	}
 
 	@Override
 	public <T> T deserialize(String json, Class<T> clazz) {
