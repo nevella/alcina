@@ -22,6 +22,10 @@ public class Mvcc {
 		return DomainStore.stores().storeFor(hili.provideEntityClass());
 	}
 
+	public static boolean isMvccObject(HasIdAndLocalId hili) {
+		return hili instanceof MvccObject;
+	}
+
 	public static Class<? extends HasId>
 			resolveEntityClass(Class<? extends HasId> clazz) {
 		if (MvccObject.class.isAssignableFrom(clazz)) {

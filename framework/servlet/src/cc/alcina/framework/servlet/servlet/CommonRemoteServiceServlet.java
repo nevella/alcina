@@ -224,8 +224,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 */
 	protected static void setHeader(String key, String value) {
 		getContextThreadLocalResponse().setHeader(key, value);
-		StringMap cachedForUnexpectedException = LooseContext.get(
-				CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS);
+		StringMap cachedForUnexpectedException = (StringMap) getContextThreadLocalRequest()
+				.getAttribute(
+						CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS);
 		cachedForUnexpectedException.put(key, value);
 	}
 
@@ -691,7 +692,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					getThreadLocalRequest());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
 					getThreadLocalResponse());
-			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS,
+			getThreadLocalRequest().setAttribute(
+					CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS,
 					new StringMap());
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			if (rpcRequest
@@ -933,8 +935,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			e.printStackTrace();
 			try {
 				getThreadLocalResponse().reset();
-				StringMap cachedForUnexpectedException = LooseContext.get(
-						CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS);
+				StringMap cachedForUnexpectedException = (StringMap) getThreadLocalRequest()
+						.getAttribute(
+								CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS);
 				cachedForUnexpectedException.forEach(
 						(k, v) -> getThreadLocalResponse().setHeader(k, v));
 			} catch (IllegalStateException ex) {

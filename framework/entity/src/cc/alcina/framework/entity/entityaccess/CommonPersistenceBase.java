@@ -211,14 +211,16 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public void connectPermissionsManagerToLiveObjects(boolean forWriting) {
-		if (getEntityManager().contains(Mvcc.getEntity(getEntityManager(),
-				(PermissionsManager.get().getUser())))) {
+		IUser currentUser = PermissionsManager.get().getUser();
+		if (!Mvcc.isMvccObject(currentUser)
+				&& getEntityManager().contains(currentUser)) {
 			if (!forWriting) {
 				PermissionsManager.get().getUserGroups();
 			}
 			return;
 		}
-		String userName = PermissionsManager.get().getUserName();
+		String userName = currentUser == null ? null
+				: currentUser.getUserName();
 		if (PermissionsManager.get()
 				.getLoginState() == LoginState.NOT_LOGGED_IN) {
 			userName = getAnonymousUserName();

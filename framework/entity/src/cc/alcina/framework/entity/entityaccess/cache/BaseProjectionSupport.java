@@ -6,7 +6,9 @@ import java.util.Map;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
+import cc.alcina.framework.common.client.domain.ReverseDateProjection.TreeMapRevCreator;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.DelegateMapCreator;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalMap;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalTreeMap;
@@ -63,6 +65,15 @@ public class BaseProjectionSupport {
 		public Map get() {
 			throw new UnsupportedOperationException();
 			// return new Int2ObjectOpenHashMap();
+		}
+	}
+
+	@RegistryLocation(registryPoint = TreeMapRevCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	public static class TreeMapRevCreatorImpl extends TreeMapRevCreator {
+		@Override
+		public Map get() {
+			return new TransactionalTreeMap(types.get(0), types.get(1),
+					Comparator.reverseOrder());
 		}
 	}
 }

@@ -6,11 +6,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.MapCreator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.MultikeyMap;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalTreeMap;
 
 public abstract class ReverseDateProjection<T extends HasIdAndLocalId>
 		extends BaseProjection<T> {
@@ -34,7 +37,8 @@ public abstract class ReverseDateProjection<T extends HasIdAndLocalId>
 	@Override
 	protected MultikeyMap<T> createLookup() {
 		return new BaseProjectionLookupBuilder(this).navigable()
-				.mapCreators(new MapCreator[] { new TreeMapRevCreator(types) })
+				.mapCreators(new MapCreator[] { Registry
+						.impl(TreeMapRevCreator.class).withTypes(types) })
 				.createMultikeyMap();
 	}
 
@@ -50,18 +54,22 @@ public abstract class ReverseDateProjection<T extends HasIdAndLocalId>
 		return new Object[] { getDate(t), t };
 	}
 
+	@RegistryLocation(registryPoint = TreeMapRevCreator.class, implementationType = ImplementationType.INSTANCE)
 	public static class TreeMapRevCreator
 			implements BaseProjectionLookupBuilder.MapCreator {
-		private List<Class> types;
+		protected List<Class> types;
 
-		public TreeMapRevCreator(List<Class> types) {
-			this.types = types;
+		public TreeMapRevCreator() {
 		}
 
 		@Override
 		public Map get() {
-			return new TransactionalTreeMap(types.get(0), types.get(1),
-					Comparator.reverseOrder());
+			return new TreeMap(Comparator.reverseOrder());
+		}
+
+		public TreeMapRevCreator withTypes(List<Class> types) {
+			this.types = types;
+			return this;
 		}
 	}
 }
