@@ -38,15 +38,15 @@ public class EntityLayerLogging {
 				throwable);
 	}
 
-	public static void persistentLog(Enum componentKey, Exception exception) {
-		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
-				.log(SEUtilities.getFullExceptionMessage(exception),
-						componentKey.toString());
-	}
-
 	public static void persistentLog(Enum componentKey, String message) {
 		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
 				.log(message, componentKey.toString());
+	}
+
+	public static void persistentLog(Enum componentKey, Throwable t) {
+		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
+				.log(SEUtilities.getFullExceptionMessage(t),
+						componentKey.toString());
 	}
 
 	public static void persistentLog(Exception e, Object logMessageType) {
