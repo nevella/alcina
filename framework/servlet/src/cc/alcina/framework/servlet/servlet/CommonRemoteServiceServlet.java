@@ -524,9 +524,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 								"requestId", requestId);
 				if (alreadyWritten != null) {
 					if (logger != null) {
-						logger.warn(Ax.format(
-								"Request [%s/%s] already written", requestId,
-								clientInstanceId));
+						logger.warn(Ax.format("Request [%s/%s] already written",
+								requestId, clientInstanceId));
 					}
 					continue;
 				}
@@ -1084,7 +1083,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				rhs.setHttpSession(getSession());
 			}
 			boolean nonPersistent = LooseContext
-					.is(JobRegistry.CONTEXT_NON_PERSISTENT);
+					.is(JobRegistry.CONTEXT_NON_PERSISTENT) || Ax.isTest();
 			TransformManager transformManager = TransformManager.get();
 			try {
 				if (transformManager instanceof ThreadlocalTransformManager) {
