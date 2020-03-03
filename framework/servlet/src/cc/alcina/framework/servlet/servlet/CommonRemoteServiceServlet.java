@@ -859,11 +859,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		Object[] parameters = rpcRequest.getParameters();
 		if (rpcRequest.getMethod().getName().equals("transform")) {
 		} else {
-			try {
-				msg += new JacksonJsonObjectSerializer().withIdRefs()
-						.withMaxLength(100000).serializeNoThrow(parameters);
-			} catch (Throwable e) {
-				e.printStackTrace();
+			for (int idx = 0; idx < parameters.length; idx++) {
+				try {
+					String serializedParameter = new JacksonJsonObjectSerializer()
+							.withIdRefs().withMaxLength(100000)
+							.serializeNoThrow(parameters[idx]);
+					msg += Ax.format("%s: %s\n", serializedParameter);
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		return msg;
