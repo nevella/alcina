@@ -27,6 +27,10 @@ public class DateUtils implements RegistrableService {
 		return get().ageInDays0(date);
 	}
 
+	public static int ageInMinutes(Date date) {
+		return get().ageInMinutes0(date);
+	}
+
 	public static DateUtils get() {
 		if (singleton == null) {
 			singleton = Registry.impl(DateUtils.class);
@@ -61,5 +65,11 @@ public class DateUtils implements RegistrableService {
 		return (int) (date == null ? 0
 				: (System.currentTimeMillis() - date.getTime())
 						/ TimeConstants.ONE_DAY_MS);
+	}
+
+	protected int ageInMinutes0(Date date) {
+		return (int) (date == null ? 0
+				: (System.currentTimeMillis() - date.getTime())
+						/ TimeConstants.ONE_MINUTE_MS);
 	}
 }
