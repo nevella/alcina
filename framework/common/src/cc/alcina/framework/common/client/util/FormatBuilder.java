@@ -16,6 +16,12 @@ public class FormatBuilder {
 		sb.append(string);
 	}
 
+	public void appendIf(boolean test, String string) {
+		if (test) {
+			format(string);
+		}
+	}
+
 	public FormatBuilder appendIfBuilderEmpty(String optional) {
 		if (sb.length() == 0) {
 			sb.append(optional);
