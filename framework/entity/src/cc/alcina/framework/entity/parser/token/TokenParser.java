@@ -33,7 +33,7 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 			int debug = 3;
 		}
 		boolean multiLine = peer.isMultiLine();
-		if (peer.ignoreCitationsInBlock(content)) {
+		if (peer.ignoreTokensInBlock(content)) {
 			peer.resetContext(end || !multiLine);
 			return;
 		}

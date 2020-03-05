@@ -28,7 +28,7 @@ public interface TokenParserPeer<T extends ParserToken, S extends AbstractParser
 
 	List<T> getTokens();
 
-	boolean ignoreCitationsInBlock(String content);
+	boolean ignoreTokensInBlock(String content);
 
 	boolean ignoreNode(Node n);
 
