@@ -864,7 +864,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					String serializedParameter = new JacksonJsonObjectSerializer()
 							.withIdRefs().withMaxLength(100000)
 							.serializeNoThrow(parameters[idx]);
-					msg += Ax.format("%s: %s\n", serializedParameter);
+					msg += Ax.format("%s: %s\n", idx, serializedParameter);
 				} catch (Throwable e) {
 					e.printStackTrace();
 				}
