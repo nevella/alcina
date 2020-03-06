@@ -13,11 +13,15 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.InvalidSelectorException;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.SearchContext;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 import cc.alcina.extras.webdriver.WDConfigurationItem.WebDriverType;
@@ -47,6 +51,9 @@ public class WDUtils {
 
 	public static final String CONTEXT_IGNORE_OVERRIDE_TIMEOUT = WDUtils.class
 			.getName() + ".CONTEXT_IGNORE_OVERRIDE_TIMEOUT";
+
+	public static final String CONTEXT_FAST_ENTER_TEXT = WDUtils.class.getName()
+			+ ".CONTEXT_FAST_ENTER_TEXT";
 	static {
 		DATE_FORMAT_T.setTimeZone(SYDNEY_TZ);
 	}
@@ -98,6 +105,18 @@ public class WDUtils {
 		}
 	}
 
+	/**
+	 * Click on an element matching the given xpath with a wait for it to become
+	 * visible.
+	 *
+	 * @param driver
+	 * @param xpath
+	 */
+	public static void clickWithWaitForVisible(WebDriver driver, String xpath) {
+		WebElement elt = waitForElement(driver, xpath);
+		clickWithWaitForVisible(elt);
+	}
+
 	public static void clickWithWaitForVisible(WebElement elt) {
 		boolean ok = false;
 		int maxRetries = 100;
@@ -122,6 +141,95 @@ public class WDUtils {
 		}
 	}
 
+	/**
+	 * Do a Control+click on a given element
+	 *
+	 * @param driver
+	 * @param xpath
+	 *            The xpath to the source element
+	 */
+	public static void controlClick(WebDriver driver, String xpath) {
+		WebElement elt = waitForElement(driver, xpath);
+		Actions actions = new Actions(driver);
+		actions.keyDown(Keys.LEFT_CONTROL).click(elt).keyUp(Keys.LEFT_CONTROL)
+				.build().perform();
+	}
+
+	/**
+	 * Drag and drop given element to a specified target.
+	 *
+	 * @param driver
+	 * @param source
+	 *            The xpath to the source element.
+	 * @param target
+	 *            The xpath to the target elements.
+	 * @throws InterruptedException
+	 */
+	public static void dragAndDrop(WebDriver driver, String source,
+			String target) throws InterruptedException {
+		WebElement from = WDUtils.waitForElement(driver, source);
+		WebElement to = WDUtils.waitForElement(driver, target);
+		((JavascriptExecutor) driver).executeScript(
+				"window.simulateDragDrop($(arguments[0]), $(arguments[1]) );",
+				from, to);
+		Thread.sleep(100);
+	}
+
+	/**
+	 * Determine if an element exists.
+	 *
+	 * @param driver
+	 * @param by
+	 * @return
+	 */
+	public static boolean elementExists(WebDriver driver, By by) {
+		try {
+			driver.findElement(by);
+		} catch (NoSuchElementException ex) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Determine if an element exists by xpath.
+	 *
+	 * @param driver
+	 * @param xpath
+	 * @return
+	 */
+	public static boolean elementExists(WebDriver driver, String xpath) {
+		By by = By.xpath(xpath);
+		return elementExists(driver, by);
+	}
+
+	/**
+	 * Enter the given text in the element given by the xpath expression.
+	 *
+	 * @param driver
+	 * @param xpath
+	 * @param textToEnter
+	 * @throws InterruptedException
+	 */
+	public static void enterText(WebDriver driver, String xpath,
+			String textToEnter) throws InterruptedException {
+		if (LooseContext.is(CONTEXT_FAST_ENTER_TEXT)) {
+			// faux
+			WDToken token = new WDToken();
+			WDConfigurationItem configuration = new WDConfigurationItem();
+			configuration.driverType = WebDriverType.CHROME_LOCAL;
+			token.setConfiguration(configuration);
+			new WdExec().driver(driver).token(token).timeout(1000).xpath(xpath)
+					.setTextAndFire(textToEnter);
+		} else {
+			WebElement elt = WDUtils.waitForElement(driver, xpath);
+			clickWithWaitForVisible(elt);
+			elt.clear();
+			elt.sendKeys(textToEnter);
+			Thread.sleep(500);
+		}
+	}
+
 	public static Object executeScript(WebDriver driver, WebElement elt,
 			String script) {
 		return ((org.openqa.selenium.JavascriptExecutor) driver)
@@ -136,6 +244,31 @@ public class WDUtils {
 	public static void focusWindow(RemoteWebDriver driver) {
 		String script = "window.focus()";
 		Object result = executeScript(driver, null, script);
+	}
+
+	/**
+	 * Get the text from an element specified by the xpath.
+	 *
+	 * @param driver
+	 * @param xpath
+	 * @return
+	 */
+	public static String getTextFromElement(WebDriver driver, String xpath) {
+		WebElement elt = waitForElement(driver, xpath);
+		return elt.getText();
+	}
+
+	/**
+	 * Get the text inside an input element.
+	 *
+	 * @param driver
+	 * @param xpath
+	 * @return
+	 */
+	public static String getTextFromInputElement(WebDriver driver,
+			String xpath) {
+		WebElement elt = waitForElement(driver, xpath);
+		return elt.getAttribute("value");
 	}
 
 	public static String innerHtml(WebDriver driver, WebElement element) {
@@ -308,7 +441,8 @@ public class WDUtils {
 				timeout--;
 			}
 		}
-		throw new TimedOutException(Ax.format("Wait for attr/value [%s,%s] timed out", attr, value));
+		throw new TimedOutException(Ax
+				.format("Wait for attr/value [%s,%s] timed out", attr, value));
 	}
 
 	public static WebElement waitForElement(SearchContext context, By by,
@@ -368,6 +502,23 @@ public class WDUtils {
 		return waitForElement(driver, by, 10);
 	}
 
+	/**
+	 * Return a web element by xpath after waiting for it.
+	 *
+	 * @param driver
+	 * @param xpath
+	 * @return The WebElement, after waiting for it.
+	 */
+	public static WebElement waitForElement(WebDriver driver, String xpath) {
+		By by = By.xpath(xpath);
+		return waitForElement(driver, by);
+	}
+
+	public static List<WebElement> waitForElements(SearchContext context, By by,
+			int timeout) {
+		return waitForElements(context, by, timeout, true);
+	}
+
 	public static List<WebElement> waitForElements(SearchContext context, By by,
 			int timeout, boolean required) {
 		int j = 0;
@@ -402,6 +553,24 @@ public class WDUtils {
 		}
 	}
 
+	public static List<WebElement> waitForElements(WebDriver driver, By by) {
+		return waitForElements(driver, by, 10);
+	}
+
+	/**
+	 * Return list of web elements matching the given xpath selector.
+	 *
+	 * @param driver
+	 * @param xpath
+	 *            The xpath expression to use for matching.
+	 * @return
+	 */
+	public static List<WebElement> waitForElements(WebDriver driver,
+			String xpath) {
+		By by = By.xpath(xpath);
+		return waitForElements(driver, by, 10);
+	}
+
 	public static void waitForTextLength(WebElement elt, int minLength,
 			int timeout) {
 		int j = 0;
@@ -422,7 +591,8 @@ public class WDUtils {
 				timeout--;
 			}
 		}
-		throw new TimedOutException(Ax.format("Wait for textlength [%s] timed out", minLength));
+		throw new TimedOutException(
+				Ax.format("Wait for textlength [%s] timed out", minLength));
 	}
 
 	private static TimedOutException logException(SearchContext context,

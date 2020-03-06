@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.extras.webdriver.api.TestResultType;
-import cc.alcina.extras.webdriver.api.UnitTest;
+import cc.alcina.extras.webdriver.api.WebdriverTest;
 import cc.alcina.extras.webdriver.api.WDWriter;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -66,7 +66,7 @@ public class WDManager {
             if (config.times != 1) {
                 writer.write(Ax.format("Pass <%s>", i + 1), 0);
             }
-            UnitTest test = (UnitTest) Class.forName(cn).newInstance();
+            WebdriverTest test = (WebdriverTest) Class.forName(cn).newInstance();
             try {
                 LooseContext.push();
                 LooseContext.set(CONTEXT_TOKEN, token);

@@ -10,6 +10,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import cc.alcina.extras.webdriver.api.WebdriverTest;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
@@ -20,75 +21,79 @@ import cc.alcina.framework.common.client.util.Ax;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 public class WDConfigurationItem {
-    public String uri;
+	public String uri;
 
-    public int predelayMs;
+	public int predelayMs;
 
-    public boolean recurrentTest = false;
+	public boolean recurrentTest = false;
 
-    public String name;
+	public String name;
 
-    public int times = 1;
+	public int times = 1;
 
-    public String topLevelClassName;
+	public String topLevelClassName;
 
-    public boolean closeOnError = true;
+	public boolean closeOnError = true;
 
-    // if non-zero, stats.do will report as a long load time (easier to see in
-    // cacti) rather than as an error
-    public int reportErrorAs200OfTimeMs = 0;
+	// if non-zero, stats.do will report as a long load time (easier to see in
+	// cacti) rather than as an error
+	public int reportErrorAs200OfTimeMs = 0;
 
-    public WebDriverType driverType;
+	public WebDriverType driverType;
 
-    public transient long usedCacheIfFresherThan;
+	public transient long usedCacheIfFresherThan;
 
-    public WDDriverHandler driverHandler() {
-        return WDDriverHandlerProvider.get().driverHandler(driverType);
-    }
+	public WDDriverHandler driverHandler() {
+		return WDDriverHandlerProvider.get().driverHandler(driverType);
+	}
 
-    public String getHostAndScheme() {
-        try {
-            URL url = new URL(uri);
-            URL url2 = new URL(url.getProtocol(), url.getHost(), url.getPort(),
-                    "");
-            return url2.toExternalForm();
-        } catch (MalformedURLException e) {
-            return "";
-        }
-    }
+	public String getHostAndScheme() {
+		try {
+			URL url = new URL(uri);
+			URL url2 = new URL(url.getProtocol(), url.getHost(), url.getPort(),
+					"");
+			return url2.toExternalForm();
+		} catch (MalformedURLException e) {
+			return "";
+		}
+	}
 
-    public String toHtml() {
-        String tplt = "<a href='test.do?%s=%s'>%s</a><br />&nbsp;&nbsp;&nbsp;%s : %s : %s";
-        return Ax.format(tplt, "testname", name, name, driverType,
-                topLevelClassName, uri);
-    }
+	public void putTestClass(Class<? extends WebdriverTest> clazz) {
+		topLevelClassName = clazz.getName();
+	}
 
-    @RegistryLocation(registryPoint = JaxbContextRegistration.class)
-    @XmlRootElement(name = "wdConfiguration")
-    @XmlAccessorType(XmlAccessType.FIELD)
-    public static class WDConfiguration {
-        @XmlElementWrapper(name = "items")
-        @XmlElement(name = "item")
-        public List<WDConfigurationItem> configurations;
+	public String toHtml() {
+		String tplt = "<a href='test.do?%s=%s'>%s</a><br />&nbsp;&nbsp;&nbsp;%s : %s : %s";
+		return Ax.format(tplt, "testname", name, name, driverType,
+				topLevelClassName, uri);
+	}
 
-        public boolean runRecurrentTests;
+	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+	@XmlRootElement(name = "wdConfiguration")
+	@XmlAccessorType(XmlAccessType.FIELD)
+	public static class WDConfiguration {
+		@XmlElementWrapper(name = "items")
+		@XmlElement(name = "item")
+		public List<WDConfigurationItem> configurations;
 
-        public int recurrentTestPeriodSeconds = 60 * 5;
-    }
+		public boolean runRecurrentTests;
 
-    @RegistryLocation(registryPoint = WDDriverHandlerProvider.class, implementationType = ImplementationType.SINGLETON)
-    public static abstract class WDDriverHandlerProvider {
-        public static WDConfigurationItem.WDDriverHandlerProvider get() {
-            return Registry
-                    .impl(WDConfigurationItem.WDDriverHandlerProvider.class);
-        }
+		public int recurrentTestPeriodSeconds = 60 * 5;
+	}
 
-        public abstract WDDriverHandler driverHandler(WebDriverType driverType);
-    }
+	@RegistryLocation(registryPoint = WDDriverHandlerProvider.class, implementationType = ImplementationType.SINGLETON)
+	public static abstract class WDDriverHandlerProvider {
+		public static WDConfigurationItem.WDDriverHandlerProvider get() {
+			return Registry
+					.impl(WDConfigurationItem.WDDriverHandlerProvider.class);
+		}
 
-    public enum WebDriverType {
-        FIREFOX, IE, SAFARI, HTMLUNIT, IE8, CHROME, CHROME_LOCAL,
-        CHROME_NO_PROFILE, FIREFOX_GWT, CHROMIUM_GWT, IE11, IE9,
-        CHROMIUM_ALT_REMOTE
-    }
+		public abstract WDDriverHandler driverHandler(WebDriverType driverType);
+	}
+
+	public enum WebDriverType {
+		FIREFOX, IE, SAFARI, HTMLUNIT, IE8, CHROME, CHROME_LOCAL,
+		CHROME_NO_PROFILE, FIREFOX_GWT, CHROMIUM_GWT, IE11, IE9,
+		CHROMIUM_ALT_REMOTE
+	}
 }
