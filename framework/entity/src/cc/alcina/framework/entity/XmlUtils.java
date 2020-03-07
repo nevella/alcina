@@ -1490,6 +1490,9 @@ public class XmlUtils {
 
 		public DOMLocation(Node node, int characterOffset, int nodeIndex) {
 			this.node = node;
+			if (node == null) {
+				int debug = 3;
+			}
 			Preconditions.checkArgument(characterOffset >= 0);
 			this.characterOffset = characterOffset;
 			this.nodeIndex = nodeIndex;

@@ -1142,8 +1142,15 @@ public class DomainStore implements IDomainStore {
 			@Override
 			public <V extends HasIdAndLocalId> V resolveTransactional(
 					DomainListener listener, V value, Object[] path) {
-				return ((DomainStore) listener.getDomainStore()).handler
-						.resolveTransactional(listener, value, path);
+				DomainStore domainStore = (DomainStore) listener
+						.getDomainStore();
+				if (domainStore == null || domainStore.handler == null) {
+					// localdomain
+					return value;
+				} else {
+					return domainStore.handler.resolveTransactional(listener,
+							value, path);
+				}
 			}
 
 			@Override

@@ -57,7 +57,7 @@ public class LocalDomain {
 		return cache.values(clazz);
 	}
 
-	private void index(HasIdAndLocalId obj, boolean add) {
+	private synchronized void index(HasIdAndLocalId obj, boolean add) {
 		Class<? extends HasIdAndLocalId> clazz = obj.getClass();
 		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
 				.get(clazz);
