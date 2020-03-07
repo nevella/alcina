@@ -183,8 +183,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_NO_ACTION_LOG";
 
-	public static final String PUSH_TRANSFORMS_AT_END_OF_REUQEST = CommonRemoteServiceServlet.class
-			.getName() + ".PUSH_TRANSFORMS_AT_END_OF_REUQEST";
+	public static final String PUSH_TRANSFORMS_AT_END_OF_REQUEST = CommonRemoteServiceServlet.class
+			.getName() + ".PUSH_TRANSFORMS_AT_END_OF_REQUEST";
 
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
@@ -726,7 +726,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			InternalMetrics.get().endTracker(rpcRequest);
 			if (TransformManager.hasInstance()) {
 				if (CommonUtils.bv((Boolean) getThreadLocalRequest()
-						.getAttribute(PUSH_TRANSFORMS_AT_END_OF_REUQEST))) {
+						.getAttribute(PUSH_TRANSFORMS_AT_END_OF_REQUEST))) {
 					Sx.commit();
 				}
 				ThreadlocalTransformManager.cast().resetTltm(null);
