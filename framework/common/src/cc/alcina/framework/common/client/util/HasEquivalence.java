@@ -124,6 +124,12 @@ public interface HasEquivalence<T> {
 			return !intersection(o1, Collections.singletonList(o2)).isEmpty();
 		}
 
+		public static <T extends HasEquivalence> void
+				deDuplicate(Collection<T> list) {
+			List<T> duplicates = listDuplicates(list);
+			list.removeAll(duplicates);
+		}
+
 		public static <T, V extends HasEquivalenceAdapter<T, ?>> List<T>
 				deDuplicate(Collection<T> o1, Function<T, V> mapper) {
 			List<V> l1 = o1.stream().map(mapper).collect(Collectors.toList());
