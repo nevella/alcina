@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -193,13 +194,19 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public static <V> V resolveMaybeDeserialize(V existing, String serialized,
 			V defaultValue) {
+		return resolveMaybeDeserialize(existing, serialized, defaultValue,
+				s -> AlcinaBeanSerializer.deserializeHolder(s));
+	}
+
+	public static <V> V resolveMaybeDeserialize(V existing, String serialized,
+			V defaultValue, Function<String, V> deserializer) {
 		if (existing != null) {
 			return existing;
 		}
 		if (Ax.isBlank(serialized)) {
 			return defaultValue;
 		}
-		return AlcinaBeanSerializer.deserializeHolder(serialized);
+		return deserializer.apply(serialized);
 	}
 
 	public static String stringId(HasIdAndLocalId hili) {
