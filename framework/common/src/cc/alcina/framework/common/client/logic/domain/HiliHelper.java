@@ -127,10 +127,10 @@ public class HiliHelper {
 
 	public static Predicate<HasIdAndLocalId> idFilter(String value) {
 		if (Ax.isBlank(value)) {
-			return hili -> true;
+			return hili -> hili != null;
 		}
 		Set<Long> longs = TransformManager.idListToLongSet(value);
-		return hili -> longs.contains(hili.getId());
+		return hili -> hili != null && longs.contains(hili.getId());
 	}
 
 	public static String strGetIdOrZero(HasId hasId) {
