@@ -2,11 +2,15 @@ package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
 import javax.persistence.EntityManager;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreDescriptor;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.ClassTransformer.MvccCorrectnessIssueType;
 
 public class Mvcc {
 	public static <T extends HasIdAndLocalId> T
@@ -61,5 +65,20 @@ public class Mvcc {
 
 	public void init() {
 		classTransformer.generateTransformedClasses();
+	}
+
+	public void testTransformer(Class<? extends HasIdAndLocalId> clazz) {
+		// valid if we get an 'exception' result for each correctness type -
+		// i.e. the tests are working
+		for (MvccCorrectnessIssueType type : MvccCorrectnessIssueType
+				.values()) {
+			String result = classTransformer.testClassTransform(clazz, type);
+			Preconditions.checkState(Ax.notBlank(result));
+			Ax.out("%s\n==========\n%s\n", type, result);
+		}
+	}
+
+	enum MvccTestCategory {
+		Invalid_field_access;
 	}
 }

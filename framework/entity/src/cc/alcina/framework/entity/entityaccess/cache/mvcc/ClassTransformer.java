@@ -56,6 +56,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.AlcinaParallel;
@@ -161,6 +162,24 @@ class ClassTransformer {
 		this.addObjectResolutionChecks = addObjectResolutionChecks;
 	}
 
+	public String testClassTransform(Class<? extends HasIdAndLocalId> clazz,
+			MvccCorrectnessIssueType issueType) {
+		ClassTransform<? extends HasIdAndLocalId> ct = new ClassTransform<>(
+				clazz);
+		StringBuilder logBuilder = new StringBuilder();
+		ct.correctnessIssueTopic.add((k, issue) -> {
+			if (issue.type == issueType) {
+				logBuilder.append(issue.message);
+			}
+		});
+		ct.correctnessIssueTopic.add((k, v) -> logBuilder.append(v));
+		ct.setTransformer(this);
+		ct.init();
+		ct.checkFieldAndMethodAccess();
+		ct.generateMvccClass();
+		return logBuilder.toString();
+	}
+
 	<H extends HasIdAndLocalId> Class<? extends H>
 			getTransformedClass(Class<H> originalClass) {
 		return classTransforms.get(originalClass).transformedClass;
@@ -200,6 +219,9 @@ class ClassTransformer {
 
 	static class ClassTransform<H extends HasIdAndLocalId> {
 		private static final transient int VERSION = 7;
+
+		transient TopicSupport<MvccCorrectnessIssue> correctnessIssueTopic = TopicSupport
+				.localAnonymousTopic();
 
 		private int version;
 
@@ -242,7 +264,13 @@ class ClassTransformer {
 					.filter(f -> !f.getName().matches(
 							"id|localId|creationUser|creationDate|versionNumber|lastModificationUser|lastModificationDate|"
 									+ "propertyValue"))
-					.forEach(f -> fieldsWithProblematicAccess.add(f.getName()));
+					.forEach(f -> {
+						fieldsWithProblematicAccess.add(f.getName());
+						correctnessIssueTopic.publish(new MvccCorrectnessIssue(
+								MvccCorrectnessIssueType.invalid_field_access,
+								Ax.format("Incorrect access: %s",
+										f.getName())));
+					});
 		}
 
 		private String findSource() throws Exception {
@@ -886,5 +914,24 @@ class ClassTransformer {
 				return getClassName(ctClass).equals(clazz.getName());
 			}
 		}
+	}
+
+	static class MvccCorrectnessIssue {
+		MvccCorrectnessIssueType type;
+
+		String message;
+
+		public MvccCorrectnessIssue() {
+		}
+
+		public MvccCorrectnessIssue(MvccCorrectnessIssueType type,
+				String message) {
+			this.type = type;
+			this.message = message;
+		}
+	}
+
+	enum MvccCorrectnessIssueType {
+		invalid_field_access
 	}
 }
