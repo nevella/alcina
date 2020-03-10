@@ -9,6 +9,8 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Base64;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
@@ -28,11 +30,14 @@ import com.esotericsoftware.minlog.Log;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class KryoUtils {
 	public static final String CONTEXT_OVERRIDE_CLASSLOADER = KryoUtils.class
 			.getName() + ".CONTEXT_OVERRIDE_CLASSLOADER";
@@ -45,6 +50,8 @@ public class KryoUtils {
 
 	private static CachingMap<KryoPoolKey, KryoPool> kryosPool = new CachingConcurrentMap<>(
 			key -> new KryoPool(true), 10);
+
+	static Map<Class, Method> resolveMethods = new LinkedHashMap<>();
 
 	public static <T> T clone(T t) {
 		Kryo kryo = borrowKryo();
@@ -179,16 +186,26 @@ public class KryoUtils {
 		return key;
 	}
 
-	private static <T> T resolve(Class<T> clazz, T someObject)
+	private static <T> T resolve(Class<T> clazz, T object)
 			throws IllegalAccessException, InvocationTargetException {
-		try {
-			Method readResolve = clazz.getDeclaredMethod("readResolve",
-					new Class[0]);
-			readResolve.setAccessible(true);
-			someObject = (T) readResolve.invoke(someObject);
-		} catch (NoSuchMethodException e) {
+		Method readResolve = null;
+		synchronized (resolveMethods) {
+			if (!resolveMethods.containsKey(clazz)) {
+				readResolve = null;
+				try {
+					readResolve = clazz.getDeclaredMethod("readResolve",
+							new Class[0]);
+					readResolve.setAccessible(true);
+				} catch (NoSuchMethodException e) {
+				}
+				resolveMethods.put(clazz, readResolve);
+			}
+			readResolve = resolveMethods.get(clazz);
 		}
-		return someObject;
+		if (readResolve != null) {
+			object = (T) readResolve.invoke(object);
+		}
+		return object;
 	}
 
 	private static void returnKryo(Kryo kryo) {

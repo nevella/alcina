@@ -22,7 +22,7 @@ public class LocalDomain {
 		this.domainDescriptor = domainDescriptor;
 	}
 
-	public void add(HasIdAndLocalId obj) {
+	public synchronized void add(HasIdAndLocalId obj) {
 		cache.put(obj);
 		index(obj, true);
 	}
