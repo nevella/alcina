@@ -190,8 +190,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_NO_ACTION_LOG";
 
-	public static final String PUSH_TRANSFORMS_AT_END_OF_REUQEST = CommonRemoteServiceServlet.class
-			.getName() + ".PUSH_TRANSFORMS_AT_END_OF_REUQEST";
+	public static final String PUSH_TRANSFORMS_AT_END_OF_REQUEST = CommonRemoteServiceServlet.class
+			.getName() + ".PUSH_TRANSFORMS_AT_END_OF_REQUEST";
 
 	public static final String CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS";
@@ -555,9 +555,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 								"requestId", requestId);
 				if (alreadyWritten != null) {
 					if (logger != null) {
-						logger.warn(Ax.format(
-								"Request [%s/%s] already written", requestId,
-								clientInstanceId));
+						logger.warn(Ax.format("Request [%s/%s] already written",
+								requestId, clientInstanceId));
 					}
 					continue;
 				}
@@ -768,7 +767,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			InternalMetrics.get().endTracker(rpcRequest);
 			if (TransformManager.hasInstance()) {
 				if (CommonUtils.bv((Boolean) getThreadLocalRequest()
-						.getAttribute(PUSH_TRANSFORMS_AT_END_OF_REUQEST))) {
+						.getAttribute(PUSH_TRANSFORMS_AT_END_OF_REQUEST))) {
 					Sx.commit();
 				}
 				ThreadlocalTransformManager.cast().resetTltm(null);
@@ -901,11 +900,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		Object[] parameters = rpcRequest.getParameters();
 		if (rpcRequest.getMethod().getName().equals("transform")) {
 		} else {
-			try {
-				msg += new JacksonJsonObjectSerializer().withIdRefs()
-						.withMaxLength(100000).serializeNoThrow(parameters);
-			} catch (Throwable e) {
-				e.printStackTrace();
+			for (int idx = 0; idx < parameters.length; idx++) {
+				try {
+					String serializedParameter = new JacksonJsonObjectSerializer()
+							.withIdRefs().withMaxLength(100000)
+							.serializeNoThrow(parameters[idx]);
+					msg += Ax.format("%s: %s\n", idx, serializedParameter);
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		return msg;
@@ -1145,7 +1148,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				rhs.setHttpSession(getSession());
 			}
 			boolean nonPersistent = LooseContext
-					.is(JobRegistry.CONTEXT_NON_PERSISTENT);
+					.is(JobRegistry.CONTEXT_NON_PERSISTENT) || Ax.isTest();
 			TransformManager transformManager = TransformManager.get();
 			try {
 				if (transformManager instanceof ThreadlocalTransformManager) {

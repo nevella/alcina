@@ -25,8 +25,8 @@ public class HiliHelper {
 					CommonUtils.simpleClassName(hili.getClass()), hili.getId(),
 					hili.getLocalId());
 		}
-		return Ax.format("%s : %s ",
-				CommonUtils.simpleClassName(hi.getClass()), hi.getId());
+		return Ax.format("%s : %s ", CommonUtils.simpleClassName(hi.getClass()),
+				hi.getId());
 	}
 
 	public static <T extends HasIdAndLocalId> SortedSet<T>
@@ -127,10 +127,10 @@ public class HiliHelper {
 
 	public static Predicate<HasIdAndLocalId> idFilter(String value) {
 		if (Ax.isBlank(value)) {
-			return id -> true;
+			return hili -> hili != null;
 		}
 		Set<Long> longs = TransformManager.idListToLongSet(value);
-		return id -> longs.contains(id);
+		return hili -> hili != null && longs.contains(hili.getId());
 	}
 
 	public static String strGetIdOrZero(HasId hasId) {

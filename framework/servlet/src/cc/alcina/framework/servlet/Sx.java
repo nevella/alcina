@@ -61,7 +61,7 @@ public class Sx {
 			}
 		} else {
 			threadLocalRequest.setAttribute(
-					CommonRemoteServiceServlet.PUSH_TRANSFORMS_AT_END_OF_REUQEST,
+					CommonRemoteServiceServlet.PUSH_TRANSFORMS_AT_END_OF_REQUEST,
 					set);
 		}
 	}

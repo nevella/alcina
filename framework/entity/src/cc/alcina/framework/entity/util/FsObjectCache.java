@@ -20,7 +20,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.LockUtils;
 import cc.alcina.framework.entity.entityaccess.cache.LockUtils.ClassStringKeyLock;
 
-public class FsObjectCache<T> {
+public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	private File root;
 
 	private ThrowingFunction<String, T> pathToValue;

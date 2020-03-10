@@ -43,6 +43,12 @@ public class EntityLayerLogging {
 				.log(message, componentKey.toString());
 	}
 
+	public static void persistentLog(Enum componentKey, Throwable t) {
+		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
+				.log(SEUtilities.getFullExceptionMessage(t),
+						componentKey.toString());
+	}
+
 	public static void persistentLog(Exception e, Object logMessageType) {
 		try {
 			CommonPersistenceLocal cpl = Registry
@@ -68,7 +74,8 @@ public class EntityLayerLogging {
 	}
 
 	public static void setLevel(org.slf4j.Logger slf4jlogger, Level level) {
-		if (ResourceUtilities.is(EntityLayerLogging.class, "debugSetLogLevels")) {
+		if (ResourceUtilities.is(EntityLayerLogging.class,
+				"debugSetLogLevels")) {
 			Ax.out("%s => %s", slf4jlogger.getName(), level);
 		}
 		if (!Ax.isTest() && slf4jlogger.getClass().getName()

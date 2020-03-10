@@ -124,6 +124,12 @@ public interface HasEquivalence<T> {
 			return !intersection(o1, Collections.singletonList(o2)).isEmpty();
 		}
 
+		public static <T extends HasEquivalence> void
+				deDuplicate(Collection<T> list) {
+			List<T> duplicates = listDuplicates(list);
+			list.removeAll(duplicates);
+		}
+
 		public static <T, V extends HasEquivalenceAdapter<T, ?>> List<T>
 				deDuplicate(Collection<T> o1, Function<T, V> mapper) {
 			List<V> l1 = o1.stream().map(mapper).collect(Collectors.toList());
@@ -134,7 +140,7 @@ public interface HasEquivalence<T> {
 
 		public static <C extends HasEquivalence> Predicate<C>
 				deDuplicateFilter() {
-			return new DeduplicatePredicate<>();
+			return new DeduplicateHasEquivalencePredicate<>();
 		}
 
 		public static <T extends HasEquivalence> boolean
@@ -359,7 +365,7 @@ public interface HasEquivalence<T> {
 			return result;
 		}
 
-		public static class DeduplicatePredicate<C extends HasEquivalence>
+		public static class DeduplicateHasEquivalencePredicate<C extends HasEquivalence>
 				implements Predicate<C> {
 			List<C> seen = new ArrayList<>();
 

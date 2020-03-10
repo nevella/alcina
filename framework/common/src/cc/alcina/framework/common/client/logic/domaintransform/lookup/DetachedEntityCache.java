@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
@@ -233,6 +234,11 @@ public class DetachedEntityCache
 			lines.add(CommonUtils.simpleClassName(clazz) + ": " + size(clazz));
 		}
 		return CommonUtils.join(lines, "\n");
+	}
+
+	public <T> Stream<T> stream(Class<T> clazz) {
+		ensureMaps(clazz);
+		return (Stream<T>) detached.get(clazz).values().stream();
 	}
 
 	@Override

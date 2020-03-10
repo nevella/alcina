@@ -9,7 +9,13 @@ import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Base64;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+import org.apache.commons.pool2.BasePooledObjectFactory;
+import org.apache.commons.pool2.PooledObject;
+import org.apache.commons.pool2.impl.DefaultPooledObject;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -22,9 +28,16 @@ import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.esotericsoftware.minlog.Log;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class KryoUtils {
 	public static final String CONTEXT_OVERRIDE_CLASSLOADER = KryoUtils.class
 			.getName() + ".CONTEXT_OVERRIDE_CLASSLOADER";
@@ -35,9 +48,18 @@ public class KryoUtils {
 	public static final String CONTEXT_USE_UNSAFE_FIELD_SERIALIZER = KryoUtils.class
 			.getName() + ".CONTEXT_USE_UNSAFE_FIELD_SERIALIZER";
 
+	private static CachingMap<KryoPoolKey, KryoPool> kryosPool = new CachingConcurrentMap<>(
+			key -> new KryoPool(true), 10);
+
+	static Map<Class, Method> resolveMethods = new LinkedHashMap<>();
+
 	public static <T> T clone(T t) {
-		Kryo kryo = newKryo();
-		return kryo.copy(t);
+		Kryo kryo = borrowKryo();
+		try {
+			return kryo.copy(t);
+		} finally {
+			returnKryo(kryo);
+		}
 	}
 
 	public static <T> T deserializeFromBase64(String string,
@@ -48,8 +70,8 @@ public class KryoUtils {
 
 	public static <T> T deserializeFromByteArray(byte[] bytes,
 			Class<T> knownType) {
+		Kryo kryo = borrowKryo();
 		try {
-			Kryo kryo = newKryo();
 			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
 					? new UnsafeInput(bytes)
 					: new Input(bytes);
@@ -60,28 +82,12 @@ public class KryoUtils {
 					.deserializationFinished();
 			return someObject;
 		} catch (Exception e) {
-			throw new   KryoDeserializationException (e);
+			throw new KryoDeserializationException(e);
+		} finally {
+			returnKryo(kryo);
 		}
 	}
-	public static class KryoDeserializationException extends RuntimeException{
 
-        public KryoDeserializationException() {
-            super();
-        }
-
-        public KryoDeserializationException(String message, Throwable cause) {
-            super(message, cause);
-        }
-
-        public KryoDeserializationException(String message) {
-            super(message);
-        }
-
-        public KryoDeserializationException(Throwable cause) {
-            super(cause);
-        }
-	    
-	}
 	public static <T> T deserializeFromFile(File file, Class<T> knownType) {
 		try {
 			return deserializeFromStream(new FileInputStream(file), knownType);
@@ -92,8 +98,8 @@ public class KryoUtils {
 
 	public static <T> T deserializeFromStream(InputStream stream,
 			Class<T> clazz) {
+		Kryo kryo = borrowKryo();
 		try {
-			Kryo kryo = newKryo();
 			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
 					? new UnsafeInput(stream)
 					: new Input(stream);
@@ -106,6 +112,7 @@ public class KryoUtils {
 		} catch (Exception e) {
 			throw new KryoDeserializationException(e);
 		} finally {
+			returnKryo(kryo);
 			try {
 				stream.close();
 			} catch (IOException e) {
@@ -127,8 +134,8 @@ public class KryoUtils {
 	}
 
 	public static byte[] serializeToByteArray(Object object) {
+		Kryo kryo = borrowKryo();
 		try {
-			Kryo kryo = newKryo();
 			Output output = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
 					? new UnsafeOutput(10000, -1)
 					: new Output(10000, -1);
@@ -138,6 +145,8 @@ public class KryoUtils {
 			return output.getBuffer();
 		} catch (Exception e) {
 			throw new KryoDeserializationException(e);
+		} finally {
+			returnKryo(kryo);
 		}
 	}
 
@@ -150,8 +159,8 @@ public class KryoUtils {
 	}
 
 	public static void serializeToStream(Object object, OutputStream os) {
+		Kryo kryo = borrowKryo();
 		try {
-			Kryo kryo = newKryo();
 			Output output = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
 					? new UnsafeOutput(os)
 					: new Output(os);
@@ -161,19 +170,47 @@ public class KryoUtils {
 			output.close();
 		} catch (Exception e) {
 			throw new KryoDeserializationException(e);
+		} finally {
+			returnKryo(kryo);
 		}
 	}
 
-	private static <T> T resolve(Class<T> clazz, T someObject)
+	private static KryoPoolKey getContextKey() {
+		boolean useCompatibleFieldSerializer = LooseContext
+				.is(CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER);
+		ClassLoader classLoader = LooseContext.has(CONTEXT_OVERRIDE_CLASSLOADER)
+				? LooseContext.get(CONTEXT_OVERRIDE_CLASSLOADER)
+				: Thread.currentThread().getContextClassLoader();
+		KryoPoolKey key = new KryoPoolKey(useCompatibleFieldSerializer,
+				classLoader);
+		return key;
+	}
+
+	private static <T> T resolve(Class<T> clazz, T object)
 			throws IllegalAccessException, InvocationTargetException {
-		try {
-			Method readResolve = clazz.getDeclaredMethod("readResolve",
-					new Class[0]);
-			readResolve.setAccessible(true);
-			someObject = (T) readResolve.invoke(someObject);
-		} catch (NoSuchMethodException e) {
+		Method readResolve = null;
+		synchronized (resolveMethods) {
+			if (!resolveMethods.containsKey(clazz)) {
+				readResolve = null;
+				try {
+					readResolve = clazz.getDeclaredMethod("readResolve",
+							new Class[0]);
+					readResolve.setAccessible(true);
+				} catch (NoSuchMethodException e) {
+				}
+				resolveMethods.put(clazz, readResolve);
+			}
+			readResolve = resolveMethods.get(clazz);
 		}
-		return someObject;
+		if (readResolve != null) {
+			object = (T) readResolve.invoke(object);
+		}
+		return object;
+	}
+
+	private static void returnKryo(Kryo kryo) {
+		KryoPoolKey key = getContextKey();
+		kryosPool.get(key).returnObject(kryo);
 	}
 
 	private static Object writeReplace(Object object) throws Exception {
@@ -188,22 +225,114 @@ public class KryoUtils {
 		return object;
 	}
 
-	protected static Kryo newKryo() {
-		Kryo kryo = new Kryo();
-		if (LooseContext.is(CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER)) {
-			kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(
-					FieldSerializer.CachedFieldNameStrategy.EXTENDED);
-			kryo.setDefaultSerializer(CompatibleFieldSerializer.class);
+	protected static Kryo borrowKryo() {
+		KryoPoolKey key = getContextKey();
+		return kryosPool.get(key).borrow(key);
+	}
+
+	public static class KryoDeserializationException extends RuntimeException {
+		public KryoDeserializationException() {
+			super();
 		}
-		kryo.getFieldSerializerConfig().setOptimizedGenerics(true);
-		if (LooseContext.containsKey(CONTEXT_OVERRIDE_CLASSLOADER)) {
-			kryo.setClassLoader(LooseContext.get(CONTEXT_OVERRIDE_CLASSLOADER));
-		} else {
-			kryo.setClassLoader(Thread.currentThread().getContextClassLoader());
+
+		public KryoDeserializationException(String message) {
+			super(message);
 		}
-		kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(
-				new SerializingInstantiatorStrategy()));
-		kryo.addDefaultSerializer(LiSet.class, new LiSetSerializer());
-		return kryo;
+
+		public KryoDeserializationException(String message, Throwable cause) {
+			super(message, cause);
+		}
+
+		public KryoDeserializationException(Throwable cause) {
+			super(cause);
+		}
+	}
+
+	static class KryoPool {
+		private GenericObjectPool<Kryo> objectPool;
+
+		private KryoPoolObjectFactory factory;
+
+		private KryoPoolKey key;
+
+		public KryoPool(boolean withPool) {
+			factory = new KryoPoolObjectFactory();
+			if (withPool) {
+				objectPool = new GenericObjectPool<Kryo>(factory);
+				objectPool.setMaxTotal(10);
+			}
+		}
+
+		public void returnObject(Kryo kryo) {
+			if (objectPool != null) {
+				objectPool.returnObject(kryo);
+			}
+		}
+
+		synchronized Kryo borrow(KryoPoolKey key) {
+			this.key = key;
+			try {
+				if (objectPool == null) {
+					return factory.create();
+				} else {
+					return objectPool.borrowObject();
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		class KryoPoolObjectFactory extends BasePooledObjectFactory<Kryo> {
+			@Override
+			public Kryo create() throws Exception {
+				Kryo kryo = new Kryo();
+				if (key.useCompatibleFieldSerializer) {
+					kryo.getFieldSerializerConfig().setCachedFieldNameStrategy(
+							FieldSerializer.CachedFieldNameStrategy.EXTENDED);
+					kryo.setDefaultSerializer(CompatibleFieldSerializer.class);
+				}
+				kryo.getFieldSerializerConfig().setOptimizedGenerics(true);
+				kryo.setClassLoader(key.classLoader);
+				kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(
+						new SerializingInstantiatorStrategy()));
+				kryo.addDefaultSerializer(LiSet.class, new LiSetSerializer());
+				return kryo;
+			}
+
+			@Override
+			public PooledObject<Kryo> wrap(Kryo kryo) {
+				return new DefaultPooledObject<Kryo>(kryo);
+			}
+		}
+	}
+
+	static class KryoPoolKey {
+		private boolean useCompatibleFieldSerializer;
+
+		private ClassLoader classLoader;
+
+		public KryoPoolKey(boolean useCompatibleFieldSerializer,
+				ClassLoader classLoader) {
+			this.useCompatibleFieldSerializer = useCompatibleFieldSerializer;
+			this.classLoader = classLoader;
+		}
+
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof KryoPoolKey) {
+				KryoPoolKey o = (KryoPoolKey) other;
+				return CommonUtils.equals(o.useCompatibleFieldSerializer,
+						useCompatibleFieldSerializer, o.classLoader,
+						classLoader);
+			} else {
+				return other == this;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return (useCompatibleFieldSerializer ? 1 : 0)
+					^ classLoader.hashCode();
+		}
 	}
 }

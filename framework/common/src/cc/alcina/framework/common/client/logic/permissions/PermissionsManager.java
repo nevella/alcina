@@ -637,7 +637,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	public void prepareVersionable(IVersionable u) {
 		Date now = new Date();
-		if (u.getLastModificationDate() == null) {
+		if (u.getLastModificationDate() == null
+				&& u.getCreationDate() == null) {
 			u.setCreationUser(getUser());
 			u.setCreationDate(now);
 		}

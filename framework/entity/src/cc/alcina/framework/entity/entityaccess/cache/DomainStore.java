@@ -1139,8 +1139,15 @@ public class DomainStore implements IDomainStore {
 			@Override
 			public <V extends HasIdAndLocalId> V resolveTransactional(
 					DomainListener listener, V value, Object[] path) {
-				return ((DomainStore) listener.getDomainStore()).handler
-						.resolveTransactional(listener, value, path);
+				DomainStore domainStore = (DomainStore) listener
+						.getDomainStore();
+				if (domainStore == null || domainStore.handler == null) {
+					// localdomain
+					return value;
+				} else {
+					return domainStore.handler.resolveTransactional(listener,
+							value, path);
+				}
 			}
 
 			@Override
@@ -1410,6 +1417,9 @@ public class DomainStore implements IDomainStore {
 		public <V extends HasIdAndLocalId> V find(V v) {
 			checkInLockedSection();
 			if (!v.provideWasPersisted()) {
+				if (v.getLocalId() == 0) {
+					return null;
+				}
 				HiliLocator locator = ThreadlocalTransformManager.get()
 						.resolvePersistedLocal(DomainStore.this, v);
 				if (locator == null) {

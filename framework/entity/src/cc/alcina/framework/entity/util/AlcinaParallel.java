@@ -64,12 +64,12 @@ public class AlcinaParallel {
 						break;
 					}
 					runnable.run();
-				} catch (RuntimeException e) {
-					e.printStackTrace();
+				} catch (Throwable t) {
+					t.printStackTrace();
 					if (parameters.cancelOnException) {
 						cancelled = true;
 					}
-					exceptions.add(e);
+					exceptions.add(t);
 				} finally {
 					LooseContext.pop();
 				}
@@ -115,12 +115,12 @@ public class AlcinaParallel {
 					DomainStore.ensureActiveTransaction();
 				}
 				runnable.run();
-			} catch (RuntimeException e) {
-				e.printStackTrace();
+			} catch (Throwable t) {
+				t.printStackTrace();
 				if (parameters.cancelOnException) {
 					cancelled = true;
 				}
-				exceptions.add(e);
+				exceptions.add(t);
 			} finally {
 				LooseContext.pop();
 				ThreadlocalTransformManager.cast().resetTltm(null);
