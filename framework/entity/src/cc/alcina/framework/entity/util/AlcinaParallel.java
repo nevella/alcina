@@ -137,6 +137,14 @@ public class AlcinaParallel {
 	}
 
 	public class AlcinaParallelResults {
+		public AlcinaParallel getRunner() {
+			return AlcinaParallel.this;
+		}
+
+		public boolean hadExceptions() {
+			return exceptions.size() > 0;
+		}
+
 		public void throwOnException() {
 			if (exceptions.size() > 0) {
 				throw new WrappedRuntimeException(exceptions.get(0));
