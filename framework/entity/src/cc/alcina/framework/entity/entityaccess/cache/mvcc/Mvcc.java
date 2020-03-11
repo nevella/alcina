@@ -2,6 +2,8 @@ package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
 import javax.persistence.EntityManager;
 
+import org.slf4j.Logger;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -48,6 +50,8 @@ public class Mvcc {
 
 	private ClassTransformer classTransformer;
 
+	private Logger logger = org.slf4j.LoggerFactory.getLogger(getClass());
+
 	public Mvcc(DomainStore domainStore, DomainStoreDescriptor domainDescriptor,
 			DetachedEntityCache cache) {
 		Transactions.ensureInitialised();
@@ -74,8 +78,9 @@ public class Mvcc {
 				.values()) {
 			String result = classTransformer.testClassTransform(clazz, type);
 			Preconditions.checkState(Ax.notBlank(result));
-			Ax.out("%s\n==========\n%s\n", type, result);
+			logger.info("{}\n==========\n{}\n", type, result);
 		}
+		logger.info("(All tests passed)");
 	}
 
 	enum MvccTestCategory {

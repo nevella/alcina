@@ -172,7 +172,6 @@ class ClassTransformer {
 				logBuilder.append(issue.message);
 			}
 		});
-		ct.correctnessIssueTopic.add((k, v) -> logBuilder.append(v));
 		ct.setTransformer(this);
 		ct.init();
 		ct.checkFieldAndMethodAccess();
@@ -268,7 +267,7 @@ class ClassTransformer {
 						fieldsWithProblematicAccess.add(f.getName());
 						correctnessIssueTopic.publish(new MvccCorrectnessIssue(
 								MvccCorrectnessIssueType.invalid_field_access,
-								Ax.format("Incorrect access: %s",
+								Ax.format("Incorrect access: field '%s'",
 										f.getName())));
 					});
 		}
@@ -389,34 +388,42 @@ class ClassTransformer {
 				 * 
 				 * Transactional access::
 				 * 
-				 * Field references in transactionally ok objects may be stale
-				 * (i.e. for [A::B], A denoting object, B denoting tx id,
+				 * Two main issues: field access and object identity
 				 * 
-				 * o1::tx5.group = o2::tx3
+				 * Identity: for objects created or registered in the domain
+				 * store transaction manager, there is only *one instance* of
+				 * the object used for equality (currently this only applies to
+				 * objects created in tx phase 'TO_DOMAIN_COMMITTING' - i.e.
+				 * with a non-zero id field - but will be extended so that
+				 * objects created with an initial non-zero localid will be the
+				 * unique 'domain identity' object). All references between
+				 * graph objects use that 'domain identity' object - FIXME do
+				 * that change now, simplifies queries etc.
 				 * 
-				 * So all access to a field must be a this.field access - and we
-				 * ensure the correctness of this (i.e. that the field values
-				 * are transactionally correct) by resolving 'this' in any
-				 * non-private method calls to the object.
+				 * The effect of that constraint on the class rewriter is quite
+				 * profound - we can't allow any reference to 'this' from
+				 * transactional object versions to escape from code - and that
+				 * includes inner classes. Consequent constraints are:
+				 * 
+				 * @formatter:off
+				 * - inner class creation must be in dedicated public/protected methods in the entity class which 
+				 * *only* return the inner class (and are hooked through 'domainIdentity().xxx' by the rewriter) 
+				 * - entity field access can only occur in the main class. no inner class can access entity class fields
+				 * - 'this' can't be assigned or returned
+				 * 
+				 * @formatter:on
+				 * 
+				 * TODO: Have a think: transient cache fields (e.g. demeter payment.earnedRevenueAlgorithmData) - how can we ensure correctness
+				 * TODO: rewrite rewriter to go getXX->resolveTx.__super__getXX (which calls super.getXX)
 				 * 
 				 * 
-				 * 
-				 * So...problematic iff::
-				 * 
-				 * field access is in a private method and not 'this' in
-				 * getter/setter
-				 * 
-				 * field type is hili
-				 * 
-				 * field scope is hili
-				 * 
-				 * TODO:
-				 * 
-				 * ..forbid assignment to this
+				 * ..forbid assignment of this
 				 * 
 				 * ... inner classes
 				 * 
 				 * forbid return value of this
+				 * 
+				 * 
 				 * 
 				 * 
 				 */
