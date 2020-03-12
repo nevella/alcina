@@ -33,9 +33,13 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
 
+import com.totsp.gwittir.client.ui.Renderer;
+
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.CollectionFilters.ConverterFilter;
 import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.excel.GridFormatAnnotation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -241,6 +245,9 @@ public class ExcelExporter {
 					String type = "String";
 					Object value = pdm.pd.getReadMethod().invoke(o,
 							CommonUtils.EMPTY_OBJECT_ARRAY);
+					if (pdm.renderer != null) {
+						value = pdm.renderer.render(value);
+					}
 					cell.setAttributeNS(SS_NS, "ss:Index",
 							String.valueOf(colIndex++));
 					if (value == null || (value instanceof String
@@ -329,11 +336,16 @@ public class ExcelExporter {
 
 		PropertyDescriptor pd;
 
+		Renderer renderer;
+
 		public PdMultiplexer(PropertyDescriptor pd) {
 			this.pd = pd;
 			Method readMethod = pd.getReadMethod();
 			this.xfa = readMethod.getAnnotation(GridFormatAnnotation.class);
 			this.dia = readMethod.getAnnotation(Display.class);
+			this.renderer = (Renderer) (xfa == null
+					|| xfa.rendererClass() == Void.class ? null
+							: Registry.impl(xfa.rendererClass()));
 		}
 
 		@Override
