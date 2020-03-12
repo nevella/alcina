@@ -1646,6 +1646,11 @@ public class CommonUtils {
 	}
 
 	public static String trimToWsReverse(String s, int maxChars) {
+		return trimToWsReverse(s, maxChars, false);
+	}
+
+	public static String trimToWsReverse(String s, int maxChars,
+			boolean withEllipsis) {
 		if (s.length() <= maxChars) {
 			return s;
 		}
@@ -1653,11 +1658,12 @@ public class CommonUtils {
 			maxChars = 100;
 		}
 		String sub = s.substring(s.length() - maxChars);
+		String ellipsis = withEllipsis ? "..." : "";
 		if (sub.indexOf(" ") > maxChars / 2) {
-			return sub;
+			return ellipsis + sub;
 		}
 		int firstSpace = sub.indexOf(' ');
-		return firstSpace == -1 ? "" : sub.substring(firstSpace);
+		return firstSpace == -1 ? "" : ellipsis + sub.substring(firstSpace);
 	}
 
 	public static String upperCaseFirstLetterOnly(String s) {

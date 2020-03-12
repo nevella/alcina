@@ -137,6 +137,10 @@ public class XmlNode {
 		return attributes().getOrDefault(key, "").equals(value);
 	}
 
+	public boolean attrMatches(String attrName, String regex) {
+		return attr(attrName).matches(regex);
+	}
+
 	public XmlNodeBuilder builder() {
 		return new XmlNodeBuilder(this);
 	}
