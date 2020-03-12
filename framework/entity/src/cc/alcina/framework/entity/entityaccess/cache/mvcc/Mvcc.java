@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreDescriptor;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.ClassTransformer.MvccCorrectnessIssueType;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccCorrectnessIssue.MvccCorrectnessIssueType;
 
 public class Mvcc {
 	public static <T extends HasIdAndLocalId> T
@@ -59,8 +59,6 @@ public class Mvcc {
 		this.domainDescriptor = domainDescriptor;
 		this.cache = cache;
 		this.classTransformer = new ClassTransformer(this);
-		this.classTransformer.setAddObjectResolutionChecks(
-				domainDescriptor.isAddMvccObjectResolutionChecks());
 	}
 
 	public <T extends HasIdAndLocalId> T create(Class<T> clazz) {
@@ -74,16 +72,17 @@ public class Mvcc {
 	public void testTransformer(Class<? extends HasIdAndLocalId> clazz) {
 		// valid if we get an 'exception' result for each correctness type -
 		// i.e. the tests are working
+		logger.info("testTransformer :: {}", clazz.getSimpleName());
 		for (MvccCorrectnessIssueType type : MvccCorrectnessIssueType
 				.values()) {
+			if (type.isUnknown()) {
+				continue;
+			}
 			String result = classTransformer.testClassTransform(clazz, type);
-			Preconditions.checkState(Ax.notBlank(result));
-			logger.info("{}\n==========\n{}\n", type, result);
+			Preconditions.checkState(Ax.notBlank(result), Ax.format(
+					"test did not pass (blank result) (type: %s)", type));
+			logger.info("{} :: {}", type, result);
 		}
 		logger.info("(All tests passed)");
-	}
-
-	enum MvccTestCategory {
-		Invalid_field_access;
 	}
 }
