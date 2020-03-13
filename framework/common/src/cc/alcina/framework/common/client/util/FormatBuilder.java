@@ -13,7 +13,7 @@ public class FormatBuilder {
 	private String prefix;
 
 	public void append(String string) {
-		sb.append(string);
+		format(string);
 	}
 
 	public void appendIf(boolean test, String string) {
@@ -58,6 +58,10 @@ public class FormatBuilder {
 			maybeAppendSeparator();
 			sb.append(optional);
 		}
+	}
+
+	public void appendWithoutSeparator(String string) {
+		sb.append(string);
 	}
 
 	public FormatBuilder format(String template, Object... args) {
