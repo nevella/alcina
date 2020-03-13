@@ -90,10 +90,6 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 
 	int pageSize = 0;
 
-	public void resetPageSize() {
-		pageSize = 0;
-	}
-
 	private int visibleRecordsSize = 100;
 
 	private DomainStoreDataProvider<T>.SearchCallback activeCallback;
@@ -109,14 +105,6 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 	boolean useColumnSearchOrders = true;
 
 	private boolean reverseResults = false;
-
-	public boolean isReverseResults() {
-		return this.reverseResults;
-	}
-
-	public void setReverseResults(boolean reverseResults) {
-		this.reverseResults = reverseResults;
-	}
 
 	public DomainStoreDataProvider(Class<T> clazz) {
 		this.clazz = clazz;
@@ -141,6 +129,12 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 			GroupedDataChangeEvent.Handler handler) {
 		return groupedDataHandlerManager.addHandler(GroupedDataChangeEvent.TYPE,
 				handler);
+	}
+
+	public void cancelCurrentSearch() {
+		if (activeCallback != null) {
+			activeCallback.setCancelled(true);
+		}
 	}
 
 	public void clear() {
@@ -234,6 +228,10 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 		return handleOnClient;
 	}
 
+	public boolean isReverseResults() {
+		return this.reverseResults;
+	}
+
 	public boolean isUseColumnSearchOrders() {
 		return this.useColumnSearchOrders;
 	}
@@ -258,7 +256,14 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 		}
 	}
 
+	public void resetPageSize() {
+		pageSize = 0;
+	}
+
 	public void search() {
+		if (getDataDisplays().size() == 0) {
+			return;
+		}
 		HasData<T> dd1 = getDataDisplays().iterator().next();
 		if (LooseContext.is(CONTEXT_NO_SEARCH)) {
 			if (results == null) {
@@ -375,6 +380,10 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 
 	public void setHandleOnClient(boolean handleOnClient) {
 		this.handleOnClient = handleOnClient;
+	}
+
+	public void setReverseResults(boolean reverseResults) {
+		this.reverseResults = reverseResults;
 	}
 
 	public void setSearchDefinition(DataSearchDefinition def) {
@@ -565,12 +574,6 @@ public class DomainStoreDataProvider<T extends HasIdAndLocalId>
 		private void cleanup() {
 			activeCallback = null;
 			maybeUpdateLoadingState(dd1, LoadingState.LOADED);
-		}
-	}
-
-	public void cancelCurrentSearch() {
-		if (activeCallback != null) {
-			activeCallback.setCancelled(true);
 		}
 	}
 }
