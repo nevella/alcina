@@ -12,8 +12,9 @@ public class FormatBuilder {
 
 	private String prefix;
 
-	public void append(String string) {
-		format(string);
+	public FormatBuilder append(Object object) {
+		format(CommonUtils.nullSafeToString(object));
+		return this;
 	}
 
 	public void appendIf(boolean test, String string) {

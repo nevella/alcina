@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -81,12 +82,26 @@ public class PublicationContext {
 		try {
 			Set<Class> jaxbClasses = new HashSet<Class>(
 					Registry.get().lookup(JaxbContextRegistration.class));
-			xmlForm = String.format(
+			xmlForm = Ax.format(
 					"Content definition:\n%s\n\n" + "Delivery model:\n%s",
 					WrappedObjectHelper.xmlSerialize(contentDefinition,
 							jaxbClasses),
 					WrappedObjectHelper.xmlSerialize(deliveryModel,
 							jaxbClasses));
+			if (xmlForm.length() > 5000) {
+				xmlForm = Ax.format(
+						"(Large definition/model)\n"
+								+ "Content definition: %s (%s chars)\n"
+								+ "Delivery model: %s (%s chars)",
+						contentDefinition.getClass().getSimpleName(),
+						WrappedObjectHelper
+								.xmlSerialize(contentDefinition, jaxbClasses)
+								.length(),
+						deliveryModel.getClass().getSimpleName(),
+						WrappedObjectHelper
+								.xmlSerialize(deliveryModel, jaxbClasses)
+								.length());
+			}
 			modelString = deliveryModel.toString();
 		} catch (Exception e2) {
 			e2.printStackTrace();
