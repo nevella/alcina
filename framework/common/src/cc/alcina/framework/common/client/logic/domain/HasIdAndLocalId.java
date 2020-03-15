@@ -14,7 +14,6 @@
 package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Comparator;
-import java.util.function.Function;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
@@ -32,10 +31,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public interface HasIdAndLocalId extends HasId {
-	public static Function<?, HasIdAndLocalId> caster() {
-		return o -> (HasIdAndLocalId) o;
-	}
-
+	// FIXME.mvcc.1 - goes away (once we just use objects themselves as keys)
 	public static long provideUnpackedLocalId(long packedLocalId) {
 		return (-packedLocalId) & 0x7FFFFFFF;
 	}

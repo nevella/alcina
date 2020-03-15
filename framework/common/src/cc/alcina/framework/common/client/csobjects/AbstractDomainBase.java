@@ -56,6 +56,11 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 	}
 
 	@Override
+	public T domainIdentity() {
+		return (T) this;
+	}
+
+	@Override
 	public boolean equals(Object obj) {
 		return HiliHelper.equals(this, obj);
 	}
