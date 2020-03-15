@@ -160,6 +160,11 @@ public class Publisher {
 					original, publicationContentPersister, result);
 			ctx.getVisitorOrNoop()
 					.afterPublicationPersistence(result.publicationId);
+		} else {
+			if (result.publicationUid == null) {
+				result.publicationUid = SEUtilities.generateId();
+				result.publicationId = -1L;
+			}
 		}
 		long publicationId = CommonUtils.lv(result.publicationId);
 		ContentRenderer crh = (ContentRenderer) Registry.get()

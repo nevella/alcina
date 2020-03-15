@@ -16,8 +16,9 @@ public class FormatBuilder {
 
 	boolean indented = false;
 
-	public void append(String string) {
-		sb.append(string);
+	public FormatBuilder append(Object object) {
+		format(CommonUtils.nullSafeToString(object));
+		return this;
 	}
 
 	public void appendIf(boolean test, String string) {
@@ -65,6 +66,10 @@ public class FormatBuilder {
 			maybeAppendSeparator();
 			sb.append(optional);
 		}
+	}
+
+	public void appendWithoutSeparator(String string) {
+		sb.append(string);
 	}
 
 	public FormatBuilder format(String template, Object... args) {

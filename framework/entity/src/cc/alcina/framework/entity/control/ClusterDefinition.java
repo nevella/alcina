@@ -7,63 +7,71 @@ import java.util.Optional;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class ClusterDefinition {
-    public String clusterId;
+	public String clusterId;
 
-    public String balancerName;
+	public String balancerName;
 
-    public String balancerUrl;
+	public String balancerUrl;
 
-    public String zkHostPort;
+	public String zkHostPort;
 
-    public String testName;
+	public String testName;
 
-    public String bpxGroup;
+	public String bpxGroup;
 
-    public boolean supportsClusterHealth;
-    
-    public String zkNamespace;
+	public boolean supportsClusterHealth;
 
-    public List<ClusterMember> clusterMembers = new ArrayList<>();
+	public String zkNamespace;
 
-    public ClusterMember memberByName(String hostName) {
-        Optional<ClusterMember> member = clusterMembers.stream()
-                .filter(m -> m.hostName.equals(hostName)).findFirst();
-        if (!member.isPresent()) {
-            throw Ax.runtimeException("Host not in cluster definition: %s",
-                    hostName);
-        }
-        return member.get();
-    }
+	public List<ClusterMember> clusterMembers = new ArrayList<>();
 
-    public ClusterMember provideCurrentWriterHost() {
-        return clusterMembers.stream().filter(m -> m.writerHost).findFirst()
-                .get();
-    }
+	public String buildArtifactPath;
 
-    public static class ClusterMember {
-        public String containerName;
+	public String testSshUserName;
 
-        public String dockerHostName;
-        
-        public String comment;
-        
-        public String sshUserName="root";
+	public String testSshHost;
 
-        public String deploymentPath;
+	public String testCommand;
 
-        public String restartMarker;
+	public ClusterMember memberByName(String hostName) {
+		Optional<ClusterMember> member = clusterMembers.stream()
+				.filter(m -> m.hostName.equals(hostName)).findFirst();
+		if (!member.isPresent()) {
+			throw Ax.runtimeException("Host not in cluster definition: %s",
+					hostName);
+		}
+		return member.get();
+	}
 
-        public String hostName;
+	public ClusterMember provideCurrentWriterHost() {
+		return clusterMembers.stream().filter(m -> m.writerHost).findFirst()
+				.get();
+	}
 
-        public boolean writerHost;
+	public static class ClusterMember {
+		public String containerName;
 
-        public boolean proxiedTo;
+		public String dockerHostName;
 
-        public String tunnelAliasTo;
+		public String comment;
 
-        @Override
-        public String toString() {
-            return hostName;
-        }
-    }
+		public String sshUserName = "root";
+
+		public String deploymentPath;
+
+		public String restartMarker;
+
+		public String hostName;
+
+		public boolean writerHost;
+
+		public boolean proxiedTo;
+
+		public String tunnelAliasTo;
+
+		@Override
+		public String toString() {
+			return hostName;
+		}
+	}
 }
