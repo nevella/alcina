@@ -51,7 +51,7 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 	}
 
 	/** Creates a new instance of TextBox */
-	@SuppressWarnings("unchecked")
+	
 	public PasswordTextBox(final boolean updateOnKeypress) {
 		final PasswordTextBox instance = this;
 		old = base.getText();

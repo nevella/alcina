@@ -53,7 +53,7 @@ public class LooseActionRegistry {
 		return handler;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public void performForTargetActionAndObject(PermissibleAction action,
 			Object target) {
 		LooseTargetedActionHandler handler = (LooseTargetedActionHandler) Registry
@@ -65,7 +65,7 @@ public class LooseActionRegistry {
 		actionHandlers.put(wp.getName(), wp);
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	void loadFromRegistry() {
 		List<LooseActionHandler> handlers = Registry
 				.impls(LooseActionHandler.class);

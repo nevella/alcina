@@ -96,7 +96,7 @@ import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

@@ -71,7 +71,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
     protected AppPersistenceBase() {
     }
 
-    @SuppressWarnings("unchecked")
+    
     public String createGroupFilter(boolean userMembership,
             FilterCombinator combinator) {
         StringBuffer sb = new StringBuffer();
@@ -87,7 +87,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
         return sb.toString();
     }
 
-    @SuppressWarnings("unchecked")
+    
     public <A> Set<A> getAll(Class<A> clazz) {
         Query query = getEntityManager()
                 .createQuery(String.format("from %s ", clazz.getSimpleName()));
@@ -96,7 +96,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
         return new LinkedHashSet<A>(results);
     }
 
-    @SuppressWarnings("unchecked")
+    
     public <A> Set<A> getAllForCreationUser(Class<A> clazz) {
         Query query = getEntityManager()
                 .createQuery(String.format("from %s where creationUser=?1 ",
@@ -108,7 +108,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
         return new LinkedHashSet<A>(results);
     }
 
-    @SuppressWarnings("unchecked")
+    
     public <A> Set<A> getAllForUser(Class<A> clazz) {
         Query query = getEntityManager()
                 .createQuery(String.format("from %s where user=?1 ",
@@ -129,7 +129,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
         return query.getResultList();
     }
 
-    @SuppressWarnings("unchecked")
+    
     public Collection<G> getVisibleGroups() {
         Set<G> grps = new HashSet<G>(
                 (Collection<? extends G>) PermissionsManager.get()
@@ -209,7 +209,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
         // normally, override
     }
 
-    @SuppressWarnings("unchecked")
+    
     protected List<G> getAllGroupEntities() {
         List<G> resultList = new ArrayList(getEntityManager()
                 .createQuery("select distinct g from "

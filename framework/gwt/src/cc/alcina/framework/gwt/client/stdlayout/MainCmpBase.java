@@ -68,7 +68,7 @@ public abstract class MainCmpBase extends Composite
 		// no cancel
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public void onSelection(SelectionEvent<Integer> event) {
 		Integer tabIndex = event.getSelectedItem();
 		this.currentTabClass = (Class<BaseTab>) tabPanel.getWidget(tabIndex)

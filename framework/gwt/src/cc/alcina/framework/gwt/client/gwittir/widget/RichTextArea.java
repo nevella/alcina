@@ -55,12 +55,12 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 
 	private boolean maximised = false;
 
-	@SuppressWarnings("unchecked")
+	
 	public RichTextArea() {
 		this(true, "12px");
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public RichTextArea(boolean withToolbar, String defaultFontSize) {
 		this.defaultFontSize = defaultFontSize;
 		old = base.getHTML();

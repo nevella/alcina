@@ -90,7 +90,7 @@ import java.util.TreeSet;
  * @author JSON.org
  * @version 2010-01-05
  */
-@SuppressWarnings("unchecked")
+
 public class JSONObject {
 	/**
 	 * It is sometimes more convenient and less ambiguous to have a

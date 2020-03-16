@@ -12,7 +12,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 
 public class DbUpdateRunner {
-    @SuppressWarnings("unchecked")
+    
     public void run(EntityManager em, boolean preCacheWarmup) throws Exception {
         List<Class> updaterClasses = Registry.get().lookup(false,
                 DbUpdater.class, void.class, false);

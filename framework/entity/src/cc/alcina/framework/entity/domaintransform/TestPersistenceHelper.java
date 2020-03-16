@@ -49,7 +49,7 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
  * @author nick@alcina.cc
  * 
  */
-@SuppressWarnings("unchecked")
+
 public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		PropertyAccessor,  BeanDescriptorProvider {
 	public static TestPersistenceHelper get() {

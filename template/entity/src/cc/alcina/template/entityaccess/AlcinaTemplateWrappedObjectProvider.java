@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 
-@SuppressWarnings("unchecked")
+
 @RegistryLocation(registryPoint = WrappedObjectProvider.class, implementationType = ImplementationType.SINGLETON)
 public class AlcinaTemplateWrappedObjectProvider implements
 		WrappedObjectProvider {

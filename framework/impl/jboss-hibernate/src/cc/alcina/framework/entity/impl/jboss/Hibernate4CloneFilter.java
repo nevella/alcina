@@ -50,7 +50,7 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	
 	public <T> T filterData(T value, T cloned, GraphProjectionContext context,
 			GraphProjection graphCloner) throws Exception {
 		if (value instanceof HibernateProxy) {
@@ -70,7 +70,7 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 		return super.filterData(value, cloned, context, graphCloner);
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	protected Object clonePersistentSet(Set ps, GraphProjectionContext context,
 			GraphProjection graphCloner) throws Exception {
 		Set hs = jpaImplementation.createPersistentSetProjection(context);

@@ -336,7 +336,7 @@ public class Registry {
 		return this.registry;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public Object instantiateSingle(Class registryPoint, Class targetClass) {
 		Class lookupSingle = lookupSingle(registryPoint, targetClass, true);
 		return classLookup.newInstance(lookupSingle);

@@ -13,7 +13,7 @@ import cc.alcina.framework.entity.util.ClasspathScanner.ClasspathVisitor;
  * @author nick@alcina.cc
  *
  */
-@SuppressWarnings("unchecked")
+
 public class RcpClasspathVisitor extends ClasspathVisitor {
 	protected static final Object PROTOCOL_BUNDLE_RESOURCE = "bundleresource";
 

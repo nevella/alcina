@@ -18,7 +18,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.map.LRUMap;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

@@ -37,7 +37,7 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
-@SuppressWarnings("unchecked")
+
 /**
  * TODO - integrate with main conflict resolution framework
  * 
@@ -123,7 +123,7 @@ public class FromOfflineConflictResolver {
 			initWidget(fp);
 		}
 
-		@SuppressWarnings("unchecked")
+		
 		public void onClick(ClickEvent event) {
 			Widget sender = (Widget) event.getSource();
 			if (sender == discardLink) {

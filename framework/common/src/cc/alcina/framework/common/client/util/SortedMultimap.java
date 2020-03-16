@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.TreeMap;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

@@ -45,10 +45,10 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 
 	private T value;
 
-	@SuppressWarnings("unchecked")
+	
 	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
 
-	@SuppressWarnings("unchecked")
+	
 	private Renderer<T, String> titleRenderer = null;
 
 	/** Creates a new instance of Label */

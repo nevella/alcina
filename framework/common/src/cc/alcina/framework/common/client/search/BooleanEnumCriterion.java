@@ -16,7 +16,7 @@ public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		BooleanEnum value = getValue();

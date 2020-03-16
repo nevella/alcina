@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

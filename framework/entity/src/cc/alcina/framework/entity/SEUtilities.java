@@ -161,7 +161,7 @@ public class SEUtilities {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public static <C> C collectionItemOfClass(Collection coll, Class<C> clazz) {
 		for (Object object : coll) {
 			if (object.getClass() == clazz) {
@@ -782,7 +782,7 @@ public class SEUtilities {
 				: path;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public static <T> T getOrCreate(Collection<T> existing, String propertyName,
 			String propertyValue, Class itemClass) throws Exception {
 		PropertyDescriptor descriptor = getPropertyDescriptorByName(itemClass,
@@ -1071,7 +1071,7 @@ public class SEUtilities {
 		return results;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public static Map listToMap(List l, Method m) throws Exception {
 		Map map = new HashMap<Object, Object>();
 		for (Iterator it = l.iterator(); it.hasNext();) {

@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

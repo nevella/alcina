@@ -39,7 +39,7 @@ public abstract class StateListenable {
 		listeners.remove(l);
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	protected void fireStateChanged(String newState) {
 		ArrayList<StateChangeListener> listenersCopy = (ArrayList<StateChangeListener>) listeners
 				.clone();

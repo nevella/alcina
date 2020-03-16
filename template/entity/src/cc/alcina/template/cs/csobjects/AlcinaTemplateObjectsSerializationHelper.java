@@ -71,7 +71,7 @@ public class AlcinaTemplateObjectsSerializationHelper implements
 		return this.serverDate;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public AlcinaTemplateObjects postDeserialization() {
 		TransformManager tm = TransformManager.get();
 		AlcinaTemplateObjects objects = new AlcinaTemplateObjects();

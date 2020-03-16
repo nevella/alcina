@@ -32,7 +32,7 @@ import com.totsp.gwittir.client.validator.Validator;
  * 
  *         Modified - Nick Reddel, added getValidators() for framework support
  */
-@SuppressWarnings("unchecked")
+
 public class CompositeValidator implements Validator {
 	private ArrayList<Validator> validators = new ArrayList();
 

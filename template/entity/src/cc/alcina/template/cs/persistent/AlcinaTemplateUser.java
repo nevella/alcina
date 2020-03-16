@@ -323,7 +323,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 		this.salt = salt;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public void setSecondaryGroups(Set<? extends IGroup> secondaryGroups) {
 		Set<? extends IGroup> old_secondaryGroups = this.secondaryGroups;
 		this.secondaryGroups = (Set<AlcinaTemplateGroup>) secondaryGroups;

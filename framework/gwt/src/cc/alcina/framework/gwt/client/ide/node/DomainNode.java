@@ -74,7 +74,7 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    
     public T getUserObject() {
         return (T) super.getUserObject();
     }

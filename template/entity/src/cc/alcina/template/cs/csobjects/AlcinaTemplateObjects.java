@@ -101,7 +101,7 @@ public class AlcinaTemplateObjects implements Serializable, DomainModelHolder,
 		return this.serverDate;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public List registerableDomainObjects() {
 		Object[] colls = new Object[] { generalProperties, groups, currentUser,
 				classRefs, bookmarks };

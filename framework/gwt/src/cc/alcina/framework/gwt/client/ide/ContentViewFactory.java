@@ -113,7 +113,7 @@ import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.layout.ExpandableListPanel;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

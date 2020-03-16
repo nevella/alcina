@@ -55,7 +55,7 @@ import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

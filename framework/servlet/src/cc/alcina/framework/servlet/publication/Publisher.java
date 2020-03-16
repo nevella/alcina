@@ -62,7 +62,7 @@ public class Publisher {
 		return publish(contentDefinition, deliveryModel, null);
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public PublicationResult publish(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original)
 			throws Exception {
@@ -126,7 +126,7 @@ public class Publisher {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	private PublicationResult publish0(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original)
 			throws Exception {

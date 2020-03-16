@@ -9,7 +9,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionCont
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 
 public class CollectionProjectionFilter implements GraphProjectionDataFilter {
-	@SuppressWarnings("unchecked")
+	
 	public <T> T filterData(T original, T projected,
 			GraphProjectionContext context, GraphProjection graphProjection)
 			throws Exception {

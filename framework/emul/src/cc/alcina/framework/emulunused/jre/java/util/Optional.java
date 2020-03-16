@@ -62,7 +62,7 @@ public final class Optional<T> {
 	 * @return an empty {@code Optional}
 	 */
 	public static <T> Optional<T> empty() {
-		@SuppressWarnings("unchecked")
+		
 		Optional<T> t = (Optional<T>) EMPTY;
 		return t;
 	}

@@ -16,7 +16,7 @@ import cc.alcina.template.j2seentities.DomainTransformEventPersistentImpl;
 
 
 @RegistryLocation(registryPoint = Searcher.class, targetClass = DomainTransformSearchDefinition.class)
-@SuppressWarnings("unchecked")
+
 public class DomainTransformSearcher extends BasicSearcher {
 	@Override
 	public SearchResultsBase search(SearchDefinition def, int pageNumber,

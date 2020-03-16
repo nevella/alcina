@@ -55,7 +55,7 @@ import cc.alcina.framework.common.client.util.StackDebug;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
-@SuppressWarnings("unchecked")
+
 /**
  * <h2>Notes</h2>
  * <p>

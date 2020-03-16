@@ -126,7 +126,7 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    
     public void setModel(Object model) {
         lastDefEmptySearchable = null;
         if (searchables != null && def != null) {

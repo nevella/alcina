@@ -154,7 +154,7 @@ public abstract class ClientReflector implements ClassLookup {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    
     public <T> T getTemplateInstance(Class<T> clazz) {
         clazz = getBeanInfoClassResolver().resolveForBeanInfo(clazz);
         if (!templateInstances.containsKey(clazz)) {

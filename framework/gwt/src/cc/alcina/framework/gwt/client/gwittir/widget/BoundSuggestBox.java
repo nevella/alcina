@@ -47,7 +47,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 
 	private T value;
 
-	@SuppressWarnings("unchecked")
+	
 	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
 
 	private BoundSuggestOracle suggestOracle;
@@ -106,7 +106,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 		this.showOnFocus = showOnFocus;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public void setValue(T value) {
 		T old = this.getValue();
 		this.value = value;

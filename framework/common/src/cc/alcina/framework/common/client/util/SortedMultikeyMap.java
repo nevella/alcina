@@ -30,7 +30,7 @@ import com.google.gwt.core.shared.GwtIncompatible;
  * @author nick@alcina.cc
  * 
  */
-@SuppressWarnings("unchecked")
+
 public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 	static final transient long serialVersionUID = -1L;
 

@@ -53,7 +53,7 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
  * @author nick@alcina.cc
  * 
  */
-@SuppressWarnings("unchecked")
+
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
         PropertyAccessor, RegistrableService, BeanDescriptorProvider {

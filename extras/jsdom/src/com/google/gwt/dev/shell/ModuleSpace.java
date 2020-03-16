@@ -475,7 +475,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	
 	public <T> T rebindAndCreate(String requestedClassName)
 			throws UnableToCompleteException {
 		assert Name.isBinaryName(requestedClassName);

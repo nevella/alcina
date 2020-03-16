@@ -24,7 +24,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

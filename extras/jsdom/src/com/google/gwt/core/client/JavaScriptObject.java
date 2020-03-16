@@ -131,7 +131,7 @@ public class JavaScriptObject implements JavascriptObjectEquivalent {
 	 * @return this object as a different type
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
+	
 	public <T extends JavascriptObjectEquivalent> T cast() {
 		return (T) this;
 	}

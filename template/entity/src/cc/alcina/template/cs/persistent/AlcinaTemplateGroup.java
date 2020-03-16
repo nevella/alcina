@@ -170,7 +170,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 	public void setId(long id) {
 		this.id = id;
 	}
-	@SuppressWarnings("unchecked")
+	
 	public void setMemberGroups(Set<? extends IGroup> memberGroups) {
 		Set<? extends IGroup> old_memberGroups = this.memberGroups;
 		this.memberGroups = (Set<AlcinaTemplateGroup>) memberGroups;
@@ -186,7 +186,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 		propertyChangeSupport().firePropertyChange("memberOfGroups",
 				old_memberOfGroups, memberOfGroups);
 	}
-	@SuppressWarnings("unchecked")
+	
 	public void setMemberUsers(Set<? extends IUser> memberUsers) {
 		Set<AlcinaTemplateUser> old_memberUsers = this.memberUsers;
 		this.memberUsers = (Set<AlcinaTemplateUser>) memberUsers;

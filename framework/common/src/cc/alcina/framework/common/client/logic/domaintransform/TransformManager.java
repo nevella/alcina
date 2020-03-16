@@ -79,7 +79,7 @@ import cc.alcina.framework.common.client.util.SortedMultikeyMap;
  * @author nick@alcina.cc
  *
  */
-@SuppressWarnings("unchecked")
+
 // unchecked because reflection is always going to involve a lot of
 // casting...alas
 public abstract class TransformManager implements PropertyChangeListener,

@@ -28,7 +28,7 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
 
 @ClientInstantiable
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel
