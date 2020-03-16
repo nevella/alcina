@@ -4,8 +4,9 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparator;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -32,9 +33,9 @@ public abstract class SearchOrder<T, V extends Comparable>
 	}
 
 	protected int compare2(T o1, T o2) {
-		if (o1 instanceof HasIdAndLocalId) {
-			return HiliComparator.INSTANCE.compare((HasIdAndLocalId) o1,
-					(HasIdAndLocalId) o2);
+		if (o1 instanceof Entity) {
+			return Entity.EntityComparator.INSTANCE.compare((Entity) o1,
+					(Entity) o2);
 		} else {
 			return 0;
 		}

@@ -19,12 +19,12 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 
 @MappedSuperclass
 @DomainTransformPersistable
-public abstract class RollingDataItem extends AbstractDomainBase {
+public abstract class RollingDataItem extends Entity {
 	private String data;
 
 	private String maxKey;

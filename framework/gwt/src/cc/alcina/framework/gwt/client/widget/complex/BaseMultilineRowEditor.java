@@ -3,10 +3,10 @@ package cc.alcina.framework.gwt.client.widget.complex;
 import java.util.List;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 
-public class BaseMultilineRowEditor<T extends HasIdAndLocalId>
+public class BaseMultilineRowEditor<T extends Entity>
 		extends MultilineRowEditor<T> implements BaseMultilineEditor<T> {
 	private BaseMultilineEditorCustomiser<T> customiser;
 

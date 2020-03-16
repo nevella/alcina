@@ -23,11 +23,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 
@@ -40,7 +40,7 @@ public class DomainTransformLayerWrapper implements Serializable {
 
 	public DomainTransformResponse response;
 
-	public HiliLocatorMap locatorMap;
+	public EntityLocatorMap locatorMap;
 
 	public int ignored;
 
@@ -85,9 +85,9 @@ public class DomainTransformLayerWrapper implements Serializable {
 		return String.valueOf(CommonUtils.last(persistentRequests).getId());
 	}
 
-	public <V extends HasIdAndLocalId> Set<V> getObjectsFor(Class<V> clazz) {
+	public <V extends Entity> Set<V> getObjectsFor(Class<V> clazz) {
 		return (Set<V>) (Set) getTransformsFor(clazz).stream()
-				.map(HiliLocator::objectLocator).map(Domain::find)
+				.map(EntityLocator::objectLocator).map(Domain::find)
 				.filter(Objects::nonNull).collect(Collectors.toSet());
 	}
 
@@ -100,14 +100,14 @@ public class DomainTransformLayerWrapper implements Serializable {
 	}
 
 	public Stream<DomainTransformEventPersistent>
-			getTransformsFor(HasIdAndLocalId hili) {
-		return getTransformsFor(hili.getClass()).stream()
-				.filter(dte -> HiliLocator.objectLocator(dte)
-						.equals(HiliLocator.instanceLocator(hili)));
+			getTransformsFor(Entity entity) {
+		return getTransformsFor(entity.getClass()).stream()
+				.filter(dte -> EntityLocator.objectLocator(dte)
+						.equals(EntityLocator.instanceLocator(entity)));
 	}
 
-	public HiliLocatorMap locatorMapOrEmpty() {
-		return locatorMap == null ? new HiliLocatorMap() : locatorMap;
+	public EntityLocatorMap locatorMapOrEmpty() {
+		return locatorMap == null ? new EntityLocatorMap() : locatorMap;
 	}
 
 	public void merge(DomainTransformLayerWrapper toMerge) {

@@ -22,9 +22,9 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
-import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 
@@ -34,7 +34,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
  * 
  * 
  */
-public abstract class IdMultipleCriterion<E extends HasIdAndLocalId>
+public abstract class IdMultipleCriterion<E extends Entity>
 		extends SearchCriterion implements HasValue<Set<E>> {
 	static final transient long serialVersionUID = -1L;
 
@@ -75,7 +75,7 @@ public abstract class IdMultipleCriterion<E extends HasIdAndLocalId>
 	 * add property change firing to the subclass implementation, if you care
 	 */
 	public void setValue(Set<E> value) {
-		setIds(HiliHelper.toIdSet(value));
+		setIds(EntityHelper.toIdSet(value));
 		Set<E> old_value = this.value;
 		this.value = value;
 		propertyChangeSupport().firePropertyChange("value", old_value, value);

@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
@@ -146,7 +146,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
 							.getHighestPersistedRequestIdForClientInstance(
 									clientInstance.getId());
 					token.getRequest().setClientInstance(clientInstance);
-					HiliLocatorMap locatorMap = Registry
+					EntityLocatorMap locatorMap = Registry
 							.impl(ServletLayerTransforms.class)
 							.getLocatorMapForClient(token.getRequest());
 					token.setLocatorMap(locatorMap);

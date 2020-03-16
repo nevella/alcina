@@ -4,7 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -54,7 +54,7 @@ public abstract class DataPlace<SD extends DataSearchDefinition> extends
 		if (id != 0) {
 			BasePlaceTokenizer tokenizer = RegistryHistoryMapper.get()
 					.getTokenizer(this);
-			HasIdAndLocalId modelObject = TransformManager.get()
+			Entity modelObject = TransformManager.get()
 					.getObject(tokenizer.getModelClass(), id, 0);
 			if (modelObject == null
 					|| !(modelObject instanceof HasDisplayName)) {

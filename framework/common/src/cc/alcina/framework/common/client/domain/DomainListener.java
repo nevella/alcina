@@ -1,8 +1,8 @@
 package cc.alcina.framework.common.client.domain;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 
-public interface DomainListener<H extends HasIdAndLocalId> {
+public interface DomainListener<H extends Entity> {
     public abstract Class<H> getListenedClass();
 
     public abstract void insert(H o);

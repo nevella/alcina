@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreM
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStorePrivateObjectCacheCreator;
 import cc.alcina.framework.common.client.domain.PrivateObjectCache;
 import cc.alcina.framework.common.client.domain.PrivateObjectCache.PrivateObjectCacheSingleClass;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -34,9 +34,9 @@ public class DataCollectionSuppliers {
 	public static class CacheIdMapCreatorClient
 			implements DomainStoreIdMapCreator {
 		@Override
-		public Map<Long, HasIdAndLocalId> get() {
+		public Map<Long, Entity> get() {
 			return useJsMaps() ? JsUniqueMap.create(Long.class, false)
-					: new LinkedHashMap<Long, HasIdAndLocalId>();
+					: new LinkedHashMap<Long, Entity>();
 		}
 	}
 

@@ -37,7 +37,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestTagProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -96,13 +96,13 @@ public class CommitToStorageTransformListener extends StateListenable
 	}
 
 	public static void
-			flushAndRunWithCreationConsumer(Consumer<HiliLocator> r2) {
+			flushAndRunWithCreationConsumer(Consumer<EntityLocator> r2) {
 		flushAndRun(() -> r2.accept(CommitToStorageTransformListener
 				.get().lastCreatedObjectLocator));
 	}
 
 	public static void
-			flushAndRunWithFirstCreationConsumer(Consumer<HiliLocator> r2) {
+			flushAndRunWithFirstCreationConsumer(Consumer<EntityLocator> r2) {
 		flushAndRun(() -> r2.accept(CommitToStorageTransformListener
 				.get().firstCreatedObjectLocator));
 	}
@@ -127,9 +127,9 @@ public class CommitToStorageTransformListener extends StateListenable
 				message);
 	}
 
-	private HiliLocator lastCreatedObjectLocator;
+	private EntityLocator lastCreatedObjectLocator;
 
-	private HiliLocator firstCreatedObjectLocator;
+	private EntityLocator firstCreatedObjectLocator;
 
 	private List<DomainTransformEvent> transformQueue;
 
@@ -423,10 +423,10 @@ public class CommitToStorageTransformListener extends StateListenable
 									TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 							synthesisedEvents.add(idEvt);
 							localToServerIds.put(dte.getObjectLocalId(), id);
-							tm.registerHiliMappingPriorToLocalIdDeletion(
+							tm.registerEntityMappingPriorToLocalIdDeletion(
 									dte.getObjectClass(), id,
 									dte.getObjectLocalId());
-							HiliLocator hiliLocator = new HiliLocator(
+							EntityLocator hiliLocator = new EntityLocator(
 									dte.getObjectClass(), id, 0L);
 							if (firstCreatedObjectLocator == null) {
 								firstCreatedObjectLocator = hiliLocator;

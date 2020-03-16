@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.domain.PrivateObjectCache;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -43,7 +43,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 public class DetachedEntityCache
 		implements Serializable, PrivateObjectCache, MemoryStatProvider {
-	protected Map<Class, Map<Long, HasIdAndLocalId>> detached;
+	protected Map<Class, Map<Long, Entity>> detached;
 
 	private transient Supplier<Map> classMapSupplier;
 
@@ -67,15 +67,15 @@ public class DetachedEntityCache
 		return self;
 	}
 
-	public Set<HasIdAndLocalId> allValues() {
-		Set<HasIdAndLocalId> result = new LinkedHashSet<HasIdAndLocalId>();
+	public Set<Entity> allValues() {
+		Set<Entity> result = new LinkedHashSet<Entity>();
 		for (Class clazz : detached.keySet()) {
 			result.addAll(detached.get(clazz).values());
 		}
 		return result;
 	}
 
-	public Set<Entry<Class, Map<Long, HasIdAndLocalId>>> classEntries() {
+	public Set<Entry<Class, Map<Long, Entity>>> classEntries() {
 		return detached.entrySet();
 	}
 
@@ -83,28 +83,28 @@ public class DetachedEntityCache
 		detached.clear();
 	}
 
-	public <T extends HasIdAndLocalId> boolean contains(Class<T> clazz,
+	public <T extends Entity> boolean contains(Class<T> clazz,
 			long id) {
 		ensureMaps(clazz);
 		return detached.get(clazz).containsKey(id);
 	}
 
-	public boolean contains(HasIdAndLocalId hili) {
-		Class<? extends HasIdAndLocalId> clazz = hili.provideEntityClass();
+	public boolean contains(Entity entity) {
+		Class<? extends Entity> clazz = entity.provideEntityClass();
 		ensureMaps(clazz);
-		long id = hili.getId();
+		long id = entity.getId();
 		return detached.get(clazz).containsKey(id);
 	}
 
-	public <T extends HasIdAndLocalId> boolean containsMap(Class<T> clazz) {
+	public <T extends Entity> boolean containsMap(Class<T> clazz) {
 		return detached.containsKey(clazz);
 	}
 
-	public Map<Long, HasIdAndLocalId> createMap() {
+	public Map<Long, Entity> createMap() {
 		return classMapSupplier.get();
 	}
 
-	public <T> List<T> fieldValues(Class<? extends HasIdAndLocalId> clazz,
+	public <T> List<T> fieldValues(Class<? extends Entity> clazz,
 			String propertyName) {
 		throw new UnsupportedOperationException();
 	}
@@ -119,16 +119,16 @@ public class DetachedEntityCache
 		return t;
 	}
 
-	public Map<Class, Map<Long, HasIdAndLocalId>> getDetached() {
+	public Map<Class, Map<Long, Entity>> getDetached() {
 		return this.detached;
 	}
 
 	@Override
-	public <T extends HasIdAndLocalId> T getExisting(T hili) {
-		return (T) get(hili.provideEntityClass(), hili.getId());
+	public <T extends Entity> T getExisting(T entity) {
+		return (T) get(entity.provideEntityClass(), entity.getId());
 	}
 
-	public Map<Long, HasIdAndLocalId> getMap(Class clazz) {
+	public Map<Long, Entity> getMap(Class clazz) {
 		ensureMaps(clazz);
 		return this.detached.get(clazz);
 	}
@@ -183,39 +183,39 @@ public class DetachedEntityCache
 	}
 
 	@Override
-	public void put(HasIdAndLocalId hili) {
-		Class<? extends HasIdAndLocalId> clazz = hili.provideEntityClass();
+	public void put(Entity entity) {
+		Class<? extends Entity> clazz = entity.provideEntityClass();
 		ensureMaps(clazz);
-		long id = hili.getId();
+		long id = entity.getId();
 		if (throwOnExisting) {
 			if (detached.get(clazz).containsKey(id)) {
-				throw Ax.runtimeException("Double-put: %s", hili);
+				throw Ax.runtimeException("Double-put: %s", entity);
 			}
 		}
-		detached.get(clazz).put(id, hili);
+		detached.get(clazz).put(id, entity);
 	}
 
 	public void putAll(Class clazz,
-			Collection<? extends HasIdAndLocalId> values) {
+			Collection<? extends Entity> values) {
 		ensureMaps(clazz);
-		Map<Long, HasIdAndLocalId> m = detached.get(clazz);
-		for (HasIdAndLocalId hili : values) {
-			long id = hili.getId();
-			m.put(hili.getId(), hili);
+		Map<Long, Entity> m = detached.get(clazz);
+		for (Entity entity : values) {
+			long id = entity.getId();
+			m.put(entity.getId(), entity);
 		}
 	}
 
 	@Override
-	public void putForSuperClass(Class clazz, HasIdAndLocalId hili) {
+	public void putForSuperClass(Class clazz, Entity entity) {
 		ensureMaps(clazz);
-		long id = hili.getId();
-		detached.get(clazz).put(id, hili);
+		long id = entity.getId();
+		detached.get(clazz).put(id, entity);
 	}
 
-	public void remove(HasIdAndLocalId hili) {
-		Class<? extends HasIdAndLocalId> clazz = hili.provideEntityClass();
+	public void remove(Entity entity) {
+		Class<? extends Entity> clazz = entity.provideEntityClass();
 		ensureMaps(clazz);
-		long id = hili.getId();
+		long id = entity.getId();
 		detached.get(clazz).remove(id);
 	}
 
@@ -272,7 +272,7 @@ public class DetachedEntityCache
 	static class DefaultTopMapSupplier implements Supplier<Map> {
 		@Override
 		public Map get() {
-			return new HashMap<Class, Map<Long, HasIdAndLocalId>>(128);
+			return new HashMap<Class, Map<Long, Entity>>(128);
 		}
 	}
 }

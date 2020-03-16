@@ -5,11 +5,11 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import com.google.gwt.core.client.GwtScriptOnly;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 
 @GwtScriptOnly
-public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
+public class LiSet<H extends Entity> extends AbstractSet<H> implements
 		Cloneable {
 	public LiSet() {
 	}
@@ -18,7 +18,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		addAll(c);
 	}
 
-	public static <H extends HasIdAndLocalId> LiSet<H> of(H h) {
+	public static <H extends Entity> LiSet<H> of(H h) {
 		LiSet<H> result = new LiSet<>();
 		result.add(h);
 		return result;

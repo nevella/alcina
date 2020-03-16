@@ -22,7 +22,7 @@ import javax.persistence.Transient;
 import com.google.gwt.user.client.rpc.GwtTransient;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
@@ -38,13 +38,14 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  * prevent accidental access of possibly different IUser objects
  * 
  * @author nick@alcina.cc
+ * 
+ *         Note that the localid field won't be used (clientinstances are not
+ *         transform-persisted)
  *
  */
-public abstract class ClientInstance
-		implements HasIUser, HasIdAndLocalId, Serializable, Cloneable {
+public abstract class ClientInstance extends Entity<ClientInstance>
+		implements HasIUser, Serializable, Cloneable {
 	private long id;
-
-	private long localId;
 
 	private Date helloDate;
 
@@ -79,7 +80,7 @@ public abstract class ClientInstance
 
 	public ClientInstance copyPropertiesTo(ClientInstance other) {
 		other.id = id;
-		other.localId = localId;
+		other.setLocalId(getLocalId());
 		other.helloDate = helloDate;
 		other.auth = auth;
 		other.userAgent = userAgent;
@@ -121,12 +122,6 @@ public abstract class ClientInstance
 
 	public Date getLastAccessed() {
 		return this.lastAccessed;
-	}
-
-	@Override
-	@Transient
-	public long getLocalId() {
-		return this.localId;
 	}
 
 	public String getReferrer() {
@@ -172,11 +167,6 @@ public abstract class ClientInstance
 
 	public void setLastAccessed(Date lastAccessed) {
 		this.lastAccessed = lastAccessed;
-	}
-
-	@Override
-	public void setLocalId(long localId) {
-		this.localId = localId;
 	}
 
 	public void setReferrer(String referrer) {

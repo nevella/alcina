@@ -55,7 +55,7 @@ import cc.alcina.framework.common.client.gwittir.validator.RequiresSourceValidat
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ShortDateValidator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
@@ -688,9 +688,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					suv.setOkId(((HasId) obj).getId());
 				}
 				if (v instanceof RequiresSourceValidator
-						&& obj instanceof HasIdAndLocalId) {
+						&& obj instanceof Entity) {
 					RequiresSourceValidator rsv = (RequiresSourceValidator) v;
-					rsv.setSourceObject((HasIdAndLocalId) obj);
+					rsv.setSourceObject((Entity) obj);
 				}
 				if (v instanceof RequiresContextBindable) {
 					((RequiresContextBindable) v)

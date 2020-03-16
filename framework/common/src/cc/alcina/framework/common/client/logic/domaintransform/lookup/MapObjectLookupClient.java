@@ -13,7 +13,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -33,7 +33,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 
 	private int registerCounter;
 
-	LinkedList<HasIdAndLocalId> toRegister = new LinkedList<HasIdAndLocalId>();
+	LinkedList<Entity> toRegister = new LinkedList<Entity>();
 
 	private ScheduledCommand postRegisterCommand;
 
@@ -47,7 +47,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 	}
 
 	@Override
-	public synchronized void mapObject(HasIdAndLocalId obj) {
+	public synchronized void mapObject(Entity obj) {
 		mappedObjects = new PerClassLookup();
 		addObjectOrCollectionToEndOfQueue(obj);
 		iterateRegistration();
@@ -98,12 +98,12 @@ public class MapObjectLookupClient extends MapObjectLookup {
 	}
 
 	private synchronized void mapObjectFromFrontOfQueue() {
-		HasIdAndLocalId obj = toRegister.removeFirst();
+		Entity obj = toRegister.removeFirst();
 		if ((obj.getId() == 0 && obj.getLocalId() == 0)
 				|| mappedObjects.contains(obj)) {
 			return;
 		}
-		Class<? extends HasIdAndLocalId> clazz = obj.getClass();
+		Class<? extends Entity> clazz = obj.getClass();
 		FastIdLookup lookup = ensureLookup(clazz);
 		lookup.put(obj, obj.getId() == 0);
 		if (obj instanceof SourcesPropertyChangeEvents) {
@@ -144,11 +144,11 @@ public class MapObjectLookupClient extends MapObjectLookup {
 			return;
 		}
 		if (o instanceof Collection) {
-			for (HasIdAndLocalId child : (Collection<HasIdAndLocalId>) o) {
+			for (Entity child : (Collection<Entity>) o) {
 				toRegister.add(child);
 			}
 		} else {
-			toRegister.add((HasIdAndLocalId) o);
+			toRegister.add((Entity) o);
 		}
 	}
 

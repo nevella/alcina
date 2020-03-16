@@ -9,7 +9,7 @@ import com.google.gwt.event.shared.UmbrellaException;
 import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.csobjects.WebException;
-import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -48,7 +48,7 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
     public String extraInfoForExceptionText() {
         ClientInstance clientInstance = PermissionsManager.get()
                 .getClientInstance();
-        long clientInstanceId = HiliHelper.getIdOrZero(clientInstance);
+        long clientInstanceId = EntityHelper.getIdOrZero(clientInstance);
         String extraInfo = "\n\nUser agent: " + BrowserMod.getUserAgent()
                 + "\nHistory token: " + History.getToken()
                 + "\nPermutation name: " + GWT.getPermutationStrongName()

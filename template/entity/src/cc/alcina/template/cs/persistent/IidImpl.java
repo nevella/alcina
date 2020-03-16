@@ -3,7 +3,7 @@ package cc.alcina.template.cs.persistent;
 import java.io.Serializable;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Entity;
+
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 
 @Table(name="Iid")
-@Entity
+@javax.persistence.Entity
 
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = Iid.class)
 public class IidImpl implements Serializable, Iid{

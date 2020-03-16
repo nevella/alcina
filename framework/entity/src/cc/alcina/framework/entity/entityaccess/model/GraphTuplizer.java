@@ -10,7 +10,7 @@ import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -37,12 +37,12 @@ public class GraphTuplizer {
 
 		boolean ignore(TObjectRef inObjRef);
 
-		void putRelational(TObjectRef inObjRef, HasIdAndLocalId t,
+		void putRelational(TObjectRef inObjRef, Entity t,
 				TFieldRef inField);
 
-		void prepareCustom(HasIdAndLocalId t);
+		void prepareCustom(Entity t);
 
-		void doCustom(TObjectRef inObjRef, HasIdAndLocalId t);
+		void doCustom(TObjectRef inObjRef, Entity t);
 
 		void prepare(TObjectRef inObjRef);
 
@@ -115,7 +115,7 @@ public class GraphTuplizer {
 		IndividualPropertyAccessor accessor = null;
 
 		public IndividualPropertyAccessor
-				outAccessor(Class<? extends HasIdAndLocalId> clazz) {
+				outAccessor(Class<? extends Entity> clazz) {
 			if (accessor == null) {
 				accessor = Reflections.propertyAccessor().cachedAccessor(clazz,
 						outFieldName);
@@ -148,13 +148,13 @@ public class GraphTuplizer {
 	private String getValue(Object object, TFieldRef field) {
 		try {
 			Object oValue = field.field.get(object);
-			if (oValue instanceof HasIdAndLocalId) {
+			if (oValue instanceof Entity) {
 				String locator = object.getClass().getSimpleName() + "."
 						+ field.name;
 				if (hiliFields.add(locator)) {
 					Ax.out(locator);
 				}
-				return String.valueOf(((HasIdAndLocalId) oValue).getId());
+				return String.valueOf(((Entity) oValue).getId());
 				// Ax.runtimeException("shouldn't persist: %s",
 				// oValue.getClass());
 			}
@@ -224,7 +224,7 @@ public class GraphTuplizer {
 		if (id == -1) {
 			return;
 		}
-		HasIdAndLocalId t = (HasIdAndLocalId) Reflections.classLookup()
+		Entity t = (Entity) Reflections.classLookup()
 				.newInstance(clazz, id, 0L);
 		t.setId(id);
 		DomainTransformEvent dte = new DomainTransformEvent();
@@ -233,7 +233,7 @@ public class GraphTuplizer {
 		dte.setTransformType(TransformType.CREATE_OBJECT);
 		TransformManager.get().addTransform(dte);
 		TransformManager.get().registerDomainObject(t);
-		inObjRef.hili = t;
+		inObjRef.entity = t;
 	}
 
 	public static class NonRelationalTranslateToken {
@@ -259,7 +259,7 @@ public class GraphTuplizer {
 			return;
 		}
 		Class clazz = mapper.classFor(inObjRef.classRef);
-		HasIdAndLocalId t = inObjRef.hili;
+		Entity t = inObjRef.entity;
 		TClassRef outRef = tuples.ensureClassRef(clazz);
 		NonRelationalTranslateToken token = new NonRelationalTranslateToken();
 		for (TFieldRef inField : inObjRef.classRef.fieldRefs) {
@@ -290,7 +290,7 @@ public class GraphTuplizer {
 		}
 		Object out = null;
 		Class clazz = mapper.classFor(inField.type);
-		if (HasIdAndLocalId.class.isAssignableFrom(clazz)) {
+		if (Entity.class.isAssignableFrom(clazz)) {
 			return mapper.resolve(clazz, in);
 		}
 		boolean dateValued = Date.class.isAssignableFrom(clazz);
@@ -323,7 +323,7 @@ public class GraphTuplizer {
 			return;
 		}
 		Class clazz = mapper.classFor(inObjRef.classRef);
-		HasIdAndLocalId t = inObjRef.hili;
+		Entity t = inObjRef.entity;
 		TClassRef outRef = tuples.ensureClassRef(clazz);
 		for (TFieldRef inField : inObjRef.classRef.fieldRefs) {
 			TFieldRef outField = outRef.fieldRefByName(inField.name);
@@ -339,7 +339,7 @@ public class GraphTuplizer {
 		if (mapper.ignore(inObjRef, "doCustom")) {
 			return;
 		}
-		HasIdAndLocalId t = inObjRef.hili;
+		Entity t = inObjRef.entity;
 		mapper.doCustom(inObjRef, t);
 	}
 
@@ -347,7 +347,7 @@ public class GraphTuplizer {
 		if (mapper.ignore(inObjRef)) {
 			return;
 		}
-		HasIdAndLocalId t = inObjRef.hili;
+		Entity t = inObjRef.entity;
 		mapper.prepareCustom(t);
 	}
 }

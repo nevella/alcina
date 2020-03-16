@@ -57,7 +57,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderType
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -123,7 +123,7 @@ class ClassTransformer {
 		}
 	}
 
-	public <T extends HasIdAndLocalId> T create(Class<T> clazz) {
+	public <T extends Entity> T create(Class<T> clazz) {
 		try {
 			return (T) classTransforms.get(clazz).transformedClass
 					.newInstance();
@@ -158,9 +158,9 @@ class ClassTransformer {
 		}
 	}
 
-	public String testClassTransform(Class<? extends HasIdAndLocalId> clazz,
+	public String testClassTransform(Class<? extends Entity> clazz,
 			MvccCorrectnessIssueType issueType) {
-		ClassTransform<? extends HasIdAndLocalId> ct = new ClassTransform<>(
+		ClassTransform<? extends Entity> ct = new ClassTransform<>(
 				clazz);
 		StringBuilder logBuilder = new StringBuilder();
 		ct.correctnessIssueTopic.add((k, issue) -> {
@@ -178,7 +178,7 @@ class ClassTransformer {
 		return logBuilder.toString();
 	}
 
-	<H extends HasIdAndLocalId> Class<? extends H>
+	<H extends Entity> Class<? extends H>
 			getTransformedClass(Class<H> originalClass) {
 		return classTransforms.get(originalClass).transformedClass;
 	}
@@ -217,7 +217,7 @@ class ClassTransformer {
 		}
 	}
 
-	static class ClassTransform<H extends HasIdAndLocalId> {
+	static class ClassTransform<H extends Entity> {
 		private static final transient int VERSION = 7;
 
 		transient TopicSupport<MvccCorrectnessIssue> correctnessIssueTopic = TopicSupport
@@ -719,7 +719,7 @@ class ClassTransformer {
 						ctClass.addMethod(newMethod);
 					});
 					/*
-					 * override HasIdAndLocalId
+					 * override Entity
 					 */
 					tasks.add(() -> {
 						String body = Ax.format("{\n\treturn %s.class;}",

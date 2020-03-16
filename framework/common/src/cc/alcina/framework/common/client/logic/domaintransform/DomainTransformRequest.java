@@ -30,8 +30,8 @@ import javax.persistence.Transient;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -237,7 +237,7 @@ public class DomainTransformRequest implements Serializable {
 		}
 	}
 
-	public void removeTransformsForObject(HasIdAndLocalId object) {
+	public void removeTransformsForObject(Entity object) {
 		for (DomainTransformRequest rq : allRequests()) {
 			for (Iterator<DomainTransformEvent> itr = rq.getEvents()
 					.iterator(); itr.hasNext();) {
@@ -285,7 +285,7 @@ public class DomainTransformRequest implements Serializable {
 
 	public String shortId() {
 		return Ax.format("Dtr: cli-id: %s - rq-id: %s",
-				HiliHelper.getIdOrNull(clientInstance), requestId);
+				EntityHelper.getIdOrNull(clientInstance), requestId);
 	}
 
 	@Override

@@ -9,13 +9,13 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.MapCreator;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 
-public abstract class ReverseDateProjection<T extends HasIdAndLocalId>
+public abstract class ReverseDateProjection<T extends Entity>
 		extends BaseProjection<T> {
 	public ReverseDateProjection(Class initialType, Class... secondaryTypes) {
 		super(initialType, secondaryTypes);

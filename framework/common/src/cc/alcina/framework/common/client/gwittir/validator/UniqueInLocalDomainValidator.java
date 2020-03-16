@@ -18,8 +18,8 @@ import java.util.Collection;
 import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -39,7 +39,7 @@ public class UniqueInLocalDomainValidator
 
 	private String propertyName;
 
-	private HasIdAndLocalId sourceObject;
+	private Entity sourceObject;
 
 	public UniqueInLocalDomainValidator() {
 	}
@@ -52,7 +52,7 @@ public class UniqueInLocalDomainValidator
 		this.propertyName = p.stringValue();
 	}
 
-	public void setSourceObject(HasIdAndLocalId sourceObject) {
+	public void setSourceObject(Entity sourceObject) {
 		this.sourceObject = sourceObject;
 	}
 
@@ -60,14 +60,14 @@ public class UniqueInLocalDomainValidator
 		if (value == null) {
 			return value;
 		}
-		Collection<HasIdAndLocalId> c = TransformManager.get()
+		Collection<Entity> c = TransformManager.get()
 				.getCollection(domainClass);
-		for (HasIdAndLocalId hili : c) {
-			if (HiliHelper.equals(sourceObject, hili)) {
+		for (Entity entity : c) {
+			if (EntityHelper.equals(sourceObject, entity)) {
 				continue;
 			}
-			if (!(value.equals(hili)) && value.equals(Reflections
-					.propertyAccessor().getPropertyValue(hili, propertyName))) {
+			if (!(value.equals(entity)) && value.equals(Reflections
+					.propertyAccessor().getPropertyValue(entity, propertyName))) {
 				throw new ValidationException("Value must be unique",
 						UniqueInLocalDomainValidator.class);
 			}

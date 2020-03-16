@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
@@ -94,14 +94,14 @@ public class DomainObjectCloner extends CloneHelper {
 
 	protected <T> T newInstance(T o) {
 		Class clazz = o.getClass();
-		if (o instanceof HasIdAndLocalId) {
+		if (o instanceof Entity) {
 			if (createProvisionalObjects) {
-				HasIdAndLocalId obj = TransformManager.get()
+				Entity obj = TransformManager.get()
 						.createProvisionalObject(clazz);
 				provisionalObjects.add(obj);
 				return (T) obj;
 			} else {
-				HasIdAndLocalId obj = TransformManager.get()
+				Entity obj = TransformManager.get()
 						.createDomainObject(clazz);
 				return (T) obj;
 			}

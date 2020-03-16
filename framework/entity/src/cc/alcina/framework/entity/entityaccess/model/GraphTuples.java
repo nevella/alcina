@@ -10,7 +10,7 @@ import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
@@ -186,7 +186,7 @@ public class GraphTuples {
 	}
 
 	public static class TObjectRef {
-		public transient HasIdAndLocalId hili;
+		public transient Entity entity;
 
 		public TClassRef classRef;
 

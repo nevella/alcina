@@ -32,7 +32,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.UserTransaction;
@@ -53,8 +52,8 @@ import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -62,7 +61,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstanceExp
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
@@ -212,7 +211,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public void connectPermissionsManagerToLiveObjects(boolean forWriting) {
 		IUser currentUser = PermissionsManager.get().getUser();
-		if (!Mvcc.isMvccObject(currentUser)
+		if (!Mvcc.isMvccObject((Entity) currentUser)
 				&& getEntityManager().contains(currentUser)) {
 			if (!forWriting) {
 				PermissionsManager.get().getUserGroups();
@@ -491,7 +490,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	@Override
-	public HiliLocatorMap getLocatorMap(Long clientInstanceId) {
+	public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
 		return getHandshakeObjectProvider().getLocatorMap(clientInstanceId);
 	}
 
@@ -631,8 +630,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.allEvents(dtrps);
 			DetachedEntityCache cache = cacheEntities(events, false, false);
 			for (DomainTransformEvent event : events) {
-				event.setSource((HasIdAndLocalId) cache
-						.get(event.getObjectClass(), event.getObjectId()));
+				event.setSource((Entity) cache.get(event.getObjectClass(),
+						event.getObjectId()));
 			}
 			if (logTransformReadMetrics) {
 				dc.endWithLogger(logger,
@@ -978,9 +977,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	@Override
-	public HiliLocatorMap reconstituteHiliMap(long clientInstanceId) {
+	public EntityLocatorMap reconstituteEntityMap(long clientInstanceId) {
 		ThreadlocalTransformManager tm = new ThreadlocalTransformManager();
-		tm.resetTltm(new HiliLocatorMap());
+		tm.resetTltm(new EntityLocatorMap());
 		tm.setEntityManager(getEntityManager());
 		ClientInstance clientInstance = getNewImplementationInstance(
 				ClientInstance.class);
@@ -988,7 +987,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		// don't use the real client instance, requires
 		// permissionsmanager>>liveobjects
 		tm.setClientInstance(clientInstance);
-		HiliLocatorMap result = tm.reconstituteHiliMap();
+		EntityLocatorMap result = tm.reconstituteEntityMap();
 		tm.resetTltm(null);
 		return result;
 	}
@@ -996,12 +995,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	@Override
 	public void remove(Object o) {
 		AppPersistenceBase.checkNotReadOnly();
-		if (o instanceof HasIdAndLocalId) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) getEntityManager()
-					.find(o.getClass(), ((HasIdAndLocalId) o).getId());
-			getEntityManager().remove(hili);
+		if (o instanceof Entity) {
+			Entity entity = (Entity) getEntityManager().find(o.getClass(),
+					((Entity) o).getId());
+			getEntityManager().remove(entity);
 		} else {
-			throw new RuntimeException("Cannot remove detached non-hili " + o);
+			throw new RuntimeException(
+					"Cannot remove detached non-entity " + o);
 		}
 	}
 
@@ -1277,7 +1277,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			return;
 		}
 		try {
-			HasIdAndLocalId object = TransformManager.get()
+			Entity object = TransformManager.get()
 					.getObject(transformException.getEvent(), true);
 			if (object != null) {
 				transformException.setSourceObjectName(
@@ -1394,7 +1394,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				// optimisation) - but must if we need the results for mixing
 				// back into domainStore
 			}
-			if (clazz.getAnnotation(Entity.class) != null) {
+			if (clazz.getAnnotation(javax.persistence.Entity.class) != null) {
 				storageClass = clazz;
 			}
 			if (WrapperPersistable.class.isAssignableFrom(clazz)) {
@@ -1404,15 +1404,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
 					List<Long> idsSlice = ids.subList(i,
 							Math.min(ids.size(), i + PRECACHE_RQ_SIZE));
-					List<HasIdAndLocalId> resultList = getEntityManager()
+					List<Entity> resultList = getEntityManager()
 							.createQuery(String.format("from %s where id in %s",
 									storageClass.getSimpleName(),
 									EntityUtils.longsToIdClause(idsSlice)))
 							.getResultList();
-					for (HasIdAndLocalId hili : resultList) {
-						cache.put(hili);
+					for (Entity entity : resultList) {
+						cache.put(entity);
 						if (fixWithPrecreate) {
-							entry.getValue().remove(hili.getId());
+							entry.getValue().remove(entity.getId());
 						}
 					}
 				}
@@ -1516,7 +1516,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 
 		@Override
-		public HiliLocatorMap getLocatorMap(Long clientInstanceId) {
+		public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -1562,7 +1562,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 		WriterHandshakeObjectProvider writerHandshakeObjectProvider = new WriterHandshakeObjectProvider();
 
-		Map<Long, HiliLocatorMap> locatorMaps = Collections
+		Map<Long, EntityLocatorMap> locatorMaps = Collections
 				.synchronizedMap(new LinkedHashMap<>());
 
 		@Override
@@ -1570,7 +1570,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				String ipAddress) {
 			ClientInstance clientInstance = delegate()
 					.createClientInstance(userAgent, iid, ipAddress);
-			locatorMaps.put(clientInstance.getId(), new HiliLocatorMap());
+			locatorMaps.put(clientInstance.getId(), new EntityLocatorMap());
 			return clientInstance;
 		}
 
@@ -1585,8 +1585,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 
 		@Override
-		public HiliLocatorMap getLocatorMap(Long clientInstanceId) {
-			HiliLocatorMap map = locatorMaps.get(clientInstanceId);
+		public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
+			EntityLocatorMap map = locatorMaps.get(clientInstanceId);
 			if (map == null) {
 				CommonPersistenceBase commonPersistence = writerHandshakeObjectProvider.commonPersistence;
 				if (commonPersistence.getEntityManager() == null) {
@@ -1601,7 +1601,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				ThreadlocalTransformManager.get()
 						.setEntityManager(commonPersistence.getEntityManager());
 				ThreadlocalTransformManager.get()
-						.setUserSessionHiliMap(new HiliLocatorMap());
+						.setUserSessionEntityMap(new EntityLocatorMap());
 				ClientInstance clientInstanceImpl = (ClientInstance) commonPersistence
 						.getNewImplementationInstance(ClientInstance.class);
 				clientInstanceImpl.setId(clientInstanceId);
@@ -1609,7 +1609,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				// live permissions objects
 				ThreadlocalTransformManager.get()
 						.setClientInstance(clientInstanceImpl);
-				map = ThreadlocalTransformManager.get().reconstituteHiliMap();
+				map = ThreadlocalTransformManager.get().reconstituteEntityMap();
 				ThreadlocalTransformManager.get()
 						.setEntityManager(cachedEntityManager);
 			}
@@ -1719,7 +1719,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 
 		@Override
-		public HiliLocatorMap getLocatorMap(Long clientInstanceId) {
+		public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
 			throw new UnsupportedOperationException();
 		}
 

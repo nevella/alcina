@@ -22,7 +22,7 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.renderer.IdToStringRenderer;
@@ -35,7 +35,7 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.IdToStringRenderer;
  */
 public class DomainObjectIdEditor extends AbstractBoundWidget
 		implements ValueChangeHandler {
-	private Class<? extends HasIdAndLocalId> domainObjectClass;;
+	private Class<? extends Entity> domainObjectClass;;
 
 	private FlowPanel fp;
 
@@ -64,14 +64,14 @@ public class DomainObjectIdEditor extends AbstractBoundWidget
 			} else {
 				try {
 					id = Long.parseLong(text);
-					HasIdAndLocalId hili = Reflections.classLookup()
+					Entity entity = Reflections.classLookup()
 							.newInstance(domainObjectClass);
-					hili.setId(id);
-					if (hili != null && !hili.equals(currentValue)
-							&& TransformManager.get().getObject(hili) == null) {
-						TransformManager.get().registerDomainObject(hili);
+					entity.setId(id);
+					if (entity != null && !entity.equals(currentValue)
+							&& TransformManager.get().getObject(entity) == null) {
+						TransformManager.get().registerDomainObject(entity);
 					}
-					currentValue = hili;
+					currentValue = entity;
 				} catch (Exception e) {
 				}
 			}
@@ -88,7 +88,7 @@ public class DomainObjectIdEditor extends AbstractBoundWidget
 		currentValue = value;
 		if (CommonUtils.isNullOrEmpty(tb.getText())) {
 			tb.setText(IdToStringRenderer.INSTANCE
-					.render((HasIdAndLocalId) currentValue));
+					.render((Entity) currentValue));
 		}
 		changes.firePropertyChange("value", old, getValue());
 	}

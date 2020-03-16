@@ -4,7 +4,7 @@ import java.beans.PropertyChangeEvent;
 
 import com.google.gwt.user.client.ui.FlowPanel;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.gwt.client.data.DataAction;
 import cc.alcina.framework.gwt.client.data.entity.DataDomainBase;
@@ -18,7 +18,7 @@ public abstract class DetailView<DVM extends DetailViewModel>
     private static final String TOPIC_DETAIL_MODEL_OBJECT_SET = DetailView.class
             .getName() + "." + "TOPIC_DETAIL_MODEL_OBJECT_SET";
 
-    public static TopicSupport<HasIdAndLocalId> topicDetailModelObjectSet() {
+    public static TopicSupport<Entity> topicDetailModelObjectSet() {
         return new TopicSupport<>(TOPIC_DETAIL_MODEL_OBJECT_SET);
     }
 

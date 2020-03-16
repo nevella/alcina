@@ -15,7 +15,7 @@ import com.google.gwt.view.client.HasData;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -111,11 +111,11 @@ public abstract class AbstractViewModelView<VM extends ViewModel>
         // disabled, doesn't work that nicely
     }
 
-    protected Widget createDetailCaption(SubPlace place, HasIdAndLocalId hili) {
-        return createDetailCaption(place, hili, "");
+    protected Widget createDetailCaption(SubPlace place, Entity entity) {
+        return createDetailCaption(place, entity, "");
     }
 
-    protected Widget createDetailCaption(SubPlace place, HasIdAndLocalId hili,
+    protected Widget createDetailCaption(SubPlace place, Entity entity,
             String detailSuffix) {
         FlowPanel caption = new FlowPanel();
         caption.setStyleName("tab-caption-3");
@@ -124,7 +124,7 @@ public abstract class AbstractViewModelView<VM extends ViewModel>
                         CommonUtils.friendlyConstant(place.getSub())),
                 "#" + place.toTokenString());
         caption.add(link);
-        caption.add(new InlineLabel(" > " + hili.getId() + " " + detailSuffix));
+        caption.add(new InlineLabel(" > " + entity.getId() + " " + detailSuffix));
         return caption;
     }
 

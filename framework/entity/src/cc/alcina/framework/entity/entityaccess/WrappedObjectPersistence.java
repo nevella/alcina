@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.PersistentSingleton;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -178,8 +178,8 @@ public class WrappedObjectPersistence {
 					System.err.println(Ax.format(
 							"Warn - allowing access to %s : %s only via admin override",
 							wrapper == null ? "(null wrapper)"
-									: HiliHelper.asDomainPoint(wrapper),
-							HiliHelper.asDomainPoint(wrapped)));
+									: EntityHelper.asDomainPoint(wrapper),
+							EntityHelper.asDomainPoint(wrapped)));
 				}
 				return;// permitted
 			}

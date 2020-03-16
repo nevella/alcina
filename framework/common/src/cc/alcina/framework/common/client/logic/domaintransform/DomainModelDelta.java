@@ -17,7 +17,7 @@ public interface DomainModelDelta {
 
 	public abstract DomainModelDeltaSignature getSignature();
 
-	public Collection<DomainModelDeltaHili> getUnlinkedObjects();
+	public Collection<DomainModelDeltaEntity> getUnlinkedObjects();
 
 	public boolean hasLocalOnlyTransforms();
 

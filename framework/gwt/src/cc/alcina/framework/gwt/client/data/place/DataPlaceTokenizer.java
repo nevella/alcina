@@ -1,12 +1,12 @@
 package cc.alcina.framework.gwt.client.data.place;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.gwt.client.data.DataAction;
 import cc.alcina.framework.gwt.client.data.search.DataSearchDefinition;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 
-public abstract class DataPlaceTokenizer<HL extends HasIdAndLocalId, SD extends DataSearchDefinition, P extends DataPlace<SD>>
+public abstract class DataPlaceTokenizer<HL extends Entity, SD extends DataSearchDefinition, P extends DataPlace<SD>>
         extends BasePlaceTokenizer<P> {
     protected static final String P_DEF = "d";
 

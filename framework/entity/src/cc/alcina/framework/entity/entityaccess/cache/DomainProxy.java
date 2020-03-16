@@ -5,10 +5,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 
-public interface DomainProxy<T> extends HasIdAndLocalId {
+public interface DomainProxy<T> extends HasId {
 	public static final String CONTEXT_DOMAIN_PROXY_CONTEXT = DomainProxy.class
 			.getName() + ".CONTEXT_DOMAIN_PROXY_CONTEXT";
 
@@ -26,6 +26,6 @@ public interface DomainProxy<T> extends HasIdAndLocalId {
 			}
 		};
 
-		Map<HiliLocator, DomainProxy> projectionProxies = new LinkedHashMap<>();
+		Map<EntityLocator, DomainProxy> projectionProxies = new LinkedHashMap<>();
 	}
 }

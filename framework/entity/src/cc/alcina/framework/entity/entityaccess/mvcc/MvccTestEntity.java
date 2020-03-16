@@ -2,10 +2,10 @@ package cc.alcina.framework.entity.entityaccess.mvcc;
 
 import java.util.stream.IntStream;
 
-import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccessCorrect;
 
-public class MvccTestEntity extends AbstractDomainBase<MvccTestEntity> {
+public class MvccTestEntity extends Entity<MvccTestEntity> {
 	private long id;
 
 	protected String incorrectAccessField;

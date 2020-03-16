@@ -6,8 +6,9 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparator;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.LoginAttempt;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -28,7 +29,7 @@ public class LoginAttempts {
 				"maxAttempts");
 		int maxAttemptsPeriodMins = ResourceUtilities
 				.getInteger(LoginAttempts.class, "maxAttemptsPeriodMins");
-		return attempts.stream().sorted(HiliComparator.REVERSED_INSTANCE)
+		return attempts.stream().sorted(Entity.EntityComparator.REVERSED_INSTANCE)
 				.limit(maxAttempts).filter(a -> !a.isSuccess())
 				.filter(a -> (System.currentTimeMillis()
 						- a.getDate().getTime()) < maxAttemptsPeriodMins
@@ -50,8 +51,8 @@ public class LoginAttempts {
 								LoginAttempt.class),
 				"userNameLowerCase",
 				loginModel.loginBean.getUserName().toLowerCase());
-		attempts.stream().sorted(HiliComparator.REVERSED_INSTANCE)
-				.skip(maxAttempts).forEach(HasIdAndLocalId::delete);
+		attempts.stream().sorted(Entity.EntityComparator.REVERSED_INSTANCE)
+				.skip(maxAttempts).forEach(Entity::delete);
 		LoginAttempt loginAttempt = Domain.create(CommonPersistenceProvider
 				.get().getCommonPersistenceExTransaction()
 				.getImplementation(LoginAttempt.class));

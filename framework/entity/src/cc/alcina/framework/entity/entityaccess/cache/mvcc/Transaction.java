@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
@@ -146,7 +146,7 @@ public class Transaction {
 		logger.trace("Created tx: {}", this);
 	}
 
-	public <T extends HasIdAndLocalId> T create(Class<T> clazz,
+	public <T extends Entity> T create(Class<T> clazz,
 			DomainStore store) {
 		StoreTransaction storeTransaction = storeTransactions.get(store);
 		T t = storeTransaction.getMvcc().create(clazz);

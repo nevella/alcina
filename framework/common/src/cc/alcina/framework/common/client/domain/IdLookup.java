@@ -6,11 +6,11 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public class IdLookup<T, H extends HasIdAndLocalId> extends DomainLookup<T, H> {
+public class IdLookup<T, H extends Entity> extends DomainLookup<T, H> {
 	private Set<T> duplicateKeys = new LinkedHashSet<T>();
 
 	protected final transient Logger logger = LoggerFactory

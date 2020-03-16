@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.domain.search.SearchOrder;
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.ColumnSearchOrder;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.SerializableSearchOrder;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -49,7 +49,7 @@ import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.WaitForTransformsClient;
 
-public class DomainStoreDataProvider<T extends HasIdAndLocalId>
+public class DomainStoreDataProvider<T extends Entity>
 		extends AsyncDataProvider<T>
 		implements ColumnSortEvent.Handler, HasDataChangeHandlers<T> {
 	public static final String CONTEXT_NO_SEARCH = DomainStoreDataProvider.class

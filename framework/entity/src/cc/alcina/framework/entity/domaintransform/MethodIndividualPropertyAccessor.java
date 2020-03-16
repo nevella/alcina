@@ -11,8 +11,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparator;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
@@ -73,8 +74,8 @@ public class MethodIndividualPropertyAccessor
 					return null;
 				}
 				List list = new ArrayList(c);
-				if (c.iterator().next() instanceof HasIdAndLocalId) {
-					list.sort(HiliComparator.INSTANCE);
+				if (c.iterator().next() instanceof Entity) {
+					list.sort(Entity.EntityComparator.INSTANCE);
 				}
 				if (propertyIndex < list.size()) {
 					return list.get(propertyIndex);

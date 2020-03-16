@@ -3,10 +3,11 @@ package cc.alcina.framework.gwt.client.widget.complex;
 import java.util.List;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparatorLocalsHigh;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparatorLocalsHigh;
 
-public interface BaseMultilineEditor<T extends HasIdAndLocalId> {
+public interface BaseMultilineEditor<T extends Entity> {
 	public Object getModel();
 
 	public Set<T> getValue();
@@ -20,6 +21,6 @@ public interface BaseMultilineEditor<T extends HasIdAndLocalId> {
 	void setCustomiser(BaseMultilineEditorCustomiser<T> customiser);
 
 	default void sortValues(List<T> values) {
-		values.sort(HiliComparatorLocalsHigh.INSTANCE);
+		values.sort(Entity.EntityComparatorLocalsHigh.INSTANCE);
 	}
 }

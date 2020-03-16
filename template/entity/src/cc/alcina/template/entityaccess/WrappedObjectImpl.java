@@ -4,7 +4,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Entity;
+
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -27,7 +27,7 @@ import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 import cc.alcina.template.cs.persistent.DomainBaseVersionable;
 
-@Entity
+@javax.persistence.Entity
 @Table(name = "wrappedObject")
 @SequenceGenerator(allocationSize=1,name = "wrappedObject_sequence", sequenceName = "wrappedObject_id_seq")
 @SuppressWarnings("unchecked")

@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.logic;
 import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.*;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 
 /**
@@ -29,9 +29,9 @@ public class AlcinaHistoryItemTm extends AlcinaHistoryItem {
 				getId(), getLocalId());
 	}
 
-	public void setReferencedObject(HasIdAndLocalId hili) {
-		setParameter(CLASS_NAME_KEY, hili.getClass().getName());
-		setParameter(ID_KEY, hili.getId());
-		setParameter(LOCAL_ID_KEY, hili.getLocalId());
+	public void setReferencedObject(Entity entity) {
+		setParameter(CLASS_NAME_KEY, entity.getClass().getName());
+		setParameter(ID_KEY, entity.getId());
+		setParameter(LOCAL_ID_KEY, entity.getLocalId());
 	}
 }

@@ -25,7 +25,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef.ClassRefSimpleNameRenderer;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -52,12 +52,12 @@ public class PersistentObjectCriteriaGroupRenderer
 	public BoundWidgetProvider renderCustomiser() {
 		return new BoundWidgetProvider() {
 			public BoundWidget get() {
-				return new HiliSelectBox();
+				return new EntitySelectBox();
 			}
 		};
 	}
 
-	public static class HiliSelectBox
+	public static class EntitySelectBox
 			extends AbstractBoundWidget<PersistentObjectCriteriaGroup> {
 		private PersistentObjectCriteriaGroup value;
 
@@ -65,7 +65,7 @@ public class PersistentObjectCriteriaGroupRenderer
 
 		SetBasedListBox box;
 
-		public HiliSelectBox() {
+		public EntitySelectBox() {
 			this.fp = new FlowPanel();
 			box = new SetBasedListBox();
 			Set<ClassRef> all = ClassRef.all();
@@ -75,7 +75,7 @@ public class PersistentObjectCriteriaGroupRenderer
 							try {
 								Object templateInstance = ClientReflector.get()
 										.getTemplateInstance(o.getRefClass());
-								return templateInstance instanceof HasIdAndLocalId;
+								return templateInstance instanceof Entity;
 							} catch (Exception e) {
 								return false;
 							}
@@ -89,7 +89,7 @@ public class PersistentObjectCriteriaGroupRenderer
 			box.setOptions(sorted);
 			fp.add(box);
 			initWidget(fp);
-			setAction(new HiliSelectBoxBindingAction());
+			setAction(new EntitySelectBoxBindingAction());
 		}
 
 		public PersistentObjectCriteriaGroup getValue() {
@@ -101,11 +101,11 @@ public class PersistentObjectCriteriaGroupRenderer
 		}
 	}
 
-	private static class HiliSelectBoxBindingAction extends
+	private static class EntitySelectBoxBindingAction extends
 			BasicBindingAction<BoundWidget<PersistentObjectCriteriaGroup>> {
 		@Override
 		protected void set0(BoundWidget widget) {
-			HiliSelectBox hsb = (HiliSelectBox) widget;
+			EntitySelectBox hsb = (EntitySelectBox) widget;
 			binding.getChildren()
 					.add(new Binding(hsb.box, "value",
 							((PersistentObjectCriteriaGroup) hsb.getModel())

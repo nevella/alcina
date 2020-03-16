@@ -23,20 +23,20 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 import cc.alcina.framework.common.client.Reflections;
 
 /**
- * Custom field serializer for HiliLocator
+ * Custom field serializer for EntityLocator
  */
 @SuppressWarnings("unchecked")
-public final class HiliLocator_CustomFieldSerializer
-		extends CustomFieldSerializer<HiliLocator> {
+public final class EntityLocator_CustomFieldSerializer
+		extends CustomFieldSerializer<EntityLocator> {
 	public static void deserialize(SerializationStreamReader streamReader,
-			HiliLocator instance) throws SerializationException {
+			EntityLocator instance) throws SerializationException {
 		instance.id=streamReader.readLong();
 		instance.localId=streamReader.readLong();
 		instance.clazz=Reflections.classLookup().getClassForName(streamReader.readString());
 	}
 
 	public static void serialize(SerializationStreamWriter streamWriter,
-			HiliLocator instance) throws SerializationException {
+			EntityLocator instance) throws SerializationException {
 		streamWriter.writeLong(instance.id);
 		streamWriter.writeLong(instance.localId);
 		streamWriter.writeString(instance.clazz.getName());
@@ -44,13 +44,13 @@ public final class HiliLocator_CustomFieldSerializer
 
 	@Override
 	public void deserializeInstance(SerializationStreamReader streamReader,
-			HiliLocator instance) throws SerializationException {
+			EntityLocator instance) throws SerializationException {
 		deserialize(streamReader, instance);
 	}
 
 	@Override
 	public void serializeInstance(SerializationStreamWriter streamWriter,
-			HiliLocator instance) throws SerializationException {
+			EntityLocator instance) throws SerializationException {
 		serialize(streamWriter, instance);
 	}
 }

@@ -16,14 +16,14 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.DomainDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.domain.IDomainStore;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.MetricLogging;
 
-public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
+public abstract class LazyLoadProvideTask<T extends Entity>
         implements PreProvideTask<T> {
     final static Logger logger = LoggerFactory
             .getLogger(MethodHandles.lookup().lookupClass());
@@ -49,9 +49,9 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
     }
 
     public void evictDependents(EvictionToken evictionToken,
-            Collection<? extends HasIdAndLocalId> hilis) {
-        hilis.stream().forEach(
-                hili -> this.evict(evictionToken, hili.getId(), false));
+            Collection<? extends Entity> entities) {
+        entities.stream().forEach(
+                entity -> this.evict(evictionToken, entity.getId(), false));
     }
 
     @Override
@@ -192,7 +192,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
             this.topLevelTask = lazyLoadProvideTask;
         }
 
-        public <T extends HasIdAndLocalId> T getObject(Long key,
+        public <T extends Entity> T getObject(Long key,
                 Class<T> clazz) {
             return store.cache.get(clazz, key);
         }
@@ -215,13 +215,13 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
             topLevelTask.lllog(fb.toString());
         }
 
-        public void removeFromDomainStore(Set<? extends HasIdAndLocalId> set) {
+        public void removeFromDomainStore(Set<? extends Entity> set) {
             if (!set.isEmpty()) {
-                HasIdAndLocalId item0 = set.iterator().next();
+                Entity item0 = set.iterator().next();
                 Class clazz = item0.getClass();
                 int size1 = store.cache.getMap(clazz).size();
-                for (HasIdAndLocalId hili : set) {
-                    store.cache.remove(hili);
+                for (Entity entity : set) {
+                    store.cache.remove(entity);
                 }
                 int size2 = store.cache.getMap(clazz).size();
                 topLevelTask.lllog(

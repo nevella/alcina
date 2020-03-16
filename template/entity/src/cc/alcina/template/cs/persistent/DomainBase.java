@@ -9,6 +9,6 @@ import cc.alcina.framework.common.client.entity.VersioningEntityListener;
 
 
 @MappedSuperclass
-@EntityListeners(VersioningEntityListener.class)
+@javax.persistence.EntityListeners(VersioningEntityListener.class)
 public abstract class DomainBase extends AbstractDomainBase {
 }

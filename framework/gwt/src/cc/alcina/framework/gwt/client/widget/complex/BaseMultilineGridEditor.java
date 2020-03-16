@@ -4,12 +4,13 @@ import java.util.Collections;
 import java.util.List;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparator;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.widget.Link;
 
-public class BaseMultilineGridEditor<T extends HasIdAndLocalId>
+public class BaseMultilineGridEditor<T extends Entity>
         extends MultilineGridEditor<T> implements BaseMultilineEditor<T> {
     BaseMultilineEditorCustomiser<T> customiser;
 
@@ -71,7 +72,7 @@ public class BaseMultilineGridEditor<T extends HasIdAndLocalId>
     }
     @Override
 	public void sortValues(List<T> values) {
-    	Collections.sort(values,HiliComparator.INSTANCE);
+    	Collections.sort(values,Entity.EntityComparator.INSTANCE);
 		customiser.sortValues(values);
 	}
 }

@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
@@ -24,7 +24,7 @@ import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 
-public abstract class MultilineGridEditor<H extends HasIdAndLocalId>
+public abstract class MultilineGridEditor<H extends Entity>
 		extends AbstractBoundWidget<Set<H>> implements MultilineWidget {
 	private FlowPanel holder;
 

@@ -1,7 +1,7 @@
 package cc.alcina.template.j2seentities;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
+
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -29,7 +29,7 @@ import cc.alcina.template.cs.persistent.ClassRefImpl;
 
 
 
-@Entity
+@javax.persistence.Entity
 @Table(name = "domain_transform_event")
 @SequenceGenerator(allocationSize=1,name = "domain_transform_event_id_seq", sequenceName = "domain_transform_event_id_seq")
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = DomainTransformEventPersistent.class)

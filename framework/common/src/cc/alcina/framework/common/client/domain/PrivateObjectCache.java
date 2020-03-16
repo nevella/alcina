@@ -3,8 +3,8 @@ package cc.alcina.framework.common.client.domain;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreIdMapCreator;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
@@ -16,15 +16,15 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 public interface PrivateObjectCache {
 	public <T> T get(Class<T> clazz, Long id);
 
-	public <T extends HasIdAndLocalId> T getExisting(T hili);
+	public <T extends Entity> T getExisting(T entity);
 
-	default <T extends HasIdAndLocalId> T get(HiliLocator locator) {
+	default <T extends Entity> T get(EntityLocator locator) {
 		return (T) get(locator.clazz, locator.id);
 	}
 
-	void put(HasIdAndLocalId hili);
+	void put(Entity entity);
 
-	void putForSuperClass(Class clazz, HasIdAndLocalId hili);
+	void putForSuperClass(Class clazz, Entity entity);
 
 	public static class PrivateObjectCacheSingleClass
 			implements PrivateObjectCache {
@@ -36,18 +36,18 @@ public interface PrivateObjectCache {
 		}
 
 		@Override
-		public <T extends HasIdAndLocalId> T getExisting(T hili) {
-			return (T) map.get(hili.getId());
+		public <T extends Entity> T getExisting(T entity) {
+			return (T) map.get(entity.getId());
 		}
 
 		@Override
-		public void put(HasIdAndLocalId hili) {
-			map.put(hili.getId(), hili);
+		public void put(Entity entity) {
+			map.put(entity.getId(), entity);
 		}
 
 		@Override
-		public void putForSuperClass(Class clazz, HasIdAndLocalId hili) {
-			put(hili);
+		public void putForSuperClass(Class clazz, Entity entity) {
+			put(entity);
 		}
 	}
 }

@@ -2,17 +2,17 @@ package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
 import java.util.Collection;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 
 public interface FastIdLookup {
-	public abstract HasIdAndLocalId get(long id, boolean local);
+	public abstract Entity get(long id, boolean local);
 
-	public abstract void put(HasIdAndLocalId hili, boolean local);
+	public abstract void put(Entity entity, boolean local);
 
-	public abstract void putAll(Collection<HasIdAndLocalId> values,
+	public abstract void putAll(Collection<Entity> values,
 			boolean local);
 
 	public abstract void remove(long id, boolean local);
 
-	public abstract Collection<HasIdAndLocalId> values();
+	public abstract Collection<Entity> values();
 }

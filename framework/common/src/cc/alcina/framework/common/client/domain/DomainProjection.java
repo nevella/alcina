@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.domain;
 
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 
 /**
  * Domain projections do not project when returning results - detached cloning
@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  * 
  * @param <T>
  */
-public interface DomainProjection<T extends HasIdAndLocalId>
+public interface DomainProjection<T extends Entity>
 		extends DomainListener<T>, MemoryStatProvider {
 	@Override
 	default MemoryStat addMemoryStats(MemoryStat parent, StatType type) {

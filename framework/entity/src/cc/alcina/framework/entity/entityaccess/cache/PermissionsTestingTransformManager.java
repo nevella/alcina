@@ -4,7 +4,7 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCacheObjectStore;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
@@ -25,7 +25,7 @@ public class PermissionsTestingTransformManager
 	}
 
 	@Override
-	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+	public <T extends Entity> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		return getDomainObjects().getObject(c, id, localId);
 	}
@@ -36,7 +36,7 @@ public class PermissionsTestingTransformManager
 	}
 
 	@Override
-	public <T extends HasIdAndLocalId> void loadObject(Class<? extends T> c,
+	public <T extends Entity> void loadObject(Class<? extends T> c,
 			long id, long localId) {
 		T t = Domain.detachedVersion(c, id);
 		store.mapObject(t);

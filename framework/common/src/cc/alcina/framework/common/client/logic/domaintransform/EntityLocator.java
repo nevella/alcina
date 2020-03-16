@@ -6,55 +6,56 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /*
  */
-public class HiliLocator implements Serializable {
+public class EntityLocator implements Serializable {
 	static final transient long serialVersionUID = 1L;
 
-	public static HiliLocator instanceLocator(HasIdAndLocalId hili) {
-		return new HiliLocator(hili);
+	public static EntityLocator instanceLocator(Entity entity) {
+		return new EntityLocator(entity);
 	}
 
-	public static HiliLocator objectLocalLocator(DomainTransformEvent dte) {
-		return new HiliLocator(dte.getObjectClass(), 0, dte.getObjectLocalId());
-	}
-
-	public static HiliLocator objectLocator(DomainTransformEvent dte) {
-		return new HiliLocator(dte.getObjectClass(), dte.getObjectId(),
+	public static EntityLocator objectLocalLocator(DomainTransformEvent dte) {
+		return new EntityLocator(dte.getObjectClass(), 0,
 				dte.getObjectLocalId());
 	}
 
-	public static HiliLocator parse(String v) {
+	public static EntityLocator objectLocator(DomainTransformEvent dte) {
+		return new EntityLocator(dte.getObjectClass(), dte.getObjectId(),
+				dte.getObjectLocalId());
+	}
+
+	public static EntityLocator parse(String v) {
 		if (v == null || v.equals("null")) {
-			return new HiliLocator();
+			return new EntityLocator();
 		}
 		String[] parts = v.split("/");
-		return new HiliLocator(
+		return new EntityLocator(
 				Reflections.classLookup().getClassForName(parts[2]),
 				Long.parseLong(parts[0]), Long.parseLong(parts[1]));
 	}
 
-	public static HiliLocator parseShort(Class clazz, String key) {
+	public static EntityLocator parseShort(Class clazz, String key) {
 		String simpleName = key.replaceFirst("(\\S+) - (.+)", "$1");
 		long id = Long.parseLong(key.replaceFirst("(\\S+) - (.+)", "$2"));
 		Preconditions.checkArgument(clazz.getSimpleName().equals(simpleName));
-		return new HiliLocator(clazz, id, 0);
+		return new EntityLocator(clazz, id, 0);
 	}
 
-	public static HiliLocator valueLocator(DomainTransformEvent dte) {
+	public static EntityLocator valueLocator(DomainTransformEvent dte) {
 		return dte.getValueClass() != null
 				&& (dte.getValueId() != 0 || dte.getValueLocalId() != 0)
-						? new HiliLocator(dte.getValueClass(), dte.getValueId(),
-								dte.getValueLocalId())
+						? new EntityLocator(dte.getValueClass(),
+								dte.getValueId(), dte.getValueLocalId())
 						: null;
 	}
 
-	public Class<? extends HasIdAndLocalId> clazz;
+	public Class<? extends Entity> clazz;
 
 	public long id;
 
@@ -62,17 +63,16 @@ public class HiliLocator implements Serializable {
 
 	private int hash;
 
-	public HiliLocator() {
+	public EntityLocator() {
 	}
 
-	public HiliLocator(Class<? extends HasIdAndLocalId> clazz, long id,
-			long localId) {
+	public EntityLocator(Class<? extends Entity> clazz, long id, long localId) {
 		this.clazz = clazz;
 		this.id = id;
 		this.localId = localId;
 	}
 
-	public HiliLocator(HasIdAndLocalId obj) {
+	public EntityLocator(Entity obj) {
 		this.clazz = obj.getClass();
 		this.id = obj.getId();
 		this.localId = obj.getLocalId();
@@ -80,8 +80,8 @@ public class HiliLocator implements Serializable {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof HiliLocator) {
-			HiliLocator o = (HiliLocator) obj;
+		if (obj instanceof EntityLocator) {
+			EntityLocator o = (EntityLocator) obj;
 			if (localId != 0 && o.localId != 0) {
 				return localId == o.localId && clazz == o.clazz;
 			}
@@ -90,11 +90,11 @@ public class HiliLocator implements Serializable {
 		return super.equals(obj);
 	}
 
-	public <T extends HasIdAndLocalId> T find() {
+	public <T extends Entity> T find() {
 		return Domain.find(this);
 	}
 
-	public Class<? extends HasIdAndLocalId> getClazz() {
+	public Class<? extends Entity> getClazz() {
 		return this.clazz;
 	}
 
@@ -119,7 +119,7 @@ public class HiliLocator implements Serializable {
 		return localId != 0;
 	}
 
-	public void setClazz(Class<? extends HasIdAndLocalId> clazz) {
+	public void setClazz(Class<? extends Entity> clazz) {
 		this.clazz = clazz;
 	}
 

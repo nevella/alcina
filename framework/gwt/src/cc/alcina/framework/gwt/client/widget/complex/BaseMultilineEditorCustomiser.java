@@ -8,14 +8,15 @@ import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliComparatorLocalsHigh;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparatorLocalsHigh;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.widget.Link;
 
-public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
+public abstract class BaseMultilineEditorCustomiser<T extends Entity>
 		implements Customiser, BoundWidgetProvider {
 	private boolean editable;
 
@@ -83,7 +84,7 @@ public abstract class BaseMultilineEditorCustomiser<T extends HasIdAndLocalId>
 	}
 
 	public void sortValues(List<T> values) {
-		values.sort(HiliComparatorLocalsHigh.INSTANCE);
+		values.sort(Entity.EntityComparatorLocalsHigh.INSTANCE);
 	}
 
 	protected boolean asMultipleGrids() {

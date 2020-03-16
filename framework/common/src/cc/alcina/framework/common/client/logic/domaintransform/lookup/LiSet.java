@@ -9,7 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 
 /**
  * 
@@ -17,19 +17,19 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  * 
  * @param <H>
  */
-public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
+public class LiSet<H extends Entity> extends AbstractSet<H>
         implements Cloneable, Serializable {
     static final transient long serialVersionUID = 1;
 
     static final transient int DEGENERATE_THRESHOLD = 30;
 
-    public static <H extends HasIdAndLocalId> LiSet<H> of(H h) {
+    public static <H extends Entity> LiSet<H> of(H h) {
         LiSet<H> result = new LiSet<>();
         result.add(h);
         return result;
     }
 
-    private transient HasIdAndLocalId[] elementData;
+    private transient Entity[] elementData;
 
     transient int size = 0;
 
@@ -61,7 +61,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
             return toDegenerate(e);
         }
         if (isEmpty()) {
-            elementData = new HasIdAndLocalId[1];
+            elementData = new Entity[1];
             elementData[0] = e;
             size++;
             modCount++;
@@ -77,7 +77,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
             }
             size++;
             modCount++;
-            HasIdAndLocalId[] newData = new HasIdAndLocalId[size];
+            Entity[] newData = new Entity[size];
             System.arraycopy(elementData, 0, newData, 0, idx);
             newData[idx] = e;
             System.arraycopy(elementData, idx, newData, idx + 1,
@@ -103,7 +103,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
         if (isEmpty()) {
             return false;
         }
-        int idx = indexOf((HasIdAndLocalId) o);
+        int idx = indexOf((Entity) o);
         if (idx == size) {
             return false;
         }
@@ -133,7 +133,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
         if (isEmpty()) {
             return false;
         }
-        int idx = indexOf((HasIdAndLocalId) o);
+        int idx = indexOf((Entity) o);
         if (idx == size) {
             return false;
         }
@@ -146,7 +146,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
             elementData = null;
             return true;
         }
-        HasIdAndLocalId[] newData = new HasIdAndLocalId[size];
+        Entity[] newData = new Entity[size];
         System.arraycopy(elementData, 0, newData, 0, idx);
         System.arraycopy(elementData, idx + 1, newData, idx, size - idx);
         elementData = newData;
@@ -161,7 +161,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
         return size;
     }
 
-    private int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+    private int compare(Entity o1, Entity o2) {
         if (o1.getId() < o2.getId()) {
             return -1;
         }
@@ -177,14 +177,14 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
         return 0;
     }
 
-    private int indexOf(HasIdAndLocalId e) {
+    private int indexOf(Entity e) {
         int rangeMin = 0;
         int rangeMax = size;
         int arrayPos = 0;
         int res = 0;
         while (rangeMax > rangeMin) {
             arrayPos = (rangeMax - rangeMin) / 2 + rangeMin;
-            HasIdAndLocalId f = elementData[arrayPos];
+            Entity f = elementData[arrayPos];
             res = compare(e, f);
             if (res == 0) {
                 return arrayPos;
@@ -201,14 +201,14 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
         // if res<0, e<f - but possibly e<d (elementData[arrayPos-1]) - limits
         // of binary search.
         if (rangeMax < size && rangeMax >= 0) {
-            HasIdAndLocalId f = elementData[rangeMax];
+            Entity f = elementData[rangeMax];
             if (e.equals(f)) {
                 return rangeMax;
             }
         }
         if (res < 0) {
             if (arrayPos > 0) {
-                HasIdAndLocalId d = elementData[arrayPos - 1];
+                Entity d = elementData[arrayPos - 1];
                 res = compare(e, d);
                 if (res == -1) {
                     return arrayPos - 1;
@@ -217,7 +217,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H>
             return arrayPos;
         } else {
             if (arrayPos + 1 < size) {
-                HasIdAndLocalId g = elementData[arrayPos + 1];
+                Entity g = elementData[arrayPos + 1];
                 res = compare(e, g);
                 if (res == 1) {
                     return arrayPos + 2;

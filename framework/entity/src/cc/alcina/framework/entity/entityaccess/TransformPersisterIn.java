@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -87,8 +87,8 @@ public class TransformPersisterIn {
 		this.entityManager = entityManager;
 		IUser incomingUser = PermissionsManager.get().getUser();
 		commonPersistenceBase.connectPermissionsManagerToLiveObjects(true);
-		HiliLocatorMap locatorMap = token.getLocatorMap();
-		HiliLocatorMap locatorMapClone = (HiliLocatorMap) locatorMap.copy();
+		EntityLocatorMap locatorMap = token.getLocatorMap();
+		EntityLocatorMap locatorMapClone = (EntityLocatorMap) locatorMap.copy();
 		final DomainTransformRequest request = token.getRequest();
 		List<DomainTransformEventPersistent> dtreps = wrapper.persistentEvents;
 		List<DomainTransformRequestPersistent> dtrps = wrapper.persistentRequests;
@@ -441,7 +441,7 @@ public class TransformPersisterIn {
 			}
 			if (e instanceof OptimisticLockException) {
 				Object entity = ((OptimisticLockException) e).getEntity();
-				if (entity != null && entity instanceof HasIdAndLocalId) {
+				if (entity != null && entity instanceof Entity) {
 					System.out.format("Conflicting entity:\n\t%s\n",
 							Registry.impl(JPAImplementation.class)
 									.entityDebugString(entity));

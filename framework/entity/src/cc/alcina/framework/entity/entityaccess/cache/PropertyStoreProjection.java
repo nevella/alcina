@@ -3,9 +3,9 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.sql.SQLException;
 
 import cc.alcina.framework.common.client.domain.BaseProjection;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 
-public abstract class PropertyStoreProjection<T extends HasIdAndLocalId>
+public abstract class PropertyStoreProjection<T extends Entity>
 		extends BaseProjection<T> {
 	public PropertyStoreProjection(PropertyStore propertyStore,
 			Class initialType, Class... secondaryTypes) {

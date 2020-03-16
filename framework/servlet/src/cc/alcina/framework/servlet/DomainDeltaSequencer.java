@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
@@ -76,12 +76,12 @@ public class DomainDeltaSequencer {
 
 	public static DomainTranche objectsToTranche(
 			final DetachedEntityCache reachableCache, Long id,
-			Collection<HasIdAndLocalId> hilis, Class clazz,
+			Collection<Entity> entities, Class clazz,
 			Class signatureClass, GraphProjectionDualFilter flattenFilter)
 			throws Exception {
-		hilis = new ArrayList<HasIdAndLocalId>(hilis);
+		entities = new ArrayList<Entity>(entities);
 		List<DomainTransformEvent> dtes = TransformManager.get()
-				.objectsToDtes(hilis, clazz, false);
+				.objectsToDtes(entities, clazz, false);
 		// flatten
 		CollectionFilter<DomainTransformEvent> changePropertyRefAndNonDvUserFilter = new ReachableAndTrimmedFilter(
 				reachableCache);
@@ -90,7 +90,7 @@ public class DomainDeltaSequencer {
 		DomainTranche tranche = new DomainTranche();
 		tranche.setReplayEvents(dtes);
 		tranche.setUnlinkedObjects(
-				new GraphProjection(flattenFilter, flattenFilter).project(hilis,
+				new GraphProjection(flattenFilter, flattenFilter).project(entities,
 						null));
 		tranche.setSignature(new DomainModelDeltaSignature()
 				.clazz(signatureClass).requiresHash().id(id));

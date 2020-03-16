@@ -2,7 +2,7 @@ package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -10,7 +10,7 @@ import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
-public class IntBackedPropertyStoreLookup<T, H extends HasIdAndLocalId>
+public class IntBackedPropertyStoreLookup<T, H extends Entity>
 		extends PropertyStoreLookup<T, H> {
 	public static Set<Long>
 			intCollectionToLongSet(IntCollection intCollection) {
@@ -54,7 +54,7 @@ public class IntBackedPropertyStoreLookup<T, H extends HasIdAndLocalId>
 	}
 
 	@Override
-	public void index(HasIdAndLocalId obj, boolean add) {
+	public void index(Entity obj, boolean add) {
 		long tgtIdx = CommonUtils.lv((Long) pd.read(obj));
 		if (tgtIdx != 0) {
 			if (add) {

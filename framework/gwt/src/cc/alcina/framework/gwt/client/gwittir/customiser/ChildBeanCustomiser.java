@@ -30,7 +30,7 @@ import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -128,7 +128,7 @@ public class ChildBeanCustomiser implements Customiser {
                     Class clazz = ChildBeanWidget.this.objectClass;
                     boolean autoSave = ClientBase.getGeneralProperties()
                             .isAutoSave();
-                    HasIdAndLocalId obj = autoSave
+                    Entity obj = autoSave
                             ? TransformManager.get().createDomainObject(clazz)
                             : TransformManager.get()
                                     .createProvisionalObject(clazz);

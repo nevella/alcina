@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
@@ -28,12 +28,12 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
  *
  * @param <T>
  */
-public class MvccObjectVersions<T extends HasIdAndLocalId>
+public class MvccObjectVersions<T extends Entity>
 		implements Vacuumable {
 	static Logger logger = LoggerFactory.getLogger(MvccObjectVersions.class);
 
 	// called in a synchronized block (synchronized on baseObject)
-	static <T extends HasIdAndLocalId> MvccObjectVersions<T> ensure(
+	static <T extends Entity> MvccObjectVersions<T> ensure(
 			T baseObject, Transaction transaction,
 			boolean initialObjectIsWriteable) {
 		MvccObject mvccObject = (MvccObject) baseObject;
@@ -82,7 +82,7 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 				ObjectVersion<T> version = new ObjectVersion<>();
 				version.transaction = initialTransaction;
 				version.object = (T) Transactions
-						.copyObject((HasIdAndLocalId & MvccObject) t);
+						.copyObject((Entity & MvccObject) t);
 				((MvccObject) version.object).__setMvccVersions__(this);
 				putVersion(version);
 			}
@@ -203,7 +203,7 @@ public class MvccObjectVersions<T extends HasIdAndLocalId>
 		}
 		if (write) {
 			version.object = (T) Transactions.copyObject(
-					(HasIdAndLocalId & MvccObject) mostRecentObject);
+					(Entity & MvccObject) mostRecentObject);
 			version.writeable = true;
 			// put before register (which will call resolve());
 			putVersion(version);

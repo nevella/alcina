@@ -7,7 +7,7 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.Entity;
+
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -57,7 +57,7 @@ import cc.alcina.template.cs.constants.AlcinaTemplateSiteConstants;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
-@Entity
+@javax.persistence.Entity
 @Table(name = "users", schema = "public")
 @SequenceGenerator(allocationSize=1,name = "users_id_seq", sequenceName = "users_id_seq")
 @Bean(actions = @ObjectActions( {

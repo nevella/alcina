@@ -4,7 +4,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import cc.alcina.framework.common.client.domain.DomainLookup;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.PdOperator;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -14,7 +14,7 @@ import it.unimi.dsi.fastutil.longs.LongListIterator;
 /*
  * Only indexes Longs!
  */
-public class PropertyStoreLookup<T, H extends HasIdAndLocalId>
+public class PropertyStoreLookup<T, H extends Entity>
 		extends DomainLookup<T, H> {
 	protected PropertyStore propertyStore;
 
@@ -38,7 +38,7 @@ public class PropertyStoreLookup<T, H extends HasIdAndLocalId>
 		return null;
 	}
 
-	public void index(HasIdAndLocalId obj, boolean add) {
+	public void index(Entity obj, boolean add) {
 		long tgtIdx = CommonUtils.lv((Long) pd.read(obj));
 		if (tgtIdx != 0) {
 			if (add) {

@@ -13,7 +13,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -145,15 +145,15 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
         return loadedInPhase.get(clazz, id) == phase;
     }
 
-    protected void addProperty(Class<? extends HasIdAndLocalId> source,
-            String propertyName, Class<? extends HasIdAndLocalId> target,
+    protected void addProperty(Class<? extends Entity> source,
+            String propertyName, Class<? extends Entity> target,
             DomainSegmentPropertyType type) {
         addProperty(source, propertyName, target, type,
                 DomainSegmentLoaderPhase.ALL_PHASES);
     }
 
-    protected void addProperty(Class<? extends HasIdAndLocalId> source,
-            String propertyName, Class<? extends HasIdAndLocalId> target,
+    protected void addProperty(Class<? extends Entity> source,
+            String propertyName, Class<? extends Entity> target,
             DomainSegmentPropertyType type, DomainSegmentLoaderPhase phase) {
         properties.add(new DomainSegmentLoaderProperty(source, propertyName,
                 target, type, phase));
@@ -198,19 +198,19 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
     }
 
     public static class DomainSegmentLoaderProperty {
-        Class<? extends HasIdAndLocalId> clazz1;
+        Class<? extends Entity> clazz1;
 
         String propertyName1;
 
-        Class<? extends HasIdAndLocalId> clazz2;
+        Class<? extends Entity> clazz2;
 
         DomainSegmentPropertyType type;
 
         private DomainSegmentLoaderPhase phase;
 
         public DomainSegmentLoaderProperty(
-                Class<? extends HasIdAndLocalId> source, String propertyName,
-                Class<? extends HasIdAndLocalId> target,
+                Class<? extends Entity> source, String propertyName,
+                Class<? extends Entity> target,
                 DomainSegmentPropertyType type,
                 DomainSegmentLoaderPhase phase) {
             this.clazz1 = source;

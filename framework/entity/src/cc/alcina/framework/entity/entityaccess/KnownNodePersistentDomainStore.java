@@ -10,7 +10,7 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.Ax;
 @DomainTransformPersistable
 @RegistryLocation(registryPoint = KnownNodePersistentDomainStore.class)
 public abstract class KnownNodePersistentDomainStore extends
-		AbstractDomainBase<KnownNodePersistentDomainStore> implements IVersionable,KnownNodePersistent {
+		Entity<KnownNodePersistentDomainStore> implements IVersionable,KnownNodePersistent {
 	protected long id;
 
 	private Set<KnownNodePersistentDomainStore> children=new LiSet<>();

@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
 
 /**
@@ -30,8 +30,8 @@ public class ObjectDeltaSpec implements Serializable {
 	public ObjectDeltaSpec() {
 	}
 
-	public ObjectDeltaSpec(HasIdAndLocalId hili, String propertyName) {
-		setObjectRef(new ObjectRef(hili));
+	public ObjectDeltaSpec(Entity entity, String propertyName) {
+		setObjectRef(new ObjectRef(entity));
 		setPropertyName(propertyName);
 	}
 

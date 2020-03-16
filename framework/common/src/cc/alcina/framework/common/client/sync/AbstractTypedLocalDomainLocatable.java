@@ -2,21 +2,21 @@ package cc.alcina.framework.common.client.sync;
 
 import com.google.gwt.core.shared.GWT;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 
-public abstract class AbstractTypedLocalDomainLocatable<T extends TypedLocalDomainLocatable>
-		implements TypedLocalDomainLocatable<T> {
+public interface AbstractTypedLocalDomainLocatable<T extends TypedLocalDomainLocatable>
+		extends TypedLocalDomainLocatable<T> {
 	public static final String CONTEXT_HINT_ALLOW_CACHED_FIND = AbstractTypedLocalDomainLocatable.class
 			.getName() + ".CONTEXT_HINT_ALLOW_CACHED_FIND";
 
-	public T createOrReturnLocal() {
+	default T createOrReturnLocal() {
 		return createOrReturnLocal(false);
 	}
 
-	public T createOrReturnLocal(boolean allowCached) {
+	default T createOrReturnLocal(boolean allowCached) {
 		if (allowCached) {
 			try {
 				LooseContext.pushWithKey(CONTEXT_HINT_ALLOW_CACHED_FIND, true);
@@ -39,26 +39,26 @@ public abstract class AbstractTypedLocalDomainLocatable<T extends TypedLocalDoma
 		}
 	}
 
-	public void deleteLocalEquivalent() {
-		if (GWT.isClient() && this instanceof HasIdAndLocalId) {
-			TransformManager.get().deleteObject((HasIdAndLocalId) this, true);
+	default void deleteLocalEquivalent() {
+		if (GWT.isClient() && this instanceof Entity) {
+			TransformManager.get().deleteObject((Entity) this, true);
 		} else {
 			Registry.impl(TypedLocalDomainPersistence.class, getClass())
 					.deleteLocalEquivalent(this);
 		}
 	}
 
-	public T ensureLocalEquivalent() {
+	default T ensureLocalEquivalent() {
 		return (T) Registry.impl(TypedLocalDomainPersistence.class, getClass())
 				.ensureLocalEquivalent(this);
 	}
 
-	public T findLocalEquivalent() {
+	default T findLocalEquivalent() {
 		return (T) Registry.impl(TypedLocalDomainPersistence.class, getClass())
 				.findLocalEquivalent(this);
 	}
 
-	public T localEquivalentOrSelf() {
+	default T localEquivalentOrSelf() {
 		try {
 			LooseContext.pushWithKey(CONTEXT_HINT_ALLOW_CACHED_FIND, true);
 			T local = findLocalEquivalent();
@@ -68,7 +68,7 @@ public abstract class AbstractTypedLocalDomainLocatable<T extends TypedLocalDoma
 		}
 	}
 
-	public T updateLocalEquivalent() {
+	default T updateLocalEquivalent() {
 		try {
 			LooseContext.pushWithKey(CONTEXT_HINT_ALLOW_CACHED_FIND, true);
 			Registry.impl(TypedLocalDomainPersistence.class, getClass())

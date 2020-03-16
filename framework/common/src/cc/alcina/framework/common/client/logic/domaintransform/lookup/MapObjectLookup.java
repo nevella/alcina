@@ -11,7 +11,7 @@ import java.util.Set;
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 
 public abstract class MapObjectLookup implements ObjectStore {
@@ -26,9 +26,9 @@ public abstract class MapObjectLookup implements ObjectStore {
 		this.perClassLookups = new PerClassLookup();
 	}
 
-	public Set<HasIdAndLocalId> allValues() {
-		Set<HasIdAndLocalId> result = new LinkedHashSet<HasIdAndLocalId>();
-		for (Collection<HasIdAndLocalId> collection : getCollectionMap()
+	public Set<Entity> allValues() {
+		Set<Entity> result = new LinkedHashSet<Entity>();
+		for (Collection<Entity> collection : getCollectionMap()
 				.values()) {
 			result.addAll(collection);
 		}
@@ -36,8 +36,8 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	@Override
-	public void changeMapping(HasIdAndLocalId obj, long id, long localId) {
-		Class<? extends HasIdAndLocalId> clazz = obj.getClass();
+	public void changeMapping(Entity obj, long id, long localId) {
+		Class<? extends Entity> clazz = obj.getClass();
 		FastIdLookup lookup = ensureLookup(clazz);
 		lookup.remove(id, false);
 		lookup.remove(localId, true);
@@ -51,12 +51,12 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	@Override
-	public boolean contains(Class<? extends HasIdAndLocalId> clazz, long id) {
+	public boolean contains(Class<? extends Entity> clazz, long id) {
 		return getObject(clazz, id, 0L) != null;
 	}
 
 	@Override
-	public boolean contains(HasIdAndLocalId obj) {
+	public boolean contains(Entity obj) {
 		return getObject(obj) != null;
 	}
 
@@ -66,27 +66,27 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	@Override
-	public void deregisterObject(HasIdAndLocalId hili) {
-		if (hili == null) {
+	public void deregisterObject(Entity entity) {
+		if (entity == null) {
 			return;
 		}
-		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
+		Class<? extends Entity> clazz = entity.getClass();
 		FastIdLookup lookup = ensureLookup(clazz);
-		lookup.remove(hili.getId(), false);
-		lookup.remove(hili.getLocalId(), true);
-		if (hili instanceof SourcesPropertyChangeEvents) {
-			SourcesPropertyChangeEvents sb = (SourcesPropertyChangeEvents) hili;
+		lookup.remove(entity.getId(), false);
+		lookup.remove(entity.getLocalId(), true);
+		if (entity instanceof SourcesPropertyChangeEvents) {
+			SourcesPropertyChangeEvents sb = (SourcesPropertyChangeEvents) entity;
 			sb.removePropertyChangeListener(listener);
 		}
 	}
 
 	@Override
-	public void deregisterObjects(Collection<HasIdAndLocalId> objects) {
+	public void deregisterObjects(Collection<Entity> objects) {
 		if (objects == null) {
 			return;
 		}
-		for (HasIdAndLocalId hili : objects) {
-			deregisterObject(hili);
+		for (Entity entity : objects) {
+			deregisterObject(entity);
 		}
 	}
 
@@ -96,13 +96,13 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	@Override
-	public Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>>
+	public Map<Class<? extends Entity>, Collection<Entity>>
 			getCollectionMap() {
 		return this.perClassLookups.getCollnMap();
 	}
 
 	@Override
-	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+	public <T extends Entity> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		FastIdLookup lookup = perClassLookups.getLookup(c);
 		if (lookup == null) {
@@ -119,13 +119,13 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	@Override
-	public HasIdAndLocalId getObject(HasIdAndLocalId bean) {
-		return (HasIdAndLocalId) getObject(bean.getClass(), bean.getId(),
+	public Entity getObject(Entity bean) {
+		return (Entity) getObject(bean.getClass(), bean.getId(),
 				bean.getLocalId());
 	}
 
 	@Override
-	public void invalidate(Class<? extends HasIdAndLocalId> clazz) {
+	public void invalidate(Class<? extends Entity> clazz) {
 		perClassLookups.lookups.remove(clazz);
 		perClassLookups.ensureLookup(clazz);
 	}
@@ -133,7 +133,7 @@ public abstract class MapObjectLookup implements ObjectStore {
 	@Override
 	public void removeListeners() {
 		for (FastIdLookup lookup : perClassLookups.lookups.values()) {
-			for (HasIdAndLocalId o : lookup.values()) {
+			for (Entity o : lookup.values()) {
 				if (o instanceof SourcesPropertyChangeEvents) {
 					SourcesPropertyChangeEvents sb = (SourcesPropertyChangeEvents) o;
 					sb.removePropertyChangeListener(listener);
@@ -151,25 +151,25 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	class PerClassLookup {
-		Map<Class<? extends HasIdAndLocalId>, FastIdLookup> lookups = new LinkedHashMap<Class<? extends HasIdAndLocalId>, FastIdLookup>(
+		Map<Class<? extends Entity>, FastIdLookup> lookups = new LinkedHashMap<Class<? extends Entity>, FastIdLookup>(
 				100);
 
-		public boolean contains(HasIdAndLocalId obj) {
+		public boolean contains(Entity obj) {
 			FastIdLookup lookup = ensureLookup(obj.getClass());
 			return lookup.values().contains(obj);
 		}
 
-		public Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>>
+		public Map<Class<? extends Entity>, Collection<Entity>>
 				getCollnMap() {
-			Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> result = new LinkedHashMap<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>>();
-			for (Entry<Class<? extends HasIdAndLocalId>, FastIdLookup> entry : lookups
+			Map<Class<? extends Entity>, Collection<Entity>> result = new LinkedHashMap<Class<? extends Entity>, Collection<Entity>>();
+			for (Entry<Class<? extends Entity>, FastIdLookup> entry : lookups
 					.entrySet()) {
 				result.put(entry.getKey(), entry.getValue().values());
 			}
 			return result;
 		}
 
-		public void put(HasIdAndLocalId obj) {
+		public void put(Entity obj) {
 			FastIdLookup lookup = ensureLookup(obj.getClass());
 			lookup.put(obj, obj.getId() == 0);
 		}

@@ -54,9 +54,9 @@ import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask
 import cc.alcina.framework.common.client.domain.DomainProjection;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
-import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -185,7 +185,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		return this.transformSequencer;
 	}
 
-	public <T extends HasIdAndLocalId> List<T> loadTable(Class clazz,
+	public <T extends Entity> List<T> loadTable(Class clazz,
 			String sqlFilter, ClassIdLock sublock) throws Exception {
 		assert sublock != null;
 		try {
@@ -624,11 +624,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					.withConn(conn).withSqlFilter(sql)
 					.withJoinHandler(joinHandler).build();
 			for (Object[] row : connResults) {
-				HasIdAndLocalId src = (HasIdAndLocalId) store.cache
+				Entity src = (Entity) store.cache
 						.get(targetEntityClass, (Long) row[0]);
 				assert src != null;
 				if (joinHandler == null) {
-					HasIdAndLocalId tgt = (HasIdAndLocalId) store.cache.get(
+					Entity tgt = (Entity) store.cache.get(
 							rev.getReadMethod().getDeclaringClass(),
 							(Long) row[1]);
 					assert tgt != null;
@@ -672,13 +672,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	private List<HasIdAndLocalId> loadTable(Class clazz, String sqlFilter,
+	private List<Entity> loadTable(Class clazz, String sqlFilter,
 			ClassIdLock sublock, LaterLookup laterLookup) throws Exception {
 		if (sublock != null) {
 			store.threads.sublock(sublock, true);
 		}
 		try {
-			List<HasIdAndLocalId> loaded = (List) loadTable0(clazz, sqlFilter,
+			List<Entity> loaded = (List) loadTable0(clazz, sqlFilter,
 					sublock, laterLookup,
 					(!store.initialising || loadingSegment), false);
 			boolean keepDetached = LooseContext.is(
@@ -686,8 +686,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			if (sublock != null) {
 				laterLookup.resolve();
 				if (!store.initialising && !keepDetached) {
-					for (HasIdAndLocalId hili : loaded) {
-						store.index(hili, true);
+					for (Entity entity : loaded) {
+						store.index(entity, true);
 					}
 				}
 			}
@@ -756,8 +756,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					pdOperator.field.set(hasId, objects[i]);
 				}
 			}
-			if (!keepDetached && hasId instanceof HasIdAndLocalId) {
-				store.transformManager.store.mapObject((HasIdAndLocalId) hasId);
+			if (!keepDetached && hasId instanceof Entity) {
+				store.transformManager.store.mapObject((Entity) hasId);
 			}
 		}
 		return loaded;
@@ -854,19 +854,19 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							&& event.getValueClassRef().notInVm()));
 			// TODO - populate source - see
 			// cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceQueue.FireEventsThread.publishTransformEvent(Long)
-			MultikeyMap<HasIdAndLocalId> classIdTransformee = new UnsortedMultikeyMap<>();
+			MultikeyMap<Entity> classIdTransformee = new UnsortedMultikeyMap<>();
 			for (DomainTransformEventPersistent transform : transforms) {
 				transform.getDomainTransformRequestPersistent().getEvents()
 						.add(transform);
-				Class<? extends HasIdAndLocalId> transformeeClass = transform
+				Class<? extends Entity> transformeeClass = transform
 						.getObjectClass();
 				long id = transform.getObjectId();
 				if (transform
 						.getTransformType() == TransformType.DELETE_OBJECT) {
 					classIdTransformee.remove(transformeeClass, id);
 				} else {
-					HasIdAndLocalId source = classIdTransformee.ensure(() -> {
-						HasIdAndLocalId instance = Reflections.classLookup()
+					Entity source = classIdTransformee.ensure(() -> {
+						Entity instance = Reflections.classLookup()
 								.newInstance(transformeeClass);
 						instance.setId(id);
 						return instance;
@@ -878,7 +878,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			for (Class clazz : (Set<Class>) (Set) classIdTransformee.keySet()) {
 				if (IVersionable.class.isAssignableFrom(clazz)
 						&& store.isCached(clazz)) {
-					Collection<HasIdAndLocalId> iversionables = classIdTransformee
+					Collection<Entity> iversionables = classIdTransformee
 							.asMap(clazz).allValues();
 					tasks.add(new ILoaderTask(conn, clazz, iversionables,
 							Transaction.current()));
@@ -1125,7 +1125,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	public static interface DomainStoreJoinHandler {
 		public String getTargetSql();
 
-		public void injectValue(Object[] row, HasIdAndLocalId source);
+		public void injectValue(Object[] row, Entity source);
 	}
 
 	public class LaterLookup {
@@ -1352,7 +1352,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			this.mappedClass = mapping == null ? null : mapping.mapping();
 		}
 
-		public Object read(HasIdAndLocalId obj) {
+		public Object read(Entity obj) {
 			try {
 				return field.get(obj);
 			} catch (Exception e) {
@@ -1396,16 +1396,16 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	private class ILoaderTask implements Callable<Void> {
-		private Class<HasIdAndLocalId> clazz;
+		private Class<Entity> clazz;
 
-		private Collection<HasIdAndLocalId> sources;
+		private Collection<Entity> sources;
 
 		private Connection conn;
 
 		private Transaction transaction;
 
-		public ILoaderTask(Connection conn, Class<HasIdAndLocalId> clazz,
-				Collection<HasIdAndLocalId> sources, Transaction transaction) {
+		public ILoaderTask(Connection conn, Class<Entity> clazz,
+				Collection<Entity> sources, Transaction transaction) {
 			this.conn = conn;
 			this.clazz = clazz;
 			this.sources = sources;
@@ -1420,10 +1420,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				String sqlFilter = Ax.format(" id in %s ",
 						EntityUtils.hasIdsToIdClause(sources));
 				ClassIdLock dummySublock = new ClassIdLock(clazz, 0L);
-				List<? extends HasIdAndLocalId> persistentSources = (List) loadTable0(
+				List<? extends Entity> persistentSources = (List) loadTable0(
 						conn, clazz, sqlFilter, dummySublock, laterLookup,
 						false, true, false);
-				Map<Long, ? extends HasIdAndLocalId> idMap = HiliHelper
+				Map<Long, ? extends Entity> idMap = EntityHelper
 						.toIdMap(sources);
 				Class<? extends IUser> userImplCass = CommonPersistenceProvider
 						.get().getCommonPersistenceExTransaction()
@@ -1452,8 +1452,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						}
 					}
 				});
-				for (HasIdAndLocalId persistentSource : persistentSources) {
-					HasIdAndLocalId transformee = idMap
+				for (Entity persistentSource : persistentSources) {
+					Entity transformee = idMap
 							.get(persistentSource.getId());
 					if (transformee instanceof HasVersionNumber) {
 						((HasVersionNumber) transformee).setVersionNumber(
@@ -1473,12 +1473,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						if (iUserClass == null) {
 							return null;
 						}
-						Long persistentCreationUserId = HiliHelper
+						Long persistentCreationUserId = EntityHelper
 								.getIdOrNull(persistent.getCreationUser());
 						IUser creationUser = store.cache.get(iUserClass,
 								persistentCreationUserId);
 						iVersionable.setCreationUser(creationUser);
-						Long persistentLastModificationUserId = HiliHelper
+						Long persistentLastModificationUserId = EntityHelper
 								.getIdOrNull(
 										persistent.getLastModificationUser());
 						IUser lastModificationUser = store.cache.get(iUserClass,
@@ -1515,7 +1515,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	class BackupLazyLoader implements LazyObjectLoader {
 		@Override
-		public <T extends HasIdAndLocalId> void loadObject(Class<? extends T> c,
+		public <T extends Entity> void loadObject(Class<? extends T> c,
 				long id, long localId) {
 			try {
 				DomainClassDescriptor itemDescriptor = domainDescriptor.perClass

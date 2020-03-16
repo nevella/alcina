@@ -19,8 +19,8 @@ import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 
 /**
  * 
@@ -47,9 +47,9 @@ public class UniqueInCollectionValidator implements Validator {
 		for (Object o : c) {
 			if (o != sourceObject && value.equals(Reflections.propertyAccessor()
 					.getPropertyValue(o, propertyName))) {
-				if (o instanceof HasIdAndLocalId
-						&& sourceObject instanceof HasIdAndLocalId) {
-					if (HiliHelper.equals((HasIdAndLocalId) o, sourceObject)) {
+				if (o instanceof Entity
+						&& sourceObject instanceof Entity) {
+					if (EntityHelper.equals((Entity) o, sourceObject)) {
 						continue;
 					}
 				}

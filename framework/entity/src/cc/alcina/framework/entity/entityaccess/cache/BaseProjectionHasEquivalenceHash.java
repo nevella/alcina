@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.domain.BaseProjection;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
 import cc.alcina.framework.common.client.util.HasEquivalenceHashMap;
 
@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.util.HasEquivalenceHashMap;
  *
  * @param <T>
  */
-public abstract class BaseProjectionHasEquivalenceHash<T extends HasIdAndLocalId>
+public abstract class BaseProjectionHasEquivalenceHash<T extends Entity>
 		extends BaseProjection<T> {
 	private ThreadLocal<HasEquivalenceHashMap> perThreadEquivalenceMap = new ThreadLocal<HasEquivalenceHashMap>() {
 		@Override
@@ -54,7 +54,7 @@ public abstract class BaseProjectionHasEquivalenceHash<T extends HasIdAndLocalId
 		perThreadEquivalenceMap.get().clear();
 	}
 
-	public void projectHash(HasIdAndLocalId obj) {
+	public void projectHash(Entity obj) {
 		HasEquivalenceHash heh = (HasEquivalenceHash) obj;
 		perThreadEquivalenceMap.get().add(heh);
 	}

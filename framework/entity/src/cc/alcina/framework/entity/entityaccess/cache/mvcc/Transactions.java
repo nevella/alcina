@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -20,7 +20,7 @@ public class Transactions {
 
 	private static Map<DomainStore, Transaction> baseTransactions = new LightMap<>();
 
-	public static <T extends HasIdAndLocalId> boolean checkResolved(T t) {
+	public static <T extends Entity> boolean checkResolved(T t) {
 		return resolve(t, false) == t;
 	}
 
@@ -34,7 +34,7 @@ public class Transactions {
 		return instance != null;
 	}
 
-	public static <T extends HasIdAndLocalId> T resolve(T t, boolean write) {
+	public static <T extends Entity> T resolve(T t, boolean write) {
 		if (t instanceof MvccObject) {
 			MvccObject mvccObject = (MvccObject) t;
 			MvccObjectVersions<T> versions = mvccObject.__getMvccVersions__();
@@ -66,14 +66,14 @@ public class Transactions {
 		return baseTransactions.get(store);
 	}
 
-	static <T extends HasIdAndLocalId & MvccObject> T copyObject(T object) {
+	static <T extends Entity & MvccObject> T copyObject(T object) {
 		// FIXME - write some byteassist classes to do direct copying
 		T clone = ResourceUtilities.fieldwiseClone(object, false, true);
 		clone.__setMvccVersions__(object.__getMvccVersions__());
 		return clone;
 	}
 
-	static <T extends HasIdAndLocalId> void copyObjectFields(T from, T to) {
+	static <T extends Entity> void copyObjectFields(T from, T to) {
 		ResourceUtilities.fieldwiseCopy(from, to, false, true);
 	}
 

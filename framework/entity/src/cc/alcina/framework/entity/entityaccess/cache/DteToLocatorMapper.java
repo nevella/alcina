@@ -2,10 +2,10 @@ package cc.alcina.framework.entity.entityaccess.cache;
 
 import cc.alcina.framework.common.client.collections.KeyValueMapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 
 public class DteToLocatorMapper implements
-		KeyValueMapper<HiliLocator, DomainTransformEvent, DomainTransformEvent> {
+		KeyValueMapper<EntityLocator, DomainTransformEvent, DomainTransformEvent> {
 	private boolean valueLocator;
 
 	public DteToLocatorMapper() {
@@ -17,9 +17,9 @@ public class DteToLocatorMapper implements
 	}
 
 	@Override
-	public HiliLocator getKey(DomainTransformEvent dte) {
-		return valueLocator ? HiliLocator.valueLocator(dte)
-				: HiliLocator.objectLocator(dte);
+	public EntityLocator getKey(DomainTransformEvent dte) {
+		return valueLocator ? EntityLocator.valueLocator(dte)
+				: EntityLocator.objectLocator(dte);
 	}
 
 	@Override

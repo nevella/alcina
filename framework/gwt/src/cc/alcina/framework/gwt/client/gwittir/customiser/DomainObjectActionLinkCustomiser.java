@@ -18,7 +18,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -97,15 +97,15 @@ public class DomainObjectActionLinkCustomiser implements Customiser {
 		@Override
 		public void setModel(Object model) {
 			super.setModel(model);
-			if (model instanceof HasIdAndLocalId) {
-				HasIdAndLocalId hili = (HasIdAndLocalId) model;
+			if (model instanceof Entity) {
+				Entity entity = (Entity) model;
 				AlcinaHistoryItem info = AlcinaHistory.get()
 						.createHistoryInfo();
 				info.setActionName(actionName);
 				info.setClassName(targetClass == null
-						? hili.getClass().getName() : targetClass.getName());
-				info.setId(hili.getId());
-				info.setLocalId(hili.getLocalId());
+						? entity.getClass().getName() : targetClass.getName());
+				info.setId(entity.getId());
+				info.setLocalId(entity.getLocalId());
 				setTargetHistoryToken(info.toTokenString());
 				String renderedString = this.getRenderer() != null
 						? (String) this.getRenderer().render(model)

@@ -6,7 +6,7 @@ import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.gwt.user.client.ui.IsWidget;
 
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.gwt.client.data.DataAction;
 import cc.alcina.framework.gwt.client.data.place.DataPlace;
 import cc.alcina.framework.gwt.client.data.view.ViewModel.DetailViewModel;
@@ -44,7 +44,7 @@ public abstract class TypedModelActivity<P extends Place, VM extends ViewModel>
         model.fireUpdated();
     }
 
-    public static abstract class TypedDetailModelActivity<P extends DataPlace, VM extends DetailViewModel, T extends HasIdAndLocalId>
+    public static abstract class TypedDetailModelActivity<P extends DataPlace, VM extends DetailViewModel, T extends Entity>
             extends TypedModelActivity<P, VM> {
         public TypedDetailModelActivity(P place) {
             super(place);

@@ -2,7 +2,7 @@ package cc.alcina.template.cs.persistent;
 
 import java.util.Date;
 
-import javax.persistence.Entity;
+
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 
 
-@Entity
+@javax.persistence.Entity
 @Table(name = "actionlog", schema = "public")
 @SequenceGenerator(allocationSize=1,name = "actionlog_sequence", sequenceName = "actionlog_id_seq")
 @Bean(displayNamePropertyName = "id")

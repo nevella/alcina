@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.Entity;
+
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 @Table(name = "client_instance")
-@Entity
+@javax.persistence.Entity
 @SequenceGenerator(allocationSize = 1, name = "client_instance_id_seq", sequenceName = "client_instance_id_seq")
 @RegistryLocations({
 	@RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = ClientInstance.class),

@@ -5,7 +5,7 @@ import java.lang.annotation.Annotation;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -61,13 +61,13 @@ public class TransactionalSubgraphTransformManager
 			}
 		}
 		if (event.getSource() != null) {
-			HasIdAndLocalId source = event.getSource();
+			Entity source = event.getSource();
 			if (Domain.isDomainVersion(source)) {
 				throw new RuntimeException("Source of transform"
 						+ " should be immutable except to post-persistence code");
 			}
 		}
-		HasIdAndLocalId obj = getObject(event);
+		Entity obj = getObject(event);
 		if (event.getTransformType() == TransformType.DELETE_OBJECT) {
 			if (obj != null) {
 				deleted.mapObject(obj);
@@ -79,8 +79,8 @@ public class TransactionalSubgraphTransformManager
 		super.consume(event);
 	}
 
-	public boolean contains(HasIdAndLocalId hili) {
-		return getDomainObjects().getObject(hili) != null;
+	public boolean contains(Entity entity) {
+		return getDomainObjects().getObject(entity) != null;
 	}
 
 	@Override
@@ -91,7 +91,7 @@ public class TransactionalSubgraphTransformManager
 	}
 
 	@Override
-	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+	public <T extends Entity> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		try {
 			T value = super.getObject(c, id, localId);
@@ -137,7 +137,7 @@ public class TransactionalSubgraphTransformManager
 		}
 	}
 
-	private void mapObjectToCachingProjections(HasIdAndLocalId obj) {
+	private void mapObjectToCachingProjections(Entity obj) {
 		for (BaseProjectionHasEquivalenceHash listener : domainStore.cachingProjections
 				.getAndEnsure(obj.getClass())) {
 			try {
@@ -151,7 +151,7 @@ public class TransactionalSubgraphTransformManager
 	}
 
 	@Override
-	protected boolean allowUnregisteredHiliTargetObject() {
+	protected boolean allowUnregisteredEntityTargetObject() {
 		return true;
 	}
 
@@ -165,9 +165,9 @@ public class TransactionalSubgraphTransformManager
 	@Override
 	protected Object ensureEndpointInTransformGraph(Object object) {
 		// if not persisted, just return the object
-		if (object instanceof HasIdAndLocalId
-				&& ((HasIdAndLocalId) object).getId() != 0) {
-			HasIdAndLocalId endpoint = getObject((HasIdAndLocalId) object);
+		if (object instanceof Entity
+				&& ((Entity) object).getId() != 0) {
+			Entity endpoint = getObject((Entity) object);
 			modified.mapObject(endpoint);
 			return endpoint;
 		}
@@ -178,14 +178,14 @@ public class TransactionalSubgraphTransformManager
 	protected ObjectLookup getObjectLookup() {
 		return new ObjectLookup() {
 			@Override
-			public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+			public <T extends Entity> T getObject(Class<? extends T> c,
 					long id, long localId) {
 				return (T) TransactionalSubgraphTransformManager.this
 						.getObject(c, id, localId);
 			}
 
 			@Override
-			public <T extends HasIdAndLocalId> T getObject(T bean) {
+			public <T extends Entity> T getObject(T bean) {
 				return (T) TransactionalSubgraphTransformManager.this.getObject(
 						bean.getClass(), bean.getId(), bean.getLocalId());
 			}
@@ -197,11 +197,11 @@ public class TransactionalSubgraphTransformManager
 	 * be projected...and ... two stores - "modified" vs "projected" - not just
 	 * the one
 	 */
-	protected <T extends HasIdAndLocalId> T
+	protected <T extends Entity> T
 			projectNonTransactional(T nonTransactional) throws Exception {
-		Class<? extends HasIdAndLocalId> clazz = nonTransactional.getClass();
+		Class<? extends Entity> clazz = nonTransactional.getClass();
 		if (DomainProxy.class.isAssignableFrom(clazz)) {
-			clazz = (Class<? extends HasIdAndLocalId>) clazz.getSuperclass();
+			clazz = (Class<? extends Entity>) clazz.getSuperclass();
 		}
 		T newInstance = (T) clazz.newInstance();
 		ResourceUtilities.fieldwiseCopy(nonTransactional, newInstance, false,

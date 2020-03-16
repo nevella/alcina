@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -71,7 +71,7 @@ public class DomainSearcher {
     public DomainSearcher() {
     }
 
-    public <T extends HasIdAndLocalId> List<T> search(SearchDefinition def,
+    public <T extends Entity> List<T> search(SearchDefinition def,
             Class<T> clazz, Comparator<T> order) {
         query = useSequentialSearch ? new LockingDomainQuery()
                 : Registry.impl(LockingDomainQuery.class);
@@ -144,14 +144,14 @@ public class DomainSearcher {
 
     @RegistryLocation(registryPoint = DomainSearcherAppFilter.class, implementationType = ImplementationType.INSTANCE)
     public static abstract class DomainSearcherAppFilter {
-        public abstract <T extends HasIdAndLocalId> List<T> filter(
+        public abstract <T extends Entity> List<T> filter(
                 SearchDefinition def, List<T> list);
     }
 
     public static class DomainSearcherAppFilter_DefaultImpl
             extends DomainSearcherAppFilter {
         @Override
-        public <T extends HasIdAndLocalId> List<T> filter(SearchDefinition def,
+        public <T extends Entity> List<T> filter(SearchDefinition def,
                 List<T> list) {
             return list;
         }

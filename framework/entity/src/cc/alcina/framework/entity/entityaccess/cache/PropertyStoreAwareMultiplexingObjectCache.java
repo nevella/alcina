@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 
 class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
@@ -31,7 +31,7 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
     }
 
     @Override
-    public Set<HasIdAndLocalId> allValues() {
+    public Set<Entity> allValues() {
         return main.allValues();
     }
 
@@ -46,23 +46,23 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
     }
 
     @Override
-    public <T extends HasIdAndLocalId> boolean contains(Class<T> clazz,
+    public <T extends Entity> boolean contains(Class<T> clazz,
             long id) {
         return main.contains(clazz, id);
     }
 
     @Override
-    public boolean contains(HasIdAndLocalId hili) {
-        return main.contains(hili);
+    public boolean contains(Entity entity) {
+        return main.contains(entity);
     }
 
     @Override
-    public Map<Long, HasIdAndLocalId> createMap() {
+    public Map<Long, Entity> createMap() {
         return main.createMap();
     }
 
     @Override
-    public <T> List<T> fieldValues(Class<? extends HasIdAndLocalId> clazz,
+    public <T> List<T> fieldValues(Class<? extends Entity> clazz,
             String propertyName) {
         return getSubCache(clazz).fieldValues(clazz, propertyName);
     }
@@ -73,12 +73,12 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
     }
 
     @Override
-    public Map<Class, Map<Long, HasIdAndLocalId>> getDetached() {
+    public Map<Class, Map<Long, Entity>> getDetached() {
         return main.getDetached();
     }
 
     @Override
-    public Map<Long, HasIdAndLocalId> getMap(Class clazz) {
+    public Map<Long, Entity> getMap(Class clazz) {
         return main.getMap(clazz);
     }
 
@@ -113,24 +113,24 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
     }
 
     @Override
-    public void put(HasIdAndLocalId hili) {
-        getSubCache(hili.provideEntityClass()).put(hili);
+    public void put(Entity entity) {
+        getSubCache(entity.provideEntityClass()).put(entity);
     }
 
     @Override
     public void putAll(Class clazz,
-            Collection<? extends HasIdAndLocalId> values) {
+            Collection<? extends Entity> values) {
         main.putAll(clazz, values);
     }
 
     @Override
-    public void putForSuperClass(Class clazz, HasIdAndLocalId hili) {
-        main.putForSuperClass(clazz, hili);
+    public void putForSuperClass(Class clazz, Entity entity) {
+        main.putForSuperClass(clazz, entity);
     }
 
     @Override
-    public void remove(HasIdAndLocalId hili) {
-        getSubCache(hili.provideEntityClass()).remove(hili);
+    public void remove(Entity entity) {
+        getSubCache(entity.provideEntityClass()).remove(entity);
     }
 
     @Override
@@ -173,7 +173,7 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
         committing = true;
     }
 
-    class PropertyStoreCacheWrapper<V extends HasIdAndLocalId>
+    class PropertyStoreCacheWrapper<V extends Entity>
             implements DomainStoreCache {
         private PropertyStoreItemDescriptor<V> descriptor;
 
@@ -184,7 +184,7 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
         }
 
         @Override
-        public <T> List<T> fieldValues(Class<? extends HasIdAndLocalId> clazz,
+        public <T> List<T> fieldValues(Class<? extends Entity> clazz,
                 String propertyName) {
             return descriptor.propertyStore.fieldValues(propertyName);
         }
@@ -209,9 +209,9 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
         }
 
         @Override
-        public void put(HasIdAndLocalId hili) {
+        public void put(Entity entity) {
             if (committing) {
-                long id = hili.getId();
+                long id = entity.getId();
                 commitLookup.put(id, descriptor.getProxy(main, id, true));
             } else {
                 throw new UnsupportedOperationException();
@@ -219,10 +219,10 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
         }
 
         @Override
-        public void remove(HasIdAndLocalId hili) {
+        public void remove(Entity entity) {
             if (committing) {
-                commitLookup.remove(hili.getId());
-                descriptor.remove(hili.getId());
+                commitLookup.remove(entity.getId());
+                descriptor.remove(entity.getId());
             } else {
                 throw new UnsupportedOperationException();
             }

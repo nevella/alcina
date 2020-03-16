@@ -45,7 +45,7 @@ import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -53,8 +53,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -191,15 +191,15 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private boolean useObjectCreationId;
 
-	Set<HasIdAndLocalId> modifiedObjects = new HashSet<HasIdAndLocalId>();
+	Set<Entity> modifiedObjects = new HashSet<Entity>();
 
 	List<DomainTransformEvent> modificationEvents = new ArrayList<DomainTransformEvent>();
 
 	private ClientInstance clientInstance;
 
-	protected Map<Long, HasIdAndLocalId> localIdToEntityMap;
+	protected Map<Long, Entity> localIdToEntityMap;
 
-	protected HiliLocatorMap userSessionHiliMap;
+	protected EntityLocatorMap userSessionEntityMap;
 
 	private EntityManager entityManager;
 
@@ -209,15 +209,15 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private DetachedEntityCache detachedEntityCache;
 
-	protected Set<HasIdAndLocalId> deleted;
+	protected Set<Entity> deleted;
 
-	protected HasIdAndLocalId ignorePropertyChangesTo;
+	protected Entity ignorePropertyChangesTo;
 
 	DomainTransformEvent lastEvent = null;
 
 	private boolean initialised = false;
 
-	protected Set<HiliLocator> createdObjectLocators = new LinkedHashSet<>();
+	protected Set<EntityLocator> createdObjectLocators = new LinkedHashSet<>();
 
 	private boolean transformsExplicitlyPermitted;
 
@@ -248,24 +248,24 @@ public class ThreadlocalTransformManager extends TransformManager
 		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 
-	public boolean checkPropertyAccess(HasIdAndLocalId hili,
+	public boolean checkPropertyAccess(Entity entity,
 			String propertyName, boolean read) throws IntrospectionException {
-		if (hili.provideWasPersisted()
+		if (entity.provideWasPersisted()
 				|| LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
 			PropertyDescriptor descriptor = SEUtilities
-					.getPropertyDescriptorByName(hili.getClass(), propertyName);
+					.getPropertyDescriptorByName(entity.getClass(), propertyName);
 			if (descriptor == null) {
 				throw new IntrospectionException(
 						String.format("Property not found - %s::%s",
-								hili.getClass().getName(), propertyName));
+								entity.getClass().getName(), propertyName));
 			}
 			PropertyPermissions pp = SEUtilities
-					.getPropertyDescriptorByName(hili.getClass(), propertyName)
+					.getPropertyDescriptorByName(entity.getClass(), propertyName)
 					.getReadMethod().getAnnotation(PropertyPermissions.class);
-			ObjectPermissions op = hili.getClass()
+			ObjectPermissions op = entity.getClass()
 					.getAnnotation(ObjectPermissions.class);
 			return PermissionsManager.get().checkEffectivePropertyPermission(op,
-					pp, hili, read);
+					pp, entity, read);
 		}
 		return true;
 	}
@@ -290,7 +290,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public <T extends HasIdAndLocalId> T
+	public <T extends Entity> T
 			createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
 		T newInstance = newInstance(objectClass, 0, localId);
@@ -310,7 +310,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	/**
 	 * <<<<<<< HEAD Probably don't call this - rather call
-	 * deleteObject(hili,true) - this will always be a noop on the server
+	 * deleteObject(entity,true) - this will always be a noop on the server
 	 * ======= Because TLTM never registers objects, delete(x,false) is always a
 	 * noop. A bit wonky, the whole thing - but this gets the job done. >>>>>>>
 	 * apdm-stable
@@ -318,29 +318,29 @@ public class ThreadlocalTransformManager extends TransformManager
 	 * See registerDomainObject for explanation
 	 */
 	@Override
-	public DomainTransformEvent deleteObject(HasIdAndLocalId hili) {
-		return deleteObject(hili, true);
+	public DomainTransformEvent deleteObject(Entity entity) {
+		return deleteObject(entity, true);
 	}
 
 	@Override
-	public DomainTransformEvent deleteObject(HasIdAndLocalId hili,
+	public DomainTransformEvent deleteObject(Entity entity,
 			boolean generateEventIfObjectNotFound) {
-		if (hili == null) {
+		if (entity == null) {
 			return null;
 		}
-		if (deleted.contains(hili)) {
+		if (deleted.contains(entity)) {
 			if (!LooseContext.is(CONTEXT_IGNORE_DOUBLE_DELETION)) {
 				RuntimeException ex = new RuntimeException(String.format(
-						"Double deletion - %s %s", new HiliLocator(hili),
-						CommonUtils.safeToString(hili)));
+						"Double deletion - %s %s", new EntityLocator(entity),
+						CommonUtils.safeToString(entity)));
 				System.out.println(ex.getMessage());
 				ex.printStackTrace();
 			}
 			return null;
 		}
-		hili = ensureNonProxy(hili);
-		deleted.add(hili);
-		DomainTransformEvent event = super.deleteObject(hili,
+		entity = ensureNonProxy(entity);
+		deleted.add(entity);
+		DomainTransformEvent event = super.deleteObject(entity,
 				generateEventIfObjectNotFound);
 		if (event != null) {
 			addTransform(event);
@@ -359,15 +359,15 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public void deregisterDomainObjects(Collection<HasIdAndLocalId> hilis) {
-		for (HasIdAndLocalId hili : hilis) {
-			if (hili instanceof SourcesPropertyChangeEvents) {
-				SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) hili;
+	public void deregisterDomainObjects(Collection<Entity> entities) {
+		for (Entity entity : entities) {
+			if (entity instanceof SourcesPropertyChangeEvents) {
+				SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) entity;
 				spce.removePropertyChangeListener(this);
 				listeningTo.remove(spce);
 			}
 		}
-		super.deregisterDomainObjects(hilis);
+		super.deregisterDomainObjects(entities);
 	}
 
 	@Override
@@ -376,7 +376,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public <V extends HasIdAndLocalId> V find(Class<V> clazz, String key,
+	public <V extends Entity> V find(Class<V> clazz, String key,
 			Object value) {
 		V first = null;
 		if (getEntityManager() != null) {
@@ -465,12 +465,12 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public <H extends HasIdAndLocalId> long
-			getLocalIdForClientInstance(H hili) {
-		if (userSessionHiliMap != null) {
-			return userSessionHiliMap.getLocalIdForClientInstance(hili);
+	public <H extends Entity> long
+			getLocalIdForClientInstance(H entity) {
+		if (userSessionEntityMap != null) {
+			return userSessionEntityMap.getLocalIdForClientInstance(entity);
 		} else {
-			return super.getLocalIdForClientInstance(hili);
+			return super.getLocalIdForClientInstance(entity);
 		}
 	}
 
@@ -479,9 +479,9 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> clazz,
+	public <T extends Entity> T getObject(Class<? extends T> clazz,
 			long id, long localId) {
-		if (!HasIdAndLocalId.class.isAssignableFrom(clazz)) {
+		if (!Entity.class.isAssignableFrom(clazz)) {
 			throw new WrappedRuntimeException(
 					"Attempting to obtain incompatible bean: " + clazz,
 					SuggestedAction.NOTIFY_WARNING);
@@ -490,13 +490,13 @@ public class ThreadlocalTransformManager extends TransformManager
 			if (localIdToEntityMap.containsKey(localId)) {
 				return (T) localIdToEntityMap.get(localId);
 			}
-			if (userSessionHiliMap != null && localId != 0) {
-				id = userSessionHiliMap.containsKey(localId)
-						? userSessionHiliMap.getForLocalId(localId).id
+			if (userSessionEntityMap != null && localId != 0) {
+				id = userSessionEntityMap.containsKey(localId)
+						? userSessionEntityMap.getForLocalId(localId).id
 						: 0;
 			}
 			if (id == 0) {
-				HiliLocator locator = postTransactionEntityResolvers
+				EntityLocator locator = postTransactionEntityResolvers
 						.get(DomainStore.writableStore()).resolve(localId);
 				if (locator != null) {
 					id = locator.id;
@@ -543,12 +543,12 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public <T extends HasIdAndLocalId> T getObject(T hili) {
-		if (hili == null) {
+	public <T extends Entity> T getObject(T entity) {
+		if (entity == null) {
 			return null;
 		}
-		hili = ensureNonProxy(hili);
-		return super.getObject(hili);
+		entity = ensureNonProxy(entity);
+		return super.getObject(entity);
 	}
 
 	// TODO - permissions check
@@ -627,8 +627,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public boolean isInCreationRequest(HasIdAndLocalId hili) {
-		return createdObjectLocators.contains(new HiliLocator(hili));
+	public boolean isInCreationRequest(Entity entity) {
+		return createdObjectLocators.contains(new EntityLocator(entity));
 	}
 
 	public boolean isListeningTo(SourcesPropertyChangeEvents spce) {
@@ -666,7 +666,7 @@ public class ThreadlocalTransformManager extends TransformManager
 				.impl(EntityLayerTransformPropogation.class, void.class, true);
 		if (transformPropogation != null
 				&& transformPropogation.listenToWrappedObject(wrapper)) {
-			registerDomainObject((HasIdAndLocalId) wrapper);
+			registerDomainObject((Entity) wrapper);
 		}
 	}
 
@@ -681,13 +681,13 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		try {
-			if (HasIdAndLocalId.class.isAssignableFrom(clazz)) {
-				HasIdAndLocalId newInstance = null;
+			if (Entity.class.isAssignableFrom(clazz)) {
+				Entity newInstance = null;
 				if (entityManager == null) {
 					newInstance = Transaction.current().create((Class) clazz,
 							DomainStore.stores().storeFor(clazz));
 				} else {
-					newInstance = (HasIdAndLocalId) clazz.newInstance();
+					newInstance = (Entity) clazz.newInstance();
 				}
 				localIdToEntityMap.put(localId, newInstance);
 				if (entityManager != null) {
@@ -706,16 +706,16 @@ public class ThreadlocalTransformManager extends TransformManager
 				} else {
 					newInstance.setLocalId(localId);
 				}
-				HiliLocator hiliLocator = new HiliLocator(
-						(Class<? extends HasIdAndLocalId>) clazz,
+				EntityLocator hiliLocator = new EntityLocator(
+						(Class<? extends Entity>) clazz,
 						newInstance.getId(), localId);
-				if (userSessionHiliMap != null) {
-					userSessionHiliMap.putToLookups(hiliLocator);
+				if (userSessionEntityMap != null) {
+					userSessionEntityMap.putToLookups(hiliLocator);
 				}
 				createdObjectLocators.add(hiliLocator);
 				return (T) newInstance;
 			}
-			throw new Exception("only construct hilis here");
+			throw new Exception("only construct entities here");
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -728,9 +728,9 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public void performDeleteObject(HasIdAndLocalId hili) {
-		HasIdAndLocalId object = getObject(hili);
-		removeAssociations(hili);
+	public void performDeleteObject(Entity entity) {
+		Entity object = getObject(entity);
+		removeAssociations(entity);
 		entityManager.remove(object);
 	}
 
@@ -761,12 +761,12 @@ public class ThreadlocalTransformManager extends TransformManager
 		return flushAfterTransforms.contains(event);
 	}
 
-	public HiliLocatorMap reconstituteHiliMap() {
+	public EntityLocatorMap reconstituteEntityMap() {
 		if (clientInstance != null) {
 			CommonPersistenceLocal cp = Registry
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence();
-			String message = "Reconstitute hili map - clientInstance: "
+			String message = "Reconstitute entity map - clientInstance: "
 					+ clientInstance.getId();
 			// System.out.println(message);
 			// cp.log(message, LogMessageType.INFO.toString());
@@ -791,15 +791,15 @@ public class ThreadlocalTransformManager extends TransformManager
 					.setParameter(1, TransformType.CREATE_OBJECT)
 					.getResultList();
 			// force non-empty
-			userSessionHiliMap.putToLookups(new HiliLocator(null, -1, 0));
+			userSessionEntityMap.putToLookups(new EntityLocator(null, -1, 0));
 			for (Object[] obj : idTuples) {
 				ClassRef classRef = ClassRef.forId((long) obj[2]);
-				userSessionHiliMap.putToLookups(new HiliLocator(
+				userSessionEntityMap.putToLookups(new EntityLocator(
 						classRef.getRefClass(), (Long) obj[0], (Long) obj[1]));
 			}
 			MetricLogging.get().end(message);
 		}
-		return userSessionHiliMap;
+		return userSessionEntityMap;
 	}
 
 	@Override
@@ -809,11 +809,11 @@ public class ThreadlocalTransformManager extends TransformManager
 	 * This is because of the two graph issue - db objects and current
 	 * Thread-memory objects.
 	 */
-	public <T extends HasIdAndLocalId> T registerDomainObject(T hili) {
-		if (hili instanceof SourcesPropertyChangeEvents) {
-			listenTo((SourcesPropertyChangeEvents) hili);
+	public <T extends Entity> T registerDomainObject(T entity) {
+		if (entity instanceof SourcesPropertyChangeEvents) {
+			listenTo((SourcesPropertyChangeEvents) entity);
 		}
-		return hili;
+		return entity;
 	}
 
 	public void resetLocalIdCounterForCurrentThread() {
@@ -825,27 +825,27 @@ public class ThreadlocalTransformManager extends TransformManager
 		tlIdGenerator.reset(counter);
 	}
 
-	public void resetTltm(HiliLocatorMap locatorMap) {
+	public void resetTltm(EntityLocatorMap locatorMap) {
 		resetTltm(locatorMap, null, false);
 	}
 
-	public void resetTltm(HiliLocatorMap locatorMap,
+	public void resetTltm(EntityLocatorMap locatorMap,
 			PersistenceLayerTransformExceptionPolicy exceptionPolicy,
 			boolean keepExplicitlyPermittedAndFlushAfterTransforms) {
 		setEntityManager(null);
 		setDetachedEntityCache(null);
 		this.exceptionPolicy = exceptionPolicy;
-		if (this.userSessionHiliMap != null) {
+		if (this.userSessionEntityMap != null) {
 			DomainStore.stores().stream()
 					.forEach(store -> this.postTransactionEntityResolvers
-							.get(store).merge(userSessionHiliMap));
+							.get(store).merge(userSessionEntityMap));
 		}
-		this.userSessionHiliMap = locatorMap;
-		localIdToEntityMap = new HashMap<Long, HasIdAndLocalId>();
-		modifiedObjects = new HashSet<HasIdAndLocalId>();
+		this.userSessionEntityMap = locatorMap;
+		localIdToEntityMap = new HashMap<Long, Entity>();
+		modifiedObjects = new HashSet<Entity>();
 		modificationEvents = new ArrayList<DomainTransformEvent>();
 		transformListenerSupport.clear();
-		deleted = new LinkedHashSet<HasIdAndLocalId>();
+		deleted = new LinkedHashSet<Entity>();
 		createdObjectLocators.clear();
 		if (!keepExplicitlyPermittedAndFlushAfterTransforms) {
 			explicitlyPermittedTransforms.clear();
@@ -879,7 +879,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 	}
 
-	public <V extends HasIdAndLocalId> HiliLocator
+	public <V extends Entity> EntityLocator
 			resolvePersistedLocal(DomainStore domainStore, V v) {
 		return postTransactionEntityResolvers.get(domainStore).resolve(v);
 	}
@@ -922,13 +922,13 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	public void setPropertyValue(Object bean, String propertyName,
 			Object value) {
-		if (!(bean instanceof HasIdAndLocalId)) {
+		if (!(bean instanceof Entity)) {
 			throw new WrappedRuntimeException(
 					"Attempting to serialize incompatible bean: " + bean,
 					SuggestedAction.NOTIFY_WARNING);
 		}
-		HasIdAndLocalId hili = (HasIdAndLocalId) bean;
-		if (checkHasSufficientInfoForPropertyPersist(hili)) {
+		Entity entity = (Entity) bean;
+		if (checkHasSufficientInfoForPropertyPersist(entity)) {
 			try {
 				SEUtilities.setPropertyValue(bean, propertyName, value);
 				return;
@@ -951,11 +951,11 @@ public class ThreadlocalTransformManager extends TransformManager
 		this.useObjectCreationId = useObjectCreationId;
 	}
 
-	public void setUserSessionHiliMap(HiliLocatorMap userSessionHiliMap) {
-		this.userSessionHiliMap = userSessionHiliMap;
+	public void setUserSessionEntityMap(EntityLocatorMap userSessionEntityMap) {
+		this.userSessionEntityMap = userSessionEntityMap;
 	}
 
-	public boolean testPermissions(HasIdAndLocalId hili,
+	public boolean testPermissions(Entity entity,
 			DomainTransformEvent evt, String propertyName, Object change,
 			boolean read) {
 		if (!LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
@@ -963,7 +963,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		if (read) {
 			try {
-				checkPropertyReadAccessAndThrow(hili, propertyName, evt);
+				checkPropertyReadAccessAndThrow(entity, propertyName, evt);
 				return true;
 			} catch (Exception e) {
 				PermissionsException permissionsException = CommonUtils
@@ -975,7 +975,7 @@ public class ThreadlocalTransformManager extends TransformManager
 				}
 			}
 		} else {
-			return checkPermissions(hili, evt, propertyName, change, true);
+			return checkPermissions(entity, evt, propertyName, change, true);
 		}
 	}
 
@@ -1000,7 +1000,7 @@ public class ThreadlocalTransformManager extends TransformManager
 				continue;
 			}
 			Class clazz = pd.getPropertyType();
-			if (!HasIdAndLocalId.class.isAssignableFrom(clazz)) {
+			if (!Entity.class.isAssignableFrom(clazz)) {
 				projections.add(Ax.format("t.%s as %s", propertyName,
 						propertyName));
 			} else {
@@ -1016,7 +1016,7 @@ public class ThreadlocalTransformManager extends TransformManager
 				assocClass.getSimpleName(), specProperty, ref.getId());
 	}
 
-	private boolean checkPermissions(HasIdAndLocalId hili,
+	private boolean checkPermissions(Entity entity,
 			DomainTransformEvent evt, String propertyName, Object change,
 			boolean muteLogging) {
 		if (isIgnoreTransformPermissions()) {
@@ -1026,19 +1026,19 @@ public class ThreadlocalTransformManager extends TransformManager
 			return true;
 		}
 		try {
-			if (hili == null) {
-				hili = (HasIdAndLocalId) evt.getObjectClass().newInstance();
+			if (entity == null) {
+				entity = (Entity) evt.getObjectClass().newInstance();
 			} else {
-				hili = ensureNonProxy(hili);
-				hili = resolveForPermissionsChecks(hili);
+				entity = ensureNonProxy(entity);
+				entity = resolveForPermissionsChecks(entity);
 			}
-			Class<? extends HasIdAndLocalId> objectClass = hili.getClass();
+			Class<? extends Entity> objectClass = entity.getClass();
 			ObjectPermissions op = objectClass
 					.getAnnotation(ObjectPermissions.class);
 			op = op == null
 					? PermissionsManager.get().getDefaultObjectPermissions()
 					: op;
-			HasIdAndLocalId hiliChange = (HasIdAndLocalId) (change instanceof HasIdAndLocalId
+			Entity hiliChange = (Entity) (change instanceof Entity
 					? change
 					: null);
 			ObjectPermissions oph = null;
@@ -1055,27 +1055,27 @@ public class ThreadlocalTransformManager extends TransformManager
 			switch (evt.getTransformType()) {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
-				checkPropertyReadAccessAndThrow(hili, propertyName, evt);
-				checkTargetReadAndAssignmentAccessAndThrow(hili, hiliChange,
+				checkPropertyReadAccessAndThrow(entity, propertyName, evt);
+				checkTargetReadAndAssignmentAccessAndThrow(entity, hiliChange,
 						oph, aph, evt);
 				break;
 			case CHANGE_PROPERTY_REF:
-				checkTargetReadAndAssignmentAccessAndThrow(hili, hiliChange,
+				checkTargetReadAndAssignmentAccessAndThrow(entity, hiliChange,
 						oph, aph, evt);
 				// deliberate fall-through
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_SIMPLE_VALUE:
-				return checkPropertyWriteAccessAndThrow(hili, propertyName,
+				return checkPropertyWriteAccessAndThrow(entity, propertyName,
 						evt);
 			case CREATE_OBJECT:
-				if (!PermissionsManager.get().isPermissible(hili,
+				if (!PermissionsManager.get().isPermissible(entity,
 						op.create())) {
 					throw new DomainTransformException(new PermissionsException(
 							"Permission denied : create - object " + evt));
 				}
 				break;
 			case DELETE_OBJECT:
-				if (!PermissionsManager.get().isPermissible(hili,
+				if (!PermissionsManager.get().isPermissible(entity,
 						op.delete())) {
 					throw new DomainTransformException(new PermissionsException(
 							"Permission denied : delete - object " + evt));
@@ -1088,7 +1088,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			if (e instanceof DomainTransformException) {
 				DomainTransformException dtex = (DomainTransformException) e;
 				dtex.setEvent(evt);
-				evt.setSource(hili);
+				evt.setSource(entity);
 				evt.setPropertyName(propertyName);
 			}
 			if (!muteLogging) {
@@ -1100,20 +1100,20 @@ public class ThreadlocalTransformManager extends TransformManager
 		return true;
 	}
 
-	private void checkPropertyReadAccessAndThrow(HasIdAndLocalId hili,
+	private void checkPropertyReadAccessAndThrow(Entity entity,
 			String propertyName, DomainTransformEvent evt)
 			throws DomainTransformException, IntrospectionException {
-		if (!checkPropertyAccess(hili, propertyName, true)) {
+		if (!checkPropertyAccess(entity, propertyName, true)) {
 			throw new DomainTransformException(new PermissionsException(
 					"Permission denied : write - object/property " + evt));
 		}
 	}
 
-	private boolean checkPropertyWriteAccessAndThrow(HasIdAndLocalId hili,
+	private boolean checkPropertyWriteAccessAndThrow(Entity entity,
 			String propertyName, DomainTransformEvent evt)
 			throws DomainTransformException, IntrospectionException {
-		if (!checkPropertyAccess(hili, propertyName, false)) {
-			DomainProperty ann = getAnnotationForProperty(hili.getClass(),
+		if (!checkPropertyAccess(entity, propertyName, false)) {
+			DomainProperty ann = getAnnotationForProperty(entity.getClass(),
 					DomainProperty.class, propertyName);
 			if (ann != null && ann.silentFailOnIllegalWrites()) {
 				return false;
@@ -1125,7 +1125,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	private void checkTargetReadAndAssignmentAccessAndThrow(
-			HasIdAndLocalId assigningTo, HasIdAndLocalId assigning,
+			Entity assigningTo, Entity assigning,
 			ObjectPermissions oph, AssignmentPermission aph,
 			DomainTransformEvent evt) throws DomainTransformException {
 		if (assigning == null) {
@@ -1147,24 +1147,24 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	protected boolean
-			checkHasSufficientInfoForPropertyPersist(HasIdAndLocalId hili) {
-		return hili.getId() != 0
-				|| (localIdToEntityMap.get(hili.getLocalId()) != null
+			checkHasSufficientInfoForPropertyPersist(Entity entity) {
+		return entity.getId() != 0
+				|| (localIdToEntityMap.get(entity.getLocalId()) != null
 						&& getEntityManager() == null)
-				|| (hili instanceof SourcesPropertyChangeEvents && listeningTo
-						.containsKey((SourcesPropertyChangeEvents) hili))
+				|| (entity instanceof SourcesPropertyChangeEvents && listeningTo
+						.containsKey((SourcesPropertyChangeEvents) entity))
 				|| LooseContext
 						.is(CONTEXT_ALLOW_MODIFICATION_OF_DETACHED_OBJECTS);
 	}
 
 	@Override
-	protected boolean checkPermissions(HasIdAndLocalId hili,
+	protected boolean checkPermissions(Entity entity,
 			DomainTransformEvent evt, String propertyName, Object change) {
-		return checkPermissions(hili, evt, propertyName, change, false);
+		return checkPermissions(entity, evt, propertyName, change, false);
 	}
 
 	@Override
-	protected void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
+	protected void checkVersion(Entity obj, DomainTransformEvent event)
 			throws DomainTransformException {
 		if (exceptionPolicy != null) {
 			exceptionPolicy.checkVersion(obj, event);
@@ -1172,10 +1172,10 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	protected void doCascadeDeletes(HasIdAndLocalId hili) {
+	protected void doCascadeDeletes(Entity entity) {
 		if (getEntityManager() == null) {
-			new ServerTransformManagerSupport().removeParentAssociations(hili);
-			new ServerTransformManagerSupport().doCascadeDeletes(hili);
+			new ServerTransformManagerSupport().removeParentAssociations(entity);
+			new ServerTransformManagerSupport().doCascadeDeletes(entity);
 		}
 		// client-only for the moment.
 	}
@@ -1210,12 +1210,12 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 	}
 
-	protected <T extends HasIdAndLocalId> T ensureNonProxy(T hili) {
-		if (hili != null && hili.getId() != 0 && getEntityManager() != null) {
-			hili = Registry.impl(JPAImplementation.class)
-					.getInstantiatedObject(hili);
+	protected <T extends Entity> T ensureNonProxy(T entity) {
+		if (entity != null && entity.getId() != 0 && getEntityManager() != null) {
+			entity = Registry.impl(JPAImplementation.class)
+					.getInstantiatedObject(entity);
 		}
-		return hili;
+		return entity;
 	}
 
 	protected boolean isIgnorePropertyChangesForEvent(PropertyChangeEvent evt) {
@@ -1238,29 +1238,29 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	protected void objectModified(HasIdAndLocalId hili,
+	protected void objectModified(Entity entity,
 			DomainTransformEvent evt, boolean targetObject) {
 		boolean addToResults = false;
 		if (evt.getTransformType() == TransformType.CREATE_OBJECT) {
 			addToResults = true;
-			evt.setGeneratedServerId(hili.getId());
+			evt.setGeneratedServerId(entity.getId());
 		}
 		// TODO - think about handling this as a postpersist entity listener?
 		// that way we ensure correct version numbers
-		if (hili instanceof HasVersionNumber
-				&& !modifiedObjects.contains(hili)) {
+		if (entity instanceof HasVersionNumber
+				&& !modifiedObjects.contains(entity)) {
 			addToResults = true;
-			modifiedObjects.add(hili);
-			HasVersionNumber hv = (HasVersionNumber) hili;
+			modifiedObjects.add(entity);
+			HasVersionNumber hv = (HasVersionNumber) entity;
 			if (targetObject) {
 				evt.setValueVersionNumber(hv.getVersionNumber() + 1);
 				if (evt.getValueId() == 0) {
-					evt.setValueId(hili.getId());
+					evt.setValueId(entity.getId());
 				}
 			} else {
 				evt.setObjectVersionNumber(hv.getVersionNumber() + 1);
 				if (evt.getObjectId() == 0) {
-					evt.setObjectId(hili.getId());
+					evt.setObjectId(entity.getId());
 				}
 			}
 		}
@@ -1274,13 +1274,13 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	protected void removeAssociations(HasIdAndLocalId hili) {
-		new ServerTransformManagerSupport().removeAssociations(hili);
+	protected void removeAssociations(Entity entity) {
+		new ServerTransformManagerSupport().removeAssociations(entity);
 	}
 
-	protected HasIdAndLocalId
-			resolveForPermissionsChecks(HasIdAndLocalId hili) {
-		return hili;
+	protected Entity
+			resolveForPermissionsChecks(Entity entity) {
+		return entity;
 	}
 
 	@Override
@@ -1289,7 +1289,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public static class PostTransactionEntityResolver {
-		private HiliLocatorMap locatorMap = new HiliLocatorMap();
+		private EntityLocatorMap locatorMap = new EntityLocatorMap();
 
 		private boolean reconstituted = false;
 
@@ -1312,19 +1312,19 @@ public class ThreadlocalTransformManager extends TransformManager
 					.filter(dte -> dte
 							.getTransformType() == TransformType.CREATE_OBJECT)
 					.forEach(dte -> {
-						locatorMap.putToLookups(HiliLocator.objectLocator(dte));
+						locatorMap.putToLookups(EntityLocator.objectLocator(dte));
 					});
 		}
 
-		public void merge(HiliLocatorMap locatorMap) {
+		public void merge(EntityLocatorMap locatorMap) {
 			synchronized (locatorMap) {
 				if (PermissionsManager.get().getClientInstanceId() == null) {
-					this.locatorMap = new HiliLocatorMap();
+					this.locatorMap = new EntityLocatorMap();
 				} else {
 					long currentClientInstanceId = PermissionsManager.get()
 							.getClientInstanceId();
 					if (currentClientInstanceId != clientInstanceId) {
-						this.locatorMap = new HiliLocatorMap();
+						this.locatorMap = new EntityLocatorMap();
 					}
 					this.locatorMap.merge(locatorMap);
 					clientInstanceId = currentClientInstanceId;
@@ -1333,17 +1333,17 @@ public class ThreadlocalTransformManager extends TransformManager
 			}
 		}
 
-		public HiliLocator resolve(HasIdAndLocalId v) {
+		public EntityLocator resolve(Entity v) {
 			long localId = v.getLocalId();
 			return resolve(localId);
 		}
 
-		protected HiliLocator resolve(long localId) {
+		protected EntityLocator resolve(long localId) {
 			if (!AppPersistenceBase.isTest() && PermissionsManager.get()
 					.getClientInstanceId() != clientInstanceId) {
 				return null;
 			}
-			HiliLocator locator = locatorMap.getForLocalId(localId);
+			EntityLocator locator = locatorMap.getForLocalId(localId);
 			if (locator != null) {
 				return locator;
 			}
@@ -1359,7 +1359,7 @@ public class ThreadlocalTransformManager extends TransformManager
 				} else {
 					locatorMap = CommonPersistenceProvider.get()
 							.getCommonPersistence()
-							.reconstituteHiliMap(PermissionsManager.get()
+							.reconstituteEntityMap(PermissionsManager.get()
 									.getClientInstance().getId());
 					reconstituted = true;
 				}
