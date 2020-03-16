@@ -83,8 +83,7 @@ public class DetachedEntityCache
 		detached.clear();
 	}
 
-	public <T extends Entity> boolean contains(Class<T> clazz,
-			long id) {
+	public <T extends Entity> boolean contains(Class<T> clazz, long id) {
 		ensureMaps(clazz);
 		return detached.get(clazz).containsKey(id);
 	}
@@ -187,6 +186,15 @@ public class DetachedEntityCache
 		Class<? extends Entity> clazz = entity.provideEntityClass();
 		ensureMaps(clazz);
 		long id = entity.getId();
+		if (id == 0) {
+			id = -entity.getLocalId();
+		}
+		if (id == 0) {
+			throw new RuntimeException("indexing entity with zero id/localid");
+		}
+		if (id < 0) {
+			throw new RuntimeException("indexing entity with negative id");
+		}
 		if (throwOnExisting) {
 			if (detached.get(clazz).containsKey(id)) {
 				throw Ax.runtimeException("Double-put: %s", entity);
@@ -195,8 +203,7 @@ public class DetachedEntityCache
 		detached.get(clazz).put(id, entity);
 	}
 
-	public void putAll(Class clazz,
-			Collection<? extends Entity> values) {
+	public void putAll(Class clazz, Collection<? extends Entity> values) {
 		ensureMaps(clazz);
 		Map<Long, Entity> m = detached.get(clazz);
 		for (Entity entity : values) {

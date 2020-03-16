@@ -57,7 +57,6 @@ import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -382,8 +381,7 @@ public class DomainStore implements IDomainStore {
 		return domainDescriptor.perClass.containsKey(clazz);
 	}
 
-	public <T extends Entity> boolean isCached(Class<T> clazz,
-			long id) {
+	public <T extends Entity> boolean isCached(Class<T> clazz, long id) {
 		return cache.contains(clazz, id);
 	}
 
@@ -778,8 +776,8 @@ public class DomainStore implements IDomainStore {
 					// TODO - check if necessary
 					// (note) also a check against trying to handle deletion of
 					// lazy objects
-					Entity domainStoreObj = transformManager
-							.getObject(dte, true);
+					Entity domainStoreObj = transformManager.getObject(dte,
+							true);
 					if (domainStoreObj == null) {
 						continue;
 					}
@@ -812,8 +810,8 @@ public class DomainStore implements IDomainStore {
 				}
 				if (dte.getTransformType() != TransformType.DELETE_OBJECT
 						&& last == dte) {
-					Entity domainStoreObject = transformManager
-							.getObject(dte, true);
+					Entity domainStoreObject = transformManager.getObject(dte,
+							true);
 					if (domainStoreObject != null) {
 						metadataProvider.updateMetadata(dte, domainStoreObject);
 						index(domainStoreObject, true);
@@ -878,8 +876,7 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	<T extends Entity> Set<T> query(Class<T> clazz,
-			DomainStoreQuery<T> query) {
+	<T extends Entity> Set<T> query(Class<T> clazz, DomainStoreQuery<T> query) {
 		try {
 			threads.lock(false);
 			Set<T> raw = null;
@@ -925,8 +922,7 @@ public class DomainStore implements IDomainStore {
 				 */
 				ids.stream().filter(id -> id < 0)
 						.map(id -> ThreadlocalTransformManager.cast().getObject(
-								clazz, 0L,
-								Entity.provideUnpackedLocalId(id)))
+								clazz, 0L, Entity.provideUnpackedLocalId(id)))
 						.forEach(raw::add);
 			}
 			try {
@@ -1045,8 +1041,7 @@ public class DomainStore implements IDomainStore {
 					&& descriptorMap.get(domainDescriptor).initialised;
 		}
 
-		public <V extends Entity> DomainStoreQuery<V>
-				query(Class<V> clazz) {
+		public <V extends Entity> DomainStoreQuery<V> query(Class<V> clazz) {
 			return new DomainStoreQuery(clazz, storeFor(clazz));
 		}
 
@@ -1083,8 +1078,8 @@ public class DomainStore implements IDomainStore {
 
 		class DomainStoresDomainHandler implements DomainHandler {
 			@Override
-			public <V extends Entity> void async(Class<V> clazz,
-					long objectId, boolean create, Consumer<V> resultConsumer) {
+			public <V extends Entity> void async(Class<V> clazz, long objectId,
+					boolean create, Consumer<V> resultConsumer) {
 				storeHandler(clazz).async(clazz, objectId, create,
 						resultConsumer);
 			}
@@ -1132,8 +1127,7 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
-			public <V extends Entity> DomainQuery<V>
-					query(Class<V> clazz) {
+			public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
 				return storeHandler(clazz).query(clazz);
 			}
 
@@ -1152,8 +1146,7 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
-			public <V extends Entity> Stream<V>
-					stream(Class<V> clazz) {
+			public <V extends Entity> Stream<V> stream(Class<V> clazz) {
 				return storeHandler(clazz).stream(clazz);
 			}
 
@@ -1171,8 +1164,7 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
-			public <V extends Entity> Collection<V>
-					values(Class<V> clazz) {
+			public <V extends Entity> Collection<V> values(Class<V> clazz) {
 				return storeHandler(clazz).values(clazz);
 			}
 
@@ -1200,8 +1192,8 @@ public class DomainStore implements IDomainStore {
 				String propertyName) {
 			// target, even if new object, will still be equals() to old, so no
 			// property change will be fired, which is the desired behaviour
-			Entity target = (Entity) Reflections
-					.propertyAccessor().getPropertyValue(entity, propertyName);
+			Entity target = (Entity) Reflections.propertyAccessor()
+					.getPropertyValue(entity, propertyName);
 			if (target != null) {
 				target = ensureTransactional(target);
 				Reflections.propertyAccessor().setPropertyValue(entity,
@@ -1259,8 +1251,7 @@ public class DomainStore implements IDomainStore {
 			checkInLockedSection();
 			T t = cache.get(clazz, id);
 			if (transactionActiveInCurrentThread() && t != null) {
-				return (T) transactions.get()
-						.ensureTransactional((Entity) t);
+				return (T) transactions.get().ensureTransactional((Entity) t);
 			} else {
 				return t;
 			}
@@ -1387,8 +1378,8 @@ public class DomainStore implements IDomainStore {
 
 	class DomainStoreDomainHandler implements DomainHandler {
 		@Override
-		public <V extends Entity> void async(Class<V> clazz,
-				long objectId, boolean create, Consumer<V> resultConsumer) {
+		public <V extends Entity> void async(Class<V> clazz, long objectId,
+				boolean create, Consumer<V> resultConsumer) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -1450,14 +1441,13 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public <V extends Entity> List<V> listByProperty(
-				Class<V> clazz, String propertyName, Object value) {
+		public <V extends Entity> List<V> listByProperty(Class<V> clazz,
+				String propertyName, Object value) {
 			return Domain.query(clazz).raw().filter(propertyName, value).list();
 		}
 
 		@Override
-		public <V extends Entity> DomainQuery<V>
-				query(Class<V> clazz) {
+		public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
 			return new DomainStoreQuery<>(clazz, DomainStore.this);
 		}
 
@@ -1478,8 +1468,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public <V extends Entity> V transactionalFind(Class clazz,
-				long id) {
+		public <V extends Entity> V transactionalFind(Class clazz, long id) {
 			return (V) transactions().find(clazz, id);
 		}
 
@@ -1489,8 +1478,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public <V extends Entity> Collection<V>
-				values(Class<V> clazz) {
+		public <V extends Entity> Collection<V> values(Class<V> clazz) {
 			checkInLockedSection();
 			return cache.immutableRawValues(clazz);
 		}
