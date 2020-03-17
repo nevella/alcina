@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.servlet.ServletLayerUtils;
 
 /**
  *
@@ -40,11 +41,12 @@ public class HeaderCaptureServlet extends HttpServlet {
 		ArrayList<String> names = Collections.list(request.getHeaderNames());
 		FormatBuilder logBuilder = new FormatBuilder().separator(" :--: ");
 		FormatBuilder outputBuilder = new FormatBuilder().separator("\n");
+		String ipAddr = ServletLayerUtils.robustGetRemoteAddr(request);
 		outputBuilder.format(
 				"Header capture - IP address %s\n=================================================\n",
-				request.getRemoteAddr());
+				ipAddr);
 		logBuilder.format("Header capture - IP address %s",
-				request.getRemoteAddr());
+				ipAddr);
 		for (String name : names) {
 			ArrayList<String> values = Collections
 					.list(request.getHeaders(name));
