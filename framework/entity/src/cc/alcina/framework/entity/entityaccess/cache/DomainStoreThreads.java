@@ -332,7 +332,7 @@ public class DomainStoreThreads {
 					"DomainStore log debugging----------\n"
 							+ "Writer thread trace:----------\n" + "%s\n",
 					SEUtilities.getStacktraceSlice(writerThread, 999, 0));
-			if (full) {
+			if (full && domainStore.postProcessEvent != null) {
 				try {
 					fullLockDump.format("Writer thread transforms:\n%s\n\n",
 							domainStore.postProcessEvent
