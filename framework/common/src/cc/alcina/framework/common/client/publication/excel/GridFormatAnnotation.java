@@ -37,4 +37,6 @@ public @interface GridFormatAnnotation {
 	String styleId() default "";
 
 	ExcelDatatype type() default ExcelDatatype.String;
+	
+	Class rendererClass() default Void.class;
 }

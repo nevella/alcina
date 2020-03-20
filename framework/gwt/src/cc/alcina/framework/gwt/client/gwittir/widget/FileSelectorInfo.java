@@ -45,4 +45,6 @@ public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
 	public TopicSupport<FileSelectorInfo> topicClear() {
 		return clearTopicSupport;
 	}
+	
+	
 }

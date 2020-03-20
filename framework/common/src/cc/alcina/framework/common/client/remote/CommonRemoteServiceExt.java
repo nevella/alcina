@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
+import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -27,6 +28,10 @@ public interface CommonRemoteServiceExt extends CommonRemoteService {
 	@WebMethod
 	public <G extends WrapperPersistable> Long persist(G gwpo)
 			throws WebException;
+	
+	@WebMethod
+	public <T extends ILogRecord> Long log(T remoteLogRecord)
+			;
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber);
 }
