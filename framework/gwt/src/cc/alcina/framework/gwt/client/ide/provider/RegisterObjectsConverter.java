@@ -9,12 +9,12 @@ public class RegisterObjectsConverter implements Converter {
 	@Override
 	public Object convert(Object original) {
 		if (original instanceof Entity) {
-			Entity hili1 = (Entity) original;
-			Entity hili2 = TransformManager.get().getObject(hili1);
-			if (hili2 != null) {
-				return hili2;
+			Entity entity1 = (Entity) original;
+			Entity entity2 = TransformManager.get().getObject(entity1);
+			if (entity2 != null) {
+				return entity2;
 			} else {
-				TransformManager.get().registerDomainObject(hili1);
+				TransformManager.get().registerDomainObject(entity1);
 			}
 		}
 		return original;

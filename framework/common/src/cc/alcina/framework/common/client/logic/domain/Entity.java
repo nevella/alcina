@@ -353,12 +353,12 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 			}
 		}
 
-		public String hiliToString() {
+		public String entityToString() {
 			return new EntityLocator(Entity.this).toString();
 		}
 
 		/*
-		 * iff AbstractDomainBase.this===domainVersion()
+		 * iff Entity.this===domainVersion()
 		 */
 		public boolean isDomainVersion() {
 			return Domain.isDomainVersion(Entity.this);

@@ -71,6 +71,7 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
+import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
@@ -338,6 +339,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	public Long log(ILogRecord logRecord) {
+		return Registry.impl(CommonPersistenceProvider.class)
+				.getCommonPersistence().persistLogRecord(logRecord);
 	}
 
 	@Override

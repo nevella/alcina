@@ -143,7 +143,7 @@ public class GraphTuplizer {
 		}
 	}
 
-	Set<String> hiliFields = new LinkedHashSet<>();
+	Set<String> entityFields = new LinkedHashSet<>();
 
 	private String getValue(Object object, TFieldRef field) {
 		try {
@@ -151,7 +151,7 @@ public class GraphTuplizer {
 			if (oValue instanceof Entity) {
 				String locator = object.getClass().getSimpleName() + "."
 						+ field.name;
-				if (hiliFields.add(locator)) {
+				if (entityFields.add(locator)) {
 					Ax.out(locator);
 				}
 				return String.valueOf(((Entity) oValue).getId());

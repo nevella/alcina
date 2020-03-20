@@ -105,27 +105,27 @@ public class ServerTransformManagerSupport {
 				if (Entity.class.isAssignableFrom(pd.getPropertyType())
 						&& pd.getWriteMethod() != null && pd.getReadMethod()
 								.getAnnotation(SyntheticGetter.class) == null) {
-					Entity hiliTarget = (Entity) pd
+					Entity entityTarget = (Entity) pd
 							.getReadMethod()
 							.invoke(entity, CommonUtils.EMPTY_OBJECT_ARRAY);
-					if (hiliTarget == null) {
+					if (entityTarget == null) {
 						if (domainVersion != null) {
-							hiliTarget = (Entity) pd.getReadMethod()
+							entityTarget = (Entity) pd.getReadMethod()
 									.invoke(domainVersion,
 											CommonUtils.EMPTY_OBJECT_ARRAY);
-							if (hiliTarget != null) {
-								Entity writeable = ((Entity) hiliTarget)
+							if (entityTarget != null) {
+								Entity writeable = ((Entity) entityTarget)
 										.writeable();
 								if (writeable != null) {
 									/*
 									 * not part of domain - use the target
 									 */
-									hiliTarget = writeable;
+									entityTarget = writeable;
 								}
 								try {
 									// just so it can be nulled
 									pd.getWriteMethod().invoke(entity,
-											new Object[] { hiliTarget });
+											new Object[] { entityTarget });
 								} catch (InvocationTargetException e) {
 									if (e.getTargetException() instanceof UnsupportedOperationException) {
 									} else {
@@ -135,8 +135,8 @@ public class ServerTransformManagerSupport {
 							}
 						}
 					}
-					if (hiliTarget != null && !(hiliTarget instanceof IUser)
-							&& !(hiliTarget instanceof IGroup)) {
+					if (entityTarget != null && !(entityTarget instanceof IUser)
+							&& !(entityTarget instanceof IGroup)) {
 						try {
 							pd.getWriteMethod().invoke(entity,
 									new Object[] { null });

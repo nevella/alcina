@@ -36,10 +36,10 @@ public class ThreadedClientTransformManager
         if (this.getDomainObjects() != null) {
             T object = getDomainObjects().getObject(c, id, localId);
             if (object == null && localId != 0 && id == 0) {
-                EntityLocator hiliLocator = userSessionEntityMap
+                EntityLocator entityLocator = userSessionEntityMap
                         .getForLocalId(localId);
-                if (hiliLocator != null) {
-                    return getDomainObjects().getObject(c, hiliLocator.getId(),
+                if (entityLocator != null) {
+                    return getDomainObjects().getObject(c, entityLocator.getId(),
                             0L);
                 }
             } else {

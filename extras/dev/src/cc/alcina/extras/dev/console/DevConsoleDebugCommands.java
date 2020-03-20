@@ -979,7 +979,7 @@ public class DevConsoleDebugCommands {
 				ps.setDate(1, new java.sql.Date(d.getTime()));
 				ResultSet rs = ps.executeQuery();
 				console.state.logRecords = new ArrayList<ILogRecord>();
-				List<IL> logRecords = (List<IL>) console.state.logRecords;
+				List<IL> logRecords = (List<IL>) (List<?>) console.state.logRecords;
 				addLogRecords(rs, logRecords);
 				ps.close();
 			}
