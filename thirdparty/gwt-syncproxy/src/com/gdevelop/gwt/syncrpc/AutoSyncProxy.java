@@ -113,7 +113,7 @@ public class AutoSyncProxy implements Serializable {
 	 * @return A new proxy object which implements the service interface
 	 *         serviceIntf
 	 */
-	@SuppressWarnings("unchecked")
+	
 	private Object newProxyInstance(Class serviceIntf, String moduleBaseURL,
 			String remoteServiceRelativePath,
 			boolean failingProxyOnRetrieveFail, String policyFileName,

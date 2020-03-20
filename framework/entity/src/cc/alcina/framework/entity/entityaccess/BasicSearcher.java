@@ -36,7 +36,7 @@ public class BasicSearcher implements Searcher {
 		return this.entityManager;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public SearchResultsBase search(SearchDefinition def, int pageNumber,
 			EntityManager entityManager) {
 		return searchWithTemp(def, pageNumber, entityManager, null);

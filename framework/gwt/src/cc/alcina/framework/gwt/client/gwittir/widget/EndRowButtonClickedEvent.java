@@ -72,7 +72,7 @@ public class EndRowButtonClickedEvent
 
 	// The instance knows its of type T, but the TYPE
 	// field itself does not, so we have to do an unsafe cast here.
-	@SuppressWarnings("unchecked")
+	
 	@Override
 	public final Type<EndRowButtonClickedHandler> getAssociatedType() {
 		return (Type) TYPE;

@@ -32,7 +32,7 @@ public class UserCriterion extends AbstractUserCriterion {
 	private transient AlcinaTemplateUser user;
 
 	@Override
-	@SuppressWarnings("unchecked")
+	
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		if (user == null) {

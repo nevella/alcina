@@ -5,7 +5,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 
-@SuppressWarnings("unchecked")
+
 public class ThreadedClientTransformManager
         extends ClientTransformManagerCommon {
     private static ThreadLocal<Boolean> ignorePropertyChanges = new ThreadLocal() {

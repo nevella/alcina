@@ -77,7 +77,7 @@ public class ClientBeanReflector {
 		return result;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
 		return (A) annotations.get(annotationClass);
 	}

@@ -31,7 +31,7 @@ public class LocalSearchDefinition extends SearchDefinition {
 		return resultClass;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public Collection search() {
 		CollectionFilter filter = buildFilter();
 		return TransformManager.get().filter(getResultClass(), filter);

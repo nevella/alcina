@@ -20,7 +20,7 @@ import com.google.gwt.user.client.ui.TreeItem;
 
 import cc.alcina.framework.common.client.util.Callback;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

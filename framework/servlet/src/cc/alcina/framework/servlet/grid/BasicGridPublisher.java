@@ -94,7 +94,7 @@ public class BasicGridPublisher {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
+		
 		protected void renderContent(long publicationId, long publicationUserId)
 				throws Exception {
 			// choose an xsl template based on

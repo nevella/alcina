@@ -65,7 +65,7 @@ import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

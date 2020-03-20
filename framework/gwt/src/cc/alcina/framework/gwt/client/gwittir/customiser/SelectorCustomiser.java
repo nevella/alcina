@@ -36,7 +36,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
  * 
  */
 @ClientInstantiable
-@SuppressWarnings("unchecked")
+
 public class SelectorCustomiser implements Customiser {
     public static final String FILTER_CLASS = "filterClass";
 

@@ -48,7 +48,7 @@ public class CookieHelper {
 				PermissionsManager.get().getUserName(), false);
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public List<Cookie> getAddedCookies(HttpServletRequest req) {
 		List<Cookie> addedCookies = (List<Cookie>) req
 				.getAttribute(ADDED_COOKIES_ATTR);

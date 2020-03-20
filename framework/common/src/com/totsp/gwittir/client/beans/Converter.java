@@ -28,7 +28,7 @@ import java.util.function.Function;
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
-@SuppressWarnings("unchecked")
+
 public interface Converter<T, C> extends Function<T, C> {
 	public static final Converter<Object, String> TO_STRING_CONVERTER = new Converter<Object, String>() {
 		public String convert(Object original) {

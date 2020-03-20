@@ -62,7 +62,7 @@ public class Publisher {
 		return publish(contentDefinition, deliveryModel, null);
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public PublicationResult publish(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original)
 			throws Exception {
@@ -126,7 +126,7 @@ public class Publisher {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	private PublicationResult publish0(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original)
 			throws Exception {
@@ -160,6 +160,11 @@ public class Publisher {
 					original, publicationContentPersister, result);
 			ctx.getVisitorOrNoop()
 					.afterPublicationPersistence(result.publicationId);
+		} else {
+			if (result.publicationUid == null) {
+				result.publicationUid = SEUtilities.generateId();
+				result.publicationId = -1L;
+			}
 		}
 		long publicationId = CommonUtils.lv(result.publicationId);
 		ContentRenderer crh = (ContentRenderer) Registry.get()

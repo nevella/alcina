@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.Reflections;
 /**
  * Custom field serializer for HiliLocator
  */
-@SuppressWarnings("unchecked")
+
 public final class HiliLocator_CustomFieldSerializer
 		extends CustomFieldSerializer<HiliLocator> {
 	public static void deserialize(SerializationStreamReader streamReader,

@@ -215,7 +215,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		visualiser.getViewHolder().showStack(widgetIndex);
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public void vetoableAction(final PermissibleActionEvent evt) {
 		lastEvent = evt;
 		if (evt.getAction().getClass() == CancelAction.class) {

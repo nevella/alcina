@@ -32,7 +32,7 @@ public class DoubleCriterion extends SearchCriterion implements HasValue<Double>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		if (value == null) {

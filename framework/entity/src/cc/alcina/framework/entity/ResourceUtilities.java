@@ -112,7 +112,7 @@ public class ResourceUtilities {
 				cloneCollections, new ArrayList<String>());
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
 			Class methodFilterAnnotation, boolean cloneCollections,
 			Collection<String> ignorePropertyNames) {

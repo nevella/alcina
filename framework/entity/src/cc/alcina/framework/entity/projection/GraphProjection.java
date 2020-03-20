@@ -75,7 +75,6 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
-@SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel

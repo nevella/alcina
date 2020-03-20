@@ -48,7 +48,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.Link;
 
 @ClientInstantiable
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

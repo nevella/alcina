@@ -66,7 +66,7 @@ public class LayoutEvents {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public void fireLayoutEvent(LayoutEvent event) {
 		if (firingEvents.contains(event.getEventType())) {
 			return;

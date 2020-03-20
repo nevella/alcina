@@ -160,7 +160,7 @@ public class NodeFactory {
         return new UmbrellaProviderNode(providerChild, null, null, this);
     }
 
-    @SuppressWarnings("unchecked")
+    
     protected DomainNode createDomainNode(
             SourcesPropertyChangeEvents domainObject) {
         Class clazz = domainObject.getClass();

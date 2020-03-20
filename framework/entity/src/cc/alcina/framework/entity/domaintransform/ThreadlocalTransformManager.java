@@ -98,7 +98,7 @@ import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel
@@ -1001,11 +1001,11 @@ public class ThreadlocalTransformManager extends TransformManager
 			}
 			Class clazz = pd.getPropertyType();
 			if (!HasIdAndLocalId.class.isAssignableFrom(clazz)) {
-				projections.add(Ax.format("t.%s as %s", propertyName,
-						propertyName));
+				projections.add(
+						Ax.format("t.%s as %s", propertyName, propertyName));
 			} else {
-				projections.add(Ax.format("t.%s.id as %s_id",
-						propertyName, propertyName));
+				projections.add(Ax.format("t.%s.id as %s_id", propertyName,
+						propertyName));
 				if (clazz == refClass) {
 					specProperty = propertyName;
 				}

@@ -682,7 +682,7 @@ public class SyncClientSerializationStreamReader
      * @param instance
      * @throws SerializationException
      */
-    @SuppressWarnings("unchecked")
+    
     private Object deserializeArray(Class<?> instanceClass, Object instance)
             throws SerializationException {
         assert (instanceClass.isArray());

@@ -167,7 +167,7 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 					cleanUp();
 				}
 
-				@SuppressWarnings("unchecked")
+				
 				void cleanUp() {
 					validating = false;
 					validated = true;
@@ -182,7 +182,7 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 					psve.setSourceWidget(null);
 				}
 
-				@SuppressWarnings("unchecked")
+				
 				void resolveFeedback(
 						ServerValidator lastValidatorWithException) {
 					if (psve.feedback == null) {

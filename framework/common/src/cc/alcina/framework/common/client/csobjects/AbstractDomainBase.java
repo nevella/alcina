@@ -67,8 +67,14 @@ public abstract class AbstractDomainBase<T extends AbstractDomainBase>
 	public abstract long getId();
 
 	@Override
-	@Display(name = "Local id")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.ROOT), write = @Permission(access = AccessLevel.ROOT))
+	@Display(name = "Local id", visible = @Permission(access = AccessLevel.ROOT))
+	/*
+	 * The read permission level was "root" but that affects graph projection if
+	 * objects are local.
+	 * 
+	 * Value will never leave the server jvm (@GwtTransient) so safe to project
+	 */
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
 	@Transient
 	public long getLocalId() {
 		return this.localId;

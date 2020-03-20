@@ -61,7 +61,7 @@ public class CallManager {
 		updateDisplay();
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public void clear() {
 		ArrayList<AsyncCallback> clone = (ArrayList<AsyncCallback>) running
 				.clone();

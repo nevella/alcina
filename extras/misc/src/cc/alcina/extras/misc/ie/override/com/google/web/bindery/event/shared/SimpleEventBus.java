@@ -260,7 +260,7 @@ public class SimpleEventBus extends EventBus {
     }
 
     // safe, we control the puts.
-    @SuppressWarnings("unchecked")
+    
     List<H> handlers = (List<H>) sourceMap.get(source);
     if (handlers == null) {
       handlers = new ArrayList<H>();
@@ -290,7 +290,7 @@ public class SimpleEventBus extends EventBus {
     }
 
     // safe, we control the puts.
-    @SuppressWarnings("unchecked")
+    
     List<H> handlers = (List<H>) sourceMap.get(source);
     if (handlers == null) {
       return Collections.emptyList();

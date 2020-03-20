@@ -114,7 +114,7 @@ public class ObjectTreeRenderer {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
 			int depth, boolean soleChild, RenderContext renderContext,
 			TreeRenderer parent) {

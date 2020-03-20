@@ -64,7 +64,7 @@ public class LinkedHashMap_CustomFieldSerializer
 	 *            the instance to check
 	 * @return the value of instance.accessOrder
 	 */
-	@SuppressWarnings("unchecked")
+	
 	public static boolean getAccessOrderNoReflection(LinkedHashMap instance) {
 		/*
 		 * Clone the instance so our modifications won't affect the original. In

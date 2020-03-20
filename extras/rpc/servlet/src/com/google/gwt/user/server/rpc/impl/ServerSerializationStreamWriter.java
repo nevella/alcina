@@ -445,7 +445,7 @@ public final class ServerSerializationStreamWriter
 
 	// since some java classes need primitives for the constructor, some dudes
 	// will jump the gun
-	@SuppressWarnings("unchecked")
+	
 	public void writeObject(Object instance) throws SerializationException {
 		if (instance == null) {
 			// write a null string
@@ -605,7 +605,7 @@ public final class ServerSerializationStreamWriter
 				.hasCustomFieldSerializer(instanceClass);
 		if (customSerializer != null) {
 			// Use custom field serializer
-			@SuppressWarnings("unchecked")
+			
 			CustomFieldSerializer<Object> customFieldSerializer = (CustomFieldSerializer<Object>) SerializabilityUtil
 					.loadCustomFieldSerializer(customSerializer);
 			if (customFieldSerializer == null) {
