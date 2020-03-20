@@ -98,7 +98,6 @@ import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
-@SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel
@@ -248,19 +247,21 @@ public class ThreadlocalTransformManager extends TransformManager
 		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 
-	public boolean checkPropertyAccess(Entity entity,
-			String propertyName, boolean read) throws IntrospectionException {
+	public boolean checkPropertyAccess(Entity entity, String propertyName,
+			boolean read) throws IntrospectionException {
 		if (entity.provideWasPersisted()
 				|| LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
 			PropertyDescriptor descriptor = SEUtilities
-					.getPropertyDescriptorByName(entity.getClass(), propertyName);
+					.getPropertyDescriptorByName(entity.getClass(),
+							propertyName);
 			if (descriptor == null) {
 				throw new IntrospectionException(
 						String.format("Property not found - %s::%s",
 								entity.getClass().getName(), propertyName));
 			}
 			PropertyPermissions pp = SEUtilities
-					.getPropertyDescriptorByName(entity.getClass(), propertyName)
+					.getPropertyDescriptorByName(entity.getClass(),
+							propertyName)
 					.getReadMethod().getAnnotation(PropertyPermissions.class);
 			ObjectPermissions op = entity.getClass()
 					.getAnnotation(ObjectPermissions.class);
@@ -290,8 +291,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public <T extends Entity> T
-			createDomainObject(Class<T> objectClass) {
+	public <T extends Entity> T createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
 		T newInstance = newInstance(objectClass, 0, localId);
 		// logic should probably be made clearer here - if id==0, we're not in
@@ -376,8 +376,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public <V extends Entity> V find(Class<V> clazz, String key,
-			Object value) {
+	public <V extends Entity> V find(Class<V> clazz, String key, Object value) {
 		V first = null;
 		if (getEntityManager() != null) {
 			String eql = String.format(
@@ -465,8 +464,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public <H extends Entity> long
-			getLocalIdForClientInstance(H entity) {
+	public <H extends Entity> long getLocalIdForClientInstance(H entity) {
 		if (userSessionEntityMap != null) {
 			return userSessionEntityMap.getLocalIdForClientInstance(entity);
 		} else {
@@ -479,8 +477,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public <T extends Entity> T getObject(Class<? extends T> clazz,
-			long id, long localId) {
+	public <T extends Entity> T getObject(Class<? extends T> clazz, long id,
+			long localId) {
 		if (!Entity.class.isAssignableFrom(clazz)) {
 			throw new WrappedRuntimeException(
 					"Attempting to obtain incompatible bean: " + clazz,
@@ -707,8 +705,8 @@ public class ThreadlocalTransformManager extends TransformManager
 					newInstance.setLocalId(localId);
 				}
 				EntityLocator hiliLocator = new EntityLocator(
-						(Class<? extends Entity>) clazz,
-						newInstance.getId(), localId);
+						(Class<? extends Entity>) clazz, newInstance.getId(),
+						localId);
 				if (userSessionEntityMap != null) {
 					userSessionEntityMap.putToLookups(hiliLocator);
 				}
@@ -955,9 +953,8 @@ public class ThreadlocalTransformManager extends TransformManager
 		this.userSessionEntityMap = userSessionEntityMap;
 	}
 
-	public boolean testPermissions(Entity entity,
-			DomainTransformEvent evt, String propertyName, Object change,
-			boolean read) {
+	public boolean testPermissions(Entity entity, DomainTransformEvent evt,
+			String propertyName, Object change, boolean read) {
 		if (!LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
 			throw new RuntimeException("test property not set");
 		}
@@ -1001,11 +998,11 @@ public class ThreadlocalTransformManager extends TransformManager
 			}
 			Class clazz = pd.getPropertyType();
 			if (!Entity.class.isAssignableFrom(clazz)) {
-				projections.add(Ax.format("t.%s as %s", propertyName,
-						propertyName));
+				projections.add(
+						Ax.format("t.%s as %s", propertyName, propertyName));
 			} else {
-				projections.add(Ax.format("t.%s.id as %s_id",
-						propertyName, propertyName));
+				projections.add(Ax.format("t.%s.id as %s_id", propertyName,
+						propertyName));
 				if (clazz == refClass) {
 					specProperty = propertyName;
 				}
@@ -1016,9 +1013,8 @@ public class ThreadlocalTransformManager extends TransformManager
 				assocClass.getSimpleName(), specProperty, ref.getId());
 	}
 
-	private boolean checkPermissions(Entity entity,
-			DomainTransformEvent evt, String propertyName, Object change,
-			boolean muteLogging) {
+	private boolean checkPermissions(Entity entity, DomainTransformEvent evt,
+			String propertyName, Object change, boolean muteLogging) {
 		if (isIgnoreTransformPermissions()) {
 			return true;
 		}
@@ -1038,8 +1034,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			op = op == null
 					? PermissionsManager.get().getDefaultObjectPermissions()
 					: op;
-			Entity hiliChange = (Entity) (change instanceof Entity
-					? change
+			Entity hiliChange = (Entity) (change instanceof Entity ? change
 					: null);
 			ObjectPermissions oph = null;
 			AssignmentPermission aph = Reflections.propertyAccessor()
@@ -1124,9 +1119,8 @@ public class ThreadlocalTransformManager extends TransformManager
 		return true;
 	}
 
-	private void checkTargetReadAndAssignmentAccessAndThrow(
-			Entity assigningTo, Entity assigning,
-			ObjectPermissions oph, AssignmentPermission aph,
+	private void checkTargetReadAndAssignmentAccessAndThrow(Entity assigningTo,
+			Entity assigning, ObjectPermissions oph, AssignmentPermission aph,
 			DomainTransformEvent evt) throws DomainTransformException {
 		if (assigning == null) {
 			return;
@@ -1146,8 +1140,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		return explicitlyPermittedTransforms.contains(evt);
 	}
 
-	protected boolean
-			checkHasSufficientInfoForPropertyPersist(Entity entity) {
+	protected boolean checkHasSufficientInfoForPropertyPersist(Entity entity) {
 		return entity.getId() != 0
 				|| (localIdToEntityMap.get(entity.getLocalId()) != null
 						&& getEntityManager() == null)
@@ -1158,8 +1151,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	protected boolean checkPermissions(Entity entity,
-			DomainTransformEvent evt, String propertyName, Object change) {
+	protected boolean checkPermissions(Entity entity, DomainTransformEvent evt,
+			String propertyName, Object change) {
 		return checkPermissions(entity, evt, propertyName, change, false);
 	}
 
@@ -1174,7 +1167,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	protected void doCascadeDeletes(Entity entity) {
 		if (getEntityManager() == null) {
-			new ServerTransformManagerSupport().removeParentAssociations(entity);
+			new ServerTransformManagerSupport()
+					.removeParentAssociations(entity);
 			new ServerTransformManagerSupport().doCascadeDeletes(entity);
 		}
 		// client-only for the moment.
@@ -1211,7 +1205,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	protected <T extends Entity> T ensureNonProxy(T entity) {
-		if (entity != null && entity.getId() != 0 && getEntityManager() != null) {
+		if (entity != null && entity.getId() != 0
+				&& getEntityManager() != null) {
 			entity = Registry.impl(JPAImplementation.class)
 					.getInstantiatedObject(entity);
 		}
@@ -1238,8 +1233,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	protected void objectModified(Entity entity,
-			DomainTransformEvent evt, boolean targetObject) {
+	protected void objectModified(Entity entity, DomainTransformEvent evt,
+			boolean targetObject) {
 		boolean addToResults = false;
 		if (evt.getTransformType() == TransformType.CREATE_OBJECT) {
 			addToResults = true;
@@ -1278,8 +1273,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		new ServerTransformManagerSupport().removeAssociations(entity);
 	}
 
-	protected Entity
-			resolveForPermissionsChecks(Entity entity) {
+	protected Entity resolveForPermissionsChecks(Entity entity) {
 		return entity;
 	}
 
@@ -1312,7 +1306,8 @@ public class ThreadlocalTransformManager extends TransformManager
 					.filter(dte -> dte
 							.getTransformType() == TransformType.CREATE_OBJECT)
 					.forEach(dte -> {
-						locatorMap.putToLookups(EntityLocator.objectLocator(dte));
+						locatorMap
+								.putToLookups(EntityLocator.objectLocator(dte));
 					});
 		}
 

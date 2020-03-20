@@ -167,7 +167,7 @@ public abstract class SearchDefinition extends WrapperPersistable
         return orderGroup;
     }
 
-    @SuppressWarnings("unchecked")
+    
     public EqlWithParameters eql(boolean withOrderClause) {
         EqlWithParameters ewp = new EqlWithParameters();
         if (criteriaGroups.size() == 0) {
@@ -347,7 +347,7 @@ public abstract class SearchDefinition extends WrapperPersistable
         return result.toString();
     }
 
-    @SuppressWarnings("unchecked")
+    
     public <C extends OrderGroup> C orderGroup(Class<C> clazz) {
         return (C) ogs.get(clazz);
     }

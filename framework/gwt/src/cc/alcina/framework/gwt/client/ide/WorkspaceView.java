@@ -281,7 +281,7 @@ public class WorkspaceView extends Composite implements HasName,
             onTreeItemSelected(item);
         }
 
-        @SuppressWarnings("unchecked")
+        
         public void resetTree() {
             try {
                 this.scroller.remove(dataTree);
@@ -434,13 +434,13 @@ public class WorkspaceView extends Composite implements HasName,
             return actions;
         }
 
-        @SuppressWarnings("unchecked")
+        
         protected <C> ContainerNode getBasicCollectionNode(String name,
                 Class<C> clazz, ImageResource imageResource) {
             return getBasicCollectionNode(name, clazz, imageResource, null);
         }
 
-        @SuppressWarnings("unchecked")
+        
         protected <C> ContainerNode getBasicCollectionNode(String name,
                 Class<C> clazz, ImageResource imageResource,
                 NodeFactory nodeFactory) {
@@ -455,7 +455,7 @@ public class WorkspaceView extends Composite implements HasName,
             return node;
         }
 
-        @SuppressWarnings("unchecked")
+        
         protected <C> ContainerNode getFilteredCollectionNode(String name,
                 Class<C> clazz, ImageResource imageResource,
                 CollectionFilter cf) {
@@ -463,7 +463,7 @@ public class WorkspaceView extends Composite implements HasName,
                     null);
         }
 
-        @SuppressWarnings("unchecked")
+        
         protected <C> ContainerNode getFilteredCollectionNode(String name,
                 Class<C> clazz, ImageResource imageResource,
                 CollectionFilter cf, NodeFactory nodeFactory) {
@@ -471,7 +471,7 @@ public class WorkspaceView extends Composite implements HasName,
                     nodeFactory, null);
         }
 
-        @SuppressWarnings("unchecked")
+        
         protected <C> ContainerNode getFilteredCollectionNode(String name,
                 Class<C> clazz, ImageResource imageResource,
                 CollectionFilter cf, NodeFactory nodeFactory,
@@ -500,7 +500,7 @@ public class WorkspaceView extends Composite implements HasName,
 
         protected abstract Object getTopLevelItems();
 
-        @SuppressWarnings("unchecked")
+        
         protected <C> ContainerNode getUmbrellaProviderNode(String name,
                 Class<C> clazz, ImageResource imageResource,
                 UmbrellaProvider umbrellaProvider,

@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
  * 
  */
 public class AlcinaHistoryItemTm extends AlcinaHistoryItem {
-	@SuppressWarnings("unchecked")
+	
 	public Object getReferencedObjectOrClassName() {
 		if (getClassName() == null) {
 			return null;

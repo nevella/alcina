@@ -488,7 +488,7 @@ public class WidgetUtils {
     return h;
 	}-*/;
 
-	@SuppressWarnings("unchecked")
+	
 	public static <W extends Widget> W getParentWidget(Widget w,
 			Class<W> widgetClass) {
 		while (w != null) {
@@ -500,7 +500,7 @@ public class WidgetUtils {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public static <W extends Widget> W getParentWidget(Widget w,
 			String widgetClassName) {
 		while (w != null) {
@@ -513,7 +513,7 @@ public class WidgetUtils {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public static Widget getParentWidgetSatisfyingCallback(Widget w,
 			CollectionFilter<Object> callback) {
 		while (w != null) {
@@ -525,7 +525,7 @@ public class WidgetUtils {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public static <T extends Widget> T getParentWidgetSatisfyingTypedCallback(
 			Widget w, CollectionFilter<Widget> callback) {
 		while (w != null) {

@@ -17,7 +17,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
  * @author nreddel@barnet.com.au
  * 
  */
-@SuppressWarnings("unchecked")
+
 public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGroup, SC extends SearchCriterion, O>
 		extends SetBasedListBox {
 	protected C criteriaGroup;

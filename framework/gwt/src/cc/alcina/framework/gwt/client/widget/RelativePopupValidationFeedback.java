@@ -210,7 +210,7 @@ public class RelativePopupValidationFeedback
         this.position = position;
     }
 
-    @SuppressWarnings("unchecked")
+    
     protected Widget renderExceptionWidget(ValidationException exception) {
         return asHtml ? new HTML(this.getMessage(exception))
                 : new Label(this.getMessage(exception));

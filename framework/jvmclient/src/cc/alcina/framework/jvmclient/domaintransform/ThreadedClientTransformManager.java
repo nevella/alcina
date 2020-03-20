@@ -5,7 +5,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 
-@SuppressWarnings("unchecked")
+
 public class ThreadedClientTransformManager
         extends ClientTransformManagerCommon {
     private static ThreadLocal<Boolean> ignorePropertyChanges = new ThreadLocal() {

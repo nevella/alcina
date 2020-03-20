@@ -39,7 +39,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
  * @author nick@alcina.cc
  * 
  */
-@SuppressWarnings("unchecked")
+
 public class CloneHelper {
 	private Map createdMap = new IdentityHashMap();
 

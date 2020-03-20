@@ -23,7 +23,7 @@ import cc.alcina.template.cs.persistent.LogRecord;
 public class LogrecordSearchDefinition extends
 		SingleTableSearchDefinition<LogRecord> {
 	@Override
-	@SuppressWarnings("unchecked")
+	
 	protected void init() {
 		setResultClass(LogRecord.class);
 		Date now = new Date();

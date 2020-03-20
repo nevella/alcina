@@ -207,7 +207,7 @@ public class JPAHibernateImpl implements JPAImplementation {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    
     public <T> T getInstantiatedObject(T object) {
         if (object instanceof HibernateProxy) {
             return (T) ((HibernateProxy) object).getHibernateLazyInitializer()

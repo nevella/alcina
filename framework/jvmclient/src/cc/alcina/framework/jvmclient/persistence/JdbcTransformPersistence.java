@@ -49,7 +49,7 @@ import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.DeltaApplicationRecordToDomainModelDeltaConverter;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

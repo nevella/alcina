@@ -20,7 +20,7 @@ public class PersistentObjectCriterion extends SearchCriterion {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		if (classRef == null) {

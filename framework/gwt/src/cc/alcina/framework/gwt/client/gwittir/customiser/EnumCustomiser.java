@@ -33,7 +33,7 @@ import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
 @ClientInstantiable
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

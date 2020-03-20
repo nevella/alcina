@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.collections.PublicCloneable;
  * @author nick@alcina.cc
  * 
  */
-@SuppressWarnings("unchecked")
+
 public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>
 		implements PublicCloneable<UnsortedMultikeyMap> {
 	private static final long serialVersionUID = 1L;

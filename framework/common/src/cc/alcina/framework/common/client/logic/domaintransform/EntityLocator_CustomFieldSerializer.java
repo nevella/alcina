@@ -25,14 +25,14 @@ import cc.alcina.framework.common.client.Reflections;
 /**
  * Custom field serializer for EntityLocator
  */
-@SuppressWarnings("unchecked")
 public final class EntityLocator_CustomFieldSerializer
 		extends CustomFieldSerializer<EntityLocator> {
 	public static void deserialize(SerializationStreamReader streamReader,
 			EntityLocator instance) throws SerializationException {
-		instance.id=streamReader.readLong();
-		instance.localId=streamReader.readLong();
-		instance.clazz=Reflections.classLookup().getClassForName(streamReader.readString());
+		instance.id = streamReader.readLong();
+		instance.localId = streamReader.readLong();
+		instance.clazz = Reflections.classLookup()
+				.getClassForName(streamReader.readString());
 	}
 
 	public static void serialize(SerializationStreamWriter streamWriter,

@@ -132,7 +132,7 @@ public class AlcinaTemplatePersistence
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	AlcinaTemplateGroup getGroupByName(String name) {
 		List<AlcinaTemplateGroup> l = em
 				.createQuery("from AlcinaTemplateGroup g where g.groupName = ?")

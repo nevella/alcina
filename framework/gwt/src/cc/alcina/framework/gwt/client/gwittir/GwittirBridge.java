@@ -90,7 +90,7 @@ import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

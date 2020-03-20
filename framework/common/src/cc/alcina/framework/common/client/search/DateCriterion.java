@@ -38,7 +38,7 @@ public class DateCriterion extends AbstractDateCriterion {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		if (getDate() == null) {

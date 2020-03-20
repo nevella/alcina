@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

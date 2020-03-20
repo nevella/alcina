@@ -38,7 +38,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
  * 
  * @author Nick Reddel
  */
-@SuppressWarnings("unchecked")
+
 public class WorkspaceDeletionChecker {
 	public static boolean enabled = false;
 

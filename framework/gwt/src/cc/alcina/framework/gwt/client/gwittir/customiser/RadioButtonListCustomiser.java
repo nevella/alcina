@@ -45,7 +45,7 @@ public class RadioButtonListCustomiser implements Customiser {
     public static final String COLUMN_COUNT = "columnCount";
 
     @Override
-    @SuppressWarnings("unchecked")
+    
     public BoundWidgetProvider getProvider(boolean editable, Class clazz,
             boolean multiple, Custom info) {
         NamedParameter[] parameters = info.parameters();

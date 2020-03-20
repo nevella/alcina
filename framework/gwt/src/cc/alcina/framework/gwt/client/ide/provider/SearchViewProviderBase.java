@@ -53,7 +53,7 @@ import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar.BreadcrumbBarButton;
 import cc.alcina.framework.gwt.client.widget.InputButton;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

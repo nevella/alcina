@@ -73,7 +73,7 @@ public interface Comparator<T> {
             return Comparator.reverseOrder();
         }
     }
-	@SuppressWarnings("unchecked")
+	
     public static <T extends Comparable<? super T>> Comparator<T> naturalOrder() {
         return (Comparator<T>) NaturalOrderComparator.INSTANCE;
     }

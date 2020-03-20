@@ -31,7 +31,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionCont
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallbackWithShellObject;
 
-@SuppressWarnings("unchecked")
+
 /**
  *
  * @author Nick Reddel

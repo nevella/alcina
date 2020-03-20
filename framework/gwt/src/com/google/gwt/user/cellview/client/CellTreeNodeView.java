@@ -473,7 +473,7 @@ class CellTreeNodeView<T> extends UIObject {
 	 * @param event
 	 *            the native event
 	 */
-	@SuppressWarnings("unchecked")
+	
 	protected void fireEventToCell(NativeEvent event) {
 		if (parentNodeInfo == null) {
 			return;

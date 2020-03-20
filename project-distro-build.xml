@@ -10,14 +10,9 @@
 		<antcall target="prepare-war">
 		</antcall>
 		<war destfile="${project.dist.dir}/${distributable.name}.war" manifest="${project.web-inf.dir}/MANIFEST.MF" webxml="${project.web-inf.dir}/web.xml" update="${update.jars}" compress="${compress.jars}">
-			<!--<fileset dir="${project.web-inf.dir}"> <exclude name="WEB-INF/web.xml" /> </fileset> -->
-			<!-- dump this too -->
-			<!--to change in a sec -->
-
 			<zipfileset dir="${project.gwt.build.dir}" prefix="">
 				<include name="**/*" />
 			</zipfileset>
-
 			<zipfileset dir="${project.src.dir}" prefix="WEB-INF/classes">
 				<patternset refid="project.war.resource.exports" />
 			</zipfileset>
@@ -194,6 +189,9 @@
 		<copy file="${project.web-inf.dir}/MANIFEST.MF" todir="${j2ee-server.unwar.target}/META-INF" preservelastmodified="true">
 
 		</copy>
+		<echo file="${j2ee-server.unwar.target}/WEB-INF/classes/alcina.repo_hashes" append="true" message="${alcina.repo_hashes}"/>
+		<echo file="${j2ee-server.unwar.target}/WEB-INF/classes/alcina.repo_hashes2" append="true" message="${deploy.j2ee-server.deploy.dir}"/>
+		
 	</target>
 	<target name="hot-deploy-static" description="deploy static client files" depends="prepare-war">
 		<mkdir dir="${j2ee-server.unwar.target}" />

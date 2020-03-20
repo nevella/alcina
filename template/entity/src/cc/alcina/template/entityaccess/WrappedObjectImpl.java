@@ -30,7 +30,7 @@ import cc.alcina.template.cs.persistent.DomainBaseVersionable;
 @javax.persistence.Entity
 @Table(name = "wrappedObject")
 @SequenceGenerator(allocationSize=1,name = "wrappedObject_sequence", sequenceName = "wrappedObject_id_seq")
-@SuppressWarnings("unchecked")
+
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = WrappedObject.class)
 public class WrappedObjectImpl<T extends WrapperPersistable> extends
 		DomainBaseVersionable implements PropertyChangeListener,

@@ -37,7 +37,7 @@ public class TreeSet_CustomFieldSerializer
 				instance);
 	}
 
-	@SuppressWarnings("unchecked")
+	
 	public static TreeSet instantiate(SerializationStreamReader streamReader)
 			throws SerializationException {
 		if (GWT.isClient()) {

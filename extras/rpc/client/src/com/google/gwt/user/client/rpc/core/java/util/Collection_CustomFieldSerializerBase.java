@@ -24,7 +24,7 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 /**
  * Custom field serializer for {@link java.util.ArrayList}.
  */
-@SuppressWarnings("unchecked")
+
 public final class Collection_CustomFieldSerializerBase {
 	public static void deserialize(SerializationStreamReader streamReader,
 			Collection instance) throws SerializationException {

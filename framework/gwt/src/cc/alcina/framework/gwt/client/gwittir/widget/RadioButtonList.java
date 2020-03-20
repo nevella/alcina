@@ -143,7 +143,7 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    
     public void onClick(ClickEvent event) {
         Set<T> keySet = checkMap.keySet();
         for (T object : keySet) {

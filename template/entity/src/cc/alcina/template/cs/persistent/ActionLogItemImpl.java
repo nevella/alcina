@@ -89,7 +89,7 @@ public class ActionLogItemImpl extends DomainBaseVersionable implements ActionLo
 	}
 
 	@Transient
-	@SuppressWarnings("unchecked")
+	
 	public Class<? extends RemoteAction> getActionClass() {
 		if (this.actionClass == null && this.actionClassName != null) {
 			this.actionClass = Reflections.classLookup()

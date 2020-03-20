@@ -58,7 +58,7 @@ public abstract class WatchDir {
 
 	private boolean trace = false;
 
-	@SuppressWarnings("unchecked")
+	
 	static <T> WatchEvent<T> cast(WatchEvent<?> event) {
 		return (WatchEvent<T>) event;
 	}

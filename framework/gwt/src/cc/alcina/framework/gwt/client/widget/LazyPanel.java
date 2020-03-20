@@ -91,7 +91,7 @@ public abstract class LazyPanel<T extends Widget> extends SimplePanel {
 	 * 
 	 * @return the child widget, or <code>null</code> if none is present
 	 */
-	@SuppressWarnings("unchecked")
+	
 	public T getWidget() {
 		return (T) super.getWidget();
 	}

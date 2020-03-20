@@ -57,7 +57,7 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		E value = getValue();
