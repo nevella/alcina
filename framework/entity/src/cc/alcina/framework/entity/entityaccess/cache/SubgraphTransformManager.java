@@ -159,11 +159,11 @@ public class SubgraphTransformManager extends TransformManager {
 			T t = super.getObject(c, id, localId);
 			if (t == null) {
 				if (id == 0) {
-					EntityLocator hiliLocator = locatorMap.getForLocalId(localId);
-					if (hiliLocator == null) {
+					EntityLocator entityLocator = locatorMap.getForLocalId(localId);
+					if (entityLocator == null) {
 						return null;
 					}
-					id = hiliLocator.id;
+					id = entityLocator.id;
 				}
 				if (id != 0) {
 					t = Domain.detachedVersion(c, id);

@@ -426,12 +426,12 @@ public class CommitToStorageTransformListener extends StateListenable
 							tm.registerEntityMappingPriorToLocalIdDeletion(
 									dte.getObjectClass(), id,
 									dte.getObjectLocalId());
-							EntityLocator hiliLocator = new EntityLocator(
+							EntityLocator entityLocator = new EntityLocator(
 									dte.getObjectClass(), id, 0L);
 							if (firstCreatedObjectLocator == null) {
-								firstCreatedObjectLocator = hiliLocator;
+								firstCreatedObjectLocator = entityLocator;
 							}
-							lastCreatedObjectLocator = hiliLocator;
+							lastCreatedObjectLocator = entityLocator;
 						}
 						// if (dte.getObjectVersionNumber() != 0 && id != 0) {
 						// if we have zero id at this stage, we're probably in a

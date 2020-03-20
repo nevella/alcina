@@ -87,9 +87,9 @@ public class KnownsPersistenceDomainStore implements KnownsPersistence {
             DomainTransformLayerWrapper wrapper = ServletLayerTransforms
                     .pushTransforms(null, true, true);
             replaceWithPersistent.stream().forEach(n -> {
-                EntityLocator hiliLocator = wrapper.locatorMap
+                EntityLocator entityLocator = wrapper.locatorMap
                         .getForLocalId(((KnownNodePersistentDomainStore)n.persistent).getLocalId());
-                n.persistent = Domain.find(hiliLocator);
+                n.persistent = Domain.find(entityLocator);
             });
             if (wrapper.persistentEvents.size() > 0) {
                 synchronized (Knowns.reachableKnownsModificationNotifier) {

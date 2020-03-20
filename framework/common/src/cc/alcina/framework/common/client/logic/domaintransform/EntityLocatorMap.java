@@ -78,10 +78,10 @@ public class EntityLocatorMap implements Serializable {
         if (entity.getLocalId() != 0) {
             return entity.getLocalId();
         }
-        EntityLocator hiliLocator = persistentToLocal.get(entity.getClass(),
+        EntityLocator entityLocator = persistentToLocal.get(entity.getClass(),
                 entity.getId());
-        if (hiliLocator != null) {
-            return hiliLocator.localId;
+        if (entityLocator != null) {
+            return entityLocator.localId;
         }
         return 0;
     }
@@ -107,9 +107,9 @@ public class EntityLocatorMap implements Serializable {
         persistentToLocal.putMulti(other.persistentToLocal);
     }
 
-    public synchronized void putToLookups(EntityLocator hiliLocator) {
-        localToPersistent.put(hiliLocator.localId, hiliLocator);
-        persistentToLocal.put(hiliLocator.clazz, hiliLocator.id, hiliLocator);
+    public synchronized void putToLookups(EntityLocator entityLocator) {
+        localToPersistent.put(entityLocator.localId, entityLocator);
+        persistentToLocal.put(entityLocator.clazz, entityLocator.id, entityLocator);
     }
 
     public static class ToCreatedIdConverter<H extends Entity>

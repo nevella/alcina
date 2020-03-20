@@ -704,13 +704,13 @@ public class ThreadlocalTransformManager extends TransformManager
 				} else {
 					newInstance.setLocalId(localId);
 				}
-				EntityLocator hiliLocator = new EntityLocator(
+				EntityLocator entityLocator = new EntityLocator(
 						(Class<? extends Entity>) clazz, newInstance.getId(),
 						localId);
 				if (userSessionEntityMap != null) {
-					userSessionEntityMap.putToLookups(hiliLocator);
+					userSessionEntityMap.putToLookups(entityLocator);
 				}
-				createdObjectLocators.add(hiliLocator);
+				createdObjectLocators.add(entityLocator);
 				return (T) newInstance;
 			}
 			throw new Exception("only construct entities here");
@@ -1034,14 +1034,14 @@ public class ThreadlocalTransformManager extends TransformManager
 			op = op == null
 					? PermissionsManager.get().getDefaultObjectPermissions()
 					: op;
-			Entity hiliChange = (Entity) (change instanceof Entity ? change
+			Entity entityChange = (Entity) (change instanceof Entity ? change
 					: null);
 			ObjectPermissions oph = null;
 			AssignmentPermission aph = Reflections.propertyAccessor()
 					.getAnnotationForProperty(objectClass,
 							AssignmentPermission.class, propertyName);
-			if (hiliChange != null) {
-				oph = hiliChange.getClass()
+			if (entityChange != null) {
+				oph = entityChange.getClass()
 						.getAnnotation(ObjectPermissions.class);
 				oph = oph == null
 						? PermissionsManager.get().getDefaultObjectPermissions()
@@ -1051,11 +1051,11 @@ public class ThreadlocalTransformManager extends TransformManager
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
 				checkPropertyReadAccessAndThrow(entity, propertyName, evt);
-				checkTargetReadAndAssignmentAccessAndThrow(entity, hiliChange,
+				checkTargetReadAndAssignmentAccessAndThrow(entity, entityChange,
 						oph, aph, evt);
 				break;
 			case CHANGE_PROPERTY_REF:
-				checkTargetReadAndAssignmentAccessAndThrow(entity, hiliChange,
+				checkTargetReadAndAssignmentAccessAndThrow(entity, entityChange,
 						oph, aph, evt);
 				// deliberate fall-through
 			case NULL_PROPERTY_REF:

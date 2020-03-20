@@ -121,8 +121,8 @@ public class EntityHelper {
 		return hi == null ? 0 : hi.getId();
 	}
 
-	public static long getIdOrZero(Optional<? extends Entity> o_hili) {
-		return o_hili.isPresent() ? o_hili.get().getId() : 0;
+	public static long getIdOrZero(Optional<? extends Entity> o_entity) {
+		return o_entity.isPresent() ? o_entity.get().getId() : 0;
 	}
 
 	public static Predicate<Entity> idFilter(String value) {
