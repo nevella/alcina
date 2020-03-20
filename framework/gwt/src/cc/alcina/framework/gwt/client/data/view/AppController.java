@@ -8,7 +8,7 @@ import com.google.gwt.place.shared.PlaceHistoryHandler;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -53,7 +53,7 @@ public class AppController {
         flushPostDelete(CommonUtils.last(list));
     }
 
-    public void doCreate(Class<? extends HasIdAndLocalId> clazz) {
+    public void doCreate(Class<? extends Entity> clazz) {
         DataPlace target = (DataPlace) RegistryHistoryMapper.get()
                 .getPlaceByModelClass(clazz);
         target.action = DataAction.CREATE;
@@ -79,7 +79,7 @@ public class AppController {
         ClientFactory.goTo(target);
     }
 
-    public void doSearch(Class<? extends HasIdAndLocalId> clazz, String text) {
+    public void doSearch(Class<? extends Entity> clazz, String text) {
         DataPlace target = (DataPlace) RegistryHistoryMapper.get()
                 .getPlaceByModelClass(clazz);
         target.getSearchDefinition().toTextSearch(text);

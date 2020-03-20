@@ -3,16 +3,15 @@ package cc.alcina.framework.gwt.client.data.entity;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import javax.persistence.EntityListeners;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
-import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
 import cc.alcina.framework.common.client.entity.VersioningEntityListener;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
@@ -29,10 +28,10 @@ import cc.alcina.framework.common.client.util.LooseContext;
 @ClientInstantiable
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ADMIN))
 @MappedSuperclass
-@EntityListeners(VersioningEntityListener.class)
+@javax.persistence.EntityListeners(VersioningEntityListener.class)
 @RegistryLocation(registryPoint = DataDomainBase.class)
-public abstract class DataDomainBase<T extends DataDomainBase>
-		extends AbstractDomainBase<T> implements IVersionable, DataApiDecorators {
+public abstract class DataDomainBase<T extends DataDomainBase> extends Entity<T>
+		implements IVersionable, DataApiDecorators {
 	public static final String CONTEXT_FIRE_CREATION_DATE_EVENTS = DataDomainBase.class
 			.getName() + ".CONTEXT_FIRE_CREATION_DATE_EVENTS";
 
@@ -116,6 +115,6 @@ public abstract class DataDomainBase<T extends DataDomainBase>
 
 	@Override
 	public String toString() {
-		return new HiliLocator(this).toString();
+		return new EntityLocator(this).toString();
 	}
 }

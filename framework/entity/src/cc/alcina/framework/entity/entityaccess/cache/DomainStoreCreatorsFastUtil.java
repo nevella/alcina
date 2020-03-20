@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreIdMapCreator;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreLongSetCreator;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreMultisetCreator;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -21,8 +21,8 @@ public class DomainStoreCreatorsFastUtil {
 	public static class DomainStoreIdMapCreatorJ2SE
 			implements DomainStoreIdMapCreator {
 		@Override
-		public Map<Long, HasIdAndLocalId> get() {
-			return new ConcurrentSkipListMap<Long, HasIdAndLocalId>();
+		public Map<Long, Entity> get() {
+			return new ConcurrentSkipListMap<Long, Entity>();
 		}
 	}
 

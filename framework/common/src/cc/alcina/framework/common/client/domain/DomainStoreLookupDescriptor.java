@@ -7,10 +7,10 @@ import java.util.function.Function;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 
-public class DomainStoreLookupDescriptor<T extends HasIdAndLocalId>
+public class DomainStoreLookupDescriptor<T extends Entity>
 		implements MemoryStatProvider {
 	public Class<T> clazz;
 
@@ -120,7 +120,7 @@ public class DomainStoreLookupDescriptor<T extends HasIdAndLocalId>
 				propertyPath, idDescriptor);
 	}
 
-	public static class IdLookupDescriptor<T extends HasIdAndLocalId>
+	public static class IdLookupDescriptor<T extends Entity>
 			extends DomainStoreLookupDescriptor<T> {
 		private IdLookup idLookup;
 

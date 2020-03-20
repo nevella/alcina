@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
@@ -182,7 +182,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	@Override
 	public Collection<V> values() {
-		if (HasIdAndLocalId.class.isAssignableFrom(valueClass)) {
+		if (Entity.class.isAssignableFrom(valueClass)) {
 			return new ValuesSet();
 		} else {
 			return new ValuesCollection();

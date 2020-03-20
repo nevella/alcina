@@ -4,7 +4,7 @@ import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.Entity;
+
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -25,7 +25,7 @@ import cc.alcina.template.cs.persistent.ClientInstanceImpl;
 
 
 
-@Entity
+@javax.persistence.Entity
 @Table(name = "domain_transform_request")
 @SequenceGenerator(allocationSize=1,name = "domain_transform_request_id_seq", sequenceName = "domain_transform_request_id_seq")
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = DomainTransformRequestPersistent.class)

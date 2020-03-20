@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
  *
  * @param <T>
  */
-public abstract class BaseProjection<T extends HasIdAndLocalId>
+public abstract class BaseProjection<T extends Entity>
 		implements DomainProjection<T> {
 	protected MultikeyMap<T> lookup;
 
@@ -73,7 +73,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 	public <V> V get(Object... objects) {
 		V nonTransactional = (V) lookup.get(objects);
 		return (V) Domain.resolveTransactional(this,
-				(HasIdAndLocalId) nonTransactional, objects);
+				(Entity) nonTransactional, objects);
 	}
 
 	@Override
@@ -117,8 +117,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId>
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.out.println("Cause - " + t);
-				if (t instanceof HasIdAndLocalId) {
-					System.out.println(new HiliLocator(t));
+				if (t instanceof Entity) {
+					System.out.println(new EntityLocator(t));
 				}
 			}
 		}

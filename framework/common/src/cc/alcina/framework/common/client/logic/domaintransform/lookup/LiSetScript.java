@@ -4,7 +4,7 @@ import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Iterator;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 
 /**
  * This is the super-source for the gwt client
@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  * 
  * @param <H>
  */
-public class LiSetScript<H extends HasIdAndLocalId> extends AbstractSet<H>
+public class LiSetScript<H extends Entity> extends AbstractSet<H>
 		implements Cloneable {
 	private transient Collection<H> values = (Collection<H>) new FastIdLookupScript()
 			.values();

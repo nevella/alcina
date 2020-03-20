@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
@@ -125,7 +125,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 			reffed.add(ref.getRefClass());
 		}
 		for (Class ref : new ArrayList<Class>(reffed)) {
-			if (!HasIdAndLocalId.class.isAssignableFrom(ref)) {
+			if (!Entity.class.isAssignableFrom(ref)) {
 				continue;
 			}
 			if (WrapperPersistable.class.isAssignableFrom(ref)) {
@@ -147,9 +147,9 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 								|| type.isEnum()) {
 							checkType = type;
 						}
-					} else if (HasIdAndLocalId.class.isAssignableFrom(type)) {
+					} else if (Entity.class.isAssignableFrom(type)) {
 						checkType = type;
-					} else if (GraphProjection.isGenericHiliType(field)) {
+					} else if (GraphProjection.isGenericEntityType(field)) {
 						Type pt = GraphProjection.getGenericType(field);
 						if (pt instanceof ParameterizedType) {
 							Type genericType = ((ParameterizedType) pt)
@@ -334,7 +334,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 			boolean nonPersistent = clazz
 					.isAnnotationPresent(NonDomainTransformPersistable.class);
 			if (!nonPersistent
-					&& (HasIdAndLocalId.class.isAssignableFrom(clazz)
+					&& (Entity.class.isAssignableFrom(clazz)
 							&& (in || bi || dtp))
 					|| (clazz.isEnum() && (in || dtp))) {
 				out.isClassRef = true;

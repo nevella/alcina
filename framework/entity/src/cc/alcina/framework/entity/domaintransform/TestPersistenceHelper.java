@@ -27,7 +27,7 @@ import com.totsp.gwittir.client.beans.SelfDescribed;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
@@ -161,13 +161,13 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		return result;
 	}
 
-	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+	public <T extends Entity> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		// uses thread-local instance
 		return TransformManager.get().getObject(c, id, localId);
 	}
 
-	public <T extends HasIdAndLocalId> T getObject(T bean) {
+	public <T extends Entity> T getObject(T bean) {
 		return (T) TransformManager.get().getObject(bean.getClass(),
 				bean.getId(), bean.getLocalId());
 	}
@@ -241,7 +241,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		try {
-			HasIdAndLocalId newInstance = (HasIdAndLocalId) clazz.newInstance();
+			Entity newInstance = (Entity) clazz.newInstance();
 			newInstance.setLocalId(localId);
 			return (T) newInstance;
 		} catch (Exception e) {

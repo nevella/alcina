@@ -72,7 +72,7 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -259,7 +259,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@WebMethod(readonlyPermitted = true)
-	public <T extends HasIdAndLocalId> T getItemById(String className, Long id)
+	public <T extends Entity> T getItemById(String className, Long id)
 			throws WebException {
 		try {
 			Class<T> clazz = (Class<T>) Class.forName(className);
@@ -343,16 +343,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@Override
 	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
-	public Long logClientError(String exceptionToString) {
-		return logClientError(exceptionToString,
-				LogMessageType.CLIENT_EXCEPTION.toString());
+	public Long log(ILogRecord logRecord) {
+		return Registry.impl(CommonPersistenceProvider.class)
+				.getCommonPersistence().persistLogRecord(logRecord);
 	}
 
 	@Override
 	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
-	public Long log(ILogRecord logRecord) {
-		return Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistence().persistLogRecord(logRecord);
+	public Long logClientError(String exceptionToString) {
+		return logClientError(exceptionToString,
+				LogMessageType.CLIENT_EXCEPTION.toString());
 	}
 
 	@Override

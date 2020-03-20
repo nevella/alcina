@@ -11,8 +11,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -29,25 +29,25 @@ public class Domain {
 					"lastModificationUser", "creationDate", "creationUser",
 					"versionNumber" });
 
-	public static <V extends HasIdAndLocalId> List<V> asList(Class<V> clazz) {
+	public static <V extends Entity> List<V> asList(Class<V> clazz) {
 		return handler.stream(clazz).collect(Collectors.toList());
 	}
 
-	public static <V extends HasIdAndLocalId> Set<V> asSet(Class<V> clazz) {
+	public static <V extends Entity> Set<V> asSet(Class<V> clazz) {
 		return handler.stream(clazz).collect(Collectors.toSet());
 	}
 
-	public static <T extends HasIdAndLocalId> void async(Class<T> clazz,
+	public static <T extends Entity> void async(Class<T> clazz,
 			long objectId, boolean create, Consumer<T> resultConsumer) {
 		handler.async(clazz, objectId, create, resultConsumer);
 	}
 
-	public static <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
+	public static <V extends Entity> V byProperty(Class<V> clazz,
 			String propertyName, Object value) {
 		return handler.byProperty(clazz, propertyName, value);
 	}
 
-	public static <V extends HasIdAndLocalId> Supplier<Collection>
+	public static <V extends Entity> Supplier<Collection>
 			castSupplier(Class<V> clazz) {
 		return () -> values(clazz);
 	}
@@ -56,31 +56,31 @@ public class Domain {
 		handler.commitPoint();
 	}
 
-	public static <V extends HasIdAndLocalId> V create(Class<V> clazz) {
+	public static <V extends Entity> V create(Class<V> clazz) {
 		return handler.create(clazz);
 	}
 
-	public static <V extends HasIdAndLocalId> void delete(Class<V> clazz,
+	public static <V extends Entity> void delete(Class<V> clazz,
 			long id) {
-		HasIdAndLocalId hili = find(clazz, id);
-		if (hili != null) {
-			writeable(hili).delete();
+		Entity entity = find(clazz, id);
+		if (entity != null) {
+			writeable(entity).delete();
 		}
 	}
 
-	public static <V extends HasIdAndLocalId> void delete(V v) {
+	public static <V extends Entity> void delete(V v) {
 		TransformManager.get().deleteObject(v, true);
 	}
 
-	public static <V extends HasIdAndLocalId> V detachedToDomain(V hili) {
-		return detachedToDomain(hili, null);
+	public static <V extends Entity> V detachedToDomain(V entity) {
+		return detachedToDomain(entity, null);
 	}
 
-	public static <V extends HasIdAndLocalId> V detachedToDomain(V hili,
+	public static <V extends Entity> V detachedToDomain(V entity,
 			List<String> ignoreProperties) {
-		Class<V> clazz = (Class<V>) hili.getClass();
-		V writeable = hili.provideWasPersisted()
-				? Domain.writeable(Domain.find(hili))
+		Class<V> clazz = (Class<V>) entity.getClass();
+		V writeable = entity.provideWasPersisted()
+				? Domain.writeable(Domain.find(entity))
 				: Domain.create(clazz);
 		List<PropertyInfoLite> writableProperties = Reflections.classLookup()
 				.getWritableProperties(clazz);
@@ -94,39 +94,39 @@ public class Domain {
 				continue;
 			}
 			AlcinaTransient alcinaTransient = Reflections.propertyAccessor()
-					.getAnnotationForProperty(hili.getClass(),
+					.getAnnotationForProperty(entity.getClass(),
 							AlcinaTransient.class, propertyName);
 			if (alcinaTransient != null) {
 				continue;
 			}
-			propertyInfo.copy(hili, writeable);
+			propertyInfo.copy(entity, writeable);
 		}
 		return writeable;
 	}
 
-	public static <V extends HasIdAndLocalId> V detachedVersion(Class<V> clazz,
+	public static <V extends Entity> V detachedVersion(Class<V> clazz,
 			long id) {
 		V v = find(clazz, id);
 		return detachedVersion(v);
 	}
 
-	public static <V extends HasIdAndLocalId> V detachedVersion(V v) {
+	public static <V extends Entity> V detachedVersion(V v) {
 		return v == null ? null : handler.detachedVersion(v);
 	}
 
-	public static <V extends HasIdAndLocalId> V find(Class clazz, long id) {
+	public static <V extends Entity> V find(Class clazz, long id) {
 		return handler.find(clazz, id);
 	}
 
-	public static <V extends HasIdAndLocalId> V find(HiliLocator locator) {
+	public static <V extends Entity> V find(EntityLocator locator) {
 		return handler.find(locator.clazz, locator.id);
 	}
 
-	public static <V extends HasIdAndLocalId> V find(V v) {
+	public static <V extends Entity> V find(V v) {
 		return handler.find(v);
 	}
 
-	public static <V extends HasIdAndLocalId> V findOrCreate(Class<V> clazz,
+	public static <V extends Entity> V findOrCreate(Class<V> clazz,
 			String propertyName, Object value, boolean createIfNonexistent) {
 		V first = byProperty(clazz, propertyName, value);
 		if (first == null && createIfNonexistent) {
@@ -139,30 +139,30 @@ public class Domain {
 		return first;
 	}
 
-	public static <V extends HasIdAndLocalId> List<Long> ids(Class<V> clazz) {
+	public static <V extends Entity> List<Long> ids(Class<V> clazz) {
 		return handler.ids(clazz);
 	}
 
-	public static <V extends HasIdAndLocalId> boolean isDomainVersion(V v) {
+	public static <V extends Entity> boolean isDomainVersion(V v) {
 		return v == null ? false : handler.isDomainVersion(v);
 	}
 
-	public static <V extends HasIdAndLocalId> List<V>
+	public static <V extends Entity> List<V>
 			listByProperty(Class<V> clazz, String propertyName, Object value) {
 		return handler.listByProperty(clazz, propertyName, value);
 	}
 
-	public static <V extends HasIdAndLocalId> Optional<V> optionalByProperty(
+	public static <V extends Entity> Optional<V> optionalByProperty(
 			Class<V> clazz, String propertyName, Object value) {
 		return Optional.ofNullable(byProperty(clazz, propertyName, value));
 	}
 
-	public static <V extends HasIdAndLocalId> DomainQuery<V>
+	public static <V extends Entity> DomainQuery<V>
 			query(Class<V> clazz) {
 		return handler.query(clazz);
 	}
 
-	public static <V extends HasIdAndLocalId> V register(V v) {
+	public static <V extends Entity> V register(V v) {
 		return TransformManager.get().registerDomainObject(v);
 	}
 
@@ -170,29 +170,29 @@ public class Domain {
 		Domain.handler = singleton;
 	}
 
-	public static <V extends HasIdAndLocalId> V resolve(V v) {
+	public static <V extends Entity> V resolve(V v) {
 		return handler.resolve(v);
 	}
 
-	public static <V extends HasIdAndLocalId> V resolveTransactional(
+	public static <V extends Entity> V resolveTransactional(
 			DomainListener listener, V value, Object[] path) {
 		return handler.resolveTransactional(listener, value, path);
 	}
 
-	public static <V extends HasIdAndLocalId> Stream<V> stream(Class<V> clazz) {
+	public static <V extends Entity> Stream<V> stream(Class<V> clazz) {
 		return handler.stream(clazz);
 	}
 
-	public static <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
+	public static <V extends Entity> V transactionalFind(Class clazz,
 			long id) {
 		return handler.transactionalFind(clazz, id);
 	}
 
-	public static <V extends HasIdAndLocalId> V transactionVersion(V v) {
+	public static <V extends Entity> V transactionVersion(V v) {
 		return handler.transactionalVersion(v);
 	}
 
-	public static <V extends HasIdAndLocalId> Collection<V>
+	public static <V extends Entity> Collection<V>
 			values(Class<V> clazz) {
 		return handler.values(clazz);
 	}
@@ -200,65 +200,65 @@ public class Domain {
 	/**
 	 * if DomainStore, project - if detached (no tm listeners), find and project
 	 */
-	public static <V extends HasIdAndLocalId> V writeable(V v) {
+	public static <V extends Entity> V writeable(V v) {
 		return handler.writeable(v);
 	}
 
 	public interface DomainHandler {
-		public <V extends HasIdAndLocalId> void async(Class<V> clazz,
+		public <V extends Entity> void async(Class<V> clazz,
 				long objectId, boolean create, Consumer<V> resultConsumer);
 
 		public void commitPoint();
 
-		public <V extends HasIdAndLocalId> V find(Class clazz, long id);
+		public <V extends Entity> V find(Class clazz, long id);
 
-		public <V extends HasIdAndLocalId> V find(V v);
+		public <V extends Entity> V find(V v);
 
-		public <V extends HasIdAndLocalId> V resolveTransactional(
+		public <V extends Entity> V resolveTransactional(
 				DomainListener listener, V value, Object[] path);
 
-		public <V extends HasIdAndLocalId> Stream<V> stream(Class<V> clazz);
+		public <V extends Entity> Stream<V> stream(Class<V> clazz);
 
-		public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
+		public <V extends Entity> V transactionalFind(Class clazz,
 				long id);
 
-		public <V extends HasIdAndLocalId> Collection<V> values(Class<V> clazz);
+		public <V extends Entity> Collection<V> values(Class<V> clazz);
 
-		public <V extends HasIdAndLocalId> V writeable(V v);
+		public <V extends Entity> V writeable(V v);
 
-		default <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
+		default <V extends Entity> V byProperty(Class<V> clazz,
 				String propertyName, Object value) {
 			return CommonUtils
 					.first(listByProperty(clazz, propertyName, value));
 		}
 
-		default <V extends HasIdAndLocalId> V create(Class<V> clazz) {
+		default <V extends Entity> V create(Class<V> clazz) {
 			return TransformManager.get().createDomainObject(clazz);
 		}
 
-		<V extends HasIdAndLocalId> V detachedVersion(V v);
+		<V extends Entity> V detachedVersion(V v);
 
-		<V extends HasIdAndLocalId> List<Long> ids(Class<V> clazz);
+		<V extends Entity> List<Long> ids(Class<V> clazz);
 
-		<V extends HasIdAndLocalId> boolean isDomainVersion(V v);
+		<V extends Entity> boolean isDomainVersion(V v);
 
-		default <V extends HasIdAndLocalId> List<V> listByProperty(
+		default <V extends Entity> List<V> listByProperty(
 				Class<V> clazz, String propertyName, Object value) {
 			return query(clazz).filter(propertyName, value).list();
 		}
 
-		<V extends HasIdAndLocalId> DomainQuery<V> query(Class<V> clazz);
+		<V extends Entity> DomainQuery<V> query(Class<V> clazz);
 
-		default <V extends HasIdAndLocalId> V resolve(V v) {
+		default <V extends Entity> V resolve(V v) {
 			return v;
 		}
 
-		<V extends HasIdAndLocalId> V transactionalVersion(V v);
+		<V extends Entity> V transactionalVersion(V v);
 	}
 
 	public static class DomainHandlerNonTransactional implements DomainHandler {
 		@Override
-		public <V extends HasIdAndLocalId> void async(Class<V> clazz,
+		public <V extends Entity> void async(Class<V> clazz,
 				long objectId, boolean create, Consumer<V> resultConsumer) {
 		}
 
@@ -268,69 +268,69 @@ public class Domain {
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V detachedVersion(V v) {
+		public <V extends Entity> V detachedVersion(V v) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V find(Class clazz, long id) {
+		public <V extends Entity> V find(Class clazz, long id) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V find(V v) {
+		public <V extends Entity> V find(V v) {
 			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> List<Long> ids(Class<V> clazz) {
+		public <V extends Entity> List<Long> ids(Class<V> clazz) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> boolean isDomainVersion(V v) {
+		public <V extends Entity> boolean isDomainVersion(V v) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> DomainQuery<V>
+		public <V extends Entity> DomainQuery<V>
 				query(Class<V> clazz) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V resolveTransactional(
+		public <V extends Entity> V resolveTransactional(
 				DomainListener listener, V value, Object[] path) {
 			return value;
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> Stream<V> stream(Class<V> clazz) {
+		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
 			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
+		public <V extends Entity> V transactionalFind(Class clazz,
 				long id) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V transactionalVersion(V v) {
+		public <V extends Entity> V transactionalVersion(V v) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> Collection<V>
+		public <V extends Entity> Collection<V>
 				values(Class<V> clazz) {
 			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V writeable(V v) {
+		public <V extends Entity> V writeable(V v) {
 			throw new UnsupportedOperationException();
 		}
 	}

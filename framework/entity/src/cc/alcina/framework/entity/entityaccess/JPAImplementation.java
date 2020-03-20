@@ -22,7 +22,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.DomainStoreJoinHandler;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
@@ -71,7 +71,7 @@ public interface JPAImplementation {
 
 	DomainStoreJoinHandler getDomainStoreJoinHandler(PropertyDescriptor pd);
 
-	Set<HiliLocator> getSessionEntityLocators(EntityManager entityManager);
+	Set<EntityLocator> getSessionEntityLocators(EntityManager entityManager);
 
 	boolean isLazyInitialisationException(Exception e);
 

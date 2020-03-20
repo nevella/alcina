@@ -3,7 +3,7 @@ package cc.alcina.template.cs.persistent;
 import java.io.Serializable;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
+
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 @Table(name = "classref")
-@Entity
+@javax.persistence.Entity
 @SequenceGenerator(allocationSize=1,name = "classref_id_seq", sequenceName = "classref_id_seq")
 @ClientInstantiable
 @Introspectable

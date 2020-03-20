@@ -34,13 +34,13 @@ import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.PopupPanel.PositionCallback;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
 
 /**
  *
  */
-public class PropertySelectorCell<T extends HasIdAndLocalId>
+public class PropertySelectorCell<T extends Entity>
 		extends AbstractEditableCell<Set<T>, Set<T>> {
 	private static final int ESCAPE = 27;
 

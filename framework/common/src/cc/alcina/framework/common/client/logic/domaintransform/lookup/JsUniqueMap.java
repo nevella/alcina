@@ -207,11 +207,11 @@ public class JsUniqueMap<K, V> implements Map<K, V> {
         if (keyClass == String.class || keyClass == Class.class) {
             return;
         }
-        // if (keyClass == HasIdAndLocalId.class) {
+        // if (keyClass == Entity.class) {
         // intLookup = true;
         // return h -> h == null ? 0
         // : LongWrapperHash
-        // .fastIntValue(((HasIdAndLocalId) h).getId());
+        // .fastIntValue(((Entity) h).getId());
         // }
         if (keyClass == Long.class) {
             intLookup = true;

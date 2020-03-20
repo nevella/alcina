@@ -4,7 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
-import javax.persistence.Entity;
+
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -37,7 +37,7 @@ import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.customiser.UrlCustomiser;
 
-@Entity
+@javax.persistence.Entity
 @Table(name = "bookmark", schema = "public")
 @Bean(displayNamePropertyName = "title", actions = @ObjectActions({
 		@Action(actionClass = ViewAction.class),

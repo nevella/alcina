@@ -23,7 +23,7 @@ import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -42,11 +42,11 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 public class WorkspaceDeletionChecker {
 	public static boolean enabled = false;
 
-	public List<HasIdAndLocalId> cascadedDeletions = new ArrayList<HasIdAndLocalId>();
+	public List<Entity> cascadedDeletions = new ArrayList<Entity>();
 
-	public boolean checkPropertyRefs(HasIdAndLocalId singleObj) {
+	public boolean checkPropertyRefs(Entity singleObj) {
 		Class<? extends Object> clazz = singleObj.getClass();
-		Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> map = TransformManager
+		Map<Class<? extends Entity>, Collection<Entity>> map = TransformManager
 				.get().getDomainObjects().getCollectionMap();
 		String message = "";
 		String template = TextProvider.get().getUiObjectText(getClass(),
@@ -58,11 +58,11 @@ public class WorkspaceDeletionChecker {
 			TextProvider.get().setDecorated(false);
 			TextProvider.get().setTrimmed(true);
 			for (Class c : map.keySet()) {
-				Collection<HasIdAndLocalId> objs = map.get(c);
+				Collection<Entity> objs = map.get(c);
 				if (objs.isEmpty()) {
 					continue;
 				}
-				if (!(objs.iterator().next() instanceof HasIdAndLocalId)) {
+				if (!(objs.iterator().next() instanceof Entity)) {
 					continue;
 				}
 				BeanDescriptor descriptor = null;
@@ -84,7 +84,7 @@ public class WorkspaceDeletionChecker {
 					}
 				}
 				for (Property p : checkProperties) {
-					for (HasIdAndLocalId o : objs) {
+					for (Entity o : objs) {
 						Object pValue = p.getAccessorMethod().invoke(o,
 								CommonUtils.EMPTY_OBJECT_ARRAY);
 						if (pValue != null && pValue.equals(singleObj)) {

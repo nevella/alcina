@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.actions.instances.CreateAction;
 import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasOrderValue;
 import cc.alcina.framework.common.client.logic.domain.HasOrderValue.HasOrderValueHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -162,7 +162,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		return this.visualModel;
 	}
 
-	public void handleParentLinks(Object node, HasIdAndLocalId newObj) {
+	public void handleParentLinks(Object node, Entity newObj) {
 		if (node instanceof DomainNode
 				&& !(node instanceof ProvidesParenting)) {
 			DomainNode dn = (DomainNode) node;
@@ -240,9 +240,9 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 			if (c.size() == 1) {
 				singleObj = c.iterator().next();
 				// quite possibly a provisional object
-				// if (singleObj instanceof HasIdAndLocalId) {
-				// HasIdAndLocalId hili = (HasIdAndLocalId) singleObj;
-				// singleObj = TransformManager.get().getObject(hili);
+				// if (singleObj instanceof Entity) {
+				// Entity entity = (Entity) singleObj;
+				// singleObj = TransformManager.get().getObject(entity);
 				// }
 				// but provisionalobj.equals(domain)=true
 				TreeItem item = visualiser.selectNodeForObject(singleObj, true);
@@ -261,9 +261,9 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 			fireVetoableActionEvent(evt);
 			return;
 		}
-		if (singleObj instanceof HasIdAndLocalId) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) singleObj;
-			singleObj = TransformManager.get().getObject(hili);
+		if (singleObj instanceof Entity) {
+			Entity entity = (Entity) singleObj;
+			singleObj = TransformManager.get().getObject(entity);
 		}
 		Class<? extends WorkspaceActionHandler> handlerClass = null;
 		if (singleObj != null) {
@@ -307,7 +307,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		return new SimpleWorkspaceVisualiser(visualModel, this);
 	}
 
-	protected void handleHasOrderValue(Object node, HasIdAndLocalId newObj) {
+	protected void handleHasOrderValue(Object node, Entity newObj) {
 		if (node instanceof DomainNode
 				&& !(node instanceof ProvidesParenting)) {
 			DomainNode dn = (DomainNode) node;

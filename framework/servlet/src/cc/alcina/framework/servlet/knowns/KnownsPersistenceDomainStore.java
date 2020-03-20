@@ -11,7 +11,7 @@ import java.util.Stack;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.KnownRenderableNode;
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
@@ -87,7 +87,7 @@ public class KnownsPersistenceDomainStore implements KnownsPersistence {
             DomainTransformLayerWrapper wrapper = ServletLayerTransforms
                     .pushTransforms(null, true, true);
             replaceWithPersistent.stream().forEach(n -> {
-                HiliLocator hiliLocator = wrapper.locatorMap
+                EntityLocator hiliLocator = wrapper.locatorMap
                         .getForLocalId(((KnownNodePersistentDomainStore)n.persistent).getLocalId());
                 n.persistent = Domain.find(hiliLocator);
             });

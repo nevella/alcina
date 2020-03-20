@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.domain.DomainListener;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
@@ -49,13 +49,13 @@ public class PerThreadTransaction {
 		TransformManager.get().removeDomainTransformListener(transformListener);
 	}
 
-	public <V extends HasIdAndLocalId> V ensureTransactional(V v) {
+	public <V extends Entity> V ensureTransactional(V v) {
 		return transactionTransformManager.getObject(v);
 	}
 
-	public <V extends HasIdAndLocalId> V
+	public <V extends Entity> V
 			getListenerValue(DomainListener listener, V value, Object[] path) {
-		Collection<? extends HasIdAndLocalId> perClassTransactional = (Collection<? extends HasIdAndLocalId>) transactionTransformManager.modified
+		Collection<? extends Entity> perClassTransactional = (Collection<? extends Entity>) transactionTransformManager.modified
 				.getCollection(listener.getListenedClass());
 		// FIXME - n^2 performance - use a per-listener threaded projection
 		// well - sorta fixed
@@ -66,7 +66,7 @@ public class PerThreadTransaction {
 				return v;
 			}
 		} else {
-			for (HasIdAndLocalId v : perClassTransactional) {
+			for (Entity v : perClassTransactional) {
 				if (listener.matches(v, path)) {
 					return (V) v;// will always be transactional object
 				}
@@ -87,7 +87,7 @@ public class PerThreadTransaction {
 	public Set<? extends Object> immutableRawValues(Class clazz,
 			DetachedEntityCache cache) {
 		Set values = cache.values(clazz);
-		Collection<? extends HasIdAndLocalId> perClassTransactional = (Collection<? extends HasIdAndLocalId>) transactionTransformManager.modified
+		Collection<? extends Entity> perClassTransactional = (Collection<? extends Entity>) transactionTransformManager.modified
 				.getCollection(clazz);
 		return new OptimisedBiSet(values, perClassTransactional);
 	}

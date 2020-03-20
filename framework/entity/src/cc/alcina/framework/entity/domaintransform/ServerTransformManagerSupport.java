@@ -7,8 +7,8 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
@@ -27,18 +27,18 @@ public class ServerTransformManagerSupport {
 	public static final String CONTEXT_NO_ASSOCIATION_CHECK = ServerTransformManagerSupport.class
 			.getName() + ".CONTEXT_NO_ASSOCIATION_CHECK";
 
-	public void removeAssociations(HasIdAndLocalId hili) {
+	public void removeAssociations(Entity entity) {
 		if (LooseContext.is(CONTEXT_NO_ASSOCIATION_CHECK)) {
 			return;
 		}
 		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(hili.getClass())
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(entity.getClass())
 					.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				if (Set.class.isAssignableFrom(pd.getPropertyType())) {
 					Association info = pd.getReadMethod()
 							.getAnnotation(Association.class);
-					Set set = (Set) pd.getReadMethod().invoke(hili,
+					Set set = (Set) pd.getReadMethod().invoke(entity,
 							CommonUtils.EMPTY_OBJECT_ARRAY);
 					if (info != null && set != null) {
 						for (Object o2 : set) {
@@ -49,13 +49,13 @@ public class ServerTransformManagerSupport {
 									.invoke(o2, CommonUtils.EMPTY_OBJECT_ARRAY);
 							if (o3 instanceof Set) {
 								Set assocSet = (Set) o3;
-								assocSet.remove(hili);
+								assocSet.remove(entity);
 							}
 							if (info.dereferenceOnDelete()) {
 								if (!ThreadlocalTransformManager
 										.isInEntityManagerTransaction()) {
 									TransformManager.get().registerDomainObject(
-											(HasIdAndLocalId) o2);
+											(Entity) o2);
 									Reflections.propertyAccessor()
 											.setPropertyValue(o2,
 													info.propertyName(), null);
@@ -87,14 +87,14 @@ public class ServerTransformManagerSupport {
 		}
 	}
 
-	public void removeParentAssociations(HasIdAndLocalId hili) {
+	public void removeParentAssociations(Entity entity) {
 		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(hili.getClass())
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(entity.getClass())
 					.getPropertyDescriptors();
-			AbstractDomainBase domainVersion = null;
-			if (hili instanceof AbstractDomainBase
-					&& DomainStore.writableStore().isCached(hili.getClass())) {
-				domainVersion = hili.domain().domainVersion();
+			Entity domainVersion = null;
+			if (entity instanceof Entity
+					&& DomainStore.writableStore().isCached(entity.getClass())) {
+				domainVersion = entity.domain().domainVersion();
 				if (domainVersion instanceof DomainProxy) {
 					// don't run against proxies, it's a little tricky - keep
 					// these manual for the moment
@@ -102,19 +102,19 @@ public class ServerTransformManagerSupport {
 				}
 			}
 			for (PropertyDescriptor pd : pds) {
-				if (HasIdAndLocalId.class.isAssignableFrom(pd.getPropertyType())
+				if (Entity.class.isAssignableFrom(pd.getPropertyType())
 						&& pd.getWriteMethod() != null && pd.getReadMethod()
 								.getAnnotation(SyntheticGetter.class) == null) {
-					HasIdAndLocalId hiliTarget = (HasIdAndLocalId) pd
+					Entity hiliTarget = (Entity) pd
 							.getReadMethod()
-							.invoke(hili, CommonUtils.EMPTY_OBJECT_ARRAY);
+							.invoke(entity, CommonUtils.EMPTY_OBJECT_ARRAY);
 					if (hiliTarget == null) {
 						if (domainVersion != null) {
-							hiliTarget = (HasIdAndLocalId) pd.getReadMethod()
+							hiliTarget = (Entity) pd.getReadMethod()
 									.invoke(domainVersion,
 											CommonUtils.EMPTY_OBJECT_ARRAY);
 							if (hiliTarget != null) {
-								AbstractDomainBase writeable = ((AbstractDomainBase) hiliTarget)
+								Entity writeable = ((Entity) hiliTarget)
 										.writeable();
 								if (writeable != null) {
 									/*
@@ -124,7 +124,7 @@ public class ServerTransformManagerSupport {
 								}
 								try {
 									// just so it can be nulled
-									pd.getWriteMethod().invoke(hili,
+									pd.getWriteMethod().invoke(entity,
 											new Object[] { hiliTarget });
 								} catch (InvocationTargetException e) {
 									if (e.getTargetException() instanceof UnsupportedOperationException) {
@@ -138,7 +138,7 @@ public class ServerTransformManagerSupport {
 					if (hiliTarget != null && !(hiliTarget instanceof IUser)
 							&& !(hiliTarget instanceof IGroup)) {
 						try {
-							pd.getWriteMethod().invoke(hili,
+							pd.getWriteMethod().invoke(entity,
 									new Object[] { null });
 						} catch (InvocationTargetException e) {
 							if (e.getTargetException() instanceof UnsupportedOperationException) {
@@ -154,18 +154,18 @@ public class ServerTransformManagerSupport {
 		}
 	}
 
-	protected void doCascadeDeletes(final HasIdAndLocalId hili) {
+	protected void doCascadeDeletes(final Entity entity) {
 		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
-		SEUtilities.iterateForPropertyWithAnnotation(hili, Association.class,
+		SEUtilities.iterateForPropertyWithAnnotation(entity, Association.class,
 				new HasAnnotationCallback<Association>() {
 					@Override
 					public void apply(Association association,
 							PropertyReflector propertyReflector) {
 						if (association.cascadeDeletes()) {
 							Object object = propertyReflector
-									.getPropertyValue(hili);
+									.getPropertyValue(entity);
 							if (object instanceof Set) {
-								for (HasIdAndLocalId target : (Set<HasIdAndLocalId>) object) {
+								for (Entity target : (Set<Entity>) object) {
 									ThreadlocalTransformManager.get()
 											.deleteObject(target, true);
 								}

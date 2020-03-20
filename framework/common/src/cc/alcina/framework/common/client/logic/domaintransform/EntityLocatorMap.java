@@ -18,25 +18,25 @@ import java.util.HashMap;
 
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
- * The key is the (client's) localid of the Hili Most methods are "local to
+ * The key is the (client's) localid of the Entity Most methods are "local to
  * persistent" - except where marked
  * 
  * @author nick@alcina.cc
  * 
  */
-public class HiliLocatorMap implements Serializable {
+public class EntityLocatorMap implements Serializable {
     static final transient long serialVersionUID = 1;
 
-    private HashMap<Long, HiliLocator> localToPersistent = new HashMap<>();
+    private HashMap<Long, EntityLocator> localToPersistent = new HashMap<>();
 
-    private UnsortedMultikeyMap<HiliLocator> persistentToLocal = new UnsortedMultikeyMap<>(
+    private UnsortedMultikeyMap<EntityLocator> persistentToLocal = new UnsortedMultikeyMap<>(
             2);
 
-    public HiliLocatorMap() {
+    public EntityLocatorMap() {
     }
 
     public synchronized void clear() {
@@ -48,49 +48,49 @@ public class HiliLocatorMap implements Serializable {
         return localToPersistent.containsKey(localId);
     }
 
-    public synchronized HiliLocatorMap copy() {
-        HiliLocatorMap clone = new HiliLocatorMap();
-        clone.localToPersistent = (HashMap<Long, HiliLocator>) localToPersistent
+    public synchronized EntityLocatorMap copy() {
+        EntityLocatorMap clone = new EntityLocatorMap();
+        clone.localToPersistent = (HashMap<Long, EntityLocator>) localToPersistent
                 .clone();
         clone.persistentToLocal = persistentToLocal.clone();
         return clone;
     }
 
-    public synchronized HiliLocator getFor(HasIdAndLocalId hili) {
-        return localToPersistent.get(hili.getLocalId());
+    public synchronized EntityLocator getFor(Entity entity) {
+        return localToPersistent.get(entity.getLocalId());
     }
 
-    public synchronized HiliLocator getFor(ObjectRef ref) {
+    public synchronized EntityLocator getFor(ObjectRef ref) {
         long id = ref.getId();
         if (id != 0) {
-            return new HiliLocator(ref.getClassRef().getRefClass(), id,
+            return new EntityLocator(ref.getClassRef().getRefClass(), id,
                     ref.getLocalId());
         }
         return localToPersistent.get(ref.getLocalId());
     }
 
-    public synchronized HiliLocator getForLocalId(Long localId) {
+    public synchronized EntityLocator getForLocalId(Long localId) {
         return localToPersistent.get(localId);
     }
 
-    public synchronized <H extends HasIdAndLocalId> long getLocalIdForClientInstance(
-            H hili) {
-        if (hili.getLocalId() != 0) {
-            return hili.getLocalId();
+    public synchronized <H extends Entity> long getLocalIdForClientInstance(
+            H entity) {
+        if (entity.getLocalId() != 0) {
+            return entity.getLocalId();
         }
-        HiliLocator hiliLocator = persistentToLocal.get(hili.getClass(),
-                hili.getId());
+        EntityLocator hiliLocator = persistentToLocal.get(entity.getClass(),
+                entity.getId());
         if (hiliLocator != null) {
             return hiliLocator.localId;
         }
         return 0;
     }
 
-    public synchronized HiliLocator getPersistentLocator(HasIdAndLocalId hili) {
-        if (hili.getId() != 0) {
-            return new HiliLocator(hili);
+    public synchronized EntityLocator getPersistentLocator(Entity entity) {
+        if (entity.getId() != 0) {
+            return new EntityLocator(entity);
         } else {
-            return localToPersistent.get(hili.getLocalId());
+            return localToPersistent.get(entity.getLocalId());
         }
     }
 
@@ -98,25 +98,25 @@ public class HiliLocatorMap implements Serializable {
         return localToPersistent.isEmpty();
     }
 
-    public synchronized void merge(HiliLocatorMap locatorMap) {
+    public synchronized void merge(EntityLocatorMap locatorMap) {
         putAll(locatorMap);
     }
 
-    public synchronized void putAll(HiliLocatorMap other) {
+    public synchronized void putAll(EntityLocatorMap other) {
         localToPersistent.putAll(other.localToPersistent);
         persistentToLocal.putMulti(other.persistentToLocal);
     }
 
-    public synchronized void putToLookups(HiliLocator hiliLocator) {
+    public synchronized void putToLookups(EntityLocator hiliLocator) {
         localToPersistent.put(hiliLocator.localId, hiliLocator);
         persistentToLocal.put(hiliLocator.clazz, hiliLocator.id, hiliLocator);
     }
 
-    public static class ToCreatedIdConverter<H extends HasIdAndLocalId>
+    public static class ToCreatedIdConverter<H extends Entity>
             implements Converter<H, Long> {
-        private HiliLocatorMap map;
+        private EntityLocatorMap map;
 
-        public ToCreatedIdConverter(HiliLocatorMap map) {
+        public ToCreatedIdConverter(EntityLocatorMap map) {
             this.map = map;
         }
 

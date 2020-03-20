@@ -22,7 +22,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
@@ -39,7 +39,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
 public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	private DetachedEntityCache cache;
 
-	private Map<? extends HasIdAndLocalId, ? extends HasIdAndLocalId> ensureInjected;
+	private Map<? extends Entity, ? extends Entity> ensureInjected;
 
 	private InstantiateImplCallbackWithShellObject shellInstantiator;
 
@@ -69,17 +69,17 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	@Override
 	public <T> T filterData(T value, T cloned, GraphProjectionContext context,
 			GraphProjection graphProjection) throws Exception {
-		if (value instanceof HasIdAndLocalId) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) value;
-			if (ensureInjected != null && ensureInjected.containsKey(hili)) {
-				hili = ensureInjected.get(hili);
-				ensureInjected.remove(hili);
-				// if it does, just proceed as normal (hili will already be the
+		if (value instanceof Entity) {
+			Entity entity = (Entity) value;
+			if (ensureInjected != null && ensureInjected.containsKey(entity)) {
+				entity = ensureInjected.get(entity);
+				ensureInjected.remove(entity);
+				// if it does, just proceed as normal (entity will already be the
 				// key in the reached map, so .project() wouldn't work)
-				if (hili != value) {
-					hili = graphProjection.project(hili, value, context, false);
-					getCache().put((HasIdAndLocalId) hili);
-					return (T) hili;
+				if (entity != value) {
+					entity = graphProjection.project(entity, value, context, false);
+					getCache().put((Entity) entity);
+					return (T) entity;
 				}
 			}
 			if (value instanceof HibernateProxy) {
@@ -103,12 +103,12 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 								.getHibernateLazyInitializer()
 								.getImplementation();
 						impl = graphProjection.project(impl, value, context, false);
-						getCache().put((HasIdAndLocalId) impl);
+						getCache().put((Entity) impl);
 					} else if (shellInstantiator != null) {
 						impl = shellInstantiator.instantiateShellObject(lazy,
 								context);
 						if (impl != null) {
-							getCache().put((HasIdAndLocalId) impl);
+							getCache().put((Entity) impl);
 						}
 					}
 				}
@@ -122,8 +122,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 					return null;
 				}
 			} else {
-				Class<? extends HasIdAndLocalId> valueClass = hili.getClass();
-				Object cached = getCache().get(valueClass, hili.getId());
+				Class<? extends Entity> valueClass = entity.getClass();
+				Object cached = getCache().get(valueClass, entity.getId());
 				if (cached != null) {
 					return (T) cached;
 				} else {
@@ -131,15 +131,15 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 					if (useRawDomainStore) {
 						if (DomainStore.stores().writableStore()
 								.isCached(valueClass)) {
-							result = (T) Domain.find(valueClass, hili.getId());
+							result = (T) Domain.find(valueClass, entity.getId());
 						}
 					}
 					if (result == null) {
-						HasIdAndLocalId clonedHili = (HasIdAndLocalId) cloned;
-						clonedHili.setId(hili.getId());
-						result = (T) clonedHili;
+						Entity clonedEntity = (Entity) cloned;
+						clonedEntity.setId(entity.getId());
+						result = (T) clonedEntity;
 					}
-					getCache().put((HasIdAndLocalId) result);
+					getCache().put((Entity) result);
 					return (T) result;
 				}
 			}
@@ -154,7 +154,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 		return this.cache;
 	}
 
-	public Map<? extends HasIdAndLocalId, ? extends HasIdAndLocalId>
+	public Map<? extends Entity, ? extends Entity>
 			getEnsureInjected() {
 		return this.ensureInjected;
 	}
@@ -173,7 +173,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	}
 
 	public void setEnsureInjected(
-			Map<? extends HasIdAndLocalId, ? extends HasIdAndLocalId> ensureInjected) {
+			Map<? extends Entity, ? extends Entity> ensureInjected) {
 		this.ensureInjected = ensureInjected;
 	}
 
@@ -199,7 +199,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 							.getHibernateLazyInitializer().getImplementation();
 					projected = graphCloner.project(impl, value, context,
 							false);
-					getCache().put((HasIdAndLocalId) projected);
+					getCache().put((Entity) projected);
 				} else {
 					projected = graphCloner.project(value, context);
 				}

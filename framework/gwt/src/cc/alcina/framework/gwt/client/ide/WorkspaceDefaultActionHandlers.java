@@ -10,7 +10,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -67,13 +67,13 @@ public class WorkspaceDefaultActionHandlers {
 		public void performAction(final PermissibleActionEvent event,
 				Object node, Object object, final Workspace workspace,
 				Class nodeObjectClass) {
-			final HasIdAndLocalId hili = (HasIdAndLocalId) object;
-			HasIdAndLocalId newObj = null;
+			final Entity entity = (Entity) object;
+			Entity newObj = null;
 			List<Object> provisionals = new ArrayList<Object>();
 			try {
 				CollectionModificationSupport.queue(true);
 				DomainObjectCloner cloner = new DomainObjectCloner();
-				newObj = cloner.deepBeanClone(hili);
+				newObj = cloner.deepBeanClone(entity);
 				if (isAutoSave()) {
 					ClientTransformManager.cast().promoteToDomainObject(
 							cloner.getProvisionalObjects());
@@ -111,7 +111,7 @@ public class WorkspaceDefaultActionHandlers {
 	@RegistryLocation(registryPoint = CreateActionHandler.class)
 	public static class DefaultCreateActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements CreateActionHandler {
-		protected HasIdAndLocalId newObj;
+		protected Entity newObj;
 
 		public void performAction(PermissibleActionEvent event, Object node,
 				Object object, Workspace workspace, Class nodeObjectClass) {
@@ -162,17 +162,17 @@ public class WorkspaceDefaultActionHandlers {
 		public void performAction(final PermissibleActionEvent event,
 				Object node, Object object, final Workspace workspace,
 				Class nodeObjectClass) {
-			final HasIdAndLocalId hili = (HasIdAndLocalId) object;
+			final Entity entity = (Entity) object;
 			final WorkspaceDeletionChecker workspaceDeletionChecker = new WorkspaceDeletionChecker();
 			if (WorkspaceDeletionChecker.enabled) {
-				if (!workspaceDeletionChecker.checkPropertyRefs(hili)) {
+				if (!workspaceDeletionChecker.checkPropertyRefs(entity)) {
 					return;
 				} else {
 				}
 			}
 			Registry.impl(ClientNotifications.class).confirm(
 					"Are you sure you want to delete the selected object",
-					new DoDeleteCallback(event, workspace, hili,
+					new DoDeleteCallback(event, workspace, entity,
 							workspaceDeletionChecker));
 		}
 
@@ -181,16 +181,16 @@ public class WorkspaceDefaultActionHandlers {
 
 			private final Workspace workspace;
 
-			private final HasIdAndLocalId hili;
+			private final Entity entity;
 
 			private final WorkspaceDeletionChecker workspaceDeletionChecker;
 
 			private DoDeleteCallback(PermissibleActionEvent event,
-					Workspace workspace, HasIdAndLocalId hili,
+					Workspace workspace, Entity entity,
 					WorkspaceDeletionChecker workspaceDeletionChecker) {
 				this.event = event;
 				this.workspace = workspace;
-				this.hili = hili;
+				this.entity = entity;
 				this.workspaceDeletionChecker = workspaceDeletionChecker;
 			}
 
@@ -207,19 +207,19 @@ public class WorkspaceDefaultActionHandlers {
 					}
 
 					private void finish() {
-						TransformManager.get().deleteObject(hili);
+						TransformManager.get().deleteObject(entity);
 						if (workspace != null) {
 							workspace.getVisualiser()
 									.setContentWidget(new HorizontalPanel());
 							workspace.fireVetoableActionEvent(
-									new PermissibleActionEvent(hili,
+									new PermissibleActionEvent(entity,
 											event.getAction()));
 						}
 					}
 				};
 				if (!this.workspaceDeletionChecker.cascadedDeletions
 						.isEmpty()) {
-					for (HasIdAndLocalId cascade : this.workspaceDeletionChecker.cascadedDeletions) {
+					for (Entity cascade : this.workspaceDeletionChecker.cascadedDeletions) {
 						TransformManager.get().deleteObject(cascade);
 					}
 					Registry.impl(CommitToStorageTransformListener.class)
@@ -257,7 +257,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 
 		protected void handleParentLinks(Workspace workspace, Object node,
-				HasIdAndLocalId newObj) {
+				Entity newObj) {
 			workspace.handleParentLinks(node, newObj);
 		}
 

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -22,17 +22,17 @@ public class LocalDomain {
 		this.domainDescriptor = domainDescriptor;
 	}
 
-	public synchronized void add(HasIdAndLocalId obj) {
+	public synchronized void add(Entity obj) {
 		cache.put(obj);
 		index(obj, true);
 	}
 
-	public <T extends HasIdAndLocalId> LocalDomainQuery<T>
+	public <T extends Entity> LocalDomainQuery<T>
 			aliasedQuery(Class<T> clazz, Object alias, Object key) {
 		return new LocalDomainQuery(this, clazz, alias, key);
 	}
 
-	public <T extends HasIdAndLocalId> T find(Class<T> clazz, long id) {
+	public <T extends Entity> T find(Class<T> clazz, long id) {
 		return cache.get(clazz, id);
 	}
 
@@ -57,12 +57,12 @@ public class LocalDomain {
 		return cache.values(clazz);
 	}
 
-	private synchronized void index(HasIdAndLocalId obj, boolean add) {
-		Class<? extends HasIdAndLocalId> clazz = obj.getClass();
+	private synchronized void index(Entity obj, boolean add) {
+		Class<? extends Entity> clazz = obj.getClass();
 		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
 				.get(clazz);
 		itemDescriptor.index(obj, add);
-		for (HasIdAndLocalId dependentObject : itemDescriptor
+		for (Entity dependentObject : itemDescriptor
 				.getDependentObjectsWithDerivedProjections(obj)) {
 			index(dependentObject, add);
 		}

@@ -17,8 +17,8 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.util.StringMap;
 /*
  * Call initialise once all infrastructure (mvcc) is ready 
  */
-public class DomainClassDescriptor<T extends HasIdAndLocalId>
+public class DomainClassDescriptor<T extends Entity>
 		implements MemoryStatProvider {
 	public Class<T> clazz;
 
@@ -83,7 +83,7 @@ public class DomainClassDescriptor<T extends HasIdAndLocalId>
 		if (existing == null) {
 			List filtered = CollectionFilters
 					.filter(cache.immutableRawValues(clazz), filter);
-			return HiliHelper.toIdSet(filtered);
+			return EntityHelper.toIdSet(filtered);
 		} else {
 			CollectionFilter withIdFilter = new CollectionFilter<Long>() {
 				@Override
@@ -115,8 +115,8 @@ public class DomainClassDescriptor<T extends HasIdAndLocalId>
 		return propertyPath;
 	}
 
-	public Collection<HasIdAndLocalId>
-			getDependentObjectsWithDerivedProjections(HasIdAndLocalId obj) {
+	public Collection<Entity>
+			getDependentObjectsWithDerivedProjections(Entity obj) {
 		return new ArrayList<>();
 	}
 
@@ -124,7 +124,7 @@ public class DomainClassDescriptor<T extends HasIdAndLocalId>
 		return false;
 	}
 
-	public void index(HasIdAndLocalId obj, boolean add) {
+	public void index(Entity obj, boolean add) {
 		for (DomainStoreLookupDescriptor lookupDescriptor : lookupDescriptors) {
 			DomainLookup lookup = lookupDescriptor.getLookup();
 			if (add) {

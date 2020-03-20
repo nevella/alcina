@@ -10,14 +10,14 @@ import com.totsp.gwittir.client.beans.Converter;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreLongSetCreator;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreMultisetCreator;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 
-public class DomainLookup<T, H extends HasIdAndLocalId>
+public class DomainLookup<T, H extends Entity>
 		implements DomainListener<H> {
 	private Multiset<T, Set<Long>> store;
 
@@ -98,19 +98,19 @@ public class DomainLookup<T, H extends HasIdAndLocalId>
 	}
 
 	@Override
-	public void insert(H hili) {
-		if (relevanceFilter != null && !relevanceFilter.allow(hili)) {
+	public void insert(H entity) {
+		if (relevanceFilter != null && !relevanceFilter.allow(entity)) {
 			return;
 		}
 		checkModification("insert");
-		Object v1 = getChainedProperty(hili);
+		Object v1 = getChainedProperty(entity);
 		if (v1 instanceof Collection) {
 			Set deduped = new LinkedHashSet((Collection) v1);
 			for (Object v2 : deduped) {
-				add(normalise((T) v2), hili.provideTransactionalId());
+				add(normalise((T) v2), entity.provideTransactionalId());
 			}
 		} else {
-			add(normalise((T) v1), hili.provideTransactionalId());
+			add(normalise((T) v1), entity.provideTransactionalId());
 		}
 	}
 
@@ -133,15 +133,15 @@ public class DomainLookup<T, H extends HasIdAndLocalId>
 	}
 
 	@Override
-	public void remove(H hili) {
-		Object v1 = getChainedProperty(hili);
+	public void remove(H entity) {
+		Object v1 = getChainedProperty(entity);
 		if (v1 instanceof Collection) {
 			Set deduped = new LinkedHashSet((Collection) v1);
 			for (Object v2 : deduped) {
-				remove(normalise((T) v2), hili.getId());
+				remove(normalise((T) v2), entity.getId());
 			}
 		} else {
-			remove(normalise((T) v1), hili.getId());
+			remove(normalise((T) v1), entity.getId());
 		}
 	}
 
@@ -216,11 +216,11 @@ public class DomainLookup<T, H extends HasIdAndLocalId>
 		return result;
 	}
 
-	protected Object getChainedProperty(H hili) {
+	protected Object getChainedProperty(H entity) {
 		if (descriptor.valueFunction != null) {
-			return descriptor.valueFunction.apply(hili);
+			return descriptor.valueFunction.apply(entity);
 		}
-		return propertyPathAccesor.getChainedProperty(hili);
+		return propertyPathAccesor.getChainedProperty(entity);
 	}
 
 	protected H getForResolvedId(long id) {

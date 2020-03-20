@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.FilterContext;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.collections.PropertyPathFilter;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.PdOperator;
@@ -148,7 +148,7 @@ public class PropertyStore {
         return null;
     }
 
-    public void index(HasIdAndLocalId obj, boolean add) {
+    public void index(Entity obj, boolean add) {
         for (PropertyStoreLookup lookup : lookups) {
             lookup.index(obj, add);
         }
@@ -498,8 +498,8 @@ public class PropertyStore {
                 if (valueFilter != null) {
                     return valueFilter.matchesValue(value);
                 } else {
-                    Object hili = cache.get(pd.mappedClass, (Long) value);
-                    return suffixFilter.allow(hili);
+                    Object entity = cache.get(pd.mappedClass, (Long) value);
+                    return suffixFilter.allow(entity);
                 }
             }
         }

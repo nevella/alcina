@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.introspect.ObjectIdInfo;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
@@ -217,11 +217,11 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		@Override
 		public ObjectIdInfo findObjectIdInfo(Annotated ann) {
 			ObjectIdInfo annotatedResult = super.findObjectIdInfo(ann);
-			if (annotatedResult == null && HasIdAndLocalId.class
+			if (annotatedResult == null && Entity.class
 					.isAssignableFrom(ann.getRawType())) {
 				PropertyName name = PropertyName.construct("ref_id");
 				return new ObjectIdInfo(name, Object.class,
-						HiliStringIdGenerator.class,
+						EntityStringIdGenerator.class,
 						com.fasterxml.jackson.annotation.SimpleObjectIdResolver.class);
 			} else {
 				return annotatedResult;
@@ -229,11 +229,11 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		}
 	}
 
-	public static class HiliStringIdGenerator
+	public static class EntityStringIdGenerator
 			extends ObjectIdGenerator<String> {
 		private static final long serialVersionUID = 1L;
 
-		public HiliStringIdGenerator() {
+		public EntityStringIdGenerator() {
 		}
 
 		// Should be usable for generic Opaque String ids?
@@ -250,7 +250,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 		@Override
 		public String generateId(Object forPojo) {
-			return ((HasIdAndLocalId) forPojo).toStringHili();
+			return ((Entity) forPojo).toStringEntity();
 		}
 
 		@Override

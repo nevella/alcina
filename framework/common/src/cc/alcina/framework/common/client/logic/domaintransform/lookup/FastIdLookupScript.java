@@ -4,7 +4,7 @@ import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class FastIdLookupScript implements FastIdLookup {
@@ -19,7 +19,7 @@ public class FastIdLookupScript implements FastIdLookup {
 	}
 
 	@Override
-	public HasIdAndLocalId get(long id, boolean local) {
+	public Entity get(long id, boolean local) {
 		int idi = LongWrapperHash.fastIntValue(id);
 		if (local) {
 			return localIdLookup.get(idi);
@@ -29,18 +29,18 @@ public class FastIdLookupScript implements FastIdLookup {
 	}
 
 	@Override
-	public void put(HasIdAndLocalId hili, boolean local) {
-		int idi = getApplicableId(hili, local);
+	public void put(Entity entity, boolean local) {
+		int idi = getApplicableId(entity, local);
 		if (local) {
-			localIdLookup.put(idi, hili);
+			localIdLookup.put(idi, entity);
 		} else {
-			idLookup.put(idi, hili);
+			idLookup.put(idi, entity);
 		}
 	}
 
 	@Override
-	public void putAll(Collection<HasIdAndLocalId> values, boolean local) {
-		for (HasIdAndLocalId value : values) {
+	public void putAll(Collection<Entity> values, boolean local) {
+		for (Entity value : values) {
 			put(value, local);
 		}
 	}
@@ -62,54 +62,54 @@ public class FastIdLookupScript implements FastIdLookup {
 	}
 
 	@Override
-	public Collection<HasIdAndLocalId> values() {
+	public Collection<Entity> values() {
 		return values;
 	}
 
-	int getApplicableId(HasIdAndLocalId hili, boolean local) {
-		long id = local ? hili.getLocalId() : hili.getId();
+	int getApplicableId(Entity entity, boolean local) {
+		long id = local ? entity.getLocalId() : entity.getId();
 		int idi = LongWrapperHash.fastIntValue(id);
 		return idi;
 	}
 
-	class FastIdLookupScriptValues extends AbstractCollection<HasIdAndLocalId> {
+	class FastIdLookupScriptValues extends AbstractCollection<Entity> {
 		@Override
-		public boolean add(HasIdAndLocalId hili) {
-			boolean contains = contains(hili);
-			put(hili, hili.getId() == 0);
+		public boolean add(Entity entity) {
+			boolean contains = contains(entity);
+			put(entity, entity.getId() == 0);
 			return !contains;
 		}
 
 		@Override
 		public boolean contains(Object o) {
-			if (o instanceof HasIdAndLocalId) {
-				HasIdAndLocalId hili = (HasIdAndLocalId) o;
-				HasIdAndLocalId existing = null;
-				if (hili.getLocalId() == 0) {
-					existing = get(hili.getId(), false);
+			if (o instanceof Entity) {
+				Entity entity = (Entity) o;
+				Entity existing = null;
+				if (entity.getLocalId() == 0) {
+					existing = get(entity.getId(), false);
 				} else {
-					existing = get(hili.getLocalId(), true);
+					existing = get(entity.getLocalId(), true);
 				}
 				return existing != null
-						&& hili.getClass() == existing.getClass();
+						&& entity.getClass() == existing.getClass();
 			}
 			return false;
 		}
 
 		@Override
-		public Iterator<HasIdAndLocalId> iterator() {
-			return new MultiIterator<HasIdAndLocalId>(true, null,
+		public Iterator<Entity> iterator() {
+			return new MultiIterator<Entity>(true, null,
 					localIdLookup.valuesIterator(), idLookup.valuesIterator());
 		}
 
 		@Override
 		public boolean remove(Object o) {
-			if (o instanceof HasIdAndLocalId) {
-				HasIdAndLocalId hili = (HasIdAndLocalId) o;
-				boolean local = hili.getId() == 0;
+			if (o instanceof Entity) {
+				Entity entity = (Entity) o;
+				boolean local = entity.getId() == 0;
 				boolean contains = contains(o);
-				FastIdLookupScript.this.remove(hili.getId(), false);
-				FastIdLookupScript.this.remove(hili.getLocalId(), true);
+				FastIdLookupScript.this.remove(entity.getId(), false);
+				FastIdLookupScript.this.remove(entity.getLocalId(), true);
 			}
 			return false;
 		}

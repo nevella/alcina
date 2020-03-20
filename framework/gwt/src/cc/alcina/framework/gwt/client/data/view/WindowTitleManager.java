@@ -6,7 +6,7 @@ import com.google.gwt.user.client.Window;
 import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -33,10 +33,10 @@ public class WindowTitleManager {
         this.appName = appName;
         setup();
         DetailView.topicDetailModelObjectSet()
-                .add(new TopicListener<HasIdAndLocalId>() {
+                .add(new TopicListener<Entity>() {
                     @Override
                     public void topicPublished(String key,
-                            HasIdAndLocalId message) {
+                            Entity message) {
                         updateTitle(ClientFactory.currentPlace());
                     }
                 });

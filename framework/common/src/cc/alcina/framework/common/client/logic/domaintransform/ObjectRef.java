@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -36,12 +36,12 @@ public class ObjectRef implements Serializable {
 	public ObjectRef() {
 	}
 
-	public ObjectRef(HasIdAndLocalId hili) {
-		setClassRef(ClassRef.forClass(hili.getClass()));
-		setId(hili.getId());
-		setLocalId(hili.getLocalId());
-		if (hili instanceof HasVersionNumber) {
-			setVersionNumber(((HasVersionNumber) hili).getVersionNumber());
+	public ObjectRef(Entity entity) {
+		setClassRef(ClassRef.forClass(entity.getClass()));
+		setId(entity.getId());
+		setLocalId(entity.getLocalId());
+		if (entity instanceof HasVersionNumber) {
+			setVersionNumber(((HasVersionNumber) entity).getVersionNumber());
 		}
 	}
 

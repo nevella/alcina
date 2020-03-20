@@ -46,7 +46,7 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.GArrayList;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
@@ -97,7 +97,7 @@ public class GraphProjection {
 				}
 			}, LOOKUP_SIZE);
 
-	static Map<Field, Boolean> genericHiliTypeLookup = new NullWrappingMap<Field, Boolean>(
+	static Map<Field, Boolean> genericEntityTypeLookup = new NullWrappingMap<Field, Boolean>(
 			new ConcurrentHashMap(LOOKUP_SIZE));
 
 	static Map<Class, List<Field>> perClassDeclaredFields = new NullWrappingMap<Class, List<Field>>(
@@ -319,21 +319,21 @@ public class GraphProjection {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
 
-	public static boolean isGenericHiliType(Field field) {
-		if (!genericHiliTypeLookup.containsKey(field)) {
+	public static boolean isGenericEntityType(Field field) {
+		if (!genericEntityTypeLookup.containsKey(field)) {
 			Type pt = getGenericType(field);
-			boolean isHili = false;
+			boolean isEntity = false;
 			if (pt instanceof ParameterizedType) {
 				Type genericType = ((ParameterizedType) pt)
 						.getActualTypeArguments()[0];
 				if (genericType instanceof Class) {
 					Class type = (Class) genericType;
-					isHili = HasIdAndLocalId.class.isAssignableFrom(type);
+					isEntity = Entity.class.isAssignableFrom(type);
 				}
 			}
-			genericHiliTypeLookup.put(field, isHili);
+			genericEntityTypeLookup.put(field, isEntity);
 		}
-		return genericHiliTypeLookup.get(field);
+		return genericEntityTypeLookup.get(field);
 	}
 
 	public static boolean isPrimitiveOrDataClass(Class c) {
@@ -359,8 +359,8 @@ public class GraphProjection {
 		}
 		T result = projections.project(t);
 		TransformManager transformManager = TransformManager.get();
-		for (HasIdAndLocalId hili : dataFilter.getCache().allValues()) {
-			transformManager.registerDomainObject(hili);
+		for (Entity entity : dataFilter.getCache().allValues()) {
+			transformManager.registerDomainObject(entity);
 		}
 		return result;
 	}
@@ -477,7 +477,7 @@ public class GraphProjection {
 
 	private boolean collectionReachedCheck = true;
 
-	private LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> replaceMap = null;
+	private LinkedHashMap<Entity, Entity> replaceMap = null;
 
 	private List<GraphProjectionContext> contexts = new ArrayList<GraphProjectionContext>();
 
@@ -562,7 +562,7 @@ public class GraphProjection {
 	 * if we have: a.b .equals c - but not a.b==c and we want to project c, not
 	 * a.b - put c in this map
 	 */
-	public LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> getReplaceMap() {
+	public LinkedHashMap<Entity, Entity> getReplaceMap() {
 		return this.replaceMap;
 	}
 
@@ -652,7 +652,7 @@ public class GraphProjection {
 			if (isPrimitiveOrDataClass(sourceClass)) {
 				return source;
 			}
-			if (replaceMap != null && source instanceof HasIdAndLocalId
+			if (replaceMap != null && source instanceof Entity
 					&& replaceMap.containsKey(source)) {
 				source = (T) replaceMap.get(source);
 			}
@@ -688,7 +688,7 @@ public class GraphProjection {
 			projected = (T) ((DomainProxy) source).nonProxy();
 		} else if (source instanceof MvccObject) {
 			projected = newInstance(
-					((HasIdAndLocalId) source).provideEntityClass(), context);
+					((Entity) source).provideEntityClass(), context);
 		} else {
 			projected = newInstance(sourceClass, context);
 		}
@@ -771,7 +771,7 @@ public class GraphProjection {
 			if (value == null) {
 				field.set(projected, null);
 			} else {
-				if (replaceMap != null && value instanceof HasIdAndLocalId
+				if (replaceMap != null && value instanceof Entity
 						&& replaceMap.containsKey(value)) {
 					value = (T) replaceMap.get(value);
 				}
@@ -874,7 +874,7 @@ public class GraphProjection {
 	}
 
 	public void setReplaceMap(
-			LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> replaceMap) {
+			LinkedHashMap<Entity, Entity> replaceMap) {
 		this.replaceMap = replaceMap;
 	}
 
@@ -1081,8 +1081,8 @@ public class GraphProjection {
 		public String toPath(boolean withToString) {
 			String string = "?";
 			if (withToString) {
-				if (sourceOwner instanceof HasIdAndLocalId) {
-					string = ((HasIdAndLocalId) sourceOwner).toStringHili();
+				if (sourceOwner instanceof Entity) {
+					string = ((Entity) sourceOwner).toStringEntity();
 				} else if (sourceOwner instanceof Collection) {
 					string = Ax.format("[%s]",
 							((Collection) sourceOwner).size());

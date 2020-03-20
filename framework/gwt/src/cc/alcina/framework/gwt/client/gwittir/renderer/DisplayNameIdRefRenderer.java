@@ -14,7 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
@@ -34,7 +34,7 @@ public class DisplayNameIdRefRenderer extends FlexibleToStringRenderer {
 			return "0";
 		}
 		Long id = (Long) o;
-		HasIdAndLocalId object = Reflections.objectLookup()
+		Entity object = Reflections.objectLookup()
 				.getObject(targetClass, id, 0);
 		String dn = null;
 		if (object != null) {

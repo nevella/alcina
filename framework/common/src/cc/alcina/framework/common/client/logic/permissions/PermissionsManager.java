@@ -34,7 +34,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.Vetoer;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -607,9 +607,9 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		}
 		IUser owner = hasOwner.getOwner();
 		if (owner == null) {
-			return hasOwner instanceof HasIdAndLocalId
+			return hasOwner instanceof Entity
 					? TransformManager.get()
-							.isInCreationRequest((HasIdAndLocalId) hasOwner)
+							.isInCreationRequest((Entity) hasOwner)
 					: false;
 		} else {
 			return owner.equals(user) || owner.equals(instantiatedUser);

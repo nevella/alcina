@@ -1,8 +1,8 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 
-public class IntBackedPropertyStoreLookupDescriptor<T extends HasIdAndLocalId>
+public class IntBackedPropertyStoreLookupDescriptor<T extends Entity>
 		extends PropertyStoreLookupDescriptor<T> {
 	public IntBackedPropertyStoreLookupDescriptor(Class clazz,
 			String propertyPath, PropertyStore propertyStore) {

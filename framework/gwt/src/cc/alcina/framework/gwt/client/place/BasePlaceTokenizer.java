@@ -6,7 +6,7 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceTokenizer;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -52,7 +52,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
         return value == null ? 0 : CommonUtils.friendlyParseLong(value);
     }
 
-    public Class<? extends HasIdAndLocalId> getModelClass() {
+    public Class<? extends Entity> getModelClass() {
         return null;
     }
 
@@ -101,7 +101,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
     }
 
     public void register(
-            Map<Class<? extends HasIdAndLocalId>, BasePlaceTokenizer> tokenizersByModelClass) {
+            Map<Class<? extends Entity>, BasePlaceTokenizer> tokenizersByModelClass) {
     }
 
     public void setParameter(String key, Object value) {

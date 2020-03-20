@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 import java.util.Collection;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 
 public class DetachedCacheObjectStore implements ObjectStore {
@@ -16,36 +16,36 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
-	public void changeMapping(HasIdAndLocalId obj, long id, long localId) {
+	public void changeMapping(Entity obj, long id, long localId) {
 		// noop - doesn't support localids
 	}
 
 	@Override
-	public boolean contains(Class<? extends HasIdAndLocalId> clazz, long id) {
+	public boolean contains(Class<? extends Entity> clazz, long id) {
 		return cache.contains(clazz, id);
 	}
 
 	@Override
-	public boolean contains(HasIdAndLocalId obj) {
+	public boolean contains(Entity obj) {
 		return getObject(obj) != null;
 	}
 
 	@Override
-	public void deregisterObject(HasIdAndLocalId hili) {
+	public void deregisterObject(Entity entity) {
 		// just remove
-		if(hili==null){
+		if(entity==null){
 			return;
 		}
-		cache.remove(hili);
+		cache.remove(entity);
 	}
 
 	@Override
-	public void deregisterObjects(Collection<HasIdAndLocalId> objects) {
+	public void deregisterObjects(Collection<Entity> objects) {
 		if (objects == null) {
 			return;
 		}
-		for (HasIdAndLocalId hili : objects) {
-			deregisterObject(hili);
+		for (Entity entity : objects) {
+			deregisterObject(entity);
 		}
 	}
 
@@ -59,7 +59,7 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
-	public Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>>
+	public Map<Class<? extends Entity>, Collection<Entity>>
 			getCollectionMap() {
 		return (Map) cache.getDetached();
 	}
@@ -69,7 +69,7 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
-	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+	public <T extends Entity> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		T t = cache.get(c, id);
 		if (t == null && lazyObjectLoader != null && id != 0) {
@@ -80,18 +80,18 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
-	public <T extends HasIdAndLocalId> T getObject(T bean) {
+	public <T extends Entity> T getObject(T bean) {
 		return (T) (bean == null ? null
 				: getObject(bean.getClass(), bean.getId(), 0));
 	}
 
 	@Override
-	public void invalidate(Class<? extends HasIdAndLocalId> clazz) {
+	public void invalidate(Class<? extends Entity> clazz) {
 		cache.invalidate(clazz);
 	}
 
 	@Override
-	public void mapObject(HasIdAndLocalId obj) {
+	public void mapObject(Entity obj) {
 		cache.put(obj);
 	}
 

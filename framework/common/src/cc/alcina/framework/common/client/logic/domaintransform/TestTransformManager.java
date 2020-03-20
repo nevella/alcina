@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 
 public class TestTransformManager extends ClientTransformManager {
 	public TestTransformManager() {
@@ -16,7 +16,7 @@ public class TestTransformManager extends ClientTransformManager {
 		return (TestTransformManager) TransformManager.get();
 	}
 
-	public void performDeleteObject(HasIdAndLocalId hili) {
+	public void performDeleteObject(Entity entity) {
 	}
 
 	@Override
@@ -25,8 +25,8 @@ public class TestTransformManager extends ClientTransformManager {
 	}
 
 	@Override
-	protected void doCascadeDeletes(HasIdAndLocalId hili) {
-		super.doCascadeDeletes(hili);
+	protected void doCascadeDeletes(Entity entity) {
+		super.doCascadeDeletes(entity);
 	}
 
 	public List<DomainTransformEvent> transformInterceptList = null;

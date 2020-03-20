@@ -10,7 +10,7 @@ public class DomainTranche<T extends DomainModelObject>
 		implements DomainModelDelta, Serializable {
 	private DomainModelHolder domainModelHolder;
 
-	private Collection<DomainModelDeltaHili> unlinkedObjects = new ArrayList<DomainModelDeltaHili>();
+	private Collection<DomainModelDeltaEntity> unlinkedObjects = new ArrayList<DomainModelDeltaEntity>();
 
 	private Collection<DomainTransformEvent> replayEvents = new ArrayList<DomainTransformEvent>();
 
@@ -48,7 +48,7 @@ public class DomainTranche<T extends DomainModelObject>
 		return signature;
 	}
 
-	public Collection<DomainModelDeltaHili> getUnlinkedObjects() {
+	public Collection<DomainModelDeltaEntity> getUnlinkedObjects() {
 		return this.unlinkedObjects;
 	}
 
@@ -88,7 +88,7 @@ public class DomainTranche<T extends DomainModelObject>
 	}
 
 	public void setUnlinkedObjects(
-			Collection<DomainModelDeltaHili> unlinkedObjects) {
+			Collection<DomainModelDeltaEntity> unlinkedObjects) {
 		this.unlinkedObjects = unlinkedObjects;
 	}
 

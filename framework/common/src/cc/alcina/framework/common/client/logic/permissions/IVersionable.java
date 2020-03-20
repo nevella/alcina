@@ -15,13 +15,13 @@ package cc.alcina.framework.common.client.logic.permissions;
 
 import java.util.Date;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 
 /**
  *
  * @author Nick Reddel
  */
-public interface IVersionable extends HasIdAndLocalId {
+public interface IVersionable extends HasId {
 	public Date getCreationDate();
 
 	public IUser getCreationUser();

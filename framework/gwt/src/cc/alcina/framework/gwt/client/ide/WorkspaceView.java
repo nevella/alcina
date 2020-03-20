@@ -48,7 +48,7 @@ import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -266,7 +266,7 @@ public class WorkspaceView extends Composite implements HasName,
                     && evt.getType() == ExtraTreeEventType.DBL_CLICK) {
                 Class<? extends PermissibleAction> actionClass = canEdit
                         && (allowEditCollections || evt.getSource()
-                                .getUserObject() instanceof HasIdAndLocalId)
+                                .getUserObject() instanceof Entity)
                                         ? EditAction.class : ViewAction.class;
                 vetoableAction(new PermissibleActionEvent(evt.getSource(),
                         ClientReflector.get().newInstance(actionClass)));

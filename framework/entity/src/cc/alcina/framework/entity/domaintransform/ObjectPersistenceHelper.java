@@ -27,7 +27,7 @@ import com.totsp.gwittir.client.beans.SelfDescribed;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
@@ -180,14 +180,14 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
     }
 
     @Override
-    public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+    public <T extends Entity> T getObject(Class<? extends T> c,
             long id, long localId) {
         // uses thread-local instance
         return TransformManager.get().getObject(c, id, localId);
     }
 
     @Override
-    public <T extends HasIdAndLocalId> T getObject(T bean) {
+    public <T extends Entity> T getObject(T bean) {
         return (T) TransformManager.get().getObject(bean.provideEntityClass(),
                 bean.getId(), bean.getLocalId());
     }

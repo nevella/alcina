@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
-import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
@@ -356,7 +356,7 @@ public class LogStore {
 		String clientInstanceAuth = clientInstance == null ? "(before cli)"
 				: String.valueOf(clientInstance.getAuth());
 		ClientLogRecord logRecord = new ClientLogRecord(++localSeriesIdCounter,
-				clientInstanceAuth, HiliHelper.getIdOrZero(clientInstance),
+				clientInstanceAuth, EntityHelper.getIdOrZero(clientInstance),
 				new Date(), topic, message, null);
 		logs.addLogRecord(logRecord);
 		if (useCookieMsgBackup) {

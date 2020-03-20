@@ -6,7 +6,7 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 @MappedSuperclass
 @DomainTransformPersistable
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ROOT), write = @Permission(access = AccessLevel.ROOT), delete = @Permission(access = AccessLevel.ROOT))
-public abstract class LoginAttempt extends AbstractDomainBase<LoginAttempt> {
+public abstract class LoginAttempt extends Entity<LoginAttempt> {
 	private String userNameLowerCase;
 
 	private Date date;

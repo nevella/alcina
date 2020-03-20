@@ -11,7 +11,7 @@ import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 import com.google.gwt.user.datepicker.client.CalendarUtil;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -92,11 +92,11 @@ public class SearchUtils {
 		return false;
 	}
 
-	public static boolean matchesId(String query, HasIdAndLocalId hili) {
-		if (matchesIds(query, hili)) {
+	public static boolean matchesId(String query, Entity entity) {
+		if (matchesIds(query, entity)) {
 			return true;
 		}
-		return hili != null && toId(query) == hili.getId();
+		return entity != null && toId(query) == entity.getId();
 	}
 
 	public static long toId(String s) {
@@ -138,11 +138,11 @@ public class SearchUtils {
 		}
 	}
 
-	private static boolean matchesIds(String query, HasIdAndLocalId hili) {
-		if (idsHelper.matches(query, hili)) {
+	private static boolean matchesIds(String query, Entity entity) {
+		if (idsHelper.matches(query, entity)) {
 			return true;
 		}
-		if (regexpHelper.matches(query, hili)) {
+		if (regexpHelper.matches(query, entity)) {
 			return true;
 		}
 		return false;
@@ -204,7 +204,7 @@ public class SearchUtils {
 	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class)
 	@ClientInstantiable
 	public static abstract class SearchUtilsIdsHelper {
-		public boolean matches(String query, HasIdAndLocalId hili) {
+		public boolean matches(String query, Entity entity) {
 			return false;
 		}
 	}
@@ -218,9 +218,9 @@ public class SearchUtils {
 				getMap());
 
 		@Override
-		public boolean matches(String query, HasIdAndLocalId hili) {
-			return hili != null
-					&& stringIdLookup.get(query).contains(hili.getId());
+		public boolean matches(String query, Entity entity) {
+			return entity != null
+					&& stringIdLookup.get(query).contains(entity.getId());
 		}
 
 		protected Map<String, Set<Long>> getMap() {
@@ -231,7 +231,7 @@ public class SearchUtils {
 	@RegistryLocation(registryPoint = SearchUtilsRegExpHelper.class)
 	@ClientInstantiable
 	public static abstract class SearchUtilsRegExpHelper {
-		public boolean matches(String query, HasIdAndLocalId hili) {
+		public boolean matches(String query, Entity entity) {
 			return false;
 		}
 	}
@@ -245,15 +245,15 @@ public class SearchUtils {
 				getMap());
 
 		@Override
-		public boolean matches(String query, HasIdAndLocalId hili) {
-			if (hili == null) {
+		public boolean matches(String query, Entity entity) {
+			if (entity == null) {
 				return false;
 			}
 			RegExp regExp = stringRegexpLookup.get(query);
 			if (regExp == null) {
 				return false;
 			}
-			return regExp.exec(hili.toString()) != null;
+			return regExp.exec(entity.toString()) != null;
 		}
 
 		protected Map<String, RegExp> getMap() {

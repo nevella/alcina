@@ -11,13 +11,13 @@ import javax.persistence.EntityManager;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -58,7 +58,7 @@ public class TransformConflicts {
 	/*
 	 * do all that's humanly possible to avoid a db query
 	 */
-	public void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
+	public void checkVersion(Entity obj, DomainTransformEvent event)
 			throws DomainTransformException {
 		if (ignoreConflicts) {
 			return;
@@ -211,14 +211,14 @@ public class TransformConflicts {
 	}
 
 	public static class TransformConflictsFromOfflineSupport {
-		private Set<HiliLocator> checked = new LinkedHashSet<HiliLocator>();
+		private Set<EntityLocator> checked = new LinkedHashSet<EntityLocator>();
 
-		public void checking(HasIdAndLocalId obj) {
-			checked.add(new HiliLocator(obj));
+		public void checking(Entity obj) {
+			checked.add(new EntityLocator(obj));
 		}
 
-		public boolean wasChecked(HasIdAndLocalId obj) {
-			return checked.contains(new HiliLocator(obj));
+		public boolean wasChecked(Entity obj) {
+			return checked.contains(new EntityLocator(obj));
 		}
 	}
 }

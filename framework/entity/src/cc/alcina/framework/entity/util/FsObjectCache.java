@@ -51,6 +51,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		this.pathToValue = pathToValue;
 	}
 
+	@Override
 	public T get(String path) {
 		ClassStringKeyLock lock = LockUtils
 				.obtainClassStringKeyLock(pathToValue.getClass(), path);
@@ -74,6 +75,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		return this.cacheObjects;
 	}
 
+	@Override
 	public void persist(T t, String path) {
 		ClassStringKeyLock lock = LockUtils
 				.obtainClassStringKeyLock(pathToValue.getClass(), path);
@@ -171,14 +173,14 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		File cacheFile = getCacheFile(path);
 		if (!cacheFile.exists() || !allowFromCachedObjects) {
 			try {
-				logger.info("refreshing cache object - {} - {}",
+				logger.debug("refreshing cache object - {} - {}",
 						clazz.getSimpleName(), path);
 				T value = pathToValue.apply(path);
 				if (value != null) {
-                    KryoUtils.serializeToFile(value, cacheFile);
-                } else {
-                    return null;
-                }
+					KryoUtils.serializeToFile(value, cacheFile);
+				} else {
+					return null;
+				}
 			} catch (Exception e) {
 				if (!cacheFile.exists()) {
 					throw new WrappedRuntimeException(e);

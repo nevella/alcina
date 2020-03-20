@@ -6,7 +6,7 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -14,7 +14,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 @MappedSuperclass
 @DomainTransformPersistable
 public abstract class InternalMetric<U extends InternalMetric>
-		extends AbstractDomainBase<U> {
+		extends Entity<U> {
 	protected long id;
 
 	private String threadName;

@@ -7,15 +7,15 @@ import java.util.Set;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.DomainProxy.DomainProxyContext;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.PdOperator;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
-public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId>
+public abstract class PropertyStoreItemDescriptor<T extends Entity>
 		extends DomainClassDescriptor<T> {
 	protected PropertyStore propertyStore;
 
@@ -69,7 +69,7 @@ public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId>
 	}
 
 	@Override
-	public void index(HasIdAndLocalId obj, boolean add) {
+	public void index(Entity obj, boolean add) {
 		propertyStore.index(obj, add);
 	}
 
@@ -113,7 +113,7 @@ public abstract class PropertyStoreItemDescriptor<T extends HasIdAndLocalId>
 			if (ctx == null) {
 				return (T) createProxy(rowOffset, cache, id);
 			} else {
-				HiliLocator locator = new HiliLocator(clazz, id, 0);
+				EntityLocator locator = new EntityLocator(clazz, id, 0);
 				T proxy = (T) ctx.projectionProxies.get(locator);
 				if (proxy == null) {
 					proxy = (T) createProxy(rowOffset, cache, id);

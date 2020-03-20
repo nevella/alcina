@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletio
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaHili;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
@@ -86,7 +86,7 @@ public class DtrWrapperBackedDomainModelDelta
     }
 
     @Override
-    public Collection<DomainModelDeltaHili> getUnlinkedObjects() {
+    public Collection<DomainModelDeltaEntity> getUnlinkedObjects() {
         return referencedDelta == null ? null
                 : referencedDelta.getUnlinkedObjects();
     }

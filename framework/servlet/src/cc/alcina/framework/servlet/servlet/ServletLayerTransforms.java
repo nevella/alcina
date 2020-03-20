@@ -23,7 +23,7 @@ import com.google.gwt.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -35,7 +35,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestTagProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -157,7 +157,7 @@ public class ServletLayerTransforms {
 	}
 
 	public static long pushTransformsAndReturnId(boolean asRoot,
-			HasIdAndLocalId returnIdFor) {
+			Entity returnIdFor) {
 		DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
 				true).response;
 		for (DomainTransformEvent dte : transformResponse
@@ -264,7 +264,7 @@ public class ServletLayerTransforms {
 	 */
 	private ClientInstance serverAsClientInstance;
 
-	private Map<Long, HiliLocatorMap> clientInstanceLocatorMap = new HashMap<Long, HiliLocatorMap>();
+	private Map<Long, EntityLocatorMap> clientInstanceLocatorMap = new HashMap<Long, EntityLocatorMap>();
 
 	private int transformRequestCounter = 1;
 
@@ -282,24 +282,24 @@ public class ServletLayerTransforms {
 		backendTransformQueue.enqueue(runnable);
 	}
 
-	public HiliLocatorMap
+	public EntityLocatorMap
 			getLocatorMapForClient(ClientInstance clientInstance) {
 		Long clientInstanceId = clientInstance.getId();
-		Map<Long, HiliLocatorMap> clientInstanceLocatorMap = getClientInstanceLocatorMap();
+		Map<Long, EntityLocatorMap> clientInstanceLocatorMap = getClientInstanceLocatorMap();
 		synchronized (clientInstanceLocatorMap) {
 			if (!clientInstanceLocatorMap.containsKey(clientInstanceId)) {
-				HiliLocatorMap locatorMap = CommonPersistenceProvider.get()
+				EntityLocatorMap locatorMap = CommonPersistenceProvider.get()
 						.getCommonPersistenceExTransaction()
 						.getLocatorMap(clientInstanceId);
 				clientInstanceLocatorMap.put(clientInstanceId, locatorMap);
 			}
 		}
-		HiliLocatorMap locatorMap = clientInstanceLocatorMap
+		EntityLocatorMap locatorMap = clientInstanceLocatorMap
 				.get(clientInstanceId);
 		return locatorMap;
 	}
 
-	public HiliLocatorMap
+	public EntityLocatorMap
 			getLocatorMapForClient(DomainTransformRequest request) {
 		return getLocatorMapForClient(request.getClientInstance());
 	}
@@ -317,7 +317,7 @@ public class ServletLayerTransforms {
 			Collection<DomainTransformEvent> transforms, String tag)
 			throws DomainTransformRequestException {
 		int requestId = nextTransformRequestId();
-		HiliLocatorMap map = new HiliLocatorMap();
+		EntityLocatorMap map = new EntityLocatorMap();
 		ClientInstance clientInstance = ServletLayerTransforms.get()
 				.getServerAsClientInstance();
 		DomainTransformRequest request = DomainTransformRequest
@@ -560,7 +560,7 @@ public class ServletLayerTransforms {
 			boolean forOfflineTransforms,
 			boolean blockUntilAllListenersNotified)
 			throws DomainTransformRequestException {
-		HiliLocatorMap locatorMap = Registry.impl(ServletLayerTransforms.class)
+		EntityLocatorMap locatorMap = Registry.impl(ServletLayerTransforms.class)
 				.getLocatorMapForClient(request);
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
@@ -572,7 +572,7 @@ public class ServletLayerTransforms {
 		}
 	}
 
-	Map<Long, HiliLocatorMap> getClientInstanceLocatorMap() {
+	Map<Long, EntityLocatorMap> getClientInstanceLocatorMap() {
 		return this.clientInstanceLocatorMap;
 	}
 

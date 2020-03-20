@@ -15,9 +15,8 @@ package cc.alcina.framework.common.client.entity;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -27,14 +26,13 @@ import cc.alcina.framework.common.client.logic.permissions.Permissible;
  * 
  * @author Nick Reddel
  */
-public class WrapperPersistable extends BaseBindable
-		implements HasIdAndLocalId, Permissible, HasOwner {
+public class WrapperPersistable extends Entity<WrapperPersistable>
+		implements Permissible, HasOwner {
 	private long id;
-
-	private long localId;
 
 	private transient IUser owner;
 
+	@Override
 	public AccessLevel accessLevel() {
 		return AccessLevel.ADMIN;
 	}
@@ -43,38 +41,35 @@ public class WrapperPersistable extends BaseBindable
 	 * Hack - note that the old/newvalues of the propertychangeevent should
 	 * !not! be read. For listeners on collection properties
 	 */
+	@Override
 	public void fireNullPropertyChange(String name) {
 		((MutablePropertyChangeSupport) this.propertyChangeSupport())
 				.fireNullPropertyChange(name);
 	}
 
+	@Override
 	public long getId() {
 		return this.id;
-	}
-
-	public long getLocalId() {
-		return this.localId;
 	}
 
 	/**
 	 * This will only be used for permissions checking server-side, no need to
 	 * send to the client
 	 */
+	@Override
 	@XmlTransient
 	public IUser getOwner() {
 		return owner;
 	}
 
+	@Override
 	public String rule() {
 		return null;
 	}
 
+	@Override
 	public void setId(long id) {
 		this.id = id;
-	}
-
-	public void setLocalId(long localId) {
-		this.localId = localId;
 	}
 
 	public void setOwner(IUser owner) {

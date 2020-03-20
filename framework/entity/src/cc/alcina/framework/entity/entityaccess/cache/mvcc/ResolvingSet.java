@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 
 /**
  * 
@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  * @param <E>
  */
 @Deprecated
-public class ResolvingSet<E extends HasIdAndLocalId> implements Set<E> {
+public class ResolvingSet<E extends Entity> implements Set<E> {
     private Set<E> delegate;
 
     ResolvingSet(Set<E> delegate) {

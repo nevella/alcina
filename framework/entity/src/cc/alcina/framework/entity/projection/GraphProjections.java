@@ -6,7 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookup;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -125,7 +125,7 @@ public class GraphProjections {
 	public class StrictAllowForbid implements GraphProjectionFieldFilter {
 		@Override
 		public Boolean permitClass(Class clazz) {
-			if (!HasIdAndLocalId.class.isAssignableFrom(clazz)) {
+			if (!Entity.class.isAssignableFrom(clazz)) {
 				return true;
 			}
 			if (permittedClasses.size() > 0
@@ -154,7 +154,7 @@ public class GraphProjections {
 	class PermissibleFieldFilterH extends PermissibleFieldFilter {
 		@Override
 		public Boolean permitClass(Class clazz) {
-			if (!HasIdAndLocalId.class.isAssignableFrom(clazz)) {
+			if (!Entity.class.isAssignableFrom(clazz)) {
 				return true;
 			}
 			if (permittedClasses.size() > 0

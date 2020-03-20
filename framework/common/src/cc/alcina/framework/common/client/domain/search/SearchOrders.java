@@ -35,12 +35,12 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	public SearchOrders() {
 	}
 
-	public SearchOrders<T> addHiliDescOrder() {
+	public SearchOrders<T> addEntityDescOrder() {
 		addOrder(new IdOrder(), false);
 		return this;
 	}
 
-	public SearchOrders<T> addHiliOrder() {
+	public SearchOrders<T> addEntityOrder() {
 		addOrder(new IdOrder(), true);
 		return this;
 	}

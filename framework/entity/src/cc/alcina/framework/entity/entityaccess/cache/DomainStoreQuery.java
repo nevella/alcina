@@ -7,14 +7,14 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainQuery;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.projection.CollectionProjectionFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
-public class DomainStoreQuery<V extends HasIdAndLocalId>
+public class DomainStoreQuery<V extends Entity>
 		extends DomainQuery<V> {
 	private GraphProjectionFieldFilter fieldFilter;
 

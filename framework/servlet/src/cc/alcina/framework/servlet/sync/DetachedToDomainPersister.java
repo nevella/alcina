@@ -9,9 +9,9 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.J8Utils;
@@ -19,7 +19,7 @@ import cc.alcina.framework.servlet.sync.FlatDeltaPersister.DeltaItemPersister;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersisterResult.FlatDeltaPersisterResultType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
 
-public class DetachedToDomainPersister<T extends AbstractDomainBase>
+public class DetachedToDomainPersister<T extends Entity>
 		implements DeltaItemPersister<T> {
 	public DetachedToDomainPersister() {
 		detachedToPersisted = new LinkedHashMap<>();
@@ -29,7 +29,7 @@ public class DetachedToDomainPersister<T extends AbstractDomainBase>
 		detachedToPersisted.putAll(other.detachedToPersisted);
 	}
 
-	protected Map<AbstractDomainBase, AbstractDomainBase> detachedToPersisted;
+	protected Map<Entity, Entity> detachedToPersisted;
 
 	@Override
 	public FlatDeltaPersisterResultType performSyncAction(SyncAction syncAction,
@@ -85,7 +85,7 @@ public class DetachedToDomainPersister<T extends AbstractDomainBase>
 			toReparent = getter.apply(t);
 			if (toReparent instanceof Set) {
 				Set replaceReparent = new LinkedHashSet((Set) toReparent);
-				Set filtered = ((Set<HasIdAndLocalId>) toReparent).stream()
+				Set filtered = ((Set<Entity>) toReparent).stream()
 						.filter(o -> {
 							if (o.getId() != 0) {
 								return true;
@@ -104,11 +104,11 @@ public class DetachedToDomainPersister<T extends AbstractDomainBase>
 		public void withAttached(T attached) {
 			reparentFunction.accept(attached, toReparent);
 			CommonUtils.wrapInCollection(toReparent).stream().forEach(o -> {
-				AbstractDomainBase adb = (AbstractDomainBase) o;
+				Entity adb = (Entity) o;
 				if (adb.getId() == 0) {
 					adb.setLocalId(0);
 				}
-				AbstractDomainBase toDomain = adb.domain().detachedToDomain();
+				Entity toDomain = adb.domain().detachedToDomain();
 				detachedToPersisted.put(adb, toDomain);
 			});
 		}

@@ -17,7 +17,7 @@ import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -120,7 +120,7 @@ public class TextProvider {
 		this.decorated = decorated;
 	}
 
-	public void setObjectName(HasIdAndLocalId newObj, String name) {
+	public void setObjectName(Entity newObj, String name) {
 		if (newObj instanceof HasGeneratedDisplayName) {
 			return;
 		}

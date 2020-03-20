@@ -24,7 +24,7 @@ import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
@@ -309,8 +309,8 @@ public class ClientReflectorJvm extends ClientReflector {
             checkClassAnnotationsForInstantiation(clazz);
             T newInstance = clazz.newInstance();
             if (localId != 0) {
-                HasIdAndLocalId hili = (HasIdAndLocalId) newInstance;
-                hili.setLocalId(localId);
+                Entity entity = (Entity) newInstance;
+                entity.setLocalId(localId);
             }
             return newInstance;
         } catch (Exception e) {

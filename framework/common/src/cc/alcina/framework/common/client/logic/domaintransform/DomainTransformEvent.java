@@ -24,7 +24,7 @@ import javax.persistence.Transient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -50,7 +50,7 @@ public class DomainTransformEvent
 
 	private transient Object newValue;
 
-	private transient HasIdAndLocalId source;
+	private transient Entity source;
 
 	private transient Class objectClass;
 
@@ -208,7 +208,7 @@ public class DomainTransformEvent
 
 	@Transient
 	@JsonIgnore
-	public HasIdAndLocalId getSource() {
+	public Entity getSource() {
 		return this.source;
 	}
 
@@ -287,23 +287,23 @@ public class DomainTransformEvent
 	/*
 	 * this version handles equality for deleted objects
 	 */
-	public boolean provideSourceEquals(HasIdAndLocalId hili) {
-		if (hili == null) {
+	public boolean provideSourceEquals(Entity entity) {
+		if (entity == null) {
 			return false;
 		}
-		return hili.getClass().equals(objectClass)
-				&& hili.getLocalId() == objectLocalId
-				&& hili.getId() == objectId;
+		return entity.getClass().equals(objectClass)
+				&& entity.getLocalId() == objectLocalId
+				&& entity.getId() == objectId;
 	}
 
-	public HasIdAndLocalId provideSourceOrMarker() {
-		HasIdAndLocalId source = getSource();
+	public Entity provideSourceOrMarker() {
+		Entity source = getSource();
 		if (source == null && getObjectLocalId() != 0) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) Reflections.classLookup()
+			Entity entity = (Entity) Reflections.classLookup()
 					.newInstance(getObjectClass());
-			source = hili;
-			hili.setId(getObjectId());
-			hili.setLocalId(getObjectLocalId());
+			source = entity;
+			entity.setId(getObjectId());
+			entity.setLocalId(getObjectLocalId());
 		}
 		return source;
 	}
@@ -311,13 +311,13 @@ public class DomainTransformEvent
 	/*
 	 * only used for removing existing transforms, it's not the real object
 	 */
-	public HasIdAndLocalId provideTargetMarkerForRemoval() {
+	public Entity provideTargetMarkerForRemoval() {
 		if (valueId != 0 || valueLocalId != 0) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) Reflections.classLookup()
+			Entity entity = (Entity) Reflections.classLookup()
 					.newInstance(getValueClass());
-			hili.setId(valueId);
-			hili.setLocalId(valueLocalId);
-			return hili;
+			entity.setId(valueId);
+			entity.setLocalId(valueLocalId);
+			return entity;
 		} else {
 			return null;
 		}
@@ -411,7 +411,7 @@ public class DomainTransformEvent
 		this.propertyName = propertyName;
 	}
 
-	public void setSource(HasIdAndLocalId source) {
+	public void setSource(Entity source) {
 		this.source = source;
 	}
 

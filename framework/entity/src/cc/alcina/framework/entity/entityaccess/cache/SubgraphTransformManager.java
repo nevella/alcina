@@ -8,11 +8,11 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCacheObjectStore;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
@@ -26,8 +26,8 @@ import cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 
 public class SubgraphTransformManager extends TransformManager {
-	public static <T extends HasIdAndLocalId> T generateSynthetic(
-			HiliLocatorMap locatorMap, Stream<DomainTransformEvent> stream) {
+	public static <T extends Entity> T generateSynthetic(
+			EntityLocatorMap locatorMap, Stream<DomainTransformEvent> stream) {
 		try {
 			SubgraphTransformManagerRecord tm = new SubgraphTransformManagerRecord();
 			List<DomainTransformEvent> dtes = stream.map(dte -> {
@@ -55,7 +55,7 @@ public class SubgraphTransformManager extends TransformManager {
 			for (DomainTransformEvent dte : dtes) {
 				tm.consume(dte);
 			}
-			HasIdAndLocalId firstReferenced = tm.firstReferenced;
+			Entity firstReferenced = tm.firstReferenced;
 			long id = firstReferenced.getId();
 			if (id < 0) {
 				firstReferenced.setLocalId(-id);
@@ -97,21 +97,21 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	@Override
-	protected void doCascadeDeletes(HasIdAndLocalId hili) {
+	protected void doCascadeDeletes(Entity entity) {
 		// rely on the client for this...
 		// or the servletlayer aspect of tltm
 	}
 
 	@Override
 	protected Object ensureEndpointInTransformGraph(Object object) {
-		if (object instanceof HasIdAndLocalId) {
-			return getObject((HasIdAndLocalId) object);
+		if (object instanceof Entity) {
+			return getObject((Entity) object);
 		}
 		return object;
 	}
 
 	@Override
-	protected HasIdAndLocalId getObjectForCreate(DomainTransformEvent event) {
+	protected Entity getObjectForCreate(DomainTransformEvent event) {
 		return null;
 	}
 
@@ -121,8 +121,8 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	@Override
-	protected void removeAssociations(HasIdAndLocalId hili) {
-		new ServerTransformManagerSupport().removeAssociations(hili);
+	protected void removeAssociations(Entity entity) {
+		new ServerTransformManagerSupport().removeAssociations(entity);
 	}
 
 	@Override
@@ -132,7 +132,7 @@ public class SubgraphTransformManager extends TransformManager {
 
 	public static class SubgraphTransformManagerPreProcess
 			extends SubgraphTransformManager {
-		public SubgraphTransformManagerPreProcess(HiliLocatorMap locatorMap) {
+		public SubgraphTransformManagerPreProcess(EntityLocatorMap locatorMap) {
 			((PreProcessBridgeLookup) getDomainObjects()).locatorMap = locatorMap;
 		}
 
@@ -148,18 +148,18 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	static class PreProcessBridgeLookup extends MapObjectLookupJvm {
-		private HiliLocatorMap locatorMap;
+		private EntityLocatorMap locatorMap;
 
 		public PreProcessBridgeLookup() {
 		}
 
 		@Override
-		public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+		public <T extends Entity> T getObject(Class<? extends T> c,
 				long id, long localId) {
 			T t = super.getObject(c, id, localId);
 			if (t == null) {
 				if (id == 0) {
-					HiliLocator hiliLocator = locatorMap.getForLocalId(localId);
+					EntityLocator hiliLocator = locatorMap.getForLocalId(localId);
 					if (hiliLocator == null) {
 						return null;
 					}
@@ -226,7 +226,7 @@ public class SubgraphTransformManager extends TransformManager {
 		@Override
 		public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 			try {
-				HasIdAndLocalId newInstance = Transaction.current().create(
+				Entity newInstance = Transaction.current().create(
 						(Class) clazz, DomainStore.stores().storeFor(clazz));
 				newInstance.setLocalId(localId);
 				return (T) newInstance;
@@ -238,21 +238,21 @@ public class SubgraphTransformManager extends TransformManager {
 
 	static class SubgraphTransformManagerRecord extends SubgraphTransformManager
 			implements LazyObjectLoader {
-		private HasIdAndLocalId firstReferenced = null;
+		private Entity firstReferenced = null;
 
 		@Override
 		public void consume(DomainTransformEvent event)
 				throws DomainTransformException {
 			super.consume(event);
 			if (firstReferenced == null) {
-				Iterator<HasIdAndLocalId> iterator = getDetachedEntityCache()
+				Iterator<Entity> iterator = getDetachedEntityCache()
 						.allValues().iterator();
 				firstReferenced = iterator.hasNext() ? iterator.next() : null;
 			}
 		}
 
 		@Override
-		public <T extends HasIdAndLocalId> void
+		public <T extends Entity> void
 				loadObject(Class<? extends T> clazz, long id, long localId) {
 			store.mapObject(Domain.detachedVersion(clazz, id));
 		}

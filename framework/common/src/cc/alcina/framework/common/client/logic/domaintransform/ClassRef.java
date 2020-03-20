@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.common.client.logic.domaintransform;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -27,7 +26,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
@@ -39,12 +38,10 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
-public abstract class ClassRef implements Serializable, HasIdAndLocalId {
+public abstract class ClassRef extends Entity {
 	private static Map<String, ClassRef> refMap = new HashMap<String, ClassRef>();
 
 	private static Map<Long, ClassRef> idMap = new HashMap<Long, ClassRef>();
-
-	
 
 	public static void add(Collection<? extends ClassRef> refs) {
 		for (ClassRef classRef : refs) {
@@ -87,20 +84,6 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 				&& getRefClass().equals(((ClassRef) obj).getRefClass());
 	}
 
-	@Override
-	@Transient
-	public abstract long getId();
-
-	@Override
-	@Transient
-	/**
-	 * Here for HasIdAndLocalId compatibility, but always 0 since always
-	 * server-generated
-	 */
-	public long getLocalId() {
-		return 0;
-	}
-
 	@Transient
 	@XmlTransient
 	public Class getRefClass() {
@@ -137,14 +120,6 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 		return false;
 	}
 
-	@Override
-	public abstract void setId(long id);
-
-	@Override
-	public void setLocalId(long localId) {
-		// noop.
-	}
-
 	public void setRefClass(Class refClass) {
 		this.refClass = refClass;
 		this.refClassName = (refClass == null) ? null : this.refClass.getName();
@@ -156,6 +131,12 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 		this.refClassName = refClassName;
 	}
 
+	@Override
+	public String toString() {
+		return Ax.format("Classref - id: %s className: %s", getId(),
+				getRefClassName());
+	}
+
 	public static class ClassRefSimpleNameRenderer
 			implements Renderer<ClassRef, String> {
 		public static final ClassRefSimpleNameRenderer INSTANCE = new ClassRefSimpleNameRenderer();
@@ -165,11 +146,5 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 			return o == null ? "(undefined)"
 					: CommonUtils.simpleClassName(o.getRefClass());
 		}
-	}
-
-	@Override
-	public String toString() {
-		return Ax.format("Classref - id: %s className: %s", getId(),
-				getRefClassName());
 	}
 }

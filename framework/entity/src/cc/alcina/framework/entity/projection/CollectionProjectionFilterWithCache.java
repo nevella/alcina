@@ -1,6 +1,6 @@
 package cc.alcina.framework.entity.projection;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupJvm;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
@@ -16,21 +16,21 @@ public class CollectionProjectionFilterWithCache
 	public <T> T filterData(T original, T projected,
 			GraphProjectionContext context, GraphProjection graphProjection)
 			throws Exception {
-		if (original instanceof HasIdAndLocalId) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) original;
-			if (hili.getId() != 0) {
-				Object cached = cache.get(original.getClass(), hili.getId());
+		if (original instanceof Entity) {
+			Entity entity = (Entity) original;
+			if (entity.getId() != 0) {
+				Object cached = cache.get(original.getClass(), entity.getId());
 				if (cached != null) {
 					return (T) cached;
 				} else {
-					HasIdAndLocalId clonedHili = (HasIdAndLocalId) projected;
-					clonedHili.setId(hili.getId());
-					cache.put(clonedHili);
-					objectLookup.mapObject(clonedHili);
-					return (T) clonedHili;
+					Entity clonedEntity = (Entity) projected;
+					clonedEntity.setId(entity.getId());
+					cache.put(clonedEntity);
+					objectLookup.mapObject(clonedEntity);
+					return (T) clonedEntity;
 				}
 			} else {
-				objectLookup.mapObject(hili);
+				objectLookup.mapObject(entity);
 			}
 		}
 		return super.filterData(original, projected, context, graphProjection);

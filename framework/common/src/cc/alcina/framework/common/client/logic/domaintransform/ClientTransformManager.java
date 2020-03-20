@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
@@ -94,14 +94,14 @@ public abstract class ClientTransformManager extends TransformManager {
     }
 
     /**
-     * Useful series of actions when persisting a HasIdAndLocalId with
+     * Useful series of actions when persisting a Entity with
      * references to a WrappedObject
      *
      * @see TransformManager#promoteToDomainObject(Object) wrt what to do with
      *      promoted objects
      * @param referrer
      */
-    public <T extends HasIdAndLocalId> T persistWrappedObjectReferrer(
+    public <T extends Entity> T persistWrappedObjectReferrer(
             final T referrer, boolean onlyLocalGraph) {
         final ClientBeanReflector beanReflector = ClientReflector.get()
                 .beanInfoForClass(referrer.getClass());
@@ -139,7 +139,7 @@ public abstract class ClientTransformManager extends TransformManager {
                 CollectionModificationSupport.queue(false);
             }
         }
-        final HasIdAndLocalId finalTarget = target;
+        final Entity finalTarget = target;
         HasAnnotationCallback<Wrapper> callback = new HasAnnotationCallback<Wrapper>() {
             @Override
             public void apply(final Wrapper annotation,
@@ -169,7 +169,7 @@ public abstract class ClientTransformManager extends TransformManager {
         return target;
     }
 
-    public Collection prepareObject(HasIdAndLocalId domainObject,
+    public Collection prepareObject(Entity domainObject,
             boolean autoSave, boolean afterCreation, boolean forEditing) {
         List children = new ArrayList();
         ClientBeanReflector bi = ClientReflector.get()
@@ -210,7 +210,7 @@ public abstract class ClientTransformManager extends TransformManager {
                 requiresEditPrep.put(c, true);
             }
             if (create && afterCreation) {
-                HasIdAndLocalId newObj = autoSave
+                Entity newObj = autoSave
                         ? TransformManager.get()
                                 .createDomainObject(pr.getPropertyType())
                         : TransformManager.get()
@@ -227,19 +227,19 @@ public abstract class ClientTransformManager extends TransformManager {
                 if (cloneForEditing && !autoSave && currentValue != null) {
                     if (currentValue instanceof Collection) {
                         Collection cl = (Collection) currentValue;
-                        Collection<HasIdAndLocalId> hilis = CommonUtils
+                        Collection<Entity> entities = CommonUtils
                                 .shallowCollectionClone(cl);
                         cl.clear();
-                        for (HasIdAndLocalId hili : hilis) {
-                            HasIdAndLocalId clonedValue = new CloneHelper()
-                                    .shallowishBeanClone(hili);
+                        for (Entity entity : entities) {
+                            Entity clonedValue = new CloneHelper()
+                                    .shallowishBeanClone(entity);
                             children.add(clonedValue);
                             children.addAll(prepareObject(clonedValue, autoSave,
                                     afterCreation, forEditing));
                             cl.add(clonedValue);
                         }
                     } else {
-                        HasIdAndLocalId clonedValue = (HasIdAndLocalId) new CloneHelper()
+                        Entity clonedValue = (Entity) new CloneHelper()
                                 .shallowishBeanClone(currentValue);
                         Reflections.propertyAccessor().setPropertyValue(
                                 domainObject, propertyName, clonedValue);
@@ -287,14 +287,14 @@ public abstract class ClientTransformManager extends TransformManager {
 
     public void serializeDomainObjects(ClientInstance clientInstance)
             throws Exception {
-        Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> collectionMap = getDomainObjects()
+        Map<Class<? extends Entity>, Collection<Entity>> collectionMap = getDomainObjects()
                 .getCollectionMap();
         Map<Class, List> objCopy = new LinkedHashMap<Class, List>();
-        for (Class<? extends HasIdAndLocalId> clazz : collectionMap.keySet()) {
+        for (Class<? extends Entity> clazz : collectionMap.keySet()) {
             List values = CollectionFilters.filter(collectionMap.get(clazz),
-                    new CollectionFilter<HasIdAndLocalId>() {
+                    new CollectionFilter<Entity>() {
                         @Override
-                        public boolean allow(HasIdAndLocalId o) {
+                        public boolean allow(Entity o) {
                             return o.getId() != 0;
                         }
                     });
@@ -319,7 +319,7 @@ public abstract class ClientTransformManager extends TransformManager {
     }
 
     @Override
-    protected boolean allowUnregisteredHiliTargetObject() {
+    protected boolean allowUnregisteredEntityTargetObject() {
         return true;
     }
 
@@ -332,8 +332,8 @@ public abstract class ClientTransformManager extends TransformManager {
             WrapperPersistable persistableObject,
             AsyncCallback<Long> savedCallback);
 
-    protected boolean checkRemoveAssociation(HasIdAndLocalId hili,
-            HasIdAndLocalId target, ClientPropertyReflector propertyReflector) {
+    protected boolean checkRemoveAssociation(Entity entity,
+            Entity target, ClientPropertyReflector propertyReflector) {
         Association association = propertyReflector
                 .getAnnotation(Association.class);
         if (association != null && association.dereferenceOnDelete()) {
@@ -343,7 +343,7 @@ public abstract class ClientTransformManager extends TransformManager {
     }
 
     @Override
-    protected void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
+    protected void checkVersion(Entity obj, DomainTransformEvent event)
             throws DomainTransformException {
         if (isReplayingRemoteEvent() && obj instanceof HasVersionNumber
                 && CommonUtils.iv(event.getObjectVersionNumber()) > 0) {
@@ -353,9 +353,9 @@ public abstract class ClientTransformManager extends TransformManager {
     }
 
     @Override
-    protected void doCascadeDeletes(final HasIdAndLocalId hili) {
+    protected void doCascadeDeletes(final Entity entity) {
         final ClientBeanReflector beanReflector = ClientReflector.get()
-                .beanInfoForClass(hili.getClass());
+                .beanInfoForClass(entity.getClass());
         PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
         beanReflector.iterateForPropertyWithAnnotation(Association.class,
                 new HasAnnotationCallback<Association>() {
@@ -364,9 +364,9 @@ public abstract class ClientTransformManager extends TransformManager {
                             PropertyReflector propertyReflector) {
                         if (association.cascadeDeletes()) {
                             Object object = propertyReflector
-                                    .getPropertyValue(hili);
+                                    .getPropertyValue(entity);
                             if (object instanceof Set) {
-                                for (HasIdAndLocalId target : (Set<HasIdAndLocalId>) object) {
+                                for (Entity target : (Set<Entity>) object) {
                                     deleteObject(target, true);
                                 }
                             }
@@ -386,7 +386,7 @@ public abstract class ClientTransformManager extends TransformManager {
     }
 
     @Override
-    protected void maybeModifyAsPropertyChange(HasIdAndLocalId obj,
+    protected void maybeModifyAsPropertyChange(Entity obj,
             String propertyName, Object value,
             CollectionModificationType collectionModificationType) {
         if (isFirePropertyChangesOnConsumedCollectionMods()) {
@@ -396,9 +396,9 @@ public abstract class ClientTransformManager extends TransformManager {
     }
 
     @Override
-    protected void removeAssociations(HasIdAndLocalId hili) {
+    protected void removeAssociations(Entity entity) {
         ClientBeanReflector bi = ClientReflector.get()
-                .beanInfoForClass(hili.getClass());
+                .beanInfoForClass(entity.getClass());
         Collection<ClientPropertyReflector> propertyReflectors = bi
                 .getPropertyReflectors().values();
         for (ClientPropertyReflector propertyReflector : propertyReflectors) {
@@ -411,13 +411,13 @@ public abstract class ClientTransformManager extends TransformManager {
             if (!CommonUtils
                     .isStandardJavaClass(propertyReflector.getPropertyType())) {
                 Object object = Reflections.propertyAccessor().getPropertyValue(
-                        hili, propertyReflector.getPropertyName());
-                if (object instanceof HasIdAndLocalId) {
+                        entity, propertyReflector.getPropertyName());
+                if (object instanceof Entity) {
                     // do not null user/group properties, since they may be
                     // required for deletion permission checks, and should never
                     // be the collection owner of non-userland objects
-                    HasIdAndLocalId target = (HasIdAndLocalId) object;
-                    if (!checkRemoveAssociation(hili, target,
+                    Entity target = (Entity) object;
+                    if (!checkRemoveAssociation(entity, target,
                             propertyReflector)) {
                         continue;
                     }
@@ -425,7 +425,7 @@ public abstract class ClientTransformManager extends TransformManager {
                     if (!wasRegistered) {
                         registerDomainObject(target);
                     }
-                    propertyReflector.setPropertyValue(hili, null);
+                    propertyReflector.setPropertyValue(entity, null);
                     if (!wasRegistered) {
                         deregisterDomainObject(target);
                     }
@@ -447,20 +447,20 @@ public abstract class ClientTransformManager extends TransformManager {
             lkp = new UnsortedMultikeyMap(3);
         }
 
-        public void update(HasIdAndLocalId hili, String propertyName,
+        public void update(Entity entity, String propertyName,
                 final AsyncCallback callback, final boolean fireTransforms) {
-            if (hili.getId() == 0) {
+            if (entity.getId() == 0) {
                 callback.onSuccess(null);
                 return;
             }
-            final Object[] spec = { hili.getClass(), hili.getId(),
+            final Object[] spec = { entity.getClass(), entity.getId(),
                     propertyName };
             if (lkp.containsKey(spec)) {
                 callback.onSuccess(null);
                 return;
             }
             Collection value = (Collection) Reflections.propertyAccessor()
-                    .getPropertyValue(hili, propertyName);
+                    .getPropertyValue(entity, propertyName);
             if (value != null && !value.isEmpty()) {
                 callback.onSuccess(null);
                 return;
@@ -526,7 +526,7 @@ public abstract class ClientTransformManager extends TransformManager {
                 }
             };
             List<ObjectDeltaSpec> specs = new ArrayList<ObjectDeltaSpec>();
-            specs.add(new ObjectDeltaSpec(hili, propertyName));
+            specs.add(new ObjectDeltaSpec(entity, propertyName));
             notifier.modalOn();
             ClientBase.getCommonRemoteServiceAsyncInstance()
                     .getObjectDelta(specs, innerCallback);

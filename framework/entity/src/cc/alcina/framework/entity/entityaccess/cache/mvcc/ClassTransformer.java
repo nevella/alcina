@@ -19,12 +19,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.persistence.Transient;
 
 import com.github.javaparser.StaticJavaParser;
+import com.github.javaparser.ast.AccessSpecifier;
 import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
@@ -34,24 +35,29 @@ import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.MethodReferenceExpr;
+import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.SuperExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
 import com.github.javaparser.ast.stmt.ReturnStmt;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
-import com.github.javaparser.resolution.MethodUsage;
+import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
+import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
+import com.github.javaparser.resolution.declarations.ResolvedValueDeclaration;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserClassDeclaration;
-import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserMethodDeclaration;
+import com.github.javaparser.symbolsolver.model.resolution.SymbolReference;
 import com.github.javaparser.symbolsolver.reflectionmodel.ReflectionClassDeclaration;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -59,6 +65,7 @@ import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccCorrectnessIssue.MvccCorrectnessIssueType;
 import cc.alcina.framework.entity.util.AlcinaParallel;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.FsObjectCache;
@@ -98,8 +105,6 @@ class ClassTransformer {
 
 	private JavaParserFacade solver;
 
-	private boolean addObjectResolutionChecks;
-
 	private List<Runnable> compilationRunnables = new ArrayList<>();
 
 	public ClassTransformer(Mvcc mvcc) {
@@ -118,7 +123,7 @@ class ClassTransformer {
 		}
 	}
 
-	public <T extends HasIdAndLocalId> T create(Class<T> clazz) {
+	public <T extends Entity> T create(Class<T> clazz) {
 		try {
 			return (T) classTransforms.get(clazz).transformedClass
 					.newInstance();
@@ -137,8 +142,8 @@ class ClassTransformer {
 				.collect(Collectors.toMap(k -> k, ClassTransform::new));
 		for (ClassTransform ct : classTransforms.values()) {
 			ct.setTransformer(this);
-			ct.init();
-			ct.checkFieldAndMethodAccess();
+			ct.init(false);
+			ct.checkFieldAndMethodAccess(true);
 			ct.generateMvccClass();
 		}
 		if (classTransforms.values().stream().anyMatch(ct -> ct.invalid)) {
@@ -153,33 +158,27 @@ class ClassTransformer {
 		}
 	}
 
-	public boolean isAddObjectResolutionChecks() {
-		return this.addObjectResolutionChecks;
-	}
-
-	public void
-			setAddObjectResolutionChecks(boolean addObjectResolutionChecks) {
-		this.addObjectResolutionChecks = addObjectResolutionChecks;
-	}
-
-	public String testClassTransform(Class<? extends HasIdAndLocalId> clazz,
+	public String testClassTransform(Class<? extends Entity> clazz,
 			MvccCorrectnessIssueType issueType) {
-		ClassTransform<? extends HasIdAndLocalId> ct = new ClassTransform<>(
+		ClassTransform<? extends Entity> ct = new ClassTransform<>(
 				clazz);
 		StringBuilder logBuilder = new StringBuilder();
 		ct.correctnessIssueTopic.add((k, issue) -> {
 			if (issue.type == issueType) {
 				logBuilder.append(issue.message);
 			}
+			if (issue.type.isUnknown()) {
+				Ax.err("Unknown type: %s %s", issue.type, issue.message);
+			}
 		});
 		ct.setTransformer(this);
-		ct.init();
-		ct.checkFieldAndMethodAccess();
+		ct.init(true);
+		ct.checkFieldAndMethodAccess(false);
 		ct.generateMvccClass();
 		return logBuilder.toString();
 	}
 
-	<H extends HasIdAndLocalId> Class<? extends H>
+	<H extends Entity> Class<? extends H>
 			getTransformedClass(Class<H> originalClass) {
 		return classTransforms.get(originalClass).transformedClass;
 	}
@@ -198,9 +197,11 @@ class ClassTransformer {
 					return ResourceUtilities
 							.readUrlAsString(sourceFileLocation.toString());
 				}
-				sourceFileLocation = new URL(
-						sourceFileLocation.toString().replace("/bin/", "/src/")
-								.replace("/build/classes/", "/src/"));
+				sourceFileLocation = new URL(sourceFileLocation.toString()
+						.replace("/alcina/bin/",
+								"/alcina/framework/entity/src/")
+						.replace("/bin/", "/src/")
+						.replace("/build/classes/", "/src/"));
 				if (new File(toPath(sourceFileLocation)).exists()) {
 					return ResourceUtilities
 							.readUrlAsString(sourceFileLocation.toString());
@@ -216,7 +217,7 @@ class ClassTransformer {
 		}
 	}
 
-	static class ClassTransform<H extends HasIdAndLocalId> {
+	static class ClassTransform<H extends Entity> {
 		private static final transient int VERSION = 7;
 
 		transient TopicSupport<MvccCorrectnessIssue> correctnessIssueTopic = TopicSupport
@@ -266,7 +267,7 @@ class ClassTransformer {
 					.forEach(f -> {
 						fieldsWithProblematicAccess.add(f.getName());
 						correctnessIssueTopic.publish(new MvccCorrectnessIssue(
-								MvccCorrectnessIssueType.invalid_field_access,
+								MvccCorrectnessIssueType.Invalid_field_access,
 								Ax.format("Incorrect access: field '%s'",
 										f.getName())));
 					});
@@ -287,7 +288,7 @@ class ClassTransformer {
 					&& source != null;
 		}
 
-		void checkFieldAndMethodAccess() {
+		void checkFieldAndMethodAccess(boolean logWarnings) {
 			if (isSameSourceAsLastRun()) {
 				methodsWithProblematicAccess = lastRun.methodsWithProblematicAccess;
 				fieldsWithProblematicAccess = lastRun.fieldsWithProblematicAccess;
@@ -299,25 +300,30 @@ class ClassTransformer {
 							.forEach(classDeclaration -> {
 								String typeName = classDeclaration.getName()
 										.asString();
-								Ax.out("checking correctness: %s", typeName);
+								if (logWarnings) {
+									Ax.out("checking correctness: %s",
+											typeName);
+								}
 								classDeclaration
 										.accept(new CheckAccessVisitor(), null);
 							});
 				}
 			}
-			if (methodsWithProblematicAccess.size() > 0) {
-				Ax.err("\n======================\nClass: %s\nMethodsWithProblematicAccess:\n======================",
-						originalClass.getName());
-				methodsWithProblematicAccess.forEach(Ax::err);
-				Ax.out("\n");
-				invalid = true;
-			}
-			if (fieldsWithProblematicAccess.size() > 0) {
-				Ax.err("\n======================\nClass: %s\nFieldsWithProblematicAccess:\n======================",
-						originalClass.getName());
-				fieldsWithProblematicAccess.forEach(Ax::err);
-				Ax.out("\n");
-				invalid = true;
+			if (logWarnings) {
+				if (fieldsWithProblematicAccess.size() > 0) {
+					Ax.err("\n======================\nClass: %s\nFieldsWithProblematicAccess:\n======================",
+							originalClass.getName());
+					fieldsWithProblematicAccess.forEach(Ax::err);
+					Ax.out("\n");
+					invalid = true;
+				}
+				if (methodsWithProblematicAccess.size() > 0) {
+					Ax.err("\n======================\nClass: %s\nMethodsWithProblematicAccess:\n======================",
+							originalClass.getName());
+					methodsWithProblematicAccess.forEach(Ax::err);
+					Ax.out("\n");
+					invalid = true;
+				}
 			}
 		}
 
@@ -337,11 +343,13 @@ class ClassTransformer {
 			}
 		}
 
-		void init() {
+		void init(boolean ignoreLastRun) {
 			try {
 				this.source = findSource();
 				this.lastRun = transformer.cache.get(originalClass.getName());
-				// this.lastRun = null;
+				if (ignoreLastRun) {
+					this.lastRun = null;
+				}
 				if (this.lastRun != null && this.lastRun.version != VERSION) {
 					this.lastRun = null;
 				}
@@ -363,113 +371,87 @@ class ClassTransformer {
 			}
 		}
 
-		// TODO - all non-static inner classes must throw exceptions on identity
-		// (equals, hashcode) operations. Probably by extending a base class.
-		// Should (but can't) check for assignment of said inner classes - but
-		// enough to document as a no-no-no
-		private class CheckAccessExpressionVisitor
-				extends VoidVisitorAdapter<Void> {
+		private class CheckAccessVisitor extends VoidVisitorAdapter<Void> {
 			private MethodDeclaration methodDeclaration;
 
-			public CheckAccessExpressionVisitor(
-					MethodDeclaration methodDeclaration) {
-				this.methodDeclaration = methodDeclaration;
+			private ClassOrInterfaceDeclaration classOrInterfaceDeclaration;
+
+			private boolean expressionIsInNestedType;
+
+			public CheckAccessVisitor() {
 			}
 
 			@Override
+			// checkd as a subtype of 'NameExpr' checks (since field access can
+			// be without a this.xxx form)
+			//
+			/*
+			 * 
+			 * 
+			 * Transactional access::
+			 * 
+			 * Two main issues: field access and object identity
+			 * 
+			 * Identity: for objects created or registered in the domain
+			 * store transaction manager, there is only *one instance* of
+			 * the object used for equality (currently this only applies to
+			 * objects created in tx phase 'TO_DOMAIN_COMMITTING' - i.e.
+			 * with a non-zero id field - but will be extended so that
+			 * objects created with an initial non-zero localid will be the
+			 * unique 'domain identity' object). All references between
+			 * graph objects use that 'domain identity' object - FIXME do
+			 * that change now, simplifies queries etc.
+			 * 
+			 * The effect of that constraint on the class rewriter is quite
+			 * profound - we can't allow any reference to 'this' from
+			 * transactional object versions to escape from code - and that
+			 * includes inner classes. Consequent constraints are:
+			 * 
+			 * @formatter:off
+			 * - inner class creation must be in dedicated public/protected methods in the entity class which 
+			 * *only* return the inner class (and are hooked through 'domainIdentity().xxx' by the rewriter) 
+			 * - entity field access can only occur in the main class. no inner class can access entity class fields
+			 * - 'this' can't be assigned or returned
+			 * 
+			 * @formatter:on
+			 * 
+			 * TODO: Have a think: transient cache fields (e.g. demeter payment.earnedRevenueAlgorithmData) - how can we ensure correctness
+			 * TODO: rewrite rewriter to go getXX->resolveTx.__super__getXX (which calls super.getXX)
+			 * 
+			 * 
+			 * ..forbid assignment of this
+			 * 
+			 * ... inner classes
+			 * 
+			 * forbid return value of this
+			 * 
+			 * 
+			 * 
+			 * 
+			 */
 			public void visit(FieldAccessExpr expr, Void arg) {
-				if (isPartOfAnnotationExpression(expr)) {
-					// constant expression
+				super.visit(expr, arg);
+			}
+
+			@Override
+			public void visit(MethodCallExpr expr, Void arg) {
+				super.visit(expr, arg);
+				if (isDefinedOk(expr)) {
 					return;
 				}
-				/*
-				 * 
-				 * TODO - make this formal
-				 * 
-				 * Transactional access::
-				 * 
-				 * Two main issues: field access and object identity
-				 * 
-				 * Identity: for objects created or registered in the domain
-				 * store transaction manager, there is only *one instance* of
-				 * the object used for equality (currently this only applies to
-				 * objects created in tx phase 'TO_DOMAIN_COMMITTING' - i.e.
-				 * with a non-zero id field - but will be extended so that
-				 * objects created with an initial non-zero localid will be the
-				 * unique 'domain identity' object). All references between
-				 * graph objects use that 'domain identity' object - FIXME do
-				 * that change now, simplifies queries etc.
-				 * 
-				 * The effect of that constraint on the class rewriter is quite
-				 * profound - we can't allow any reference to 'this' from
-				 * transactional object versions to escape from code - and that
-				 * includes inner classes. Consequent constraints are:
-				 * 
-				 * @formatter:off
-				 * - inner class creation must be in dedicated public/protected methods in the entity class which 
-				 * *only* return the inner class (and are hooked through 'domainIdentity().xxx' by the rewriter) 
-				 * - entity field access can only occur in the main class. no inner class can access entity class fields
-				 * - 'this' can't be assigned or returned
-				 * 
-				 * @formatter:on
-				 * 
-				 * TODO: Have a think: transient cache fields (e.g. demeter payment.earnedRevenueAlgorithmData) - how can we ensure correctness
-				 * TODO: rewrite rewriter to go getXX->resolveTx.__super__getXX (which calls super.getXX)
-				 * 
-				 * 
-				 * ..forbid assignment of this
-				 * 
-				 * ... inner classes
-				 * 
-				 * forbid return value of this
-				 * 
-				 * 
-				 * 
-				 * 
-				 */
 				try {
-					ResolvedType fieldType = transformer.solver.getType(expr);
-					ResolvedType scopeType = transformer.solver
-							.getType(expr.getScope());
-					boolean scopeTypeIsDomain = false;
-					boolean fieldTypeIsDomain = false;
-					if (fieldType.isReferenceType()) {
-						ResolvedReferenceTypeDeclaration fieldTypeDeclaration = fieldType
-								.asReferenceType().getTypeDeclaration();
-						if (fieldTypeDeclaration instanceof ReflectionClassDeclaration) {
-							Class clazz = (Class) transformer.referenceTypeClazzAccessor
-									.get(fieldTypeDeclaration);
-							fieldTypeIsDomain = HasIdAndLocalId.class
-									.isAssignableFrom(clazz);
-						}
-					}
-					if (scopeType.isReferenceType()) {
-						ResolvedReferenceTypeDeclaration scopeTypeDeclaration = scopeType
-								.asReferenceType().getTypeDeclaration();
-						if (scopeTypeDeclaration instanceof ReflectionClassDeclaration) {
-							Class clazz = (Class) transformer.referenceTypeClazzAccessor
-									.get(scopeTypeDeclaration);
-							scopeTypeIsDomain = HasIdAndLocalId.class
-									.isAssignableFrom(clazz);
-						} else if (scopeTypeDeclaration instanceof JavaParserClassDeclaration) {
-							scopeTypeIsDomain = true;
-						}
-					}
-					if (scopeTypeIsDomain) {
-						if (expr.getScope() instanceof ThisExpr) {
-							// OK
-							return;
-						} else {
-							// nope
-							//
-							if (methodDeclaration
-									.getAnnotationByClass(
-											MvccAccessCorrect.class)
-									.isPresent()) {
-							} else {
-								addProblematicAccess();
-							}
-						}
+					SymbolReference<ResolvedMethodDeclaration> ref = transformer.solver
+							.solve(expr);
+					ResolvedMethodDeclaration decl = ref
+							.getCorrespondingDeclaration();
+					boolean privateMethod = decl
+							.accessSpecifier() == AccessSpecifier.PRIVATE;
+					boolean entityMethod = decl.declaringType()
+							.getQualifiedName().equals(originalClass.getName());
+					if (privateMethod && entityMethod
+							&& expressionIsInNestedType) {
+						addProblematicAccess(
+								MvccCorrectnessIssueType.InnerClassOuterPrivateMethodAccess);
 					}
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
@@ -477,130 +459,203 @@ class ClassTransformer {
 			}
 
 			@Override
-			public void visit(MethodCallExpr expr, Void arg) {
-				if (isPartOfAnnotationExpression(expr)) {
+			public void visit(MethodReferenceExpr expr, Void arg) {
+				super.visit(expr, arg);
+				if (isDefinedOk(expr)) {
+					return;
+				}
+				// by wriggling, we could access private methods here...but have
+				// to try reaally hard
+				//
+				// MvccTestEntity.this::disallowedInnerAccessMethod
+				// since solver doesn't work nicely for these, just forbid
+				if (expressionIsInNestedType) {
+					if (expr.toString().matches(".+\\.this::.+")) {
+						addProblematicAccess(
+								MvccCorrectnessIssueType.InnerClassOuterPrivateMethodRef);
+					}
+				}
+			}
+
+			@Override
+			public void visit(NameExpr expr, Void arg) {
+				super.visit(expr, arg);
+				if (isDefinedOk(expr)) {
 					// constant expression
 					return;
 				}
-				if (expr.getScope().isPresent()) {
-					Expression scope = expr.getScope().get();
-					if (scope instanceof ThisExpr) {
-					} else {
-						if (expr.toString().contains("pathIs0")) {
-							try {
-								ResolvedType scopeType = transformer.solver
-										.getType(scope);
-								ResolvedReferenceTypeDeclaration scopeTypeDeclaration = scopeType
-										.asReferenceType().getTypeDeclaration();
-								if (scopeTypeDeclaration instanceof ReflectionClassDeclaration) {
-									Class clazz = (Class) transformer.referenceTypeClazzAccessor
-											.get(scopeTypeDeclaration);
-									int debug = 3;
-								} else if (scopeTypeDeclaration instanceof JavaParserClassDeclaration) {
-									JavaParserClassDeclaration parserClassDeclaration = (JavaParserClassDeclaration) scopeTypeDeclaration;
-									MethodUsage methodUsage = parserClassDeclaration
-											.getAllMethods().stream()
-											.filter(mu -> mu.getName().equals(
-													expr.getNameAsString())
-													&& mu.getParamTypes()
-															.equals(expr
-																	.getArguments()
-																	.stream()
-																	.map(ex -> transformer.solver
-																			.getType(
-																					ex))
-																	.collect(
-																			Collectors
-																					.toList())))
-											.findFirst().get();
-									JavaParserMethodDeclaration declaration = (JavaParserMethodDeclaration) methodUsage
-											.getDeclaration();
-									String signature = declaration
-											.getSignature();
-									boolean privateMethod = declaration
-											.getWrappedNode().getModifiers()
-											.stream().anyMatch(m -> m
-													.getKeyword() == Keyword.PRIVATE);
-									if (privateMethod) {
-										addProblematicAccess();
-									}
-								}
-							} catch (Exception e) {
-								throw new WrappedRuntimeException(e);
-							}
+				if (expr.getNameAsString()
+						.equals("disallowedInnerAccessField")) {
+					SymbolReference<? extends ResolvedValueDeclaration> ref = transformer.solver
+							.solve(expr);
+					if (ref.getCorrespondingDeclaration().isField()) {
+						ResolvedFieldDeclaration field = ref
+								.getCorrespondingDeclaration().asField();
+						if (expressionIsInNestedType
+								&& field.declaringType().getQualifiedName()
+										.equals(originalClass.getName())) {
+							addProblematicAccess(
+									MvccCorrectnessIssueType.InnerClassOuterFieldAccess);
 						}
 					}
 				}
 			}
 
 			@Override
-			public void visit(SuperExpr expr, Void arg) {
-				if (isPartOfAnnotationExpression(expr)) {
+			public void visit(ObjectCreationExpr expr, Void arg) {
+				super.visit(expr, arg);
+				if (isDefinedOk(expr)) {
 					// constant expression
 					return;
 				}
+				ClassOrInterfaceType type = expr.getType();
+				ResolvedType creationType = transformer.solver.getType(expr);
+				ResolvedReferenceTypeDeclaration creationTypeDeclaration = creationType
+						.asReferenceType().getTypeDeclaration();
+				if (creationTypeDeclaration instanceof JavaParserClassDeclaration) {
+					try {
+						String qualifiedName = creationTypeDeclaration
+								.getQualifiedName();
+						FormatBuilder fb = new FormatBuilder().separator(".");
+						for (String part : qualifiedName.split("\\.")) {
+							fb.append(part);
+							if (part.matches("[A-Z].+")) {
+								fb.separator("$");
+							}
+						}
+						Class clazz = Class.forName(fb.toString());
+						boolean innerNonStatic = false;
+						while (clazz.getEnclosingClass() != null) {
+							if ((clazz.getModifiers() & Modifier.STATIC) != 0) {
+								break;
+							}
+							clazz = clazz.getEnclosingClass();
+							if (clazz == originalClass) {
+								innerNonStatic = true;
+								break;
+							}
+						}
+						if (innerNonStatic) {
+							// not allowed, must be annotated with
+							// @MvccAccessCorrect - see
+							// cc.alcina.framework.entity.entityaccess.mvcc.MvccTestEntity.valid_InnerConstructor()
+							addProblematicAccess(
+									MvccCorrectnessIssueType.InnerClassConstructor);
+						}
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+			}
+
+			@Override
+			public void visit(SuperExpr expr, Void arg) {
+				super.visit(expr, arg);
+				if (isDefinedOk(expr)) {
+					// constant expression
+					return;
+				}
+				addProblematicAccess(MvccCorrectnessIssueType.Super_usage);
 				Node parent = expr.getParentNode().get();
 				if (parent instanceof ReturnStmt) {
-					addProblematicAccess();
 				}
 				int debug = 3;
 			}
 
 			@Override
 			public void visit(ThisExpr expr, Void arg) {
-				if (isPartOfAnnotationExpression(expr)) {
-					// constant expression
+				super.visit(expr, arg);
+				if (isDefinedOk(expr)) {
 					return;
 				}
 				Node parent = expr.getParentNode().get();
+				// OK -- e.g. this.id
+				if (parent instanceof FieldAccessExpr) {
+					return;
+				}
+				// OK -- e.g. this.getId()
+				if (parent instanceof MethodCallExpr) {
+					return;
+				}
+				// OK -- e.g. MvccTestEntity.this::someMethod (we check access
+				// elsewhere)
+				if (parent instanceof MethodReferenceExpr) {
+					return;
+				}
 				if (parent instanceof ReturnStmt) {
-					addProblematicAccess();
+					addProblematicAccess(
+							MvccCorrectnessIssueType.This_ReturnStmt);
 				} else if (parent instanceof VariableDeclarator) {
-					addProblematicAccess();
+					addProblematicAccess(
+							MvccCorrectnessIssueType.This_VariableDeclarator);
 				} else if (parent instanceof AssignExpr) {
-					addProblematicAccess();
+					addProblematicAccess(
+							MvccCorrectnessIssueType.This_AssignExpr);
 				} else if (parent instanceof BinaryExpr) {
-					addProblematicAccess();
+					addProblematicAccess(
+							MvccCorrectnessIssueType.This_BinaryExpr);
 				} else if (parent instanceof MethodCallExpr) {
-					addProblematicAccess();
+					addProblematicAccess(
+							MvccCorrectnessIssueType.This_assignment_unknown);
 				} else if (parent instanceof ObjectCreationExpr) {
-					// new Test(this);
-					addProblematicAccess();
+					addProblematicAccess(
+							MvccCorrectnessIssueType.This_assignment_unknown);
 				} else {
 					// unknown
 					throw new UnsupportedOperationException();
 				}
 			}
 
-			private boolean isPartOfAnnotationExpression(Expression expr) {
+			private boolean isDefinedOk(Expression expr) {
+				boolean isInAnnotationExpression = false;
+				boolean mvccAccessCorrectAnnotationPresent = false;
 				Optional<Node> cursor = Optional.<Node> ofNullable(expr);
 				while (cursor.isPresent()) {
 					Node node = cursor.get();
+					if (node instanceof MethodDeclaration) {
+						methodDeclaration = (MethodDeclaration) node;
+						mvccAccessCorrectAnnotationPresent = methodDeclaration
+								.getAnnotationByClass(MvccAccessCorrect.class)
+								.isPresent();
+					}
+					if (node instanceof ClassOrInterfaceDeclaration) {
+						classOrInterfaceDeclaration = (ClassOrInterfaceDeclaration) node;
+						expressionIsInNestedType = classOrInterfaceDeclaration
+								.isNestedType();
+						break;
+					}
 					if (node instanceof NormalAnnotationExpr) {
-						return true;
+						isInAnnotationExpression = true;
 					}
 					cursor = node.getParentNode();
 				}
-				return false;
+				return isInAnnotationExpression
+						|| mvccAccessCorrectAnnotationPresent;
 			}
 
-			protected void addProblematicAccess() {
+			protected void addProblematicAccess(MvccCorrectnessIssueType type) {
 				methodsWithProblematicAccess
 						.add(methodDeclaration.getDeclarationAsString());
+				correctnessIssueTopic.publish(new MvccCorrectnessIssue(type,
+						Ax.format("Incorrect access: method '%s'",
+								decorateLocation())));
 			}
-		}
 
-		private class CheckAccessVisitor extends VoidVisitorAdapter<Void> {
-			@Override
-			public void visit(MethodDeclaration methodDeclaration, Void arg) {
-				if (methodDeclaration
-						.getAnnotationByClass(MvccAccessCorrect.class)
-						.isPresent()) {
-					return;
+			String decorateLocation() {
+				return methodDeclaration == null ? "(no method)"
+						: methodDeclaration.getDeclarationAsString();
+			}
+
+			@SuppressWarnings("unused")
+			class T1 {
+				void yum(int a) {
 				}
-				methodDeclaration.accept(
-						new CheckAccessExpressionVisitor(methodDeclaration),
-						null);
+
+				class T2 {
+					void test() {
+						IntStream.of(1, 2).forEach(T1.this::yum);
+					}
+				}
 			}
 		}
 
@@ -609,14 +664,8 @@ class ClassTransformer {
 		 * <ul>
 		 * <li>clazz__ extends clazz implements MvccObject
 		 * <li>implementation of MvccObject
-		 * <li>getters (of domain objects and domain object sets) are rewritten
-		 * to return resolved instances and resolving sets
-		 * <li>setters are rewritten to ensure write is written to
-		 * transaction-writable version
-		 * <li>(optional) rewrite all non-private methods to check transactional
-		 * validity of object
-		 * <li>...more thinking, intercept *all* external calls to resolve -
-		 * handles cross-tx and writable/non-writable versions
+		 * <li>non-private methods are rewritten to apply call to transactional
+		 * version of object
 		 * </ul>
 		 * 
 		 * @author nick@alcina.cc
@@ -670,7 +719,7 @@ class ClassTransformer {
 						ctClass.addMethod(newMethod);
 					});
 					/*
-					 * override HasIdAndLocalId
+					 * override Entity
 					 */
 					tasks.add(() -> {
 						String body = Ax.format("{\n\treturn %s.class;}",
@@ -708,10 +757,13 @@ class ClassTransformer {
 					 * Wrap non-private methods to ensure dispatch to
 					 * transactionally correct object.
 					 * 
-					 * FIXME - temporarily ignore @transient getters and setters
-					 * - this is incorrect (real solution is an extension of
-					 * DomainStore.postProcess to include transactional writes
-					 * to db-transient fields - only applied
+					 * FIXME.mvcc - temporarily ignore @transient getters and
+					 * setters - this is incorrect (real solution is an
+					 * extension of DomainStore.postProcess to include
+					 * transactional writes to db-transient fields - only
+					 * applied to jvm which sourced the transforms
+					 * 
+					 * 
 					 */
 					List<Method> allClassMethods = SEUtilities
 							.allClassMethods(originalClass);
@@ -769,20 +821,9 @@ class ClassTransformer {
 							}
 						}
 						FormatBuilder bodyBuilder = new FormatBuilder();
-						// FIXME - deprecated. It'd be nice (performance) to not
-						// have to check every external access, but I think we
-						// have to
-						//
-						// FIXME - 2 - just get rid of it
-						if (transformer.addObjectResolutionChecks) {
-							bodyBuilder.line(
-									"cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions.checkResolved(this);");
-						}
 						// TODO - We assume only setters modify fields - which
 						// is true of how anything that respects property
 						// changes must work
-						boolean getter = method.getName().matches("get[A-Z].*")
-								&& method.getParameterTypes().length == 0;
 						boolean setter = method.getName().matches("set[A-Z].*")
 								&& method.getParameterTypes().length == 1;
 						boolean writeResolve = setter;
@@ -811,6 +852,10 @@ class ClassTransformer {
 						 * inlined and (b) need an instance variable of the new
 						 * type (so we can call the method) which javassist
 						 * don't like
+						 * 
+						 * We could write another super_call method - but
+						 * remember, 99.9% of the time we don't reach this
+						 * point...
 						 */
 						bodyBuilder.line(
 								"%s __instance__ = (%s) cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions.resolve(this,%s);",
@@ -921,24 +966,5 @@ class ClassTransformer {
 				return getClassName(ctClass).equals(clazz.getName());
 			}
 		}
-	}
-
-	static class MvccCorrectnessIssue {
-		MvccCorrectnessIssueType type;
-
-		String message;
-
-		public MvccCorrectnessIssue() {
-		}
-
-		public MvccCorrectnessIssue(MvccCorrectnessIssueType type,
-				String message) {
-			this.type = type;
-			this.message = message;
-		}
-	}
-
-	enum MvccCorrectnessIssueType {
-		invalid_field_access
 	}
 }

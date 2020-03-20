@@ -5,12 +5,18 @@ import java.util.Set;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalMap;
 
+/*
+ * 
+ *	objects created in phase TO_DB_PREPARING (with a local id) are indexed with the negative of their local id
+ *
+ *
+ *
+ */
 public class DetachedEntityCacheTransactionalMap extends DetachedEntityCache
 		implements DomainStoreCache {
 	/*
 	 * return a set view of the real thing
 	 * 
-	 * FIXME
 	 */
 	@Override
 	public <T> Set<T> values(Class<T> clazz) {

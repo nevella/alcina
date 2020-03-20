@@ -7,7 +7,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
@@ -24,8 +24,8 @@ public class PropertyFieldUpdater implements FieldUpdater {
 
 	@Override
 	public void update(int index, Object object, Object value) {
-		HasIdAndLocalId hili = (HasIdAndLocalId) object;
-		TransformManager.get().registerDomainObject(hili);
+		Entity entity = (Entity) object;
+		TransformManager.get().registerDomainObject(entity);
 		if (field != null) {
 			if (field.getValidator() != null) {
 				try {
@@ -44,7 +44,7 @@ public class PropertyFieldUpdater implements FieldUpdater {
 						CommonUtils.nullSafeToString(value));
 			}
 		}
-		Reflections.propertyAccessor().setPropertyValue(hili, propertyName,
+		Reflections.propertyAccessor().setPropertyValue(entity, propertyName,
 				value);
 	}
 }

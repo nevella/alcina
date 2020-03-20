@@ -1,9 +1,9 @@
 package cc.alcina.framework.jvmclient.domaintransform;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 
 
 public class ThreadedClientTransformManager
@@ -22,21 +22,21 @@ public class ThreadedClientTransformManager
         }
     };
 
-    HiliLocatorMap userSessionHiliMap = new HiliLocatorMap();
+    EntityLocatorMap userSessionEntityMap = new EntityLocatorMap();
 
     @Override
-    public synchronized <H extends HasIdAndLocalId> long getLocalIdForClientInstance(
-            H hili) {
-        return userSessionHiliMap.getLocalIdForClientInstance(hili);
+    public synchronized <H extends Entity> long getLocalIdForClientInstance(
+            H entity) {
+        return userSessionEntityMap.getLocalIdForClientInstance(entity);
     }
 
     @Override
-    public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+    public <T extends Entity> T getObject(Class<? extends T> c,
             long id, long localId) {
         if (this.getDomainObjects() != null) {
             T object = getDomainObjects().getObject(c, id, localId);
             if (object == null && localId != 0 && id == 0) {
-                HiliLocator hiliLocator = userSessionHiliMap
+                EntityLocator hiliLocator = userSessionEntityMap
                         .getForLocalId(localId);
                 if (hiliLocator != null) {
                     return getDomainObjects().getObject(c, hiliLocator.getId(),
@@ -60,9 +60,9 @@ public class ThreadedClientTransformManager
     }
 
     @Override
-    public synchronized void registerHiliMappingPriorToLocalIdDeletion(
+    public synchronized void registerEntityMappingPriorToLocalIdDeletion(
             Class clazz, long id, long localId) {
-        userSessionHiliMap.putToLookups(new HiliLocator(clazz, id, localId));
+        userSessionEntityMap.putToLookups(new EntityLocator(clazz, id, localId));
     }
 
     @Override

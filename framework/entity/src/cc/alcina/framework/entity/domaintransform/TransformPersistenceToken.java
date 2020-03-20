@@ -15,7 +15,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
@@ -27,7 +27,7 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 public class TransformPersistenceToken implements Serializable {
 	private final DomainTransformRequest request;
 
-	private HiliLocatorMap locatorMap;
+	private EntityLocatorMap locatorMap;
 
 	private int dontFlushTilNthTransform = 0;
 
@@ -60,7 +60,7 @@ public class TransformPersistenceToken implements Serializable {
 	private transient DomainStore targetStore = null;
 
 	public TransformPersistenceToken(DomainTransformRequest request,
-			HiliLocatorMap locatorMap,
+			EntityLocatorMap locatorMap,
 			TransformLoggingPolicy transformLoggingPolicy, boolean asyncClient,
 			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
 			Logger logger, boolean blockUntilAllListenersNotified) {
@@ -89,7 +89,7 @@ public class TransformPersistenceToken implements Serializable {
 		return this.ignoreInExceptionPass;
 	}
 
-	public HiliLocatorMap getLocatorMap() {
+	public EntityLocatorMap getLocatorMap() {
 		return this.locatorMap;
 	}
 
@@ -168,7 +168,7 @@ public class TransformPersistenceToken implements Serializable {
 		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
 	}
 
-	public void setLocatorMap(HiliLocatorMap locatorMap) {
+	public void setLocatorMap(EntityLocatorMap locatorMap) {
 		this.locatorMap = locatorMap;
 	}
 

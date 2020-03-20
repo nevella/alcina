@@ -11,7 +11,7 @@ import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.search.LockingDomainQuery;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
@@ -24,7 +24,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.Search
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.SearchUtilsRegExpHelperSingleThreaded;
 
 @RegistryLocation(registryPoint = LockingDomainQuery.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-public class LockingDomainQueryParallel<V extends HasIdAndLocalId>
+public class LockingDomainQueryParallel<V extends Entity>
 		extends LockingDomainQuery<V> {
 	private CachingConcurrentMap<Thread, DomainQueryThread> contexts = new CachingConcurrentMap<Thread, DomainQueryThread>(
 			DomainQueryThread::new, 20);

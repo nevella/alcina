@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.publication.Publication;
@@ -111,7 +111,7 @@ public interface CommonPersistenceLocal {
 
 	public long getLastTransformId();
 
-	public HiliLocatorMap getLocatorMap(Long clientInstanceId);
+	public EntityLocatorMap getLocatorMap(Long clientInstanceId);
 
 	public abstract LongPair getMinMaxIdRange(Class clazz);
 
@@ -175,7 +175,7 @@ public interface CommonPersistenceLocal {
 			Long id, GraphProjectionFieldFilter fieldFilter,
 			GraphProjectionDataFilter dataFilter);
 
-	public HiliLocatorMap reconstituteHiliMap(long l2);
+	public EntityLocatorMap reconstituteEntityMap(long l2);
 
 	public void remove(Object o);
 

@@ -48,12 +48,12 @@ import org.hibernate.tuple.IdentifierProperty;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -102,9 +102,9 @@ public class JPAHibernateImpl implements JPAImplementation {
 
     @Override
     public boolean areEquivalentIgnoreInstantiationState(Object o1, Object o2) {
-        if (o1 instanceof HasIdAndLocalId && o2 instanceof HasIdAndLocalId) {
-            HiliLocator l1 = toHiliLocator(o1);
-            HiliLocator l2 = toHiliLocator(o2);
+        if (o1 instanceof Entity && o2 instanceof Entity) {
+            EntityLocator l1 = toEntityLocator(o1);
+            EntityLocator l2 = toEntityLocator(o2);
             return CommonUtils.equalsWithNullEquality(l1, l2);
         }
         return CommonUtils.equalsWithNullEquality(o1, o2);
@@ -151,7 +151,7 @@ public class JPAHibernateImpl implements JPAImplementation {
             persistenSetProjectionCreator = Registry
                     .impl(PersistenSetProjectionCreator.class);
         }
-        if (GraphProjection.isGenericHiliType(context.field)) {
+        if (GraphProjection.isGenericEntityType(context.field)) {
             return persistenSetProjectionCreator
                     .createPersistentSetProjection(context);
         } else {
@@ -169,13 +169,13 @@ public class JPAHibernateImpl implements JPAImplementation {
                 Class clazz = lazy.getPersistentClass();
                 return String.format("\tclass: %s\n\tid:\t%s\n\n", clazz, id);
             }
-            if (object instanceof HasIdAndLocalId) {
+            if (object instanceof Entity) {
                 return object.toString();
             }
         } catch (Exception e) {
             // stale transaction e.g.
-            if (object instanceof HasIdAndLocalId) {
-                HiliHelper.asDomainPoint((HasId) object);
+            if (object instanceof Entity) {
+                EntityHelper.asDomainPoint((HasId) object);
             }
         }
         return null;
@@ -230,9 +230,9 @@ public class JPAHibernateImpl implements JPAImplementation {
     }
 
     @Override
-    public Set<HiliLocator> getSessionEntityLocators(
+    public Set<EntityLocator> getSessionEntityLocators(
             EntityManager entityManager) {
-        Set<HiliLocator> result = new LinkedHashSet<>();
+        Set<EntityLocator> result = new LinkedHashSet<>();
         try {
             SessionImplementor sessionImpl = (SessionImplementor) entityManager
                     .getDelegate();
@@ -258,7 +258,7 @@ public class JPAHibernateImpl implements JPAImplementation {
                             .get(key);
                     Class clazz = persister.getEntityMetamodel().getEntityType()
                             .getReturnedClass();
-                    result.add(new HiliLocator(clazz, id, 0));
+                    result.add(new EntityLocator(clazz, id, 0));
                 }
             }
         } catch (Exception e) {
@@ -337,17 +337,17 @@ public class JPAHibernateImpl implements JPAImplementation {
         return backup;
     }
 
-    private HiliLocator toHiliLocator(Object o) {
+    private EntityLocator toEntityLocator(Object o) {
         if (o == null) {
             return null;
         }
         if (o instanceof HibernateProxy) {
             LazyInitializer lazy = ((HibernateProxy) o)
                     .getHibernateLazyInitializer();
-            return new HiliLocator(lazy.getPersistentClass(),
+            return new EntityLocator(lazy.getPersistentClass(),
                     (Long) lazy.getIdentifier(), 0L);
         }
-        return new HiliLocator((HasIdAndLocalId) o);
+        return new EntityLocator((Entity) o);
     }
 
     static class DomainStoreJoinHandler_ElementCollection
@@ -375,7 +375,7 @@ public class JPAHibernateImpl implements JPAImplementation {
         }
 
         @Override
-        public void injectValue(Object[] row, HasIdAndLocalId source) {
+        public void injectValue(Object[] row, Entity source) {
             try {
                 String string = (String) row[1];
                 Set enums = (Set) this.pd.getReadMethod().invoke(source,
@@ -400,7 +400,7 @@ public class JPAHibernateImpl implements JPAImplementation {
         @Override
         public Serializable generate(SessionImplementor session, Object object)
                 throws HibernateException {
-            return ((HasIdAndLocalId) object).getId();
+            return ((Entity) object).getId();
         }
     }
 

@@ -1,6 +1,6 @@
 package cc.alcina.framework.entity.domaintransform.policy;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.entity.domaintransform.TransformConflicts;
@@ -18,7 +18,7 @@ public abstract class AbstractPersistenceLayerTransformExceptionPolicy
 	}
 
 	@Override
-	public void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
+	public void checkVersion(Entity obj, DomainTransformEvent event)
 			throws DomainTransformException {
 		if (checkVersion) {
 			if (transformConflicts == null) {

@@ -19,11 +19,11 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.IUserStory;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
@@ -238,8 +238,7 @@ public class UserStories {
 				incoming.getClientInstanceUid());
 		IUserStory story = null;
 		if (o_story.isPresent()) {
-			story = (IUserStory) ((AbstractDomainBase) o_story.get())
-					.writeable();
+			story = (IUserStory) ((Entity) o_story.get()).writeable();
 		} else {
 			story = Domain.create(getImplementation());
 			postCreateStory(story, clientInstance);
@@ -298,8 +297,8 @@ public class UserStories {
 		return out.stream().collect(Collectors.joining(" "));
 	}
 
-	protected Class<? extends IUserStory> getImplementation() {
-		return CommonPersistenceProvider.get()
+	protected <T extends Entity & IUserStory> Class<T> getImplementation() {
+		return (Class<T>) CommonPersistenceProvider.get()
 				.getCommonPersistenceExTransaction()
 				.getImplementation(IUserStory.class);
 	}

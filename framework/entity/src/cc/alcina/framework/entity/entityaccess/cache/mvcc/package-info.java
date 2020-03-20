@@ -50,7 +50,7 @@
  * synchronized)
  * <li>Post-process and transaction cleanup. Delete cascade can be a lot less
  * brutal (just associations)
- * <li>Check no field assignment within hili private methods, and no calls to
+ * <li>Check no field assignment within entity private methods, and no calls to
  * setters (pretty sure checked as part of bytecode generation)
  * <li>Tx abort - check hits vacuum etc
  * </ul>

@@ -12,11 +12,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public abstract class DomainQuery<V extends HasIdAndLocalId> {
+public abstract class DomainQuery<V extends Entity> {
 	protected Collection<Long> filterByIds = new LinkedHashSet<Long>();
 
 	private List<DomainFilter> filters = new ArrayList<DomainFilter>();

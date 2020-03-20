@@ -20,7 +20,7 @@ import com.totsp.gwittir.client.beans.Method;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -103,23 +103,23 @@ public interface ClassLookup {
 			}
 		}
 
-		public void copy(HasIdAndLocalId hili, HasIdAndLocalId writeable) {
+		public void copy(Entity entity, Entity writeable) {
 			try {
-				Object value = get(hili);
+				Object value = get(entity);
 				set(writeable,value);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
 		}
-		public Object get(HasIdAndLocalId hili){
+		public Object get(Entity entity){
 			try {
-				return getReadMethod().invoke(hili, new Object[0]);
+				return getReadMethod().invoke(entity, new Object[0]);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
 		}
 
-		public void set(HasIdAndLocalId writeable,Object value){
+		public void set(Entity writeable,Object value){
 			try {
 				writeMethod.invoke(writeable, new Object[] { value });
 			} catch (Exception e) {

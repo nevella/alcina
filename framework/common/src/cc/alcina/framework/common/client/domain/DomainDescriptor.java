@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.CachingMap;
@@ -29,7 +29,7 @@ public abstract class DomainDescriptor {
 	public DomainDescriptor() {
 	}
 
-	public <T extends HasIdAndLocalId> DomainClassDescriptor<T>
+	public <T extends Entity> DomainClassDescriptor<T>
 			addClassDescriptor(Class<T> clazz, String... indexProperties) {
 		DomainClassDescriptor classDescriptor = new DomainClassDescriptor(clazz,
 				indexProperties);

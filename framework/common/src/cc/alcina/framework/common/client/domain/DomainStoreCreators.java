@@ -4,14 +4,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Multiset;
 
 public interface DomainStoreCreators {
 	public static interface DomainStoreIdMapCreator
-			extends Supplier<Map<Long, HasIdAndLocalId>> {
+			extends Supplier<Map<Long, Entity>> {
 		@Override
-		public Map<Long, HasIdAndLocalId> get();
+		public Map<Long, Entity> get();
 	}
 
 	public static interface DomainStoreLongSetCreator

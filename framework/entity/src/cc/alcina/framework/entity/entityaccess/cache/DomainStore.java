@@ -56,13 +56,13 @@ import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCacheObjectStore;
@@ -185,7 +185,7 @@ public class DomainStore implements IDomainStore {
 		return domainStores;
 	}
 
-	public static TopicSupport<HasIdAndLocalId> topicMappingEvent() {
+	public static TopicSupport<Entity> topicMappingEvent() {
 		return new TopicSupport<>(TOPIC_MAPPING_EVENT);
 	}
 
@@ -350,7 +350,7 @@ public class DomainStore implements IDomainStore {
 		MemoryStat top = new MemoryStat(this);
 		top.setObjectMemory(Registry.impl(ObjectMemory.class));
 		/*
-		 * Add cache stats first (notionally it's the owner of the hilis)
+		 * Add cache stats first (notionally it's the owner of the entities)
 		 */
 		cache.addMemoryStats(top, type);
 		getDomainDescriptor().addMemoryStats(top, type);
@@ -381,8 +381,7 @@ public class DomainStore implements IDomainStore {
 		return domainDescriptor.perClass.containsKey(clazz);
 	}
 
-	public <T extends HasIdAndLocalId> boolean isCached(Class<T> clazz,
-			long id) {
+	public <T extends Entity> boolean isCached(Class<T> clazz, long id) {
 		return cache.contains(clazz, id);
 	}
 
@@ -626,11 +625,11 @@ public class DomainStore implements IDomainStore {
 
 	void addValues(DomainListener listener) {
 		for (Object o : cache.values(listener.getListenedClass())) {
-			listener.insert((HasIdAndLocalId) o);
+			listener.insert((Entity) o);
 		}
 	}
 
-	<T extends HasIdAndLocalId> T findRaw(Class<T> clazz, long id) {
+	<T extends Entity> T findRaw(Class<T> clazz, long id) {
 		checkInLockedSection();
 		T t = cache.get(clazz, id);
 		if (t == null) {
@@ -651,7 +650,7 @@ public class DomainStore implements IDomainStore {
 		return t;
 	}
 
-	<T extends HasIdAndLocalId> T findRaw(T t) {
+	<T extends Entity> T findRaw(T t) {
 		return (T) findRaw(t.provideEntityClass(), t.getId());
 	}
 
@@ -672,21 +671,21 @@ public class DomainStore implements IDomainStore {
 		return field.get();
 	}
 
-	void index(HasIdAndLocalId obj, boolean add) {
-		Class<? extends HasIdAndLocalId> clazz = obj.provideEntityClass();
+	void index(Entity obj, boolean add) {
+		Class<? extends Entity> clazz = obj.provideEntityClass();
 		if (obj instanceof DomainProxy) {
-			clazz = (Class<? extends HasIdAndLocalId>) clazz.getSuperclass();
+			clazz = (Class<? extends Entity>) clazz.getSuperclass();
 		}
 		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
 				.get(clazz);
 		itemDescriptor.index(obj, add);
-		for (HasIdAndLocalId dependentObject : itemDescriptor
+		for (Entity dependentObject : itemDescriptor
 				.getDependentObjectsWithDerivedProjections(obj)) {
 			index(dependentObject, add);
 		}
 	}
 
-	<V extends HasIdAndLocalId> boolean isRawValue(V v) {
+	<V extends Entity> boolean isRawValue(V v) {
 		V existing = (V) cache.get(v.provideEntityClass(), v.getId());
 		return existing == v;
 	}
@@ -715,17 +714,17 @@ public class DomainStore implements IDomainStore {
 			 */
 			List<DomainTransformEvent> filtered = filterInterestedTransforms(
 					dtes);
-			Multimap<HiliLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
+			Multimap<EntityLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
 					.multimap(filtered, new DteToLocatorMapper());
 			for (DomainTransformEvent dte : filtered) {
 				DomainTransformEvent first = CommonUtils
 						.first(perObjectTransforms
-								.get(HiliLocator.objectLocator(dte)));
+								.get(EntityLocator.objectLocator(dte)));
 				DomainTransformEvent last = CommonUtils.last(perObjectTransforms
-						.get(HiliLocator.objectLocator(dte)));
+						.get(EntityLocator.objectLocator(dte)));
 				if (dte.getTransformType() != TransformType.CREATE_OBJECT
 						&& first == dte) {
-					HasIdAndLocalId obj = transformManager.getObject(dte, true);
+					Entity obj = transformManager.getObject(dte, true);
 				}
 			}
 		}
@@ -753,9 +752,9 @@ public class DomainStore implements IDomainStore {
 					.getDomainTransformLayerWrapper().persistentEvents;
 			List<DomainTransformEvent> filtered = filterInterestedTransforms(
 					dtes);
-			Multimap<HiliLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
+			Multimap<EntityLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
 					.multimap(filtered, new DteToLocatorMapper());
-			Set<HasIdAndLocalId> indexAtEnd = new LinkedHashSet<>();
+			Set<Entity> indexAtEnd = new LinkedHashSet<>();
 			metadataProvider.registerTransforms(filtered);
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
 			for (DomainTransformEvent dte : filtered) {
@@ -767,9 +766,9 @@ public class DomainStore implements IDomainStore {
 				// preexisting object
 				DomainTransformEvent first = CommonUtils
 						.first(perObjectTransforms
-								.get(HiliLocator.objectLocator(dte)));
+								.get(EntityLocator.objectLocator(dte)));
 				DomainTransformEvent last = CommonUtils.last(perObjectTransforms
-						.get(HiliLocator.objectLocator(dte)));
+						.get(EntityLocator.objectLocator(dte)));
 				if (last.getTransformType() == TransformType.DELETE_OBJECT
 						&& first.getTransformType() != TransformType.CREATE_OBJECT) {
 					// this a check against deletion during cache warmup.
@@ -777,20 +776,20 @@ public class DomainStore implements IDomainStore {
 					// TODO - check if necessary
 					// (note) also a check against trying to handle deletion of
 					// lazy objects
-					HasIdAndLocalId domainStoreObj = transformManager
-							.getObject(dte, true);
+					Entity domainStoreObj = transformManager.getObject(dte,
+							true);
 					if (domainStoreObj == null) {
 						continue;
 					}
 				}
 				if (dte.getTransformType() != TransformType.CREATE_OBJECT
 						&& first == dte) {
-					HasIdAndLocalId obj = transformManager.getObject(dte, true);
+					Entity obj = transformManager.getObject(dte, true);
 					if (obj != null) {
 						index(obj, false);
 					} else {
 						logger.warn("Null domain store object for index - {}",
-								HiliLocator.objectLocator(dte));
+								EntityLocator.objectLocator(dte));
 					}
 				}
 				try {
@@ -811,20 +810,20 @@ public class DomainStore implements IDomainStore {
 				}
 				if (dte.getTransformType() != TransformType.DELETE_OBJECT
 						&& last == dte) {
-					HasIdAndLocalId domainStoreObject = transformManager
-							.getObject(dte, true);
+					Entity domainStoreObject = transformManager.getObject(dte,
+							true);
 					if (domainStoreObject != null) {
 						metadataProvider.updateMetadata(dte, domainStoreObject);
 						index(domainStoreObject, true);
 					} else {
 						logger.warn("Null domain store object for index - {}",
-								HiliLocator.objectLocator(dte));
+								EntityLocator.objectLocator(dte));
 					}
 				}
 			}
 			indexAtEnd.forEach(domainStoreObject -> {
 				List<DomainTransformEvent> list = perObjectTransforms
-						.get(new HiliLocator(domainStoreObject));
+						.get(new EntityLocator(domainStoreObject));
 				DomainTransformEvent last = list == null ? null
 						: CommonUtils.last(list);
 				if (last != null && last
@@ -877,8 +876,7 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	<T extends HasIdAndLocalId> Set<T> query(Class<T> clazz,
-			DomainStoreQuery<T> query) {
+	<T extends Entity> Set<T> query(Class<T> clazz, DomainStoreQuery<T> query) {
 		try {
 			threads.lock(false);
 			Set<T> raw = null;
@@ -924,8 +922,7 @@ public class DomainStore implements IDomainStore {
 				 */
 				ids.stream().filter(id -> id < 0)
 						.map(id -> ThreadlocalTransformManager.cast().getObject(
-								clazz, 0L,
-								HasIdAndLocalId.provideUnpackedLocalId(id)))
+								clazz, 0L, Entity.provideUnpackedLocalId(id)))
 						.forEach(raw::add);
 			}
 			try {
@@ -1044,8 +1041,7 @@ public class DomainStore implements IDomainStore {
 					&& descriptorMap.get(domainDescriptor).initialised;
 		}
 
-		public <V extends HasIdAndLocalId> DomainStoreQuery<V>
-				query(Class<V> clazz) {
+		public <V extends Entity> DomainStoreQuery<V> query(Class<V> clazz) {
 			return new DomainStoreQuery(clazz, storeFor(clazz));
 		}
 
@@ -1082,14 +1078,14 @@ public class DomainStore implements IDomainStore {
 
 		class DomainStoresDomainHandler implements DomainHandler {
 			@Override
-			public <V extends HasIdAndLocalId> void async(Class<V> clazz,
-					long objectId, boolean create, Consumer<V> resultConsumer) {
+			public <V extends Entity> void async(Class<V> clazz, long objectId,
+					boolean create, Consumer<V> resultConsumer) {
 				storeHandler(clazz).async(clazz, objectId, create,
 						resultConsumer);
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
+			public <V extends Entity> V byProperty(Class<V> clazz,
 					String propertyName, Object value) {
 				return storeHandler(clazz).byProperty(clazz, propertyName,
 						value);
@@ -1101,43 +1097,42 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> V detachedVersion(V v) {
+			public <V extends Entity> V detachedVersion(V v) {
 				return v == null ? null
 						: storeHandler(v.provideEntityClass())
 								.detachedVersion(v);
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> V find(Class clazz, long id) {
+			public <V extends Entity> V find(Class clazz, long id) {
 				return storeHandler(clazz).find(clazz, id);
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> V find(V v) {
+			public <V extends Entity> V find(V v) {
 				return v == null ? null
 						: storeHandler(v.provideEntityClass()).find(v);
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> List<Long> ids(Class<V> clazz) {
+			public <V extends Entity> List<Long> ids(Class<V> clazz) {
 				return storeHandler(clazz).ids(clazz);
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> boolean isDomainVersion(V v) {
+			public <V extends Entity> boolean isDomainVersion(V v) {
 				return v == null ? null
 						: storeHandler(v.provideEntityClass())
 								.isDomainVersion(v);
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> DomainQuery<V>
-					query(Class<V> clazz) {
+			public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
 				return storeHandler(clazz).query(clazz);
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> V resolveTransactional(
+			public <V extends Entity> V resolveTransactional(
 					DomainListener listener, V value, Object[] path) {
 				DomainStore domainStore = (DomainStore) listener
 						.getDomainStore();
@@ -1151,32 +1146,30 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> Stream<V>
-					stream(Class<V> clazz) {
+			public <V extends Entity> Stream<V> stream(Class<V> clazz) {
 				return storeHandler(clazz).stream(clazz);
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
+			public <V extends Entity> V transactionalFind(Class clazz,
 					long id) {
 				return storeHandler(clazz).transactionalFind(clazz, id);
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> V transactionalVersion(V v) {
+			public <V extends Entity> V transactionalVersion(V v) {
 				return v == null ? null
 						: storeHandler(v.provideEntityClass())
 								.transactionalVersion(v);
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> Collection<V>
-					values(Class<V> clazz) {
+			public <V extends Entity> Collection<V> values(Class<V> clazz) {
 				return storeHandler(clazz).values(clazz);
 			}
 
 			@Override
-			public <V extends HasIdAndLocalId> V writeable(V v) {
+			public <V extends Entity> V writeable(V v) {
 				return v == null ? null
 						: storeHandler(v.provideEntityClass()).writeable(v);
 			}
@@ -1195,15 +1188,15 @@ public class DomainStore implements IDomainStore {
 
 		Set<Long> activeTransactionThreadIds = new LinkedHashSet<Long>();
 
-		public void ensureReferredPropertyIsTransactional(HasIdAndLocalId hili,
+		public void ensureReferredPropertyIsTransactional(Entity entity,
 				String propertyName) {
 			// target, even if new object, will still be equals() to old, so no
 			// property change will be fired, which is the desired behaviour
-			HasIdAndLocalId target = (HasIdAndLocalId) Reflections
-					.propertyAccessor().getPropertyValue(hili, propertyName);
+			Entity target = (Entity) Reflections.propertyAccessor()
+					.getPropertyValue(entity, propertyName);
 			if (target != null) {
 				target = ensureTransactional(target);
-				Reflections.propertyAccessor().setPropertyValue(hili,
+				Reflections.propertyAccessor().setPropertyValue(entity,
 						propertyName, target);
 			}
 		}
@@ -1241,7 +1234,7 @@ public class DomainStore implements IDomainStore {
 			return transaction;
 		}
 
-		public <V extends HasIdAndLocalId> V ensureTransactional(V value) {
+		public <V extends Entity> V ensureTransactional(V value) {
 			if (value == null) {
 				return null;
 			}
@@ -1258,8 +1251,7 @@ public class DomainStore implements IDomainStore {
 			checkInLockedSection();
 			T t = cache.get(clazz, id);
 			if (transactionActiveInCurrentThread() && t != null) {
-				return (T) transactions.get()
-						.ensureTransactional((HasIdAndLocalId) t);
+				return (T) transactions.get().ensureTransactional((Entity) t);
 			} else {
 				return t;
 			}
@@ -1284,7 +1276,7 @@ public class DomainStore implements IDomainStore {
 			}
 		}
 
-		public <V extends HasIdAndLocalId> V resolveTransactional(
+		public <V extends Entity> V resolveTransactional(
 				DomainListener listener, V value, Object[] path) {
 			PerThreadTransaction perThreadTransaction = transactions.get();
 			if (perThreadTransaction == null || (value != null
@@ -1357,8 +1349,8 @@ public class DomainStore implements IDomainStore {
 			List<Field> fields = new GraphProjection()
 					.getFieldsForClass(input.getClass());
 			for (Field field : fields) {
-				if (HasIdAndLocalId.class.isAssignableFrom(field.getType())) {
-					HasIdAndLocalId value = (HasIdAndLocalId) field.get(input);
+				if (Entity.class.isAssignableFrom(field.getType())) {
+					Entity value = (Entity) field.get(input);
 					if (value != null) {
 						I raw = (I) domainStore.cache.get(field.getType(),
 								value.getId());
@@ -1376,7 +1368,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public void mapObject(HasIdAndLocalId obj) {
+		public void mapObject(Entity obj) {
 			if (publishMappingEvents) {
 				topicMappingEvent().publish(obj);
 			}
@@ -1386,13 +1378,13 @@ public class DomainStore implements IDomainStore {
 
 	class DomainStoreDomainHandler implements DomainHandler {
 		@Override
-		public <V extends HasIdAndLocalId> void async(Class<V> clazz,
-				long objectId, boolean create, Consumer<V> resultConsumer) {
+		public <V extends Entity> void async(Class<V> clazz, long objectId,
+				boolean create, Consumer<V> resultConsumer) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V byProperty(Class<V> clazz,
+		public <V extends Entity> V byProperty(Class<V> clazz,
 				String propertyName, Object value) {
 			return Domain.query(clazz).raw().filter(propertyName, value).find();
 		}
@@ -1403,24 +1395,24 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V detachedVersion(V v) {
+		public <V extends Entity> V detachedVersion(V v) {
 			return (V) Domain.query(v.provideEntityClass())
 					.filterById(v.getId()).find();
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V find(Class clazz, long id) {
+		public <V extends Entity> V find(Class clazz, long id) {
 			return (V) findRaw(clazz, id);
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V find(V v) {
+		public <V extends Entity> V find(V v) {
 			checkInLockedSection();
 			if (!v.provideWasPersisted()) {
 				if (v.getLocalId() == 0) {
 					return null;
 				}
-				HiliLocator locator = ThreadlocalTransformManager.get()
+				EntityLocator locator = ThreadlocalTransformManager.get()
 						.resolvePersistedLocal(DomainStore.this, v);
 				if (locator == null) {
 					return null;
@@ -1434,7 +1426,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		@DomainStoreUnsafe
-		public <V extends HasIdAndLocalId> List<Long> ids(Class<V> clazz) {
+		public <V extends Entity> List<Long> ids(Class<V> clazz) {
 			try {
 				threads.lock(false);
 				return new ArrayList<Long>(cache.keys(clazz));
@@ -1444,58 +1436,55 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> boolean isDomainVersion(V v) {
+		public <V extends Entity> boolean isDomainVersion(V v) {
 			return isRawValue(v);
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> List<V> listByProperty(
-				Class<V> clazz, String propertyName, Object value) {
+		public <V extends Entity> List<V> listByProperty(Class<V> clazz,
+				String propertyName, Object value) {
 			return Domain.query(clazz).raw().filter(propertyName, value).list();
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> DomainQuery<V>
-				query(Class<V> clazz) {
+		public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
 			return new DomainStoreQuery<>(clazz, DomainStore.this);
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V resolve(V v) {
+		public <V extends Entity> V resolve(V v) {
 			return Transactions.resolve(v, false);
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V resolveTransactional(
+		public <V extends Entity> V resolveTransactional(
 				DomainListener listener, V value, Object[] path) {
 			return transactions().resolveTransactional(listener, value, path);
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> Stream<V> stream(Class<V> clazz) {
+		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
 			return list(clazz).stream();
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
-				long id) {
+		public <V extends Entity> V transactionalFind(Class clazz, long id) {
 			return (V) transactions().find(clazz, id);
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V transactionalVersion(V v) {
+		public <V extends Entity> V transactionalVersion(V v) {
 			return (V) transactions().ensureTransactional(v);
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> Collection<V>
-				values(Class<V> clazz) {
+		public <V extends Entity> Collection<V> values(Class<V> clazz) {
 			checkInLockedSection();
 			return cache.immutableRawValues(clazz);
 		}
 
 		@Override
-		public <V extends HasIdAndLocalId> V writeable(V v) {
+		public <V extends Entity> V writeable(V v) {
 			V out = v;
 			if (out == null) {
 				return null;
@@ -1516,7 +1505,7 @@ public class DomainStore implements IDomainStore {
 			return out;
 		}
 
-		private <V extends HasIdAndLocalId> V project(V v) {
+		private <V extends Entity> V project(V v) {
 			if (LooseContext.has(CONTEXT_WRITEABLE_PROJECTOR)) {
 				Function<V, V> projector = LooseContext
 						.get(CONTEXT_WRITEABLE_PROJECTOR);
@@ -1526,7 +1515,7 @@ public class DomainStore implements IDomainStore {
 			}
 		}
 
-		<T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
+		<T extends Entity> List<T> list(Class<T> clazz) {
 			return Domain.query(clazz).raw().list();
 		}
 	}
@@ -1563,7 +1552,7 @@ public class DomainStore implements IDomainStore {
 			}
 			DomainStore store = DomainStore.stores()
 					.storeFor(event.getObjectClass());
-			HasIdAndLocalId object = TransformManager.get().getObject(event);
+			Entity object = TransformManager.get().getObject(event);
 			if (event.getTransformType() != TransformType.CREATE_OBJECT) {
 				switch (event.getTransformType()) {
 				case CHANGE_PROPERTY_REF:

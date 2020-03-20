@@ -7,14 +7,14 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSuggestorSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class BaseTruncatedObjectCriterionPack {
-	public interface BaseTruncatedObjectCriterionHandler<I extends HasId, O extends HasIdAndLocalId> {
+	public interface BaseTruncatedObjectCriterionHandler<I extends HasId, O extends Entity> {
 		Function<I, O> getLinkedObjectMapper();
 
 		default DomainFilter getFilter0(TruncatedObjectCriterion<O> sc) {
@@ -28,7 +28,7 @@ public class BaseTruncatedObjectCriterionPack {
 					if (i == null) {
 						return false;
 					}
-					HasIdAndLocalId linked = getLinkedObjectMapper().apply(i);
+					Entity linked = getLinkedObjectMapper().apply(i);
 					return linked != null && linked.getId() == id;
 				}
 			}).invertIf(
@@ -36,7 +36,7 @@ public class BaseTruncatedObjectCriterionPack {
 		}
 	}
 
-	public interface BaseTruncatedObjectMultipleCriterionHandler<I extends HasId, O extends HasIdAndLocalId> {
+	public interface BaseTruncatedObjectMultipleCriterionHandler<I extends HasId, O extends Entity> {
 		Function<I, Set<O>> getLinkedObjectMapper();
 
 		default DomainFilter getFilter0(TruncatedObjectCriterion<O> sc) {

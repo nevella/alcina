@@ -4,7 +4,7 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.view.client.HasData;
 
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.gwt.client.data.DataAction;
 import cc.alcina.framework.gwt.client.data.HasDataAction;
@@ -71,7 +71,7 @@ public abstract class ViewModel<P extends Place> extends BaseBindable {
 				updated);
 	}
 
-	public abstract static class DetailViewModel<P extends Place, T extends HasIdAndLocalId>
+	public abstract static class DetailViewModel<P extends Place, T extends Entity>
 			extends ViewModelWithAction<P> {
 		private T modelObject;
 
@@ -104,7 +104,7 @@ public abstract class ViewModel<P extends Place> extends BaseBindable {
 		}
 	}
 
-	public static abstract class ViewModelWithDataProvider<P extends Place, T extends HasIdAndLocalId>
+	public static abstract class ViewModelWithDataProvider<P extends Place, T extends Entity>
 			extends ViewModel<P> {
 		public DomainStoreDataProvider<T> dataProvider;
 
@@ -123,7 +123,7 @@ public abstract class ViewModel<P extends Place> extends BaseBindable {
 		}
 	}
 
-	public static abstract class ViewModelWithDataProviderAndAction<P extends Place, T extends HasIdAndLocalId>
+	public static abstract class ViewModelWithDataProviderAndAction<P extends Place, T extends Entity>
 			extends ViewModelWithDataProvider<P, T> {
 		public DataAction action;
 

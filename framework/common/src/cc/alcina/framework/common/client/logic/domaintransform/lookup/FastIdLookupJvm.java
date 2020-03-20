@@ -8,14 +8,14 @@ import java.util.Map;
 
 import com.google.gwt.core.client.GWT;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class FastIdLookupJvm implements FastIdLookup {
-	private Map<Long, HasIdAndLocalId> idLookup = new LinkedHashMap<Long, HasIdAndLocalId>();
+	private Map<Long, Entity> idLookup = new LinkedHashMap<Long, Entity>();
 
-	private Map<Long, HasIdAndLocalId> localIdLookup = new LinkedHashMap<Long, HasIdAndLocalId>();
+	private Map<Long, Entity> localIdLookup = new LinkedHashMap<Long, Entity>();
 
 	private FastIdLookupDevValues values;
 
@@ -30,7 +30,7 @@ public class FastIdLookupJvm implements FastIdLookup {
 	}
 
 	@Override
-	public HasIdAndLocalId get(long id, boolean local) {
+	public Entity get(long id, boolean local) {
 		checkId(id);
 		if (local) {
 			return localIdLookup.get(id);
@@ -40,18 +40,18 @@ public class FastIdLookupJvm implements FastIdLookup {
 	}
 
 	@Override
-	public void put(HasIdAndLocalId hili, boolean local) {
-		long idi = getApplicableId(hili, local);
+	public void put(Entity entity, boolean local) {
+		long idi = getApplicableId(entity, local);
 		if (local) {
-			localIdLookup.put(idi, hili);
+			localIdLookup.put(idi, entity);
 		} else {
-			idLookup.put(idi, hili);
+			idLookup.put(idi, entity);
 		}
 	}
 
 	@Override
-	public void putAll(Collection<HasIdAndLocalId> values, boolean local) {
-		for (HasIdAndLocalId value : values) {
+	public void putAll(Collection<Entity> values, boolean local) {
+		for (Entity value : values) {
 			put(value, local);
 		}
 	}
@@ -73,33 +73,33 @@ public class FastIdLookupJvm implements FastIdLookup {
 	}
 
 	@Override
-	public Collection<HasIdAndLocalId> values() {
+	public Collection<Entity> values() {
 		return values;
 	}
 
-	long getApplicableId(HasIdAndLocalId hili, boolean local) {
-		long id = local ? hili.getLocalId() : hili.getId();
+	long getApplicableId(Entity entity, boolean local) {
+		long id = local ? entity.getLocalId() : entity.getId();
 		checkId(id);
 		return id;
 	}
 
-	class FastIdLookupDevValues extends AbstractCollection<HasIdAndLocalId> {
+	class FastIdLookupDevValues extends AbstractCollection<Entity> {
 		@Override
 		public boolean contains(Object o) {
-			if (o instanceof HasIdAndLocalId) {
-				HasIdAndLocalId hili = (HasIdAndLocalId) o;
-				if (hili.getLocalId() == 0) {
-					return get(hili.getId(), false) != null;
+			if (o instanceof Entity) {
+				Entity entity = (Entity) o;
+				if (entity.getLocalId() == 0) {
+					return get(entity.getId(), false) != null;
 				} else {
-					return get(hili.getLocalId(), true) != null;
+					return get(entity.getLocalId(), true) != null;
 				}
 			}
 			return false;
 		}
 
 		@Override
-		public Iterator<HasIdAndLocalId> iterator() {
-			return new MultiIterator<HasIdAndLocalId>(false, null,
+		public Iterator<Entity> iterator() {
+			return new MultiIterator<Entity>(false, null,
 					localIdLookup.values().iterator(),
 					idLookup.values().iterator());
 		}

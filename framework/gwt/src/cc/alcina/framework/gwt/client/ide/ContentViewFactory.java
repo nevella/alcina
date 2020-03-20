@@ -71,7 +71,7 @@ import cc.alcina.framework.common.client.actions.instances.NonstandardObjectActi
 import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
@@ -140,7 +140,7 @@ public class ContentViewFactory {
 		throw new UnsupportedOperationException();
 	}
 
-	public static Predicate<Field> excludeStandardHiliFilter() {
+	public static Predicate<Field> excludeStandardEntityFilter() {
 		return field -> {
 			if (DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING
 					.contains(field.getPropertyName())) {
@@ -151,12 +151,12 @@ public class ContentViewFactory {
 		};
 	}
 
-	public static Predicate<Field> excludeStandardHiliNonIdFilter() {
+	public static Predicate<Field> excludeStandardEntityNonIdFilter() {
 		return field -> {
 			if (field.getPropertyName().equals("id")) {
 				return true;
 			}
-			return excludeStandardHiliFilter().test(field);
+			return excludeStandardEntityFilter().test(field);
 		};
 	}
 
@@ -310,9 +310,9 @@ public class ContentViewFactory {
 		boolean cloned = false;
 		Collection supportingObjects = new ArrayList();
 		if (!doNotClone && !autoSave
-				&& (!(bean instanceof HasIdAndLocalId)
+				&& (!(bean instanceof Entity)
 						|| Reflections.objectLookup()
-								.getObject((HasIdAndLocalId) bean) != null)) {
+								.getObject((Entity) bean) != null)) {
 			bean = new CloneHelper().shallowishBeanClone(bean);
 			cloned = true;
 		}
@@ -321,8 +321,8 @@ public class ContentViewFactory {
 					"Unviewable bean type: " + bean.getClass(),
 					SuggestedAction.NOTIFY_WARNING);
 		}
-		if (autoSave && bean instanceof HasIdAndLocalId) {
-			TransformManager.get().registerDomainObject((HasIdAndLocalId) bean);
+		if (autoSave && bean instanceof Entity) {
+			TransformManager.get().registerDomainObject((Entity) bean);
 		}
 		PaneWrapperWithObjects cp = createPaneWrapper(actionListener);
 		cp.editable = editable;
@@ -382,9 +382,9 @@ public class ContentViewFactory {
 				}
 				cp.setBean(bean);
 				boolean provisional = cloned;
-				if (bean instanceof HasIdAndLocalId) {
-					HasIdAndLocalId hili = (HasIdAndLocalId) bean;
-					provisional = provisional || (hili.getId() == 0);
+				if (bean instanceof Entity) {
+					Entity entity = (Entity) bean;
+					provisional = provisional || (entity.getId() == 0);
 				}
 				Collection additional = CommonUtils.wrapInCollection(
 						additionalProvisional != null ? additionalProvisional
@@ -397,9 +397,9 @@ public class ContentViewFactory {
 				if (provisional) {
 					TransformManager.get().registerProvisionalObject(list);
 				}
-				if (bean instanceof HasIdAndLocalId && !doNotPrepare) {
+				if (bean instanceof Entity && !doNotPrepare) {
 					supportingObjects = ClientTransformManager.cast()
-							.prepareObject((HasIdAndLocalId) bean, autoSave,
+							.prepareObject((Entity) bean, autoSave,
 									false, true);
 				}
 				if (additional != null) {

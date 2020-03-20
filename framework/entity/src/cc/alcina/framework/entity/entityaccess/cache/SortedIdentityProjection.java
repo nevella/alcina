@@ -5,9 +5,9 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.domain.DomainProjection;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 
-public abstract class SortedIdentityProjection<T extends HasIdAndLocalId>
+public abstract class SortedIdentityProjection<T extends Entity>
 		implements DomainProjection<T> {
 	private Class<T> listenedClass;
 
@@ -39,7 +39,7 @@ public abstract class SortedIdentityProjection<T extends HasIdAndLocalId>
 	}
 
 	@Override
-	public boolean matches(HasIdAndLocalId h, Object[] keys) {
+	public boolean matches(Entity h, Object[] keys) {
 		throw new UnsupportedOperationException();
 	}
 

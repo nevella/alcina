@@ -15,8 +15,8 @@ import org.apache.log4j.Logger;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
@@ -252,8 +252,8 @@ public class SyncMerger<T> {
 
 	protected void ensureLeftWriteable(SyncPair<T> pair) {
 		Object left = pair.getLeft().getObject();
-		if (left instanceof AbstractDomainBase) {
-			AbstractDomainBase adb = (AbstractDomainBase) left;
+		if (left instanceof Entity) {
+			Entity adb = (Entity) left;
 			if (adb.provideIsNonDomain()) {
 			} else {
 				adb = adb.writeable();
@@ -265,8 +265,8 @@ public class SyncMerger<T> {
 
 	protected void ensureRightWriteable(SyncPair<T> pair) {
 		Object right = pair.getRight().getObject();
-		if (right instanceof AbstractDomainBase) {
-			AbstractDomainBase adb = (AbstractDomainBase) right;
+		if (right instanceof Entity) {
+			Entity adb = (Entity) right;
 			if (adb.provideIsNonDomain()) {
 			} else {
 				adb = adb.writeable();
@@ -428,8 +428,8 @@ public class SyncMerger<T> {
 					.itemsFor(new Object[] { keys[0], keys[1], propertyName });
 			boolean withoutLog = items.isEmpty() || keys[1] == null
 					|| keys[0] == null;
-			withoutLog |= ((HasIdAndLocalId) left).getId() == 0
-					|| ((HasIdAndLocalId) right).getId() == 0;
+			withoutLog |= ((Entity) left).getId() == 0
+					|| ((Entity) right).getId() == 0;
 			if (withoutLog) {
 				mergeWithoutLog(left, right);
 			} else {
