@@ -49,7 +49,9 @@ public class KryoUtils {
 			.getName() + ".CONTEXT_USE_UNSAFE_FIELD_SERIALIZER";
 
 	private static CachingMap<KryoPoolKey, KryoPool> kryosPool = new CachingConcurrentMap<>(
-			key -> new KryoPool(true), 10);
+			key -> new KryoPool(
+					ResourceUtilities.is(KryoUtils.class, "usePool")),
+			10);
 
 	static Map<Class, Method> resolveMethods = new LinkedHashMap<>();
 
