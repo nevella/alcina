@@ -289,7 +289,7 @@ public class WdExec {
 	}
 
 	public void waitFor() {
-		for (int i = 0; i < 30; i++) {
+		for (int i = 0; i < timeoutSecs * 10; i++) {
 			if (immediateTest()) {
 				return;
 			} else {
