@@ -147,7 +147,7 @@ public abstract class UnitTest {
 		}
 		testResult.setResultType(TestResultType.OK);
 		try {
-			int retryCount = 1;
+			int retryCount = getRetryCount();
 			while (true) {
 				try {
 					LooseContext.push();
@@ -242,6 +242,10 @@ public abstract class UnitTest {
 			driver.get(uri);
 		}
 		MetricLogging.get().end(key);
+	}
+
+	protected int getRetryCount() {
+		return 1;
 	}
 
 	protected Map<Class<? extends UnitTest>, UnitTest> getTestTemplates() {
