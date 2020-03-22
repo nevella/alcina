@@ -112,7 +112,6 @@ public class ResourceUtilities {
 				cloneCollections, new ArrayList<String>());
 	}
 
-	
 	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
 			Class methodFilterAnnotation, boolean cloneCollections,
 			Collection<String> ignorePropertyNames) {
@@ -920,6 +919,10 @@ public class ResourceUtilities {
 
 		private boolean decodeGz;
 
+		private String contentType;
+
+		private String contentDisposition;
+
 		public SimpleQuery(String strUrl, String postBody, StringMap headers) {
 			this.strUrl = strUrl;
 			this.postBody = postBody;
@@ -959,6 +962,9 @@ public class ResourceUtilities {
 				if (decodeGz) {
 					input = maybeDecodeGzip(input);
 				}
+				contentType = connection.getContentType();
+				contentDisposition = connection
+						.getHeaderField("Content-Disposition");
 				return input;
 			} catch (IOException ioe) {
 				if (connection != null) {
@@ -987,6 +993,26 @@ public class ResourceUtilities {
 
 		public String asString() throws Exception {
 			return new String(asBytes(), StandardCharsets.UTF_8);
+		}
+
+		public String getContentDisposition() {
+			return this.contentDisposition;
+		}
+
+		public String getContentType() {
+			return this.contentType;
+		}
+
+		public SimpleQuery withBasicAuthentication(String username,
+				String password) {
+			if (headers == null) {
+				headers = new StringMap();
+			}
+			String auth = Ax.format("%s:%s", username, password);
+			headers.put("Authorization",
+					Ax.format("Basic %s", Base64.getEncoder().encodeToString(
+							auth.getBytes(StandardCharsets.UTF_8))));
+			return this;
 		}
 
 		public SimpleQuery withDecodeGz(boolean decodeGz) {

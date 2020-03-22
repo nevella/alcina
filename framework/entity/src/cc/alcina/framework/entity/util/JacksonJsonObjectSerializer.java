@@ -4,8 +4,11 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.Stack;
 import java.util.function.Function;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
@@ -17,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.ObjectIdGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyName;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -53,24 +57,31 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	private boolean withDefaults = true;
 
+	private boolean withDuplicateIdRefCheck = false;
+
 	public JacksonJsonObjectSerializer() {
 		maxLength = ResourceUtilities.getInteger(
 				JacksonJsonObjectSerializer.class, "maxLength", 10000000);
 	}
 
 	@Override
-	public <T> T deserialize(String json, Class<T> clazz) {
+	public <T> T deserialize(String deserJson, Class<T> clazz) {
 		return runWithObjectMapper(mapper -> {
+			String json = deserJson;
 			try {
-				String fJson = json;
 				if (withBase64Encoding) {
-					fJson = new String(Base64.getDecoder().decode(fJson),
+					json = new String(Base64.getDecoder().decode(json),
 							StandardCharsets.UTF_8);
 				}
-				return mapper.readValue(fJson, clazz);
+				if (withDuplicateIdRefCheck
+						&& hasDuplicateIds(mapper.readTree(json))) {
+				} else {
+					return mapper.readValue(json, clazz);
+				}
 			} catch (Exception e) {
-				return deserialize_v1(json, clazz);
+				// deserialization issue
 			}
+			return deserialize_v1(json, clazz);
 		});
 	}
 
@@ -134,6 +145,12 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		return this;
 	}
 
+	public JacksonJsonObjectSerializer
+			withDuplicateIdRefCheck(boolean withDuplicateIdRefCheck) {
+		this.withDuplicateIdRefCheck = withDuplicateIdRefCheck;
+		return this;
+	}
+
 	public JacksonJsonObjectSerializer withIdRefs() {
 		this.withIdRefs = true;
 		return this;
@@ -172,6 +189,22 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	private boolean hasDuplicateIds(JsonNode root) {
+		Set<String> refIds = new LinkedHashSet<>();
+		Stack<JsonNode> nodes = new Stack<>();
+		nodes.push(root);
+		while (nodes.size() > 0) {
+			JsonNode node = nodes.pop();
+			if (node.has("ref_id")) {
+				if (!refIds.add(node.get("ref_id").asText())) {
+					return true;
+				}
+			}
+			node.elements().forEachRemaining(nodes::push);
+		}
+		return false;
 	}
 
 	private <T> T

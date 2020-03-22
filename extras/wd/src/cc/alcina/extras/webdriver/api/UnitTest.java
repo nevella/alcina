@@ -82,8 +82,7 @@ public abstract class UnitTest {
 			int predelayMs = token.getConfiguration().predelayMs;
 			if (predelayMs != 0) {
 				token.getWriter().write(
-						Ax.format("Predelay: %s ms \n", predelayMs),
-						level);
+						Ax.format("Predelay: %s ms \n", predelayMs), level);
 				Thread.sleep(predelayMs);
 			}
 		} catch (InterruptedException e) {
@@ -101,8 +100,8 @@ public abstract class UnitTest {
 		testResult.setStartTime(System.currentTimeMillis());
 		testResult.setNoTimePayload(noTimePayload());
 		testResult.setName(getClass().getSimpleName());
-		token.getWriter().write(Ax.format("Test: %s - \n",
-				getClass().getSimpleName()), level);
+		token.getWriter().write(
+				Ax.format("Test: %s - \n", getClass().getSimpleName()), level);
 		if (parent == null) {
 			token.setRootResult(testResult);
 			testResult.setRootResult(true);
@@ -115,6 +114,7 @@ public abstract class UnitTest {
 			return testResult;
 		}
 		level++;
+		beforeDependentTests(token);
 		List<UnitTest> dependentTests = getRequiredDependentTests(token);
 		if (!dependentTests.isEmpty()) {
 			level++;
@@ -127,9 +127,11 @@ public abstract class UnitTest {
 		if (cancelDueToError(token, level)) {
 			return testResult;
 		}
+		beforeChildTests(token);
 		long startTime = System.currentTimeMillis();
-		token.getWriter().write(Ax.format("Starting test: %s - \n",
-				getClass().getSimpleName()), level);
+		token.getWriter().write(
+				Ax.format("Starting test: %s - \n", getClass().getSimpleName()),
+				level);
 		Class<? extends UnitTest>[] childTests = childTests();
 		if (childTests.length != 0) {
 			level++;
@@ -219,6 +221,12 @@ public abstract class UnitTest {
 		} else {
 			return false;
 		}
+	}
+
+	protected void beforeChildTests(WDToken token) {
+	}
+
+	protected void beforeDependentTests(WDToken token) {
 	}
 
 	protected void getAndLog(WebDriver driver, String uri) {

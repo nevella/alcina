@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.util.UrlEncoder;
+import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 
 /**
@@ -66,11 +66,11 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 
 	public static final String PRE_HISTORY_KEY = "ph";
 
-	static UrlEncoder encoder;
+	static UrlComponentEncoder encoder;
 
 	public static String encode(String string) {
 		if (encoder == null) {
-			encoder = Registry.impl(UrlEncoder.class);
+			encoder = Registry.impl(UrlComponentEncoder.class);
 		}
 		string = string.replace("&", "&&");
 		String encoded = encoder.encode(string);
@@ -117,7 +117,7 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 					}
 				}
 				map.put(key,
-						Registry.impl(UrlEncoder.class)
+						Registry.impl(UrlComponentEncoder.class)
 								.decode(s.substring(idxStart, idx0))
 								.replace("&&", "&"));
 				forKey = true;

@@ -16,7 +16,9 @@ package cc.alcina.framework.servlet.servlet;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -215,6 +217,27 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	private ThreadLocal<Integer> looseContextDepth = new ThreadLocal<>();
 
 	private AtomicInteger callCounter = new AtomicInteger(0);
+
+	private Object exceptionCatchProxy = null;
+	{
+		InvocationHandler handler = new InvocationHandler() {
+			@Override
+			public Object invoke(Object proxy, Method method, Object[] args)
+					throws Throwable {
+				try {
+					return method.invoke(CommonRemoteServiceServlet.this, args);
+				} catch (Throwable t) {
+					if (t instanceof Exception) {
+						logRpcException((Exception) t);
+					}
+					throw t;
+				}
+			}
+		};
+		exceptionCatchProxy = Proxy.newProxyInstance(
+				Thread.currentThread().getContextClassLoader(),
+				getClass().getInterfaces(), handler);
+	}
 
 	@Override
 	@WebMethod(readonlyPermitted = true)
@@ -958,8 +981,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	protected String invokeAndEncodeResponse(RPCRequest rpcRequest)
 			throws SerializationException {
-		return RPC.invokeAndEncodeResponse(this, rpcRequest.getMethod(),
-				rpcRequest.getParameters(),
+		return RPC.invokeAndEncodeResponse(exceptionCatchProxy,
+				rpcRequest.getMethod(), rpcRequest.getParameters(),
 				rpcRequest.getSerializationPolicy());
 	}
 

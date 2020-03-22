@@ -83,18 +83,28 @@ public class WDUtils {
 	}
 
 	public static void click(WebElement clickMe) {
-		try {
-			clickMe.click();
-		} catch (RuntimeException e) {
-			if (exceptionCallback != null) {
-				try {
-					exceptionCallback.apply(null);
-				} catch (Exception e1) {
-					e1.printStackTrace();
+		int maxRetries = 100;
+		while (true) {
+			try {
+				clickMe.click();
+				break;
+			} catch (RuntimeException e) {
+				if (exceptionCallback != null) {
+					try {
+						exceptionCallback.apply(null);
+					} catch (Exception e1) {
+						e1.printStackTrace();
+					}
+					throw e;
+				} else {
+					if (maxRetries-- > 0) {
+						sleep(100);
+					} else {
+						e.printStackTrace();
+						throwAfterTimeout(e);
+					}
 				}
 			}
-			e.printStackTrace();
-			throw e;
 		}
 	}
 
@@ -195,7 +205,11 @@ public class WDUtils {
 			WebElement elem) {
 		String script = "var elem = arguments[0];var rect = elem.getBoundingClientRect();var originalScrollTop = document.documentElement.scrollTop;var delta = rect.top - (document.documentElement.clientHeight / 2);window.scrollTo(0, originalScrollTop + delta);return {    scrollTop : document.documentElement.scrollTop,    rectTop : rect.top,    originalScrollTop : originalScrollTop,    delta : delta};";
 		script = script.replace(";", ";\n");
-		Object result = executeScript(driver, elem, script);
+		try {
+			Object result = executeScript(driver, elem, script);
+		} catch (Exception e) {
+			Ax.err(CommonUtils.toSimpleExceptionMessage(e));
+		}
 	}
 
 	public static void sendChanged(WDToken token, WebDriver driver,
@@ -306,7 +320,8 @@ public class WDUtils {
 				timeout--;
 			}
 		}
-		throw new TimedOutException(Ax.format("Wait for attr/value [%s,%s] timed out", attr, value));
+		throw new TimedOutException(Ax
+				.format("Wait for attr/value [%s,%s] timed out", attr, value));
 	}
 
 	public static WebElement waitForElement(SearchContext context, By by,
@@ -344,9 +359,11 @@ public class WDUtils {
 		}
 		if (required) {
 			if (!LooseContext.is(CONTEXT_DONT_LOG_EXCEPTION)) {
-				int debug = 3;
+				throwAfterTimeout(logException(context, by));
+				return null;
+			} else {
+				throw logException(context, by);
 			}
-			throw logException(context, by);
 		} else {
 			return null;
 		}
@@ -420,7 +437,8 @@ public class WDUtils {
 				timeout--;
 			}
 		}
-		throw new TimedOutException(Ax.format("Wait for textlength [%s] timed out", minLength));
+		throw new TimedOutException(
+				Ax.format("Wait for textlength [%s] timed out", minLength));
 	}
 
 	private static TimedOutException logException(SearchContext context,
@@ -455,6 +473,14 @@ public class WDUtils {
 			return (int) (override > timeout ? override : timeout);
 		} else {
 			return (int) timeout;
+		}
+	}
+
+	private static void throwAfterTimeout(RuntimeException e) {
+		boolean tryAgain = false;
+		int debug = 3;
+		if (!tryAgain) {
+			throw e;
 		}
 	}
 
