@@ -16,9 +16,7 @@ package cc.alcina.framework.servlet.servlet;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -218,26 +216,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	private AtomicInteger callCounter = new AtomicInteger(0);
 
-	private Object exceptionCatchProxy = null;
-	{
-		InvocationHandler handler = new InvocationHandler() {
-			@Override
-			public Object invoke(Object proxy, Method method, Object[] args)
-					throws Throwable {
-				try {
-					return method.invoke(CommonRemoteServiceServlet.this, args);
-				} catch (Throwable t) {
-					if (t instanceof Exception) {
-						logRpcException((Exception) t);
-					}
-					throw t;
-				}
-			}
-		};
-		exceptionCatchProxy = Proxy.newProxyInstance(
-				Thread.currentThread().getContextClassLoader(),
-				getClass().getInterfaces(), handler);
-	}
+	private AtomicInteger rpcExceptionLogCounter = new AtomicInteger();
 
 	@Override
 	@WebMethod(readonlyPermitted = true)
@@ -266,6 +245,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().getItemById(clazz, id, true, false);
 		} catch (Exception e) {
+			logRpcException(e);
 			throw new WebException(e.getMessage());
 		}
 	}
@@ -295,7 +275,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().getObjectDelta(specs);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logRpcException(e);
 			throw new WebException(e);
 		}
 	}
@@ -409,6 +389,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public void logRpcException(Exception ex, String exceptionType) {
 		String remoteAddr = getRemoteAddress();
+		if (rpcExceptionLogCounter.incrementAndGet() > 10000) {
+			Ax.err("Not logging rpc exception %s : %s - too many exceptions",
+					exceptionType, CommonUtils.toSimpleExceptionMessage(ex));
+			return;
+		}
 		try {
 			LooseContext.pushWithKey(
 					CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
@@ -422,7 +407,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				msg = describeRpcRequest(rpcRequest, msg);
 			}
 			msg += "\nStacktrace:\t " + sw.toString();
-			System.out.println(msg);
+			Ax.err(msg);
 			CommonPersistenceLocal cpl = Registry
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence();
@@ -474,6 +459,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return id;
 		} catch (Exception e) {
 			logger.warn("Exception in persist wrappable", e);
+			logRpcException(e);
 			throw new WebException(e.getMessage());
 		}
 	}
@@ -644,6 +630,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return committed;
 		} catch (Exception e) {
 			e.printStackTrace();
+			logRpcException(e);
 			throw new WebException(e);
 		} finally {
 			LooseContext.getContext().pop();
@@ -798,13 +785,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			transformException.setType(DomainTransformExceptionType.UNKNOWN);
 			domainTransformResponse.getTransformExceptions()
 					.add(transformException);
+			logRpcException(e);
 			throw new DomainTransformRequestException(domainTransformResponse);
 		}
 	}
 
 	@Override
-	public List<ServerValidator> validateOnServer(
-			List<ServerValidator> validators) throws WebException {
+	public List<ServerValidator>
+			validateOnServer(List<ServerValidator> validators) {
 		List<ServerValidator> entityLayer = new ArrayList<ServerValidator>();
 		List<ServerValidator> results = new ArrayList<ServerValidator>();
 		for (ServerValidator validator : validators) {
@@ -981,8 +969,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	protected String invokeAndEncodeResponse(RPCRequest rpcRequest)
 			throws SerializationException {
-		return RPC.invokeAndEncodeResponse(exceptionCatchProxy,
-				rpcRequest.getMethod(), rpcRequest.getParameters(),
+		return RPC.invokeAndEncodeResponse(this, rpcRequest.getMethod(),
+				rpcRequest.getParameters(),
 				rpcRequest.getSerializationPolicy());
 	}
 
