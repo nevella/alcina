@@ -88,6 +88,8 @@ public class WDManager {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
+				} else {
+					Ax.err("...no...closeAndCleanup");
 				}
 			}
 			cacheToken(token);
