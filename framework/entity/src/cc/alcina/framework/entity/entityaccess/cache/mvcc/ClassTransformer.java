@@ -160,8 +160,7 @@ class ClassTransformer {
 
 	public String testClassTransform(Class<? extends Entity> clazz,
 			MvccCorrectnessIssueType issueType) {
-		ClassTransform<? extends Entity> ct = new ClassTransform<>(
-				clazz);
+		ClassTransform<? extends Entity> ct = new ClassTransform<>(clazz);
 		StringBuilder logBuilder = new StringBuilder();
 		ct.correctnessIssueTopic.add((k, issue) -> {
 			if (issue.type == issueType) {
@@ -761,7 +760,16 @@ class ClassTransformer {
 					 * setters - this is incorrect (real solution is an
 					 * extension of DomainStore.postProcess to include
 					 * transactional writes to db-transient fields - only
-					 * applied to jvm which sourced the transforms
+					 * applied to jvm which sourced the transforms)
+					 * 
+					 * Further thinking - that sorta stuff (version-level
+					 * caches) just shouldn't be on the object - or at least
+					 * shouldn't be publicly accessible.
+					 * 
+					 * Have an snapshot somewhere - and invalidate it on change.
+					 * Hmmm...in which case storing the snapshot on _base_ is
+					 * ok, in which case maybe @transient (-> base) really is
+					 * the right approach
 					 * 
 					 * 
 					 */
@@ -792,6 +800,9 @@ class ClassTransformer {
 						 * FIXME - get rid of it
 						 */
 						if (method.getName().matches("writeable")) {
+							continue;
+						}
+						if (method.getName().matches("provideEntityClass")) {
 							continue;
 						}
 						/*
