@@ -114,6 +114,7 @@ public abstract class WebdriverTest {
 		}
 		level++;
 		List<WebdriverTest> dependentTests = getRequiredDependentTests(token);
+		beforeDependentTests(token);
 		if (!dependentTests.isEmpty()) {
 			level++;
 			token.getWriter().write("Processing dependencies - \n", level);
@@ -125,6 +126,8 @@ public abstract class WebdriverTest {
 		if (cancelDueToError(token, level)) {
 			return testResult;
 		}
+		beforeChildTests(token);
+		long startTime = System.currentTimeMillis();
 		token.getWriter().write(
 				Ax.format("Starting test: %s - \n", getClass().getSimpleName()),
 				level);
@@ -140,7 +143,7 @@ public abstract class WebdriverTest {
 		}
 		testResult.setResultType(TestResultType.OK);
 		try {
-			int retryCount = 1;
+			int retryCount = getRetryCount();
 			while (true) {
 				try {
 					testResult.setStartTimeExcludingDependent(
@@ -212,6 +215,12 @@ public abstract class WebdriverTest {
 		}
 	}
 
+	protected void beforeChildTests(WDToken token) {
+	}
+
+	protected void beforeDependentTests(WDToken token) {
+	}
+
 	protected void getAndLog(WebDriver driver, String uri) {
 		String key = "Load: " + uri;
 		MetricLogging.get().start(key);
@@ -219,12 +228,14 @@ public abstract class WebdriverTest {
 		MetricLogging.get().end(key);
 	}
 
-	@SuppressWarnings("unchecked")
+	protected int getRetryCount() {
+		return 1;
+	}
+
 	protected Map<Class<? extends WebdriverTest>, WebdriverTest>
 			getTestTemplates() {
 		if (testTemplates == null) {
 			testTemplates = new HashMap<Class<? extends WebdriverTest>, WebdriverTest>();
-			@SuppressWarnings("rawtypes")
 			List<Class> tests = Registry.get().lookup(WebdriverTest.class);
 			try {
 				for (Class<? extends WebdriverTest> c : tests) {

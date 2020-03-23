@@ -84,6 +84,8 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	private static DomUtilsBlockResolver blockResolver;
 
+	public static Node debugNode;
+
 	public static Stream<Element> ancestorStream(Element element) {
 		// FIXME-jadex (not optimal)
 		List<Element> elements = new ArrayList<>();

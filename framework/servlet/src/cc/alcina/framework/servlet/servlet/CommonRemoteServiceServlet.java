@@ -239,6 +239,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	private AtomicInteger callCounter = new AtomicInteger(0);
 
+	private AtomicInteger rpcExceptionLogCounter = new AtomicInteger();
+
 	@Override
 	@WebMethod(readonlyPermitted = true)
 	public void dumpData(String data) {
@@ -266,6 +268,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().getItemById(clazz, id, true, false);
 		} catch (Exception e) {
+			logRpcException(e);
 			throw new WebException(e.getMessage());
 		}
 	}
@@ -295,7 +298,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().getObjectDelta(specs);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logRpcException(e);
 			throw new WebException(e);
 		}
 	}
@@ -416,6 +419,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public void logRpcException(Exception ex, String exceptionType) {
 		String remoteAddr = getRemoteAddress();
+		if (rpcExceptionLogCounter.incrementAndGet() > 10000) {
+			Ax.err("Not logging rpc exception %s : %s - too many exceptions",
+					exceptionType, CommonUtils.toSimpleExceptionMessage(ex));
+			return;
+		}
 		try {
 			LooseContext.pushWithKey(
 					CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
@@ -429,7 +437,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				msg = describeRpcRequest(rpcRequest, msg);
 			}
 			msg += "\nStacktrace:\t " + sw.toString();
-			System.out.println(msg);
+			Ax.err(msg);
 			CommonPersistenceLocal cpl = Registry
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence();
@@ -490,6 +498,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return id;
 		} catch (Exception e) {
 			logger.warn("Exception in persist wrappable", e);
+			logRpcException(e);
 			throw new WebException(e.getMessage());
 		}
 	}
@@ -666,6 +675,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return committed;
 		} catch (Exception e) {
 			e.printStackTrace();
+			logRpcException(e);
 			throw new WebException(e);
 		} finally {
 			LooseContext.getContext().pop();
@@ -824,13 +834,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			transformException.setType(DomainTransformExceptionType.UNKNOWN);
 			domainTransformResponse.getTransformExceptions()
 					.add(transformException);
+			logRpcException(e);
 			throw new DomainTransformRequestException(domainTransformResponse);
 		}
 	}
 
 	@Override
-	public List<ServerValidator> validateOnServer(
-			List<ServerValidator> validators) throws WebException {
+	public List<ServerValidator>
+			validateOnServer(List<ServerValidator> validators) {
 		List<ServerValidator> entityLayer = new ArrayList<ServerValidator>();
 		List<ServerValidator> results = new ArrayList<ServerValidator>();
 		for (ServerValidator validator : validators) {

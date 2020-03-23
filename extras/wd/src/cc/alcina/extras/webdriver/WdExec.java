@@ -14,11 +14,13 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 
+import cc.alcina.extras.webdriver.WDUtils.TestCallback;
 import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 
 public class WdExec {
 	private WebDriver driver;
@@ -36,6 +38,8 @@ public class WdExec {
 	private String linkText;
 
 	private String textMatchParent;
+
+	private TestCallback testCallback;
 
 	public void clear() {
 		getElement().clear();
@@ -110,7 +114,6 @@ public class WdExec {
 		throw lastException;
 	}
 
-
 	public void clickLink(String linkText) {
 		xpath(Ax.format("//a[.='%s']", linkText)).click();
 	}
@@ -142,7 +145,8 @@ public class WdExec {
 		int oIndex = index;
 		index = 0;
 		if (oIndex == 0) {
-			return WDUtils.waitForElement(driver, by, timeoutSecs);
+			return WDUtils.waitForElement(driver, by, timeoutSecs,
+					testCallback);
 		} else {
 			return WDUtils.waitForElements(driver, by, timeoutSecs, true)
 					.get(oIndex);
@@ -208,6 +212,16 @@ public class WdExec {
 		System.out.println(WDUtils.outerHtml(driver, elem));
 	}
 
+	public String readRelativeUrl(String relativeUrl) {
+		try {
+			String url = SEUtilities.combinePaths(token.getConfiguration().uri,
+					relativeUrl);
+			return ResourceUtilities.readUrlAsString(url);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public void scrollIntoView() {
 		WDUtils.scrollIntoView(driver, getElement());
 	}
@@ -253,6 +267,11 @@ public class WdExec {
 		}
 	}
 
+	public WdExec testCallback(TestCallback testCallback) {
+		this.testCallback = testCallback;
+		return this;
+	}
+
 	public WdExec textMatchParent(String template, Object... args) {
 		clearByParams();
 		textMatchParent = Ax.format(template, args);
@@ -270,7 +289,7 @@ public class WdExec {
 	}
 
 	public void waitFor() {
-		for (int i = 0; i < 30; i++) {
+		for (int i = 0; i < timeoutSecs * 10; i++) {
 			if (immediateTest()) {
 				return;
 			} else {
