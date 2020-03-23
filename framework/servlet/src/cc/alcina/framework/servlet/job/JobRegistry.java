@@ -139,6 +139,10 @@ public class JobRegistry implements RegistrableService {
 				add);
 	}
 
+	public static ProgressBuilder progressBuilder() {
+		return new ProgressBuilder();
+	}
+
 	private Map<String, JobTracker> trackerMap = new ConcurrentHashMap<String, JobTracker>();
 
 	boolean refuseJobs = false;
@@ -375,8 +379,10 @@ public class JobRegistry implements RegistrableService {
 			jobProgress(String.format("(%s/%s) -  %s", itemsCompleted,
 					itemCount, message), progress);
 		} else {
-			// Ax.out("Update job (no tracker): %s - %s
-			// completedDelta",message,completedDelta);
+			if (!Ax.isTest()) {
+				Ax.out("Update job (no tracker): %s - %s completedDelta",
+						message, completedDelta);
+			}
 		}
 	}
 
@@ -509,5 +515,36 @@ public class JobRegistry implements RegistrableService {
 		tracker.setJobException(ex);
 		jobComplete(tracker, JobResultType.FAIL, jobResult);
 		notifyJobFailure(tracker);
+	}
+
+	public static class ProgressBuilder {
+		private String message;
+
+		private int delta;
+
+		private int total;
+
+		public void publish() {
+			JobTracker contextTracker = JobRegistry.get().getContextTracker();
+			if (contextTracker != null) {
+				contextTracker.setItemCount(total);
+			}
+			JobRegistry.get().updateJob(message, delta);
+		}
+
+		public ProgressBuilder withDelta(int delta) {
+			this.delta = delta;
+			return this;
+		}
+
+		public ProgressBuilder withMessage(String template, Object... args) {
+			this.message = Ax.format(template, args);
+			return this;
+		}
+
+		public ProgressBuilder withTotal(int total) {
+			this.total = total;
+			return this;
+		}
 	}
 }
