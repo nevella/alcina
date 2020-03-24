@@ -405,6 +405,12 @@ public class JobRegistry implements RegistrableService {
 	}
 
 	private void flushTracker(JobTracker tracker) {
+		if (tracker == null) {
+			// TODO - this shouldn't happen - probably need to make
+			// flushContextTracker...indeed, a lot of the xxContext/Tracker
+			// methods...protected
+			return;
+		}
 		tracker.setLog(tracker.getLog() + getContextLogBuffer(tracker));
 	}
 
@@ -468,6 +474,7 @@ public class JobRegistry implements RegistrableService {
 					"warn -- popping wrong tracker %s, thread-current %s\n",
 					tracker, current);
 		} else {
+			flushTracker(tracker);
 			JobTracker parent = tracker.getParent();
 			if (parent != null) {
 				List<JobTracker> newList = new ArrayList<JobTracker>(
