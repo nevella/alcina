@@ -89,11 +89,15 @@ public class XmlTokenOutput {
 
 	public void ensureOpenClass(XmlStructuralJoin join, String tag,
 			String className) {
-		if (!writeCursor.ancestors().orSelf().list().stream().anyMatch(c -> c
-				.tagIs(tag)
-				&& (className == null || c.attrIs("class", className)))) {
+		if (!isOpen(tag, className)) {
 			open(join, tag);
 		}
+	}
+
+	public boolean isOpen(String tag, String className) {
+		return writeCursor.ancestors().orSelf().list().stream().anyMatch(c -> c
+				.tagIs(tag)
+				&& (className == null || c.attrIs("class", className)));
 	}
 
 	public XmlNode getLastTextNode() {
