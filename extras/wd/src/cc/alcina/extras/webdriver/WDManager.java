@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class WDManager {
+	// keeps browsers alive (prevents finalizers)
 	private static Map<String, WDToken> resultCache = new HashMap<String, WDToken>();
 
 	public static final String CONTEXT_TOKEN = WDManager.class.getName()
@@ -92,6 +93,7 @@ public class WDManager {
 							Ax.err("...no...closeAndCleanup");
 						}
 					}
+					//
 					cacheToken(token);
 				} catch (Throwable e) {
 					e.printStackTrace();
