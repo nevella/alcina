@@ -33,7 +33,7 @@ public abstract class AlcinaCollectors {
 		return Registry.impl(AlcinaCollectors.class).toKeyMap0(keyMapper);
 	}
 
-	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>>
+	public static <T, K> Collector<T, ?, Multimap<K, List<T>>>
 			toKeyMultimap(Function<? super T, ? extends K> keyMapper) {
 		return Registry.impl(AlcinaCollectors.class).toKeyMultimap0(keyMapper);
 	}

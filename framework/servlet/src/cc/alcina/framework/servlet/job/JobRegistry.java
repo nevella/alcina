@@ -522,7 +522,7 @@ public class JobRegistry implements RegistrableService {
 
 		private int delta;
 
-		private int total;
+		private int total = 1;
 
 		public void publish() {
 			JobTracker contextTracker = JobRegistry.get().getContextTracker();
