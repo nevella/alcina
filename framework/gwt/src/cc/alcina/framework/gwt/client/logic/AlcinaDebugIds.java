@@ -54,10 +54,12 @@ public class AlcinaDebugIds {
 
 	public static final String DEBUG_IGNORE_IE_DOWNLOAD = "d-ignore-ie-download";
 
+	public static final String DEBUG_IGNORE_DOWNLOAD = "d-ignore-download";
+
 	public static final List<String> DEBUG_IDS = new ArrayList(Arrays.asList(
 			new String[] { DEBUG_SIMULATE_OFFLINE, DEBUG_LOG_LOAD_METRICS,
 					DEBUG_SUPPRESS_UI_EXCEPTION_NOTIFICATIONS,
-					DEBUG_IGNORE_IE_DOWNLOAD }));
+					DEBUG_IGNORE_IE_DOWNLOAD, DEBUG_IGNORE_DOWNLOAD }));
 
 	static List<String> debugIdsMatched = new ArrayList<String>();
 
