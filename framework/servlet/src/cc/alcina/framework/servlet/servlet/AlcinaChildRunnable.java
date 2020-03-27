@@ -18,211 +18,216 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 
 public abstract class AlcinaChildRunnable implements Runnable {
-    public static <T> void parallelStream(String name, List<T> items,
-            Consumer<T> consumer) {
-        CountDownLatch latch = new CountDownLatch(items.size());
-        items.stream().forEach(i -> {
-            Runnable itemRunnable = () -> consumer.accept(i);
-            new AlcinaChildContextRunner(
-                    Ax.format("%s-%s", name, items.indexOf(i)))
-                            .callNewThread(itemRunnable, latch);
-        });
-        try {
-            latch.await();
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
+	public static <T> void parallelStream(String name, List<T> items,
+			Consumer<T> consumer) {
+		CountDownLatch latch = new CountDownLatch(items.size());
+		items.stream().forEach(i -> {
+			Runnable itemRunnable = () -> consumer.accept(i);
+			new AlcinaChildContextRunner(
+					Ax.format("%s-%s", name, items.indexOf(i)))
+							.callNewThread(itemRunnable, latch);
+		});
+		try {
+			latch.await();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
-    public static <T> Consumer<T> wrapWithCurrentThreadContext(
-            Consumer<T> consumer) {
-        LooseContextInstance snapshot = LooseContext.getContext().snapshot();
-        return t -> {
-            try {
-                LooseContext.push();
-                LooseContext.putSnapshotProperties(snapshot);
-                consumer.accept(t);
-            } finally {
-                LooseContext.pop();
-            }
-        };
-    }
+	public static <T> Consumer<T>
+			wrapWithCurrentThreadContext(Consumer<T> consumer) {
+		LooseContextInstance snapshot = LooseContext.getContext().snapshot();
+		return t -> {
+			try {
+				LooseContext.push();
+				LooseContext.putSnapshotProperties(snapshot);
+				consumer.accept(t);
+			} finally {
+				LooseContext.pop();
+			}
+		};
+	}
 
-    public static Runnable wrapWithCurrentThreadContext(Runnable runnable) {
-        LooseContextInstance snapshot = LooseContext.getContext().snapshot();
-        return () -> {
-            try {
-                LooseContext.push();
-                LooseContext.putSnapshotProperties(snapshot);
-                runnable.run();
-            } finally {
-                LooseContext.pop();
-            }
-        };
-    }
+	public static Runnable wrapWithCurrentThreadContext(Runnable runnable) {
+		LooseContextInstance snapshot = LooseContext.getContext().snapshot();
+		return () -> {
+			try {
+				LooseContext.push();
+				LooseContext.putSnapshotProperties(snapshot);
+				runnable.run();
+			} finally {
+				LooseContext.pop();
+			}
+		};
+	}
 
-    private PermissionsManagerState permissionsManagerState;
+	private PermissionsManagerState permissionsManagerState;
 
-    private String threadName;
+	private String threadName;
 
-    private ClassLoader contextClassLoader;
+	private ClassLoader contextClassLoader;
 
-    protected RunContext runContext = new RunContext();
+	protected RunContext runContext = new RunContext();
 
-    Map<String, Object> copyContext = new LinkedHashMap<>();
+	Map<String, Object> copyContext = new LinkedHashMap<>();
 
-    public AlcinaChildRunnable(String name) {
-        this.threadName = name;
-        this.permissionsManagerState = PermissionsManager.get().snapshotState();
-        this.contextClassLoader = Thread.currentThread()
-                .getContextClassLoader();
-        if (ResourceUtilities.is(AlcinaChildRunnable.class,
-                "traceConstruction")) {
-            Ax.out("Constructing AlcinaChildRunnable - thread id: %s name: %s\n\n%s",
-                    Thread.currentThread().getId(), name, SEUtilities
-                            .getStacktraceSlice(Thread.currentThread(), 30, 2));
-        }
-    }
+	public AlcinaChildRunnable(String name) {
+		this.threadName = name;
+		this.permissionsManagerState = PermissionsManager.get().snapshotState();
+		this.contextClassLoader = Thread.currentThread()
+				.getContextClassLoader();
+		if (ResourceUtilities.is(AlcinaChildRunnable.class,
+				"traceConstruction")) {
+			Ax.out("Constructing AlcinaChildRunnable - thread id: %s name: %s\n\n%s",
+					Thread.currentThread().getId(), name, SEUtilities
+							.getStacktraceSlice(Thread.currentThread(), 30, 2));
+		}
+	}
 
-    public AlcinaChildRunnable copyContext(String key) {
-        copyContext.put(key, LooseContext.get(key));
-        return this;
-    }
+	public AlcinaChildRunnable copyContext(String key) {
+		copyContext.put(key, LooseContext.get(key));
+		return this;
+	}
 
-    public AlcinaChildRunnable logExceptions() {
-        getRunContext().logExceptions = true;
-        return this;
-    }
+	public AlcinaChildRunnable logExceptions() {
+		getRunContext().logExceptions = true;
+		return this;
+	}
 
-    @Override
-    public void run() {
-        if (threadName != null) {
-            Thread.currentThread().setName(threadName);
-        }
-        try {
-            LooseContext.push();
-            // different thread-local
-            getRunContext().tLooseContextDepth = LooseContext.depth();
-            this.permissionsManagerState.copyTo(PermissionsManager.get());
-            Thread.currentThread().setContextClassLoader(contextClassLoader);
-            copyContext.forEach((k, v) -> LooseContext.set(k, v));
-            run0();
-        } catch (OutOfMemoryError e) {
-            SEUtilities.dumpAllThreads();
-            throw e;
-        } catch (Throwable throwable) {
-            if (getRunContext().logExceptions) {
-                throwable.printStackTrace();
-                EntityLayerLogging.persistentLog(
-                        LogMessageType.WORKER_THREAD_EXCEPTION,
-                        SEUtilities.getFullExceptionMessage(throwable));
-            }
-            if (throwable instanceof RuntimeException) {
-                throw ((RuntimeException) throwable);
-            }
-            throw new RuntimeException(throwable);
-        } finally {
-            LooseContext.confirmDepth(getRunContext().tLooseContextDepth);
-            LooseContext.pop();
-        }
-    }
+	@Override
+	public void run() {
+		if (threadName != null) {
+			Thread.currentThread().setName(threadName);
+		}
+		try {
+			LooseContext.push();
+			// different thread-local
+			getRunContext().tLooseContextDepth = LooseContext.depth();
+			this.permissionsManagerState.copyTo(PermissionsManager.get());
+			Thread.currentThread().setContextClassLoader(contextClassLoader);
+			copyContext.forEach((k, v) -> LooseContext.set(k, v));
+			run0();
+		} catch (OutOfMemoryError e) {
+			SEUtilities.dumpAllThreads();
+			throw e;
+		} catch (Throwable throwable) {
+			if (getRunContext().logExceptions) {
+				throwable.printStackTrace();
+				EntityLayerLogging.persistentLog(
+						LogMessageType.WORKER_THREAD_EXCEPTION,
+						SEUtilities.getFullExceptionMessage(throwable));
+			}
+			if (throwable instanceof RuntimeException) {
+				throw ((RuntimeException) throwable);
+			}
+			throw new RuntimeException(throwable);
+		} finally {
+			LooseContext.confirmDepth(getRunContext().tLooseContextDepth);
+			LooseContext.pop();
+		}
+	}
 
-    public AlcinaChildRunnable withContext(String key, Object value) {
-        copyContext.put(key, value);
-        return this;
-    }
+	public AlcinaChildRunnable withContext(String key, Object value) {
+		copyContext.put(key, value);
+		return this;
+	}
 
-    protected RunContext getRunContext() {
-        return runContext;
-    }
+	public AlcinaChildRunnable withContextSnapshot() {
+		copyContext.putAll(LooseContext.getContext().properties);
+		return this;
+	}
 
-    protected abstract void run0() throws Exception;
+	protected RunContext getRunContext() {
+		return runContext;
+	}
 
-    public static class AlcinaChildContextRunner extends AlcinaChildRunnable {
-        ThreadLocal<RunContext> contexts = new ThreadLocal<AlcinaChildRunnable.RunContext>() {
-            @Override
-            protected RunContext initialValue() {
-                return new RunContext();
-            }
-        };
+	protected abstract void run0() throws Exception;
 
-        private long launcherThreadId;
+	public static class AlcinaChildContextRunner extends AlcinaChildRunnable {
+		ThreadLocal<RunContext> contexts = new ThreadLocal<AlcinaChildRunnable.RunContext>() {
+			@Override
+			protected RunContext initialValue() {
+				return new RunContext();
+			}
+		};
 
-        public Throwable thrown;
+		private long launcherThreadId;
 
-        public Object result;
+		public Throwable thrown;
 
-        public AlcinaChildContextRunner(String name) {
-            super(name);
-            launcherThreadId = Thread.currentThread().getId();
-        }
+		public Object result;
 
-        public Object call(Runnable runnable) {
-            if (Thread.currentThread().getId() == launcherThreadId) {
-                // don't do anything fancy to the context (e.g. fork/join pool)
-                runnable.run();
-                return null;
-            } else {
-                getRunContext().runnable = runnable;
-                run();
-                return null;
-            }
-        }
+		public AlcinaChildContextRunner(String name) {
+			super(name);
+			launcherThreadId = Thread.currentThread().getId();
+		}
 
-        public Object callNewThread(Runnable runnable) {
-            return callNewThread(runnable, null);
-        }
+		public Object call(Runnable runnable) {
+			if (Thread.currentThread().getId() == launcherThreadId) {
+				// don't do anything fancy to the context (e.g. fork/join pool)
+				runnable.run();
+				return null;
+			} else {
+				getRunContext().runnable = runnable;
+				run();
+				return null;
+			}
+		}
 
-        public Object callNewThread(Runnable runnable, CountDownLatch latch) {
-            new Thread() {
-                @Override
-                public void run() {
-                    getRunContext().runnable = runnable;
-                    try {
-                        AlcinaChildContextRunner.this.run();
-                    } finally {
-                        if (latch != null) {
-                            latch.countDown();
-                        }
-                    }
-                }
-            }.start();
-            return null;
-        }
+		public Object callNewThread(Runnable runnable) {
+			return callNewThread(runnable, null);
+		}
 
-        public Object callNewThreadOrCurrent(Runnable runnable,
-                CountDownLatch latch, boolean newThread) {
-            if (newThread) {
-                callNewThread(runnable, latch);
-            } else {
-                try {
-                    runnable.run();
-                } finally {
-                    if (latch != null) {
-                        latch.countDown();
-                    }
-                }
-            }
-            return null;
-        }
+		public Object callNewThread(Runnable runnable, CountDownLatch latch) {
+			new Thread() {
+				@Override
+				public void run() {
+					getRunContext().runnable = runnable;
+					try {
+						AlcinaChildContextRunner.this.run();
+					} finally {
+						if (latch != null) {
+							latch.countDown();
+						}
+					}
+				}
+			}.start();
+			return null;
+		}
 
-        @Override
-        public AlcinaChildContextRunner copyContext(String key) {
-            super.copyContext(key);
-            return this;
-        }
+		public Object callNewThreadOrCurrent(Runnable runnable,
+				CountDownLatch latch, boolean newThread) {
+			if (newThread) {
+				callNewThread(runnable, latch);
+			} else {
+				try {
+					runnable.run();
+				} finally {
+					if (latch != null) {
+						latch.countDown();
+					}
+				}
+			}
+			return null;
+		}
 
-        @Override
-        protected void run0() throws Exception {
-            getRunContext().runnable.run();
-        }
-    }
+		@Override
+		public AlcinaChildContextRunner copyContext(String key) {
+			super.copyContext(key);
+			return this;
+		}
 
-    class RunContext {
-        private int tLooseContextDepth;
+		@Override
+		protected void run0() throws Exception {
+			getRunContext().runnable.run();
+		}
+	}
 
-        private boolean logExceptions = true;
+	class RunContext {
+		private int tLooseContextDepth;
 
-        private Runnable runnable;
-    }
+		private boolean logExceptions = true;
+
+		private Runnable runnable;
+	}
 }
