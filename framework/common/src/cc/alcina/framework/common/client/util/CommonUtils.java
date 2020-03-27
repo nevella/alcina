@@ -40,7 +40,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
-
 /**
  *
  * @author Nick Reddel
@@ -637,6 +636,11 @@ public class CommonUtils {
 			return format("%s %s",
 					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
 					padTwo(date.getYear() + 1900));
+		case AU_DATE_TIME_SHORT:
+			return format("%s/%s/%s - %s:%s:%s", padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
+					padTwo(date.getHours()), padTwo(date.getMinutes()),
+					padTwo(date.getSeconds()));
 		}
 		return date.toString();
 	}
@@ -1818,7 +1822,7 @@ public class CommonUtils {
 		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
 		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
 		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH, TIMESTAMP_NO_DAY,
-		AU_DATE_MONTH_NO_PAD_DAY
+		AU_DATE_MONTH_NO_PAD_DAY, AU_DATE_TIME_SHORT
 	}
 
 	public static class DeduplicatePredicate<C, K> implements Predicate<C> {

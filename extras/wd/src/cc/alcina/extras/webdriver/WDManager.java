@@ -77,17 +77,28 @@ public class WDManager {
                 }
                 test.process(token, 0, null);
             } finally {
-                LooseContext.pop();
+            	try {
+					if (token.getRootResult()
+							.getResultType() != TestResultType.ERROR
+							|| config.closeOnError) {
+						if (ResourceUtilities.is("allowCloseBrowser")) {
+							Ax.err("...closeAndCleanup");
+							try {
+								token.getDriverHandler().closeAndCleanup();
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						} else {
+							Ax.err("...no...closeAndCleanup");
+						}
+					}
+					//
+					cacheToken(token);
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
+				LooseContext.pop();
             }
-            if (token.getRootResult().getResultType() != TestResultType.ERROR
-                    || config.closeOnError) {
-                try {
-                    token.getDriverHandler().closeAndCleanup();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            cacheToken(token);
         }
         logger.info(token.getRootResult().toString());
         return token;
