@@ -94,12 +94,6 @@ public class XmlTokenOutput {
 		}
 	}
 
-	public boolean isOpen(String tag, String className) {
-		return writeCursor.ancestors().orSelf().list().stream().anyMatch(c -> c
-				.tagIs(tag)
-				&& (className == null || c.attrIs("class", className)));
-	}
-
 	public XmlNode getLastTextNode() {
 		return this.lastTextNode;
 	}
@@ -110,6 +104,12 @@ public class XmlTokenOutput {
 
 	public XmlNode getOutputNode() {
 		return writeCursor;
+	}
+
+	public boolean isOpen(String tag, String className) {
+		return writeCursor.ancestors().orSelf().list().stream()
+				.anyMatch(c -> c.tagIs(tag)
+						&& (className == null || c.attrIs("class", className)));
 	}
 
 	public void open(XmlStructuralJoin join, String tag) {
