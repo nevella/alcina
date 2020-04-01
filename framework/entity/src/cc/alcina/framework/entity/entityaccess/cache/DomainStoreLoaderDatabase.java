@@ -173,27 +173,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	// FIXME.mvcc
-	public <T extends HasIdAndLocalId> void copyLazyPropertyValues(T t,
-			T domain) {
-		Class<? extends HasIdAndLocalId> clazz = t.getClass();
-		List<ColumnDescriptor> columnDescriptors = this.columnDescriptors
-				.get(clazz);
-		List<PdOperator> pds = descriptors.get(clazz);
-		int idx = 0;
-		for (idx = 0; idx < columnDescriptors.size(); idx++) {
-			ColumnDescriptor columnDescriptor = columnDescriptors.get(idx);
-			PdOperator pd = pds.get(idx);
-			if (columnDescriptor.loadType == DomainStorePropertyLoadType.LAZY) {
-				try {
-					pd.field.set(domain, pd.field.get(t));
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
-	}
-
 	@Override
 	public LazyObjectLoader getLazyObjectLoader() {
 		return backupLazyLoader;
@@ -1102,6 +1081,46 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	protected synchronized void releaseWarmupConnection(Connection conn) {
 		warmupConnections.add(conn, -1);
+	}
+
+	// FIXME.mvcc
+	<T extends HasIdAndLocalId> void clearLazyPropertyValues(T domain) {
+		Class<? extends HasIdAndLocalId> clazz = domain.getClass();
+		List<ColumnDescriptor> columnDescriptors = this.columnDescriptors
+				.get(clazz);
+		List<PdOperator> pds = descriptors.get(clazz);
+		int idx = 0;
+		for (idx = 0; idx < columnDescriptors.size(); idx++) {
+			ColumnDescriptor columnDescriptor = columnDescriptors.get(idx);
+			PdOperator pd = pds.get(idx);
+			if (columnDescriptor.loadType == DomainStorePropertyLoadType.LAZY) {
+				try {
+					pd.field.set(domain, null);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+	}
+
+	// FIXME.mvcc
+	<T extends HasIdAndLocalId> void copyLazyPropertyValues(T t, T domain) {
+		Class<? extends HasIdAndLocalId> clazz = t.getClass();
+		List<ColumnDescriptor> columnDescriptors = this.columnDescriptors
+				.get(clazz);
+		List<PdOperator> pds = descriptors.get(clazz);
+		int idx = 0;
+		for (idx = 0; idx < columnDescriptors.size(); idx++) {
+			ColumnDescriptor columnDescriptor = columnDescriptors.get(idx);
+			PdOperator pd = pds.get(idx);
+			if (columnDescriptor.loadType == DomainStorePropertyLoadType.LAZY) {
+				try {
+					pd.field.set(domain, pd.field.get(t));
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
 	}
 
 	Connection getConnection() {

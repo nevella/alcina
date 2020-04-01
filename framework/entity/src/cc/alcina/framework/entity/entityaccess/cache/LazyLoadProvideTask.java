@@ -24,218 +24,222 @@ import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.MetricLogging;
 
 public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
-        implements PreProvideTask<T> {
-    final static Logger logger = LoggerFactory
-            .getLogger(MethodHandles.lookup().lookupClass());
+		implements PreProvideTask<T> {
+	final static Logger logger = LoggerFactory
+			.getLogger(MethodHandles.lookup().lookupClass());
 
-    private long minEvictionAge;
+	private long minEvictionAge;
 
-    private int minEvictionSize;
+	private int minEvictionSize;
 
-    protected Class<T> clazz;
+	protected Class<T> clazz;
 
-    private LinkedHashMap<Long, Long> idEvictionAge = new LinkedHashMap<>();
+	private LinkedHashMap<Long, Long> idEvictionAge = new LinkedHashMap<>();
 
-    protected DomainStore domainStore;
+	protected DomainStore domainStore;
 
-    public LazyLoadProvideTask() {
-    }
+	public LazyLoadProvideTask() {
+	}
 
-    public LazyLoadProvideTask(long minEvictionAge, int minEvictionSize,
-            Class<T> clazz) {
-        this.minEvictionAge = minEvictionAge;
-        this.minEvictionSize = minEvictionSize;
-        this.clazz = clazz;
-    }
+	public LazyLoadProvideTask(long minEvictionAge, int minEvictionSize,
+			Class<T> clazz) {
+		this.minEvictionAge = minEvictionAge;
+		this.minEvictionSize = minEvictionSize;
+		this.clazz = clazz;
+	}
 
-    public void evictDependents(EvictionToken evictionToken,
-            Collection<? extends HasIdAndLocalId> hilis) {
-        hilis.stream().forEach(
-                hili -> this.evict(evictionToken, hili.getId(), false));
-    }
+	public void addToEvictionQueue(HasIdAndLocalId hasIdAndLocalId) {
+		idEvictionAge.put(hasIdAndLocalId.getId(), System.currentTimeMillis());
+	}
 
-    @Override
-    public Class<T> forClazz() {
-        return this.clazz;
-    }
+	public void evictDependents(EvictionToken evictionToken,
+			Collection<? extends HasIdAndLocalId> hilis) {
+		hilis.stream().forEach(
+				hili -> this.evict(evictionToken, hili.getId(), false));
+	}
 
-    public void metric(String key, boolean end) {
-        if (end) {
-            MetricLogging.get().end(key, domainStore.metricLogger);
-        } else {
-            MetricLogging.get().start(key);
-        }
-    }
+	@Override
+	public Class<T> forClazz() {
+		return this.clazz;
+	}
 
-    @Override
-    public void registerStore(IDomainStore iDomainStore) {
-        this.domainStore = (DomainStore) iDomainStore;
-    }
+	public void metric(String key, boolean end) {
+		if (end) {
+			MetricLogging.get().end(key, domainStore.metricLogger);
+		} else {
+			MetricLogging.get().start(key);
+		}
+	}
 
-    @Override
-    public void run(Class clazz, Collection<T> objects, boolean topLevel)
-            throws Exception {
-        if (clazz != this.clazz) {
-            return;
-        }
-        List<T> requireLoad = requireLazyLoad(objects);
-        if (!requireLoad.isEmpty()) {
-            if (!checkShouldLazyLoad(requireLoad)) {
-                return;
-            }
-            synchronized (getLockObject()) {
-                // reget, just in case of interim eviction
-                // requireLoad = requireLazyLoad(objects);
-                // now eviction is happening in write-lock, and this only
-                // happens in read-lock, no need
-                lazyLoad(requireLoad);
-                registerLoaded(requireLoad);
-                if (topLevel) {
-                    loadDependents(requireLoad);
-                }
-            }
-        }
-    }
+	@Override
+	public void registerStore(IDomainStore iDomainStore) {
+		this.domainStore = (DomainStore) iDomainStore;
+	}
 
-    @Override
-    public void writeLockedCleanup() {
-        if (evictionDisabled()) {
-            return;
-        }
-        Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet().iterator();
-        EvictionToken evictionToken = new EvictionToken(domainStore, this);
-        while (idEvictionAge
-                .size() > (minEvictionSize
-                        + evictionToken.getTopLevelEvictedCount())
-                && itr.hasNext()) {
-            Entry<Long, Long> entry = itr.next();
-            if ((System.currentTimeMillis()
-                    - entry.getValue()) > minEvictionAge) {
-                try {
-                    Long key = entry.getKey();
-                    if (!evictionToken.wasEvicted(key, this)) {
-                        evict(evictionToken, key, true);
-                    }
-                } catch (Exception e) {
-                    AlcinaTopics.notifyDevWarning(e);
-                }
-            }
-        }
-        evictionToken.removeEvicted();
-    }
+	@Override
+	public void run(Class clazz, Collection<T> objects, boolean topLevel)
+			throws Exception {
+		if (clazz != this.clazz) {
+			return;
+		}
+		List<T> requireLoad = requireLazyLoad(objects);
+		if (!requireLoad.isEmpty()) {
+			if (!checkShouldLazyLoad(requireLoad)) {
+				return;
+			}
+			synchronized (getLockObject()) {
+				// reget, just in case of interim eviction
+				// requireLoad = requireLazyLoad(objects);
+				// now eviction is happening in write-lock, and this only
+				// happens in read-lock, no need
+				lazyLoad(requireLoad);
+				registerLoaded(requireLoad);
+				if (topLevel) {
+					loadDependents(requireLoad);
+				}
+			}
+		}
+	}
 
-    private void registerLoaded(List<T> requireLoad) {
-        for (T t : requireLoad) {
-            idEvictionAge.put(t.getId(), System.currentTimeMillis());
-        }
-    }
+	@Override
+	public void writeLockedCleanup() {
+		if (evictionDisabled()) {
+			return;
+		}
+		Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet().iterator();
+		EvictionToken evictionToken = new EvictionToken(domainStore, this);
+		while (idEvictionAge
+				.size() > (minEvictionSize
+						+ evictionToken.getTopLevelEvictedCount())
+				&& itr.hasNext()) {
+			Entry<Long, Long> entry = itr.next();
+			if ((System.currentTimeMillis()
+					- entry.getValue()) > minEvictionAge) {
+				try {
+					Long key = entry.getKey();
+					if (!evictionToken.wasEvicted(key, this)) {
+						evict(evictionToken, key, true);
+					}
+				} catch (Exception e) {
+					AlcinaTopics.notifyDevWarning(e);
+				}
+			}
+		}
+		evictionToken.removeEvicted();
+	}
 
-    private synchronized List<T> requireLazyLoad(Collection<T> objects) {
-        List<T> result = new ArrayList<T>();
-        for (T t : objects) {
-            Long evictionAge = idEvictionAge.get(t.getId());
-            if (evictionAge == null) {
-                result.add(t);
-            }
-        }
-        return result;
-    }
+	private void registerLoaded(List<T> requireLoad) {
+		for (T t : requireLoad) {
+			idEvictionAge.put(t.getId(), System.currentTimeMillis());
+		}
+	}
 
-    protected abstract boolean checkShouldLazyLoad(List<T> toLoad);
+	private synchronized List<T> requireLazyLoad(Collection<T> objects) {
+		List<T> result = new ArrayList<T>();
+		for (T t : objects) {
+			Long evictionAge = idEvictionAge.get(t.getId());
+			if (evictionAge == null) {
+				result.add(t);
+			}
+		}
+		return result;
+	}
 
-    protected void evict(EvictionToken evictionToken, Long key, boolean top) {
-    }
+	protected abstract boolean checkShouldLazyLoad(List<T> toLoad);
 
-    protected boolean evictionDisabled() {
-        return true;
-    }
+	protected void evict(EvictionToken evictionToken, Long key, boolean top) {
+	}
 
-    protected DetachedEntityCache getDomainCache() {
-        return domainStore.cache;
-    }
+	protected boolean evictionDisabled() {
+		return true;
+	}
 
-    protected Object getLockObject() {
-        return this;
-    }
+	protected DetachedEntityCache getDomainCache() {
+		return domainStore.cache;
+	}
 
-    protected abstract void lazyLoad(Collection<T> objects) throws Exception;
+	protected Object getLockObject() {
+		return this;
+	}
 
-    protected void lllog(String template, Object... args) {
-        logger.debug(template.replace("%s", "{}"), args);
-    }
+	protected abstract void lazyLoad(Collection<T> objects) throws Exception;
 
-    protected abstract void loadDependents(List<T> requireLoad)
-            throws Exception;
+	protected void lllog(String template, Object... args) {
+		logger.debug(template.replace("%s", "{}"), args);
+	}
 
-    protected List<T> loadTable(Class clazz, String sqlFilter, ClassIdLock lock)
-            throws Exception {
-        Preconditions.checkState(
-                domainStore.loader instanceof DomainStoreLoaderDatabase);
-        return ((DomainStoreLoaderDatabase) domainStore.loader).loadTable(clazz,
-                sqlFilter, lock);
-    }
+	protected abstract void loadDependents(List<T> requireLoad)
+			throws Exception;
 
-    protected void log(String template, Object... args) {
-        this.domainStore.sqlLogger.debug(template.replace("%s", "{}"), args);
-    }
+	protected List<T> loadTable(Class clazz, String sqlFilter, ClassIdLock lock)
+			throws Exception {
+		Preconditions.checkState(
+				domainStore.loader instanceof DomainStoreLoaderDatabase);
+		return ((DomainStoreLoaderDatabase) domainStore.loader).loadTable(clazz,
+				sqlFilter, lock);
+	}
 
-    public static class EvictionToken {
-        public DomainStore store;
+	protected void log(String template, Object... args) {
+		this.domainStore.sqlLogger.debug(template.replace("%s", "{}"), args);
+	}
 
-        private LazyLoadProvideTask topLevelTask;
+	public static class EvictionToken {
+		public DomainStore store;
 
-        Multiset<LazyLoadProvideTask, Set<Long>> evicted = new Multiset<>();
+		private LazyLoadProvideTask topLevelTask;
 
-        public EvictionToken(DomainStore store,
-                LazyLoadProvideTask lazyLoadProvideTask) {
-            this.store = store;
-            this.topLevelTask = lazyLoadProvideTask;
-        }
+		Multiset<LazyLoadProvideTask, Set<Long>> evicted = new Multiset<>();
 
-        public <T extends HasIdAndLocalId> T getObject(Long key,
-                Class<T> clazz) {
-            return store.cache.get(clazz, key);
-        }
+		public EvictionToken(DomainStore store,
+				LazyLoadProvideTask lazyLoadProvideTask) {
+			this.store = store;
+			this.topLevelTask = lazyLoadProvideTask;
+		}
 
-        public int getTopLevelEvictedCount() {
-            return evicted.getAndEnsure(topLevelTask).size();
-        }
+		public <T extends HasIdAndLocalId> T getObject(Long key,
+				Class<T> clazz) {
+			return store.cache.get(clazz, key);
+		}
 
-        public void removeEvicted() {
-            FormatBuilder fb = new FormatBuilder();
-            fb.line("Eviction stats:");
-            evicted.entrySet().forEach(e -> {
-                LazyLoadProvideTask task = e.getKey();
-                LinkedHashMap<Long, Long> idEvictionAge = task.idEvictionAge;
-                int s1 = idEvictionAge.size();
-                idEvictionAge.keySet().removeAll(e.getValue());
-                int s2 = idEvictionAge.size();
-                fb.line("\t%s: %s => %s (%s)", task.clazz, s1, s2, s1 - s2);
-            });
-            topLevelTask.lllog(fb.toString());
-        }
+		public int getTopLevelEvictedCount() {
+			return evicted.getAndEnsure(topLevelTask).size();
+		}
 
-        public void removeFromDomainStore(Set<? extends HasIdAndLocalId> set) {
-            if (!set.isEmpty()) {
-                HasIdAndLocalId item0 = set.iterator().next();
-                Class clazz = item0.getClass();
-                int size1 = store.cache.getMap(clazz).size();
-                for (HasIdAndLocalId hili : set) {
-                    store.cache.remove(hili);
-                }
-                int size2 = store.cache.getMap(clazz).size();
-                topLevelTask.lllog(
-                        "remove from domain store: %s :: %s => %s (%s)",
-                        clazz.getSimpleName(), size1, size2, size1 - size2);
-            }
-        }
+		public void removeEvicted() {
+			FormatBuilder fb = new FormatBuilder();
+			fb.line("Eviction stats:");
+			evicted.entrySet().forEach(e -> {
+				LazyLoadProvideTask task = e.getKey();
+				LinkedHashMap<Long, Long> idEvictionAge = task.idEvictionAge;
+				int s1 = idEvictionAge.size();
+				idEvictionAge.keySet().removeAll(e.getValue());
+				int s2 = idEvictionAge.size();
+				fb.line("\t%s: %s => %s (%s)", task.clazz, s1, s2, s1 - s2);
+			});
+			topLevelTask.lllog(fb.toString());
+		}
 
-        public void setEvicted(Long key, LazyLoadProvideTask task) {
-            evicted.add(task, key);
-        }
+		public void removeFromDomainStore(Set<? extends HasIdAndLocalId> set) {
+			if (!set.isEmpty()) {
+				HasIdAndLocalId item0 = set.iterator().next();
+				Class clazz = item0.getClass();
+				int size1 = store.cache.getMap(clazz).size();
+				for (HasIdAndLocalId hili : set) {
+					store.cache.remove(hili);
+				}
+				int size2 = store.cache.getMap(clazz).size();
+				topLevelTask.lllog(
+						"remove from domain store: %s :: %s => %s (%s)",
+						clazz.getSimpleName(), size1, size2, size1 - size2);
+			}
+		}
 
-        public boolean wasEvicted(Long key, LazyLoadProvideTask task) {
-            return evicted.contains(task, key);
-        }
-    }
+		public void setEvicted(Long key, LazyLoadProvideTask task) {
+			evicted.add(task, key);
+		}
+
+		public boolean wasEvicted(Long key, LazyLoadProvideTask task) {
+			return evicted.contains(task, key);
+		}
+	}
 }

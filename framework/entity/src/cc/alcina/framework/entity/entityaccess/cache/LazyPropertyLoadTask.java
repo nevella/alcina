@@ -13,13 +13,27 @@ import cc.alcina.framework.entity.projection.EntityUtils;
 public class LazyPropertyLoadTask<T extends HasIdAndLocalId>
 		extends LazyLoadProvideTask {
 	public LazyPropertyLoadTask(Class<T> clazz, DomainStore domainStore) {
-		super(TimeConstants.ONE_MINUTE_MS, 100, clazz);
+		super(5 * TimeConstants.ONE_SECOND_MS, 10, clazz);
 		registerStore(domainStore);
 	}
 
 	@Override
 	protected boolean checkShouldLazyLoad(List toLoad) {
 		return true;
+	}
+
+	@Override
+	protected void evict(EvictionToken evictionToken, Long key, boolean top) {
+		T domain = Domain.find(clazz, key);
+		if (domain != null) {
+			((DomainStoreLoaderDatabase) domainStore.loader)
+					.clearLazyPropertyValues(domain);
+		}
+	}
+
+	@Override
+	protected boolean evictionDisabled() {
+		return false;
 	}
 
 	@Override

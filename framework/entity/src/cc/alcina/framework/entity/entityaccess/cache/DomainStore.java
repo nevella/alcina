@@ -444,6 +444,15 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	// FIXME.mvcc - useentityclass
+	private void
+			addToLazyPropertyEvictionQueue(HasIdAndLocalId hasIdAndLocalId) {
+		domainDescriptor.getPreProvideTasks(hasIdAndLocalId.getClass()).stream()
+				.filter(ppt -> ppt instanceof LazyLoadProvideTask).findFirst()
+				.map(ppt -> (LazyLoadProvideTask) ppt).get()
+				.addToEvictionQueue(hasIdAndLocalId);
+	}
+
 	private void doEvictions() {
 		domainDescriptor.preProvideTasks
 				.forEach(PreProvideTask::writeLockedCleanup);
@@ -744,7 +753,8 @@ public class DomainStore implements IDomainStore {
 				}
 			}
 			try {
-				for (PreProvideTask task : domainDescriptor.preProvideTasks) {
+				for (PreProvideTask task : domainDescriptor
+						.getPreProvideTasks(clazz)) {
 					task.run(clazz, raw, true);
 				}
 				if (query.isRaw() || isWillProjectLater()) {
@@ -903,6 +913,15 @@ public class DomainStore implements IDomainStore {
 					} else {
 						logger.warn("Null domain store object for index - {}",
 								HiliLocator.objectLocator(dte));
+					}
+				}
+				if (dte.getPropertyName() != null) {
+					DomainStoreProperty ann = domainStoreProperties
+							.get(dte.getObjectClass(), dte.getPropertyName());
+					if (ann != null && ann
+							.loadType() == DomainStorePropertyLoadType.LAZY) {
+						addToLazyPropertyEvictionQueue(
+								transformManager.getObject(dte, true));
 					}
 				}
 			}
