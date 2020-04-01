@@ -2,10 +2,12 @@ package cc.alcina.framework.entity.util;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,8 @@ import cc.alcina.framework.entity.entityaccess.cache.LockUtils;
 import cc.alcina.framework.entity.entityaccess.cache.LockUtils.ClassStringKeyLock;
 
 public class FsObjectCache<T> implements PersistentObjectCache<T> {
+	public static final transient ThrowingFunction<String, ?> NULL_PATH_TO_VALUE = path -> null;
+
 	private File root;
 
 	private ThrowingFunction<String, T> pathToValue;
@@ -51,6 +55,13 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		this.pathToValue = pathToValue;
 	}
 
+	@Override
+	public void clear() {
+		Arrays.stream(root.listFiles()).forEach(File::delete);
+		cachedObjects.clear();
+	}
+
+	@Override
 	public T get(String path) {
 		ClassStringKeyLock lock = LockUtils
 				.obtainClassStringKeyLock(pathToValue.getClass(), path);
@@ -74,7 +85,16 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		return this.cacheObjects;
 	}
 
-	public void persist(T t, String path) {
+	@Override
+	public List<String> listChildPaths(String pathPrefix) {
+		return Arrays.stream(root.listFiles())
+				.filter(f -> f.getName().startsWith(pathPrefix))
+				.map(f -> f.getName().replaceFirst("(.+)\\.dat", "$1"))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public void persist(String path, T t) {
 		ClassStringKeyLock lock = LockUtils
 				.obtainClassStringKeyLock(pathToValue.getClass(), path);
 		try {
@@ -110,6 +130,11 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		} finally {
 			lock.unlock();
 		}
+	}
+
+	@Override
+	public void remove(String path) {
+		getCacheFile(path).delete();
 	}
 
 	public void setCacheObjects(boolean cacheObjects) {
@@ -170,6 +195,9 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		}
 		File cacheFile = getCacheFile(path);
 		if (!cacheFile.exists() || !allowFromCachedObjects) {
+			if (pathToValue == NULL_PATH_TO_VALUE) {
+				return null;
+			}
 			try {
 				logger.info("refreshing cache object - {} - {}",
 						clazz.getSimpleName(), path);

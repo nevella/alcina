@@ -80,7 +80,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
         }
         List<T> requireLoad = requireLazyLoad(objects);
         if (!requireLoad.isEmpty()) {
-            if (!beforeLazyLoad(requireLoad)) {
+            if (!checkShouldLazyLoad(requireLoad)) {
                 return;
             }
             synchronized (getLockObject()) {
@@ -141,7 +141,7 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
         return result;
     }
 
-    protected abstract boolean beforeLazyLoad(List<T> toLoad);
+    protected abstract boolean checkShouldLazyLoad(List<T> toLoad);
 
     protected void evict(EvictionToken evictionToken, Long key, boolean top) {
     }

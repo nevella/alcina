@@ -85,10 +85,6 @@ public interface CommonPersistenceLocal {
 
 	public abstract Iid getIidByKey(String iid);
 
-	public abstract <A> Class<? extends A> getImplementation(Class<A> clazz);
-
-	public String getImplementationSimpleClassName(Class<?> clazz);
-
 	public <T> T getItemById(Class<T> clazz, Long id);
 
 	public <T> T getItemById(Class<T> clazz, Long id, boolean clean,
@@ -212,7 +208,6 @@ public interface CommonPersistenceLocal {
 			long clientInstanceId);
 
 	long getMaxPublicationIdForUser(IUser user);
-	
-    List<Long> listRecentClientInstanceIds(String iidKey);
 
+	List<Long> listRecentClientInstanceIds(String iidKey);
 }
