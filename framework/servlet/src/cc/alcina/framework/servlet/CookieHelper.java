@@ -60,6 +60,14 @@ public class CookieHelper {
 	}
 
 	public String getCookieValueByName(HttpServletRequest req, String n) {
+		// Try added cookies first
+		List<Cookie> addedCookies = getAddedCookies(req);
+		for (Cookie cookie : addedCookies) {
+			if (cookie.getName().equals(n)) {
+				return cookie.getValue();
+			}
+		}
+		// Then try original cookies
 		Cookie[] cookies = req.getCookies();
 		if (cookies == null) {
 			return null;
@@ -129,7 +137,7 @@ public class CookieHelper {
 		addToRqAndRsp(request, response, cookie);
 	}
 
-	void addToRqAndRsp(HttpServletRequest request, HttpServletResponse response,
+	public void addToRqAndRsp(HttpServletRequest request, HttpServletResponse response,
 			Cookie cookie) {
 		getAddedCookies(request).add(cookie);
 		response.addCookie(cookie);
