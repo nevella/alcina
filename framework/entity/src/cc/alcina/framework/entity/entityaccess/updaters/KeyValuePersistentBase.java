@@ -136,7 +136,6 @@ public abstract class KeyValuePersistentBase<T extends KeyValuePersistentBase>
 		byte[] bytes = KryoUtils.serializeToByteArray(object);
 		byte[] zipped = ResourceUtilities.gzipBytes(bytes);
 		String serializeToBase64 = Base64.getEncoder().encodeToString(zipped);
-		Ax.out("obj bytes: %s (%s unzipped)", zipped.length, bytes.length);
 		setValue(serializeToBase64);
 	}
 
