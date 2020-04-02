@@ -20,11 +20,15 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.MetricLogging;
 
 public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		implements PreProvideTask<T> {
+	public static final String CONTEXT_LAZY_LOAD_DISABLED = LazyLoadProvideTask.class
+			.getName() + ".CONTEXT_LAZY_LOAD_DISABLED";
+
 	final static Logger logger = LoggerFactory
 			.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -82,6 +86,9 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		if (clazz != this.clazz) {
 			return;
 		}
+		if (LooseContext.is(CONTEXT_LAZY_LOAD_DISABLED)) {
+			return;
+		}
 		List<T> requireLoad = requireLazyLoad(objects);
 		if (!requireLoad.isEmpty()) {
 			if (!checkShouldLazyLoad(requireLoad)) {
@@ -106,26 +113,32 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		if (evictionDisabled()) {
 			return;
 		}
-		Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet().iterator();
-		EvictionToken evictionToken = new EvictionToken(domainStore, this);
-		while (idEvictionAge
-				.size() > (minEvictionSize
-						+ evictionToken.getTopLevelEvictedCount())
-				&& itr.hasNext()) {
-			Entry<Long, Long> entry = itr.next();
-			if ((System.currentTimeMillis()
-					- entry.getValue()) > minEvictionAge) {
-				try {
-					Long key = entry.getKey();
-					if (!evictionToken.wasEvicted(key, this)) {
-						evict(evictionToken, key, true);
+		try {
+			LooseContext.pushWithTrue(CONTEXT_LAZY_LOAD_DISABLED);
+			Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet()
+					.iterator();
+			EvictionToken evictionToken = new EvictionToken(domainStore, this);
+			while (idEvictionAge
+					.size() > (minEvictionSize
+							+ evictionToken.getTopLevelEvictedCount())
+					&& itr.hasNext()) {
+				Entry<Long, Long> entry = itr.next();
+				if ((System.currentTimeMillis()
+						- entry.getValue()) > minEvictionAge) {
+					try {
+						Long key = entry.getKey();
+						if (!evictionToken.wasEvicted(key, this)) {
+							evict(evictionToken, key, true);
+						}
+					} catch (Exception e) {
+						AlcinaTopics.notifyDevWarning(e);
 					}
-				} catch (Exception e) {
-					AlcinaTopics.notifyDevWarning(e);
 				}
 			}
+			evictionToken.removeEvicted();
+		} finally {
+			LooseContext.pop();
 		}
-		evictionToken.removeEvicted();
 	}
 
 	private void registerLoaded(List<T> requireLoad) {
