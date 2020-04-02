@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -65,5 +66,11 @@ public class LazyPropertyLoadTask<T extends HasIdAndLocalId>
 
 	@Override
 	protected void loadDependents(List requireLoad) throws Exception {
+	}
+
+	@Override
+	protected synchronized List requireLazyLoad(Collection objects) {
+		// eviction is being a bit gnargnar, and this is just til mvcc
+		return (List) objects.stream().distinct().collect(Collectors.toList());
 	}
 }

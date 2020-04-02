@@ -134,17 +134,6 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 		}
 	}
 
-	private synchronized List<T> requireLazyLoad(Collection<T> objects) {
-		List<T> result = new ArrayList<T>();
-		for (T t : objects) {
-			Long evictionAge = idEvictionAge.get(t.getId());
-			if (evictionAge == null) {
-				result.add(t);
-			}
-		}
-		return result;
-	}
-
 	protected abstract boolean checkShouldLazyLoad(List<T> toLoad);
 
 	protected void evict(EvictionToken evictionToken, Long key, boolean top) {
@@ -181,6 +170,17 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId>
 
 	protected void log(String template, Object... args) {
 		this.domainStore.sqlLogger.debug(template.replace("%s", "{}"), args);
+	}
+
+	protected synchronized List<T> requireLazyLoad(Collection<T> objects) {
+		List<T> result = new ArrayList<T>();
+		for (T t : objects) {
+			Long evictionAge = idEvictionAge.get(t.getId());
+			if (evictionAge == null) {
+				result.add(t);
+			}
+		}
+		return result;
 	}
 
 	public static class EvictionToken {
