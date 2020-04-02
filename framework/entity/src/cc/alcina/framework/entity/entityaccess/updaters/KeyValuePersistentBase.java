@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.TransformPersisterViaServletLayerPersistence;
 
@@ -103,7 +104,9 @@ public abstract class KeyValuePersistentBase<T extends KeyValuePersistentBase>
 	private String parentKey;
 
 	public <V> V deserializeObject(Class<V> knownType) {
-		return KryoUtils.deserializeFromBase64(getValue(), knownType);
+		byte[] zipped = Base64.getDecoder().decode(getValue());
+		byte[] bytes = ResourceUtilities.gunzipBytes(zipped);
+		return KryoUtils.deserializeFromByteArray(bytes, knownType);
 	}
 
 	@Transient
@@ -130,8 +133,10 @@ public abstract class KeyValuePersistentBase<T extends KeyValuePersistentBase>
 	}
 
 	public void serializeObject(Object object) {
-		String serializeToBase64 = KryoUtils.serializeToBase64(object);
-		Ax.out("obj bytes: %s", serializeToBase64.length());
+		byte[] bytes = KryoUtils.serializeToByteArray(object);
+		byte[] zipped = ResourceUtilities.gzipBytes(bytes);
+		String serializeToBase64 = Base64.getEncoder().encodeToString(zipped);
+		Ax.out("obj bytes: %s (%s unzipped)", zipped.length, bytes.length);
 		setValue(serializeToBase64);
 	}
 
