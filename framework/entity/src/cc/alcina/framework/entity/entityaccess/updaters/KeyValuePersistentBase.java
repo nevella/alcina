@@ -130,7 +130,9 @@ public abstract class KeyValuePersistentBase<T extends KeyValuePersistentBase>
 	}
 
 	public void serializeObject(Object object) {
-		setValue(KryoUtils.serializeToBase64(object));
+		String serializeToBase64 = KryoUtils.serializeToBase64(object);
+		Ax.out("obj bytes: %s", serializeToBase64.length());
+		setValue(serializeToBase64);
 	}
 
 	public void setBytes(byte[] bytes) {
