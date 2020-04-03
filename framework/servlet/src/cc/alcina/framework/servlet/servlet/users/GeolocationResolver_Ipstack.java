@@ -42,7 +42,7 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
                     ipAddress);
             String result = ResourceUtilities.readUrlAsString(url);
             ObjectNode node = (ObjectNode) new ObjectMapper().readTree(result);
-            if (Ax.isBlank(node.get("country_name").asText())) {
+            if (node.get("country_name").isNull()){
                 return "(Local address)";
             }
             return Ax.format("%s/%s",
