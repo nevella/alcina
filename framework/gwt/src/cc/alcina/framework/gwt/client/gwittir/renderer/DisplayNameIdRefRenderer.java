@@ -29,9 +29,10 @@ public class DisplayNameIdRefRenderer extends FlexibleToStringRenderer {
 		this.targetClass = targetClass;
 	}
 
+	@Override
 	public String render(Object o) {
 		if (o == null) {
-			return "0";
+			return "";
 		}
 		Long id = (Long) o;
 		HasIdAndLocalId object = Reflections.objectLookup()

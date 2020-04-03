@@ -22,6 +22,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
@@ -68,7 +69,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	@Override
 	public <T> T filterData(T value, T cloned, GraphProjectionContext context,
 			GraphProjection graphCloner) throws Exception {
-		if (value instanceof HasIdAndLocalId) {
+		if (value instanceof HasIdAndLocalId && ! (value instanceof WrapperPersistable)) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) value;
 			if (ensureInjected != null && ensureInjected.containsKey(hili)) {
 				hili = ensureInjected.get(hili);

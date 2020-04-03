@@ -41,6 +41,7 @@ public class LongCriteriaGroup extends CriteriaGroup<LongCriterion> {
 		getCriteria().add(lc);
 	}
 
+	@Override
 	public String getDisplayName() {
 		return this.displayName;
 	}

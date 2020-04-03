@@ -43,6 +43,9 @@ public abstract class AbstractRenderer<T extends TreeRenderable>
 
 	private List<TreeRenderer> childRenderers = new ArrayList<TreeRenderer>();
 
+	private TreeRenderer parentRenderer;
+
+	@Override
 	public TreeRenderer childRendererForRenderableClass(
 			Class<? extends TreeRenderable> clazz) {
 		if (renderable.getClass() == clazz) {
@@ -57,83 +60,114 @@ public abstract class AbstractRenderer<T extends TreeRenderable>
 		return null;
 	}
 
+	@Override
 	public Collection<? extends TreeRenderer> childRenderers() {
 		return childRenderers;
 	}
 
+	@Override
 	public CollectionFilter collectionFilter() {
 		return null;
 	}
 
+	@Override
 	public CollectionProvider collectionProvider() {
 		return null;
 	}
 
+	@Override
 	public String emptyChildText() {
 		return "(Not set)";
 	}
 
+	@Override
 	public AbstractBoundWidget getBoundWidget() {
 		return this.boundWidget;
 	}
 
+	@Override
 	public RenderContext getContext() {
 		return context;
 	}
 
+	@Override
+	public TreeRenderer getParentRenderer() {
+		return this.parentRenderer;
+	}
+
+	@Override
 	public T getRenderable() {
 		return this.renderable;
 	}
 
+	@Override
 	public String hint() {
 		return null;
 	}
 
+	@Override
 	public boolean isAlwaysExpanded() {
 		return false;
 	}
 
+	@Override
 	public boolean isSingleLineCustomiser() {
 		return false;
 	}
 
+	@Override
 	public String renderablePropertyName() {
 		return getRenderable() != null && (getRenderable() instanceof HasValue)
-				? "value" : null;
+				? "value"
+				: null;
 	}
 
+	@Override
 	public String renderableText() {
 		return getRenderable().toString();
 	}
 
+	@Override
 	public boolean renderChildrenHorizontally() {
 		return false;
 	}
 
+	@Override
 	public String renderCss() {
 		return null;
 	}
 
+	@Override
 	public BoundWidgetProvider renderCustomiser() {
 		return null;
 	}
 
+	@Override
 	public RenderInstruction renderInstruction() {
 		return RenderInstruction.IGNORE_AND_DESCEND;
 	}
 
+	@Override
 	public String section() {
 		return null;
 	}
 
+	@Override
 	public void setBoundWidget(AbstractBoundWidget boundWidget) {
 		this.boundWidget = boundWidget;
 	}
 
+	@Override
 	public void setContext(RenderContext context) {
 		this.context = context;
 	}
 
+	@Override
+	public void setParentRenderer(TreeRenderer parentRenderer) {
+		this.parentRenderer = parentRenderer;
+	}
+
+	@Override
 	public void setRenderable(T renderable) {
 		this.renderable = renderable;
 	}
