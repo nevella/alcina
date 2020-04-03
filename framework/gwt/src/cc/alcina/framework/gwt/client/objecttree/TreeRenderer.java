@@ -91,9 +91,13 @@ public interface TreeRenderer<T extends TreeRenderable> {
 
 	public void setContext(RenderContext context);
 
+	public void setParentRenderer(TreeRenderer parent);
+
 	public void setRenderable(T renderable);
 
 	public String title();
+
+	TreeRenderer getParentRenderer();
 
 	default void parentBinding(Binding binding) {
 	}

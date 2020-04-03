@@ -16,6 +16,7 @@ package cc.alcina.framework.entity.domaintransform;
 import java.sql.ResultSet;
 import java.util.Date;
 
+import javax.persistence.EntityManager;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
@@ -44,7 +45,7 @@ public abstract class DomainTransformEventPersistent
 
 	private Date serverCommitDate;
 
-	public void afterStandardFieldsPopulated() {
+	public void beforeTransformCommit(EntityManager entityManager) {
 	}
 
 	public void clearForSimplePersistence() {

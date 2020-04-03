@@ -14,6 +14,9 @@
 package cc.alcina.framework.gwt.client.objecttree;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 
@@ -21,33 +24,28 @@ import cc.alcina.framework.gwt.client.logic.RenderContext;
  * @author nick@alcina.cc
  * 
  */
+@RegistryLocation(registryPoint = TreeRenderingInfoProvider.class, implementationType = ImplementationType.SINGLETON)
+@ClientInstantiable
 public class TreeRenderingInfoProvider {
-	private static TreeRenderingInfoProvider provider;
-
 	public static TreeRenderingInfoProvider get() {
-		if (provider == null) {
-			provider = new TreeRenderingInfoProvider();
-		}
-		return provider;
-	}
-
-	public static void registerTreeRenderingInfoProvider(
-			TreeRenderingInfoProvider provider) {
-		TreeRenderingInfoProvider.provider = provider;
-	}
-
-	private TreeRenderingInfoProvider() {
-		super();
+		return Registry.impl(TreeRenderingInfoProvider.class);
 	}
 
 	public TreeRenderer getForRenderable(TreeRenderable renderable,
-			RenderContext context) {
-		Class rendererClass = Registry.get().lookupSingle(TreeRenderer.class,
-				renderable.getClass(), true);
-		TreeRenderer renderer = (TreeRenderer) Reflections.classLookup()
+			TreeRenderer parent, RenderContext context) {
+		Class<? extends TreeRenderer> rendererClass = getClassForRenderable(
+				renderable, parent, context);
+		TreeRenderer renderer = Reflections.classLookup()
 				.newInstance(rendererClass);
 		renderer.setRenderable(renderable);
 		renderer.setContext(context);
 		return renderer;
+	}
+
+	protected Class<? extends TreeRenderer> getClassForRenderable(
+			TreeRenderable renderable, TreeRenderer parent,
+			RenderContext context) {
+		return Registry.get().lookupSingle(TreeRenderer.class,
+				renderable.getClass(), true);
 	}
 }

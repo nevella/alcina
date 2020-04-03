@@ -22,15 +22,14 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallbackWithShellObject;
-
 
 /**
  *
@@ -69,15 +68,17 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	@Override
 	public <T> T filterData(T value, T cloned, GraphProjectionContext context,
 			GraphProjection graphProjection) throws Exception {
-		if (value instanceof Entity) {
+		if (value instanceof Entity && !(value instanceof WrapperPersistable)) {
 			Entity entity = (Entity) value;
 			if (ensureInjected != null && ensureInjected.containsKey(entity)) {
 				entity = ensureInjected.get(entity);
 				ensureInjected.remove(entity);
-				// if it does, just proceed as normal (entity will already be the
+				// if it does, just proceed as normal (entity will already be
+				// the
 				// key in the reached map, so .project() wouldn't work)
 				if (entity != value) {
-					entity = graphProjection.project(entity, value, context, false);
+					entity = graphProjection.project(entity, value, context,
+							false);
 					getCache().put((Entity) entity);
 					return (T) entity;
 				}
@@ -102,7 +103,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 						impl = ((HibernateProxy) value)
 								.getHibernateLazyInitializer()
 								.getImplementation();
-						impl = graphProjection.project(impl, value, context, false);
+						impl = graphProjection.project(impl, value, context,
+								false);
 						getCache().put((Entity) impl);
 					} else if (shellInstantiator != null) {
 						impl = shellInstantiator.instantiateShellObject(lazy,
@@ -131,7 +133,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 					if (useRawDomainStore) {
 						if (DomainStore.stores().writableStore()
 								.isCached(valueClass)) {
-							result = (T) Domain.find(valueClass, entity.getId());
+							result = (T) Domain.find(valueClass,
+									entity.getId());
 						}
 					}
 					if (result == null) {
@@ -154,8 +157,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 		return this.cache;
 	}
 
-	public Map<? extends Entity, ? extends Entity>
-			getEnsureInjected() {
+	public Map<? extends Entity, ? extends Entity> getEnsureInjected() {
 		return this.ensureInjected;
 	}
 

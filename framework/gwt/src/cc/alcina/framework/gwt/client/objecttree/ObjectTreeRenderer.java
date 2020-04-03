@@ -85,7 +85,7 @@ public class ObjectTreeRenderer {
 
 	private void maybeSortChildRenderables(
 			List<? extends TreeRenderable> childRenderables,
-			final RenderContext renderContext) {
+			TreeRenderer parent, final RenderContext renderContext) {
 		if (renderContext.get(SEARCH_SECTIONS) != null) {
 			final List<String> sectionOrder = renderContext
 					.get(SEARCH_SECTIONS);
@@ -103,8 +103,8 @@ public class ObjectTreeRenderer {
 						private int getIndex(TreeRenderable r) {
 							if (!lkp.containsKey(r)) {
 								TreeRenderer node1 = TreeRenderingInfoProvider
-										.get()
-										.getForRenderable(r, renderContext);
+										.get().getForRenderable(r, parent,
+												renderContext);
 								String s1 = node1.section();
 								lkp.put(r, sectionOrder.indexOf(s1));
 							}
@@ -114,7 +114,6 @@ public class ObjectTreeRenderer {
 		}
 	}
 
-	
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
 			int depth, boolean soleChild, RenderContext renderContext,
 			TreeRenderer parent) {
@@ -125,7 +124,8 @@ public class ObjectTreeRenderer {
 			}
 		}
 		TreeRenderer node = TreeRenderingInfoProvider.get()
-				.getForRenderable(renderable, renderContext);
+				.getForRenderable(renderable, parent, renderContext);
+		node.setParentRenderer(parent);
 		if (parent != null) {
 			parent.childRenderers().add(node);
 		} else {
@@ -164,12 +164,11 @@ public class ObjectTreeRenderer {
 			if (CommonUtils.isNotNullOrEmpty(displayName)
 					&& !node.isNoTitle()) {
 				Label label = TextProvider.get()
-						.getInlineLabel(TextProvider.get()
-								.getUiObjectText(node.getClass(),
-										TextProvider.DISPLAY_NAME + "-"
-												+ displayName,
-										CommonUtils.upperCaseFirstLetterOnly(
-												displayName) + ": "));
+						.getInlineLabel(TextProvider.get().getUiObjectText(
+								node.getClass(),
+								TextProvider.DISPLAY_NAME + "-" + displayName,
+								CommonUtils.upperCaseFirstLetterOnly(
+										displayName) + ": "));
 				label.setStyleName("level-"
 						+ ((soleChild) ? Math.max(1, depth - 1) : depth));
 				cp.add(label);
@@ -189,7 +188,8 @@ public class ObjectTreeRenderer {
 				customiserWidget.addStyleName(node.renderCss());
 			}
 			String customiserStyleName = node.isSingleLineCustomiser()
-					? "single-line-customiser" : "customiser";
+					? "single-line-customiser"
+					: "customiser";
 			String title = node.title();
 			if (title != null) {
 				customiserWidget.setTitle(title);
@@ -236,7 +236,7 @@ public class ObjectTreeRenderer {
 			}
 			List<? extends TreeRenderable> childRenderables = new ArrayList<TreeRenderable>(
 					node.renderableChildren());
-			maybeSortChildRenderables(childRenderables, renderContext);
+			maybeSortChildRenderables(childRenderables, node, renderContext);
 			for (TreeRenderable child : childRenderables) {
 				renderToPanel(child, childPanel, depth + 1,
 						node.renderableChildren().size() == 1, renderContext,
@@ -260,6 +260,7 @@ public class ObjectTreeRenderer {
 			this.binding = binding;
 		}
 
+		@Override
 		public void setRenderContext(RenderContext renderContext) {
 			this.renderContext = renderContext;
 		}
@@ -328,8 +329,8 @@ public class ObjectTreeRenderer {
 				if (renderer != null) {
 					((ListBoxEnumProvider) f.getCellProvider())
 							.setRenderer(renderer);
-				}else{
-					renderer=node.getContext().getNodeTypeRenderer(node);
+				} else {
+					renderer = node.getContext().getNodeTypeRenderer(node);
 					if (renderer != null) {
 						((ListBoxEnumProvider) f.getCellProvider())
 								.setRenderer(renderer);

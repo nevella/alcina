@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -90,7 +91,7 @@ public class TransformPersisterIn {
 		EntityLocatorMap locatorMap = token.getLocatorMap();
 		EntityLocatorMap locatorMapClone = (EntityLocatorMap) locatorMap.copy();
 		final DomainTransformRequest request = token.getRequest();
-		List<DomainTransformEventPersistent> dtreps = wrapper.persistentEvents;
+		List<DomainTransformEventPersistent> persistentEvents = wrapper.persistentEvents;
 		List<DomainTransformRequestPersistent> dtrps = wrapper.persistentRequests;
 		wrapper.locatorMap = locatorMap;
 		try {
@@ -127,10 +128,10 @@ public class TransformPersisterIn {
 				}
 			}
 			tm.setClientInstance(persistentClientInstance);
-			List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
-			dtrs.addAll(request.getPriorRequestsWithoutResponse());
-			dtrs.add(request);
-			for (DomainTransformRequest dtr : dtrs) {
+			List<DomainTransformRequest> transformRequests = new ArrayList<DomainTransformRequest>();
+			transformRequests.addAll(request.getPriorRequestsWithoutResponse());
+			transformRequests.add(request);
+			for (DomainTransformRequest dtr : transformRequests) {
 				if (dtr.getRequestId() == 0) {
 					DomainTransformException ex = new DomainTransformException(
 							Ax.format("Domain transform request with id 0: %s",
@@ -140,8 +141,8 @@ public class TransformPersisterIn {
 					return;
 				}
 			}
-			Multimap<Integer, List<Object>> byRequestId = dtrs.stream()
-					.collect(J8Utils.toKeyMultimap(
+			Multimap<Integer, List<Object>> byRequestId = transformRequests
+					.stream().collect(J8Utils.toKeyMultimap(
 							DomainTransformRequest::getRequestId));
 			Optional<Entry<Integer, List<Object>>> multipleDtrsForOneRequestId = byRequestId
 					.entrySet().stream().filter(e -> e.getValue().size() > 1)
@@ -161,15 +162,15 @@ public class TransformPersisterIn {
 				highestPersistedRequestId = commonPersistenceBase
 						.getHighestPersistedRequestIdForClientInstance(
 								request.getClientInstance().getId());
-				for (int i = dtrs.size() - 1; i >= 0; i--) {
-					DomainTransformRequest dtr = dtrs.get(i);
+				for (int i = transformRequests.size() - 1; i >= 0; i--) {
+					DomainTransformRequest dtr = transformRequests.get(i);
 					if (highestPersistedRequestId != null && dtr
 							.getRequestId() <= highestPersistedRequestId) {
 						Ax.out("transformpersister - removing already processed "
 								+ "request :: clid: %s; rqid: %s",
 								request.getClientInstance().getId(),
-								dtrs.get(i).getRequestId());
-						dtrs.remove(i);
+								transformRequests.get(i).getRequestId());
+						transformRequests.remove(i);
 					}
 				}
 			}
@@ -179,7 +180,8 @@ public class TransformPersisterIn {
 								+ "%s - rqid:%s - prev-per-cli-id:%s",
 						persistentClientInstance.getUser().getUserName(),
 						request.getClientInstance().getId(),
-						dtrs.stream().map(DomainTransformRequest::getRequestId)
+						transformRequests.stream()
+								.map(DomainTransformRequest::getRequestId)
 								.map(String::valueOf)
 								.collect(Collectors.joining(",")),
 						(highestPersistedRequestId == null ? "(servlet layer)"
@@ -189,24 +191,24 @@ public class TransformPersisterIn {
 			boolean replaying = LooseContext
 					.getBoolean(CONTEXT_REPLAYING_FOR_LOGS);
 			int requestCount = 0;
-			loop_dtrs: for (DomainTransformRequest dtr : dtrs) {
-				if (dtr.checkForDuplicateEvents()) {
+			loop_dtrs: for (DomainTransformRequest subRequest : transformRequests) {
+				if (subRequest.checkForDuplicateEvents()) {
 					System.out.println("*** duplicate create events in rqId: "
-							+ dtr.getRequestId());
+							+ subRequest.getRequestId());
 				}
-				List<DomainTransformEvent> items = dtr.getEvents();
+				List<DomainTransformEvent> events = subRequest.getEvents();
 				List<DomainTransformEvent> eventsPersisted = new ArrayList<DomainTransformEvent>();
 				if (token.getPass() == Pass.TRY_COMMIT) {
-					commonPersistenceBase.cacheEntities(items,
+					commonPersistenceBase.cacheEntities(events,
 							token.getTransformExceptionPolicy()
 									.precreateMissingEntities(),
 							true);
 					if (LooseContext.is(CONTEXT_LOG_TO_STDOUT)) {
-						Ax.out(dtr);
+						Ax.out(subRequest);
 					}
 				}
 				int backupEventIdCounter = 0;
-				for (DomainTransformEvent event : items) {
+				for (DomainTransformEvent event : events) {
 					if (event.getEventId() == 0) {
 						event.setEventId(++backupEventIdCounter);
 					}
@@ -317,7 +319,8 @@ public class TransformPersisterIn {
 						}
 					} // commit/determine exception
 				} // dtes
-				dtr.updateTransformCommitType(CommitType.ALL_COMMITTED, false);
+				subRequest.updateTransformCommitType(CommitType.ALL_COMMITTED,
+						false);
 				if (token.getPass() == Pass.TRY_COMMIT) {
 					if (ResourceUtilities.is(TransformPersister.class,
 							"flushWithEveryRequest")) {
@@ -344,85 +347,94 @@ public class TransformPersisterIn {
 					eventsPersisted = CollectionFilters.filter(eventsPersisted,
 							filterByPolicy);
 					if (!eventsPersisted.isEmpty()) {
-						Class<? extends DomainTransformRequestPersistent> dtrqImpl = commonPersistenceBase
+						Class<? extends DomainTransformRequestPersistent> dtrqImpl = AlcinaPersistentEntityImpl
 								.getImplementation(
 										DomainTransformRequestPersistent.class);
-						Class<? extends DomainTransformEventPersistent> dtrEvtImpl = commonPersistenceBase
+						Class<? extends DomainTransformEventPersistent> dtrEvtImpl = AlcinaPersistentEntityImpl
 								.getImplementation(
 										DomainTransformEventPersistent.class);
-						DomainTransformRequestPersistent dtrp = dtrqImpl
+						DomainTransformRequestPersistent persistentRequest = dtrqImpl
 								.newInstance();
-						tm.persist(dtrp);
+						tm.persist(persistentRequest);
 						Calendar defaultCalendar = Calendar.getInstance();
 						int offset = defaultCalendar.getTimeZone()
 								.getOffset(startPersistTime.getTime());
 						Timestamp utcStartPersistTime = new Timestamp(
 								startPersistTime.getTime() - offset);
-						dtrp.setStartPersistTime(utcStartPersistTime);
+						persistentRequest
+								.setStartPersistTime(utcStartPersistTime);
 						if (!LooseContext.is(
 								CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM)) {
 							DomainStore.stores().writableStore()
 									.getPersistenceEvents().getQueue()
-									.registerPersisting(dtrp);
+									.registerPersisting(persistentRequest);
 						}
-						dtr.setEvents(null);
-						dtrp.wrap(dtr);
-						dtrp.setEvents(new ArrayList<DomainTransformEvent>());
-						dtr.setEvents(items);
-						dtrp.setClientInstance(persistentClientInstance);
-						dtrp.setOriginatingUserId(token.getOriginatingUserId());
-						dtrps.add(dtrp);
+						subRequest.setEvents(null);
+						persistentRequest.wrap(subRequest);
+						persistentRequest.setEvents(
+								new ArrayList<DomainTransformEvent>());
+						subRequest.setEvents(events);
+						persistentRequest
+								.setClientInstance(persistentClientInstance);
+						persistentRequest.setOriginatingUserId(
+								token.getOriginatingUserId());
+						dtrps.add(persistentRequest);
 						boolean missingClassRefWarned = false;
 						for (DomainTransformEvent event : eventsPersisted) {
-							DomainTransformEventPersistent dtep = dtrEvtImpl
+							DomainTransformEventPersistent persistentEvent = dtrEvtImpl
 									.newInstance();
-							tm.persist(dtep);
-							dtep.wrap(event);
-							if (dtep.getObjectClassRef() == null
+							tm.persist(persistentEvent);
+							persistentEvent.wrap(event);
+							if (persistentEvent.getObjectClassRef() == null
 									&& !missingClassRefWarned) {
 								missingClassRefWarned = true;
 								System.out.println(
 										"Warning - persisting transform without a classRef - "
-												+ dtep);
+												+ persistentEvent);
 							}
-							if (dtep.getObjectId() == 0) {
-								dtep.setObjectId(tm
-										.getObject(dtep.getObjectClass(), 0,
-												dtep.getObjectLocalId())
+							if (persistentEvent.getObjectId() == 0) {
+								persistentEvent.setObjectId(tm.getObject(
+										persistentEvent.getObjectClass(), 0,
+										persistentEvent.getObjectLocalId())
 										.getId());
 							}
-							if (dtep.getValueId() == 0
-									&& dtep.getValueLocalId() != 0) {
-								dtep.setValueId(tm
-										.getObject(dtep.getValueClass(), 0,
-												dtep.getValueLocalId())
+							if (persistentEvent.getValueId() == 0
+									&& persistentEvent.getValueLocalId() != 0) {
+								persistentEvent.setValueId(tm
+										.getObject(
+												persistentEvent.getValueClass(),
+												0,
+												persistentEvent
+														.getValueLocalId())
 										.getId());
 							}
-							dtep.setServerCommitDate(new Date());
-							dtep.setDomainTransformRequestPersistent(dtrp);
-							dtep.afterStandardFieldsPopulated();
-							dtrp.getEvents().add(dtep);
-							dtreps.add(dtep);
+							persistentEvent.setServerCommitDate(new Date());
+							persistentEvent.setDomainTransformRequestPersistent(
+									persistentRequest);
+							persistentRequest.getEvents().add(persistentEvent);
+							persistentEvents.add(persistentEvent);
 						}
 						if (++requestCount % 100 == 0) {
 							System.out.format(
 									"Large rq count transform - %s/%s\n",
-									requestCount, dtrs.size());
+									requestCount, transformRequests.size());
 						}
 					}
 				} // dtes
 			} // dtrs
+			persistentEvents.forEach(
+					event -> event.beforeTransformCommit(getEntityManager()));
 			switch (token.getPass()) {
 			case TRY_COMMIT:
-				tm.flush(dtreps);
-				DomainTransformResponse dtr = new DomainTransformResponse();
-				dtr.getEventsToUseForClientUpdate()
+				tm.flush(persistentEvents);
+				DomainTransformResponse response = new DomainTransformResponse();
+				response.getEventsToUseForClientUpdate()
 						.addAll(token.getClientUpdateEvents());
-				dtr.getEventsToUseForClientUpdate()
+				response.getEventsToUseForClientUpdate()
 						.addAll(tm.getModificationEvents());
-				dtr.setRequestId(request.getRequestId());
-				dtr.setTransformsProcessed(transformCount);
-				wrapper.response = dtr;
+				response.setRequestId(request.getRequestId());
+				response.setTransformsProcessed(transformCount);
+				wrapper.response = response;
 				return;
 			case RETRY_WITH_IGNORES:
 				return;

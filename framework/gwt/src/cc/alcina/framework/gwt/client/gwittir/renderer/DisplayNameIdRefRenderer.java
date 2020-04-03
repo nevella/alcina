@@ -29,13 +29,14 @@ public class DisplayNameIdRefRenderer extends FlexibleToStringRenderer {
 		this.targetClass = targetClass;
 	}
 
+	@Override
 	public String render(Object o) {
 		if (o == null) {
-			return "0";
+			return "";
 		}
 		Long id = (Long) o;
-		Entity object = Reflections.objectLookup()
-				.getObject(targetClass, id, 0);
+		Entity object = Reflections.objectLookup().getObject(targetClass, id,
+				0);
 		String dn = null;
 		if (object != null) {
 			return ClientReflector.get().displayNameForObject(object);
