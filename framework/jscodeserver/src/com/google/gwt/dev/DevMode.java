@@ -635,7 +635,7 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
     /**
      * Concrete class to implement all hosted mode options.
      */
-    @SuppressWarnings("serial")
+    
     protected static class HostedModeOptionsImpl
             extends HostedModeBaseOptionsImpl implements HostedModeOptions {
         private File deployDir;

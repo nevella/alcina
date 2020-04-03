@@ -392,6 +392,8 @@ public class TransformPersisterIn {
                     }
                 } // dtes
             } // dtrs
+            dtreps.forEach(
+					event -> event.beforeTransformCommit(getEntityManager()));
             switch (token.getPass()) {
             case TRY_COMMIT:
                 tm.flush(dtreps);

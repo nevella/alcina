@@ -44,6 +44,9 @@ public abstract class DomainTransformEventPersistent
 
 	private Date serverCommitDate;
 
+	public void afterStandardFieldsPopulated() {
+	}
+
 	public void clearForSimplePersistence() {
 		setDomainTransformRequestPersistent(
 				Registry.impl(JPAImplementation.class).getInstantiatedObject(
@@ -97,6 +100,7 @@ public abstract class DomainTransformEventPersistent
 		return domainTransformRequestPersistent;
 	}
 
+	@Override
 	@Transient
 	public long getId() {
 		return this.id;
@@ -118,6 +122,7 @@ public abstract class DomainTransformEventPersistent
 		this.domainTransformRequestPersistent = domainTransformRequestPersistent;
 	}
 
+	@Override
 	public void setId(long id) {
 		this.id = id;
 	}
