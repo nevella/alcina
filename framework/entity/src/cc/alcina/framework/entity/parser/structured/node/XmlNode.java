@@ -811,13 +811,14 @@ public class XmlNode {
 			return elts.size() == 1 && elts.get(0).tagIs(tag);
 		}
 
-		public XmlNode
+		public Optional<XmlNode>
 				soleElementExcludingProcessingInstructionsAndWhitespace() {
 			List<XmlNode> nodes = nodes().stream().filter(
 					n -> !n.isProcessingInstruction() && !n.ntc().isEmpty())
 					.collect(Collectors.toList());
-			return nodes.size() == 1 && nodes.get(0).isElement() ? nodes.get(0)
-					: null;
+			return nodes.size() == 1 && nodes.get(0).isElement()
+					? Optional.of(nodes.get(0))
+					: Optional.empty();
 		}
 
 		public String textContent() {

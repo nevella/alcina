@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -97,15 +98,12 @@ public class TransformConflicts {
 		}
 		// sigh
 		EntityManager em = ThreadlocalTransformManager.get().getEntityManager();
-		CommonPersistenceLocal cpb = Registry
-				.impl(CommonPersistenceProvider.class)
-				.getCommonPersistenceExTransaction();
 		String eql = String.format(
 				"select dtep from %s dtep inner join fetch dtep.domainTransformRequestPersistent dtrp"
 						+ " inner join fetch dtrp.clientInstance "
 						+ "where  dtep.objectId= %s and dtep.objectClassRef.id = %s "
 						+ " and dtep.objectVersionNumber >= %s and dtep.propertyName='%s'",
-				cpb.getImplementationSimpleClassName(
+				AlcinaPersistentEntityImpl.getImplementationSimpleClassName(
 						DomainTransformEventPersistent.class),
 				obj.getId(), ClassRef.forClass(obj.getClass()).getId(),
 				Math.min(dteVersionNumber, persistentVersionNumber),

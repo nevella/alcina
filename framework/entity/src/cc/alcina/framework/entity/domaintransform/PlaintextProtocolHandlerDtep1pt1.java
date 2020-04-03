@@ -5,12 +5,11 @@ import java.util.Date;
 import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 
 public class PlaintextProtocolHandlerDtep1pt1 {
 	public static final String VERSION = "1.1 - plain text Dtep, GWT2.1";
@@ -61,8 +60,7 @@ public class PlaintextProtocolHandlerDtep1pt1 {
 	private SimpleStringParser asyncParser = null;
 
 	public PlaintextProtocolHandlerDtep1pt1() {
-		dtrEvtImpl = Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistenceExTransaction()
+		dtrEvtImpl = AlcinaPersistentEntityImpl
 				.getImplementation(DomainTransformEventPersistent.class);
 	}
 
@@ -87,8 +85,9 @@ public class PlaintextProtocolHandlerDtep1pt1 {
 		sb.append(",");
 		sb.append(dtep.getTransformType());
 		sb.append(",");
-		sb.append(SimpleStringParser.toString(dtep.getUtcDate() == null
-				? System.currentTimeMillis() : dtep.getUtcDate().getTime()));
+		sb.append(SimpleStringParser
+				.toString(dtep.getUtcDate() == null ? System.currentTimeMillis()
+						: dtep.getUtcDate().getTime()));
 		sb.append(newlineTab);
 		sb.append(STRING_VALUE);
 		sb.append(ns);

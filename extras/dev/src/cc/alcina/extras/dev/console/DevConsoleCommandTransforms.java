@@ -45,8 +45,6 @@ import cc.alcina.framework.entity.console.FilterArgvFlag;
 import cc.alcina.framework.entity.console.FilterArgvParam;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
@@ -352,13 +350,10 @@ public class DevConsoleCommandTransforms {
 			argv = f.argv;
 			Connection conn = getConn();
 			ensureClassRefs(conn);
-			CommonPersistenceLocal cpl = Registry
-					.impl(CommonPersistenceProvider.class)
-					.getCommonPersistenceExTransaction();
-			Class<? extends DomainTransformRequestPersistent> clazz = cpl
+			Class<? extends DomainTransformRequestPersistent> clazz = AlcinaPersistentEntityImpl
 					.getImplementation(DomainTransformRequestPersistent.class);
 			String dtrName = clazz.getAnnotation(Table.class).name();
-			Class<? extends DomainTransformEventPersistent> class1 = cpl
+			Class<? extends DomainTransformEventPersistent> class1 = AlcinaPersistentEntityImpl
 					.getImplementation(DomainTransformEventPersistent.class);
 			String dteName = class1.getAnnotation(Table.class).name();
 			String sql1 = "select dtr.id as id" + " from client_instance ci "
@@ -656,19 +651,20 @@ public class DevConsoleCommandTransforms {
 				return "user";
 			}
 		}
-		public static class CmdListTransformsFilterUserNot
-		extends CmdListTransformsFilter {
-	@Override
-	public String getFilter(String arg1) {
-		return arg1.matches("\\d+") ? String.format("u.id!=%s", arg1)
-				: String.format("u.username!='%s'", arg1);
-	}
 
-	@Override
-	public String getKey() {
-		return "usernot";
-	}
-}
+		public static class CmdListTransformsFilterUserNot
+				extends CmdListTransformsFilter {
+			@Override
+			public String getFilter(String arg1) {
+				return arg1.matches("\\d+") ? String.format("u.id!=%s", arg1)
+						: String.format("u.username!='%s'", arg1);
+			}
+
+			@Override
+			public String getKey() {
+				return "usernot";
+			}
+		}
 
 		public static class CmdListTransformsFilterValueId
 				extends CmdListTransformsFilter {

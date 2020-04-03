@@ -374,6 +374,31 @@ public class ResourceUtilities {
 		return Long.parseLong(get(clazz, key));
 	}
 
+	public static byte[] gunzipBytes(byte[] bytes) {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			GZIPInputStream gzipInputStream = new GZIPInputStream(
+					new ByteArrayInputStream(bytes));
+			writeStreamToStream(gzipInputStream, baos);
+			return baos.toByteArray();
+		} catch (Exception e) {
+			return bytes;
+		}
+	}
+
+	public static byte[] gzipBytes(byte[] bytes) {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			GZIPOutputStream gzipOutputStream = new GZIPOutputStream(baos);
+			gzipOutputStream.write(bytes);
+			gzipOutputStream.flush();
+			gzipOutputStream.close();
+			return baos.toByteArray();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public static boolean is(Class clazz, String propertyName) {
 		return getBoolean(clazz, propertyName);
 	}

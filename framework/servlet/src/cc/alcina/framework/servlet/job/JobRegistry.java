@@ -372,12 +372,15 @@ public class JobRegistry implements RegistrableService {
 	public void updateJob(String message, int completedDelta) {
 		JobTracker contextTracker = getContextTracker();
 		if (contextTracker != null) {
-			contextTracker.updateJob(completedDelta);
-			long itemsCompleted = contextTracker.getItemsCompleted();
-			long itemCount = contextTracker.getItemCount();
-			double progress = ((double) itemsCompleted) / ((double) itemCount);
-			jobProgress(String.format("(%s/%s) -  %s", itemsCompleted,
-					itemCount, message), progress);
+			synchronized (contextTracker) {
+				contextTracker.updateJob(completedDelta);
+				long itemsCompleted = contextTracker.getItemsCompleted();
+				long itemCount = contextTracker.getItemCount();
+				double progress = ((double) itemsCompleted)
+						/ ((double) itemCount);
+				jobProgress(String.format("(%s/%s) -  %s", itemsCompleted,
+						itemCount, message), progress);
+			}
 		} else {
 			if (!Ax.isTest()) {
 				Ax.out("Update job (no tracker): %s - %s completedDelta",

@@ -13,6 +13,9 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -48,6 +51,8 @@ public class StructuredTokenParserContext {
 	public LinkedList<XmlStructuralJoin> openNodes = new LinkedList<>();
 
 	Map<XmlStructuralJoin, OutputContextRoot> outputContextRoots = new LinkedHashMap<>();
+
+	protected Logger logger = LoggerFactory.getLogger(getClass());
 
 	public int count(XmlToken token) {
 		return matched.containsKey(token) ? matched.get(token).size() : 0;
@@ -144,6 +149,10 @@ public class StructuredTokenParserContext {
 
 	public void log(XmlStructuralJoin join) {
 		System.out.println(getLogMessage(join));
+	}
+
+	public void logMatch(XmlToken token) {
+		logger.debug("Matched token: {}", token);
 	}
 
 	public boolean outputOpen(XmlToken token) {

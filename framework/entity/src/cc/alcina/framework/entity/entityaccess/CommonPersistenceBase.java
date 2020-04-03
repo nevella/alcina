@@ -129,6 +129,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return handshakeObjectProviderClass;
 	}
 
+	public static <A> Class<? extends A> getImplementation(Class<A> clazz) {
+		return AlcinaPersistentEntityImpl.getImplementation(clazz);
+	}
+
+	public static String getImplementationSimpleClassName(Class<?> clazz) {
+		return AlcinaPersistentEntityImpl
+				.getImplementationSimpleClassName(clazz);
+	}
+
 	public static Boolean isBotExtraUserAgent(String userAgent) {
 		return botExtraUa != null && botExtraUa.matcher(userAgent).find();
 	}
@@ -369,17 +378,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.setParameter(1, iid).getResultList();
 		return (IID) ((l.size() == 0) ? getNewImplementationInstance(Iid.class)
 				: l.get(0));
-	}
-
-	@Override
-	public <A> Class<? extends A> getImplementation(Class<A> clazz) {
-		return Registry.get().lookupSingle(AlcinaPersistentEntityImpl.class,
-				clazz);
-	}
-
-	@Override
-	public String getImplementationSimpleClassName(Class<?> clazz) {
-		return getImplementation(clazz).getSimpleName();
 	}
 
 	@Override
@@ -1470,15 +1468,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					clientInstanceIdCounter = (Long) commonPersistence
 							.getEntityManager()
 							.createQuery(String.format("select max(id) from %s",
-									commonPersistence
-											.getImplementationSimpleClassName(
-													ClientInstance.class)))
+									getImplementationSimpleClassName(
+											ClientInstance.class)))
 							.getSingleResult();
 				}
 				newId = ++clientInstanceIdCounter;
 			}
-			Class<? extends ClientInstance> clientInstanceImpl = commonPersistence
-					.getImplementation(ClientInstance.class);
+			Class<? extends ClientInstance> clientInstanceImpl = getImplementation(
+					ClientInstance.class);
 			try {
 				ClientInstance impl = clientInstanceImpl.newInstance();
 				impl.setId(newId);
@@ -1537,8 +1534,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				boolean rememberMe) {
 			if (!rememberMe) {
 				try {
-					Iid impl = (Iid) commonPersistence
-							.getImplementation(Iid.class).newInstance();
+					Iid impl = (Iid) getImplementation(Iid.class).newInstance();
 					impl.setInstanceId(iidKey);
 					commonPersistence.ensureClientInstanceAuthenticationCache()
 							.cacheIid(impl, true);
@@ -1655,14 +1651,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		public ClientInstance createClientInstance(String userAgent, String iid,
 				String ipAddress) {
 			AppPersistenceBase.checkNotReadOnly();
-			Class<? extends ClientInstance> clientInstanceImpl = commonPersistence
-					.getImplementation(ClientInstance.class);
+			Class<? extends ClientInstance> clientInstanceImpl = getImplementation(
+					ClientInstance.class);
 			try {
 				ClientInstance impl = clientInstanceImpl.newInstance();
 				commonPersistence.getEntityManager().persist(impl);
 				impl.setHelloDate(new Date());
 				impl.setUser((IUser) commonPersistence.getEntityManager().find(
-						commonPersistence.getImplementation(IUser.class),
+						getImplementation(IUser.class),
 						PermissionsManager.get().getUserId()));
 				impl.setIid(iid);
 				impl.setAuth(Math.abs(new Random().nextInt()));
@@ -1698,9 +1694,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				PermissionsManager.get().pushCurrentUser();
 				commonPersistence.connectPermissionsManagerToLiveObjects(true);
 				ClientInstance instance = (ClientInstance) commonPersistence
-						.getEntityManager().find(
-								commonPersistence.getImplementation(
-										ClientInstance.class),
+						.getEntityManager()
+						.find(getImplementation(ClientInstance.class),
 								clientInstanceId);
 				IUser user = Registry.impl(JPAImplementation.class)
 						.getInstantiatedObject(instance.getUser());
@@ -1733,8 +1728,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		public void updateClientInstanceAccessTime(long clientInstanceId,
 				long time) {
 			ClientInstance instance = (ClientInstance) commonPersistence
-					.getEntityManager().find(commonPersistence
-							.getImplementation(ClientInstance.class),
+					.getEntityManager()
+					.find(getImplementation(ClientInstance.class),
 							clientInstanceId);
 			if (instance != null) {
 				instance.setLastAccessed(new Date(time));
@@ -1760,8 +1755,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 		@Override
 		public void updateIidAccessTime(long iidId, long time) {
-			Iid iid = (Iid) commonPersistence.getEntityManager().find(
-					commonPersistence.getImplementation(Iid.class), iidId);
+			Iid iid = (Iid) commonPersistence.getEntityManager()
+					.find(getImplementation(Iid.class), iidId);
 			if (iid != null) {
 				iid.setLastAccessed(new Date(time));
 			}

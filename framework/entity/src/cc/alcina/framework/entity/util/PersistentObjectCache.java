@@ -1,7 +1,26 @@
 package cc.alcina.framework.entity.util;
 
-public interface PersistentObjectCache<T> {
-	T get(String name);
+import java.util.List;
+import java.util.Optional;
 
-	void persist(T value, String name);
+public interface PersistentObjectCache<T> {
+	default List<String> allPaths() {
+		return listChildPaths("");
+	}
+
+	default void clear() {
+		allPaths().stream().forEach(this::remove);
+	}
+
+	T get(String path);
+
+	List<String> listChildPaths(String path);
+
+	default Optional<T> optional(String path) {
+		return Optional.<T> ofNullable(get(path));
+	}
+
+	void persist(String path, T value);
+
+	void remove(String path);
 }

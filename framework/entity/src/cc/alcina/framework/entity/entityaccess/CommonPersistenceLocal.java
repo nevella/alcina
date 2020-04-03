@@ -86,10 +86,6 @@ public interface CommonPersistenceLocal {
 
 	public abstract Iid getIidByKey(String iid);
 
-	public abstract <A> Class<? extends A> getImplementation(Class<A> clazz);
-
-	public String getImplementationSimpleClassName(Class<?> clazz);
-
 	public <T> T getItemById(Class<T> clazz, Long id);
 
 	public <T> T getItemById(Class<T> clazz, Long id, boolean clean,
@@ -171,6 +167,8 @@ public interface CommonPersistenceLocal {
 
 	public void persistInternalMetrics(List<InternalMetric> metrics);
 
+	public <T extends ILogRecord> long persistLogRecord(T logRecord);
+
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
 			Long id, GraphProjectionFieldFilter fieldFilter,
 			GraphProjectionDataFilter dataFilter);
@@ -213,9 +211,6 @@ public interface CommonPersistenceLocal {
 			long clientInstanceId);
 
 	long getMaxPublicationIdForUser(IUser user);
-	
-    List<Long> listRecentClientInstanceIds(String iidKey);
-    
-    public <T extends ILogRecord> long persistLogRecord(T logRecord);
 
+	List<Long> listRecentClientInstanceIds(String iidKey);
 }
