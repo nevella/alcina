@@ -38,11 +38,11 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
         }
         try {
             String url = Ax.format(
-                    "http://api.ipstack.com/%s/?access_key=b16f9aff294aa3292256fd13cb0b9e80&output=json",
+                    "http://api.ipstack.com/%s?access_key=b16f9aff294aa3292256fd13cb0b9e80&output=json",
                     ipAddress);
             String result = ResourceUtilities.readUrlAsString(url);
             ObjectNode node = (ObjectNode) new ObjectMapper().readTree(result);
-            if (Ax.isBlank(node.get("country_name").asText())) {
+            if (node.get("country_name").isNull()){
                 return "(Local address)";
             }
             return Ax.format("%s/%s",
