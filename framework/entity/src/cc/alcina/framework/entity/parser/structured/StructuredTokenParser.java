@@ -83,6 +83,7 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 		for (XmlToken token : tokens) {
 			if (token.matches(context, node)) {
 				XmlStructuralJoin join = new XmlStructuralJoin(node, token);
+				context.logMatch(token);
 				token.onMatch(context, join);
 				break;
 			}

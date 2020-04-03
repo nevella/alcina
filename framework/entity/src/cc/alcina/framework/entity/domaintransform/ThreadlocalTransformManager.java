@@ -47,6 +47,7 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
@@ -85,7 +86,6 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
@@ -761,17 +761,14 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public EntityLocatorMap reconstituteEntityMap() {
 		if (clientInstance != null) {
-			CommonPersistenceLocal cp = Registry
-					.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence();
 			String message = "Reconstitute entity map - clientInstance: "
 					+ clientInstance.getId();
 			// System.out.println(message);
 			// cp.log(message, LogMessageType.INFO.toString());
-			String dteName = cp
+			String dteName = AlcinaPersistentEntityImpl
 					.getImplementation(DomainTransformEventPersistent.class)
 					.getSimpleName();
-			String dtrName = cp
+			String dtrName = AlcinaPersistentEntityImpl
 					.getImplementation(DomainTransformRequestPersistent.class)
 					.getSimpleName();
 			MetricLogging.get().start(message);

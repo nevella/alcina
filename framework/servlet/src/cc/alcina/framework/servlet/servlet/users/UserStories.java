@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.IUserStory;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
@@ -76,8 +77,7 @@ public class UserStories {
 					.getCommonPersistence().getClientInstance(clientInstanceId);
 		} else {
 			try {
-				clientInstance = CommonPersistenceProvider.get()
-						.getCommonPersistenceExTransaction()
+				clientInstance = AlcinaPersistentEntityImpl
 						.getImplementation(ClientInstance.class).newInstance();
 				clientInstance.setUserAgent(userStory.getUserAgent());
 				clientInstance
@@ -298,8 +298,7 @@ public class UserStories {
 	}
 
 	protected <T extends Entity & IUserStory> Class<T> getImplementation() {
-		return (Class<T>) CommonPersistenceProvider.get()
-				.getCommonPersistenceExTransaction()
+		return (Class<T>) AlcinaPersistentEntityImpl
 				.getImplementation(IUserStory.class);
 	}
 

@@ -73,6 +73,7 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -547,9 +548,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				logger.info("Wrote {} offline/bulk records to {}",
 						records.size(), saveDir);
 			}
-			Class<? extends ClientInstance> clientInstanceClass = cp
+			Class<? extends ClientInstance> clientInstanceClass = AlcinaPersistentEntityImpl
 					.getImplementation(ClientInstance.class);
-			Class<? extends DomainTransformRequestPersistent> dtrClass = cp
+			Class<? extends DomainTransformRequestPersistent> dtrClass = AlcinaPersistentEntityImpl
 					.getImplementation(DomainTransformRequestPersistent.class);
 			long currentClientInstanceId = 0;
 			int committed = 0;
@@ -1310,8 +1311,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	static class IsWrappedObjectDteFilter
 			implements CollectionFilter<DomainTransformEvent> {
-		Class clazz = Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistenceExTransaction()
+		Class clazz = AlcinaPersistentEntityImpl
 				.getImplementation(WrappedObject.class);
 
 		@Override

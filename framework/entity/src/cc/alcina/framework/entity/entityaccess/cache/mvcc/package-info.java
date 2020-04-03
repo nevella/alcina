@@ -30,7 +30,7 @@
  * base transaction)
  * <li>(Pre-jade) Cherry-pick memory usage to alcina.master. Compare memory
  * usage of a segment using propertystore vs regular objects for citaions/ccs.
- * Make framework-level 'populate DomainStoreTransient' - fingers crossed re
+ * Make framework-level 'populate DomainStoreProperty' - fingers crossed re
  * propertystore abandonment
  * </ul>
  * 

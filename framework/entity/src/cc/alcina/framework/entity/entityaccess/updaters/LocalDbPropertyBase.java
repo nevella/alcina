@@ -6,6 +6,7 @@ import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
@@ -30,6 +31,45 @@ public abstract class LocalDbPropertyBase extends Entity {
 
 	public static final transient String SERLVET_UPDATE_VERSION = "SERVLET_LAYER_UPDATE_VERSION";
 
+	public static String getLocalDbProperty(String key) {
+		return getOrSetLocalDbProperty(key, null, true);
+	}
+
+	public static LocalDbPropertyBase getLocalDbPropertyObject(String key) {
+		CommonPersistenceLocal cpl = Registry
+				.impl(CommonPersistenceProvider.class).getCommonPersistence();
+		Class<? extends LocalDbPropertyBase> implClass = AlcinaPersistentEntityImpl
+				.getImplementation(LocalDbPropertyBase.class);
+		LocalDbPropertyBase dbProperty = cpl.getItemByKeyValue(implClass,
+				KEY_FIELD_NAME, key, true, null, false, false);
+		return dbProperty;
+	}
+
+	public static String getOrSetLocalDbProperty(String key, String value,
+			boolean get) {
+		LocalDbPropertyBase dbPropertyObject = getLocalDbPropertyObject(key);
+		if (get) {
+			return dbPropertyObject.getPropertyValue();
+		} else {
+			try {
+				CommonPersistenceLocal cpl = Registry
+						.impl(CommonPersistenceProvider.class)
+						.getCommonPersistence();
+				Class<? extends LocalDbPropertyBase> implClass = AlcinaPersistentEntityImpl
+						.getImplementation(LocalDbPropertyBase.class);
+				cpl.setField(implClass, dbPropertyObject.getId(),
+						VALUE_FIELD_NAME, value);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			return null;
+		}
+	}
+
+	public static String setLocalDbProperty(String key, String value) {
+		return getOrSetLocalDbProperty(key, value, false);
+	}
+
 	protected long id;
 
 	private String propertyKey;
@@ -42,8 +82,9 @@ public abstract class LocalDbPropertyBase extends Entity {
 
 	@Lob
 	@Transient
-	public abstract String getPropertyValue() ;
+	public abstract String getPropertyValue();
 
+	@Override
 	public void setId(long id) {
 		this.id = id;
 	}
@@ -60,44 +101,5 @@ public abstract class LocalDbPropertyBase extends Entity {
 		this.propertyValue = propertyValue;
 		propertyChangeSupport().firePropertyChange("propertyValue",
 				old_propertyValue, propertyValue);
-	}
-
-	public static String getOrSetLocalDbProperty(String key, String value,
-			boolean get) {
-		LocalDbPropertyBase dbPropertyObject = getLocalDbPropertyObject(key);
-		if (get) {
-			return dbPropertyObject.getPropertyValue();
-		} else {
-			try {
-				CommonPersistenceLocal cpl = Registry
-						.impl(CommonPersistenceProvider.class)
-						.getCommonPersistence();
-				Class<? extends LocalDbPropertyBase> implClass = cpl
-						.getImplementation(LocalDbPropertyBase.class);
-				cpl.setField(implClass, dbPropertyObject.getId(),
-						VALUE_FIELD_NAME, value);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			return null;
-		}
-	}
-
-	public static String getLocalDbProperty(String key) {
-		return getOrSetLocalDbProperty(key, null, true);
-	}
-
-	public static String setLocalDbProperty(String key, String value) {
-		return getOrSetLocalDbProperty(key, value, false);
-	}
-
-	public static LocalDbPropertyBase getLocalDbPropertyObject(String key) {
-		CommonPersistenceLocal cpl = Registry
-				.impl(CommonPersistenceProvider.class).getCommonPersistence();
-		Class<? extends LocalDbPropertyBase> implClass = cpl
-				.getImplementation(LocalDbPropertyBase.class);
-		LocalDbPropertyBase dbProperty = cpl.getItemByKeyValue(implClass,
-				KEY_FIELD_NAME, key, true, null, false, false);
-		return dbProperty;
 	}
 }

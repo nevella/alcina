@@ -90,6 +90,7 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersisten
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreHealth;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreInstrumentation;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
@@ -140,6 +141,9 @@ public class DomainStore implements IDomainStore {
 
 	public static final String CONTEXT_WRITEABLE_PROJECTOR = DomainStore.class
 			.getName() + ".CONTEXT_WRITEABLE_PROJECTOR";
+
+	public static final String CONTEXT_POPULATE_LAZY_PROPERTY_VALUES = DomainStore.class
+			.getName() + ".CONTEXT_POPULATE_LAZY_PROPERTY_VALUES";
 
 	// while debugging, prevent reentrant locks
 	public static final String CONTEXT_NO_LOCKS = DomainStore.class.getName()
@@ -269,7 +273,7 @@ public class DomainStore implements IDomainStore {
 
 	DomainStoreLoader loader;
 
-	private UnsortedMultikeyMap<DomainStoreTransient> domainStoreTransientProperties = new UnsortedMultikeyMap<>(
+	private UnsortedMultikeyMap<DomainStoreProperty> domainStoreProperties = new UnsortedMultikeyMap<>(
 			2);
 
 	private LazyObjectLoader lazyObjectLoader;
@@ -483,13 +487,22 @@ public class DomainStore implements IDomainStore {
 		MetricLogging.get().end("domainStore.warmup");
 	}
 
+	// FIXME.mvcc - useentityclass
+	private void addToLazyPropertyEvictionQueue(Entity entity) {
+		LazyPropertyLoadTask task = (LazyPropertyLoadTask) domainDescriptor
+				.getPreProvideTasks(entity.provideEntityClass()).stream()
+				.filter(ppt -> ppt instanceof LazyPropertyLoadTask).findFirst()
+				.get();
+		task.addToEvictionQueue(entity);
+	}
+
 	private void doEvictions() {
 		domainDescriptor.preProvideTasks
 				.forEach(PreProvideTask::writeLockedCleanup);
 	}
 
 	private DomainTransformEvent
-			filterForDomainStoreTransient(DomainTransformEvent dte) {
+			filterForDomainStoreProperty(DomainTransformEvent dte) {
 		switch (dte.getTransformType()) {
 		case CREATE_OBJECT:
 		case DELETE_OBJECT:
@@ -497,7 +510,7 @@ public class DomainStore implements IDomainStore {
 		case REMOVE_REF_FROM_COLLECTION:
 			return dte;
 		}
-		DomainStoreTransient ann = domainStoreTransientProperties
+		DomainStoreProperty ann = domainStoreProperties
 				.get(dte.getObjectClass(), dte.getPropertyName());
 		if (ann == null) {
 			return dte;
@@ -523,7 +536,7 @@ public class DomainStore implements IDomainStore {
 			filterInterestedTransforms(Collection<DomainTransformEvent> dtes) {
 		return dtes.stream().filter(new InSubgraphFilter())
 				.filter(domainDescriptor::customFilterPostProcess)
-				.map(dte -> filterForDomainStoreTransient(dte))
+				.map(dte -> filterForDomainStoreProperty(dte))
 				.filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
@@ -606,14 +619,14 @@ public class DomainStore implements IDomainStore {
 				if ((rm.getAnnotation(Transient.class) != null
 						&& rm.getAnnotation(DomainStoreDbColumn.class) == null)
 						|| rm.getAnnotation(
-								DomainStoreTransient.class) != null) {
-					DomainStoreTransient transientAnn = rm
-							.getAnnotation(DomainStoreTransient.class);
-					if (transientAnn != null) {
+								DomainStoreProperty.class) != null) {
+					DomainStoreProperty propertyAnnotation = rm
+							.getAnnotation(DomainStoreProperty.class);
+					if (propertyAnnotation != null) {
 						Field field = getField(clazz, pd.getName());
 						field.setAccessible(true);
-						domainStoreTransientProperties.put(clazz,
-								field.getName(), transientAnn);
+						domainStoreProperties.put(clazz, field.getName(),
+								propertyAnnotation);
 					}
 					continue;
 				}
@@ -820,6 +833,15 @@ public class DomainStore implements IDomainStore {
 								EntityLocator.objectLocator(dte));
 					}
 				}
+				if (dte.getPropertyName() != null) {
+					DomainStoreProperty ann = domainStoreProperties
+							.get(dte.getObjectClass(), dte.getPropertyName());
+					if (ann != null && ann
+							.loadType() == DomainStorePropertyLoadType.LAZY) {
+						addToLazyPropertyEvictionQueue(
+								transformManager.getObject(dte, true));
+					}
+				}
 			}
 			indexAtEnd.forEach(domainStoreObject -> {
 				List<DomainTransformEvent> list = perObjectTransforms
@@ -926,7 +948,8 @@ public class DomainStore implements IDomainStore {
 						.forEach(raw::add);
 			}
 			try {
-				for (PreProvideTask task : domainDescriptor.preProvideTasks) {
+				for (PreProvideTask task : domainDescriptor
+						.getPreProvideTasks(clazz)) {
 					task.run(clazz, raw, true);
 				}
 				if (query.isRaw() || isWillProjectLater()) {
