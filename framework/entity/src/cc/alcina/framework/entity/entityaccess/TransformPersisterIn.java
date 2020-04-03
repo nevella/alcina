@@ -400,6 +400,7 @@ public class TransformPersisterIn {
 							}
 							dtep.setServerCommitDate(new Date());
 							dtep.setDomainTransformRequestPersistent(dtrp);
+							dtep.afterStandardFieldsPopulated();
 							dtrp.getEvents().add(dtep);
 							dtreps.add(dtep);
 						}
