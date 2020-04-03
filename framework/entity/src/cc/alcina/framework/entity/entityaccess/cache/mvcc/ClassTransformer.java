@@ -364,7 +364,7 @@ class ClassTransformer {
 			}
 			try {
 				this.version = VERSION;
-				transformer.cache.persist(this, originalClass.getName());
+				transformer.cache.persist(originalClass.getName(), this);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

@@ -5,13 +5,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
-public class LazyPropertyLoadTask<T extends HasIdAndLocalId>
+public class LazyPropertyLoadTask<T extends Entity>
 		extends LazyLoadProvideTask {
 	public LazyPropertyLoadTask(Class<T> clazz, DomainStore domainStore) {
 		super(5 * TimeConstants.ONE_SECOND_MS, 10, clazz);
