@@ -39,7 +39,6 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
  * @author nick@alcina.cc
  * 
  */
-
 public class CloneHelper {
 	private Map createdMap = new IdentityHashMap();
 
@@ -76,6 +75,7 @@ public class CloneHelper {
 		}
 	}
 
+	// TODO - wrap exceptions
 	public <T> T deepBeanClone(T o) throws Exception {
 		if (createdMap.containsKey(o)) {
 			return (T) createdMap.get(o);
