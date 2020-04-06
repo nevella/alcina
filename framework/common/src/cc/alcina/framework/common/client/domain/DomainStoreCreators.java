@@ -21,10 +21,4 @@ public interface DomainStoreCreators {
 	public static interface DomainStoreMultisetCreator<T> {
 		public Multiset<T, Set<Long>> get(DomainLookup lookup);
 	}
-
-	public static interface DomainStorePrivateObjectCacheCreator
-			extends Supplier<PrivateObjectCache> {
-		@Override
-		public PrivateObjectCache get();
-	}
 }

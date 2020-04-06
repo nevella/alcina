@@ -34,7 +34,30 @@
  * propertystore abandonment
  * </ul>
  * 
+ * <h2>Versions</h2>
+ * <h3>0.1</h3>
+ * <h4>Goals</h4>
+ * <ul>
+ * <li>Have transactionally independent field values for all domain objects
+ * <li>Have 'one unique object' for the lifetime of the vm - including when
+ * promoted from 'local' to 'domain'
+ * <li>Have relatively proveable zero-information leakage of transactional
+ * version identity data (i.e. the unique-to-tx entity objects do not leak this
+ * - and thereby hashcode/equals - outside their own code)
+ * </ul>
+ * <h4>Nice to have</h4>
+ * <ul>
+ * <li>Minimal memory use increase - or even lower it
+ * <li>More performant transform request communication for cache change
+ * propogation
  * 
+ * </ul>
+ * <h4>Non-goals</h4>
+ * <ul>
+ * <li>Rework the logging system
+ * <li>Rework the jobs system
+ * <li>Refactor DomainStore more than needed
+ * </ul>
  * <h2>TODO</h2>
  * <ul>
  * <li>Facade class code creation (yep)

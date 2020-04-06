@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.lang.annotation.Annotation;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,6 +24,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport;
+import cc.alcina.framework.entity.entityaccess.cache.PropertyStoreAwareMultiplexingObjectCache.DetachedEntityCacheAccess;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 
 public class SubgraphTransformManager extends TransformManager {
@@ -91,8 +93,7 @@ public class SubgraphTransformManager extends TransformManager {
 
 	@Override
 	protected void createObjectLookup() {
-		store = new DetachedCacheObjectStore(
-				new DetachedEntityCacheTransactionalMap());
+		store = new DetachedCacheObjectStore(new DetachedEntityCacheAccess());
 		setDomainObjects(store);
 	}
 
@@ -147,6 +148,11 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 	}
 
+	@FunctionalInterface
+	interface LocalReplacementCreationObjectResolver
+			extends Function<Long, Entity> {
+	}
+
 	static class PreProcessBridgeLookup extends MapObjectLookupJvm {
 		private EntityLocatorMap locatorMap;
 
@@ -154,12 +160,13 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 
 		@Override
-		public <T extends Entity> T getObject(Class<? extends T> c,
-				long id, long localId) {
+		public <T extends Entity> T getObject(Class<? extends T> c, long id,
+				long localId) {
 			T t = super.getObject(c, id, localId);
 			if (t == null) {
 				if (id == 0) {
-					EntityLocator entityLocator = locatorMap.getForLocalId(localId);
+					EntityLocator entityLocator = locatorMap
+							.getForLocalId(localId);
 					if (entityLocator == null) {
 						return null;
 					}
@@ -175,6 +182,8 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	static class SubgraphClassLookup implements ClassLookup {
+		static ThreadLocal<LocalReplacementCreationObjectResolver> localReplacementCreationObjectResolvers = new ThreadLocal<>();
+
 		@Override
 		public String displayNameForObject(Object o) {
 			return ObjectPersistenceHelper.get().displayNameForObject(o);
@@ -226,13 +235,29 @@ public class SubgraphTransformManager extends TransformManager {
 		@Override
 		public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 			try {
-				Entity newInstance = Transaction.current().create(
-						(Class) clazz, DomainStore.stores().storeFor(clazz));
+				LocalReplacementCreationObjectResolver resolver = localReplacementCreationObjectResolvers
+						.get();
+				if (resolver != null) {
+					Entity local = resolver.apply(localId);
+					if (local != null) {
+						local.hashCode();
+						local.setId(objectId);
+						TransformManager.registerLocalObjectPromotion(local);
+						return (T) local;
+					}
+				}
+				Entity newInstance = Transaction.current().create((Class) clazz,
+						DomainStore.stores().storeFor(clazz));
 				newInstance.setLocalId(localId);
 				return (T) newInstance;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+
+		public void setLocalReplacementCreationObjectResolver(
+				LocalReplacementCreationObjectResolver resolver) {
+			localReplacementCreationObjectResolvers.set(resolver);
 		}
 	}
 
@@ -245,15 +270,15 @@ public class SubgraphTransformManager extends TransformManager {
 				throws DomainTransformException {
 			super.consume(event);
 			if (firstReferenced == null) {
-				Iterator<Entity> iterator = getDetachedEntityCache()
-						.allValues().iterator();
+				Iterator<Entity> iterator = getDetachedEntityCache().allValues()
+						.iterator();
 				firstReferenced = iterator.hasNext() ? iterator.next() : null;
 			}
 		}
 
 		@Override
-		public <T extends Entity> void
-				loadObject(Class<? extends T> clazz, long id, long localId) {
+		public <T extends Entity> void loadObject(Class<? extends T> clazz,
+				long id, long localId) {
 			store.mapObject(Domain.detachedVersion(clazz, id));
 		}
 

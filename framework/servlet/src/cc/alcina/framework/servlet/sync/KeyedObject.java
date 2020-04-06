@@ -4,8 +4,8 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import cc.alcina.framework.common.client.domain.PrivateObjectCache;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -39,7 +39,7 @@ public class KeyedObject<T> implements Serializable {
 		return object.getClass();
 	}
 
-	public T resolveObject(Class<T> clazz, PrivateObjectCache resolver) {
+	public T resolveObject(Class<T> clazz, DetachedEntityCache resolver) {
 		if (object instanceof String) {
 			EntityLocator locator = EntityLocator.parseShort(clazz,
 					(String) object);

@@ -10,11 +10,12 @@ import java.util.Set;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalMap;
 
 class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 	private volatile boolean committing;
 
-	private DetachedEntityCacheTransactionalMap main = new DetachedEntityCacheTransactionalMap();
+	private DetachedEntityCacheAccess main = new DetachedEntityCacheAccess();
 
 	private List<PropertyStoreCacheWrapper> psWrappers = new ArrayList<>();
 
@@ -74,8 +75,13 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 	}
 
 	@Override
-	public Map<Class, Map<Long, Entity>> getDetached() {
-		return main.getDetached();
+	public Map<Long, Entity> getCreatedLocalsSnapshot() {
+		return main.getCreatedLocalsSnapshot();
+	}
+
+	@Override
+	public Map<Class, Map<Long, Entity>> getDomain() {
+		return main.getDomain();
 	}
 
 	@Override
@@ -171,6 +177,28 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 			psWrapper.resetThreadCache();
 		}
 		committing = true;
+	}
+
+	static class DetachedEntityCacheAccess extends DetachedEntityCache
+			implements DomainStoreCache {
+		@Override
+		protected Map<Long, Entity> createMap() {
+			return super.createMap();
+		}
+
+		@Override
+		protected void ensureMaps(Class clazz) {
+			if (!domain.containsKey(clazz)) {
+				synchronized (this) {
+					if (!domain.containsKey(clazz)) {
+						domain.put(clazz,
+								new TransactionalMap(Long.class, clazz));
+						local.put(clazz,
+								new TransactionalMap(Long.class, clazz));
+					}
+				}
+			}
+		}
 	}
 
 	class PropertyStoreCacheWrapper<V extends Entity>

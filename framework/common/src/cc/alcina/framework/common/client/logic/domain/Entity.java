@@ -150,24 +150,21 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 					return hash;
 				}
 			}
-			int classHash = getClass().getName().hashCode();
+			int classHash = provideEntityClass().getName().hashCode();
 			if (getLocalId() != 0) {
 				if (GWT.isScript()) {
 					hash = LongWrapperHash.fastHash(getLocalId()) ^ classHash;
 				} else {
-					hash = ((int) getLocalId())
-							^ getClass().getName().hashCode();
+					hash = ((int) getLocalId()) ^ classHash;
 				}
 			} else {
 				if (getId() == 0) {
 					// still 0
 				} else {
 					if (GWT.isScript()) {
-						hash = LongWrapperHash.fastHash(getId())
-								^ getClass().getName().hashCode();
+						hash = LongWrapperHash.fastHash(getId()) ^ classHash;
 					} else {
-						hash = ((int) getId())
-								^ getClass().getName().hashCode();
+						hash = ((int) getId()) ^ classHash;
 					}
 					hash = TransformManager
 							.replaceWithCreatedLocalObjectHash(this, hash);
@@ -300,7 +297,7 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 	}
 
 	public class DomainSupport {
-		public <V extends Entity> void addToProperty(V v, String propertyName) {
+		public <V extends Entity> void addToProperty(String propertyName, V v) {
 			TransformManager.get().modifyCollectionProperty(Entity.this,
 					propertyName, v, CollectionModificationType.ADD);
 		}
@@ -373,8 +370,8 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 			return (T) Entity.this;
 		}
 
-		public <V extends Entity> void removeFromProperty(V v,
-				String propertyName) {
+		public <V extends Entity> void removeFromProperty(String propertyName,
+				V v) {
 			TransformManager.get().modifyCollectionProperty(Entity.this,
 					propertyName, v, CollectionModificationType.REMOVE);
 		}

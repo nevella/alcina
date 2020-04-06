@@ -12,9 +12,6 @@ import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreIdMapCreator;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreLongSetCreator;
 import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreMultisetCreator;
-import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStorePrivateObjectCacheCreator;
-import cc.alcina.framework.common.client.domain.PrivateObjectCache;
-import cc.alcina.framework.common.client.domain.PrivateObjectCache.PrivateObjectCacheSingleClass;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
@@ -59,16 +56,6 @@ public class DataCollectionSuppliers {
 		public SortedMultiset<T, Set<Long>> get(DomainLookup cacheLookup) {
 			return useJsMaps() ? new SortedMultisetClient<>(cacheLookup)
 					: new SortedMultiset<>();
-		}
-	}
-
-	@RegistryLocation(registryPoint = DomainStorePrivateObjectCacheCreator.class, implementationType = ImplementationType.SINGLETON)
-	@ClientInstantiable
-	public static class CachePrivateObjectCacheCreatorClient
-			implements DomainStorePrivateObjectCacheCreator {
-		@Override
-		public PrivateObjectCache get() {
-			return new PrivateObjectCacheSingleClass();
 		}
 	}
 

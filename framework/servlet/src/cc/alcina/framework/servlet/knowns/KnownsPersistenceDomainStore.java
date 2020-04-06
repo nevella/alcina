@@ -45,7 +45,7 @@ public class KnownsPersistenceDomainStore implements KnownsPersistence {
                     if (node.parent != null) {
                         persistent.setParent((KnownNodePersistentDomainStore) node.parent.persistent);
                         writeable.get((KnownNodePersistentDomainStore) node.parent.persistent).domain()
-                                .addToProperty(persistent, "children");
+                                .addToProperty("children", persistent);
                     }
                     node.persistent = persistent;
                     replaceWithPersistent.add(node);

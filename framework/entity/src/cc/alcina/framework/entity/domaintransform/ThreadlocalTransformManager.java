@@ -291,9 +291,10 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public <T extends Entity> T createDomainObject(Class<T> objectClass) {
+	public <T extends Entity> T createDomainObject(Class<T> clazz) {
 		long localId = nextLocalIdCounter();
-		T newInstance = newInstance(objectClass, 0, localId);
+		T newInstance = newInstance(clazz, 0, localId);
+		DomainStore.stores().storeFor(clazz).onLocalObjectCreated(newInstance);
 		// logic should probably be made clearer here - if id==0, we're not in
 		// an
 		// entitymanager context

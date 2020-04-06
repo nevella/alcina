@@ -411,6 +411,10 @@ public class DomainStore implements IDomainStore {
 		return loader.loadTransformRequests(ids, logger);
 	}
 
+	public <T extends Entity> void onLocalObjectCreated(T newInstance) {
+		cache.put(newInstance);
+	}
+
 	public void onTransformsPersisted() {
 		loader.onTransformsPersisted();
 	}
@@ -750,6 +754,11 @@ public class DomainStore implements IDomainStore {
 					TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
 			postProcessStart = System.currentTimeMillis();
 			MetricLogging.get().start("post-process");
+			Map<Long, Entity> createdLocalsSnapshot = persistenceEvent
+					.isLocalToVm() ? cache.getCreatedLocalsSnapshot()
+							: Collections.emptyMap();
+			transformManager.setLocalReplacementCreationObjectResolver(
+					localId -> createdLocalsSnapshot.get(localId));
 			Transaction.ensureEnded();
 			Transaction.beginDomainPreparing();
 			Date transactionCommitTime = persistenceEvent
@@ -1628,6 +1637,17 @@ public class DomainStore implements IDomainStore {
 		public void addPropertyStore(DomainClassDescriptor descriptor) {
 			((PropertyStoreAwareMultiplexingObjectCache) store.getCache())
 					.addPropertyStore(descriptor);
+		}
+
+		// if (localId != 0
+		// && localReplacementCreationObjectResolver != null) {
+		// newInstance = localReplacementCreationObjectResolver
+		// .apply(localId);
+		// }
+		public void setLocalReplacementCreationObjectResolver(
+				LocalReplacementCreationObjectResolver localReplacementCreationObjectResolver) {
+			classLookup.setLocalReplacementCreationObjectResolver(
+					localReplacementCreationObjectResolver);
 		}
 
 		@Override

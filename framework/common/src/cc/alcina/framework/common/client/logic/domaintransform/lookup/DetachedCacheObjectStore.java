@@ -33,7 +33,7 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	@Override
 	public void deregisterObject(Entity entity) {
 		// just remove
-		if(entity==null){
+		if (entity == null) {
 			return;
 		}
 		cache.remove(entity);
@@ -59,9 +59,10 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
-	public Map<Class<? extends Entity>, Collection<Entity>>
-			getCollectionMap() {
-		return (Map) cache.getDetached();
+	// FIXME - mvcc.2 - for local-only domains, this is problematic.
+	// Probably better to return Map<Class<? extends Entity>, Stream<Entity>>
+	public Map<Class<? extends Entity>, Collection<Entity>> getCollectionMap() {
+		return (Map) cache.getDomain();
 	}
 
 	public LazyObjectLoader getLazyObjectLoader() {
@@ -69,8 +70,8 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
-	public <T extends Entity> T getObject(Class<? extends T> c,
-			long id, long localId) {
+	public <T extends Entity> T getObject(Class<? extends T> c, long id,
+			long localId) {
 		T t = cache.get(c, id);
 		if (t == null && lazyObjectLoader != null && id != 0) {
 			lazyObjectLoader.loadObject(c, id, localId);

@@ -20,6 +20,7 @@ import java.util.Set;
  * @author Nick Reddel
  */
 public interface IGroup extends IVersionable {
+	@Override
 	public long getId();
 
 	public Set<? extends IGroup> getMemberGroups();
@@ -33,6 +34,8 @@ public interface IGroup extends IVersionable {
 	public Set<IGroup> listMemberGroups();
 
 	public Set<IUser> listMemberUsers();
+
+	public void setGroupName(String name);
 
 	public void setMemberUsers(Set<? extends IUser> memberUsers);
 }

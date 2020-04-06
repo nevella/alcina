@@ -28,22 +28,24 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
-import cc.alcina.framework.common.client.domain.PrivateObjectCache;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
 
 /**
  *
  * @author Nick Reddel
  */
-public class DetachedEntityCache
-		implements Serializable, PrivateObjectCache, MemoryStatProvider {
-	protected Map<Class, Map<Long, Entity>> detached;
+public class DetachedEntityCache implements Serializable, MemoryStatProvider {
+	protected Map<Class, Map<Long, Entity>> domain;
+
+	protected Map<Class, Map<Long, Entity>> local;
 
 	private transient Supplier<Map> classMapSupplier;
 
@@ -56,7 +58,8 @@ public class DetachedEntityCache
 	public DetachedEntityCache(Supplier<Map> topMapSupplier,
 			Supplier<Map> classMapSupplier) {
 		this.classMapSupplier = classMapSupplier;
-		this.detached = topMapSupplier.get();
+		this.domain = topMapSupplier.get();
+		this.local = topMapSupplier.get();
 	}
 
 	@Override
@@ -69,38 +72,33 @@ public class DetachedEntityCache
 
 	public Set<Entity> allValues() {
 		Set<Entity> result = new LinkedHashSet<Entity>();
-		for (Class clazz : detached.keySet()) {
-			result.addAll(detached.get(clazz).values());
+		for (Class clazz : domain.keySet()) {
+			result.addAll(domain.get(clazz).values());
+			result.addAll(local.get(clazz).values());
 		}
 		return result;
 	}
 
-	public Set<Entry<Class, Map<Long, Entity>>> classEntries() {
-		return detached.entrySet();
-	}
-
 	public void clear() {
-		detached.clear();
+		domain.clear();
+		local.clear();
 	}
 
 	public <T extends Entity> boolean contains(Class<T> clazz, long id) {
 		ensureMaps(clazz);
-		return detached.get(clazz).containsKey(id);
+		return domain.get(clazz).containsKey(id);
 	}
 
 	public boolean contains(Entity entity) {
 		Class<? extends Entity> clazz = entity.provideEntityClass();
 		ensureMaps(clazz);
 		long id = entity.getId();
-		return detached.get(clazz).containsKey(id);
+		Preconditions.checkArgument(id > 0);
+		return domain.get(clazz).containsKey(id);
 	}
 
-	public <T extends Entity> boolean containsMap(Class<T> clazz) {
-		return detached.containsKey(clazz);
-	}
-
-	public Map<Long, Entity> createMap() {
-		return classMapSupplier.get();
+	public Set<Entry<Class, Map<Long, Entity>>> domainClassEntries() {
+		return domain.entrySet();
 	}
 
 	public <T> List<T> fieldValues(Class<? extends Entity> clazz,
@@ -108,39 +106,43 @@ public class DetachedEntityCache
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
 	public <T> T get(Class<T> clazz, Long id) {
 		ensureMaps(clazz);
 		if (id == null) {
 			return null;
 		}
-		T t = (T) detached.get(clazz).get(id);
+		T t = (T) domain.get(clazz).get(id);
 		return t;
 	}
 
-	public Map<Class, Map<Long, Entity>> getDetached() {
-		return this.detached;
+	public <T> T get(EntityLocator locator) {
+		return (T) get(locator.getClazz(), locator.getId());
 	}
 
-	@Override
-	public <T extends Entity> T getExisting(T entity) {
-		return (T) get(entity.provideEntityClass(), entity.getId());
+	public Map<Long, Entity> getCreatedLocalsSnapshot() {
+		Map<Long, Entity> result = new HashMap<>();
+		local.values().forEach(result::putAll);
+		return result;
+	}
+
+	public Map<Class, Map<Long, Entity>> getDomain() {
+		return this.domain;
 	}
 
 	public Map<Long, Entity> getMap(Class clazz) {
 		ensureMaps(clazz);
-		return this.detached.get(clazz);
+		return this.domain.get(clazz);
 	}
 
 	public <T> Collection<T> immutableRawValues(Class<T> clazz) {
 		ensureMaps(clazz);
 		return (Collection<T>) Collections
-				.unmodifiableCollection(detached.get(clazz).values());
+				.unmodifiableCollection(domain.get(clazz).values());
 	}
 
 	public void invalidate(Class clazz) {
 		ensureMaps(clazz);
-		detached.put(clazz, createMap());
+		domain.put(clazz, createMap());
 	}
 
 	public void invalidate(Class[] classes) {
@@ -160,7 +162,7 @@ public class DetachedEntityCache
 
 	public Set<Long> keys(Class clazz) {
 		ensureMaps(clazz);
-		return detached.get(clazz).keySet();
+		return domain.get(clazz).keySet();
 	}
 
 	public <T> List<T> list(Class<T> clazz, Collection<Long> ids) {
@@ -171,7 +173,7 @@ public class DetachedEntityCache
 	public List<Long> notContained(Collection<Long> ids, Class clazz) {
 		List<Long> result = new ArrayList<Long>();
 		ensureMaps(clazz);
-		Set<Long> existing = detached.get(clazz).keySet();
+		Set<Long> existing = domain.get(clazz).keySet();
 		// can be reasonably confident size(existing)>size(ids)
 		for (Long id : ids) {
 			if (!existing.contains(id)) {
@@ -181,49 +183,56 @@ public class DetachedEntityCache
 		return result;
 	}
 
-	@Override
 	public void put(Entity entity) {
 		Class<? extends Entity> clazz = entity.provideEntityClass();
 		ensureMaps(clazz);
 		long id = entity.getId();
-		if (id == 0) {
-			id = -entity.getLocalId();
-		}
-		if (id == 0) {
+		long localId = entity.getLocalId();
+		if (id == 0 && localId == 0) {
 			throw new RuntimeException("indexing entity with zero id/localid");
 		}
 		if (id < 0) {
 			throw new RuntimeException("indexing entity with negative id");
 		}
-		if (throwOnExisting) {
-			if (detached.get(clazz).containsKey(id)) {
-				throw Ax.runtimeException("Double-put: %s", entity);
+		if (id != 0) {
+			if (throwOnExisting) {
+				if (domain.get(clazz).containsKey(id)) {
+					throw Ax.runtimeException("Double-put: %s", entity);
+				}
 			}
+			domain.get(clazz).put(id, entity);
+		} else {
+			local.get(clazz).put(localId, entity);
 		}
-		detached.get(clazz).put(id, entity);
 	}
 
 	public void putAll(Class clazz, Collection<? extends Entity> values) {
-		ensureMaps(clazz);
-		Map<Long, Entity> m = detached.get(clazz);
-		for (Entity entity : values) {
-			long id = entity.getId();
-			m.put(entity.getId(), entity);
-		}
+		values.forEach(this::put);
 	}
 
-	@Override
 	public void putForSuperClass(Class clazz, Entity entity) {
 		ensureMaps(clazz);
 		long id = entity.getId();
-		detached.get(clazz).put(id, entity);
+		Preconditions.checkArgument(id > 0);
+		domain.get(clazz).put(id, entity);
 	}
 
 	public void remove(Entity entity) {
 		Class<? extends Entity> clazz = entity.provideEntityClass();
 		ensureMaps(clazz);
 		long id = entity.getId();
-		detached.get(clazz).remove(id);
+		long localId = entity.getLocalId();
+		if (id == 0 && localId == 0) {
+			throw new RuntimeException("indexing entity with zero id/localid");
+		}
+		if (id < 0) {
+			throw new RuntimeException("indexing entity with negative id");
+		}
+		if (id != 0) {
+			domain.get(clazz).remove(id);
+		} else {
+			local.get(clazz).remove(localId, entity);
+		}
 	}
 
 	public void setThrowOnExisting(boolean throwOnExisting) {
@@ -232,12 +241,12 @@ public class DetachedEntityCache
 
 	public int size(Class clazz) {
 		ensureMaps(clazz);
-		return detached.get(clazz).size();
+		return domain.get(clazz).size() + local.get(clazz).size();
 	}
 
 	public String sizes() {
 		List<String> lines = new ArrayList<String>();
-		for (Class clazz : detached.keySet()) {
+		for (Class clazz : domain.keySet()) {
 			lines.add(CommonUtils.simpleClassName(clazz) + ": " + size(clazz));
 		}
 		return CommonUtils.join(lines, "\n");
@@ -245,25 +254,30 @@ public class DetachedEntityCache
 
 	public <T> Stream<T> stream(Class<T> clazz) {
 		ensureMaps(clazz);
-		return (Stream<T>) detached.get(clazz).values().stream();
+		return (Stream<T>) Stream.concat(domain.get(clazz).values().stream(),
+				local.get(clazz).values().stream());
 	}
 
 	@Override
 	public String toString() {
-		return "Cache: " + detached;
+		return "Cache: " + domain;
 	}
 
 	public <T> Set<T> values(Class<T> clazz) {
 		ensureMaps(clazz);
 		return new LinkedHashSet<T>(
-				(Collection<? extends T>) detached.get(clazz).values());
+				(Collection<? extends T>) domain.get(clazz).values());
+	}
+
+	protected Map<Long, Entity> createMap() {
+		return classMapSupplier.get();
 	}
 
 	protected void ensureMaps(Class clazz) {
-		if (!detached.containsKey(clazz)) {
+		if (!domain.containsKey(clazz)) {
 			synchronized (this) {
-				if (!detached.containsKey(clazz)) {
-					detached.put(clazz, createMap());
+				if (!domain.containsKey(clazz)) {
+					domain.put(clazz, createMap());
 				}
 			}
 		}

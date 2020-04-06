@@ -79,7 +79,6 @@ import cc.alcina.framework.common.client.util.SortedMultikeyMap;
  * @author nick@alcina.cc
  *
  */
-
 // unchecked because reflection is always going to involve a lot of
 // casting...alas
 public abstract class TransformManager implements PropertyChangeListener,
@@ -196,21 +195,20 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	// synchronized method because createdLocalAndPromoted is initially null -
 	// this method won't be called that often
-	public static synchronized void
-			registerLocalObjectPromotion(Entity entity) {
+	public static void registerLocalObjectPromotion(Entity entity) {
 		if (createdLocalAndPromoted == null) {
 			createdLocalAndPromoted = new Multimap<>();
-			synchronized (createdLocalAndPromoted) {
-				// use the same code as for Entity.hashCode on an object with
-				// zero localid, same
-				// class and id (for later lookup)
-				int hash = ((int) entity.getId())
-						^ entity.getClass().getName().hashCode();
-				if (hash == 0) {
-					hash = -1;
-				}
-				createdLocalAndPromoted.add(hash, entity);
+		}
+		synchronized (createdLocalAndPromoted) {
+			// use the same code as for Entity.hashCode on an object with
+			// zero localid, same
+			// class and id (for later lookup)
+			int withoutLocalIdHash = ((int) entity.getId())
+					^ entity.provideEntityClass().getName().hashCode();
+			if (withoutLocalIdHash == 0) {
+				withoutLocalIdHash = -1;
 			}
+			createdLocalAndPromoted.add(withoutLocalIdHash, entity);
 		}
 	}
 
@@ -828,7 +826,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public <T extends Entity> T getObject(EntityLocator entityLocator) {
-		return (T) getObject(entityLocator.getClazz(), entityLocator.getId(), 0L);
+		return (T) getObject(entityLocator.getClazz(), entityLocator.getId(),
+				0L);
 	}
 
 	@Override
