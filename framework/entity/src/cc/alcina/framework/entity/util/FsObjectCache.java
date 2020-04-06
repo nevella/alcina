@@ -33,8 +33,6 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	private long objectInvalidationTime = 0;
 
-	private boolean cacheObjects = false;
-
 	private Map<String, CacheEntry> cachedObjects = new ConcurrentHashMap<>();
 
 	protected transient Logger logger = LoggerFactory.getLogger(getClass());
@@ -46,6 +44,8 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	};
 
 	private Timer invalidationTimer;
+
+	private boolean retainInMemory;
 
 	public FsObjectCache(File root, Class<T> clazz,
 			ThrowingFunction<String, T> pathToValue) {
@@ -73,10 +73,6 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	public long getObjectInvalidationTime() {
 		return this.objectInvalidationTime;
-	}
-
-	public boolean isCacheObjects() {
-		return this.cacheObjects;
 	}
 
 	@Override
@@ -131,10 +127,6 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		getCacheFile(path).delete();
 	}
 
-	public void setCacheObjects(boolean cacheObjects) {
-		this.cacheObjects = cacheObjects;
-	}
-
 	public void setObjectInvalidationTime(long objectInvalidationTime) {
 		this.objectInvalidationTime = objectInvalidationTime;
 	}
@@ -143,6 +135,12 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		if (invalidationTimer != null) {
 			invalidationTimer.cancel();
 		}
+	}
+
+	@Override
+	public PersistentObjectCache<T> withRetainInMemory(boolean retainInMemory) {
+		this.retainInMemory = retainInMemory;
+		return this;
 	}
 
 	private void checkInvalidation() {
@@ -163,7 +161,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	}
 
 	private void ensureCacheInvalidationStarted() {
-		if (cacheObjects && objectInvalidationTime != 0
+		if (retainInMemory && objectInvalidationTime != 0
 				&& invalidationTask == null) {
 			invalidationTask = new TimerTask() {
 				@Override
@@ -181,7 +179,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	private T get(String path, boolean allowFromCachedObjects) {
 		ensureCacheInvalidationStarted();
-		if (cacheObjects) {
+		if (retainInMemory) {
 			FsObjectCache<T>.CacheEntry entry = cachedObjects.get(path);
 			if (entry != null) {
 				return entry.object;
@@ -219,7 +217,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		try {
 			T t = KryoUtils.deserializeFromFile(cacheFile, clazz);
 			MetricLogging.get().end(key, metricLogger);
-			if (cacheObjects) {
+			if (retainInMemory) {
 				FsObjectCache<T>.CacheEntry entry = new CacheEntry();
 				entry.created = System.currentTimeMillis();
 				entry.object = t;

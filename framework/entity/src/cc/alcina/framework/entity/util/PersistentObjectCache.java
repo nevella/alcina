@@ -23,4 +23,6 @@ public interface PersistentObjectCache<T> {
 	void persist(String path, T value);
 
 	void remove(String path);
+
+	PersistentObjectCache<T> withRetainInMemory(boolean retainInMemory);
 }
