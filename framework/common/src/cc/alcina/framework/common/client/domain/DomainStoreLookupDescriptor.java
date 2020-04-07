@@ -51,7 +51,8 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 	public MemoryStat addMemoryStats(MemoryStat parent, StatType type) {
 		MemoryStat self = new MemoryStat(this);
 		parent.addChild(self);
-		self.objectMemory.walkStats(this, self.counter);
+		self.objectMemory.walkStats(this, self.counter, o -> o == this
+				|| !MemoryStatProvider.class.isAssignableFrom(o.getClass()));
 		return self;
 	}
 

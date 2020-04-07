@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
 public class MemoryStat {
@@ -34,19 +36,33 @@ public class MemoryStat {
 		this.objectMemory = objectMemory;
 	}
 
-	@Override
-	public String toString() {
+	public String toString(Predicate<Class> classFilter) {
 		FormatBuilder builder = new FormatBuilder();
 		builder.indent(depth() * 4);
 		builder.line(root.toString());
-		builder.indent(depth() * 4 + 2);
-		builder.line(counter.toString());
+		// builder.indent(depth() * 4 + 2);
+		// builder.line(counter.toString());
 		Counter deep = new Counter();
 		deep.accumulate(this);
 		builder.line(deep.toString());
+		if (classFilter != null && deep.perClassCount.keySet().stream()
+				.anyMatch(classFilter::test)) {
+			builder.line("Per-class");
+			builder.line("========");
+			deep.perClassCount.entrySet().stream()
+					.filter(e -> classFilter.test(e.getKey()))
+					.forEach(e -> builder.line("%s   %s   %s",
+							CommonUtils.padStringRight(
+									String.valueOf(e.getValue()), 10, ' '),
+							CommonUtils.padStringRight(
+									String.valueOf(
+											deep.perClassSize.get(e.getKey())),
+									10, ' '),
+							e.getKey().getSimpleName()));
+		}
 		builder.indent(0);
 		for (MemoryStat stat : children) {
-			builder.appendIfNotBlank(stat.toString());
+			builder.appendIfNotBlank(stat.toString(classFilter));
 		}
 		return builder.toString();
 	}
@@ -60,11 +76,20 @@ public class MemoryStat {
 
 		public long size = 0;
 
-		public Map<Class, Long> perClass = new LinkedHashMap<>();
+		public Map<Class, Long> perClassSize = new LinkedHashMap<>();
+
+		public Map<Class, Long> perClassCount = new LinkedHashMap<>();
 
 		public void accumulate(MemoryStat stat) {
 			count += stat.counter.count;
 			size += stat.counter.size;
+			stat.counter.perClassSize.forEach(
+					(k, v) -> perClassSize.merge(k, v, (v1, v2) -> v1 + v2));
+			stat.counter.perClassCount.forEach(
+					(k, v) -> perClassCount.merge(k, v, (v1, v2) -> v1 + v2));
+			if (perClassCount.size() > 0) {
+				int debug = 3;
+			}
 			for (MemoryStat child : stat.children) {
 				accumulate(child);
 			}
@@ -82,7 +107,10 @@ public class MemoryStat {
 
 	@RegistryLocation(registryPoint = ObjectMemory.class)
 	public static abstract class ObjectMemory {
-		public abstract void walkStats(Object o, Counter counter);
+		public abstract void dumpStats();
+
+		public abstract void walkStats(Object o, Counter counter,
+				Predicate<Object> filter);
 	}
 
 	public enum StatType {

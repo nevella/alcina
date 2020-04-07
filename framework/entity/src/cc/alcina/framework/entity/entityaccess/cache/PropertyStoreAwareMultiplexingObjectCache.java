@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -147,6 +148,11 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 	@Override
 	public String sizes() {
 		return main.sizes();
+	}
+
+	@Override
+	public <T> Stream<T> stream(Class<T> clazz) {
+		return main.stream(clazz);
 	}
 
 	@Override

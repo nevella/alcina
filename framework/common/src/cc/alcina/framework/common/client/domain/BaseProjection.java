@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -58,7 +59,8 @@ public abstract class BaseProjection<T extends Entity>
 	public MemoryStat addMemoryStats(MemoryStat parent, StatType type) {
 		MemoryStat self = new MemoryStat(this);
 		parent.addChild(self);
-		self.objectMemory.walkStats(this, self.counter);
+		self.objectMemory.walkStats(this, self.counter, o -> o == this
+				|| !MemoryStatProvider.class.isAssignableFrom(o.getClass()));
 		return self;
 	}
 
@@ -72,8 +74,8 @@ public abstract class BaseProjection<T extends Entity>
 
 	public <V> V get(Object... objects) {
 		V nonTransactional = (V) lookup.get(objects);
-		return (V) Domain.resolveTransactional(this,
-				(Entity) nonTransactional, objects);
+		return (V) Domain.resolveTransactional(this, (Entity) nonTransactional,
+				objects);
 	}
 
 	@Override
