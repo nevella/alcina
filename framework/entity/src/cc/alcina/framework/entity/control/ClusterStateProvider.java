@@ -3,23 +3,25 @@ package cc.alcina.framework.entity.control;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public interface ClusterStateProvider {
-    static ClusterStateProvider get() {
-        return Registry.impl(ClusterStateProvider.class);
-    }
+	static ClusterStateProvider get() {
+		return Registry.impl(ClusterStateProvider.class);
+	}
 
-    default String getMemberClusterState() {
-        throw new UnsupportedOperationException();
-    }
+	String getClusterLeaderState();
 
-    default String getVmHealth() {
-        throw new UnsupportedOperationException();
-    }
+	default String getMemberClusterState() {
+		throw new UnsupportedOperationException();
+	}
 
-    long getVmInstancedId(String launcherName);
+	default String getVmHealth() {
+		throw new UnsupportedOperationException();
+	}
 
-    boolean isRestarting(String owner);
+	long getVmInstancedId(String launcherName);
 
-    default boolean isVmHealthyCached() {
-        return true;
-    }
+	boolean isRestarting(String owner);
+
+	default boolean isVmHealthyCached() {
+		return true;
+	}
 }
