@@ -3,9 +3,17 @@ package cc.alcina.framework.entity.util;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.base.Preconditions;
+
 public interface PersistentObjectCache<T> {
+	public Class<T> getPersistedClass();
+
 	default List<String> allPaths() {
 		return listChildPaths("");
+	}
+
+	default SingletonCache<T> asSingletonCache() {
+		return new SingletonCache<>(this);
 	}
 
 	default void clear() {
@@ -25,4 +33,30 @@ public interface PersistentObjectCache<T> {
 	void remove(String path);
 
 	PersistentObjectCache<T> withRetainInMemory(boolean retainInMemory);
+
+	public static class SingletonCache<T> {
+		private PersistentObjectCache<T> delegate;
+
+		T value = null;
+
+		public SingletonCache(PersistentObjectCache<T> delegate) {
+			this.delegate = delegate;
+		}
+
+		public synchronized T get() {
+			if (value == null) {
+				value = delegate.get(getPath());
+			}
+			return value;
+		}
+
+		public synchronized void persist() {
+			Preconditions.checkState(value != null);
+			delegate.persist(getPath(), value);
+		}
+
+		private String getPath() {
+			return delegate.getPersistedClass().getName();
+		}
+	}
 }
