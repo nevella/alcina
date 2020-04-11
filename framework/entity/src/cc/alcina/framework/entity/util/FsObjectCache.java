@@ -25,6 +25,12 @@ import cc.alcina.framework.entity.entityaccess.cache.LockUtils.ClassStringKeyLoc
 public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	public static final transient ThrowingFunction<String, ?> NULL_PATH_TO_VALUE = path -> null;
 
+	public static <C> FsObjectCache<C> singletonCache(Class<C> clazz) {
+		return new FsObjectCache<>(
+				DataFolderProvider.get().getChildFile(clazz.getName()), clazz,
+				p -> clazz.newInstance());
+	}
+
 	private File root;
 
 	private ThrowingFunction<String, T> pathToValue;
@@ -73,6 +79,11 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	public long getObjectInvalidationTime() {
 		return this.objectInvalidationTime;
+	}
+
+	@Override
+	public Class<T> getPersistedClass() {
+		return clazz;
 	}
 
 	@Override
