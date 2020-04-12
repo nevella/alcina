@@ -3,15 +3,15 @@ package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 import java.util.AbstractSet;
 import java.util.Iterator;
 
-public class TransactionalLongSet extends AbstractSet<Long> {
-	private TransactionalMap<Long, Boolean> map;
+public class TransactionalSet<E> extends AbstractSet<E> {
+	private TransactionalMap<E, Boolean> map;
 
-	public TransactionalLongSet() {
-		this.map = new TransactionalMap<>(Long.class, Boolean.class);
+	public TransactionalSet(Class<E> clazz) {
+		this.map = new TransactionalMap<>(clazz, Boolean.class);
 	}
 
 	@Override
-	public boolean add(Long e) {
+	public boolean add(E e) {
 		return map.put(e, true) == null;
 	}
 
@@ -31,7 +31,7 @@ public class TransactionalLongSet extends AbstractSet<Long> {
 	}
 
 	@Override
-	public Iterator<Long> iterator() {
+	public Iterator<E> iterator() {
 		return map.keySet().iterator();
 	}
 

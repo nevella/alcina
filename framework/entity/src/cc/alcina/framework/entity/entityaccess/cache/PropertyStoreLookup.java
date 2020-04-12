@@ -29,13 +29,17 @@ public class PropertyStoreLookup<T, H extends Entity>
 		store.addLookup(this);
 	}
 
+	// @Override
+	// public Set<Long> get(T k1) {
+	// Long id = (Long) k1;
+	// if (lookup.containsKey(id)) {
+	// return convertArr(lookup.get(id));
+	// }
+	// return null;
+	// }
 	@Override
-	public Set<Long> get(T k1) {
-		Long id = (Long) k1;
-		if (lookup.containsKey(id)) {
-			return convertArr(lookup.get(id));
-		}
-		return null;
+	public Set<H> get(T k1) {
+		throw new UnsupportedOperationException();
 	}
 
 	public void index(Entity obj, boolean add) {

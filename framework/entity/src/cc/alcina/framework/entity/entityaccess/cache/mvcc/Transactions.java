@@ -1,12 +1,12 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
@@ -100,15 +100,6 @@ public class Transactions {
 
 	private Object transactionMetadataLock = new Object();
 
-	public List<Transaction>
-			getCommittedTransactionsBeforeOrAt(TransactionId transactionId) {
-		synchronized (transactionMetadataLock) {
-			return committedTransactions.values().stream()
-					.filter(t -> t.getId().id <= transactionId.id)
-					.collect(Collectors.toList());
-		}
-	}
-
 	public List<Transaction> getCompletedNonDomainTransactions() {
 		synchronized (transactionMetadataLock) {
 			List<Transaction> result = completedNonDomainCommittedTransactions;
@@ -141,30 +132,43 @@ public class Transactions {
 	}
 
 	/*
-	 * To determine which transactions can be vacuumed - if all active
-	 * transactions include a given transaction in their set of visible
-	 * completed transactions, it can be compacted with the base layer
+	 * Returns committed transactions which can be vacuumed, and prunes
+	 * "committedTransactions" - if all active transactions include a given
+	 * transaction in their set of visible completed transactions, it can be
+	 * compacted with the base layer
+	 * 
 	 */
-	Optional<TransactionId> getHighestCommonComittedTransactionId() {
+	List<Transaction> getVacuumableCommittedTransactions() {
+		List<Transaction> result = new ArrayList<>();
 		if (committedTransactions.isEmpty()) {
-			return Optional.empty();
+			return result;
 		}
 		// FIXME - can probably optimise sync here (not sure if need to tho')
 		TransactionId highest = CommonUtils
 				.last(committedTransactions.keySet().iterator());
 		synchronized (transactionMetadataLock) {
 			for (Transaction t : activeTransactions.values()) {
-				TransactionId transactionHighest = CommonUtils
-						.last(committedTransactions.keySet().iterator());
-				if (transactionHighest == null) {
-					return Optional.empty();
-				}
-				if (transactionHighest.id < highest.id) {
-					highest = transactionHighest;
+				if (t.committedTransactions.containsKey(t.getId())) {
+					continue;
+				} else {
+					highest = CommonUtils
+							.last(t.committedTransactions.keySet().iterator());
+					if (highest == null) {
+						return result;
+					}
 				}
 			}
+			Iterator<Entry<TransactionId, Transaction>> itr = committedTransactions
+					.entrySet().iterator();
+			while (itr.hasNext()) {
+				result.add(itr.next().getValue());
+				itr.remove();
+				if (itr == highest) {
+					break;
+				}
+			}
+			return result;
 		}
-		return Optional.of(highest);
 	}
 
 	void initialiseTransaction(Transaction transaction) {

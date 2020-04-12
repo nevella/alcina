@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.domain;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -13,12 +12,9 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -75,25 +71,6 @@ public class DomainClassDescriptor<T extends Entity>
 			if (value != null) {
 				rawValues.add(value);
 			}
-		}
-	}
-
-	public Set<Long> evaluateFilter(DetachedEntityCache cache,
-			Set<Long> existing, CollectionFilter filter) {
-		if (existing == null) {
-			List filtered = CollectionFilters
-					.filter(cache.immutableRawValues(clazz), filter);
-			return EntityHelper.toIdSet(filtered);
-		} else {
-			CollectionFilter withIdFilter = new CollectionFilter<Long>() {
-				@Override
-				public boolean allow(Long id) {
-					return filter.allow(cache.get(clazz, id));
-				}
-			};
-			existing = new LinkedHashSet<Long>(existing);
-			CollectionFilters.filterInPlace(existing, withIdFilter);
-			return existing;
 		}
 	}
 

@@ -3,10 +3,10 @@ package cc.alcina.framework.common.client.domain;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.DelegateMapCreator;
+import cc.alcina.framework.common.client.util.CollectionCreators;
+import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 public class BaseProjectionLookupBuilder {
 	private boolean sorted = false;
 
-	private MapCreator[] creators;
+	private CollectionCreators.MapCreator[] creators;
 
 	private boolean navigable;
 
@@ -39,7 +39,7 @@ public class BaseProjectionLookupBuilder {
 		return map;
 	}
 
-	public MapCreator[] getCreators() {
+	public CollectionCreators.MapCreator[] getCreators() {
 		return creators;
 	}
 
@@ -55,7 +55,7 @@ public class BaseProjectionLookupBuilder {
 		return sorted;
 	}
 
-	public BaseProjectionLookupBuilder mapCreators(MapCreator... creators) {
+	public BaseProjectionLookupBuilder mapCreators(CollectionCreators.MapCreator... creators) {
 		if (creators.length != projection.getDepth()) {
 			throw new RuntimeException(
 					"Mismatched creator array length and depth");
@@ -85,7 +85,7 @@ public class BaseProjectionLookupBuilder {
 	}
 
 	public static abstract class BplDelegateMapCreator
-			extends DelegateMapCreator {
+			implements DelegateMapCreator {
 		private BaseProjectionLookupBuilder builder;
 
 		public BaseProjectionLookupBuilder getBuilder() {
@@ -111,8 +111,5 @@ public class BaseProjectionLookupBuilder {
 						: new LinkedHashMap();
 			}
 		}
-	}
-
-	public interface MapCreator<K, V> extends Supplier<Map<K, V>> {
 	}
 }

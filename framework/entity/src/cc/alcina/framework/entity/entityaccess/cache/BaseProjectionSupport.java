@@ -9,13 +9,14 @@ import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
 import cc.alcina.framework.common.client.domain.ReverseDateProjection.TreeMapRevCreator;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.util.DelegateMapCreator;
+import cc.alcina.framework.common.client.util.CollectionCreators;
+import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalMap;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalTreeMap;
 
 public class BaseProjectionSupport {
 	public static class BplDelegateMapCreatorFastUnsorted
-			extends DelegateMapCreator {
+			implements DelegateMapCreator {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
 			return new TransactionalMap(Object.class, Object.class);
@@ -51,7 +52,7 @@ public class BaseProjectionSupport {
 	}
 
 	public static class Int2IntOpenHashMapCreator
-			implements BaseProjectionLookupBuilder.MapCreator {
+			implements CollectionCreators.MapCreator {
 		@Override
 		public Map get() {
 			throw new UnsupportedOperationException();
@@ -60,7 +61,7 @@ public class BaseProjectionSupport {
 	}
 
 	public static class Int2ObjectOpenHashMapCreator
-			implements BaseProjectionLookupBuilder.MapCreator {
+			implements CollectionCreators.MapCreator {
 		@Override
 		public Map get() {
 			throw new UnsupportedOperationException();

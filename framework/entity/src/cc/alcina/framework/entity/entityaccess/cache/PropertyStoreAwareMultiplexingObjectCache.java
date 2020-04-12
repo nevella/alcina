@@ -96,16 +96,6 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 	}
 
 	@Override
-	public void invalidate(Class clazz) {
-		main.invalidate(clazz);
-	}
-
-	@Override
-	public void invalidate(Class[] classes) {
-		main.invalidate(classes);
-	}
-
-	@Override
 	public boolean isEmpty(Class clazz) {
 		return main.isEmpty(clazz);
 	}
@@ -188,8 +178,13 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 	static class DetachedEntityCacheAccess extends DetachedEntityCache
 			implements DomainStoreCache {
 		@Override
+		public void invalidate(Class clazz) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
 		protected Map<Long, Entity> createMap() {
-			return super.createMap();
+			throw new UnsupportedOperationException();
 		}
 
 		@Override

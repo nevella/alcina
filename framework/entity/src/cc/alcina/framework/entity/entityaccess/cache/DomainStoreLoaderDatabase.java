@@ -48,7 +48,6 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
 import cc.alcina.framework.common.client.domain.DomainProjection;
@@ -322,9 +321,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				if (projection instanceof BaseProjectionHasEquivalenceHash) {
 					store.cachingProjections
 							.getAndEnsure(projection.getListenedClass());
-				}
-				if (projection instanceof BaseProjection) {
-					((BaseProjection) projection).setDomainStore(store);
 				}
 			}
 		}
@@ -1569,7 +1565,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				Transaction.join(warmupTransaction);
 				return delegate.call();
 			} finally {
-				Transaction.separate();
+				Transaction.split();
 			}
 		}
 	}

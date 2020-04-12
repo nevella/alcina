@@ -7,17 +7,14 @@ import java.util.TreeSet;
 
 import com.google.gwt.core.client.GWT;
 
-import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.domain.DomainLookup;
-import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreIdMapCreator;
-import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreLongSetCreator;
-import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreMultisetCreator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.CollectionCreators;
+import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.SortedMultiset;
 
 //TODO - use fastidlookup, some sort of decorator for the sets
@@ -26,10 +23,10 @@ public class DataCollectionSuppliers {
 		return GWT.isScript();// GWT.isClient();
 	}
 
-	@RegistryLocation(registryPoint = DomainStoreIdMapCreator.class, implementationType = ImplementationType.SINGLETON)
+	@RegistryLocation(registryPoint = CollectionCreators.IdMapCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
 	public static class CacheIdMapCreatorClient
-			implements DomainStoreIdMapCreator {
+			implements CollectionCreators.IdMapCreator {
 		@Override
 		public Map<Long, Entity> get() {
 			return useJsMaps() ? JsUniqueMap.create(Long.class, false)
@@ -37,10 +34,10 @@ public class DataCollectionSuppliers {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainStoreLongSetCreator.class, implementationType = ImplementationType.SINGLETON)
+	@RegistryLocation(registryPoint = CollectionCreators.LongSetCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
 	public static class CacheLongSetCreatorClient
-			implements DomainStoreLongSetCreator {
+			implements CollectionCreators.LongSetCreator {
 		@Override
 		public Set<Long> get() {
 			return useJsMaps() ? new JsUniqueSet(Long.class)
@@ -48,27 +45,24 @@ public class DataCollectionSuppliers {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainStoreMultisetCreator.class, implementationType = ImplementationType.SINGLETON)
+	@RegistryLocation(registryPoint = CollectionCreators.MultisetCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
-	public static class CacheMultisetCreatorClient<T>
-			implements DomainStoreMultisetCreator<T> {
+	public static class CacheMultisetCreatorClient<K, V>
+			implements CollectionCreators.MultisetCreator<K, V> {
 		@Override
-		public SortedMultiset<T, Set<Long>> get(DomainLookup cacheLookup) {
-			return useJsMaps() ? new SortedMultisetClient<>(cacheLookup)
+		public Multiset<K, Set<V>> create(Class<K> keyClass,
+				Class<V> valueClass) {
+			return useJsMaps()
+					? new SortedMultisetClient<>(keyClass, valueClass)
 					: new SortedMultiset<>();
 		}
 	}
 
-	public static class SortedMultisetClient<K, V extends Set>
-			extends SortedMultiset<K, V> {
-		public SortedMultisetClient(DomainLookup cacheLookup) {
-			Class templateClass = cacheLookup.getListenedClass();
-			Object instance = Reflections.classLookup()
-					.newInstance(templateClass);
-			Class indexClass = cacheLookup.getPropertyPathAccesor()
-					.getChainedPropertyType(instance);
-			map = useJsMaps() && indexClass != null
-					? JsUniqueMap.create(indexClass, false)
+	public static class SortedMultisetClient<K, V>
+			extends SortedMultiset<K, Set<V>> {
+		public SortedMultisetClient(Class<K> keyClass, Class<V> valueClass) {
+			map = useJsMaps() && keyClass != null
+					? JsUniqueMap.create(keyClass, false)
 					: new LinkedHashMap<>();
 		}
 

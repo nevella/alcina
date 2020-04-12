@@ -37,8 +37,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -321,10 +321,10 @@ public class Registry {
 		for (T handler : handlers) {
 			Enum key = (Enum) mapper.getKey(handler);
 			if (byKey.containsKey(key)) {
-				throw new RuntimeException(Ax.format(
-						"Duplicate key for enum lookup - %s %s %s",
-						registryPoint.getClass().getSimpleName(), key,
-						handler.getClass().getSimpleName()));
+				throw new RuntimeException(
+						Ax.format("Duplicate key for enum lookup - %s %s %s",
+								registryPoint.getClass().getSimpleName(), key,
+								handler.getClass().getSimpleName()));
 			} else {
 				byKey.put(key, handler);
 			}
@@ -336,7 +336,6 @@ public class Registry {
 		return this.registry;
 	}
 
-	
 	public Object instantiateSingle(Class registryPoint, Class targetClass) {
 		Class lookupSingle = lookupSingle(registryPoint, targetClass, true);
 		return classLookup.newInstance(lookupSingle);
@@ -367,8 +366,8 @@ public class Registry {
 				return new ArrayList<>(0);
 			}
 			System.out.println(registry.toString());
-			throw new RuntimeException(Ax.format(
-					"Unable to locate %s - %s", registryPoint, targetClass));
+			throw new RuntimeException(Ax.format("Unable to locate %s - %s",
+					registryPoint, targetClass));
 		}
 		for (Class sc : scChain) {
 			RegistryKey pointKey = keys.get(sc);
@@ -426,10 +425,10 @@ public class Registry {
 			}
 		}
 		if (cachedKey == keys.emptyLookupKey() && errorOnNull) {
-			throw new RegistryException(Ax.format(
-					"singleton/factory not registered - %s:%s",
-					CommonUtils.classSimpleName(registryPoint),
-					CommonUtils.classSimpleName(targetClass)));
+			throw new RegistryException(
+					Ax.format("singleton/factory not registered - %s:%s",
+							CommonUtils.classSimpleName(registryPoint),
+							CommonUtils.classSimpleName(targetClass)));
 		}
 		return cachedKey.clazz();
 	}

@@ -1,7 +1,6 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -9,7 +8,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
 
 class Vacuum {
@@ -24,11 +22,6 @@ class Vacuum {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public void addVacuumable(Vacuumable vacuumable) {
-		if (vacuumable instanceof Entity) {
-			if (((Entity) vacuumable).getId() <= 0) {
-				int debug = 3;
-			}
-		}
 		Transaction transaction = Transaction.current();
 		if (!vacuumables.containsKey(transaction)) {
 			synchronized (queueCreationMonitor) {
@@ -63,19 +56,13 @@ class Vacuum {
 		Transaction.begin(TransactionPhase.VACUUM_BEGIN);
 		logger.debug("transactions with vacuumables: {} : {}",
 				vacuumables.size(), vacuumables.keySet());
-		Optional<TransactionId> vacuumableTransactionId = Transactions.get()
-				.getHighestCommonComittedTransactionId();
-		if (!vacuumableTransactionId.isPresent()) {
-			return;
-		}
 		List<Transaction> vacuumableTransactions = Transactions.get()
-				.getCommittedTransactionsBeforeOrAt(
-						vacuumableTransactionId.get());
+				.getVacuumableCommittedTransactions();
 		vacuumableTransactions
 				.addAll(Transactions.get().getCompletedNonDomainTransactions());
 		for (Transaction transaction : vacuumableTransactions) {
 			if (vacuumables.containsKey(transaction)) {
-				logger.debug("vaccuming transaction: {}", transaction);
+				logger.debug("vacuuming transaction: {}", transaction);
 				vacuumables.get(transaction).keySet()
 						.forEach(v -> this.vacuum(v, transaction));
 				vacuumables.remove(transaction);

@@ -146,12 +146,6 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		domain.put(clazz, createMap());
 	}
 
-	public void invalidate(Class[] classes) {
-		for (Class c : classes) {
-			invalidate(c);
-		}
-	}
-
 	public boolean isEmpty(Class clazz) {
 		ensureMaps(clazz);
 		return values(clazz).isEmpty();
@@ -203,6 +197,11 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 			}
 			domain.get(clazz).put(id, entity);
 		} else {
+			if (throwOnExisting) {
+				if (local.get(clazz).containsKey(id)) {
+					throw Ax.runtimeException("Double-put: %s", entity);
+				}
+			}
 			local.get(clazz).put(localId, entity);
 		}
 	}

@@ -1,25 +1,24 @@
 package cc.alcina.framework.common.client.domain;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.totsp.gwittir.client.beans.Converter;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreLongSetCreator;
-import cc.alcina.framework.common.client.domain.DomainStoreCreators.DomainStoreMultisetCreator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators.MultisetCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 
-public class DomainLookup<T, H extends Entity>
-		implements DomainListener<H> {
-	private Multiset<T, Set<Long>> store;
+public class DomainLookup<T, E extends Entity> implements DomainListener<E> {
+	private Multiset<T, Set<E>> store;
 
 	protected DomainStoreLookupDescriptor descriptor;
 
@@ -27,45 +26,31 @@ public class DomainLookup<T, H extends Entity>
 
 	private boolean enabled = true;
 
-	private CollectionFilter<H> relevanceFilter;
+	private CollectionFilter<E> relevanceFilter;
 
 	private Converter<T, T> normaliser;
-
-	private ModificationChecker modificationChecker;
-
-	private DomainStoreLongSetCreator setCreator;
 
 	public DomainLookup(DomainStoreLookupDescriptor descriptor) {
 		this.descriptor = descriptor;
 		this.propertyPathAccesor = new PropertyPathAccessor(
 				descriptor.propertyPath);
-		this.store = Registry.impl(DomainStoreMultisetCreator.class).get(this);
+		this.store = Registry.impl(MultisetCreator.class)
+				.create(provideIndexClass(), getListenedClass());
 		this.relevanceFilter = descriptor.getRelevanceFilter();
-		setCreator = Registry.impl(DomainStoreLongSetCreator.class);
 	}
 
-	public Set<Long> get(T k1) {
+	public Set<E> get(T k1) {
 		k1 = normalise(k1);
 		return store.get(k1);
 	}
 
-	@Override
-	public IDomainStore getDomainStore() {
-		return descriptor.getDomainStore();
-	}
-
-	@Override
-	public Class getListenedClass() {
-		return descriptor.clazz;
-	}
-
-	public Set<Long> getMaybeCollectionKey(Object value, Set<Long> existing) {
+	public Set<E> getKeyMayBeCollection(Object value) {
 		if (value instanceof Collection) {
-			Set<Long> result = createLongSet();
+			Set<E> result = new LiSet<>();
 			for (T t : (Collection<T>) value) {
-				Set<Long> ids = get(normalise(t));
-				if (ids != null) {
-					result.addAll(ids);
+				Set<E> values = get(normalise(t));
+				if (values != null) {
+					result.addAll(values);
 				}
 			}
 			return result;
@@ -74,23 +59,13 @@ public class DomainLookup<T, H extends Entity>
 		}
 	}
 
-	public ModificationChecker getModificationChecker() {
-		return modificationChecker;
+	@Override
+	public Class getListenedClass() {
+		return descriptor.clazz;
 	}
 
 	public Converter<T, T> getNormaliser() {
 		return this.normaliser;
-	}
-
-	public Set<H> getPrivateObjects(T k1) {
-		Set<H> result = new LinkedHashSet<H>();
-		Set<Long> ids = get(k1);
-		if (ids != null) {
-			for (Long id : ids) {
-				result.add(getForResolvedId(id));
-			}
-		}
-		return result;
 	}
 
 	public PropertyPathAccessor getPropertyPathAccesor() {
@@ -98,19 +73,18 @@ public class DomainLookup<T, H extends Entity>
 	}
 
 	@Override
-	public void insert(H entity) {
+	public void insert(E entity) {
 		if (relevanceFilter != null && !relevanceFilter.allow(entity)) {
 			return;
 		}
-		checkModification("insert");
 		Object v1 = getChainedProperty(entity);
 		if (v1 instanceof Collection) {
 			Set deduped = new LinkedHashSet((Collection) v1);
 			for (Object v2 : deduped) {
-				add(normalise((T) v2), entity.provideTransactionalId());
+				add(normalise((T) v2), entity);
 			}
 		} else {
-			add(normalise((T) v1), entity.provideTransactionalId());
+			add(normalise((T) v1), entity);
 		}
 	}
 
@@ -124,7 +98,7 @@ public class DomainLookup<T, H extends Entity>
 	}
 
 	@Override
-	public boolean matches(H h, Object[] keys) {
+	public boolean matches(E h, Object[] keys) {
 		if (keys.length != 1) {
 			throw new IllegalArgumentException("Keys length must equal one");
 		}
@@ -132,27 +106,27 @@ public class DomainLookup<T, H extends Entity>
 				keys[0]);
 	}
 
+	public Class<T> provideIndexClass() {
+		return getPropertyPathAccesor().getChainedPropertyType(
+				Reflections.classLookup().newInstance(getListenedClass()));
+	}
+
 	@Override
-	public void remove(H entity) {
+	public void remove(E entity) {
 		Object v1 = getChainedProperty(entity);
 		if (v1 instanceof Collection) {
 			Set deduped = new LinkedHashSet((Collection) v1);
 			for (Object v2 : deduped) {
-				remove(normalise((T) v2), entity.getId());
+				remove(normalise((T) v2), entity);
 			}
 		} else {
-			remove(normalise((T) v1), entity.getId());
+			remove(normalise((T) v1), entity);
 		}
 	}
 
 	@Override
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
-	}
-
-	public void
-			setModificationChecker(ModificationChecker modificationChecker) {
-		this.modificationChecker = modificationChecker;
 	}
 
 	public void setNormaliser(Converter<T, T> normaliser) {
@@ -164,175 +138,46 @@ public class DomainLookup<T, H extends Entity>
 	}
 
 	public int size(T t) {
-		Set<Long> set = get(t);
+		Set<E> set = get(t);
 		return set == null ? null : set.size();
 	}
 
 	@Override
 	public String toString() {
-		return Ax.format("Lookup: %s [%s]",
-				getListenedClass().getSimpleName(), descriptor.propertyPath);
+		return Ax.format("Lookup: %s [%s]", getListenedClass().getSimpleName(),
+				descriptor.propertyPath);
 	}
 
-	private T normalise(T k1) {
-		return normaliser == null || k1 == null ? k1 : normaliser.convert(k1);
+	private T normalise(T key) {
+		return normaliser == null || key == null ? key
+				: normaliser.convert(key);
 	}
 
-	private void remove(T k1, Long value) {
-		checkModification("remove");
-		Set<Long> set = get(k1);
+	private void remove(T key, E value) {
+		Set<E> set = get(key);
 		if (set != null) {
 			set.remove(value);
 		}
 	}
 
-	protected void add(T k1, Long value) {
+	protected void add(T key, E value) {
 		if (value == null) {
 			System.err.println(
-					"Invalid value (null) for cache lookup put - " + k1);
+					"Invalid value (null) for cache lookup put - " + key);
 			return;
 		}
-		getAndEnsure(k1).add(value);
+		getAndEnsure(key).add(value);
 	}
 
-	protected void checkModification(String modificationType) {
-		if (getModificationChecker() != null) {
-			getModificationChecker().check("fire");
-		}
+	protected Set<E> getAndEnsure(T key) {
+		key = normalise(key);
+		return store.getAndEnsure(key);
 	}
 
-	protected Set createLongSet() {
-		return setCreator.get();
-	}
-
-	// write thread only!!
-	protected Set<Long> getAndEnsure(T k1) {
-		k1 = normalise(k1);
-		Set<Long> result = get(k1);
-		if (result == null) {
-			result = createLongSet();
-			store.put(k1, result);
-		}
-		return result;
-	}
-
-	protected Object getChainedProperty(H entity) {
+	protected Object getChainedProperty(E entity) {
 		if (descriptor.valueFunction != null) {
 			return descriptor.valueFunction.apply(entity);
 		}
 		return propertyPathAccesor.getChainedProperty(entity);
-	}
-
-	protected H getForResolvedId(long id) {
-		return (H) Domain.transactionalFind(descriptor.clazz, id);
-	}
-
-	class ModificationCheckedIterator implements Iterator {
-		private Iterator iterator;
-
-		ModificationCheckedIterator(Iterator iterator) {
-			if (iterator == null) {
-				throw new RuntimeException("null");
-			}
-			this.iterator = iterator;
-		}
-
-		@Override
-		public boolean hasNext() {
-			return this.iterator.hasNext();
-		}
-
-		@Override
-		public Object next() {
-			return this.iterator.next();
-		}
-
-		@Override
-		public void remove() {
-			checkModification("itr-remove");
-			this.iterator.remove();
-		}
-	}
-
-	class ModificationCheckedSet implements Set {
-		private Set set;
-
-		ModificationCheckedSet(Set set) {
-			if (set == null) {
-				throw new RuntimeException("null");
-			}
-			this.set = set;
-		}
-
-		@Override
-		public boolean add(Object e) {
-			checkModification("add-set");
-			return this.set.add(e);
-		}
-
-		@Override
-		public boolean addAll(Collection c) {
-			checkModification("add-set");
-			return this.set.addAll(c);
-		}
-
-		@Override
-		public void clear() {
-			checkModification("clear");
-			this.set.clear();
-		}
-
-		@Override
-		public boolean contains(Object o) {
-			return this.set.contains(o);
-		}
-
-		@Override
-		public boolean containsAll(Collection c) {
-			return this.set.containsAll(c);
-		}
-
-		@Override
-		public boolean isEmpty() {
-			return this.set.isEmpty();
-		}
-
-		@Override
-		public Iterator iterator() {
-			return this.set.iterator();
-		}
-
-		@Override
-		public boolean remove(Object o) {
-			checkModification("remove-set");
-			return this.set.remove(o);
-		}
-
-		@Override
-		public boolean removeAll(Collection c) {
-			checkModification("remove-all");
-			return this.set.removeAll(c);
-		}
-
-		@Override
-		public boolean retainAll(Collection c) {
-			checkModification("retain-all");
-			return this.set.retainAll(c);
-		}
-
-		@Override
-		public int size() {
-			return this.set.size();
-		}
-
-		@Override
-		public Object[] toArray() {
-			return this.set.toArray();
-		}
-
-		@Override
-		public Object[] toArray(Object[] a) {
-			return this.set.toArray(a);
-		}
 	}
 }

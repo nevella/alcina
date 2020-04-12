@@ -31,7 +31,7 @@ public class LockingDomainQuery<V extends Entity>
 	@Override
 	public List<V> list() {
 		Collection<V> values = Registry.impl(SearcherCollectionSource.class)
-				.getCollectionFor(clazz, def);
+				.getCollectionFor(entityClass, def);
 		try {
 			Stream<V> stream = getStream(values);
 			return stream.collect(Registry.impl(ListCollector.class).toList());
@@ -45,7 +45,7 @@ public class LockingDomainQuery<V extends Entity>
 	}
 
 	public void setQueryClass(Class<V> clazz) {
-		this.clazz = clazz;
+		this.entityClass = clazz;
 	}
 
 	protected void disposeStream() {

@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public class IdLookup<T, H extends Entity> extends DomainLookup<T, H> {
+public class IdLookup<T, E extends Entity> extends DomainLookup<T, E> {
 	private Set<T> duplicateKeys = new LinkedHashSet<T>();
 
 	protected final transient Logger logger = LoggerFactory
@@ -20,14 +20,14 @@ public class IdLookup<T, H extends Entity> extends DomainLookup<T, H> {
 		super(descriptor);
 	}
 
-	public H getObject(T key) {
-		H value = null;
-		Set<Long> ids = get(key);
-		if (CommonUtils.isNotNullOrEmpty(ids)) {
-			Long id = CommonUtils.first(ids);
-			value = getForResolvedId(id);
+	public E getObject(T key) {
+		E value = null;
+		Set<E> values = get(key);
+		if (CommonUtils.isNotNullOrEmpty(values)) {
+			return values.iterator().next();
+		} else {
+			return null;
 		}
-		return Domain.resolveTransactional(this, value, new Object[] { key });
 	}
 
 	public boolean isUnique(T key) {
@@ -35,18 +35,18 @@ public class IdLookup<T, H extends Entity> extends DomainLookup<T, H> {
 	}
 
 	@Override
-	protected void add(T k1, Long value) {
-		if (k1 == null) {
+	protected void add(T key, E value) {
+		if (key == null) {
 			return;
 		}
-		Set<Long> set = getAndEnsure(k1);
+		Set<E> set = getAndEnsure(key);
 		set.add(value);
 		if (set.size() > 1) {
 			// throw new IllegalArgumentException("");
 			logger.warn(Ax.format(
 					"Warning - duplicate mapping of an id lookup - %s: %s : %s",
-					this, k1, set));
-			duplicateKeys.add(k1);
+					this, key, set));
+			duplicateKeys.add(key);
 		}
 	}
 }

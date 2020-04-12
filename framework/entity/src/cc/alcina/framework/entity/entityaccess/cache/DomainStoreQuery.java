@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -14,30 +13,25 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionData
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
-public class DomainStoreQuery<V extends Entity>
-		extends DomainQuery<V> {
+public class DomainStoreQuery<V extends Entity> extends DomainQuery<V> {
 	private GraphProjectionFieldFilter fieldFilter;
 
 	private GraphProjectionDataFilter dataFilter;
 
 	private DomainStore store;
 
-	public DomainStoreQuery(Class<V> clazz, DomainStore store) {
-		super(clazz);
+	public DomainStoreQuery(Class<V> entityClass, DomainStore store) {
+		super(entityClass);
 		this.store = store;
-	}
-
-	public List<V> allRaw() {
-		raw = true;
-		filterByIds = Domain.ids(clazz);
-		return list();
 	}
 
 	@Override
 	public Set<V> asSet() {
-		return store.query(clazz, this);
+		return stream().collect(Collectors.toSet());
 	}
 
+	// FIXME - mvcc.2 - these go away (we only filter intentionally)(mostly at
+	// the rpc boundary)
 	public DomainStoreQuery<V>
 			dataFilter(GraphProjectionDataFilter dataFilter) {
 		this.dataFilter = dataFilter;
@@ -74,11 +68,11 @@ public class DomainStoreQuery<V extends Entity>
 
 	@Override
 	public List<V> list() {
-		return asSet().stream().collect(Collectors.toList());
+		return stream().collect(Collectors.toList());
 	}
 
 	@Override
 	public Stream<V> stream() {
-		return asSet().stream();
+		return store.query(entityClass, this);
 	}
 }

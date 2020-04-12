@@ -4,8 +4,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -39,26 +37,6 @@ public abstract class PropertyStoreItemDescriptor<T extends Entity>
 
 	public void addRow(Object[] row) throws SQLException {
 		propertyStore.addRow(row);
-	}
-
-	@Override
-	public Set<Long> evaluateFilter(DetachedEntityCache cache,
-			Set<Long> existing, CollectionFilter filter) {
-		// filter.setContext(propertyStore.createContext(cache));
-		if (existing == null) {
-			System.out.println("warn - raw propertyStore query - " + filter);
-			existing = propertyStore.getIds();
-		}
-		CollectionFilter withIdFilter = new CollectionFilter<Long>() {
-			@Override
-			public boolean allow(Long id) {
-				// will be chained through to the store
-				// FIXME - won't - because filter.setcontext (above) doesn't
-				// descend to child filters
-				return filter.allow(getProxy(cache, id, false));
-			}
-		};
-		return CollectionFilters.filterAsSet(existing, withIdFilter);
 	}
 
 	public Set<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {

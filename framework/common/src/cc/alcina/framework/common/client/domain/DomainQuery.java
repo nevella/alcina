@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.domain;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -16,22 +15,20 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public abstract class DomainQuery<V extends Entity> {
-	protected Collection<Long> filterByIds = new LinkedHashSet<Long>();
-
+public abstract class DomainQuery<E extends Entity> {
 	private List<DomainFilter> filters = new ArrayList<DomainFilter>();
 
 	protected boolean raw = true;
 
 	private boolean nonTransactional;
 
-	protected Class<V> clazz;
+	protected Class<E> entityClass;
 
-	public DomainQuery(Class<V> clazz) {
-		this.clazz = clazz;
+	public DomainQuery(Class<E> entityClass) {
+		this.entityClass = entityClass;
 	}
 
-	public Set<V> asSet() {
+	public Set<E> asSet() {
 		return stream().collect(Collectors.toSet());
 	}
 
@@ -39,54 +36,53 @@ public abstract class DomainQuery<V extends Entity> {
 		return raw().list().size();
 	}
 
-	public DomainQuery<V> filter(DomainFilter filter) {
+	public DomainQuery<E> filter(DomainFilter filter) {
 		if (filter instanceof CompositeFilter) {
 			CompositeFilter compositeFilter = (CompositeFilter) filter;
 			if (compositeFilter.canFlatten()) {
 				for (DomainFilter sub : compositeFilter.getFilters()) {
 					this.filters.add(sub);
 				}
-				return (DomainQuery<V>) this;
+				return (DomainQuery<E>) this;
 			}
 		}
 		this.filters.add(filter);
 		return this;
 	}
 
-	public DomainQuery<V> filter(Predicate p) {
+	public DomainQuery<E> filter(Predicate p) {
 		return filter(new DomainFilter(p));
 	}
 
-	public DomainQuery<V> filter(String key, Object value) {
+	public DomainQuery<E> filter(String key, Object value) {
 		return filter(new DomainFilter(key, value));
 	}
 
-	public DomainQuery<V> filter(String key, Object value,
+	public DomainQuery<E> filter(String key, Object value,
 			FilterOperator operator) {
 		return filter(new DomainFilter(key, value, operator));
 	}
 
-	public DomainQuery<V> filterById(long id) {
-		this.filterByIds = Collections.singleton(id);
+	public DomainQuery<E> filterById(long id) {
+		filterByIds(Collections.singleton(id));
 		return this;
 	}
 
-	public DomainQuery<V> filterByIds(Collection<Long> ids) {
-		this.filterByIds = ids;
+	public DomainQuery<E> filterByIds(Collection<Long> ids) {
+		filter("id", ids);
 		return this;
 	}
 
-	public V find() {
+	public E find() {
 		return optional().orElse(null);
 	}
 
-	public V first() {
+	public E first() {
 		return CommonUtils.first(list());
 	}
 
-	public Set<Long> getFilterByIds() {
-		return (this.filterByIds instanceof Set) ? (Set<Long>) this.filterByIds
-				: new LinkedHashSet<Long>(this.filterByIds);
+	public Class<E> getEntityClass() {
+		return this.entityClass;
 	}
 
 	public List<DomainFilter> getFilters() {
@@ -101,30 +97,34 @@ public abstract class DomainQuery<V extends Entity> {
 		return this.raw;
 	}
 
-	public abstract List<V> list();
+	public abstract List<E> list();
 
-	public DomainQuery<V> nonTransactional() {
+	public DomainQuery<E> nonTransactional() {
 		this.nonTransactional = true;
 		return this;
 	}
 
-	public Optional<V> optional() {
+	public Optional<E> optional() {
 		return stream().findFirst();
 	}
 
-	public DomainQuery<V> raw() {
+	public DomainQuery<E> raw() {
 		this.raw = true;
 		return this;
 	}
 
-	public Stream<V> stream() {
+	public Stream<E> stream() {
 		return list().stream();
 	}
 
 	@Override
 	public String toString() {
 		return Ax.format("DomainQuery: %s\n%s",
-				clazz == null ? "(No class)" : clazz.getSimpleName(),
+				entityClass == null ? "(No class)"
+						: entityClass.getSimpleName(),
 				CommonUtils.join(filters, ",\n"));
+	}
+
+	public static class DomainIdFilter {
 	}
 }

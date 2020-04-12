@@ -1,13 +1,19 @@
 package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.FromObjectKeyValueMapper;
@@ -23,8 +29,8 @@ public class EntityHelper {
 		if (hi instanceof Entity) {
 			Entity entity = (Entity) hi;
 			return Ax.format("%s : %s / %s",
-					CommonUtils.simpleClassName(entity.getClass()), entity.getId(),
-					entity.getLocalId());
+					CommonUtils.simpleClassName(entity.getClass()),
+					entity.getId(), entity.getLocalId());
 		}
 		return Ax.format("%s : %s ", CommonUtils.simpleClassName(hi.getClass()),
 				hi.getId());
@@ -146,9 +152,14 @@ public class EntityHelper {
 		}
 	}
 
-	public static <T extends Entity> Map<Long, T> toIdMap(Collection<T> entities) {
-		return (Map<Long, T>) CollectionFilters.map((Collection<Entity>) entities,
-				new EntityToIdMapper());
+	public static <T extends Entity> Map<Long, T>
+			toIdMap(Collection<T> entities) {
+		return (Map<Long, T>) CollectionFilters
+				.map((Collection<Entity>) entities, new EntityToIdMapper());
+	}
+
+	public static <E extends Entity> Collector<E, ?, Set<Long>> toIdSet() {
+		return new ToIdSetCollector<>();
 	}
 
 	public static Set<Long> toIdSet(Collection<? extends Entity> entities) {
@@ -179,6 +190,41 @@ public class EntityHelper {
 		@Override
 		public Long getKey(Entity o) {
 			return o.getId();
+		}
+	}
+
+	private static class ToIdSetCollector<E extends Entity>
+			implements java.util.stream.Collector<E, Set<Long>, Set<Long>> {
+		public ToIdSetCollector() {
+		}
+
+		@Override
+		public BiConsumer<Set<Long>, E> accumulator() {
+			return (set, t) -> set.add(t.getId());
+		}
+
+		@Override
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.of(Characteristics.IDENTITY_FINISH);
+		}
+
+		@Override
+		public BinaryOperator<Set<Long>> combiner() {
+			return (left, right) -> {
+				left.addAll(right);
+				return left;
+			};
+		}
+
+		@Override
+		public Function<Set<Long>, Set<Long>> finisher() {
+			return null;
+		}
+
+		@Override
+		public Supplier<Set<Long>> supplier() {
+			return () -> new LinkedHashSet<>();
 		}
 	}
 }

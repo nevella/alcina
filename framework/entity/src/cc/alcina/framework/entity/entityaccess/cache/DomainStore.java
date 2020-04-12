@@ -22,6 +22,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -98,7 +99,6 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjections;
-import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
 /**
  * <h3>Locking notes:</h3>
@@ -500,6 +500,42 @@ public class DomainStore implements IDomainStore {
 		task.addToEvictionQueue(entity);
 	}
 
+	private <E extends Entity> void applyFilter(final Class clazz,
+			DomainFilter filter, DomainFilter nextFilter, QueryToken<E> token) {
+		ComplexFilter complexFilter = getComplexFilterFor(clazz, filter,
+				nextFilter);
+		if (complexFilter != null) {
+			token.stream = complexFilter.evaluate(token.stream, filter,
+					nextFilter);
+			token.idx += complexFilter.topLevelFiltersConsumed() - 1;
+			if (isDebug()) {
+				token.lastFilterString = String.format("Complex - %s - %s %s",
+						complexFilter, filter, nextFilter);
+			}
+			return;
+		}
+		if (isDebug()) {
+			token.lastFilterString = filter.toString();
+		}
+		DomainLookup lookup = getLookupFor(clazz, filter.propertyPath);
+		if (lookup != null) {
+			switch (filter.filterOperator) {
+			case EQ:
+			case IN:
+				// TODO - mvcc.2 - if we have estimates of size, we might be
+				// able to optimise here
+				Set<E> lookupValues = lookup
+						.getKeyMayBeCollection(filter.propertyValue);
+				token.appendEvaluatedValueFilter(lookupValues);
+				return;
+			// all others non-optimised
+			default:
+				break;
+			}
+		}
+		token.appendFilter(filter.asCollectionFilter());
+	}
+
 	private void doEvictions() {
 		domainDescriptor.preProvideTasks
 				.forEach(PreProvideTask::writeLockedCleanup);
@@ -549,50 +585,6 @@ public class DomainStore implements IDomainStore {
 		return domainDescriptor.complexFilters.stream()
 				.filter(cf -> cf.handles(clazz, filters)).findFirst()
 				.orElse(null);
-	}
-
-	private Set<Long> getFiltered(final Class clazz, DomainFilter cacheFilter,
-			DomainFilter nextFilter, FilterContext ctr, Set<Long> existing) {
-		ComplexFilter complexFilter = getComplexFilterFor(clazz, cacheFilter,
-				nextFilter);
-		if (complexFilter != null) {
-			Set<Long> ids = complexFilter.evaluate(existing, cacheFilter,
-					nextFilter);
-			ctr.idx += complexFilter.topLevelFiltersConsumed() - 1;
-			if (isDebug()) {
-				ctr.lastFilterString = String.format("Complex - %s - %s %s",
-						complexFilter, cacheFilter, nextFilter);
-			}
-			return ids;
-		}
-		if (isDebug()) {
-			ctr.lastFilterString = cacheFilter.toString();
-		}
-		DomainLookup lookup = getLookupFor(clazz, cacheFilter.propertyPath);
-		if (lookup != null) {
-			switch (cacheFilter.filterOperator) {
-			case EQ:
-			case IN:
-				Set<Long> set = lookup.getMaybeCollectionKey(
-						cacheFilter.propertyValue, existing);
-				if (set != null && existing != null
-						&& set.size() > existing.size() * 1000) {
-					// heuristic - faster to just filter existing
-					break;
-				} else {
-					set = set != null ? new LinkedHashSet<Long>(set)
-							: new LinkedHashSet<Long>();
-					return (Set<Long>) (existing == null ? set
-							: CommonUtils.intersection(existing, set));
-				}
-				// all others non-optimised
-			default:
-				break;
-			}
-		}
-		final CollectionFilter filter = cacheFilter.asCollectionFilter();
-		return domainDescriptor.perClass.get(clazz).evaluateFilter(cache,
-				existing, filter);
 	}
 
 	private DomainLookup getLookupFor(Class clazz, String propertyName) {
@@ -907,67 +899,46 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	<T extends Entity> Set<T> query(Class<T> clazz, DomainStoreQuery<T> query) {
+	<T extends Entity> Stream<T> query(Class<T> clazz,
+			DomainStoreQuery<T> query) {
 		try {
 			threads.lock(false);
-			Set<T> raw = null;
-			Set<Long> ids = query.getFilterByIds();
 			boolean debugMetrics = isDebug()
 					&& LooseContext.is(CONTEXT_DEBUG_QUERY_METRICS);
 			StringBuilder debugMetricBuilder = new StringBuilder();
 			int filterSize = query.getFilters().size();
-			FilterContext ctx = new FilterContext();
-			for (; ctx.idx < filterSize; ctx.idx++) {
-				int idx = ctx.idx;
+			QueryToken token = new QueryToken(query);
+			for (; token.idx < filterSize; token.idx++) {
+				int idx = token.idx;
 				long start = System.nanoTime();
 				DomainFilter cacheFilter = query.getFilters().get(idx);
 				DomainFilter nextFilter = idx == filterSize - 1 ? null
 						: query.getFilters().get(idx + 1);
-				ids = (idx == 0 && ids.isEmpty()) ? null : ids;
-				ids = getFiltered(clazz, cacheFilter, nextFilter, ctx, ids);
+				applyFilter(clazz, cacheFilter, nextFilter, token);
 				if (debugMetrics) {
 					double ms = (double) (System.nanoTime() - start)
 							/ 1000000.0;
-					String filters = ctx.lastFilterString;
+					String filters = token.lastFilterString;
 					debugMetricBuilder.append(String.format("\t%.3f ms - %s\n",
 							ms, CommonUtils.trimToWsChars(filters, 100, true)));
 				}
-				if (ids.isEmpty()) {
+				if (token.isEmpty()) {
 					break;
 				}
 			}
-			if (debugMetrics
-					&& CommonUtils.isNullOrEmpty(query.getFilterByIds())) {
+			if (debugMetrics && !token.hasIdQuery()) {
 				metricLogger.debug("Query metrics:\n========\n{}\n{}", query,
 						debugMetricBuilder.toString());
 			}
-			if (filterSize == 0 && ids.isEmpty()) {
-				// Domain.list()
-				raw = cache.values(clazz);
-			} else {
-				raw = new ObjectLinkedOpenHashSet<T>(ids.size());
-				domainDescriptor.perClass.get(clazz).addRawValues(ids, cache,
-						(Set) raw);
-				/*
-				 * add tltm-local
-				 */
-				ids.stream().filter(id -> id < 0)
-						.map(id -> ThreadlocalTransformManager.cast().getObject(
-								clazz, 0L, Entity.provideUnpackedLocalId(id)))
-						.forEach(raw::add);
+			if (domainDescriptor.getPreProvideTasks(clazz).size() > 0) {
+				// would have to collect, process, stream
+				throw new UnsupportedOperationException();
 			}
-			try {
-				for (PreProvideTask task : domainDescriptor
-						.getPreProvideTasks(clazz)) {
-					task.run(clazz, raw, true);
-				}
-				if (query.isRaw() || isWillProjectLater()) {
-					return raw;
-				}
-				return new GraphProjection(query.getFieldFilter(),
-						query.getDataFilter()).project(raw, null);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
+			// FIXME - mvcc.2 - remove isRaw() etc (always raw)
+			if (query.isRaw() || isWillProjectLater()) {
+				return token.ensureStream();
+			} else {
+				throw new UnsupportedOperationException();
 			}
 		} finally {
 			threads.unlock(false);
@@ -1090,8 +1061,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		public Stream<DomainStore> stream() {
-			return descriptorMap.values().stream().collect(Collectors.toList())
-					.stream();
+			return descriptorMap.values().stream();
 		}
 
 		public DomainStore writableStore() {
@@ -1166,15 +1136,16 @@ public class DomainStore implements IDomainStore {
 			@Override
 			public <V extends Entity> V resolveTransactional(
 					DomainListener listener, V value, Object[] path) {
-				DomainStore domainStore = (DomainStore) listener
-						.getDomainStore();
-				if (domainStore == null || domainStore.handler == null) {
-					// localdomain
-					return value;
-				} else {
-					return domainStore.handler.resolveTransactional(listener,
-							value, path);
-				}
+				return value;
+				// DomainStore domainStore = (DomainStore) listener
+				// .getDomainStore();
+				// if (domainStore == null || domainStore.handler == null) {
+				// // localdomain
+				// return value;
+				// } else {
+				// return domainStore.handler.resolveTransactional(listener,
+				// value, path);
+				// }
 			}
 
 			@Override
@@ -1569,12 +1540,6 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	static class FilterContext {
-		int idx = 0;
-
-		public String lastFilterString;
-	}
-
 	static class IndexingTransformListener implements DomainTransformListener {
 		@Override
 		public void domainTransform(DomainTransformEvent event)
@@ -1630,6 +1595,57 @@ public class DomainStore implements IDomainStore {
 								.applyPostTransform(o.getValueClass(), o);
 			}
 			return true;
+		}
+	}
+
+	class QueryToken<E extends Entity> {
+		boolean empty = false;
+
+		int idx = 0;
+
+		public String lastFilterString;
+
+		Stream<E> stream;
+
+		DomainQuery<E> query;
+
+		public QueryToken(DomainStoreQuery<E> query) {
+			this.query = query;
+		}
+
+		public void appendEvaluatedValueFilter(Set<E> values) {
+			if (stream == null) {
+				if (values.size() == 0) {
+					empty = true;
+				}
+				stream = values.stream();
+			} else {
+				stream = stream.filter(values::contains);
+			}
+		}
+
+		public void appendFilter(Predicate predicate) {
+			stream = ensureStream().filter(predicate);
+		}
+
+		public Stream<E> ensureStream() {
+			if (stream == null) {
+				stream = streamFromCacheValues();
+			}
+			return stream;
+		}
+
+		public boolean hasIdQuery() {
+			return query.getFilters().stream()
+					.anyMatch(filter -> filter.propertyPath.equals("id"));
+		}
+
+		public boolean isEmpty() {
+			return empty;
+		}
+
+		private Stream<E> streamFromCacheValues() {
+			return cache.stream(query.getEntityClass());
 		}
 	}
 

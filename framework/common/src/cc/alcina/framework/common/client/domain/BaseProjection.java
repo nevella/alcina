@@ -46,8 +46,6 @@ public abstract class BaseProjection<T extends Entity>
 	protected final transient Logger logger = LoggerFactory
 			.getLogger(getClass());
 
-	private IDomainStore domainStore;
-
 	public BaseProjection(Class initialType, Class... secondaryTypes) {
 		this.types = new ArrayList();
 		types.add(initialType);
@@ -76,11 +74,6 @@ public abstract class BaseProjection<T extends Entity>
 		V nonTransactional = (V) lookup.get(objects);
 		return (V) Domain.resolveTransactional(this, (Entity) nonTransactional,
 				objects);
-	}
-
-	@Override
-	public IDomainStore getDomainStore() {
-		return this.domainStore;
 	}
 
 	public MultikeyMap<T> getLookup() {
@@ -192,10 +185,6 @@ public abstract class BaseProjection<T extends Entity>
 
 	public void setDerived(boolean derived) {
 		this.derived = derived;
-	}
-
-	public void setDomainStore(IDomainStore domainStore) {
-		this.domainStore = domainStore;
 	}
 
 	@Override

@@ -1,12 +1,15 @@
 package cc.alcina.extras.dev.console.test;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -81,6 +84,9 @@ public class MvccEntityTransactionalCollectionTest<IU extends Entity & IUser, IG
 							"non-committed-tx1: userClass.count()!=initialSize in tx2");
 					tx2Latch1.countDown();
 					tx1Latch2.await();
+					List<IU> users = Domain.stream(userClass)
+							.sorted(EntityComparator.INSTANCE)
+							.collect(Collectors.toList());
 					Preconditions.checkState(
 							Domain.stream(userClass).count() == initialSize,
 							"committed-tx1: userClass.count()!=initialSize in tx2 (old tx)");

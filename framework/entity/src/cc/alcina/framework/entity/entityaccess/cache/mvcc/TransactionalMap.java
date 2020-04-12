@@ -78,6 +78,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	Comparator<K> comparator;
 
 	public TransactionalMap(Class<K> keyClass, Class<V> valueClass) {
+		Preconditions.checkNotNull(keyClass);
+		Preconditions.checkNotNull(valueClass);
 		this.keyClass = keyClass;
 		this.valueClass = valueClass;
 		base = new Layer(Transaction.current());
@@ -262,7 +264,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				return (Map<K, V1>) new Long2ObjectLinkedOpenHashMap<>();
 			}
 		} else {
-			// FIXME - some more optimisations would be great
+			// FIXME - mvcc.1 - some more optimisations would be great (String?
+			// Enum?)
 			return (Map<K, V1>) new Object2ObjectLinkedOpenHashMap<>();
 		}
 	}

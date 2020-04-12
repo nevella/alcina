@@ -23,6 +23,7 @@ import com.google.gwt.core.shared.GwtIncompatible;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PublicCloneable;
+import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
@@ -31,7 +32,6 @@ import cc.alcina.framework.common.client.collections.PublicCloneable;
  * @author nick@alcina.cc
  * 
  */
-
 public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>
 		implements PublicCloneable<UnsortedMultikeyMap> {
 	private static final long serialVersionUID = 1L;
@@ -105,9 +105,7 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>
 		return delegateMapCreator;
 	}
 
-	public static class UnsortedMapCreator extends DelegateMapCreator {
-		private static final long serialVersionUID = 1L;
-
+	public static class UnsortedMapCreator implements DelegateMapCreator {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
 			return new LinkedHashMap<>();

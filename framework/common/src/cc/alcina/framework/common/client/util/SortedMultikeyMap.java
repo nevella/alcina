@@ -23,6 +23,8 @@ import java.util.TreeMap;
 
 import com.google.gwt.core.shared.GwtIncompatible;
 
+import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
+
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
  * class/id/instance would be depth 2
@@ -30,7 +32,6 @@ import com.google.gwt.core.shared.GwtIncompatible;
  * @author nick@alcina.cc
  * 
  */
-
 public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 	static final transient long serialVersionUID = -1L;
 
@@ -103,9 +104,7 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 		return this.delegateMapCreator;
 	}
 
-	public static class SortedMapCreator extends DelegateMapCreator {
-		private static final long serialVersionUID = 1L;
-
+	public static class SortedMapCreator implements DelegateMapCreator {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
 			return new TreeMap();

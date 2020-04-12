@@ -1,9 +1,11 @@
 package cc.alcina.framework.common.client.domain;
 
-import java.util.Set;
+import java.util.stream.Stream;
 
-public interface ComplexFilter {
-	Set<Long> evaluate(Set<Long> existing, DomainFilter... filters);
+import cc.alcina.framework.common.client.logic.domain.Entity;
+
+public interface ComplexFilter<T extends Entity> {
+	Stream<T> evaluate(Stream<T> incoming, DomainFilter... filters);
 
 	boolean handles(Class clazz, DomainFilter... filters);
 

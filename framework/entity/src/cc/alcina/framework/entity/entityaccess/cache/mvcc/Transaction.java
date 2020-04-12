@@ -98,7 +98,7 @@ public class Transaction {
 	}
 
 	// inverse of join
-	public static void separate() {
+	public static void split() {
 		logger.trace("Removing tx - {} {} {}", threadLocalInstance.get(),
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
@@ -146,8 +146,7 @@ public class Transaction {
 		logger.trace("Created tx: {}", this);
 	}
 
-	public <T extends Entity> T create(Class<T> clazz,
-			DomainStore store) {
+	public <T extends Entity> T create(Class<T> clazz, DomainStore store) {
 		StoreTransaction storeTransaction = storeTransactions.get(store);
 		T t = storeTransaction.getMvcc().create(clazz);
 		if (!isBaseTransaction()) {

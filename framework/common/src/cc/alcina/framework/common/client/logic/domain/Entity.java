@@ -47,11 +47,6 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 	public static final String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class
 			+ ".CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID";
 
-	// FIXME.mvcc.1 - goes away (once we just use objects themselves as keys)
-	public static long provideUnpackedLocalId(long packedLocalId) {
-		return (-packedLocalId) & 0x7FFFFFFF;
-	}
-
 	protected transient int hash = 0;
 
 	protected transient String comparisonString;

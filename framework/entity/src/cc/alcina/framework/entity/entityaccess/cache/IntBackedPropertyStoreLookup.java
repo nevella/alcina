@@ -42,16 +42,20 @@ public class IntBackedPropertyStoreLookup<T, H extends Entity>
 	}
 
 	@Override
-	public Set<Long> get(T k1) {
-		if (k1 == null) {
-			return null;
-		}
-		int id = ((Long) k1).intValue();
-		if (intBackedlookup.containsKey(id)) {
-			return convertArr(intBackedlookup.get(id));
-		}
-		return null;
+	public Set<H> get(T k1) {
+		throw new UnsupportedOperationException();
 	}
+	// @Override
+	// public Set<Long> get(T k1) {
+	// if (k1 == null) {
+	// return null;
+	// }
+	// int id = ((Long) k1).intValue();
+	// if (intBackedlookup.containsKey(id)) {
+	// return convertArr(intBackedlookup.get(id));
+	// }
+	// return null;
+	// }
 
 	@Override
 	public void index(Entity obj, boolean add) {

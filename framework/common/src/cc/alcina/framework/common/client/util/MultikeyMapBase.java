@@ -14,6 +14,7 @@ import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.ImmutableMap;
+import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 
 public abstract class MultikeyMapBase<V>
 		implements MultikeyMap<V>, Serializable {
