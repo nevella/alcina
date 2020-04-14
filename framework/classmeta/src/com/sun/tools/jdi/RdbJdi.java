@@ -252,7 +252,7 @@ public class RdbJdi {
 						.computeIfAbsent(key, k -> new ArrayList<>())
 						.add((StackFrameImpl) frame);
 			} catch (JDWPException e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 			}
 		}
 	}
