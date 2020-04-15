@@ -37,9 +37,11 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
             ipAddress = m.group(1);
         }
         try {
+            String apiKey = ResourceUtilities.get(GeolocationResolver_Ipstack.class, 
+                    "apiKey");
             String url = Ax.format(
-                    "http://api.ipstack.com/%s?access_key=b16f9aff294aa3292256fd13cb0b9e80&output=json",
-                    ipAddress);
+                    "http://api.ipstack.com/%s?access_key=%s&output=json",
+                    ipAddress, apiKey);
             String result = ResourceUtilities.readUrlAsString(url);
             ObjectNode node = (ObjectNode) new ObjectMapper().readTree(result);
             if (node.get("country_name").isNull()){
