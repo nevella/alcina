@@ -9,8 +9,6 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparatorLocalsHigh;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;

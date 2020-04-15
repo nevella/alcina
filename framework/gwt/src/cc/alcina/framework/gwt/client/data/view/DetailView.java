@@ -9,7 +9,6 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.gwt.client.data.DataAction;
 import cc.alcina.framework.gwt.client.data.entity.DataDomainBase;
 import cc.alcina.framework.gwt.client.data.place.DataPlace;
-import cc.alcina.framework.gwt.client.data.place.DataSubPlace;
 import cc.alcina.framework.gwt.client.data.view.ViewModel.DetailViewModel;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 

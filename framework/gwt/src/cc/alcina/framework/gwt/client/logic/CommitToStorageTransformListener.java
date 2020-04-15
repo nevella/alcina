@@ -454,7 +454,7 @@ public class CommitToStorageTransformListener extends StateListenable
 					}
 					for (DomainTransformEvent dte : synthesisedEvents) {
 						try {
-							tm.consume(dte);
+							tm.apply(dte);
 							tm.fireDomainTransform(dte);// this notifies
 							// gears?
 							// well, definitely notifies clients who need to

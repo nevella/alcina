@@ -10,8 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.extras.webdriver.api.TestResultType;
-import cc.alcina.extras.webdriver.api.WebdriverTest;
 import cc.alcina.extras.webdriver.api.WDWriter;
+import cc.alcina.extras.webdriver.api.WebdriverTest;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;

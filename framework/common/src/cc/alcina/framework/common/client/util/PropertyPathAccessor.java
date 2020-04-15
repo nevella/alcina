@@ -5,14 +5,14 @@ import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 
 public class PropertyPathAccessor {
 	private String propertyPath;
 
 	private String[] paths;
 
-	private IndividualPropertyAccessor[] accessors = new IndividualPropertyAccessor[0];
+	private PropertyReflector[] accessors = new PropertyReflector[0];
 
 	public PropertyPathAccessor(String propertyPath) {
 		this.propertyPath = propertyPath;
@@ -69,13 +69,12 @@ public class PropertyPathAccessor {
 			return;
 		}
 		String path = paths[idx];
-		IndividualPropertyAccessor[] accessors = new IndividualPropertyAccessor[idx
-				+ 1];
+		PropertyReflector[] accessors = new PropertyReflector[idx + 1];
 		System.arraycopy(this.accessors, 0, accessors, 0,
 				this.accessors.length);
 		this.accessors = accessors;
 		this.accessors[idx] = Reflections.propertyAccessor()
-				.cachedAccessor(obj.getClass(), path);
+				.property(obj.getClass(), path);
 	}
 
 	private Object get(Object obj, boolean type) {
@@ -84,8 +83,8 @@ public class PropertyPathAccessor {
 		}
 		if (paths.length == 1) {
 			ensureAccessors(obj, 0);
-			IndividualPropertyAccessor accessor = accessors[0];
-			return type ? accessor.getPropertyType(obj)
+			PropertyReflector accessor = accessors[0];
+			return type ? accessor.getPropertyType()
 					: accessor.getPropertyValue(obj);
 		}
 		int idx = 0;

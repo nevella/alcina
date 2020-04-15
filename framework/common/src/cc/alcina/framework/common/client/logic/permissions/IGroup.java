@@ -38,4 +38,12 @@ public interface IGroup extends IVersionable {
 	public void setGroupName(String name);
 
 	public void setMemberUsers(Set<? extends IUser> memberUsers);
+
+	default <IG extends IGroup> boolean containsGroup(IG group) {
+		return getMemberGroups().contains(group);
+	}
+
+	default <IU extends IUser> boolean containsUser(IU user) {
+		return getMemberUsers().contains(user);
+	}
 }

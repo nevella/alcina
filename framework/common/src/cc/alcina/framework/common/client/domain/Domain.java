@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -37,8 +37,8 @@ public class Domain {
 		return handler.stream(clazz).collect(Collectors.toSet());
 	}
 
-	public static <T extends Entity> void async(Class<T> clazz,
-			long objectId, boolean create, Consumer<T> resultConsumer) {
+	public static <T extends Entity> void async(Class<T> clazz, long objectId,
+			boolean create, Consumer<T> resultConsumer) {
 		handler.async(clazz, objectId, create, resultConsumer);
 	}
 
@@ -60,8 +60,7 @@ public class Domain {
 		return handler.create(clazz);
 	}
 
-	public static <V extends Entity> void delete(Class<V> clazz,
-			long id) {
+	public static <V extends Entity> void delete(Class<V> clazz, long id) {
 		Entity entity = find(clazz, id);
 		if (entity != null) {
 			writeable(entity).delete();
@@ -69,7 +68,7 @@ public class Domain {
 	}
 
 	public static <V extends Entity> void delete(V v) {
-		TransformManager.get().deleteObject(v, true);
+		TransformManager.get().delete(v);
 	}
 
 	public static <V extends Entity> V detachedToDomain(V entity) {
@@ -82,9 +81,9 @@ public class Domain {
 		V writeable = entity.provideWasPersisted()
 				? Domain.writeable(Domain.find(entity))
 				: Domain.create(clazz);
-		List<PropertyInfoLite> writableProperties = Reflections.classLookup()
+		List<PropertyInfo> writableProperties = Reflections.classLookup()
 				.getWritableProperties(clazz);
-		for (PropertyInfoLite propertyInfo : writableProperties) {
+		for (PropertyInfo propertyInfo : writableProperties) {
 			String propertyName = propertyInfo.getPropertyName();
 			if (TransformManager.get().isIgnoreProperty(propertyName)) {
 				continue;
@@ -147,8 +146,8 @@ public class Domain {
 		return v == null ? false : handler.isDomainVersion(v);
 	}
 
-	public static <V extends Entity> List<V>
-			listByProperty(Class<V> clazz, String propertyName, Object value) {
+	public static <V extends Entity> List<V> listByProperty(Class<V> clazz,
+			String propertyName, Object value) {
 		return handler.listByProperty(clazz, propertyName, value);
 	}
 
@@ -157,8 +156,7 @@ public class Domain {
 		return Optional.ofNullable(byProperty(clazz, propertyName, value));
 	}
 
-	public static <V extends Entity> DomainQuery<V>
-			query(Class<V> clazz) {
+	public static <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
 		return handler.query(clazz);
 	}
 
@@ -183,8 +181,7 @@ public class Domain {
 		return handler.stream(clazz);
 	}
 
-	public static <V extends Entity> V transactionalFind(Class clazz,
-			long id) {
+	public static <V extends Entity> V transactionalFind(Class clazz, long id) {
 		return handler.transactionalFind(clazz, id);
 	}
 
@@ -192,8 +189,7 @@ public class Domain {
 		return handler.transactionalVersion(v);
 	}
 
-	public static <V extends Entity> Collection<V>
-			values(Class<V> clazz) {
+	public static <V extends Entity> Collection<V> values(Class<V> clazz) {
 		return handler.values(clazz);
 	}
 
@@ -205,8 +201,8 @@ public class Domain {
 	}
 
 	public interface DomainHandler {
-		public <V extends Entity> void async(Class<V> clazz,
-				long objectId, boolean create, Consumer<V> resultConsumer);
+		public <V extends Entity> void async(Class<V> clazz, long objectId,
+				boolean create, Consumer<V> resultConsumer);
 
 		public void commitPoint();
 
@@ -219,8 +215,7 @@ public class Domain {
 
 		public <V extends Entity> Stream<V> stream(Class<V> clazz);
 
-		public <V extends Entity> V transactionalFind(Class clazz,
-				long id);
+		public <V extends Entity> V transactionalFind(Class clazz, long id);
 
 		public <V extends Entity> Collection<V> values(Class<V> clazz);
 
@@ -242,8 +237,8 @@ public class Domain {
 
 		<V extends Entity> boolean isDomainVersion(V v);
 
-		default <V extends Entity> List<V> listByProperty(
-				Class<V> clazz, String propertyName, Object value) {
+		default <V extends Entity> List<V> listByProperty(Class<V> clazz,
+				String propertyName, Object value) {
 			return query(clazz).filter(propertyName, value).list();
 		}
 
@@ -258,8 +253,8 @@ public class Domain {
 
 	public static class DomainHandlerNonTransactional implements DomainHandler {
 		@Override
-		public <V extends Entity> void async(Class<V> clazz,
-				long objectId, boolean create, Consumer<V> resultConsumer) {
+		public <V extends Entity> void async(Class<V> clazz, long objectId,
+				boolean create, Consumer<V> resultConsumer) {
 		}
 
 		@Override
@@ -294,8 +289,7 @@ public class Domain {
 		}
 
 		@Override
-		public <V extends Entity> DomainQuery<V>
-				query(Class<V> clazz) {
+		public <V extends Entity> DomainQuery<V> query(Class<V> clazz) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -312,8 +306,7 @@ public class Domain {
 		}
 
 		@Override
-		public <V extends Entity> V transactionalFind(Class clazz,
-				long id) {
+		public <V extends Entity> V transactionalFind(Class clazz, long id) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -323,8 +316,7 @@ public class Domain {
 		}
 
 		@Override
-		public <V extends Entity> Collection<V>
-				values(Class<V> clazz) {
+		public <V extends Entity> Collection<V> values(Class<V> clazz) {
 			// TODO Auto-generated method stub
 			return null;
 		}

@@ -26,73 +26,73 @@ import cc.alcina.framework.gwt.client.ClientBase;
 @RegistryLocation(registryPoint = WaitForTransformsClient.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 public class WaitForTransformsClient implements AsyncCallback<DomainUpdate> {
-    public static WaitForTransformsClient get() {
-        return Registry.impl(WaitForTransformsClient.class);
-    }
+	public static WaitForTransformsClient get() {
+		return Registry.impl(WaitForTransformsClient.class);
+	}
 
-    private DomainTransformCommitPosition position;
+	private DomainTransformCommitPosition position;
 
-    public DomainTransformCommitPosition getPosition() {
-        return this.position;
-    }
+	public DomainTransformCommitPosition getPosition() {
+		return this.position;
+	}
 
-    @Override
-    public void onFailure(Throwable caught) {
-        TimerWrapper timer = Registry.impl(TimerWrapperProvider.class)
-                .getTimer(() -> {
-                    waitForTransforms();
-                });
-        timer.scheduleSingle(5000);
-        throw new WrappedRuntimeException(caught);
-    }
+	@Override
+	public void onFailure(Throwable caught) {
+		TimerWrapper timer = Registry.impl(TimerWrapperProvider.class)
+				.getTimer(() -> {
+					waitForTransforms();
+				});
+		timer.scheduleSingle(5000);
+		throw new WrappedRuntimeException(caught);
+	}
 
-    @Override
-    public void onSuccess(DomainUpdate result) {
-        TransformManager tm = TransformManager.get();
-        for (DomainTransformRequest dtr : result.requests) {
-            long clientInstanceId = dtr.getClientInstance().getId();
-            ClientInstance clientInstance = PermissionsManager.get()
-                    .getClientInstance();
-            boolean ignoreCreates = clientInstance.getId() == clientInstanceId;
-            try {
-                CollectionModificationSupport.queue(true);
-                ClientTransformManager.cast()
-                        .setFirePropertyChangesOnConsumedCollectionMods(true);
-                TransformManager.get().setReplayingRemoteEvent(true);
-                for (DomainTransformEvent dte : dtr.getEvents()) {
-                    try {
-                        // the one thing that would cause schmiel in the graph
-                        if (dte.getTransformType() == TransformType.CREATE_OBJECT
-                                && ignoreCreates) {
-                            continue;
-                        }
-                        tm.consume(dte);
-                    } catch (DomainTransformException e) {
-                        if (e.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND
-                                || e.getType() == DomainTransformExceptionType.TARGET_ENTITY_NOT_FOUND) {
-                        } else {
-                            throw new WrappedRuntimeException(e);
-                        }
-                    }
-                }
-            } finally {
-                TransformManager.get().setReplayingRemoteEvent(false);
-                ClientTransformManager.cast()
-                        .setFirePropertyChangesOnConsumedCollectionMods(false);
-                CollectionModificationSupport.queue(false);
-            }
-        }
-        position = result.commitPosition;
-        waitForTransforms();
-    }
+	@Override
+	public void onSuccess(DomainUpdate result) {
+		TransformManager tm = TransformManager.get();
+		for (DomainTransformRequest dtr : result.requests) {
+			long clientInstanceId = dtr.getClientInstance().getId();
+			ClientInstance clientInstance = PermissionsManager.get()
+					.getClientInstance();
+			boolean ignoreCreates = clientInstance.getId() == clientInstanceId;
+			try {
+				CollectionModificationSupport.queue(true);
+				ClientTransformManager.cast()
+						.setFirePropertyChangesOnConsumedCollectionMods(true);
+				TransformManager.get().setReplayingRemoteEvent(true);
+				for (DomainTransformEvent dte : dtr.getEvents()) {
+					try {
+						// the one thing that would cause schmiel in the graph
+						if (dte.getTransformType() == TransformType.CREATE_OBJECT
+								&& ignoreCreates) {
+							continue;
+						}
+						tm.apply(dte);
+					} catch (DomainTransformException e) {
+						if (e.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND
+								|| e.getType() == DomainTransformExceptionType.TARGET_ENTITY_NOT_FOUND) {
+						} else {
+							throw new WrappedRuntimeException(e);
+						}
+					}
+				}
+			} finally {
+				TransformManager.get().setReplayingRemoteEvent(false);
+				ClientTransformManager.cast()
+						.setFirePropertyChangesOnConsumedCollectionMods(false);
+				CollectionModificationSupport.queue(false);
+			}
+		}
+		position = result.commitPosition;
+		waitForTransforms();
+	}
 
-    public void start(DomainTransformCommitPosition initialPosition) {
-        this.position = initialPosition;
-        waitForTransforms();
-    }
+	public void start(DomainTransformCommitPosition initialPosition) {
+		this.position = initialPosition;
+		waitForTransforms();
+	}
 
-    private void waitForTransforms() {
-        ClientBase.getCommonRemoteServiceAsyncInstance()
-                .waitForTransforms(position, this);
-    }
+	private void waitForTransforms() {
+		ClientBase.getCommonRemoteServiceAsyncInstance()
+				.waitForTransforms(position, this);
+	}
 }

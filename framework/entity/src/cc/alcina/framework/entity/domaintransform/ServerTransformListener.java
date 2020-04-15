@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
  * @author Nick Reddel
  */
 public class ServerTransformListener implements DomainTransformListener {
+	@Override
 	public void domainTransform(DomainTransformEvent evt)
 			throws DomainTransformException {
 		if (evt.getCommitType() == CommitType.TO_LOCAL_BEAN) {
@@ -33,7 +34,7 @@ public class ServerTransformListener implements DomainTransformListener {
 		} else if (evt.getCommitType() == CommitType.TO_STORAGE) {
 			TransformManager tm = TransformManager.get();
 			try {
-				tm.consume(evt);
+				tm.apply(evt);
 			} catch (Exception e) {
 				System.out.println("Direct cause:");
 				System.out.println(evt);

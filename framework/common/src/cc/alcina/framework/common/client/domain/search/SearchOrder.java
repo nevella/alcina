@@ -5,8 +5,6 @@ import java.util.Comparator;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 

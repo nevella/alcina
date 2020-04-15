@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CollectionCreators;
-import cc.alcina.framework.common.client.util.CollectionCreators.MapCreator;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 
 public abstract class ReverseDateProjection<T extends Entity>

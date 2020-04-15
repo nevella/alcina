@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.entity.domaintransform.MethodIndividualPropertyAccessor;
 
 public class XmlNodePropertyAccessor implements PropertyAccessor {
@@ -23,7 +24,7 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 	}
 
 	@Override
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+	public PropertyReflector property(Class clazz,
 			String propertyName) {
 		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}

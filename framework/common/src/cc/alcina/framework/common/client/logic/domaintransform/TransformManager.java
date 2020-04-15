@@ -55,7 +55,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupClient;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfo;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
@@ -348,26 +348,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	public void appShutdown() {
-		theInstance = null;
-	}
-
-	public void clearTransforms() {
-		getTransforms().clear();
-		for (CommitType ct : transformsByType.keySet()) {
-			transformsByType.get(ct).clear();
-		}
-	}
-
-	public void clearUserObjects() {
-		setDomainObjects(null);
-	}
-
-	public void commitProvisionalObjects(Collection c) {
-		promoteToDomain(c, false);
-	}
-
-	public void consume(DomainTransformEvent event)
+	public void apply(DomainTransformEvent event)
 			throws DomainTransformException {
 		currentEvent = event;
 		ProcessEventToken token = createProcessEventToken(event);
@@ -502,6 +483,25 @@ public abstract class TransformManager implements PropertyChangeListener,
 		currentEvent = null;
 	}
 
+	public void appShutdown() {
+		theInstance = null;
+	}
+
+	public void clearTransforms() {
+		getTransforms().clear();
+		for (CommitType ct : transformsByType.keySet()) {
+			transformsByType.get(ct).clear();
+		}
+	}
+
+	public void clearUserObjects() {
+		setDomainObjects(null);
+	}
+
+	public void commitProvisionalObjects(Collection c) {
+		promoteToDomain(c, false);
+	}
+
 	public boolean containsObject(DomainTransformEvent dte) {
 		Entity obj = getObjectLookup().getObject(dte.getObjectClass(),
 				dte.getObjectId(), dte.getObjectLocalId());
@@ -520,7 +520,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		if (value instanceof List || value instanceof Map) {
 			ClassLookup classLookup = classLookup();
-			PropertyInfoLite pd = classLookup
+			PropertyInfo pd = classLookup
 					.getWritableProperties(event.getObjectClass()).stream()
 					.filter(pd1 -> pd1.getPropertyName()
 							.equals(event.getPropertyName()))
@@ -607,28 +607,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return currentEvent.getObjectLocalId() != 0;
 	}
 
-	public <H extends Entity> void deleteMultiple(Collection<H> collection) {
-		new ArrayList<H>(collection)
-				.forEach(entity -> deleteObject(entity, true));
-	}
-
-	public DomainTransformEvent deleteObject(Entity entity) {
-		return deleteObject(entity, false);
-	}
-
 	/**
 	 * If calling from the servlet layer, the object will normally not be
 	 * 'found' - so this function variant should be called, with the second
 	 * parameter equal to true
 	 */
-	public DomainTransformEvent deleteObject(Entity entity,
-			boolean generateEventIfObjectNotFound) {
-		if (!generateEventIfObjectNotFound && getObject(entity) == null) {
+	public DomainTransformEvent delete(Entity entity) {
+		if (!generateEventIfObjectNotFound() && getObject(entity) == null) {
 			return null;
 		}
 		registerDomainObject(entity);
-		doCascadeDeletes(entity);
-		removeAssociations(entity);
 		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setObjectId(entity.getId());
 		dte.setObjectLocalId(entity.getLocalId());
@@ -647,9 +635,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
+	// FIXME - mvcc.jade - can be removed (since postprocess() ignores
+	// created/deleted)
 	public void deleteObjectOrRemoveTransformsIfLocal(Entity entity) {
 		if (entity.getId() != 0) {
-			deleteObject(entity);
+			delete(entity);
 			return;
 		}
 		Set<DomainTransformEvent> toRemove = new LinkedHashSet<DomainTransformEvent>();
@@ -671,15 +661,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		trs.removeAll(toRemove);
 		transforms.removeAll(toRemove);
-	}
-
-	public void deleteObjects(Class<? extends Entity> clazz,
-			Collection<Long> ids) {
-		for (Long id : ids) {
-			Entity entity = Reflections.classLookup().newInstance(clazz);
-			entity.setId(id);
-			deleteObject(entity, true);
-		}
 	}
 
 	public void deregisterDomainObject(Object o) {
@@ -904,7 +885,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		if (valueClass == List.class || valueClass == Map.class) {
 			ClassLookup classLookup = classLookup();
-			PropertyInfoLite pd = classLookup
+			PropertyInfo pd = classLookup
 					.getWritableProperties(evt.getObjectClass()).stream()
 					.filter(pd1 -> pd1.getPropertyName()
 							.equals(evt.getPropertyName()))
@@ -1044,13 +1025,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public List<DomainTransformEvent> objectsToDtes(Collection objects,
 			Class clazz, boolean asObjectSpec) throws Exception {
 		ClassLookup classLookup = classLookup();
-		List<PropertyInfoLite> pds = classLookup.getWritableProperties(clazz);
+		List<PropertyInfo> pds = classLookup.getWritableProperties(clazz);
 		Object templateInstance = classLookup.getTemplateInstance(clazz);
 		PropertyAccessor accessor = propertyAccessor();
 		Map<String, Object> defaultValues = new HashMap();
 		Set<Class> implementsEntity = new HashSet<Class>();
-		for (Iterator<PropertyInfoLite> itr = pds.iterator(); itr.hasNext();) {
-			PropertyInfoLite info = itr.next();
+		for (Iterator<PropertyInfo> itr = pds.iterator(); itr.hasNext();) {
+			PropertyInfo info = itr.next();
 			String propertyName = info.getPropertyName();
 			if (ignorePropertyForCaching(clazz, info.getPropertyType(),
 					propertyName)) {
@@ -1091,7 +1072,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			dte.setTransformType(TransformType.CREATE_OBJECT);
 			dtes.add(dte);
 			int i = 1;
-			for (PropertyInfoLite pd : pds) {
+			for (PropertyInfo pd : pds) {
 				String propertyName = pd.getPropertyName();
 				Class propertyType = pd.getPropertyType();
 				Object defaultValue = defaultValues.get(propertyName);
@@ -1585,8 +1566,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		setDomainObjects(new MapObjectLookupClient(this));
 	}
 
-	protected abstract void doCascadeDeletes(Entity entity);
-
 	protected void doubleCheckAddition(Collection collection, Object tgt) {
 		collection.add(tgt);
 	}
@@ -1615,6 +1594,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			dtre.setEvent(e.getEvent());
 			throw dtre;
 		}
+	}
+
+	protected boolean generateEventIfObjectNotFound() {
+		return false;
 	}
 
 	protected Entity getObjectForCreate(DomainTransformEvent event) {
@@ -1679,7 +1662,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected void performDeleteObject(Entity entity) {
 		if (getDomainObjects() != null) {
-			removeAssociations(entity);
 			getDomainObjects().deregisterObject(entity);
 			maybeFireCollectionModificationEvent(entity.provideEntityClass(),
 					false);
@@ -1743,7 +1725,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 						}
 					} else {
 						try {
-							consume(dte);
+							apply(dte);
 						} catch (Exception e) {
 							throw new WrappedRuntimeException(e);
 						}
@@ -1761,8 +1743,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected PropertyAccessor propertyAccessor() {
 		return Reflections.propertyAccessor();
 	}
-
-	protected abstract void removeAssociations(Entity entity);
 
 	protected void setDomainObjects(ObjectStore domainObjects) {
 		this.domainObjects = domainObjects;
@@ -1885,6 +1865,32 @@ public abstract class TransformManager implements PropertyChangeListener,
 						true);
 				break;
 			}
+			case DELETE_OBJECT: {
+				// PropertyAccessor propertyAccessor =
+				// Reflections.propertyAccessor();
+				// SEUtilities.iterateForPropertyWithAnnotation(entity,
+				// Association.class,
+				// new HasAnnotationCallback<Association>() {
+				// @Override
+				// public void apply(Association association,
+				// PropertyReflector propertyReflector) {
+				// if (association.cascadeDeletes()) {
+				// Object object = propertyReflector
+				// .getPropertyValue(entity);
+				// if (object instanceof Set) {
+				// for (Entity target : (Set<Entity>) object) {
+				// ThreadlocalTransformManager.get()
+				// .deleteObject(target, true);
+				// }
+				// }
+				// }
+				// }
+				// });
+				break;
+			}
+			default:
+				// non-associiation
+				break;
 			}
 		}
 	}
@@ -1917,7 +1923,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				case NULL_PROPERTY_REF:
 				case CHANGE_PROPERTY_REF:
 					try {
-						tm.consume(evt);
+						tm.apply(evt);
 						associationPropogation.domainTransform(evt);
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
@@ -1937,7 +1943,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 		private final Class<V> parentClass;
 
-		private Set<PropertyInfoLite> pils = new LinkedHashSet<PropertyInfoLite>();
+		private Set<PropertyInfo> pils = new LinkedHashSet<PropertyInfo>();
 
 		private Multimap<K, List<V>> lookup;
 
@@ -1958,7 +1964,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			if (lookup != null) {
 				if (evt.getTransformType() == TransformType.NULL_PROPERTY_REF
 						|| evt.getTransformType() == TransformType.CHANGE_PROPERTY_REF) {
-					if (pils.contains(new PropertyInfoLite(evt.getObjectClass(),
+					if (pils.contains(new PropertyInfo(evt.getObjectClass(),
 							evt.getPropertyName()))) {
 						lookup = null;
 					}
@@ -1989,14 +1995,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 						continue;
 					}
 					ClassLookup classLookup = Reflections.classLookup();
-					List<PropertyInfoLite> pds = classLookup
+					List<PropertyInfo> pds = classLookup
 							.getWritableProperties(clazz);
 					Object templateInstance = classLookup
 							.getTemplateInstance(clazz);
 					PropertyAccessor accessor = Reflections.propertyAccessor();
-					for (Iterator<PropertyInfoLite> itr = pds.iterator(); itr
+					for (Iterator<PropertyInfo> itr = pds.iterator(); itr
 							.hasNext();) {
-						PropertyInfoLite info = itr.next();
+						PropertyInfo info = itr.next();
 						if (info.getPropertyType() != childClass) {
 							itr.remove();
 						}
@@ -2005,7 +2011,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					Object[] args = new Object[0];
 					try {
 						for (V o : (Collection<V>) m.get(clazz)) {
-							for (PropertyInfoLite info : pds) {
+							for (PropertyInfo info : pds) {
 								K k = (K) info.getReadMethod().invoke(o, args);
 								if (k != null) {
 									lookup.add(k, o);

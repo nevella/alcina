@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupJvm;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.MethodIndividualPropertyAccessor;
@@ -36,13 +37,7 @@ public class TransactionalSubgraphTransformManager
 	}
 
 	@Override
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,
-			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
-	}
-
-	@Override
-	public void consume(DomainTransformEvent event)
+	public void apply(DomainTransformEvent event)
 			throws DomainTransformException {
 		if (event.getTransformType() == TransformType.CREATE_OBJECT) {
 			// if an object is newly created (by the tltm), it won't be in the
@@ -56,7 +51,7 @@ public class TransactionalSubgraphTransformManager
 				return;
 			} catch (Exception e) {
 				// object not in graph, fall through to create
-				super.consume(event);
+				super.apply(event);
 				return;
 			}
 		}
@@ -76,7 +71,13 @@ public class TransactionalSubgraphTransformManager
 			modified.mapObject(obj);
 			mapObjectToCachingProjections(obj);
 		}
-		super.consume(event);
+		super.apply(event);
+	}
+
+	@Override
+	public PropertyReflector property(Class clazz,
+			String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 
 	public boolean contains(Entity entity) {
@@ -91,8 +92,8 @@ public class TransactionalSubgraphTransformManager
 	}
 
 	@Override
-	public <T extends Entity> T getObject(Class<? extends T> c,
-			long id, long localId) {
+	public <T extends Entity> T getObject(Class<? extends T> c, long id,
+			long localId) {
 		try {
 			T value = super.getObject(c, id, localId);
 			if (value != null) {
@@ -165,8 +166,7 @@ public class TransactionalSubgraphTransformManager
 	@Override
 	protected Object ensureEndpointInTransformGraph(Object object) {
 		// if not persisted, just return the object
-		if (object instanceof Entity
-				&& ((Entity) object).getId() != 0) {
+		if (object instanceof Entity && ((Entity) object).getId() != 0) {
 			Entity endpoint = getObject((Entity) object);
 			modified.mapObject(endpoint);
 			return endpoint;
@@ -178,8 +178,8 @@ public class TransactionalSubgraphTransformManager
 	protected ObjectLookup getObjectLookup() {
 		return new ObjectLookup() {
 			@Override
-			public <T extends Entity> T getObject(Class<? extends T> c,
-					long id, long localId) {
+			public <T extends Entity> T getObject(Class<? extends T> c, long id,
+					long localId) {
 				return (T) TransactionalSubgraphTransformManager.this
 						.getObject(c, id, localId);
 			}
@@ -197,8 +197,8 @@ public class TransactionalSubgraphTransformManager
 	 * be projected...and ... two stores - "modified" vs "projected" - not just
 	 * the one
 	 */
-	protected <T extends Entity> T
-			projectNonTransactional(T nonTransactional) throws Exception {
+	protected <T extends Entity> T projectNonTransactional(T nonTransactional)
+			throws Exception {
 		Class<? extends Entity> clazz = nonTransactional.getClass();
 		if (DomainProxy.class.isAssignableFrom(clazz)) {
 			clazz = (Class<? extends Entity>) clazz.getSuperclass();

@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;

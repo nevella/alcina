@@ -15,14 +15,13 @@ package cc.alcina.framework.common.client.logic.domaintransform.spi;
 
 import java.lang.annotation.Annotation;
 
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+
 /**
  * 
  * @author Nick Reddel
  */
 public interface PropertyAccessor {
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,
-			String propertyName);
-
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName);
 
@@ -30,18 +29,12 @@ public interface PropertyAccessor {
 
 	public Object getPropertyValue(Object bean, String propertyName);
 
+	public PropertyReflector property(Class clazz, String propertyName);
+
 	public void setPropertyValue(Object bean, String propertyName,
 			Object value);
 
 	default boolean hasPropertyKey(Object left, String leftName) {
 		return true;
-	}
-
-	public interface IndividualPropertyAccessor {
-		public Object getPropertyValue(Object value);
-
-		public void setPropertyValue(Object bean, Object value);
-
-		Class getPropertyType(Object bean);
 	}
 }

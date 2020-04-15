@@ -5,10 +5,10 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfo;
 
 public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
-	default boolean debugInequivalence(PropertyInfoLite pd, Object o1,
+	default boolean debugInequivalence(PropertyInfo pd, Object o1,
 			Object o2) {
 		return false;
 	}
@@ -18,10 +18,10 @@ public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 		if (other == null || getClass() != other.getClass()) {
 			return false;
 		}
-		List<PropertyInfoLite> properties = Reflections.classLookup()
+		List<PropertyInfo> properties = Reflections.classLookup()
 				.getWritableProperties(getClass());
 		try {
-			for (PropertyInfoLite pd : properties) {
+			for (PropertyInfo pd : properties) {
 				Object o1 = pd.getReadMethod().invoke(this, new Object[] {});
 				Object o2 = pd.getReadMethod().invoke(other, new Object[] {});
 				if (CommonUtils.equalsWithNullEquality(o1, o2)) {

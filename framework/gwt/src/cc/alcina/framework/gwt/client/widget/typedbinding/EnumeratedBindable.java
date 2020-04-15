@@ -3,8 +3,6 @@ package cc.alcina.framework.gwt.client.widget.typedbinding;
 import java.beans.PropertyChangeListener;
 
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
-import cc.alcina.framework.gwt.client.widget.typedbinding.EnumeratedBindingSupport;
-import cc.alcina.framework.gwt.client.widget.typedbinding.HasEnumeratedBindings;
 
 public abstract class EnumeratedBindable extends BaseBindable
 		implements HasEnumeratedBindings {

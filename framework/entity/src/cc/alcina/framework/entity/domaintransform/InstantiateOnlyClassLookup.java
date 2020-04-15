@@ -5,6 +5,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
 public class InstantiateOnlyClassLookup implements ClassLookup {
@@ -29,11 +30,6 @@ public class InstantiateOnlyClassLookup implements ClassLookup {
 	}
 
 	@Override
-	public List<String> getAnnotatedPropertyNames(Class clazz) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public <A extends Annotation> A getAnnotationForClass(Class targetClass,
 			Class<A> annotationClass) {
 		throw new UnsupportedOperationException();
@@ -42,6 +38,11 @@ public class InstantiateOnlyClassLookup implements ClassLookup {
 	@Override
 	public Class getClassForName(String fqn) {
 		return fqnLookup.get(fqn);
+	}
+
+	@Override
+	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -55,7 +56,7 @@ public class InstantiateOnlyClassLookup implements ClassLookup {
 	}
 
 	@Override
-	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
+	public List<PropertyInfo> getWritableProperties(Class clazz) {
 		throw new UnsupportedOperationException();
 	}
 

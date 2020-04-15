@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -32,18 +33,18 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public interface ClassLookup {
 	public String displayNameForObject(Object o);
 
-	public List<String> getAnnotatedPropertyNames(Class clazz);
-
 	public <A extends Annotation> A getAnnotationForClass(Class targetClass,
 			Class<A> annotationClass);
 
 	public Class getClassForName(String fqn);
 
+	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass);
+
 	public Class getPropertyType(Class clazz, String propertyName);
 
 	public <T> T getTemplateInstance(Class<T> clazz);
 
-	public List<PropertyInfoLite> getWritableProperties(Class clazz);
+	public List<PropertyInfo> getWritableProperties(Class clazz);
 
 	public <T> T newInstance(Class<T> clazz);
 
@@ -57,7 +58,7 @@ public interface ClassLookup {
 		return (T) newInstance(getClassForName(fqn));
 	}
 
-	public static class PropertyInfoLite {
+	public static class PropertyInfo {
 		private Class propertyType;
 
 		private final String propertyName;
@@ -70,23 +71,14 @@ public interface ClassLookup {
 
 		private String serializeWithBeanSerialization;
 
-		public String getSerializeWithBeanSerialization() {
-			return this.serializeWithBeanSerialization;
-		}
-
-		public void setSerializeWithBeanSerialization(
-				String serializeWithBeanSerialization) {
-			this.serializeWithBeanSerialization = serializeWithBeanSerialization;
-		}
-
 		private Method writeMethod;
 
-		public PropertyInfoLite(Class beanType, String propertyName) {
+		public PropertyInfo(Class beanType, String propertyName) {
 			this.propertyName = propertyName;
 			this.beanType = beanType;
 		}
 
-		public PropertyInfoLite(Class propertyType, String propertyName,
+		public PropertyInfo(Class propertyType, String propertyName,
 				Method readMethod, Method writeMethod, Class beanType) {
 			this.readMethod = readMethod;
 			this.writeMethod = writeMethod;
@@ -106,22 +98,7 @@ public interface ClassLookup {
 		public void copy(Entity entity, Entity writeable) {
 			try {
 				Object value = get(entity);
-				set(writeable,value);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-		public Object get(Entity entity){
-			try {
-				return getReadMethod().invoke(entity, new Object[0]);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		public void set(Entity writeable,Object value){
-			try {
-				writeMethod.invoke(writeable, new Object[] { value });
+				set(writeable, value);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -129,12 +106,20 @@ public interface ClassLookup {
 
 		@Override
 		public boolean equals(Object obj) {
-			if (obj instanceof PropertyInfoLite) {
-				PropertyInfoLite o = (PropertyInfoLite) obj;
+			if (obj instanceof PropertyInfo) {
+				PropertyInfo o = (PropertyInfo) obj;
 				return o.beanType.equals(beanType)
 						&& o.propertyName.equals(getPropertyName());
 			}
 			return false;
+		}
+
+		public Object get(Entity entity) {
+			try {
+				return getReadMethod().invoke(entity, new Object[0]);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 
 		public String getPropertyName() {
@@ -149,17 +134,34 @@ public interface ClassLookup {
 			return readMethod;
 		}
 
+		public String getSerializeWithBeanSerialization() {
+			return this.serializeWithBeanSerialization;
+		}
+
 		@Override
 		public int hashCode() {
 			return beanType.hashCode() ^ propertyName.hashCode();
+		}
+
+		public boolean hasSerializeWithBeanSerialization() {
+			return Ax.notBlank(this.serializeWithBeanSerialization);
 		}
 
 		public boolean isSerializableCollection() {
 			return serializeCollectionOnClient;
 		}
 
-		public boolean hasSerializeWithBeanSerialization() {
-			return Ax.notBlank(this.serializeWithBeanSerialization);
+		public void set(Entity writeable, Object value) {
+			try {
+				writeMethod.invoke(writeable, new Object[] { value });
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		public void setSerializeWithBeanSerialization(
+				String serializeWithBeanSerialization) {
+			this.serializeWithBeanSerialization = serializeWithBeanSerialization;
 		}
 
 		@Override

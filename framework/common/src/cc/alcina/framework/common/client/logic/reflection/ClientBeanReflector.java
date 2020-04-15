@@ -77,7 +77,6 @@ public class ClientBeanReflector {
 		return result;
 	}
 
-	
 	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
 		return (A) annotations.get(annotationClass);
 	}
@@ -98,12 +97,10 @@ public class ClientBeanReflector {
 	public String getObjectName(Object o) {
 		Class<? extends Object> clazz = o.getClass();
 		if (clazz != beanClass) {
-			throw new WrappedRuntimeException(
-					Ax.format(
-							"Object not of correct class for reflector - %s, %s",
-							clazz != null ? clazz.getName() : null,
-							beanClass.getName()),
-					SuggestedAction.NOTIFY_ERROR);
+			throw new WrappedRuntimeException(Ax.format(
+					"Object not of correct class for reflector - %s, %s",
+					clazz != null ? clazz.getName() : null,
+					beanClass.getName()), SuggestedAction.NOTIFY_ERROR);
 		}
 		return TextProvider.get().getObjectName(o, this);
 	}
@@ -120,22 +117,5 @@ public class ClientBeanReflector {
 		}
 		return TextProvider.get().getUiObjectText(beanClass,
 				TextProvider.DISPLAY_NAME, tn);
-	}
-
-	/**
-	 * Convenience method
-	 * 
-	 * @param annotationClass
-	 * @param callback
-	 */
-	public <A extends Annotation> void iterateForPropertyWithAnnotation(
-			Class<A> annotationClass, HasAnnotationCallback<A> callback) {
-		for (ClientPropertyReflector propertyReflector : getPropertyReflectors()
-				.values()) {
-			A annotation = propertyReflector.getAnnotation(annotationClass);
-			if (annotation != null) {
-				callback.apply(annotation, propertyReflector);
-			}
-		}
 	}
 }

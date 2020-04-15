@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PropertyMapper.NoSuchVariantPropertyException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.entity.domaintransform.MethodIndividualPropertyAccessor;
@@ -45,7 +46,7 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 	}
 
 	@Override
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+	public PropertyReflector property(Class clazz,
 			String propertyName) {
 		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}

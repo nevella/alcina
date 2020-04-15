@@ -1,9 +1,13 @@
 package cc.alcina.framework.common.client;
 
+import java.lang.annotation.Annotation;
+import java.util.function.BiConsumer;
+
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
@@ -19,6 +23,24 @@ public class Reflections {
 		return get().classLookup;
 	}
 
+	/**
+	 * Convenience method
+	 * 
+	 * @param annotationClass
+	 * @param callback
+	 */
+	public static <A extends Annotation> void iterateForPropertyWithAnnotation(
+			Class<?> beanClass, Class<A> annotationClass,
+			BiConsumer<A, PropertyReflector> callback) {
+		for (PropertyReflector propertyReflector : classLookup()
+				.getPropertyReflectors(beanClass)) {
+			A annotation = propertyReflector.getAnnotation(annotationClass);
+			if (annotation != null) {
+				callback.accept(annotation, propertyReflector);
+			}
+		}
+	}
+
 	public static ObjectLookup objectLookup() {
 		return get().objectLookup;
 	}
@@ -29,9 +51,6 @@ public class Reflections {
 
 	public static void registerBeanDescriptorProvider(
 			BeanDescriptorProvider beanDescriptorProvider) {
-		if (beanDescriptorProvider != null) {
-			int debug = 3;
-		}
 		get().beanDescriptorProvider = beanDescriptorProvider;
 	}
 

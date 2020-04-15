@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.SEUtilities;
@@ -49,9 +50,8 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
  * @author nick@alcina.cc
  * 
  */
-
 public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
-		PropertyAccessor,  BeanDescriptorProvider {
+		PropertyAccessor, BeanDescriptorProvider {
 	public static TestPersistenceHelper get() {
 		TestPersistenceHelper singleton = Registry
 				.checkSingleton(TestPersistenceHelper.class);
@@ -84,12 +84,6 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	@Override
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,
-			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
-	}
-
-
 	public String displayNameForObject(Object o) {
 		if (o instanceof HasGeneratedDisplayName) {
 			return ((HasGeneratedDisplayName) o).generatedDisplayName();
@@ -121,11 +115,13 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
+	@Override
 	public <A extends Annotation> A getAnnotationForClass(Class targetClass,
 			Class<A> annotationClass) {
 		return (A) targetClass.getAnnotation(annotationClass);
 	}
 
+	@Override
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName) {
 		try {
@@ -140,10 +136,12 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
+	@Override
 	public Class getClassForName(String fqn) {
 		return fqnLookup.get(fqn);
 	}
 
+	@Override
 	public BeanDescriptor getDescriptor(Object object) {
 		if (cache.containsKey(object.getClass())) {
 			return cache.get(object.getClass());
@@ -161,17 +159,26 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		return result;
 	}
 
-	public <T extends Entity> T getObject(Class<? extends T> c,
-			long id, long localId) {
+	@Override
+	public <T extends Entity> T getObject(Class<? extends T> c, long id,
+			long localId) {
 		// uses thread-local instance
 		return TransformManager.get().getObject(c, id, localId);
 	}
 
+	@Override
 	public <T extends Entity> T getObject(T bean) {
 		return (T) TransformManager.get().getObject(bean.getClass(),
 				bean.getId(), bean.getLocalId());
 	}
 
+	@Override
+	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
 	public Class getPropertyType(Class clazz, String propertyName) {
 		try {
 			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
@@ -187,6 +194,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
+	@Override
 	public Object getPropertyValue(Object bean, String propertyName) {
 		return SEUtilities.getPropertyValue(bean, propertyName);
 	}
@@ -195,13 +203,15 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		return this.reflectiveClassLoader;
 	}
 
+	@Override
 	public <T> T getTemplateInstance(Class<T> clazz) {
 		return newInstance(clazz);
 	}
 
-	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
+	@Override
+	public List<PropertyInfo> getWritableProperties(Class clazz) {
 		try {
-			List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();
+			List<PropertyInfo> infos = new ArrayList<PropertyInfo>();
 			java.beans.BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
 			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
@@ -221,7 +231,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 						propertyType = implementationType;
 					}
 				}
-				infos.add(new PropertyInfoLite(propertyType, pd.getName(),
+				infos.add(new PropertyInfo(propertyType, pd.getName(),
 						new MethodWrapper(pd.getReadMethod()),
 						new MethodWrapper(pd.getWriteMethod()), clazz));
 			}
@@ -231,6 +241,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
+	@Override
 	public <T> T newInstance(Class<T> clazz) {
 		try {
 			return clazz.newInstance();
@@ -239,6 +250,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
+	@Override
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		try {
 			Entity newInstance = (Entity) clazz.newInstance();
@@ -249,6 +261,12 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
+	@Override
+	public PropertyReflector property(Class clazz, String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+	}
+
+	@Override
 	public void setPropertyValue(Object bean, String propertyName,
 			Object value) {
 		SEUtilities.setPropertyValue(bean, propertyName, value);

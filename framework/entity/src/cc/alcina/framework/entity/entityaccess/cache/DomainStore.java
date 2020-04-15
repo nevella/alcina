@@ -807,7 +807,7 @@ public class DomainStore implements IDomainStore {
 					}
 				}
 				try {
-					transformManager.consume(dte);
+					transformManager.apply(dte);
 				} catch (DomainTransformException dtex) {
 					if (dtex.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND
 							&& dte.getTransformType() == TransformType.DELETE_OBJECT) {
@@ -1675,6 +1675,11 @@ public class DomainStore implements IDomainStore {
 		@Override
 		protected boolean isZeroCreatedObjectLocalId(Class clazz) {
 			return true;
+		}
+
+		@Override
+		protected void performDeleteObject(Entity entity) {
+			super.performDeleteObject(entity);
 		}
 
 		void endCommit() {

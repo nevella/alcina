@@ -5,8 +5,6 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.widget.Link;
 

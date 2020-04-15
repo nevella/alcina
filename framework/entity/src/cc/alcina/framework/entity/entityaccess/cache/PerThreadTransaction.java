@@ -28,7 +28,7 @@ public class PerThreadTransaction {
 				return;
 			}
 			beforeConsume(evt);
-			transactionTransformManager.consume(evt);
+			transactionTransformManager.apply(evt);
 			afterConsume(evt);
 		}
 	};
@@ -53,8 +53,8 @@ public class PerThreadTransaction {
 		return transactionTransformManager.getObject(v);
 	}
 
-	public <V extends Entity> V
-			getListenerValue(DomainListener listener, V value, Object[] path) {
+	public <V extends Entity> V getListenerValue(DomainListener listener,
+			V value, Object[] path) {
 		Collection<? extends Entity> perClassTransactional = (Collection<? extends Entity>) transactionTransformManager.modified
 				.getCollection(listener.getListenedClass());
 		// FIXME - n^2 performance - use a per-listener threaded projection

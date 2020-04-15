@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparatorLocalsHigh;
 
 public interface BaseMultilineEditor<T extends Entity> {
 	public Object getModel();

@@ -73,6 +73,7 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -132,12 +133,12 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();
 
-	private static ThreadLocalSequentialIdGenerator tlIdGenerator = new ThreadLocalSequentialIdGenerator();;
+	private static ThreadLocalSequentialIdGenerator tlIdGenerator = new ThreadLocalSequentialIdGenerator();
 
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
 		threadLocalListeners.add(listener);
-	}
+	};
 
 	public static ThreadlocalTransformManager cast() {
 		return (ThreadlocalTransformManager) TransformManager.get();
@@ -242,9 +243,17 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,
-			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+	public void apply(DomainTransformEvent evt)
+			throws DomainTransformException {
+		super.apply(evt);
+		if (getEntityManager() != null
+				&& evt.getTransformType() != TransformType.DELETE_OBJECT) {
+			// for use in IVersionable/DomainStore
+			if (evt.getSource() instanceof MvccObject) {
+				evt.setSource(null);
+			}
+			maybeEnsureSource(evt);
+		}
 	}
 
 	public boolean checkPropertyAccess(Entity entity, String propertyName,
@@ -272,25 +281,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	/**
-	 * TODO - ignore collection mods to collection properties with
-	 * the @OneToMany annotation (inefficient and unnecessary)
-	 * ...hmmm...wait-a-sec - might be necessary for the level 2 cache
-	 */
-	public void consume(DomainTransformEvent evt)
-			throws DomainTransformException {
-		super.consume(evt);
-		if (getEntityManager() != null
-				&& evt.getTransformType() != TransformType.DELETE_OBJECT) {
-			// for use in IVersionable/DomainStore
-			if (evt.getSource() instanceof MvccObject) {
-				evt.setSource(null);
-			}
-			maybeEnsureSource(evt);
-		}
-	}
-
-	@Override
 	public <T extends Entity> T createDomainObject(Class<T> clazz) {
 		long localId = nextLocalIdCounter();
 		T newInstance = newInstance(clazz, 0, localId);
@@ -309,23 +299,8 @@ public class ThreadlocalTransformManager extends TransformManager
 		return newInstance;
 	}
 
-	/**
-	 * <<<<<<< HEAD Probably don't call this - rather call
-	 * deleteObject(entity,true) - this will always be a noop on the server
-	 * ======= Because TLTM never registers objects, delete(x,false) is always a
-	 * noop. A bit wonky, the whole thing - but this gets the job done. >>>>>>>
-	 * apdm-stable
-	 *
-	 * See registerDomainObject for explanation
-	 */
 	@Override
-	public DomainTransformEvent deleteObject(Entity entity) {
-		return deleteObject(entity, true);
-	}
-
-	@Override
-	public DomainTransformEvent deleteObject(Entity entity,
-			boolean generateEventIfObjectNotFound) {
+	public DomainTransformEvent delete(Entity entity) {
 		if (entity == null) {
 			return null;
 		}
@@ -341,8 +316,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		entity = ensureNonProxy(entity);
 		deleted.add(entity);
-		DomainTransformEvent event = super.deleteObject(entity,
-				generateEventIfObjectNotFound);
+		DomainTransformEvent event = super.delete(entity);
 		if (event != null) {
 			addTransform(event);
 		}
@@ -412,11 +386,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public void flush(List<DomainTransformEventPersistent> dtreps) {
 		entityManager.flush();
-	}
-
-	@Override
-	public List<String> getAnnotatedPropertyNames(Class clazz) {
-		return ObjectPersistenceHelper.get().getAnnotatedPropertyNames(clazz);
 	}
 
 	@Override
@@ -585,6 +554,11 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
+	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+		return ObjectPersistenceHelper.get().getPropertyReflectors(beanClass);
+	}
+
+	@Override
 	public Class getPropertyType(Class clazz, String propertyName) {
 		return ObjectPersistenceHelper.get().getPropertyType(clazz,
 				propertyName);
@@ -621,7 +595,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
+	public List<PropertyInfo> getWritableProperties(Class clazz) {
 		return ObjectPersistenceHelper.get().getWritableProperties(clazz);
 	}
 
@@ -726,15 +700,13 @@ public class ThreadlocalTransformManager extends TransformManager
 				: localIdGenerator.incrementAndGet();
 	}
 
-	@Override
-	public void performDeleteObject(Entity entity) {
-		Entity object = getObject(entity);
-		removeAssociations(entity);
-		entityManager.remove(object);
-	}
-
 	public void persist(Object object) {
 		entityManager.persist(object);
+	}
+
+	@Override
+	public PropertyReflector property(Class clazz, String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 
 	@Override
@@ -986,9 +958,8 @@ public class ThreadlocalTransformManager extends TransformManager
 		ClassLookup classLookup = Reflections.classLookup();
 		String specProperty = null;
 		projections.add(Ax.format("t.%s as %s", "id", "id"));
-		List<PropertyInfoLite> pds = classLookup
-				.getWritableProperties(assocClass);
-		for (PropertyInfoLite pd : pds) {
+		List<PropertyInfo> pds = classLookup.getWritableProperties(assocClass);
+		for (PropertyInfo pd : pds) {
 			String propertyName = pd.getPropertyName();
 			if (ignorePropertyForCaching(assocClass, pd.getPropertyType(),
 					propertyName)) {
@@ -1163,16 +1134,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	protected void doCascadeDeletes(Entity entity) {
-		if (getEntityManager() == null) {
-			new ServerTransformManagerSupport()
-					.removeParentAssociations(entity);
-			new ServerTransformManagerSupport().doCascadeDeletes(entity);
-		}
-		// client-only for the moment.
-	}
-
-	@Override
 	protected void doubleCheckAddition(Collection collection, Object tgt) {
 		JPAImplementation jpaImplementation = Registry
 				.impl(JPAImplementation.class);
@@ -1209,6 +1170,11 @@ public class ThreadlocalTransformManager extends TransformManager
 					.getInstantiatedObject(entity);
 		}
 		return entity;
+	}
+
+	@Override
+	protected boolean generateEventIfObjectNotFound() {
+		return true;
 	}
 
 	protected boolean isIgnorePropertyChangesForEvent(PropertyChangeEvent evt) {
@@ -1262,13 +1228,18 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 	}
 
-	protected void propertyChangeSuper(PropertyChangeEvent evt) {
-		super.propertyChange(evt);
+	@Override
+	protected void performDeleteObject(Entity entity) {
+		entity = getObject(entity);
+		if (entityManager != null) {
+			entityManager.remove(entity);
+		} else {
+			deregisterDomainObject(entity);
+		}
 	}
 
-	@Override
-	protected void removeAssociations(Entity entity) {
-		new ServerTransformManagerSupport().removeAssociations(entity);
+	protected void propertyChangeSuper(PropertyChangeEvent evt) {
+		super.propertyChange(evt);
 	}
 
 	protected Entity resolveForPermissionsChecks(Entity entity) {

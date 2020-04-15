@@ -8,28 +8,15 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 
 public class TestTransformManager extends ClientTransformManager {
-	public TestTransformManager() {
-		createObjectLookup();
-	}
-
 	public static TestTransformManager cast() {
 		return (TestTransformManager) TransformManager.get();
 	}
 
-	public void performDeleteObject(Entity entity) {
-	}
-
-	@Override
-	protected void callRemotePersistence(WrapperPersistable persistableObject,
-			AsyncCallback<Long> savedCallback) {
-	}
-
-	@Override
-	protected void doCascadeDeletes(Entity entity) {
-		super.doCascadeDeletes(entity);
-	}
-
 	public List<DomainTransformEvent> transformInterceptList = null;
+
+	public TestTransformManager() {
+		createObjectLookup();
+	}
 
 	@Override
 	public void addTransform(DomainTransformEvent evt) {
@@ -47,5 +34,14 @@ public class TestTransformManager extends ClientTransformManager {
 		} else {
 			super.clearTransforms();
 		}
+	}
+
+	@Override
+	public void performDeleteObject(Entity entity) {
+	}
+
+	@Override
+	protected void callRemotePersistence(WrapperPersistable persistableObject,
+			AsyncCallback<Long> savedCallback) {
 	}
 }

@@ -23,8 +23,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 

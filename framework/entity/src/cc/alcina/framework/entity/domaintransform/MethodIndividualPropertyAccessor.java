@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.domaintransform;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,14 +13,11 @@ import java.util.regex.Pattern;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
 
-public class MethodIndividualPropertyAccessor
-		implements IndividualPropertyAccessor {
+public class MethodIndividualPropertyAccessor implements PropertyReflector {
 	private Object[] emptyValue = new Object[0];
 
 	private Method readMethod;
@@ -51,13 +49,31 @@ public class MethodIndividualPropertyAccessor
 	}
 
 	@Override
-	public Class getPropertyType(Object bean) {
+	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
+		return readMethod.getAnnotation(annotationClass);
+	}
+
+	@Override
+	public String getPropertyName() {
+		return propertyName;
+	}
+
+	@Override
+	public Class getPropertyType() {
 		try {
-			ensureMethods(bean);
 			if (isIndexed()) {
 				throw new UnsupportedOperationException();
 			}
 			return readMethod.getReturnType();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public Class getPropertyType(Object bean) {
+		try {
+			ensureMethods(bean);
+			return getPropertyType();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

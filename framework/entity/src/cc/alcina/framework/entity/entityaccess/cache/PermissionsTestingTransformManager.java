@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 
 public class PermissionsTestingTransformManager
@@ -25,8 +26,8 @@ public class PermissionsTestingTransformManager
 	}
 
 	@Override
-	public <T extends Entity> T getObject(Class<? extends T> c,
-			long id, long localId) {
+	public <T extends Entity> T getObject(Class<? extends T> c, long id,
+			long localId) {
 		return getDomainObjects().getObject(c, id, localId);
 	}
 
@@ -36,8 +37,8 @@ public class PermissionsTestingTransformManager
 	}
 
 	@Override
-	public <T extends Entity> void loadObject(Class<? extends T> c,
-			long id, long localId) {
+	public <T extends Entity> void loadObject(Class<? extends T> c, long id,
+			long localId) {
 		T t = Domain.detachedVersion(c, id);
 		store.mapObject(t);
 	}
@@ -75,11 +76,6 @@ public class PermissionsTestingTransformManager
 		}
 
 		@Override
-		public List<String> getAnnotatedPropertyNames(Class clazz) {
-			return this.delegate.getAnnotatedPropertyNames(clazz);
-		}
-
-		@Override
 		public <A extends Annotation> A getAnnotationForClass(Class targetClass,
 				Class<A> annotationClass) {
 			return this.delegate.getAnnotationForClass(targetClass,
@@ -89,6 +85,12 @@ public class PermissionsTestingTransformManager
 		@Override
 		public Class getClassForName(String fqn) {
 			return this.delegate.getClassForName(fqn);
+		}
+
+		@Override
+		public List<PropertyReflector>
+				getPropertyReflectors(Class<?> beanClass) {
+			return this.delegate.getPropertyReflectors(beanClass);
 		}
 
 		@Override
@@ -102,7 +104,7 @@ public class PermissionsTestingTransformManager
 		}
 
 		@Override
-		public List<PropertyInfoLite> getWritableProperties(Class clazz) {
+		public List<PropertyInfo> getWritableProperties(Class clazz) {
 			return this.delegate.getWritableProperties(clazz);
 		}
 

@@ -54,8 +54,8 @@ import cc.alcina.framework.common.client.gwittir.validator.ParameterisedValidato
 import cc.alcina.framework.common.client.gwittir.validator.RequiresSourceValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ShortDateValidator;
-import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
@@ -69,6 +69,7 @@ import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.Validators;
@@ -89,7 +90,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
-
 
 /**
  *
@@ -274,42 +274,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	private GwittirBridge() {
 		super();
-	}
-
-	@Override
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,
-			String propertyName) {
-		Property property = getPropertyForClass(clazz, propertyName);
-		return new IndividualPropertyAccessor() {
-			@Override
-			public Class getPropertyType(Object bean) {
-				try {
-					return property.getType();
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-
-			@Override
-			public Object getPropertyValue(Object value) {
-				try {
-					return property.getAccessorMethod().invoke(value,
-							new Object[0]);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-
-			@Override
-			public void setPropertyValue(Object bean, Object value) {
-				try {
-					property.getMutatorMethod().invoke(bean,
-							new Object[] { value });
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		};
 	}
 
 	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
@@ -754,6 +718,52 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					&& ((displayInfo.displayMask() & Display.DISPLAY_RO) == 0);
 		}
 		return false;
+	}
+
+	@Override
+	public PropertyReflector property(Class clazz, String propertyName) {
+		Property property = getPropertyForClass(clazz, propertyName);
+		return new PropertyReflector() {
+			@Override
+			public <A extends Annotation> A
+					getAnnotation(Class<A> annotationClass) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public String getPropertyName() {
+				return property.getName();
+			}
+
+			@Override
+			public Class getPropertyType() {
+				try {
+					return property.getType();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+
+			@Override
+			public Object getPropertyValue(Object value) {
+				try {
+					return property.getAccessorMethod().invoke(value,
+							new Object[0]);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+
+			@Override
+			public void setPropertyValue(Object bean, Object value) {
+				try {
+					property.getMutatorMethod().invoke(bean,
+							new Object[] { value });
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		};
 	}
 
 	public void setIgnoreProperties(List<String> ignoreProperties) {

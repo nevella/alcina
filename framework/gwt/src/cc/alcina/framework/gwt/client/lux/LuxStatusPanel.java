@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.client.lux;
 
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Label;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;

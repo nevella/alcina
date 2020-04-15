@@ -21,9 +21,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObject
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupJvm;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
-import cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport;
 import cc.alcina.framework.entity.entityaccess.cache.PropertyStoreAwareMultiplexingObjectCache.DetachedEntityCacheAccess;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 
@@ -55,7 +55,7 @@ public class SubgraphTransformManager extends TransformManager {
 				}
 			}).collect(Collectors.toList());
 			for (DomainTransformEvent dte : dtes) {
-				tm.consume(dte);
+				tm.apply(dte);
 			}
 			Entity firstReferenced = tm.firstReferenced;
 			long id = firstReferenced.getId();
@@ -98,12 +98,6 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	@Override
-	protected void doCascadeDeletes(Entity entity) {
-		// rely on the client for this...
-		// or the servletlayer aspect of tltm
-	}
-
-	@Override
 	protected Object ensureEndpointInTransformGraph(Object object) {
 		if (object instanceof Entity) {
 			return getObject((Entity) object);
@@ -119,11 +113,6 @@ public class SubgraphTransformManager extends TransformManager {
 	@Override
 	protected ObjectLookup getObjectLookup() {
 		return store;
-	}
-
-	@Override
-	protected void removeAssociations(Entity entity) {
-		new ServerTransformManagerSupport().removeAssociations(entity);
 	}
 
 	@Override
@@ -190,12 +179,6 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 
 		@Override
-		public List<String> getAnnotatedPropertyNames(Class clazz) {
-			return ObjectPersistenceHelper.get()
-					.getAnnotatedPropertyNames(clazz);
-		}
-
-		@Override
 		public <A extends Annotation> A getAnnotationForClass(Class targetClass,
 				Class<A> annotationClass) {
 			return ObjectPersistenceHelper.get()
@@ -205,6 +188,13 @@ public class SubgraphTransformManager extends TransformManager {
 		@Override
 		public Class getClassForName(String fqn) {
 			return ObjectPersistenceHelper.get().getClassForName(fqn);
+		}
+
+		@Override
+		public List<PropertyReflector>
+				getPropertyReflectors(Class<?> beanClass) {
+			return ObjectPersistenceHelper.get()
+					.getPropertyReflectors(beanClass);
 		}
 
 		@Override
@@ -219,7 +209,7 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 
 		@Override
-		public List<PropertyInfoLite> getWritableProperties(Class clazz) {
+		public List<PropertyInfo> getWritableProperties(Class clazz) {
 			return ObjectPersistenceHelper.get().getWritableProperties(clazz);
 		}
 
@@ -266,9 +256,9 @@ public class SubgraphTransformManager extends TransformManager {
 		private Entity firstReferenced = null;
 
 		@Override
-		public void consume(DomainTransformEvent event)
+		public void apply(DomainTransformEvent event)
 				throws DomainTransformException {
-			super.consume(event);
+			super.apply(event);
 			if (firstReferenced == null) {
 				Iterator<Entity> iterator = getDetachedEntityCache().allValues()
 						.iterator();

@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TClassRef;
 import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TFieldRef;
@@ -24,160 +24,7 @@ import cc.alcina.framework.entity.entityaccess.model.GraphTuples.TObjectRef;
 public class GraphTuplizer {
 	private GraphTuples tuples;
 
-	public interface DetupleizeMapper {
-		boolean ignore(TClassRef classRef);
-
-		Class classFor(TClassRef classRef);
-
-		Object resolve(Class clazz, String value);
-
-		void notifyUnmapped(TFieldRef inField, TFieldRef outField);
-
-		long getId(TObjectRef inObjRef);
-
-		boolean ignore(TObjectRef inObjRef);
-
-		void putRelational(TObjectRef inObjRef, Entity t,
-				TFieldRef inField);
-
-		void prepareCustom(Entity t);
-
-		void doCustom(TObjectRef inObjRef, Entity t);
-
-		void prepare(TObjectRef inObjRef);
-
-		default void translateNonRelational(NonRelationalTranslateToken token) {
-			token.fieldName = token.inField.name;
-			token.value = token.inValue;
-		}
-
-		default boolean ignore(TObjectRef inObjRef, String hint) {
-			return ignore(inObjRef);
-		}
-	}
-
-	public static enum DetupelizeInstructionType {
-		IGNORE, HILI, FUNCTION, ID, LONG, ID_COMPRESS
-	}
-
-	public static class DetupelizeInstruction {
-		public DetupelizeInstructionType type;
-
-		public String path;
-
-		public String outFieldName;
-
-		public Consumer<NonRelationalTranslateToken> consumer;
-
-		public DetupelizeInstruction() {
-		}
-
-		public DetupelizeInstruction(DetupelizeInstructionType type,
-				String path) {
-			this.type = type;
-			this.path = path;
-		}
-
-		public DetupelizeInstruction(DetupelizeInstructionType type,
-				String path, String outFieldName) {
-			this.type = type;
-			this.path = path;
-			this.outFieldName = outFieldName;
-		}
-
-		public DetupelizeInstruction(DetupelizeInstructionType type,
-				String path, String outFieldName,
-				Consumer<NonRelationalTranslateToken> consumer) {
-			this.type = type;
-			this.path = path;
-			this.outFieldName = outFieldName;
-			this.consumer = consumer;
-		}
-
-		private transient String inFieldPart;
-
-		private transient String classSimplePart;
-
-		public String inFieldPart() {
-			if (inFieldPart == null) {
-				inFieldPart = path.replaceFirst(".+\\.", "");
-			}
-			return inFieldPart;
-		}
-
-		public String classSimplePart() {
-			if (classSimplePart == null) {
-				classSimplePart = path.replaceFirst("\\..+", "");
-			}
-			return classSimplePart;
-		}
-
-		IndividualPropertyAccessor accessor = null;
-
-		public IndividualPropertyAccessor
-				outAccessor(Class<? extends Entity> clazz) {
-			if (accessor == null) {
-				accessor = Reflections.propertyAccessor().cachedAccessor(clazz,
-						outFieldName);
-			}
-			return accessor;
-		}
-	}
-
-	public GraphTuples tupleize(Collection objects,
-			Predicate<Field> fieldFilter) {
-		tuples = new GraphTuples();
-		tuples.fieldFilter = fieldFilter;
-		for (Object object : objects) {
-			tuple(object);
-		}
-		return tuples;
-	}
-
-	private void tuple(Object object) {
-		TClassRef classRef = tuples.ensureClassRef(object.getClass());
-		TObjectRef obj = new TObjectRef(classRef);
-		tuples.objects.add(obj);
-		for (TFieldRef field : classRef.fieldRefs) {
-			obj.values.put(field, getValue(object, field));
-		}
-	}
-
 	Set<String> entityFields = new LinkedHashSet<>();
-
-	private String getValue(Object object, TFieldRef field) {
-		try {
-			Object oValue = field.field.get(object);
-			if (oValue instanceof Entity) {
-				String locator = object.getClass().getSimpleName() + "."
-						+ field.name;
-				if (entityFields.add(locator)) {
-					Ax.out(locator);
-				}
-				return String.valueOf(((Entity) oValue).getId());
-				// Ax.runtimeException("shouldn't persist: %s",
-				// oValue.getClass());
-			}
-			if (oValue == null) {
-				return null;
-			}
-			Class clazz = oValue.getClass();
-			if (clazz == long.class || clazz == Long.class) {
-				return oValue.toString();
-			}
-			if (Date.class.isAssignableFrom(clazz)) {
-				return String.valueOf(((Date) oValue).getTime());
-			}
-			DomainTransformEvent dte = new DomainTransformEvent();
-			dte.setNewValue(oValue);
-			dte.setObjectClass(object.getClass());
-			dte.setPropertyName(field.name);
-			TransformManager.get().convertToTargetObject(dte);
-			return dte.getNewStringValue();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
 
 	DetachedEntityCache created = new DetachedEntityCache();
 
@@ -208,11 +55,14 @@ public class GraphTuplizer {
 		}
 	}
 
-	private void prepare(TObjectRef inObjRef) {
-		if (mapper.ignore(inObjRef)) {
-			return;
+	public GraphTuples tupleize(Collection objects,
+			Predicate<Field> fieldFilter) {
+		tuples = new GraphTuples();
+		tuples.fieldFilter = fieldFilter;
+		for (Object object : objects) {
+			tuple(object);
 		}
-		mapper.prepare(inObjRef);
+		return tuples;
 	}
 
 	private void create(TObjectRef inObjRef) {
@@ -224,8 +74,8 @@ public class GraphTuplizer {
 		if (id == -1) {
 			return;
 		}
-		Entity t = (Entity) Reflections.classLookup()
-				.newInstance(clazz, id, 0L);
+		Entity t = (Entity) Reflections.classLookup().newInstance(clazz, id,
+				0L);
 		t.setId(id);
 		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setObjectClass(clazz);
@@ -236,49 +86,12 @@ public class GraphTuplizer {
 		inObjRef.entity = t;
 	}
 
-	public static class NonRelationalTranslateToken {
-		public String value;
-
-		public String fieldName;
-
-		public TFieldRef inField;
-
-		public String inValue;
-
-		public boolean fieldTranslated;
-
-		public void in(TFieldRef inField, String inValue) {
-			this.inField = inField;
-			this.inValue = inValue;
-			fieldTranslated = false;
-		}
-	}
-
-	private void nonRelational(TObjectRef inObjRef) {
-		if (mapper.ignore(inObjRef)) {
+	private void doCustom(TObjectRef inObjRef) {
+		if (mapper.ignore(inObjRef, "doCustom")) {
 			return;
 		}
-		Class clazz = mapper.classFor(inObjRef.classRef);
 		Entity t = inObjRef.entity;
-		TClassRef outRef = tuples.ensureClassRef(clazz);
-		NonRelationalTranslateToken token = new NonRelationalTranslateToken();
-		for (TFieldRef inField : inObjRef.classRef.fieldRefs) {
-			String value = inObjRef.values.get(inField);
-			token.in(inField, value);
-			mapper.translateNonRelational(token);
-			TFieldRef outField = outRef.fieldRefByName(token.fieldName);
-			if (outField != null && (inField.equivalentTo(outField)
-					|| token.fieldTranslated)) {
-				Object newValue = getNewValue(inField, token.value);
-				try {
-					outField.accessor().setPropertyValue(t, newValue);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			} else {
-				mapper.notifyUnmapped(inField, outField);
-			}
-		}
+		mapper.doCustom(inObjRef, t);
 	}
 
 	private Object getNewValue(TFieldRef inField, String in) {
@@ -318,6 +131,82 @@ public class GraphTuplizer {
 		return out;
 	}
 
+	private String getValue(Object object, TFieldRef field) {
+		try {
+			Object oValue = field.field.get(object);
+			if (oValue instanceof Entity) {
+				String locator = object.getClass().getSimpleName() + "."
+						+ field.name;
+				if (entityFields.add(locator)) {
+					Ax.out(locator);
+				}
+				return String.valueOf(((Entity) oValue).getId());
+				// Ax.runtimeException("shouldn't persist: %s",
+				// oValue.getClass());
+			}
+			if (oValue == null) {
+				return null;
+			}
+			Class clazz = oValue.getClass();
+			if (clazz == long.class || clazz == Long.class) {
+				return oValue.toString();
+			}
+			if (Date.class.isAssignableFrom(clazz)) {
+				return String.valueOf(((Date) oValue).getTime());
+			}
+			DomainTransformEvent dte = new DomainTransformEvent();
+			dte.setNewValue(oValue);
+			dte.setObjectClass(object.getClass());
+			dte.setPropertyName(field.name);
+			TransformManager.get().convertToTargetObject(dte);
+			return dte.getNewStringValue();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	private void nonRelational(TObjectRef inObjRef) {
+		if (mapper.ignore(inObjRef)) {
+			return;
+		}
+		Class clazz = mapper.classFor(inObjRef.classRef);
+		Entity t = inObjRef.entity;
+		TClassRef outRef = tuples.ensureClassRef(clazz);
+		NonRelationalTranslateToken token = new NonRelationalTranslateToken();
+		for (TFieldRef inField : inObjRef.classRef.fieldRefs) {
+			String value = inObjRef.values.get(inField);
+			token.in(inField, value);
+			mapper.translateNonRelational(token);
+			TFieldRef outField = outRef.fieldRefByName(token.fieldName);
+			if (outField != null && (inField.equivalentTo(outField)
+					|| token.fieldTranslated)) {
+				Object newValue = getNewValue(inField, token.value);
+				try {
+					outField.accessor().setPropertyValue(t, newValue);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			} else {
+				mapper.notifyUnmapped(inField, outField);
+			}
+		}
+	}
+
+	private void prepare(TObjectRef inObjRef) {
+		if (mapper.ignore(inObjRef)) {
+			return;
+		}
+		mapper.prepare(inObjRef);
+	}
+
+	private void prepareCustom(TObjectRef inObjRef) {
+		if (mapper.ignore(inObjRef)) {
+			return;
+		}
+		Entity t = inObjRef.entity;
+		mapper.prepareCustom(t);
+	}
+
 	private void relational(TObjectRef inObjRef) {
 		if (mapper.ignore(inObjRef)) {
 			return;
@@ -335,19 +224,128 @@ public class GraphTuplizer {
 		}
 	}
 
-	private void doCustom(TObjectRef inObjRef) {
-		if (mapper.ignore(inObjRef, "doCustom")) {
-			return;
+	private void tuple(Object object) {
+		TClassRef classRef = tuples.ensureClassRef(object.getClass());
+		TObjectRef obj = new TObjectRef(classRef);
+		tuples.objects.add(obj);
+		for (TFieldRef field : classRef.fieldRefs) {
+			obj.values.put(field, getValue(object, field));
 		}
-		Entity t = inObjRef.entity;
-		mapper.doCustom(inObjRef, t);
 	}
 
-	private void prepareCustom(TObjectRef inObjRef) {
-		if (mapper.ignore(inObjRef)) {
-			return;
+	public static class DetupelizeInstruction {
+		public DetupelizeInstructionType type;
+
+		public String path;
+
+		public String outFieldName;
+
+		public Consumer<NonRelationalTranslateToken> consumer;
+
+		private transient String inFieldPart;
+
+		private transient String classSimplePart;
+
+		PropertyReflector accessor = null;
+
+		public DetupelizeInstruction() {
 		}
-		Entity t = inObjRef.entity;
-		mapper.prepareCustom(t);
+
+		public DetupelizeInstruction(DetupelizeInstructionType type,
+				String path) {
+			this.type = type;
+			this.path = path;
+		}
+
+		public DetupelizeInstruction(DetupelizeInstructionType type,
+				String path, String outFieldName) {
+			this.type = type;
+			this.path = path;
+			this.outFieldName = outFieldName;
+		}
+
+		public DetupelizeInstruction(DetupelizeInstructionType type,
+				String path, String outFieldName,
+				Consumer<NonRelationalTranslateToken> consumer) {
+			this.type = type;
+			this.path = path;
+			this.outFieldName = outFieldName;
+			this.consumer = consumer;
+		}
+
+		public String classSimplePart() {
+			if (classSimplePart == null) {
+				classSimplePart = path.replaceFirst("\\..+", "");
+			}
+			return classSimplePart;
+		}
+
+		public String inFieldPart() {
+			if (inFieldPart == null) {
+				inFieldPart = path.replaceFirst(".+\\.", "");
+			}
+			return inFieldPart;
+		}
+
+		public PropertyReflector outAccessor(Class<? extends Entity> clazz) {
+			if (accessor == null) {
+				accessor = Reflections.propertyAccessor().property(clazz,
+						outFieldName);
+			}
+			return accessor;
+		}
+	}
+
+	public static enum DetupelizeInstructionType {
+		IGNORE, HILI, FUNCTION, ID, LONG, ID_COMPRESS
+	}
+
+	public interface DetupleizeMapper {
+		Class classFor(TClassRef classRef);
+
+		void doCustom(TObjectRef inObjRef, Entity t);
+
+		long getId(TObjectRef inObjRef);
+
+		boolean ignore(TClassRef classRef);
+
+		boolean ignore(TObjectRef inObjRef);
+
+		default boolean ignore(TObjectRef inObjRef, String hint) {
+			return ignore(inObjRef);
+		}
+
+		void notifyUnmapped(TFieldRef inField, TFieldRef outField);
+
+		void prepare(TObjectRef inObjRef);
+
+		void prepareCustom(Entity t);
+
+		void putRelational(TObjectRef inObjRef, Entity t, TFieldRef inField);
+
+		Object resolve(Class clazz, String value);
+
+		default void translateNonRelational(NonRelationalTranslateToken token) {
+			token.fieldName = token.inField.name;
+			token.value = token.inValue;
+		}
+	}
+
+	public static class NonRelationalTranslateToken {
+		public String value;
+
+		public String fieldName;
+
+		public TFieldRef inField;
+
+		public String inValue;
+
+		public boolean fieldTranslated;
+
+		public void in(TFieldRef inField, String inValue) {
+			this.inField = inField;
+			this.inValue = inValue;
+			fieldTranslated = false;
+		}
 	}
 }

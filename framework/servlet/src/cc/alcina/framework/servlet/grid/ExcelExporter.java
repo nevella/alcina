@@ -35,7 +35,6 @@ import org.w3c.dom.Text;
 
 import com.totsp.gwittir.client.ui.Renderer;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.CollectionFilters.ConverterFilter;
 import cc.alcina.framework.common.client.logic.reflection.Display;

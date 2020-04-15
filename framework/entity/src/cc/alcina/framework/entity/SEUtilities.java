@@ -28,7 +28,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -81,7 +80,6 @@ import javax.swing.tree.TreePath;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
-import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
@@ -90,7 +88,6 @@ import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import cc.alcina.framework.entity.util.JvmPropertyReflector;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
 /**
@@ -107,7 +104,7 @@ public class SEUtilities {
 	private static UnsortedMultikeyMap<PropertyDescriptor> pdLookup = new UnsortedMultikeyMap<PropertyDescriptor>(
 			2);
 
-    private static Map<Class, List<Method>> allMethodsPerClass = new LinkedHashMap<>();
+	private static Map<Class, List<Method>> allMethodsPerClass = new LinkedHashMap<>();
 
 	private static Map<Class, List<Field>> allFieldsPerClass = new LinkedHashMap<>();
 
@@ -122,6 +119,27 @@ public class SEUtilities {
 	private static Pattern sq_5 = Pattern.compile("[`'´]+");
 
 	private static Pattern sq_6 = Pattern.compile("[`'´]{2,}");
+
+	/**
+	 * Does not return interface (default) methods
+	 */
+	public static List<Method> allClassMethods(Class clazz0) {
+		return allMethodsPerClass.computeIfAbsent(clazz0, clazz -> {
+			List<Method> result = new ArrayList<>();
+			try {
+				while (clazz != Object.class) {
+					for (Method m : clazz.getDeclaredMethods()) {
+						m.setAccessible(true);
+						result.add(m);
+					}
+					clazz = clazz.getSuperclass();
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			return result;
+		});
+	}
 
 	public static List<Field> allFields(Class clazz0) {
 		return allFieldsPerClass.computeIfAbsent(clazz0, clazz -> {
@@ -140,26 +158,7 @@ public class SEUtilities {
 			return result;
 		});
 	}
-	 /**
-     * Does not return interface (default) methods
-     */
-    public static List<Method> allClassMethods(Class clazz0) {
-        return allMethodsPerClass.computeIfAbsent(clazz0, clazz -> {
-            List<Method> result = new ArrayList<>();
-            try {
-                while (clazz != Object.class) {
-                    for (Method m : clazz.getDeclaredMethods()) {
-                        m.setAccessible(true);
-                        result.add(m);
-                    }
-                    clazz = clazz.getSuperclass();
-                }
-            } catch (Exception e) {
-                throw new WrappedRuntimeException(e);
-            }
-            return result;
-        });
-    }
+
 	public static void appShutdown() {
 		pdLookup = null;
 	}
@@ -182,7 +181,6 @@ public class SEUtilities {
 		}
 	}
 
-	
 	public static <C> C collectionItemOfClass(Collection coll, Class<C> clazz) {
 		for (Object object : coll) {
 			if (object.getClass() == clazz) {
@@ -803,7 +801,6 @@ public class SEUtilities {
 				: path;
 	}
 
-	
 	public static <T> T getOrCreate(Collection<T> existing, String propertyName,
 			String propertyValue, Class itemClass) throws Exception {
 		PropertyDescriptor descriptor = getPropertyDescriptorByName(itemClass,
@@ -1011,25 +1008,6 @@ public class SEUtilities {
 		return input.length() == 0 || isWhitespace(input);
 	}
 
-	public static <A extends Annotation> void iterateForPropertyWithAnnotation(
-			Object object, Class<A> annotationClass,
-			HasAnnotationCallback<A> hasAnnotationCallback) {
-		try {
-			PropertyDescriptor[] pds = Introspector
-					.getBeanInfo(object.getClass()).getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				JvmPropertyReflector reflector = new JvmPropertyReflector(pd);
-				if (reflector.getAnnotation(annotationClass) != null) {
-					hasAnnotationCallback.apply(
-							reflector.getAnnotation(annotationClass),
-							reflector);
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	public static List<Object> iteratorToList(Iterator i) {
 		List<Object> result = new ArrayList<Object>();
 		for (; i.hasNext(); result.add(i.next()))
@@ -1092,7 +1070,6 @@ public class SEUtilities {
 		return results;
 	}
 
-	
 	public static Map listToMap(List l, Method m) throws Exception {
 		Map map = new HashMap<Object, Object>();
 		for (Iterator it = l.iterator(); it.hasNext();) {

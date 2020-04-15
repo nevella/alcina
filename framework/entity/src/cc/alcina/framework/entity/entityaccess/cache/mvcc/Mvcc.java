@@ -6,8 +6,8 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;

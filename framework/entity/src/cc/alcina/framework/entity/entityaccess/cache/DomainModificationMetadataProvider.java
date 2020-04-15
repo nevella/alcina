@@ -3,8 +3,8 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
+import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;

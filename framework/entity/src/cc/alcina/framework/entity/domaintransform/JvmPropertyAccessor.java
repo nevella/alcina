@@ -6,6 +6,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -17,11 +18,6 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 	MultikeyMap<Class> typeCache = new UnsortedMultikeyMap<>(2);
 
 	@Override
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,
-			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
-	}
-
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName) {
 		try {
@@ -33,6 +29,7 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 		}
 	}
 
+	@Override
 	public Class getPropertyType(Class clazz, String propertyName) {
 		return typeCache.ensure(() -> {
 			try {
@@ -45,10 +42,17 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 		}, clazz, propertyName);
 	}
 
+	@Override
 	public Object getPropertyValue(Object bean, String propertyName) {
 		return ensureAccessor(propertyName).getChainedProperty(bean);
 	}
 
+	@Override
+	public PropertyReflector property(Class clazz, String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+	}
+
+	@Override
 	public void setPropertyValue(Object bean, String propertyName,
 			Object value) {
 		ensureAccessor(propertyName).setChainedProperty(bean, value);

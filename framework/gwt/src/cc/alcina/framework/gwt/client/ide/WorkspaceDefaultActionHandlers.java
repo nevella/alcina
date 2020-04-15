@@ -64,6 +64,7 @@ public class WorkspaceDefaultActionHandlers {
 	@RegistryLocation(registryPoint = CloneActionHandler.class)
 	public static class DefaultCloneActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements CloneActionHandler {
+		@Override
 		public void performAction(final PermissibleActionEvent event,
 				Object node, Object object, final Workspace workspace,
 				Class nodeObjectClass) {
@@ -113,6 +114,7 @@ public class WorkspaceDefaultActionHandlers {
 			WorkspaceDefaultActionHandlerBase implements CreateActionHandler {
 		protected Entity newObj;
 
+		@Override
 		public void performAction(PermissibleActionEvent event, Object node,
 				Object object, Workspace workspace, Class nodeObjectClass) {
 			try {
@@ -159,6 +161,7 @@ public class WorkspaceDefaultActionHandlers {
 	 */
 	public static class DefaultDeleteActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements DeleteActionHandler {
+		@Override
 		public void performAction(final PermissibleActionEvent event,
 				Object node, Object object, final Workspace workspace,
 				Class nodeObjectClass) {
@@ -194,6 +197,7 @@ public class WorkspaceDefaultActionHandlers {
 				this.workspaceDeletionChecker = workspaceDeletionChecker;
 			}
 
+			@Override
 			public void ok() {
 				AsyncCallback deleteObjectCallback = new AsyncCallback<Void>() {
 					@Override
@@ -207,7 +211,7 @@ public class WorkspaceDefaultActionHandlers {
 					}
 
 					private void finish() {
-						TransformManager.get().deleteObject(entity);
+						entity.delete();
 						if (workspace != null) {
 							workspace.getVisualiser()
 									.setContentWidget(new HorizontalPanel());
@@ -220,7 +224,7 @@ public class WorkspaceDefaultActionHandlers {
 				if (!this.workspaceDeletionChecker.cascadedDeletions
 						.isEmpty()) {
 					for (Entity cascade : this.workspaceDeletionChecker.cascadedDeletions) {
-						TransformManager.get().deleteObject(cascade);
+						cascade.delete();
 					}
 					Registry.impl(CommitToStorageTransformListener.class)
 							.flushWithOneoffCallback(deleteObjectCallback);
@@ -243,6 +247,7 @@ public class WorkspaceDefaultActionHandlers {
 	@RegistryLocation(registryPoint = ViewActionHandler.class)
 	public static class DefaultViewActionHandler extends BaseViewActionHandler
 			implements ViewActionHandler {
+		@Override
 		protected boolean editView() {
 			return false;
 		}
