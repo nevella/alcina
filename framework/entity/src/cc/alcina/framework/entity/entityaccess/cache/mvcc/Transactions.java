@@ -67,7 +67,6 @@ public class Transactions {
 	}
 
 	static <T extends Entity & MvccObject> T copyObject(T object) {
-		// FIXME - write some byteassist classes to do direct copying
 		T clone = ResourceUtilities.fieldwiseClone(object, false, true);
 		clone.__setMvccVersions__(object.__getMvccVersions__());
 		return clone;

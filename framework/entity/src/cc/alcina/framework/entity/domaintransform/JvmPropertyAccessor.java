@@ -30,6 +30,12 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 	}
 
 	@Override
+	public PropertyReflector getPropertyReflector(Class clazz,
+			String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+	}
+
+	@Override
 	public Class getPropertyType(Class clazz, String propertyName) {
 		return typeCache.ensure(() -> {
 			try {
@@ -45,11 +51,6 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 	@Override
 	public Object getPropertyValue(Object bean, String propertyName) {
 		return ensureAccessor(propertyName).getChainedProperty(bean);
-	}
-
-	@Override
-	public PropertyReflector property(Class clazz, String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 
 	@Override

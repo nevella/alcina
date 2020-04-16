@@ -23,12 +23,6 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 		this.singleChildElementNames = Arrays.asList(singleChildElementNames);
 	}
 
-	@Override
-	public PropertyReflector property(Class clazz,
-			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
-	}
-
 	public <T> T get(Object bean, String propertyName) {
 		return (T) getPropertyValue(bean, propertyName);
 	}
@@ -37,6 +31,12 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public PropertyReflector getPropertyReflector(Class clazz,
+			String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 
 	@Override

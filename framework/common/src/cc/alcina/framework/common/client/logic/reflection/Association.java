@@ -30,7 +30,7 @@ import java.lang.annotation.RetentionPolicy;
 public @interface Association {
 	boolean cascadeDeletes() default false;
 
-	boolean dereferenceOnDelete() default false;
+	boolean dereferenceOnDelete() default true;
 
 	/**
 	 * The type name of the implementation class (component type for a

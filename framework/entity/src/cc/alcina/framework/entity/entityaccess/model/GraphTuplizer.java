@@ -289,8 +289,8 @@ public class GraphTuplizer {
 
 		public PropertyReflector outAccessor(Class<? extends Entity> clazz) {
 			if (accessor == null) {
-				accessor = Reflections.propertyAccessor().property(clazz,
-						outFieldName);
+				accessor = Reflections.propertyAccessor()
+						.getPropertyReflector(clazz, outFieldName);
 			}
 			return accessor;
 		}

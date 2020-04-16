@@ -593,6 +593,53 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	}
 
 	@Override
+	public PropertyReflector getPropertyReflector(Class clazz,
+			String propertyName) {
+		Property property = getPropertyForClass(clazz, propertyName);
+		return new PropertyReflector() {
+			@Override
+			public <A extends Annotation> A
+					getAnnotation(Class<A> annotationClass) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public String getPropertyName() {
+				return property.getName();
+			}
+
+			@Override
+			public Class getPropertyType() {
+				try {
+					return property.getType();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+
+			@Override
+			public Object getPropertyValue(Object value) {
+				try {
+					return property.getAccessorMethod().invoke(value,
+							new Object[0]);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+
+			@Override
+			public void setPropertyValue(Object bean, Object value) {
+				try {
+					property.getMutatorMethod().invoke(bean,
+							new Object[] { value });
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		};
+	}
+
+	@Override
 	public Class getPropertyType(Class objectClass, String propertyName) {
 		return ClientReflector.get().getPropertyType(objectClass, propertyName);
 	}
@@ -718,52 +765,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					&& ((displayInfo.displayMask() & Display.DISPLAY_RO) == 0);
 		}
 		return false;
-	}
-
-	@Override
-	public PropertyReflector property(Class clazz, String propertyName) {
-		Property property = getPropertyForClass(clazz, propertyName);
-		return new PropertyReflector() {
-			@Override
-			public <A extends Annotation> A
-					getAnnotation(Class<A> annotationClass) {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public String getPropertyName() {
-				return property.getName();
-			}
-
-			@Override
-			public Class getPropertyType() {
-				try {
-					return property.getType();
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-
-			@Override
-			public Object getPropertyValue(Object value) {
-				try {
-					return property.getAccessorMethod().invoke(value,
-							new Object[0]);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-
-			@Override
-			public void setPropertyValue(Object bean, Object value) {
-				try {
-					property.getMutatorMethod().invoke(bean,
-							new Object[] { value });
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		};
 	}
 
 	public void setIgnoreProperties(List<String> ignoreProperties) {

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.SelfDescribed;
@@ -40,6 +41,8 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.CachingConcurrentMap;
+import cc.alcina.framework.entity.util.JvmPropertyReflector;
 import cc.alcina.framework.entity.util.MethodWrapper;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
@@ -73,6 +76,12 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	});
 
 	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
+
+	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
+			clazz -> SEUtilities.getSortedPropertyDescriptors(clazz).stream()
+					.map(JvmPropertyReflector::new)
+					.collect(Collectors.toList()),
+			100);
 
 	private TestPersistenceHelper() {
 		super();
@@ -173,9 +182,14 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	@Override
+	public PropertyReflector getPropertyReflector(Class clazz,
+			String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+	}
+
+	@Override
 	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
-		// TODO Auto-generated method stub
-		return null;
+		return classPropertyReflectorLookup.get(beanClass);
 	}
 
 	@Override
@@ -259,11 +273,6 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	@Override
-	public PropertyReflector property(Class clazz, String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 
 	@Override

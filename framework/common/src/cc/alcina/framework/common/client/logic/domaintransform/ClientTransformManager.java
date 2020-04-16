@@ -344,7 +344,7 @@ public abstract class ClientTransformManager extends TransformManager {
 	}
 
 	@Override
-	protected void maybeModifyAsPropertyChange(Entity obj, String propertyName,
+	protected void beforeDirectCollectionModification(Entity obj, String propertyName,
 			Object value,
 			CollectionModificationType collectionModificationType) {
 		if (isFirePropertyChangesOnConsumedCollectionMods()) {

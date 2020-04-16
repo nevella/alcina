@@ -94,7 +94,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	@Override
 	public V get(Object key) {
 		if (transactionLayers == null) {
-			return base.get(key);
+			return base.wasRemoved(key) ? null : base.get(key);
 		}
 		List<Layer> visibleLayers = visibleLayers();
 		for (int idx = visibleLayers.size() - 1; idx >= 0; idx--) {
@@ -333,16 +333,13 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	}
 
 	class Layer {
-		int added;
+		private int added;
 
-		/*
-		 * FIXME - these should be specialised. Removed should be lazy
-		 */
-		Map<K, Boolean> removed = createNonSynchronizedMap(Boolean.class);
+		private Map<K, Boolean> removed;
 
-		Map<K, V> modified = createNonSynchronizedMap(valueClass);
+		private Map<K, V> modified = createNonSynchronizedMap(valueClass);
 
-		Transaction transaction;
+		private Transaction transaction;
 
 		public Layer(Transaction transaction) {
 			this.transaction = transaction;
@@ -357,11 +354,21 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		 */
 		public Layer merge(Layer higherLayer) {
 			Layer merged = new Layer(null);
-			merged.removed.putAll(removed);
+			if (hasRemoved()) {
+				merged.ensureRemoved().putAll(ensureRemoved());
+			}
 			merged.modified.putAll(modified);
-			merged.removed.keySet().removeAll(higherLayer.modified.keySet());
-			merged.modified.keySet().removeAll(higherLayer.removed.keySet());
-			merged.removed.putAll(higherLayer.removed);
+			if (merged.hasRemoved()) {
+				merged.ensureRemoved().keySet()
+						.removeAll(higherLayer.modified.keySet());
+			}
+			if (higherLayer.hasRemoved()) {
+				merged.modified.keySet()
+						.removeAll(higherLayer.ensureRemoved().keySet());
+			}
+			if (higherLayer.hasRemoved()) {
+				merged.ensureRemoved().putAll(higherLayer.ensureRemoved());
+			}
 			merged.modified.putAll(higherLayer.modified);
 			return merged;
 		}
@@ -370,12 +377,14 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			modified.put(key, value);
 			if (existing == null) {
 				added++;
-				removed.remove(key);
+				if (hasRemoved()) {
+					ensureRemoved().remove(key);
+				}
 			}
 		}
 
 		public void remove(K key) {
-			removed.put(key, Boolean.TRUE);
+			ensureRemoved().put(key, Boolean.TRUE);
 		}
 
 		@Override
@@ -392,15 +401,27 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		public boolean wasModifiedOrRemoved(Object key) {
-			return removed.containsKey(key) || modified.containsKey(key);
+			return (removed != null && removed.containsKey(key))
+					|| modified.containsKey(key);
 		}
 
 		public boolean wasRemoved(Object key) {
-			return removed.containsKey(key);
+			return removed != null && removed.containsKey(key);
+		}
+
+		private Map<K, Boolean> ensureRemoved() {
+			if (removed == null) {
+				removed = createNonSynchronizedMap(Boolean.class);
+			}
+			return removed;
+		}
+
+		private boolean hasRemoved() {
+			return removed != null;
 		}
 
 		int combinedMapSize() {
-			return removed.size() + modified.size();
+			return (removed == null ? 0 : removed.size()) + modified.size();
 		}
 
 		Iterator<Entry<K, V>> modifiedEntrySetIterator() {
@@ -438,6 +459,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 					}, iteratorArray);
 			Predicate<Entry<K, V>> mapping = e -> {
 				int idx = layerIterator.getCurrentIteratorIndex();
+				if (visibleLayers.get(idx).wasRemoved(e.getKey())) {
+					return false;
+				}
 				idx++;// check if modified in any subsequent layers
 				for (; idx < visibleLayers.size(); idx++) {
 					if (visibleLayers.get(idx)
@@ -456,8 +480,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public int size() {
-			return visibleLayers.stream().collect(Collectors
-					.summingInt(layer -> layer.added - layer.removed.size()));
+			return visibleLayers.stream()
+					.collect(Collectors.summingInt(layer -> layer.added
+							- (layer.hasRemoved() ? layer.removed.size() : 0)));
 		}
 	}
 }

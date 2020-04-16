@@ -74,12 +74,6 @@ public class TransactionalSubgraphTransformManager
 		super.apply(event);
 	}
 
-	@Override
-	public PropertyReflector property(Class clazz,
-			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
-	}
-
 	public boolean contains(Entity entity) {
 		return getDomainObjects().getObject(entity) != null;
 	}
@@ -112,6 +106,12 @@ public class TransactionalSubgraphTransformManager
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	public PropertyReflector getPropertyReflector(Class clazz,
+			String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 
 	@Override

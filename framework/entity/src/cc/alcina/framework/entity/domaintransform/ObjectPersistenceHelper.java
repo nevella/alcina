@@ -174,6 +174,13 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	@Override
+	public PropertyReflector getPropertyReflector(Class clazz,
+			String propertyName) {
+		return (ThreadlocalTransformManager.cast()).getPropertyReflector(clazz,
+				propertyName);
+	}
+
+	@Override
 	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
 		return classPropertyReflectorLookup.get(beanClass);
 	}
@@ -250,12 +257,6 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		return (ThreadlocalTransformManager.cast()).newInstance(clazz, objectId,
 				localId);
-	}
-
-	@Override
-	public PropertyReflector property(Class clazz, String propertyName) {
-		return (ThreadlocalTransformManager.cast()).property(clazz,
-				propertyName);
 	}
 
 	@Override

@@ -154,7 +154,7 @@ public class GraphTuples {
 		public PropertyReflector accessor() {
 			if (accessor == null) {
 				accessor = Reflections.propertyAccessor()
-						.property(classRef.clazz, name);
+						.getPropertyReflector(classRef.clazz, name);
 			}
 			return accessor;
 		}

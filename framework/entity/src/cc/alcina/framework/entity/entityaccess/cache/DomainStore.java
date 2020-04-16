@@ -423,6 +423,10 @@ public class DomainStore implements IDomainStore {
 		threads.readLockExpectLongRunning(lock);
 	}
 
+	public void remove(Entity entity) {
+		cache.remove(entity);
+	}
+
 	public void runWithWriteLock(Runnable runnable) {
 		try {
 			threads.lock(true);
@@ -1467,7 +1471,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
-			return list(clazz).stream();
+			return Domain.query(clazz).stream();
 		}
 
 		@Override
@@ -1664,6 +1668,13 @@ public class DomainStore implements IDomainStore {
 				LocalReplacementCreationObjectResolver localReplacementCreationObjectResolver) {
 			classLookup.setLocalReplacementCreationObjectResolver(
 					localReplacementCreationObjectResolver);
+		}
+
+		@Override
+		protected void beforeDirectCollectionModification(Entity obj,
+				String propertyName, Object newTargetValue,
+				CollectionModificationType collectionModificationType) {
+			Transactions.resolve(obj, true);
 		}
 
 		@Override

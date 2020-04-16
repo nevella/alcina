@@ -554,6 +554,12 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
+	public PropertyReflector getPropertyReflector(Class clazz,
+			String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+	}
+
+	@Override
 	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
 		return ObjectPersistenceHelper.get().getPropertyReflectors(beanClass);
 	}
@@ -702,11 +708,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public void persist(Object object) {
 		entityManager.persist(object);
-	}
-
-	@Override
-	public PropertyReflector property(Class clazz, String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 
 	@Override
@@ -1229,12 +1230,21 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
+	/*
+	 * if in 'entityManager' mode (i.e. in a db transaction), let the
+	 * entityManager handle it - otherwise
+	 * 
+	 * FIXME mvcc.2 - maybe non-em instances should have a 'domainobjects' (i.e.
+	 * domain store?)
+	 */
 	protected void performDeleteObject(Entity entity) {
 		entity = getObject(entity);
 		if (entityManager != null) {
 			entityManager.remove(entity);
 		} else {
 			deregisterDomainObject(entity);
+			DomainStore.stores().storeFor(entity.provideEntityClass())
+					.remove(entity);
 		}
 	}
 

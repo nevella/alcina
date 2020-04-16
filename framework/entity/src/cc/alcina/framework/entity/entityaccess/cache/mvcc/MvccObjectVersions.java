@@ -28,14 +28,12 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
  *
  * @param <T>
  */
-public class MvccObjectVersions<T extends Entity>
-		implements Vacuumable {
+public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 	static Logger logger = LoggerFactory.getLogger(MvccObjectVersions.class);
 
 	// called in a synchronized block (synchronized on baseObject)
-	static <T extends Entity> MvccObjectVersions<T> ensure(
-			T baseObject, Transaction transaction,
-			boolean initialObjectIsWriteable) {
+	static <T extends Entity> MvccObjectVersions<T> ensure(T baseObject,
+			Transaction transaction, boolean initialObjectIsWriteable) {
 		MvccObject mvccObject = (MvccObject) baseObject;
 		MvccObjectVersions<T> versions = null;
 		versions = new MvccObjectVersions<T>(baseObject, transaction,
@@ -182,8 +180,6 @@ public class MvccObjectVersions<T extends Entity>
 		if (version != null && version.isCorrectWriteableState(write)) {
 			return version.object;
 		}
-		version = new ObjectVersion<>();
-		version.transaction = transaction;
 		Transaction mostRecentTransaction = transaction
 				.mostRecentPriorTransaction(versions.keys(),
 						DomainStore.stores().storeFor(
@@ -202,8 +198,10 @@ public class MvccObjectVersions<T extends Entity>
 			mostRecentObject = baseObject;
 		}
 		if (write) {
-			version.object = (T) Transactions.copyObject(
-					(Entity & MvccObject) mostRecentObject);
+			version = new ObjectVersion<>();
+			version.transaction = transaction;
+			version.object = (T) Transactions
+					.copyObject((Entity & MvccObject) mostRecentObject);
 			version.writeable = true;
 			// put before register (which will call resolve());
 			putVersion(version);

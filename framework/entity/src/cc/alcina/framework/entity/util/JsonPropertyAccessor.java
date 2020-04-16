@@ -45,25 +45,28 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 		this.defaultObjectPrefix = defaultObjectPrefix;
 	}
 
-	@Override
-	public PropertyReflector property(Class clazz,
-			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
-	}
-
 	public <T> T get(Object bean, String propertyName) {
 		return (T) getPropertyValue(bean, propertyName);
 	}
 
+	@Override
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public PropertyReflector getPropertyReflector(Class clazz,
+			String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+	}
+
+	@Override
 	public Class getPropertyType(Class clazz, String propertyName) {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public Object getPropertyValue(Object bean, String propertyName) {
 		return getPropertyValue0(bean, propertyName, false);
 	}
@@ -83,6 +86,7 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 		return this;
 	}
 
+	@Override
 	public void setPropertyValue(Object bean, String propertyName,
 			Object value) {
 		try {
@@ -132,7 +136,8 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 				value = null;
 			}
 			return (value instanceof String && ((String) value).isEmpty())
-					? null : value;
+					? null
+					: value;
 		} catch (Exception e) {
 			throw WrappedRuntimeException.wrapIfNotRuntime(e);
 		}

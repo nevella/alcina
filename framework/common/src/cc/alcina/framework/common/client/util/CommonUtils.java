@@ -34,6 +34,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.gwt.core.client.GWT;
+
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -106,6 +112,8 @@ public class CommonUtils {
 			.stream("A,An,The,And,But,Or,Nor,For,Yet,So,As,In,Of,On,To,For,From,Into,LikeExcluded,Over,With,Upon"
 					.split(","))
 			.collect(Collectors.toSet());
+
+	static Logger logger = LoggerFactory.getLogger(CommonUtils.class);
 
 	public static void addIfNotNull(List l, Object o) {
 		if (o != null) {
@@ -1422,19 +1430,29 @@ public class CommonUtils {
 		return new LinkedHashSet<T>(Arrays.asList(values));
 	}
 
-	public static <T extends Collection> T shallowCollectionClone(T coll) {
+	public static <T extends Collection> T
+			shallowCollectionClone(T collection) {
 		try {
-			T c = null;
-			if (coll instanceof ArrayList) {
-				c = (T) ((ArrayList) coll).clone();
-			} else if (coll instanceof LinkedHashSet) {
-				c = (T) ((LinkedHashSet) coll).clone();
-			} else if (coll instanceof LiSet) {
-				c = (T) ((LiSet) coll).clone();
-			} else if (coll instanceof HashSet) {
-				c = (T) ((HashSet) coll).clone();
+			T clone = null;
+			if (collection instanceof ArrayList) {
+				clone = (T) ((ArrayList) collection).clone();
+			} else if (collection instanceof LinkedHashSet) {
+				clone = (T) ((LinkedHashSet) collection).clone();
+			} else if (collection instanceof LiSet) {
+				clone = (T) ((LiSet) collection).clone();
+			} else if (collection instanceof HashSet) {
+				clone = (T) ((HashSet) collection).clone();
+			} else {
+				if (GWT.isClient()) {
+					throw new UnsupportedOperationException();
+				} else {
+					logger.warn("Cloning unexpected shallow collection: {}",
+							collection.getClass());
+					clone = (T) Reflections.classLookup()
+							.newInstance(collection.getClass());
+				}
 			}
-			return c;
+			return clone;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

@@ -25,11 +25,12 @@ public interface PropertyAccessor {
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName);
 
+	public PropertyReflector getPropertyReflector(Class clazz,
+			String propertyName);
+
 	public Class getPropertyType(Class objectClass, String propertyName);
 
 	public Object getPropertyValue(Object bean, String propertyName);
-
-	public PropertyReflector property(Class clazz, String propertyName);
 
 	public void setPropertyValue(Object bean, String propertyName,
 			Object value);

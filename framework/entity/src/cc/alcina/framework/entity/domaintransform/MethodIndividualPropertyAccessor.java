@@ -37,6 +37,10 @@ public class MethodIndividualPropertyAccessor implements PropertyReflector {
 	public MethodIndividualPropertyAccessor(Class clazz, String propertyName) {
 		this.constructorTimeClass = clazz;
 		methodDeclaringClass = null;// be lazy
+		/*
+		 * 2020-04-15 -- really not sure about this lazy method approach -
+		 * trying without to see...
+		 */
 		Pattern indexedPattern = Pattern.compile("(.+)\\[(\\d+)\\]");
 		Matcher m = indexedPattern.matcher(propertyName);
 		if (m.matches()) {
@@ -46,6 +50,14 @@ public class MethodIndividualPropertyAccessor implements PropertyReflector {
 		} else {
 			this.propertyName = propertyName;
 		}
+		PropertyDescriptor pd = SEUtilities.getPropertyDescriptorByName(clazz,
+				propertyName);
+		if (pd == null) {
+			Ax.err("No property descriptor - %s.%s", clazz.getSimpleName(),
+					propertyName);
+		}
+		this.readMethod = pd.getReadMethod();
+		this.writeMethod = pd.getWriteMethod();
 	}
 
 	@Override

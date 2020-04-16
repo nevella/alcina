@@ -414,11 +414,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// removal
 		//
 		// on the client, if replaying, we want to refire these for the UI to
-		// notice ('maybeModifyAsPropertyChange'). on the server (db commit),
-		// it's a lot more efficient to not do that
+		// notice ('beforeDirectCollectionModification'). on the server (db
+		// commit),
+		// it's a lot more efficient to not do that. server-side, mvcc requires
+		// a writeable version
 		case ADD_REF_TO_COLLECTION: {
-			maybeModifyAsPropertyChange(token.object, event.getPropertyName(),
-					token.newTargetValue, CollectionModificationType.ADD);
+			beforeDirectCollectionModification(token.object,
+					event.getPropertyName(), token.newTargetValue,
+					CollectionModificationType.ADD);
 			Set set = (Set) propertyAccessor().getPropertyValue(token.object,
 					event.getPropertyName());
 			if (!set.contains(token.newTargetValue)) {
@@ -429,8 +432,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 			break;
 		case REMOVE_REF_FROM_COLLECTION: {
-			maybeModifyAsPropertyChange(token.object, event.getPropertyName(),
-					token.newTargetValue, CollectionModificationType.REMOVE);
+			beforeDirectCollectionModification(token.object,
+					event.getPropertyName(), token.newTargetValue,
+					CollectionModificationType.REMOVE);
 			Set set = (Set) propertyAccessor().getPropertyValue(token.object,
 					event.getPropertyName());
 			boolean wasContained = set.remove(token.newTargetValue);
@@ -611,6 +615,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 	 * If calling from the servlet layer, the object will normally not be
 	 * 'found' - so this function variant should be called, with the second
 	 * parameter equal to true
+	 * 
+	 * Order is critical here - fire first (so associations can handle
+	 * pre-delete) - then add transform (to queue) - then finally unregister
+	 * listeners and remove from backing object cache
 	 */
 	public DomainTransformEvent delete(Entity entity) {
 		if (!generateEventIfObjectNotFound() && getObject(entity) == null) {
@@ -623,9 +631,15 @@ public abstract class TransformManager implements PropertyChangeListener,
 		dte.setObjectClass(entity.provideEntityClass());
 		dte.setTransformType(TransformType.DELETE_OBJECT);
 		dte.setSource(entity);
-		addTransform(dte);
 		try {
+			/*
+			 * Order is critical here - fire first (so associations can handle
+			 * pre-delete) - then add transform (to queue) - then finally
+			 * unregister listeners and remove from backing object cache
+			 */
 			fireDomainTransform(dte);
+			addTransform(dte);
+			performDeleteObject(entity);
 			return dte;
 		} catch (DomainTransformException e) {
 			DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
@@ -1528,6 +1542,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return false;
 	}
 
+	protected void beforeDirectCollectionModification(Entity obj,
+			String propertyName, Object newTargetValue,
+			CollectionModificationType collectionModificationType) {
+		// for clients to force collection modifications to publish as property
+		// changes (when replaying remote events). mvcc, force a tx-writeable
+		// version of the object
+	}
+
 	/**
 	 * For subclasses Transform manager (client) explicitly doesn't check -
 	 * that's handled by (what's) the presented UI note - problems are mostly
@@ -1638,13 +1660,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected void maybeFireCollectionModificationEvent(
 			Class<? extends Object> collectionClass,
 			boolean fromPropertyChange) {
-	}
-
-	protected void maybeModifyAsPropertyChange(Entity obj, String propertyName,
-			Object newTargetValue,
-			CollectionModificationType collectionModificationType) {
-		// for clients to force collection modifications to publish as property
-		// changes (when replaying remote events)
 	}
 
 	protected void objectCreated(Entity entity) {
@@ -1846,46 +1861,61 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 			TransformManager tm = TransformManager.get();
 			ProcessEventToken token = tm.createProcessEventToken(event);
+			Entity entity = token.object;
 			switch (token.transformType) {
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_REF: {
-				tm.updateAssociation(event, token.object,
-						token.existingTargetObject, true);
-				tm.updateAssociation(event, token.object, token.newTargetObject,
+				tm.updateAssociation(event, entity, token.existingTargetObject,
+						true);
+				tm.updateAssociation(event, entity, token.newTargetObject,
 						false);
 				break;
 			}
 			case ADD_REF_TO_COLLECTION: {
-				tm.updateAssociation(event, token.object, token.newTargetObject,
+				tm.updateAssociation(event, entity, token.newTargetObject,
 						false);
 				break;
 			}
 			case REMOVE_REF_FROM_COLLECTION: {
-				tm.updateAssociation(event, token.object, token.newTargetObject,
+				tm.updateAssociation(event, entity, token.newTargetObject,
 						true);
 				break;
 			}
 			case DELETE_OBJECT: {
-				// PropertyAccessor propertyAccessor =
-				// Reflections.propertyAccessor();
-				// SEUtilities.iterateForPropertyWithAnnotation(entity,
-				// Association.class,
-				// new HasAnnotationCallback<Association>() {
-				// @Override
-				// public void apply(Association association,
-				// PropertyReflector propertyReflector) {
-				// if (association.cascadeDeletes()) {
-				// Object object = propertyReflector
-				// .getPropertyValue(entity);
-				// if (object instanceof Set) {
-				// for (Entity target : (Set<Entity>) object) {
-				// ThreadlocalTransformManager.get()
-				// .deleteObject(target, true);
-				// }
-				// }
-				// }
-				// }
-				// });
+				Reflections.iterateForPropertyWithAnnotation(
+						entity.provideEntityClass(), Association.class,
+						(association, propertyReflector) -> {
+							Object associated = propertyReflector
+									.getPropertyValue(entity);
+							if (association.cascadeDeletes()) {
+								if (associated instanceof Set) {
+									((Set<? extends Entity>) associated)
+											.forEach(Entity::delete);
+								} else if (associated instanceof Entity) {
+									((Entity) associated).delete();
+								} else {
+									Preconditions
+											.checkArgument(associated == null);
+								}
+							} else if (association.dereferenceOnDelete()) {
+								if (associated instanceof Set) {
+									propertyReflector.setPropertyValue(entity,
+											new LinkedHashSet<>());
+								} else if (associated instanceof Entity) {
+									propertyReflector.setPropertyValue(entity,
+											null);
+								} else {
+									Preconditions
+											.checkArgument(associated == null);
+								}
+							} else {
+								throw Ax.runtimeException(
+										"Association with no delete behaviour: %s.%s",
+										entity.provideEntityClass()
+												.getSimpleName(),
+										propertyReflector.getPropertyName());
+							}
+						});
 				break;
 			}
 			default:

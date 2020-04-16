@@ -74,7 +74,7 @@ public class PropertyPathAccessor {
 				this.accessors.length);
 		this.accessors = accessors;
 		this.accessors[idx] = Reflections.propertyAccessor()
-				.property(obj.getClass(), path);
+				.getPropertyReflector(obj.getClass(), path);
 	}
 
 	private Object get(Object obj, boolean type) {

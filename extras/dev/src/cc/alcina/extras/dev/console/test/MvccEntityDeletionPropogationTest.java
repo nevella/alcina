@@ -1,6 +1,8 @@
 package cc.alcina.extras.dev.console.test;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
@@ -10,6 +12,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.HashSetExtension;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
@@ -65,6 +68,8 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 					createdGroup.domain().addToProperty("memberUsers",
 							createdUser2);
 					createdUser2.delete();
+					List<IU> users = Domain.stream(userClass)
+							.collect(Collectors.toList());
 					Preconditions.checkState(
 							Domain.stream(userClass).count() == initialSize - 1,
 							"non-committed-tx1: userClass.count()!=initialSize-1");
@@ -75,7 +80,7 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 					Sx.commit();
 					tx1Latch2.countDown();
 					Preconditions.checkState(
-							Domain.stream(userClass).count() == initialSize + 1,
+							Domain.stream(userClass).count() == initialSize - 1,
 							"committed-tx1: userClass.count()!=initialSize-1");
 				} catch (Exception e) {
 					txLatch.countDown();
@@ -127,7 +132,6 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 	@Override
 	protected void run0() throws Exception {
 		username = "moew" + System.currentTimeMillis() + "@nodomain.com";
-		initialSize = Domain.stream(userClass).count();
 		txLatch = new CountDownLatch(2);
 		tx1Latch1 = new CountDownLatch(1);
 		tx1Latch2 = new CountDownLatch(1);
@@ -139,6 +143,9 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 		createdUser.setUserName(username);
 		createdGroup.domain().addToProperty("memberUsers", createdUser);
 		Sx.commit();
+		HashSetExtension.debugInstance = (HashSetExtension) createdGroup
+				.getMemberUsers();
+		initialSize = Domain.stream(userClass).count();
 		startTx1();
 		startTx2();
 		txLatch.await();
