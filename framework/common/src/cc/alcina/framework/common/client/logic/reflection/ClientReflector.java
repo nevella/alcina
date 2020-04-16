@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
@@ -73,6 +74,11 @@ public abstract class ClientReflector implements ClassLookup {
 	private Map<Class, Object> templateInstances = new HashMap<Class, Object>();
 
 	protected Map<String, Class> forNameMap = new HashMap<String, Class>();
+
+	CachingMap<Class<?>, List<PropertyReflector>> propertyReflectorsCache = new CachingMap<>(
+			beanClass -> ClientReflector.get().beanInfoForClass(beanClass)
+					.getPropertyReflectors().values().stream()
+					.collect(Collectors.toList()));
 
 	public ClientReflector() {
 		{
@@ -130,6 +136,11 @@ public abstract class ClientReflector implements ClassLookup {
 		throw new WrappedRuntimeException(
 				Ax.format("Class %s not reflect-instantiable", fqn),
 				SuggestedAction.NOTIFY_ERROR);
+	}
+
+	@Override
+	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+		return propertyReflectorsCache.get(beanClass);
 	}
 
 	@Override

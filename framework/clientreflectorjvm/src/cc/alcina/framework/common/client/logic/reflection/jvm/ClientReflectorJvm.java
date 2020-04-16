@@ -15,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
@@ -40,10 +41,13 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.AnnotationUtils;
+import cc.alcina.framework.entity.util.CachingConcurrentMap;
+import cc.alcina.framework.entity.util.JvmPropertyReflector;
 import cc.alcina.framework.entity.util.MethodWrapper;
 
 /**
@@ -117,6 +121,12 @@ public class ClientReflectorJvm extends ClientReflector {
 			2);
 
 	private CollectionFilter<String> filter;
+
+	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
+			clazz -> SEUtilities.getSortedPropertyDescriptors(clazz).stream()
+					.map(JvmPropertyReflector::new)
+					.collect(Collectors.toList()),
+			100);
 
 	public ClientReflectorJvm() {
 		try {
@@ -278,8 +288,7 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	@Override
 	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
-		// TODO Auto-generated method stub
-		return null;
+		return classPropertyReflectorLookup.get(beanClass);
 	}
 
 	@Override

@@ -67,7 +67,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		MemoryStat self = new MemoryStat(this);
 		parent.addChild(self);
 		self.objectMemory.walkStats(this, self.counter, o -> o == this
-				|| !MemoryStatProvider.class.isAssignableFrom(o.getClass()));
+				|| !self.objectMemory.isMemoryStatProvider(o.getClass()));
 		return self;
 	}
 

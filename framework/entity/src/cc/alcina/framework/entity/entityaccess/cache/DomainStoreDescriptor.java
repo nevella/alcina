@@ -123,6 +123,11 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		}
 
 		@Override
+		public boolean isMemoryStatProvider(Class<? extends Object> clazz) {
+			return MemoryStatProvider.class.isAssignableFrom(clazz);
+		}
+
+		@Override
 		public void walkStats(Object o, Counter counter,
 				Predicate<Object> filter) {
 			if (o == null) {

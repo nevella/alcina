@@ -109,6 +109,9 @@ public class MemoryStat {
 	public static abstract class ObjectMemory {
 		public abstract void dumpStats();
 
+		public abstract boolean
+				isMemoryStatProvider(Class<? extends Object> clazz);
+
 		public abstract void walkStats(Object o, Counter counter,
 				Predicate<Object> filter);
 	}
