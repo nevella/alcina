@@ -25,6 +25,8 @@ import cc.alcina.framework.common.client.collections.BidiConverter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.gwt.client.gwittir.widget.DateBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
@@ -56,7 +58,8 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
       return jsDate.toUTCString();
 		}-*/;
 	}
-@ClientInstantiable
+
+	@ClientInstantiable
 	public static class ISO_8601_DateRenderer
 			implements Renderer<Date, String> {
 		@Override
