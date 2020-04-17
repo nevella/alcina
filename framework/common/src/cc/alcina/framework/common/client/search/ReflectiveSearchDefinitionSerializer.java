@@ -107,10 +107,8 @@ public class ReflectiveSearchDefinitionSerializer
             SearchDefinition def = Registry.impl(AlcinaBeanSerializer.class)
                     .registerLookups(abbrevLookup, reverseAbbrevLookup)
                     .deserialize(serializedDef);
-            def.resetLookups();
             SearchDefinition defaultInstance = Reflections.classLookup()
                     .newInstance(def.getClass());
-            defaultInstance.resetLookups();
             defaultInstance.getCriteriaGroups().forEach(cg -> {
                 CriteriaGroup ocg = def.criteriaGroup(cg.getClass());
                 if (ocg == null) {
@@ -183,7 +181,6 @@ public class ReflectiveSearchDefinitionSerializer
         }
         SearchDefinition defaultInstance = Reflections.classLookup()
                 .newInstance(def.getClass());
-        defaultInstance.resetLookups();
         def.getCriteriaGroups().removeIf(cg -> {
             CriteriaGroup ocg = defaultInstance.criteriaGroup(cg.getClass());
             return ocg != null && ocg.equivalentTo(cg);
