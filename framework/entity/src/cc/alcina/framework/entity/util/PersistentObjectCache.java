@@ -5,6 +5,9 @@ import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.csobjects.ContentNode;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+
 public interface PersistentObjectCache<T> {
 	public Class<T> getPersistedClass();
 
@@ -32,6 +35,9 @@ public interface PersistentObjectCache<T> {
 
 	void remove(String path);
 
+	PersistentObjectCache<T>
+			withCreateIfNonExistent(boolean createIfNonExistent);
+
 	PersistentObjectCache<T> withRetainInMemory(boolean retainInMemory);
 
 	public static class SingletonCache<T> {
@@ -57,6 +63,21 @@ public interface PersistentObjectCache<T> {
 
 		private String getPath() {
 			return delegate.getPersistedClass().getName();
+		}
+
+		public synchronized void set(T value) {
+			this.value = value;
+		}
+	}
+
+	public interface ClusteredPersistentObjectCacheProvider {
+		<T> PersistentObjectCache<T> createCache(Class<T> clazz);
+
+		public static
+				PersistentObjectCache.ClusteredPersistentObjectCacheProvider
+				get() {
+			return Registry.impl(
+					PersistentObjectCache.ClusteredPersistentObjectCacheProvider.class);
 		}
 	}
 }

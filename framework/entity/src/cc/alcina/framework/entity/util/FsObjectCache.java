@@ -23,7 +23,6 @@ import cc.alcina.framework.entity.entityaccess.cache.LockUtils;
 import cc.alcina.framework.entity.entityaccess.cache.LockUtils.ClassStringKeyLock;
 
 public class FsObjectCache<T> implements PersistentObjectCache<T> {
-	public static final transient ThrowingFunction<String, ?> NULL_PATH_TO_VALUE = path -> null;
 
 	public static <C> FsObjectCache<C> singletonCache(Class<C> clazz) {
 		return new FsObjectCache<>(
@@ -52,6 +51,8 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	private Timer invalidationTimer;
 
 	private boolean retainInMemory;
+
+	private boolean createIfNonExistent;
 
 	public FsObjectCache(File root, Class<T> clazz,
 			ThrowingFunction<String, T> pathToValue) {
@@ -85,6 +86,12 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	public long getObjectInvalidationTime() {
 		return this.objectInvalidationTime;
+	}
+	@Override
+	public FsObjectCache<T>
+			withCreateIfNonExistent(boolean createIfNonExistent) {
+		this.createIfNonExistent = createIfNonExistent;
+		return this;
 	}
 
 	@Override
@@ -204,7 +211,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		}
 		File cacheFile = getCacheFile(path);
 		if (!cacheFile.exists() || !allowFromCachedObjects) {
-			if (pathToValue == NULL_PATH_TO_VALUE) {
+			if (!createIfNonExistent) {
 				return null;
 			}
 			try {
