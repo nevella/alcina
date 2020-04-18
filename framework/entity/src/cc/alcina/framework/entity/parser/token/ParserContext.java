@@ -466,7 +466,13 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		}
 		return result;
 	}
-
+	public void rewindToStartOfFirstSlice() {
+		startOffset =startOffsetOfSlice(matched.get(0));
+		matched.clear();
+		matchedByType.clear();
+		tokenCounts.clear();
+		resetSequence();
+	}
 	public int startOffsetOfSlice(AbstractParserSlice slice) {
 		Text firstText = slice.getFirstText();
 		int offset = 0;
