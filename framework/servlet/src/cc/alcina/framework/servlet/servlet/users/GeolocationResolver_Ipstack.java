@@ -44,7 +44,7 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
 					ipAddress, apiKey);
 			String result = ResourceUtilities.readUrlAsString(url);
 			ObjectNode node = (ObjectNode) new ObjectMapper().readTree(result);
-			if (!node.get("success").asBoolean()) {
+			if (node.has("success") && !node.get("success").asBoolean()) {
 				return "(unable to resolve ip adress)(probably usage limit)";
 			}
 			if (node.get("country_name").isNull()) {
