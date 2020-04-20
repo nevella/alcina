@@ -634,7 +634,7 @@ public class ResourceUtilities {
 		int bufLength = is.available() <= 1024 ? 1024 * 64 : is.available();
 		ByteArrayOutputStream baos = new ByteArrayOutputStream(bufLength);
 		writeStreamToStream(is, baos);
-		return baos.toByteArray();
+		return baos.toByteArray();	
 	}
 
 	public static String readStreamToString(InputStream is) throws IOException {

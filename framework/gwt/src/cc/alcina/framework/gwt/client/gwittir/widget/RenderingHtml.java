@@ -19,26 +19,55 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment.HorizontalAlignmentConstant;
+import com.google.gwt.user.client.ui.MouseListener;
+import com.google.gwt.user.client.ui.MouseWheelListener;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-
-import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
+import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 /**
- *
+ * 
+ * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
+ *         Cooper</a>
+ * 
  */
-public class BoundHTML extends AbstractBoundWidget<String>
-		implements MultilineWidget {
+@SuppressWarnings("deprecation")
+public class RenderingHtml<T> extends AbstractBoundWidget<T> {
 	private com.google.gwt.user.client.ui.HTML base;
 
-	/** Creates a new instance of Label */
-	public BoundHTML() {
-		this.init(null);
+	private T value;
+
+	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
+
+	private Renderer<T, String> titleRenderer = null;
+
+	public RenderingHtml() {
+		this.init();
 	}
 
-	public BoundHTML(String text) {
-		this.init(text);
+	public void addChangeListener(ClickListener clickListener) {
+		throw new UnsupportedOperationException("Not yet implemented");
+	}
+
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
+	}
+
+	public void addClickListener(ClickListener listener) {
+		this.base.addClickListener(listener);
+	}
+
+	public void addMouseListener(MouseListener listener) {
+		this.base.addMouseListener(listener);
+	}
+
+	public void addMouseWheelListener(MouseWheelListener listener) {
 	}
 
 	@Override
@@ -85,6 +114,15 @@ public class BoundHTML extends AbstractBoundWidget<String>
 		return retValue;
 	}
 
+	/**
+	 * Get the value of renderer
+	 * 
+	 * @return the value of renderer
+	 */
+	public Renderer<T, String> getRenderer() {
+		return this.renderer;
+	}
+
 	@Override
 	public String getStyleName() {
 		String retValue;
@@ -105,9 +143,13 @@ public class BoundHTML extends AbstractBoundWidget<String>
 		return retValue;
 	}
 
+	public Renderer<T, String> getTitleRenderer() {
+		return this.titleRenderer;
+	}
+
 	@Override
-	public String getValue() {
-		return this.base.getHTML().length() == 0 ? null : this.base.getHTML();
+	public T getValue() {
+		return value;
 	}
 
 	public boolean getWordWrap() {
@@ -117,15 +159,21 @@ public class BoundHTML extends AbstractBoundWidget<String>
 	}
 
 	@Override
-	public boolean isMultiline() {
-		return true;
-	}
-
-	@Override
 	public boolean isVisible() {
 		boolean retValue;
 		retValue = this.base.isVisible();
 		return retValue;
+	}
+
+	public void removeClickListener(ClickListener listener) {
+		this.base.removeClickListener(listener);
+	}
+
+	public void removeMouseListener(MouseListener listener) {
+		this.base.removeMouseListener(listener);
+	}
+
+	public void removeMouseWheelListener(MouseWheelListener listener) {
 	}
 
 	@Override
@@ -152,6 +200,16 @@ public class BoundHTML extends AbstractBoundWidget<String>
 		this.base.setPixelSize(width, height);
 	}
 
+	/**
+	 * Set the value of renderer
+	 * 
+	 * @param newrenderer
+	 *            new value of renderer
+	 */
+	public void setRenderer(Renderer<T, String> newrenderer) {
+		this.renderer = newrenderer;
+	}
+
 	@Override
 	public void setSize(String width, String height) {
 		this.base.setSize(width, height);
@@ -171,13 +229,21 @@ public class BoundHTML extends AbstractBoundWidget<String>
 		this.base.setTitle(title);
 	}
 
+	public void setTitleRenderer(Renderer<T, String> titleRenderer) {
+		this.titleRenderer = titleRenderer;
+	}
+
 	@Override
-	public void setValue(String value) {
+	public void setValue(T value) {
 		// ("Setting value "+ value, null );
 		Object old = this.getValue();
-		this.setHTML(value);
+		this.value = value;
+		this.setHTML(renderer.render(value));
+		if (titleRenderer != null) {
+			setTitle(titleRenderer.render(value));
+		}
 		if (this.getValue() != old && this.getValue() != null
-				&& !this.getValue().equals(old)) {
+				&& this.getValue().equals(old)) {
 			this.changes.firePropertyChange("value", old, this.getValue());
 		}
 	}
@@ -193,7 +259,7 @@ public class BoundHTML extends AbstractBoundWidget<String>
 	}
 
 	public void setWordWrap(boolean wrap) {
-		this.base.setWordWrap(wrap);
+		this.base.setStyleName("nowrap", !wrap);
 	}
 
 	@Override
@@ -206,9 +272,8 @@ public class BoundHTML extends AbstractBoundWidget<String>
 		this.base.unsinkEvents(eventBitsToRemove);
 	}
 
-	private void init(String text) {
-		base = text == null ? new com.google.gwt.user.client.ui.HTML()
-				: new com.google.gwt.user.client.ui.HTML(text);
+	private void init() {
+		base = new com.google.gwt.user.client.ui.HTML();
 		super.initWidget(base);
 	}
 }

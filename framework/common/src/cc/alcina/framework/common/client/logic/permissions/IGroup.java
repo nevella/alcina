@@ -13,7 +13,10 @@
  */
 package cc.alcina.framework.common.client.logic.permissions;
 
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
+import java.util.Stack;
 
 /**
  * 
@@ -31,10 +34,6 @@ public interface IGroup extends IVersionable {
 
 	public String getName();
 
-	public Set<IGroup> listMemberGroups();
-
-	public Set<IUser> listMemberUsers();
-
 	public void setGroupName(String name);
 
 	public void setMemberUsers(Set<? extends IUser> memberUsers);
@@ -45,5 +44,20 @@ public interface IGroup extends IVersionable {
 
 	default <IU extends IUser> boolean containsUser(IU user) {
 		return getMemberUsers().contains(user);
+	}
+
+	default boolean provideIsMemberOf(IGroup otherGroup) {
+		Set<IGroup> queued = new HashSet<>();
+		Stack<IGroup> toTraverse = new Stack<>();
+		toTraverse.add(this);
+		while (toTraverse.size() > 0) {
+			IGroup cursor = toTraverse.pop();
+			if (Objects.equals(cursor, otherGroup)) {
+				return true;
+			}
+			cursor.getMemberOfGroups().stream().filter(queued::add)
+					.forEach(toTraverse::add);
+		}
+		return false;
 	}
 }
