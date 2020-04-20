@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
@@ -50,11 +51,15 @@ public class ClientReflectorJvm extends ClientReflector {
 		return null;
 	}
 
-	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
+	public List<PropertyInfo> getWritableProperties(Class clazz) {
 		return null;
 	}
 	public static void checkClassAnnotations(Class clazz) {
 		return;
+	}
+	@Override
+	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+		return null;
 	}
 
 	class MethodWrapper implements com.totsp.gwittir.client.beans.Method {
