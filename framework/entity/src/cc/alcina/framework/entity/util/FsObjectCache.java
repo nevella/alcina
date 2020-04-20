@@ -70,8 +70,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	@Override
 	public T get(String path) {
-		ClassStringKeyLock lock = LockUtils
-				.obtainClassStringKeyLock(pathToValue.getClass(), path);
+		ClassStringKeyLock lock = getLock(path);
 		try {
 			lock.lock();
 			return get(path, true);
@@ -109,8 +108,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	@Override
 	public void persist(String path, T t) {
-		ClassStringKeyLock lock = LockUtils
-				.obtainClassStringKeyLock(pathToValue.getClass(), path);
+		ClassStringKeyLock lock = getLock(path);
 		try {
 			lock.lock();
 			File cacheFile = getCacheFile(path);
@@ -120,12 +118,17 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		}
 	}
 
+	private ClassStringKeyLock getLock(String path) {
+		ClassStringKeyLock lock = LockUtils
+				.obtainClassStringKeyLock(pathToValue==null?clazz:pathToValue.getClass(), path);
+		return lock;
+	}
+
 	/**
 	 * return false if no change
 	 */
 	public boolean persistIfModified(T t, String path) {
-		ClassStringKeyLock lock = LockUtils
-				.obtainClassStringKeyLock(pathToValue.getClass(), path);
+		ClassStringKeyLock lock = getLock(path);
 		try {
 			lock.lock();
 			File cacheFile = getCacheFile(path);
