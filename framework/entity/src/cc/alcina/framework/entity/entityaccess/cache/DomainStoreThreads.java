@@ -204,7 +204,7 @@ public class DomainStoreThreads {
 			return;
 		}
 		if (lock) {
-			maybeLogLock(DomainStoreLockAction.PRE_LOCK, lock);
+			maybeLogLock(DomainStoreLockAction.PRE_LOCK, false);
 			subgraphLock.writeLock().lock();
 			writeLockSubLock = sublock;
 		} else {
@@ -219,7 +219,7 @@ public class DomainStoreThreads {
 			}
 		}
 		maybeLogLock(lock ? DomainStoreLockAction.SUB_LOCK_ACQUIRED
-				: DomainStoreLockAction.UNLOCK, lock);
+				: DomainStoreLockAction.UNLOCK, false);
 	}
 
 	public void unlock(boolean write) {

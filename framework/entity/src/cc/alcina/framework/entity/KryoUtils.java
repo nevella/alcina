@@ -51,7 +51,7 @@ public class KryoUtils {
 	private static CachingMap<KryoPoolKey, KryoPool> kryosPool = new CachingConcurrentMap<>(
 			key -> new KryoPool(
 					ResourceUtilities.is(KryoUtils.class, "usePool")),
-			10);
+			50);
 
 	static Map<Class, Method> resolveMethods = new LinkedHashMap<>();
 
@@ -215,16 +215,29 @@ public class KryoUtils {
 		kryosPool.get(key).returnObject(kryo);
 	}
 
+	private static CachingMap<Class, Method> writeReplaceMethodCache = new CachingMap<>(
+			clazz -> {
+				try {
+					Method writeReplace = clazz
+							.getDeclaredMethod("writeReplace", new Class[0]);
+					writeReplace.setAccessible(true);
+					return writeReplace;
+				} catch (NoSuchMethodException e) {
+					return null;
+				}
+			});
+
 	private static Object writeReplace(Object object) throws Exception {
-		try {
-			Class<? extends Object> clazz = object.getClass();
-			Method writeReplace = clazz.getDeclaredMethod("writeReplace",
-					new Class[0]);
-			writeReplace.setAccessible(true);
-			return writeReplace.invoke(object);
-		} catch (NoSuchMethodException e) {
+		Class<? extends Object> clazz = object.getClass();
+		Method method = null;
+		synchronized (writeReplaceMethodCache) {
+			method = writeReplaceMethodCache.get(clazz);
 		}
-		return object;
+		if (method != null) {
+			return method.invoke(object);
+		} else {
+			return object;
+		}
 	}
 
 	protected static Kryo borrowKryo() {
