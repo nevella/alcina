@@ -214,7 +214,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	private static final String NAV_STYLE = "nav";
 
-	static int setCounter = 0;
 
 	private Binding topBinding;
 
@@ -1292,10 +1291,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.setStyleName("gwittir-BoundTable", true);
 		if (Ax.notBlank(oldStyleNames)) {
 			this.setStyleName(oldStyleNames);
-		}
-		if (++setCounter == 5) {
-			// should be number 5 in seq
-			int debug = 3;
 		}
 		esp.setWidget(this.table);
 	}

@@ -108,7 +108,6 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 			item.url = url;
 			item.urlString = url.toString();
 		} else {
-			int debug = 3;
 			// ignore straight jars
 			// item.evalMd5(inputStream);
 		}

@@ -35,7 +35,7 @@ public abstract class DataDomainBase<T extends DataDomainBase> extends Entity<T>
 	public static final String CONTEXT_FIRE_CREATION_DATE_EVENTS = DataDomainBase.class
 			.getName() + ".CONTEXT_FIRE_CREATION_DATE_EVENTS";
 
-	protected long id = 0;
+	protected volatile long id = 0;
 
 	private Date lastModificationDate;
 

@@ -20,7 +20,7 @@ import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
  *
  */
 public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG extends Entity & IGroup>
-		extends AbstractTaskPerformer {
+		extends MvccEntiityTransactionTest {
 	Class<IG> groupClass = (Class<IG>) AlcinaPersistentEntityImpl
 			.getImplementation(IGroup.class);
 
@@ -61,9 +61,10 @@ public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG exte
 					Preconditions.checkState(foundUser != null,
 							"committed-tx1: index not visible from tx1");
 				} catch (Exception e) {
-					txLatch.countDown();
+					notifyThreadException(e);
 					throw new WrappedRuntimeException(e);
 				} finally {
+					Transaction.ensureEnded();
 					txLatch.countDown();
 				}
 			}
@@ -82,7 +83,6 @@ public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG exte
 					Preconditions.checkState(foundUser == null,
 							"non-committed-tx1: index visible from tx2");
 					tx2Latch1.countDown();
-					;
 					tx1Latch2.await();
 					foundUser = Domain.byProperty(userClass, "email", username);
 					Preconditions.checkState(foundUser == null,
@@ -92,8 +92,10 @@ public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG exte
 					Preconditions.checkState(foundUser != null,
 							"committed-tx1: index not visible from thread tx2 (post-committed-tx1 tx)");
 				} catch (Exception e) {
+					notifyThreadException(e);
 					throw new WrappedRuntimeException(e);
 				} finally {
+					Transaction.ensureEnded();
 					txLatch.countDown();
 				}
 			}

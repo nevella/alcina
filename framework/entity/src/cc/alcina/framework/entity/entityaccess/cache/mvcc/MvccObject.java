@@ -6,4 +6,13 @@ public interface MvccObject<T extends Entity> {
     MvccObjectVersions<T> __getMvccVersions__();
 
     void __setMvccVersions__(MvccObjectVersions<T> mvccVersions__);
+
+	default void __debugResolvedVersion__(){
+		MvccObjectVersions<T> versions = __getMvccVersions__();
+		if(versions!=null){
+			versions.debugResolvedVersion();
+		}
+	}
+    
+    
 }

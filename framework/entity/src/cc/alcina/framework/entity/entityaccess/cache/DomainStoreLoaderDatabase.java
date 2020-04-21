@@ -238,7 +238,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			releaseConn(conn);
 		}
 		warmupTransaction.toDomainCommitting(
-				transformSequencer.getHighestVisibleTransactionTimestamp());
+				transformSequencer.getHighestVisibleTransactionTimestamp(),
+				store, store.applyTxToGraphCounter.getAndIncrement());
 		// get non-many-many obj
 		store.threads.lock(true);
 		// lazy tables, load a segment (for large db dev work)
@@ -792,7 +793,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	 */
 	private List<DomainTransformRequestPersistent> loadTransformRequests0(
 			Collection<Long> ids, Logger logger) throws Exception {
-		store.logger.warn("{} - loading transform request {}", store.name, ids);
+		store.logger.info("{} - loading transform request {}", store.name, ids);
 		Connection conn = getConnection();
 		try {
 			CachingMap<Long, DomainTransformRequestPersistent> loadedRequests = new CachingMap<>(

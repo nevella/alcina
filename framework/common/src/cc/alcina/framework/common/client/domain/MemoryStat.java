@@ -87,9 +87,6 @@ public class MemoryStat {
 					(k, v) -> perClassSize.merge(k, v, (v1, v2) -> v1 + v2));
 			stat.counter.perClassCount.forEach(
 					(k, v) -> perClassCount.merge(k, v, (v1, v2) -> v1 + v2));
-			if (perClassCount.size() > 0) {
-				int debug = 3;
-			}
 			for (MemoryStat child : stat.children) {
 				accumulate(child);
 			}

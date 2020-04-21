@@ -397,6 +397,9 @@ public class DomainTransformEvent
 
 	public void setObjectLocalId(long localId) {
 		this.objectLocalId = localId;
+		if(objectLocalId==0 && objectId==0){
+			int debug=3;
+		}
 	}
 
 	public void setObjectVersionNumber(Integer objectVersionNumber) {
@@ -450,6 +453,9 @@ public class DomainTransformEvent
 
 	public void setValueLocalId(long valueLocalId) {
 		this.valueLocalId = valueLocalId;
+		if(valueLocalId==0 && valueId==0){
+			int debug=3;
+		}
 	}
 
 	@Transient

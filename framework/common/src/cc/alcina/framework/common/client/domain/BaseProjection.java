@@ -102,7 +102,13 @@ public abstract class BaseProjection<T extends Entity>
 						}
 						T existing = lookup.get(keys);
 						if (existing != null) {
-							logDuplicateMapping(values, existing);
+							// duplicate mapping is allowed for null keys
+							for (Object o : keys) {
+								if (o != null) {
+									logDuplicateMapping(values, existing);
+									break;
+								}
+							}
 							return;
 						}
 					}

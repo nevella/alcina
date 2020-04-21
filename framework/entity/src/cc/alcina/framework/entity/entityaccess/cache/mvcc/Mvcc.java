@@ -3,11 +3,13 @@ package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
@@ -50,7 +52,7 @@ public class Mvcc {
 
 	private ClassTransformer classTransformer;
 
-	private Logger logger = org.slf4j.LoggerFactory.getLogger(getClass());
+	private static Logger logger = LoggerFactory.getLogger(Mvcc.class);
 
 	public Mvcc(DomainStore domainStore, DomainStoreDescriptor domainDescriptor,
 			DetachedEntityCache cache) {
@@ -85,4 +87,9 @@ public class Mvcc {
 		}
 		logger.info("(All tests passed)");
 	}
+
+	public static void debugSourceNotFound(DomainTransformException e) {
+		logger.warn("in vacuum?");
+	}
+
 }

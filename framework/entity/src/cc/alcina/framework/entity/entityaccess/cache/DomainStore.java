@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -703,8 +704,11 @@ public class DomainStore implements IDomainStore {
 		return existing == v;
 	}
 
+	AtomicLong applyTxToGraphCounter = new AtomicLong(0);
+
 	// we only have one thread allowed here - but they won't start blocking the
 	// reader thread
+	// TODO - optimise!
 	synchronized void
 			postProcess(DomainTransformPersistenceEvent persistenceEvent) {
 		DomainModificationMetadataProvider metadataProvider = persistenceEvent
@@ -712,6 +716,8 @@ public class DomainStore implements IDomainStore {
 		if (metadataProvider == null) {
 			metadataProvider = new SourceMetadataProvider(this);
 		}
+		DteToLocatorMapper objectLocator = new DteToLocatorMapper();
+		DteToLocatorMapper valueLocator = new DteToLocatorMapper(true);
 		{
 			List<DomainTransformEvent> dtes = (List) persistenceEvent
 					.getDomainTransformLayerWrapper().persistentEvents;
@@ -728,7 +734,7 @@ public class DomainStore implements IDomainStore {
 			List<DomainTransformEvent> filtered = filterInterestedTransforms(
 					dtes);
 			Multimap<EntityLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
-					.multimap(filtered, new DteToLocatorMapper());
+					.multimap(filtered, objectLocator);
 			for (DomainTransformEvent dte : filtered) {
 				DomainTransformEvent first = CommonUtils
 						.first(perObjectTransforms
@@ -761,7 +767,8 @@ public class DomainStore implements IDomainStore {
 					.getDomainTransformLayerWrapper().persistentRequests.get(0)
 							.getTransactionCommitTime();
 			Transaction.current().toDomainCommitting(
-					testSensitiveTimestamp(transactionCommitTime));
+					testSensitiveTimestamp(transactionCommitTime), this,
+					applyTxToGraphCounter.getAndIncrement());
 			threads.postProcessWriterThread = Thread.currentThread();
 			postProcessEvent = persistenceEvent;
 			health.domainStorePostProcessStartTime = System.currentTimeMillis();
@@ -771,7 +778,22 @@ public class DomainStore implements IDomainStore {
 			List<DomainTransformEvent> filtered = filterInterestedTransforms(
 					dtes);
 			Multimap<EntityLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
-					.multimap(filtered, new DteToLocatorMapper());
+					.multimap(filtered, objectLocator);
+			Set<EntityLocator> createdAndDeleted = perObjectTransforms
+					.entrySet().stream().filter(e -> {
+						DomainTransformEvent first = e.getValue().get(0);
+						DomainTransformEvent last = CommonUtils
+								.last(e.getValue());
+						return last
+								.getTransformType() == TransformType.DELETE_OBJECT
+								&& first.getTransformType() == TransformType.CREATE_OBJECT;
+					}).map(e -> e.getKey()).collect(Collectors.toSet());
+			if (createdAndDeleted.size() > 0) {
+				filtered.removeIf(dte -> createdAndDeleted
+						.contains(objectLocator.getKey(dte))
+						|| createdAndDeleted
+								.contains(valueLocator.getKey(dte)));
+			}
 			Set<Entity> indexAtEnd = new LinkedHashSet<>();
 			metadataProvider.registerTransforms(filtered);
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
@@ -1618,13 +1640,15 @@ public class DomainStore implements IDomainStore {
 		}
 
 		public void appendEvaluatedValueFilter(Set<E> values) {
-			if (stream == null) {
-				if (values.size() == 0) {
-					empty = true;
-				}
-				stream = values.stream();
+			if (values == null || values.size() == 0) {
+				empty = true;
+				stream = Stream.empty();
 			} else {
-				stream = stream.filter(values::contains);
+				if (stream == null) {
+					stream = values.stream();
+				} else {
+					stream = stream.filter(values::contains);
+				}
 			}
 		}
 
@@ -1653,21 +1677,35 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	@FunctionalInterface
+	interface LocalReplacementCreationObjectResolver
+			extends Function<Long, Entity> {
+	}
+
 	class SubgraphTransformManagerPostProcess extends SubgraphTransformManager {
+		private LocalReplacementCreationObjectResolver localReplacementCreationObjectResolver;
+
 		public void addPropertyStore(DomainClassDescriptor descriptor) {
 			((PropertyStoreAwareMultiplexingObjectCache) store.getCache())
 					.addPropertyStore(descriptor);
 		}
 
-		// if (localId != 0
-		// && localReplacementCreationObjectResolver != null) {
-		// newInstance = localReplacementCreationObjectResolver
-		// .apply(localId);
-		// }
+		@Override
+		protected Entity getObjectForCreate(DomainTransformEvent event) {
+			Entity localReplacement = localReplacementCreationObjectResolver
+					.apply(event.getObjectLocalId());
+			if (localReplacement != null) {
+				store.getCache().remove(localReplacement);
+				localReplacement.setId(event.getObjectId());
+				store.getCache().put(localReplacement);
+				TransformManager.registerLocalObjectPromotion(localReplacement);
+			}
+			return localReplacement;
+		}
+
 		public void setLocalReplacementCreationObjectResolver(
 				LocalReplacementCreationObjectResolver localReplacementCreationObjectResolver) {
-			classLookup.setLocalReplacementCreationObjectResolver(
-					localReplacementCreationObjectResolver);
+			this.localReplacementCreationObjectResolver = localReplacementCreationObjectResolver;
 		}
 
 		@Override

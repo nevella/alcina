@@ -1229,9 +1229,6 @@ public class SEUtilities {
 			if (priorNonWhitespace) {
 				text = text.substring(1);
 			}
-			if (text.equals("‘. ")) {
-				int debug = 3;
-			}
 		}
 		return text;
 	}

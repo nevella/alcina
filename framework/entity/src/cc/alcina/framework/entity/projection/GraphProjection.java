@@ -637,9 +637,6 @@ public class GraphProjection {
 			}
 		}
 		Class sourceClass = source.getClass();
-		if (sourceClass.getName().contains("OpsolGroup")) {
-			int debug = 3;
-		}
 		boolean checkReachable = false;
 		if (!easysChecked) {
 			if (sourceClass == Timestamp.class && replaceTimestampsWithDates) {

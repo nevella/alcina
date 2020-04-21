@@ -281,7 +281,7 @@ public class DevConsoleCommandInternalMetrics {
                 args = matcher.group(1)
                         + new JSONArray(matcher.group(2)).toString(2);
             } catch (Exception e) {
-                int debug = 3;
+            	//iignore
             }
             if (outputArgs) {
                 Ax.out("-----------\n%s\n", args);

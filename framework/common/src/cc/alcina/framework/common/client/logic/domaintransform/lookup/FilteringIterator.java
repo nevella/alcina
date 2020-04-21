@@ -48,9 +48,6 @@ public class FilteringIterator<E> implements Iterator<E> {
 			throw new NoSuchElementException();
 		}
 		resetPeeked();
-		if (next == null) {
-			int debug = 3;
-		}
 		return next;
 	}
 

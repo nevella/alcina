@@ -3,25 +3,17 @@ package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 /**
- * 
- * FIXME - not sure why the various db ids are here. Probably incorrect, early
- * thinking about transaction writing...see package-info
- * 
- * Could be that they're just informational too...
+ *
+ * committingSequenceId is key for ordering in-flight committed txs
  * 
  * @author nick@alcina.cc
  *
  */
 class StoreTransaction {
-	long committedDbDomainTransformRequestId;
-
-	/*
-	 * This *must* be in sync with the db transaction when performing initial
-	 * load
-	 */
-	long committedKafkaDomainTransformRequestIdLogId;
 
 	DomainStore store;
+
+	public long committingSequenceId;
 
 	public StoreTransaction(DomainStore store) {
 		this.store = store;

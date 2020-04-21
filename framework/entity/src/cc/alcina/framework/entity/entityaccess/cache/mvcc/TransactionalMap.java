@@ -109,6 +109,24 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		return null;
 	}
 
+	@Override
+	public boolean containsKey(Object key) {
+		if (transactionLayers == null) {
+			return base.wasRemoved(key) ? false : base.wasModified(key);
+		}
+		List<Layer> visibleLayers = visibleLayers();
+		for (int idx = visibleLayers.size() - 1; idx >= 0; idx--) {
+			Layer layer = visibleLayers.get(idx);
+			if (layer.wasRemoved(key)) {
+				return false;
+			}
+			if (layer.wasModified(key)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public boolean isSorted() {
 		return false;
 	}
@@ -126,12 +144,15 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				value == null || valueClass.isAssignableFrom(value.getClass()));
 		V existing = get(key);
 		Layer layer = ensureLayer();
-		layer.put(key, value, existing);
+		layer.put(key, value, containsKey(key));
 		return existing;
 	}
 
 	@Override
 	public V remove(Object key) {
+		if (!containsKey(key)) {
+			return null;
+		}
 		V existing = get(key);
 		Layer layer = ensureLayer();
 		layer.remove((K) key);
@@ -167,7 +188,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				Layer layer0 = mergedReplace.get(idx);
 				Layer layer1 = mergedReplace.get(idx + 1);
 				if (layer1.combinedMapSize() * 10 > layer0.combinedMapSize()) {
-					Layer merged = layer0.merge(layer1);
+					Layer merged = layer0.merge(layer1, mergedReplace, idx - 1);
 					mergedReplace.remove(idx);
 					// not idx+1 - we've just removed idx (but essentially
 					// removing both old layers)
@@ -215,6 +236,14 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		return transactionLayers.get(transaction);
 	}
 
+	/*
+	 * TODO - this is probably the most expensive piece of layered code. I've
+	 * chosen not to cache the visibleLayers result per-tx ... to avoid vacuum
+	 * cost ... but maybe return a custom list ... something more specialised? A
+	 * lot of the time visible active tx layers will be empty for instance.
+	 * 
+	 * Initally, tried to run this without synchronization with vacuum. 
+	 */
 	private List<Layer> visibleLayers() {
 		if (transactionLayers == null) {
 			return baseLayerList;
@@ -224,9 +253,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			List<Layer> transactionLayersSnapshot = new ArrayList<>();
 			visibleLayers.add(base);
 			/*
-			 * To avoid synchronization, copy visible layers *before* merged
-			 * layers (because vacuum modifies visible layers *after* merged
-			 * layers)
+			 * To avoid synchronization, copy active-visible-tx layers *before*
+			 * merged layers (because vacuum modifies visible layers *after*
+			 * merged layers)
 			 */
 			for (Transaction committed : transaction.committedTransactions
 					.values()) {
@@ -332,6 +361,16 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
+	/*
+	 * // trickiest thing about this class is actually keeping track of size a
+	 * la delta in this layer
+	 * 
+	 * delta is size("key in modified, not in containsKey() of older layers") -
+	 * size(wasRemoved)
+	 * 
+	 * if key is in modified,
+	 * 
+	 */
 	class Layer {
 		private int added;
 
@@ -350,41 +389,94 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		/*
-		 * returns a new non-transaction layer containing the union of these two
+		 * returns a new non-live-transaction layer containing the union of
+		 * these two
 		 */
-		public Layer merge(Layer higherLayer) {
+		public Layer merge(Layer newerLayer, List<Layer> olderLayers,
+				int newestOlderLayerIndex) {
 			Layer merged = new Layer(null);
 			if (hasRemoved()) {
 				merged.ensureRemoved().putAll(ensureRemoved());
+				merged.ensureRemoved().keySet()
+						.removeAll(newerLayer.modified.keySet());
+			}
+			if (newerLayer.hasRemoved()) {
+				merged.ensureRemoved().putAll(newerLayer.ensureRemoved());
 			}
 			merged.modified.putAll(modified);
+			merged.modified.putAll(newerLayer.modified);
 			if (merged.hasRemoved()) {
-				merged.ensureRemoved().keySet()
-						.removeAll(higherLayer.modified.keySet());
-			}
-			if (higherLayer.hasRemoved()) {
 				merged.modified.keySet()
-						.removeAll(higherLayer.ensureRemoved().keySet());
+						.removeAll(merged.ensureRemoved().keySet());
 			}
-			if (higherLayer.hasRemoved()) {
-				merged.ensureRemoved().putAll(higherLayer.ensureRemoved());
+			/*
+			 * now ... how many of merged.modified were in fact added?
+			 * 
+			 * Other way to do this would be to have three (lazy) maps - added,
+			 * modified, removed - per layer
+			 * 
+			 * We also clean up removed - if not contained in older layers, just
+			 * remove it
+			 */
+			for (K key : merged.modified.keySet()) {
+				boolean added = true;
+				for (int idx = newestOlderLayerIndex; idx >= 0; idx++) {
+					Layer layer = olderLayers.get(idx);
+					if (layer.wasRemoved(key)) {
+						break;// yep, added
+					}
+					if (layer.wasModified(key)) {
+						added = false;
+						break;// nope
+					}
+				}
+				if (added) {
+					merged.added++;
+				}
 			}
-			merged.modified.putAll(higherLayer.modified);
+			if (merged.hasRemoved()) {
+				for (Iterator<K> itr = merged.removed.keySet().iterator(); itr
+						.hasNext();) {
+					K key = itr.next();
+					boolean drop = true;
+					for (int idx = newestOlderLayerIndex; idx >= 0; idx++) {
+						Layer layer = olderLayers.get(idx);
+						if (layer.wasRemoved(key)) {
+							break;// will have no effect on combined operations;
+									// drop
+						}
+						if (layer.wasModified(key)) {
+							drop = false;
+							break;// will have an effect on combined operations
+						}
+					}
+					if (drop) {
+						itr.remove();
+					}
+				}
+			}
 			return merged;
 		}
 
-		public void put(K key, V value, V existing) {
+		public void put(K key, V value, boolean existing) {
 			modified.put(key, value);
-			if (existing == null) {
-				added++;
+			if (!existing) {
+				Boolean wasInRemoved = null;
 				if (hasRemoved()) {
-					ensureRemoved().remove(key);
+					wasInRemoved = ensureRemoved().remove(key);
+				}
+				if (wasInRemoved == null) {
+					added++;
+				} else {
+					// effective size will increment because removed from
+					// removed...
 				}
 			}
 		}
 
 		public void remove(K key) {
 			ensureRemoved().put(key, Boolean.TRUE);
+			modified.remove(key);
 		}
 
 		@Override
@@ -430,6 +522,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
+	/*
+	 * Does not allow modification of any layers _visible to this tx_ during
+	 * iteration.
+	 */
 	class TransactionalEntrySet extends AbstractSet<Entry<K, V>> {
 		private List<Layer> visibleLayers;
 
@@ -478,8 +574,18 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return filteringIterator;
 		}
 
+		private int size = -1;
+
 		@Override
+		//
 		public int size() {
+			if (size == -1) {
+				size = calculateSize();
+			}
+			return size;
+		}
+
+		private int calculateSize() {
 			return visibleLayers.stream()
 					.collect(Collectors.summingInt(layer -> layer.added
 							- (layer.hasRemoved() ? layer.removed.size() : 0)));

@@ -47,9 +47,6 @@ class Oracle {
 			Packet command = packet.getCorrespondingCommandPacket();
 			if (command.fromDebugger) {
 				if (endpoint.isDebuggee()) {
-					if (command.messageName.equals("FieldsWithGeneric")) {
-						int debug = 3;
-					}
 					predictForSeries = command.series;
 					switch (command.messageName) {
 					case "ClassesBySignature":
@@ -194,11 +191,6 @@ class Oracle {
 
 	public boolean onPredictivePacketHit(Packet command,
 			Packet predictiveResponse) {
-		switch (command.messageName) {
-		case "Frames":
-			int debug = 3;
-			break;
-		}
 		return isCacheable(predictiveResponse);
 	}
 

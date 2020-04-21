@@ -56,7 +56,7 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 	// has @GwtTransient annotation because we don't want to send
 	// server-generated local ids to the client
 	@GwtTransient
-	long localId;
+	volatile long localId;
 
 	public void delete() {
 		Domain.delete(this);
@@ -134,6 +134,8 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 	 * same localid (but different originating vms), but with the cost of more
 	 * complicated transforms and transform persistence
 	 * 
+	 * This method will always return the same result irresepective of mvcc version, so is not rerouted
+	 * 
 	 */
 	@Override
 	public int hashCode() {
@@ -206,29 +208,11 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 		return getId() != 0;
 	}
 
-	/**
-	 * used - and why? Because an object we map will _always_ have either a
-	 * local or persistent id - which means (for the lifetime of the
-	 * client/webapp) - that the hash code will be unique. OK - but if we get
-	 * the conceptually same object from the server - later - with a db id, and
-	 * we check if a tm collection contains that object, it'll say "no" sad.
-	 * probably some concept of "remapping listener" wouldn't be bad in the tm
-	 * just in case of user sets/maps which need remapping
-	 *
-	 * hmm - wait - if we remap, we're making all sorts of problems for anything
-	 * in a set better to not - and use a set implementation in the tm which
-	 * maybe handles this sort of thing
-	 *
-	 * in fact...hmmm - used to be gethash/sethash, but _any way_ is really
-	 * wrong objects from db are different to client-created objects - use one
-	 * of the getobject(class,id,localid) methods if you want to look up
-	 *
-	 */
-	// public void clearHash() {
-	// hash = 0;
-	// }
 	// no listeners - this should be invisible to transform listeners
 	public void setLocalId(long localId) {
+		if(this.localId!=0){
+			int debug=3;
+		}
 		this.localId = localId;
 	}
 

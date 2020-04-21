@@ -367,10 +367,13 @@ public class DomainTransformPersistenceQueue {
 					}
 					if (id != null && !closed.get()) {
 						try {
+							Transaction.ensureBegun();
 							ThreadedPermissionsManager.cast().pushSystemUser();
 							publishTransformEvent(id);
 						} finally {
+							Transaction.ensureBegun();
 							ThreadedPermissionsManager.cast().popSystemUser();
+							Transaction.ensureEnded();
 						}
 					}
 				} catch (Exception e) {

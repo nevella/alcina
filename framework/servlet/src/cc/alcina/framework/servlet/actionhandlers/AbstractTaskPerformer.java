@@ -71,7 +71,7 @@ public abstract class AbstractTaskPerformer implements Runnable {
 		return this;
 	}
 
-	private void run(boolean throwExceptions) {
+	protected void run(boolean throwExceptions) {
 		KnownJob knownJob = getKnownJob();
 		try {
 			LooseContext.push();

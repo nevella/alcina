@@ -15,7 +15,6 @@ class Accessor {
     public Accessor() {
         try {
             model();
-            int debug = 3;
         } catch (Exception e) {
             throw new WrappedRuntimeException(e);
         }

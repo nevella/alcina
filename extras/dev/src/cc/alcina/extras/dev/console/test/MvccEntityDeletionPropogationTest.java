@@ -12,10 +12,9 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.HashSetExtension;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 import cc.alcina.framework.servlet.Sx;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 /**
  * 
@@ -23,7 +22,7 @@ import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
  *
  */
 public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG extends Entity & IGroup>
-		extends AbstractTaskPerformer {
+		extends MvccEntiityTransactionTest {
 	Class<IG> groupClass = (Class<IG>) AlcinaPersistentEntityImpl
 			.getImplementation(IGroup.class);
 
@@ -55,6 +54,7 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 					Preconditions.checkState(
 							createdGroup.containsUser(createdUser),
 							"pre-delete: referenced group does not contain user");
+					List removedVersions = Transactions.getRemovedVersions(createdUser);
 					createdUser.delete();
 					Preconditions.checkState(
 							Domain.stream(userClass).count() == initialSize - 1,
@@ -83,9 +83,10 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 							Domain.stream(userClass).count() == initialSize - 1,
 							"committed-tx1: userClass.count()!=initialSize-1");
 				} catch (Exception e) {
-					txLatch.countDown();
+					notifyThreadException(e);
 					throw WrappedRuntimeException.wrapIfNotRuntime(e);
 				} finally {
+					Transaction.ensureEnded();
 					txLatch.countDown();
 				}
 			}
@@ -121,8 +122,10 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 							Domain.stream(userClass).count() == initialSize - 1,
 							"committed-tx1: userClass.count()!=initialSize-1 thread tx2 (post-committed-tx1 tx)");
 				} catch (Exception e) {
+					notifyThreadException(e);
 					throw WrappedRuntimeException.wrapIfNotRuntime(e);
 				} finally {
+					Transaction.ensureEnded();
 					txLatch.countDown();
 				}
 			}
@@ -143,8 +146,8 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 		createdUser.setUserName(username);
 		createdGroup.domain().addToProperty("memberUsers", createdUser);
 		Sx.commit();
-		HashSetExtension.debugInstance = (HashSetExtension) createdGroup
-				.getMemberUsers();
+//		HashSetExtension.debugInstance = (HashSetExtension) createdGroup
+//				.getMemberUsers();
 		initialSize = Domain.stream(userClass).count();
 		startTx1();
 		startTx2();

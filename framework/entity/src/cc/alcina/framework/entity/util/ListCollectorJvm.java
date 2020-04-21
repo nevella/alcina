@@ -101,9 +101,6 @@ public class ListCollectorJvm extends ListCollector {
 		}
 
 		public void add(T t) {
-			if (addedOther) {
-				int debug = 3;
-			}
 			elementSize.incrementAndGet();
 			queue.add(t);
 		}

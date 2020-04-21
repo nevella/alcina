@@ -94,11 +94,6 @@ public class StatsFilter extends CollectionProjectionFilter {
         if (bypass(context.field)) {
             return null;
         }
-        if (original.getClass().getName().endsWith("Shipment")) {
-            if (Math.random() < 0.02) {
-                int debug = 3;
-            }
-        }
         String toPath = noPath ? "..." : context.toPath(!noPathToString);
         visited.put(context.projectedOwner, toPath);
         visited.put(filtered, toPath);

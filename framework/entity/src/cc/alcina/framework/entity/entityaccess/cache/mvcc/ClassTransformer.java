@@ -217,7 +217,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 7;
+		private static final transient int VERSION = 8;
 
 		transient TopicSupport<MvccCorrectnessIssue> correctnessIssueTopic = TopicSupport
 				.localAnonymousTopic();
@@ -558,7 +558,6 @@ class ClassTransformer {
 				Node parent = expr.getParentNode().get();
 				if (parent instanceof ReturnStmt) {
 				}
-				int debug = 3;
 			}
 
 			@Override
@@ -803,6 +802,15 @@ class ClassTransformer {
 							continue;
 						}
 						if (method.getName().matches("provideEntityClass")) {
+							continue;
+						}
+						/*
+						 * FIXME - reroute to base? 
+						 */
+						if (method.getName().matches("equals")) {
+							continue;
+						}
+						if (method.getName().matches("hashCode")) {
 							continue;
 						}
 						/*

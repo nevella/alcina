@@ -21,12 +21,14 @@ class Vacuum {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
+	 boolean paused;
+
 	public void addVacuumable(Vacuumable vacuumable) {
 		Transaction transaction = Transaction.current();
 		if (!vacuumables.containsKey(transaction)) {
 			synchronized (queueCreationMonitor) {
 				if (!vacuumables.containsKey(transaction)) {
-					logger.warn("added vacuumable transaction: {}",
+					logger.info("added vacuumable transaction: {}",
 							transaction);
 					vacuumables.put(transaction, new ConcurrentHashMap<>());
 				}
@@ -46,15 +48,24 @@ class Vacuum {
 		if (executor.getActiveCount() > 2) {
 			return;
 		}
-		executor.execute(() -> vacuum());
+		executor.execute(() -> {
+			vacuum();
+		});
 	}
 
 	/*
 	 * synchronized semantic - only called from single-thread executor
 	 */
 	private synchronized void vacuum() {
+		while(paused){
+			try {
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 		Transaction.begin(TransactionPhase.VACUUM_BEGIN);
-		logger.debug("transactions with vacuumables: {} : {}",
+		logger.debug("vacuum: transactions with vacuumables: {} : {}",
 				vacuumables.size(), vacuumables.keySet());
 		List<Transaction> vacuumableTransactions = Transactions.get()
 				.getVacuumableCommittedTransactions();
@@ -69,7 +80,8 @@ class Vacuum {
 				logger.debug("removed vacuumable transaction: {}", transaction);
 			}
 		}
-		Transaction.current().toVacuumEnded();
+		Transaction.current().toVacuumEnded(vacuumableTransactions);
+		logger.debug("vacuum: end");
 		Transaction.end();
 	}
 

@@ -27,7 +27,6 @@ public abstract class LoginAttempt extends Entity<LoginAttempt> {
 	private String userAgent;
 
 	public LoginAttempt() {
-		int debug = 3;
 	}
 
 	public Date getDate() {

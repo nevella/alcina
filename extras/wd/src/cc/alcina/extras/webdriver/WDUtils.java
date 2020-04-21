@@ -482,7 +482,6 @@ public class WDUtils {
 				if (e instanceof InvalidSelectorException) {
 					throw e;
 				}
-				int debug = 3;
 			}
 			if (timeout == 0.0) {
 				break;

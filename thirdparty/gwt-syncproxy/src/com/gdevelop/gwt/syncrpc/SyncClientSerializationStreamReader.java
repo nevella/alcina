@@ -552,9 +552,6 @@ public class SyncClientSerializationStreamReader
         int maxSub = PRELUDE.length();
         int backslashCount = 0;
         for (int i = 0; i < encoded.length(); i++) {
-            if (i >= encoded.length() - 2) {
-                int debug = 3;
-            }
             char ch = encoded.charAt(i);
             char chl1 = i == 0 ? 0 : encoded.charAt(i - 1);
             if (inStr) {

@@ -7,12 +7,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
+import cc.alcina.framework.entity.projection.GraphProjection;
 
 /**
  * Note that like a TransactionalMap, the owning MvccObject will not be
@@ -44,9 +46,11 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 
 	private volatile ConcurrentHashMap<Transaction, ObjectVersion<T>> versions = new ConcurrentHashMap<>();
 
-	// never changes (for a given class/id or class/clientinstance/localid
-	// tuple). fields can be updated by vacuum if not accessible via any
-	// transaction
+	// object pointed to by this field never changes (for a given class/id or
+	// class/clientinstance/localid
+	// tuple) - it is the 'domain identity'. Its fields can be updated by vacuum
+	// if not accessible from any
+	// active transaction
 	private volatile T baseObject;
 
 	/*
@@ -59,8 +63,8 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 	private T __mostRecentWritable;
 
 	/*
-	 * synchronization - either a object t for this domainstore (so no sync
-	 * needed), or accessed via a block synced on 't'
+	 * synchronization - either a newly created object t for this domainstore
+	 * (so no sync needed), or accessed via a block synced on 't'
 	 */
 	MvccObjectVersions(T t, Transaction initialTransaction,
 			boolean initialObjectIsWriteable) {
@@ -149,12 +153,17 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 				// looking at version.object fields)
 				Transactions.copyObjectFields(version.object, baseObject);
 			}
+			Transactions.debugRemoveVersion(baseObject, version);
 			versions.remove(transaction);
 			if (versions.isEmpty()) {
+				logger.trace("removed mvcc versions: {} : {}", baseObject,
+						baseObject.hashCode());
 				((MvccObject) baseObject).__setMvccVersions__(null);
 			}
 		}
 	}
+
+	public static int debugRemoval = 0;
 
 	private void putVersion(ObjectVersion<T> version) {
 		versions.put(version.transaction, version);
@@ -173,12 +182,8 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 		if (version != null && version.isCorrectWriteableState(write)) {
 			return version.object;
 		}
-		if (versions.isEmpty()) {
+		if (versions.isEmpty() && !write) {
 			return baseObject;
-		}
-		version = versions.get(transaction);
-		if (version != null && version.isCorrectWriteableState(write)) {
-			return version.object;
 		}
 		Transaction mostRecentTransaction = transaction
 				.mostRecentPriorTransaction(versions.keys(),
@@ -187,7 +192,7 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 										.provideEntityClass()));
 		T mostRecentObject = null;
 		/*
-		 * mostRecent will be null if just created
+		 * mostRecentVersion will be null if just created
 		 */
 		ObjectVersion<T> mostRecentVersion = mostRecentTransaction == null
 				? null
@@ -223,5 +228,25 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 			__mostRecentWritable = resolved;
 		}
 		return resolved;
+	}
+
+	void debugResolvedVersion() {
+		try {
+			T resolved = resolve0(false);
+			long id = (long) SEUtilities
+					.getFieldByName(resolved.getClass(), "id").get(resolved);
+			long localId = (long) SEUtilities
+					.getFieldByName(resolved.getClass(), "localId")
+					.get(resolved);
+			// if (id == 0 && localId == 0) {
+			// synchronized (Transactions.debugMonitor) {
+			// int debug = 3;
+			// }
+			// }
+			Ax.out("dbg resolved: %s %s %s", id, localId,
+					System.identityHashCode(resolved));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }

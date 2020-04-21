@@ -265,9 +265,6 @@ public class DevConsoleRemote {
 		private void putCallerId() {
 			this.callerClientInstanceUid = LooseContext
 					.get(CONTEXT_CALLER_CLIENT_INSTANCE_UID);
-			if (this.callerClientInstanceUid == null) {
-				int debug = 3;
-			}
 		}
 	}
 

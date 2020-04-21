@@ -19,7 +19,6 @@ public class HttpAcceptorHandler extends AbstractHandler {
         String requestJson = ResourceUtilities.readClazzp("tmp.json");
         HttpTransportModel transportRequest = JacksonUtils
                 .deserialize(requestJson, HttpTransportModel.class);
-        int debug = 3;
     }
 
     @Override

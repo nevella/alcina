@@ -1665,9 +1665,6 @@ public class DOM {
 		EventTarget eventTarget = event.getEventTarget();
 		String lcType = event.getType().toLowerCase();
 		int eventTypeInt = Event.getTypeInt(lcType);
-		if (lcType.equals("click")) {
-			int debug = 3;
-		}
 		if (recentDispatches.stream()
 				.anyMatch(di -> di.dispatchedToListener(event, listener))) {
 			return;

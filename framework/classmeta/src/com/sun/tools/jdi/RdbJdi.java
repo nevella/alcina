@@ -116,7 +116,6 @@ public class RdbJdi {
 		try {
 			PredictorToken token = new PredictorToken(bytes, null);
 			long objectRefId = token.commandStream().readObjectRef();
-			int debug = 3;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -156,7 +155,6 @@ public class RdbJdi {
 						// earlyBreakpointResumes.merge(breakpoint.thread.ref,
 						// 1,
 						// (k, v) -> v + 1);
-						int debug = 3;
 					} else {
 						Ax.out("Breakpoint: ref %s (real breakpoint)",
 								breakpoint.thread.ref);
@@ -431,9 +429,6 @@ public class RdbJdi {
 			int sentCount = earlyBreakpointResumes.getOrDefault(thread, 0);
 			earlyBreakpointResumes.put(thread,
 					sentCount <= 0 ? 0 : sentCount - 1);
-			if (sentCount != 0) {
-				int debug = 3;
-			}
 			return sentCount == 0;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -445,7 +440,6 @@ public class RdbJdi {
 			PredictorToken token = new PredictorToken(null, bytes);
 			CapabilitiesNew o = CapabilitiesNew.waitForReply(vm,
 					token.replyStream());
-			int debug = 3;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

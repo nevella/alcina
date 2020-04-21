@@ -91,6 +91,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -316,6 +317,8 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		entity = ensureNonProxy(entity);
 		deleted.add(entity);
+//		Ax.out("dbg deletion: %s %s %s %s",entity.getId(),entity.getLocalId(),entity.hashCode(),System.identityHashCode(entity));
+//		((MvccObject)entity).__debugResolvedVersion__();
 		DomainTransformEvent event = super.delete(entity);
 		if (event != null) {
 			addTransform(event);

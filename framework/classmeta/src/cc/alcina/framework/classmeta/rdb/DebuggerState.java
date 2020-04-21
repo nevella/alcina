@@ -148,7 +148,6 @@ class DebuggerState {
                 switch (name) {
                 case "Suspend":
                 case "Status":
-                    int debug = 3;
                     break;
                 default:
                     next = EventSeries.unknown_post_handshake;

@@ -29,9 +29,6 @@ public class SyncLogger {
 			boolean hadIssue = itemMatch.currentSyncStatus == SyncItemLogStatus.UNSYNCED
 					&& ((itemMatch.ambiguous && !ambiguousOk)
 							|| itemMatch.issue != null);
-			if (hadIssue) {
-				int debug = 3;
-			}
 			return hadIssue;
 		}
 	}

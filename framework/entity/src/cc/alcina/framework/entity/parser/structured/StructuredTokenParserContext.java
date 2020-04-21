@@ -317,9 +317,6 @@ public class StructuredTokenParserContext {
 							.isContextResolutionRoot();
 				}
 			}
-			if (result == null) {
-				int debug = 3;
-			}
 			return result;
 		}
 	}

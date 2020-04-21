@@ -105,10 +105,6 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 				logger.debug("Clearing static fields for class\n\t{}", clazz);
 				try {
 					try {
-						if (clazz.getName()
-								.contains("ThreadedPermissionsManager")) {
-							int debug = 3;
-						}
 						clearThreadLocalsForAllThreads(clazz);
 					} catch (Exception e) {
 						logger.debug("Thread local clear issue", e);

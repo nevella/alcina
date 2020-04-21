@@ -137,10 +137,6 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 	}
 
-	@FunctionalInterface
-	interface LocalReplacementCreationObjectResolver
-			extends Function<Long, Entity> {
-	}
 
 	static class PreProcessBridgeLookup extends MapObjectLookupJvm {
 		private EntityLocatorMap locatorMap;
@@ -171,7 +167,6 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	static class SubgraphClassLookup implements ClassLookup {
-		static ThreadLocal<LocalReplacementCreationObjectResolver> localReplacementCreationObjectResolvers = new ThreadLocal<>();
 
 		@Override
 		public String displayNameForObject(Object o) {
@@ -225,17 +220,7 @@ public class SubgraphTransformManager extends TransformManager {
 		@Override
 		public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 			try {
-				LocalReplacementCreationObjectResolver resolver = localReplacementCreationObjectResolvers
-						.get();
-				if (resolver != null) {
-					Entity local = resolver.apply(localId);
-					if (local != null) {
-						local.hashCode();
-						local.setId(objectId);
-						TransformManager.registerLocalObjectPromotion(local);
-						return (T) local;
-					}
-				}
+				
 				Entity newInstance = Transaction.current().create((Class) clazz,
 						DomainStore.stores().storeFor(clazz));
 				newInstance.setLocalId(localId);
@@ -245,10 +230,6 @@ public class SubgraphTransformManager extends TransformManager {
 			}
 		}
 
-		public void setLocalReplacementCreationObjectResolver(
-				LocalReplacementCreationObjectResolver resolver) {
-			localReplacementCreationObjectResolvers.set(resolver);
-		}
 	}
 
 	static class SubgraphTransformManagerRecord extends SubgraphTransformManager

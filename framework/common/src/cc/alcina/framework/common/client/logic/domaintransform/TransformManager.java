@@ -72,6 +72,7 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 
 /**
  * TODO - abstract parts out to ClientTransformManager
@@ -449,11 +450,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 			break;
 		case CREATE_OBJECT:
 			if (event.getObjectId() != 0) {
-				// three possibilities:
+				// various possibilities:
 				// 1. replaying a server create,(on the client)
 				// 2. recording an in-entity-manager create
 				// 3. doing a database-regeneration
-				// if (2), break at this point
+				// 4. post-process; replaying local-to-vm create
+				// 5. post-process; replaying not-local-to-vm create
+				// if (2) or (4) , break at this point
 				if (getObjectForCreate(event) != null) {
 					break;
 				}
@@ -756,7 +759,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public synchronized void fireDomainTransform(DomainTransformEvent event)
 			throws DomainTransformException {
-		this.transformListenerSupport.fireDomainTransform(event);
+		try {
+			this.transformListenerSupport.fireDomainTransform(event);
+		} catch (DomainTransformException e) {
+			if(e.getType()==DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND){
+			Mvcc.debugSourceNotFound(e);
+			}
+			throw e;
+		}
 	}
 
 	public <V extends Entity> List<V> fromIdList(Class<V> clazz, String idStr) {
@@ -809,7 +819,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			if (dte.getTransformType() != TransformType.CREATE_OBJECT
 					&& dte.getTransformType() != TransformType.DELETE_OBJECT) {
 				String message = Ax.format(
-						"calling getobject() on a provisional/deregistered object transform "
+						"getObject() returned null - possibly uncommitted object on different thread? "
+								+ "Calling getobject() on a provisional/deregistered object transform "
 								+ "- will harm the transform. use getsource() - \n%s\n",
 						dte);
 				throw new RuntimeException(new DomainTransformException(dte,
@@ -1080,8 +1091,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			dte.setUtcDate(new Date(0L));
 			Long id = asObjectSpec ? (Long) arr[0] : entity.getId();
 			long localId = id == 0 ? entity.getLocalId() : 0L;
-			dte.setObjectLocalId(localId);
 			dte.setObjectId(id);
+			dte.setObjectLocalId(localId);
 			dte.setObjectClass(clazz);
 			dte.setTransformType(TransformType.CREATE_OBJECT);
 			dtes.add(dte);
@@ -1144,8 +1155,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 				} else {
 					dte = new DomainTransformEvent();
 					dte.setUtcDate(new Date(0L));
-					dte.setObjectId(id);
 					dte.setObjectClass(clazz);
+					dte.setObjectId(id);
 					dte.setObjectLocalId(localId);
 					if (value instanceof Timestamp) {
 						value = new Date(((Timestamp) value).getTime());

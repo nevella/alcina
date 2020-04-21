@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -247,12 +248,13 @@ public class Transaction {
 		Transactions.get().onDomainTransactionCommited(this);
 	}
 
-	public void toDomainCommitting(Timestamp timestamp) {
+	public void toDomainCommitting(Timestamp timestamp, DomainStore store,long sequenceId) {
 		Preconditions
 				.checkState(getPhase() == TransactionPhase.TO_DOMAIN_PREPARING
 						&& ThreadlocalTransformManager.get().getTransforms()
 								.isEmpty());
 		this.databaseCommitTimestamp = timestamp;
+		storeTransactions.get(store).committingSequenceId=sequenceId;
 		setPhase(TransactionPhase.TO_DOMAIN_COMMITTING);
 	}
 
@@ -272,17 +274,18 @@ public class Transaction {
 		return Ax.format("%s::%s", id, phase);
 	}
 
-	public void toVacuumEnded() {
+	 void toVacuumEnded(List<Transaction> vacuumableTransactions) {
 		Preconditions.checkState(getPhase() == TransactionPhase.VACUUM_BEGIN);
+		Transactions.get().vacuumComplete(vacuumableTransactions);
 		setPhase(TransactionPhase.VACUUM_ENDED);
 	}
 
 	private boolean hasHigherCommitIdThan(Transaction otherTransaction,
 			DomainStore store) {
 		long thisStoreTxId = storeTransactions
-				.get(store).committedDbDomainTransformRequestId;
+				.get(store).committingSequenceId;
 		long otherStoreTxId = otherTransaction.storeTransactions
-				.get(store).committedDbDomainTransformRequestId;
+				.get(store).committingSequenceId;
 		return thisStoreTxId > otherStoreTxId;
 	}
 

@@ -143,9 +143,6 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 			if (seen.put(o, o) != null) {
 				return;
 			}
-			if (clazz.getName().contains("Attributes")) {
-				int debug = 3;
-			}
 			counter.count++;
 			long size = getShallowObjectSize(o);
 			counter.size += size;

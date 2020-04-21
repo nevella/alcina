@@ -8,9 +8,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
@@ -49,6 +51,7 @@ public class Transactions {
 				} else {
 					//
 					synchronized (t) {
+						versions = mvccObject.__getMvccVersions__();
 						if (versions == null) {
 							versions = MvccObjectVersions.ensure(t, transaction,
 									false);
@@ -67,13 +70,18 @@ public class Transactions {
 	}
 
 	static <T extends Entity & MvccObject> T copyObject(T object) {
-		T clone = ResourceUtilities.fieldwiseClone(object, false, true);
-		clone.__setMvccVersions__(object.__getMvccVersions__());
-		return clone;
+//		synchronized (debugMonitor) {
+			T clone = ResourceUtilities.fieldwiseClone(object, false, true);
+			MvccObjectVersions __getMvccVersions__ = object.__getMvccVersions__();
+			clone.__setMvccVersions__(__getMvccVersions__);
+			return clone;
+//		}
 	}
 
 	static <T extends Entity> void copyObjectFields(T from, T to) {
-		ResourceUtilities.fieldwiseCopy(from, to, false, true);
+//		synchronized (debugMonitor) {
+			ResourceUtilities.fieldwiseCopy(from, to, false, true);
+//		}
 	}
 
 	static Transactions get() {
@@ -138,21 +146,27 @@ public class Transactions {
 	 * 
 	 */
 	List<Transaction> getVacuumableCommittedTransactions() {
-		List<Transaction> result = new ArrayList<>();
-		if (committedTransactions.isEmpty()) {
-			return result;
-		}
-		// FIXME - can probably optimise sync here (not sure if need to tho')
-		TransactionId highest = CommonUtils
-				.last(committedTransactions.keySet().iterator());
 		synchronized (transactionMetadataLock) {
-			for (Transaction t : activeTransactions.values()) {
-				if (t.committedTransactions.containsKey(t.getId())) {
+			List<Transaction> result = new ArrayList<>();
+			if (committedTransactions.isEmpty()) {
+				return result;
+			}
+			// // FIXME - can probably optimise sync here (not sure if need to
+			// // tho')
+			TransactionId highestVacuumableId = CommonUtils
+					.last(committedTransactions.keySet().iterator());
+			for (Transaction activeTransaction : activeTransactions.values()) {
+				// 'highest vacuumable' commit was visible to this transaction,
+				// so ... good, continue
+				if (activeTransaction.committedTransactions
+						.containsKey(highestVacuumableId)) {
 					continue;
 				} else {
-					highest = CommonUtils
-							.last(t.committedTransactions.keySet().iterator());
-					if (highest == null) {
+					// lower our sights
+					highestVacuumableId = CommonUtils
+							.last(activeTransaction.committedTransactions
+									.keySet().iterator());
+					if (highestVacuumableId == null) {
 						return result;
 					}
 				}
@@ -160,9 +174,11 @@ public class Transactions {
 			Iterator<Entry<TransactionId, Transaction>> itr = committedTransactions
 					.entrySet().iterator();
 			while (itr.hasNext()) {
-				result.add(itr.next().getValue());
-				itr.remove();
-				if (itr == highest) {
+				Entry<TransactionId, Transaction> next = itr.next();
+				result.add(next.getValue());
+				// itr.remove();
+				// nope! remove after vacuum completes
+				if (next.getKey().equals(highestVacuumableId)) {
 					break;
 				}
 			}
@@ -183,5 +199,59 @@ public class Transactions {
 
 	void onAddedVacuumable(Vacuumable vacuumable) {
 		vacuum.addVacuumable(vacuumable);
+	}
+
+	// debug/testing only!
+	public static void waitForAllToCompleteExSelf() {
+		get().waitForAllToCompleteExSelf0();
+	}
+
+	private void waitForAllToCompleteExSelf0() {
+		while (true) {
+			synchronized (transactionMetadataLock) {
+				Transaction current = Transaction.current();
+				if (activeTransactions.size() == 0) {
+					return;
+				}
+				if (activeTransactions.containsKey(current.getId())
+						&& activeTransactions.size() == 1) {
+					return;
+				}
+			}
+			try {
+				Thread.sleep(100);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
+	private static Multimap removedVersions = new Multimap();
+
+//	static Object debugMonitor = new Object();
+
+	public static synchronized <T extends Entity> void
+			debugRemoveVersion(T baseObject, ObjectVersion<T> version) {
+//		removedVersions.add(baseObject, version);
+	}
+
+	public static synchronized <T extends Entity> List<ObjectVersion<T>>
+			getRemovedVersions(T baseObject) {
+		List<ObjectVersion<T>> list = removedVersions.get(baseObject);
+		if (list != null) {
+			list.forEach(ObjectVersion::debugObjectHash);
+		}
+		return list;
+	}
+
+	  void
+			vacuumComplete(List<Transaction> vacuumableTransactions) {
+		 synchronized (transactionMetadataLock) {
+			 vacuumableTransactions.forEach(tx->committedTransactions.remove(tx.getId()));
+		 }
+	}
+
+	public static void pauseVacuum(boolean paused) {
+		get().vacuum.paused=paused;
 	}
 }
