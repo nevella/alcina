@@ -50,10 +50,17 @@ public class MvccEntityTransactionalCollectionTest<IU extends Entity & IUser, IG
 			public void run() {
 				try {
 					Transaction.ensureBegun();
-					long suffix = System.currentTimeMillis();
 					List<IU> users2 = Domain.stream(userClass)
 							.sorted(EntityComparator.INSTANCE)
 							.collect(Collectors.toList());
+					long suffix = System.currentTimeMillis();
+					List<IU> users1 = Domain.stream(userClass).collect(Collectors.toList());
+					if(users1.size()!=Domain.stream(userClass).count()){
+						//issue with layer merge, most likely
+						int debug=3;
+					}
+					Preconditions.checkArgument(
+							users2.size() == Domain.stream(userClass).count());
 					IG createdGroup = Domain.create(groupClass);
 					IU createdUser = Domain.create(userClass);
 					createdGroup.setGroupName("testgroup-" + suffix);
@@ -61,7 +68,7 @@ public class MvccEntityTransactionalCollectionTest<IU extends Entity & IUser, IG
 					if (Domain.stream(userClass).count() != initialSize + 1) {
 						long count = Domain.stream(userClass).count();
 					}
-					List<IU> users1 = Domain.stream(userClass)
+					List<IU> users3 = Domain.stream(userClass)
 							.sorted(EntityComparator.INSTANCE)
 							.collect(Collectors.toList());
 					Preconditions.checkState(
@@ -84,8 +91,6 @@ public class MvccEntityTransactionalCollectionTest<IU extends Entity & IUser, IG
 			}
 		}.start();
 	}
-
-	
 
 	private void startTx2() {
 		new Thread("test-mvcc-2") {

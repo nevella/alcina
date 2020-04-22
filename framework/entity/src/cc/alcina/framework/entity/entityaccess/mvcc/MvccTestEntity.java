@@ -5,9 +5,10 @@ import java.util.stream.IntStream;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccessCorrect;
 
-public class MvccTestEntity extends Entity<MvccTestEntity> {
+public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 	private long id;
-
+	@SuppressWarnings("unused")
+	private long invalidDuplicateFieldName;
 	protected String incorrectAccessField;
 
 	private String disallowedInnerAccessField;

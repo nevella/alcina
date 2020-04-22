@@ -55,7 +55,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
  *   
  *   Synchronization:
  * 
- * 'this' acts as a lock on modification of the layers field (since layers may be null)
+ * 'this' acts as a lock on creation of the transactionLayers field (one-time per TransactionalMap instance)  
  * 
  * 
  *   TODO - baseLayerList can be implemented by this class (so avoid having an extra list per map) 
@@ -70,6 +70,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	private List<Layer> baseLayerList;
 
 	private volatile List<Layer> mergedLayerList;
+
+	private volatile int mergedLayerListVersion;
 
 	protected Class<K> keyClass;
 
@@ -170,6 +172,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	@Override
 	public void vacuum(Transaction transaction) {
 		if (transaction.getPhase() != TransactionPhase.TO_DOMAIN_COMMITTED) {
+			// will not affect visible layers to any current transactionm no
+			// sync needed
 			transactionLayers.remove(transaction);
 			return;
 		}
@@ -199,8 +203,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				}
 			}
 		} while (modified);
+		// bump counter before we modify, and after
+		mergedLayerListVersion++;
 		mergedLayerList = mergedReplace;
 		transactionLayers.remove(transaction);
+		mergedLayerListVersion++;
 	}
 
 	@Override
@@ -219,18 +226,21 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 		if (transactionLayers == null
 				|| !transactionLayers.containsKey(transaction)) {
-			// double-checked
-			synchronized (this) {
-				if (transactionLayers == null
-						|| !transactionLayers.containsKey(transaction)) {
-					if (transactionLayers == null) {
-						transactionLayers = new ConcurrentSkipListMap<>(
-								new TransactionComparator());
-						mergedLayerList = new ArrayList<>();
+			if (transactionLayers == null
+					|| !transactionLayers.containsKey(transaction)) {
+				if (transactionLayers == null) {
+					// double-checked
+					synchronized (this) {
+						if (transactionLayers == null) {
+							transactionLayers = new ConcurrentSkipListMap<>(
+									new TransactionComparator());
+							mergedLayerList = new ArrayList<>();
+							mergedLayerList.add(base);
+						}
 					}
-					transactionLayers.put(transaction, new Layer(transaction));
-					Transactions.get().onAddedVacuumable(this);
 				}
+				transactionLayers.put(transaction, new Layer(transaction));
+				Transactions.get().onAddedVacuumable(this);
 			}
 		}
 		return transactionLayers.get(transaction);
@@ -242,7 +252,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	 * cost ... but maybe return a custom list ... something more specialised? A
 	 * lot of the time visible active tx layers will be empty for instance.
 	 * 
-	 * Initally, tried to run this without synchronization with vacuum. 
+	 * Initally, tried to run this without synchronization with vacuum.
 	 */
 	private List<Layer> visibleLayers() {
 		if (transactionLayers == null) {
@@ -251,37 +261,38 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			Transaction transaction = Transaction.current();
 			List<Layer> visibleLayers = new ArrayList<>();
 			List<Layer> transactionLayersSnapshot = new ArrayList<>();
-			visibleLayers.add(base);
-			/*
-			 * To avoid synchronization, copy active-visible-tx layers *before*
-			 * merged layers (because vacuum modifies visible layers *after*
-			 * merged layers)
-			 */
-			for (Transaction committed : transaction.committedTransactions
-					.values()) {
-				Layer layer = transactionLayers.get(committed);
-				if (layer != null) {
-					transactionLayersSnapshot.add(layer);
+			// loop until we have a consistent
+			// mergedLayerList/committedTransactions pair (99.9 % of
+			// time we won't hit vacuum, this approach avoids the 'reader'
+			// thread contention we'd get with a naive synchronized block)
+			for (;;) {
+				int mergedLayerListVersionPre = this.mergedLayerListVersion;
+				for (Transaction committed : transaction.committedTransactions
+						.values()) {
+					Layer layer = transactionLayers.get(committed);
+					if (layer != null) {
+						transactionLayersSnapshot.add(layer);
+					}
 				}
+				visibleLayers.addAll(mergedLayerList);
+				int mergedLayerListVersionPost = this.mergedLayerListVersion;
+				if (mergedLayerListVersionPre != mergedLayerListVersionPost) {
+					continue;
+				}
+				/*
+				 * now add our snapshot
+				 */
+				visibleLayers.addAll(transactionLayersSnapshot);
+				Layer currentLayer = transactionLayers
+						.get(Transaction.current());
+				if (currentLayer != null) {
+					visibleLayers.add(currentLayer);
+				}
+				/*
+				 * et voila!
+				 */
+				return visibleLayers;
 			}
-			/*
-			 * Note that merged layer list is swapped during vacuum, rather than
-			 * modified (its length is logarithmic wrt element size) - so we can
-			 * add without a synchronization risk.
-			 */
-			visibleLayers.addAll(mergedLayerList);
-			/*
-			 * now add our snapshot
-			 */
-			visibleLayers.addAll(transactionLayersSnapshot);
-			Layer currentLayer = transactionLayers.get(Transaction.current());
-			if (currentLayer != null) {
-				visibleLayers.add(currentLayer);
-			}
-			/*
-			 * et voila!
-			 */
-			return visibleLayers;
 		}
 	}
 
@@ -420,7 +431,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			 */
 			for (K key : merged.modified.keySet()) {
 				boolean added = true;
-				for (int idx = newestOlderLayerIndex; idx >= 0; idx++) {
+				for (int idx = newestOlderLayerIndex; idx >= 0; idx--) {
 					Layer layer = olderLayers.get(idx);
 					if (layer.wasRemoved(key)) {
 						break;// yep, added
@@ -439,7 +450,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 						.hasNext();) {
 					K key = itr.next();
 					boolean drop = true;
-					for (int idx = newestOlderLayerIndex; idx >= 0; idx++) {
+					for (int idx = newestOlderLayerIndex; idx >= 0; idx--) {
 						Layer layer = olderLayers.get(idx);
 						if (layer.wasRemoved(key)) {
 							break;// will have no effect on combined operations;

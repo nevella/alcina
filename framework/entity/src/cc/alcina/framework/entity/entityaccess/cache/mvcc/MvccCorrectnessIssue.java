@@ -19,7 +19,7 @@ class MvccCorrectnessIssue {
 		Invalid_field_access, This_assignment_unknown, This_AssignExpr,
 		This_VariableDeclarator, This_ReturnStmt, This_BinaryExpr, Super_usage,
 		InnerClassConstructor, InnerClassOuterFieldAccess,
-		InnerClassOuterPrivateMethodAccess, InnerClassOuterPrivateMethodRef;
+		InnerClassOuterPrivateMethodAccess, InnerClassOuterPrivateMethodRef, Duplicate_field_name;
 		boolean isUnknown() {
 			return this.toString().contains("unknown");
 		}

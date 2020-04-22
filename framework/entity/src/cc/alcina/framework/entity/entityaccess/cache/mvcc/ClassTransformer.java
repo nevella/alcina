@@ -58,9 +58,11 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -293,6 +295,7 @@ class ClassTransformer {
 				fieldsWithProblematicAccess = lastRun.fieldsWithProblematicAccess;
 			} else {
 				checkFieldModifiers();
+				checkDuplicateFieldNames();
 				if (source != null) {
 					compilationUnit = StaticJavaParser.parse(source);
 					compilationUnit.findAll(ClassOrInterfaceDeclaration.class)
@@ -324,6 +327,20 @@ class ClassTransformer {
 					invalid = true;
 				}
 			}
+		}
+
+		private void checkDuplicateFieldNames() {
+			Multimap<String, List<Field>> byName = SEUtilities
+					.allFields(originalClass).stream()
+					.collect(AlcinaCollectors.toKeyMultimap(Field::getName));
+			byName.entrySet().stream().filter(e -> e.getValue().size() > 1)
+					.forEach(e -> {
+						correctnessIssueTopic.publish(new MvccCorrectnessIssue(
+								MvccCorrectnessIssueType.Duplicate_field_name,
+								Ax.format(
+										"Duplicate field name: field '%s' - fields: %s",
+										e.getKey(), e.getValue())));
+					});
 		}
 
 		void generateMvccClass() {
@@ -805,7 +822,7 @@ class ClassTransformer {
 							continue;
 						}
 						/*
-						 * FIXME - reroute to base? 
+						 * FIXME - reroute to base?
 						 */
 						if (method.getName().matches("equals")) {
 							continue;
