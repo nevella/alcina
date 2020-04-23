@@ -23,7 +23,6 @@ import cc.alcina.framework.entity.entityaccess.cache.LockUtils;
 import cc.alcina.framework.entity.entityaccess.cache.LockUtils.ClassStringKeyLock;
 
 public class FsObjectCache<T> implements PersistentObjectCache<T> {
-
 	public static <C> FsObjectCache<C> singletonCache(Class<C> clazz) {
 		return new FsObjectCache<>(
 				DataFolderProvider.get().getChildFile(clazz.getName()), clazz,
@@ -86,6 +85,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	public long getObjectInvalidationTime() {
 		return this.objectInvalidationTime;
 	}
+
 	@Override
 	public FsObjectCache<T>
 			withCreateIfNonExistent(boolean createIfNonExistent) {
@@ -119,8 +119,8 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	}
 
 	private ClassStringKeyLock getLock(String path) {
-		ClassStringKeyLock lock = LockUtils
-				.obtainClassStringKeyLock(pathToValue==null?clazz:pathToValue.getClass(), path);
+		ClassStringKeyLock lock = LockUtils.obtainClassStringKeyLock(
+				pathToValue == null ? clazz : pathToValue.getClass(), path);
 		return lock;
 	}
 
@@ -220,7 +220,8 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 			try {
 				logger.info("refreshing cache object - {} - {}",
 						clazz.getSimpleName(), path);
-				T value = pathToValue.apply(path);
+				T value = pathToValue == null ? clazz.newInstance()
+						: pathToValue.apply(path);
 				KryoUtils.serializeToFile(value, cacheFile);
 			} catch (Exception e) {
 				if (!cacheFile.exists()) {
