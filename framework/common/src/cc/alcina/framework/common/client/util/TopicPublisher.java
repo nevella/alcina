@@ -73,6 +73,9 @@ public class TopicPublisher {
     }
 
     public static class TopicSupport<T> {
+    	public static <T> TopicSupport<T> localAnonymousTopic() {
+			return new TopicSupport<>(null, false);
+		}
         private String topic;
 
         private TopicPublisher topicPublisher;
