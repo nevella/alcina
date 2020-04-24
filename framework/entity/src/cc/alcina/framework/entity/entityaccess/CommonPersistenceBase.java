@@ -197,21 +197,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
-	@Override
-	public void changeWrappedObjectOwner(long id, IUser fromUser,
-			IUser toUser) {
-		List<WrappedObject> wrapped = getEntityManager()
-				.createQuery(Ax.format("from %s where id = %s",
-						getImplementation(WrappedObject.class).getSimpleName(),
-						id))
-				.getResultList();
-		if (wrapped.size() == 1) {
-			wrapped.get(0).setUser(
-					getEntityManager().find(toUser.getClass(), toUser.getId()));
-			Ax.out("changed wrapped object owner - %s - %s -> %s", id, fromUser,
-					toUser);
-		}
-	}
+	
 
 	@Override
 	public void connectPermissionsManagerToLiveObjects() {

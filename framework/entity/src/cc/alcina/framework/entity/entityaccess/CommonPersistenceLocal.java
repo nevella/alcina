@@ -54,8 +54,6 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
 public interface CommonPersistenceLocal {
 	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
 
-	public void changeWrappedObjectOwner(long parseLong, IUser fromUser,
-			IUser toUser);
 
 	public abstract void connectPermissionsManagerToLiveObjects();
 

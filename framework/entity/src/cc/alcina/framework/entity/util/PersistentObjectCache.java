@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.csobjects.ContentNode;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public interface PersistentObjectCache<T> {
@@ -67,6 +67,16 @@ public interface PersistentObjectCache<T> {
 
 		public synchronized void set(T value) {
 			this.value = value;
+		}
+		public void clear(){
+			try{
+				set(delegate.getPersistedClass().newInstance());
+				persist();
+			}
+			catch(Exception e){
+				throw new WrappedRuntimeException(e);
+			}
+			
 		}
 	}
 
