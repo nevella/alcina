@@ -137,4 +137,7 @@ public interface HasIdAndLocalId extends HasId {
 			return HiliHelper.compareNoLocals(o1, o2);
 		}
 	}
+	default <T extends HasIdAndLocalId> Class<T> provideEntityClass(){
+		return (Class<T>) getClass();
+	}
 }

@@ -36,6 +36,8 @@ public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
 	}
 
 	public void clear() {
+		setBytes(null);
+		setFileName(null);
 		topicClear().publish(this);
 	}
 
