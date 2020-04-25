@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
 import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-import cc.alcina.framework.gwt.client.data.GeneralProperties;
+import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
 /**

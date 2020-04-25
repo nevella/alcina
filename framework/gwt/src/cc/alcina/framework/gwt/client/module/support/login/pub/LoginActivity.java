@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.module.support.login.pub;
 
-import cc.alcina.framework.gwt.client.data.view.TypedModelActivity;
-import cc.alcina.framework.gwt.client.data.view.ViewModel;
+import cc.alcina.framework.gwt.client.entity.view.TypedModelActivity;
+import cc.alcina.framework.gwt.client.entity.view.ViewModel;
 import cc.alcina.framework.gwt.client.module.support.login.pub.LoginActivity.LoginViewModel;
 
 public class LoginActivity

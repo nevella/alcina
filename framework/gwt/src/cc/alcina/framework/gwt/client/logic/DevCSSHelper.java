@@ -7,7 +7,7 @@ import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ClientBase;
-import cc.alcina.framework.gwt.client.data.GeneralProperties;
+import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 public class DevCSSHelper {

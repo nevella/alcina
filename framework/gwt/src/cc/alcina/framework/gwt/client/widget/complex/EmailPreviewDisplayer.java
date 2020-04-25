@@ -20,7 +20,7 @@ import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 
-import cc.alcina.framework.gwt.client.data.EmailPreview;
+import cc.alcina.framework.gwt.client.entity.EmailPreview;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 
 /**

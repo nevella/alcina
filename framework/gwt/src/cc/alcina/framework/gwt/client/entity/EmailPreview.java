@@ -11,27 +11,42 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.common.client.logic.domaintransform;
+package cc.alcina.framework.gwt.client.entity;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Set;
-
-import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 
 /**
  *
  * @author Nick Reddel
  */
-public interface DomainModelHolder extends Serializable {
-	public Set<ClassRef> getClassRefs();
+public class EmailPreview implements Serializable {
+	private String toAddresses;
 
-	public IUser getCurrentUser();
+	private String subject;
 
-	public GeneralProperties getGeneralProperties();
+	private String body;
 
-	public List registerableDomainObjects();
+	public String getBody() {
+		return this.body;
+	}
 
-	public void registerSelfAsProvider();
+	public String getSubject() {
+		return this.subject;
+	}
+
+	public String getToAddresses() {
+		return this.toAddresses;
+	}
+
+	public void setBody(String body) {
+		this.body = body;
+	}
+
+	public void setSubject(String subject) {
+		this.subject = subject;
+	}
+
+	public void setToAddresses(String toAddresses) {
+		this.toAddresses = toAddresses;
+	}
 }

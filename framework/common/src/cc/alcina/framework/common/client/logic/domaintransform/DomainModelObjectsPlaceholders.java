@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.gwt.client.data.GeneralProperties;
+import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 
 //ensure that domainmodeldelta will serialize
 public class DomainModelObjectsPlaceholders {
