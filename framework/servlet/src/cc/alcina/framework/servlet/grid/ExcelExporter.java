@@ -254,12 +254,14 @@ public class ExcelExporter {
 						dataRow.add(null);
 						continue;
 					}
-					if (pdm.pd.getPropertyType() == Date.class) {
-						type = "DateTime";
-						value = df.format(value);
-					} else if (Number.class
-							.isAssignableFrom(pdm.pd.getPropertyType())) {
-						type = "Number";
+					if (pdm.renderer == null) {
+						if (pdm.pd.getPropertyType() == Date.class) {
+							type = "DateTime";
+							value = df.format(value);
+						} else if (Number.class
+								.isAssignableFrom(pdm.pd.getPropertyType())) {
+							type = "Number";
+						}
 					}
 					data.setAttributeNS(SS_NS, "ss:Type", type);
 					txt = book.createTextNode(

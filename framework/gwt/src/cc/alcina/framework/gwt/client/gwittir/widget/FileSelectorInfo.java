@@ -7,15 +7,12 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 
 public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
 		implements Serializable {
-	private static final transient String TOPIC_CLEAR = FileSelectorInfo.class
-			.getName() + ".TOPIC_CLEAR";
 
 	private String fileName;
 
 	private byte[] bytes;
 
-	private transient TopicSupport<FileSelectorInfo> clearTopicSupport = new TopicSupport<FileSelectorInfo>(
-			TOPIC_CLEAR);
+	private transient TopicSupport<FileSelectorInfo> clearTopicSupport = TopicSupport.localAnonymousTopic();
 
 	public byte[] getBytes() {
 		return this.bytes;
@@ -39,6 +36,8 @@ public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
 	}
 
 	public void clear() {
+		setBytes(null);
+		setFileName(null);
 		topicClear().publish(this);
 	}
 

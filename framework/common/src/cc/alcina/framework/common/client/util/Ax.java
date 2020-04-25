@@ -4,6 +4,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BinaryOperator;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -145,5 +148,18 @@ public class Ax {
 
 	public static double twoPlaces(double d) {
 		return CommonUtils.roundNumeric(d, 2);
+	}
+
+	public static class AxStreams {
+		public <T> Function<T, T> visit(Consumer<T> consumer) {
+			return t -> {
+				consumer.accept(t);
+				return t;
+			};
+		}
+	}
+
+	public static <T> BinaryOperator<T> last() {
+		return (a, b) -> b;
 	}
 }

@@ -461,12 +461,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 							: DN_LABEL_PROVIDER;
 				} else {
 					if (domainType == Date.class) {
-						if (display.rendererHint()
-								.equals(HINT_DATE_WITH_TIME_TITLE)) {
-							bwp = AU_DATE_TIME_TITLE_PROVIDER;
-						} else {
-							bwp = AU_DATE_PROVIDER;
-						}
+						bwp = dateRendererProvider.getRenderer(display);
 					} else if (isEnum) {
 						bwp = FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE;
 					} else if (domainType == boolean.class
@@ -855,5 +850,25 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					.compareTo(bi.getPropertyReflectors()
 							.get(o2.getPropertyName()));
 		}
+	}
+	public static class GwittirDateRendererProvider {
+		public BoundWidgetProvider getRenderer(Display display) {
+			if (display.rendererHint().equals(HINT_DATE_WITH_TIME_TITLE)) {
+				return AU_DATE_TIME_TITLE_PROVIDER;
+			} else {
+				return AU_DATE_PROVIDER;
+			}
+		}
+	}
+
+	private GwittirDateRendererProvider dateRendererProvider = new GwittirDateRendererProvider();
+
+	public GwittirDateRendererProvider getDateRendererProvider() {
+		return this.dateRendererProvider;
+	}
+
+	public void setDateRendererProvider(
+			GwittirDateRendererProvider dateRendererProvider) {
+		this.dateRendererProvider = dateRendererProvider;
 	}
 }
