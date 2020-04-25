@@ -13,26 +13,12 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multiset;
 
 public class CollectionCreatorsMvcc {
-	@RegistryLocation(registryPoint = CollectionCreators.IdMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-	public static class DomainStoreIdMapCreatorJ2SE
-			implements CollectionCreators.IdMapCreator {
-		@Override
-		public Map<Long, Entity> get() {
-			return new ConcurrentSkipListMap<Long, Entity>();
-		}
-	}
+	
 
-	@RegistryLocation(registryPoint = CollectionCreators.LongSetCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-	public static class DomainStoreLongSetCreatorMvcc
-			implements CollectionCreators.LongSetCreator {
-		@Override
-		public Set<Long> get() {
-			return new TransactionalSet<>(Long.class);
-		}
-	}
+
 
 	@RegistryLocation(registryPoint = CollectionCreators.MultisetCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-	public static class DomainStoreMultisetCreatorMvv<K, V>
+	public static class DomainStoreMultisetCreator<K, V>
 			implements CollectionCreators.MultisetCreator<K, V> {
 		@Override
 		public Multiset<K, Set<V>> create(Class<K> keyClass,
@@ -44,6 +30,7 @@ public class CollectionCreatorsMvcc {
 
 		private final static class TransactionalMultiset<K, V>
 				extends Multiset<K, Set<V>> {
+			@SuppressWarnings("unused")
 			private Class<K> keyClass;
 
 			private Class<V> valueClass;

@@ -16,14 +16,8 @@ public class CollectionCreators {
 		}
 	}
 
-	public static interface IdMapCreator extends Supplier<Map<Long, Entity>> {
-		@Override
-		public Map<Long, Entity> get();
-	}
 
-	public static interface LongSetCreator extends Supplier<Set<Long>> {
-	}
-
+	
 	public static interface MultisetCreator<K, V> {
 		public Multiset<K, Set<V>> create(Class<K> keyClass,
 				Class<V> valueClass);

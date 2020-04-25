@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.entity.view;
+package cc.alcina.framework.common.client.util;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,32 +18,13 @@ import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.SortedMultiset;
 
 //TODO - use fastidlookup, some sort of decorator for the sets
-public class DataCollectionSuppliers {
+public class CollectionCreatorsClient {
 	static boolean useJsMaps() {
 		return GWT.isScript();// GWT.isClient();
 	}
 
-	@RegistryLocation(registryPoint = CollectionCreators.IdMapCreator.class, implementationType = ImplementationType.SINGLETON)
-	@ClientInstantiable
-	public static class CacheIdMapCreatorClient
-			implements CollectionCreators.IdMapCreator {
-		@Override
-		public Map<Long, Entity> get() {
-			return useJsMaps() ? JsUniqueMap.create(Long.class, false)
-					: new LinkedHashMap<Long, Entity>();
-		}
-	}
+	
 
-	@RegistryLocation(registryPoint = CollectionCreators.LongSetCreator.class, implementationType = ImplementationType.SINGLETON)
-	@ClientInstantiable
-	public static class CacheLongSetCreatorClient
-			implements CollectionCreators.LongSetCreator {
-		@Override
-		public Set<Long> get() {
-			return useJsMaps() ? new JsUniqueSet(Long.class)
-					: new TreeSet<Long>();
-		}
-	}
 
 	@RegistryLocation(registryPoint = CollectionCreators.MultisetCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
