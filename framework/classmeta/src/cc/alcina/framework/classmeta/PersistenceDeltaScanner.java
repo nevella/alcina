@@ -13,7 +13,7 @@ import java.util.Set;
 import cc.alcina.framework.classmeta.ClassPersistenceScanData.ClassPersistenceScannedClass;
 import cc.alcina.framework.classmeta.ClassPersistenceScanData.ClassPersistenceScannedPersistenceGetter;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.entity.J8Utils;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.registry.CachingScanner;
 import cc.alcina.framework.entity.registry.ClassMetadata;
@@ -52,7 +52,7 @@ class PersistenceDeltaScanner
         result.classes = outgoingCache.classData.values().stream()
                 .filter(cpsc -> cpsc.persistent)
                 .sorted(Comparator.comparing(cpsc -> cpsc.className))
-                .collect(J8Utils.toLinkedHashSet());
+                .collect(AlcinaCollectors.toLinkedHashSet());
     }
 
     private boolean isPersistent(Annotation typed) {

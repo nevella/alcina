@@ -19,6 +19,18 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 
 public abstract class AlcinaChildRunnable implements Runnable {
+	public static void launchWithCurrentThreadContext(String threadName,
+			Runnable runnable) {
+		AlcinaChildRunnable wrappingRunnable = new AlcinaChildRunnable(
+				threadName) {
+			@Override
+			protected void run0() throws Exception {
+				runnable.run();
+			}
+		};
+		new Thread(wrappingRunnable).start();
+	}
+
 	public static <T> void parallelStream(String name, List<T> items,
 			Consumer<T> consumer) {
 		CountDownLatch latch = new CountDownLatch(items.size());

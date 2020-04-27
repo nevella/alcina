@@ -5,9 +5,13 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.gwt.client.entity.VersionableDomainBase;
 
+@RegistryLocation(registryPoint = SearchContext.class, implementationType = ImplementationType.INSTANCE)
 public class SearchContext {
 	public static final String CONTEXT_INSTANCE = SearchContext.class
 			+ ".CONTEXT_INSTANCE";
@@ -22,10 +26,12 @@ public class SearchContext {
 		return LooseContext.get(CONTEXT_INSTANCE) != null;
 	}
 
-	public static SearchContext start() {
+	public static SearchContext startContext() {
 		SearchContext result = LooseContext.get(CONTEXT_INSTANCE);
 		Preconditions.checkState(result == null);
-		LooseContext.set(CONTEXT_INSTANCE, new SearchContext());
+		SearchContext impl = Registry.impl(SearchContext.class);
+		LooseContext.set(CONTEXT_INSTANCE, impl);
+		impl.start();
 		return get();
 	}
 
@@ -37,5 +43,11 @@ public class SearchContext {
 
 	public ModelSearchResults modelSearchResults;
 
-	public List<VersionableDomainBase> queried;
+	public List<VersionableEntity> queried;
+
+	public void end() {
+	}
+
+	public void start() {
+	}
 }

@@ -9,9 +9,6 @@ import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
  * <ul>
  * <li>Test framework
  * <li>Main-class: this, super, field access
- * </ul>
- * <h3>Todo:</h3>
- * <ul>
  * <li>Inner class: super private method access, super field access
  * <li>Inner class: constructor
  * 
@@ -24,6 +21,6 @@ public class MvccEntityConstraintTest extends AbstractTaskPerformer {
 	@Override
 	protected void run0() throws Exception {
 		DomainStore.writableStore().getMvcc()
-				.testTransformer(MvccTestEntity.class);
+				.testTransformer(MvccTestEntity.class, null);
 	}
 }

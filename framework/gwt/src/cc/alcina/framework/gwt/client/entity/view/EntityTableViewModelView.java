@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
 import cc.alcina.framework.common.client.util.ColumnMapper;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder.SortableColumn;
-import cc.alcina.framework.gwt.client.entity.VersionableDomainBase;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.GroupingParameters;
@@ -42,7 +42,7 @@ import cc.alcina.framework.gwt.client.widget.FilterWidget;
 import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable;
 
-public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvider, T extends VersionableDomainBase, SD extends EntitySearchDefinition>
+public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvider, T extends VersionableEntity, SD extends EntitySearchDefinition>
 		extends AbstractViewModelView<VM> implements CellTableView<T> {
 	protected FlowPanel fp;
 

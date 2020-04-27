@@ -41,47 +41,50 @@ public class MultiIterator<E> extends FilteringIterator<E> {
 		throw new IllegalArgumentException("Remove not permitted");
 	}
 
-	private E peekNonSorted() {
+	private void peekNonSorted() {
 		peeked = true;
 		while (currentIteratorIndex < iterators.size()) {
 			if (iterators.get(currentIteratorIndex).hasNext()) {
 				FilteringIterator<E> filteringIterator = iterators
 						.get(currentIteratorIndex);
 				next = filteringIterator.next();
-				return next;
+				return;
 			}
 			currentIteratorIndex++;
 		}
 		finished = true;
-		return null;
 	}
 
-	private E peekSorted() {
-		E max = null;
+	private void peekSorted() {
+		boolean minPopulated = false;
+		E min = null;
 		peeked = true;
 		currentIteratorIndex = -1;
-		for (int idx = 0; idx < iterators.size(); idx++) {
-			FilteringIterator<E> iterator = iterators.get(idx);
+		for (int iteratorIdx = 0; iteratorIdx < iterators
+				.size(); iteratorIdx++) {
+			FilteringIterator<E> iterator = iterators.get(iteratorIdx);
 			if (!iterator.hasNext()) {
 				continue;
 			}
 			E e = iterator.peek();
-			if (max == null || comparator.compare(max, e) < 0) {
-				max = e;
-				currentIteratorIndex = idx;
+			// requires null safe comparator with
+			if (!minPopulated || comparator.compare(min, e) < 0) {
+				min = e;
+				currentIteratorIndex = iteratorIdx;
 			}
 		}
-		finished = max == null;
-		return max;
+		finished = currentIteratorIndex == -1;
+		next = min;
 	}
 
 	@Override
 	protected E peekNext() {
 		if (comparator == null) {
-			return peekNonSorted();
+			peekNonSorted();
 		} else {
-			return peekSorted();
+			peekSorted();
 		}
+		return next;
 	}
 
 	@Override

@@ -107,7 +107,7 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 	public static class SortedMapCreator implements DelegateMapCreator {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
-			return new TreeMap();
+			return new TreeMap(new NullFriendlyComparatorWrapper<>());
 		}
 	}
 }

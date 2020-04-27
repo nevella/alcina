@@ -19,8 +19,6 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @DomainTransformPersistable
 public abstract class LocalDbPropertyBase extends Entity {
-	static final transient long serialVersionUID = -1L;
-
 	public static final transient String KEY_FIELD_NAME = "propertyKey";
 
 	public static final transient String VALUE_FIELD_NAME = "propertyValue";

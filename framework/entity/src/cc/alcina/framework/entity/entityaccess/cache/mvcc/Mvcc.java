@@ -17,8 +17,14 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStoreDescriptor;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccCorrectnessIssue.MvccCorrectnessIssueType;
 
 public class Mvcc {
-	public static <T extends Entity> T
-			getEntity(EntityManager entityManager, T t) {
+	private static Logger logger = LoggerFactory.getLogger(Mvcc.class);
+
+	public static void debugSourceNotFound(DomainTransformException e) {
+		logger.warn("in vacuum?");
+	}
+
+	public static <T extends Entity> T getEntity(EntityManager entityManager,
+			T t) {
 		if (t instanceof MvccObject) {
 			return (T) entityManager.find(t.provideEntityClass(), t.getId());
 		} else {
@@ -52,8 +58,6 @@ public class Mvcc {
 
 	private ClassTransformer classTransformer;
 
-	private static Logger logger = LoggerFactory.getLogger(Mvcc.class);
-
 	public Mvcc(DomainStore domainStore, DomainStoreDescriptor domainDescriptor,
 			DetachedEntityCache cache) {
 		Transactions.ensureInitialised();
@@ -71,25 +75,27 @@ public class Mvcc {
 		classTransformer.generateTransformedClasses();
 	}
 
-	public void testTransformer(Class<? extends Entity> clazz) {
+	public void testTransformer(Class<? extends Entity> clazz,
+			MvccCorrectnessToken token) {
 		// valid if we get an 'exception' result for each correctness type -
 		// i.e. the tests are working
-		logger.info("testTransformer :: {}", clazz.getSimpleName());
-		for (MvccCorrectnessIssueType type : MvccCorrectnessIssueType
-				.values()) {
-			if (type.isUnknown()) {
-				continue;
+		if (classTransformer.getTransformedClass(clazz) != null) {
+			Preconditions.checkState(
+					classTransformer.testClassTransform(clazz, token));
+		} else {
+			logger.info("testTransformer :: {}", clazz.getSimpleName());
+			for (MvccCorrectnessIssueType type : MvccCorrectnessIssueType
+					.values()) {
+				if (type.isUnknown()) {
+					continue;
+				}
+				String result = classTransformer.testClassTransform(clazz, type,
+						new MvccCorrectnessToken());
+				Preconditions.checkState(Ax.notBlank(result), Ax.format(
+						"test did not pass (blank result) (type: %s)", type));
+				logger.info("{} :: {}", type, result);
 			}
-			String result = classTransformer.testClassTransform(clazz, type);
-			Preconditions.checkState(Ax.notBlank(result), Ax.format(
-					"test did not pass (blank result) (type: %s)", type));
-			logger.info("{} :: {}", type, result);
+			logger.info("(All tests passed)");
 		}
-		logger.info("(All tests passed)");
 	}
-
-	public static void debugSourceNotFound(DomainTransformException e) {
-		logger.warn("in vacuum?");
-	}
-
 }

@@ -8,11 +8,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.entity.J8Utils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.Sx;
@@ -196,7 +196,7 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 		public String dumpDistinct() {
 			Multimap<String, List<TdModelThread>> byLines = threads.stream()
 					.filter(tmt -> !tmt.ignoreable()).collect(
-							J8Utils.toKeyMultimap(tmt -> tmt.lines.toString()));
+							AlcinaCollectors.toKeyMultimap(tmt -> tmt.lines.toString()));
 			String distinctWaits = byLines.entrySet().stream().sorted(
 					(e1, e2) -> e1.getValue().size() - e2.getValue().size())
 					.map(e -> String.format("%5s %-40s", e.getValue().size(),

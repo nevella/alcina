@@ -16,6 +16,7 @@ public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 			Comparator<K> comparator) {
 		super(keyClass, valueClass);
 		this.comparator = comparator;
+		createBaseLayer();
 	}
 
 	@Override
@@ -30,7 +31,7 @@ public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 
 	@Override
 	public Comparator<? super K> comparator() {
-		throw new UnsupportedOperationException();
+		return comparator;
 	}
 
 	@Override
@@ -158,5 +159,11 @@ public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 			// FIXME - some more optimisations would be great
 			return (Map<K, V1>) new Object2ObjectAVLTreeMap<>(comparator);
 		}
+	}
+
+	@Override
+	protected void init() {
+		// super.init();
+		// noop - need to set comparator in constructor first
 	}
 }

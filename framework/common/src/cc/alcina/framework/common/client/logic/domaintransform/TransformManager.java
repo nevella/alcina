@@ -72,7 +72,6 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 
 /**
  * TODO - abstract parts out to ClientTransformManager
@@ -762,9 +761,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		try {
 			this.transformListenerSupport.fireDomainTransform(event);
 		} catch (DomainTransformException e) {
-			if(e.getType()==DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND){
-			Mvcc.debugSourceNotFound(e);
-			}
+			// if (e.getType() ==
+			// DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND) {
+			// Mvcc.debugSourceNotFound(e);
+			// }
 			throw e;
 		}
 	}

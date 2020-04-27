@@ -3,9 +3,9 @@ package cc.alcina.framework.gwt.client.entity.view;
 import com.google.gwt.view.client.OrderedMultiSelectionModel;
 import com.google.gwt.view.client.SingleSelectionModel;
 
-import cc.alcina.framework.gwt.client.entity.VersionableDomainBase;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 
-public class MultiSelectionSupportDataDomainBase<T extends VersionableDomainBase>
+public class MultiSelectionSupportDataDomainBase<T extends VersionableEntity>
         extends MultiSelectionSupport<T> {
     public MultiSelectionSupportDataDomainBase(AbstractViewModelView view,
             CellTableView<T> cellTableView) {

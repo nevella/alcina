@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TxtCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.gwt.client.entity.VersionableDomainBase;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /*
@@ -81,7 +81,7 @@ public abstract class EntitySearchDefinition extends SearchDefinition {
         }
     }
 
-    public abstract <C extends VersionableDomainBase> Class<C> resultClass();
+    public abstract <C extends VersionableEntity> Class<C> resultClass();
 
     public void setGroupingParameters(GroupingParameters groupingParameters) {
         this.groupingParameters = groupingParameters;
@@ -122,7 +122,7 @@ public abstract class EntitySearchDefinition extends SearchDefinition {
         }
 
         @Override
-        public <C extends VersionableDomainBase> Class<C> resultClass() {
+        public <C extends VersionableEntity> Class<C> resultClass() {
             throw new UnsupportedOperationException();
         }
     }

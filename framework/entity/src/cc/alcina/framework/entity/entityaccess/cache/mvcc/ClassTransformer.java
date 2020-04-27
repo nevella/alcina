@@ -12,6 +12,7 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,8 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
+import com.github.javaparser.ast.expr.CastExpr;
+import com.github.javaparser.ast.expr.EnclosedExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
@@ -64,9 +67,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListenerReference;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccCorrectnessIssue.MvccCorrectnessIssueType;
 import cc.alcina.framework.entity.util.AlcinaParallel;
 import cc.alcina.framework.entity.util.DataFolderProvider;
@@ -141,11 +146,16 @@ class ClassTransformer {
 		cache = new FsObjectCache(cacheFolder, ClassTransform.class,
 				path -> null);
 		classTransforms = (Map) mvcc.domainDescriptor.perClass.keySet().stream()
-				.collect(Collectors.toMap(k -> k, ClassTransform::new));
+				.sorted(Comparator.comparing(Class::getSimpleName))
+				.collect(AlcinaCollectors.toValueMap(ClassTransform::new));
+		MvccCorrectnessToken token = new MvccCorrectnessToken();
 		for (ClassTransform ct : classTransforms.values()) {
 			ct.setTransformer(this);
 			ct.init(false);
-			ct.checkFieldAndMethodAccess(true);
+			if (ResourceUtilities.is(ClassTransformer.class,
+					"checkClassCorrectness")) {
+				ct.checkFieldAndMethodAccess(true, false, token);
+			}
 			ct.generateMvccClass();
 		}
 		if (classTransforms.values().stream().anyMatch(ct -> ct.invalid)) {
@@ -160,8 +170,29 @@ class ClassTransformer {
 		}
 	}
 
-	public String testClassTransform(Class<? extends Entity> clazz,
-			MvccCorrectnessIssueType issueType) {
+	<H extends Entity> Class<? extends H>
+			getTransformedClass(Class<H> originalClass) {
+		ClassTransform classTransform = classTransforms.get(originalClass);
+		return classTransform == null ? null : classTransform.transformedClass;
+	}
+
+	boolean testClassTransform(Class clazz, MvccCorrectnessToken token) {
+		ClassTransform<? extends Entity> transform = classTransforms.get(clazz);
+		TopicListenerReference ref = transform.correctnessIssueTopic
+				.add((k, issue) -> {
+					Ax.err("Correctness issue: %s %s", issue.type,
+							issue.message);
+				});
+		try {
+			transform.checkFieldAndMethodAccess(true, true, token);
+			return !transform.invalid;
+		} finally {
+			ref.remove();
+		}
+	}
+
+	String testClassTransform(Class<? extends Entity> clazz,
+			MvccCorrectnessIssueType issueType, MvccCorrectnessToken token) {
 		ClassTransform<? extends Entity> ct = new ClassTransform<>(clazz);
 		StringBuilder logBuilder = new StringBuilder();
 		ct.correctnessIssueTopic.add((k, issue) -> {
@@ -174,14 +205,9 @@ class ClassTransformer {
 		});
 		ct.setTransformer(this);
 		ct.init(true);
-		ct.checkFieldAndMethodAccess(false);
+		ct.checkFieldAndMethodAccess(false, true, token);
 		ct.generateMvccClass();
 		return logBuilder.toString();
-	}
-
-	<H extends Entity> Class<? extends H>
-			getTransformedClass(Class<H> originalClass) {
-		return classTransforms.get(originalClass).transformedClass;
 	}
 
 	private static class SourceFinderFs implements SourceFinder {
@@ -207,6 +233,13 @@ class ClassTransformer {
 					return ResourceUtilities
 							.readUrlAsString(sourceFileLocation.toString());
 				}
+				sourceFileLocation = new URL(sourceFileLocation.toString()
+						.replace("/alcina/framework/entity/src/",
+								"/alcina/framework/common/src/"));
+				if (new File(toPath(sourceFileLocation)).exists()) {
+					return ResourceUtilities
+							.readUrlAsString(sourceFileLocation.toString());
+				}
 				return null;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -219,7 +252,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 8;
+		private static final transient int VERSION = 3;
 
 		transient TopicSupport<MvccCorrectnessIssue> correctnessIssueTopic = TopicSupport
 				.localAnonymousTopic();
@@ -238,7 +271,7 @@ class ClassTransformer {
 
 		private transient boolean invalid;
 
-		private String source;
+		private List<String> classSources;
 
 		private byte[] transformedClassBytes;
 
@@ -255,6 +288,23 @@ class ClassTransformer {
 
 		public void setTransformer(ClassTransformer transformer) {
 			this.transformer = transformer;
+		}
+
+		private void checkDuplicateFieldNames() {
+			Multimap<String, List<Field>> byName = SEUtilities
+					.allFields(originalClass).stream()
+					.collect(AlcinaCollectors.toKeyMultimap(Field::getName));
+			byName.entrySet().stream().filter(e -> e.getValue().size() > 1)
+					.forEach(e -> {
+						fieldsWithProblematicAccess.add(e.getKey());
+						correctnessIssueTopic.publish(new MvccCorrectnessIssue(
+								MvccCorrectnessIssueType.Duplicate_field_name,
+								Ax.format(
+										"Duplicate field name: field '%s' - fields: \n\t%s",
+										e.getKey(),
+										CommonUtils.joinWithNewlineTab(
+												e.getValue()))));
+					});
 		}
 
 		private void checkFieldModifiers() {
@@ -274,41 +324,48 @@ class ClassTransformer {
 					});
 		}
 
-		private String findSource() throws Exception {
+		private String findSource(Class clazz) throws Exception {
 			for (SourceFinder finder : SourceFinder.sourceFinders) {
-				String source = finder.findSource(originalClass);
+				String source = finder.findSource(clazz);
 				if (source != null) {
 					return source;
 				}
 			}
+			Ax.err("Warn - cannot find source:\n\t%s", clazz.getName());
 			return null;
 		}
 
 		private boolean isSameSourceAsLastRun() {
-			return lastRun != null && Objects.equals(lastRun.source, source)
-					&& source != null;
+			return lastRun != null
+					&& Objects.equals(lastRun.classSources, classSources)
+					&& classSources.size() > 0;
 		}
 
-		void checkFieldAndMethodAccess(boolean logWarnings) {
-			if (isSameSourceAsLastRun()) {
+		void checkFieldAndMethodAccess(boolean logWarnings,
+				boolean ignoreLastRun, MvccCorrectnessToken token) {
+			if (isSameSourceAsLastRun() && !ignoreLastRun) {
 				methodsWithProblematicAccess = lastRun.methodsWithProblematicAccess;
 				fieldsWithProblematicAccess = lastRun.fieldsWithProblematicAccess;
 			} else {
+				Ax.out("checking unit : %s", originalClass.getSimpleName());
 				checkFieldModifiers();
 				checkDuplicateFieldNames();
-				if (source != null) {
-					compilationUnit = StaticJavaParser.parse(source);
-					compilationUnit.findAll(ClassOrInterfaceDeclaration.class)
-							.forEach(classDeclaration -> {
-								String typeName = classDeclaration.getName()
-										.asString();
-								if (logWarnings) {
-									Ax.out("checking correctness: %s",
-											typeName);
-								}
-								classDeclaration
-										.accept(new CheckAccessVisitor(), null);
-							});
+				for (String source : classSources) {
+					if (token.checkedSources.add(source)) {
+						compilationUnit = StaticJavaParser.parse(source);
+						compilationUnit
+								.findAll(ClassOrInterfaceDeclaration.class)
+								.forEach(classDeclaration -> {
+									String typeName = classDeclaration.getName()
+											.asString();
+									if (logWarnings) {
+										Ax.out("checking correctness: %s",
+												typeName);
+									}
+									classDeclaration.accept(
+											new CheckAccessVisitor(), null);
+								});
+					}
 				}
 			}
 			if (logWarnings) {
@@ -329,20 +386,6 @@ class ClassTransformer {
 			}
 		}
 
-		private void checkDuplicateFieldNames() {
-			Multimap<String, List<Field>> byName = SEUtilities
-					.allFields(originalClass).stream()
-					.collect(AlcinaCollectors.toKeyMultimap(Field::getName));
-			byName.entrySet().stream().filter(e -> e.getValue().size() > 1)
-					.forEach(e -> {
-						correctnessIssueTopic.publish(new MvccCorrectnessIssue(
-								MvccCorrectnessIssueType.Duplicate_field_name,
-								Ax.format(
-										"Duplicate field name: field '%s' - fields: %s",
-										e.getKey(), e.getValue())));
-					});
-		}
-
 		void generateMvccClass() {
 			if (isSameSourceAsLastRun()
 					&& lastRun.transformedClassBytes != null) {
@@ -361,7 +404,20 @@ class ClassTransformer {
 
 		void init(boolean ignoreLastRun) {
 			try {
-				this.source = findSource();
+				this.classSources = new ArrayList<>();
+				Class clazz = originalClass;
+				String superClassFilter = ResourceUtilities.get(
+						ClassTransformer.class,
+						"checkClassCorrectness.superClassFilter");
+				while (clazz != Object.class) {
+					if (Ax.notBlank(superClassFilter)
+							&& clazz.getName().matches(superClassFilter)) {
+						break;
+					}
+					classSources.add(findSource(clazz));
+					clazz = clazz.getSuperclass();
+				}
+				classSources.removeIf(Ax::isNull);
 				this.lastRun = transformer.cache.get(originalClass.getName());
 				if (ignoreLastRun) {
 					this.lastRun = null;
@@ -394,6 +450,8 @@ class ClassTransformer {
 
 			private boolean expressionIsInNestedType;
 
+			private String containingClassName;
+
 			public CheckAccessVisitor() {
 			}
 
@@ -410,13 +468,12 @@ class ClassTransformer {
 			 * 
 			 * Identity: for objects created or registered in the domain
 			 * store transaction manager, there is only *one instance* of
-			 * the object used for equality (currently this only applies to
+			 * the object used for equality. This applies to all objects
 			 * objects created in tx phase 'TO_DOMAIN_COMMITTING' - i.e.
-			 * with a non-zero id field - but will be extended so that
-			 * objects created with an initial non-zero localid will be the
-			 * unique 'domain identity' object). All references between
-			 * graph objects use that 'domain identity' object - FIXME do
-			 * that change now, simplifies queries etc.
+			 * with a non-zero id field - and also objects
+			 * objects created with an initial non-zero localid in tx phase 
+			 * TO_DB_PREPARING. All references between
+			 * graph objects use that 'domain identity' object.
 			 * 
 			 * The effect of that constraint on the class rewriter is quite
 			 * profound - we can't allow any reference to 'this' from
@@ -425,22 +482,13 @@ class ClassTransformer {
 			 * 
 			 * @formatter:off
 			 * - inner class creation must be in dedicated public/protected methods in the entity class which 
-			 * *only* return the inner class (and are hooked through 'domainIdentity().xxx' by the rewriter) 
+			 * *only* return the inner class (and are hooked through 'domainIdentity().xxx' by the programmer) 
 			 * - entity field access can only occur in the main class. no inner class can access entity class fields
 			 * - 'this' can't be assigned or returned
 			 * 
 			 * @formatter:on
 			 * 
-			 * TODO: Have a think: transient cache fields (e.g. demeter payment.earnedRevenueAlgorithmData) - how can we ensure correctness
 			 * TODO: rewrite rewriter to go getXX->resolveTx.__super__getXX (which calls super.getXX)
-			 * 
-			 * 
-			 * ..forbid assignment of this
-			 * 
-			 * ... inner classes
-			 * 
-			 * forbid return value of this
-			 * 
 			 * 
 			 * 
 			 * 
@@ -458,6 +506,10 @@ class ClassTransformer {
 				try {
 					SymbolReference<ResolvedMethodDeclaration> ref = transformer.solver
 							.solve(expr);
+					if (!ref.isSolved()) {
+						Ax.out("Not solved: %s", expr);
+						return;
+					}
 					ResolvedMethodDeclaration decl = ref
 							.getCorrespondingDeclaration();
 					boolean privateMethod = decl
@@ -470,7 +522,26 @@ class ClassTransformer {
 								MvccCorrectnessIssueType.InnerClassOuterPrivateMethodAccess);
 					}
 				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
+					// assume these are ok...
+					// String methodName =
+					// methodDeclaration.getName().asString();
+					// switch (containingClassName) {
+					// case "au.com.barnet.demeter.crm.client.ContactBase":
+					// switch (methodName) {
+					// case "provideReachableActiveRecurrentOrders":
+					// case "provideActiveProductCategories":
+					// case "ensureFlow":
+					// case "provideActiveProductCodes":
+					// case "provideAllProductCodes":
+					// case "provideAllProductCategories":
+					// case "provideBestAddress":
+					// case "provideCCExpiration":
+					// case "provideCCMaskedNumber":
+					// return;
+					// }
+					// break;
+					// }
+					// throw new WrappedRuntimeException(e);
 				}
 			}
 
@@ -508,8 +579,8 @@ class ClassTransformer {
 						ResolvedFieldDeclaration field = ref
 								.getCorrespondingDeclaration().asField();
 						if (expressionIsInNestedType
-								&& field.declaringType().getQualifiedName()
-										.equals(originalClass.getName())) {
+								&& !field.declaringType().getQualifiedName()
+										.equals(containingClassName)) {
 							addProblematicAccess(
 									MvccCorrectnessIssueType.InnerClassOuterFieldAccess);
 						}
@@ -526,31 +597,17 @@ class ClassTransformer {
 				}
 				ClassOrInterfaceType type = expr.getType();
 				ResolvedType creationType = transformer.solver.getType(expr);
+				if (creationType.asReferenceType().getQualifiedName()
+						.contains("DomainSupport")) {
+					int debug = 3;
+				}
 				ResolvedReferenceTypeDeclaration creationTypeDeclaration = creationType
 						.asReferenceType().getTypeDeclaration();
 				if (creationTypeDeclaration instanceof JavaParserClassDeclaration) {
 					try {
-						String qualifiedName = creationTypeDeclaration
-								.getQualifiedName();
-						FormatBuilder fb = new FormatBuilder().separator(".");
-						for (String part : qualifiedName.split("\\.")) {
-							fb.append(part);
-							if (part.matches("[A-Z].+")) {
-								fb.separator("$");
-							}
-						}
-						Class clazz = Class.forName(fb.toString());
-						boolean innerNonStatic = false;
-						while (clazz.getEnclosingClass() != null) {
-							if ((clazz.getModifiers() & Modifier.STATIC) != 0) {
-								break;
-							}
-							clazz = clazz.getEnclosingClass();
-							if (clazz == originalClass) {
-								innerNonStatic = true;
-								break;
-							}
-						}
+						Class clazz = getJvmClassFromTypeDeclaration(
+								creationTypeDeclaration);
+						boolean innerNonStatic = isInnerNonStatic(clazz);
 						if (innerNonStatic) {
 							// not allowed, must be annotated with
 							// @MvccAccessCorrect - see
@@ -567,14 +624,23 @@ class ClassTransformer {
 			@Override
 			public void visit(SuperExpr expr, Void arg) {
 				super.visit(expr, arg);
-				if (isDefinedOk(expr)) {
-					// constant expression
-					return;
-				}
-				addProblematicAccess(MvccCorrectnessIssueType.Super_usage);
-				Node parent = expr.getParentNode().get();
-				if (parent instanceof ReturnStmt) {
-				}
+				// super.xxx calls are actually fine - we can't leak 'this'
+				// (since those methods are also checked) and we're already
+				// resolved (for field
+				// value correctness)
+				//
+				//
+				// if (isDefinedOk(expr)) {
+				// // constant expression
+				// return;
+				// }
+				// if (isInStaticNonEntityInnerClass(expr)) {
+				// return;
+				// }
+				// addProblematicAccess(MvccCorrectnessIssueType.Super_usage);
+				// Node parent = expr.getParentNode().get();
+				// if (parent instanceof ReturnStmt) {
+				// }
 			}
 
 			@Override
@@ -583,14 +649,27 @@ class ClassTransformer {
 				if (isDefinedOk(expr)) {
 					return;
 				}
+				if (expressionIsInNestedType) {
+					// OK, 'this' is nested in domainIdentity()
+					return;
+				}
 				Node parent = expr.getParentNode().get();
 				// OK -- e.g. this.id
 				if (parent instanceof FieldAccessExpr) {
 					return;
 				}
-				// OK -- e.g. this.getId()
 				if (parent instanceof MethodCallExpr) {
-					return;
+					MethodCallExpr methodCallExpr = (MethodCallExpr) parent;
+					if (methodCallExpr.getScope().isPresent()
+							&& methodCallExpr.getScope().get() == expr) {
+						// OK -- e.g. this.getId()
+						return;
+					} else {
+						// foo(this);
+						addProblematicAccess(
+								MvccCorrectnessIssueType.This_assignment_unknown);
+						return;
+					}
 				}
 				// OK -- e.g. MvccTestEntity.this::someMethod (we check access
 				// elsewhere)
@@ -609,15 +688,48 @@ class ClassTransformer {
 				} else if (parent instanceof BinaryExpr) {
 					addProblematicAccess(
 							MvccCorrectnessIssueType.This_BinaryExpr);
-				} else if (parent instanceof MethodCallExpr) {
-					addProblematicAccess(
-							MvccCorrectnessIssueType.This_assignment_unknown);
 				} else if (parent instanceof ObjectCreationExpr) {
 					addProblematicAccess(
 							MvccCorrectnessIssueType.This_assignment_unknown);
+				} else if (parent instanceof CastExpr) {
+					addProblematicAccess(
+							MvccCorrectnessIssueType.This_assignment_unknown);
+				} else if (parent instanceof EnclosedExpr) {
+					throw new UnsupportedOperationException(Ax
+							.format("Remove enclosed expression: %s", parent));
 				} else {
 					// unknown
 					throw new UnsupportedOperationException();
+				}
+			}
+
+			private ClassOrInterfaceDeclaration
+					getContainingDeclaration(Node node) {
+				while (node != null) {
+					if (node instanceof ClassOrInterfaceDeclaration) {
+						return (ClassOrInterfaceDeclaration) node;
+					}
+					node = node.getParentNode().get();
+				}
+				return null;
+			}
+
+			private Class getJvmClassFromTypeDeclaration(
+					ResolvedReferenceTypeDeclaration resolvedReferenceTypeDeclaration) {
+				try {
+					String qualifiedName = resolvedReferenceTypeDeclaration
+							.getQualifiedName();
+					FormatBuilder fb = new FormatBuilder().separator(".");
+					for (String part : qualifiedName.split("\\.")) {
+						fb.append(part);
+						if (part.matches("[A-Z].+")) {
+							fb.separator("$");
+						}
+					}
+					Class clazz = Class.forName(fb.toString());
+					return clazz;
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
 				}
 			}
 
@@ -625,16 +737,20 @@ class ClassTransformer {
 				boolean isInAnnotationExpression = false;
 				boolean mvccAccessCorrectAnnotationPresent = false;
 				Optional<Node> cursor = Optional.<Node> ofNullable(expr);
+				// FIXME - mvcc.2 - can cache a bunch of this
 				while (cursor.isPresent()) {
 					Node node = cursor.get();
 					if (node instanceof MethodDeclaration) {
 						methodDeclaration = (MethodDeclaration) node;
 						mvccAccessCorrectAnnotationPresent = methodDeclaration
-								.getAnnotationByClass(MvccAccessCorrect.class)
+								.getAnnotationByClass(MvccAccess.class)
 								.isPresent();
 					}
 					if (node instanceof ClassOrInterfaceDeclaration) {
 						classOrInterfaceDeclaration = (ClassOrInterfaceDeclaration) node;
+						containingClassName = transformer.solver
+								.getTypeDeclaration(classOrInterfaceDeclaration)
+								.asReferenceType().getQualifiedName();
 						expressionIsInNestedType = classOrInterfaceDeclaration
 								.isNestedType();
 						break;
@@ -646,6 +762,33 @@ class ClassTransformer {
 				}
 				return isInAnnotationExpression
 						|| mvccAccessCorrectAnnotationPresent;
+			}
+
+			private boolean isInnerNonStatic(Class clazz) {
+				boolean innerNonStatic = false;
+				while (clazz.getEnclosingClass() != null) {
+					if ((clazz.getModifiers() & Modifier.STATIC) != 0) {
+						break;
+					}
+					clazz = clazz.getEnclosingClass();
+					if (clazz.getEnclosingClass() == null) {
+						innerNonStatic = true;
+						break;
+					}
+				}
+				return innerNonStatic;
+			}
+
+			@SuppressWarnings("unused")
+			private boolean isInStaticNonEntityInnerClass(Expression expr) {
+				ClassOrInterfaceDeclaration containingDeclaration = getContainingDeclaration(
+						expr);
+				ResolvedReferenceTypeDeclaration creationTypeDeclaration = transformer.solver
+						.getTypeDeclaration(containingDeclaration);
+				Class clazz = getJvmClassFromTypeDeclaration(
+						creationTypeDeclaration);
+				boolean innerNonStatic = isInnerNonStatic(clazz);
+				return !innerNonStatic && !Entity.class.isAssignableFrom(clazz);
 			}
 
 			protected void addProblematicAccess(MvccCorrectnessIssueType type) {
@@ -787,6 +930,8 @@ class ClassTransformer {
 					 * ok, in which case maybe @transient (-> base) really is
 					 * the right approach
 					 * 
+					 * Hmmm....
+					 * 
 					 * 
 					 */
 					List<Method> allClassMethods = SEUtilities
@@ -807,15 +952,6 @@ class ClassTransformer {
 						 */
 						if (!isNonPrivateInstanceNonInterfaceMethod(
 								allClassMethods, method)) {
-							continue;
-						}
-						/*
-						 * transitional - 'writeable' will go away (at the
-						 * moment causes bytecode issues)
-						 * 
-						 * FIXME - get rid of it
-						 */
-						if (method.getName().matches("writeable")) {
 							continue;
 						}
 						if (method.getName().matches("provideEntityClass")) {
@@ -863,44 +999,61 @@ class ClassTransformer {
 						boolean setter = method.getName().matches("set[A-Z].*")
 								&& method.getParameterTypes().length == 1;
 						boolean writeResolve = setter;
-						String declaringTypeName = getClassName(ctClass);
-						String returnPhrase = method
-								.getReturnType() == CtClass.voidType ? ""
-										: "return";
-						String returnVoidPhrase = method
-								.getReturnType() == CtClass.voidType
-										? "\n\treturn;"
-										: "";
-						List<String> argumentNames = getArgumentNames(method);
-						String parameterList = argumentNames.stream()
-								.collect(Collectors.joining(","));
-						if (!writeResolve) {
-							bodyBuilder.line(
-									"if (__mvccObjectVersions__ == null){\n\t%s super.%s(%s);\n%s}\n",
-									returnPhrase, method.getName(),
-									parameterList, returnVoidPhrase);
+						MvccAccessType accessType = null;
+						if (method.hasAnnotation(MvccAccess.class)) {
+							MvccAccess annotation = (MvccAccess) method
+									.getAnnotation(MvccAccess.class);
+							accessType = annotation.type();
 						}
-						/*
-						 * This may result in two calls to resolve() - but
-						 * there's no other way to do it with javassist
-						 * 
-						 * If we were to make a new method, (a) possibly not
-						 * inlined and (b) need an instance variable of the new
-						 * type (so we can call the method) which javassist
-						 * don't like
-						 * 
-						 * We could write another super_call method - but
-						 * remember, 99.9% of the time we don't reach this
-						 * point...
-						 */
-						bodyBuilder.line(
-								"%s __instance__ = (%s) cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions.resolve(this,%s);",
-								cf.getName(), cf.getName(), writeResolve);
-						bodyBuilder.line(
-								"if (__instance__ != this){\n\t%s __instance__.%s(%s);\n}\n",
-								returnPhrase, method.getName(), parameterList);
-						bodyBuilder.line("else {\n\t%s super.%s(%s);\n}\n",
-								returnPhrase, method.getName(), parameterList);
+						if (accessType == MvccAccessType.TRANSACTIONAL_ACCESS_NOT_SUPPORTED) {
+							bodyBuilder.line(
+									"throw new UnsupportedOperationException();");
+						} else {
+							String declaringTypeName = getClassName(ctClass);
+							String returnPhrase = method
+									.getReturnType() == CtClass.voidType ? ""
+											: "return";
+							String returnVoidPhrase = method
+									.getReturnType() == CtClass.voidType
+											? "\n\treturn;"
+											: "";
+							List<String> argumentNames = getArgumentNames(
+									method);
+							String parameterList = argumentNames.stream()
+									.collect(Collectors.joining(","));
+							if (!writeResolve) {
+								bodyBuilder.line(
+										"if (__mvccObjectVersions__ == null){\n\t%s super.%s(%s);\n%s}\n",
+										returnPhrase, method.getName(),
+										parameterList, returnVoidPhrase);
+							}
+							/*
+							 * This may result in two calls to resolve() - but
+							 * there's no other way to do it with javassist
+							 * 
+							 * If we were to make a new method, (a) possibly not
+							 * inlined and (b) need an instance variable of the
+							 * new type (so we can call the method) which
+							 * javassist don't like
+							 * 
+							 * We could write another super_call method - but
+							 * remember, 99.9% of the time we don't reach this
+							 * point...
+							 */
+							bodyBuilder.line(
+									"%s __instance__ = (%s) cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions.resolve(this, %s, %s);",
+									cf.getName(), cf.getName(),
+									writeResolve
+											&& accessType != MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY,
+									accessType == MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY);
+							bodyBuilder.line(
+									"if (__instance__ != this){\n\t%s __instance__.%s(%s);\n}\n",
+									returnPhrase, method.getName(),
+									parameterList);
+							bodyBuilder.line("else {\n\t%s super.%s(%s);\n}\n",
+									returnPhrase, method.getName(),
+									parameterList);
+						}
 						String body = bodyBuilder.toString();
 						if (body.length() > 0) {
 							String f_body = Ax.format("{\n%s}",

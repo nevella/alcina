@@ -89,18 +89,22 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 					MvccObjectVersions.debugRemoval++;
 					createdGroup.domain().addToProperty("memberUsers",
 							createdUser2);
-					IG resolveFalse = Transactions.resolve(createdGroup, false);
-					IG resolveTrue = Transactions.resolve(createdGroup, true);
+					IG resolveFalse = Transactions.resolve(createdGroup, false,
+							false);
+					IG resolveTrue = Transactions.resolve(createdGroup, true,
+							false);
 					tx2Latch1.countDown();
 					tx3Latch1.await();
 					// this one to avoid a concurrent db (hibernate) mod
 					tx1Latch2.await();
-					IG resolve3 = Transactions.resolve(createdGroup, false);
-					if(createdGroup.getMemberUsers().size() != initialSize
-							+ 1){
-						Set<? extends IUser> memberUsers = createdGroup.getMemberUsers();
+					IG resolve3 = Transactions.resolve(createdGroup, false,
+							false);
+					if (createdGroup.getMemberUsers().size() != initialSize
+							+ 1) {
+						Set<? extends IUser> memberUsers = createdGroup
+								.getMemberUsers();
 						long size2 = memberUsers.stream().count();
-						int debug=3;
+						int debug = 3;
 					}
 					Preconditions.checkState(
 							createdGroup.getMemberUsers().size() == initialSize
@@ -132,12 +136,12 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 					tx3Latch1.countDown();
 					tx1Latch2.await();
 					tx2Latch2.await();
-					
-					Set<? extends IUser> memberUsers = createdGroup.getMemberUsers();
+					Set<? extends IUser> memberUsers = createdGroup
+							.getMemberUsers();
 					long size2 = memberUsers.stream().count();
-					if(createdGroup.getMemberUsers().size() != initialSize
-							+ 1){
-						int debug=3;
+					if (createdGroup.getMemberUsers().size() != initialSize
+							+ 1) {
+						int debug = 3;
 					}
 					Preconditions.checkState(
 							createdGroup.getMemberUsers().size() == initialSize
@@ -145,17 +149,18 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 							"not-committed-tx3: createdGroup.getMemberUsers().size()!=initialSize+1");
 					Transactions.pauseVacuum(true);
 					Sx.commit();
-					Set<? extends IUser> shouldBeThree = createdGroup.getMemberUsers();
+					Set<? extends IUser> shouldBeThree = createdGroup
+							.getMemberUsers();
 					Transactions.pauseVacuum(false);
 					Transactions.waitForAllToCompleteExSelf();
-					Set<? extends IUser> shouldBeThree2 = createdGroup.getMemberUsers();
-					int debug=3;
+					Set<? extends IUser> shouldBeThree2 = createdGroup
+							.getMemberUsers();
+					int debug = 3;
 					Preconditions.checkState(
 							createdGroup.getMemberUsers().size() == initialSize
 									+ 3,
 							"committed-tx3 (and tx1,tx2): createdGroup.getMemberUsers().size()!=initialSize+3");
-					//vacuum
-					
+					// vacuum
 				} catch (Exception e) {
 					notifyThreadException(e);
 					throw WrappedRuntimeException.wrapIfNotRuntime(e);

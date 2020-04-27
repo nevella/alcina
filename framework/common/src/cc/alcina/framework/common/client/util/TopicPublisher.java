@@ -74,6 +74,22 @@ public class TopicPublisher {
 		void topicPublished(String key, T message);
 	}
 
+	public static class TopicListenerReference {
+		private TopicListener listener;
+
+		private TopicSupport topicSupport;
+
+		public TopicListenerReference(TopicSupport topicSupport,
+				TopicListener listener) {
+			this.topicSupport = topicSupport;
+			this.listener = listener;
+		}
+
+		public void remove() {
+			topicSupport.remove(listener);
+		}
+	}
+
 	public static class TopicSupport<T> {
 		public static <T> TopicSupport<T> localAnonymousTopic() {
 			return new TopicSupport<>(null, false);
@@ -95,11 +111,12 @@ public class TopicPublisher {
 					: new TopicPublisher();
 		}
 
-		public void add(TopicListener<T> listener) {
-			add(listener, false);
+		public TopicListenerReference add(TopicListener<T> listener) {
+			return add(listener, false);
 		}
 
-		public void add(TopicListener<T> listener, boolean fireIfWasPublished) {
+		public TopicListenerReference add(TopicListener<T> listener,
+				boolean fireIfWasPublished) {
 			delta(listener, true);
 			if (wasPublished && fireIfWasPublished) {
 				// note - we don't keep a ref to the last published object -
@@ -108,6 +125,7 @@ public class TopicPublisher {
 				// already occurred
 				listener.topicPublished(topic, null);
 			}
+			return new TopicListenerReference(this, listener);
 		}
 
 		public void addRunnable(Runnable runnable) {

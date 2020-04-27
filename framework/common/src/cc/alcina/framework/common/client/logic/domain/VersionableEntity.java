@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.entity;
+package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -10,8 +10,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.entity.VersioningEntityListener;
-import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
@@ -29,14 +27,10 @@ import cc.alcina.framework.common.client.util.LooseContext;
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ADMIN))
 @MappedSuperclass
 @javax.persistence.EntityListeners(VersioningEntityListener.class)
-@RegistryLocation(registryPoint = VersionableDomainBase.class)
-public abstract class VersionableDomainBase<T extends VersionableDomainBase> extends Entity<T>
-		implements IVersionable {
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
-	@Display(name = "Id", displayMask = Display.DISPLAY_RO_PROPERTY, styleName = "nowrap id", orderingHint = 5)
-	public abstract long getId();
-	
-	public static final String CONTEXT_FIRE_CREATION_DATE_EVENTS = VersionableDomainBase.class
+@RegistryLocation(registryPoint = VersionableEntity.class)
+public abstract class VersionableEntity<T extends VersionableEntity>
+		extends Entity<T> implements IVersionable {
+	public static final String CONTEXT_FIRE_CREATION_DATE_EVENTS = VersionableEntity.class
 			.getName() + ".CONTEXT_FIRE_CREATION_DATE_EVENTS";
 
 	protected volatile long id = 0;
@@ -45,10 +39,10 @@ public abstract class VersionableDomainBase<T extends VersionableDomainBase> ext
 
 	private Date creationDate;
 
-	public VersionableDomainBase(boolean exDomain) {
+	public VersionableEntity(boolean exDomain) {
 	}
 
-	protected VersionableDomainBase() {
+	protected VersionableEntity() {
 	}
 
 	@Override
@@ -63,6 +57,12 @@ public abstract class VersionableDomainBase<T extends VersionableDomainBase> ext
 	public IUser getCreationUser() {
 		return null;
 	}
+
+	@Override
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
+	@Display(name = "Id", displayMask = Display.DISPLAY_RO_PROPERTY, styleName = "nowrap id", orderingHint = 5)
+	@Transient
+	public abstract long getId();
 
 	@Override
 	@Display(name = "Last modified", orderingHint = 999)
@@ -115,10 +115,5 @@ public abstract class VersionableDomainBase<T extends VersionableDomainBase> ext
 	@Override
 	public void setLastModificationUser(IUser lastModificationUser) {
 		// ignore
-	}
-
-	@Override
-	public String toString() {
-		return new EntityLocator(this).toString();
 	}
 }

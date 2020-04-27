@@ -32,16 +32,8 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 	private FileInput base;
 
 	private FileSelectorInfo value;
-	
+
 	private String accept;
-
-	public String getAccept() {
-		return this.accept;
-	}
-
-	public void setAccept(String accept) {
-		this.accept = accept;
-	}
 
 	private TopicListener<FileSelectorInfo> clearListener = (k, v) -> base
 			.clear();
@@ -51,12 +43,12 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 		initWidget(base);
 		base.addChangeHandler(this);
 	}
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		base.setAccept(accept);
+
+	public String getAccept() {
+		return this.accept;
 	}
 
+	@Override
 	public FileSelectorInfo getValue() {
 		return this.value;
 	}
@@ -87,6 +79,7 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 						bytes[i] = (byte) result.charAt(i);
 					}
 					newInfo.setBytes(bytes);
+					//
 					newInfo.topicClear().add(clearListener);
 					FileSelectorInfo oldValue = value;
 					if (oldValue != null) {
@@ -99,12 +92,17 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 		}
 	}
 
+	public void setAccept(String accept) {
+		this.accept = accept;
+	}
+
 	@Override
 	public void setEnabled(boolean enabled) {
 		base.setEnabled(enabled);
 	}
 
 	// never actually called - 'value' only created post readBinaryString
+	@Override
 	public void setValue(FileSelectorInfo value) {
 		this.value = value;
 	}
@@ -118,4 +116,10 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
     };
     reader.readAsBinaryString(file);
 	}-*/;
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		base.setAccept(accept);
+	}
 }

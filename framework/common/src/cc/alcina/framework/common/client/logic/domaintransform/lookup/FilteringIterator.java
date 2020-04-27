@@ -59,8 +59,6 @@ public class FilteringIterator<E> implements Iterator<E> {
 			return next;
 		}
 		peeked = true;
-		// not needed, but sanitary
-		next = null;
 		return peekNext();
 	}
 

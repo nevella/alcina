@@ -31,7 +31,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.J8Utils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
@@ -240,7 +239,7 @@ public class InternalMetrics {
         // MetricLogging.get().end(key);
         Map<Long, ThreadInfo> threadInfoById = Arrays.stream(threadInfos)
                 .filter(Objects::nonNull)
-                .collect(J8Utils.toKeyMap(ti -> ti.getThreadId()));
+                .collect(AlcinaCollectors.toKeyMap(ti -> ti.getThreadId()));
         trackers.values().stream().filter(imd -> !imd.isFinished())
                 .filter(imd -> shouldSlice(imd)).forEach(imd -> {
                     synchronized (imd) {
@@ -339,7 +338,7 @@ public class InternalMetrics {
                         || imd.lastPersistTime < imd.lastSliceTime)
                 .map(imd -> imd.syncCopyForPersist())
                 .collect(Collectors.toMap(imd -> imd, imd -> imd.asMetric(),
-                        J8Utils.throwingMerger(), LinkedHashMap::new));
+                        AlcinaCollectors.throwingMerger(), LinkedHashMap::new));
         if (toPersist.size() > 0) {
             logger.debug("persist internal metric: [%s]",
                     toPersist.keySet().stream().map(imd -> imd.thread.getName())

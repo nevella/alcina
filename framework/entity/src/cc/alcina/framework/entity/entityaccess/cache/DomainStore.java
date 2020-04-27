@@ -285,6 +285,8 @@ public class DomainStore implements IDomainStore {
 
 	public String name;
 
+	AtomicLong applyTxToGraphCounter = new AtomicLong(0);
+
 	public DomainStore(DomainStoreDescriptor descriptor) {
 		this();
 		this.domainDescriptor = descriptor;
@@ -703,8 +705,6 @@ public class DomainStore implements IDomainStore {
 		V existing = (V) cache.get(v.provideEntityClass(), v.getId());
 		return existing == v;
 	}
-
-	AtomicLong applyTxToGraphCounter = new AtomicLong(0);
 
 	// we only have one thread allowed here - but they won't start blocking the
 	// reader thread
@@ -1482,7 +1482,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public <V extends Entity> V resolve(V v) {
-			return Transactions.resolve(v, false);
+			return Transactions.resolve(v, false, false);
 		}
 
 		@Override
@@ -1624,6 +1624,11 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	@FunctionalInterface
+	interface LocalReplacementCreationObjectResolver
+			extends Function<Long, Entity> {
+	}
+
 	class QueryToken<E extends Entity> {
 		boolean empty = false;
 
@@ -1677,17 +1682,30 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	@FunctionalInterface
-	interface LocalReplacementCreationObjectResolver
-			extends Function<Long, Entity> {
-	}
-
 	class SubgraphTransformManagerPostProcess extends SubgraphTransformManager {
 		private LocalReplacementCreationObjectResolver localReplacementCreationObjectResolver;
 
 		public void addPropertyStore(DomainClassDescriptor descriptor) {
 			((PropertyStoreAwareMultiplexingObjectCache) store.getCache())
 					.addPropertyStore(descriptor);
+		}
+
+		public void setLocalReplacementCreationObjectResolver(
+				LocalReplacementCreationObjectResolver localReplacementCreationObjectResolver) {
+			this.localReplacementCreationObjectResolver = localReplacementCreationObjectResolver;
+		}
+
+		@Override
+		protected void beforeDirectCollectionModification(Entity obj,
+				String propertyName, Object newTargetValue,
+				CollectionModificationType collectionModificationType) {
+			Transactions.resolve(obj, true, false);
+		}
+
+		@Override
+		protected void createObjectLookup() {
+			store = new DetachedCacheObjectStorePsAware();
+			setDomainObjects(store);
 		}
 
 		@Override
@@ -1701,24 +1719,6 @@ public class DomainStore implements IDomainStore {
 				TransformManager.registerLocalObjectPromotion(localReplacement);
 			}
 			return localReplacement;
-		}
-
-		public void setLocalReplacementCreationObjectResolver(
-				LocalReplacementCreationObjectResolver localReplacementCreationObjectResolver) {
-			this.localReplacementCreationObjectResolver = localReplacementCreationObjectResolver;
-		}
-
-		@Override
-		protected void beforeDirectCollectionModification(Entity obj,
-				String propertyName, Object newTargetValue,
-				CollectionModificationType collectionModificationType) {
-			Transactions.resolve(obj, true);
-		}
-
-		@Override
-		protected void createObjectLookup() {
-			store = new DetachedCacheObjectStorePsAware();
-			setDomainObjects(store);
 		}
 
 		@Override

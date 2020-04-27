@@ -22,8 +22,15 @@ public class Transactions {
 
 	private static Map<DomainStore, Transaction> baseTransactions = new LightMap<>();
 
+	private static Multimap removedVersions = new Multimap();
+
 	public static <T extends Entity> boolean checkResolved(T t) {
-		return resolve(t, false) == t;
+		return resolve(t, false, false) == t;
+	}
+
+	public static synchronized <T extends Entity> void
+			debugRemoveVersion(T baseObject, ObjectVersion<T> version) {
+		// removedVersions.add(baseObject, version);
 	}
 
 	public static synchronized void ensureInitialised() {
@@ -32,11 +39,25 @@ public class Transactions {
 		}
 	}
 
+	public static synchronized <T extends Entity> List<ObjectVersion<T>>
+			getRemovedVersions(T baseObject) {
+		List<ObjectVersion<T>> list = removedVersions.get(baseObject);
+		if (list != null) {
+			list.forEach(ObjectVersion::debugObjectHash);
+		}
+		return list;
+	}
+
 	public static synchronized boolean isInitialised() {
 		return instance != null;
 	}
 
-	public static <T extends Entity> T resolve(T t, boolean write) {
+	public static void pauseVacuum(boolean paused) {
+		get().vacuum.paused = paused;
+	}
+
+	public static <T extends Entity> T resolve(T t, boolean write,
+			boolean base) {
 		if (t instanceof MvccObject) {
 			MvccObject mvccObject = (MvccObject) t;
 			MvccObjectVersions<T> versions = mvccObject.__getMvccVersions__();
@@ -56,6 +77,9 @@ public class Transactions {
 							versions = MvccObjectVersions.ensure(t, transaction,
 									false);
 						}
+						if (base) {
+							return versions.getBaseObject();
+						}
 						return versions.resolve(write);
 					}
 				}
@@ -65,23 +89,28 @@ public class Transactions {
 		}
 	}
 
+	// debug/testing only!
+	public static void waitForAllToCompleteExSelf() {
+		get().waitForAllToCompleteExSelf0();
+	}
+
 	static Transaction baseTransaction(DomainStore store) {
 		return baseTransactions.get(store);
 	}
 
 	static <T extends Entity & MvccObject> T copyObject(T object) {
-//		synchronized (debugMonitor) {
-			T clone = ResourceUtilities.fieldwiseClone(object, false, true);
-			MvccObjectVersions __getMvccVersions__ = object.__getMvccVersions__();
-			clone.__setMvccVersions__(__getMvccVersions__);
-			return clone;
-//		}
+		// synchronized (debugMonitor) {
+		T clone = ResourceUtilities.fieldwiseClone(object, false, true);
+		MvccObjectVersions __getMvccVersions__ = object.__getMvccVersions__();
+		clone.__setMvccVersions__(__getMvccVersions__);
+		return clone;
+		// }
 	}
 
 	static <T extends Entity> void copyObjectFields(T from, T to) {
-//		synchronized (debugMonitor) {
-			ResourceUtilities.fieldwiseCopy(from, to, false, true);
-//		}
+		// synchronized (debugMonitor) {
+		ResourceUtilities.fieldwiseCopy(from, to, false, true);
+		// }
 	}
 
 	static Transactions get() {
@@ -137,6 +166,27 @@ public class Transactions {
 			}
 		}
 	}
+
+	private void waitForAllToCompleteExSelf0() {
+		while (true) {
+			synchronized (transactionMetadataLock) {
+				Transaction current = Transaction.current();
+				if (activeTransactions.size() == 0) {
+					return;
+				}
+				if (activeTransactions.containsKey(current.getId())
+						&& activeTransactions.size() == 1) {
+					return;
+				}
+			}
+			try {
+				Thread.sleep(100);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+	// static Object debugMonitor = new Object();
 
 	/*
 	 * Returns committed transactions which can be vacuumed, and prunes
@@ -201,57 +251,10 @@ public class Transactions {
 		vacuum.addVacuumable(vacuumable);
 	}
 
-	// debug/testing only!
-	public static void waitForAllToCompleteExSelf() {
-		get().waitForAllToCompleteExSelf0();
-	}
-
-	private void waitForAllToCompleteExSelf0() {
-		while (true) {
-			synchronized (transactionMetadataLock) {
-				Transaction current = Transaction.current();
-				if (activeTransactions.size() == 0) {
-					return;
-				}
-				if (activeTransactions.containsKey(current.getId())
-						&& activeTransactions.size() == 1) {
-					return;
-				}
-			}
-			try {
-				Thread.sleep(100);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
+	void vacuumComplete(List<Transaction> vacuumableTransactions) {
+		synchronized (transactionMetadataLock) {
+			vacuumableTransactions
+					.forEach(tx -> committedTransactions.remove(tx.getId()));
 		}
-	}
-
-	private static Multimap removedVersions = new Multimap();
-
-//	static Object debugMonitor = new Object();
-
-	public static synchronized <T extends Entity> void
-			debugRemoveVersion(T baseObject, ObjectVersion<T> version) {
-//		removedVersions.add(baseObject, version);
-	}
-
-	public static synchronized <T extends Entity> List<ObjectVersion<T>>
-			getRemovedVersions(T baseObject) {
-		List<ObjectVersion<T>> list = removedVersions.get(baseObject);
-		if (list != null) {
-			list.forEach(ObjectVersion::debugObjectHash);
-		}
-		return list;
-	}
-
-	  void
-			vacuumComplete(List<Transaction> vacuumableTransactions) {
-		 synchronized (transactionMetadataLock) {
-			 vacuumableTransactions.forEach(tx->committedTransactions.remove(tx.getId()));
-		 }
-	}
-
-	public static void pauseVacuum(boolean paused) {
-		get().vacuum.paused=paused;
 	}
 }

@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.cache;
+package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -11,10 +11,9 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalMap;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalTreeMap;
+import cc.alcina.framework.common.client.util.NullFriendlyComparatorWrapper;
 
-public class BaseProjectionSupport {
+public class BaseProjectionSupportMvcc {
 	public static class BplDelegateMapCreatorFastUnsorted
 			implements DelegateMapCreator {
 		@Override
@@ -35,11 +34,13 @@ public class BaseProjectionSupport {
 			}
 			if (getBuilder().isNavigable()) {
 				return new TransactionalTreeMap(Object.class, Object.class,
-						Comparator.naturalOrder());
+						new NullFriendlyComparatorWrapper(
+								Comparator.reverseOrder()));
 			} else {
 				if (getBuilder().isSorted()) {
 					return new TransactionalTreeMap(Object.class, Object.class,
-							Comparator.naturalOrder());
+							new NullFriendlyComparatorWrapper(
+									Comparator.reverseOrder()));
 				} else {
 					if (depthFromRoot > 0 && depth == 1) {
 						return new TransactionalMap(Object.class, Object.class);
@@ -74,7 +75,8 @@ public class BaseProjectionSupport {
 		@Override
 		public Map get() {
 			return new TransactionalTreeMap(types.get(0), types.get(1),
-					Comparator.reverseOrder());
+					new NullFriendlyComparatorWrapper(
+							Comparator.reverseOrder()));
 		}
 	}
 }

@@ -2,13 +2,15 @@ package cc.alcina.framework.entity.entityaccess.mvcc;
 
 import java.util.stream.IntStream;
 
-import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccessCorrect;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessType;
 
 public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 	private long id;
+
 	@SuppressWarnings("unused")
 	private long invalidDuplicateFieldName;
+
 	protected String incorrectAccessField;
 
 	private String disallowedInnerAccessField;
@@ -23,10 +25,6 @@ public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 
 	public Inner1 invalid_InnerConstructor() {
 		return new Inner1();
-	}
-
-	public void invalid_Super_usage() {
-		MvccTestEntity.super.getLocalId();
 	}
 
 	public void invalid_This_AssignExpr() {
@@ -52,7 +50,12 @@ public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 		this.id = id;
 	}
 
-	@MvccAccessCorrect
+	/*
+	 * normally would
+	 * use @MvccAccessCorrect(type=MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY) -
+	 * which would wrap the constructor. This demonstrates the actual wrapping
+	 */
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public Inner1 valid_InnerConstructor() {
 		if (this == domainIdentity()) {
 			return new Inner1();

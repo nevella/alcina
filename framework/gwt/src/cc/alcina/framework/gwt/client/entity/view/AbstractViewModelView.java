@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
-import cc.alcina.framework.gwt.client.entity.VersionableDomainBase;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.gwt.client.entity.view.ViewModel.ViewModelWithDataProvider;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -79,7 +79,7 @@ public abstract class AbstractViewModelView<VM extends ViewModel>
                 ViewModelWithDataProvider castModel = (ViewModelWithDataProvider) model;
                 List allResults = castModel.dataProvider.getAllResults();
                 if (allResults.size() > index) {
-                    VersionableDomainBase object = (VersionableDomainBase) allResults
+                    VersionableEntity object = (VersionableEntity) allResults
                             .get(index);
                     AppController.get().doView(object);
                 }
@@ -100,7 +100,7 @@ public abstract class AbstractViewModelView<VM extends ViewModel>
         throw new UnsupportedOperationException();
     }
 
-    protected <C extends VersionableDomainBase> void asyncSelect(Class<C> clazz,
+    protected <C extends VersionableEntity> void asyncSelect(Class<C> clazz,
             String id, AbstractCellTable<C> table) {
         if (table == null || table.getSelectionModel() == null) {
             return;

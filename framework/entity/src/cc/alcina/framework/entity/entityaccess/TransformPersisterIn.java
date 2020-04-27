@@ -31,11 +31,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.entity.J8Utils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -142,7 +142,7 @@ public class TransformPersisterIn {
 				}
 			}
 			Multimap<Integer, List<Object>> byRequestId = transformRequests
-					.stream().collect(J8Utils.toKeyMultimap(
+					.stream().collect(AlcinaCollectors.toKeyMultimap(
 							DomainTransformRequest::getRequestId));
 			Optional<Entry<Integer, List<Object>>> multipleDtrsForOneRequestId = byRequestId
 					.entrySet().stream().filter(e -> e.getValue().size() > 1)

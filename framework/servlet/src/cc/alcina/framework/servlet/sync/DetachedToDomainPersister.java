@@ -12,8 +12,8 @@ import java.util.function.Function;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.J8Utils;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersister.DeltaItemPersister;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersisterResult.FlatDeltaPersisterResultType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
@@ -92,7 +92,7 @@ public class DetachedToDomainPersister<T extends Entity>
 								o.setLocalId(0);// need to recreate, detached
 								return false;
 							}
-						}).collect(J8Utils.toLiSet());
+						}).collect(AlcinaCollectors.toLiSet());
 				((Set) toReparent).removeIf(o -> !filtered.contains(o));
 				toReparent = (V) replaceReparent;
 			} else {

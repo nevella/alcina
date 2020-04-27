@@ -4,10 +4,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.gwt.client.entity.VersionableDomainBase;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 
 public class QuickSearchResponse implements Serializable {
-	public List<VersionableDomainBase> results = new ArrayList<>();
+	public List<VersionableEntity> results = new ArrayList<>();
 
 	public int resultCount;
 

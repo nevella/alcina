@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
-import cc.alcina.framework.gwt.client.entity.VersionableDomainBase;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.gwt.client.entity.export.RowExportContentDefinition;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
@@ -41,10 +41,10 @@ public class AppController {
         super();
     }
 
-    public void deleteMultiple(List<? extends VersionableDomainBase> list) {
+    public void deleteMultiple(List<? extends VersionableEntity> list) {
         MessageManager.get().showMessage(Ax.format("Deleting %s",
                 CommonUtils.pluralise("record", list.size(), true)));
-        for (VersionableDomainBase ds : list) {
+        for (VersionableEntity ds : list) {
             if (!validateDelete(ds)) {
                 break;
             }
@@ -60,7 +60,7 @@ public class AppController {
         ClientFactory.goTo(target);
     }
 
-    public boolean doDelete(VersionableDomainBase object) {
+    public boolean doDelete(VersionableEntity object) {
         if (!validateDelete(object)) {
             return false;
         }
@@ -68,7 +68,7 @@ public class AppController {
         return true;
     }
 
-    public void doEdit(VersionableDomainBase object) {
+    public void doEdit(VersionableEntity object) {
         if (object == null) {
             return;
         }
@@ -98,7 +98,7 @@ public class AppController {
         ClientFactory.goTo(target);
     }
 
-    public void doView(VersionableDomainBase object) {
+    public void doView(VersionableEntity object) {
         if (object == null) {
             return;
         }
@@ -130,11 +130,11 @@ public class AppController {
         return place.toTokenString();
     }
 
-    public String getPlaceToken(VersionableDomainBase o) {
+    public String getPlaceToken(VersionableEntity o) {
         return o == null ? null : getViewPlace(o).toTokenString();
     }
 
-    public EntityPlace getViewPlace(VersionableDomainBase object) {
+    public EntityPlace getViewPlace(VersionableEntity object) {
         if (object == null) {
             return null;
         }
@@ -180,7 +180,7 @@ public class AppController {
         ClientFactory.goTo(copy);
     }
 
-    private void afterDeleteSuccess(VersionableDomainBase object) {
+    private void afterDeleteSuccess(VersionableEntity object) {
         MessageManager.get().showMessage(Ax.format("Deleted %s %s",
                 object.getClass().getSimpleName(), object.getId()));
         AppViewModel.get().resetProviderFor(object.getClass());
@@ -191,20 +191,20 @@ public class AppController {
         // for subclasses
     }
 
-    protected void delete0(VersionableDomainBase object) {
+    protected void delete0(VersionableEntity object) {
         object.delete();
         flushPostDelete(object);
     }
 
-    protected void flushPostDelete(VersionableDomainBase object) {
+    protected void flushPostDelete(VersionableEntity object) {
         CommitToStorageTransformListener
                 .flushAndRun(() -> afterDeleteSuccess(object));
     }
 
     protected void maybeSetId(GenericBasePlace place,
-            Set<? extends VersionableDomainBase> collection) {
+            Set<? extends VersionableEntity> collection) {
         if (collection.size() == 1) {
-            VersionableDomainBase next = collection.iterator().next();
+            VersionableEntity next = collection.iterator().next();
             if (next != null) {
                 place.id = next.getId();
                 place.def.clearAllCriteria();
@@ -212,7 +212,7 @@ public class AppController {
         }
     }
 
-    protected boolean validateDelete(VersionableDomainBase object) {
+    protected boolean validateDelete(VersionableEntity object) {
         return true;
     }
 }

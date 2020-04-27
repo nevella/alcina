@@ -36,7 +36,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.J8Utils;
 import cc.alcina.framework.entity.MatcherIterator;
 import cc.alcina.framework.entity.OptimizingXpathEvaluator;
 import cc.alcina.framework.entity.SEUtilities;
@@ -873,7 +872,7 @@ public class XmlNode {
 	public class XmlNodeHtml {
 		public XmlNode addClassName(String string) {
 			Set<String> classes = Arrays.stream(attr("class").split(" "))
-					.filter(Ax::notBlank).collect(J8Utils.toLinkedHashSet());
+					.filter(Ax::notBlank).collect(AlcinaCollectors.toLinkedHashSet());
 			classes.add(string);
 			setAttr("class", classes.stream().collect(Collectors.joining(" ")));
 			return XmlNode.this;

@@ -16,6 +16,7 @@ import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 public class LoginPagePassword extends LoginPage {
 	private LoginPagePasswordModel model;
 
+	//
 	public LoginPagePassword(LoginConsort loginConsort) {
 		super(loginConsort);
 		this.model = new LoginPagePasswordModel(loginConsort.request);

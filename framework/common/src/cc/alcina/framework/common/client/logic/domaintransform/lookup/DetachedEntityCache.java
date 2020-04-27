@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -265,8 +266,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 
 	public <T> Set<T> values(Class<T> clazz) {
 		ensureMaps(clazz);
-		return new LinkedHashSet<T>(
-				(Collection<? extends T>) domain.get(clazz).values());
+		return stream(clazz).collect(AlcinaCollectors.toLinkedHashSet());
 	}
 
 	protected Map<Long, Entity> createMap() {

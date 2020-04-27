@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.logic.domain;
 
-import java.util.Collection;
 import java.util.Comparator;
 
 import javax.persistence.Column;
@@ -27,14 +26,13 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.HasEquivalence;
-import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccessCorrect;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 /**
- * Base interface for classes which can be handled by the
+ * Base for classes which can be handled by the
  * {@link cc.alcina.framework.common.client.logic.domaintransform.TransformManager
  * TransformManager }. Note that the only id type supported is <code>long</code>
  */
@@ -42,8 +40,6 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 @RegistryLocation(registryPoint = Entity.class, implementationType = ImplementationType.MULTIPLE)
 public abstract class Entity<T extends Entity> extends BaseBindable
 		implements HasVersionNumber, HasId {
-	static final transient long serialVersionUID = 1L;
-
 	public static final String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class
 			+ ".CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID";
 
@@ -54,25 +50,28 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 	int versionNumber;
 
 	// has @GwtTransient annotation because we don't want to send
-	// server-generated local ids to the client
+	// server-generated local ids to the client - or vice-versa
 	@GwtTransient
 	volatile long localId;
 
 	public void delete() {
-		Domain.delete(this);
+		Domain.delete(domainIdentity());
 	}
 
+	@MvccAccess(type = MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY)
 	public DomainSupport domain() {
 		return new DomainSupport();
 	}
 
+	// rewritten by class transformer
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public T domainIdentity() {
 		return (T) this;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		return EntityHelper.equals(this, obj);
+		return EntityHelper.equals(domainIdentity(), obj);
 	}
 
 	@Override
@@ -134,7 +133,8 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 	 * same localid (but different originating vms), but with the cost of more
 	 * complicated transforms and transform persistence
 	 * 
-	 * This method will always return the same result irresepective of mvcc version, so is not rerouted
+	 * This method will always return the same result irresepective of mvcc
+	 * version, so is not rerouted
 	 * 
 	 */
 	@Override
@@ -143,7 +143,7 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 			if (getId() == 0 && getLocalId() == 0) {
 				if (LooseContext.is(
 						CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID)) {
-					hash = System.identityHashCode(this);
+					hash = System.identityHashCode(domainIdentity());
 					return hash;
 				}
 			}
@@ -163,8 +163,8 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 					} else {
 						hash = ((int) getId()) ^ classHash;
 					}
-					hash = TransformManager
-							.replaceWithCreatedLocalObjectHash(this, hash);
+					hash = TransformManager.replaceWithCreatedLocalObjectHash(
+							domainIdentity(), hash);
 				}
 			}
 			if (hash == 0) {
@@ -210,8 +210,8 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 
 	// no listeners - this should be invisible to transform listeners
 	public void setLocalId(long localId) {
-		if(this.localId!=0){
-			int debug=3;
+		if (this.localId != 0) {
+			int debug = 3;
 		}
 		this.localId = localId;
 	}
@@ -221,32 +221,29 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 		this.versionNumber = versionNumber;
 	}
 
-	public boolean superEquals(Object obj) {
-		return super.equals(obj);
-	}
-
 	@Override
 	/*
 	 * the last line is to deal with a weird gwt/ff/webkit bug
 	 */
 	public String toString() {
 		if (Reflections.classLookup() == null) {
-			return new EntityLocator(this).toString();
+			return new EntityLocator(domainIdentity()).toString();
 		}
 		if (!GwittirUtils.isIntrospectable(getClass())) {
 			return super.toString();
 		}
-		String dn = Reflections.classLookup().displayNameForObject(this);
+		String dn = Reflections.classLookup()
+				.displayNameForObject(domainIdentity());
 		dn = !CommonUtils.isNullOrEmpty(dn) ? dn : "[Object]";
 		return dn.substring(0, dn.length());
 	}
 
 	public String toStringEntity() {
-		return new EntityLocator(this).toString();
+		return new EntityLocator(domainIdentity()).toString();
 	}
 
 	public T writeable() {
-		return (T) Domain.writeable(this);
+		return domainIdentity();
 	}
 
 	protected int _compareTo(Entity o) {
@@ -269,7 +266,6 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 		return CommonUtils.compareLongs(getId(), o.getId());
 	}
 
-	@MvccAccessCorrect
 	protected String comparisonString() {
 		throw new RuntimeException(
 				"no display name available, and using comparator");
@@ -279,17 +275,6 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 		public <V extends Entity> void addToProperty(String propertyName, V v) {
 			TransformManager.get().modifyCollectionProperty(Entity.this,
 					propertyName, v, CollectionModificationType.ADD);
-		}
-
-		public T createOrReturnWriteable() {
-			HasEquivalence equivalent = HasEquivalenceHelper.getEquivalent(
-					(Collection) Domain.values(Entity.this.getClass()),
-					(HasEquivalence) Entity.this);
-			if (equivalent != null) {
-				return (T) equivalent;
-			} else {
-				return writeable();
-			}
 		}
 
 		public T detachedToDomain() {
@@ -319,18 +304,6 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 		 */
 		public T domainVersion() {
 			return (T) Domain.find(Entity.this);
-		}
-
-		public T domainVersionIfPersisted() {
-			if (provideWasPersisted()) {
-				return domainVersion();
-			} else {
-				return (T) Entity.this;
-			}
-		}
-
-		public String entityToString() {
-			return new EntityLocator(Entity.this).toString();
 		}
 
 		/*

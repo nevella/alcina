@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.entity.VersionableDomainBase;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 
 @RegistryLocation(registryPoint = AppViewModel.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
@@ -21,7 +21,7 @@ public class AppViewModel {
 	public AppViewModel() {
 	}
 
-	public <T extends VersionableDomainBase> DomainStoreDataProvider<T>
+	public <T extends VersionableEntity> DomainStoreDataProvider<T>
 			getDataProvider(Class<T> clazz) {
 		if (!providers.containsKey(clazz)) {
 			providers.put(clazz, createProvider(clazz));
@@ -29,11 +29,11 @@ public class AppViewModel {
 		return providers.get(clazz);
 	}
 
-	public void resetProviderFor(Class<? extends VersionableDomainBase> clazz) {
+	public void resetProviderFor(Class<? extends VersionableEntity> clazz) {
 		providers.get(clazz).invalidate();
 	}
 
-	protected <T extends VersionableDomainBase> DomainStoreDataProvider<T>
+	protected <T extends VersionableEntity> DomainStoreDataProvider<T>
 			createProvider(Class<T> clazz) {
 		return new DomainStoreDataProvider<>(clazz);
 	}

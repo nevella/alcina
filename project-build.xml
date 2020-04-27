@@ -67,45 +67,38 @@
 	<target name="make-jars-task" description="Make ${project.module.description} jar" depends="">
 		<mkdir dir="${project.dist.dir}" />
 		<delete file="${project.dist.dir}/${ant.project.name}.jar" if:true="${alcina.delete-before-jars}" />
-		<copy todir="${project.build.dir}">
+		<echo message="brus"/>
+		<copy todir="${project.build.dir}" preservelastmodified="true">
 			<fileset dir="${project.src.dir}">
 				<include name="**/*.*" />
-				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${project.src.dir.2}">
 				<include name="**/*.*" />
-				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${project.src.dir.3}">
 				<include name="**/*.*" />
-				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${project.src.dir.4}">
 				<include name="**/*.*" />
-				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${project.src.dir.5}">
 				<include name="**/*.*" />
-				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${project.src.dir.6}">
 				<include name="**/*.*" />
-				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${project.src.dir.7}">
 				<include name="**/*.*" />
-				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${project.src.dir.8}">
 				<include name="**/*.*" />
-				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
 
