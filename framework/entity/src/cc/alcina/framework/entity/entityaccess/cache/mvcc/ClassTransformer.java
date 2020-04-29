@@ -252,7 +252,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 3;
+		private static final transient int VERSION = 5;
 
 		transient TopicSupport<MvccCorrectnessIssue> correctnessIssueTopic = TopicSupport
 				.localAnonymousTopic();
