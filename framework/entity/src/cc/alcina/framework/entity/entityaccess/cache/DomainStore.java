@@ -447,6 +447,10 @@ public class DomainStore implements IDomainStore {
 		threads.checkModificationWriteLock = checkModificationWriteLock;
 	}
 
+	public void setConnectionUrl(String newUrl) {
+		((DomainStoreLoaderDatabase) loader).setConnectionUrl(newUrl);
+	}
+
 	public void setDebug(boolean debug) {
 		this.debug = debug;
 	}
