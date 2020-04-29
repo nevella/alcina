@@ -116,7 +116,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private DomainStore store;
 
-	DataSource dataSource;
+	RetargetableDataSource dataSource;
 
 	private ThreadPoolExecutor warmupExecutor;
 
@@ -155,7 +155,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			.newFixedThreadPool(8,
 					new NamedThreadFactory("domainStore-iLoader"));
 
-	public DomainStoreLoaderDatabase(DomainStore store, DataSource dataSource,
+	public DomainStoreLoaderDatabase(DomainStore store, RetargetableDataSource dataSource,
 			ThreadPoolExecutor warmupExecutor) {
 		this.store = store;
 		this.dataSource = dataSource;
@@ -1967,5 +1967,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		boolean handles(PdOperator pdOperator);
 
 		Object resolveCustom(PdOperator pdOperator, LaterItem item);
+	}
+
+	public void setConnectionUrl(String newUrl) {
+		dataSource.setConnectionUrl(newUrl);
 	}
 }

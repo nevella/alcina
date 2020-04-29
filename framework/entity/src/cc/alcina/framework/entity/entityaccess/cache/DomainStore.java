@@ -983,7 +983,7 @@ public class DomainStore implements IDomainStore {
 
 		private ThreadPoolExecutor warmupExecutor;
 
-		private DataSource dataSource;
+		private RetargetableDataSource dataSource;
 
 		private DomainLoaderType loaderType;
 
@@ -1015,7 +1015,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		public Builder withLoaderDatabase(ThreadPoolExecutor warmupExecutor,
-				DataSource dataSource) {
+				RetargetableDataSource dataSource) {
 			this.warmupExecutor = warmupExecutor;
 			this.dataSource = dataSource;
 			loaderType = DomainLoaderType.Database;
@@ -1097,6 +1097,15 @@ public class DomainStore implements IDomainStore {
 		public synchronized DomainStore
 				storeFor(DomainDescriptor domainDescriptor) {
 			return descriptorMap.get(domainDescriptor);
+		}
+
+		public synchronized DomainStore
+				storeFor(String domainDescriptorClassName) {
+			DomainDescriptor domainDescriptor = descriptorMap.keySet().stream()
+					.filter(dd -> dd.getClass().getName()
+							.equals(domainDescriptorClassName))
+					.findFirst().get();
+			return storeFor(domainDescriptor);
 		}
 
 		public synchronized Stream<DomainStore> stream() {
@@ -1436,7 +1445,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		//FIXME - mvcc - doesn't look too detached to me
+		// FIXME - mvcc - doesn't look too detached to me
 		public <V extends HasIdAndLocalId> V detachedVersion(V v) {
 			return (V) Domain.query(v.getClass()).filterById(v.getId()).find();
 		}
@@ -1710,5 +1719,9 @@ public class DomainStore implements IDomainStore {
 		void startCommit() {
 			((PsAwareMultiplexingObjectCache) store.getCache()).startCommit();
 		}
+	}
+
+	public void setConnectionUrl(String newUrl) {
+((DomainStoreLoaderDatabase)		loader).setConnectionUrl(newUrl);
 	}
 }

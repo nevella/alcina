@@ -1673,4 +1673,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			cp.getEntityManager().merge(iid);
 		}
 	}
+	@Override
+	public void changeJdbcConnectionUrl(String newUrl){
+		String fieldPath="emf.sessionFactory.jdbcServices.connectionProvider.dataSource.cm.pool.mcf.connectionURL";
+		try{
+			ResourceUtilities.setField(getEntityManager(),fieldPath,newUrl);
+		}
+		catch(Exception e){
+			throw new WrappedRuntimeException(e);
+		}
+		
+	}
 }
