@@ -1436,6 +1436,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
+		//FIXME - mvcc - doesn't look too detached to me
 		public <V extends HasIdAndLocalId> V detachedVersion(V v) {
 			return (V) Domain.query(v.getClass()).filterById(v.getId()).find();
 		}
