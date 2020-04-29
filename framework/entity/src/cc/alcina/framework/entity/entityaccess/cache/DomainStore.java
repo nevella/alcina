@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.Transient;
-import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -976,7 +975,7 @@ public class DomainStore implements IDomainStore {
 
 		private ThreadPoolExecutor warmupExecutor;
 
-		private DataSource dataSource;
+		private RetargetableDataSource dataSource;
 
 		private DomainLoaderType loaderType;
 
@@ -1008,7 +1007,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		public Builder withLoaderDatabase(ThreadPoolExecutor warmupExecutor,
-				DataSource dataSource) {
+				RetargetableDataSource dataSource) {
 			this.warmupExecutor = warmupExecutor;
 			this.dataSource = dataSource;
 			loaderType = DomainLoaderType.Database;
@@ -1084,6 +1083,20 @@ public class DomainStore implements IDomainStore {
 
 		public DomainStore storeFor(Class clazz) {
 			return classMap.get(clazz);
+		}
+
+		public synchronized DomainStore
+				storeFor(DomainDescriptor domainDescriptor) {
+			return descriptorMap.get(domainDescriptor);
+		}
+
+		public synchronized DomainStore
+				storeFor(String domainDescriptorClassName) {
+			DomainDescriptor domainDescriptor = descriptorMap.keySet().stream()
+					.filter(dd -> dd.getClass().getName()
+							.equals(domainDescriptorClassName))
+					.findFirst().get();
+			return storeFor(domainDescriptor);
 		}
 
 		public Stream<DomainStore> stream() {

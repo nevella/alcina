@@ -41,7 +41,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,7 +116,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private DomainStore store;
 
-	DataSource dataSource;
+	RetargetableDataSource dataSource;
 
 	private ThreadPoolExecutor warmupExecutor;
 
@@ -158,7 +157,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private Transaction warmupTransaction;
 
-	public DomainStoreLoaderDatabase(DomainStore store, DataSource dataSource,
+	public DomainStoreLoaderDatabase(DomainStore store,
+			RetargetableDataSource dataSource,
 			ThreadPoolExecutor warmupExecutor) {
 		this.store = store;
 		this.dataSource = dataSource;
@@ -218,6 +218,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		} catch (SQLException e) {
 			logger.warn("Exception in ensureTransactionCommitTimes ", e);
 		}
+	}
+
+	public void setConnectionUrl(String newUrl) {
+		dataSource.setConnectionUrl(newUrl);
 	}
 
 	@Override

@@ -59,6 +59,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
+import javax.persistence.EntityManager;
 import javax.swing.ImageIcon;
 
 import org.cyberneko.html.parsers.DOMParser;
@@ -634,7 +635,7 @@ public class ResourceUtilities {
 		int bufLength = is.available() <= 1024 ? 1024 * 64 : is.available();
 		ByteArrayOutputStream baos = new ByteArrayOutputStream(bufLength);
 		writeStreamToStream(is, baos);
-		return baos.toByteArray();	
+		return baos.toByteArray();
 	}
 
 	public static String readStreamToString(InputStream is) throws IOException {
@@ -1056,6 +1057,23 @@ public class ResourceUtilities {
 						new GZIPInputStream(new ByteArrayInputStream(input)));
 			} else {
 				return input;
+			}
+		}
+	}
+
+	public static void setField(Object object, String fieldPath,
+			Object newValue) throws Exception {
+		Object cursor = object;
+		Field field = null;
+		String[] segments = fieldPath.split("\\.");
+		for (int idx = 0; idx < segments.length; idx++) {
+			String segment = segments[idx];
+			field = SEUtilities.getFieldByName(cursor.getClass(),segment);
+			field.setAccessible(true);
+			if (idx < segments.length - 1) {
+				cursor = field.get(cursor);
+			} else {
+				field.set(cursor, newValue);
 			}
 		}
 	}
