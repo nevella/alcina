@@ -277,24 +277,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 	}
 
-	@Override
-	public <T extends HasIdAndLocalId> T
-			createDomainObject(Class<T> objectClass) {
-		long localId = nextLocalIdCounter();
-		T newInstance = newInstance(objectClass, 0, localId);
-		// logic should probably be made clearer here - if id==0, we're not in
-		// an
-		// entitymanager context
-		// so we want to record creates
-		// nah - in fact, always record creates (even if in-em), but don't
-		// process in consume() if obj exists
-		// if (newInstance.getId() == 0) {
-		registerDomainObject(newInstance);
-		fireCreateObjectEvent(newInstance.getClass(), newInstance.getId(),
-				newInstance.getLocalId());
-		// }
-		return newInstance;
-	}
+	
 
 	/**
 	 * <<<<<<< HEAD Probably don't call this - rather call

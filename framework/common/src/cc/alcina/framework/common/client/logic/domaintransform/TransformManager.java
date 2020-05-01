@@ -325,9 +325,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 		currentEvent = event;
 		HasIdAndLocalId object = null;
 		TransformType transformType = event.getTransformType();
-		if (transformType != TransformType.CREATE_OBJECT) {
-			object = getObject(event);
-			if (object == null) {
+		object = getObject(event);
+		if (object == null) {
+			/*
+			 * Created objects will already be in the graph if locally created
+			 */
+			if (transformType != TransformType.CREATE_OBJECT) {
 				throw new DomainTransformException(event,
 						DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND);
 			}
@@ -461,36 +464,38 @@ public abstract class TransformManager implements PropertyChangeListener,
 			performDeleteObject((HasIdAndLocalId) object);
 			break;
 		case CREATE_OBJECT:
-			if (event.getObjectId() != 0) {
-				// three possibilities:
-				// 1. replaying a server create,(on the client)
-				// 2. recording an in-entity-manager create
-				// 3. doing a database-regeneration
-				// if (2), break at this point
-				if (getObjectForCreate(event) != null) {
-					break;
+			// three possibilities:
+			// 1. replaying a server create,(on the client)
+			// 2. recording an in-entity-manager create
+			// 3. doing a database-regeneration
+			// if (2), break at this point
+			HasIdAndLocalId createdObject = getObjectForCreate(event);
+			if (createdObject != null) {
+				// created locally, most of the registration needs to be handled
+				// at the creation site (createDomainObject())
+				if (createdObject.getLocalId() == 0) {
+					// increment that version number
+					objectModified(createdObject, event, false);
 				}
-			}
-			long creationLocalId = isZeroCreatedObjectLocalId(
-					event.getObjectClass()) ? 0 : event.getObjectLocalId();
-			HasIdAndLocalId hili = (HasIdAndLocalId) classLookup().newInstance(
-					event.getObjectClass(), event.getObjectId(),
-					event.getObjectLocalId());
-			hili.setLocalId(creationLocalId);
-			if (hili.getId() == 0 && event.getObjectId() != 0) {// replay from
-																// server -
-				// huh? unless newInstance does something weird, should never
-				// reach here
-				hili.setId(event.getObjectId());
-			}
-			event.setObjectId(hili.getId());
-			if (event.getCommitType() == CommitType.TO_STORAGE) {
+				break;
+			} else {
+				long creationLocalId = isZeroCreatedObjectLocalId(
+						event.getObjectClass()) ? 0 : event.getObjectLocalId();
+				HasIdAndLocalId hili = (HasIdAndLocalId) classLookup()
+						.newInstance(event.getObjectClass(),
+								event.getObjectId(), event.getObjectLocalId());
+				hili.setLocalId(creationLocalId);
+				if (hili.getId() == 0 && event.getObjectId() != 0) {// replay
+																	// from
+																	// server -
+					// huh? unless newInstance does something weird, should
+					// never
+					// reach here
+					hili.setId(event.getObjectId());
+				}
+				event.setObjectId(hili.getId());
 				objectModified(hili, event, false);
-			}
-			objectCreated(hili);
-			if (getDomainObjects() != null) {
-				getDomainObjects().mapObject(hili);
-				maybeFireCollectionModificationEvent(hili.getClass(), false);
+				maybeFireCollectionModificationEvent(event.getObjectClass(), false);
 			}
 			break;
 		default:
@@ -498,6 +503,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		currentEvent = null;
 	}
+
 
 	public boolean containsObject(DomainTransformEvent dte) {
 		HasIdAndLocalId obj = getObjectLookup().getObject(dte.getObjectClass(),
@@ -561,12 +567,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
 		T newInstance = classLookup().newInstance(objectClass, 0, localId);
-		newInstance.setLocalId(localId);
-		// a bit roundabout, but to ensure compatibility with the event system
-		// essentially registers a synthesised object, then replaces it in the
-		// mapping with the real one
-		fireCreateObjectEvent(objectClass, 0, localId);
+		Preconditions.checkState(newInstance.getLocalId() != 0);
 		registerDomainObject(newInstance);
+		fireCreateObjectEvent(objectClass, 0, localId);
+		maybeFireCollectionModificationEvent(objectClass, false);
 		return newInstance;
 	}
 
@@ -1331,7 +1335,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 			if (hili.getId() == 0) {
 				HasIdAndLocalId createdObject = getDomainObjects()
 						.getObject(hili);
-				getDomainObjects().deregisterObject(createdObject);
+				if (createdObject != null) {
+					getDomainObjects().deregisterObject(createdObject);
+				}
 			}
 			getDomainObjects().mapObject(hili);
 		}
@@ -1658,8 +1664,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// changes (when replaying remote events)
 	}
 
-	protected void objectCreated(HasIdAndLocalId hili) {
-	}
 
 	/**
 	 * for subclasses to handle version increments
@@ -1975,7 +1979,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public static class RecordTransformListener
 			implements DomainTransformListener {
-
 		@Override
 		public void domainTransform(DomainTransformEvent evt) {
 			if (evt.getCommitType() == CommitType.TO_LOCAL_BEAN) {
