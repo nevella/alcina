@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import cc.alcina.framework.common.client.xml.XmlNode;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 
 public class XmlStructuralJoin {
 	public List<XmlStructuralJoin> additionalSources = new ArrayList<>();

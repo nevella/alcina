@@ -15,8 +15,9 @@ import org.w3c.dom.NodeList;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
+import cc.alcina.framework.common.client.xml.XmlNode.XpathEvaluator;
 
-public class OptimizingXpathEvaluator {
+public class OptimizingXpathEvaluator implements XpathEvaluator {
 	private boolean optimiseXpathEvaluationSpeed = false;
 
 	private Node removedNode;
@@ -32,7 +33,11 @@ public class OptimizingXpathEvaluator {
 
 	private CachingMap<String, XPathExpression> expressionCache;
 
-	public OptimizingXpathEvaluator(XpathAndExpressionCache xexc) {
+	private XpathHelper xpathHelper;
+
+	public OptimizingXpathEvaluator(XpathHelper xpathHelper,
+			XpathAndExpressionCache xexc) {
+		this.xpathHelper = xpathHelper;
 		this.expressionCache = xexc.expressionCache;
 	}
 
@@ -65,6 +70,10 @@ public class OptimizingXpathEvaluator {
 	public String getTextContentOrEmpty(String xpath, Node from) {
 		Node node = getNodeByXpath(xpath, from);
 		return node == null ? "" : node.getTextContent();
+	}
+
+	public XpathHelper getXpathHelper() {
+		return xpathHelper;
 	}
 
 	public boolean isOptimiseXpathEvaluationSpeed() {

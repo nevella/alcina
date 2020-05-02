@@ -31,7 +31,7 @@ public class XpathHelper {
 	}
 
 	public OptimizingXpathEvaluator createOptimisedEvaluator(Node node) {
-		OptimizingXpathEvaluator evaluator = new OptimizingXpathEvaluator(
+		OptimizingXpathEvaluator evaluator = new OptimizingXpathEvaluator(this,
 				docXpathMap.get(ownerDoc(node)));
 		evaluator.setOptimiseXpathEvaluationSpeed(true);
 		return evaluator;

@@ -5,9 +5,10 @@ import java.util.Stack;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
-import cc.alcina.framework.entity.parser.structured.node.XmlTokenStream;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.xml.XmlDoc;
+import cc.alcina.framework.common.client.xml.XmlNode;
+import cc.alcina.framework.common.client.xml.XmlTokenStream;
 
 public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 	public static List<XmlToken> getTokens(Class<?> tokenClass) {
@@ -27,31 +28,37 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 	public XmlTokenOutput parse(Class<?> tokenClass, XmlTokenStream stream,
 			C context, Supplier<Boolean> shouldContinue,
 			List<XmlToken> tokens) {
-		openNodes = new Stack<>();
-		this.tokens = tokens;
-		XmlDoc outDoc = new XmlDoc("<root/>");
-		XmlTokenOutput out = new XmlTokenOutput(outDoc);
-		context.out = out;
-		out.context = context;
-		context.stream = stream;
-		context.parser = this;
-		context.start();
-		int counter = 0;
-		int all = (int) stream.getDoc().children.flat().count();
-		while (stream.hasNext()) {
-			XmlNode node = stream.next();
-			closeOpenNodes(node, context);
-			handleNode(node, context);
-			if (!shouldContinue.get()) {
-				break;
+		try {
+			LooseContext.push();
+			openNodes = new Stack<>();
+			this.tokens = tokens;
+			XmlDoc outDoc = new XmlDoc("<root/>");
+			XmlTokenOutput out = new XmlTokenOutput(outDoc);
+			LooseContext.set(XmlNode.CONTEXT_DEBUG_SUPPORT, out);
+			context.out = out;
+			out.context = context;
+			context.stream = stream;
+			context.parser = this;
+			context.start();
+			int counter = 0;
+			int all = (int) stream.getDoc().children.flat().count();
+			while (stream.hasNext()) {
+				XmlNode node = stream.next();
+				closeOpenNodes(node, context);
+				handleNode(node, context);
+				if (!shouldContinue.get()) {
+					break;
+				}
+				if (all > 30000 && counter++ % 5000 == 0) {
+					Ax.out("%s/%s", counter, all);
+				}
 			}
-			if (all > 30000 && counter++ % 5000 == 0) {
-				Ax.out("%s/%s", counter, all);
-			}
+			closeOpenNodes(null, context);
+			context.end();
+			return out;
+		} finally {
+			LooseContext.pop();
 		}
-		closeOpenNodes(null, context);
-		context.end();
-		return out;
 	}
 
 	private void closeOpenNodes(XmlNode node, C context) {

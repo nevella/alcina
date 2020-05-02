@@ -29,7 +29,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.function.Predicate;
@@ -86,8 +85,10 @@ import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
+import cc.alcina.framework.common.client.xml.XmlDoc;
+import cc.alcina.framework.common.client.xml.XmlEnvironment.BlockResolver;
+import cc.alcina.framework.common.client.xml.XmlEnvironment.BlockResolverHtml;
+import cc.alcina.framework.common.client.xml.XmlNode;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
 /**
@@ -1430,40 +1431,6 @@ public class XmlUtils {
 			return text.replaceFirst("(?s)^[\n]*(.+?)[\n]*$", "$1");
 		} else {
 			return text.replaceFirst("(?s)^[ \t\n]*(.+?)[ \t\n]*$", "$1");
-		}
-	}
-
-	public static interface BlockResolver extends Predicate<XmlNode> {
-		default Optional<XmlNode> getContainingBlock(XmlNode cursor) {
-			return cursor.ancestors().orSelf().match(this);
-		}
-
-		default boolean isBlock(Element e) {
-			return isBlock(XmlNode.from(e));
-		}
-
-		boolean isBlock(XmlNode node);
-
-		@Override
-		default boolean test(XmlNode node) {
-			return isBlock(node);
-		}
-	}
-
-	public static class BlockResolverHtml implements BlockResolver {
-		XmlDoc doc = null;
-
-		@Override
-		public boolean isBlock(Element e) {
-			if (doc == null) {
-				doc = XmlNode.from(e).doc;
-			}
-			return isBlock(doc.nodeFor(e));
-		}
-
-		@Override
-		public boolean isBlock(XmlNode node) {
-			return node.html().isBlock();
 		}
 	}
 

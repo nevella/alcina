@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.parser.structured.node;
+package cc.alcina.framework.common.client.xml;
 
 import java.util.List;
 import java.util.stream.Collectors;

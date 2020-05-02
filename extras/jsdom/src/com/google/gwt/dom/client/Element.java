@@ -21,6 +21,11 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.w3c.dom.Attr;
+import org.w3c.dom.DOMException;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.TypeInfo;
+
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JavascriptObjectEquivalent;
@@ -39,7 +44,7 @@ import cc.alcina.framework.gwt.client.util.TextUtils;
 /**
  * All HTML element interfaces derive from this class.
  */
-public class Element extends Node implements DomElement {
+public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	public static final String REMOTE_DEFINED = "__localdom-remote-defined";
 
 	/**
@@ -212,8 +217,29 @@ public class Element extends Node implements DomElement {
 	}
 
 	@Override
-	public Map<String, String> getAttributes() {
-		return local().getAttributes();
+	public Map<String, String> getAttributeMap() {
+		return local().getAttributeMap();
+	}
+
+	@Override
+	public Attr getAttributeNode(String arg0) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Attr getAttributeNodeNS(String arg0, String arg1)
+			throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getAttributeNS(String arg0, String arg1) throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NamedNodeMap getAttributes() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -273,6 +299,12 @@ public class Element extends Node implements DomElement {
 	public NodeList<Element> getElementsByTagName(String name) {
 		ensureRemote();
 		return remote().getElementsByTagName(name);
+	}
+
+	@Override
+	public org.w3c.dom.NodeList getElementsByTagNameNS(String arg0, String arg1)
+			throws DOMException {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -399,6 +431,11 @@ public class Element extends Node implements DomElement {
 	}
 
 	@Override
+	public TypeInfo getSchemaTypeInfo() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public int getScrollHeight() {
 		return callWithRemoteOrDefault(true, () -> remote().getScrollHeight(),
 				0);
@@ -444,6 +481,11 @@ public class Element extends Node implements DomElement {
 	}
 
 	@Override
+	public String getTextContent() throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public String getTitle() {
 		return local().getTitle();
 	}
@@ -451,6 +493,12 @@ public class Element extends Node implements DomElement {
 	@Override
 	public boolean hasAttribute(String name) {
 		return local().hasAttribute(name);
+	}
+
+	@Override
+	public boolean hasAttributeNS(String arg0, String arg1)
+			throws DOMException {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -485,6 +533,17 @@ public class Element extends Node implements DomElement {
 		ensureRemoteCheck();
 		local().removeAttribute(name);
 		remote().removeAttribute(name);
+	}
+
+	@Override
+	public Attr removeAttributeNode(Attr arg0) throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void removeAttributeNS(String arg0, String arg1)
+			throws DOMException {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -542,6 +601,22 @@ public class Element extends Node implements DomElement {
 	}
 
 	@Override
+	public Attr setAttributeNode(Attr arg0) throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Attr setAttributeNodeNS(Attr arg0) throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setAttributeNS(String arg0, String arg1, String arg2)
+			throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void setClassName(String className) {
 		String current = local().getClassName();
 		if (Objects.equals(current, className)) {
@@ -571,6 +646,23 @@ public class Element extends Node implements DomElement {
 		ensureRemoteCheck();
 		local().setId(id);
 		remote().setId(id);
+	}
+
+	@Override
+	public void setIdAttribute(String arg0, boolean arg1) throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setIdAttributeNode(Attr arg0, boolean arg1)
+			throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setIdAttributeNS(String arg0, String arg1, boolean arg2)
+			throws DOMException {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -792,7 +884,7 @@ public class Element extends Node implements DomElement {
 				stringBuilder.append("\n");
 				LocalDom.log(LocalDomDebug.DUMP_LOCAL, message);
 				break;
-			case ELEMENT_NODE:
+			case Node.ELEMENT_NODE:
 				((Element) node).dumpLocal0(depth + 1, prefix + "." + (idx++),
 						linkToRemote, stringBuilder);
 				break;

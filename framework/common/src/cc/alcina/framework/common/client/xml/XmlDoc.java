@@ -1,9 +1,7 @@
-package cc.alcina.framework.entity.parser.structured.node;
+package cc.alcina.framework.common.client.xml;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -12,9 +10,9 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.common.client.xml.XmlEnvironment.NamespaceResult;
 
 public class XmlDoc extends XmlNode {
 	public static XmlDoc basicHtmlDoc() {
@@ -22,7 +20,7 @@ public class XmlDoc extends XmlNode {
 	}
 
 	public static XmlNode createDocumentElement(String tag) {
-		return new XmlDoc(String.format("<%s/>", tag)).getDocumentElementNode();
+		return new XmlDoc(Ax.format("<%s/>", tag)).getDocumentElementNode();
 	}
 
 	private CachingMap<Node, XmlNode> nodes = new CachingMap<Node, XmlNode>(
@@ -64,28 +62,23 @@ public class XmlDoc extends XmlNode {
 	@Override
 	public String prettyToString() {
 		try {
-			return XmlUtils.prettyPrintWithDOM3LS(domDoc());
+			return XmlEnvironment.get().prettyPrint(domDoc());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
 	public void removeNamespaces() {
-		String fullToString = doc.fullToString();
-		Pattern p = Pattern.compile("(?s)<([A-Za-z]\\S+) .+?>");
-		Matcher m = p.matcher(fullToString);
-		m.find();
-		firstTag = m.group();
-		fullToString = m.replaceFirst("<$1>");
-		loadFromXml(fullToString);
+		NamespaceResult namespaceResult = XmlEnvironment.get()
+				.removeNamespaces(this);
+		firstTag = namespaceResult.firstTag;
+		loadFromXml(namespaceResult.xml);
 	}
 
 	public void restoreNamespaces() {
-		String fullToString = doc.fullToString();
-		Pattern p = Pattern.compile("(?s)<[A-Za-z]\\S+>");
-		Matcher m = p.matcher(fullToString);
-		fullToString = m.replaceFirst(CommonUtils.escapeRegex(firstTag));
-		loadFromXml(fullToString);
+		NamespaceResult namespaceResult = XmlEnvironment.get()
+				.restoreNamespaces(this, firstTag);
+		loadFromXml(namespaceResult.xml);
 	}
 
 	public XmlNode root() {
@@ -98,7 +91,7 @@ public class XmlDoc extends XmlNode {
 
 	private void loadFromXml(String xml) {
 		try {
-			this.node = XmlUtils.loadDocument(xml);
+			this.node = XmlEnvironment.get().loadFromXml(xml);
 			nodes.put(this.node, this);
 			this.doc = this;
 		} catch (Exception e) {
