@@ -10,13 +10,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.xml.XmlNode.XpathEvaluator;
 
-@RegistryLocation(registryPoint = XmlEnvironment.class, implementationType = ImplementationType.SINGLETON)
 public interface XmlEnvironment {
 	public static BlockResolver contextBlockResolver() {
 		return new BlockResolverHtml();

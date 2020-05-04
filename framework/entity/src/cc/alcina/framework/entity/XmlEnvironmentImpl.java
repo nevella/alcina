@@ -9,12 +9,15 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.xml.XmlDoc;
 import cc.alcina.framework.common.client.xml.XmlEnvironment;
 import cc.alcina.framework.common.client.xml.XmlNode;
 import cc.alcina.framework.common.client.xml.XmlNode.XpathEvaluator;
 
+@RegistryLocation(registryPoint = XmlEnvironment.class, implementationType = ImplementationType.SINGLETON)
 public class XmlEnvironmentImpl implements XmlEnvironment {
 	@Override
 	public XpathEvaluator createXpathEvaluator(XmlNode xmlNode,
