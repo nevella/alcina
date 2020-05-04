@@ -41,7 +41,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,7 +154,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			.newFixedThreadPool(8,
 					new NamedThreadFactory("domainStore-iLoader"));
 
-	public DomainStoreLoaderDatabase(DomainStore store, RetargetableDataSource dataSource,
+	public DomainStoreLoaderDatabase(DomainStore store,
+			RetargetableDataSource dataSource,
 			ThreadPoolExecutor warmupExecutor) {
 		this.store = store;
 		this.dataSource = dataSource;
@@ -215,6 +215,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		} catch (SQLException e) {
 			logger.warn("Exception in ensureTransactionCommitTimes ", e);
 		}
+	}
+
+	public void setConnectionUrl(String newUrl) {
+		dataSource.setConnectionUrl(newUrl);
 	}
 
 	@Override
@@ -1967,9 +1971,5 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		boolean handles(PdOperator pdOperator);
 
 		Object resolveCustom(PdOperator pdOperator, LaterItem item);
-	}
-
-	public void setConnectionUrl(String newUrl) {
-		dataSource.setConnectionUrl(newUrl);
 	}
 }
