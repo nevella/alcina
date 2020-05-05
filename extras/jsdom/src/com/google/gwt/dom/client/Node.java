@@ -79,7 +79,7 @@ public abstract class Node
 	@Override
 	public org.w3c.dom.Node appendChild(org.w3c.dom.Node arg0)
 			throws DOMException {
-		throw new UnsupportedOperationException();
+		return appendChild((Node) arg0);
 	}
 
 	@Override
@@ -255,7 +255,7 @@ public abstract class Node
 	@Override
 	public Node insertBefore(org.w3c.dom.Node arg0, org.w3c.dom.Node arg1)
 			throws DOMException {
-		throw new UnsupportedOperationException();
+		return insertBefore((Node) arg0, (Node) arg1);
 	}
 
 	@Override
@@ -336,7 +336,7 @@ public abstract class Node
 	@Override
 	public org.w3c.dom.Node removeChild(org.w3c.dom.Node arg0)
 			throws DOMException {
-		throw new UnsupportedOperationException();
+		return removeChild((Node) arg0);
 	}
 
 	@Override
@@ -359,7 +359,7 @@ public abstract class Node
 	@Override
 	public org.w3c.dom.Node replaceChild(org.w3c.dom.Node arg0,
 			org.w3c.dom.Node arg1) throws DOMException {
-		throw new UnsupportedOperationException();
+		return replaceChild((Node) arg0, (Node) arg1);
 	}
 
 	public DomNode sameTreeNodeFor(DomNode domNode) {

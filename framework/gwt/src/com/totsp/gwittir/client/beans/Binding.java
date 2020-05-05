@@ -36,7 +36,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.gwt.client.util.DomUtils;
+import cc.alcina.framework.gwt.client.util.GwtDomUtils;
 
 /**
  * This class represents a DataBinding between two objects. It also supports
@@ -606,7 +606,7 @@ public class Binding {
 
 	protected boolean leftObjectIsHiddenWidget() {
 		if (left.object instanceof Widget) {
-			if (!DomUtils.isVisibleAncestorChain(
+			if (!GwtDomUtils.isVisibleAncestorChain(
 					((Widget) left.object).getElement())) {
 				return true;
 			}

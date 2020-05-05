@@ -2,9 +2,13 @@ package cc.alcina.framework.common.client.xml;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Stack;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
+import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -23,12 +27,20 @@ public class XmlDoc extends XmlNode {
 		return new XmlDoc(Ax.format("<%s/>", tag)).getDocumentElementNode();
 	}
 
+	public static XmlDoc from(Document domDocument) {
+		return new XmlDoc(domDocument);
+	}
+
 	private CachingMap<Node, XmlNode> nodes = new CachingMap<Node, XmlNode>(
 			n -> n == null ? null : new XmlNode(n, this));
 
 	private String firstTag;
 
 	private boolean readonly;
+
+	private boolean useCachedElementIds;
+
+	private Map<String, Element> cachedElementIdMap;
 
 	public XmlDoc(Document domDocument) {
 		super(null, null);
@@ -49,6 +61,39 @@ public class XmlDoc extends XmlNode {
 
 	public XmlNode getDocumentElementNode() {
 		return nodeFor(domDoc().getDocumentElement());
+	}
+
+	public Element getElementById(String elementId) {
+		if (useCachedElementIds) {
+			if (cachedElementIdMap == null) {
+				cachedElementIdMap = new LinkedHashMap<String, Element>();
+				Stack<Element> elts = new Stack<Element>();
+				elts.push(((Document) node).getDocumentElement());
+				while (!elts.isEmpty()) {
+					Element elt = elts.pop();
+					if (elt.hasAttribute("id")) {
+						cachedElementIdMap.put(elt.getAttribute("id"), elt);
+					}
+					int length = elt.getChildNodes().getLength();
+					for (int idx = 0; idx < length; idx++) {
+						Node node = elt.getChildNodes().item(idx);
+						if (node.getNodeType() == Node.ELEMENT_NODE) {
+							elts.push((Element) node);
+						}
+					}
+				}
+			}
+			return cachedElementIdMap.get(elementId);
+		} else {
+			/*
+			 * Probably should throw an exception
+			 */
+			if (GWT.isClient()) {
+				return ((Document) node).getElementById(elementId);
+			} else {
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 
 	public boolean isReadonly() {
@@ -87,6 +132,10 @@ public class XmlDoc extends XmlNode {
 
 	public void setReadonly(boolean readonly) {
 		this.readonly = readonly;
+	}
+
+	public void setUseCachedElementIds(boolean useCachedElementIds) {
+		this.useCachedElementIds = useCachedElementIds;
 	}
 
 	private void loadFromXml(String xml) {

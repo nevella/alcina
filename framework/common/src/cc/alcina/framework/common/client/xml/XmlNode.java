@@ -72,7 +72,7 @@ public class XmlNode {
 
 	private XmlNodeXpath xpath;
 
-	private XmlNodeAncestors ancestor;
+	private XmlNodeAncestors ancestors;
 
 	private transient XmlNodeReadonlyLookup lookup;
 
@@ -97,10 +97,10 @@ public class XmlNode {
 	}
 
 	public XmlNodeAncestors ancestors() {
-		if (ancestor == null) {
-			ancestor = new XmlNodeAncestors();
+		if (ancestors == null) {
+			ancestors = new XmlNodeAncestors();
 		}
-		return ancestor;
+		return ancestors;
 	}
 
 	public XmlNode asXmlNode() {
@@ -609,6 +609,10 @@ public class XmlNode {
 			return false;
 		}
 
+		public XmlNode selfOrContainingElement() {
+			return isElement() ? XmlNode.this : parent();
+		}
+
 		private XmlNode getStartingCursor() {
 			return orSelf ? XmlNode.this : XmlNode.this.parent();
 		}
@@ -1028,13 +1032,13 @@ public class XmlNode {
 		}
 
 		public boolean isBold() {
-			return isElement() && XmlEnvironment.contextBlockResolver()
-					.isBold(XmlNode.this);
+			return XmlEnvironment.contextBlockResolver()
+					.isBold(ancestors().selfOrContainingElement());
 		}
 
 		public boolean isItalic() {
-			return isElement() && XmlEnvironment.contextBlockResolver()
-					.isItalic(XmlNode.this);
+			return XmlEnvironment.contextBlockResolver()
+					.isItalic(ancestors().selfOrContainingElement());
 		}
 
 		public boolean isOrContainsBlock(StyleResolver blockResolver) {
@@ -1044,7 +1048,12 @@ public class XmlNode {
 			return children.flat().anyMatch(blockResolver::isBlock);
 		}
 
-		public void setStyleProperty(String key, String value) {
+		public XmlNode setClassName(String string) {
+			setAttr("class", string);
+			return XmlNode.this;
+		}
+
+		public void setProperty(String key, String value) {
 			StringMap styles = new StringMap();
 			// t0tes naive
 			if (has("style")) {
