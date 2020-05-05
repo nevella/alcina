@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.xml.XmlEnvironment.BlockResolver;
+import cc.alcina.framework.common.client.xml.XmlEnvironment.StyleResolver;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
 public class XmlNode {
@@ -73,8 +73,6 @@ public class XmlNode {
 	private XmlNodeXpath xpath;
 
 	private XmlNodeAncestors ancestor;
-
-	private XmlNodeHtml xmlNodeHtml;
 
 	private transient XmlNodeReadonlyLookup lookup;
 
@@ -242,10 +240,7 @@ public class XmlNode {
 	}
 
 	public XmlNodeHtml html() {
-		if (xmlNodeHtml == null) {
-			xmlNodeHtml = new XmlNodeHtml();
-		}
-		return xmlNodeHtml;
+		return new XmlNodeHtml();
 	}
 
 	public int indexInParentChildElements() {
@@ -419,6 +414,10 @@ public class XmlNode {
 		fragNode.children.adoptFrom(this);
 		relative().insertBeforeThis(fragNode);
 		removeFromParent();
+	}
+
+	public XmlNodeStyle style() {
+		return new XmlNodeStyle();
 	}
 
 	public boolean tagAndClassIs(String tagName, String className) {
@@ -675,6 +674,12 @@ public class XmlNode {
 					.findFirst().orElse(null);
 		}
 
+		public XmlNode firstNonWhitespaceTextDescendant() {
+			return flat()
+					.filter(n -> n.isText() && !n.isWhitespaceTextContent())
+					.findFirst().orElse(null);
+		}
+
 		public Stream<XmlNode> flat() {
 			return flatten();
 		}
@@ -718,6 +723,12 @@ public class XmlNode {
 		public boolean isFirstNonWhitespaceChild(XmlNode xmlNode) {
 			return xmlNode != null && firstNonWhitespaceNode() != null
 					&& firstNonWhitespaceNode().domNode() == xmlNode.domNode();
+		}
+
+		public boolean isFirstNonWhitespaceTextDescendant(XmlNode xmlNode) {
+			return xmlNode != null && firstNonWhitespaceTextDescendant() != null
+					&& firstNonWhitespaceTextDescendant().domNode() == xmlNode
+							.domNode();
 		}
 
 		public boolean isLastChild(XmlNode node) {
@@ -855,23 +866,9 @@ public class XmlNode {
 	}
 
 	public class XmlNodeHtml {
-		public XmlNode addClassName(String string) {
-			Set<String> classes = new LinkedHashSet<>();
-			Arrays.stream(attr("class").split(" ")).filter(Ax::notBlank)
-					.forEach(classes::add);
-			classes.add(string);
-			setAttr("class", classes.stream().collect(Collectors.joining(" ")));
-			return XmlNode.this;
-		}
-
 		public XmlNode addLink(String text, String href, String target) {
 			return builder().tag("a").attr("href", href).attr("target", target)
 					.text(text).append();
-		}
-
-		public Optional<XmlNode> ancestorBlock() {
-			return ancestors().list().stream().filter(n -> n.html().isBlock())
-					.findFirst();
 		}
 
 		public void appendStyleNode(String css) {
@@ -883,42 +880,8 @@ public class XmlNode {
 					.orElse(xpath("//BODY").node());
 		}
 
-		public boolean hasClassName(String className) {
-			return isElement() && Arrays.stream(attr("class").split(" "))
-					.anyMatch(cn -> cn.equals(className));
-		}
-
 		public XmlNode head() {
 			return xpath("//head").node();
-		}
-
-		public boolean isBlock() {
-			return isElement() && XmlEnvironment.contextBlockResolver()
-					.isBlock(XmlNode.this);
-		}
-
-		public boolean isOrContainsBlock(BlockResolver blockResolver) {
-			if (blockResolver.isBlock(XmlNode.this)) {
-				return true;
-			}
-			return children.flat().anyMatch(blockResolver::isBlock);
-		}
-
-		public void setStyleProperty(String key, String value) {
-			StringMap styles = new StringMap();
-			// t0tes naive
-			if (has("style")) {
-				String existing = attr("style");
-				Arrays.stream(existing.split(";")).forEach(s -> {
-					String[] parts = s.split(":");
-					styles.put(parts[0], parts[1]);
-				});
-			}
-			styles.put(key, value);
-			setAttr("style",
-					styles.entrySet().stream().map(
-							e -> Ax.format("%s:%s", e.getKey(), e.getValue()))
-							.collect(Collectors.joining("; ")));
 		}
 
 		public XmlNodeHtmlTableBuilder tableBuilder() {
@@ -1036,6 +999,66 @@ public class XmlNode {
 			wrapper.children.append(XmlNode.this);
 			wrapper.copyAttributesFrom(XmlNode.this);
 			return wrapper;
+		}
+	}
+
+	public class XmlNodeStyle {
+		public XmlNode addClassName(String string) {
+			Set<String> classes = new LinkedHashSet<>();
+			Arrays.stream(attr("class").split(" ")).filter(Ax::notBlank)
+					.forEach(classes::add);
+			classes.add(string);
+			setAttr("class", classes.stream().collect(Collectors.joining(" ")));
+			return XmlNode.this;
+		}
+
+		public Optional<XmlNode> containingBlock() {
+			return ancestors().orSelf().list().stream()
+					.filter(n -> n.style().isBlock()).findFirst();
+		}
+
+		public boolean hasClassName(String className) {
+			return isElement() && Arrays.stream(attr("class").split(" "))
+					.anyMatch(cn -> cn.equals(className));
+		}
+
+		public boolean isBlock() {
+			return isElement() && XmlEnvironment.contextBlockResolver()
+					.isBlock(XmlNode.this);
+		}
+
+		public boolean isBold() {
+			return isElement() && XmlEnvironment.contextBlockResolver()
+					.isBold(XmlNode.this);
+		}
+
+		public boolean isItalic() {
+			return isElement() && XmlEnvironment.contextBlockResolver()
+					.isItalic(XmlNode.this);
+		}
+
+		public boolean isOrContainsBlock(StyleResolver blockResolver) {
+			if (blockResolver.isBlock(XmlNode.this)) {
+				return true;
+			}
+			return children.flat().anyMatch(blockResolver::isBlock);
+		}
+
+		public void setStyleProperty(String key, String value) {
+			StringMap styles = new StringMap();
+			// t0tes naive
+			if (has("style")) {
+				String existing = attr("style");
+				Arrays.stream(existing.split(";")).forEach(s -> {
+					String[] parts = s.split(":");
+					styles.put(parts[0], parts[1]);
+				});
+			}
+			styles.put(key, value);
+			setAttr("style",
+					styles.entrySet().stream().map(
+							e -> Ax.format("%s:%s", e.getKey(), e.getValue()))
+							.collect(Collectors.joining("; ")));
 		}
 	}
 

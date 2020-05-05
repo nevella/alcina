@@ -60,7 +60,7 @@ public class PublicationViews {
 		body.builder().tag("hr").append();
 		XmlNode content = body.builder().tag("iframe").append().setAttr("id",
 				"content-frame");
-		content.html().addClassName("content");
+		content.style().addClassName("content");
 		PublicationContentPersister publicationContentPersister = Registry
 				.impl(PublicationContentPersister.class);
 		XmlNode script = body.builder().tag("script").append();

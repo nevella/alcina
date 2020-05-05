@@ -15,8 +15,8 @@ import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.xml.XmlNode.XpathEvaluator;
 
 public interface XmlEnvironment {
-	public static BlockResolver contextBlockResolver() {
-		return new BlockResolverHtml();
+	public static StyleResolver contextBlockResolver() {
+		return new StyleResolverHtml();
 	}
 
 	public static XmlEnvironment get() {
@@ -55,7 +55,7 @@ public interface XmlEnvironment {
 
 	public String toXml(Node node);
 
-	public static interface BlockResolver extends Predicate<XmlNode> {
+	public static interface StyleResolver extends Predicate<XmlNode> {
 		default Optional<XmlNode> getContainingBlock(XmlNode cursor) {
 			return cursor.ancestors().orSelf().match(this);
 		}
@@ -66,13 +66,18 @@ public interface XmlEnvironment {
 
 		boolean isBlock(XmlNode node);
 
+		boolean isBold(XmlNode node);
+
+		boolean isItalic(XmlNode node);
+
 		@Override
 		default boolean test(XmlNode node) {
 			return isBlock(node);
 		}
 	}
 
-	public static class BlockResolverHtml implements BlockResolver {
+	public static class StyleResolverHtml
+			implements StyleResolver {
 		XmlDoc doc = null;
 
 		@Override
@@ -86,6 +91,20 @@ public interface XmlEnvironment {
 		@Override
 		public boolean isBlock(XmlNode node) {
 			return isHtmlBlockTag(node.name());
+		}
+
+		@Override
+		public boolean isBold(XmlNode node) {
+			return node.ancestors().orSelf()
+					.has(n -> n.name().equalsIgnoreCase("B")
+							|| n.name().equalsIgnoreCase("STRONG"));
+		}
+
+		@Override
+		public boolean isItalic(XmlNode node) {
+			return node.ancestors().orSelf()
+					.has(n -> n.name().equalsIgnoreCase("I")
+							|| n.name().equalsIgnoreCase("EMPH"));
 		}
 	}
 

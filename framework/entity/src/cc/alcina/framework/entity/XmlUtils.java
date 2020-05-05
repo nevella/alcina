@@ -86,8 +86,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.xml.XmlDoc;
-import cc.alcina.framework.common.client.xml.XmlEnvironment.BlockResolver;
-import cc.alcina.framework.common.client.xml.XmlEnvironment.BlockResolverHtml;
+import cc.alcina.framework.common.client.xml.XmlEnvironment.StyleResolver;
+import cc.alcina.framework.common.client.xml.XmlEnvironment.StyleResolverHtml;
 import cc.alcina.framework.common.client.xml.XmlNode;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
@@ -537,11 +537,11 @@ public class XmlUtils {
 	}
 
 	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node) {
-		return getSurroundingBlockTuple(node, new BlockResolverHtml());
+		return getSurroundingBlockTuple(node, new StyleResolverHtml());
 	}
 
 	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node,
-			BlockResolver blockResolver) {
+			StyleResolver blockResolver) {
 		XmlDoc xmlDoc = new XmlDoc(node.getOwnerDocument());
 		XmlNode prev = xmlDoc.nodeFor(node);
 		XmlNode next = prev;
@@ -558,7 +558,7 @@ public class XmlUtils {
 				tuple.prevBlock = null;
 				break;
 			}
-			if (cursor.html().isOrContainsBlock(blockResolver)
+			if (cursor.style().isOrContainsBlock(blockResolver)
 					|| blockResolver.getContainingBlock(cursor)
 							.orElse(null) != currentBlockAncestor) {
 				tuple.prevBlock = cursor.domNode();
@@ -578,7 +578,7 @@ public class XmlUtils {
 				tuple.nextBlock = null;
 				break;
 			}
-			if (cursor.html().isOrContainsBlock(blockResolver)
+			if (cursor.style().isOrContainsBlock(blockResolver)
 					|| blockResolver.getContainingBlock(cursor)
 							.orElse(null) != currentBlockAncestor) {
 				tuple.nextBlock = cursor.domNode();
