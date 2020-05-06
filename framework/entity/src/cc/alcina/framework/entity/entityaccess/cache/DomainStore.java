@@ -1726,7 +1726,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		protected Entity getObjectForCreate(DomainTransformEvent event) {
+		protected Entity getEntityForCreate(DomainTransformEvent event) {
 			Entity localReplacement = localReplacementCreationObjectResolver
 					.apply(event.getObjectLocalId());
 			if (localReplacement != null) {

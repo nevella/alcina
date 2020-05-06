@@ -448,38 +448,43 @@ public abstract class TransformManager implements PropertyChangeListener,
 			performDeleteObject((Entity) token.object);
 			break;
 		case CREATE_OBJECT:
-			if (event.getObjectId() != 0) {
-				// various possibilities:
-				// 1. replaying a server create,(on the client)
-				// 2. recording an in-entity-manager create
-				// 3. doing a database-regeneration
-				// 4. post-process; replaying local-to-vm create
-				// 5. post-process; replaying not-local-to-vm create
-				// if (2) or (4) , break at this point
-				if (getObjectForCreate(event) != null) {
-					break;
+			// various possibilities:
+			// 1. replaying a server create,(on the client)
+			// 2. recording an in-entity-manager create
+			// 3. doing a database-regeneration
+			// 4. post-process; replaying local-to-vm create
+			// 5. post-process; replaying not-local-to-vm create
+			// 6. in a local object create cycle
+			// if (2) or (4) , break at this point
+			Entity createdEntity = getEntityForCreate(event);
+			if (createdEntity != null) {
+				// created locally, most of the registration needs to be handled
+				// at the creation site (createDomainObject())
+				if (createdEntity.getLocalId() == 0) {
+					// increment that version number
+					objectModified(createdEntity, event, false);
 				}
-			}
-			long creationLocalId = isZeroCreatedObjectLocalId(
-					event.getObjectClass()) ? 0 : event.getObjectLocalId();
-			Entity entity = (Entity) classLookup().newInstance(
-					event.getObjectClass(), event.getObjectId(),
-					event.getObjectLocalId());
-			entity.setLocalId(creationLocalId);
-			if (entity.getId() == 0 && event.getObjectId() != 0) {// replay from
-																	// server -
-				// huh? unless newInstance does something weird, should never
-				// reach here
-				entity.setId(event.getObjectId());
-			}
-			event.setObjectId(entity.getId());
-			if (event.getCommitType() == CommitType.TO_STORAGE) {
+				break;
+			} else {
+				long creationLocalId = isZeroCreatedObjectLocalId(
+						event.getObjectClass()) ? 0 : event.getObjectLocalId();
+				Entity entity = (Entity) classLookup().newInstance(
+						event.getObjectClass(), event.getObjectId(),
+						event.getObjectLocalId());
+				entity.setLocalId(creationLocalId);
+				if (entity.getId() == 0 && event.getObjectId() != 0) {// replay
+																		// from
+																		// server
+																		// -
+					// huh? unless newInstance does something weird, should
+					// never
+					// reach here
+					entity.setId(event.getObjectId());
+				}
+				event.setObjectId(entity.getId());
 				objectModified(entity, event, false);
-			}
-			objectCreated(entity);
-			if (getDomainObjects() != null) {
-				getDomainObjects().mapObject(entity);
-				maybeFireCollectionModificationEvent(entity.getClass(), false);
+				maybeFireCollectionModificationEvent(event.getObjectClass(),
+						false);
 			}
 			break;
 		default:
@@ -577,12 +582,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public <T extends Entity> T createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
 		T newInstance = classLookup().newInstance(objectClass, 0, localId);
-		newInstance.setLocalId(localId);
-		// a bit roundabout, but to ensure compatibility with the event system
-		// essentially registers a synthesised object, then replaces it in the
-		// mapping with the real one
-		fireCreateObjectEvent(objectClass, 0, localId);
+		Preconditions.checkState(newInstance.getLocalId() != 0);
 		registerDomainObject(newInstance);
+		fireCreateObjectEvent(objectClass, 0, localId);
+		maybeFireCollectionModificationEvent(objectClass, false);
 		return newInstance;
 	}
 
@@ -1340,7 +1343,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (getDomainObjects() != null && entity != null) {
 			if (entity.getId() == 0) {
 				Entity createdObject = getDomainObjects().getObject(entity);
-				getDomainObjects().deregisterObject(createdObject);
+				if (createdObject != null) {
+					getDomainObjects().deregisterObject(createdObject);
+				}
 			}
 			getDomainObjects().mapObject(entity);
 		}
@@ -1633,7 +1638,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return false;
 	}
 
-	protected Entity getObjectForCreate(DomainTransformEvent event) {
+	protected Entity getEntityForCreate(DomainTransformEvent event) {
 		return getObject(event);
 	}
 
@@ -1671,9 +1676,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected void maybeFireCollectionModificationEvent(
 			Class<? extends Object> collectionClass,
 			boolean fromPropertyChange) {
-	}
-
-	protected void objectCreated(Entity entity) {
 	}
 
 	/**
@@ -2103,9 +2105,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 		ProcessEventToken(DomainTransformEvent event)
 				throws DomainTransformException {
 			transformType = event.getTransformType();
-			if (transformType != TransformType.CREATE_OBJECT) {
-				object = getObject(event);
-				if (object == null) {
+			object = getObject(event);
+			if (object == null) {
+				/*
+				 * Created objects will already be in the graph if locally
+				 * created
+				 */
+				if (transformType != TransformType.CREATE_OBJECT) {
 					throw new DomainTransformException(event,
 							DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND);
 				}

@@ -91,7 +91,6 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -282,25 +281,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public <T extends Entity> T createDomainObject(Class<T> clazz) {
-		long localId = nextLocalIdCounter();
-		T newInstance = newInstance(clazz, 0, localId);
-		DomainStore.stores().storeFor(clazz).onLocalObjectCreated(newInstance);
-		// logic should probably be made clearer here - if id==0, we're not in
-		// an
-		// entitymanager context
-		// so we want to record creates
-		// nah - in fact, always record creates (even if in-em), but don't
-		// process in consume() if obj exists
-		// if (newInstance.getId() == 0) {
-		registerDomainObject(newInstance);
-		fireCreateObjectEvent(newInstance.provideEntityClass(),
-				newInstance.getId(), newInstance.getLocalId());
-		// }
-		return newInstance;
-	}
-
-	@Override
 	public DomainTransformEvent delete(Entity entity) {
 		if (entity == null) {
 			return null;
@@ -317,8 +297,9 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		entity = ensureNonProxy(entity);
 		deleted.add(entity);
-//		Ax.out("dbg deletion: %s %s %s %s",entity.getId(),entity.getLocalId(),entity.hashCode(),System.identityHashCode(entity));
-//		((MvccObject)entity).__debugResolvedVersion__();
+		// Ax.out("dbg deletion: %s %s %s
+		// %s",entity.getId(),entity.getLocalId(),entity.hashCode(),System.identityHashCode(entity));
+		// ((MvccObject)entity).__debugResolvedVersion__();
 		DomainTransformEvent event = super.delete(entity);
 		if (event != null) {
 			addTransform(event);

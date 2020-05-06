@@ -106,7 +106,7 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	@Override
-	protected Entity getObjectForCreate(DomainTransformEvent event) {
+	protected Entity getEntityForCreate(DomainTransformEvent event) {
 		return null;
 	}
 
