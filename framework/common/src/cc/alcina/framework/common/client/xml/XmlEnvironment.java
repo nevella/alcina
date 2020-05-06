@@ -10,21 +10,20 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonConstants;
+import cc.alcina.framework.common.client.util.HtmlConstants;
 import cc.alcina.framework.common.client.xml.XmlNode.XpathEvaluator;
 
 public interface XmlEnvironment {
 	public static StyleResolver contextBlockResolver() {
-		return new StyleResolverHtml();
+		return Registry.impl(StyleResolver.class);
 	}
 
 	public static XmlEnvironment get() {
 		return Registry.impl(XmlEnvironment.class);
-	}
-
-	public static boolean isHtmlBlockTag(String tagName) {
-		return CommonConstants.HTML_BLOCKS.contains("," + tagName + ",");
 	}
 
 	public static List<Node> nodeListToList(NodeList nl) {
@@ -55,6 +54,12 @@ public interface XmlEnvironment {
 
 	public String toXml(Node node);
 
+	public static class NamespaceResult {
+		public String firstTag;
+
+		public String xml;
+	}
+
 	public static interface StyleResolver extends Predicate<XmlNode> {
 		default Optional<XmlNode> getContainingBlock(XmlNode cursor) {
 			return cursor.ancestors().orSelf().match(this);
@@ -76,8 +81,9 @@ public interface XmlEnvironment {
 		}
 	}
 
-	public static class StyleResolverHtml
-			implements StyleResolver {
+	@RegistryLocation(registryPoint = StyleResolver.class, implementationType = ImplementationType.INSTANCE)
+	@ClientInstantiable
+	public static class StyleResolverHtml implements StyleResolver {
 		XmlDoc doc = null;
 
 		@Override
@@ -90,7 +96,7 @@ public interface XmlEnvironment {
 
 		@Override
 		public boolean isBlock(XmlNode node) {
-			return isHtmlBlockTag(node.name());
+			return HtmlConstants.isHtmlBlock(node.name());
 		}
 
 		@Override
@@ -106,11 +112,5 @@ public interface XmlEnvironment {
 					.has(n -> n.name().equalsIgnoreCase("I")
 							|| n.name().equalsIgnoreCase("EMPH"));
 		}
-	}
-
-	public static class NamespaceResult {
-		public String firstTag;
-
-		public String xml;
 	}
 }

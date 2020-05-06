@@ -17,8 +17,8 @@ import cc.alcina.framework.common.client.xml.XmlEnvironment;
 import cc.alcina.framework.common.client.xml.XmlNode;
 import cc.alcina.framework.common.client.xml.XmlNode.XpathEvaluator;
 
-@RegistryLocation(registryPoint = XmlEnvironment.class, implementationType = ImplementationType.SINGLETON)
-public class XmlEnvironmentImpl implements XmlEnvironment {
+@RegistryLocation(registryPoint = XmlEnvironment.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+public class XmlEnvironmentJvmImpl implements XmlEnvironment {
 	@Override
 	public XpathEvaluator createXpathEvaluator(XmlNode xmlNode,
 			XpathEvaluator xpathEvaluator) {

@@ -3,64 +3,63 @@ package cc.alcina.framework.common.xml;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.xml.XmlDoc;
 import cc.alcina.framework.common.client.xml.XmlEnvironment;
 import cc.alcina.framework.common.client.xml.XmlNode;
 import cc.alcina.framework.common.client.xml.XmlNode.XpathEvaluator;
 
-public class XmlEnvironmentImpl implements XmlEnvironment {
+@RegistryLocation(registryPoint = XmlEnvironment.class, implementationType = ImplementationType.SINGLETON)
+@ClientInstantiable
+/*
+ * Not yet implemented, but could be without much difficulty
+ */
+public class XmlEnvironmentClientImpl implements XmlEnvironment {
 	@Override
 	public XpathEvaluator createXpathEvaluator(XmlNode xmlNode,
 			XpathEvaluator xpathEvaluator) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Node loadFromXml(String xml) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public String log(XmlNode xmlNode, boolean pretty) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public String prettyPrint(Document domDoc) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public String prettyToString(XmlNode xmlNode) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public NamespaceResult removeNamespaces(XmlDoc xmlDoc) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public NamespaceResult restoreNamespaces(XmlDoc xmlDoc, String firstTag) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public String streamNCleanForBrowserHtmlFragment(Node node) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public String toXml(Node node) {
-		// TODO Auto-generated method stub
-		return null;
+		throw new UnsupportedOperationException();
 	}
 }

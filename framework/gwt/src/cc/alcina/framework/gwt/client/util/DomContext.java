@@ -7,8 +7,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.xml.XmlDoc;
 
 public abstract class DomContext {
-	public static XmlDoc xmlDoc(Document domDocument) {
-		return get().getXmlDoc(domDocument);
+	public static void clearReferences() {
+		get().clearReferences0();
 	}
 
 	public static int getAbsoluteTop(Element parentElement) {
@@ -39,9 +39,24 @@ public abstract class DomContext {
 		get().scrollIntoView0(elem);
 	}
 
+	public static void setProperty(Element elem, String key, String value) {
+		get().setProperty0(elem, key, value);
+	}
+
+	public static void setStyleProperty(Element elem, String key,
+			String value) {
+		get().setStyleProperty0(elem, key, value);
+	}
+
+	public static XmlDoc xmlDoc(Document domDocument) {
+		return get().getXmlDoc(domDocument);
+	}
+
 	private static DomContext get() {
 		return Registry.impl(DomContext.class);
 	}
+
+	protected abstract void clearReferences0();
 
 	protected abstract int getAbsoluteTop0(Element parentElement);
 
@@ -58,4 +73,10 @@ public abstract class DomContext {
 	protected abstract void putXmlDoc0(XmlDoc doc);
 
 	protected abstract void scrollIntoView0(Element elem);
+
+	protected abstract void setProperty0(Element elem, String key,
+			String value);
+
+	protected abstract void setStyleProperty0(Element elem, String key,
+			String value);
 }

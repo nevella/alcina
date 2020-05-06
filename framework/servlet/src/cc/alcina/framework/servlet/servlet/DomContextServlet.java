@@ -10,12 +10,18 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.xml.XmlDoc;
+import cc.alcina.framework.common.client.xml.XmlNode;
 import cc.alcina.framework.gwt.client.util.DomContext;
 
 @RegistryLocation(registryPoint = DomContext.class, implementationType = ImplementationType.SINGLETON)
 public class DomContextServlet extends DomContext {
 	public static final String CONTEXT_DOCS = DomContextServlet.class.getName()
 			+ ".CONTEXT_DOCS";
+
+	@Override
+	protected void clearReferences0() {
+		xmlDocs().clear();
+	}
 
 	@Override
 	protected int getAbsoluteTop0(Element parentElement) {
@@ -55,6 +61,16 @@ public class DomContextServlet extends DomContext {
 	@Override
 	protected void scrollIntoView0(Element elem) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected void setProperty0(Element elem, String key, String value) {
+		XmlNode.from(elem).setAttr(key, value);
+	}
+
+	@Override
+	protected void setStyleProperty0(Element elem, String key, String value) {
+		XmlNode.from(elem).style().setProperty(key, value);
 	}
 
 	Map<Document, XmlDoc> xmlDocs() {

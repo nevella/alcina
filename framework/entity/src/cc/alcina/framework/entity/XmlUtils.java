@@ -81,8 +81,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HtmlConstants;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.xml.XmlDoc;
@@ -687,7 +687,7 @@ public class XmlUtils {
 	}
 
 	public static boolean isBlockTag(String tagName) {
-		return CommonConstants.HTML_BLOCKS.contains("," + tagName + ",");
+		return HtmlConstants.isHtmlBlock(tagName);
 	}
 
 	public static boolean isCompleteBlock(Element elt) {
@@ -736,7 +736,7 @@ public class XmlUtils {
 	}
 
 	public static boolean isInvisibleContentElement(Element elt) {
-		return CommonConstants.HTML_INVISIBLE_CONTENT_ELEMENTS
+		return HtmlConstants.HTML_INVISIBLE_CONTENT_ELEMENTS
 				.contains("," + elt.getTagName().toUpperCase() + ",");
 	}
 

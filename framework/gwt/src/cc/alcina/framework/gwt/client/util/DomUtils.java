@@ -28,8 +28,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HtmlConstants;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.xml.XmlNode;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -820,8 +820,7 @@ public class DomUtils implements NodeFromXpathProvider {
 	@ClientInstantiable
 	public static class DomUtilsBlockResolver {
 		public boolean isBlockHTMLElement(Element e) {
-			return CommonConstants.HTML_BLOCKS
-					.contains("," + e.getTagName().toUpperCase() + ",");
+			return HtmlConstants.isHtmlBlock(e.getTagName());
 		}
 	}
 
@@ -844,15 +843,14 @@ public class DomUtils implements NodeFromXpathProvider {
 			this.properties = properties;
 		}
 
-		public void applyTo(Element wrapper) {
-			XmlNode wrappingNode = XmlNode.from(wrapper);
-			wrappingNode.style().setClassName(cssClassName);
+		public void applyTo(Element elem) {
+			elem.setAttribute("class", cssClassName);
 			for (Entry<String, String> entry : styleProperties.entrySet()) {
-				wrappingNode.style().setProperty(entry.getKey(),
+				DomContext.setStyleProperty(elem, entry.getKey(),
 						entry.getValue());
 			}
 			for (Entry<String, String> entry : properties.entrySet()) {
-				wrappingNode.setAttr(entry.getKey(), entry.getValue());
+				DomContext.setProperty(elem, entry.getKey(), entry.getValue());
 			}
 		}
 

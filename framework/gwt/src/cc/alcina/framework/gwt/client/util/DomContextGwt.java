@@ -9,6 +9,11 @@ public class DomContextGwt extends DomContext {
 	XmlDoc doc = null;
 
 	@Override
+	protected void clearReferences0() {
+		getXmlDoc(null).clearElementReferences();
+	}
+
+	@Override
 	protected int getAbsoluteTop0(org.w3c.dom.Element w3cElem) {
 		Element elem = (Element) w3cElem;
 		return elem.getAbsoluteTop();
@@ -59,5 +64,19 @@ public class DomContextGwt extends DomContext {
 	protected void scrollIntoView0(org.w3c.dom.Element w3cElem) {
 		Element elem = (Element) w3cElem;
 		elem.scrollIntoView();
+	}
+
+	@Override
+	protected void setProperty0(org.w3c.dom.Element w3cElem, String key,
+			String value) {
+		Element elem = (Element) w3cElem;
+		elem.setPropertyString(key, value);
+	}
+
+	@Override
+	protected void setStyleProperty0(org.w3c.dom.Element w3cElem, String key,
+			String value) {
+		Element elem = (Element) w3cElem;
+		elem.getStyle().setProperty(key, value);
 	}
 }

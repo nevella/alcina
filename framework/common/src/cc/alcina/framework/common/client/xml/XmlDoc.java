@@ -54,6 +54,13 @@ public class XmlDoc extends XmlNode {
 		loadFromXml(xml);
 	}
 
+	public void clearElementReferences() {
+		if (cachedElementIdMap != null) {
+			cachedElementIdMap.clear();
+		}
+		nodes.clear();
+	}
+
 	@Override
 	public Document domDoc() {
 		return super.domDoc();
