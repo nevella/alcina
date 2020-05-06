@@ -137,7 +137,6 @@ public class CsvCols
 		public String get(String key) {
 			return csvCols.grid.get(rowIdx).get(getColumnIndex(key));
 		}
-
 		public boolean has(String key) {
 			return get(key).length() > 0;
 		}

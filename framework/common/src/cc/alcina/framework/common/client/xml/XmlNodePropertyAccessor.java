@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.parser.structured.node;
+package cc.alcina.framework.common.client.xml;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -9,9 +9,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
-import cc.alcina.framework.entity.domaintransform.MethodIndividualPropertyAccessor;
 
 public class XmlNodePropertyAccessor implements PropertyAccessor {
 	private List<String> singleChildElementNames = new ArrayList<>();
@@ -36,7 +36,8 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 	@Override
 	public PropertyReflector getPropertyReflector(Class clazz,
 			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+		return Reflections.propertyAccessor().getPropertyReflector(clazz,
+				propertyName);
 	}
 
 	@Override

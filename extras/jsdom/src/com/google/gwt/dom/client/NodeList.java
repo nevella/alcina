@@ -33,7 +33,7 @@ import java.util.stream.Stream;
  * @param <T>
  *            the type of contained node
  */
-public class NodeList<T extends Node> implements DomNodeList<T>, Iterable<T> {
+public class NodeList<T extends Node> implements DomNodeList<T>, Iterable<T>,org.w3c.dom.NodeList {
 	public static DomNodeList<? extends Node>
 			gwtOnlySubList(DomNodeList<? extends Node> childNodes) {
 		return new NodeList<>(childNodes).filteredSubList(n -> {
@@ -93,5 +93,10 @@ public class NodeList<T extends Node> implements DomNodeList<T>, Iterable<T> {
 			}
 			return getItem(cursor++);
 		}
+	}
+
+	@Override
+	public Node item(int arg0) {
+		return getItem(arg0);
 	}
 }

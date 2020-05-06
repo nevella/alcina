@@ -27,6 +27,7 @@ public class WidgetWrapper extends Composite implements HasClickHandlers {
 		initWidget(fp);
 	}
 
+	@Override
 	public HandlerRegistration addClickHandler(ClickHandler handler) {
 		return addDomHandler(handler, ClickEvent.getType());
 	}
@@ -49,7 +50,7 @@ public class WidgetWrapper extends Composite implements HasClickHandlers {
 		if (replace != null) {
 			return replace;
 		}
-		List<Element> kids = DomUtils
+		List<Element> kids = GwtDomUtils
 				.nodeListToElementList(element.getChildNodes());
 		boolean hasReplacedChild = false;
 		for (Element e2 : kids) {

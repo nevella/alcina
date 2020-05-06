@@ -59,6 +59,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	private boolean withDuplicateIdRefCheck = false;
 
+	private boolean truncateAtMaxLength;
+
 	public JacksonJsonObjectSerializer() {
 		maxLength = ResourceUtilities.getInteger(
 				JacksonJsonObjectSerializer.class, "maxLength", 10000000);
@@ -111,7 +113,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	public String serialize(Object object) {
 		return runWithObjectMapper(mapper -> {
 			try {
-				StringWriter writer = new LengthLimitedStringWriter(maxLength);
+				StringWriter writer = new LengthLimitedStringWriter(maxLength,truncateAtMaxLength);
 				if (withPrettyPrint) {
 					mapper.writerWithDefaultPrettyPrinter().writeValue(writer,
 							object);
@@ -158,6 +160,11 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	public JacksonJsonObjectSerializer withMaxLength(int maxLength) {
 		this.maxLength = maxLength;
+		return this;
+	}
+	
+	public JacksonJsonObjectSerializer withTruncateAtMaxLength(boolean truncateAtMaxLength) {
+		this.truncateAtMaxLength = truncateAtMaxLength;
 		return this;
 	}
 
@@ -308,58 +315,77 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	public static class LengthLimitedStringWriter extends StringWriter {
 		private int maxLength;
+		private boolean truncateAtMaxLength;
 
-		public LengthLimitedStringWriter(int maxLength) {
+		public LengthLimitedStringWriter(int maxLength, boolean truncateAtMaxLength) {
 			this.maxLength = maxLength;
+			this.truncateAtMaxLength = truncateAtMaxLength;
 		}
 
 		@Override
 		public StringWriter append(char c) {
-			checkLength(1);
+			if(!checkLength(1)){
+			return this;	
+			}
 			return super.append(c);
 		}
 
 		@Override
 		public StringWriter append(CharSequence csq) {
-			checkLength(csq.length());
+			if(!checkLength(csq.length())){
+				return this;	
+				}
 			return super.append(csq);
 		}
 
 		@Override
 		public StringWriter append(CharSequence csq, int start, int end) {
-			checkLength(end - start);
+			if(!checkLength(end - start)){
+				return this;	
+				}
 			return super.append(csq, start, end);
 		}
 
 		@Override
 		public void write(char[] cbuf, int off, int len) {
-			checkLength(len);
+			if(!checkLength(len)){
+				return ;	
+				}
 			super.write(cbuf, off, len);
 		}
 
 		@Override
 		public void write(int c) {
-			checkLength(1);
+			if(!checkLength(1)){
+				return ;	
+				}
 			super.write(c);
 		}
 
 		@Override
 		public void write(String str) {
-			checkLength(str.length());
+			if(!checkLength(str.length())){
+				return ;	
+				}
 			super.write(str);
 		}
 
 		@Override
 		public void write(String str, int off, int len) {
-			checkLength(len);
+			if(!checkLength(len)){
+				return ;	
+				}
 			super.write(str, off, len);
 		}
 
-		private void checkLength(int len) {
+		private boolean checkLength(int len) {
 			if (maxLength == 0) {
-				return;
+				return true;
 			}
 			if (getBuffer().length() + len > maxLength) {
+				if(truncateAtMaxLength){
+					return false;
+				}
 				String first = "";
 				String last = "";
 				if (getBuffer().length() <= 1000) {
@@ -379,6 +405,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 								+ ":\n%s\n\ntop of stack:\n%s",
 						maxLength, first, last,
 						CommonUtils.joinWithNewlines(topOfTrace));
+			}else{
+				return true;
 			}
 		}
 	}

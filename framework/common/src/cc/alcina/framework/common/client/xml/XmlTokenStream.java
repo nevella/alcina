@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.parser.structured.node;
+package cc.alcina.framework.common.client.xml;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;

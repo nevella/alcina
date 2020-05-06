@@ -29,7 +29,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.function.Predicate;
@@ -82,12 +81,14 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HtmlConstants;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
+import cc.alcina.framework.common.client.xml.XmlDoc;
+import cc.alcina.framework.common.client.xml.XmlEnvironment.StyleResolver;
+import cc.alcina.framework.common.client.xml.XmlEnvironment.StyleResolverHtml;
+import cc.alcina.framework.common.client.xml.XmlNode;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
 /**
@@ -536,11 +537,11 @@ public class XmlUtils {
 	}
 
 	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node) {
-		return getSurroundingBlockTuple(node, new BlockResolverHtml());
+		return getSurroundingBlockTuple(node, new StyleResolverHtml());
 	}
 
 	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node,
-			BlockResolver blockResolver) {
+			StyleResolver blockResolver) {
 		XmlDoc xmlDoc = new XmlDoc(node.getOwnerDocument());
 		XmlNode prev = xmlDoc.nodeFor(node);
 		XmlNode next = prev;
@@ -557,7 +558,7 @@ public class XmlUtils {
 				tuple.prevBlock = null;
 				break;
 			}
-			if (cursor.html().isOrContainsBlock(blockResolver)
+			if (cursor.style().isOrContainsBlock(blockResolver)
 					|| blockResolver.getContainingBlock(cursor)
 							.orElse(null) != currentBlockAncestor) {
 				tuple.prevBlock = cursor.domNode();
@@ -577,7 +578,7 @@ public class XmlUtils {
 				tuple.nextBlock = null;
 				break;
 			}
-			if (cursor.html().isOrContainsBlock(blockResolver)
+			if (cursor.style().isOrContainsBlock(blockResolver)
 					|| blockResolver.getContainingBlock(cursor)
 							.orElse(null) != currentBlockAncestor) {
 				tuple.nextBlock = cursor.domNode();
@@ -686,7 +687,7 @@ public class XmlUtils {
 	}
 
 	public static boolean isBlockTag(String tagName) {
-		return CommonConstants.HTML_BLOCKS.contains("," + tagName + ",");
+		return HtmlConstants.isHtmlBlock(tagName);
 	}
 
 	public static boolean isCompleteBlock(Element elt) {
@@ -735,7 +736,7 @@ public class XmlUtils {
 	}
 
 	public static boolean isInvisibleContentElement(Element elt) {
-		return CommonConstants.HTML_INVISIBLE_CONTENT_ELEMENTS
+		return HtmlConstants.HTML_INVISIBLE_CONTENT_ELEMENTS
 				.contains("," + elt.getTagName().toUpperCase() + ",");
 	}
 
@@ -1430,40 +1431,6 @@ public class XmlUtils {
 			return text.replaceFirst("(?s)^[\n]*(.+?)[\n]*$", "$1");
 		} else {
 			return text.replaceFirst("(?s)^[ \t\n]*(.+?)[ \t\n]*$", "$1");
-		}
-	}
-
-	public static interface BlockResolver extends Predicate<XmlNode> {
-		default Optional<XmlNode> getContainingBlock(XmlNode cursor) {
-			return cursor.ancestors().orSelf().match(this);
-		}
-
-		default boolean isBlock(Element e) {
-			return isBlock(XmlNode.from(e));
-		}
-
-		boolean isBlock(XmlNode node);
-
-		@Override
-		default boolean test(XmlNode node) {
-			return isBlock(node);
-		}
-	}
-
-	public static class BlockResolverHtml implements BlockResolver {
-		XmlDoc doc = null;
-
-		@Override
-		public boolean isBlock(Element e) {
-			if (doc == null) {
-				doc = XmlNode.from(e).doc;
-			}
-			return isBlock(doc.nodeFor(e));
-		}
-
-		@Override
-		public boolean isBlock(XmlNode node) {
-			return node.html().isBlock();
 		}
 	}
 

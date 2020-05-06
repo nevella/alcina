@@ -1,6 +1,6 @@
 package cc.alcina.framework.entity.parser.structured;
 
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
+import cc.alcina.framework.common.client.xml.XmlNode;
 
 public abstract class XmlToken<C extends StructuredTokenParserContext> {
 	protected String name;

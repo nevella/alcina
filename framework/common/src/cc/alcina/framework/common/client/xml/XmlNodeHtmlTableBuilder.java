@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.parser.structured.node;
+package cc.alcina.framework.common.client.xml;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.gwt.client.util.TextUtils;
 
 public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 	public static final transient String CONTEXT_NO_TD_STYLES = XmlNodeHtmlTableBuilder.class
@@ -38,7 +38,7 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			((List<Cell>) row.cells).stream().forEach(cell -> {
 				String value = Ax.blankToEmpty(cell.value).replace("\\n", "\n");
 				if (!LooseContext.is(CONTEXT_KEEP_NEWLINES)) {
-					value = SEUtilities.normalizeWhitespaceAndTrim(value);
+					value = TextUtils.normalizeWhitespaceAndTrim(value);
 				}
 				String href = cell.href;
 				if (Ax.notBlank(href)) {

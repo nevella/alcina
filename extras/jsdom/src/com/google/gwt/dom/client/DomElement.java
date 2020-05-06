@@ -61,7 +61,7 @@ public interface DomElement extends DomNode {
 
 	String getAttribute(String name);
 
-	Map<String, String> getAttributes();
+	Map<String, String> getAttributeMap();
 
 	String getClassName();
 

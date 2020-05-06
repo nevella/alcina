@@ -6,6 +6,7 @@
 	<inherits name='com.google.gwt.activity.Activity' />
 	<inherits name='com.totsp.gwittir.GwittirNoDeps' />
 	<inherits name='com.totsp.gwittir.LoggingWarn' />
+	<inherits name='org.w3c.Xml' />
 	
 	<inherits name='cc.alcina.framework.emul.AlcinaEmul' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmulDevModeRegex' />

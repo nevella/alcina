@@ -8,9 +8,9 @@ import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.xml.XmlDoc;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.XmlUtils.SurroundingBlockTuple;
-import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 
 public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>> {
 	public static String debugMarker = "%%^^##**x";

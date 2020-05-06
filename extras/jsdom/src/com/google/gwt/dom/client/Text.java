@@ -15,14 +15,19 @@
  */
 package com.google.gwt.dom.client;
 
+import org.w3c.dom.DOMException;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.UserDataHandler;
+
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * The Text interface represents textual content.
  */
-public class Text extends Node implements DomText {
+public class Text extends Node implements DomText, org.w3c.dom.Text {
 	/**
 	 * Assert that the given {@link Node} is of type {@link Node#TEXT_NODE} and
 	 * automatically typecast it.
@@ -146,5 +151,35 @@ public class Text extends Node implements DomText {
 		public TextRemote typedRemote() {
 			return Text.this.typedRemote();
 		}
+	}
+
+	@Override
+	public void appendData(String arg0) throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String substringData(int arg0, int arg1) throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getTextContent() throws DOMException {
+		return getData();
+	}
+
+	@Override
+	public String getWholeText() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isElementContentWhitespace() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public org.w3c.dom.Text replaceWholeText(String arg0) throws DOMException {
+		throw new UnsupportedOperationException();
 	}
 }

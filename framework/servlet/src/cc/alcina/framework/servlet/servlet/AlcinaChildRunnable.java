@@ -27,7 +27,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			protected void run0() throws Exception {
 				runnable.run();
 			}
-		};
+		}.withContextSnapshot();
 		new Thread(wrappingRunnable).start();
 	}
 
