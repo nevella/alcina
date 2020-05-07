@@ -7,12 +7,36 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class IntPair implements Comparable<IntPair>, Serializable {
 	static final transient long serialVersionUID = -1L;
+
+	public static List<IntPair> asRangeList(List<Integer> ints) {
+		int start = -1;
+		int cursor = -1;
+		List<IntPair> result = new ArrayList<>();
+		for (Integer integer : ints) {
+			if (start == -1) {
+				start = integer;
+				cursor = integer;
+			} else {
+				if (cursor < integer - 1) {
+					result.add(new IntPair(start, cursor));
+					start = cursor;
+				} else {
+					cursor = integer;
+				}
+			}
+		}
+		if (start != -1) {
+			result.add(new IntPair(start, cursor));
+		}
+		return result;
+	}
 
 	public static boolean containedInRanges(List<IntPair> ranges,
 			IntPair range) {
@@ -257,6 +281,10 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 		return i1 + "," + i2;
 	}
 
+	public IntStream stream(boolean closed) {
+		return closed ? IntStream.rangeClosed(i1, i2) : IntStream.range(i1, i2);
+	}
+
 	public String substring(String str) {
 		return str.substring(Math.max(i1, 0), Math.min(i2, str.length()));
 	}
@@ -268,6 +296,10 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 
 	public String toDashString() {
 		return "[" + i1 + "-" + i2 + "]";
+	}
+
+	public String toDashStringOrPoint() {
+		return isPoint() ? String.valueOf(i1) : "[" + i1 + "-" + i2 + "]";
 	}
 
 	@Override
