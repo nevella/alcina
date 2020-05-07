@@ -589,6 +589,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 								reuseIUserHolder.iUser = wrapperUser;
 							}
 						}
+						if (wrapperUser == null) {
+							// admin persistence
+							wrapperUser = PermissionsManager.get().getUser();
+						}
 						PermissionsManager.get().pushUser(wrapperUser,
 								LoginState.LOGGED_IN);
 					} else {
@@ -874,7 +878,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			for (int idx = 0; idx < parameters.length; idx++) {
 				try {
 					String serializedParameter = new JacksonJsonObjectSerializer()
-							.withIdRefs().withMaxLength(100000).withTruncateAtMaxLength(true)
+							.withIdRefs().withMaxLength(100000)
+							.withTruncateAtMaxLength(true)
 							.serializeNoThrow(parameters[idx]);
 					msg += Ax.format("%s: %s\n", idx, serializedParameter);
 				} catch (Throwable e) {
