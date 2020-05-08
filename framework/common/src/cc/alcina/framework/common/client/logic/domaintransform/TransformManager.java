@@ -477,6 +477,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					// increment that version number
 					objectModified(createdObject, event, false);
 				}
+				maybeFireCollectionModificationEvent(createdObject.getClass(), false);
 				break;
 			} else {
 				long creationLocalId = isZeroCreatedObjectLocalId(
@@ -495,7 +496,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 				}
 				event.setObjectId(hili.getId());
 				objectModified(hili, event, false);
-				maybeFireCollectionModificationEvent(event.getObjectClass(), false);
+				if (getDomainObjects() != null) {
+					getDomainObjects().mapObject(hili);
+					maybeFireCollectionModificationEvent(hili.getClass(), false);
+				}
 			}
 			break;
 		default:
