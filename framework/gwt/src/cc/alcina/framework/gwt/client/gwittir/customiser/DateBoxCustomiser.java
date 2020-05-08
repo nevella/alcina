@@ -55,7 +55,12 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 
 		public static final native String render0(double millis) /*-{
       var jsDate = new Date(millis);
-      return jsDate.toUTCString();
+      function pad(n) {
+        return n < 10 ? '0' + n : '' + n;
+      }
+      return jsDate.getUTCFullYear() + "-" + pad(jsDate.getUTCMonth() + 1)
+          + "-" + pad(jsDate.getUTCDate());
+
 		}-*/;
 	}
 
@@ -95,7 +100,8 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 	public BoundWidget get() {
 		if (utc) {
 			if (editable) {
-				DateBox dateBox = new DateBox();
+				DateBox dateBox = new DateBox(
+						DateTimeFormat.getFormat("yyyy-MM-dd"));
 				dateBox.setDateTranslator(new UtcLocalDateTranslator());
 				return dateBox;
 			} else {
