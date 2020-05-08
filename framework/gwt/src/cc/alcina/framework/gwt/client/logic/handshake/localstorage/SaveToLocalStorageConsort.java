@@ -16,7 +16,7 @@ import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
  * playback things (c) just write the replay deltas (e.g. domainholder x,
  * deltas/unlinked y) (d) release lock
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class SaveToLocalStorageConsort extends AllStatesConsort<State> {

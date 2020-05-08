@@ -13,7 +13,7 @@ import com.totsp.gwittir.client.beans.Converter;
 /**
  * A string tuple
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)

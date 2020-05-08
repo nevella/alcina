@@ -15,7 +15,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 
 /**
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @RegistryLocation(registryPoint=AlcinaTemplateBeanProvider.class,implementationType=ImplementationType.SINGLETON)

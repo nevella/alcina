@@ -16,7 +16,7 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 
 /**
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 @RegistryLocation(registryPoint = ContentDeliveryType.class, targetClass = ContentDeliveryType_LOCAL_FILESYSTEM.class)

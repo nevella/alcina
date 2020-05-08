@@ -43,7 +43,7 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
  *
  *
  *
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public class Publisher {

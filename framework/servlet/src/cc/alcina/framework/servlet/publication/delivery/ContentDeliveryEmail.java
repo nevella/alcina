@@ -51,7 +51,7 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
  * could extend xxxMimeType - but we'd need to expand the registry, with a
  * "no-inherit"..TODO??
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @RegistryLocation(registryPoint = ContentDeliveryType.class, targetClass = ContentDeliveryType_EMAIL.class)

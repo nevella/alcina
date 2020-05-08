@@ -12,7 +12,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 /**
  * Convert html to unicode entities for XHTML processing
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class EntityCleaner {

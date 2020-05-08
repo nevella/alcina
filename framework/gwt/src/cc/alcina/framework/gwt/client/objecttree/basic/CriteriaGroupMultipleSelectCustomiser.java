@@ -14,7 +14,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 
 /**
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @SuppressWarnings("unchecked")
