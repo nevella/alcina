@@ -42,7 +42,7 @@ public class DtrSimpleAdminPersistenceHandler
 			int size = fullRequest.getEvents().size();
 			boolean commitAsWrapperUser = ResourceUtilities
 					.is("commitAsWrapperUser");
-			if (size > chunkSize) {
+			if (size > chunkSize && dar.getChunkUuidString() != null) {
 				getJobTracker().setItemCount(size / chunkSize + 1);
 				int rqIdCounter = dar.getRequestId();
 				for (int idx = 0; idx < size;) {
