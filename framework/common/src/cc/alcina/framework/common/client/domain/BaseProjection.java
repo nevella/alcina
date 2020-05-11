@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
  * but -- if it's a one->many (e.g. just an existence map like
  * article.disabledatcourtrequest), use id->article
  *
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  * @param <T>
  */

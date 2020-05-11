@@ -9,7 +9,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 /**
  * Passthrough interface - does no work
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 @RegistryLocation(registryPoint = FormatConverter.class, targetClass = FormatConversionTarget_HTML.class)

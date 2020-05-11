@@ -13,7 +13,7 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 /**
  * Subclass this if the app can function in a "never-connected-to-server" mode
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @RegistryLocation(registryPoint = CheckOfflineSufficentPlayer.class, implementationType = ImplementationType.SINGLETON)

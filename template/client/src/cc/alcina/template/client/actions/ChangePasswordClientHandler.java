@@ -36,7 +36,7 @@ import com.totsp.gwittir.client.validator.Validator;
 
 /**
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @RegistryLocation(registryPoint = PermissibleActionHandler.class, targetClass = ChangePasswordClientAction.class)

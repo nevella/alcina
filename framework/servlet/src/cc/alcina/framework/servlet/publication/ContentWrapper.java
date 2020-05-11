@@ -35,7 +35,7 @@ import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererRe
  * Base for 'wrapper' phase of pipeline - adds headers, footers, does any extra
  * end-of-rendering pipeline work.
  *
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  * @param <D>
  * @param <M>

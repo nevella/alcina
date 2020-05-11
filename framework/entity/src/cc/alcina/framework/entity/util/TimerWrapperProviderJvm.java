@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 /**
  * XP (JVM/GWT) timer functionality
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 /*

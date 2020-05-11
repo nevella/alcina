@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Implemented by format converters
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public interface FormatConverter {
