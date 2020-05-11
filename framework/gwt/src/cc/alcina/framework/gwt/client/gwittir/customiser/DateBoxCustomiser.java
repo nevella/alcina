@@ -15,6 +15,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.Date;
 
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -39,12 +40,33 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 
 	private boolean editable;
 
-	public static class UtcDateRenderer implements Renderer<Date, String> {
-		@Override
-		public String render(Date date) {
-			return date==null?"":render0(date.getTime());
+	@Override
+	public BoundWidget get() {
+		if (utc) {
+			if (editable) {
+				DateBox dateBox = new DateBox(
+						DateTimeFormat.getFormat("yyyy-MM-dd"));
+				dateBox.setDateTranslator(new UtcLocalDateTranslator());
+				return dateBox;
+			} else {
+				RenderingLabel<Date> label = new RenderingLabel<Date>();
+				label.setRenderer(new UtcDateRenderer());
+				return label;
+			}
+		} else {
+			throw new UnsupportedOperationException();
 		}
+	}
 
+	@Override
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
+			boolean multiple, Custom info) {
+		this.editable = editable;
+		utc = NamedParameter.Support.booleanValue(info.parameters(), UTC);
+		return this;
+	}
+
+	public static class UtcDateRenderer implements Renderer<Date, String> {
 		public static final native String render0(double millis) /*-{
       var jsDate = new Date(millis);
       function pad(n) {
@@ -54,6 +76,11 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
           + "-" + pad(jsDate.getUTCDate());
 
 		}-*/;
+
+		@Override
+		public String render(Date date) {
+			return date == null ? "" : render0(date.getTime());
+		}
 	}
 
 	public static class UtcLocalDateTranslator
@@ -75,30 +102,5 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 			int tzOffsetMinutes = ClientUtils.getDateTzOffsetMinutes();
 			return new Date(b.getTime() - tzOffsetMinutes * 60 * 1000);
 		}
-	}
-
-	@Override
-	public BoundWidget get() {
-		if (utc) {
-			if (editable) {
-				DateBox dateBox = new DateBox(
-						DateTimeFormat.getFormat("yyyy-MM-dd"));
-				dateBox.setDateTranslator(new UtcLocalDateTranslator());
-				return dateBox;
-			} else {
-				RenderingLabel<Date> label = new RenderingLabel<Date>();
-				label.setRenderer(new UtcDateRenderer());
-				return label;
-			}
-		} else {
-			throw new UnsupportedOperationException();
-		}
-	}
-
-	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, Custom info) {
-		this.editable = editable;
-		utc = NamedParameter.Support.booleanValue(info.parameters(), UTC);
-		return this;
 	}
 }
