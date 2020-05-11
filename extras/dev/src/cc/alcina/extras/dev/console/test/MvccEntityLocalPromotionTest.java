@@ -16,7 +16,7 @@ import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
  *
  */
 public class MvccEntityLocalPromotionTest<IU extends Entity & IUser, IG extends Entity & IGroup>
-		extends MvccEntiityTransactionTest {
+		extends MvccEntityTransactionTest {
 	@Override
 	protected void run0() throws Exception {
 		Class<IG> groupClass = (Class<IG>) AlcinaPersistentEntityImpl

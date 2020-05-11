@@ -959,13 +959,15 @@ public class DomainStore implements IDomainStore {
 				metricLogger.debug("Query metrics:\n========\n{}\n{}", query,
 						debugMetricBuilder.toString());
 			}
-			if (domainDescriptor.getPreProvideTasks(clazz).size() > 0) {
-				// would have to collect, process, stream
-				throw new UnsupportedOperationException();
-			}
 			// FIXME - mvcc.2 - remove isRaw() etc (always raw)
 			if (query.isRaw() || isWillProjectLater()) {
-				return token.ensureStream();
+				Stream stream = token.ensureStream();
+				List<PreProvideTask<T>> preProvideTasks = domainDescriptor
+						.getPreProvideTasks(clazz);
+				for (PreProvideTask<T> preProvideTask : preProvideTasks) {
+					stream = preProvideTask.wrap(stream);
+				}
+				return stream;
 			} else {
 				throw new UnsupportedOperationException();
 			}
@@ -1705,6 +1707,16 @@ public class DomainStore implements IDomainStore {
 		public void addPropertyStore(DomainClassDescriptor descriptor) {
 			((PropertyStoreAwareMultiplexingObjectCache) store.getCache())
 					.addPropertyStore(descriptor);
+		}
+
+		@Override
+		public Entity getObject(DomainTransformEvent dte,
+				boolean ignoreSource) {
+			if (dte.getTransformType() == TransformType.CREATE_OBJECT) {
+				// avoid fallback to lazy loader
+				return null;
+			}
+			return super.getObject(dte, ignoreSource);
 		}
 
 		public void setLocalReplacementCreationObjectResolver(

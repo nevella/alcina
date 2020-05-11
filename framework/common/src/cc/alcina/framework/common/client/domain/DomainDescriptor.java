@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -99,5 +100,7 @@ public abstract class DomainDescriptor {
 
 		default void registerStore(IDomainStore domainStore) {
 		}
+
+		Stream<T> wrap(Stream<T> stream);
 	}
 }

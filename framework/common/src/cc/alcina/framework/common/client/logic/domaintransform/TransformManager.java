@@ -351,7 +351,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public void apply(DomainTransformEvent event)
 			throws DomainTransformException {
 		currentEvent = event;
-		ProcessEventToken token = createProcessEventToken(event);
+		ApplyToken token = createApplyToken(event);
 		if (!checkPermissions(token.object, event, event.getPropertyName(),
 				token.existingTargetValue)) {
 			return;
@@ -454,8 +454,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 			// 3. doing a database-regeneration
 			// 4. post-process; replaying local-to-vm create
 			// 5. post-process; replaying not-local-to-vm create
-			// 6. in a local object create cycle
 			// if (2) or (4) , break at this point
+			// FIXME - clean this up further once client localid->id transitions
+			// are updated, and provisional -> bubble universe. Some of these
+			// cases may
+			// not still be here? e.g. (2)
 			Entity createdEntity = getEntityForCreate(event);
 			if (createdEntity != null) {
 				// created locally, most of the registration needs to be handled
@@ -1550,9 +1553,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return sb.toString();
 	}
 
-	private ProcessEventToken createProcessEventToken(
-			DomainTransformEvent event) throws DomainTransformException {
-		return new ProcessEventToken(event);
+	private ApplyToken createApplyToken(DomainTransformEvent event)
+			throws DomainTransformException {
+		return new ApplyToken(event);
 	}
 
 	protected boolean allowUnregisteredEntityTargetObject() {
@@ -1878,7 +1881,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				return;
 			}
 			TransformManager tm = TransformManager.get();
-			ProcessEventToken token = tm.createProcessEventToken(event);
+			ApplyToken token = tm.createApplyToken(event);
 			Entity entity = token.object;
 			switch (token.transformType) {
 			case NULL_PROPERTY_REF:
@@ -2094,7 +2097,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	class ProcessEventToken {
+	class ApplyToken {
 		Entity object;
 
 		private TransformType transformType;
@@ -2107,8 +2110,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 		private Entity newTargetObject;
 
-		ProcessEventToken(DomainTransformEvent event)
-				throws DomainTransformException {
+		ApplyToken(DomainTransformEvent event) throws DomainTransformException {
 			transformType = event.getTransformType();
 			object = getObject(event);
 			if (object == null) {

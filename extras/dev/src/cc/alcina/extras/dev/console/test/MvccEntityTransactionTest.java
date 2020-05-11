@@ -6,10 +6,16 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
-import cc.alcina.framework.servlet.knowns.KnownJob;
 
-public abstract class MvccEntiityTransactionTest extends AbstractTaskPerformer{
+public abstract class MvccEntityTransactionTest extends AbstractTaskPerformer {
 	private Exception lastThreadException;
+
+	protected void notifyThreadException(Exception e) {
+		TransformManager.get().clearTransforms();
+		lastThreadException = e;
+	}
+
+	@Override
 	protected void run(boolean throwExceptions) {
 		try {
 			Ax.err(getClass().getSimpleName());
@@ -23,10 +29,11 @@ public abstract class MvccEntiityTransactionTest extends AbstractTaskPerformer{
 				Ax.out(message);
 			}
 			run0();
-			if(lastThreadException!=null){
+			if (lastThreadException != null) {
 				throw lastThreadException;
 			}
 		} catch (Exception e) {
+			TransformManager.get().clearTransforms();
 			if (throwExceptions) {
 				throw WrappedRuntimeException.wrapIfNotRuntime(e);
 			} else {
@@ -36,9 +43,5 @@ public abstract class MvccEntiityTransactionTest extends AbstractTaskPerformer{
 			Transaction.endAndBeginNew();
 			LooseContext.pop();
 		}
-	}
-	protected void notifyThreadException(Exception e) {
-		TransformManager.get().clearTransforms();
-		lastThreadException=e;		
 	}
 }

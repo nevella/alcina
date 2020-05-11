@@ -23,7 +23,7 @@ import cc.alcina.framework.servlet.Sx;
  *
  */
 public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser, IG extends Entity & IGroup>
-		extends MvccEntiityTransactionTest {
+		extends MvccEntityTransactionTest {
 	Class<IG> groupClass = (Class<IG>) AlcinaPersistentEntityImpl
 			.getImplementation(IGroup.class);
 

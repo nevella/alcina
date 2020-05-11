@@ -164,6 +164,11 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 		main.ensureMaps(clazz);
 	}
 
+	@Override
+	protected <T> T getLocal(Class<T> clazz, long localId) {
+		return main.getLocal(clazz, localId);
+	}
+
 	synchronized void endCommit() {
 		committing = false;
 	}
@@ -199,6 +204,11 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 					}
 				}
 			}
+		}
+
+		@Override
+		protected <T> T getLocal(Class<T> clazz, long localId) {
+			return super.getLocal(clazz, localId);
 		}
 	}
 

@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,24 +95,44 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 			if (!checkShouldLazyLoad(requireLoad)) {
 				return;
 			}
-			synchronized (getLockObject()) {
-				// reget, just in case of interim eviction
-				// requireLoad = requireLazyLoad(objects);
-				// now eviction is happening in write-lock, and this only
-				// happens in read-lock, no need
+			Object lockObject = getLockObject();
+			if (lockObject == null) {
+				// transactional population only, no need to evict or lock
 				lazyLoad(requireLoad);
-				registerLoaded(requireLoad);
-				if (topLevel) {
-					loadDependents(requireLoad);
+			} else {
+				synchronized (lockObject) {
+					// reget, just in case of interim eviction
+					// requireLoad = requireLazyLoad(objects);
+					// now eviction is happening in write-lock, and this only
+					// happens in read-lock, no need
+					lazyLoad(requireLoad);
+					registerLoaded(requireLoad);
+					if (topLevel) {
+						loadDependents(requireLoad);
+					}
 				}
 			}
 		}
 	}
 
 	@Override
+	public Stream<T> wrap(Stream<T> stream) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void writeLockedCleanup() {
 		if (evictionDisabled()) {
 			return;
+		}
+		if ("mvcc".length() > 0) {
+			/*
+			 * **probably** get rid of all of fancy eviction - have mvcc/vacuum
+			 * handle all lazy tasks (which - for performance reasons - pretty
+			 * much ensures that lazy graphs are going to be dev-only -- but
+			 * that's ok)
+			 */
+			throw new UnsupportedOperationException();
 		}
 		try {
 			LooseContext.pushWithTrue(CONTEXT_LAZY_LOAD_DISABLED);

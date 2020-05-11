@@ -266,13 +266,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	@Override
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
-		try {
-			Entity newInstance = (Entity) clazz.newInstance();
-			newInstance.setLocalId(localId);
-			return (T) newInstance;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return (ThreadlocalTransformManager.cast()).newInstance(clazz, objectId,
+				localId);
 	}
 
 	@Override

@@ -58,6 +58,7 @@ import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -738,6 +739,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				.findFirst().get();
 		Transaction transaction = Transaction.current();
 		boolean transactional = DomainStore.stores().storeFor(clazz) != null;
+		ignoreIfExisting &= sublock == null;
 		for (Object[] objects : connResults) {
 			HasId hasId = (HasId) (transactional
 					? transaction.create(clazz, store)
@@ -1112,23 +1114,35 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	// FIXME.mvcc
-	<T extends Entity> void copyLazyPropertyValues(T t, T domain) {
-		Class<? extends Entity> clazz = t.provideEntityClass();
-		List<ColumnDescriptor> columnDescriptors = this.columnDescriptors
-				.get(clazz);
-		List<PdOperator> pds = descriptors.get(clazz);
-		int idx = 0;
-		for (idx = 0; idx < columnDescriptors.size(); idx++) {
-			ColumnDescriptor columnDescriptor = columnDescriptors.get(idx);
-			PdOperator pd = pds.get(idx);
-			if (columnDescriptor.loadType == DomainStorePropertyLoadType.LAZY) {
-				try {
-					pd.field.set(domain, pd.field.get(t));
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
+	/*
+	 * Use the writed method of the domain entity (to force a transactional
+	 * version) but don't record the property change. The populated version will
+	 * be vacuumed - neatly avoiding any cache invalidation requirements
+	 */
+	<T extends Entity> void copyLazyPropertyValues(T tableEntity,
+			T domainEntity) {
+		try {
+			TransformManager.get().setIgnorePropertyChanges(true);
+			Class<? extends Entity> clazz = tableEntity.provideEntityClass();
+			List<ColumnDescriptor> columnDescriptors = this.columnDescriptors
+					.get(clazz);
+			List<PdOperator> pds = descriptors.get(clazz);
+			int idx = 0;
+			for (idx = 0; idx < columnDescriptors.size(); idx++) {
+				ColumnDescriptor columnDescriptor = columnDescriptors.get(idx);
+				PdOperator pd = pds.get(idx);
+				if (columnDescriptor.loadType == DomainStorePropertyLoadType.LAZY) {
+					try {
+						Object tableValue = pd.field.get(tableEntity);
+						pd.writeMethod.invoke(domainEntity,
+								new Object[] { tableValue });
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
 				}
 			}
+		} finally {
+			TransformManager.get().setIgnorePropertyChanges(false);
 		}
 	}
 

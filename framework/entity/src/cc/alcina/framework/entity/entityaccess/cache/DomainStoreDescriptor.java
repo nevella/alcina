@@ -25,9 +25,13 @@ import cc.alcina.framework.common.client.domain.MemoryStat.Counter;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
+import cc.alcina.framework.common.client.domain.ReverseDateProjection;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -320,5 +324,18 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 				return ((x + multiple - 1) / multiple) * multiple;
 			}
 		}
+	}
+
+	@RegistryLocation(registryPoint = TestSupport.class, implementationType = ImplementationType.SINGLETON)
+	public static abstract class TestSupport {
+		public static DomainStoreDescriptor.TestSupport get() {
+			return Registry.impl(DomainStoreDescriptor.TestSupport.class);
+		}
+
+		public abstract <T extends Entity> T createReversedDateEntityInstance();
+
+		public abstract ReverseDateProjection getReversedDateProjection();
+
+		public abstract Class<? extends Entity> getTypeWithLazyProperties();
 	}
 }

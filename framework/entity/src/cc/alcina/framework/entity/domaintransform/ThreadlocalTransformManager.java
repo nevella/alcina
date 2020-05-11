@@ -442,6 +442,13 @@ public class ThreadlocalTransformManager extends TransformManager
 			if (localIdToEntityMap.containsKey(localId)) {
 				return (T) localIdToEntityMap.get(localId);
 			}
+			if (getEntityManager() == null) {
+				T entity = DomainStore.stores().storeFor(clazz).getCache()
+						.get(new EntityLocator(clazz, id, localId));
+				if (entity != null) {
+					return entity;
+				}
+			}
 			if (userSessionEntityMap != null && localId != 0) {
 				id = userSessionEntityMap.containsKey(localId)
 						? userSessionEntityMap.getForLocalId(localId).id
@@ -759,12 +766,17 @@ public class ThreadlocalTransformManager extends TransformManager
 	/**
 	 * NOTE - doesn't register children (unlike client)
 	 *
-	 * This is because of the two graph issue - db objects and current
-	 * Thread-memory objects.
 	 */
 	public <T extends Entity> T registerDomainObject(T entity) {
 		if (entity instanceof SourcesPropertyChangeEvents) {
 			listenTo((SourcesPropertyChangeEvents) entity);
+		}
+		if (entity.getId() == 0) {
+			DetachedEntityCache cache = DomainStore.stores()
+					.storeFor(entity.provideEntityClass()).getCache();
+			if (!cache.contains(entity)) {
+				cache.put(entity);
+			}
 		}
 		return entity;
 	}

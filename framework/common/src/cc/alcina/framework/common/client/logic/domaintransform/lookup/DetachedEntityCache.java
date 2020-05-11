@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 /**
  *
  * @author Nick Reddel
+ * 
  */
 public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	protected Map<Class, Map<Long, Entity>> domain;
@@ -94,9 +95,12 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	public boolean contains(Entity entity) {
 		Class<? extends Entity> clazz = entity.provideEntityClass();
 		ensureMaps(clazz);
-		long id = entity.getId();
-		Preconditions.checkArgument(id > 0);
-		return domain.get(clazz).containsKey(id);
+		if (entity.getId() > 0) {
+			return domain.get(clazz).containsKey(entity.getId());
+		} else {
+			Preconditions.checkArgument(entity.getLocalId() > 0);
+			return local.get(clazz).containsKey(entity.getLocalId());
+		}
 	}
 
 	public Set<Entry<Class, Map<Long, Entity>>> domainClassEntries() {
@@ -118,7 +122,8 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public <T> T get(EntityLocator locator) {
-		return (T) get(locator.getClazz(), locator.getId());
+		return (T) (locator.id != 0 ? get(locator.getClazz(), locator.getId())
+				: getLocal(locator.clazz, locator.localId));
 	}
 
 	public Map<Long, Entity> getCreatedLocalsSnapshot() {
@@ -281,6 +286,12 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 				}
 			}
 		}
+	}
+
+	protected <T> T getLocal(Class<T> clazz, long localId) {
+		ensureMaps(clazz);
+		T t = (T) local.get(clazz).get(localId);
+		return t;
 	}
 
 	static class DefaultClassMapSupplier implements Supplier<Map> {

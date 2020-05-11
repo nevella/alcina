@@ -165,8 +165,11 @@ class ClassTransformer {
 				.withThreadCount(8).withCancelOnException(true).withSerial(true)
 				.withThreadName("ClassTransformer-compilation").run()
 				.throwOnException();
-		for (ClassTransform ct : classTransforms.values()) {
-			ct.persist();
+		if (ResourceUtilities.is(ClassTransformer.class,
+				"checkClassCorrectness")) {
+			for (ClassTransform ct : classTransforms.values()) {
+				ct.persist();
+			}
 		}
 	}
 
