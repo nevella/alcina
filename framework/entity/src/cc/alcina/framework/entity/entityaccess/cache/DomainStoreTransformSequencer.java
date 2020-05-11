@@ -80,6 +80,13 @@ public class DomainStoreTransformSequencer {
 		} catch (Exception e) {
 			// FIXME - log. Wait for retry (which will be pushed from kafka)
 			e.printStackTrace();
+			try {
+				if (connection != null) {
+					connection.close();
+				}
+			} catch (Exception e2) {
+				e2.printStackTrace();
+			}
 			connection = null;
 			return new ArrayList<>();
 		}
@@ -191,7 +198,7 @@ public class DomainStoreTransformSequencer {
 	private Connection getConnection() throws SQLException {
 		if (connection == null) {
 			connection = loaderDatabase.dataSource.getConnection();
-			connection.setAutoCommit(false);
+			connection.setAutoCommit(true);
 		}
 		return connection;
 	}
@@ -314,6 +321,7 @@ public class DomainStoreTransformSequencer {
 		/* postgres specific */
 		Connection conn = getConnection();
 		try (Statement statement = conn.createStatement()) {
+			conn.setAutoCommit(false);
 			Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
 					.getDomainTransformRequestPersistentClass();
 			String tableName = persistentClass.getAnnotation(Table.class)
@@ -339,6 +347,8 @@ public class DomainStoreTransformSequencer {
 			}
 			conn.commit();
 			rs.close();
+		} finally {
+			conn.setAutoCommit(true);
 		}
 	}
 

@@ -141,8 +141,9 @@ public class XmlDoc extends XmlNode {
 		this.readonly = readonly;
 	}
 
-	public void setUseCachedElementIds(boolean useCachedElementIds) {
+	public XmlDoc withUseCachedElementIds(boolean useCachedElementIds) {
 		this.useCachedElementIds = useCachedElementIds;
+		return this;
 	}
 
 	private void loadFromXml(String xml) {
