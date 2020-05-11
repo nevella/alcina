@@ -22,15 +22,13 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 		for (Integer integer : ints) {
 			if (start == -1) {
 				start = integer;
-				cursor = integer;
 			} else {
 				if (cursor < integer - 1) {
 					result.add(new IntPair(start, cursor));
-					start = cursor;
-				} else {
-					cursor = integer;
+					start = integer;
 				}
 			}
+			cursor = integer;
 		}
 		if (start != -1) {
 			result.add(new IntPair(start, cursor));
@@ -299,7 +297,7 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 	}
 
 	public String toDashStringOrPoint() {
-		return isPoint() ? String.valueOf(i1) : "[" + i1 + "-" + i2 + "]";
+		return isPoint() ? String.valueOf(i1) : i1 + "-" + i2;
 	}
 
 	@Override
