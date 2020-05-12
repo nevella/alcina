@@ -345,7 +345,13 @@ public class DomainStoreTransformSequencer {
 				logger.debug("Updated transactionCommitTime for request {}",
 						id);
 			}
-			conn.commit();
+			try {
+				conn.commit();
+			} catch (Exception e) {
+				// TODO review - have seen exceptions saying 'autocommit set to
+				// true' - this guards
+				e.printStackTrace();
+			}
 			rs.close();
 		} finally {
 			conn.setAutoCommit(true);
