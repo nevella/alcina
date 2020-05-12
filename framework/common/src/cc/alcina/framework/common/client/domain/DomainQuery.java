@@ -16,6 +16,9 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class DomainQuery<E extends Entity> {
+	public static final String CONTEXT_DEBUG_CONSUMER = DomainQuery.class
+			.getName() + ".CONTEXT_DEBUG_CONSUMER";
+
 	private List<DomainFilter> filters = new ArrayList<DomainFilter>();
 
 	protected boolean raw = true;
@@ -23,6 +26,8 @@ public abstract class DomainQuery<E extends Entity> {
 	private boolean nonTransactional;
 
 	protected Class<E> entityClass;
+
+	private Optional<Stream<E>> sourceStream = Optional.empty();
 
 	public DomainQuery(Class<E> entityClass) {
 		this.entityClass = entityClass;
@@ -89,6 +94,10 @@ public abstract class DomainQuery<E extends Entity> {
 		return this.filters;
 	}
 
+	public Optional<Stream<E>> getSourceStream() {
+		return this.sourceStream;
+	}
+
 	public boolean isNonTransactional() {
 		return this.nonTransactional;
 	}
@@ -111,6 +120,10 @@ public abstract class DomainQuery<E extends Entity> {
 	public DomainQuery<E> raw() {
 		this.raw = true;
 		return this;
+	}
+
+	public void sourceStream(Optional<Stream<E>> sourceStream) {
+		this.sourceStream = sourceStream;
 	}
 
 	public Stream<E> stream() {

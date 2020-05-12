@@ -219,8 +219,11 @@ public class SearchUtils {
 
 		@Override
 		public boolean matches(String query, Entity entity) {
-			return entity != null
-					&& stringIdLookup.get(query).contains(entity.getId());
+			Set<Long> ids = null;
+			synchronized (stringIdLookup) {
+				ids = stringIdLookup.get(query);
+			}
+			return entity != null && ids.contains(entity.getId());
 		}
 
 		protected Map<String, Set<Long>> getMap() {
@@ -249,7 +252,10 @@ public class SearchUtils {
 			if (entity == null) {
 				return false;
 			}
-			RegExp regExp = stringRegexpLookup.get(query);
+			RegExp regExp = null;
+			synchronized (stringRegexpLookup) {
+				regExp = stringRegexpLookup.get(query);
+			}
 			if (regExp == null) {
 				return false;
 			}

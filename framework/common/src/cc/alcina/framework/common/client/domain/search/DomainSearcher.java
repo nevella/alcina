@@ -5,12 +5,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.domain.CompositeFilter;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -24,136 +28,129 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
-public class DomainSearcher {
-    private static UnsortedMultikeyMap<DomainCriterionHandler> handlers = new UnsortedMultikeyMap<DomainCriterionHandler>(
-            2);
+public class DomainSearcher<T extends Entity> {
+	private static UnsortedMultikeyMap<DomainCriterionHandler> handlers = new UnsortedMultikeyMap<DomainCriterionHandler>(
+			2);
 
-    private static Map<Class, DomainDefinitionHandler> definitionHandlers = new LinkedHashMap<>();
+	private static Map<Class, DomainDefinitionHandler> definitionHandlers = new LinkedHashMap<>();
 
-    public static boolean useSequentialSearch = false;
+	public static boolean useSequentialSearch = true;
 
-    private static synchronized void setupHandlers() {
-        Logger logger = LoggerFactory.getLogger(DomainSearcher.class);
-        if (handlers.isEmpty()) {
-            List<DomainCriterionHandler> impls = Registry
-                    .impls(DomainCriterionHandler.class);
-            for (DomainCriterionHandler handler : impls) {
-                handlers.put(handler.handlesSearchDefinition(),
-                        handler.handlesSearchCriterion(), handler);
-                logger.debug(
-                        "registering search criterion handler: \n{} => {} :: {}",
-                        handler.getClass().getName(),
-                        handler.handlesSearchDefinition() == null
-                                ? "(null defs)"
-                                : handler.handlesSearchDefinition()
-                                        .getSimpleName(),
-                        handler.handlesSearchCriterion().getSimpleName());
-            }
-            List<DomainDefinitionHandler> defImpls = Registry
-                    .impls(DomainDefinitionHandler.class);
-            for (DomainDefinitionHandler handler : defImpls) {
-                definitionHandlers.put(handler.handlesSearchDefinition(),
-                        handler);
-                logger.debug(
-                        "registering search definition handler: \n{} => {} ",
-                        handler.getClass().getName(),
-                        handler.handlesSearchDefinition() == null ? "(null)"
-                                : handler.handlesSearchDefinition()
-                                        .getSimpleName());
-            }
-        }
-    }
+	private static synchronized void setupHandlers() {
+		Logger logger = LoggerFactory.getLogger(DomainSearcher.class);
+		if (handlers.isEmpty()) {
+			List<DomainCriterionHandler> impls = Registry
+					.impls(DomainCriterionHandler.class);
+			for (DomainCriterionHandler handler : impls) {
+				handlers.put(handler.handlesSearchDefinition(),
+						handler.handlesSearchCriterion(), handler);
+				logger.debug(
+						"registering search criterion handler: \n{} => {} :: {}",
+						handler.getClass().getName(),
+						handler.handlesSearchDefinition() == null
+								? "(null defs)"
+								: handler.handlesSearchDefinition()
+										.getSimpleName(),
+						handler.handlesSearchCriterion().getSimpleName());
+			}
+			List<DomainDefinitionHandler> defImpls = Registry
+					.impls(DomainDefinitionHandler.class);
+			for (DomainDefinitionHandler handler : defImpls) {
+				definitionHandlers.put(handler.handlesSearchDefinition(),
+						handler);
+				logger.debug(
+						"registering search definition handler: \n{} => {} ",
+						handler.getClass().getName(),
+						handler.handlesSearchDefinition() == null ? "(null)"
+								: handler.handlesSearchDefinition()
+										.getSimpleName());
+			}
+		}
+	}
 
-    private SearchDefinition def;
+	private SearchDefinition def;
 
-    private LockingDomainQuery query;
+	private DomainQuery<T> query;
 
-    public DomainSearcher() {
-    }
+	public DomainSearcher() {
+	}
 
-    public <T extends Entity> List<T> search(SearchDefinition def,
-            Class<T> clazz, Comparator<T> order) {
-        query = useSequentialSearch ? new LockingDomainQuery()
-                : Registry.impl(LockingDomainQuery.class);
-        query.setQueryClass(clazz);
-        this.def = def;
-        query.def = def;
-        setupHandlers();
-        processDefinitionHandler();
-        processHandlers();
-        List<T> list;
-        try {
-            query.readLock(true);
-            list = query.list();
-            list = Registry.impl(DomainSearcherAppFilter.class).filter(def,
-                    list);
-        } finally {
-            query.readLock(false);
-        }
-        list.sort(order);
-        return list;
-    }
+	public Stream<T> search(SearchDefinition def, Class<T> clazz,
+			Comparator<T> order) {
+		query = Domain.query(clazz);
+		query.sourceStream(Registry.impl(SearcherCollectionSource.class)
+				.getSourceStreamFor(clazz, def));
+		this.def = def;
+		setupHandlers();
+		processDefinitionHandler();
+		processHandlers();
+		query.stream();
+		Stream<T> stream = query.stream();
+		stream = stream.filter(
+				Registry.impl(DomainSearcherAppFilter.class).filter(def));
+		stream = stream.sorted(order);
+		return stream;
+	}
 
-    private DomainCriterionHandler getCriterionHandler(SearchCriterion sc) {
-        return handlers.get(def.getClass(), sc.getClass());
-    }
+	private DomainCriterionHandler getCriterionHandler(SearchCriterion sc) {
+		return handlers.get(def.getClass(), sc.getClass());
+	}
 
-    private void processDefinitionHandler() {
-        DomainDefinitionHandler handler = definitionHandlers
-                .get(def.getClass());
-        if (handler != null) {
-            query.filter(handler.getFilter(def));
-        }
-    }
+	private void processDefinitionHandler() {
+		DomainDefinitionHandler handler = definitionHandlers
+				.get(def.getClass());
+		if (handler != null) {
+			query.filter(handler.getFilter(def));
+		}
+	}
 
-    protected void processHandlers() {
-        Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
-        for (CriteriaGroup cg : criteriaGroups) {
-            if (!cg.provideIsEmpty()) {
-                CompositeFilter cgFilter = new CompositeFilter(
-                        cg.getCombinator() == FilterCombinator.OR);
-                boolean added = false;
-                for (SearchCriterion sc : (Set<SearchCriterion>) cg
-                        .getCriteria()) {
-                    DomainCriterionHandler handler = getCriterionHandler(sc);
-                    if (handler == null) {
-                        System.err.println(Ax.format(
-                                "No handler for def/class %s - %s\n",
-                                def.getClass().getSimpleName(),
-                                sc.getClass().getSimpleName()));
-                        continue;
-                    }
-                    DomainFilter filter = handler.getFilter(sc);
-                    if (filter != null) {
-                        cgFilter.add(filter);
-                        added = true;
-                    }
-                }
-                if (added) {
-                    query.filter(cgFilter);
-                }
-            }
-        }
-    }
+	protected void processHandlers() {
+		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
+		for (CriteriaGroup cg : criteriaGroups) {
+			if (!cg.provideIsEmpty()) {
+				CompositeFilter cgFilter = new CompositeFilter(
+						cg.getCombinator() == FilterCombinator.OR);
+				boolean added = false;
+				for (SearchCriterion sc : (Set<SearchCriterion>) cg
+						.getCriteria()) {
+					DomainCriterionHandler handler = getCriterionHandler(sc);
+					if (handler == null) {
+						System.err.println(
+								Ax.format("No handler for def/class %s - %s\n",
+										def.getClass().getSimpleName(),
+										sc.getClass().getSimpleName()));
+						continue;
+					}
+					DomainFilter filter = handler.getFilter(sc);
+					if (filter != null) {
+						cgFilter.add(filter);
+						added = true;
+					}
+				}
+				if (added) {
+					query.filter(cgFilter);
+				}
+			}
+		}
+	}
 
-    @RegistryLocation(registryPoint = DomainLocker.class, implementationType = ImplementationType.SINGLETON)
-    public static class DomainLocker {
-        public void readLock(boolean lock) {
-        }
-    }
+	@RegistryLocation(registryPoint = DomainLocker.class, implementationType = ImplementationType.SINGLETON)
+	public static class DomainLocker {
+		public void readLock(boolean lock) {
+		}
+	}
 
-    @RegistryLocation(registryPoint = DomainSearcherAppFilter.class, implementationType = ImplementationType.INSTANCE)
-    public static abstract class DomainSearcherAppFilter {
-        public abstract <T extends Entity> List<T> filter(
-                SearchDefinition def, List<T> list);
-    }
+	@RegistryLocation(registryPoint = DomainSearcherAppFilter.class, implementationType = ImplementationType.INSTANCE)
+	public static abstract class DomainSearcherAppFilter {
+		public abstract <T extends Entity> Predicate<T>
+				filter(SearchDefinition def);
+	}
 
-    public static class DomainSearcherAppFilter_DefaultImpl
-            extends DomainSearcherAppFilter {
-        @Override
-        public <T extends Entity> List<T> filter(SearchDefinition def,
-                List<T> list) {
-            return list;
-        }
-    }
+	public static class DomainSearcherAppFilter_DefaultImpl
+			extends DomainSearcherAppFilter {
+		@Override
+		public <T extends Entity> Predicate<T> filter(SearchDefinition def) {
+			return t -> true;
+		}
+	}
 }

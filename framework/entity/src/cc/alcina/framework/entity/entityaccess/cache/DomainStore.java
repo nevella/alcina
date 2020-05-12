@@ -1682,7 +1682,15 @@ public class DomainStore implements IDomainStore {
 
 		public Stream<E> ensureStream() {
 			if (stream == null) {
-				stream = streamFromCacheValues();
+				if (query.getSourceStream().isPresent()) {
+					stream = query.getSourceStream().get();
+				} else {
+					stream = streamFromCacheValues();
+				}
+				if (LooseContext.has(DomainQuery.CONTEXT_DEBUG_CONSUMER)) {
+					stream.peek(LooseContext
+							.get(DomainQuery.CONTEXT_DEBUG_CONSUMER));
+				}
 			}
 			return stream;
 		}

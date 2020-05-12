@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.shared.GwtEvent;
@@ -331,8 +332,10 @@ public class DomainStoreDataProvider<T extends Entity>
 			}
 			searching(searchDefinition, range);
 			if (isHandleOnClient()) {
-				allResults = new DomainSearcher().search(searchDefinition,
-						clazz, new ColumnOrder(columnSortList));
+				allResults = (List) new DomainSearcher()
+						.search(searchDefinition, clazz,
+								new ColumnOrder(columnSortList))
+						.collect(Collectors.toList());
 				IntPair iRange = new IntPair(
 						searchDefinition.getResultsPerPage() * (pageNumber),
 						searchDefinition.getResultsPerPage()
@@ -439,8 +442,8 @@ public class DomainStoreDataProvider<T extends Entity>
 		List<T> toFireAsDcEvent = values == results && allResults != null
 				? allResults
 				: values;
-		Scheduler.get().scheduleDeferred(
-				() -> fireEvent(new DataProviderChangeEvent<T>(toFireAsDcEvent)));
+		Scheduler.get().scheduleDeferred(() -> fireEvent(
+				new DataProviderChangeEvent<T>(toFireAsDcEvent)));
 	}
 
 	private void maybeUpdateLoadingState(HasData<T> dd1,
