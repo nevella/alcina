@@ -162,8 +162,10 @@ public class ContentDeliveryEmail implements ContentDelivery {
 					.forName(filterClassName).newInstance();
 			emailAddresses = filter.filterAddresses(emailAddresses);
 			if (systemEmailAddressOfRequestor != null) {
-				systemEmailAddressOfRequestor = filter.filterAddresses(
-						new String[] { systemEmailAddressOfRequestor })[0];
+				String[] tmpSystemEmailBuffer = filter.filterAddresses(
+					new String[] { systemEmailAddressOfRequestor });
+				systemEmailAddressOfRequestor = tmpSystemEmailBuffer.length == 1 ?
+						tmpSystemEmailBuffer[0] : "(null)";
 			}
 		}
 		for (String email : emailAddresses) {
