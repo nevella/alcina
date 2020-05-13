@@ -25,6 +25,8 @@ import cc.alcina.framework.common.client.collections.BidiConverter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.gwt.client.gwittir.widget.DateBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
@@ -37,37 +39,20 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 	public static final String UTC = "UTC";
 
+	public static final String ISO_8601 = "ISO_8601";
+
 	private boolean utc;
+
+	private boolean iso8601;
 
 	private boolean editable;
 
-	@Override
-	public BoundWidget get() {
-		if (utc) {
-			if (editable) {
-				DateBox dateBox = new DateBox(
-						DateTimeFormat.getFormat("yyyy-MM-dd"));
-				dateBox.setDateTranslator(new UtcLocalDateTranslator());
-				return dateBox;
-			} else {
-				RenderingLabel<Date> label = new RenderingLabel<Date>();
-				label.setRenderer(new UtcDateRenderer());
-				return label;
-			}
-		} else {
-			throw new UnsupportedOperationException();
-		}
-	}
-
-	@Override
-	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, Custom info) {
-		this.editable = editable;
-		utc = NamedParameter.Support.booleanValue(info.parameters(), UTC);
-		return this;
-	}
-
 	public static class UtcDateRenderer implements Renderer<Date, String> {
+		@Override
+		public String render(Date date) {
+			return date == null ? "" : render0(date.getTime());
+		}
+
 		public static final native String render0(double millis) /*-{
       var jsDate = new Date(millis);
       function pad(n) {
@@ -77,11 +62,6 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
           + "-" + pad(jsDate.getUTCDate());
 
 		}-*/;
-
-		@Override
-		public String render(Date date) {
-			return date == null ? "" : render0(date.getTime());
-		}
 	}
 
 	@ClientInstantiable
@@ -114,5 +94,43 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 			int tzOffsetMinutes = ClientUtils.getDateTzOffsetMinutes();
 			return new Date(b.getTime() - tzOffsetMinutes * 60 * 1000);
 		}
+	}
+
+	@Override
+	public BoundWidget get() {
+		if (utc) {
+			if (editable) {
+				DateBox dateBox = new DateBox(
+						DateTimeFormat.getFormat("yyyy-MM-dd"));
+				dateBox.setDateTranslator(new UtcLocalDateTranslator());
+				return dateBox;
+			} else {
+				RenderingLabel<Date> label = new RenderingLabel<Date>();
+				label.setRenderer(new UtcDateRenderer());
+				return label;
+			}
+		} else if (iso8601) {
+			if (editable) {
+				DateBox dateBox = new DateBox(
+						DateTimeFormat.getFormat(PredefinedFormat.ISO_8601));
+				dateBox.addStyleName("iso8601");
+				return dateBox;
+			} else {
+				RenderingLabel<Date> label = new RenderingLabel<Date>();
+				label.setRenderer(new ISO_8601_DateRenderer());
+				return label;
+			}
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
+			boolean multiple, Custom info) {
+		this.editable = editable;
+		utc = NamedParameter.Support.booleanValue(info.parameters(), UTC);
+		iso8601 = NamedParameter.Support.booleanValue(info.parameters(),
+				ISO_8601);
+		return this;
 	}
 }
