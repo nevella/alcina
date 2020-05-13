@@ -16,6 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 import java.util.Date;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -80,6 +81,17 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 		@Override
 		public String render(Date date) {
 			return date == null ? "" : render0(date.getTime());
+		}
+	}
+
+	@ClientInstantiable
+	public static class ISO_8601_DateRenderer
+			implements Renderer<Date, String> {
+		@Override
+		public String render(Date date) {
+			return date == null ? ""
+					: DateTimeFormat.getFormat(PredefinedFormat.ISO_8601)
+							.format(date);
 		}
 	}
 
