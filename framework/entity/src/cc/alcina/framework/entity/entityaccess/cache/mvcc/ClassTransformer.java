@@ -229,6 +229,11 @@ class ClassTransformer {
 								"/alcina/framework/entity/src/")
 						.replace("/bin/", "/src/")
 						.replace("/build/classes/", "/src/"));
+				if (sourceFileLocation.toString().contains("/build/")
+						&& !sourceFileLocation.toString().contains("/src/")) {
+					sourceFileLocation = new URL(sourceFileLocation.toString()
+							.replace("/build/", "/src/"));
+				}
 				if (new File(toPath(sourceFileLocation)).exists()) {
 					return ResourceUtilities
 							.readUrlAsString(sourceFileLocation.toString());

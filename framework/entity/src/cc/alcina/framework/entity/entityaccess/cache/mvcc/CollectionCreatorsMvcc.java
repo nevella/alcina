@@ -1,22 +1,15 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListMap;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multiset;
 
 public class CollectionCreatorsMvcc {
-	
-
-
-
 	@RegistryLocation(registryPoint = CollectionCreators.MultisetCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	public static class DomainStoreMultisetCreator<K, V>
 			implements CollectionCreators.MultisetCreator<K, V> {

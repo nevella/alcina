@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 
 public class DomainStoreLookupDescriptor<T extends Entity>
 		implements MemoryStatProvider {
@@ -141,5 +143,10 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		public IdLookup getLookup() {
 			return idLookup;
 		}
+	}
+
+	public Class getLookupIndexClass(PropertyPathAccessor propertyPathAccesor) {
+		return propertyPathAccesor.getChainedPropertyType(
+				Reflections.classLookup().newInstance(clazz));
 	}
 }

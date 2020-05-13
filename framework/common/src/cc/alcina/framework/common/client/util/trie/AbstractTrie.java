@@ -31,7 +31,7 @@ abstract class AbstractTrie<K, V> extends AbstractMap<K, V>
 	 * The {@link KeyAnalyzer} that's being used to build the PATRICIA
 	 * {@link Trie}
 	 */
-	protected final KeyAnalyzer<? super K> keyAnalyzer;
+	protected KeyAnalyzer<? super K> keyAnalyzer;
 
 	public AbstractTrie() {
 		this(DefaultKeyAnalyzer.singleton());

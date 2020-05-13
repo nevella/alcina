@@ -6,7 +6,6 @@ import java.util.Set;
 
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -34,8 +33,9 @@ public class DomainLookup<T, E extends Entity> implements DomainListener<E> {
 		this.descriptor = descriptor;
 		this.propertyPathAccesor = new PropertyPathAccessor(
 				descriptor.propertyPath);
-		this.store = Registry.impl(MultisetCreator.class)
-				.create(provideIndexClass(), getListenedClass());
+		this.store = Registry.impl(MultisetCreator.class).create(
+				descriptor.getLookupIndexClass(this.propertyPathAccesor),
+				getListenedClass());
 		this.relevanceFilter = descriptor.getRelevanceFilter();
 	}
 
@@ -103,11 +103,6 @@ public class DomainLookup<T, E extends Entity> implements DomainListener<E> {
 		}
 		return CommonUtils.equalsWithNullEquality(getChainedProperty(h),
 				keys[0]);
-	}
-
-	public Class<T> provideIndexClass() {
-		return getPropertyPathAccesor().getChainedPropertyType(
-				Reflections.classLookup().newInstance(getListenedClass()));
 	}
 
 	@Override
