@@ -143,7 +143,6 @@ public abstract class BaseProjection<T extends Entity>
 		return items == null ? Collections.EMPTY_LIST : items;
 	}
 
-	@Override
 	public boolean matches(T t, Object[] keys) {
 		Object[] tKeys = project(t);
 		if (keys == null || tKeys == null) {

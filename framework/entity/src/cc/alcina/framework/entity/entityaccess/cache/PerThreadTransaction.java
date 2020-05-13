@@ -67,9 +67,10 @@ public class PerThreadTransaction {
 			}
 		} else {
 			for (Entity v : perClassTransactional) {
-				if (listener.matches(v, path)) {
-					return (V) v;// will always be transactional object
-				}
+				// if (listener.matches(v, path)) {
+				// return (V) v;// will always be transactional object
+				// }
+				throw new UnsupportedOperationException();
 			}
 		}
 		if (value == null) {

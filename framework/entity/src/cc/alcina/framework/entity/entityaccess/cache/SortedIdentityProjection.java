@@ -39,11 +39,6 @@ public abstract class SortedIdentityProjection<T extends Entity>
 	}
 
 	@Override
-	public boolean matches(Entity h, Object[] keys) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public void remove(T o) {
 		sorted.remove(o);
 	}

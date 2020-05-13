@@ -97,7 +97,6 @@ public class DomainLookup<T, E extends Entity> implements DomainListener<E> {
 		return store.keySet();
 	}
 
-	@Override
 	public boolean matches(E h, Object[] keys) {
 		if (keys.length != 1) {
 			throw new IllegalArgumentException("Keys length must equal one");

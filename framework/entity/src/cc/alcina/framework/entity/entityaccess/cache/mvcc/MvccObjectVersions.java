@@ -8,13 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
-import cc.alcina.framework.entity.projection.GraphProjection;
 
 /**
  * Note that like a TransactionalMap, the owning MvccObject will not be
@@ -30,15 +28,29 @@ import cc.alcina.framework.entity.projection.GraphProjection;
  *
  * @param <T>
  */
-public class MvccObjectVersions<T extends Entity> implements Vacuumable {
+public abstract class MvccObjectVersions<T> implements Vacuumable {
 	static Logger logger = LoggerFactory.getLogger(MvccObjectVersions.class);
 
+	public static int debugRemoval = 0;
+
 	// called in a synchronized block (synchronized on baseObject)
-	static <T extends Entity> MvccObjectVersions<T> ensure(T baseObject,
+	static <T extends Entity> MvccObjectVersions<T> ensureEntity(T baseObject,
 			Transaction transaction, boolean initialObjectIsWriteable) {
 		MvccObject mvccObject = (MvccObject) baseObject;
 		MvccObjectVersions<T> versions = null;
-		versions = new MvccObjectVersions<T>(baseObject, transaction,
+		versions = new MvccObjectVersionsEntity<T>(baseObject, transaction,
+				initialObjectIsWriteable);
+		mvccObject.__setMvccVersions__(versions);
+		return versions;
+	}
+
+	// called in a synchronized block (synchronized on baseObject)
+	static MvccObjectVersions<TransactionalTrieEntry> ensureTrieEntry(
+			TransactionalTrieEntry baseObject, Transaction transaction,
+			boolean initialObjectIsWriteable) {
+		MvccObject mvccObject = (MvccObject) baseObject;
+		MvccObjectVersions<TransactionalTrieEntry> versions = null;
+		versions = new MvccObjectVersionsTrieEntry(baseObject, transaction,
 				initialObjectIsWriteable);
 		mvccObject.__setMvccVersions__(versions);
 		return versions;
@@ -79,7 +91,7 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 		 */
 		baseObject = t;
 		if (initialTransaction.phase == TransactionPhase.TO_DB_PREPARING
-				&& t.provideWasPersisted()) {
+				&& wasPersisted(t)) {
 			{
 				ObjectVersion<T> version = new ObjectVersion<>();
 				version.transaction = initialTransaction;
@@ -151,9 +163,9 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 				// baseObject fields will not be reachable here to app code (all
 				// active txs will be
 				// looking at version.object fields)
-				Transactions.copyObjectFields(version.object, baseObject);
+				copyObjectFields(version.object, baseObject);
 			}
-			Transactions.debugRemoveVersion(baseObject, version);
+			// Transactions.debugRemoveVersion(baseObject, version);
 			versions.remove(transaction);
 			if (versions.isEmpty()) {
 				logger.trace("removed mvcc versions: {} : {}", baseObject,
@@ -162,8 +174,6 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 			}
 		}
 	}
-
-	public static int debugRemoval = 0;
 
 	private void putVersion(ObjectVersion<T> version) {
 		versions.put(version.transaction, version);
@@ -185,11 +195,10 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 		if (versions.isEmpty() && !write) {
 			return baseObject;
 		}
+		Class<T> entityClass = provideEntityClass();
 		Transaction mostRecentTransaction = transaction
 				.mostRecentPriorTransaction(versions.keys(),
-						DomainStore.stores().storeFor(
-								versions.values().iterator().next().object
-										.provideEntityClass()));
+						DomainStore.stores().storeFor(entityClass));
 		T mostRecentObject = null;
 		/*
 		 * mostRecentVersion will be null if just created
@@ -210,7 +219,7 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 			version.writeable = true;
 			// put before register (which will call resolve());
 			putVersion(version);
-			Domain.register(version.object);
+			register(version.object);
 			return version.object;
 		} else {
 			/*
@@ -221,14 +230,13 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 		}
 	}
 
-	T resolve(boolean write) {
-		T resolved = resolve0(write);
-		__mostRecentReffed = resolved;
-		if (write) {
-			__mostRecentWritable = resolved;
-		}
-		return resolved;
-	}
+	protected abstract void copyObjectFields(T fromObject, T toObject);
+
+	protected abstract Class<T> provideEntityClass();
+
+	protected abstract void register(T object);
+
+	protected abstract boolean wasPersisted(T t);
 
 	void debugResolvedVersion() {
 		try {
@@ -248,5 +256,14 @@ public class MvccObjectVersions<T extends Entity> implements Vacuumable {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	T resolve(boolean write) {
+		T resolved = resolve0(write);
+		__mostRecentReffed = resolved;
+		if (write) {
+			__mostRecentWritable = resolved;
+		}
+		return resolved;
 	}
 }

@@ -12,6 +12,4 @@ public interface DomainListener<E extends Entity> {
 	public abstract void remove(E o);
 
 	public void setEnabled(boolean enabled);
-
-	boolean matches(E h, Object[] keys);
 }

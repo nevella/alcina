@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
-import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -21,8 +20,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import javax.persistence.Transient;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.AccessSpecifier;
@@ -968,32 +965,6 @@ class ClassTransformer {
 						}
 						if (method.getName().matches("hashCode")) {
 							continue;
-						}
-						/*
-						 * transitional - don't wrap transient setters/getters -
-						 * they will go to the 'base' object - assuming it has
-						 * no versions
-						 * 
-						 * this is a hack - see start of loop
-						 * 
-						 * FIXME - get rid of it
-						 */
-						if (method.getName().length() > 3
-								&& method.getName().matches("(set|get).*")) {
-							String propertyName = method.getName()
-									.substring(3, 4).toLowerCase()
-									+ method.getName().substring(4);
-							PropertyDescriptor propertyDescriptor = SEUtilities
-									.getPropertyDescriptorByName(originalClass,
-											propertyName);
-							if (propertyDescriptor != null
-									&& propertyDescriptor
-											.getReadMethod() != null
-									&& propertyDescriptor.getReadMethod()
-											.getAnnotation(
-													Transient.class) != null) {
-								continue;
-							}
 						}
 						FormatBuilder bodyBuilder = new FormatBuilder();
 						// TODO - We assume only setters modify fields - which

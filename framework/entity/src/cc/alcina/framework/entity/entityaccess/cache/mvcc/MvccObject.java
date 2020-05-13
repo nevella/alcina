@@ -1,18 +1,14 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
-import cc.alcina.framework.common.client.logic.domain.Entity;
-
-public interface MvccObject<T extends Entity> {
-    MvccObjectVersions<T> __getMvccVersions__();
-
-    void __setMvccVersions__(MvccObjectVersions<T> mvccVersions__);
-
-	default void __debugResolvedVersion__(){
+public interface MvccObject<T> {
+	default void __debugResolvedVersion__() {
 		MvccObjectVersions<T> versions = __getMvccVersions__();
-		if(versions!=null){
+		if (versions != null) {
 			versions.debugResolvedVersion();
 		}
 	}
-    
-    
+
+	MvccObjectVersions<T> __getMvccVersions__();
+
+	void __setMvccVersions__(MvccObjectVersions<T> mvccVersions__);
 }

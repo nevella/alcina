@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.domain.ReverseDateProjection;
+import cc.alcina.framework.common.client.domain.TrieProjection;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -334,7 +335,12 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 
 		public abstract <T extends Entity> T createReversedDateEntityInstance();
 
+		public abstract <T extends Entity> T
+				createTrieEntityInstance(String key);
+
 		public abstract ReverseDateProjection getReversedDateProjection();
+
+		public abstract TrieProjection getTrieProjection();
 
 		public abstract Class<? extends Entity> getTypeWithLazyProperties();
 	}

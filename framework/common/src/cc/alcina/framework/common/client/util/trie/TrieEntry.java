@@ -7,27 +7,27 @@ import java.util.Map;
  */
 public class TrieEntry<K, V> implements Map.Entry<K, V> {
 	/** The index this entry is comparing. */
-	protected int bitIndex;
+	private int bitIndex;
 
 	/** The parent of this entry. */
-	protected TrieEntry<K, V> parent;
+	private TrieEntry<K, V> parent;
 
 	/** The left child of this entry. */
-	protected TrieEntry<K, V> left;
+	private TrieEntry<K, V> left;
 
 	/** The right child of this entry. */
-	protected TrieEntry<K, V> right;
+	private TrieEntry<K, V> right;
 
 	/** The entry who uplinks to this entry. */
-	protected TrieEntry<K, V> predecessor;
+	private TrieEntry<K, V> predecessor;
 
-	protected K key;
+	private K key;
 
-	protected V value;
+	private V value;
 
 	private transient int hashCode = 0;
 
-	public TrieEntry(K key, V value, int bitIndex) {
+	protected TrieEntry(K key, V value, int bitIndex) {
 		this.key = key;
 		this.value = value;
 		this.bitIndex = bitIndex;
@@ -163,5 +163,49 @@ public class TrieEntry<K, V> implements Map.Entry<K, V> {
 		}
 		buffer.append(")");
 		return buffer.toString();
+	}
+
+	protected int getBitIndex() {
+		return bitIndex;
+	}
+
+	protected void setBitIndex(int bitIndex) {
+		this.bitIndex = bitIndex;
+	}
+
+	protected TrieEntry<K, V> getParent() {
+		return parent;
+	}
+
+	protected void setParent(TrieEntry<K, V> parent) {
+		this.parent = parent;
+	}
+
+	protected TrieEntry<K, V> getLeft() {
+		return left;
+	}
+
+	protected void setLeft(TrieEntry<K, V> left) {
+		this.left = left;
+	}
+
+	protected TrieEntry<K, V> getRight() {
+		return right;
+	}
+
+	protected void setRight(TrieEntry<K, V> right) {
+		this.right = right;
+	}
+
+	protected TrieEntry<K, V> getPredecessor() {
+		return predecessor;
+	}
+
+	protected void setPredecessor(TrieEntry<K, V> predecessor) {
+		this.predecessor = predecessor;
+	}
+
+	protected void setKey(K key) {
+		this.key = key;
 	}
 }

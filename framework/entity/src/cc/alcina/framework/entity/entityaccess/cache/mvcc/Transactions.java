@@ -67,6 +67,8 @@ public class Transactions {
 			} else {
 				Transaction transaction = Transaction.current();
 				// TODO - possibly optimise (app level 'in warmup')
+				// although - doesn't warmup write fields, not via setters? In
+				// which case this isn't called in warmup?
 				if (transaction.isBaseTransaction()) {
 					return t;
 				} else {
@@ -74,8 +76,8 @@ public class Transactions {
 					synchronized (t) {
 						versions = mvccObject.__getMvccVersions__();
 						if (versions == null) {
-							versions = MvccObjectVersions.ensure(t, transaction,
-									false);
+							versions = MvccObjectVersions.ensureEntity(t,
+									transaction, false);
 						}
 						if (base) {
 							return versions.getBaseObject();
@@ -107,7 +109,7 @@ public class Transactions {
 		// }
 	}
 
-	static <T extends Entity> void copyObjectFields(T from, T to) {
+	static <T> void copyObjectFields(T from, T to) {
 		// synchronized (debugMonitor) {
 		ResourceUtilities.fieldwiseCopy(from, to, false, true);
 		// }
@@ -120,6 +122,32 @@ public class Transactions {
 	static synchronized void registerBaseTransaction(DomainStore store,
 			Transaction transaction) {
 		baseTransactions.put(store, transaction);
+	}
+
+	static <K, V> TransactionalTrieEntry<K, V>
+			resolveTrie(TransactionalTrieEntry<K, V> t, boolean write) {
+		MvccObject mvccObject = (MvccObject) t;
+		MvccObjectVersions<TransactionalTrieEntry> versions = mvccObject
+				.__getMvccVersions__();
+		if (versions == null && !write) {
+			// no transactional versions, return base
+			return t;
+		} else {
+			Transaction transaction = Transaction.current();
+			if (transaction.isBaseTransaction()) {
+				return t;
+			} else {
+				//
+				synchronized (t) {
+					versions = mvccObject.__getMvccVersions__();
+					if (versions == null) {
+						versions = MvccObjectVersions.ensureTrieEntry(t,
+								transaction, false);
+					}
+					return versions.resolve(write);
+				}
+			}
+		}
 	}
 
 	private Vacuum vacuum = new Vacuum();

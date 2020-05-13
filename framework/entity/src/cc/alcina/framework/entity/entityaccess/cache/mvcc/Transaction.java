@@ -151,8 +151,8 @@ public class Transaction {
 		StoreTransaction storeTransaction = storeTransactions.get(store);
 		T t = storeTransaction.getMvcc().create(clazz);
 		if (!isBaseTransaction()) {
-			MvccObjectVersions<T> versions = new MvccObjectVersions<>(t, this,
-					true);
+			MvccObjectVersions<T> versions = MvccObjectVersions.ensureEntity(t,
+					this, true);
 			((MvccObject<T>) t).__setMvccVersions__(versions);
 		}
 		return t;
@@ -248,13 +248,14 @@ public class Transaction {
 		Transactions.get().onDomainTransactionCommited(this);
 	}
 
-	public void toDomainCommitting(Timestamp timestamp, DomainStore store,long sequenceId) {
+	public void toDomainCommitting(Timestamp timestamp, DomainStore store,
+			long sequenceId) {
 		Preconditions
 				.checkState(getPhase() == TransactionPhase.TO_DOMAIN_PREPARING
 						&& ThreadlocalTransformManager.get().getTransforms()
 								.isEmpty());
 		this.databaseCommitTimestamp = timestamp;
-		storeTransactions.get(store).committingSequenceId=sequenceId;
+		storeTransactions.get(store).committingSequenceId = sequenceId;
 		setPhase(TransactionPhase.TO_DOMAIN_COMMITTING);
 	}
 
@@ -274,16 +275,9 @@ public class Transaction {
 		return Ax.format("%s::%s", id, phase);
 	}
 
-	 void toVacuumEnded(List<Transaction> vacuumableTransactions) {
-		Preconditions.checkState(getPhase() == TransactionPhase.VACUUM_BEGIN);
-		Transactions.get().vacuumComplete(vacuumableTransactions);
-		setPhase(TransactionPhase.VACUUM_ENDED);
-	}
-
 	private boolean hasHigherCommitIdThan(Transaction otherTransaction,
 			DomainStore store) {
-		long thisStoreTxId = storeTransactions
-				.get(store).committingSequenceId;
+		long thisStoreTxId = storeTransactions.get(store).committingSequenceId;
 		long otherStoreTxId = otherTransaction.storeTransactions
 				.get(store).committingSequenceId;
 		return thisStoreTxId > otherStoreTxId;
@@ -326,6 +320,12 @@ public class Transaction {
 	void setPhase(TransactionPhase phase) {
 		this.phase = phase;
 		logger.trace("Transition tx: {}", this);
+	}
+
+	void toVacuumEnded(List<Transaction> vacuumableTransactions) {
+		Preconditions.checkState(getPhase() == TransactionPhase.VACUUM_BEGIN);
+		Transactions.get().vacuumComplete(vacuumableTransactions);
+		setPhase(TransactionPhase.VACUUM_ENDED);
 	}
 
 	/*

@@ -2,19 +2,14 @@ package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
 import java.util.Objects;
 
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 
-class ObjectVersion<T extends Entity> {
+class ObjectVersion<T> {
 	T object;
 
 	Transaction transaction;
 
 	boolean writeable;
-	
-	void debugObjectHash(){
-		Ax.out("\t debug object hash: %s",System.identityHashCode(object));
-	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -39,5 +34,9 @@ class ObjectVersion<T extends Entity> {
 	 */
 	public boolean isCorrectWriteableState(boolean write) {
 		return !write || writeable;
+	}
+
+	void debugObjectHash() {
+		Ax.out("\t debug object hash: %s", System.identityHashCode(object));
 	}
 }

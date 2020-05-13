@@ -2,16 +2,19 @@ package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
-import cc.alcina.framework.common.client.domain.ReverseDateProjection.TreeMapRevCreator;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.NullFriendlyComparatorWrapper;
+import cc.alcina.framework.common.client.util.trie.KeyAnalyzer;
+import cc.alcina.framework.common.client.util.trie.MultiTrie;
 
 public class BaseProjectionSupportMvcc {
 	public static class BplDelegateMapCreatorFastUnsorted
@@ -70,8 +73,19 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
-	@RegistryLocation(registryPoint = TreeMapRevCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-	public static class TreeMapRevCreatorImpl extends TreeMapRevCreator {
+	@RegistryLocation(registryPoint = CollectionCreators.MultiTrieCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	public static class MultiTrieCreatorImpl
+			extends CollectionCreators.MultiTrieCreator {
+		@Override
+		public <K, E extends Entity> MultiTrie<K, Set<E>> create(
+				KeyAnalyzer<? super K> keyAnalyzer, Class<E> entityClass) {
+			return new TransactionalMultiTrie<>(keyAnalyzer, entityClass);
+		}
+	}
+
+	@RegistryLocation(registryPoint = CollectionCreators.TreeMapRevCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	public static class TreeMapRevCreatorImpl
+			extends CollectionCreators.TreeMapRevCreator {
 		@Override
 		public Map get() {
 			return new TransactionalTreeMap(types.get(0), types.get(1),

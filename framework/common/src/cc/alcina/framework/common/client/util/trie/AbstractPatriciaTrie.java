@@ -37,14 +37,14 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 	 * Returns true if 'next' is a valid uplink coming from 'from'.
 	 */
 	static boolean isValidUplink(TrieEntry<?, ?> next, TrieEntry<?, ?> from) {
-		return next != null && next.bitIndex <= from.bitIndex
+		return next != null && next.getBitIndex() <= from.getBitIndex()
 				&& !next.isEmpty();
 	}
 
 	/**
 	 * The root node of the {@link Trie}.
 	 */
-	final TrieEntry<K, V> root = new TrieEntry<K, V>(null, null, -1);
+	final TrieEntry<K, V> root = createTrieEntry(null, null, -1);
 
 	/**
 	 * Each of these fields are initialized to contain an instance of the
@@ -89,13 +89,13 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 
 	@Override
 	public void clear() {
-		root.key = null;
-		root.bitIndex = -1;
-		root.value = null;
-		root.parent = null;
-		root.left = root;
-		root.right = null;
-		root.predecessor = root;
+		root.setKey(null);
+		root.setBitIndex(-1);
+		root.setValue(null);
+		root.setParent(null);
+		root.setLeft(root);
+		root.setRight(null);
+		root.setPredecessor(root);
 		size = 0;
 		incrementModCount();
 	}
@@ -107,7 +107,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 		}
 		K key = Tries.<K> cast(k);
 		TrieEntry<K, V> entry = getNearestEntryForKey(key);
-		return !entry.isEmpty() && compareKeys(key, entry.key);
+		return !entry.isEmpty() && compareKeys(key, entry.getKey());
 	}
 
 	@Override
@@ -149,7 +149,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 			return root.setKeyValue(key, value);
 		}
 		TrieEntry<K, V> found = getNearestEntryForKey(key);
-		if (compareKeys(key, found.key)) {
+		if (compareKeys(key, found.getKey())) {
 			if (found.isEmpty()) { // <- must be the root
 				incrementSize();
 			} else {
@@ -157,11 +157,11 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 			}
 			return found.setKeyValue(key, value);
 		}
-		int bitIndex = bitIndex(key, found.key);
+		int bitIndex = bitIndex(key, found.getKey());
 		if (!Tries.isOutOfBoundsIndex(bitIndex)) {
 			if (Tries.isValidBitIndex(bitIndex)) { // in 99.999...9% the case
 				/* NEW KEY+VALUE TUPLE */
-				TrieEntry<K, V> t = new TrieEntry<K, V>(key, value, bitIndex);
+				TrieEntry<K, V> t = createTrieEntry(key, value, bitIndex);
 				addEntry(t);
 				incrementSize();
 				return null;
@@ -200,21 +200,21 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 			return null;
 		}
 		K key = Tries.<K> cast(k);
-		TrieEntry<K, V> current = root.left;
+		TrieEntry<K, V> current = root.getLeft();
 		TrieEntry<K, V> path = root;
 		while (true) {
-			if (current.bitIndex <= path.bitIndex) {
-				if (!current.isEmpty() && compareKeys(key, current.key)) {
+			if (current.getBitIndex() <= path.getBitIndex()) {
+				if (!current.isEmpty() && compareKeys(key, current.getKey())) {
 					return removeEntry(current);
 				} else {
 					return null;
 				}
 			}
 			path = current;
-			if (!isBitSet(key, current.bitIndex)) {
-				current = current.left;
+			if (!isBitSet(key, current.getBitIndex())) {
+				current = current.getLeft();
 			} else {
-				current = current.right;
+				current = current.getRight();
 			}
 		}
 	}
@@ -222,7 +222,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 	@Override
 	public Map.Entry<K, V> select(K key) {
 		Reference<Map.Entry<K, V>> reference = new Reference<Map.Entry<K, V>>();
-		if (!selectR(root.left, -1, key, reference)) {
+		if (!selectR(root.getLeft(), -1, key, reference)) {
 			return reference.get();
 		}
 		return null;
@@ -231,7 +231,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 	@Override
 	public Map.Entry<K, V> select(K key, Cursor<? super K, ? super V> cursor) {
 		Reference<Map.Entry<K, V>> reference = new Reference<Map.Entry<K, V>>();
-		selectR(root.left, -1, key, cursor, reference);
+		selectR(root.getLeft(), -1, key, cursor, reference);
 		return reference.get();
 	}
 
@@ -254,7 +254,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 				removeEntry(current);
 				break; // out of switch, stay in while loop
 			case REMOVE_AND_EXIT:
-				Map.Entry<K, V> value = new TrieEntry<K, V>(current.getKey(),
+				Map.Entry<K, V> value = createTrieEntry(current.getKey(),
 						current.getValue(), -1);
 				removeEntry(current);
 				return value;
@@ -292,18 +292,18 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 			throw new IllegalArgumentException(
 					h + " is not an external Entry!");
 		}
-		TrieEntry<K, V> parent = h.parent;
-		TrieEntry<K, V> child = (h.left == h) ? h.right : h.left;
-		if (parent.left == h) {
-			parent.left = child;
+		TrieEntry<K, V> parent = h.getParent();
+		TrieEntry<K, V> child = (h.getLeft() == h) ? h.getRight() : h.getLeft();
+		if (parent.getLeft() == h) {
+			parent.setLeft(child);
 		} else {
-			parent.right = child;
+			parent.setRight(child);
 		}
 		// either the parent is changing, or the predecessor is changing.
-		if (child.bitIndex > parent.bitIndex) {
-			child.parent = parent;
+		if (child.getBitIndex() > parent.getBitIndex()) {
+			child.setParent(parent);
 		} else {
-			child.predecessor = parent;
+			child.setPredecessor(parent);
 		}
 	}
 
@@ -321,29 +321,30 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 			throw new IllegalArgumentException(
 					h + " is not an internal Entry!");
 		}
-		TrieEntry<K, V> p = h.predecessor;
+		TrieEntry<K, V> p = h.getPredecessor();
 		// Set P's bitIndex
-		p.bitIndex = h.bitIndex;
+		p.setBitIndex(h.getBitIndex());
 		// Fix P's parent, predecessor and child Nodes
 		{
-			TrieEntry<K, V> parent = p.parent;
-			TrieEntry<K, V> child = (p.left == h) ? p.right : p.left;
+			TrieEntry<K, V> parent = p.getParent();
+			TrieEntry<K, V> child = (p.getLeft() == h) ? p.getRight()
+					: p.getLeft();
 			// if it was looping to itself previously,
 			// it will now be pointed from it's parent
 			// (if we aren't removing it's parent --
 			// in that case, it remains looping to itself).
 			// otherwise, it will continue to have the same
 			// predecessor.
-			if (p.predecessor == p && p.parent != h) {
-				p.predecessor = p.parent;
+			if (p.getPredecessor() == p && p.getParent() != h) {
+				p.setPredecessor(p.getParent());
 			}
-			if (parent.left == p) {
-				parent.left = child;
+			if (parent.getLeft() == p) {
+				parent.setLeft(child);
 			} else {
-				parent.right = child;
+				parent.setRight(child);
 			}
-			if (child.bitIndex > parent.bitIndex) {
-				child.parent = parent;
+			if (child.getBitIndex() > parent.getBitIndex()) {
+				child.setParent(parent);
 			}
 		}
 		;
@@ -351,32 +352,32 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 		{
 			// If H is a parent of its left and right child
 			// then change them to P
-			if (h.left.parent == h) {
-				h.left.parent = p;
+			if (h.getLeft().getParent() == h) {
+				h.getLeft().setParent(p);
 			}
-			if (h.right.parent == h) {
-				h.right.parent = p;
+			if (h.getRight().getParent() == h) {
+				h.getRight().setParent(p);
 			}
 			// Change H's parent
-			if (h.parent.left == h) {
-				h.parent.left = p;
+			if (h.getParent().getLeft() == h) {
+				h.getParent().setLeft(p);
 			} else {
-				h.parent.right = p;
+				h.getParent().setRight(p);
 			}
 		}
 		;
 		// Copy the remaining fields from H to P
 		// p.bitIndex = h.bitIndex;
-		p.parent = h.parent;
-		p.left = h.left;
-		p.right = h.right;
+		p.setParent(h.getParent());
+		p.setLeft(h.getLeft());
+		p.setRight(h.getRight());
 		// Make sure that if h was pointing to any uplinks,
 		// p now points to them.
-		if (isValidUplink(p.left, p)) {
-			p.left.predecessor = p;
+		if (isValidUplink(p.getLeft(), p)) {
+			p.getLeft().setPredecessor(p);
 		}
-		if (isValidUplink(p.right, p)) {
-			p.right.predecessor = p;
+		if (isValidUplink(p.getRight(), p)) {
+			p.getRight().setPredecessor(p);
 		}
 	}
 
@@ -386,7 +387,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 	private boolean selectR(TrieEntry<K, V> h, int bitIndex, final K key,
 			final Cursor<? super K, ? super V> cursor,
 			final Reference<Map.Entry<K, V>> reference) {
-		if (h.bitIndex <= bitIndex) {
+		if (h.getBitIndex() <= bitIndex) {
 			if (!h.isEmpty()) {
 				Decision decision = cursor.select(h);
 				switch (decision) {
@@ -397,7 +398,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 					reference.set(h);
 					return false; // exit
 				case REMOVE_AND_EXIT:
-					TrieEntry<K, V> entry = new TrieEntry<K, V>(h.getKey(),
+					TrieEntry<K, V> entry = createTrieEntry(h.getKey(),
 							h.getValue(), -1);
 					reference.set(entry);
 					removeEntry(h);
@@ -408,13 +409,16 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 			}
 			return true; // continue
 		}
-		if (!isBitSet(key, h.bitIndex)) {
-			if (selectR(h.left, h.bitIndex, key, cursor, reference)) {
-				return selectR(h.right, h.bitIndex, key, cursor, reference);
+		if (!isBitSet(key, h.getBitIndex())) {
+			if (selectR(h.getLeft(), h.getBitIndex(), key, cursor, reference)) {
+				return selectR(h.getRight(), h.getBitIndex(), key, cursor,
+						reference);
 			}
 		} else {
-			if (selectR(h.right, h.bitIndex, key, cursor, reference)) {
-				return selectR(h.left, h.bitIndex, key, cursor, reference);
+			if (selectR(h.getRight(), h.getBitIndex(), key, cursor,
+					reference)) {
+				return selectR(h.getLeft(), h.getBitIndex(), key, cursor,
+						reference);
 			}
 		}
 		return false;
@@ -428,7 +432,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 	 */
 	private boolean selectR(TrieEntry<K, V> h, int bitIndex, final K key,
 			final Reference<Map.Entry<K, V>> reference) {
-		if (h.bitIndex <= bitIndex) {
+		if (h.getBitIndex() <= bitIndex) {
 			// If we hit the root Node and it is empty
 			// we have to look for an alternative best
 			// matching node.
@@ -438,55 +442,60 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 			}
 			return true;
 		}
-		if (!isBitSet(key, h.bitIndex)) {
-			if (selectR(h.left, h.bitIndex, key, reference)) {
-				return selectR(h.right, h.bitIndex, key, reference);
+		if (!isBitSet(key, h.getBitIndex())) {
+			if (selectR(h.getLeft(), h.getBitIndex(), key, reference)) {
+				return selectR(h.getRight(), h.getBitIndex(), key, reference);
 			}
 		} else {
-			if (selectR(h.right, h.bitIndex, key, reference)) {
-				return selectR(h.left, h.bitIndex, key, reference);
+			if (selectR(h.getRight(), h.getBitIndex(), key, reference)) {
+				return selectR(h.getLeft(), h.getBitIndex(), key, reference);
 			}
 		}
 		return false;
+	}
+
+	protected TrieEntry<K, V> createTrieEntry(K key, V value, int bitIndex) {
+		return new TrieEntry<K, V>(key, value, bitIndex);
 	}
 
 	/**
 	 * Adds the given {@link TrieEntry} to the {@link Trie}
 	 */
 	TrieEntry<K, V> addEntry(TrieEntry<K, V> entry) {
-		TrieEntry<K, V> current = root.left;
+		TrieEntry<K, V> current = root.getLeft();
 		TrieEntry<K, V> path = root;
 		while (true) {
-			if (current.bitIndex >= entry.bitIndex
-					|| current.bitIndex <= path.bitIndex) {
-				entry.predecessor = entry;
-				if (!isBitSet(entry.key, entry.bitIndex)) {
-					entry.left = entry;
-					entry.right = current;
+			if (current.getBitIndex() >= entry.getBitIndex()
+					|| current.getBitIndex() <= path.getBitIndex()) {
+				entry.setPredecessor(entry);
+				if (!isBitSet(entry.getKey(), entry.getBitIndex())) {
+					entry.setLeft(entry);
+					entry.setRight(current);
 				} else {
-					entry.left = current;
-					entry.right = entry;
+					entry.setLeft(current);
+					entry.setRight(entry);
 				}
-				entry.parent = path;
-				if (current.bitIndex >= entry.bitIndex) {
-					current.parent = entry;
+				entry.setParent(path);
+				if (current.getBitIndex() >= entry.getBitIndex()) {
+					current.setParent(entry);
 				}
 				// if we inserted an uplink, set the predecessor on it
-				if (current.bitIndex <= path.bitIndex) {
-					current.predecessor = entry;
+				if (current.getBitIndex() <= path.getBitIndex()) {
+					current.setPredecessor(entry);
 				}
-				if (path == root || !isBitSet(entry.key, path.bitIndex)) {
-					path.left = entry;
+				if (path == root
+						|| !isBitSet(entry.getKey(), path.getBitIndex())) {
+					path.setLeft(entry);
 				} else {
-					path.right = entry;
+					path.setRight(entry);
 				}
 				return entry;
 			}
 			path = current;
-			if (!isBitSet(entry.key, current.bitIndex)) {
-				current = current.left;
+			if (!isBitSet(entry.getKey(), current.getBitIndex())) {
+				current = current.getLeft();
 			} else {
-				current = current.right;
+				current = current.getRight();
 			}
 		}
 	}
@@ -519,12 +528,12 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 	 */
 	TrieEntry<K, V> followLeft(TrieEntry<K, V> node) {
 		while (true) {
-			TrieEntry<K, V> child = node.left;
+			TrieEntry<K, V> child = node.getLeft();
 			// if we hit root and it didn't have a node, go right instead.
 			if (child.isEmpty()) {
-				child = node.right;
+				child = node.getRight();
 			}
-			if (child.bitIndex <= node.bitIndex) {
+			if (child.getBitIndex() <= node.getBitIndex()) {
 				return child;
 			}
 			node = child;
@@ -544,7 +553,8 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 			return null;
 		}
 		TrieEntry<K, V> entry = getNearestEntryForKey(key);
-		return !entry.isEmpty() && compareKeys(key, entry.key) ? entry : null;
+		return !entry.isEmpty() && compareKeys(key, entry.getKey()) ? entry
+				: null;
 	}
 
 	/**
@@ -556,17 +566,17 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 	 * the exception that it might return the root Entry even if it's empty.
 	 */
 	TrieEntry<K, V> getNearestEntryForKey(K key) {
-		TrieEntry<K, V> current = root.left;
+		TrieEntry<K, V> current = root.getLeft();
 		TrieEntry<K, V> path = root;
 		while (true) {
-			if (current.bitIndex <= path.bitIndex) {
+			if (current.getBitIndex() <= path.getBitIndex()) {
 				return current;
 			}
 			path = current;
-			if (!isBitSet(key, current.bitIndex)) {
-				current = current.left;
+			if (!isBitSet(key, current.getBitIndex())) {
+				current = current.getLeft();
 			} else {
-				current = current.right;
+				current = current.getRight();
 			}
 		}
 	}
@@ -588,7 +598,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 		if (node == null) {
 			return firstEntry();
 		} else {
-			return nextEntryImpl(node.predecessor, node, null);
+			return nextEntryImpl(node.getPredecessor(), node, null);
 		}
 	}
 
@@ -629,17 +639,17 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 		// Only look at the left if this was a recursive or
 		// the first check, otherwise we know we've already looked
 		// at the left.
-		if (previous == null || start != previous.predecessor) {
-			while (!current.left.isEmpty()) {
+		if (previous == null || start != previous.getPredecessor()) {
+			while (!current.getLeft().isEmpty()) {
 				// stop traversing if we've already
 				// returned the left of this node.
-				if (previous == current.left) {
+				if (previous == current.getLeft()) {
 					break;
 				}
-				if (isValidUplink(current.left, current)) {
-					return current.left;
+				if (isValidUplink(current.getLeft(), current)) {
+					return current.getLeft();
 				}
-				current = current.left;
+				current = current.getLeft();
 			}
 		}
 		// If there's no data at all, exit.
@@ -655,46 +665,46 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 		// \_/ \
 		// null <-- 'current'
 		//
-		if (current.right == null) {
+		if (current.getRight() == null) {
 			return null;
 		}
 		// If nothing valid on the left, try the right.
-		if (previous != current.right) {
+		if (previous != current.getRight()) {
 			// See if it immediately is valid.
-			if (isValidUplink(current.right, current)) {
-				return current.right;
+			if (isValidUplink(current.getRight(), current)) {
+				return current.getRight();
 			}
 			// Must search on the right's side if it wasn't initially valid.
-			return nextEntryImpl(current.right, previous, tree);
+			return nextEntryImpl(current.getRight(), previous, tree);
 		}
 		// Neither left nor right are valid, find the first parent
 		// whose child did not come from the right & traverse it.
-		while (current == current.parent.right) {
+		while (current == current.getParent().getRight()) {
 			// If we're going to traverse to above the subtree, stop.
 			if (current == tree) {
 				return null;
 			}
-			current = current.parent;
+			current = current.getParent();
 		}
 		// If we're on the top of the subtree, we can't go any higher.
 		if (current == tree) {
 			return null;
 		}
 		// If there's no right, the parent must be root, so we're done.
-		if (current.parent.right == null) {
+		if (current.getParent().getRight() == null) {
 			return null;
 		}
 		// If the parent's right points to itself, we've found one.
-		if (previous != current.parent.right
-				&& isValidUplink(current.parent.right, current.parent)) {
-			return current.parent.right;
+		if (previous != current.getParent().getRight() && isValidUplink(
+				current.getParent().getRight(), current.getParent())) {
+			return current.getParent().getRight();
 		}
 		// If the parent's right is itself, there can't be any more nodes.
-		if (current.parent.right == current.parent) {
+		if (current.getParent().getRight() == current.getParent()) {
 			return null;
 		}
 		// We need to traverse down the parent's right's path.
-		return nextEntryImpl(current.parent.right, previous, tree);
+		return nextEntryImpl(current.getParent().getRight(), previous, tree);
 	}
 
 	/**

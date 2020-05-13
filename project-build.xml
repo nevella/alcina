@@ -67,7 +67,6 @@
 	<target name="make-jars-task" description="Make ${project.module.description} jar" depends="">
 		<mkdir dir="${project.dist.dir}" />
 		<delete file="${project.dist.dir}/${ant.project.name}.jar" if:true="${alcina.delete-before-jars}" />
-		<echo message="brus"/>
 		<copy todir="${project.build.dir}" preservelastmodified="true">
 			<fileset dir="${project.src.dir}">
 				<include name="**/*.*" />

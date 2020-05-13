@@ -1,16 +1,11 @@
 package cc.alcina.framework.common.client.domain;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -38,7 +33,8 @@ public abstract class ReverseDateProjection<T extends Entity>
 	protected MultikeyMap<T> createLookup() {
 		return new BaseProjectionLookupBuilder(this).navigable()
 				.mapCreators(new CollectionCreators.MapCreator[] { Registry
-						.impl(TreeMapRevCreator.class).withTypes(types) })
+						.impl(CollectionCreators.TreeMapRevCreator.class)
+						.withTypes(types) })
 				.createMultikeyMap();
 	}
 
@@ -52,24 +48,5 @@ public abstract class ReverseDateProjection<T extends Entity>
 	@Override
 	protected Object[] project(T t) {
 		return new Object[] { getDate(t), t };
-	}
-
-	@RegistryLocation(registryPoint = TreeMapRevCreator.class, implementationType = ImplementationType.INSTANCE)
-	public static class TreeMapRevCreator
-			implements CollectionCreators.MapCreator {
-		protected List<Class> types;
-
-		public TreeMapRevCreator() {
-		}
-
-		@Override
-		public Map get() {
-			return new TreeMap(Comparator.reverseOrder());
-		}
-
-		public TreeMapRevCreator withTypes(List<Class> types) {
-			this.types = types;
-			return this;
-		}
 	}
 }
