@@ -28,6 +28,7 @@ import com.totsp.gwittir.client.beans.Property;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -199,6 +200,9 @@ public abstract class ClientReflector implements ClassLookup {
 		for (ClientReflector reflector : reflectors) {
 			T instance = reflector.newInstance0(clazz, objectId, localId);
 			if (instance != null) {
+				if (instance instanceof Entity) {
+					((Entity) instance).setLocalId(localId);
+				}
 				return instance;
 			}
 		}
@@ -206,6 +210,9 @@ public abstract class ClientReflector implements ClassLookup {
 			reflector.initialiseNewInstance(clazz);
 			T instance = reflector.newInstance0(clazz, objectId, localId);
 			if (instance != null) {
+				if (instance instanceof Entity) {
+					((Entity) instance).setLocalId(localId);
+				}
 				return instance;
 			}
 		}
