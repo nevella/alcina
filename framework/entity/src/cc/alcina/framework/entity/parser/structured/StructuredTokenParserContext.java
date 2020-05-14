@@ -16,13 +16,13 @@ import java.util.stream.StreamSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomTokenStream;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.xml.XmlNode;
-import cc.alcina.framework.common.client.xml.XmlTokenStream;
 
 public class StructuredTokenParserContext {
 	public static final String CONTEXT_DEBUG_UNMATCHED_NODES = StructuredTokenParserContext.class
@@ -30,11 +30,11 @@ public class StructuredTokenParserContext {
 
 	public XmlTokenOutput out;
 
-	public XmlTokenStream stream;
+	public DomTokenStream stream;
 
-	public Multimap<XmlToken, List<XmlNode>> matched = new Multimap<>();
+	public Multimap<XmlToken, List<DomNode>> matched = new Multimap<>();
 
-	private Map<XmlNode, XmlStructuralJoin> nodeToken = new LinkedHashMap<>();
+	private Map<DomNode, XmlStructuralJoin> nodeToken = new LinkedHashMap<>();
 
 	public StructuredTokenParser parser;
 
@@ -62,8 +62,8 @@ public class StructuredTokenParserContext {
 	}
 
 	public String getLogMessage(XmlStructuralJoin join) {
-		XmlNode targetNode = join.targetNode;
-		XmlNode sourceNode = join.sourceNode;
+		DomNode targetNode = join.targetNode;
+		DomNode sourceNode = join.sourceNode;
 		int depthOut = lastDepthOut + 1;
 		if (targetNode != null) {
 			depthOut = targetNode.depth();
@@ -101,7 +101,7 @@ public class StructuredTokenParserContext {
 		return message;
 	}
 
-	public XmlStructuralJoin getNodeToken(XmlNode node) {
+	public XmlStructuralJoin getNodeToken(DomNode node) {
 		return nodeToken.get(node);
 	}
 
@@ -109,12 +109,12 @@ public class StructuredTokenParserContext {
 		return matched.containsKey(token);
 	}
 
-	public void handleOutOfOrderNode(XmlNode node) {
+	public void handleOutOfOrderNode(DomNode node) {
 		parser.handleNode(node, this);
 		stream.skip(node);
 	}
 
-	public boolean has(XmlNode node, XmlToken token) {
+	public boolean has(DomNode node, XmlToken token) {
 		node = node.parent();
 		while (node != null) {
 			XmlStructuralJoin mappedTo = nodeToken.get(node);
@@ -137,7 +137,7 @@ public class StructuredTokenParserContext {
 		if (out.getOutCursor() == null) {
 			return false;
 		}
-		XmlNode cursor = out.getOutCursor().sourceNode;
+		DomNode cursor = out.getOutCursor().sourceNode;
 		while (cursor != null) {
 			if (nodeToken.get(cursor).token.getSubCategory() == clazz) {
 				return true;
@@ -170,7 +170,7 @@ public class StructuredTokenParserContext {
 				join.token.getOutputContext(join).getTag(), join.hashCode());
 	}
 
-	public void skip(XmlNode node) {
+	public void skip(DomNode node) {
 		stream.skip(node);
 	}
 
@@ -178,7 +178,7 @@ public class StructuredTokenParserContext {
 		stream.skipChildren();
 	}
 
-	public void skipChildren(Predicate<XmlNode> predicate) {
+	public void skipChildren(Predicate<DomNode> predicate) {
 		stream.skipChildren(predicate);
 	}
 
@@ -274,7 +274,7 @@ public class StructuredTokenParserContext {
 	}
 
 	public class NodeAncestorIterator implements Iterator<XmlStructuralJoin> {
-		XmlNode cursor;
+		DomNode cursor;
 
 		private XmlStructuralJoin tokenNode;
 

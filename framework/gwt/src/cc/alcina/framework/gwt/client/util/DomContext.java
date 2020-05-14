@@ -3,8 +3,8 @@ package cc.alcina.framework.gwt.client.util;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.xml.XmlDoc;
 
 public abstract class DomContext {
 	public static void clearReferences() {
@@ -31,7 +31,7 @@ public abstract class DomContext {
 		return get().isVisibleAncestorChain0(elem);
 	}
 
-	public static void putXmlDoc(XmlDoc doc) {
+	public static void putXmlDoc(DomDoc doc) {
 		get().putXmlDoc0(doc);
 	}
 
@@ -48,7 +48,7 @@ public abstract class DomContext {
 		get().setStyleProperty0(elem, key, value);
 	}
 
-	public static XmlDoc xmlDoc(Document domDocument) {
+	public static DomDoc xmlDoc(Document domDocument) {
 		return get().getXmlDoc(domDocument);
 	}
 
@@ -66,11 +66,11 @@ public abstract class DomContext {
 
 	protected abstract int getOffsetTop0(Element elem);
 
-	protected abstract XmlDoc getXmlDoc(Document domDocument);
+	protected abstract DomDoc getXmlDoc(Document domDocument);
 
 	protected abstract boolean isVisibleAncestorChain0(Element elem);
 
-	protected abstract void putXmlDoc0(XmlDoc doc);
+	protected abstract void putXmlDoc0(DomDoc doc);
 
 	protected abstract void scrollIntoView0(Element elem);
 

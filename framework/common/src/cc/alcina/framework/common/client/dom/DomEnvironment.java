@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.xml;
+package cc.alcina.framework.common.client.dom;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,20 +10,20 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.HtmlConstants;
-import cc.alcina.framework.common.client.xml.XmlNode.XpathEvaluator;
 
-public interface XmlEnvironment {
+public interface DomEnvironment {
 	public static StyleResolver contextBlockResolver() {
 		return Registry.impl(StyleResolver.class);
 	}
 
-	public static XmlEnvironment get() {
-		return Registry.impl(XmlEnvironment.class);
+	public static DomEnvironment get() {
+		return Registry.impl(DomEnvironment.class);
 	}
 
 	public static List<Node> nodeListToList(NodeList nl) {
@@ -35,20 +35,20 @@ public interface XmlEnvironment {
 		return rVal;
 	}
 
-	public XpathEvaluator createXpathEvaluator(XmlNode xmlNode,
+	public XpathEvaluator createXpathEvaluator(DomNode xmlNode,
 			XpathEvaluator xpathEvaluator);
 
 	public Node loadFromXml(String xml) throws Exception;
 
-	public String log(XmlNode xmlNode, boolean pretty);
+	public String log(DomNode xmlNode, boolean pretty);
 
 	public String prettyPrint(Document domDoc);
 
-	public String prettyToString(XmlNode xmlNode);
+	public String prettyToString(DomNode xmlNode);
 
-	public NamespaceResult removeNamespaces(XmlDoc xmlDoc);
+	public NamespaceResult removeNamespaces(DomDoc xmlDoc);
 
-	public NamespaceResult restoreNamespaces(XmlDoc xmlDoc, String firstTag);
+	public NamespaceResult restoreNamespaces(DomDoc xmlDoc, String firstTag);
 
 	public String streamNCleanForBrowserHtmlFragment(Node node);
 
@@ -60,23 +60,23 @@ public interface XmlEnvironment {
 		public String xml;
 	}
 
-	public static interface StyleResolver extends Predicate<XmlNode> {
-		default Optional<XmlNode> getContainingBlock(XmlNode cursor) {
+	public static interface StyleResolver extends Predicate<DomNode> {
+		default Optional<DomNode> getContainingBlock(DomNode cursor) {
 			return cursor.ancestors().orSelf().match(this);
 		}
 
 		default boolean isBlock(Element e) {
-			return isBlock(XmlNode.from(e));
+			return isBlock(DomNode.from(e));
 		}
 
-		boolean isBlock(XmlNode node);
+		boolean isBlock(DomNode node);
 
-		boolean isBold(XmlNode node);
+		boolean isBold(DomNode node);
 
-		boolean isItalic(XmlNode node);
+		boolean isItalic(DomNode node);
 
 		@Override
-		default boolean test(XmlNode node) {
+		default boolean test(DomNode node) {
 			return isBlock(node);
 		}
 	}
@@ -84,30 +84,30 @@ public interface XmlEnvironment {
 	@RegistryLocation(registryPoint = StyleResolver.class, implementationType = ImplementationType.INSTANCE)
 	@ClientInstantiable
 	public static class StyleResolverHtml implements StyleResolver {
-		XmlDoc doc = null;
+		DomDoc doc = null;
 
 		@Override
 		public boolean isBlock(Element e) {
 			if (doc == null) {
-				doc = XmlNode.from(e).doc;
+				doc = DomNode.from(e).doc;
 			}
 			return isBlock(doc.nodeFor(e));
 		}
 
 		@Override
-		public boolean isBlock(XmlNode node) {
+		public boolean isBlock(DomNode node) {
 			return HtmlConstants.isHtmlBlock(node.name());
 		}
 
 		@Override
-		public boolean isBold(XmlNode node) {
+		public boolean isBold(DomNode node) {
 			return node.ancestors().orSelf()
 					.has(n -> n.name().equalsIgnoreCase("B")
 							|| n.name().equalsIgnoreCase("STRONG"));
 		}
 
 		@Override
-		public boolean isItalic(XmlNode node) {
+		public boolean isItalic(DomNode node) {
 			return node.ancestors().orSelf()
 					.has(n -> n.name().equalsIgnoreCase("I")
 							|| n.name().equalsIgnoreCase("EMPH"));

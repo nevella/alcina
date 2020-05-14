@@ -76,6 +76,10 @@ import org.xml.sax.SAXParseException;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolver;
+import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolverHtml;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -85,10 +89,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HtmlConstants;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.xml.XmlDoc;
-import cc.alcina.framework.common.client.xml.XmlEnvironment.StyleResolver;
-import cc.alcina.framework.common.client.xml.XmlEnvironment.StyleResolverHtml;
-import cc.alcina.framework.common.client.xml.XmlNode;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
 /**
@@ -542,15 +542,15 @@ public class XmlUtils {
 
 	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node,
 			StyleResolver blockResolver) {
-		XmlDoc xmlDoc = new XmlDoc(node.getOwnerDocument());
-		XmlNode prev = xmlDoc.nodeFor(node);
-		XmlNode next = prev;
+		DomDoc xmlDoc = new DomDoc(node.getOwnerDocument());
+		DomNode prev = xmlDoc.nodeFor(node);
+		DomNode next = prev;
 		SurroundingBlockTuple tuple = new SurroundingBlockTuple(prev.domNode());
-		XmlNode cursor = prev;
+		DomNode cursor = prev;
 		if (!hasLegalRootContainer(node)) {
 			throw new RuntimeException("Node has no legal root container");
 		}
-		XmlNode currentBlockAncestor = blockResolver.getContainingBlock(cursor)
+		DomNode currentBlockAncestor = blockResolver.getContainingBlock(cursor)
 				.orElse(null);
 		while (true) {
 			cursor = cursor.relative().previousSibOrParentSibNode();
@@ -657,8 +657,8 @@ public class XmlUtils {
 			}
 			m.appendTail(out);
 			if (LooseContext.is(CONTEXT_XSL_STRIP_WHITESPACE)) {
-				XmlDoc doc = new XmlDoc(out.toString());
-				doc.children.flat().filter(XmlNode::isText).forEach(
+				DomDoc doc = new DomDoc(out.toString());
+				doc.children.flat().filter(DomNode::isText).forEach(
 						n -> n.setText(trimAndNormaliseWrappingNewlines(
 								n.parent().nameIs("xsl:text"),
 								n.textContent())));

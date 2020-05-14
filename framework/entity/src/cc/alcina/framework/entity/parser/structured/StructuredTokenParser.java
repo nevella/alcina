@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Stack;
 import java.util.function.Supplier;
 
+import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomTokenStream;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.xml.XmlDoc;
-import cc.alcina.framework.common.client.xml.XmlNode;
-import cc.alcina.framework.common.client.xml.XmlTokenStream;
 
 public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 	public static List<XmlToken> getTokens(Class<?> tokenClass) {
@@ -17,24 +17,24 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 
 	private List<XmlToken> tokens;
 
-	Stack<XmlNode> openNodes;
+	Stack<DomNode> openNodes;
 
-	public XmlTokenOutput parse(Class<?> tokenClass, XmlTokenStream stream,
+	public XmlTokenOutput parse(Class<?> tokenClass, DomTokenStream stream,
 			C context) {
 		return parse(tokenClass, stream, context, () -> true,
 				getTokens(tokenClass));
 	}
 
-	public XmlTokenOutput parse(Class<?> tokenClass, XmlTokenStream stream,
+	public XmlTokenOutput parse(Class<?> tokenClass, DomTokenStream stream,
 			C context, Supplier<Boolean> shouldContinue,
 			List<XmlToken> tokens) {
 		try {
 			LooseContext.push();
 			openNodes = new Stack<>();
 			this.tokens = tokens;
-			XmlDoc outDoc = new XmlDoc("<root/>");
+			DomDoc outDoc = new DomDoc("<root/>");
 			XmlTokenOutput out = new XmlTokenOutput(outDoc);
-			LooseContext.set(XmlNode.CONTEXT_DEBUG_SUPPORT, out);
+			LooseContext.set(DomNode.CONTEXT_DEBUG_SUPPORT, out);
 			context.out = out;
 			out.context = context;
 			context.stream = stream;
@@ -43,7 +43,7 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 			int counter = 0;
 			int all = (int) stream.getDoc().children.flat().count();
 			while (stream.hasNext()) {
-				XmlNode node = stream.next();
+				DomNode node = stream.next();
 				closeOpenNodes(node, context);
 				handleNode(node, context);
 				if (!shouldContinue.get()) {
@@ -61,9 +61,9 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 		}
 	}
 
-	private void closeOpenNodes(XmlNode node, C context) {
+	private void closeOpenNodes(DomNode node, C context) {
 		while (openNodes.size() > 0) {
-			XmlNode openNode = openNodes.pop();
+			DomNode openNode = openNodes.pop();
 			if (node != null && openNode.isAncestorOf(node)) {
 				openNodes.push(openNode);
 				break;
@@ -76,7 +76,7 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 		}
 	}
 
-	protected void handleExitNode(XmlNode node, C context) {
+	protected void handleExitNode(DomNode node, C context) {
 		for (XmlToken token : tokens) {
 			if (token.matchesExit(context, node)) {
 				XmlStructuralJoin join = new XmlStructuralJoin(node, token);
@@ -86,7 +86,7 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 		}
 	}
 
-	protected void handleNode(XmlNode node, C context) {
+	protected void handleNode(DomNode node, C context) {
 		for (XmlToken token : tokens) {
 			if (token.matches(context, node)) {
 				XmlStructuralJoin join = new XmlStructuralJoin(node, token);

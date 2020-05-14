@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.xml;
+package cc.alcina.framework.common.client.dom;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -11,28 +11,28 @@ import org.w3c.dom.Node;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.dom.DomEnvironment.NamespaceResult;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.common.client.xml.XmlEnvironment.NamespaceResult;
 
-public class XmlDoc extends XmlNode {
-	public static XmlDoc basicHtmlDoc() {
-		return new XmlDoc("<html><head></head><body></body></html>");
+public class DomDoc extends DomNode {
+	public static DomDoc basicHtmlDoc() {
+		return new DomDoc("<html><head></head><body></body></html>");
 	}
 
-	public static XmlNode createDocumentElement(String tag) {
-		return new XmlDoc(Ax.format("<%s/>", tag)).getDocumentElementNode();
+	public static DomNode createDocumentElement(String tag) {
+		return new DomDoc(Ax.format("<%s/>", tag)).getDocumentElementNode();
 	}
 
-	public static XmlDoc from(Document domDocument) {
-		return new XmlDoc(domDocument);
+	public static DomDoc from(Document domDocument) {
+		return new DomDoc(domDocument);
 	}
 
-	private CachingMap<Node, XmlNode> nodes = new CachingMap<Node, XmlNode>(
-			n -> n == null ? null : new XmlNode(n, this));
+	private CachingMap<Node, DomNode> nodes = new CachingMap<Node, DomNode>(
+			n -> n == null ? null : new DomNode(n, this));
 
 	private String firstTag;
 
@@ -42,14 +42,14 @@ public class XmlDoc extends XmlNode {
 
 	private Map<String, Element> cachedElementIdMap;
 
-	public XmlDoc(Document domDocument) {
+	public DomDoc(Document domDocument) {
 		super(null, null);
 		this.node = domDocument;
 		nodes.put(this.node, this);
 		this.doc = this;
 	}
 
-	public XmlDoc(String xml) {
+	public DomDoc(String xml) {
 		super(null, null);
 		loadFromXml(xml);
 	}
@@ -66,7 +66,7 @@ public class XmlDoc extends XmlNode {
 		return super.domDoc();
 	}
 
-	public XmlNode getDocumentElementNode() {
+	public DomNode getDocumentElementNode() {
 		return nodeFor(domDoc().getDocumentElement());
 	}
 
@@ -107,33 +107,33 @@ public class XmlDoc extends XmlNode {
 		return this.readonly;
 	}
 
-	public XmlNode nodeFor(Node domNode) {
+	public DomNode nodeFor(Node domNode) {
 		return nodes.get(domNode);
 	}
 
 	@Override
 	public String prettyToString() {
 		try {
-			return XmlEnvironment.get().prettyPrint(domDoc());
+			return DomEnvironment.get().prettyPrint(domDoc());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
 	public void removeNamespaces() {
-		NamespaceResult namespaceResult = XmlEnvironment.get()
+		NamespaceResult namespaceResult = DomEnvironment.get()
 				.removeNamespaces(this);
 		firstTag = namespaceResult.firstTag;
 		loadFromXml(namespaceResult.xml);
 	}
 
 	public void restoreNamespaces() {
-		NamespaceResult namespaceResult = XmlEnvironment.get()
+		NamespaceResult namespaceResult = DomEnvironment.get()
 				.restoreNamespaces(this, firstTag);
 		loadFromXml(namespaceResult.xml);
 	}
 
-	public XmlNode root() {
+	public DomNode root() {
 		return nodeFor(domDoc().getDocumentElement());
 	}
 
@@ -141,14 +141,14 @@ public class XmlDoc extends XmlNode {
 		this.readonly = readonly;
 	}
 
-	public XmlDoc withUseCachedElementIds(boolean useCachedElementIds) {
+	public DomDoc withUseCachedElementIds(boolean useCachedElementIds) {
 		this.useCachedElementIds = useCachedElementIds;
 		return this;
 	}
 
 	private void loadFromXml(String xml) {
 		try {
-			this.node = XmlEnvironment.get().loadFromXml(xml);
+			this.node = DomEnvironment.get().loadFromXml(xml);
 			nodes.put(this.node, this);
 			this.doc = this;
 		} catch (Exception e) {
@@ -156,21 +156,21 @@ public class XmlDoc extends XmlNode {
 		}
 	}
 
-	void register(XmlNode xmlNode) {
+	void register(DomNode xmlNode) {
 	}
 
 	@RegistryLocation(registryPoint = XmlReadonlyDocCache.class, implementationType = ImplementationType.SINGLETON)
 	public static class XmlReadonlyDocCache {
-		public static XmlDoc.XmlReadonlyDocCache get() {
-			return Registry.impl(XmlDoc.XmlReadonlyDocCache.class);
+		public static DomDoc.XmlReadonlyDocCache get() {
+			return Registry.impl(DomDoc.XmlReadonlyDocCache.class);
 		}
 
 		private int maxSize = 0;
 
-		private Map<String, XmlDoc> docs = new LinkedHashMap<String, XmlDoc>() {
+		private Map<String, DomDoc> docs = new LinkedHashMap<String, DomDoc>() {
 			@Override
 			protected boolean
-					removeEldestEntry(Map.Entry<String, XmlDoc> eldest) {
+					removeEldestEntry(Map.Entry<String, DomDoc> eldest) {
 				return size() > maxSize;
 			};
 		};
@@ -179,10 +179,10 @@ public class XmlDoc extends XmlNode {
 
 		int hitCount = 0;
 
-		public synchronized XmlDoc get(String xml) {
-			XmlDoc doc = docs.get(xml);
+		public synchronized DomDoc get(String xml) {
+			DomDoc doc = docs.get(xml);
 			if (doc == null) {
-				doc = new XmlDoc(xml);
+				doc = new DomDoc(xml);
 				doc.setReadonly(true);
 				docs.put(xml, doc);
 				missCount++;
