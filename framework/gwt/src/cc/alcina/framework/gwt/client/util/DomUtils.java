@@ -681,7 +681,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (regenerate) {
 			exactTextMap = mapSupplier.get();
 			xpathMap = mapSupplier.get();
-			generateMap((Element) lastContainer, "", xpathMap);
+			generateMap(lastContainer, "", xpathMap);
 		} else {
 			exactTextMap = null;
 		}
