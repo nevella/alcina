@@ -111,7 +111,7 @@ public class AlcinaCollectorsGwt extends AlcinaCollectors {
 
 		@Override
 		public Function<Map<K, T>, Map<K, T>> finisher() {
-			return null;
+			return Function.identity();
 		}
 
 		@Override
@@ -159,7 +159,7 @@ public class AlcinaCollectorsGwt extends AlcinaCollectors {
 
 		@Override
 		public Function<Multimap<K, List<U>>, Multimap<K, List<U>>> finisher() {
-			return null;
+			return Function.identity();
 		}
 
 		@Override
