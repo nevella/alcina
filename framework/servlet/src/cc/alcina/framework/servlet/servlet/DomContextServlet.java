@@ -6,11 +6,11 @@ import java.util.Map;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.xml.XmlDoc;
-import cc.alcina.framework.common.client.xml.XmlNode;
 import cc.alcina.framework.gwt.client.util.DomContext;
 
 @RegistryLocation(registryPoint = DomContext.class, implementationType = ImplementationType.SINGLETON)
@@ -44,7 +44,7 @@ public class DomContextServlet extends DomContext {
 	}
 
 	@Override
-	protected XmlDoc getXmlDoc(Document domDocument) {
+	protected DomDoc getXmlDoc(Document domDocument) {
 		return xmlDocs().get(domDocument);
 	}
 
@@ -54,7 +54,7 @@ public class DomContextServlet extends DomContext {
 	}
 
 	@Override
-	protected void putXmlDoc0(XmlDoc doc) {
+	protected void putXmlDoc0(DomDoc doc) {
 		xmlDocs().put(doc.domDoc(), doc);
 	}
 
@@ -65,15 +65,15 @@ public class DomContextServlet extends DomContext {
 
 	@Override
 	protected void setProperty0(Element elem, String key, String value) {
-		XmlNode.from(elem).setAttr(key, value);
+		DomNode.from(elem).setAttr(key, value);
 	}
 
 	@Override
 	protected void setStyleProperty0(Element elem, String key, String value) {
-		XmlNode.from(elem).style().setProperty(key, value);
+		DomNode.from(elem).style().setProperty(key, value);
 	}
 
-	Map<Document, XmlDoc> xmlDocs() {
+	Map<Document, DomDoc> xmlDocs() {
 		return LooseContext.ensure(CONTEXT_DOCS, () -> new LinkedHashMap<>());
 	}
 }

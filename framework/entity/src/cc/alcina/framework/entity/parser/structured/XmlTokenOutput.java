@@ -1,30 +1,30 @@
 package cc.alcina.framework.entity.parser.structured;
 
+import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNode.DomNodeDebugSupport;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.xml.XmlDoc;
-import cc.alcina.framework.common.client.xml.XmlNode;
-import cc.alcina.framework.common.client.xml.XmlNode.XmlNodeDebugSupport;
 import cc.alcina.framework.entity.XmlUtils;
 
-public class XmlTokenOutput implements XmlNodeDebugSupport {
-	private XmlDoc outDoc;
+public class XmlTokenOutput implements DomNodeDebugSupport {
+	private DomDoc outDoc;
 
-	private XmlNode writeCursor;
+	private DomNode writeCursor;
 
 	public StructuredTokenParserContext context;
 
-	private XmlNode lastTextNode;
+	private DomNode lastTextNode;
 
 	public boolean debug = false;
 
-	private CachingMap<XmlNode, XmlNodeDebugInfo> debugMap = new CachingMap<>(
-			XmlNodeDebugInfo::new);
+	private CachingMap<DomNode, DomNodeDebugInfo> debugMap = new CachingMap<>(
+			DomNodeDebugInfo::new);
 
-	public XmlTokenOutput(XmlDoc outDoc) {
+	public XmlTokenOutput(DomDoc outDoc) {
 		this.outDoc = outDoc;
 		writeCursor = outDoc.root();
 	}
@@ -99,15 +99,15 @@ public class XmlTokenOutput implements XmlNodeDebugSupport {
 		}
 	}
 
-	public XmlNode getLastTextNode() {
+	public DomNode getLastTextNode() {
 		return this.lastTextNode;
 	}
 
-	public XmlDoc getOutDoc() {
+	public DomDoc getOutDoc() {
 		return this.outDoc;
 	}
 
-	public XmlNode getOutputNode() {
+	public DomNode getOutputNode() {
 		return writeCursor;
 	}
 
@@ -140,10 +140,10 @@ public class XmlTokenOutput implements XmlNodeDebugSupport {
 	}
 
 	@Override
-	public String shortRepresentation(XmlNode node) {
+	public String shortRepresentation(DomNode node) {
 		String out = "";
 		if (node.isElement()) {
-			XmlNodeDebugInfo debugInfo = debugMap.get(node);
+			DomNodeDebugInfo debugInfo = debugMap.get(node);
 			if (debugInfo.close != null && debugInfo.open != null) {
 				out = String.format("<%s />", node.name());
 			} else if (debugInfo.close != null) {
@@ -175,8 +175,8 @@ public class XmlTokenOutput implements XmlNodeDebugSupport {
 	}
 
 	public void writeXml(String xmlString) {
-		XmlDoc insert = new XmlDoc(xmlString);
-		XmlNode documentElementNode = insert.getDocumentElementNode();
+		DomDoc insert = new DomDoc(xmlString);
+		DomNode documentElementNode = insert.getDocumentElementNode();
 		if (documentElementNode.tagIs("strip")) {
 			documentElementNode.children.nodes()
 					.forEach(writeCursor.children::importFrom);
@@ -196,14 +196,14 @@ public class XmlTokenOutput implements XmlNodeDebugSupport {
 		return debugMap.get(writeCursor).open;
 	}
 
-	public static class XmlNodeDebugInfo {
-		XmlNode node;
+	public static class DomNodeDebugInfo {
+		DomNode node;
 
 		XmlStructuralJoin open;
 
 		XmlStructuralJoin close;
 
-		public XmlNodeDebugInfo(XmlNode node) {
+		public DomNodeDebugInfo(DomNode node) {
 			this.node = node;
 		}
 	}

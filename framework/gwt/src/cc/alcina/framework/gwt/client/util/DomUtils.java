@@ -21,6 +21,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.RootPanel;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -31,7 +32,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HtmlConstants;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.xml.XmlNode;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
 /**
@@ -681,7 +681,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (regenerate) {
 			exactTextMap = mapSupplier.get();
 			xpathMap = mapSupplier.get();
-			generateMap((Element) lastContainer, "", xpathMap);
+			generateMap(lastContainer, "", xpathMap);
 		} else {
 			exactTextMap = null;
 		}
@@ -947,12 +947,12 @@ public class DomUtils implements NodeFromXpathProvider {
 						splitFrom.getChildNodes());
 				Node insertionPoint = splitFrom;
 				for (Node node : children) {
-					XmlNode.from(insertionPoint).relative()
-							.insertAfterThis(XmlNode.from(node));
+					DomNode.from(insertionPoint).relative()
+							.insertAfterThis(DomNode.from(node));
 					insertionPoint = node;
 				}
-				XmlNode.from(insertionPoint).relative()
-						.insertAfterThis(XmlNode.from(splitEnd));
+				DomNode.from(insertionPoint).relative()
+						.insertAfterThis(DomNode.from(splitEnd));
 			} else {
 				boolean found = false;
 				for (int i = 0; i < nl.getLength(); i++) {
@@ -967,17 +967,17 @@ public class DomUtils implements NodeFromXpathProvider {
 				for (int i = 1; i < contents.size(); i++) {
 					splitEnd.appendChild(contents.get(i));
 				}
-				XmlNode.from(splitFrom).relative()
-						.insertAfterThis(XmlNode.from(splitAround));
-				XmlNode.from(splitAround).relative()
-						.insertAfterThis(XmlNode.from(splitEnd));
+				DomNode.from(splitFrom).relative()
+						.insertAfterThis(DomNode.from(splitAround));
+				DomNode.from(splitAround).relative()
+						.insertAfterThis(DomNode.from(splitEnd));
 				if (splitAround.getNodeType() == Node.TEXT_NODE) {
 					Element splitAroundWrap = splitFrom.getOwnerDocument()
 							.createElement("span");
 					splitAroundWrap.setAttribute(ATTR_UNWRAP_EXPANDO_ID,
 							expandoId);
-					XmlNode.from(splitAround).relative()
-							.insertAfterThis(XmlNode.from(splitAroundWrap));
+					DomNode.from(splitAround).relative()
+							.insertAfterThis(DomNode.from(splitAroundWrap));
 					splitAroundWrap.appendChild(splitAround);
 				} else {
 					Element splitAroundElt = (Element) splitAround;

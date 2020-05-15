@@ -9,18 +9,18 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomEnvironment;
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.xml.XmlDoc;
-import cc.alcina.framework.common.client.xml.XmlEnvironment;
-import cc.alcina.framework.common.client.xml.XmlNode;
-import cc.alcina.framework.common.client.xml.XmlNode.XpathEvaluator;
 
-@RegistryLocation(registryPoint = XmlEnvironment.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-public class XmlEnvironmentJvmImpl implements XmlEnvironment {
+@RegistryLocation(registryPoint = DomEnvironment.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+public class DomEnvironmentJvmImpl implements DomEnvironment {
 	@Override
-	public XpathEvaluator createXpathEvaluator(XmlNode xmlNode,
+	public XpathEvaluator createXpathEvaluator(DomNode xmlNode,
 			XpathEvaluator xpathEvaluator) {
 		XpathHelper xh = null;
 		if (xpathEvaluator != null) {
@@ -37,7 +37,7 @@ public class XmlEnvironmentJvmImpl implements XmlEnvironment {
 	}
 
 	@Override
-	public String log(XmlNode xmlNode, boolean pretty) {
+	public String log(DomNode xmlNode, boolean pretty) {
 		try {
 			XmlUtils.logToFilePretty(xmlNode.domNode());
 			return "ok";
@@ -57,7 +57,7 @@ public class XmlEnvironmentJvmImpl implements XmlEnvironment {
 	}
 
 	@Override
-	public String prettyToString(XmlNode xmlNode) {
+	public String prettyToString(DomNode xmlNode) {
 		Node node = xmlNode.domNode();
 		try {
 			if (node.getNodeType() == Node.DOCUMENT_FRAGMENT_NODE) {
@@ -72,7 +72,7 @@ public class XmlEnvironmentJvmImpl implements XmlEnvironment {
 	}
 
 	@Override
-	public NamespaceResult removeNamespaces(XmlDoc xmlDoc) {
+	public NamespaceResult removeNamespaces(DomDoc xmlDoc) {
 		NamespaceResult result = new NamespaceResult();
 		String xml = xmlDoc.fullToString();
 		Pattern p = Pattern.compile("(?s)<([A-Za-z]\\S+) .+?>");
@@ -85,7 +85,7 @@ public class XmlEnvironmentJvmImpl implements XmlEnvironment {
 	}
 
 	@Override
-	public NamespaceResult restoreNamespaces(XmlDoc xmlDoc, String firstTag) {
+	public NamespaceResult restoreNamespaces(DomDoc xmlDoc, String firstTag) {
 		NamespaceResult result = new NamespaceResult();
 		result.xml = xmlDoc.fullToString();
 		Pattern p = Pattern.compile("(?s)<[A-Za-z]\\S+>");

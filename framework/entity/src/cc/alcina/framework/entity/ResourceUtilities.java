@@ -69,12 +69,12 @@ import org.xml.sax.InputSource;
 import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.xml.XmlDoc;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
@@ -481,16 +481,16 @@ public class ResourceUtilities {
 		});
 	}
 
-	public static XmlDoc loadXmlDocFromHtmlString(String html) {
+	public static DomDoc loadXmlDocFromHtmlString(String html) {
 		try {
-			return new XmlDoc(loadHtmlDocumentFromString(html));
+			return new DomDoc(loadHtmlDocumentFromString(html));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
-	public static XmlDoc loadXmlDocFromUrl(String url) {
-		return new XmlDoc(loadHtmlDocumentFromUrl(url));
+	public static DomDoc loadXmlDocFromUrl(String url) {
+		return new DomDoc(loadHtmlDocumentFromUrl(url));
 	}
 
 	public static void logToFile(String content) {

@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.xml;
+package cc.alcina.framework.common.client.dom;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -10,16 +10,16 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
-public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
-	public static final transient String CONTEXT_NO_TD_STYLES = XmlNodeHtmlTableBuilder.class
+public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
+	public static final transient String CONTEXT_NO_TD_STYLES = DomNodeHtmlTableBuilder.class
 			.getName() + ".CONTEXT_NO_TD_STYLES";
 
-	public static final transient String CONTEXT_KEEP_NEWLINES = XmlNodeHtmlTableBuilder.class
+	public static final transient String CONTEXT_KEEP_NEWLINES = DomNodeHtmlTableBuilder.class
 			.getName() + ".CONTEXT_KEEP_NEWLINES";
 
 	public static String toHtmlGrid(List<String> headers, List<Row> values,
 			String title, int maxColWidth) {
-		XmlDoc doc = XmlDoc.basicHtmlDoc();
+		DomDoc doc = DomDoc.basicHtmlDoc();
 		if (!LooseContext.is(CONTEXT_NO_TD_STYLES)) {
 			doc.xpath("//head").node().builder().tag("style")
 					.text("td {white-space: nowrap; \n"
@@ -28,13 +28,13 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 							+ ".numeric{text-align:right}", maxColWidth)
 					.append();
 		}
-		XmlNode node = doc.xpath("//body").node();
-		XmlNodeHtmlTableBuilder tableBuilder = node.html().tableBuilder();
-		XmlNodeHtmlTableRowBuilder headerBuilder = tableBuilder.row();
+		DomNode node = doc.xpath("//body").node();
+		DomNodeHtmlTableBuilder tableBuilder = node.html().tableBuilder();
+		DomNodeHtmlTableRowBuilder headerBuilder = tableBuilder.row();
 		headerBuilder.className("header");
 		headers.forEach(headerBuilder::cell);
 		values.forEach(row -> {
-			XmlNodeHtmlTableRowBuilder rowBuilder = tableBuilder.row();
+			DomNodeHtmlTableRowBuilder rowBuilder = tableBuilder.row();
 			((List<Cell>) row.cells).stream().forEach(cell -> {
 				String value = Ax.blankToEmpty(cell.value).replace("\\n", "\n");
 				if (!LooseContext.is(CONTEXT_KEEP_NEWLINES)) {
@@ -42,7 +42,7 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 				}
 				String href = cell.href;
 				if (Ax.notBlank(href)) {
-					XmlNode td = rowBuilder.cell().append();
+					DomNode td = rowBuilder.cell().append();
 					td.html().addLink(value, href, "_blank");
 				} else {
 					rowBuilder.cell(value);
@@ -54,21 +54,21 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 
 	private String rowClassName;
 
-	public XmlNodeHtmlTableBuilder(XmlNode xmlNode) {
+	public DomNodeHtmlTableBuilder(DomNode xmlNode) {
 		relativeTo = xmlNode;
 		tag("table");
 	}
 
-	public XmlNodeHtmlTableRowBuilder row() {
-		XmlNode tableNode = ensureBuilt();
-		return new XmlNodeHtmlTableRowBuilder(tableNode);
+	public DomNodeHtmlTableRowBuilder row() {
+		DomNode tableNode = ensureBuilt();
+		return new DomNodeHtmlTableRowBuilder(tableNode);
 	}
 
 	public void rowClassName(String rowClassName) {
 		this.rowClassName = rowClassName;
 	}
 
-	private XmlNode ensureBuilt() {
+	private DomNode ensureBuilt() {
 		if (built) {
 			return builtNode();
 		} else {
@@ -76,50 +76,50 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 		}
 	}
 
-	public class XmlNodeHtmlTableCellBuilder extends XmlNodeBuilder {
-		public XmlNodeHtmlTableCellBuilder(XmlNode rowNode) {
+	public class DomNodeHtmlTableCellBuilder extends DomNodeBuilder {
+		public DomNodeHtmlTableCellBuilder(DomNode rowNode) {
 			relativeTo = rowNode;
 			tag("td");
 		}
 
-		public XmlNodeHtmlTableCellBuilder blank() {
+		public DomNodeHtmlTableCellBuilder blank() {
 			text("\u00A0");
 			return this;
 		}
 
-		public XmlNodeHtmlTableCellBuilder cell() {
+		public DomNodeHtmlTableCellBuilder cell() {
 			ensureBuilt();
-			return new XmlNodeHtmlTableCellBuilder(relativeTo);
+			return new DomNodeHtmlTableCellBuilder(relativeTo);
 		}
 
-		public XmlNodeHtmlTableCellBuilder cell(Consumer<XmlNode> consumer) {
+		public DomNodeHtmlTableCellBuilder cell(Consumer<DomNode> consumer) {
 			consumer.accept(ensureBuilt());
 			return cell();
 		}
 
-		public XmlNodeHtmlTableCellBuilder cell(Object text) {
+		public DomNodeHtmlTableCellBuilder cell(Object text) {
 			text(CommonUtils.nullSafeToString(text));
 			return cell();
 		}
 
-		public XmlNodeHtmlTableCellBuilder cell(String template,
+		public DomNodeHtmlTableCellBuilder cell(String template,
 				Object... args) {
 			text(Ax.format(template, args));
 			return cell();
 		}
 
 		@Override
-		public XmlNodeHtmlTableCellBuilder className(String className) {
+		public DomNodeHtmlTableCellBuilder className(String className) {
 			super.className(className);
 			return this;
 		}
 
-		public XmlNodeHtmlTableCellBuilder colSpan(int colSpan) {
+		public DomNodeHtmlTableCellBuilder colSpan(int colSpan) {
 			attr("colSpan", String.valueOf(colSpan));
 			return this;
 		}
 
-		public XmlNode ensureBuilt() {
+		public DomNode ensureBuilt() {
 			if (built) {
 				return builtNode();
 			} else {
@@ -128,47 +128,47 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			}
 		}
 
-		public XmlNodeHtmlTableCellBuilder nowrap() {
+		public DomNodeHtmlTableCellBuilder nowrap() {
 			style("white-space: nowrap");
 			return this;
 		}
 
-		public XmlNodeHtmlTableCellBuilder numeric() {
+		public DomNodeHtmlTableCellBuilder numeric() {
 			return className("numeric");
 		}
 
-		public XmlNodeHtmlTableRowBuilder row() {
+		public DomNodeHtmlTableRowBuilder row() {
 			ensureBuilt();
-			return new XmlNodeHtmlTableRowBuilder(relativeTo.parent());
+			return new DomNodeHtmlTableRowBuilder(relativeTo.parent());
 		}
 
-		public XmlNodeHtmlTableCellBuilder spacer() {
+		public DomNodeHtmlTableCellBuilder spacer() {
 			return text("\u00a0").cell();
 		}
 
 		@Override
-		public XmlNodeHtmlTableCellBuilder style(String style) {
+		public DomNodeHtmlTableCellBuilder style(String style) {
 			super.style(style);
 			return this;
 		}
 
 		@Override
-		public XmlNodeHtmlTableCellBuilder text(String text) {
+		public DomNodeHtmlTableCellBuilder text(String text) {
 			super.text(text);
 			return this;
 		}
 
 		@Override
-		public XmlNodeHtmlTableCellBuilder title(String title) {
+		public DomNodeHtmlTableCellBuilder title(String title) {
 			super.title(title);
 			return this;
 		}
 	}
 
-	public class XmlNodeHtmlTableRowBuilder extends XmlNodeBuilder {
-		private XmlNode node;
+	public class DomNodeHtmlTableRowBuilder extends DomNodeBuilder {
+		private DomNode node;
 
-		public XmlNodeHtmlTableRowBuilder(XmlNode tableNode) {
+		public DomNodeHtmlTableRowBuilder(DomNode tableNode) {
 			relativeTo = tableNode;
 			tag("tr");
 			if (Ax.notBlank(rowClassName)) {
@@ -176,21 +176,21 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			}
 		}
 
-		public XmlNodeHtmlTableCellBuilder cell() {
+		public DomNodeHtmlTableCellBuilder cell() {
 			ensureBuilt();
-			return new XmlNodeHtmlTableCellBuilder(builtNode());
+			return new DomNodeHtmlTableCellBuilder(builtNode());
 		}
 
-		public XmlNodeHtmlTableCellBuilder cell(Consumer<XmlNode> consumer) {
+		public DomNodeHtmlTableCellBuilder cell(Consumer<DomNode> consumer) {
 			consumer.accept(cell().ensureBuilt());
 			return cell();
 		}
 
-		public XmlNodeHtmlTableCellBuilder cell(String text) {
+		public DomNodeHtmlTableCellBuilder cell(String text) {
 			return cell().text(text).cell();
 		}
 
-		public XmlNodeHtmlTableCellBuilder cell(String template,
+		public DomNodeHtmlTableCellBuilder cell(String template,
 				Object... args) {
 			return cell().cell(Ax.format(template, args));
 		}
@@ -202,16 +202,16 @@ public class XmlNodeHtmlTableBuilder extends XmlNodeBuilder {
 			}
 		}
 
-		public XmlNode getNode() {
+		public DomNode getNode() {
 			return this.node;
 		}
 
-		public XmlNodeHtmlTableCellBuilder spacer() {
+		public DomNodeHtmlTableCellBuilder spacer() {
 			return cell().spacer();
 		}
 
 		@Override
-		public XmlNodeHtmlTableRowBuilder style(String style) {
+		public DomNodeHtmlTableRowBuilder style(String style) {
 			super.style(style);
 			return this;
 		}

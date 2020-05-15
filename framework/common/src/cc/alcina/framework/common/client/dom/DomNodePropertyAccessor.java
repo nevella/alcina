@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.xml;
+package cc.alcina.framework.common.client.dom;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -13,13 +13,13 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 
-public class XmlNodePropertyAccessor implements PropertyAccessor {
+public class DomNodePropertyAccessor implements PropertyAccessor {
 	private List<String> singleChildElementNames = new ArrayList<>();
 
-	public XmlNodePropertyAccessor() {
+	public DomNodePropertyAccessor() {
 	}
 
-	public XmlNodePropertyAccessor(String... singleChildElementNames) {
+	public DomNodePropertyAccessor(String... singleChildElementNames) {
 		this.singleChildElementNames = Arrays.asList(singleChildElementNames);
 	}
 
@@ -47,8 +47,8 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 
 	@Override
 	public Object getPropertyValue(Object bean, String propertyName) {
-		XmlNode node = (XmlNode) bean;
-		List<XmlNode> resolved = node.xpath(propertyName).nodes();
+		DomNode node = (DomNode) bean;
+		List<DomNode> resolved = node.xpath(propertyName).nodes();
 		if (resolved.size() == 0) {
 			return null;
 		}
@@ -57,8 +57,8 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 			return resolved.get(0);
 		}
 		Preconditions.checkArgument(resolved.size() == 1);
-		XmlNode singleResolved = resolved.get(0);
-		List<XmlNode> elements = singleResolved.children.elements();
+		DomNode singleResolved = resolved.get(0);
+		List<DomNode> elements = singleResolved.children.elements();
 		if (elements.size() > 0) {
 			return elements;
 		} else {
@@ -77,21 +77,21 @@ public class XmlNodePropertyAccessor implements PropertyAccessor {
 		if (value == null) {
 			return;
 		}
-		XmlNode node = (XmlNode) bean;
-		XmlNode leaf = node.ensurePath(propertyName);
+		DomNode node = (DomNode) bean;
+		DomNode leaf = node.ensurePath(propertyName);
 		if (value instanceof Collection) {
-			Collection<XmlNode> values = (Collection<XmlNode>) value;
+			Collection<DomNode> values = (Collection<DomNode>) value;
 			values = values.stream()
 					.map(v -> node.doc.nodeFor(node.domDoc().adoptNode(v.node)))
 					.collect(Collectors.toList());
 			leaf.children.append(values);
 		} else {
 			if (singleChildElementNames.contains(propertyName)) {
-				XmlNode nodeValue = (XmlNode) value;
+				DomNode nodeValue = (DomNode) value;
 				if (nodeValue.children.nodes().size() == 0) {
 					leaf.removeFromParent();
 				} else {
-					XmlNode imported = leaf.children.importFrom(nodeValue);
+					DomNode imported = leaf.children.importFrom(nodeValue);
 					leaf.strip();
 				}
 			} else {

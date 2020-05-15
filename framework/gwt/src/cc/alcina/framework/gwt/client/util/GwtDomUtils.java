@@ -8,9 +8,10 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Display;
-import com.google.gwt.dom.client.Text;
 
-import cc.alcina.framework.common.client.xml.XmlNode;
+import cc.alcina.framework.common.client.dom.DomNode;
+
+import com.google.gwt.dom.client.Text;
 
 public class GwtDomUtils {
 	public static List<Element> getChildElements(Element elt) {
@@ -18,7 +19,7 @@ public class GwtDomUtils {
 	}
 
 	public static Element getContainingBlock(org.w3c.dom.Node node) {
-		return (Element) XmlNode.from(node).style().containingBlock().get()
+		return (Element) DomNode.from(node).style().containingBlock().get()
 				.domElement();
 	}
 

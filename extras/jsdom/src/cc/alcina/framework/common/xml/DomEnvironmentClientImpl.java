@@ -3,22 +3,22 @@ package cc.alcina.framework.common.xml;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
+import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomEnvironment;
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.xml.XmlDoc;
-import cc.alcina.framework.common.client.xml.XmlEnvironment;
-import cc.alcina.framework.common.client.xml.XmlNode;
-import cc.alcina.framework.common.client.xml.XmlNode.XpathEvaluator;
 
-@RegistryLocation(registryPoint = XmlEnvironment.class, implementationType = ImplementationType.SINGLETON)
+@RegistryLocation(registryPoint = DomEnvironment.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 /*
  * Not yet implemented, but could be without much difficulty
  */
-public class XmlEnvironmentClientImpl implements XmlEnvironment {
+public class DomEnvironmentClientImpl implements DomEnvironment {
 	@Override
-	public XpathEvaluator createXpathEvaluator(XmlNode xmlNode,
+	public XpathEvaluator createXpathEvaluator(DomNode xmlNode,
 			XpathEvaluator xpathEvaluator) {
 		throw new UnsupportedOperationException();
 	}
@@ -29,7 +29,7 @@ public class XmlEnvironmentClientImpl implements XmlEnvironment {
 	}
 
 	@Override
-	public String log(XmlNode xmlNode, boolean pretty) {
+	public String log(DomNode xmlNode, boolean pretty) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -39,17 +39,17 @@ public class XmlEnvironmentClientImpl implements XmlEnvironment {
 	}
 
 	@Override
-	public String prettyToString(XmlNode xmlNode) {
+	public String prettyToString(DomNode xmlNode) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public NamespaceResult removeNamespaces(XmlDoc xmlDoc) {
+	public NamespaceResult removeNamespaces(DomDoc xmlDoc) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public NamespaceResult restoreNamespaces(XmlDoc xmlDoc, String firstTag) {
+	public NamespaceResult restoreNamespaces(DomDoc xmlDoc, String firstTag) {
 		throw new UnsupportedOperationException();
 	}
 
