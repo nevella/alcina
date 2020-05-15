@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.BrowserEvents;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.Style.Unit;
@@ -374,8 +375,9 @@ public abstract class TourManager implements NativePreviewHandler {
 				PopupInfo popupInfo = view.popupInfo;
 				RelativePopupPositioningParams params = new RelativePopupPositioningParams();
 				RelativeTo relativeTo = popupInfo.getRelativeTo();
-				params.relativeToElement = WidgetUtils
-						.getElementForSelector(null, relativeTo.getElement());
+				params.relativeToElement = WidgetUtils.getElementForSelector(
+						Document.get().getDocumentElement(),
+						relativeTo.getElement());
 				if (params.relativeToElement != null) {
 					params.boundingWidget = RootPanel.get();
 					params.relativeContainer = RootPanel.get();
@@ -426,7 +428,8 @@ public abstract class TourManager implements NativePreviewHandler {
 		Element getElement(List<String> selectors) {
 			Element selected = null;
 			for (String selector : selectors) {
-				selected = WidgetUtils.getElementForSelector(null, selector);
+				selected = WidgetUtils.getElementForSelector(
+						Document.get().getDocumentElement(), selector);
 				if (selected != null
 						&& WidgetUtils.isVisibleAncestorChain(selected)) {
 					return selected;
