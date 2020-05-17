@@ -351,6 +351,10 @@ public class DomNode {
 		return new DomNodeRelative();
 	}
 
+	public void removeAttribute(String key) {
+		node.getAttributes().removeNamedItem(key);
+	}
+
 	public void removeFromParent() {
 		parent().invalidate();
 		node.getParentNode().removeChild(node);
