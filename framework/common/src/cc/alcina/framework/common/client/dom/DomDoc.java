@@ -31,6 +31,10 @@ public class DomDoc extends DomNode {
 		return new DomDoc(domDocument);
 	}
 
+	public static DomDoc from(String xml) {
+		return new DomDoc(xml);
+	}
+
 	private CachingMap<Node, DomNode> nodes = new CachingMap<Node, DomNode>(
 			n -> n == null ? null : new DomNode(n, this));
 

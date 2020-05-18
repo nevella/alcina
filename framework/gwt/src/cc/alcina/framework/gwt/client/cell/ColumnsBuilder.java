@@ -274,15 +274,6 @@ public class ColumnsBuilder<T> {
 			this.function = (Function<T, Object>) function;
 			return this;
 		}
-		public ColumnBuilder nullFriendlyFunction(Function<T, ?> function) {
-			this.function = (Function<T, Object>) function;
-			this.function = t -> {
-				Object result = function.apply(t);
-				return result==null?"":result;
-			};
-			return this;
-		}
-
 
 		public Function<T, String> getHrefFunction() {
 			return this.hrefFunction;
@@ -338,6 +329,15 @@ public class ColumnsBuilder<T> {
 
 		public ColumnBuilder noWrap() {
 			style("nowrap");
+			return this;
+		}
+
+		public ColumnBuilder nullFriendlyFunction(Function<T, ?> function) {
+			this.function = (Function<T, Object>) function;
+			this.function = t -> {
+				Object result = function.apply(t);
+				return result == null ? "" : result;
+			};
 			return this;
 		}
 
@@ -443,6 +443,7 @@ public class ColumnsBuilder<T> {
 
 		private String name;
 
+		@SuppressWarnings("unused")
 		private ColumnsBuilder columnsBuilder;
 
 		private Function<T, Place> placeFunction;

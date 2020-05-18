@@ -770,17 +770,6 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		ensureRemoteCheck();
 		local().setPropertyString(name, value);
 		remote().setPropertyString(name, value);
-		if (!GWT.isScript() && linkedToRemote()) {
-			String remoteValue = remote().getPropertyString(name);
-			// CHROME 33 hack, looks like ... works
-			if (getTagName().equals("input")
-					&& getParentElement().getChildCount() == 1) {
-				ElementRemote parentElement0 = typedRemote()
-						.getParentElementRemote();
-				typedRemote().removeFromParent0();
-				parentElement0.appendChild0(typedRemote());
-			}
-		}
 	}
 
 	@Override

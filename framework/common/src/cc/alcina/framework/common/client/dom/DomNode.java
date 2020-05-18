@@ -76,14 +76,14 @@ public class DomNode {
 
 	private transient DomNodeReadonlyLookup lookup;
 
+	public DomNode(DomNode from) {
+		this(from.node, from.doc);
+	}
+
 	public DomNode(Node node, DomDoc xmlDoc) {
 		this.node = node;
 		this.doc = xmlDoc;
 		this.children = new DomNodeChildren();
-	}
-
-	public DomNode(DomNode from) {
-		this(from.node, from.doc);
 	}
 
 	public DomNode addAttr(String name, String value, String separator) {
@@ -351,6 +351,10 @@ public class DomNode {
 		return new DomNodeRelative();
 	}
 
+	public void removeAttribute(String key) {
+		node.getAttributes().removeNamedItem(key);
+	}
+
 	public void removeFromParent() {
 		parent().invalidate();
 		node.getParentNode().removeChild(node);
@@ -539,6 +543,18 @@ public class DomNode {
 			return null;
 		}
 
+		public boolean has(DomNode test) {
+			test = test.asDomNode();
+			DomNode node = getStartingCursor();
+			while (node != null) {
+				if (node == test) {
+					return true;
+				}
+				node = node.parent();
+			}
+			return false;
+		}
+
 		public boolean has(Predicate<DomNode> test) {
 			DomNode node = getStartingCursor();
 			while (node != null) {
@@ -552,18 +568,6 @@ public class DomNode {
 
 		public boolean has(String... tags) {
 			return get(tags) != null;
-		}
-
-		public boolean has(DomNode test) {
-			test = test.asDomNode();
-			DomNode node = getStartingCursor();
-			while (node != null) {
-				if (node == test) {
-					return true;
-				}
-				node = node.parent();
-			}
-			return false;
 		}
 
 		public boolean isFirstChild() {
@@ -648,6 +652,10 @@ public class DomNode {
 
 		public void clear() {
 			nodes().stream().forEach(DomNode::removeFromParent);
+		}
+
+		public boolean contains(DomNode n) {
+			return nodes().contains(n);
 		}
 
 		public boolean contains(String tag) {
