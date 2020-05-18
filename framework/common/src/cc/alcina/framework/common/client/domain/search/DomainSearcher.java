@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainFilter;
@@ -108,8 +109,8 @@ public class DomainSearcher<T extends Entity> {
 		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
 		for (CriteriaGroup cg : criteriaGroups) {
 			if (!cg.provideIsEmpty()) {
-				CompositeFilter cgFilter = new CompositeFilter(
-						cg.getCombinator() == FilterCombinator.OR);
+				boolean or = cg.getCombinator() == FilterCombinator.OR;
+				CompositeFilter cgFilter = new CompositeFilter(or);
 				boolean added = false;
 				for (SearchCriterion sc : (Set<SearchCriterion>) cg
 						.getCriteria()) {
@@ -122,12 +123,18 @@ public class DomainSearcher<T extends Entity> {
 						continue;
 					}
 					DomainFilter filter = handler.getFilter(sc);
+					DomainSearcherFilter searcherFilter = new DomainSearcherFilter(
+							filter, sc);
 					if (filter != null) {
-						cgFilter.add(filter);
+						if (or) {
+							cgFilter.add(filter);
+						} else {
+							query.filter(searcherFilter);
+						}
 						added = true;
 					}
 				}
-				if (added) {
+				if (added && or) {
 					query.filter(cgFilter);
 				}
 			}
@@ -151,6 +158,38 @@ public class DomainSearcher<T extends Entity> {
 		@Override
 		public <T extends Entity> Predicate<T> filter(SearchDefinition def) {
 			return t -> true;
+		}
+	}
+
+	public static class DomainSearcherFilter extends DomainFilter {
+		public SearchCriterion criterion;
+
+		public DomainFilter filter;
+
+		public DomainSearcherFilter(DomainFilter filter,
+				SearchCriterion criterion) {
+			this.filter = filter;
+			this.criterion = criterion;
+		}
+
+		@Override
+		public CollectionFilter asCollectionFilter() {
+			return this.filter.asCollectionFilter();
+		}
+
+		@Override
+		public boolean canFlatten() {
+			return this.filter.canFlatten();
+		}
+
+		@Override
+		public DomainFilter invertIf(boolean invert) {
+			return this.filter.invertIf(invert);
+		}
+
+		@Override
+		public String toString() {
+			return this.filter.toString();
 		}
 	}
 }

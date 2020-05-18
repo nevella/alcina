@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.domain.ComplexFilter;
+import cc.alcina.framework.common.client.domain.ComplexFilter.ComplexFilterContext;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.Domain.DomainHandler;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
@@ -515,7 +516,9 @@ public class DomainStore implements IDomainStore {
 		ComplexFilter complexFilter = getComplexFilterFor(clazz, filter,
 				nextFilter);
 		if (complexFilter != null) {
-			token.stream = complexFilter.evaluate(token.stream, filter,
+			ComplexFilterContextImpl<E> filterContext = new ComplexFilterContextImpl<E>(
+					clazz, token);
+			token.stream = complexFilter.evaluate(filterContext, filter,
 					nextFilter);
 			token.idx += complexFilter.topLevelFiltersConsumed() - 1;
 			if (isDebug()) {
@@ -937,6 +940,7 @@ public class DomainStore implements IDomainStore {
 			StringBuilder debugMetricBuilder = new StringBuilder();
 			int filterSize = query.getFilters().size();
 			QueryToken token = new QueryToken(query);
+			token.planner().optimiseFilters();
 			for (; token.idx < filterSize; token.idx++) {
 				int idx = token.idx;
 				long start = System.nanoTime();
@@ -1410,6 +1414,29 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	private class ComplexFilterContextImpl<E extends Entity>
+			implements ComplexFilterContext<E> {
+		private final Class clazz;
+
+		private final QueryToken<E> token;
+
+		private ComplexFilterContextImpl(Class clazz, QueryToken<E> token) {
+			this.clazz = clazz;
+			this.token = token;
+		}
+
+		@Override
+		public Stream<E> getEntitiesForIds(Set<Long> ids) {
+			return (Stream<E>) (Stream<?>) ids.stream()
+					.map(id -> cache.get(this.clazz, id));
+		}
+
+		@Override
+		public Stream<E> getIncomingStream() {
+			return this.token.stream;
+		}
+	}
+
 	class DetachedCacheObjectStorePsAware extends DetachedCacheObjectStore {
 		public DetachedCacheObjectStorePsAware() {
 			super(new PropertyStoreAwareMultiplexingObjectCache());
@@ -1659,6 +1686,8 @@ public class DomainStore implements IDomainStore {
 
 		DomainQuery<E> query;
 
+		DomainQueryPlanner planner;
+
 		public QueryToken(DomainStoreQuery<E> query) {
 			this.query = query;
 		}
@@ -1704,8 +1733,19 @@ public class DomainStore implements IDomainStore {
 			return empty;
 		}
 
+		public DomainQueryPlanner planner() {
+			if (planner == null) {
+				planner = new DomainQueryPlanner(this);
+			}
+			return planner;
+		}
+
 		private Stream<E> streamFromCacheValues() {
 			return cache.stream(query.getEntityClass());
+		}
+
+		DomainStore getStore() {
+			return DomainStore.this;
 		}
 	}
 

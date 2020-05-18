@@ -99,6 +99,14 @@ public class SearchUtils {
 		return entity != null && toId(query) == entity.getId();
 	}
 
+	public static boolean matchesIdsQuery(String query) {
+		return query.matches(IDS_REGEX);
+	}
+
+	public static boolean matchesRegexQuery(String query) {
+		return query.matches(REGEX_REGEX);
+	}
+
 	public static long toId(String s) {
 		return s == null || !s.matches("(?:id:)?[0-9]+") ? Integer.MIN_VALUE
 				: Long.parseLong(s.replaceFirst("(?:id:)?([0-9]+)", "$1"));

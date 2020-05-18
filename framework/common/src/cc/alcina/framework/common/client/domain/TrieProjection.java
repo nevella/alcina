@@ -22,10 +22,10 @@ public class TrieProjection<K, E extends Entity>
 
 	private Class<E> entityClass;
 
-	private Function<E, K> keyMapper;
+	private Function<E, List<K>> keyMapper;
 
 	public TrieProjection(KeyAnalyzer<? super K> keyAnalyzer,
-			Class<E> entityClass, Function<E, K> keyMapper) {
+			Class<E> entityClass, Function<E, List<K>> keyMapper) {
 		this.entityClass = entityClass;
 		this.keyMapper = keyMapper;
 		trie = Registry.impl(MultiTrieCreator.class).create(keyAnalyzer,
@@ -44,13 +44,12 @@ public class TrieProjection<K, E extends Entity>
 
 	@Override
 	public void insert(E o) {
-		K key = keyMapper.apply(o);
-		if (key == null) {
-			return;
+		List<K> keys = keyMapper.apply(o);
+		for (K key : keys) {
+			trie.add(key, o);
+			List<K> subKeys = extractSubKeys(key);
+			subKeys.forEach(k -> trie.add(k, o));
 		}
-		trie.add(key, o);
-		List<K> subKeys = extractSubKeys(key);
-		subKeys.forEach(k -> trie.add(k, o));
 	}
 
 	@Override
@@ -60,13 +59,12 @@ public class TrieProjection<K, E extends Entity>
 
 	@Override
 	public void remove(E o) {
-		K key = keyMapper.apply(o);
-		if (key == null) {
-			return;
+		List<K> keys = keyMapper.apply(o);
+		for (K key : keys) {
+			trie.remove(key, o);
+			List<K> subKeys = extractSubKeys(key);
+			subKeys.forEach(k -> trie.remove(k, o));
 		}
-		trie.remove(key, o);
-		List<K> subKeys = extractSubKeys(key);
-		subKeys.forEach(k -> trie.remove(k, o));
 	}
 
 	@Override

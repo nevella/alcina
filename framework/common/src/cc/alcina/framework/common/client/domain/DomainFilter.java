@@ -40,6 +40,9 @@ public class DomainFilter {
 		this.filterOperator = operator;
 	}
 
+	protected DomainFilter() {
+	}
+
 	public CollectionFilter asCollectionFilter() {
 		return predicate != null ? new CollectionFilter() {
 			@Override

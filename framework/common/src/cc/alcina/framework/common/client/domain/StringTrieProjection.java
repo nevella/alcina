@@ -19,7 +19,7 @@ public class StringTrieProjection<E extends Entity>
 	private int maxSubstringLength;
 
 	public StringTrieProjection(Class<E> entityClass,
-			Function<E, String> keyMapper, int minSubstringLength,
+			Function<E, List<String>> keyMapper, int minSubstringLength,
 			int maxSubstringLength) {
 		super(StringKeyAnalyzer.CHAR, entityClass, keyMapper);
 		this.minSubstringLength = minSubstringLength;
