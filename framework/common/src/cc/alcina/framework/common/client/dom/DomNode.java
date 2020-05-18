@@ -375,6 +375,10 @@ public class DomNode {
 		return this;
 	}
 
+	public DomNode setClassName(String className) {
+		return setAttr("class", className);
+	}
+
 	public void setInnerXml(String xml) {
 		DomDoc importDoc = new DomDoc(xml);
 		children.importFrom(importDoc.getDocumentElementNode());
