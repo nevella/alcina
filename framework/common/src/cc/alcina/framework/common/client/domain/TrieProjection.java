@@ -46,6 +46,7 @@ public class TrieProjection<K, E extends Entity>
 	public void insert(E o) {
 		List<K> keys = keyMapper.apply(o);
 		for (K key : keys) {
+			key = normalise(key);
 			trie.add(key, o);
 			List<K> subKeys = extractSubKeys(key);
 			subKeys.forEach(k -> trie.add(k, o));
@@ -61,6 +62,7 @@ public class TrieProjection<K, E extends Entity>
 	public void remove(E o) {
 		List<K> keys = keyMapper.apply(o);
 		for (K key : keys) {
+			key = normalise(key);
 			trie.remove(key, o);
 			List<K> subKeys = extractSubKeys(key);
 			subKeys.forEach(k -> trie.remove(k, o));
@@ -74,5 +76,9 @@ public class TrieProjection<K, E extends Entity>
 
 	protected List<K> extractSubKeys(K key) {
 		return Collections.emptyList();
+	}
+
+	protected K normalise(K key) {
+		return key;
 	}
 }

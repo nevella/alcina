@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -53,6 +54,7 @@ import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
+import cc.alcina.framework.common.client.domain.FilterCost;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
@@ -1435,6 +1437,18 @@ public class DomainStore implements IDomainStore {
 		public Stream<E> getIncomingStream() {
 			return this.token.stream;
 		}
+
+		@Override
+		public <E2 extends Entity> ComplexFilterContext<E2>
+				getOtherEntityFilterContext(Class<E2> otherEntityClass) {
+			return new ComplexFilterContextImpl(otherEntityClass, token);
+		}
+
+		@Override
+		public <E2 extends Entity> DomainLookup<String, E2>
+				getStringLookup(Class<E2> clazz, String propertyPath) {
+			return getLookupFor(clazz, propertyPath);
+		}
 	}
 
 	class DetachedCacheObjectStorePsAware extends DetachedCacheObjectStore {
@@ -1448,6 +1462,86 @@ public class DomainStore implements IDomainStore {
 				topicMappingEvent().publish(obj);
 			}
 			super.mapObject(obj);
+		}
+	}
+
+	class DomainQueryPlanner<E extends Entity> {
+		private QueryToken<E> token;
+
+		public DomainQueryPlanner(QueryToken<E> queryToken) {
+			this.token = queryToken;
+		}
+
+		public void optimiseFilters() {
+			DomainQuery<E> query = token.query;
+			List<DomainFilter> filters = query.getFilters();
+			List<FilterCostTuple> filterCosts = new ArrayList<>();
+			Class<E> clazz = query.getEntityClass();
+			int entityCount = cache.size(clazz);
+			for (int idx = 0; idx < filters.size();) {
+				DomainFilter filter = query.getFilters().get(idx);
+				DomainFilter nextFilter = idx == filters.size() - 1 ? null
+						: query.getFilters().get(idx + 1);
+				ComplexFilter complexFilter = getComplexFilterFor(clazz, filter,
+						nextFilter);
+				List<DomainFilter> consumedFilters = Collections
+						.singletonList(filter);
+				FilterCost filterCost = null;
+				if (complexFilter != null) {
+					filterCost = complexFilter.estimateFilterCost(entityCount,
+							filter, nextFilter);
+					int filtersConsumed = complexFilter
+							.topLevelFiltersConsumed();
+					switch (filtersConsumed) {
+					case 1:
+						break;
+					case 2:
+						consumedFilters = Arrays.asList(filter, nextFilter);
+						break;
+					default:
+						throw new UnsupportedOperationException();
+					}
+					idx += filtersConsumed;
+				} else {
+					DomainLookup lookup = getLookupFor(clazz,
+							filter.propertyPath);
+					if (lookup != null) {
+						switch (filter.filterOperator) {
+						case EQ:
+						case IN:
+							filterCost = lookup.estimateFilterCost(entityCount,
+									filter);
+							break;
+						// all others non-optimised
+						default:
+							break;
+						}
+					}
+					if (filterCost == null) {
+						filterCost = FilterCost.evaluatorProjectionCost();
+					}
+					idx++;
+				}
+				filterCosts
+						.add(new FilterCostTuple(consumedFilters, filterCost));
+			}
+			Collections.sort(filterCosts,
+					Comparator.comparing(fc -> fc.filterCost.naiveOrdering()));
+			filters.clear();
+			filterCosts.stream().map(fct -> fct.filters)
+					.flatMap(Collection::stream).forEach(filters::add);
+		}
+
+		class FilterCostTuple {
+			List<DomainFilter> filters;
+
+			FilterCost filterCost;
+
+			public FilterCostTuple(List<DomainFilter> filters,
+					FilterCost filterCost) {
+				this.filters = filters;
+				this.filterCost = filterCost;
+			}
 		}
 	}
 

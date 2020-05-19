@@ -30,6 +30,9 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class DomainSearcher<T extends Entity> {
+	public static final String CONTEXT_HINT = DomainSearcher.class.getName()
+			+ ".CONTEXT_HINT";
+
 	private static UnsortedMultikeyMap<DomainCriterionHandler> handlers = new UnsortedMultikeyMap<DomainCriterionHandler>(
 			2);
 
@@ -77,7 +80,7 @@ public class DomainSearcher<T extends Entity> {
 	}
 
 	public Stream<T> search(SearchDefinition def, Class<T> clazz,
-			Comparator<T> order) {
+			Comparator<? super T> order) {
 		query = Domain.query(clazz);
 		query.sourceStream(Registry.impl(SearcherCollectionSource.class)
 				.getSourceStreamFor(clazz, def));
@@ -85,7 +88,6 @@ public class DomainSearcher<T extends Entity> {
 		setupHandlers();
 		processDefinitionHandler();
 		processHandlers();
-		query.stream();
 		Stream<T> stream = query.stream();
 		stream = stream.filter(
 				Registry.impl(DomainSearcherAppFilter.class).filter(def));

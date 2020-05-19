@@ -1,6 +1,7 @@
 package cc.alcina.extras.webdriver;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -63,55 +64,8 @@ public class WdExec {
 		return click(false);
 	}
 
-	/**
-	 * 
-	 * @param returnIfNotVisible
-	 * @return true if not visible
-	 */
 	public boolean click(boolean returnIfNotVisible) {
-		RuntimeException lastException = null;
-		for (int i = 0; i < timeoutSecs * 5; i++) {
-			WebElement elem = getElement();
-			Actions actions = new Actions(driver);
-			actions.moveToElement(elem);
-			if (WDUtils.forceTimeout) {
-				throw new TimedOutException("forced timeout");
-			}
-			try {
-				elem.click();
-				return false;
-			} catch (RuntimeException e) {
-				lastException = e;
-				if (e instanceof ElementNotVisibleException) {
-					if (returnIfNotVisible) {
-						return true;
-					}
-					WDUtils.scrollToCenterUsingBoundingClientRect(driver, elem);
-					sleep(200);
-				} else if (e instanceof StaleElementReferenceException) {
-					if (returnIfNotVisible) {
-						return true;
-					}
-					// WDUtils.scrollToCenterUsingBoundingClientRect(driver,
-					// elem);
-					sleep(200);
-				} else {
-					String message = e.getMessage();
-					if (message.contains("is not clickable")) {
-						if (ignoreSpuriousOtherElementWouldReceiveClickException(
-								elem, message)) {
-							return false;
-						}
-						WDUtils.scrollToCenterUsingBoundingClientRect(driver,
-								elem);
-						sleep(200);
-					} else {
-						throw e;
-					}
-				}
-			}
-		}
-		throw lastException;
+		return performAction(returnIfNotVisible, WebElement::click);
 	}
 
 	public void clickLink(String linkText) {
@@ -212,6 +166,53 @@ public class WdExec {
 		System.out.println(WDUtils.outerHtml(driver, elem));
 	}
 
+	public boolean performAction(boolean returnIfNotVisible,
+			Consumer<WebElement> actor) {
+		RuntimeException lastException = null;
+		for (int i = 0; i < timeoutSecs * 5; i++) {
+			WebElement elem = getElement();
+			Actions actions = new Actions(driver);
+			actions.moveToElement(elem);
+			if (WDUtils.forceTimeout) {
+				throw new TimedOutException("forced timeout");
+			}
+			try {
+				actor.accept(elem);
+				return false;
+			} catch (RuntimeException e) {
+				lastException = e;
+				if (e instanceof ElementNotVisibleException) {
+					if (returnIfNotVisible) {
+						return true;
+					}
+					WDUtils.scrollToCenterUsingBoundingClientRect(driver, elem);
+					sleep(200);
+				} else if (e instanceof StaleElementReferenceException) {
+					if (returnIfNotVisible) {
+						return true;
+					}
+					// WDUtils.scrollToCenterUsingBoundingClientRect(driver,
+					// elem);
+					sleep(200);
+				} else {
+					String message = e.getMessage();
+					if (message.contains("is not clickable")) {
+						if (ignoreSpuriousOtherElementWouldReceiveClickException(
+								elem, message)) {
+							return false;
+						}
+						WDUtils.scrollToCenterUsingBoundingClientRect(driver,
+								elem);
+						sleep(200);
+					} else {
+						throw e;
+					}
+				}
+			}
+		}
+		throw lastException;
+	}
+
 	public String readRelativeUrl(String relativeUrl) {
 		try {
 			String url = SEUtilities.combinePaths(token.getConfiguration().uri,
@@ -243,7 +244,7 @@ public class WdExec {
 	}
 
 	public void sendKeys(CharSequence string) {
-		getElement().sendKeys(string);
+		performAction(false, e -> e.sendKeys(string));
 	}
 
 	public void setFancyInputTextAndFire(String labelText, String inputText) {

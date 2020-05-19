@@ -12,6 +12,28 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.trie.StringKeyAnalyzer;
 
+/*
+ * Notes on filter cost estimation
+ * 
+ * 
+ * 
+ * frac returned:
+track per-length key count
+tract distinct per-length key count
+if (contact,3) == 20 && count(contact)==2
+
+if(per-length == distinct per-length) - fraction = 1/size
+if(per-length == 2xdistinct per-length) - fraction = 2/size
+
+so roughly per-length/disintct per-length / size for length n
+
+per outgoing entity cost:1
+per incoming: 0
+
+// TODO  But...until we have
+			// framework level option to evaulate without lookup, it's always
+			// going to make sense to put trie projections first
+ */
 public class StringTrieProjection<E extends Entity>
 		extends TrieProjection<String, E> {
 	private int minSubstringLength;
@@ -49,5 +71,10 @@ public class StringTrieProjection<E extends Entity>
 			subKeys.add(key.substring(idx, idx + to));
 		}
 		return subKeys;
+	}
+
+	@Override
+	protected String normalise(String key) {
+		return key == null ? null : key.toLowerCase();
 	}
 }

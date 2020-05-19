@@ -506,6 +506,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		theInstance = null;
 	}
 
+	public boolean checkForExistingLocallyCreatedObjects() {
+		return true;
+	}
+
 	public void clearTransforms() {
 		getTransforms().clear();
 		for (CommitType ct : transformsByType.keySet()) {
@@ -2112,7 +2116,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 		ApplyToken(DomainTransformEvent event) throws DomainTransformException {
 			transformType = event.getTransformType();
-			object = getObject(event);
+			if (transformType != TransformType.CREATE_OBJECT
+					|| checkForExistingLocallyCreatedObjects()) {
+				object = getObject(event);
+			}
 			if (object == null) {
 				/*
 				 * Created objects will already be in the graph if locally

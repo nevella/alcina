@@ -67,6 +67,7 @@ import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.csobjects.WebException;
+import cc.alcina.framework.common.client.domain.search.DomainSearcher;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
@@ -813,6 +814,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public Response suggest(BoundSuggestOracleRequest request) {
 		try {
+			LooseContext.set(DomainSearcher.CONTEXT_HINT, request.hint);
 			Class<? extends BoundSuggestOracleResponseType> clazz = (Class<? extends BoundSuggestOracleResponseType>) Class
 					.forName(request.targetClassName);
 			return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz)

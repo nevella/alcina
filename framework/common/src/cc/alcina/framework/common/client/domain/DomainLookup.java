@@ -3,10 +3,13 @@ package cc.alcina.framework.common.client.domain;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.domain.FilterCost.HasFilterCost;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -16,7 +19,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 
-public class DomainLookup<T, E extends Entity> implements DomainListener<E> {
+public class DomainLookup<T, E extends Entity>
+		implements DomainListener<E>, HasFilterCost {
 	private Multiset<T, Set<E>> store;
 
 	protected DomainStoreLookupDescriptor descriptor;
@@ -37,6 +41,12 @@ public class DomainLookup<T, E extends Entity> implements DomainListener<E> {
 				descriptor.getLookupIndexClass(this.propertyPathAccesor),
 				getListenedClass());
 		this.relevanceFilter = descriptor.getRelevanceFilter();
+	}
+
+	@Override
+	public FilterCost estimateFilterCost(int entityCount,
+			DomainFilter... filters) {
+		return FilterCost.lookupProjectionCost();
 	}
 
 	public Set<E> get(T k1) {
@@ -134,6 +144,11 @@ public class DomainLookup<T, E extends Entity> implements DomainListener<E> {
 	public int size(T t) {
 		Set<E> set = get(t);
 		return set == null ? null : set.size();
+	}
+
+	public <E2 extends Entity> Stream<E2> stream(T key, Function<E, E2> map) {
+		Set<E> set = get(key);
+		return set == null ? Stream.empty() : set.stream().map(map);
 	}
 
 	@Override

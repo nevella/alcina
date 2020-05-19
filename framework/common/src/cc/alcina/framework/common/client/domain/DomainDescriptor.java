@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -39,6 +41,8 @@ public abstract class DomainDescriptor {
 	}
 
 	public void addClassDescriptor(DomainClassDescriptor classDescriptor) {
+		Preconditions
+				.checkArgument(!perClass.containsKey(classDescriptor.clazz));
 		perClass.put(classDescriptor.clazz, classDescriptor);
 	}
 

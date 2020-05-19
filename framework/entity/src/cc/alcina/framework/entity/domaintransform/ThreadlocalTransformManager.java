@@ -256,6 +256,12 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 	}
 
+	@Override
+	public boolean checkForExistingLocallyCreatedObjects() {
+		// if in db-commit mode, we want a nice crisp fresh untouched instance
+		return getEntityManager() == null;
+	}
+
 	public boolean checkPropertyAccess(Entity entity, String propertyName,
 			boolean read) throws IntrospectionException {
 		if (entity.provideWasPersisted()
@@ -1172,6 +1178,15 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	protected boolean generateEventIfObjectNotFound() {
 		return true;
+	}
+
+	@Override
+	protected Entity getEntityForCreate(DomainTransformEvent event) {
+		if (getEntityManager() == null) {
+			return super.getEntityForCreate(event);
+		} else {
+			return null;
+		}
 	}
 
 	protected boolean isIgnorePropertyChangesForEvent(PropertyChangeEvent evt) {
