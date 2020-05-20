@@ -28,8 +28,8 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.AccessSpecifier;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
@@ -45,6 +45,7 @@ import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.SuperExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
 import com.github.javaparser.ast.stmt.ReturnStmt;
+import com.github.javaparser.ast.stmt.SwitchStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
@@ -228,7 +229,8 @@ class ClassTransformer {
 				URL sourceFileLocation = new URL(
 						Ax.format("%s%s.java", classFileLocation.toString(),
 								clazz.getName().replace(".", "/")));
-				if (new File(toPath(sourceFileLocation)).exists()) {
+				if (new File(toPath(sourceFileLocation)).exists()
+						&& !sourceFileLocation.toString().contains("/build/")) {
 					return ResourceUtilities
 							.readUrlAsString(sourceFileLocation.toString());
 				}
@@ -366,8 +368,7 @@ class ClassTransformer {
 				for (String source : classSources) {
 					if (token.checkedSources.add(source)) {
 						compilationUnit = StaticJavaParser.parse(source);
-						compilationUnit
-								.findAll(ClassOrInterfaceDeclaration.class)
+						compilationUnit.findAll(TypeDeclaration.class)
 								.forEach(classDeclaration -> {
 									String typeName = classDeclaration.getName()
 											.asString();
@@ -459,7 +460,7 @@ class ClassTransformer {
 		private class CheckAccessVisitor extends VoidVisitorAdapter<Void> {
 			private MethodDeclaration methodDeclaration;
 
-			private ClassOrInterfaceDeclaration classOrInterfaceDeclaration;
+			private TypeDeclaration typeDeclaration;
 
 			private boolean expressionIsInNestedType;
 
@@ -689,6 +690,9 @@ class ClassTransformer {
 				if (parent instanceof MethodReferenceExpr) {
 					return;
 				}
+				if (isInStaticNonEntityInnerClass(expr)) {
+					return;
+				}
 				if (parent instanceof ReturnStmt) {
 					addProblematicAccess(
 							MvccCorrectnessIssueType.This_ReturnStmt);
@@ -707,6 +711,9 @@ class ClassTransformer {
 				} else if (parent instanceof CastExpr) {
 					addProblematicAccess(
 							MvccCorrectnessIssueType.This_assignment_unknown);
+				} else if (parent instanceof SwitchStmt) {
+					addProblematicAccess(
+							MvccCorrectnessIssueType.This_assignment_unknown);
 				} else if (parent instanceof EnclosedExpr) {
 					throw new UnsupportedOperationException(Ax
 							.format("Remove enclosed expression: %s", parent));
@@ -716,11 +723,10 @@ class ClassTransformer {
 				}
 			}
 
-			private ClassOrInterfaceDeclaration
-					getContainingDeclaration(Node node) {
+			private TypeDeclaration getContainingDeclaration(Node node) {
 				while (node != null) {
-					if (node instanceof ClassOrInterfaceDeclaration) {
-						return (ClassOrInterfaceDeclaration) node;
+					if (node instanceof TypeDeclaration) {
+						return (TypeDeclaration) node;
 					}
 					node = node.getParentNode().get();
 				}
@@ -759,12 +765,12 @@ class ClassTransformer {
 								.getAnnotationByClass(MvccAccess.class)
 								.isPresent();
 					}
-					if (node instanceof ClassOrInterfaceDeclaration) {
-						classOrInterfaceDeclaration = (ClassOrInterfaceDeclaration) node;
+					if (node instanceof TypeDeclaration) {
+						typeDeclaration = (TypeDeclaration) node;
 						containingClassName = transformer.solver
-								.getTypeDeclaration(classOrInterfaceDeclaration)
+								.getTypeDeclaration(typeDeclaration)
 								.asReferenceType().getQualifiedName();
-						expressionIsInNestedType = classOrInterfaceDeclaration
+						expressionIsInNestedType = typeDeclaration
 								.isNestedType();
 						break;
 					}
@@ -794,7 +800,7 @@ class ClassTransformer {
 
 			@SuppressWarnings("unused")
 			private boolean isInStaticNonEntityInnerClass(Expression expr) {
-				ClassOrInterfaceDeclaration containingDeclaration = getContainingDeclaration(
+				TypeDeclaration containingDeclaration = getContainingDeclaration(
 						expr);
 				ResolvedReferenceTypeDeclaration creationTypeDeclaration = transformer.solver
 						.getTypeDeclaration(containingDeclaration);

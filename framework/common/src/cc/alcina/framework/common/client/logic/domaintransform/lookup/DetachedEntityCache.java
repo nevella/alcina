@@ -283,6 +283,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 			synchronized (this) {
 				if (!domain.containsKey(clazz)) {
 					domain.put(clazz, createMap());
+					local.put(clazz, createMap());
 				}
 			}
 		}
