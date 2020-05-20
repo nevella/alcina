@@ -179,7 +179,8 @@ public class DomainStore implements IDomainStore {
 	// FIXME - this is over-called, probably should be changed to strict
 	// start/finish semantics (and made non-static)
 	public static PerThreadTransaction ensureActiveTransaction() {
-		return stores().writableStore().transactions().ensureTransaction();
+		return null;
+		// return stores().writableStore().transactions().ensureTransaction();
 	}
 
 	public static DomainStores stores() {

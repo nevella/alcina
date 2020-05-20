@@ -21,6 +21,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.AccessSpecifier;
 import com.github.javaparser.ast.CompilationUnit;
@@ -111,6 +114,8 @@ class ClassTransformer {
 
 	private List<Runnable> compilationRunnables = new ArrayList<>();
 
+	Logger logger = LoggerFactory.getLogger(getClass());
+
 	public ClassTransformer(Mvcc mvcc) {
 		this.mvcc = mvcc;
 		classPool = new ClassPool();
@@ -162,6 +167,9 @@ class ClassTransformer {
 				.withThreadCount(8).withCancelOnException(true).withSerial(true)
 				.withThreadName("ClassTransformer-compilation").run()
 				.throwOnException();
+		logger.info("Generated {} new mvcc classes, loaded {} existing",
+				compilationRunnables.size(),
+				classTransforms.size() - compilationRunnables.size());
 		if (ResourceUtilities.is(ClassTransformer.class,
 				"checkClassCorrectness")) {
 			for (ClassTransform ct : classTransforms.values()) {
@@ -257,7 +265,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 5;
+		private static final transient int VERSION = 6;
 
 		transient TopicSupport<MvccCorrectnessIssue> correctnessIssueTopic = TopicSupport
 				.localAnonymousTopic();

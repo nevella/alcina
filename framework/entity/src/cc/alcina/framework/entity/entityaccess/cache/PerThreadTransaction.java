@@ -38,6 +38,7 @@ public class PerThreadTransaction {
 	public DomainStore store;
 
 	public PerThreadTransaction() {
+		int debug = 3;
 	}
 
 	public void committing() {
