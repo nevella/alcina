@@ -829,7 +829,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			}
 		}
 		listeningTo = new IdentityHashMap<>();
-		LinkedHashSet<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(
+		Set<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN);
 		if (!pendingTransforms.isEmpty() && !AppPersistenceBase.isTest()) {
 			System.out.println(

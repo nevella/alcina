@@ -1259,7 +1259,7 @@ public class DomainStore implements IDomainStore {
 		public PerThreadTransaction ensureTransaction() {
 			PerThreadTransaction transaction = transactions.get();
 			if (transaction == null) {
-				LinkedHashSet<DomainTransformEvent> localTransforms = TransformManager
+				Set<DomainTransformEvent> localTransforms = TransformManager
 						.get()
 						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 				int pendingTransformCount = localTransforms.size();

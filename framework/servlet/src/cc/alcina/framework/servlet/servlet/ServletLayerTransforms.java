@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -344,8 +343,8 @@ public class ServletLayerTransforms {
 
 	public DomainTransformLayerWrapper transformFromServletLayer(String tag)
 			throws DomainTransformRequestException {
-		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
-				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		Set<DomainTransformEvent> pendingTransforms = TransformManager.get()
+				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		if (pendingTransforms.isEmpty()) {
 			return null;
 		}
@@ -438,8 +437,8 @@ public class ServletLayerTransforms {
 			return;
 		}
 		ThreadlocalTransformManager.cast().getTransforms();
-		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
-				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		Set<DomainTransformEvent> pendingTransforms = TransformManager.get()
+				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		if (pendingTransforms.isEmpty()) {
 			return;
 		}
@@ -560,7 +559,8 @@ public class ServletLayerTransforms {
 			boolean forOfflineTransforms,
 			boolean blockUntilAllListenersNotified)
 			throws DomainTransformRequestException {
-		EntityLocatorMap locatorMap = Registry.impl(ServletLayerTransforms.class)
+		EntityLocatorMap locatorMap = Registry
+				.impl(ServletLayerTransforms.class)
 				.getLocatorMapForClient(request);
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(

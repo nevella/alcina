@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
@@ -24,6 +26,13 @@ import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 
 /**
  * 
+ * <h2>Thread-safety</h2>
+ * <ul>
+ * <li>All methods (mostly wrapping superclass methods) that access internal
+ * state directly are synchronized
+ * <li>Return collections must be iterated across/accessed within a block
+ * synchroized on 'this'
+ * </ul>
  * 
  * @param hasIdAndLocalId
  * @param obj
@@ -44,6 +53,47 @@ public class MapObjectLookupClient extends MapObjectLookup {
 	public void clearReflectionCache() {
 		// because different code modules may have different reflection data
 		registerChildren.clear();
+	}
+
+	@Override
+	public synchronized void deregisterObject(Entity entity) {
+		super.deregisterObject(entity);
+	}
+
+	@Override
+	public synchronized <T extends Entity> T getObject(Class<? extends T> c,
+			long id, long localId) {
+		return super.getObject(c, id, localId);
+	}
+
+	@Override
+	public synchronized void invalidate(Class<? extends Entity> clazz) {
+		super.invalidate(clazz);
+	}
+
+	@Override
+	/*
+	 * the map itself is a replica of the internal structure, so thread-safe -
+	 * the entity collections require synchronization on this
+	 */
+	public synchronized Map<Class<? extends Entity>, Collection<Entity>>
+			getCollectionMap() {
+		return super.getCollectionMap();
+	}
+
+	@Override
+	protected synchronized FastIdLookup ensureLookup(Class c) {
+		return super.ensureLookup(c);
+	}
+
+	@Override
+	public synchronized void changeMapping(Entity obj, long id, long localId) {
+		super.changeMapping(obj, id, localId);
+	}
+
+	@Override
+	public synchronized Set<Entity> allValues() {
+		return super.allValues();
 	}
 
 	@Override

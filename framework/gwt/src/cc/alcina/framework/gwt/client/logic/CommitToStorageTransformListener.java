@@ -61,6 +61,18 @@ import cc.alcina.framework.gwt.client.util.ClientUtilsNonGwt;
 /**
  * 
  * @author Nick Reddel
+ * 
+ *         <h2>Thread-safety notes (applicable to JVM variant
+ *         CommitToStorageTransformListenerJvm)</h2>
+ *         <ul>
+ *         <li>Topic publishers are thread-safe
+ *         <li>QueueingFinished timer only accessed in synchronized methods,
+ *         ditto localRequestId ditto committingRequest
+ *         </ul>
+ * 
+ *         //FIXME mvcc.2 - get rid of statelistenable - publish a typed topic
+ *         event
+ * 
  */
 public class CommitToStorageTransformListener extends StateListenable
 		implements DomainTransformListener {
@@ -79,13 +91,16 @@ public class CommitToStorageTransformListener extends StateListenable
 	public static final transient String CONTEXT_REPLAYING_SYNTHESISED_EVENTS = CommitToStorageTransformListener.class
 			.getName() + ".CONTEXT_REPLAYING_SYNTHESISED_EVENTS";
 
+	public static final transient String CONTEXT_COMMITTING_REQUEST = CommitToStorageTransformListener.class
+			.getName() + ".CONTEXT_COMMITTING_REQUEST";
+
 	private static final String TOPIC_DOMAIN_EXCEPTION = CommitToStorageTransformListener.class
 			.getName() + ".TOPIC_DOMAIN_EXCEPTION";
 
 	private static final String TOPIC_TRANSFORMS_COMMITTED = CommitToStorageTransformListener.class
 			.getName() + ".TOPIC_TRANSFORMS_COMMITTED";
 
-	public static void flushAndRun(Runnable runnable) {
+	public static synchronized void flushAndRun(Runnable runnable) {
 		Registry.impl(CommitToStorageTransformListener.class)
 				.flushWithOneoffCallback(new AsyncCallbackStd() {
 					@Override
@@ -95,13 +110,13 @@ public class CommitToStorageTransformListener extends StateListenable
 				});
 	}
 
-	public static void
+	public static synchronized void
 			flushAndRunWithCreationConsumer(Consumer<EntityLocator> r2) {
 		flushAndRun(() -> r2.accept(CommitToStorageTransformListener
 				.get().lastCreatedObjectLocator));
 	}
 
-	public static void
+	public static synchronized void
 			flushAndRunWithFirstCreationConsumer(Consumer<EntityLocator> r2) {
 		flushAndRun(() -> r2.accept(CommitToStorageTransformListener
 				.get().firstCreatedObjectLocator));
@@ -131,9 +146,9 @@ public class CommitToStorageTransformListener extends StateListenable
 
 	private EntityLocator firstCreatedObjectLocator;
 
-	private List<DomainTransformEvent> transformQueue;
+	protected List<DomainTransformEvent> transformQueue;
 
-	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
+	protected List<DomainTransformRequest> priorRequestsWithoutResponse;
 
 	protected TimerWrapper queueingFinishedTimer;
 
@@ -145,21 +160,32 @@ public class CommitToStorageTransformListener extends StateListenable
 
 	private int localRequestId = 1;
 
-	private Map<Long, Long> localToServerIds = new HashMap<Long, Long>();
+	protected Map<Long, Long> localToServerIds;
 
-	ArrayList<DomainTransformEvent> synthesisedEvents;
+	private List<DomainTransformEvent> synthesisedEvents;
 
 	private boolean reloadRequired = false;
 
-	private Set<Long> eventIdsToIgnore = new HashSet<Long>();
+	protected Set<Long> eventIdsToIgnore;
 
 	private String currentState;
 
-	private DomainTransformRequest committingRequest;
-
 	private boolean localStorageOnly;
 
+	private int lastCommitSize;
+
+	private boolean queueCommitTimerDisabled;
+
+	public boolean isQueueCommitTimerDisabled() {
+		return this.queueCommitTimerDisabled;
+	}
+
+	public void setQueueCommitTimerDisabled(boolean queueCommitTimerDisabled) {
+		this.queueCommitTimerDisabled = queueCommitTimerDisabled;
+	}
+
 	public CommitToStorageTransformListener() {
+		init();
 		resetQueue();
 	}
 
@@ -177,7 +203,8 @@ public class CommitToStorageTransformListener extends StateListenable
 			}
 			transformQueue.add(evt);
 			lastQueueAddMillis = System.currentTimeMillis();
-			if (queueingFinishedTimer == null) {
+			if (queueingFinishedTimer == null
+					&& !isQueueCommitTimerDisabled()) {
 				queueingFinishedTimer = Registry
 						.impl(TimerWrapperProvider.class)
 						.getTimer(getCommitLoopRunnable());
@@ -187,7 +214,7 @@ public class CommitToStorageTransformListener extends StateListenable
 		}
 	}
 
-	public void flush() {
+	public synchronized void flush() {
 		if (currentState == RELOAD) {
 			return;
 		}
@@ -210,15 +237,11 @@ public class CommitToStorageTransformListener extends StateListenable
 		flush();
 	}
 
-	public DomainTransformRequest getCommittingRequest() {
-		return this.committingRequest;
-	}
-
 	public String getCurrentState() {
 		return this.currentState;
 	}
 
-	public int getLocalRequestId() {
+	public synchronized int getLocalRequestId() {
 		return this.localRequestId;
 	}
 
@@ -226,7 +249,7 @@ public class CommitToStorageTransformListener extends StateListenable
 		return this.priorRequestsWithoutResponse;
 	}
 
-	public ArrayList<DomainTransformEvent> getSynthesisedEvents() {
+	public List<DomainTransformEvent> getSynthesisedEvents() {
 		return this.synthesisedEvents;
 	}
 
@@ -258,18 +281,7 @@ public class CommitToStorageTransformListener extends StateListenable
 		return suppressErrors;
 	}
 
-	public Long localToServerId(Long localId) {
-		return localToServerIds.get(localId);
-	}
-
-	/**
-	 * Indicates that no further transforms should be processed
-	 */
-	public void putReloadRequired() {
-		currentState = RELOAD;
-	}
-
-	public void setLocalRequestId(int localRequestId) {
+	public synchronized void setLocalRequestId(int localRequestId) {
 		this.localRequestId = localRequestId;
 	}
 
@@ -293,11 +305,6 @@ public class CommitToStorageTransformListener extends StateListenable
 		return clientInstance;
 	}
 
-	private synchronized void resetQueue() {
-		transformQueue = new ArrayList<DomainTransformEvent>();
-		// eventIdsToIgnore = new HashSet<Long>();
-	}
-
 	protected boolean canTransitionToOnline() {
 		return true;
 	}
@@ -316,14 +323,15 @@ public class CommitToStorageTransformListener extends StateListenable
 		}
 		queueingFinishedTimer = null;
 		int requestId = localRequestId++;
-		final DomainTransformRequest dtr = DomainTransformRequest
+		final DomainTransformRequest request = DomainTransformRequest
 				.createPersistableRequest(requestId,
 						PermissionsManager.get().getClientInstanceId());
-		dtr.setRequestId(requestId);
-		dtr.setClientInstance(getClientInstance());
-		dtr.getEvents().addAll(transformQueue);
-		dtr.getEventIdsToIgnore().addAll(eventIdsToIgnore);
-		dtr.setTag(DomainTransformRequestTagProvider.get().getTag());
+		request.setRequestId(requestId);
+		request.setClientInstance(getClientInstance());
+		request.getEvents().addAll(transformQueue);
+		lastCommitSize = transformQueue.size();
+		request.getEventIdsToIgnore().addAll(eventIdsToIgnore);
+		request.setTag(DomainTransformRequestTagProvider.get().getTag());
 		updateTransformQueueVersions();
 		resetQueue();
 		final AsyncCallback<DomainTransformResponse> commitRemoteCallback = new AsyncCallback<DomainTransformResponse>() {
@@ -379,127 +387,134 @@ public class CommitToStorageTransformListener extends StateListenable
 			// must be synchronized for multithreaded (RCP) clients - note,
 			// better yet would be to pass synthesisedEvents with the emitted
 			// callbacks/events
-			private synchronized void
-					onSuccess0(DomainTransformResponse response) {
-				PermissionsManager.get().setOnlineState(OnlineState.ONLINE);
-				TransformManager tm = TransformManager.get();
-				tm.setReplayingRemoteEvent(true);
-				try {
-					synthesisedEvents = new ArrayList<DomainTransformEvent>();
-					lastCreatedObjectLocator = null;
-					firstCreatedObjectLocator = null;
-					/*
-					 * either way we do this (server or client), it's going to
-					 * seem a bit hacky but...a client's interpretation of what
-					 * is the canonical event (e.g. createObject on the server)
-					 * is more its business than the TLTM's
-					 * 
-					 * so...leave here. for now
-					 */
-					for (DomainTransformEvent dte : response
-							.getEventsToUseForClientUpdate()) {
-						long id = dte.getGeneratedServerId() != 0
-								? dte.getGeneratedServerId()
-								: dte.getObjectId();
-						if (dte.getGeneratedServerId() != 0) {
-							DomainTransformEvent idEvt = new DomainTransformEvent();
-							idEvt.setObjectClass(dte.getObjectClass());
-							idEvt.setObjectLocalId(dte.getObjectLocalId());
-							idEvt.setPropertyName(
-									TransformManager.ID_FIELD_NAME);
-							idEvt.setValueClass(Long.class);
-							idEvt.setTransformType(
-									TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
-							idEvt.setNewStringValue(String.valueOf(id));
-							synthesisedEvents.add(idEvt);
-							idEvt = new DomainTransformEvent();
-							idEvt.setObjectClass(dte.getObjectClass());
-							idEvt.setObjectId(id);
-							idEvt.setPropertyName(
-									TransformManager.LOCAL_ID_FIELD_NAME);
-							idEvt.setNewStringValue("0");
-							idEvt.setValueClass(Long.class);
-							idEvt.setTransformType(
-									TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
-							synthesisedEvents.add(idEvt);
-							localToServerIds.put(dte.getObjectLocalId(), id);
-							tm.registerEntityMappingPriorToLocalIdDeletion(
-									dte.getObjectClass(), id,
-									dte.getObjectLocalId());
-							EntityLocator entityLocator = new EntityLocator(
-									dte.getObjectClass(), id, 0L);
-							if (firstCreatedObjectLocator == null) {
-								firstCreatedObjectLocator = entityLocator;
+			private void onSuccess0(DomainTransformResponse response) {
+				synchronized (CommitToStorageTransformListener.this) {
+					PermissionsManager.get().setOnlineState(OnlineState.ONLINE);
+					TransformManager tm = TransformManager.get();
+					tm.setReplayingRemoteEvent(true);
+					try {
+						synthesisedEvents = new ArrayList<DomainTransformEvent>();
+						lastCreatedObjectLocator = null;
+						firstCreatedObjectLocator = null;
+						/*
+						 * either way we do this (server or client), it's going
+						 * to seem a bit hacky but...a client's interpretation
+						 * of what is the canonical event (e.g. createObject on
+						 * the server) is more its business than the TLTM's
+						 * 
+						 * so...leave here. for now
+						 */
+						for (DomainTransformEvent dte : response
+								.getEventsToUseForClientUpdate()) {
+							long id = dte.getGeneratedServerId() != 0
+									? dte.getGeneratedServerId()
+									: dte.getObjectId();
+							if (dte.getGeneratedServerId() != 0) {
+								DomainTransformEvent idEvt = new DomainTransformEvent();
+								idEvt.setObjectClass(dte.getObjectClass());
+								idEvt.setObjectLocalId(dte.getObjectLocalId());
+								idEvt.setPropertyName(
+										TransformManager.ID_FIELD_NAME);
+								idEvt.setValueClass(Long.class);
+								idEvt.setTransformType(
+										TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+								idEvt.setNewStringValue(String.valueOf(id));
+								synthesisedEvents.add(idEvt);
+								idEvt = new DomainTransformEvent();
+								idEvt.setObjectClass(dte.getObjectClass());
+								idEvt.setObjectId(id);
+								idEvt.setPropertyName(
+										TransformManager.LOCAL_ID_FIELD_NAME);
+								idEvt.setNewStringValue("0");
+								idEvt.setValueClass(Long.class);
+								idEvt.setTransformType(
+										TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+								synthesisedEvents.add(idEvt);
+								localToServerIds.put(dte.getObjectLocalId(),
+										id);
+								tm.registerEntityMappingPriorToLocalIdDeletion(
+										dte.getObjectClass(), id,
+										dte.getObjectLocalId());
+								EntityLocator entityLocator = new EntityLocator(
+										dte.getObjectClass(), id, 0L);
+								if (firstCreatedObjectLocator == null) {
+									firstCreatedObjectLocator = entityLocator;
+								}
+								lastCreatedObjectLocator = entityLocator;
 							}
-							lastCreatedObjectLocator = entityLocator;
-						}
-						// if (dte.getObjectVersionNumber() != 0 && id != 0) {
-						// if we have zero id at this stage, we're probably in a
-						// race condition
-						// with some other persistence mech
-						// and it definitely _does_ need to be sorted
-						if (CommonUtils.iv(dte.getObjectVersionNumber()) != 0) {
-							DomainTransformEvent idEvt = new DomainTransformEvent();
-							idEvt.setObjectClass(dte.getObjectClass());
-							idEvt.setObjectId(id);
-							idEvt.setPropertyName(
-									TransformManager.VERSION_FIELD_NAME);
-							idEvt.setNewStringValue(String
-									.valueOf(dte.getObjectVersionNumber()));
-							idEvt.setValueClass(Integer.class);
-							idEvt.setTransformType(
-									TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
-							synthesisedEvents.add(idEvt);
-						}
-					}
-					for (DomainTransformEvent dte : synthesisedEvents) {
-						try {
-							tm.apply(dte);
-							tm.fireDomainTransform(dte);// this notifies
-							// gears?
-							// well, definitely notifies clients who need to
-							// know chanages were committed
-						} catch (DomainTransformException e) {
-							// shouldn't happen, if the server code's ok
-							// note - squelching (for the moment)
-							// sourceentitynotfound -
-							// assume object was either deregistered or deleted
-							// before these transforms
-							// made it back from the server
-							// actually, e.g. deletion - there'll be a version
-							// change which gets propogated back
-							// more correct would be to record deleted
-							// objects...but it don't matter much
-							if (e.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND
-									|| e.getType() == DomainTransformExceptionType.TARGET_ENTITY_NOT_FOUND) {
-							} else {
-								throw new WrappedRuntimeException(e);
+							// if (dte.getObjectVersionNumber() != 0 && id != 0)
+							// {
+							// if we have zero id at this stage, we're probably
+							// in a
+							// race condition
+							// with some other persistence mech
+							// and it definitely _does_ need to be sorted
+							if (CommonUtils
+									.iv(dte.getObjectVersionNumber()) != 0) {
+								DomainTransformEvent idEvt = new DomainTransformEvent();
+								idEvt.setObjectClass(dte.getObjectClass());
+								idEvt.setObjectId(id);
+								idEvt.setPropertyName(
+										TransformManager.VERSION_FIELD_NAME);
+								idEvt.setNewStringValue(String
+										.valueOf(dte.getObjectVersionNumber()));
+								idEvt.setValueClass(Integer.class);
+								idEvt.setTransformType(
+										TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+								synthesisedEvents.add(idEvt);
 							}
 						}
-					}
-					List<DomainTransformEvent> items = dtr.getEvents();
-					for (DomainTransformEvent evt : items) {
-						TransformManager.get().setTransformCommitType(evt,
-								CommitType.ALL_COMMITTED);
-					}
-					for (int i = priorRequestsWithoutResponse.size()
-							- 1; i >= 0; i--) {
-						if (priorRequestsWithoutResponse.get(i)
-								.getRequestId() <= dtr.getRequestId()) {
-							priorRequestsWithoutResponse.remove(i);
+						for (DomainTransformEvent dte : synthesisedEvents) {
+							try {
+								tm.apply(dte);
+								tm.fireDomainTransform(dte);// this notifies
+								// gears?
+								// well, definitely notifies clients who need to
+								// know chanages were committed
+							} catch (DomainTransformException e) {
+								// shouldn't happen, if the server code's ok
+								// note - squelching (for the moment)
+								// sourceentitynotfound -
+								// assume object was either deregistered or
+								// deleted
+								// before these transforms
+								// made it back from the server
+								// actually, e.g. deletion - there'll be a
+								// version
+								// change which gets propogated back
+								// more correct would be to record deleted
+								// objects...but it don't matter much
+								if (e.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND
+										|| e.getType() == DomainTransformExceptionType.TARGET_ENTITY_NOT_FOUND) {
+								} else {
+									throw new WrappedRuntimeException(e);
+								}
+							}
 						}
-					}
-					if (response.getMessage() != null) {
-						Registry.impl(ClientNotifications.class)
-								.showMessage(response.getMessage());
-					}
-				} finally {
-					tm.setReplayingRemoteEvent(false);
-					if (reloadRequired) {
-						fireStateChanged(RELOAD);
-					} else {
-						fireStateChanged(COMMITTED);
-						topicTransformsCommitted().publish(response);
+						List<DomainTransformEvent> items = request.getEvents();
+						for (DomainTransformEvent evt : items) {
+							TransformManager.get().setTransformCommitType(evt,
+									CommitType.ALL_COMMITTED);
+						}
+						for (int i = priorRequestsWithoutResponse.size()
+								- 1; i >= 0; i--) {
+							if (priorRequestsWithoutResponse.get(i)
+									.getRequestId() <= request.getRequestId()) {
+								priorRequestsWithoutResponse.remove(i);
+							}
+						}
+						if (response.getMessage() != null) {
+							Registry.impl(ClientNotifications.class)
+									.showMessage(response.getMessage());
+						}
+					} finally {
+						tm.setReplayingRemoteEvent(false);
+						if (reloadRequired) {
+							fireStateChanged(RELOAD);
+						} else {
+							fireStateChanged(COMMITTED);
+							topicTransformsCommitted().publish(response);
+						}
 					}
 				}
 			}
@@ -514,11 +529,15 @@ public class CommitToStorageTransformListener extends StateListenable
 		// dtr.setPriorRequestsWithoutResponse(priorRequestsWithoutResponseCopy)
 		List<DomainTransformRequest> priorRequestsWithoutResponseForCommit = new ArrayList<DomainTransformRequest>(
 				priorRequestsWithoutResponse);
-		dtr.setPriorRequestsWithoutResponse(
+		request.setPriorRequestsWithoutResponse(
 				priorRequestsWithoutResponseForCommit);
-		committingRequest = dtr;
-		fireStateChanged(COMMITTING);
-		priorRequestsWithoutResponse.add(dtr);
+		try {
+			LooseContext.pushWithKey(CONTEXT_COMMITTING_REQUEST, request);
+			fireStateChanged(COMMITTING);
+		} finally {
+			LooseContext.pop();
+		}
+		priorRequestsWithoutResponse.add(request);
 		if (isLocalStorageOnly()) {
 			fireStateChanged(OFFLINE);
 			return;
@@ -537,20 +556,23 @@ public class CommitToStorageTransformListener extends StateListenable
 						@Override
 						public void onSuccess(Void result) {
 							if (canTransitionToOnline()) {
-								commitRemote(commitRemoteCallback);
+								commitRemote(request, commitRemoteCallback);
 							}
 						}
 					});
 		} else {
-			commitRemote(commitRemoteCallback);
+			commitRemote(request, commitRemoteCallback);
 		}
 	}
 
-	protected void
-			commitRemote(AsyncCallback<DomainTransformResponse> callback) {
-		ClientBase.getCommonRemoteServiceAsyncInstance()
-				.transform(committingRequest, callback);
-		committingRequest = null;
+	public int getLastCommitSize() {
+		return this.lastCommitSize;
+	}
+
+	protected void commitRemote(DomainTransformRequest request,
+			AsyncCallback<DomainTransformResponse> callback) {
+		ClientBase.getCommonRemoteServiceAsyncInstance().transform(request,
+				callback);
 	}
 
 	@Override
@@ -573,6 +595,16 @@ public class CommitToStorageTransformListener extends StateListenable
 
 	protected List<DomainTransformEvent> getTransformQueue() {
 		return this.transformQueue;
+	}
+
+	protected void init() {
+		priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
+		localToServerIds = new HashMap<Long, Long>();
+		eventIdsToIgnore = new HashSet<Long>();
+	}
+
+	protected synchronized void resetQueue() {
+		transformQueue = new ArrayList<DomainTransformEvent>();
 	}
 
 	/*

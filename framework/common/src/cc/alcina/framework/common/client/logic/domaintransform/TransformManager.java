@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +76,13 @@ import cc.alcina.framework.common.client.util.SortedMultikeyMap;
 
 /**
  * TODO - abstract parts out to ClientTransformManager
+ * 
+ * <h2>Thread safety notes</h2>
+ * <ul>
+ * <li>Collection modificiation support is a thread-safe singleton (except for
+ * listener add/remove)
+ * <li>transformsByType access synchronized
+ * </ul>
  *
  * @author nick@alcina.cc
  *
@@ -273,13 +281,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private ObjectStore domainObjects;
 
-	final Set<DomainTransformEvent> transforms = new LinkedHashSet<DomainTransformEvent>();
+	private Set<DomainTransformEvent> transforms = createTransformSet();
 
-	final Map<CommitType, LinkedHashSet<DomainTransformEvent>> transformsByType = new HashMap<CommitType, LinkedHashSet<DomainTransformEvent>>();
+	private Map<CommitType, Set<DomainTransformEvent>> transformsByType = new LinkedHashMap<>();
 
 	protected DomainTransformSupport transformListenerSupport;
 
-	protected IdentityHashMap<Object, Boolean> provisionalObjects = new IdentityHashMap<>();
+	// underlying map must be an identity-, not equals- map
+	protected Map<Object, Boolean> provisionalObjects;
 
 	private boolean ignorePropertyChanges;
 
@@ -296,6 +305,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected TransformManager() {
 		this.transformListenerSupport = new DomainTransformSupport();
 		this.collectionModificationSupport = new CollectionModificationSupport();
+		initCollections();
+	}
+
+	protected void initCollections() {
+		provisionalObjects = new IdentityHashMap<>();
 	}
 
 	@Override
@@ -674,7 +688,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return;
 		}
 		Set<DomainTransformEvent> toRemove = new LinkedHashSet<DomainTransformEvent>();
-		LinkedHashSet<DomainTransformEvent> trs = getTransformsByCommitType(
+		Set<DomainTransformEvent> trs = getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN);
 		for (DomainTransformEvent dte : trs) {
 			Entity source = dte.getSource() != null ? dte.getSource()
@@ -797,7 +811,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return getDomainObjects().getCollection(clazz);
 	}
 
-	// TODO - Jira - get rid of objectstore vs objectlookup
+	// TODO - mvcc - get rid of objectstore vs objectlookup?
 	public ObjectStore getDomainObjects() {
 		return this.domainObjects;
 	}
@@ -957,12 +971,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return this.transforms;
 	}
 
-	public LinkedHashSet<DomainTransformEvent>
+	public synchronized Set<DomainTransformEvent>
 			getTransformsByCommitType(CommitType ct) {
 		if (transformsByType.get(ct) == null) {
-			transformsByType.put(ct, new LinkedHashSet<DomainTransformEvent>());
+			transformsByType.put(ct, createTransformSet());
 		}
 		return transformsByType.get(ct);
+	}
+
+	// underlying set must be ordered
+	protected Set<DomainTransformEvent> createTransformSet() {
+		return new LinkedHashSet<>();
 	}
 
 	public TransformHistoryManager getUndoManager() {
@@ -1488,8 +1507,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public void removeTransformsForObjects(Collection c) {
-		Set<DomainTransformEvent> trs = (Set<DomainTransformEvent>) getTransformsByCommitType(
-				CommitType.TO_LOCAL_BEAN).clone();
+		Set<DomainTransformEvent> trs = new LinkedHashSet<>(
+				getTransformsByCommitType(CommitType.TO_LOCAL_BEAN));
 		if (!(c instanceof Set)) {
 			c = new HashSet(c);
 		}

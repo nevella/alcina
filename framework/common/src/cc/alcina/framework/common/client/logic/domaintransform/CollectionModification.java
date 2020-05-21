@@ -94,7 +94,7 @@ public class CollectionModification {
 
 		private static int queueDepth = 0;;
 
-		public static void queue(boolean push) {
+		public static synchronized void queue(boolean push) {
 			queueDepth += push ? 1 : -1;
 			queueDepth = Math.max(queueDepth, 0);
 			if (queueDepth == 0 && queuedEvents != null) {
@@ -116,6 +116,7 @@ public class CollectionModification {
 
 		private boolean firing = false;
 
+		@Override
 		public void addCollectionModificationListener(
 				CollectionModificationListener listener) {
 			listenerList.add(listener);
@@ -148,33 +149,37 @@ public class CollectionModification {
 
 		public void fireCollectionModificationEvent(
 				CollectionModificationEvent event) {
-			if (listenerList.isEmpty() && classListenerList.isEmpty()) {
-				return;
-			}
-			if (queuedEvents != null) {
-				queuedEvents.add(new SupportEvent(event, this));
-				return;
-			}
-			try {
-				firing = true;
-				if (!event.isFromPropertyChange()) {
-					for (CollectionModificationListener listener : listenerList) {
-						listener.collectionModification(event);
-					}
+			synchronized (CollectionModificationSupport.class) {
+				if (listenerList.isEmpty() && classListenerList.isEmpty()) {
+					return;
 				}
-				for (Tuple t : classListenerList) {
-					if ((event.getCollectionClass() == Object.class
-							|| t.listenedClass == event.getCollectionClass())
-							&& (!event.isFromPropertyChange()
-									|| t.filteringListener)) {
-						t.listener.collectionModification(event);
-					}
+				if (queuedEvents != null) {
+					queuedEvents.add(new SupportEvent(event, this));
+					return;
 				}
-			} finally {
-				firing = false;
+				try {
+					firing = true;
+					if (!event.isFromPropertyChange()) {
+						for (CollectionModificationListener listener : listenerList) {
+							listener.collectionModification(event);
+						}
+					}
+					for (Tuple t : classListenerList) {
+						if ((event.getCollectionClass() == Object.class
+								|| t.listenedClass == event
+										.getCollectionClass())
+								&& (!event.isFromPropertyChange()
+										|| t.filteringListener)) {
+							t.listener.collectionModification(event);
+						}
+					}
+				} finally {
+					firing = false;
+				}
 			}
 		}
 
+		@Override
 		public void removeCollectionModificationListener(
 				final CollectionModificationListener listener) {
 			ScheduledCommand cmd = new ScheduledCommand() {

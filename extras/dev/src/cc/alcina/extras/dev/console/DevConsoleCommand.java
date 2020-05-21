@@ -487,7 +487,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 								Sx.commit();
 							}
 							// check for dangling transforms
-							LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
+							Set<DomainTransformEvent> pendingTransforms = TransformManager
 									.get().getTransformsByCommitType(
 											CommitType.TO_LOCAL_BEAN);
 							if (!pendingTransforms.isEmpty()) {
