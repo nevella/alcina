@@ -54,7 +54,6 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
 public interface CommonPersistenceLocal {
 	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
 
-
 	public abstract void connectPermissionsManagerToLiveObjects();
 
 	public abstract ClientInstance createClientInstance(String userAgent,
@@ -212,6 +211,7 @@ public interface CommonPersistenceLocal {
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
 
+	public <T extends ILogRecord> long persistLogRecord(T logRecord);
 
 	void changeJdbcConnectionUrl(String newUrl);
 }
