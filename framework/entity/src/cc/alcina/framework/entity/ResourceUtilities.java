@@ -59,6 +59,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
+import javax.persistence.EntityManager;
 import javax.swing.ImageIcon;
 
 import org.cyberneko.html.parsers.DOMParser;
@@ -68,12 +69,12 @@ import org.xml.sax.InputSource;
 import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
@@ -112,7 +113,6 @@ public class ResourceUtilities {
 				cloneCollections, new ArrayList<String>());
 	}
 
-	
 	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
 			Class methodFilterAnnotation, boolean cloneCollections,
 			Collection<String> ignorePropertyNames) {
@@ -375,6 +375,31 @@ public class ResourceUtilities {
 		return Long.parseLong(get(clazz, key));
 	}
 
+	public static byte[] gunzipBytes(byte[] bytes) {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			GZIPInputStream gzipInputStream = new GZIPInputStream(
+					new ByteArrayInputStream(bytes));
+			writeStreamToStream(gzipInputStream, baos);
+			return baos.toByteArray();
+		} catch (Exception e) {
+			return bytes;
+		}
+	}
+
+	public static byte[] gzipBytes(byte[] bytes) {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			GZIPOutputStream gzipOutputStream = new GZIPOutputStream(baos);
+			gzipOutputStream.write(bytes);
+			gzipOutputStream.flush();
+			gzipOutputStream.close();
+			return baos.toByteArray();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public static boolean is(Class clazz, String propertyName) {
 		return getBoolean(clazz, propertyName);
 	}
@@ -456,16 +481,16 @@ public class ResourceUtilities {
 		});
 	}
 
-	public static XmlDoc loadXmlDocFromHtmlString(String html) {
+	public static DomDoc loadXmlDocFromHtmlString(String html) {
 		try {
-			return new XmlDoc(loadHtmlDocumentFromString(html));
+			return new DomDoc(loadHtmlDocumentFromString(html));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
-	public static XmlDoc loadXmlDocFromUrl(String url) {
-		return new XmlDoc(loadHtmlDocumentFromUrl(url));
+	public static DomDoc loadXmlDocFromUrl(String url) {
+		return new DomDoc(loadHtmlDocumentFromUrl(url));
 	}
 
 	public static void logToFile(String content) {
@@ -920,6 +945,10 @@ public class ResourceUtilities {
 
 		private boolean decodeGz;
 
+		private String contentType;
+
+		private String contentDisposition;
+
 		public SimpleQuery(String strUrl, String postBody, StringMap headers) {
 			this.strUrl = strUrl;
 			this.postBody = postBody;
@@ -959,6 +988,9 @@ public class ResourceUtilities {
 				if (decodeGz) {
 					input = maybeDecodeGzip(input);
 				}
+				contentType = connection.getContentType();
+				contentDisposition = connection
+						.getHeaderField("Content-Disposition");
 				return input;
 			} catch (IOException ioe) {
 				if (connection != null) {
@@ -989,6 +1021,26 @@ public class ResourceUtilities {
 			return new String(asBytes(), StandardCharsets.UTF_8);
 		}
 
+		public String getContentDisposition() {
+			return this.contentDisposition;
+		}
+
+		public String getContentType() {
+			return this.contentType;
+		}
+
+		public SimpleQuery withBasicAuthentication(String username,
+				String password) {
+			if (headers == null) {
+				headers = new StringMap();
+			}
+			String auth = Ax.format("%s:%s", username, password);
+			headers.put("Authorization",
+					Ax.format("Basic %s", Base64.getEncoder().encodeToString(
+							auth.getBytes(StandardCharsets.UTF_8))));
+			return this;
+		}
+
 		public SimpleQuery withDecodeGz(boolean decodeGz) {
 			this.decodeGz = decodeGz;
 			return this;
@@ -1005,6 +1057,23 @@ public class ResourceUtilities {
 						new GZIPInputStream(new ByteArrayInputStream(input)));
 			} else {
 				return input;
+			}
+		}
+	}
+
+	public static void setField(Object object, String fieldPath,
+			Object newValue) throws Exception {
+		Object cursor = object;
+		Field field = null;
+		String[] segments = fieldPath.split("\\.");
+		for (int idx = 0; idx < segments.length; idx++) {
+			String segment = segments[idx];
+			field = SEUtilities.getFieldByName(cursor.getClass(),segment);
+			field.setAccessible(true);
+			if (idx < segments.length - 1) {
+				cursor = field.get(cursor);
+			} else {
+				field.set(cursor, newValue);
 			}
 		}
 	}

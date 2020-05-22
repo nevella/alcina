@@ -21,6 +21,14 @@ public class CsvCols
 		return new CsvCols(ResourceUtilities.read(file));
 	}
 
+	public static CsvCols parseCsv(String csv) {
+		return new CsvCols(csv);
+	}
+
+	public static CsvCols parseTsv(String tsv) {
+		return new CsvCols(CsvUtils.parseCsv(tsv, true));
+	}
+
 	Map<String, Integer> colLookup = new LinkedHashMap<>();
 
 	Map<String, Integer> colLcLookup = new LinkedHashMap<>();

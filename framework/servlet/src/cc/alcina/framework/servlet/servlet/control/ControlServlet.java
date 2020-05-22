@@ -30,167 +30,174 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
 import cc.alcina.framework.servlet.publication.delivery.ContentDeliveryEmail;
 
 public class ControlServlet extends HttpServlet {
-    Logger logger = LoggerFactory.getLogger(getClass());
+	Logger logger = LoggerFactory.getLogger(getClass());
 
-    public void writeAndClose(String s, HttpServletResponse resp)
-            throws IOException {
-        resp.setContentType("text/plain");
-        resp.getWriter().write(s);
-        resp.getWriter().close();
-    }
+	public void writeAndClose(String s, HttpServletResponse resp)
+			throws IOException {
+		resp.setContentType("text/plain");
+		resp.getWriter().write(s);
+		resp.getWriter().close();
+	}
 
-    public void writeAndCloseHtml(String s, HttpServletRequest req,
-            HttpServletResponse resp) throws IOException {
-        resp.setContentType("text/html");
-        String host = req.getRequestURL().toString()
-                .replaceFirst("https?://(.+?)/.+", "$1");
-        String html = String.format(
-                "<html><head><style>body{font-family:courier;white-space:pre;font-size:13px}</style><title>%s control servlet</title></head><body>%s</body></html>",
-                host, StringEscapeUtils.escapeHtml(s));
-        resp.getWriter().write(html);
-        resp.getWriter().close();
-    }
+	public void writeAndCloseHtml(String s, HttpServletRequest req,
+			HttpServletResponse resp) throws IOException {
+		resp.setContentType("text/html");
+		String host = req.getRequestURL().toString()
+				.replaceFirst("https?://(.+?)/.+", "$1");
+		String html = String.format(
+				"<html><head><style>body{font-family:courier;white-space:pre;font-size:13px}</style><title>%s control servlet</title></head><body>%s</body></html>",
+				host, StringEscapeUtils.escapeHtml(s));
+		resp.getWriter().write(html);
+		resp.getWriter().close();
+	}
 
-    private void authenticate(HttpServletRequest req, String reqApiKey,
-            String appApiKey) throws Exception {
-        if (appApiKey.isEmpty()) {
-            throw new InformException("Api key not set");
-        }
-        if (!appApiKey.equals(reqApiKey)) {
-            throw new InformException("Invalid api key");
-        }
-    }
+	private void authenticate(HttpServletRequest req, String reqApiKey,
+			String appApiKey) throws Exception {
+		if (appApiKey.isEmpty()) {
+			throw new InformException("Api key not set");
+		}
+		if (!appApiKey.equals(reqApiKey)) {
+			throw new InformException("Invalid api key");
+		}
+	}
 
-    private void doGet0(HttpServletRequest req, HttpServletResponse resp)
-            throws Exception {
-        try {
-            String apiKey = getApiKey();
-            authenticate(req, req.getParameter("apiKey"), apiKey);
-            ControlServletRequest csr = parseRequest(req, resp);
-            handleRequest(csr, req, resp);
-        } catch (Exception e) {
-            e.printStackTrace();
-            writeAndClose(SEUtilities.getFullExceptionMessage(e), resp);
-        }
-    }
+	private void doGet0(HttpServletRequest req, HttpServletResponse resp)
+			throws Exception {
+		try {
+			String apiKey = getApiKey();
+			authenticate(req, req.getParameter("apiKey"), apiKey);
+			ControlServletRequest csr = parseRequest(req, resp);
+			handleRequest(csr, req, resp);
+		} catch (Exception e) {
+			e.printStackTrace();
+			writeAndClose(SEUtilities.getFullExceptionMessage(e), resp);
+		}
+	}
 
-    private void handleRequest(ControlServletRequest csr,
-            HttpServletRequest req, HttpServletResponse resp) throws Exception {
-        if (csr.getCommand() == null) {
-            return;
-        }
-        switch (csr.getCommand()) {
-        case REFRESH_CONFIG:
-            Registry.impl(AppLifecycleManager.class).refreshProperties();
-            writeAndClose(
-                    String.format("Properties refreshed - %s", new Date()),
-                    resp);
-            break;
-        case GET_STATUS:
-            ControlServletState status = Registry
-                    .impl(AppLifecycleManager.class).getState();
-            if (csr.isJson()) {
-                writeAndClose(new AlcinaBeanSerializerS().serialize(status),
-                        resp);
-            } else {
-                String msg = status.toString();
-                msg += "\n";
-                msg += Registry.impl(AppLifecycleManager.class)
-                        .getLifecycleServlet().dumpCustomProperties();
-                writeAndClose(msg, resp);
-            }
-            break;
-        case CLUSTER_STATUS:
-            writeAndCloseHtml(Registry.impl(ClusterStateProvider.class)
-                    .getMemberClusterState(), req, resp);
-            break;
-        case VM_HEALTH:
-            writeAndClose(
-                    Registry.impl(ClusterStateProvider.class).getVmHealth(),
-                    resp);
-            break;
-        case TEST_SENDMAIL:
-            String toAddress = testSendmail();
-            String message = Ax.format(
-                    "Test email sent to: %s from: %s via: %s", toAddress,
-                    EntityLayerUtils.getLocalHostName(), ResourceUtilities
-                            .get(ContentDeliveryEmail.class, "smtp.host.name"));
-            logger.warn(message);
-            writeAndClose(message, resp);
-            break;
-        }
-    }
+	private void handleRequest(ControlServletRequest csr,
+			HttpServletRequest req, HttpServletResponse resp) throws Exception {
+		if (csr.getCommand() == null) {
+			return;
+		}
+		switch (csr.getCommand()) {
+		case REFRESH_CONFIG:
+			Registry.impl(AppLifecycleManager.class).refreshProperties();
+			writeAndClose(
+					String.format("Properties refreshed - %s", new Date()),
+					resp);
+			break;
+		case GET_STATUS:
+			ControlServletState status = Registry
+					.impl(AppLifecycleManager.class).getState();
+			if (csr.isJson()) {
+				writeAndClose(new AlcinaBeanSerializerS().serialize(status),
+						resp);
+			} else {
+				String msg = status.toString();
+				msg += "\n";
+				msg += Registry.impl(AppLifecycleManager.class)
+						.getLifecycleServlet().dumpCustomProperties();
+				writeAndClose(msg, resp);
+			}
+			break;
+		case CLUSTER_STATUS:
+			writeAndCloseHtml(Registry.impl(ClusterStateProvider.class)
+					.getMemberClusterState(), req, resp);
+			break;
+		case CLUSTER_LEADER:
+			writeAndCloseHtml(Registry.impl(ClusterStateProvider.class)
+					.getClusterLeaderState(), req, resp);
+			break;
+		case VM_HEALTH:
+			writeAndClose(
+					Registry.impl(ClusterStateProvider.class).getVmHealth(),
+					resp);
+			break;
+		case TEST_SENDMAIL:
+			String toAddress = testSendmail();
+			String message = Ax.format(
+					"Test email sent to: %s from: %s via: %s", toAddress,
+					EntityLayerUtils.getLocalHostName(), ResourceUtilities
+							.get(ContentDeliveryEmail.class, "smtp.host.name"));
+			logger.warn(message);
+			writeAndClose(message, resp);
+			break;
+		}
+	}
 
-    private ControlServletRequest parseRequest(HttpServletRequest req,
-            HttpServletResponse resp) throws Exception {
-        String jsonPayload = req.getParameter("json");
-        if (jsonPayload != null) {
-            ControlServletRequest csr = new AlcinaBeanSerializerS()
-                    .deserialize(jsonPayload);
-            csr.setJson(true);
-            return csr;
-        }
-        String cmd = CommonUtils.nullToEmpty(req.getParameter("cmd"));
-        ControlServletRequest csr = new ControlServletRequest();
-        if (cmd.equals("refresh-config")) {
-            csr.setCommand(ControlServletRequestCommand.REFRESH_CONFIG);
-            return csr;
-        } else if (cmd.equals("get-status")) {
-            csr.setCommand(ControlServletRequestCommand.GET_STATUS);
-            return csr;
-        } else if (cmd.equals("cluster-status")) {
-            csr.setCommand(ControlServletRequestCommand.CLUSTER_STATUS);
-            return csr;
-        } else if (cmd.equals("vm-health")) {
-            csr.setCommand(ControlServletRequestCommand.VM_HEALTH);
-            return csr;
-        } else if (cmd.equals("test-sendmail")) {
-            csr.setCommand(ControlServletRequestCommand.TEST_SENDMAIL);
-            return csr;
-        }
-        writeAndClose("Usage:\n" + "control.do?apiKey=xxx&"
-                + "{json=yyy|cmd=[refresh-config|to-reader|to-writer|get-status|vm-health|test-sendmail]}",
-                resp);
-        return null;
-    }
+	private ControlServletRequest parseRequest(HttpServletRequest req,
+			HttpServletResponse resp) throws Exception {
+		String jsonPayload = req.getParameter("json");
+		if (jsonPayload != null) {
+			ControlServletRequest csr = new AlcinaBeanSerializerS()
+					.deserialize(jsonPayload);
+			csr.setJson(true);
+			return csr;
+		}
+		String cmd = CommonUtils.nullToEmpty(req.getParameter("cmd"));
+		ControlServletRequest csr = new ControlServletRequest();
+		if (cmd.equals("refresh-config")) {
+			csr.setCommand(ControlServletRequestCommand.REFRESH_CONFIG);
+			return csr;
+		} else if (cmd.equals("get-status")) {
+			csr.setCommand(ControlServletRequestCommand.GET_STATUS);
+			return csr;
+		} else if (cmd.equals("cluster-status")) {
+			csr.setCommand(ControlServletRequestCommand.CLUSTER_STATUS);
+			return csr;
+		} else if (cmd.equals("cluster-leader")) {
+			csr.setCommand(ControlServletRequestCommand.CLUSTER_LEADER);
+			return csr;
+		} else if (cmd.equals("vm-health")) {
+			csr.setCommand(ControlServletRequestCommand.VM_HEALTH);
+			return csr;
+		} else if (cmd.equals("test-sendmail")) {
+			csr.setCommand(ControlServletRequestCommand.TEST_SENDMAIL);
+			return csr;
+		}
+		writeAndClose("Usage:\n" + "control.do?apiKey=xxx&"
+				+ "{json=yyy|cmd=[refresh-config|to-reader|to-writer|get-status|vm-health|test-sendmail|cluster-leader]}",
+				resp);
+		return null;
+	}
 
-    private String testSendmail() throws Exception {
-        ContentDelivery deliverer = (ContentDelivery) Registry.get()
-                .instantiateSingle(ContentDeliveryType.class,
-                        ContentDeliveryType_EMAIL.class);
-        TestContentRequest testContentRequest = new TestContentRequest();
-        testContentRequest.setEmailInline(true);
-        testContentRequest.setEmailSubject(Ax.format("Test: %s :: %s",
-                EntityLayerUtils.getLocalHostName(), new Date()));
-        String emailAddress = ResourceUtilities.get("testSendmailAddress");
-        testContentRequest.setEmailAddress(emailAddress);
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(
-                "test".getBytes(StandardCharsets.UTF_8));
-        String token = deliverer.deliver(new PublicationContext(), inputStream,
-                testContentRequest, null);
-        return emailAddress;
-    }
+	private String testSendmail() throws Exception {
+		ContentDelivery deliverer = (ContentDelivery) Registry.get()
+				.instantiateSingle(ContentDeliveryType.class,
+						ContentDeliveryType_EMAIL.class);
+		TestContentRequest testContentRequest = new TestContentRequest();
+		testContentRequest.setEmailInline(true);
+		testContentRequest.setEmailSubject(Ax.format("Test: %s :: %s",
+				EntityLayerUtils.getLocalHostName(), new Date()));
+		String emailAddress = ResourceUtilities.get("testSendmailAddress");
+		testContentRequest.setEmailAddress(emailAddress);
+		ByteArrayInputStream inputStream = new ByteArrayInputStream(
+				"test".getBytes(StandardCharsets.UTF_8));
+		String token = deliverer.deliver(new PublicationContext(), inputStream,
+				testContentRequest, null);
+		return emailAddress;
+	}
 
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
-        try {
-            doGet0(req, resp);
-        } catch (Exception e) {
-            if (e instanceof InformException) {
-                writeAndClose(e.getMessage(), resp);
-            }
-            throw new ServletException(e);
-        }
-    }
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
+		try {
+			doGet0(req, resp);
+		} catch (Exception e) {
+			if (e instanceof InformException) {
+				writeAndClose(e.getMessage(), resp);
+			}
+			throw new ServletException(e);
+		}
+	}
 
-    protected String getApiKey() {
-        return Registry.impl(AppLifecycleManager.class).getState().getApiKey();
-    }
+	protected String getApiKey() {
+		return Registry.impl(AppLifecycleManager.class).getState().getApiKey();
+	}
 
-    public class InformException extends Exception {
-        public InformException(String message) {
-            super(message);
-        }
-    }
+	public class InformException extends Exception {
+		public InformException(String message) {
+			super(message);
+		}
+	}
 }

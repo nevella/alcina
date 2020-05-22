@@ -1521,7 +1521,7 @@ table.gwittir-BoundTable.editable tr.odd td {
 }
 /** Rich text **/
 .alcina-richTextToolbarBkg {
-	background: #e3e8f3 url(images/hborder.png) repeat-x 0px -2003px;
+	background: #e3e8f3 url(/images/hborder.png) repeat-x 0px -2003px;
 	/*gwt-std img*/
 }
 

@@ -1,25 +1,30 @@
 package cc.alcina.framework.entity.parser.structured;
 
+import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNode.DomNodeDebugSupport;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.XmlUtils;
-import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 
-public class XmlTokenOutput {
-	private XmlDoc outDoc;
+public class XmlTokenOutput implements DomNodeDebugSupport {
+	private DomDoc outDoc;
 
-	private XmlNode writeCursor;
+	private DomNode writeCursor;
 
 	public StructuredTokenParserContext context;
 
-	private XmlNode lastTextNode;
+	private DomNode lastTextNode;
 
 	public boolean debug = false;
 
-	public XmlTokenOutput(XmlDoc outDoc) {
+	private CachingMap<DomNode, DomNodeDebugInfo> debugMap = new CachingMap<>(
+			DomNodeDebugInfo::new);
+
+	public XmlTokenOutput(DomDoc outDoc) {
 		this.outDoc = outDoc;
 		writeCursor = outDoc.root();
 	}
@@ -48,7 +53,7 @@ public class XmlTokenOutput {
 			throw new RuntimeException(String.format(
 					"closing unmatched tag : %s -> %s", nameAndClass(), tag));
 		}
-		writeCursor.close = join;
+		debugMap.get(writeCursor).close = join;
 		join.targetNode = writeCursor;
 		writeCursor = writeCursor.parent();
 	}
@@ -89,23 +94,27 @@ public class XmlTokenOutput {
 
 	public void ensureOpenClass(XmlStructuralJoin join, String tag,
 			String className) {
-		if (!writeCursor.ancestors().orSelf().list().stream().anyMatch(c -> c
-				.tagIs(tag)
-				&& (className == null || c.attrIs("class", className)))) {
+		if (!isOpen(tag, className)) {
 			open(join, tag);
 		}
 	}
 
-	public XmlNode getLastTextNode() {
+	public DomNode getLastTextNode() {
 		return this.lastTextNode;
 	}
 
-	public XmlDoc getOutDoc() {
+	public DomDoc getOutDoc() {
 		return this.outDoc;
 	}
 
-	public XmlNode getOutputNode() {
+	public DomNode getOutputNode() {
 		return writeCursor;
+	}
+
+	public boolean isOpen(String tag, String className) {
+		return writeCursor.ancestors().orSelf().list().stream()
+				.anyMatch(c -> c.tagIs(tag)
+						&& (className == null || c.attrIs("class", className)));
 	}
 
 	public void open(XmlStructuralJoin join, String tag) {
@@ -115,7 +124,7 @@ public class XmlTokenOutput {
 	public void open(XmlStructuralJoin join, String tag, StringMap attrs) {
 		debug("open - %s - %s - %s", tag, join.hashCode(), attrs);
 		writeCursor = writeCursor.builder().tag(tag).attrs(attrs).append();
-		writeCursor.open = join;
+		debugMap.get(writeCursor).open = join;
 		join.targetNode = writeCursor;
 		context.targetNodeMapped(join);
 	}
@@ -128,6 +137,22 @@ public class XmlTokenOutput {
 	public void pi(String name, String data) {
 		writeCursor.builder().processingInstruction().tag(name).text(data)
 				.append();
+	}
+
+	@Override
+	public String shortRepresentation(DomNode node) {
+		String out = "";
+		if (node.isElement()) {
+			DomNodeDebugInfo debugInfo = debugMap.get(node);
+			if (debugInfo.close != null && debugInfo.open != null) {
+				out = String.format("<%s />", node.name());
+			} else if (debugInfo.close != null) {
+				out = String.format("</%s>", node.name());
+			} else {
+				out = String.format("<%s>", node.name());
+			}
+		}
+		return out;
 	}
 
 	public void tag(XmlStructuralJoin node, String tag) {
@@ -150,8 +175,8 @@ public class XmlTokenOutput {
 	}
 
 	public void writeXml(String xmlString) {
-		XmlDoc insert = new XmlDoc(xmlString);
-		XmlNode documentElementNode = insert.getDocumentElementNode();
+		DomDoc insert = new DomDoc(xmlString);
+		DomNode documentElementNode = insert.getDocumentElementNode();
 		if (documentElementNode.tagIs("strip")) {
 			documentElementNode.children.nodes()
 					.forEach(writeCursor.children::importFrom);
@@ -168,6 +193,18 @@ public class XmlTokenOutput {
 	}
 
 	XmlStructuralJoin getOutCursor() {
-		return writeCursor.open;
+		return debugMap.get(writeCursor).open;
+	}
+
+	public static class DomNodeDebugInfo {
+		DomNode node;
+
+		XmlStructuralJoin open;
+
+		XmlStructuralJoin close;
+
+		public DomNodeDebugInfo(DomNode node) {
+			this.node = node;
+		}
 	}
 }

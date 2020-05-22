@@ -1,6 +1,6 @@
 package cc.alcina.framework.entity.parser.structured;
 
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
+import cc.alcina.framework.common.client.dom.DomNode;
 
 public abstract class XmlToken<C extends StructuredTokenParserContext> {
 	protected String name;
@@ -24,9 +24,9 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 		return false;
 	}
 
-	public abstract boolean matches(C context, XmlNode node);
+	public abstract boolean matches(C context, DomNode node);
 
-	public boolean matchesExit(C context, XmlNode node) {
+	public boolean matchesExit(C context, DomNode node) {
 		return false;
 	}
 
@@ -39,7 +39,7 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 		onMatch0(context, join);
 	}
 
-	public String textContent(XmlNode sourceNode) {
+	public String textContent(DomNode sourceNode) {
 		return null;
 	}
 

@@ -19,6 +19,7 @@ import org.w3c.dom.html.HTMLAnchorElement;
 import org.w3c.dom.ranges.DocumentRange;
 import org.w3c.dom.ranges.Range;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -26,7 +27,6 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 
 public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<T>> {
 	public static final String LONG_BLANK_STRING = "        ";
@@ -254,20 +254,20 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		return commonContainer;
 	}
 
-	public Optional<XmlNode> getContainingNode(int absoluteOffset) {
+	public Optional<DomNode> getContainingNode(int absoluteOffset) {
 		int offset = 0;
 		for (Text text : allTexts) {
 			int length = text.getLength();
 			IntPair textRange = new IntPair(offset, offset + length);
 			if (textRange.containsExEnd(absoluteOffset)) {
-				return Optional.of(XmlNode.from(text));
+				return Optional.of(DomNode.from(text));
 			}
 			offset += length;
 		}
 		return Optional.empty();
 	}
 
-	public Optional<XmlNode>
+	public Optional<DomNode>
 			getContainingNode(IntPair containingRangeRelativeToStartOffset) {
 		containingRangeRelativeToStartOffset = containingRangeRelativeToStartOffset
 				.shiftRight(startOffset);
@@ -276,14 +276,14 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			int length = text.getLength();
 			IntPair textRange = new IntPair(offset, offset + length);
 			if (containingRangeRelativeToStartOffset.contains(textRange)) {
-				return Optional.of(XmlNode.from(text));
+				return Optional.of(DomNode.from(text));
 			}
 			offset += length;
 		}
 		return Optional.empty();
 	}
 
-	public Optional<XmlNode> getContainingNode(Matcher matcher) {
+	public Optional<DomNode> getContainingNode(Matcher matcher) {
 		return getContainingNode(new IntPair(matcher.start(), matcher.end()));
 	}
 
@@ -466,7 +466,13 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		}
 		return result;
 	}
-
+	public void rewindToStartOfFirstSlice() {
+		startOffset =startOffsetOfSlice(matched.get(0));
+		matched.clear();
+		matchedByType.clear();
+		tokenCounts.clear();
+		resetSequence();
+	}
 	public int startOffsetOfSlice(AbstractParserSlice slice) {
 		Text firstText = slice.getFirstText();
 		int offset = 0;

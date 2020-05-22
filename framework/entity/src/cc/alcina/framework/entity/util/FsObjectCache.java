@@ -2,10 +2,12 @@ package cc.alcina.framework.entity.util;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,12 @@ import cc.alcina.framework.entity.entityaccess.cache.LockUtils;
 import cc.alcina.framework.entity.entityaccess.cache.LockUtils.ClassStringKeyLock;
 
 public class FsObjectCache<T> implements PersistentObjectCache<T> {
+	public static <C> FsObjectCache<C> singletonCache(Class<C> clazz) {
+		return new FsObjectCache<>(
+				DataFolderProvider.get().getChildFile(clazz.getName()), clazz,
+				p -> clazz.newInstance());
+	}
+
 	private File root;
 
 	private ThrowingFunction<String, T> pathToValue;
@@ -28,8 +36,6 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	private Class<T> clazz;
 
 	private long objectInvalidationTime = 0;
-
-	private boolean cacheObjects = false;
 
 	private Map<String, CacheEntry> cachedObjects = new ConcurrentHashMap<>();
 
@@ -43,6 +49,10 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	private Timer invalidationTimer;
 
+	private boolean retainInMemory;
+
+	private boolean createIfNonExistent;
+
 	public FsObjectCache(File root, Class<T> clazz,
 			ThrowingFunction<String, T> pathToValue) {
 		this.root = root;
@@ -51,9 +61,15 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		this.pathToValue = pathToValue;
 	}
 
+	@Override
+	public void clear() {
+		Arrays.stream(root.listFiles()).forEach(File::delete);
+		cachedObjects.clear();
+	}
+
+	@Override
 	public T get(String path) {
-		ClassStringKeyLock lock = LockUtils
-				.obtainClassStringKeyLock(pathToValue.getClass(), path);
+		ClassStringKeyLock lock = getLock(path);
 		try {
 			lock.lock();
 			return get(path, true);
@@ -70,13 +86,29 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		return this.objectInvalidationTime;
 	}
 
-	public boolean isCacheObjects() {
-		return this.cacheObjects;
+	@Override
+	public FsObjectCache<T>
+			withCreateIfNonExistent(boolean createIfNonExistent) {
+		this.createIfNonExistent = createIfNonExistent;
+		return this;
 	}
 
-	public void persist(T t, String path) {
-		ClassStringKeyLock lock = LockUtils
-				.obtainClassStringKeyLock(pathToValue.getClass(), path);
+	@Override
+	public Class<T> getPersistedClass() {
+		return clazz;
+	}
+
+	@Override
+	public List<String> listChildPaths(String pathPrefix) {
+		return Arrays.stream(root.listFiles())
+				.filter(f -> f.getName().startsWith(pathPrefix))
+				.map(f -> f.getName().replaceFirst("(.+)\\.dat", "$1"))
+				.collect(Collectors.toList());
+	}
+
+	@Override
+	public void persist(String path, T t) {
+		ClassStringKeyLock lock = getLock(path);
 		try {
 			lock.lock();
 			File cacheFile = getCacheFile(path);
@@ -86,12 +118,17 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		}
 	}
 
+	private ClassStringKeyLock getLock(String path) {
+		ClassStringKeyLock lock = LockUtils.obtainClassStringKeyLock(
+				pathToValue == null ? clazz : pathToValue.getClass(), path);
+		return lock;
+	}
+
 	/**
 	 * return false if no change
 	 */
 	public boolean persistIfModified(T t, String path) {
-		ClassStringKeyLock lock = LockUtils
-				.obtainClassStringKeyLock(pathToValue.getClass(), path);
+		ClassStringKeyLock lock = getLock(path);
 		try {
 			lock.lock();
 			File cacheFile = getCacheFile(path);
@@ -112,8 +149,9 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		}
 	}
 
-	public void setCacheObjects(boolean cacheObjects) {
-		this.cacheObjects = cacheObjects;
+	@Override
+	public void remove(String path) {
+		getCacheFile(path).delete();
 	}
 
 	public void setObjectInvalidationTime(long objectInvalidationTime) {
@@ -124,6 +162,12 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		if (invalidationTimer != null) {
 			invalidationTimer.cancel();
 		}
+	}
+
+	@Override
+	public PersistentObjectCache<T> withRetainInMemory(boolean retainInMemory) {
+		this.retainInMemory = retainInMemory;
+		return this;
 	}
 
 	private void checkInvalidation() {
@@ -144,7 +188,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	}
 
 	private void ensureCacheInvalidationStarted() {
-		if (cacheObjects && objectInvalidationTime != 0
+		if (retainInMemory && objectInvalidationTime != 0
 				&& invalidationTask == null) {
 			invalidationTask = new TimerTask() {
 				@Override
@@ -162,7 +206,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	private T get(String path, boolean allowFromCachedObjects) {
 		ensureCacheInvalidationStarted();
-		if (cacheObjects) {
+		if (retainInMemory) {
 			FsObjectCache<T>.CacheEntry entry = cachedObjects.get(path);
 			if (entry != null) {
 				return entry.object;
@@ -170,10 +214,14 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		}
 		File cacheFile = getCacheFile(path);
 		if (!cacheFile.exists() || !allowFromCachedObjects) {
+			if (!createIfNonExistent) {
+				return null;
+			}
 			try {
 				logger.info("refreshing cache object - {} - {}",
 						clazz.getSimpleName(), path);
-				T value = pathToValue.apply(path);
+				T value = pathToValue == null ? clazz.newInstance()
+						: pathToValue.apply(path);
 				KryoUtils.serializeToFile(value, cacheFile);
 			} catch (Exception e) {
 				if (!cacheFile.exists()) {
@@ -193,7 +241,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		try {
 			T t = KryoUtils.deserializeFromFile(cacheFile, clazz);
 			MetricLogging.get().end(key, metricLogger);
-			if (cacheObjects) {
+			if (retainInMemory) {
 				FsObjectCache<T>.CacheEntry entry = new CacheEntry();
 				entry.created = System.currentTimeMillis();
 				entry.object = t;

@@ -4,8 +4,11 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.Stack;
 import java.util.function.Function;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
@@ -17,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.ObjectIdGenerator;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyName;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -53,24 +57,33 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	private boolean withDefaults = true;
 
+	private boolean withDuplicateIdRefCheck = false;
+
+	private boolean truncateAtMaxLength;
+
 	public JacksonJsonObjectSerializer() {
 		maxLength = ResourceUtilities.getInteger(
 				JacksonJsonObjectSerializer.class, "maxLength", 10000000);
 	}
 
 	@Override
-	public <T> T deserialize(String json, Class<T> clazz) {
+	public <T> T deserialize(String deserJson, Class<T> clazz) {
 		return runWithObjectMapper(mapper -> {
+			String json = deserJson;
 			try {
-				String fJson = json;
 				if (withBase64Encoding) {
-					fJson = new String(Base64.getDecoder().decode(fJson),
+					json = new String(Base64.getDecoder().decode(json),
 							StandardCharsets.UTF_8);
 				}
-				return mapper.readValue(fJson, clazz);
+				if (withDuplicateIdRefCheck
+						&& hasDuplicateIds(mapper.readTree(json))) {
+				} else {
+					return mapper.readValue(json, clazz);
+				}
 			} catch (Exception e) {
-				return deserialize_v1(json, clazz);
+				// deserialization issue
 			}
+			return deserialize_v1(json, clazz);
 		});
 	}
 
@@ -100,7 +113,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	public String serialize(Object object) {
 		return runWithObjectMapper(mapper -> {
 			try {
-				StringWriter writer = new LengthLimitedStringWriter(maxLength);
+				StringWriter writer = new LengthLimitedStringWriter(maxLength,truncateAtMaxLength);
 				if (withPrettyPrint) {
 					mapper.writerWithDefaultPrettyPrinter().writeValue(writer,
 							object);
@@ -134,6 +147,12 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		return this;
 	}
 
+	public JacksonJsonObjectSerializer
+			withDuplicateIdRefCheck(boolean withDuplicateIdRefCheck) {
+		this.withDuplicateIdRefCheck = withDuplicateIdRefCheck;
+		return this;
+	}
+
 	public JacksonJsonObjectSerializer withIdRefs() {
 		this.withIdRefs = true;
 		return this;
@@ -141,6 +160,11 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	public JacksonJsonObjectSerializer withMaxLength(int maxLength) {
 		this.maxLength = maxLength;
+		return this;
+	}
+	
+	public JacksonJsonObjectSerializer withTruncateAtMaxLength(boolean truncateAtMaxLength) {
+		this.truncateAtMaxLength = truncateAtMaxLength;
 		return this;
 	}
 
@@ -172,6 +196,22 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	private boolean hasDuplicateIds(JsonNode root) {
+		Set<String> refIds = new LinkedHashSet<>();
+		Stack<JsonNode> nodes = new Stack<>();
+		nodes.push(root);
+		while (nodes.size() > 0) {
+			JsonNode node = nodes.pop();
+			if (node.has("ref_id")) {
+				if (!refIds.add(node.get("ref_id").asText())) {
+					return true;
+				}
+			}
+			node.elements().forEachRemaining(nodes::push);
+		}
+		return false;
 	}
 
 	private <T> T
@@ -275,58 +315,77 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	public static class LengthLimitedStringWriter extends StringWriter {
 		private int maxLength;
+		private boolean truncateAtMaxLength;
 
-		public LengthLimitedStringWriter(int maxLength) {
+		public LengthLimitedStringWriter(int maxLength, boolean truncateAtMaxLength) {
 			this.maxLength = maxLength;
+			this.truncateAtMaxLength = truncateAtMaxLength;
 		}
 
 		@Override
 		public StringWriter append(char c) {
-			checkLength(1);
+			if(!checkLength(1)){
+			return this;	
+			}
 			return super.append(c);
 		}
 
 		@Override
 		public StringWriter append(CharSequence csq) {
-			checkLength(csq.length());
+			if(!checkLength(csq.length())){
+				return this;	
+				}
 			return super.append(csq);
 		}
 
 		@Override
 		public StringWriter append(CharSequence csq, int start, int end) {
-			checkLength(end - start);
+			if(!checkLength(end - start)){
+				return this;	
+				}
 			return super.append(csq, start, end);
 		}
 
 		@Override
 		public void write(char[] cbuf, int off, int len) {
-			checkLength(len);
+			if(!checkLength(len)){
+				return ;	
+				}
 			super.write(cbuf, off, len);
 		}
 
 		@Override
 		public void write(int c) {
-			checkLength(1);
+			if(!checkLength(1)){
+				return ;	
+				}
 			super.write(c);
 		}
 
 		@Override
 		public void write(String str) {
-			checkLength(str.length());
+			if(!checkLength(str.length())){
+				return ;	
+				}
 			super.write(str);
 		}
 
 		@Override
 		public void write(String str, int off, int len) {
-			checkLength(len);
+			if(!checkLength(len)){
+				return ;	
+				}
 			super.write(str, off, len);
 		}
 
-		private void checkLength(int len) {
+		private boolean checkLength(int len) {
 			if (maxLength == 0) {
-				return;
+				return true;
 			}
 			if (getBuffer().length() + len > maxLength) {
+				if(truncateAtMaxLength){
+					return false;
+				}
 				String first = "";
 				String last = "";
 				if (getBuffer().length() <= 1000) {
@@ -346,6 +405,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 								+ ":\n%s\n\ntop of stack:\n%s",
 						maxLength, first, last,
 						CommonUtils.joinWithNewlines(topOfTrace));
+			}else{
+				return true;
 			}
 		}
 	}

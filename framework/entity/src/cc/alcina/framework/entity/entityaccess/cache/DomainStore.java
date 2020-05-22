@@ -89,6 +89,7 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersisten
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreHealth;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreInstrumentation;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -129,6 +130,9 @@ public class DomainStore implements IDomainStore {
 
 	public static final String CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH = DomainStore.class
 			.getName() + ".CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH";
+
+	public static final String CONTEXT_POPULATE_LAZY_PROPERTY_VALUES = DomainStore.class
+			.getName() + ".CONTEXT_POPULATE_LAZY_PROPERTY_VALUES";
 
 	public static final String CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS = DomainStore.class
 			.getName() + ".CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS";
@@ -250,7 +254,7 @@ public class DomainStore implements IDomainStore {
 
 	DomainStoreLoader loader;
 
-	private UnsortedMultikeyMap<DomainStoreTransient> domainStoreTransientProperties = new UnsortedMultikeyMap<>(
+	private UnsortedMultikeyMap<DomainStoreProperty> domainStoreProperties = new UnsortedMultikeyMap<>(
 			2);
 
 	private LazyObjectLoader lazyObjectLoader;
@@ -440,6 +444,15 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	// FIXME.mvcc - useentityclass
+	private void
+			addToLazyPropertyEvictionQueue(HasIdAndLocalId hasIdAndLocalId) {
+		domainDescriptor.getPreProvideTasks(hasIdAndLocalId.getClass()).stream()
+				.filter(ppt -> ppt instanceof LazyLoadProvideTask).findFirst()
+				.map(ppt -> (LazyLoadProvideTask) ppt).get()
+				.addToEvictionQueue(hasIdAndLocalId);
+	}
+
 	private void doEvictions() {
 		domainDescriptor.preProvideTasks
 				.forEach(PreProvideTask::writeLockedCleanup);
@@ -454,9 +467,12 @@ public class DomainStore implements IDomainStore {
 		case REMOVE_REF_FROM_COLLECTION:
 			return dte;
 		}
-		DomainStoreTransient ann = domainStoreTransientProperties
+		DomainStoreProperty ann = domainStoreProperties
 				.get(dte.getObjectClass(), dte.getPropertyName());
 		if (ann == null) {
+			return dte;
+		}
+		if (ann.loadType() == DomainStorePropertyLoadType.LAZY) {
 			return dte;
 		}
 		if (!ann.translateObjectWritesToIdWrites()) {
@@ -571,16 +587,15 @@ public class DomainStore implements IDomainStore {
 				if ((rm.getAnnotation(Transient.class) != null
 						&& rm.getAnnotation(DomainStoreDbColumn.class) == null)
 						|| rm.getAnnotation(
-								DomainStoreTransient.class) != null) {
-					DomainStoreTransient transientAnn = rm
-							.getAnnotation(DomainStoreTransient.class);
-					if (transientAnn != null) {
+								DomainStoreProperty.class) != null) {
+					DomainStoreProperty propertyAnnotation = rm
+							.getAnnotation(DomainStoreProperty.class);
+					if (propertyAnnotation != null) {
 						Field field = getField(clazz, pd.getName());
 						field.setAccessible(true);
-						domainStoreTransientProperties.put(clazz,
-								field.getName(), transientAnn);
+						domainStoreProperties.put(clazz, field.getName(),
+								propertyAnnotation);
 					}
-					continue;
 				}
 			}
 		} catch (Exception e) {
@@ -738,7 +753,8 @@ public class DomainStore implements IDomainStore {
 				}
 			}
 			try {
-				for (PreProvideTask task : domainDescriptor.preProvideTasks) {
+				for (PreProvideTask task : domainDescriptor
+						.getPreProvideTasks(clazz)) {
 					task.run(clazz, raw, true);
 				}
 				if (query.isRaw() || isWillProjectLater()) {
@@ -899,6 +915,15 @@ public class DomainStore implements IDomainStore {
 								HiliLocator.objectLocator(dte));
 					}
 				}
+				if (dte.getPropertyName() != null) {
+					DomainStoreProperty ann = domainStoreProperties
+							.get(dte.getObjectClass(), dte.getPropertyName());
+					if (ann != null && ann
+							.loadType() == DomainStorePropertyLoadType.LAZY) {
+						addToLazyPropertyEvictionQueue(
+								transformManager.getObject(dte, true));
+					}
+				}
 			}
 			indexAtEnd.forEach(domainStoreObject -> {
 				List<DomainTransformEvent> list = perObjectTransforms
@@ -958,7 +983,7 @@ public class DomainStore implements IDomainStore {
 
 		private ThreadPoolExecutor warmupExecutor;
 
-		private DataSource dataSource;
+		private RetargetableDataSource dataSource;
 
 		private DomainLoaderType loaderType;
 
@@ -990,7 +1015,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		public Builder withLoaderDatabase(ThreadPoolExecutor warmupExecutor,
-				DataSource dataSource) {
+				RetargetableDataSource dataSource) {
 			this.warmupExecutor = warmupExecutor;
 			this.dataSource = dataSource;
 			loaderType = DomainLoaderType.Database;
@@ -1072,6 +1097,15 @@ public class DomainStore implements IDomainStore {
 		public synchronized DomainStore
 				storeFor(DomainDescriptor domainDescriptor) {
 			return descriptorMap.get(domainDescriptor);
+		}
+
+		public synchronized DomainStore
+				storeFor(String domainDescriptorClassName) {
+			DomainDescriptor domainDescriptor = descriptorMap.keySet().stream()
+					.filter(dd -> dd.getClass().getName()
+							.equals(domainDescriptorClassName))
+					.findFirst().get();
+			return storeFor(domainDescriptor);
 		}
 
 		public synchronized Stream<DomainStore> stream() {
@@ -1411,6 +1445,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
+		// FIXME - mvcc - doesn't look too detached to me
 		public <V extends HasIdAndLocalId> V detachedVersion(V v) {
 			return (V) Domain.query(v.getClass()).filterById(v.getId()).find();
 		}
@@ -1684,5 +1719,9 @@ public class DomainStore implements IDomainStore {
 		void startCommit() {
 			((PsAwareMultiplexingObjectCache) store.getCache()).startCommit();
 		}
+	}
+
+	public void setConnectionUrl(String newUrl) {
+((DomainStoreLoaderDatabase)		loader).setConnectionUrl(newUrl);
 	}
 }

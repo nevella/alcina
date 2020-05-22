@@ -16,6 +16,7 @@ import javax.xml.transform.dom.DOMSource;
 
 import org.w3c.dom.Document;
 
+import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -25,7 +26,6 @@ import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.XmlUtils.TransformerFactoryConfigurator;
-import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
 import cc.alcina.framework.entity.util.JaxbUtils;
 
 /**
@@ -87,7 +87,7 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 		m.marshal(wrapper, doc);
 		boolean logDocXml = false;
 		if (logDocXml) {
-			new XmlDoc(doc).logPretty();
+			new DomDoc(doc).logPretty();
 		}
 	}
 

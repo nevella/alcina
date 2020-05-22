@@ -40,7 +40,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
-
 /**
  *
  * @author Nick Reddel
@@ -100,10 +99,37 @@ public class CommonUtils {
 
 	private static Set<String> done = new LinkedHashSet<>();
 
+	// https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Titles
+	private static Set<String> standardLowercaseEnglish = Arrays
+			// not exactly - can imagine "like" in a company name
+			// "A,An,The,And,But,Or,Nor,For,Yet,So,As,In,Of,On,To,For,From,Into,Like,Over,With,Upon"
+			.stream("A,An,The,And,But,Or,Nor,For,Yet,So,As,In,Of,On,To,For,From,Into,LikeExcluded,Over,With,Upon"
+					.split(","))
+			.collect(Collectors.toSet());
+
 	public static void addIfNotNull(List l, Object o) {
 		if (o != null) {
 			l.add(o);
 		}
+	}
+
+	public static String applyStandardTitleCaseLowercaseRules(String string) {
+		String[] words = string.split(" ");
+		StringBuilder sb = new StringBuilder();
+		for (int idx = 0; idx < words.length; idx++) {
+			if (idx > 0) {
+				sb.append(" ");
+			}
+			String word = words[idx];
+			if (idx == 0 || idx == words.length - 1) {
+			} else {
+				if (standardLowercaseEnglish.contains(word)) {
+					word = word.toLowerCase();
+				}
+			}
+			sb.append(word);
+		}
+		return sb.toString();
 	}
 
 	public static String buildSpaceSeparatedStrings(String... strings) {
@@ -637,6 +663,11 @@ public class CommonUtils {
 			return format("%s %s",
 					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
 					padTwo(date.getYear() + 1900));
+		case AU_DATE_TIME_SHORT:
+			return format("%s/%s/%s - %s:%s:%s", padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
+					padTwo(date.getHours()), padTwo(date.getMinutes()),
+					padTwo(date.getSeconds()));
 		}
 		return date.toString();
 	}
@@ -1818,7 +1849,7 @@ public class CommonUtils {
 		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
 		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
 		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH, TIMESTAMP_NO_DAY,
-		AU_DATE_MONTH_NO_PAD_DAY
+		AU_DATE_MONTH_NO_PAD_DAY, AU_DATE_TIME_SHORT
 	}
 
 	public static class DeduplicatePredicate<C, K> implements Predicate<C> {

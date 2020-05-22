@@ -80,6 +80,13 @@ public class DomainStoreTransformSequencer {
 		} catch (Exception e) {
 			// FIXME - log. Wait for retry (which will be pushed from kafka)
 			e.printStackTrace();
+			try {
+				if (connection != null) {
+					connection.close();
+				}
+			} catch (Exception e2) {
+				e2.printStackTrace();
+			}
 			connection = null;
 			return new ArrayList<>();
 		}
@@ -213,16 +220,19 @@ public class DomainStoreTransformSequencer {
 				transactionsData.commitTimestamp = rs
 						.getTimestamp("transactionCommitTime");
 				rs.close();
-				PreparedStatement idStatement = conn.prepareStatement(Ax.format(
-						"select id from %s where transactionCommitTime=? ",
-						tableName));
-				idStatement.setTimestamp(1, transactionsData.commitTimestamp);
-				ResultSet idRs = idStatement.executeQuery();
-				while (idRs.next()) {
-					transactionsData.transformListIds.add(idRs.getLong("id"));
+				try (PreparedStatement idStatement = conn.prepareStatement(Ax
+						.format("select id from %s where transactionCommitTime=? ",
+								tableName))) {
+					idStatement.setTimestamp(1,
+							transactionsData.commitTimestamp);
+					ResultSet idRs = idStatement.executeQuery();
+					while (idRs.next()) {
+						transactionsData.transformListIds
+								.add(idRs.getLong("id"));
+					}
+					logger.trace("Got highestVisible request data : {}",
+							transactionsData);
 				}
-				logger.trace("Got highestVisible request data : {}",
-						transactionsData);
 			}
 			return transactionsData;
 		}
@@ -277,6 +287,7 @@ public class DomainStoreTransformSequencer {
 				}
 				txData.add(element);
 			}
+			rs.close();
 			if (maxCurrent <= 0) {
 				txData.clear();
 			}
@@ -302,8 +313,9 @@ public class DomainStoreTransformSequencer {
 					"Added unpublished ids {} - fromTimestamp {} - new timestamp {}",
 					unpublishedIds, fromTimestamp,
 					highestVisibleTransactions.commitTimestamp);
-			return unpublishedIds;
 		}
+		conn.commit();
+		return unpublishedIds;
 	}
 
 	void ensureTransactionCommitTimes() throws SQLException {
@@ -324,22 +336,27 @@ public class DomainStoreTransformSequencer {
 					tableName);
 			ResultSet rs = statement.executeQuery(sql);
 			while (rs.next()) {
-				long id = rs.getLong("id");
-				PreparedStatement updateStatement = conn.prepareStatement(Ax
-						.format("update %s set transactionCommitTime=? where id=?",
-								tableName));
-				Timestamp commit_timestamp = rs
-						.getTimestamp("commit_timestamp");
-				updateStatement.setTimestamp(1, commit_timestamp);
-				updateStatement.setLong(2, id);
-				updateStatement.executeUpdate();
-				updateStatement.close();
-				logger.debug("Updated transactionCommitTime for request {}",
-						id);
+				try (PreparedStatement updateStatement = conn
+						.prepareStatement(Ax.format(
+								"update %s set transactionCommitTime=? where id=?",
+								tableName))) {
+					long id = rs.getLong("id");
+					Timestamp commit_timestamp = rs
+							.getTimestamp("commit_timestamp");
+					updateStatement.setTimestamp(1, commit_timestamp);
+					updateStatement.setLong(2, id);
+					updateStatement.executeUpdate();
+					updateStatement.close();
+					logger.debug("Updated transactionCommitTime for request {}",
+							id);
+				}
 			}
-			conn.commit();
-			rs.close();
 		}
+		conn.commit();
+	}
+
+	Timestamp getHighestVisibleTransactionTimestamp() {
+		return highestVisibleTransactions.commitTimestamp;
 	}
 
 	void markHighestVisibleTransformList(Connection conn) throws SQLException {

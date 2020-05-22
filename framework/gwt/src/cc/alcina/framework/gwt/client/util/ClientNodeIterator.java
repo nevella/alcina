@@ -3,7 +3,7 @@
  */
 package cc.alcina.framework.gwt.client.util;
 
-import com.google.gwt.dom.client.Node;
+import org.w3c.dom.Node;
 
 public class ClientNodeIterator {
 	public static final int SHOW_ALL = -1;
@@ -31,7 +31,7 @@ public class ClientNodeIterator {
 		return root;
 	}
 
-	public Node nextNode() {
+	public <T extends Node> T nextNode() {
 		boolean filterOk = false;
 		while (current != null && !filterOk) {
 			Node next = null, node = current, checkedKids = null;
@@ -56,10 +56,10 @@ public class ClientNodeIterator {
 			current = next;
 			filterOk = checkFilter();
 		}
-		return current;
+		return (T) current;
 	}
 
-	public Node previousNode() {
+	public <T extends Node> T previousNode() {
 		boolean filterOk = false;
 		while (current != null && !filterOk) {
 			if (current == root) {
@@ -75,7 +75,7 @@ public class ClientNodeIterator {
 			current = previous;
 			filterOk = checkFilter();
 		}
-		return current;
+		return (T) current;
 	}
 
 	public void setCurrentNode(Node current) {
@@ -110,7 +110,7 @@ public class ClientNodeIterator {
 	}
 
 	private Node lastChildOf(Node node) {
-		if (node.getChildCount() == 0) {
+		if (!node.hasChildNodes()) {
 			return node;
 		}
 		return lastChildOf(node.getLastChild());

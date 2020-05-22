@@ -128,7 +128,7 @@ public class ElementLocal extends NodeLocal
 	}
 
 	@Override
-	public Map<String, String> getAttributes() {
+	public Map<String, String> getAttributeMap() {
 		return attributes;
 	}
 

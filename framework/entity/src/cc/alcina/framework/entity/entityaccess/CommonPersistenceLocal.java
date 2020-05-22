@@ -54,9 +54,6 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
 public interface CommonPersistenceLocal {
 	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
 
-	public void changeWrappedObjectOwner(long parseLong, IUser fromUser,
-			IUser toUser);
-
 	public abstract void connectPermissionsManagerToLiveObjects();
 
 	public abstract ClientInstance createClientInstance(String userAgent,
@@ -85,10 +82,6 @@ public interface CommonPersistenceLocal {
 	public abstract IGroup getGroupByName(String groupName, boolean clean);
 
 	public abstract Iid getIidByKey(String iid);
-
-	public abstract <A> Class<? extends A> getImplementation(Class<A> clazz);
-
-	public String getImplementationSimpleClassName(Class<?> clazz);
 
 	public <T> T getItemById(Class<T> clazz, Long id);
 
@@ -213,9 +206,10 @@ public interface CommonPersistenceLocal {
 			long clientInstanceId);
 
 	long getMaxPublicationIdForUser(IUser user);
-	
-    List<Long> listRecentClientInstanceIds(String iidKey);
-    
-    public <T extends ILogRecord> long persistLogRecord(T logRecord);
 
+	List<Long> listRecentClientInstanceIds(String iidKey);
+
+	public <T extends ILogRecord> long persistLogRecord(T logRecord);
+
+	void changeJdbcConnectionUrl(String newUrl);
 }

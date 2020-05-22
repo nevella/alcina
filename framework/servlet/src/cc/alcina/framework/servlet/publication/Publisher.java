@@ -62,7 +62,6 @@ public class Publisher {
 		return publish(contentDefinition, deliveryModel, null);
 	}
 
-	
 	public PublicationResult publish(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original)
 			throws Exception {
@@ -126,7 +125,6 @@ public class Publisher {
 		}
 	}
 
-	
 	private PublicationResult publish0(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original)
 			throws Exception {
@@ -174,7 +172,7 @@ public class Publisher {
 				publicationId, publicationUserId);
 		ctx.renderedContent = crh.results;
 		if (crh.getResults().persist && publicationContentPersister != null
-				&& publicationId != 0) {
+				&& publicationId > 0) {
 			publicationContentPersister.persistContentRendererResults(
 					crh.getResults(), publicationId);
 		}

@@ -280,71 +280,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	public void printDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
-			boolean ignoreLatterSubstring,
-			boolean ignoreWhitespaceAndPunctuation, File f1, String s1, File f2,
-			String s2) {
-		String[] split1 = splitFile(s1);
-		String[] split2 = splitFile(s2);
-		Diff diff = new Diff(split1, split2);
-		Change change = diff.diff(Diff.forwardScript);
-		while (change != null) {
-			if (ignoreEqualLength && change.deleted == change.inserted) {
-			} else if (ignoreInsertions && change.deleted <= change.inserted) {
-			} else {
-				boolean ignore = false;
-				if (ignoreLatterSubstring) {
-					if (change.deleted == change.inserted) {
-						ignore = true;
-						for (int i = 0; i < change.deleted; i++) {
-							if (split1[change.line0 + i]
-									.contains(split2[change.line0 + i])) {
-							} else {
-								ignore = false;
-								break;
-							}
-						}
-					}
-				}
-				if (ignoreWhitespaceAndPunctuation && change.deleted == 1
-						&& change.inserted == 1) {
-					if (Sx.ntrim(split1[change.line0])
-							.replaceAll("[ ,.~:-]", "")
-							.equals(Sx.ntrim(split2[change.line1])
-									.replaceAll("[ ,.~:-]", ""))) {
-						ignore = true;
-					}
-				}
-				if (!ignore) {
-					System.out.format("(%s, %s): -%s, +%s\n", change.line0 + 1,
-							change.line1 + 1, change.deleted, change.inserted);
-					for (int i = 0; i < change.deleted; i++) {
-						System.out.format("\t---%-8s: %s\n",
-								change.line0 + i + 1, CommonUtils.hangingIndent(
-										split1[change.line0 + i], true, 2));
-					}
-					for (int i = 0; i < change.inserted; i++) {
-						System.out.format("\t+++%-8s: %s\n",
-								change.line1 + i + 1, CommonUtils.hangingIndent(
-										split2[change.line1 + i], true, 2));
-					}
-				}
-			}
-			change = change.link;
-		}
-		System.out.println();
-		System.out.format("\nopendiff \"%s\" \"%s\"\n\n", f1.getPath(),
-				f2.getPath());
-	}
-
-	public void printDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
-			boolean ignoreLatterSubstring, File f1, String s1, File f2,
-			String s2) {
-		printDiff(ignoreEqualLength, ignoreInsertions, ignoreLatterSubstring,
-				false, f1, s1, f2, s2);
-	}
-
-	public void dumpTransforms() {
+	public String dumpTransforms() {
 		System.out.println("\n\n");
 		Set<DomainTransformEvent> transforms = devHelper.dumpTransforms();
 		System.out.println("\n\n");
@@ -354,6 +290,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			ResourceUtilities.writeStringToFile(transforms.toString(),
 					dumpFile);
 			Ax.out("Transforms dumped to:\n\t%s", dumpFile.getPath());
+			return dumpFile.getPath();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -646,6 +583,70 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		cmd.setEnvironment(this);
 	}
 
+	public void printDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
+			boolean ignoreLatterSubstring,
+			boolean ignoreWhitespaceAndPunctuation, File f1, String s1, File f2,
+			String s2) {
+		String[] split1 = splitFile(s1);
+		String[] split2 = splitFile(s2);
+		Diff diff = new Diff(split1, split2);
+		Change change = diff.diff(Diff.forwardScript);
+		while (change != null) {
+			if (ignoreEqualLength && change.deleted == change.inserted) {
+			} else if (ignoreInsertions && change.deleted <= change.inserted) {
+			} else {
+				boolean ignore = false;
+				if (ignoreLatterSubstring) {
+					if (change.deleted == change.inserted) {
+						ignore = true;
+						for (int i = 0; i < change.deleted; i++) {
+							if (split1[change.line0 + i]
+									.contains(split2[change.line0 + i])) {
+							} else {
+								ignore = false;
+								break;
+							}
+						}
+					}
+				}
+				if (ignoreWhitespaceAndPunctuation && change.deleted == 1
+						&& change.inserted == 1) {
+					if (Sx.ntrim(split1[change.line0])
+							.replaceAll("[ ,.~:-]", "")
+							.equals(Sx.ntrim(split2[change.line1])
+									.replaceAll("[ ,.~:-]", ""))) {
+						ignore = true;
+					}
+				}
+				if (!ignore) {
+					System.out.format("(%s, %s): -%s, +%s\n", change.line0 + 1,
+							change.line1 + 1, change.deleted, change.inserted);
+					for (int i = 0; i < change.deleted; i++) {
+						System.out.format("\t---%-8s: %s\n",
+								change.line0 + i + 1, CommonUtils.hangingIndent(
+										split1[change.line0 + i], true, 2));
+					}
+					for (int i = 0; i < change.inserted; i++) {
+						System.out.format("\t+++%-8s: %s\n",
+								change.line1 + i + 1, CommonUtils.hangingIndent(
+										split2[change.line1 + i], true, 2));
+					}
+				}
+			}
+			change = change.link;
+		}
+		System.out.println();
+		System.out.format("\nopendiff \"%s\" \"%s\"\n\n", f1.getPath(),
+				f2.getPath());
+	}
+
+	public void printDiff(boolean ignoreEqualLength, boolean ignoreInsertions,
+			boolean ignoreLatterSubstring, File f1, String s1, File f2,
+			String s2) {
+		printDiff(ignoreEqualLength, ignoreInsertions, ignoreLatterSubstring,
+				false, f1, s1, f2, s2);
+	}
+
 	public void pushSubshell(Class<? extends DevConsoleCommand> clazz) {
 		shells.push(clazz);
 		loadCommandMap();
@@ -712,6 +713,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	public void setCommandLineText(String text) {
 		commandLine.setTextWithPrompt(text);
 		remote.addSetCommandLineEvent(text);
+	}
+
+	public void setConsoleOuputMuted(boolean muted) {
+		out.setMuted(muted);
+		err.setMuted(muted);
 	}
 
 	public void setNextCommand(String cmd) {

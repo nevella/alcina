@@ -17,6 +17,8 @@ public class BiPrintStream extends PrintStream {
 
 	public PrintStream s2;
 
+	private PrintStream[] restoreStreams = null;
+
 	public BiPrintStream(OutputStream ignore) {
 		super(ignore);
 	}
@@ -219,6 +221,18 @@ public class BiPrintStream extends PrintStream {
 		debugPrint(x);
 		s1.println(x);
 		s2.println(x);
+	}
+
+	public void setMuted(boolean muted) {
+		if (muted) {
+			restoreStreams = new PrintStream[] { s1, s2 };
+			s1 = new NullPrintStream();
+			s2 = new NullPrintStream();
+		} else {
+			s1 = restoreStreams[0];
+			s2 = restoreStreams[1];
+			restoreStreams = null;
+		}
 	}
 
 	@Override

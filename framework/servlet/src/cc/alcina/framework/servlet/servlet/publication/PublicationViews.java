@@ -9,6 +9,9 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
+import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -18,9 +21,6 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
-import cc.alcina.framework.entity.parser.structured.node.XmlNodeHtmlTableBuilder;
 import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
 import cc.alcina.framework.servlet.publication.Publisher.PublicationContentPersister;
@@ -39,14 +39,14 @@ public class PublicationViews {
 	public void build(long id, String delta) {
 		Publication publication = CommonPersistenceProvider.get()
 				.getCommonPersistence().getPublication(id);
-		XmlDoc doc = XmlDoc.basicHtmlDoc();
+		DomDoc doc = DomDoc.basicHtmlDoc();
 		String css = ResourceUtilities.readClassPathResourceAsString(
 				PublicationViews.class, "publication-view.css");
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
-		XmlNode body = doc.xpath("//body").node();
+		DomNode body = doc.xpath("//body").node();
 		body.builder().tag("h2").text("Publication view").append();
 		{
-			XmlNodeHtmlTableBuilder builder = body.html().tableBuilder();
+			DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
 			builder.row().cell("Id").cell(id);
 			builder.row().cell("User")
 					.cell(publication.getUser().toIdNameString());
@@ -58,12 +58,12 @@ public class PublicationViews {
 			builder.append();
 		}
 		body.builder().tag("hr").append();
-		XmlNode content = body.builder().tag("iframe").append().setAttr("id",
+		DomNode content = body.builder().tag("iframe").append().setAttr("id",
 				"content-frame");
-		content.html().addClassName("content");
+		content.style().addClassName("content");
 		PublicationContentPersister publicationContentPersister = Registry
 				.impl(PublicationContentPersister.class);
-		XmlNode script = body.builder().tag("script").append();
+		DomNode script = body.builder().tag("script").append();
 		ContentRendererResults crr = publicationContentPersister
 				.getContentRendererResults(id);
 		String nodeHtml = StringEscapeUtils.escapeJavaScript(crr.htmlContent);
@@ -72,7 +72,7 @@ public class PublicationViews {
 		fb.line("document.getElementById('content-frame').contentDocument.documentElement.innerHTML= content;");
 		script.setText(fb.toString());
 		// {
-		// XmlNodeHtmlTableBuilder builder = body.html().tableBuilder();
+		// DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
 		// builder.row().style("font-weight:bold").cell("Time").cell("Type")
 		// .cell("Details");
 		// String story = delta != null ? delta : userStory.getStory();
@@ -105,13 +105,13 @@ public class PublicationViews {
 		// }
 		// break;
 		// }
-		// XmlNodeHtmlTableRowBuilder row = builder.row();
+		// DomNodeHtmlTableRowBuilder row = builder.row();
 		// String timestamp = CommonUtils.formatDate(record.getTime(),
 		// DateStyle.TIMESTAMP_NO_DAY);
 		// row.cell().text(timestamp).nowrap().cell();
 		// String topic = Ax.friendly(record.getTopic());
 		// row.cell(topic);
-		// XmlNode td = row.getNode().builder().tag("td").append();
+		// DomNode td = row.getNode().builder().tag("td").append();
 		// Message message = parseMessage(record);
 		// if (message.path != null) {
 		// td.builder().tag("div")

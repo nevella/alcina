@@ -105,6 +105,7 @@ public class BoundHTML extends AbstractBoundWidget<String>
 		return retValue;
 	}
 
+	@Override
 	public String getValue() {
 		return this.base.getHTML().length() == 0 ? null : this.base.getHTML();
 	}
@@ -132,6 +133,7 @@ public class BoundHTML extends AbstractBoundWidget<String>
 		this.base.removeStyleName(style);
 	}
 
+	@Override
 	public void setHeight(String height) {
 		this.base.setHeight(height);
 	}
@@ -169,6 +171,7 @@ public class BoundHTML extends AbstractBoundWidget<String>
 		this.base.setTitle(title);
 	}
 
+	@Override
 	public void setValue(String value) {
 		// ("Setting value "+ value, null );
 		Object old = this.getValue();

@@ -82,8 +82,7 @@ public abstract class UnitTest {
 			int predelayMs = token.getConfiguration().predelayMs;
 			if (predelayMs != 0) {
 				token.getWriter().write(
-						Ax.format("Predelay: %s ms \n", predelayMs),
-						level);
+						Ax.format("Predelay: %s ms \n", predelayMs), level);
 				Thread.sleep(predelayMs);
 			}
 		} catch (InterruptedException e) {
@@ -101,8 +100,8 @@ public abstract class UnitTest {
 		testResult.setStartTime(System.currentTimeMillis());
 		testResult.setNoTimePayload(noTimePayload());
 		testResult.setName(getClass().getSimpleName());
-		token.getWriter().write(Ax.format("Test: %s - \n",
-				getClass().getSimpleName()), level);
+		token.getWriter().write(
+				Ax.format("Test: %s - \n", getClass().getSimpleName()), level);
 		if (parent == null) {
 			token.setRootResult(testResult);
 			testResult.setRootResult(true);
@@ -115,6 +114,7 @@ public abstract class UnitTest {
 			return testResult;
 		}
 		level++;
+		beforeDependentTests(token);
 		List<UnitTest> dependentTests = getRequiredDependentTests(token);
 		if (!dependentTests.isEmpty()) {
 			level++;
@@ -127,9 +127,11 @@ public abstract class UnitTest {
 		if (cancelDueToError(token, level)) {
 			return testResult;
 		}
+		beforeChildTests(token);
 		long startTime = System.currentTimeMillis();
-		token.getWriter().write(Ax.format("Starting test: %s - \n",
-				getClass().getSimpleName()), level);
+		token.getWriter().write(
+				Ax.format("Starting test: %s - \n", getClass().getSimpleName()),
+				level);
 		Class<? extends UnitTest>[] childTests = childTests();
 		if (childTests.length != 0) {
 			level++;
@@ -145,7 +147,7 @@ public abstract class UnitTest {
 		}
 		testResult.setResultType(TestResultType.OK);
 		try {
-			int retryCount = 1;
+			int retryCount = getRetryCount();
 			while (true) {
 				try {
 					LooseContext.push();
@@ -221,6 +223,12 @@ public abstract class UnitTest {
 		}
 	}
 
+	protected void beforeChildTests(WDToken token) {
+	}
+
+	protected void beforeDependentTests(WDToken token) {
+	}
+
 	protected void getAndLog(WebDriver driver, String uri) {
 		getAndLog(driver, uri, false);
 	}
@@ -234,6 +242,10 @@ public abstract class UnitTest {
 			driver.get(uri);
 		}
 		MetricLogging.get().end(key);
+	}
+
+	protected int getRetryCount() {
+		return 1;
 	}
 
 	protected Map<Class<? extends UnitTest>, UnitTest> getTestTemplates() {

@@ -41,7 +41,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +57,7 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -88,8 +88,13 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainS
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentPropertyType;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.LaterLookup.LaterItem;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
+/*FIXME
+ * The various loadtable methods are way to overloaded 
+ * (and use context vars as well because of call depth). Refactor into a loadparams builder
+ */
 public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -110,7 +115,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private DomainStore store;
 
-	DataSource dataSource;
+	RetargetableDataSource dataSource;
 
 	private ThreadPoolExecutor warmupExecutor;
 
@@ -120,7 +125,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private int originalTransactionIsolation;
 
-	private UnsortedMultikeyMap<Field> domainStoreTransientFields = new UnsortedMultikeyMap<Field>(
+	private UnsortedMultikeyMap<Field> domainStorePropertyFields = new UnsortedMultikeyMap<Field>(
 			2);
 
 	// only access via synchronized code
@@ -149,7 +154,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			.newFixedThreadPool(8,
 					new NamedThreadFactory("domainStore-iLoader"));
 
-	public DomainStoreLoaderDatabase(DomainStore store, DataSource dataSource,
+	public DomainStoreLoaderDatabase(DomainStore store,
+			RetargetableDataSource dataSource,
 			ThreadPoolExecutor warmupExecutor) {
 		this.store = store;
 		this.dataSource = dataSource;
@@ -209,6 +215,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		} catch (SQLException e) {
 			logger.warn("Exception in ensureTransactionCommitTimes ", e);
 		}
+	}
+
+	public void setConnectionUrl(String newUrl) {
+		dataSource.setConnectionUrl(newUrl);
 	}
 
 	@Override
@@ -709,11 +719,16 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			boolean ensureModificationChecker) throws Exception {
 		keepDetached |= LooseContext
 				.is(DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
+		boolean populateLazyPropertyValues = LooseContext
+				.is(DomainStore.CONTEXT_POPULATE_LAZY_PROPERTY_VALUES);
+		ignoreIfExisting &= !populateLazyPropertyValues;
 		List<HasId> loaded;
 		ConnResults connResults = ConnResults.builder().withClazz(clazz)
 				.withConn(conn)
 				.withColumnDescriptors(columnDescriptors.get(clazz))
-				.withLoader(this).withSqlFilter(sqlFilter).build();
+				.withLoader(this).withSqlFilter(sqlFilter)
+				.withPopulateLazyPropertyValues(populateLazyPropertyValues)
+				.build();
 		List<PdOperator> pds = descriptors.get(clazz);
 		loaded = new ArrayList<>();
 		PdOperator idOperator = pds.stream().filter(pd -> pd.name.equals("id"))
@@ -734,6 +749,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 			for (int i = 0; i < objects.length; i++) {
 				PdOperator pdOperator = pds.get(i);
+				ColumnDescriptor columnDescriptor = connResults.columnDescriptors
+						.get(i);
 				Method rm = pdOperator.readMethod;
 				if (pdOperator.manyToOne != null
 						|| pdOperator.oneToOne != null) {
@@ -870,7 +887,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						&& store.isCached(clazz)) {
 					Collection<HasIdAndLocalId> iversionables = classIdTransformee
 							.asMap(clazz).allValues();
-					tasks.add(new ILoaderTask(conn, clazz, iversionables));
+					tasks.add(new IVersionableLoaderTask(conn, clazz,
+							iversionables));
 				}
 			}
 			invokeAllWithThrow(tasks, iLoaderExecutor);
@@ -906,15 +924,20 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			Method rm = pd.getReadMethod();
 			if ((rm.getAnnotation(Transient.class) != null
 					&& rm.getAnnotation(DomainStoreDbColumn.class) == null)
-					|| rm.getAnnotation(DomainStoreTransient.class) != null) {
-				DomainStoreTransient transientAnn = rm
-						.getAnnotation(DomainStoreTransient.class);
-				if (transientAnn != null) {
+					|| rm.getAnnotation(DomainStoreProperty.class) != null) {
+				boolean ignore = true;
+				DomainStoreProperty propertyAnnotation = rm
+						.getAnnotation(DomainStoreProperty.class);
+				if (propertyAnnotation != null) {
 					Field field = store.getField(clazz, pd.getName());
 					field.setAccessible(true);
-					domainStoreTransientFields.put(clazz, field, field);
+					domainStorePropertyFields.put(clazz, field, field);
+					ignore = propertyAnnotation
+							.loadType() == DomainStorePropertyLoadType.TRANSIENT;
 				}
-				continue;
+				if (ignore) {
+					continue;
+				}
 			}
 			if (classDescriptor.ignoreField(pd.getName())) {
 				continue;
@@ -996,6 +1019,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 			mapped.add(ensurePdOperator(pd, clazz));
 		}
+		boolean addLazyPropertyLoadTask = columnDescriptors.get(clazz).stream()
+				.anyMatch(
+						cd -> cd.loadType == DomainStorePropertyLoadType.LAZY);
+		if (addLazyPropertyLoadTask) {
+			domainDescriptor.preProvideTasks
+					.add(new LazyPropertyLoadTask<>(clazz, store));
+		}
 	}
 
 	private void setupInitialJoinTableCalls(List<Callable> calls) {
@@ -1055,6 +1085,46 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	protected synchronized void releaseWarmupConnection(Connection conn) {
 		warmupConnections.add(conn, -1);
+	}
+
+	// FIXME.mvcc
+	<T extends HasIdAndLocalId> void clearLazyPropertyValues(T domain) {
+		Class<? extends HasIdAndLocalId> clazz = domain.getClass();
+		List<ColumnDescriptor> columnDescriptors = this.columnDescriptors
+				.get(clazz);
+		List<PdOperator> pds = descriptors.get(clazz);
+		int idx = 0;
+		for (idx = 0; idx < columnDescriptors.size(); idx++) {
+			ColumnDescriptor columnDescriptor = columnDescriptors.get(idx);
+			PdOperator pd = pds.get(idx);
+			if (columnDescriptor.loadType == DomainStorePropertyLoadType.LAZY) {
+				try {
+					pd.field.set(domain, null);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+	}
+
+	// FIXME.mvcc
+	<T extends HasIdAndLocalId> void copyLazyPropertyValues(T t, T domain) {
+		Class<? extends HasIdAndLocalId> clazz = t.getClass();
+		List<ColumnDescriptor> columnDescriptors = this.columnDescriptors
+				.get(clazz);
+		List<PdOperator> pds = descriptors.get(clazz);
+		int idx = 0;
+		for (idx = 0; idx < columnDescriptors.size(); idx++) {
+			ColumnDescriptor columnDescriptor = columnDescriptors.get(idx);
+			PdOperator pd = pds.get(idx);
+			if (columnDescriptor.loadType == DomainStorePropertyLoadType.LAZY) {
+				try {
+					pd.field.set(domain, pd.field.get(t));
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
 	}
 
 	Connection getConnection() {
@@ -1383,14 +1453,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	private class ILoaderTask implements Callable<Void> {
+	private class IVersionableLoaderTask implements Callable<Void> {
 		private Class<HasIdAndLocalId> clazz;
 
 		private Collection<HasIdAndLocalId> sources;
 
 		private Connection conn;
 
-		public ILoaderTask(Connection conn, Class<HasIdAndLocalId> clazz,
+		public IVersionableLoaderTask(Connection conn,
+				Class<HasIdAndLocalId> clazz,
 				Collection<HasIdAndLocalId> sources) {
 			this.conn = conn;
 			this.clazz = clazz;
@@ -1409,8 +1480,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						false, true, false);
 				Map<Long, ? extends HasIdAndLocalId> idMap = HiliHelper
 						.toIdMap(sources);
-				Class<? extends IUser> userImplCass = CommonPersistenceProvider
-						.get().getCommonPersistenceExTransaction()
+				Class<? extends IUser> userImplCass = AlcinaPersistentEntityImpl
 						.getImplementation(IUser.class);
 				laterLookup.resolve(new CustomResolver() {
 					@Override
@@ -1509,6 +1579,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		private EnumType enumType = EnumType.ORDINAL;
 
+		private DomainStorePropertyLoadType loadType = DomainStorePropertyLoadType.EAGER;
+
 		public ColumnDescriptor(PropertyDescriptor pd, Class propertyType) {
 			this.pd = pd;
 			type = propertyType;
@@ -1517,6 +1589,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					.getAnnotation(Enumerated.class);
 			if (enumerated != null) {
 				enumType = enumerated.value();
+			}
+			DomainStoreProperty domainStoreProperty = pd.getReadMethod()
+					.getAnnotation(DomainStoreProperty.class);
+			if (domainStoreProperty != null) {
+				loadType = domainStoreProperty.loadType();
 			}
 		}
 
@@ -1533,8 +1610,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			return col != null ? col.name() : joinColumn.name();
 		}
 
-		public String getColumnSql() {
+		public String getColumnSql(boolean populateLazyPropertyValues) {
 			String columnName = getColumnName();
+			if (!populateLazyPropertyValues
+					&& loadType == DomainStorePropertyLoadType.LAZY) {
+				return Ax.format("null as %s", columnName);
+			}
 			if (type == Date.class) {
 				return String.format(
 						"EXTRACT (EPOCH FROM %s::timestamp at time zone 'utc')::float*1000 as %s",
@@ -1661,6 +1742,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		String rsSql;
 
+		private boolean lazyProperties;
+
 		private ConnResults(Builder builder) {
 			this.conn = builder.conn;
 			this.clazz = builder.clazz;
@@ -1675,6 +1758,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					? new ConnResultsReusePassthrough()
 					: (ConnResultsReuse) domainDescriptor
 							.getDomainSegmentLoader();
+			this.lazyProperties = builder.populateLazyPropertyValues;
 		}
 
 		public ResultSet ensureRs() {
@@ -1699,7 +1783,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						String template = "select %s from %s";
 						List<String> columnNames = new ArrayList<String>();
 						for (ColumnDescriptor descr : columnDescriptors) {
-							columnNames.add(descr.getColumnSql());
+							columnNames.add(descr.getColumnSql(lazyProperties));
 						}
 						Table table = (Table) clazz.getAnnotation(Table.class);
 						String tableName = table.name();
@@ -1751,6 +1835,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 			private DomainStoreLoaderDatabase loader;
 
+			private boolean populateLazyPropertyValues;
+
 			private Builder() {
 			}
 
@@ -1781,6 +1867,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 			public Builder withLoader(DomainStoreLoaderDatabase loader) {
 				this.loader = loader;
+				return this;
+			}
+
+			public Builder withPopulateLazyPropertyValues(
+					boolean populateLazyPropertyValues) {
+				this.populateLazyPropertyValues = populateLazyPropertyValues;
 				return this;
 			}
 

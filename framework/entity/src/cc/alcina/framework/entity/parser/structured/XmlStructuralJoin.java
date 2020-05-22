@@ -4,21 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
 
 public class XmlStructuralJoin {
 	public List<XmlStructuralJoin> additionalSources = new ArrayList<>();
 
-	public XmlNode sourceNode;
+	public DomNode sourceNode;
 
-	public XmlNode targetNode;
+	public DomNode targetNode;
 
 	public XmlToken token;
 
 	private XmlTokenContext nodeContext;
 
-	public XmlStructuralJoin(XmlNode node, XmlToken token) {
+	public XmlStructuralJoin(DomNode node, XmlToken token) {
 		this.sourceNode = node;
 		this.token = token;
 	}

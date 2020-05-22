@@ -69,6 +69,7 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -217,6 +218,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	private AtomicInteger callCounter = new AtomicInteger(0);
 
+	private AtomicInteger rpcExceptionLogCounter = new AtomicInteger();
+
 	@Override
 	@WebMethod(readonlyPermitted = true)
 	public void dumpData(String data) {
@@ -244,6 +247,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().getItemById(clazz, id, true, false);
 		} catch (Exception e) {
+			logRpcException(e);
 			throw new WebException(e.getMessage());
 		}
 	}
@@ -273,7 +277,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().getObjectDelta(specs);
 		} catch (Exception e) {
-			e.printStackTrace();
+			logRpcException(e);
 			throw new WebException(e);
 		}
 	}
@@ -394,6 +398,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public void logRpcException(Exception ex, String exceptionType) {
 		String remoteAddr = getRemoteAddress();
+		if (rpcExceptionLogCounter.incrementAndGet() > 10000) {
+			Ax.err("Not logging rpc exception %s : %s - too many exceptions",
+					exceptionType, CommonUtils.toSimpleExceptionMessage(ex));
+			return;
+		}
 		try {
 			LooseContext.pushWithKey(
 					CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
@@ -407,7 +416,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				msg = describeRpcRequest(rpcRequest, msg);
 			}
 			msg += "\nStacktrace:\t " + sw.toString();
-			System.out.println(msg);
+			Ax.err(msg);
 			CommonPersistenceLocal cpl = Registry
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence();
@@ -459,6 +468,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return id;
 		} catch (Exception e) {
 			logger.warn("Exception in persist wrappable", e);
+			logRpcException(e);
 			throw new WebException(e.getMessage());
 		}
 	}
@@ -507,9 +517,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				logger.info("Wrote {} offline/bulk records to {}",
 						records.size(), saveDir);
 			}
-			Class<? extends ClientInstance> clientInstanceClass = cp
+			Class<? extends ClientInstance> clientInstanceClass = AlcinaPersistentEntityImpl
 					.getImplementation(ClientInstance.class);
-			Class<? extends DomainTransformRequestPersistent> dtrClass = cp
+			Class<? extends DomainTransformRequestPersistent> dtrClass = AlcinaPersistentEntityImpl
 					.getImplementation(DomainTransformRequestPersistent.class);
 			long currentClientInstanceId = 0;
 			int committed = 0;
@@ -587,6 +597,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 								reuseIUserHolder.iUser = wrapperUser;
 							}
 						}
+						if (wrapperUser == null) {
+							// admin persistence
+							wrapperUser = PermissionsManager.get().getUser();
+						}
 						PermissionsManager.get().pushUser(wrapperUser,
 								LoginState.LOGGED_IN);
 					} else {
@@ -629,6 +643,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return committed;
 		} catch (Exception e) {
 			e.printStackTrace();
+			logRpcException(e);
 			throw new WebException(e);
 		} finally {
 			LooseContext.getContext().pop();
@@ -783,13 +798,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			transformException.setType(DomainTransformExceptionType.UNKNOWN);
 			domainTransformResponse.getTransformExceptions()
 					.add(transformException);
+			logRpcException(e);
 			throw new DomainTransformRequestException(domainTransformResponse);
 		}
 	}
 
 	@Override
-	public List<ServerValidator> validateOnServer(
-			List<ServerValidator> validators) throws WebException {
+	public List<ServerValidator>
+			validateOnServer(List<ServerValidator> validators) {
 		List<ServerValidator> entityLayer = new ArrayList<ServerValidator>();
 		List<ServerValidator> results = new ArrayList<ServerValidator>();
 		for (ServerValidator validator : validators) {
@@ -871,6 +887,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				try {
 					String serializedParameter = new JacksonJsonObjectSerializer()
 							.withIdRefs().withMaxLength(100000)
+							.withTruncateAtMaxLength(true)
 							.serializeNoThrow(parameters[idx]);
 					msg += Ax.format("%s: %s\n", idx, serializedParameter);
 				} catch (Throwable e) {
@@ -1238,8 +1255,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	static class IsWrappedObjectDteFilter
 			implements CollectionFilter<DomainTransformEvent> {
-		Class clazz = Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistenceExTransaction()
+		Class clazz = AlcinaPersistentEntityImpl
 				.getImplementation(WrappedObject.class);
 
 		@Override

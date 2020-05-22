@@ -9,16 +9,16 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObject
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 
 public interface DomainStoreLoader {
-    void appShutdown();
+	void appShutdown();
 
-    LazyObjectLoader getLazyObjectLoader();
+	LazyObjectLoader getLazyObjectLoader();
 
-    DomainStoreTransformSequencer getTransformSequencer();
+	DomainStoreTransformSequencer getTransformSequencer();
 
-    List<DomainTransformRequestPersistent> loadTransformRequests(
-            Collection<Long> ids, Logger logger) throws Exception;
+	List<DomainTransformRequestPersistent> loadTransformRequests(
+			Collection<Long> ids, Logger logger) throws Exception;
 
-    void onTransformsPersisted();
+	void onTransformsPersisted();
 
-    void warmup() throws Exception;
+	void warmup() throws Exception;
 }

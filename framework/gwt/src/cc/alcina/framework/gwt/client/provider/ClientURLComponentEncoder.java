@@ -18,15 +18,15 @@ import com.google.gwt.http.client.URL;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.util.UrlEncoder;
+import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 
 /**
  *
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = UrlEncoder.class, implementationType = ImplementationType.SINGLETON)
+@RegistryLocation(registryPoint = UrlComponentEncoder.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
-public class ClientURLComponentEncoder implements UrlEncoder {
+public class ClientURLComponentEncoder implements UrlComponentEncoder {
 	public String decode(String componentText) {
 		return URL.decodeQueryString(componentText);
 	}

@@ -5,14 +5,15 @@ import java.util.Collections;
 import java.util.List;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.BrowserEvents;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
@@ -89,7 +90,7 @@ public abstract class TourManager implements NativePreviewHandler {
 		Event event = Event.as(npe.getNativeEvent());
 		EventTarget target = event.getEventTarget();
 		if (event.getType().equals(BrowserEvents.KEYDOWN)) {
-			char c = (char) DOM.eventGetKeyCode(event);
+			char c = (char) event.getKeyCode();
 			if (c == KeyCodes.KEY_ESCAPE) {
 				stepListener.topicPublished(null, Action.CLOSE);
 			}
@@ -301,9 +302,11 @@ public abstract class TourManager implements NativePreviewHandler {
 				setPopupsModal(false);
 				WidgetUtils.click(target);
 				target.setPropertyString("value", step.getActionValue());
-				setPopupsModal(false);
-				WidgetUtils.click(target);
-				setPopupsModal(true);
+				Scheduler.get().scheduleDeferred(() -> {
+					setPopupsModal(false);
+					WidgetUtils.click(target);
+					setPopupsModal(true);
+				});
 				break;
 			}
 			return true;
@@ -374,8 +377,9 @@ public abstract class TourManager implements NativePreviewHandler {
 				PopupInfo popupInfo = view.popupInfo;
 				RelativePopupPositioningParams params = new RelativePopupPositioningParams();
 				RelativeTo relativeTo = popupInfo.getRelativeTo();
-				params.relativeToElement = WidgetUtils
-						.getElementForSelector(null, relativeTo.getElement());
+				params.relativeToElement = WidgetUtils.getElementForSelector(
+						Document.get().getDocumentElement(),
+						relativeTo.getElement());
 				if (params.relativeToElement != null) {
 					params.boundingWidget = RootPanel.get();
 					params.relativeContainer = RootPanel.get();
@@ -426,7 +430,8 @@ public abstract class TourManager implements NativePreviewHandler {
 		Element getElement(List<String> selectors) {
 			Element selected = null;
 			for (String selector : selectors) {
-				selected = WidgetUtils.getElementForSelector(null, selector);
+				selected = WidgetUtils.getElementForSelector(
+						Document.get().getDocumentElement(), selector);
 				if (selected != null
 						&& WidgetUtils.isVisibleAncestorChain(selected)) {
 					return selected;

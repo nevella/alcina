@@ -342,10 +342,10 @@ public class TransformPersisterIn {
 					eventsPersisted = CollectionFilters.filter(eventsPersisted,
 							filterByPolicy);
 					if (!eventsPersisted.isEmpty()) {
-						Class<? extends DomainTransformRequestPersistent> dtrqImpl = commonPersistenceBase
+						Class<? extends DomainTransformRequestPersistent> dtrqImpl = CommonPersistenceBase
 								.getImplementation(
 										DomainTransformRequestPersistent.class);
-						Class<? extends DomainTransformEventPersistent> dtrEvtImpl = commonPersistenceBase
+						Class<? extends DomainTransformEventPersistent> dtrEvtImpl = CommonPersistenceBase
 								.getImplementation(
 										DomainTransformEventPersistent.class);
 						DomainTransformRequestPersistent dtrp = dtrqImpl

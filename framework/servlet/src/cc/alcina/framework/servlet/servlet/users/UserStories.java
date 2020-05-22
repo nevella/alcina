@@ -20,10 +20,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
+import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
+import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableRowBuilder;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.IUserStory;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
@@ -34,10 +39,6 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.parser.structured.node.XmlDoc;
-import cc.alcina.framework.entity.parser.structured.node.XmlNode;
-import cc.alcina.framework.entity.parser.structured.node.XmlNodeHtmlTableBuilder;
-import cc.alcina.framework.entity.parser.structured.node.XmlNodeHtmlTableBuilder.XmlNodeHtmlTableRowBuilder;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
@@ -76,8 +77,7 @@ public class UserStories {
 					.getCommonPersistence().getClientInstance(clientInstanceId);
 		} else {
 			try {
-				clientInstance = CommonPersistenceProvider.get()
-						.getCommonPersistenceExTransaction()
+				clientInstance = AlcinaPersistentEntityImpl
 						.getImplementation(ClientInstance.class).newInstance();
 				clientInstance.setUserAgent(userStory.getUserAgent());
 				clientInstance
@@ -87,11 +87,11 @@ public class UserStories {
 				throw new WrappedRuntimeException(e);
 			}
 		}
-		XmlDoc doc = XmlDoc.basicHtmlDoc();
+		DomDoc doc = DomDoc.basicHtmlDoc();
 		String css = ResourceUtilities.readClassPathResourceAsString(
 				UserStories.class, "user-stories.css");
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
-		XmlNode body = doc.xpath("//body").node();
+		DomNode body = doc.xpath("//body").node();
 		body.builder().tag("h2").text("User Story").append();
 		String idNameString = clientInstance.getUser() == null
 				? userStory.getEmail()
@@ -102,7 +102,7 @@ public class UserStories {
 					GeolocationResolver.get().getLocation(location));
 		}
 		{
-			XmlNodeHtmlTableBuilder builder = body.html().tableBuilder();
+			DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
 			builder.row().cell("User").cell(idNameString);
 			builder.row().cell("Client instance")
 					.cell(clientInstanceId == 0 ? "---" : clientInstanceId);
@@ -113,7 +113,7 @@ public class UserStories {
 					.cell(clientInstance.getUserAgent());
 			builder.row().cell("Triggering paywall event")
 					.cell(userStory.getTrigger());
-			XmlNodeHtmlTableRowBuilder row = builder.row();
+			DomNodeHtmlTableRowBuilder row = builder.row();
 			row.cell("\u00a0");
 			row.cell().text(
 					"Note, below the 'near' field refers to text either of the element clicked or the closest subsequent text")
@@ -136,7 +136,7 @@ public class UserStories {
 		}
 		body.builder().tag("hr").append();
 		{
-			XmlNodeHtmlTableBuilder builder = body.html().tableBuilder();
+			DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
 			builder.row().style("font-weight:bold").cell("Time").cell("Type")
 					.cell("Details");
 			String story = delta != null ? delta : userStory.getStory();
@@ -172,13 +172,13 @@ public class UserStories {
 					}
 					break;
 				}
-				XmlNodeHtmlTableRowBuilder row = builder.row();
+				DomNodeHtmlTableRowBuilder row = builder.row();
 				String timestamp = CommonUtils.formatDate(record.getTime(),
 						DateStyle.TIMESTAMP_NO_DAY);
 				row.cell().text(timestamp).nowrap().cell();
 				String topic = Ax.friendly(record.getTopic());
 				row.cell(topic);
-				XmlNode td = row.getNode().builder().tag("td").append();
+				DomNode td = row.getNode().builder().tag("td").append();
 				Message message = parseMessage(record);
 				if (message.path != null) {
 					td.builder().tag("div")
@@ -299,9 +299,7 @@ public class UserStories {
 	}
 
 	protected Class<? extends IUserStory> getImplementation() {
-		return CommonPersistenceProvider.get()
-				.getCommonPersistenceExTransaction()
-				.getImplementation(IUserStory.class);
+		return AlcinaPersistentEntityImpl.getImplementation(IUserStory.class);
 	}
 
 	protected List<String> getUserStoryPropertiesNotPopulatedByClient() {

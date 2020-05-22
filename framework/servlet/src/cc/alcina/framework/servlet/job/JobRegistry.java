@@ -139,6 +139,10 @@ public class JobRegistry implements RegistrableService {
 				add);
 	}
 
+	public static ProgressBuilder progressBuilder() {
+		return new ProgressBuilder();
+	}
+
 	private Map<String, JobTracker> trackerMap = new ConcurrentHashMap<String, JobTracker>();
 
 	boolean refuseJobs = false;
@@ -368,15 +372,20 @@ public class JobRegistry implements RegistrableService {
 	public void updateJob(String message, int completedDelta) {
 		JobTracker contextTracker = getContextTracker();
 		if (contextTracker != null) {
-			contextTracker.updateJob(completedDelta);
-			long itemsCompleted = contextTracker.getItemsCompleted();
-			long itemCount = contextTracker.getItemCount();
-			double progress = ((double) itemsCompleted) / ((double) itemCount);
-			jobProgress(String.format("(%s/%s) -  %s", itemsCompleted,
-					itemCount, message), progress);
+			synchronized (contextTracker) {
+				contextTracker.updateJob(completedDelta);
+				long itemsCompleted = contextTracker.getItemsCompleted();
+				long itemCount = contextTracker.getItemCount();
+				double progress = ((double) itemsCompleted)
+						/ ((double) itemCount);
+				jobProgress(String.format("(%s/%s) -  %s", itemsCompleted,
+						itemCount, message), progress);
+			}
 		} else {
-			// Ax.out("Update job (no tracker): %s - %s
-			// completedDelta",message,completedDelta);
+			if (!Ax.isTest()) {
+				Ax.out("Update job (no tracker): %s - %s completedDelta",
+						message, completedDelta);
+			}
 		}
 	}
 
@@ -399,6 +408,12 @@ public class JobRegistry implements RegistrableService {
 	}
 
 	private void flushTracker(JobTracker tracker) {
+		if (tracker == null) {
+			// TODO - this shouldn't happen - probably need to make
+			// flushContextTracker...indeed, a lot of the xxContext/Tracker
+			// methods...protected
+			return;
+		}
 		tracker.setLog(tracker.getLog() + getContextLogBuffer(tracker));
 	}
 
@@ -462,6 +477,7 @@ public class JobRegistry implements RegistrableService {
 					"warn -- popping wrong tracker %s, thread-current %s\n",
 					tracker, current);
 		} else {
+			flushTracker(tracker);
 			JobTracker parent = tracker.getParent();
 			if (parent != null) {
 				List<JobTracker> newList = new ArrayList<JobTracker>(
@@ -509,5 +525,36 @@ public class JobRegistry implements RegistrableService {
 		tracker.setJobException(ex);
 		jobComplete(tracker, JobResultType.FAIL, jobResult);
 		notifyJobFailure(tracker);
+	}
+
+	public static class ProgressBuilder {
+		private String message;
+
+		private int delta;
+
+		private int total = 1;
+
+		public void publish() {
+			JobTracker contextTracker = JobRegistry.get().getContextTracker();
+			if (contextTracker != null) {
+				contextTracker.setItemCount(total);
+			}
+			JobRegistry.get().updateJob(message, delta);
+		}
+
+		public ProgressBuilder withDelta(int delta) {
+			this.delta = delta;
+			return this;
+		}
+
+		public ProgressBuilder withMessage(String template, Object... args) {
+			this.message = Ax.format(template, args);
+			return this;
+		}
+
+		public ProgressBuilder withTotal(int total) {
+			this.total = total;
+			return this;
+		}
 	}
 }

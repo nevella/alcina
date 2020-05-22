@@ -168,7 +168,8 @@ public class WidgetUtils {
 			return null;
 		}
 		target = Element.as(event.getEventTarget());
-		Element anchor = DomUtils.getSelfOrAncestorWithTagName(target, "A");
+		Element anchor = (Element) DomUtils.getSelfOrAncestorWithTagName(target,
+				"A");
 		return anchor;
 	}
 
@@ -353,7 +354,7 @@ public class WidgetUtils {
 		return null;
 	}
 
-	public static Element getElementForPositioning0(Element from) {
+	public static Element getElementForPositioning(Element from) {
 		assert tempPositioningText == null;
 		if (!isVisibleAncestorChain(from)) {
 			return null;
@@ -371,7 +372,8 @@ public class WidgetUtils {
 		}
 		ClientNodeIterator itr = new ClientNodeIterator(from,
 				ClientNodeIterator.SHOW_ALL);
-		Element fromContainingBlock = DomUtils.getContainingBlock(from);
+		Element fromContainingBlock = (Element) DomUtils
+				.getContainingBlock(from);
 		Node node = from;
 		int insertTextIfOffsetMoreThanXChars = 100;
 		while ((node = node.getPreviousSibling()) != null) {
@@ -488,7 +490,6 @@ public class WidgetUtils {
     return h;
 	}-*/;
 
-	
 	public static <W extends Widget> W getParentWidget(Widget w,
 			Class<W> widgetClass) {
 		while (w != null) {
@@ -500,7 +501,6 @@ public class WidgetUtils {
 		return null;
 	}
 
-	
 	public static <W extends Widget> W getParentWidget(Widget w,
 			String widgetClassName) {
 		while (w != null) {
@@ -513,7 +513,6 @@ public class WidgetUtils {
 		return null;
 	}
 
-	
 	public static Widget getParentWidgetSatisfyingCallback(Widget w,
 			CollectionFilter<Object> callback) {
 		while (w != null) {
@@ -525,7 +524,6 @@ public class WidgetUtils {
 		return null;
 	}
 
-	
 	public static <T extends Widget> T getParentWidgetSatisfyingTypedCallback(
 			Widget w, CollectionFilter<Widget> callback) {
 		while (w != null) {
@@ -904,7 +902,7 @@ public class WidgetUtils {
 		if (absoluteTop == 0) {
 			Text tptCopy = tempPositioningText;
 			tempPositioningText = null;
-			Element positioning = WidgetUtils.getElementForPositioning0(elem);
+			Element positioning = WidgetUtils.getElementForPositioning(elem);
 			if (positioning != null) {
 				absoluteTop = positioning.getAbsoluteTop();
 				recalcAbsoluteTopAfterScroll = false;
@@ -1064,9 +1062,8 @@ public class WidgetUtils {
 
 	private static void debugScroll(String message) {
 		if (debugScroll) {
-			ClientNotifications.get()
-					.log(Ax.format("scroll from: %s,%s",
-							Window.getScrollLeft(), Window.getScrollTop()));
+			ClientNotifications.get().log(Ax.format("scroll from: %s,%s",
+					Window.getScrollLeft(), Window.getScrollTop()));
 			ClientNotifications.get().log(message);
 		}
 	}

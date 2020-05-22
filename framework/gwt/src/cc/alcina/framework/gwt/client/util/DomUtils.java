@@ -11,18 +11,17 @@ import java.util.Stack;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
+
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.NodeList;
-import com.google.gwt.dom.client.Style;
-import com.google.gwt.dom.client.Style.Display;
-import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.ui.RootPanel;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -30,8 +29,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HtmlConstants;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
@@ -84,6 +83,8 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	private static DomUtilsBlockResolver blockResolver;
 
+	public static Node debugNode;
+
 	public static Stream<Element> ancestorStream(Element element) {
 		// FIXME-jadex (not optimal)
 		List<Element> elements = new ArrayList<>();
@@ -96,9 +97,9 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public static boolean containsBlocks(Element elt) {
-		elt.getChildNodes();
-		for (int i = 0; i < elt.getChildCount(); i++) {
-			Node child = elt.getChild(i);
+		NodeList childNodes = elt.getChildNodes();
+		for (int i = 0; i < childNodes.getLength(); i++) {
+			Node child = childNodes.item(i);
 			if (child.getNodeType() == Node.ELEMENT_NODE
 					&& isBlockHTMLElement((Element) child)) {
 				return true;
@@ -125,7 +126,7 @@ public class DomUtils implements NodeFromXpathProvider {
 	public static Text getFirstNonWhitespaceTextChild(Node node) {
 		NodeList nl = node.getChildNodes();
 		for (int i = 0; i < nl.getLength(); i++) {
-			node = nl.getItem(i);
+			node = nl.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				Text t = getFirstNonWhitespaceTextChild(node);
 				if (t != null) {
@@ -154,17 +155,6 @@ public class DomUtils implements NodeFromXpathProvider {
 		return null;
 	}
 
-	public static Element getMinimalParentWithOffsetHeight(Text text) {
-		Element parent = text.getParentElement();
-		while (parent != null) {
-			if (parent.getOffsetHeight() != 0) {
-				return parent;
-			}
-			parent = parent.getParentElement();
-		}
-		return null;
-	}
-
 	public static Element getNeighbouringBlock(Node n, int dir) {
 		Element block = getContainingBlock(n);
 		if (block == null) {
@@ -184,18 +174,6 @@ public class DomUtils implements NodeFromXpathProvider {
 				return cb;
 			}
 		}
-	}
-
-	public static Element getParentElement(Element elt, String tagName) {
-		// double-check it's really an element
-		while (elt != null && Element.is(elt)) {
-			String eltTagName = elt.getTagName();
-			if (eltTagName.equalsIgnoreCase(tagName)) {
-				return elt;
-			}
-			elt = elt.getParentElement();
-		}
-		return null;
 	}
 
 	public static Element getSelfOrAncestorWithTagName(Node node,
@@ -255,22 +233,8 @@ public class DomUtils implements NodeFromXpathProvider {
 				.contains("," + tagName.toUpperCase() + ",");
 	}
 
-	public static boolean isVisibleAncestorChain(Element e) {
-		while (e != null) {
-			if (e.getStyle().getDisplay().equals(Display.NONE.getCssName())) {
-				return false;
-			}
-			if (e.getStyle().getVisibility()
-					.equals(Style.Visibility.HIDDEN.getCssName())) {
-				return false;
-			}
-			e = e.getParentElement();
-		}
-		return true;
-	}
-
 	public static Node lastChildOf(Node node) {
-		if (node.getChildCount() == 0) {
+		if (!node.hasChildNodes()) {
 			return node;
 		}
 		return lastChildOf(node.getLastChild());
@@ -280,7 +244,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		List<Node> result = new ArrayList<Node>();
 		int length = list.getLength();
 		for (int i = 0; i < length; i++) {
-			Node node = list.getItem(i);
+			Node node = list.item(i);
 			result.add(node);
 		}
 		return result;
@@ -290,7 +254,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		List<Element> result = new ArrayList<Element>();
 		int length = list.getLength();
 		for (int i = 0; i < length; i++) {
-			Node node = list.getItem(i);
+			Node node = list.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				result.add((Element) node);
 			}
@@ -303,32 +267,11 @@ public class DomUtils implements NodeFromXpathProvider {
 		NodeList nl = oldNode.getChildNodes();
 		Node refChild = oldNode;
 		for (int i = nl.getLength() - 1; i >= 0; i--) {
-			Node child = nl.getItem(i);
+			Node child = nl.item(i);
 			parent.insertBefore(child, refChild);
 			refChild = child;
 		}
 		oldNode.getParentNode().removeChild(oldNode);
-	}
-
-	public static String stripStructuralTags(String html) {
-		Element elt = Document.get().createDivElement();
-		elt.setInnerHTML(html);
-		boolean loopOk = true;
-		while (loopOk) {
-			loopOk = false;
-			if (elt.getChildNodes().getLength() == 1) {
-				Node child = elt.getChildNodes().getItem(0);
-				if (child.getNodeType() == Node.ELEMENT_NODE) {
-					Element childElt = (Element) child;
-					String tag = childElt.getTagName().toLowerCase();
-					if (tag.equals("div") || tag.equals("p")) {
-						elt = childElt;
-						loopOk = true;
-					}
-				}
-			}
-		}
-		return elt.getInnerHTML();
 	}
 
 	public static String toSimpleXPointer(Node n) {
@@ -351,7 +294,7 @@ public class DomUtils implements NodeFromXpathProvider {
 				int count = 0;
 				int length = childNodes.getLength();
 				for (int i = 0; i < length; i++) {
-					Node item = childNodes.getItem(i);
+					Node item = childNodes.item(i);
 					if (item == n) {
 						pos = count + 1;
 					}
@@ -372,12 +315,6 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 		Collections.reverse(parts);
 		return CommonUtils.join(parts, "/");
-	}
-
-	public static String toText(String html) {
-		Element elt = Document.get().createElement("DIV");
-		elt.setInnerHTML(html);
-		return elt.getInnerText();
 	}
 
 	private static void addVisibleTextNodes(Element elt, List<Text> texts) {
@@ -498,7 +435,7 @@ public class DomUtils implements NodeFromXpathProvider {
 				if (count > 3) {
 					System.out.println("Parent map:");
 					xpathMap = mapSupplier.get();
-					generateMap((Element) lastMatched.getParentElement(), "",
+					generateMap((Element) lastMatched.getParentNode(), "",
 							xpathMap);
 					dumpMap0(false, xpathMap);
 				}
@@ -519,6 +456,7 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public Node findXpathWithIndexedText(String xpathStr, Node container,
 			Integer backupAbsTextOffset) {
+		container = resolveContainer(container);
 		if (nodeProvider != null) {
 			return nodeProvider.findXpathWithIndexedText(xpathStr, container);
 		}
@@ -535,7 +473,7 @@ public class DomUtils implements NodeFromXpathProvider {
 				if (notifications != null) {
 					notifications.metricLogStart(DOM_XPATH_MAP);
 				}
-				generateMap((Element) container, "", xpathMap);
+				generateMap(container, GWT.isClient() ? "" : "/", xpathMap);
 				if (notifications != null) {
 					notifications.metricLogEnd(DOM_XPATH_MAP);
 				}
@@ -633,9 +571,9 @@ public class DomUtils implements NodeFromXpathProvider {
 		return current;
 	}
 
-	public void generateMap(Element elt, String prefix,
+	public void generateMap(Node container, String prefix,
 			Map<String, Node> xpathMap) {
-		generateMap0(elt, prefix, xpathMap);
+		generateMap0(container, prefix, xpathMap);
 	}
 
 	public BackupNodeResolver getBackupNodeResolver() {
@@ -689,11 +627,11 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public void unwrap(Element el) {
 		// NO nodelist.stream - because our old faux-element doesn't support
-		Element parent = el.getParentElement();
-		NodeList<Node> nl = el.getChildNodes();
+		Element parent = (Element) el.getParentNode();
+		NodeList nl = el.getChildNodes();
 		Node[] tmp = new Node[nl.getLength()];
 		for (int i = 0; i < nl.getLength(); i++) {
-			tmp[i] = nl.getItem(i);
+			tmp[i] = nl.item(i);
 		}
 		for (int i = 0; i < tmp.length; i++) {
 			Node n = tmp[i];
@@ -743,7 +681,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (regenerate) {
 			exactTextMap = mapSupplier.get();
 			xpathMap = mapSupplier.get();
-			generateMap((Element) lastContainer, "", xpathMap);
+			generateMap(lastContainer, "", xpathMap);
 		} else {
 			exactTextMap = null;
 		}
@@ -760,14 +698,14 @@ public class DomUtils implements NodeFromXpathProvider {
 		return builder.toString();
 	}
 
-	private void generateMap0(Element container, String prefix,
+	private void generateMap0(Node container, String prefix,
 			Map<String, Node> xpathMap) {
 		if (container == null) {
 			return;
 		}
 		Map<String, Integer> total = mapSupplier.get();
 		Map<String, Integer> current = mapSupplier.get();
-		NodeList<Node> nodes = container.getChildNodes();
+		NodeList nodes = container.getChildNodes();
 		if (prefix.length() <= 1) {
 			xpathMap.put(prefix, container);
 		}
@@ -859,6 +797,13 @@ public class DomUtils implements NodeFromXpathProvider {
 		// throw new RuntimeException();
 	}
 
+	private Node resolveContainer(Node container) {
+		return GWT.isClient() ? container :
+		// all server-side addressing should be relative to the document
+				container.getNodeType() == Node.DOCUMENT_NODE ? container
+						: container.getOwnerDocument();
+	}
+
 	boolean requiresSplit(Element ancestor, Element wrapper) {
 		if (ancestor.getTagName().toLowerCase().equals("a")
 				&& wrapper.getTagName().toLowerCase().equals("a")) {
@@ -875,8 +820,7 @@ public class DomUtils implements NodeFromXpathProvider {
 	@ClientInstantiable
 	public static class DomUtilsBlockResolver {
 		public boolean isBlockHTMLElement(Element e) {
-			return CommonConstants.HTML_BLOCKS
-					.contains("," + e.getTagName().toUpperCase() + ",");
+			return HtmlConstants.isHtmlBlock(e.getTagName());
 		}
 	}
 
@@ -899,14 +843,14 @@ public class DomUtils implements NodeFromXpathProvider {
 			this.properties = properties;
 		}
 
-		public void applyTo(Element wrapper) {
-			wrapper.setClassName(cssClassName);
+		public void applyTo(Element elem) {
+			elem.setAttribute("class", cssClassName);
 			for (Entry<String, String> entry : styleProperties.entrySet()) {
-				wrapper.getStyle().setProperty(entry.getKey(),
+				DomContext.setStyleProperty(elem, entry.getKey(),
 						entry.getValue());
 			}
 			for (Entry<String, String> entry : properties.entrySet()) {
-				wrapper.setPropertyString(entry.getKey(), entry.getValue());
+				DomContext.setProperty(elem, entry.getKey(), entry.getValue());
 			}
 		}
 
@@ -995,22 +939,24 @@ public class DomUtils implements NodeFromXpathProvider {
 						String.valueOf(expandoIdProvider.incrementAndGet()));
 			}
 			String expandoId = splitFrom.getAttribute(ATTR_UNWRAP_EXPANDO_ID);
-			Element grand = splitFrom.getParentElement();
-			NodeList<Node> nl = splitFrom.getChildNodes();
+			Element grand = (Element) splitFrom.getParentNode();
+			NodeList nl = splitFrom.getChildNodes();
 			splitEnd = (Element) splitFrom.cloneNode(false);
 			if (splitAround == null) {
 				List<Node> children = nodeListToArrayList(
 						splitFrom.getChildNodes());
 				Node insertionPoint = splitFrom;
 				for (Node node : children) {
-					grand.insertAfter(node, insertionPoint);
+					DomNode.from(insertionPoint).relative()
+							.insertAfterThis(DomNode.from(node));
 					insertionPoint = node;
 				}
-				grand.insertAfter(splitEnd, insertionPoint);
+				DomNode.from(insertionPoint).relative()
+						.insertAfterThis(DomNode.from(splitEnd));
 			} else {
 				boolean found = false;
 				for (int i = 0; i < nl.getLength(); i++) {
-					Node n = nl.getItem(i);
+					Node n = nl.item(i);
 					if (splitAround == null || n == splitAround) {
 						found = true;
 					}
@@ -1021,14 +967,17 @@ public class DomUtils implements NodeFromXpathProvider {
 				for (int i = 1; i < contents.size(); i++) {
 					splitEnd.appendChild(contents.get(i));
 				}
-				grand.insertAfter(splitAround, splitFrom);
-				grand.insertAfter(splitEnd, splitAround);
+				DomNode.from(splitFrom).relative()
+						.insertAfterThis(DomNode.from(splitAround));
+				DomNode.from(splitAround).relative()
+						.insertAfterThis(DomNode.from(splitEnd));
 				if (splitAround.getNodeType() == Node.TEXT_NODE) {
 					Element splitAroundWrap = splitFrom.getOwnerDocument()
 							.createElement("span");
 					splitAroundWrap.setAttribute(ATTR_UNWRAP_EXPANDO_ID,
 							expandoId);
-					grand.insertAfter(splitAroundWrap, splitAround);
+					DomNode.from(splitAround).relative()
+							.insertAfterThis(DomNode.from(splitAroundWrap));
 					splitAroundWrap.appendChild(splitAround);
 				} else {
 					Element splitAroundElt = (Element) splitAround;
@@ -1048,8 +997,9 @@ public class DomUtils implements NodeFromXpathProvider {
 				}
 			}
 			for (int i = 1; i < maybeRedundantSplits.size() - 1; i++) {
-				if (maybeRedundantSplits.get(i).getChildCount() == 0) {
-					maybeRedundantSplits.get(i).removeFromParent();
+				Element split = maybeRedundantSplits.get(i);
+				if (!split.hasChildNodes()) {
+					split.getParentNode().removeChild(split);
 				}
 			}
 		}
@@ -1060,7 +1010,7 @@ public class DomUtils implements NodeFromXpathProvider {
 				splitFrom.appendChild(n);
 			}
 			splitFrom.removeAttribute(ATTR_UNWRAP_EXPANDO_ID);
-			splitEnd.removeFromParent();
+			splitEnd.getParentNode().removeChild(splitEnd);
 		}
 	}
 
@@ -1074,7 +1024,7 @@ public class DomUtils implements NodeFromXpathProvider {
 
 		List<Element> currentToUnwrap = new ArrayList<>();
 
-		public NodeWrapList(Element parent) {
+		public NodeWrapList(Node parent) {
 			List<Node> list = nodeListToArrayList(parent.getChildNodes());
 			int length = list.size();
 			boolean inWrap = false;
@@ -1093,10 +1043,11 @@ public class DomUtils implements NodeFromXpathProvider {
 					}
 					if (Ax.notBlank(currentEltWrapId)) {
 						flushToUnwrap();
-						Preconditions.checkState(e.getChildCount() == 1);
-						Preconditions.checkState(e.getChildNodes().getItem(0)
+						Preconditions
+								.checkState(e.getChildNodes().getLength() == 1);
+						Preconditions.checkState(e.getChildNodes().item(0)
 								.getNodeType() == Node.TEXT_NODE);
-						kids.add(e.getChildNodes().getItem(0));
+						kids.add(e.getChildNodes().item(0));
 					} else {
 						if (Ax.notBlank(currentEltUnwrapId)) {
 							if (!Objects.equals(currentEltUnwrapId,
@@ -1166,9 +1117,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		private int idx = 0;
 
 		WrappingAwareNodeIterator(Node parent) {
-			Preconditions.checkState(parent.getNodeType() == Node.ELEMENT_NODE);
-			Element parentElt = (Element) parent;
-			nodes = new NodeWrapList(parentElt);
+			nodes = new NodeWrapList(parent);
 			length = nodes.getLength();
 		}
 

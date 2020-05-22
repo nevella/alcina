@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
 import cc.alcina.framework.servlet.knowns.KnownJob;
 
@@ -66,6 +67,12 @@ public abstract class AbstractTaskPerformer implements Runnable {
 		run(false);
 	}
 
+	public <T extends AbstractTaskPerformer> T
+			withTypedValue(Object typedValue) {
+		value = JacksonUtils.serializeWithDefaultsAndTypes(typedValue);
+		return (T) this;
+	}
+
 	public AbstractTaskPerformer withValue(String value) {
 		this.value = value;
 		return this;
@@ -119,4 +126,21 @@ public abstract class AbstractTaskPerformer implements Runnable {
 	}
 
 	protected abstract void run0() throws Exception;
+
+	protected <T> T typedValue(Class<T> clazz) {
+		try {
+			return JacksonUtils.deserialize(value, clazz);
+		} catch (Exception e) {
+			try {
+				slf4jLogger.warn(
+						"Typed value invalid - class {}. \nValid sample:\n{}",
+						clazz.getName(),
+						JacksonUtils.serializeWithDefaultsAndTypes(
+								clazz.newInstance()));
+				return null;
+			} catch (Exception e2) {
+				throw new WrappedRuntimeException(e2);
+			}
+		}
+	}
 }

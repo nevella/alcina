@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.parser.structured.node;
+package cc.alcina.framework.common.client.dom;
 
 import java.util.Arrays;
 
@@ -10,11 +10,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 
-public class XmlNodeBuilder {
-	public static final transient String CONTEXT_TEXT_UNESCAPED = XmlNodeBuilder.class
+public class DomNodeBuilder {
+	public static final transient String CONTEXT_TEXT_UNESCAPED = DomNodeBuilder.class
 			.getName() + ".CONTEXT_TEXT_UNESCAPED";
 
-	protected XmlNode relativeTo;
+	protected DomNode relativeTo;
 
 	private String tag;
 
@@ -26,51 +26,51 @@ public class XmlNodeBuilder {
 
 	protected boolean built;
 
-	private XmlNode builtNode;
+	private DomNode builtNode;
 
-	public XmlNodeBuilder() {
+	public DomNodeBuilder() {
 	}
 
-	public XmlNodeBuilder(XmlNode relativeTo) {
+	public DomNodeBuilder(DomNode relativeTo) {
 		this.relativeTo = relativeTo;
 	}
 
-	public XmlNode append() {
+	public DomNode append() {
 		return appendTo(relativeTo);
 	}
 
-	public XmlNode appendAsFirstChild() {
-		XmlNode node = build();
+	public DomNode appendAsFirstChild() {
+		DomNode node = build();
 		relativeTo.node.insertBefore(node.node,
 				relativeTo.node.getFirstChild());
 		relativeTo.children.invalidate();
 		return node;
 	}
 
-	public XmlNodeBuilder attr(String key, String value) {
+	public DomNodeBuilder attr(String key, String value) {
 		attrs(key, value);
 		return this;
 	}
 
-	public XmlNodeBuilder attrNumeric(String key, double d) {
+	public DomNodeBuilder attrNumeric(String key, double d) {
 		return attr(key, String.valueOf(d));
 	}
 
-	public XmlNodeBuilder attrNumeric(String key, int i) {
+	public DomNodeBuilder attrNumeric(String key, int i) {
 		return attr(key, String.valueOf(i));
 	}
 
-	public XmlNodeBuilder attrs(String... strings) {
+	public DomNodeBuilder attrs(String... strings) {
 		this.attrs.putAll(new StringMap(Arrays.asList(strings)));
 		return this;
 	}
 
-	public XmlNodeBuilder attrs(StringMap attrs) {
+	public DomNodeBuilder attrs(StringMap attrs) {
 		this.attrs.putAll(attrs);
 		return this;
 	}
 
-	public XmlNode build() {
+	public DomNode build() {
 		built = true;
 		Node node = null;
 		if (processingInstruction) {
@@ -98,38 +98,38 @@ public class XmlNodeBuilder {
 		return builtNode;
 	}
 
-	public XmlNode builtNode() {
+	public DomNode builtNode() {
 		return builtNode;
 	}
 
-	public XmlNodeBuilder className(String className) {
+	public DomNodeBuilder className(String className) {
 		attrs("class", className);
 		return this;
 	}
 
-	public XmlNode insertAfter() {
-		XmlNode node = build();
+	public DomNode insertAfter() {
+		DomNode node = build();
 		relativeTo.relative().insertAfterThis(node);
 		return node;
 	}
 
-	public XmlNode insertBeforeThis() {
+	public DomNode insertBeforeThis() {
 		return insertBefore(relativeTo);
 	}
 
-	public XmlNodeBuilder processingInstruction() {
+	public DomNodeBuilder processingInstruction() {
 		this.processingInstruction = true;
 		return this;
 	}
 
-	public XmlNode replaceWith() {
-		XmlNode node = build();
+	public DomNode replaceWith() {
+		DomNode node = build();
 		node.children.adoptFrom(relativeTo);
 		relativeTo.replaceWith(node);
 		return node;
 	}
 
-	public XmlNodeBuilder style(String style) {
+	public DomNodeBuilder style(String style) {
 		String styleBuf = attrs.getOrDefault("style", "");
 		if (styleBuf.length() > 0) {
 			styleBuf += "; ";
@@ -139,21 +139,21 @@ public class XmlNodeBuilder {
 		return this;
 	}
 
-	public XmlNodeBuilder tag(String tag) {
+	public DomNodeBuilder tag(String tag) {
 		this.tag = tag;
 		return this;
 	}
 
-	public XmlNodeBuilder text(String text) {
+	public DomNodeBuilder text(String text) {
 		this.text = text;
 		return this;
 	}
 
-	public XmlNodeBuilder text(String string, Object... args) {
+	public DomNodeBuilder text(String string, Object... args) {
 		return text(Ax.format(string, args));
 	}
 
-	public XmlNodeBuilder title(String title) {
+	public DomNodeBuilder title(String title) {
 		if (title.isEmpty()) {
 			this.attrs.remove("title");
 		} else {
@@ -162,8 +162,8 @@ public class XmlNodeBuilder {
 		return this;
 	}
 
-	public XmlNode wrap() {
-		XmlNode node = build();
+	public DomNode wrap() {
+		DomNode node = build();
 		relativeTo.node.getParentNode().insertBefore(node.node,
 				relativeTo.node);
 		node.node.appendChild(relativeTo.node);
@@ -171,26 +171,26 @@ public class XmlNodeBuilder {
 		return node;
 	}
 
-	public XmlNode wrapChildren() {
-		XmlNode node = build();
+	public DomNode wrapChildren() {
+		DomNode node = build();
 		node.children.adoptFrom(relativeTo);
 		relativeTo.children.append(node);
 		return node;
 	}
 
-	private XmlNode appendTo(XmlNode appendTo) {
-		XmlNode node = build();
+	private DomNode appendTo(DomNode appendTo) {
+		DomNode node = build();
 		appendTo.node.appendChild(node.node);
 		appendTo.children.invalidate();
 		return node;
 	}
 
-	private XmlDoc doc() {
+	private DomDoc doc() {
 		return relativeTo.doc;
 	}
 
-	private XmlNode insertBefore(XmlNode insertBefore) {
-		XmlNode node = build();
+	private DomNode insertBefore(DomNode insertBefore) {
+		DomNode node = build();
 		insertBefore.node.getParentNode().insertBefore(node.node,
 				insertBefore.node);
 		insertBefore.parent().invalidate();

@@ -152,4 +152,15 @@ public abstract class AbstractSerializationStreamReader extends
 		// index is 1-based
 		return seenArray.size();
 	}
+	/**
+	   * Get the previously seen object at the given index which must be 1-based.
+	   * 
+	   * @param index a 1-based index into the seen objects
+	   * 
+	   * @return the object stored in the seen array at index - 1
+	   */
+	  protected final Object getDecodedObject(int index) {
+	    // index is 1-based
+	    return seenArray.get(index - 1);
+	  }
 }

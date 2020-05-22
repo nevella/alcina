@@ -17,6 +17,7 @@ public class ElementNull extends NodeLocalNull
 		return false;
 	}
 
+	@Override
 	public void blur() {
 		throw new UnsupportedOperationException();
 	}
@@ -31,6 +32,7 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public void dispatchEvent(NativeEvent evt) {
 		throw new UnsupportedOperationException();
 	}
@@ -45,22 +47,27 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public void focus() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public int getAbsoluteBottom() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public int getAbsoluteLeft() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public int getAbsoluteRight() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public int getAbsoluteTop() {
 		throw new UnsupportedOperationException();
 	}
@@ -71,7 +78,7 @@ public class ElementNull extends NodeLocalNull
 	}
 
 	@Override
-	public Map<String, String> getAttributes() {
+	public Map<String, String> getAttributeMap() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -80,18 +87,22 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public int getClientHeight() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public int getClientWidth() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public String getDir() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public String getDraggable() {
 		throw new UnsupportedOperationException();
 	}
@@ -101,6 +112,7 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public int getEventBits() {
 		throw new UnsupportedOperationException();
 	}
@@ -125,6 +137,7 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public String getLang() {
 		throw new UnsupportedOperationException();
 	}
@@ -149,6 +162,7 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public int getOffsetHeight() {
 		throw new UnsupportedOperationException();
 	}
@@ -213,6 +227,7 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public int getScrollHeight() {
 		throw new UnsupportedOperationException();
 	}
@@ -222,10 +237,12 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public int getScrollTop() {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public int getScrollWidth() {
 		throw new UnsupportedOperationException();
 	}
@@ -235,6 +252,7 @@ public class ElementNull extends NodeLocalNull
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public Style getStyle() {
 		throw new UnsupportedOperationException();
 	}
@@ -299,6 +317,7 @@ public class ElementNull extends NodeLocalNull
 	public void setClassName(String className) {
 	}
 
+	@Override
 	public void setDir(String dir) {
 	}
 
@@ -322,6 +341,7 @@ public class ElementNull extends NodeLocalNull
 	public void setInnerText(String text) {
 	}
 
+	@Override
 	public void setLang(String lang) {
 	}
 
@@ -361,6 +381,7 @@ public class ElementNull extends NodeLocalNull
 	public final void setScrollLeft(int scrollLeft) {
 	}
 
+	@Override
 	public void setScrollTop(int scrollTop) {
 	}
 
