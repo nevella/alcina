@@ -277,8 +277,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 	}
 
-	
-
 	/**
 	 * <<<<<<< HEAD Probably don't call this - rather call
 	 * deleteObject(hili,true) - this will always be a noop on the server
@@ -1350,5 +1348,11 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public static class UncomittedTransformsException extends Exception {
+	}
+
+	// for testing
+	public static void registerPerThreadTransformManager(
+			TransformManager perThreadTransformManager) {
+		threadLocalTLTMInstance.set(perThreadTransformManager);
 	}
 }
