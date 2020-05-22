@@ -28,10 +28,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 public class ServerTransformListener implements DomainTransformListener {
 	public void domainTransform(DomainTransformEvent evt)
 			throws DomainTransformException {
+		TransformManager tm = TransformManager.get();
 		if (evt.getCommitType() == CommitType.TO_LOCAL_BEAN) {
+			evt.setEventId(tm.nextEventIdCounter());
 			evt.setUtcDate(new Date());
 		} else if (evt.getCommitType() == CommitType.TO_STORAGE) {
-			TransformManager tm = TransformManager.get();
 			try {
 				tm.consume(evt);
 			} catch (Exception e) {
