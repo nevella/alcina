@@ -1362,4 +1362,10 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public static class UncomittedTransformsException extends Exception {
 	}
+
+	// for testing
+	public static void registerPerThreadTransformManager(
+			TransformManager perThreadTransformManager) {
+		threadLocalTLTMInstance.set(perThreadTransformManager);
+	}
 }

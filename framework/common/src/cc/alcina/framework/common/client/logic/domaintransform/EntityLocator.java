@@ -157,4 +157,10 @@ public class EntityLocator implements Serializable {
 		return Ax.format("%s - %s",
 				clazz == null ? "??" : CommonUtils.simpleClassName(clazz), id);
 	}
+
+	public static EntityLocator requireIdOrLocalId(Entity entity) {
+		Preconditions
+				.checkArgument(entity.getId() != 0 || entity.getLocalId() != 0);
+		return new EntityLocator(entity);
+	}
 }
