@@ -53,7 +53,7 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
  * @author nick@alcina.cc
  * 
  */
-@SuppressWarnings("unchecked")
+
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
         PropertyAccessor, RegistrableService, BeanDescriptorProvider {
@@ -205,8 +205,17 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 
     @Override
     public Object getPropertyValue(Object bean, String propertyName) {
-        return (ThreadlocalTransformManager.cast()).getPropertyValue(bean,
-                propertyName);
+		try {
+			PropertyDescriptor descriptor = SEUtilities
+					.getPropertyDescriptorByName(bean.getClass(), propertyName);
+			if (descriptor == null) {
+				throw new Exception(String.format("No property %s for class %s",
+						propertyName, bean.getClass().getName()));
+			}
+			return descriptor.getReadMethod().invoke(bean);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
     }
 
     public ClassLoader getServletLayerClassloader() {
