@@ -28,7 +28,6 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords
 import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
-import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
@@ -202,14 +201,12 @@ public interface CommonPersistenceLocal {
 	 */
 	public TransformCache warmupTransformCache();
 
+	void changeJdbcConnectionUrl(String newUrl);
+
 	Integer getHighestPersistedRequestIdForClientInstance(
 			long clientInstanceId);
 
 	long getMaxPublicationIdForUser(IUser user);
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
-
-	public <T extends ILogRecord> long persistLogRecord(T logRecord);
-
-	void changeJdbcConnectionUrl(String newUrl);
 }
