@@ -211,7 +211,5 @@ public interface CommonPersistenceLocal {
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
 
-	public <T extends ILogRecord> long persistLogRecord(T logRecord);
-
 	void changeJdbcConnectionUrl(String newUrl);
 }
