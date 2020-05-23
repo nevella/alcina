@@ -1100,6 +1100,18 @@ public class DomNode {
 			return doc.nodeFor(tw.getCurrentNode());
 		}
 
+		public List<DomNode> listUntil(DomNode end, boolean endInclusive) {
+			List<DomNode> result = new ArrayList<>();
+			while (currentNode() != end) {
+				result.add(currentNode());
+				nextLogicalNode();
+			}
+			if (endInclusive) {
+				result.add(end);
+			}
+			return result;
+		}
+
 		public DomNode nextLogicalNode() {
 			Node next = tw.nextNode();
 			return doc.nodeFor(next);

@@ -14,22 +14,45 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_EMAIL;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase.TestContentRequest;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.ResourceUtilities.SimpleQuery;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.control.ClusterStateProvider;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
+import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
 import cc.alcina.framework.servlet.publication.delivery.ContentDeliveryEmail;
+import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 public class ControlServlet extends HttpServlet {
+	public static String invokeRemoteAction(RemoteAction action, String url,
+			String apiKey) {
+		StringMap queryParameters = new StringMap();
+		queryParameters.put("cmd", "perform-action");
+		queryParameters.put("apiKey", apiKey);
+		queryParameters.put("actionClassName", action.getClass().getName());
+		queryParameters.put("actionJson",
+				JacksonUtils.serializeWithDefaultsAndTypes(action));
+		try {
+			return new SimpleQuery(url, null, null)
+					.withQueryParameters(queryParameters).asString();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public void writeAndClose(String s, HttpServletResponse resp)
@@ -113,7 +136,7 @@ public class ControlServlet extends HttpServlet {
 					Registry.impl(ClusterStateProvider.class).getVmHealth(),
 					resp);
 			break;
-		case TEST_SENDMAIL:
+		case TEST_SENDMAIL: {
 			String toAddress = testSendmail();
 			String message = Ax.format(
 					"Test email sent to: %s from: %s via: %s", toAddress,
@@ -122,6 +145,13 @@ public class ControlServlet extends HttpServlet {
 			logger.warn(message);
 			writeAndClose(message, resp);
 			break;
+		}
+		case PERFORM_ACTION: {
+			String message = performAction(req);
+			logger.warn(message);
+			writeAndClose(message, resp);
+			break;
+		}
 		}
 	}
 
@@ -154,11 +184,30 @@ public class ControlServlet extends HttpServlet {
 		} else if (cmd.equals("test-sendmail")) {
 			csr.setCommand(ControlServletRequestCommand.TEST_SENDMAIL);
 			return csr;
+		} else if (cmd.equals("perform-action")) {
+			csr.setCommand(ControlServletRequestCommand.PERFORM_ACTION);
+			return csr;
 		}
 		writeAndClose("Usage:\n" + "control.do?apiKey=xxx&"
 				+ "{json=yyy|cmd=[refresh-config|to-reader|to-writer|get-status|vm-health|test-sendmail|cluster-leader]}",
 				resp);
 		return null;
+	}
+
+	private String performAction(HttpServletRequest req) {
+		if (Ax.notBlank(req.getHeader("X-Forwarded-Server"))) {
+			throw new RuntimeException("Internal/non-proxied access only");
+		}
+		String actionClassName = req.getParameter("actionClassName");
+		String actionJson = req.getParameter("actionJson");
+		return ThreadedPermissionsManager.cast()
+				.callWithPushedSystemUserIfNeededNoThrow(() -> {
+					RemoteAction action = (RemoteAction) JacksonUtils
+							.deserialize(actionJson,
+									Class.forName(actionClassName));
+					return Registry.impl(CommonRemoteServiceServlet.class)
+							.performActionAndWait(action).getActionLog();
+				});
 	}
 
 	private String testSendmail() throws Exception {
@@ -193,6 +242,10 @@ public class ControlServlet extends HttpServlet {
 
 	protected String getApiKey() {
 		return Registry.impl(AppLifecycleManager.class).getState().getApiKey();
+	}
+
+	public static interface ControlServletActionPerformer {
+		String performAction(String actionClassName, String actionParameters);
 	}
 
 	public class InformException extends Exception {
