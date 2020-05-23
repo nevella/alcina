@@ -55,11 +55,11 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
-import javax.persistence.EntityManager;
 import javax.swing.ImageIcon;
 
 import org.cyberneko.html.parsers.DOMParser;
@@ -75,6 +75,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
@@ -820,6 +821,23 @@ public class ResourceUtilities {
 		ResourceUtilities.clientWithJvmProperties = clientWithJvmProperties;
 	}
 
+	public static void setField(Object object, String fieldPath,
+			Object newValue) throws Exception {
+		Object cursor = object;
+		Field field = null;
+		String[] segments = fieldPath.split("\\.");
+		for (int idx = 0; idx < segments.length; idx++) {
+			String segment = segments[idx];
+			field = SEUtilities.getFieldByName(cursor.getClass(), segment);
+			field.setAccessible(true);
+			if (idx < segments.length - 1) {
+				cursor = field.get(cursor);
+			} else {
+				field.set(cursor, newValue);
+			}
+		}
+	}
+
 	public static void write(String content, File file) {
 		try {
 			writeStringToFile(content, file);
@@ -949,6 +967,8 @@ public class ResourceUtilities {
 
 		private String contentDisposition;
 
+		private StringMap queryParameters;
+
 		public SimpleQuery(String strUrl, String postBody, StringMap headers) {
 			this.strUrl = strUrl;
 			this.postBody = postBody;
@@ -960,6 +980,15 @@ public class ResourceUtilities {
 			connection = null;
 			if (headers == null) {
 				headers = new StringMap();
+			}
+			if (queryParameters != null) {
+				if (!strUrl.contains("?")) {
+					strUrl += "?";
+				}
+				strUrl += queryParameters.entrySet().stream().map(e -> {
+					return Ax.format("%s=%s", e.getKey(),
+							UrlComponentEncoder.get().encode(e.getValue()));
+				}).collect(Collectors.joining("&"));
 			}
 			try {
 				URL url = new URL(strUrl);
@@ -1051,29 +1080,17 @@ public class ResourceUtilities {
 			return this;
 		}
 
+		public SimpleQuery withQueryParameters(StringMap queryParameters) {
+			this.queryParameters = queryParameters;
+			return this;
+		}
+
 		private byte[] maybeDecodeGzip(byte[] input) throws IOException {
 			if ("gzip".equals(connection.getHeaderField("content-encoding"))) {
 				return readStreamToByteArray(
 						new GZIPInputStream(new ByteArrayInputStream(input)));
 			} else {
 				return input;
-			}
-		}
-	}
-
-	public static void setField(Object object, String fieldPath,
-			Object newValue) throws Exception {
-		Object cursor = object;
-		Field field = null;
-		String[] segments = fieldPath.split("\\.");
-		for (int idx = 0; idx < segments.length; idx++) {
-			String segment = segments[idx];
-			field = SEUtilities.getFieldByName(cursor.getClass(),segment);
-			field.setAccessible(true);
-			if (idx < segments.length - 1) {
-				cursor = field.get(cursor);
-			} else {
-				field.set(cursor, newValue);
 			}
 		}
 	}
