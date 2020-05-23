@@ -131,6 +131,15 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return Boolean.valueOf(get(key));
 	}
 
+	public boolean matchesPatternKeys(String string) {
+		for (Map.Entry<String, String> entry : entrySet()) {
+			if (Ax.matches(string, entry.getKey())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public String replaceMatch(String string) {
 		return containsKey(string) ? get(string) : string;
 	}
