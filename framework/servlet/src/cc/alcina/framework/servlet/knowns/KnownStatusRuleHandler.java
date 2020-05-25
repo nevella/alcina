@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 import com.google.common.base.Preconditions;
@@ -189,14 +190,19 @@ public abstract class KnownStatusRuleHandler {
 			LocalDateTime now = LocalDateTime.now();
 			LocalDateTime lastOkLt = LocalDateTime.ofInstant(
 					lastOkDate.toInstant(), ZoneId.systemDefault());
-			// Warn if not run by HOUR_OF_DAY(rule.warnValue())
-			if (now.getDayOfYear() == lastOkLt.getDayOfYear() &&
+			long daysPassed = ChronoUnit.DAYS.between(lastOkLt, now);
+			// Warn if not run by HOUR_OF_DAY(rule.warnValue()) the day after last run
+			if (daysPassed == 1 &&
 					now.getHour() >= rule.warnValue()) {
 				status = KnownTagAlcina.Status_Warn;
 			}
-			// Err if not run by HOUR_OF_DAY(rule.errorValue())
-			if (now.getDayOfYear() == lastOkLt.getDayOfYear() &&
+			// Err if not run by HOUR_OF_DAY(rule.errorValue()) the day after last run
+			if (daysPassed == 1 &&
 					now.getHour() >= rule.errorValue()) {
+				status = KnownTagAlcina.Status_Error;
+			}
+			// Err if not run on the same day and the expected run time has passed
+			if (daysPassed > 1) {
 				status = KnownTagAlcina.Status_Error;
 			}
 			return status;
