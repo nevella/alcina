@@ -305,8 +305,12 @@ public abstract class SearchDefinition extends WrapperPersistable
 						CriterionPropertyNameMappings.class);
 		if (crMappings != null) {
 			for (CriterionPropertyNameMapping mapping : crMappings.value()) {
-				criteriaGroup(mapping.criteriaGroupClass())
-						.map(mapping.criterionClass(), mapping.propertyName());
+				CriteriaGroup criteriaGroup = criteriaGroup(
+						mapping.criteriaGroupClass());
+				if (criteriaGroup != null) {
+					criteriaGroup.map(mapping.criterionClass(),
+							mapping.propertyName());
+				}
 			}
 		}
 	}
