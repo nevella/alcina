@@ -131,22 +131,7 @@ public abstract class KnownStatusRuleHandler {
 			if (value == null) {
 				return;
 			}
-			Date lastOkDate = value.lastOk;
-			KnownTagAlcina status = null;
-			if (value.status != null) {
-				switch (value.status) {
-				case FAILED:
-					status = KnownTagAlcina.Status_Error;
-					break;
-				}
-			}
-			if (status == KnownTagAlcina.Status_Error) {
-				// error is error. ignore last ok
-			} else {
-				if (lastOkDate != null) {
-					status = checkDateTime(rule, lastOkDate);
-				}
-			}
+			KnownTagAlcina status = testRule(value.status, rule, value.lastOk);
 			if (status != null) {
 				node.tags.add(status);
 			}
@@ -155,33 +140,28 @@ public abstract class KnownStatusRuleHandler {
 		@Override
 		public void handleRule(KnownNodeMetadata nodeMetadata,
 				KnownRenderableNode node, KnownStatusRule rule) {
-			KnownTagAlcina status = null;
 			OpStatus opStatus = null;
+			Date lastOkDate = null;
 			if (node.hasProperty("status")) {
 				opStatus = node.typedChildValue(OpStatus.class, "status");
 			}
-			if (opStatus != null) {
-				switch (opStatus) {
-				case FAILED:
-					status = KnownTagAlcina.Status_Error;
-					break;
-				}
+			if (node.hasProperty("lastOk") || node.hasProperty("lastRun")) {
+				lastOkDate = node.hasProperty("lastOk")
+						? node.typedChildValue(Date.class, "lastOk")
+						: node.typedChildValue(Date.class, "lastRun");
 			}
-			if (status == KnownTagAlcina.Status_Error) {
-				// error is error. ignore last ok
-			} else {
-				if (node.hasProperty("lastOk") || node.hasProperty("lastRun")) {
-					Date lastOkDate = node.hasProperty("lastOk")
-							? node.typedChildValue(Date.class, "lastOk")
-							: node.typedChildValue(Date.class, "lastRun");
-					if (lastOkDate != null) {
-						status = checkDateTime(rule, lastOkDate);
-					}
-				}
-			}
+			KnownTagAlcina status = testRule(opStatus, rule, lastOkDate);
 			if (status != null) {
 				node.tags.add(status);
 			}
+		}
+
+		private KnownTagAlcina testRule(OpStatus opStatus,
+				KnownStatusRule rule, Date lastOkDate) {
+			if (opStatus != OpStatus.FAILED && lastOkDate != null) {
+				return checkDateTime(rule, lastOkDate);
+			}
+			return null;
 		}
 
 		private KnownTagAlcina checkDateTime(
