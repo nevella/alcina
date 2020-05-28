@@ -1,5 +1,5 @@
 package cc.alcina.framework.common.client.csobjects;
 
 public enum KnownStatusRuleName {
-	Max_Age
+	Max_Age, Run_By
 }
