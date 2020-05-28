@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.SearchUtilsIdsHelper;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils.SearchUtilsIdsHelperSingleThreaded;
@@ -52,6 +53,7 @@ public class LockingDomainQueryParallel<V extends HasIdAndLocalId>
 	@Override
 	protected Stream<V> getStream(Collection<V> values) {
 		boolean serial = LooseContext.is(CONTEXT_USE_SERIAL_STREAM);
+		serial |= ResourceUtilities.is("useSerialStream");
 		this.debugMatch = LooseContext.get(CONTEXT_DEBUG_MATCH);
 		if (serial) {
 			return values.stream().filter(this::filter);
