@@ -59,6 +59,8 @@ import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.StreamBuffer;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
+import elemental.json.Json;
+import elemental.json.JsonObject;
 import nl.bitwalker.useragentutils.Browser;
 import nl.bitwalker.useragentutils.RenderingEngine;
 import nl.bitwalker.useragentutils.UserAgent;
@@ -92,13 +94,27 @@ public class DevConsoleDebugCommands {
 
 		@Override
 		public String getUsage() {
-			return "dxc  {-c key} {-u userid} {-d days}"
+			return "dxc  {-c key} {-u userid} {-d days} {--no-exclusions}"
 					+ " {-i min-id} {-r regex} {-rn not-regex} {-fu id - list(client)users with similar exceptions to id}";
 		}
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			List<ILogRecord> logRecords = console.state.logRecords;
+			List<ILogRecord> logRecords = console.state.logRecords.stream()
+					.collect(Collectors.toList());
+			StringMap excludePatterns = IgnoreExceptionPatternProvider.get()
+					.getIgnoreExceptionPatterns();
+			int size = logRecords.size();
+			FilterArgvFlag flag = new FilterArgvFlag(argv, "--no-exclusions");
+			argv = flag.argv;
+			if (!flag.contains) {
+				logRecords.removeIf(
+						lr -> excludePatterns.matchesPatternKeys(lr.getText()));
+			}
+			if (logRecords.size() < size) {
+				logger.info(Ax.format("Exclude patterns removed %s records",
+						size - logRecords.size()));
+			}
 			for (ILogRecord o : logRecords) {
 				o.setText(CommonUtils.nullToEmpty(o.getText()));
 			}
@@ -792,6 +808,15 @@ public class DevConsoleDebugCommands {
 				text = text.substring(0, clientLogMatcher.start());
 			}
 			text = text.replace("\n", "\n\t");
+			try {
+				JsonObject jsonNode = Json.parse(text);
+				if (jsonNode.hasKey("log")) {
+					text = text + "\n=========\nLog:\n=======\n"
+							+ jsonNode.get("log").asString()
+									.replace("StackTrace:", "\nStackTrace:\n");
+				}
+			} catch (Exception e) {
+			}
 			System.out.format(
 					"-------\nId:\t%s\nUser:\t%s (%s)\nCmp:\t%s\nDate:\t%s\nHost:\t%s\nText:\t%s\n",
 					record.getId(), console.state.getUser(record.getUserId()),
@@ -1001,5 +1026,18 @@ public class DevConsoleDebugCommands {
 
 		public abstract DevConsoleDebugPaths
 				getPaths(DevConsoleProperties props);
+	}
+
+	@RegistryLocation(registryPoint = IgnoreExceptionPatternProvider.class, implementationType = ImplementationType.SINGLETON)
+	public static class IgnoreExceptionPatternProvider {
+		public static DevConsoleDebugCommands.IgnoreExceptionPatternProvider
+				get() {
+			return Registry.impl(
+					DevConsoleDebugCommands.IgnoreExceptionPatternProvider.class);
+		}
+
+		public StringMap getIgnoreExceptionPatterns() {
+			return new StringMap();
+		}
 	}
 }

@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.dom;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -15,8 +16,10 @@ import cc.alcina.framework.common.client.dom.DomEnvironment.NamespaceResult;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.common.client.util.Multimap;
 
 public class DomDoc extends DomNode {
 	public static DomDoc basicHtmlDoc() {
@@ -45,6 +48,8 @@ public class DomDoc extends DomNode {
 	private boolean useCachedElementIds;
 
 	private Map<String, Element> cachedElementIdMap;
+
+	private Multimap<String, List<DomNode>> byTag;
 
 	public DomDoc(Document domDocument) {
 		super(null, null);
@@ -160,13 +165,21 @@ public class DomDoc extends DomNode {
 		}
 	}
 
+	Multimap<String, List<DomNode>> byTag() {
+		if (byTag == null) {
+			byTag = getDocumentElementNode().children.flat()
+					.collect(AlcinaCollectors.toKeyMultimap(DomNode::name));
+		}
+		return byTag;
+	}
+
 	void register(DomNode xmlNode) {
 	}
 
-	@RegistryLocation(registryPoint = XmlReadonlyDocCache.class, implementationType = ImplementationType.SINGLETON)
-	public static class XmlReadonlyDocCache {
-		public static DomDoc.XmlReadonlyDocCache get() {
-			return Registry.impl(DomDoc.XmlReadonlyDocCache.class);
+	@RegistryLocation(registryPoint = ReadonlyDocCache.class, implementationType = ImplementationType.SINGLETON)
+	public static class ReadonlyDocCache {
+		public static DomDoc.ReadonlyDocCache get() {
+			return Registry.impl(DomDoc.ReadonlyDocCache.class);
 		}
 
 		private int maxSize = 0;

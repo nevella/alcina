@@ -35,11 +35,9 @@ import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolver;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
@@ -1204,8 +1202,7 @@ public class DomNode {
 		}
 
 		public DomNode node() {
-			if (doc.isReadonly() && lookup().handlesXpath(query)
-					&& DomNode.this == doc) {
+			if (doc.isReadonly() && lookup().handlesXpath(query)) {
 				return stream().findFirst().orElse(null);
 			} else {
 				Node domNode = evaluator.getNodeByXpath(query, node);
@@ -1227,8 +1224,7 @@ public class DomNode {
 		}
 
 		public Stream<DomNode> stream() {
-			if (doc.isReadonly() && lookup().handlesXpath(query)
-					&& DomNode.this == doc) {
+			if (doc.isReadonly() && lookup().handlesXpath(query)) {
 				return lookup.stream(query);
 			} else {
 				List<Node> domNodes = evaluator.getNodesByXpath(query, node);
@@ -1367,15 +1363,12 @@ public class DomNode {
 	}
 
 	class DomNodeReadonlyLookup {
-		Multimap<String, List<DomNode>> byTag;
-
 		public DomNodeReadonlyLookup() {
-			byTag = doc.getDocumentElementNode().children.flat()
-					.collect(AlcinaCollectors.toKeyMultimap(DomNode::name));
 		}
 
 		public boolean handlesXpath(String xpath) {
-			return parse(xpath).valid;
+			DomNodeReadonlyLookupQuery query = parse(xpath);
+			return query.valid && (query.immediateChild || DomNode.this == doc);
 		}
 
 		DomNodeReadonlyLookupQuery parse(String xpath) {
@@ -1386,7 +1379,12 @@ public class DomNode {
 					xmlIdentifierChars, xmlIdentifierChars);
 			String tagAttrValueRegex = Ax.format("//(%s)/\\[@(%s)='(%s)'\\]",
 					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars);
-			if (xpath.matches(tagOnlyRegex)) {
+			String immediateChildRegex = xmlIdentifierChars;
+			if (xpath.matches(immediateChildRegex)) {
+				query.tag = xpath;
+				query.valid = true;
+				query.immediateChild = true;
+			} else if (xpath.matches(tagOnlyRegex)) {
 				query.tag = xpath.replaceFirst(tagOnlyRegex, "$1");
 				query.valid = true;
 			} else if (xpath.matches(tagAttrNodeRegex)) {
@@ -1408,11 +1406,18 @@ public class DomNode {
 
 		Stream<DomNode> stream(String xpath) {
 			DomNodeReadonlyLookupQuery query = parse(xpath);
-			return byTag.getAndEnsure(query.tag).stream()
-					.filter(query.predicate).map(query.map);
+			if (query.immediateChild) {
+				return children.byTag(query.tag).stream()
+						.filter(query.predicate).map(query.map);
+			} else {
+				return doc.byTag().getAndEnsure(query.tag).stream()
+						.filter(query.predicate).map(query.map);
+			}
 		}
 
 		class DomNodeReadonlyLookupQuery {
+			boolean immediateChild;
+
 			String tag;
 
 			Predicate<DomNode> predicate = node -> true;
