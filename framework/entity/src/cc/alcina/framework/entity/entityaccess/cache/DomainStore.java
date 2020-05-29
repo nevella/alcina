@@ -1885,8 +1885,10 @@ public class DomainStore implements IDomainStore {
 			Entity localReplacement = localReplacementCreationObjectResolver
 					.apply(event.getObjectLocalId());
 			if (localReplacement != null) {
-				store.getCache().remove(localReplacement);
 				localReplacement.setId(event.getObjectId());
+				// this has to happen after setId, since that will create the
+				// (local) version in the cache
+				store.getCache().removeLocal(localReplacement);
 				store.getCache().put(localReplacement);
 				TransformManager.registerLocalObjectPromotion(localReplacement);
 			}

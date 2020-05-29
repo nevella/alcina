@@ -31,6 +31,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore.DomainStoreException;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreWaitStats.DomainStoreWaitOnLockStat;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 
 /*
  * Public just for inner class access, not to be used outside this package
@@ -430,6 +431,18 @@ public class DomainStoreThreads {
 			return threadQueueTimes.values().stream()
 					.min(Comparator.naturalOrder())
 					.map(t -> System.currentTimeMillis() - t).orElse(0L);
+		}
+
+		public long getMvccOldestTx() {
+			return Transactions.stats().getOldestTxStartTime();
+		}
+
+		public long getMvccUncollectedTxCount() {
+			return Transactions.stats().getUncollectedTxCount();
+		}
+
+		public long getMvccVacuumQueueLength() {
+			return Transactions.stats().getVacuumQueueLength();
 		}
 
 		public long getTimeInDomainStoreWriter() {

@@ -131,6 +131,11 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 	}
 
 	@Override
+	public void removeLocal(Entity entity) {
+		main.removeLocal(entity);
+	}
+
+	@Override
 	public int size(Class clazz) {
 		return main.size(clazz);
 	}

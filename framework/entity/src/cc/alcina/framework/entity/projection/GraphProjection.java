@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.entity.projection;
 
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -71,6 +72,8 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.DomainProxy;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
@@ -530,6 +533,19 @@ public class GraphProjection {
 							continue;
 						}
 					}
+					// special-case mvcc fields
+					PropertyDescriptor propertyDescriptor = SEUtilities
+							.getPropertyDescriptorByName(c, field.getName());
+					if (propertyDescriptor != null
+							&& propertyDescriptor.getReadMethod() != null) {
+						MvccAccess mvccAccess = propertyDescriptor
+								.getReadMethod()
+								.getAnnotation(MvccAccess.class);
+						if (mvccAccess != null && mvccAccess
+								.type() == MvccAccessType.TRANSACTIONAL_ACCESS_NOT_SUPPORTED) {
+							continue;
+						}
+					}
 					result.add(field);
 				}
 				c = c.getSuperclass();
@@ -684,8 +700,8 @@ public class GraphProjection {
 		} else if (source instanceof DomainProxy) {
 			projected = (T) ((DomainProxy) source).nonProxy();
 		} else if (source instanceof MvccObject) {
-			projected = newInstance(
-					((Entity) source).provideEntityClass(), context);
+			projected = newInstance(((Entity) source).provideEntityClass(),
+					context);
 		} else {
 			projected = newInstance(sourceClass, context);
 		}
@@ -870,8 +886,7 @@ public class GraphProjection {
 		this.reached = reached;
 	}
 
-	public void setReplaceMap(
-			LinkedHashMap<Entity, Entity> replaceMap) {
+	public void setReplaceMap(LinkedHashMap<Entity, Entity> replaceMap) {
 		this.replaceMap = replaceMap;
 	}
 

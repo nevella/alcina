@@ -49,6 +49,7 @@ public class Transaction {
 			return;
 		}
 		if (TransformManager.get().getTransforms().size() > 0) {
+			ThreadlocalTransformManager.cast().resetTltm(null);
 			throw new MvccException(
 					"Ending transaction with uncommitted transforms");
 		}
@@ -123,7 +124,12 @@ public class Transaction {
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
 		threadLocalInstance.set(transaction);
+		transaction.originatingThreadName = Thread.currentThread().getName();
 	}
+
+	// debugging aid
+	@SuppressWarnings("unused")
+	private String originatingThreadName;
 
 	boolean ended;
 
@@ -139,11 +145,14 @@ public class Transaction {
 
 	TransactionPhase phase;
 
+	long startTime;
+
 	public Transaction(TransactionPhase initialPhase) {
 		DomainStore.stores().stream().forEach(store -> storeTransactions
 				.put(store, new StoreTransaction(store)));
 		this.phase = initialPhase;
 		Transactions.get().initialiseTransaction(this);
+		startTime = System.currentTimeMillis();
 		logger.trace("Created tx: {}", this);
 	}
 

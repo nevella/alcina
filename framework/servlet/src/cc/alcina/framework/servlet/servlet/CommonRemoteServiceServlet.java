@@ -796,6 +796,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				}
 				ThreadlocalTransformManager.cast().resetTltm(null);
 				LooseContext.pop();
+				Transaction.ensureEnded();
 			} else {
 				try {
 					LooseContext.pop();

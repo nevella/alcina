@@ -91,6 +91,10 @@ public class Transactions {
 		}
 	}
 
+	public static TransactionsStats stats() {
+		return get().createStats();
+	}
+
 	// debug/testing only!
 	public static void waitForAllToCompleteExSelf() {
 		get().waitForAllToCompleteExSelf0();
@@ -195,6 +199,10 @@ public class Transactions {
 		}
 	}
 
+	private TransactionsStats createStats() {
+		return new TransactionsStats();
+	}
+
 	private void waitForAllToCompleteExSelf0() {
 		while (true) {
 			synchronized (transactionMetadataLock) {
@@ -283,6 +291,26 @@ public class Transactions {
 		synchronized (transactionMetadataLock) {
 			vacuumableTransactions
 					.forEach(tx -> committedTransactions.remove(tx.getId()));
+		}
+	}
+
+	public class TransactionsStats {
+		public long getOldestTxStartTime() {
+			synchronized (transactionMetadataLock) {
+				return committedTransactions.isEmpty() ? 0L
+						: committedTransactions.values().iterator()
+								.next().startTime;
+			}
+		}
+
+		public long getUncollectedTxCount() {
+			synchronized (transactionMetadataLock) {
+				return committedTransactions.size();
+			}
+		}
+
+		public long getVacuumQueueLength() {
+			return vacuum.vacuumables.size();
 		}
 	}
 }

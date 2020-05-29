@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.Pe
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
@@ -45,6 +46,18 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	// FIXME.mvcc.2 - try to avoid this - declarative jobs and/or
+	// alcinachildrunnables
+	public static void runInTransaction(ThrowingRunnable runnable) {
+		AlcinaChildRunnable wrappingRunnable = new AlcinaChildRunnable(null) {
+			@Override
+			protected void run0() throws Exception {
+				runnable.run();
+			}
+		};
+		wrappingRunnable.run();
 	}
 
 	public static <T> Consumer<T>

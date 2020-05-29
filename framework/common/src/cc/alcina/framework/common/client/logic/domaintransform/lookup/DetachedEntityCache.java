@@ -241,6 +241,13 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		}
 	}
 
+	public void removeLocal(Entity entity) {
+		Class<? extends Entity> clazz = entity.provideEntityClass();
+		long localId = entity.getLocalId();
+		Preconditions.checkArgument(localId > 0);
+		local.get(clazz).remove(localId, entity);
+	}
+
 	public void setThrowOnExisting(boolean throwOnExisting) {
 		this.throwOnExisting = throwOnExisting;
 	}
