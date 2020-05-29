@@ -109,7 +109,9 @@ public class DevConsoleDebugCommands {
 			argv = flag.argv;
 			if (!flag.contains) {
 				logRecords.removeIf(
-						lr -> excludePatterns.matchesPatternKeys(lr.getText()));
+						lr -> excludePatterns.matchesPatternKeys(lr.getText())
+								|| excludePatterns.matchesPatternKeys(
+										lr.getComponentKey()));
 			}
 			if (logRecords.size() < size) {
 				logger.info(Ax.format("Exclude patterns removed %s records",
@@ -814,6 +816,10 @@ public class DevConsoleDebugCommands {
 					text = text + "\n=========\nLog:\n=======\n"
 							+ jsonNode.get("log").asString()
 									.replace("StackTrace:", "\nStackTrace:\n");
+				}
+				if (jsonNode.hasKey("stack")) {
+					text = text + "\n=========\nStack:\n=======\n"
+							+ jsonNode.get("stack").asString();
 				}
 			} catch (Exception e) {
 			}
