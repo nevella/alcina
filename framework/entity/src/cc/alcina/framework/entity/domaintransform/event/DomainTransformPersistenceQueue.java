@@ -432,6 +432,8 @@ public class DomainTransformPersistenceQueue {
 					}
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
+				} finally {
+					Transaction.ensureEnded();
 				}
 			}
 		}

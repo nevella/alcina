@@ -495,7 +495,7 @@ public class DomainStore implements IDomainStore {
 		loader.warmup();
 		// loader responsible for this
 		// Transaction.current().toCommitted();
-		Transaction.endAndBeginNew();
+		Transaction.end();
 		initialising = false;
 		initialised = true;
 		threads.startLongLockHolderCheck();

@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
@@ -295,6 +296,27 @@ public class Transactions {
 	}
 
 	public class TransactionsStats {
+		public String describeTransactions() {
+			FormatBuilder fb = new FormatBuilder();
+			synchronized (transactionMetadataLock) {
+				fb.line("");
+				fb.line("Active Transactions: (%s)", activeTransactions.size());
+				fb.line("===========================");
+				fb.indent(2);
+				activeTransactions.values()
+						.forEach(tx -> fb.line(tx.toDebugString()));
+				fb.line("");
+				fb.indent(0);
+				fb.line("Committed Transactions: (%s)",
+						committedTransactions.size());
+				fb.line("===========================");
+				fb.indent(2);
+				committedTransactions.values()
+						.forEach(tx -> fb.line(tx.toDebugString()));
+				return fb.toString();
+			}
+		}
+
 		public long getOldestTxStartTime() {
 			synchronized (transactionMetadataLock) {
 				return committedTransactions.isEmpty() ? 0L
@@ -305,7 +327,7 @@ public class Transactions {
 
 		public long getUncollectedTxCount() {
 			synchronized (transactionMetadataLock) {
-				return committedTransactions.size();
+				return committedTransactions.size() + activeTransactions.size();
 			}
 		}
 

@@ -94,6 +94,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			throw new ServletException(e);
 		} finally {
 			Transaction.current().toNoActiveTransaction();
+			Transaction.end();
 			LooseContext.pop();
 		}
 	}

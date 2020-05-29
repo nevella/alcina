@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
 import java.sql.Timestamp;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,6 +19,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
@@ -125,10 +128,14 @@ public class Transaction {
 				Thread.currentThread().getId());
 		threadLocalInstance.set(transaction);
 		transaction.originatingThreadName = Thread.currentThread().getName();
+		if (ResourceUtilities.is("retainTransactionStartTrace")) {
+			transaction.transactionStartTrace = SEUtilities
+					.getCurrentThreadStacktraceSlice();
+		}
 	}
 
-	// debugging aid
-	@SuppressWarnings("unused")
+	private String transactionStartTrace;
+
 	private String originatingThreadName;
 
 	boolean ended;
@@ -241,6 +248,14 @@ public class Transaction {
 		Preconditions
 				.checkState(getPhase() == TransactionPhase.TO_DB_PREPARING);
 		setPhase(TransactionPhase.TO_DB_PERSISTING);
+	}
+
+	public String toDebugString() {
+		String detail = String.format("%10s %14s %14s %s", id, phase,
+				new Date(startTime), originatingThreadName);
+		return transactionStartTrace == null ? detail
+				: Ax.format("%s\n-------\n%s\n", detail, CommonUtils
+						.hangingIndent(transactionStartTrace, false, 2));
 	}
 
 	public void toDomainAborted() {
