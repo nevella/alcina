@@ -20,6 +20,10 @@ public abstract class ReverseDateProjection<T extends Entity>
 		List<T> result = new ArrayList<>();
 		Set<Date> keys = (Set) getLookup().keySet();
 		for (Date key : keys) {
+			if (key == null) {
+				// at end (reversed), so nothing matches
+				break;
+			}
 			if (date == null || key.after(date)) {
 				result.add(get(key));
 			} else {

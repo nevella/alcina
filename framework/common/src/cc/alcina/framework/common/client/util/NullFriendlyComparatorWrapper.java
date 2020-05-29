@@ -2,6 +2,13 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
 
+/**
+ * Null comes first...
+ * 
+ * @author nick@alcina.cc
+ *
+ * @param <T>
+ */
 public class NullFriendlyComparatorWrapper<T> implements Comparator<T> {
 	private Comparator<T> wrappedComparator;
 
