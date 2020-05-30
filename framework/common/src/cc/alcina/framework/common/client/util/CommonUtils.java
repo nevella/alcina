@@ -1720,6 +1720,8 @@ public class CommonUtils {
 
 	public static <T> void validateComparator(List<T> list,
 			Comparator<T> comparator) {
+		SystemoutCounter counter = SystemoutCounter
+				.standardJobCounter(list.size(), "validate-comparator");
 		for (int idx0 = 0; idx0 < list.size(); idx0++) {
 			for (int idx1 = 0; idx1 < list.size(); idx1++) {
 				for (int idx2 = 0; idx2 < list.size(); idx2++) {
@@ -1744,6 +1746,7 @@ public class CommonUtils {
 					}
 				}
 			}
+			counter.tick();
 		}
 	}
 
