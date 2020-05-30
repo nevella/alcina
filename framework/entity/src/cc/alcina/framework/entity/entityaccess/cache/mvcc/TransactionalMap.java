@@ -419,14 +419,17 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		/*
 		 * returns a new non-live-transaction layer containing the union of
 		 * these two
+		 * 
+		 * note that some variants of fastutil maps don't support
+		 * keySet().remove(), hence fancy remove loops
 		 */
 		public Layer merge(Layer newerLayer, List<Layer> olderLayers,
 				int newestOlderLayerIndex) {
 			Layer merged = new Layer(null);
 			if (hasRemoved()) {
 				merged.ensureRemoved().putAll(ensureRemoved());
-				merged.ensureRemoved().keySet()
-						.removeAll(newerLayer.modified.keySet());
+				newerLayer.modified.keySet()
+						.forEach(k -> merged.ensureRemoved().remove(k));
 			}
 			if (newerLayer.hasRemoved()) {
 				merged.ensureRemoved().putAll(newerLayer.ensureRemoved());
@@ -434,8 +437,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			merged.modified.putAll(modified);
 			merged.modified.putAll(newerLayer.modified);
 			if (merged.hasRemoved()) {
-				merged.modified.keySet()
-						.removeAll(merged.ensureRemoved().keySet());
+				merged.ensureRemoved().keySet()
+						.forEach(merged.modified::remove);
 			}
 			/*
 			 * now ... how many of merged.modified were in fact added?
