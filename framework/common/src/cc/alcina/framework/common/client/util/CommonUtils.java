@@ -1718,10 +1718,43 @@ public class CommonUtils {
 				+ s.substring(1).toLowerCase();
 	}
 
+	public static <T> void validateComparator(List<T> list,
+			Comparator<T> comparator) {
+		for (int idx0 = 0; idx0 < list.size(); idx0++) {
+			for (int idx1 = 0; idx1 < list.size(); idx1++) {
+				for (int idx2 = 0; idx2 < list.size(); idx2++) {
+					if (idx0 == idx1 || idx1 == idx2 || idx0 == idx2) {
+						continue;
+					}
+					T o0 = list.get(idx0);
+					T o1 = list.get(idx1);
+					T o2 = list.get(idx2);
+					if (!CommonUtils.validateComparator(o0, o1, o2,
+							comparator.compare(o0, o1),
+							comparator.compare(o1, o2),
+							comparator.compare(o0, o2))) {
+						comparator.compare(o0, o1);
+						comparator.compare(o1, o2);
+						comparator.compare(o0, o2);
+						throw Ax.runtimeException(
+								"Comparator relation issue: %s %s %s :: %s %s %s",
+								o0, o1, o2, comparator.compare(o0, o1),
+								comparator.compare(o1, o2),
+								comparator.compare(o0, o2));
+					}
+				}
+			}
+		}
+	}
+
 	public static boolean validateComparator(Object o1, Object o2, Object o3,
-			int cmp0_1, int cmp0_2, int cmp1_2) {
-		if (cmp0_1 > 0 && cmp1_2 > 0) {
-			return cmp0_2 > 0;
+			int cmp0_1, int cmp1_2, int cmp0_2) {
+		if (cmp0_1 < 0 && cmp1_2 < 0) {
+			if (cmp0_2 < 0) {
+				return true;
+			} else {
+				return false;
+			}
 		} else {
 			return true;
 		}
