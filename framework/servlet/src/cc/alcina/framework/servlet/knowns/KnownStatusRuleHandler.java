@@ -158,7 +158,9 @@ public abstract class KnownStatusRuleHandler {
 
 		private KnownTagAlcina testRule(OpStatus opStatus,
 				KnownStatusRule rule, Date lastOkDate) {
-			if (opStatus != OpStatus.FAILED && lastOkDate != null) {
+			if (opStatus == OpStatus.FAILED) {
+				return KnownTagAlcina.Status_Error;
+			}else if (lastOkDate != null) {
 				return checkDateTime(rule, lastOkDate);
 			}
 			return null;
