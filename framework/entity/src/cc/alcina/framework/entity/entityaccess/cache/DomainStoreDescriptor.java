@@ -86,7 +86,25 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 	 * sort output
 	 * 
 	 * @author nick@alcina.cc
-	 *
+	 * 
+	 * Memory stat impl 2 (not currently needed - current impl helped a bunch for debugging)
+	 * @formatter:off			
+goal:				
+root				
+	cache			
+		main		
+			overhead	
+			keys	
+			payment (map)	
+				overhead
+				size
+				shallow
+				deep
+				avg. shallow
+				avg. deep
+				id
+				paymentTokens (shallow)
+	 * @formatter:on
 	 */
 	public static class ObjectMemoryImpl extends ObjectMemory {
 		public static final Predicate<Class> entityAndMapAndCollectionFilter = clazz -> {
