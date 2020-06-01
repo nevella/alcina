@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -42,7 +43,8 @@ public class TrieProjection<K, E extends Entity>
 	}
 
 	public Stream<E> getSubstringMatches(K prefix) {
-		return trie.prefixMap(prefix).entrySet().stream().map(Entry::getValue)
+		SortedMap<K, Set<E>> prefixMap = trie.prefixMap(prefix);
+		return prefixMap.entrySet().stream().map(Entry::getValue)
 				.flatMap(Collection::stream).distinct();
 	}
 

@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -131,10 +132,25 @@ public class Transactions {
 		return baseTransactions.get(store);
 	}
 
-	static <T extends Entity & MvccObject> T copyObject(T object) {
+	static <T extends MvccObject> T copyObject(T from) {
 		// synchronized (debugMonitor) {
-		T clone = ResourceUtilities.fieldwiseClone(object, false, true);
-		MvccObjectVersions __getMvccVersions__ = object.__getMvccVersions__();
+		T clone = null;
+		try {
+			if (from instanceof TransactionalSet) {
+				clone = (T) new TransactionalSet();
+			} else if (from instanceof TransactionalTrieEntry) {
+				clone = (T) new TransactionalTrieEntry();
+			} else {
+				Constructor<T> constructor = (Constructor<T>) from.getClass()
+						.getConstructor(new Class[0]);
+				constructor.setAccessible(true);
+				clone = constructor.newInstance();
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		ResourceUtilities.fieldwiseCopy(from, clone, false, true);
+		MvccObjectVersions __getMvccVersions__ = from.__getMvccVersions__();
 		clone.__setMvccVersions__(__getMvccVersions__);
 		return clone;
 		// }

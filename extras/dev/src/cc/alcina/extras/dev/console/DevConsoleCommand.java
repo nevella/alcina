@@ -476,7 +476,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						LooseContext.pushWithKey(
 								DevConsoleRunnable.CONTEXT_ACTION_RESULT, "");
 						if (Transactions.isInitialised()) {
-							Transaction.begin();
+							Transaction.ensureBegun();
 						}
 						runnable.run();
 						String msg = LooseContext.getString(

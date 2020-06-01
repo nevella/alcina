@@ -114,6 +114,10 @@ public class Transaction {
 		if (!Transactions.isInitialised()) {
 			return;
 		}
+		if (threadLocalInstance.get() != null) {
+			throw Ax.runtimeException("Begin without end: %s - %s",
+					initialPhase, threadLocalInstance.get());
+		}
 		switch (initialPhase) {
 		case TO_DB_PREPARING:
 		case TO_DOMAIN_PREPARING:

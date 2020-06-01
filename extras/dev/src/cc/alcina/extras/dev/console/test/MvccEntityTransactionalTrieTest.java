@@ -1,6 +1,7 @@
 package cc.alcina.extras.dev.console.test;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
@@ -74,6 +75,8 @@ public class MvccEntityTransactionalTrieTest<IU extends Entity & IUser, IG exten
 				try {
 					Transaction.begin();
 					tx1Latch1.await();
+					Object collect = projection.getSubstringMatches(testKey)
+							.collect(Collectors.toList());
 					long count = projection.getSubstringMatches(testKey)
 							.count();
 					Preconditions.checkState(count == initialCount,

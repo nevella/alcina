@@ -34,11 +34,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	public static int debugRemoval = 0;
 
 	// called in a synchronized block (synchronized on baseObject)
-	static <T extends Entity> MvccObjectVersions<T> ensureEntity(T baseObject,
+	static <E extends Entity> MvccObjectVersions<E> ensureEntity(E baseObject,
 			Transaction transaction, boolean initialObjectIsWriteable) {
 		MvccObject mvccObject = (MvccObject) baseObject;
-		MvccObjectVersions<T> versions = null;
-		versions = new MvccObjectVersionsEntity<T>(baseObject, transaction,
+		MvccObjectVersions<E> versions = null;
+		versions = new MvccObjectVersionsEntity<E>(baseObject, transaction,
 				initialObjectIsWriteable);
 		mvccObject.__setMvccVersions__(versions);
 		return versions;
@@ -49,8 +49,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			boolean initialObjectIsWriteable) {
 		MvccObject mvccObject = (MvccObject) baseObject;
 		MvccObjectVersions<TransactionalSet> versions = null;
-		versions = new MvccObjectVersionsTransactionalSet(baseObject, transaction,
-				initialObjectIsWriteable);
+		versions = new MvccObjectVersionsTransactionalSet(baseObject,
+				transaction, initialObjectIsWriteable);
 		mvccObject.__setMvccVersions__(versions);
 		return versions;
 	}
@@ -106,8 +106,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			{
 				ObjectVersion<T> version = new ObjectVersion<>();
 				version.transaction = initialTransaction;
-				version.object = (T) Transactions
-						.copyObject((Entity & MvccObject) t);
+				version.object = (T) Transactions.copyObject((MvccObject) t);
 				((MvccObject) version.object).__setMvccVersions__(this);
 				putVersion(version);
 			}
@@ -226,7 +225,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			version = new ObjectVersion<>();
 			version.transaction = transaction;
 			version.object = (T) Transactions
-					.copyObject((Entity & MvccObject) mostRecentObject);
+					.copyObject((MvccObject) mostRecentObject);
 			version.writeable = true;
 			// put before register (which will call resolve());
 			putVersion(version);

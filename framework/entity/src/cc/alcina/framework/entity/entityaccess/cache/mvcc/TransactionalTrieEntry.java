@@ -15,6 +15,10 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 		this.entityClass = entityClass;
 	}
 
+	// for copying
+	TransactionalTrieEntry() {
+	}
+
 	@Override
 	public MvccObjectVersions<TransactionalTrieEntry> __getMvccVersions__() {
 		return __mvccObjectVersions__;
@@ -130,9 +134,6 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 
 	@Override
 	public V setKeyValue(K key, V value) {
-		if (__mvccObjectVersions__ == null) {
-			return super.setKeyValue(key, value);
-		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
 				.resolveTrieEntry(this, true);
 		if (__instance__ == this) {
@@ -144,9 +145,6 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 
 	@Override
 	public V setValue(V value) {
-		if (__mvccObjectVersions__ == null) {
-			return super.setValue(value);
-		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
 				.resolveTrieEntry(this, true);
 		if (__instance__ == this) {
@@ -242,10 +240,6 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 
 	@Override
 	protected void setBitIndex(int bitIndex) {
-		if (__mvccObjectVersions__ == null) {
-			super.setBitIndex(bitIndex);
-			return;
-		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
 				.resolveTrieEntry(this, true);
 		if (__instance__ == this) {
@@ -259,10 +253,6 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 
 	@Override
 	protected void setKey(K key) {
-		if (__mvccObjectVersions__ == null) {
-			super.setKey(key);
-			return;
-		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
 				.resolveTrieEntry(this, true);
 		if (__instance__ == this) {
@@ -276,10 +266,6 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 
 	@Override
 	protected void setLeft(TrieEntry<K, V> left) {
-		if (__mvccObjectVersions__ == null) {
-			super.setLeft(left);
-			return;
-		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
 				.resolveTrieEntry(this, true);
 		if (__instance__ == this) {
@@ -293,10 +279,6 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 
 	@Override
 	protected void setParent(TrieEntry<K, V> parent) {
-		if (__mvccObjectVersions__ == null) {
-			super.setParent(parent);
-			return;
-		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
 				.resolveTrieEntry(this, true);
 		if (__instance__ == this) {
@@ -310,10 +292,6 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 
 	@Override
 	protected void setPredecessor(TrieEntry<K, V> predecessor) {
-		if (__mvccObjectVersions__ == null) {
-			super.setPredecessor(predecessor);
-			return;
-		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
 				.resolveTrieEntry(this, true);
 		if (__instance__ == this) {
@@ -327,10 +305,6 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 
 	@Override
 	protected void setRight(TrieEntry<K, V> right) {
-		if (__mvccObjectVersions__ == null) {
-			super.setRight(right);
-			return;
-		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
 				.resolveTrieEntry(this, true);
 		if (__instance__ == this) {

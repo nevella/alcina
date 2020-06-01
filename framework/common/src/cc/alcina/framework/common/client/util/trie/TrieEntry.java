@@ -27,6 +27,9 @@ public class TrieEntry<K, V> implements Map.Entry<K, V> {
 
 	private transient int hashCode = 0;
 
+	protected TrieEntry() {
+	}
+
 	protected TrieEntry(K key, V value, int bitIndex) {
 		this.key = key;
 		this.value = value;
@@ -169,43 +172,43 @@ public class TrieEntry<K, V> implements Map.Entry<K, V> {
 		return bitIndex;
 	}
 
-	protected void setBitIndex(int bitIndex) {
-		this.bitIndex = bitIndex;
+	protected TrieEntry<K, V> getLeft() {
+		return left;
 	}
 
 	protected TrieEntry<K, V> getParent() {
 		return parent;
 	}
 
-	protected void setParent(TrieEntry<K, V> parent) {
-		this.parent = parent;
-	}
-
-	protected TrieEntry<K, V> getLeft() {
-		return left;
-	}
-
-	protected void setLeft(TrieEntry<K, V> left) {
-		this.left = left;
+	protected TrieEntry<K, V> getPredecessor() {
+		return predecessor;
 	}
 
 	protected TrieEntry<K, V> getRight() {
 		return right;
 	}
 
-	protected void setRight(TrieEntry<K, V> right) {
-		this.right = right;
+	protected void setBitIndex(int bitIndex) {
+		this.bitIndex = bitIndex;
 	}
 
-	protected TrieEntry<K, V> getPredecessor() {
-		return predecessor;
+	protected void setKey(K key) {
+		this.key = key;
+	}
+
+	protected void setLeft(TrieEntry<K, V> left) {
+		this.left = left;
+	}
+
+	protected void setParent(TrieEntry<K, V> parent) {
+		this.parent = parent;
 	}
 
 	protected void setPredecessor(TrieEntry<K, V> predecessor) {
 		this.predecessor = predecessor;
 	}
 
-	protected void setKey(K key) {
-		this.key = key;
+	protected void setRight(TrieEntry<K, V> right) {
+		this.right = right;
 	}
 }

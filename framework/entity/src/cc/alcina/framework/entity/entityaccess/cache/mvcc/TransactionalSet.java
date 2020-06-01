@@ -1,23 +1,27 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MostlySingleValuedSet;
 
 /*
- *Does *not* implement transactional collection (the degenerate case's map does, but looks like ~95% time that isn't reached)...
  * 
  * 
  */
 public class TransactionalSet<E extends Entity> extends MostlySingleValuedSet<E>
-		implements MvccObject<TransactionalSet> {
+		implements MvccObject<TransactionalSet>, TransactionalCollection {
 	private Class<E> entityClass;
 
 	MvccObjectVersions<TransactionalSet> __mvccObjectVersions__;
 
 	public TransactionalSet(Class<E> entityClass) {
 		this.entityClass = entityClass;
+	}
+
+	// for copying
+	TransactionalSet() {
 	}
 
 	@Override
@@ -33,9 +37,6 @@ public class TransactionalSet<E extends Entity> extends MostlySingleValuedSet<E>
 
 	@Override
 	public boolean add(E o) {
-		if (__mvccObjectVersions__ == null) {
-			return super.add(o);
-		}
 		TransactionalSet<E> __instance__ = Transactions
 				.resolveTransactionalSet(this, true);
 		if (__instance__ == this) {
@@ -65,7 +66,7 @@ public class TransactionalSet<E extends Entity> extends MostlySingleValuedSet<E>
 			return super.contains(o);
 		}
 		TransactionalSet<E> __instance__ = Transactions
-				.resolveTransactionalSet(this, true);
+				.resolveTransactionalSet(this, false);
 		if (__instance__ == this) {
 			return super.contains(o);
 		} else {
@@ -93,9 +94,6 @@ public class TransactionalSet<E extends Entity> extends MostlySingleValuedSet<E>
 
 	@Override
 	public boolean remove(Object o) {
-		if (__mvccObjectVersions__ == null) {
-			return super.remove(o);
-		}
 		TransactionalSet<E> __instance__ = Transactions
 				.resolveTransactionalSet(this, true);
 		if (__instance__ == this) {
@@ -117,5 +115,10 @@ public class TransactionalSet<E extends Entity> extends MostlySingleValuedSet<E>
 		} else {
 			return __instance__.size();
 		}
+	}
+
+	@Override
+	protected Map<E, Boolean> createDegenerateMap() {
+		return new TransactionalMap<>(entityClass, Boolean.class);
 	}
 }

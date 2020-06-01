@@ -39,6 +39,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.HttpURLConnection;
@@ -212,10 +213,7 @@ public class ResourceUtilities {
 	public static <T> T fieldwiseClone(T t, boolean withTransients,
 			boolean withCollectionProjection) {
 		try {
-			Constructor<T> constructor = (Constructor<T>) t.getClass()
-					.getConstructor(new Class[0]);
-			constructor.setAccessible(true);
-			T instance = constructor.newInstance();
+			T instance = newInstance(t);
 			return fieldwiseCopy(t, instance, withTransients,
 					withCollectionProjection);
 		} catch (Exception e) {
@@ -262,8 +260,8 @@ public class ResourceUtilities {
 						value = newMap;
 					} else {
 						Collection collection = (Collection) value;
-						Collection newCollection = (Collection) collection
-								.getClass().newInstance();
+						Collection newCollection = (Collection) newInstance(
+								collection);
 						newCollection.addAll(collection);
 						value = newCollection;
 					}
@@ -945,6 +943,22 @@ public class ResourceUtilities {
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);
 		bw.close();
+	}
+
+	private static <T> T newInstance(T t)
+			throws NoSuchMethodException, InstantiationException,
+			IllegalAccessException, InvocationTargetException {
+		Constructor<T> constructor = null;
+		try {
+			constructor = (Constructor<T>) t.getClass()
+					.getConstructor(new Class[0]);
+		} catch (NoSuchMethodException e) {
+			constructor = (Constructor<T>) t.getClass()
+					.getDeclaredConstructor(new Class[0]);
+		}
+		constructor.setAccessible(true);
+		T instance = constructor.newInstance();
+		return instance;
 	}
 
 	public static interface BeanInfoHelper {

@@ -108,7 +108,7 @@ public class MostlySingleValuedSet<E> extends AbstractSet<E>
 		return size;
 	}
 
-	private Map<E, Boolean> createDegenerateMap() {
+	protected Map<E, Boolean> createDegenerateMap() {
 		return new LinkedHashMap<>();
 	}
 }
