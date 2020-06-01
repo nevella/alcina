@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CountingMap;
 
 /**
  *
@@ -62,6 +64,13 @@ public class MultiTrie<K, V extends Set<? extends Entity>>
 			set.addAll(v);
 		}
 		return (V) set;
+	}
+
+	public void dumpDensity() {
+		Ax.out("All values: %s", size());
+		CountingMap<Integer> sizeCount = new CountingMap<>();
+		keySet().stream().map(k -> get(k).size()).forEach(sizeCount::add);
+		sizeCount.toLinkedHashMap(true).entrySet().forEach(Ax::out);
 	}
 
 	public V getAndEnsure(K key) {

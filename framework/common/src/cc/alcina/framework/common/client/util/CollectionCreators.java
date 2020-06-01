@@ -59,4 +59,8 @@ public class CollectionCreators {
 			return this;
 		}
 	}
+
+	public static interface TypedMapCreator<K, V> {
+		public Map<K, V> create(Class<K> keyClass, Class<V> valueClass);
+	}
 }

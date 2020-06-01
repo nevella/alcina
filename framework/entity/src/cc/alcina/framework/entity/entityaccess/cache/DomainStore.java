@@ -359,11 +359,12 @@ public class DomainStore implements IDomainStore {
 	public MemoryStat getMemoryStats(StatType type) {
 		MemoryStat top = new MemoryStat(this);
 		top.setObjectMemory(Registry.impl(ObjectMemory.class));
+		top.type = type;
 		/*
 		 * Add cache stats first (notionally it's the owner of the entities)
 		 */
-		cache.addMemoryStats(top, type);
-		getDomainDescriptor().addMemoryStats(top, type);
+		cache.addMemoryStats(top);
+		getDomainDescriptor().addMemoryStats(top);
 		return top;
 	}
 

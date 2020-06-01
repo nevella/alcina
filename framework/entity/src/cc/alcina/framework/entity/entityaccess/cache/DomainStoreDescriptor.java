@@ -24,7 +24,6 @@ import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.Counter;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
-import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.domain.ReverseDateProjection;
 import cc.alcina.framework.common.client.domain.TrieProjection;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -46,11 +45,11 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 	protected DomainSegmentLoader domainSegmentLoader;
 
 	@Override
-	public MemoryStat addMemoryStats(MemoryStat parent, StatType type) {
+	public MemoryStat addMemoryStats(MemoryStat parent) {
 		MemoryStat self = new MemoryStat(this);
 		parent.addChild(self);
 		perClass.values()
-				.forEach(descriptor -> descriptor.addMemoryStats(self, type));
+				.forEach(descriptor -> descriptor.addMemoryStats(self));
 		return self;
 	}
 

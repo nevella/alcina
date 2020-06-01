@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
+
 public class MvccObjectVersionsTrieEntry
 		extends MvccObjectVersions<TransactionalTrieEntry> {
 	MvccObjectVersionsTrieEntry(TransactionalTrieEntry t,
@@ -14,7 +16,7 @@ public class MvccObjectVersionsTrieEntry
 	}
 
 	@Override
-	protected Class<TransactionalTrieEntry> provideEntityClass() {
+	protected <E extends Entity> Class<E> provideEntityClass() {
 		return getBaseObject().provideEntityClass();
 	}
 

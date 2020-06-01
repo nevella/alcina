@@ -92,6 +92,32 @@ public class Transactions {
 		}
 	}
 
+	public static <E extends Entity> TransactionalSet<E>
+			resolveTransactionalSet(TransactionalSet<E> t, boolean write) {
+		MvccObject mvccObject = (MvccObject) t;
+		MvccObjectVersions<TransactionalSet> versions = mvccObject
+				.__getMvccVersions__();
+		if (versions == null && !write) {
+			// no transactional versions, return base
+			return t;
+		} else {
+			Transaction transaction = Transaction.current();
+			if (transaction.isBaseTransaction()) {
+				return t;
+			} else {
+				//
+				synchronized (t) {
+					versions = mvccObject.__getMvccVersions__();
+					if (versions == null) {
+						versions = MvccObjectVersions.ensureTransactionalSet(t,
+								transaction, false);
+					}
+					return versions.resolve(write);
+				}
+			}
+		}
+	}
+
 	public static TransactionsStats stats() {
 		return get().createStats();
 	}
@@ -130,7 +156,7 @@ public class Transactions {
 	}
 
 	static <K, V> TransactionalTrieEntry<K, V>
-			resolveTrie(TransactionalTrieEntry<K, V> t, boolean write) {
+			resolveTrieEntry(TransactionalTrieEntry<K, V> t, boolean write) {
 		MvccObject mvccObject = (MvccObject) t;
 		MvccObjectVersions<TransactionalTrieEntry> versions = mvccObject
 				.__getMvccVersions__();

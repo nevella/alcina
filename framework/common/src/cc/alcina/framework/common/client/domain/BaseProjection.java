@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.Ax;
@@ -53,7 +52,7 @@ public abstract class BaseProjection<T extends Entity>
 	}
 
 	@Override
-	public MemoryStat addMemoryStats(MemoryStat parent, StatType type) {
+	public MemoryStat addMemoryStats(MemoryStat parent) {
 		MemoryStat self = new MemoryStat(this);
 		parent.addChild(self);
 		self.objectMemory.walkStats(this, self.counter, o -> o == this

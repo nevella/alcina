@@ -1,47 +1,121 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
-import java.util.AbstractSet;
 import java.util.Iterator;
 
-public class TransactionalSet<E> extends AbstractSet<E> {
-	private TransactionalMap<E, Boolean> map;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.MostlySingleValuedSet;
 
-	public TransactionalSet(Class<E> clazz) {
-		this.map = new TransactionalMap<>(clazz, Boolean.class);
+/*
+ *Does *not* implement transactional collection (the degenerate case's map does, but looks like ~95% time that isn't reached)...
+ * 
+ * 
+ */
+public class TransactionalSet<E extends Entity> extends MostlySingleValuedSet<E>
+		implements MvccObject<TransactionalSet> {
+	private Class<E> entityClass;
+
+	MvccObjectVersions<TransactionalSet> __mvccObjectVersions__;
+
+	public TransactionalSet(Class<E> entityClass) {
+		this.entityClass = entityClass;
 	}
 
 	@Override
-	public boolean add(E e) {
-		return map.put(e, true) == null;
+	public MvccObjectVersions<TransactionalSet> __getMvccVersions__() {
+		return __mvccObjectVersions__;
 	}
 
 	@Override
-	public void clear() {
-		map.clear();
+	public void __setMvccVersions__(
+			MvccObjectVersions<TransactionalSet> __mvccVersions__) {
+		this.__mvccObjectVersions__ = __mvccVersions__;
+	}
+
+	@Override
+	public boolean add(E o) {
+		if (__mvccObjectVersions__ == null) {
+			return super.add(o);
+		}
+		TransactionalSet<E> __instance__ = Transactions
+				.resolveTransactionalSet(this, true);
+		if (__instance__ == this) {
+			return super.add(o);
+		} else {
+			return __instance__.add(o);
+		}
+	}
+
+	@Override
+	public Object clone() {
+		if (__mvccObjectVersions__ == null) {
+			return super.clone();
+		}
+		TransactionalSet<E> __instance__ = Transactions
+				.resolveTransactionalSet(this, false);
+		if (__instance__ == this) {
+			return super.clone();
+		} else {
+			return __instance__.clone();
+		}
 	}
 
 	@Override
 	public boolean contains(Object o) {
-		return map.containsKey(o);
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return map.isEmpty();
+		if (__mvccObjectVersions__ == null) {
+			return super.contains(o);
+		}
+		TransactionalSet<E> __instance__ = Transactions
+				.resolveTransactionalSet(this, true);
+		if (__instance__ == this) {
+			return super.contains(o);
+		} else {
+			return __instance__.contains(o);
+		}
 	}
 
 	@Override
 	public Iterator<E> iterator() {
-		return map.keySet().iterator();
+		if (__mvccObjectVersions__ == null) {
+			return super.iterator();
+		}
+		TransactionalSet<E> __instance__ = Transactions
+				.resolveTransactionalSet(this, false);
+		if (__instance__ == this) {
+			return super.iterator();
+		} else {
+			return __instance__.iterator();
+		}
+	}
+
+	public Class<E> provideEntityClass() {
+		return entityClass;
 	}
 
 	@Override
 	public boolean remove(Object o) {
-		return map.remove(o) != null;
+		if (__mvccObjectVersions__ == null) {
+			return super.remove(o);
+		}
+		TransactionalSet<E> __instance__ = Transactions
+				.resolveTransactionalSet(this, true);
+		if (__instance__ == this) {
+			return super.remove(o);
+		} else {
+			return __instance__.remove(o);
+		}
 	}
 
 	@Override
 	public int size() {
-		return map.size();
+		if (__mvccObjectVersions__ == null) {
+			return super.size();
+		}
+		TransactionalSet<E> __instance__ = Transactions
+				.resolveTransactionalSet(this, false);
+		if (__instance__ == this) {
+			return super.size();
+		} else {
+			return __instance__.size();
+		}
 	}
 }

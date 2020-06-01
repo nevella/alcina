@@ -61,7 +61,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
  *   
  */
 public class TransactionalMap<K, V> extends AbstractMap<K, V>
-		implements Vacuumable {
+		implements Vacuumable, TransactionalCollection {
 	private Layer base;
 
 	private Layers layers;
@@ -78,6 +78,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		this.keyClass = keyClass;
 		this.valueClass = valueClass;
 		init();
+		// if (Math.random() * 1000 < 1) {
+		// int debug = 3;
+		// }
 	}
 
 	@Override

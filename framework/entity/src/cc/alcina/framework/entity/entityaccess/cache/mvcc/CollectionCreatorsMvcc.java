@@ -1,9 +1,12 @@
 package cc.alcina.framework.entity.entityaccess.cache.mvcc;
 
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
@@ -37,13 +40,24 @@ public class CollectionCreatorsMvcc {
 
 			@Override
 			protected Set<V> createSet() {
-				return new TransactionalSet<>(valueClass);
+				Class<? extends Entity> entityClass = (Class<? extends Entity>) valueClass;
+				return new TransactionalSet(entityClass);
 			}
 
 			@Override
 			protected void createTopMap() {
 				// do it in *our* init
 			}
+		}
+	}
+
+	@RegistryLocation(registryPoint = CollectionCreators.TypedMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@ClientInstantiable
+	public static class TypedMapCreatorCreatorMvcc<K, V>
+			implements CollectionCreators.TypedMapCreator<K, V> {
+		@Override
+		public Map<K, V> create(Class<K> keyClass, Class<V> valueClass) {
+			return new TransactionalMap(keyClass, valueClass);
 		}
 	}
 }

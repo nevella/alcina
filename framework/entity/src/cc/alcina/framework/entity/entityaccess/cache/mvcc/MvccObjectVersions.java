@@ -44,6 +44,17 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		return versions;
 	}
 
+	static MvccObjectVersions<TransactionalSet> ensureTransactionalSet(
+			TransactionalSet baseObject, Transaction transaction,
+			boolean initialObjectIsWriteable) {
+		MvccObject mvccObject = (MvccObject) baseObject;
+		MvccObjectVersions<TransactionalSet> versions = null;
+		versions = new MvccObjectVersionsTransactionalSet(baseObject, transaction,
+				initialObjectIsWriteable);
+		mvccObject.__setMvccVersions__(versions);
+		return versions;
+	}
+
 	// called in a synchronized block (synchronized on baseObject)
 	static MvccObjectVersions<TransactionalTrieEntry> ensureTrieEntry(
 			TransactionalTrieEntry baseObject, Transaction transaction,
@@ -195,7 +206,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (versions.isEmpty() && !write) {
 			return baseObject;
 		}
-		Class<T> entityClass = provideEntityClass();
+		Class<? extends Entity> entityClass = provideEntityClass();
 		Transaction mostRecentTransaction = transaction
 				.mostRecentPriorTransaction(versions.keys(),
 						DomainStore.stores().storeFor(entityClass));
@@ -232,7 +243,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected abstract void copyObjectFields(T fromObject, T toObject);
 
-	protected abstract Class<T> provideEntityClass();
+	protected abstract <E extends Entity> Class<E> provideEntityClass();
 
 	protected abstract void register(T object);
 

@@ -7,7 +7,6 @@ import java.util.function.Function;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
-import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
@@ -50,7 +49,7 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 	}
 
 	@Override
-	public MemoryStat addMemoryStats(MemoryStat parent, StatType type) {
+	public MemoryStat addMemoryStats(MemoryStat parent) {
 		MemoryStat self = new MemoryStat(this);
 		parent.addChild(self);
 		self.objectMemory.walkStats(this, self.counter, o -> o == this
@@ -77,6 +76,11 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 
 	public DomainLookup getLookup() {
 		return lookup;
+	}
+
+	public Class getLookupIndexClass(PropertyPathAccessor propertyPathAccesor) {
+		return propertyPathAccesor.getChainedPropertyType(
+				Reflections.classLookup().newInstance(clazz));
 	}
 
 	public String getPropertyPath() {
@@ -143,10 +147,5 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		public IdLookup getLookup() {
 			return idLookup;
 		}
-	}
-
-	public Class getLookupIndexClass(PropertyPathAccessor propertyPathAccesor) {
-		return propertyPathAccesor.getChainedPropertyType(
-				Reflections.classLookup().newInstance(clazz));
 	}
 }

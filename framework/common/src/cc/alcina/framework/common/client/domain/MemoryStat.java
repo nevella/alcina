@@ -22,6 +22,8 @@ public class MemoryStat {
 
 	public Counter counter = new Counter();
 
+	public StatType type;
+
 	public MemoryStat(Object root) {
 		this.root = root;
 	}
@@ -80,6 +82,9 @@ public class MemoryStat {
 
 		public Map<Class, Long> perClassCount = new LinkedHashMap<>();
 
+		public Counter() {
+		}
+
 		public void accumulate(MemoryStat stat) {
 			count += stat.counter.count;
 			size += stat.counter.size;
@@ -99,7 +104,7 @@ public class MemoryStat {
 	}
 
 	public interface MemoryStatProvider {
-		MemoryStat addMemoryStats(MemoryStat parent, StatType type);
+		MemoryStat addMemoryStats(MemoryStat parent);
 	}
 
 	@RegistryLocation(registryPoint = ObjectMemory.class)

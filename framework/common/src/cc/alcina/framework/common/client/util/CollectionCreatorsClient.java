@@ -7,24 +7,17 @@ import java.util.TreeSet;
 
 import com.google.gwt.core.client.GWT;
 
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.util.CollectionCreators;
-import cc.alcina.framework.common.client.util.Multiset;
-import cc.alcina.framework.common.client.util.SortedMultiset;
 
 //TODO - use fastidlookup, some sort of decorator for the sets
 public class CollectionCreatorsClient {
 	static boolean useJsMaps() {
 		return GWT.isScript();// GWT.isClient();
 	}
-
-	
-
 
 	@RegistryLocation(registryPoint = CollectionCreators.MultisetCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
@@ -55,6 +48,18 @@ public class CollectionCreatorsClient {
 
 		@Override
 		protected void createTopMap() {
+		}
+	}
+
+	@RegistryLocation(registryPoint = CollectionCreators.TypedMapCreator.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class TypedMapCreatorCreatorClient<K, V>
+			implements CollectionCreators.TypedMapCreator<K, V> {
+		@Override
+		public Map<K, V> create(Class<K> keyClass, Class<V> valueClass) {
+			return useJsMaps() && keyClass != null
+					? JsUniqueMap.create(keyClass, false)
+					: new LinkedHashMap<>();
 		}
 	}
 }

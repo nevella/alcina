@@ -39,8 +39,8 @@ public class IdLookup<T, E extends Entity> extends DomainLookup<T, E> {
 		if (key == null) {
 			return;
 		}
-		Set<E> set = getAndEnsure(key);
-		set.add(value);
+		super.add(key, value);
+		Set<E> set = get(key);
 		if (set.size() > 1) {
 			// throw new IllegalArgumentException("");
 			logger.warn(Ax.format(

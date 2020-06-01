@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
-import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.Ax;
@@ -50,13 +49,12 @@ public class DomainClassDescriptor<T extends Entity>
 	}
 
 	@Override
-	public MemoryStat addMemoryStats(MemoryStat parent, StatType type) {
+	public MemoryStat addMemoryStats(MemoryStat parent) {
 		MemoryStat self = new MemoryStat(this);
 		parent.addChild(self);
 		lookupDescriptors
-				.forEach(descriptor -> descriptor.addMemoryStats(self, type));
-		projections
-				.forEach(projection -> projection.addMemoryStats(self, type));
+				.forEach(descriptor -> descriptor.addMemoryStats(self));
+		projections.forEach(projection -> projection.addMemoryStats(self));
 		return self;
 	}
 

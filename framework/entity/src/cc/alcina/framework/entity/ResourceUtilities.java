@@ -76,6 +76,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalCollection;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
@@ -250,7 +251,7 @@ public class ResourceUtilities {
 				boolean project = false;
 				if (value != null && withShallowCopiedCollections) {
 					if (value instanceof Map || value instanceof Collection) {
-						project = true;
+						project = !(value instanceof TransactionalCollection);
 					}
 				}
 				if (project) {

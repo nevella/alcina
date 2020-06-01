@@ -32,7 +32,6 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
-import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -65,7 +64,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	@Override
-	public MemoryStat addMemoryStats(MemoryStat parent, StatType type) {
+	public MemoryStat addMemoryStats(MemoryStat parent) {
 		MemoryStat self = new MemoryStat(this);
 		parent.addChild(self);
 		self.objectMemory.walkStats(this, self.counter, o -> o == this

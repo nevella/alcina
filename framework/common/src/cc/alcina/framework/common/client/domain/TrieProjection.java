@@ -32,6 +32,10 @@ public class TrieProjection<K, E extends Entity>
 				entityClass);
 	}
 
+	public void dumpDensity() {
+		trie.dumpDensity();
+	}
+
 	@Override
 	public Class<E> getListenedClass() {
 		return entityClass;
