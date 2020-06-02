@@ -161,8 +161,11 @@ class ClassTransformer {
 			}
 			ct.generateMvccClass();
 		}
-		if (classTransforms.values().stream().anyMatch(ct -> ct.invalid)) {
-			throw new IllegalStateException();
+		if (ResourceUtilities.is(ClassTransformer.class,
+				"cancelStartupIfInvalid")) {
+			if (classTransforms.values().stream().anyMatch(ct -> ct.invalid)) {
+				throw new IllegalStateException();
+			}
 		}
 		AlcinaParallel.builder().withRunnables(compilationRunnables)
 				.withThreadCount(8).withCancelOnException(true).withSerial(true)

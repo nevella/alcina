@@ -20,12 +20,14 @@ import com.google.gwt.view.client.NoSelectionModel;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.ColumnSearchOrder;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.IdOrder;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
 import cc.alcina.framework.common.client.util.ColumnMapper;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder.SortableColumn;
-import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.gwt.client.cell.ColumnsBuilderRows;
+import cc.alcina.framework.gwt.client.cell.ShowMorePager;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.GroupingParameters;
@@ -33,8 +35,6 @@ import cc.alcina.framework.gwt.client.entity.view.GroupedCellTableView.GroupedDa
 import cc.alcina.framework.gwt.client.entity.view.ViewModel.ViewModelWithDataProvider;
 import cc.alcina.framework.gwt.client.entity.view.res.TableRes;
 import cc.alcina.framework.gwt.client.entity.view.res.TableResEditable;
-import cc.alcina.framework.gwt.client.cell.ColumnsBuilderRows;
-import cc.alcina.framework.gwt.client.cell.ShowMorePager;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchDefinitionEditor;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
@@ -283,6 +283,8 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 		container.add(toolbar);
 		updateToolbar();
 		renderFilter();
+		new KeyboardActionHandler().setup(this, 'T',
+				() -> multiSelectionSupport.toggleSelecting());
 	}
 
 	protected void invalidate() {

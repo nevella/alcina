@@ -36,6 +36,17 @@ per incoming: 0
  */
 public class StringTrieProjection<E extends Entity>
 		extends TrieProjection<String, E> {
+	private static boolean fastStringTrieProjections;
+
+	public static boolean isFastStringTrieProjections() {
+		return fastStringTrieProjections;
+	}
+
+	public static void
+			setFastStringTrieProjections(boolean fastStringTrieProjections) {
+		StringTrieProjection.fastStringTrieProjections = fastStringTrieProjections;
+	}
+
 	private int minSubstringLength;
 
 	private int maxSubstringLength;
@@ -46,6 +57,10 @@ public class StringTrieProjection<E extends Entity>
 		super(StringKeyAnalyzer.CHAR, entityClass, keyMapper);
 		this.minSubstringLength = minSubstringLength;
 		this.maxSubstringLength = maxSubstringLength;
+		if (fastStringTrieProjections) {
+			this.minSubstringLength = Math.max(this.minSubstringLength, 4);
+			this.maxSubstringLength = this.minSubstringLength;
+		}
 	}
 
 	@Override
@@ -69,6 +84,9 @@ public class StringTrieProjection<E extends Entity>
 		for (int idx = 0; idx < key.length() - minSubstringLength; idx++) {
 			int to = Math.min(maxSubstringLength, key.length() - idx);
 			subKeys.add(key.substring(idx, idx + to));
+			if (fastStringTrieProjections) {
+				break;
+			}
 		}
 		return subKeys;
 	}
