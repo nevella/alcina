@@ -121,6 +121,10 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		this.enabled = enabled;
 	}
 
+	public void setNonTransactional() {
+		lookup.setNonTransactional();
+	}
+
 	public void setRelevanceFilter(CollectionFilter<T> relevanceFilter) {
 		this.relevanceFilter = relevanceFilter;
 	}

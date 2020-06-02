@@ -92,6 +92,9 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public boolean contains(Entity entity) {
+		if (entity == null) {
+			return false;
+		}
 		Class<? extends Entity> clazz = entity.provideEntityClass();
 		ensureMaps(clazz);
 		if (entity.getId() > 0) {

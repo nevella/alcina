@@ -1,14 +1,14 @@
 package cc.alcina.framework.common.client.domain;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class LocalDomain {
 	private DetachedEntityCache cache = new DetachedEntityCache();
@@ -27,8 +27,8 @@ public class LocalDomain {
 		index(obj, true);
 	}
 
-	public <T extends Entity> LocalDomainQuery<T>
-			aliasedQuery(Class<T> clazz, Object alias, Object key) {
+	public <T extends Entity> LocalDomainQuery<T> aliasedQuery(Class<T> clazz,
+			Object alias, Object key) {
 		return new LocalDomainQuery(this, clazz, alias, key);
 	}
 
@@ -45,6 +45,7 @@ public class LocalDomain {
 				.values()) {
 			for (DomainStoreLookupDescriptor lookupDescriptor : descriptor.lookupDescriptors) {
 				lookupDescriptor.createLookup();
+				lookupDescriptor.setNonTransactional();
 			}
 		}
 	}
@@ -58,7 +59,7 @@ public class LocalDomain {
 	}
 
 	private synchronized void index(Entity obj, boolean add) {
-		Class<? extends Entity> clazz = obj.getClass();
+		Class<? extends Entity> clazz = obj.provideEntityClass();
 		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
 				.get(clazz);
 		itemDescriptor.index(obj, add);
@@ -86,20 +87,24 @@ public class LocalDomain {
 		}
 
 		public Optional<T> findFirst() {
-			return Optional.ofNullable(CommonUtils.first(list()));
+			return stream().findFirst();
 		}
 
 		public List<T> list() {
+			return stream().collect(Collectors.toList());
+		}
+
+		public Stream<T> stream() {
 			DomainClassDescriptor itemDescriptor = localDomain.domainDescriptor.perClass
 					.get(clazz);
 			Optional<DomainStoreLookupDescriptor> lookupDescriptor = itemDescriptor
 					.findDescriptorByAlias(alias);
 			if (lookupDescriptor.isPresent()) {
-				Set ids = lookupDescriptor.get().getLookup().get(key);
-				if (ids == null || ids.isEmpty()) {
-					return new ArrayList<>();
+				Set<T> values = lookupDescriptor.get().getLookup().get(key);
+				if (values == null || values.isEmpty()) {
+					return Stream.empty();
 				} else {
-					return localDomain.cache.list(clazz, ids);
+					return values.stream();
 				}
 			} else {
 				throw new IllegalArgumentException();

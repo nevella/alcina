@@ -124,7 +124,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			}
 		}
 		// TODO - remove? It's a hit
-		logger.trace("created object version: {} : {}", toString(), hashCode());
+		// logger.trace("created object version: {} : {}", toString(),
+		// hashCode());
 	}
 
 	public T getBaseObject() {
@@ -144,17 +145,26 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 					transaction = firstVersion.transaction;
 				}
 			}
-			/*
-			 * use field rather than getters to not resolve
-			 */
-			Field idField = SEUtilities.getFieldByName(object.getClass(), "id");
-			Field localIdField = SEUtilities.getFieldByName(object.getClass(),
-					"localId");
-			Object id = idField.get(object);
-			return Ax.format("versions: %s : base: %s/%s/%s : initial-tx: %s",
-					versions.size(), object.getClass(), id,
-					System.identityHashCode(object),
-					transaction == null ? transaction : "base");
+			if (object instanceof Entity) {
+				/*
+				 * use field rather than getters to not resolve
+				 */
+				Field idField = SEUtilities.getFieldByName(object.getClass(),
+						"id");
+				Field localIdField = SEUtilities
+						.getFieldByName(object.getClass(), "localId");
+				Object id = idField.get(object);
+				return Ax.format(
+						"versions: %s : base: %s/%s/%s : initial-tx: %s",
+						versions.size(), object.getClass(), id,
+						System.identityHashCode(object),
+						transaction == null ? transaction : "base");
+			} else {
+				return Ax.format("versions: %s : base: %s/%s : initial-tx: %s",
+						versions.size(), object.getClass(),
+						System.identityHashCode(object),
+						transaction == null ? transaction : "base");
+			}
 		} catch (Exception e) {
 			return "exception..";
 		}

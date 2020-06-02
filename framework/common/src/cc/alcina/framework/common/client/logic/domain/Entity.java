@@ -99,7 +99,8 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 	@Version
 	@Column(name = "OPTLOCK")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
-	@Display(name = "Version number", visible = @Permission(access = AccessLevel.ADMIN), orderingHint = 991)
+	// @Display(name = "Version number", visible = @Permission(access =
+	// AccessLevel.ADMIN), orderingHint = 991)
 	public int getVersionNumber() {
 		return versionNumber;
 	}
