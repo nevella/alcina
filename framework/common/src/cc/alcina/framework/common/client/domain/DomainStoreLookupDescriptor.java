@@ -33,15 +33,18 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 
 	private IDomainStore domainStore;
 
+	private Class lookupIndexClass;
+
 	public DomainStoreLookupDescriptor(Class clazz, String propertyPath) {
-		this(clazz, propertyPath, null);
+		this(clazz, propertyPath, null, null);
 	}
 
 	public DomainStoreLookupDescriptor(Class clazz, String propertyPath,
-			Function<? super T, ?> valueFunction) {
+			Function<? super T, ?> valueFunction, Class lookupIndexClass) {
 		this.clazz = clazz;
 		this.propertyPath = propertyPath;
 		this.valueFunction = valueFunction;
+		this.lookupIndexClass = lookupIndexClass;
 	}
 
 	public void addAlias(String propertyPath) {
@@ -79,8 +82,9 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 	}
 
 	public Class getLookupIndexClass(PropertyPathAccessor propertyPathAccesor) {
-		return propertyPathAccesor.getChainedPropertyType(
-				Reflections.classLookup().newInstance(clazz));
+		return lookupIndexClass != null ? lookupIndexClass
+				: propertyPathAccesor.getChainedPropertyType(
+						Reflections.classLookup().newInstance(clazz));
 	}
 
 	public String getPropertyPath() {
@@ -132,7 +136,7 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		private IdLookup idLookup;
 
 		public IdLookupDescriptor(Class clazz, String propertyPath) {
-			super(clazz, propertyPath, null);
+			super(clazz, propertyPath, null, null);
 		}
 
 		@Override

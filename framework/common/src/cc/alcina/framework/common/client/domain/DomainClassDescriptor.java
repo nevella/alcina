@@ -140,9 +140,10 @@ public class DomainClassDescriptor<T extends Entity>
 	}
 
 	protected DomainClassDescriptor<T> addAliasedFunction(Object alias,
-			Function<? super T, ?> function) {
+			Function<? super T, ?> function, Class lookupIndexClass) {
 		DomainStoreLookupDescriptor lookupDescriptor = new DomainStoreLookupDescriptor<>(
-				(Class) clazz, "no-path", (Function) function);
+				(Class) clazz, "no-path", (Function) function,
+				lookupIndexClass);
 		addLookup(lookupDescriptor);
 		aliasedFunctionLookups.put(alias, lookupDescriptor);
 		return this;
