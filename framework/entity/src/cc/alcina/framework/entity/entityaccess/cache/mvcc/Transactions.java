@@ -355,6 +355,14 @@ public class Transactions {
 				fb.indent(2);
 				committedTransactions.values()
 						.forEach(tx -> fb.line(tx.toDebugString()));
+				fb.line("");
+				fb.indent(0);
+				fb.line("Vacuum queue transactions: (%s)",
+						vacuum.vacuumables.size());
+				fb.line("===========================");
+				fb.indent(2);
+				vacuum.vacuumables.keySet()
+						.forEach(tx -> fb.line(tx.toDebugString()));
 				return fb.toString();
 			}
 		}
