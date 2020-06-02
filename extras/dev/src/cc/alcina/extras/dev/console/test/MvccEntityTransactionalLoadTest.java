@@ -54,6 +54,7 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 					Transaction.ensureBegun();
 					int addCount = 120;
 					int deleteCount = 10;
+					addedCount = 0;
 					for (int idx = 0; idx < addCount; idx++) {
 						IUser user = Domain.create(getUserClass());
 						user.setUserName(Ax.format(
@@ -65,7 +66,8 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 					double filterProbability = ((double) deleteCount)
 							/ usersSize;
 					List<Entity> toDelete = Domain.stream(getUserClass())
-							.filter(u -> Math.random() < filterProbability)
+							.filter(u -> (u.getId() > 20 || u.getId() == 0)
+									&& Math.random() < filterProbability)
 							.collect(Collectors.toList());
 					toDelete.forEach(Entity::delete);
 					deletedCount = toDelete.size();
@@ -99,9 +101,10 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 					Transaction.begin();
 					tx1Latch1.await();
 					Preconditions.checkState(getUsersSize() == initialCount,
-							"non-committed-tx1: entities visible from tx2");
+							"non-committed-tx2: entities visible from tx2");
 					tx2Latch1.countDown();
 					tx1Latch2.await();
+					Transaction.endAndBeginNew();
 					Preconditions.checkState(
 							getUsersSize() == initialCount + addedCount
 									- deletedCount,
@@ -119,8 +122,10 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 
 	@Override
 	protected void run0() throws Exception {
-		initialCount = getUsersSize();
 		for (int idx = 0; idx < 5; idx++) {
+			initialCount = getUsersSize();
+			Ax.sysLogHigh("Iteration: %s - intial count: %s", idx,
+					initialCount);
 			txLatch = new CountDownLatch(2);
 			tx1Latch1 = new CountDownLatch(1);
 			tx1Latch2 = new CountDownLatch(1);
@@ -128,6 +133,7 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 			startTx1();
 			startTx2();
 			txLatch.await();
+			Transaction.endAndBeginNew();
 		}
 	}
 }
