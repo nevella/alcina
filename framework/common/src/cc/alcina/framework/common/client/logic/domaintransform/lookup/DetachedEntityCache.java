@@ -96,7 +96,9 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 			return false;
 		}
 		Class<? extends Entity> clazz = entity.provideEntityClass();
-		ensureMaps(clazz);
+		if (!domain.containsKey(clazz)) {
+			return false;
+		}
 		if (entity.getId() > 0) {
 			return domain.get(clazz).containsKey(entity.getId());
 		} else {
@@ -115,6 +117,9 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public <T> T get(Class<T> clazz, Long id) {
+		if (!domain.containsKey(clazz)) {
+			return null;
+		}
 		ensureMaps(clazz);
 		if (id == null) {
 			return null;
