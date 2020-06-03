@@ -65,11 +65,14 @@ public class StringTrieProjection<E extends Entity>
 
 	@Override
 	public Stream<E> getSubstringMatches(String prefix) {
-		if (maxSubstringLength == 0 || prefix.length() <= maxSubstringLength) {
-			return super.getSubstringMatches(prefix);
+		String normalisedPrefix = normalise(prefix);
+		if (maxSubstringLength == 0
+				|| normalisedPrefix.length() <= maxSubstringLength) {
+			return super.getSubstringMatches(normalisedPrefix);
 		}
-		String trimmedPrefix = prefix.substring(0, maxSubstringLength);
-		Predicate<String> keyFilter = k -> k.contains(prefix);
+		String trimmedPrefix = normalisedPrefix.substring(0,
+				maxSubstringLength);
+		Predicate<String> keyFilter = k -> k.contains(normalisedPrefix);
 		return trie.prefixMap(trimmedPrefix).entrySet().stream()
 				.filter(e -> keyFilter.test(e.getKey())).map(Entry::getValue)
 				.flatMap(Collection::stream).distinct();
