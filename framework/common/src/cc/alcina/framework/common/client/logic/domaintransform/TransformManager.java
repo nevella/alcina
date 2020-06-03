@@ -308,10 +308,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		initCollections();
 	}
 
-	protected void initCollections() {
-		provisionalObjects = new IdentityHashMap<>();
-	}
-
 	@Override
 	public void addCollectionModificationListener(
 			CollectionModificationListener listener) {
@@ -979,11 +975,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return transformsByType.get(ct);
 	}
 
-	// underlying set must be ordered
-	protected Set<DomainTransformEvent> createTransformSet() {
-		return new LinkedHashSet<>();
-	}
-
 	public TransformHistoryManager getUndoManager() {
 		return undoManager;
 	}
@@ -1635,6 +1626,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		setDomainObjects(new MapObjectLookupClient(this));
 	}
 
+	// underlying set must be ordered
+	protected Set<DomainTransformEvent> createTransformSet() {
+		return new LinkedHashSet<>();
+	}
+
 	protected void doubleCheckAddition(Collection collection, Object tgt) {
 		collection.add(tgt);
 	}
@@ -1686,6 +1682,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return ignorePropertiesForCaching.contains(propertyName)
 				|| propertyType == Class.class || !PermissionsManager.get()
 						.checkReadable(objectType, propertyName, null);
+	}
+
+	protected void initCollections() {
+		provisionalObjects = new IdentityHashMap<>();
 	}
 
 	protected boolean isZeroCreatedObjectLocalId(Class clazz) {

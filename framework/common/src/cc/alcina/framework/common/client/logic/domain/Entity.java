@@ -75,7 +75,6 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 	}
 
 	@Override
-	@Display(name = "Id", orderingHint = 900, visible = @Permission(access = AccessLevel.ADMIN))
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
 	@Transient
 	public abstract long getId();

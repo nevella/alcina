@@ -178,6 +178,12 @@ public class ThreadlocalTransformManager extends TransformManager
 		return false;
 	}
 
+	// for testing
+	public static void registerPerThreadTransformManager(
+			TransformManager perThreadTransformManager) {
+		threadLocalTLTMInstance.set(perThreadTransformManager);
+	}
+
 	public static TopicSupport<Thread> topicTransformManagerWasReset() {
 		return new TopicSupport<>(TOPIC_RESET_THREAD_TRANSFORM_MANAGER);
 	}
@@ -665,7 +671,6 @@ public class ThreadlocalTransformManager extends TransformManager
 				} else {
 					newInstance = (Entity) clazz.newInstance();
 				}
-				localIdToEntityMap.put(localId, newInstance);
 				if (entityManager != null) {
 					if (isUseObjectCreationId() && objectId != 0) {
 						newInstance.setId(objectId);
@@ -682,6 +687,7 @@ public class ThreadlocalTransformManager extends TransformManager
 				} else {
 					newInstance.setLocalId(localId);
 				}
+				localIdToEntityMap.put(localId, newInstance);
 				EntityLocator entityLocator = new EntityLocator(
 						(Class<? extends Entity>) clazz, newInstance.getId(),
 						localId);
@@ -768,23 +774,22 @@ public class ThreadlocalTransformManager extends TransformManager
 		return userSessionEntityMap;
 	}
 
+	/*
+	 * Like it says. This is neither fish nor fowl (it's not the domain store's
+	 * local id, so we don't want to register it there, but we *do* want access
+	 * to it during this tx
+	 */
+	public void registerCreatedClientObjectForCascade(Entity entity) {
+		registerDomainObject0(entity, false);
+	}
+
 	@Override
 	/**
 	 * NOTE - doesn't register children (unlike client)
 	 *
 	 */
 	public <T extends Entity> T registerDomainObject(T entity) {
-		if (entity instanceof SourcesPropertyChangeEvents) {
-			listenTo((SourcesPropertyChangeEvents) entity);
-		}
-		if (entity.getId() == 0) {
-			DetachedEntityCache cache = DomainStore.stores()
-					.storeFor(entity.provideEntityClass()).getCache();
-			if (!cache.contains(entity)) {
-				cache.put(entity);
-			}
-		}
-		return entity;
+		return registerDomainObject0(entity, true);
 	}
 
 	public void resetLocalIdCounterForCurrentThread() {
@@ -1112,6 +1117,30 @@ public class ThreadlocalTransformManager extends TransformManager
 		return explicitlyPermittedTransforms.contains(evt);
 	}
 
+	private <T extends Entity> T registerDomainObject0(T entity,
+			boolean addToDomainStore) {
+		if (entity instanceof SourcesPropertyChangeEvents) {
+			listenTo((SourcesPropertyChangeEvents) entity);
+		}
+		if (entity.getId() == 0) {
+			if (addToDomainStore) {
+				DetachedEntityCache cache = DomainStore.stores()
+						.storeFor(entity.provideEntityClass()).getCache();
+				if (!cache.contains(entity)) {
+					cache.put(entity);
+				}
+			} else {
+				localIdToEntityMap.put(entity.getLocalId(), entity);
+				EntityLocator entityLocator = new EntityLocator(
+						entity.getClass(), entity.getId(), entity.getLocalId());
+				if (userSessionEntityMap != null) {
+					userSessionEntityMap.putToLookups(entityLocator);
+				}
+			}
+		}
+		return entity;
+	}
+
 	protected boolean checkHasSufficientInfoForPropertyPersist(Entity entity) {
 		return entity.getId() != 0
 				|| (localIdToEntityMap.get(entity.getLocalId()) != null
@@ -1361,11 +1390,5 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public static class UncomittedTransformsException extends Exception {
-	}
-
-	// for testing
-	public static void registerPerThreadTransformManager(
-			TransformManager perThreadTransformManager) {
-		threadLocalTLTMInstance.set(perThreadTransformManager);
 	}
 }

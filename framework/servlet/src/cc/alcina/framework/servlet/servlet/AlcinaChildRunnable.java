@@ -50,14 +50,20 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 	// FIXME.mvcc.2 - try to avoid this - declarative jobs and/or
 	// alcinachildrunnables
-	public static void runInTransaction(ThrowingRunnable runnable) {
-		AlcinaChildRunnable wrappingRunnable = new AlcinaChildRunnable(null) {
+	public static void runInTransaction(String threadName,
+			ThrowingRunnable runnable) {
+		AlcinaChildRunnable wrappingRunnable = new AlcinaChildRunnable(
+				threadName) {
 			@Override
 			protected void run0() throws Exception {
 				runnable.run();
 			}
 		};
 		wrappingRunnable.run();
+	}
+
+	public static void runInTransaction(ThrowingRunnable runnable) {
+		runInTransaction(null, runnable);
 	}
 
 	public static <T> Consumer<T>
