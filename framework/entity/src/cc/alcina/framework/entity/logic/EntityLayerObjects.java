@@ -17,6 +17,7 @@ import java.io.File;
 
 import org.apache.log4j.Logger;
 
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
@@ -45,12 +46,26 @@ public class EntityLayerObjects {
 
 	private Registry servletLayerRegistry;
 
+	private ClassLoader servletLayerClassLoader;
+
+	private ClassLoader entityLayerClassLoader;
+
+	/**
+	 * the instance used by the server layer when acting as a client to the ejb
+	 * layer. Note - this must be set on webapp startup
+	 */
+	private ClientInstance serverAsClientInstance;
+
 	private EntityLayerObjects() {
 		super();
 	}
 
 	public File getDataFolder() {
 		return dataFolder;
+	}
+
+	public ClassLoader getEntityLayerClassLoader() {
+		return this.entityLayerClassLoader;
 	}
 
 	public Logger getMetricLogger() {
@@ -61,6 +76,14 @@ public class EntityLayerObjects {
 		return persistentLogger;
 	}
 
+	public ClientInstance getServerAsClientInstance() {
+		return this.serverAsClientInstance;
+	}
+
+	public ClassLoader getServletLayerClassLoader() {
+		return this.servletLayerClassLoader;
+	}
+
 	public Registry getServletLayerRegistry() {
 		return this.servletLayerRegistry;
 	}
@@ -69,12 +92,26 @@ public class EntityLayerObjects {
 		this.dataFolder = dataFolder;
 	}
 
+	public void setEntityLayerClassLoader(ClassLoader entityLayerClassLoader) {
+		this.entityLayerClassLoader = entityLayerClassLoader;
+	}
+
 	public void setMetricLogger(Logger metricLogger) {
 		this.metricLogger = metricLogger;
 	}
 
 	public void setPersistentLogger(Logger persistentLogger) {
 		this.persistentLogger = persistentLogger;
+	}
+
+	public void
+			setServerAsClientInstance(ClientInstance serverAsClientInstance) {
+		this.serverAsClientInstance = serverAsClientInstance;
+	}
+
+	public void
+			setServletLayerClassLoader(ClassLoader servletLayerClassLoader) {
+		this.servletLayerClassLoader = servletLayerClassLoader;
 	}
 
 	public void setServletLayerRegistry(Registry servletLayerRegistry) {

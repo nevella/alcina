@@ -11,6 +11,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -18,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistryKey;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
@@ -82,6 +85,10 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public static ClassLoaderAwareRegistryProvider get() {
+		return (ClassLoaderAwareRegistryProvider) Registry.getProvider();
 	}
 
 	Map<ClassLoader, Registry> perClassLoader = new LinkedHashMap<ClassLoader, Registry>();
@@ -151,6 +158,14 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 				});
 	}
 
+	public ClassLoader getEntityLayerClassloader() {
+		Preconditions.checkArgument(
+				perClassLoader.size() == 2 && servletLayerClassloader != null);
+		return perClassLoader.entrySet().stream()
+				.filter(e -> e.getKey() != servletLayerClassloader).findFirst()
+				.get().getKey();
+	}
+
 	public Map<ClassLoader, Registry> getPerClassLoader() {
 		return this.perClassLoader;
 	}
@@ -201,5 +216,9 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	public void
 			setServletLayerClassloader(ClassLoader servletLayerClassloader) {
 		this.servletLayerClassloader = servletLayerClassloader;
+		EntityLayerObjects.get()
+				.setServletLayerClassLoader(getServletLayerClassloader());
+		EntityLayerObjects.get()
+				.setEntityLayerClassLoader(getEntityLayerClassloader());
 	}
 }

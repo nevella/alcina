@@ -189,6 +189,7 @@ public class Domain {
 		return handler.transactionalVersion(v);
 	}
 
+	// FIXME - mvcc.2 - remove
 	public static <V extends Entity> Collection<V> values(Class<V> clazz) {
 		return handler.values(clazz);
 	}

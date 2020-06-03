@@ -18,14 +18,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
@@ -33,7 +32,9 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -46,21 +47,12 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	protected Map<Class, Map<Long, Entity>> domain;
 
-	protected Map<Class, Map<Long, Entity>> local;
-
-	private transient Supplier<Map> classMapSupplier;
+	protected Map<ClientInstance, Map<Class, Map<Long, Entity>>> local;
 
 	private boolean throwOnExisting;
 
 	public DetachedEntityCache() {
-		this(new DefaultTopMapSupplier(), new DefaultClassMapSupplier());
-	}
-
-	public DetachedEntityCache(Supplier<Map> topMapSupplier,
-			Supplier<Map> classMapSupplier) {
-		this.classMapSupplier = classMapSupplier;
-		this.domain = topMapSupplier.get();
-		this.local = topMapSupplier.get();
+		createTopMaps();
 	}
 
 	@Override
@@ -76,7 +68,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		Set<Entity> result = new LinkedHashSet<Entity>();
 		for (Class clazz : domain.keySet()) {
 			result.addAll(domain.get(clazz).values());
-			result.addAll(local.get(clazz).values());
+			result.addAll(local(clazz, false).values());
 		}
 		return result;
 	}
@@ -87,7 +79,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public <T extends Entity> boolean contains(Class<T> clazz, long id) {
-		ensureMaps(clazz);
+		ensureMap(clazz);
 		return domain.get(clazz).containsKey(id);
 	}
 
@@ -102,8 +94,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		if (entity.getId() > 0) {
 			return domain.get(clazz).containsKey(entity.getId());
 		} else {
-			Preconditions.checkArgument(entity.getLocalId() > 0);
-			return local.get(clazz).containsKey(entity.getLocalId());
+			return local(clazz, false).containsKey(entity.getLocalId());
 		}
 	}
 
@@ -120,7 +111,6 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		if (!domain.containsKey(clazz)) {
 			return null;
 		}
-		ensureMaps(clazz);
 		if (id == null) {
 			return null;
 		}
@@ -135,7 +125,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 
 	public Map<Long, Entity> getCreatedLocalsSnapshot() {
 		Map<Long, Entity> result = new HashMap<>();
-		local.values().forEach(result::putAll);
+		local(false).values().forEach(result::putAll);
 		return result;
 	}
 
@@ -144,24 +134,25 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public Map<Long, Entity> getMap(Class clazz) {
-		ensureMaps(clazz);
+		ensureMap(clazz);
 		return this.domain.get(clazz);
 	}
 
+	// FIXME - mvcc.2 - remove
 	public <T> Collection<T> immutableRawValues(Class<T> clazz) {
-		ensureMaps(clazz);
+		ensureMap(clazz);
 		return (Collection<T>) Collections
 				.unmodifiableCollection(domain.get(clazz).values());
 	}
 
 	public void invalidate(Class clazz) {
-		ensureMaps(clazz);
-		domain.put(clazz, createMap());
+		ensureMap(clazz);
+		domain.put(clazz, createIdEntityMap(clazz));
 	}
 
 	public boolean isEmpty(Class clazz) {
-		ensureMaps(clazz);
-		return values(clazz).isEmpty();
+		ensureMap(clazz);
+		return stream(clazz).count() == 0;
 	}
 
 	public boolean isThrowOnExisting() {
@@ -169,18 +160,13 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public Set<Long> keys(Class clazz) {
-		ensureMaps(clazz);
+		ensureMap(clazz);
 		return domain.get(clazz).keySet();
-	}
-
-	public <T> List<T> list(Class<T> clazz, Collection<Long> ids) {
-		return ids.stream().map(id -> get(clazz, id))
-				.collect(Collectors.toList());
 	}
 
 	public List<Long> notContained(Collection<Long> ids, Class clazz) {
 		List<Long> result = new ArrayList<Long>();
-		ensureMaps(clazz);
+		ensureMap(clazz);
 		Set<Long> existing = domain.get(clazz).keySet();
 		// can be reasonably confident size(existing)>size(ids)
 		for (Long id : ids) {
@@ -193,7 +179,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 
 	public void put(Entity entity) {
 		Class<? extends Entity> clazz = entity.provideEntityClass();
-		ensureMaps(clazz);
+		ensureMap(clazz);
 		long id = entity.getId();
 		long localId = entity.getLocalId();
 		if (id == 0 && localId == 0) {
@@ -210,12 +196,13 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 			}
 			domain.get(clazz).put(id, entity);
 		} else {
+			Map<Long, Entity> perClientInstanceClazz = local(clazz, true);
 			if (throwOnExisting) {
-				if (local.get(clazz).containsKey(id)) {
+				if (perClientInstanceClazz.containsKey(id)) {
 					throw Ax.runtimeException("Double-put: %s", entity);
 				}
 			}
-			local.get(clazz).put(localId, entity);
+			perClientInstanceClazz.put(localId, entity);
 		}
 	}
 
@@ -224,7 +211,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public void putForSuperClass(Class clazz, Entity entity) {
-		ensureMaps(clazz);
+		ensureMap(clazz);
 		long id = entity.getId();
 		Preconditions.checkArgument(id > 0);
 		domain.get(clazz).put(id, entity);
@@ -232,7 +219,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 
 	public void remove(Entity entity) {
 		Class<? extends Entity> clazz = entity.provideEntityClass();
-		ensureMaps(clazz);
+		ensureMap(clazz);
 		long id = entity.getId();
 		long localId = entity.getLocalId();
 		if (id == 0 && localId == 0) {
@@ -244,7 +231,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		if (id != 0) {
 			domain.get(clazz).remove(id);
 		} else {
-			local.get(clazz).remove(localId, entity);
+			local(clazz, true).remove(localId, entity);
 		}
 	}
 
@@ -252,7 +239,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		Class<? extends Entity> clazz = entity.provideEntityClass();
 		long localId = entity.getLocalId();
 		Preconditions.checkArgument(localId > 0);
-		local.get(clazz).remove(localId, entity);
+		local(clazz, true).remove(localId, entity);
 	}
 
 	public void setThrowOnExisting(boolean throwOnExisting) {
@@ -260,8 +247,8 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public int size(Class clazz) {
-		ensureMaps(clazz);
-		return domain.get(clazz).size() + local.get(clazz).size();
+		ensureMap(clazz);
+		return domain.get(clazz).size() + local(clazz, false).size();
 	}
 
 	public String sizes() {
@@ -273,9 +260,9 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public <T> Stream<T> stream(Class<T> clazz) {
-		ensureMaps(clazz);
+		ensureMap(clazz);
 		return (Stream<T>) Stream.concat(domain.get(clazz).values().stream(),
-				local.get(clazz).values().stream());
+				local(clazz, false).values().stream());
 	}
 
 	@Override
@@ -284,42 +271,78 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public <T> Set<T> values(Class<T> clazz) {
-		ensureMaps(clazz);
+		ensureMap(clazz);
 		return stream(clazz).collect(AlcinaCollectors.toLinkedHashSet());
 	}
 
-	protected Map<Long, Entity> createMap() {
-		return classMapSupplier.get();
+	private Map<Class, Map<Long, Entity>> local(boolean ensure) {
+		ClientInstance clientInstance = PermissionsManager.get()
+				.getClientInstance();
+		if (clientInstance == null) {
+			return Collections.emptyMap();
+		}
+		Map<Class, Map<Long, Entity>> perClientInstance = local
+				.get(clientInstance);
+		if (perClientInstance != null) {
+			return perClientInstance;
+		}
+		if (!ensure) {
+			return Collections.emptyMap();
+		}
+		synchronized (clientInstance) {
+			perClientInstance = local.get(clientInstance);
+			if (perClientInstance != null) {
+				return perClientInstance;
+			}
+			perClientInstance = createClientInstanceClassMap();
+			local.put(clientInstance, perClientInstance);
+			return perClientInstance;
+		}
 	}
 
-	protected void ensureMaps(Class clazz) {
+	private Map<Long, Entity> local(Class clazz, boolean ensure) {
+		Map<Class, Map<Long, Entity>> perClientInstance = local(ensure);
+		if (!perClientInstance.containsKey(clazz)) {
+			if (!ensure) {
+				return Collections.emptyMap();
+			}
+			synchronized (this) {
+				if (!perClientInstance.containsKey(clazz)) {
+					perClientInstance.put(clazz, createIdEntityMap(clazz));
+				}
+			}
+		}
+		return perClientInstance.get(clazz);
+	}
+
+	protected Map<Class, Map<Long, Entity>> createClientInstanceClassMap() {
+		return new LinkedHashMap<>();
+	}
+
+	protected Map<Long, Entity> createIdEntityMap(Class clazz) {
+		return new TreeMap<>();
+	}
+
+	protected void createTopMaps() {
+		domain = new LinkedHashMap<>();
+		local = new LinkedHashMap<>();
+	}
+
+	protected void ensureMap(Class clazz) {
 		if (!domain.containsKey(clazz)) {
 			synchronized (this) {
 				if (!domain.containsKey(clazz)) {
-					domain.put(clazz, createMap());
-					local.put(clazz, createMap());
+					domain.put(clazz, createIdEntityMap(clazz));
 				}
 			}
 		}
 	}
 
 	protected <T> T getLocal(Class<T> clazz, long localId) {
-		ensureMaps(clazz);
-		T t = (T) local.get(clazz).get(localId);
+		if (!domain.containsKey(clazz)) {
+			return null;
+		}
+		T t = (T) local(clazz, false).get(localId);
 		return t;
-	}
-
-	static class DefaultClassMapSupplier implements Supplier<Map> {
-		@Override
-		public Map get() {
-			return new TreeMap();
-		}
-	}
-
-	static class DefaultTopMapSupplier implements Supplier<Map> {
-		@Override
-		public Map get() {
-			return new HashMap<Class, Map<Long, Entity>>(128);
-		}
 	}
 }

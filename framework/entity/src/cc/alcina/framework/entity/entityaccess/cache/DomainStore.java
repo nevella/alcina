@@ -767,8 +767,10 @@ public class DomainStore implements IDomainStore {
 			postProcessStart = System.currentTimeMillis();
 			MetricLogging.get().start("post-process");
 			Map<Long, Entity> createdLocalsSnapshot = persistenceEvent
-					.isLocalToVm() ? cache.getCreatedLocalsSnapshot()
-							: Collections.emptyMap();
+					.isLocalToVm()
+					&& !persistenceEvent.getTransformPersistenceToken()
+							.isAsyncClient() ? cache.getCreatedLocalsSnapshot()
+									: Collections.emptyMap();
 			transformManager.setLocalReplacementCreationObjectResolver(
 					localId -> createdLocalsSnapshot.get(localId));
 			Transaction.ensureEnded();

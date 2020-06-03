@@ -21,22 +21,22 @@ class Vacuum {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	 boolean paused;
+	boolean paused;
 
 	public void addVacuumable(Vacuumable vacuumable) {
 		Transaction transaction = Transaction.current();
 		if (!vacuumables.containsKey(transaction)) {
 			synchronized (queueCreationMonitor) {
 				if (!vacuumables.containsKey(transaction)) {
-					logger.info("added vacuumable transaction: {}",
+					logger.debug("added vacuumable transaction: {}",
 							transaction);
 					vacuumables.put(transaction, new ConcurrentHashMap<>());
 				}
 			}
 		}
 		if (vacuumables.get(transaction).put(vacuumable, vacuumable) == null) {
-			logger.trace("added vacuumable object: {}=>{}:{}", transaction,
-					vacuumable.getClass().getSimpleName(), vacuumable);
+			// logger.trace("added vacuumable object: {}=>{}:{}", transaction,
+			// vacuumable.getClass().getSimpleName(), vacuumable);
 		}
 	}
 
@@ -57,7 +57,7 @@ class Vacuum {
 	 * synchronized semantic - only called from single-thread executor
 	 */
 	private synchronized void vacuum() {
-		while(paused){
+		while (paused) {
 			try {
 				Thread.sleep(50);
 			} catch (InterruptedException e) {

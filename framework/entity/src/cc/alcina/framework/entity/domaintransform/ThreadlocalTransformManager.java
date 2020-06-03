@@ -774,22 +774,29 @@ public class ThreadlocalTransformManager extends TransformManager
 		return userSessionEntityMap;
 	}
 
-	/*
-	 * Like it says. This is neither fish nor fowl (it's not the domain store's
-	 * local id, so we don't want to register it there, but we *do* want access
-	 * to it during this tx
-	 */
-	public void registerCreatedClientObjectForCascade(Entity entity) {
-		registerDomainObject0(entity, false);
-	}
-
 	@Override
 	/**
 	 * NOTE - doesn't register children (unlike client)
+	 * 
+	 * This can be used for either vm-local or ex-vm localid entities - as long
+	 * as the clientinstance is correctly set
+	 * 
+	 * userSessionEntityMap/localIdToEntityMap are not modified (they're for
+	 * in-em access)
 	 *
 	 */
 	public <T extends Entity> T registerDomainObject(T entity) {
-		return registerDomainObject0(entity, true);
+		if (entity instanceof SourcesPropertyChangeEvents) {
+			listenTo((SourcesPropertyChangeEvents) entity);
+		}
+		if (entity.getId() == 0) {
+			DetachedEntityCache cache = DomainStore.stores()
+					.storeFor(entity.provideEntityClass()).getCache();
+			if (!cache.contains(entity)) {
+				cache.put(entity);
+			}
+		}
+		return entity;
 	}
 
 	public void resetLocalIdCounterForCurrentThread() {
@@ -1115,30 +1122,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private boolean explicitlyPermitted(DomainTransformEvent evt) {
 		return explicitlyPermittedTransforms.contains(evt);
-	}
-
-	private <T extends Entity> T registerDomainObject0(T entity,
-			boolean addToDomainStore) {
-		if (entity instanceof SourcesPropertyChangeEvents) {
-			listenTo((SourcesPropertyChangeEvents) entity);
-		}
-		if (entity.getId() == 0) {
-			if (addToDomainStore) {
-				DetachedEntityCache cache = DomainStore.stores()
-						.storeFor(entity.provideEntityClass()).getCache();
-				if (!cache.contains(entity)) {
-					cache.put(entity);
-				}
-			} else {
-				localIdToEntityMap.put(entity.getLocalId(), entity);
-				EntityLocator entityLocator = new EntityLocator(
-						entity.getClass(), entity.getId(), entity.getLocalId());
-				if (userSessionEntityMap != null) {
-					userSessionEntityMap.putToLookups(entityLocator);
-				}
-			}
-		}
-		return entity;
 	}
 
 	protected boolean checkHasSufficientInfoForPropertyPersist(Entity entity) {

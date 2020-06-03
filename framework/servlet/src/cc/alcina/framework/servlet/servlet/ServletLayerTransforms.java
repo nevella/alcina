@@ -58,6 +58,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreTransformSequencer.TransformPriorityProvider;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -130,7 +131,7 @@ public class ServletLayerTransforms {
 				"testTransformCascade")) {
 			return new DomainTransformLayerWrapper();
 		}
-		if (Ax.isTest() && ServletLayerTransforms.get()
+		if (Ax.isTest() && EntityLayerObjects.get()
 				.getServerAsClientInstance() == null) {
 			// pre-login test tx (say fixing up credentials) - create dummy
 			ThreadlocalTransformManager.cast().resetTltm(null);
@@ -257,12 +258,6 @@ public class ServletLayerTransforms {
 
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 
-	/**
-	 * the instance used by the server layer when acting as a client to the ejb
-	 * layer. Note - this must be set on webapp startup
-	 */
-	private ClientInstance serverAsClientInstance;
-
 	private Map<Long, EntityLocatorMap> clientInstanceLocatorMap = new HashMap<Long, EntityLocatorMap>();
 
 	private int transformRequestCounter = 1;
@@ -303,21 +298,12 @@ public class ServletLayerTransforms {
 		return getLocatorMapForClient(request.getClientInstance());
 	}
 
-	public ClientInstance getServerAsClientInstance() {
-		return this.serverAsClientInstance;
-	}
-
-	public void
-			setServerAsClientInstance(ClientInstance serverAsClientInstance) {
-		this.serverAsClientInstance = serverAsClientInstance;
-	}
-
 	public DomainTransformLayerWrapper transformFromServletLayer(
 			Collection<DomainTransformEvent> transforms, String tag)
 			throws DomainTransformRequestException {
 		int requestId = nextTransformRequestId();
 		EntityLocatorMap map = new EntityLocatorMap();
-		ClientInstance clientInstance = ServletLayerTransforms.get()
+		ClientInstance clientInstance = EntityLayerObjects.get()
 				.getServerAsClientInstance();
 		DomainTransformRequest request = DomainTransformRequest
 				.createPersistableRequest(requestId, clientInstance.getId());

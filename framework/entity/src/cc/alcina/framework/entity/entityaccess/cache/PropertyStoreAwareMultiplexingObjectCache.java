@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
@@ -57,11 +58,6 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 	@Override
 	public boolean contains(Entity entity) {
 		return main.contains(entity);
-	}
-
-	@Override
-	public Map<Long, Entity> createMap() {
-		return main.createMap();
 	}
 
 	@Override
@@ -165,8 +161,13 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 	}
 
 	@Override
-	protected void ensureMaps(Class clazz) {
-		main.ensureMaps(clazz);
+	protected Map<Long, Entity> createIdEntityMap(Class clazz) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected void ensureMap(Class clazz) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -193,22 +194,20 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 		}
 
 		@Override
-		protected Map<Long, Entity> createMap() {
-			throw new UnsupportedOperationException();
+		// linkedhashmap is fine here
+		protected Map<Class, Map<Long, Entity>> createClientInstanceClassMap() {
+			return super.createClientInstanceClassMap();
 		}
 
 		@Override
-		protected void ensureMaps(Class clazz) {
-			if (!domain.containsKey(clazz)) {
-				synchronized (this) {
-					if (!domain.containsKey(clazz)) {
-						domain.put(clazz,
-								new TransactionalMap(Long.class, clazz));
-						local.put(clazz,
-								new TransactionalMap(Long.class, clazz));
-					}
-				}
-			}
+		protected Map<Long, Entity> createIdEntityMap(Class clazz) {
+			return new TransactionalMap(Long.class, clazz);
+		}
+
+		@Override
+		protected void createTopMaps() {
+			domain = new LinkedHashMap<>();
+			local = new ConcurrentHashMap<>(100);
 		}
 
 		@Override

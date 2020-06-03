@@ -1,5 +1,6 @@
 package cc.alcina.extras.dev.console.test;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
@@ -9,6 +10,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -36,6 +38,8 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 	private long deletedCount;
 
 	private long addedCount;
+
+	private long minDeletionId;
 
 	private <E extends Entity & IUser> Class<E> getUserClass() {
 		return (Class<E>) AlcinaPersistentEntityImpl
@@ -66,7 +70,8 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 					double filterProbability = ((double) deleteCount)
 							/ usersSize;
 					List<Entity> toDelete = Domain.stream(getUserClass())
-							.filter(u -> (u.getId() > 20 || u.getId() == 0)
+							.filter(u -> (u.getId() > minDeletionId
+									|| u.getId() == 0)
 									&& Math.random() < filterProbability)
 							.collect(Collectors.toList());
 					toDelete.forEach(Entity::delete);
@@ -122,6 +127,8 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 
 	@Override
 	protected void run0() throws Exception {
+		minDeletionId = Domain.stream(getUserClass()).map(HasId::getId)
+				.max(Comparator.naturalOrder()).get();
 		for (int idx = 0; idx < 5; idx++) {
 			initialCount = getUsersSize();
 			Ax.sysLogHigh("Iteration: %s - intial count: %s", idx,
