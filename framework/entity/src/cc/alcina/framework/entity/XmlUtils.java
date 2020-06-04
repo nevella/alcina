@@ -573,7 +573,7 @@ public class XmlUtils {
 		currentBlockAncestor = blockResolver.getContainingBlock(cursor)
 				.orElse(null);
 		while (true) {
-			cursor = cursor.relative().nextSibOrParentSibNode();
+			cursor = cursor.relative().nextLogicalNode();
 			if (cursor == null || cursor.isDocumentNode()) {
 				tuple.nextBlock = null;
 				break;

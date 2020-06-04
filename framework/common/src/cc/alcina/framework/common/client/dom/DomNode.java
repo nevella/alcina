@@ -939,6 +939,17 @@ public class DomNode {
 			parent().node.insertBefore(node.node, DomNode.this.node);
 		}
 
+		public DomNode nextLogicalNode() {
+			if (hasNextSibling()) {
+				return nextSibling();
+			}
+			DomNode parent = parent();
+			if (parent != null) {
+				return parent.relative().nextLogicalNode();
+			}
+			return null;
+		}
+
 		public DomNode nextSibling() {
 			return doc.nodeFor(node.getNextSibling());
 		}
@@ -955,13 +966,13 @@ public class DomNode {
 			return null;
 		}
 
-		public DomNode nextSibOrParentSibNode() {
+		public DomNode previousLogicalNode() {
 			if (hasNextSibling()) {
 				return nextSibling();
 			}
 			DomNode parent = parent();
 			if (parent != null) {
-				return parent.relative().nextSibOrParentSibNode();
+				return parent.relative().nextLogicalNode();
 			}
 			return null;
 		}

@@ -94,7 +94,6 @@ import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 import cc.alcina.framework.servlet.ServletLayerUtils;
-import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable;
 import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable.AlcinaChildContextRunner;
 
@@ -611,9 +610,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				}
 				if (ignoreWhitespaceAndPunctuation && change.deleted == 1
 						&& change.inserted == 1) {
-					if (Sx.ntrim(split1[change.line0])
+					if (Ax.ntrim(split1[change.line0])
 							.replaceAll("[ ,.~:-]", "")
-							.equals(Sx.ntrim(split2[change.line1])
+							.equals(Ax.ntrim(split2[change.line1])
 									.replaceAll("[ ,.~:-]", ""))) {
 						ignore = true;
 					}

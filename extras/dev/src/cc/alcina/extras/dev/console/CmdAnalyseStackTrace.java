@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.J8Utils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.servlet.Sx;
 
 public class CmdAnalyseStackTrace extends DevConsoleCommand {
 	public static final String CONTEXT_FILTER = CmdAnalyseStackTrace.class
@@ -153,7 +152,7 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 			Pattern statePattern = Pattern
 					.compile("java.lang.Thread.State: .*");
 			for (String line : dump.split("\n")) {
-				line = Sx.ntrim(line);
+				line = Ax.ntrim(line);
 				if (line.isEmpty()) {
 					continue;
 				}
