@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.gwt.client.util.TextUtils;
 
 public class Ax {
 	private static boolean test;
@@ -103,6 +104,10 @@ public class Ax {
 
 	public static boolean notPresent(Optional<?> optional) {
 		return !optional.isPresent();
+	}
+
+	public static String ntrim(String s) {
+		return TextUtils.normalizeWhitespaceAndTrim(s);
 	}
 
 	public static String nullSafe(String string) {
