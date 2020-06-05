@@ -15,13 +15,14 @@ import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCrea
 import cc.alcina.framework.common.client.util.NullFriendlyComparatorWrapper;
 import cc.alcina.framework.common.client.util.trie.KeyAnalyzer;
 import cc.alcina.framework.common.client.util.trie.MultiTrie;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class BaseProjectionSupportMvcc {
 	public static class BplDelegateMapCreatorFastUnsorted
 			implements DelegateMapCreator {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
-			return new TransactionalMap(Object.class, Object.class);
+			return new Object2ObjectLinkedOpenHashMap();
 		}
 	}
 

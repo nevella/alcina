@@ -12,6 +12,10 @@ public class IdCounter {
 		this.reversed = reversed;
 	}
 
+	public IdCounter(long initialValue) {
+		this.counter = initialValue;
+	}
+
 	public synchronized long nextId() {
 		return reversed ? --counter : ++counter;
 	}

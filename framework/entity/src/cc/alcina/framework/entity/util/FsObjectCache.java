@@ -17,7 +17,6 @@ import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.KryoUtils;
-import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.LockUtils;
 import cc.alcina.framework.entity.entityaccess.cache.LockUtils.ClassStringKeyLock;
@@ -81,13 +80,6 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	}
 
 	@Override
-	public FsObjectCache<T>
-			withCreateIfNonExistent(boolean createIfNonExistent) {
-		this.createIfNonExistent = createIfNonExistent;
-		return this;
-	}
-
-	@Override
 	public Class<T> getPersistedClass() {
 		return clazz;
 	}
@@ -110,12 +102,6 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		} finally {
 			lock.unlock();
 		}
-	}
-
-	private ClassStringKeyLock getLock(String path) {
-		ClassStringKeyLock lock = LockUtils.obtainClassStringKeyLock(
-				pathToValue == null ? clazz : pathToValue.getClass(), path);
-		return lock;
 	}
 
 	/**
@@ -156,6 +142,13 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		if (invalidationTimer != null) {
 			invalidationTimer.cancel();
 		}
+	}
+
+	@Override
+	public FsObjectCache<T>
+			withCreateIfNonExistent(boolean createIfNonExistent) {
+		this.createIfNonExistent = createIfNonExistent;
+		return this;
 	}
 
 	@Override
@@ -235,10 +228,10 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		Logger metricLogger = AlcinaLogUtils
 				.getMetricLogger(FsObjectCache.class);
 		String key = Ax.format("Deserialize cache: %s", path);
-		MetricLogging.get().start(key);
+		// MetricLogging.get().start(key);
 		try {
 			T t = KryoUtils.deserializeFromFile(cacheFile, clazz);
-			MetricLogging.get().end(key, metricLogger);
+			// MetricLogging.get().end(key, metricLogger);
 			if (retainInMemory) {
 				FsObjectCache<T>.CacheEntry entry = new CacheEntry();
 				entry.created = System.currentTimeMillis();
@@ -255,6 +248,12 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 				return get(path, false);
 			}
 		}
+	}
+
+	private ClassStringKeyLock getLock(String path) {
+		ClassStringKeyLock lock = LockUtils.obtainClassStringKeyLock(
+				pathToValue == null ? clazz : pathToValue.getClass(), path);
+		return lock;
 	}
 
 	class CacheEntry {

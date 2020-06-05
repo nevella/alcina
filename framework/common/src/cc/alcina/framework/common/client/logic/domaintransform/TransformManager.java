@@ -1361,6 +1361,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
 	}
 
+	// FIXME - mvcc - not needed server-side
 	public <T extends Entity> T registerDomainObject(T entity) {
 		if (getDomainObjects() != null && entity != null) {
 			if (entity.getId() == 0) {

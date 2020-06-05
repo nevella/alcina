@@ -34,6 +34,7 @@ import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.CastExpr;
+import com.github.javaparser.ast.expr.ConditionalExpr;
 import com.github.javaparser.ast.expr.EnclosedExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
@@ -46,6 +47,7 @@ import com.github.javaparser.ast.expr.SuperExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.stmt.SwitchStmt;
+import com.github.javaparser.ast.stmt.SynchronizedStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
@@ -177,7 +179,9 @@ class ClassTransformer {
 		if (ResourceUtilities.is(ClassTransformer.class,
 				"checkClassCorrectness")) {
 			for (ClassTransform ct : classTransforms.values()) {
-				ct.persist();
+				if (!ct.invalid) {
+					ct.persist();
+				}
 			}
 		}
 	}
@@ -379,8 +383,8 @@ class ClassTransformer {
 										Ax.out("checking correctness: %s",
 												typeName);
 									}
-									classDeclaration.accept(
-											new CheckAccessVisitor(), null);
+									CheckAccessVisitor visitor = new CheckAccessVisitor();
+									classDeclaration.accept(visitor, null);
 								});
 					}
 				}
@@ -469,6 +473,8 @@ class ClassTransformer {
 
 			private String containingClassName;
 
+			private MethodCallExpr visiting;
+
 			public CheckAccessVisitor() {
 			}
 
@@ -516,10 +522,11 @@ class ClassTransformer {
 
 			@Override
 			public void visit(MethodCallExpr expr, Void arg) {
-				super.visit(expr, arg);
+				this.visiting = expr;
 				if (isDefinedOk(expr)) {
 					return;
 				}
+				super.visit(expr, arg);
 				try {
 					SymbolReference<ResolvedMethodDeclaration> ref = transformer.solver
 							.solve(expr);
@@ -614,10 +621,6 @@ class ClassTransformer {
 				}
 				ClassOrInterfaceType type = expr.getType();
 				ResolvedType creationType = transformer.solver.getType(expr);
-				if (creationType.asReferenceType().getQualifiedName()
-						.contains("DomainSupport")) {
-					int debug = 3;
-				}
 				ResolvedReferenceTypeDeclaration creationTypeDeclaration = creationType
 						.asReferenceType().getTypeDeclaration();
 				if (creationTypeDeclaration instanceof JavaParserClassDeclaration) {
@@ -717,12 +720,22 @@ class ClassTransformer {
 				} else if (parent instanceof SwitchStmt) {
 					addProblematicAccess(
 							MvccCorrectnessIssueType.This_assignment_unknown);
+				} else if (parent instanceof ConditionalExpr) {
+					addProblematicAccess(
+							MvccCorrectnessIssueType.This_assignment_unknown);
+				} else if (parent instanceof SynchronizedStmt) {
+					addProblematicAccess(
+							MvccCorrectnessIssueType.This_assignment_unknown);
 				} else if (parent instanceof EnclosedExpr) {
 					throw new UnsupportedOperationException(Ax
 							.format("Remove enclosed expression: %s", parent));
 				} else {
+					addProblematicAccess(
+							MvccCorrectnessIssueType.This_assignment_unknown);
+					Ax.sysLogHigh("really should check this: %s",
+							parent.getClass().getSimpleName());
 					// unknown
-					throw new UnsupportedOperationException();
+					// throw new UnsupportedOperationException();
 				}
 			}
 

@@ -87,6 +87,9 @@ public class PropertyPathAccessor {
 			return type ? accessor.getPropertyType()
 					: accessor.getPropertyValue(obj);
 		}
+		if (type) {
+			return null;
+		}
 		int idx = 0;
 		for (String path : paths) {
 			if (obj == null) {

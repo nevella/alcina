@@ -38,10 +38,18 @@ public class DomainLookup<T, E extends Entity>
 		this.descriptor = descriptor;
 		this.propertyPathAccesor = new PropertyPathAccessor(
 				descriptor.propertyPath);
-		this.store = Registry.impl(MultisetCreator.class).create(
-				descriptor.getLookupIndexClass(this.propertyPathAccesor),
+		Class indexClass = CommonUtils.getWrapperType(
+				descriptor.getLookupIndexClass(this.propertyPathAccesor));
+		this.store = Registry.impl(MultisetCreator.class).create(indexClass,
 				getListenedClass());
 		this.relevanceFilter = descriptor.getRelevanceFilter();
+		if (indexClass == Long.class) {
+			Converter<Long, Long> normaliser = l -> l == null ? 0 : l;
+			this.normaliser = (Converter<T, T>) normaliser;
+		} else if (indexClass == Long.class) {
+			Converter<Long, Long> normaliser = l -> l == null ? 0 : l;
+			this.normaliser = (Converter<T, T>) normaliser;
+		}
 	}
 
 	@Override
@@ -164,8 +172,7 @@ public class DomainLookup<T, E extends Entity>
 	}
 
 	private T normalise(T key) {
-		return normaliser == null || key == null ? key
-				: normaliser.convert(key);
+		return normaliser == null ? key : normaliser.convert(key);
 	}
 
 	private void remove(T key, E value) {

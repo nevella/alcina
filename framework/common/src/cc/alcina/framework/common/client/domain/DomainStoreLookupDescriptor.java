@@ -8,6 +8,9 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 
@@ -82,9 +85,20 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 	}
 
 	public Class getLookupIndexClass(PropertyPathAccessor propertyPathAccesor) {
-		return lookupIndexClass != null ? lookupIndexClass
-				: propertyPathAccesor.getChainedPropertyType(
-						Reflections.classLookup().newInstance(clazz));
+		if (lookupIndexClass != null) {
+			return lookupIndexClass;
+		}
+		Class chainedPropertyType = propertyPathAccesor.getChainedPropertyType(
+				Reflections.classLookup().newInstance(clazz));
+		if (chainedPropertyType != null) {
+			return chainedPropertyType;
+		}
+		if (valueFunction != null) {
+			return null;
+		}
+		return Registry.impl(ReflectiveChainedPropertyTypeProvider.class)
+				.getLookupIndexClass(clazz,
+						propertyPathAccesor.getPropertyPath());
 	}
 
 	public String getPropertyPath() {
@@ -155,5 +169,11 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		public IdLookup getLookup() {
 			return idLookup;
 		}
+	}
+
+	@RegistryLocation(registryPoint = ReflectiveChainedPropertyTypeProvider.class, implementationType = ImplementationType.SINGLETON)
+	public abstract static class ReflectiveChainedPropertyTypeProvider {
+		public abstract Class getLookupIndexClass(Class clazz,
+				String propertyPath);
 	}
 }

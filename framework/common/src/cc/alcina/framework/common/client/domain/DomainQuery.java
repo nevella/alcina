@@ -74,8 +74,7 @@ public abstract class DomainQuery<E extends Entity> {
 	}
 
 	public DomainQuery<E> filterByIds(Collection<Long> ids) {
-		filter("id", ids);
-		return this;
+		return filter(new DomainFilter("id", ids, FilterOperator.IN));
 	}
 
 	public E find() {

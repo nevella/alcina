@@ -502,6 +502,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						runSuccess = true;
 						return String.format("'%s' was run%s", runnableName,
 								msg);
+					} catch (Exception e0) {
+						e0.printStackTrace();
+						throw e0;
 					} finally {
 						try {
 							if (Transactions.isInitialised()) {

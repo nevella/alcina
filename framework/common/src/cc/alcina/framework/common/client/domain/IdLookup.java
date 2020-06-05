@@ -36,7 +36,7 @@ public class IdLookup<T, E extends Entity> extends DomainLookup<T, E> {
 
 	@Override
 	protected void add(T key, E value) {
-		if (key == null) {
+		if (key == null || key == Long.valueOf(0)) {
 			return;
 		}
 		super.add(key, value);

@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectL
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
@@ -116,9 +117,10 @@ public class GraphProjections {
 		public CountingMap<Class> counts = new CountingMap<Class>();
 
 		@Override
-		protected <T> T newInstance(Class sourceClass, GraphProjectionContext context) throws Exception {
+		protected <T> T newInstance(Class sourceClass,
+				GraphProjectionContext context) throws Exception {
 			counts.add(sourceClass);
-			return super.newInstance(sourceClass,context);
+			return super.newInstance(sourceClass, context);
 		}
 	}
 
@@ -128,6 +130,7 @@ public class GraphProjections {
 			if (!Entity.class.isAssignableFrom(clazz)) {
 				return true;
 			}
+			clazz = Mvcc.resolveEntityClass(clazz);
 			if (permittedClasses.size() > 0
 					&& !permittedClasses.contains(clazz)) {
 				return false;
@@ -157,6 +160,7 @@ public class GraphProjections {
 			if (!Entity.class.isAssignableFrom(clazz)) {
 				return true;
 			}
+			clazz = Mvcc.resolveEntityClass(clazz);
 			if (permittedClasses.size() > 0
 					&& !permittedClasses.contains(clazz)) {
 				return false;
