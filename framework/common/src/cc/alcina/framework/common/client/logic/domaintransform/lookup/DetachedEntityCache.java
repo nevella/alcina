@@ -34,7 +34,6 @@ import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -46,6 +45,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	protected Map<Class, Map<Long, Entity>> domain;
+
+	protected Map<Class, Map<Long, Entity>> local2;
 
 	protected Map<ClientInstance, Map<Class, Map<Long, Entity>>> local;
 
@@ -276,28 +277,29 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	private Map<Class, Map<Long, Entity>> local(boolean ensure) {
-		ClientInstance clientInstance = PermissionsManager.get()
-				.getClientInstance();
-		if (clientInstance == null) {
-			return Collections.emptyMap();
-		}
-		Map<Class, Map<Long, Entity>> perClientInstance = local
-				.get(clientInstance);
-		if (perClientInstance != null) {
-			return perClientInstance;
-		}
-		if (!ensure) {
-			return Collections.emptyMap();
-		}
-		synchronized (clientInstance) {
-			perClientInstance = local.get(clientInstance);
-			if (perClientInstance != null) {
-				return perClientInstance;
-			}
-			perClientInstance = createClientInstanceClassMap();
-			local.put(clientInstance, perClientInstance);
-			return perClientInstance;
-		}
+		// ClientInstance clientInstance = PermissionsManager.get()
+		// .getClientInstance();
+		// if (clientInstance == null) {
+		// return Collections.emptyMap();
+		// }
+		// Map<Class, Map<Long, Entity>> perClientInstance = local
+		// .get(clientInstance);
+		// if (perClientInstance != null) {
+		// return perClientInstance;
+		// }
+		// if (!ensure) {
+		// return Collections.emptyMap();
+		// }
+		// synchronized (clientInstance) {
+		// perClientInstance = local.get(clientInstance);
+		// if (perClientInstance != null) {
+		// return perClientInstance;
+		// }
+		// perClientInstance = createClientInstanceClassMap();
+		// local.put(clientInstance, perClientInstance);
+		// return perClientInstance;
+		// }
+		return local2;
 	}
 
 	private Map<Long, Entity> local(Class clazz, boolean ensure) {
@@ -326,6 +328,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	protected void createTopMaps() {
 		domain = new LinkedHashMap<>();
 		local = new LinkedHashMap<>();
+		local2 = new LinkedHashMap<>();
 	}
 
 	protected void ensureMap(Class clazz) {

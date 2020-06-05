@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
@@ -23,6 +24,10 @@ import cc.alcina.framework.entity.ResourceUtilities;
 public class ClientInstanceAuthenticationCache {
 	public static final transient String CONTEXT_IDLE_TIMEOUT_DISABLED = ClientInstanceAuthenticationCache.class
 			.getName() + ".CONTEXT_IDLE_TIMEOUT_DISABLED";
+
+	public static ClientInstanceAuthenticationCache get() {
+		return Registry.impl(ClientInstanceAuthenticationCache.class);
+	}
 
 	HandshakeObjectProvider handshakeObjectProvider;
 

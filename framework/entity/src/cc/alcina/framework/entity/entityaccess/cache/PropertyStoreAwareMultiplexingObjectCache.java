@@ -208,6 +208,7 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 		protected void createTopMaps() {
 			domain = new LinkedHashMap<>();
 			local = new ConcurrentHashMap<>(100);
+			local2 = new LinkedHashMap<>();
 		}
 
 		@Override
