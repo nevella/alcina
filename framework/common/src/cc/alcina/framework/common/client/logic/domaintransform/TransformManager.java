@@ -64,6 +64,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoMana
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -1943,12 +1944,35 @@ public abstract class TransformManager implements PropertyChangeListener,
 											.checkArgument(associated == null);
 								}
 							} else if (association.dereferenceOnDelete()) {
+								PropertyReflector associatedObjectAccessor = Reflections
+										.propertyAccessor()
+										.getPropertyReflector(
+												association
+														.implementationClass(),
+												association.propertyName());
 								if (associated instanceof Set) {
-									propertyReflector.setPropertyValue(entity,
-											new LinkedHashSet<>());
+									((Set<? extends Entity>) associated)
+											.forEach(
+													e -> associatedObjectAccessor
+															.setPropertyValue(e,
+																	null));
 								} else if (associated instanceof Entity) {
-									propertyReflector.setPropertyValue(entity,
-											null);
+									Object associatedAssociationValue = associatedObjectAccessor
+											.getPropertyValue(associated);
+									if (associatedAssociationValue instanceof Set) {
+										((Entity) associated).domain()
+												.removeFromProperty(
+														association
+																.propertyName(),
+														entity);
+									} else if (associated instanceof Entity) {
+										associatedObjectAccessor
+												.setPropertyValue(associated,
+														null);
+									} else {
+										Preconditions.checkArgument(
+												associated == null);
+									}
 								} else {
 									Preconditions
 											.checkArgument(associated == null);
