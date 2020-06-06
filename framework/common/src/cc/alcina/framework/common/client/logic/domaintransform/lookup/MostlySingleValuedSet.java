@@ -86,7 +86,7 @@ public class MostlySingleValuedSet<E> extends AbstractSet<E>
 	@Override
 	public boolean remove(Object o) {
 		if (map != null) {
-			return map.remove(o);
+			return map.remove(o) != null;
 		}
 		if (isEmpty()) {
 			return false;

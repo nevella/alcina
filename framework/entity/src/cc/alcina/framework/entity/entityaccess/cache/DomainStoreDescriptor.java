@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.eclipse.jdt.core.dom.Modifier;
 
@@ -59,6 +60,10 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 
 	public abstract Class<? extends DomainTransformRequestPersistent>
 			getDomainTransformRequestPersistentClass();
+
+	public Stream<Class> getHandledClasses() {
+		return perClass.keySet().stream();
+	}
 
 	public Class<? extends ClassRef> getShadowClassRefClass() {
 		throw new UnsupportedOperationException();

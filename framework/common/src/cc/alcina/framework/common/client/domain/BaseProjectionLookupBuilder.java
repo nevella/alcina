@@ -2,21 +2,21 @@ package cc.alcina.framework.common.client.domain;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.MultikeyMap;
-import cc.alcina.framework.common.client.util.SortedMultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
+/**
+ * This used to have sorted/navigable options - but in general those are better
+ * defined by setting mapcreators for each layer of keys. Also, navigable will
+ * not work under mvcc (fastutil treemaps are not navigable, although they are
+ * sorted)
+ */
 public class BaseProjectionLookupBuilder {
-	private boolean sorted = false;
-
 	private CollectionCreators.MapCreator[] creators;
-
-	private boolean navigable;
 
 	private BaseProjection projection;
 
@@ -29,13 +29,7 @@ public class BaseProjectionLookupBuilder {
 		BplDelegateMapCreator mapCreator = Registry
 				.impl(BplDelegateMapCreator.class);
 		mapCreator.setBuilder(this);
-		if (isSorted()) {
-			map = new SortedMultikeyMap<T>(projection.getDepth(), 0,
-					mapCreator);
-		} else {
-			map = new UnsortedMultikeyMap<T>(projection.getDepth(), 0,
-					mapCreator);
-		}
+		map = new UnsortedMultikeyMap<T>(projection.getDepth(), 0, mapCreator);
 		return map;
 	}
 
@@ -47,15 +41,8 @@ public class BaseProjectionLookupBuilder {
 		return this.projection;
 	}
 
-	public boolean isNavigable() {
-		return navigable;
-	}
-
-	public boolean isSorted() {
-		return sorted;
-	}
-
-	public BaseProjectionLookupBuilder mapCreators(CollectionCreators.MapCreator... creators) {
+	public BaseProjectionLookupBuilder
+			mapCreators(CollectionCreators.MapCreator... creators) {
 		if (creators.length != projection.getDepth()) {
 			throw new RuntimeException(
 					"Mismatched creator array length and depth");
@@ -64,24 +51,8 @@ public class BaseProjectionLookupBuilder {
 		return this;
 	}
 
-	public BaseProjectionLookupBuilder navigable() {
-		navigable = true;
-		sorted = true;
-		return this;
-	}
-
 	public void setProjection(BaseProjection projection) {
 		this.projection = projection;
-	}
-
-	public BaseProjectionLookupBuilder sorted() {
-		sorted = true;
-		return this;
-	}
-
-	public BaseProjectionLookupBuilder unsorted() {
-		sorted = false;
-		return this;
 	}
 
 	public static abstract class BplDelegateMapCreator
@@ -103,12 +74,8 @@ public class BaseProjectionLookupBuilder {
 		public Map createDelegateMap(int depthFromRoot, int depth) {
 			if (getBuilder().getCreators() != null) {
 				return (Map) getBuilder().getCreators()[depthFromRoot].get();
-			}
-			if (getBuilder().isNavigable()) {
-				return new TreeMap();
 			} else {
-				return getBuilder().isSorted() ? new TreeMap()
-						: new LinkedHashMap();
+				return new LinkedHashMap();
 			}
 		}
 	}

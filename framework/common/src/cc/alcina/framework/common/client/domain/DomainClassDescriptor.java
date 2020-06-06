@@ -116,9 +116,13 @@ public class DomainClassDescriptor<T extends Entity>
 					projection.remove(obj);
 				}
 			} catch (Exception e) {
-				String msg = Ax.format(
-						"Issue indexing: projection: %s  - add: %s - object: %s",
-						projection, add, obj);
+				String msg = "<error evaluating issue>";
+				try {
+					msg = Ax.format(
+							"Issue indexing: projection: %s  - add: %s - object: %s",
+							projection, add, obj);
+				} catch (Exception e2) {
+				}
 				logger.warn(msg, e);
 			}
 		}

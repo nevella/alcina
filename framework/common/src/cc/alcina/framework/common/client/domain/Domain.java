@@ -177,6 +177,10 @@ public class Domain {
 		return handler.resolveTransactional(listener, value, path);
 	}
 
+	public static <V extends Entity> long size(Class<V> clazz) {
+		return handler.size(clazz);
+	}
+
 	public static <V extends Entity> Stream<V> stream(Class<V> clazz) {
 		return handler.stream(clazz);
 	}
@@ -247,6 +251,10 @@ public class Domain {
 
 		default <V extends Entity> V resolve(V v) {
 			return v;
+		}
+
+		default <V extends Entity> long size(Class<V> clazz) {
+			return stream(clazz).count();
 		}
 
 		<V extends Entity> V transactionalVersion(V v);

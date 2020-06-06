@@ -92,7 +92,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		if (!domain.containsKey(clazz)) {
 			return false;
 		}
-		if (entity.getId() > 0) {
+		if (entity.getId() != 0) {
 			return domain.get(clazz).containsKey(entity.getId());
 		} else {
 			return local(clazz, false).containsKey(entity.getLocalId());
@@ -186,9 +186,11 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		if (id == 0 && localId == 0) {
 			throw new RuntimeException("indexing entity with zero id/localid");
 		}
-		if (id < 0) {
-			throw new RuntimeException("indexing entity with negative id");
-		}
+		// these will not be put in to-domain phase transactions, so are
+		// harmless
+		// if (id < 0) {
+		// throw new RuntimeException("indexing entity with negative id");
+		// }
 		if (id != 0) {
 			if (throwOnExisting) {
 				if (domain.get(clazz).containsKey(id)) {
@@ -225,9 +227,6 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		long localId = entity.getLocalId();
 		if (id == 0 && localId == 0) {
 			throw new RuntimeException("indexing entity with zero id/localid");
-		}
-		if (id < 0) {
-			throw new RuntimeException("indexing entity with negative id");
 		}
 		if (id != 0) {
 			domain.get(clazz).remove(id);

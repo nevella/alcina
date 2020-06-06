@@ -30,7 +30,9 @@ public abstract class SortedIdentityProjection<T extends Entity>
 
 	@Override
 	public void insert(T o) {
-		sorted.put(o, o);
+		if (isIndexable(o)) {
+			sorted.put(o, o);
+		}
 	}
 
 	@Override
@@ -40,7 +42,9 @@ public abstract class SortedIdentityProjection<T extends Entity>
 
 	@Override
 	public void remove(T o) {
-		sorted.remove(o);
+		if (isIndexable(o)) {
+			sorted.remove(o);
+		}
 	}
 
 	@Override
@@ -49,4 +53,8 @@ public abstract class SortedIdentityProjection<T extends Entity>
 	}
 
 	protected abstract Comparator<T> getComparator();
+
+	protected boolean isIndexable(T o) {
+		return true;
+	}
 }

@@ -789,9 +789,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		if (entity instanceof SourcesPropertyChangeEvents) {
 			listenTo((SourcesPropertyChangeEvents) entity);
 		}
-		if (entity.getId() == 0) {
-			DetachedEntityCache cache = DomainStore.stores()
-					.storeFor(entity.provideEntityClass()).getCache();
+		if (entity.getId() <= 0) {
+			DomainStore store = DomainStore.stores()
+					.storeFor(entity.provideEntityClass());
+			DetachedEntityCache cache = store.getCache();
 			if (!cache.contains(entity)) {
 				cache.put(entity);
 			}

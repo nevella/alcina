@@ -168,6 +168,7 @@ public class DomainStore implements IDomainStore {
 		return new Builder();
 	}
 
+	// FIXME - mvcc.jade - remove
 	public static void checkInLockedSection() {
 		// mvcc.end - remove
 		// if (stores().hasInitialisedDatabaseStore()
@@ -704,10 +705,12 @@ public class DomainStore implements IDomainStore {
 		}
 		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
 				.get(clazz);
-		itemDescriptor.index(obj, add);
-		for (Entity dependentObject : itemDescriptor
-				.getDependentObjectsWithDerivedProjections(obj)) {
-			index(dependentObject, add);
+		if (itemDescriptor != null) {
+			itemDescriptor.index(obj, add);
+			for (Entity dependentObject : itemDescriptor
+					.getDependentObjectsWithDerivedProjections(obj)) {
+				index(dependentObject, add);
+			}
 		}
 	}
 
@@ -1091,7 +1094,7 @@ public class DomainStore implements IDomainStore {
 
 		public synchronized void register(DomainStore store) {
 			descriptorMap.put(store.domainDescriptor, store);
-			store.domainDescriptor.perClass.keySet().forEach(clazz -> {
+			store.domainDescriptor.getHandledClasses().forEach(clazz -> {
 				Preconditions.checkState(!classMap.containsKey(clazz));
 				classMap.put(clazz, store);
 			});
@@ -1201,6 +1204,11 @@ public class DomainStore implements IDomainStore {
 				// return domainStore.handler.resolveTransactional(listener,
 				// value, path);
 				// }
+			}
+
+			@Override
+			public <V extends Entity> long size(Class<V> clazz) {
+				return storeHandler(clazz).size(clazz);
 			}
 
 			@Override
@@ -1633,6 +1641,11 @@ public class DomainStore implements IDomainStore {
 		public <V extends Entity> V resolveTransactional(
 				DomainListener listener, V value, Object[] path) {
 			return transactions().resolveTransactional(listener, value, path);
+		}
+
+		@Override
+		public <V extends Entity> long size(Class<V> clazz) {
+			return cache.size(clazz);
 		}
 
 		@Override

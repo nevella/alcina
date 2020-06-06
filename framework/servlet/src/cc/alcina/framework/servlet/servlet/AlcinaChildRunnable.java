@@ -93,6 +93,8 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		};
 	}
 
+	private boolean runningWithinTransaction;
+
 	private PermissionsManagerState permissionsManagerState;
 
 	private String threadName;
@@ -119,6 +121,10 @@ public abstract class AlcinaChildRunnable implements Runnable {
 	public AlcinaChildRunnable copyContext(String key) {
 		copyContext.put(key, LooseContext.get(key));
 		return this;
+	}
+
+	public boolean isRunningWithinTransaction() {
+		return this.runningWithinTransaction;
 	}
 
 	public AlcinaChildRunnable logExceptions() {
@@ -155,10 +161,16 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			}
 			throw new RuntimeException(throwable);
 		} finally {
-			Transaction.ensureEnded();
+			if (!isRunningWithinTransaction()) {
+				Transaction.ensureEnded();
+			}
 			LooseContext.confirmDepth(getRunContext().tLooseContextDepth);
 			LooseContext.pop();
 		}
+	}
+
+	public void setRunningWithinTransaction(boolean runningWithinTransaction) {
+		this.runningWithinTransaction = runningWithinTransaction;
 	}
 
 	public AlcinaChildRunnable withContext(String key, Object value) {

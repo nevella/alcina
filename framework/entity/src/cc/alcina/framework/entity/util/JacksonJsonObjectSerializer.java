@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 
 @RegistryLocation(registryPoint = JsonObjectSerializer.class, implementationType = ImplementationType.INSTANCE)
 public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
@@ -113,7 +114,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	public String serialize(Object object) {
 		return runWithObjectMapper(mapper -> {
 			try {
-				StringWriter writer = new LengthLimitedStringWriter(maxLength,truncateAtMaxLength);
+				StringWriter writer = new LengthLimitedStringWriter(maxLength,
+						truncateAtMaxLength);
 				if (withPrettyPrint) {
 					mapper.writerWithDefaultPrettyPrinter().writeValue(writer,
 							object);
@@ -162,14 +164,15 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		this.maxLength = maxLength;
 		return this;
 	}
-	
-	public JacksonJsonObjectSerializer withTruncateAtMaxLength(boolean truncateAtMaxLength) {
-		this.truncateAtMaxLength = truncateAtMaxLength;
-		return this;
-	}
 
 	public JacksonJsonObjectSerializer withPrettyPrint() {
 		this.withPrettyPrint = true;
+		return this;
+	}
+
+	public JacksonJsonObjectSerializer
+			withTruncateAtMaxLength(boolean truncateAtMaxLength) {
+		this.truncateAtMaxLength = truncateAtMaxLength;
 		return this;
 	}
 
@@ -257,8 +260,12 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		@Override
 		public ObjectIdInfo findObjectIdInfo(Annotated ann) {
 			ObjectIdInfo annotatedResult = super.findObjectIdInfo(ann);
-			if (annotatedResult == null && Entity.class
-					.isAssignableFrom(ann.getRawType())) {
+			if (annotatedResult == null
+					&& Entity.class.isAssignableFrom(ann.getRawType())) {
+				if (MvccObject.class.isAssignableFrom(ann.getRawType())) {
+					throw new RuntimeException(
+							"Cannot jackson/serialize mvcc objects - project first");
+				}
 				PropertyName name = PropertyName.construct("ref_id");
 				return new ObjectIdInfo(name, Object.class,
 						EntityStringIdGenerator.class,
@@ -315,66 +322,68 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	public static class LengthLimitedStringWriter extends StringWriter {
 		private int maxLength;
+
 		private boolean truncateAtMaxLength;
 
-		public LengthLimitedStringWriter(int maxLength, boolean truncateAtMaxLength) {
+		public LengthLimitedStringWriter(int maxLength,
+				boolean truncateAtMaxLength) {
 			this.maxLength = maxLength;
 			this.truncateAtMaxLength = truncateAtMaxLength;
 		}
 
 		@Override
 		public StringWriter append(char c) {
-			if(!checkLength(1)){
-			return this;	
+			if (!checkLength(1)) {
+				return this;
 			}
 			return super.append(c);
 		}
 
 		@Override
 		public StringWriter append(CharSequence csq) {
-			if(!checkLength(csq.length())){
-				return this;	
-				}
+			if (!checkLength(csq.length())) {
+				return this;
+			}
 			return super.append(csq);
 		}
 
 		@Override
 		public StringWriter append(CharSequence csq, int start, int end) {
-			if(!checkLength(end - start)){
-				return this;	
-				}
+			if (!checkLength(end - start)) {
+				return this;
+			}
 			return super.append(csq, start, end);
 		}
 
 		@Override
 		public void write(char[] cbuf, int off, int len) {
-			if(!checkLength(len)){
-				return ;	
-				}
+			if (!checkLength(len)) {
+				return;
+			}
 			super.write(cbuf, off, len);
 		}
 
 		@Override
 		public void write(int c) {
-			if(!checkLength(1)){
-				return ;	
-				}
+			if (!checkLength(1)) {
+				return;
+			}
 			super.write(c);
 		}
 
 		@Override
 		public void write(String str) {
-			if(!checkLength(str.length())){
-				return ;	
-				}
+			if (!checkLength(str.length())) {
+				return;
+			}
 			super.write(str);
 		}
 
 		@Override
 		public void write(String str, int off, int len) {
-			if(!checkLength(len)){
-				return ;	
-				}
+			if (!checkLength(len)) {
+				return;
+			}
 			super.write(str, off, len);
 		}
 
@@ -383,7 +392,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 				return true;
 			}
 			if (getBuffer().length() + len > maxLength) {
-				if(truncateAtMaxLength){
+				if (truncateAtMaxLength) {
 					return false;
 				}
 				String first = "";
@@ -405,7 +414,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 								+ ":\n%s\n\ntop of stack:\n%s",
 						maxLength, first, last,
 						CommonUtils.joinWithNewlines(topOfTrace));
-			}else{
+			} else {
 				return true;
 			}
 		}

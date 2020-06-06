@@ -71,8 +71,8 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 
 	@Override
 	public MultikeyMap<V> createMap(int childDepth) {
-		return new SortedMultikeyMap(childDepth, depthFromRoot + 1,
-				delegateMapCreator);
+		return new SortedMultikeyMap(childDepth,
+				depthFromRoot + (depth - childDepth), delegateMapCreator);
 	}
 
 	@Override

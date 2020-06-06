@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
@@ -170,6 +171,14 @@ public class Transaction {
 	public <T extends Entity> T create(Class<T> clazz, DomainStore store) {
 		StoreTransaction storeTransaction = storeTransactions.get(store);
 		T t = storeTransaction.getMvcc().create(clazz);
+		if (t == null) {
+			try {
+				// non-transactional entity
+				return clazz.newInstance();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 		if (!isBaseTransaction()) {
 			MvccObjectVersions<T> versions = MvccObjectVersions.ensureEntity(t,
 					this, true);

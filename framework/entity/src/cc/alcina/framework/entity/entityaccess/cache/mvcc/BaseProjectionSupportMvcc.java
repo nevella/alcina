@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
+import cc.alcina.framework.common.client.util.CollectionCreators.MapCreator;
 import cc.alcina.framework.common.client.util.NullFriendlyComparatorWrapper;
 import cc.alcina.framework.common.client.util.trie.KeyAnalyzer;
 import cc.alcina.framework.common.client.util.trie.MultiTrie;
@@ -26,33 +27,18 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
-	@RegistryLocation(registryPoint = BaseProjectionLookupBuilder.BplDelegateMapCreator.class)
+	@RegistryLocation(registryPoint = BaseProjectionLookupBuilder.BplDelegateMapCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	public static class BplDelegateMapCreatorFastUtil
 			extends BaseProjectionLookupBuilder.BplDelegateMapCreator {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
-			if (getBuilder().getCreators() != null) {
+			if (getBuilder().getCreators() != null
+					&& getBuilder().getCreators().length > depthFromRoot) {
 				Map map = (Map) getBuilder().getCreators()[depthFromRoot].get();
 				Preconditions.checkState(map instanceof TransactionalMap);
 				return map;
 			}
-			if (getBuilder().isNavigable()) {
-				return new TransactionalTreeMap(Object.class, Object.class,
-						new NullFriendlyComparatorWrapper(
-								Comparator.reverseOrder()));
-			} else {
-				if (getBuilder().isSorted()) {
-					return new TransactionalTreeMap(Object.class, Object.class,
-							new NullFriendlyComparatorWrapper(
-									Comparator.reverseOrder()));
-				} else {
-					if (depthFromRoot > 0 && depth == 1) {
-						return new TransactionalMap(Object.class, Object.class);
-					} else {
-						return new TransactionalMap(Object.class, Object.class);
-					}
-				}
-			}
+			return new TransactionalMap(Object.class, Object.class);
 		}
 	}
 
@@ -81,6 +67,14 @@ public class BaseProjectionSupportMvcc {
 		public <K, E extends Entity> MultiTrie<K, Set<E>> create(
 				KeyAnalyzer<? super K> keyAnalyzer, Class<E> entityClass) {
 			return new TransactionalMultiTrie<>(keyAnalyzer, entityClass);
+		}
+	}
+
+	public static class TransactionalObject2ObjectMapCreator
+			implements MapCreator {
+		@Override
+		public Object get() {
+			return new TransactionalMap(Object.class, Object.class);
 		}
 	}
 

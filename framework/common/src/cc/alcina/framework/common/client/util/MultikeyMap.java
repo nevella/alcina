@@ -88,4 +88,12 @@ public interface MultikeyMap<V> {
 	void putMulti(MultikeyMap<V> multi);
 
 	void setDepth(int depth);
+
+	default <T> Set<? extends T> typedKeySet(Class<T> clazz) {
+		return keySet();
+	}
+
+	default <T> Collection<T> typedValues(Class<T> typed, Object... objects) {
+		return values(objects);
+	}
 }

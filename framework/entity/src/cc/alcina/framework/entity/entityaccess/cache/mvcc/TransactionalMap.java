@@ -151,8 +151,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	public V put(K key, V value) {
 		Preconditions.checkArgument(
 				key == null || keyClass.isAssignableFrom(key.getClass()));
-		Preconditions.checkArgument(
-				value == null || valueClass.isAssignableFrom(value.getClass()));
+		Preconditions.checkArgument(value == null || valueClass == Object.class
+				|| valueClass.isAssignableFrom(value.getClass()));
 		V existing = get(key);
 		Layer layer = ensureLayer();
 		layer.put(key, value, containsKey(key));

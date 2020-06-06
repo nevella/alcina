@@ -3,7 +3,6 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.lang.annotation.Annotation;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -137,7 +136,6 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 	}
 
-
 	static class PreProcessBridgeLookup extends MapObjectLookupJvm {
 		private EntityLocatorMap locatorMap;
 
@@ -167,7 +165,6 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	static class SubgraphClassLookup implements ClassLookup {
-
 		@Override
 		public String displayNameForObject(Object o) {
 			return ObjectPersistenceHelper.get().displayNameForObject(o);
@@ -220,7 +217,6 @@ public class SubgraphTransformManager extends TransformManager {
 		@Override
 		public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 			try {
-				
 				Entity newInstance = Transaction.current().create((Class) clazz,
 						DomainStore.stores().storeFor(clazz));
 				newInstance.setLocalId(localId);
@@ -229,7 +225,6 @@ public class SubgraphTransformManager extends TransformManager {
 				throw new WrappedRuntimeException(e);
 			}
 		}
-
 	}
 
 	static class SubgraphTransformManagerRecord extends SubgraphTransformManager

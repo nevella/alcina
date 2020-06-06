@@ -336,34 +336,33 @@ public abstract class MultikeyMapBase<V>
 	}
 
 	Object getWithKeys(boolean ensure, int ignoreCount, Object... objects) {
-		MultikeyMap m = this;
+		MultikeyMap map = this;
 		int last = objects.length - 1 - ignoreCount;
-		for (int i = 0; i <= last; i++) {
-			Object k = objects[i];
-			// FIXME - mvcc
-			if (k == null && this instanceof SortedMultikeyMap) {
+		for (int idx = 0; idx <= last; idx++) {
+			Object key = objects[idx];
+			if (key == null && this instanceof SortedMultikeyMap) {
 				// invalid key, would throw NPE on a treemap
 				return null;
 			}
-			Object o = m.writeableDelegate().get(k);
-			if (o != null) {
-				if (i == last) {
-					return o;
+			Object object = map.writeableDelegate().get(key);
+			if (object != null) {
+				if (idx == last) {
+					return object;
 				} else {
-					m = (MultikeyMap) o;
+					map = (MultikeyMap) object;
 				}
 			} else {
-				if (ensure && i != getDepth() - 1) {
+				if (ensure && idx != getDepth() - 1) {
 					// only use ensure if we're ensuring a map, not a key
-					o = createMap(getDepth() - i - 1);
-					m.writeableDelegate().put(k, o);
-					m = (MultikeyMap) o;
+					object = createMap(getDepth() - idx - 1);
+					map.writeableDelegate().put(key, object);
+					map = (MultikeyMap) object;
 				} else {
 					return null;
 				}
 			}
 		}
-		return m;
+		return map;
 	}
 
 	static class MissingObject {

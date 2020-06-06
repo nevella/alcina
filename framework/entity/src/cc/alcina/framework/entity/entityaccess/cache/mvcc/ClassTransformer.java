@@ -137,8 +137,9 @@ class ClassTransformer {
 
 	public <T extends Entity> T create(Class<T> clazz) {
 		try {
-			return (T) classTransforms.get(clazz).transformedClass
-					.newInstance();
+			ClassTransform classTransform = classTransforms.get(clazz);
+			return classTransform == null ? null
+					: (T) classTransform.transformedClass.newInstance();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

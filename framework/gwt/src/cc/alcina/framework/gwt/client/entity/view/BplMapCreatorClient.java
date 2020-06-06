@@ -9,9 +9,10 @@ import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.BplD
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
 @ClientInstantiable
-@RegistryLocation(registryPoint = BaseProjectionLookupBuilder.BplDelegateMapCreator.class)
+@RegistryLocation(registryPoint = BaseProjectionLookupBuilder.BplDelegateMapCreator.class, implementationType = ImplementationType.INSTANCE)
 public class BplMapCreatorClient extends BplDelegateMapCreatorStd {
 	@Override
 	public Map createDelegateMap(int depthFromRoot, int depth) {

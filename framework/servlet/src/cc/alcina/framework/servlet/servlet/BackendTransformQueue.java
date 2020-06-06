@@ -34,16 +34,7 @@ class BackendTransformQueue {
 		}
 		if (size > ResourceUtilities.getInteger(BackendTransformQueue.class,
 				"maxRunnables")) {
-			new Thread("backend-transform-queue-commit") {
-				@Override
-				public void run() {
-					try {
-						persistQueue();
-					} catch (Throwable t) {
-						t.printStackTrace();
-					}
-				};
-			}.start();
+			persistQueue();
 		}
 	}
 
@@ -56,6 +47,10 @@ class BackendTransformQueue {
 				tasks = new ArrayList<>();
 			}
 			for (Runnable runnable : toCommit) {
+				if (runnable instanceof AlcinaChildRunnable) {
+					((AlcinaChildRunnable) runnable)
+							.setRunningWithinTransaction(true);
+				}
 				ThreadlocalTransformManager.cast().resetTltm(null);
 				try {
 					LooseContext.push();
@@ -90,14 +85,15 @@ class BackendTransformQueue {
 	}
 
 	void persistQueue() {
-		ThreadedPermissionsManager.cast()
-				.runWithPushedSystemUserIfNeeded(() -> {
-					try {
-						persistQueue0();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				});
+		AlcinaChildRunnable.runInTransaction("backend-transform-persist",
+				() -> ThreadedPermissionsManager.cast()
+						.runWithPushedSystemUserIfNeeded(() -> {
+							try {
+								persistQueue0();
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}));
 	}
 
 	void start() {

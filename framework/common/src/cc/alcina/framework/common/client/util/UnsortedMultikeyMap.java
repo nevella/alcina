@@ -74,8 +74,8 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>
 
 	@Override
 	public MultikeyMap createMap(int childDepth) {
-		return new UnsortedMultikeyMap<V>(childDepth, depthFromRoot + 1,
-				delegateMapCreator);
+		return new UnsortedMultikeyMap<V>(childDepth,
+				depthFromRoot + (depth - childDepth), delegateMapCreator);
 	}
 
 	@Override
