@@ -18,6 +18,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
+
 /**
  * 
  * @author Nick Reddel
@@ -37,6 +39,10 @@ public interface IGroup extends IVersionable {
 	public void setGroupName(String name);
 
 	public void setMemberUsers(Set<? extends IUser> memberUsers);
+
+	default <IU extends Entity & IUser> void addMemberUser(IU user) {
+		((Entity) this).domain().addToProperty("memberUsers", user);
+	}
 
 	default <IG extends IGroup> boolean containsGroup(IG group) {
 		return getMemberGroups().contains(group);
@@ -59,5 +65,9 @@ public interface IGroup extends IVersionable {
 					.forEach(toTraverse::add);
 		}
 		return false;
+	}
+
+	default <IU extends Entity & IUser> void removeMemberUser(IU user) {
+		((Entity) this).domain().removeFromProperty("memberUsers", user);
 	}
 }
