@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * 
@@ -74,5 +75,11 @@ public class WrapperPersistable extends Entity<WrapperPersistable>
 
 	public void setOwner(IUser owner) {
 		this.owner = owner;
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("Wrapper persistable: %s/%s",
+				getClass().getSimpleName(), getId());
 	}
 }

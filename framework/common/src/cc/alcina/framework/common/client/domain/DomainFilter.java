@@ -48,6 +48,11 @@ public class DomainFilter {
 			@Override
 			public boolean allow(Object o) {
 				return predicate.test(o);
+				// boolean test = predicate.test(o);
+				// if (!test) {
+				// int debug = 3;
+				// }
+				// return test;
 			}
 
 			@Override
