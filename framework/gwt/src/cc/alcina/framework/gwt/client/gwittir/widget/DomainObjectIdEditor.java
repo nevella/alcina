@@ -87,7 +87,7 @@ public class DomainObjectIdEditor extends AbstractBoundWidget
 		Object old = getValue();
 		currentValue = value;
 		if (CommonUtils.isNullOrEmpty(tb.getText())) {
-			tb.setText(IdToStringRenderer.INSTANCE
+			tb.setText(IdToStringRenderer.BLANK_NULLS_INSTANCE
 					.render((HasIdAndLocalId) currentValue));
 		}
 		changes.firePropertyChange("value", old, getValue());
