@@ -55,6 +55,7 @@ public class DomainObjectIdEditor extends AbstractBoundWidget
 		initWidget(fp);
 	}
 
+	@Override
 	public Object getValue() {
 		String text = tb.getText();
 		Long id = null;
@@ -68,7 +69,8 @@ public class DomainObjectIdEditor extends AbstractBoundWidget
 							.newInstance(domainObjectClass);
 					entity.setId(id);
 					if (entity != null && !entity.equals(currentValue)
-							&& TransformManager.get().getObject(entity) == null) {
+							&& TransformManager.get()
+									.getObject(entity) == null) {
 						TransformManager.get().registerDomainObject(entity);
 					}
 					currentValue = entity;
@@ -79,15 +81,17 @@ public class DomainObjectIdEditor extends AbstractBoundWidget
 		return currentValue;
 	}
 
+	@Override
 	public void onValueChange(ValueChangeEvent event) {
 		changes.firePropertyChange("value", currentValue, getValue());
 	}
 
+	@Override
 	public void setValue(Object value) {
 		Object old = getValue();
 		currentValue = value;
 		if (CommonUtils.isNullOrEmpty(tb.getText())) {
-			tb.setText(IdToStringRenderer.INSTANCE
+			tb.setText(IdToStringRenderer.BLANK_NULLS_INSTANCE
 					.render((Entity) currentValue));
 		}
 		changes.firePropertyChange("value", old, getValue());
@@ -101,6 +105,7 @@ public class DomainObjectIdEditor extends AbstractBoundWidget
 			this.domainObjectClass = domainObjectClass;
 		}
 
+		@Override
 		public BoundWidget get() {
 			DomainObjectIdEditor editor = new DomainObjectIdEditor(
 					domainObjectClass);

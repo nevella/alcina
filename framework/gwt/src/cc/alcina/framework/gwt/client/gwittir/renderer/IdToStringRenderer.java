@@ -24,10 +24,18 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 @ClientInstantiable
 public class IdToStringRenderer extends FlexibleToStringRenderer<HasId> {
 	public static final IdToStringRenderer INSTANCE = new IdToStringRenderer();
+	
+	public static final IdToStringRenderer BLANK_NULLS_INSTANCE = new IdToStringRenderer(true);
 
+	private boolean nullsAsBlanks;
+public IdToStringRenderer() {
+}
+public IdToStringRenderer(boolean nullsAsBlanks) {
+	this.nullsAsBlanks = nullsAsBlanks;
+}
 	public String render(HasId hasId) {
 		if (hasId == null) {
-			return "(Undefined)";
+			return nullsAsBlanks?"":"(Undefined)";
 		}
 		String dn = ClientReflector.get().displayNameForObject(hasId);
 		if (hasId.toString().equals(String.valueOf(hasId.getId()))) {
