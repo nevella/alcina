@@ -57,7 +57,6 @@ import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.actions.RemoteParametersValidator;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.KnownsDelta;
@@ -74,11 +73,7 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
@@ -87,13 +82,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -105,34 +98,28 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.actions.RequiresHttpSession;
-import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
-import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.domaintransform.TransformConflicts;
-import cc.alcina.framework.entity.domaintransform.TransformConflicts.TransformConflictsFromOfflineSupport;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
-import cc.alcina.framework.entity.entityaccess.ClientInstanceAuthenticationCache;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
-import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetricData;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit.TransformPriorityStd;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
-import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
@@ -144,11 +131,9 @@ import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.SessionProvider;
-import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.knowns.KnownsDeltaRequestHandler;
-import cc.alcina.framework.servlet.servlet.ServletLayerTransforms.TransformPriorityStd;
 
 /**
  *
@@ -496,7 +481,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			Long id = Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().persist(gwpo);
-			ServletLayerTransforms.get().handleWrapperTransforms();
+			TransformCommit.get().handleWrapperTransforms();
 			return id;
 		} catch (Exception e) {
 			logger.warn("Exception in persist wrappable", e);
@@ -509,183 +494,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted) throws WebException {
-		persistOfflineTransforms(uncommitted, logger, true, false);
+		TransformCommit.persistBulkTransforms(uncommitted, logger, true, false);
 	}
 
 	public int persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted, Logger logger)
 			throws WebException {
-		return persistOfflineTransforms(uncommitted, logger, null, false);
-	}
-
-	// TODO - this should be renamed to "persist bulk transforms" really, since
-	// also used for large admin commits
-	public int persistOfflineTransforms(List<DeltaApplicationRecord> records,
-			Logger logger, Boolean useWrapperUser,
-			boolean throwPersistenceExceptions) throws WebException {
-		CommonPersistenceLocal cp = Registry
-				.impl(CommonPersistenceProvider.class).getCommonPersistence();
-		boolean persistAsOneTransaction = persistOfflineTransformsAsOneTransaction();
-		try {
-			// save a copy of the records
-			{
-				String folderName = Ax.format("cli_%s_time_%s",
-						records.get(0).getClientInstanceId(), CommonUtils
-								.formatDate(new Date(), DateStyle.TIMESTAMP));
-				File offlineDir = DataFolderProvider.get()
-						.getChildFile("offlineTransforms-partial");
-				File saveDir = SEUtilities.getChildFile(offlineDir, folderName);
-				saveDir.mkdirs();
-				DeltaApplicationRecordSerializerImpl recordSerializer = new DeltaApplicationRecordSerializerImpl();
-				for (DeltaApplicationRecord record : records) {
-					int id = record.getRequestId();
-					long clientInstanceId = record.getClientInstanceId();
-					String fileName = String.format("%s_%s_ser.txt",
-							clientInstanceId, id);
-					File out = SEUtilities.getChildFile(saveDir, fileName);
-					ResourceUtilities.write(recordSerializer.write(record),
-							out);
-				}
-				logger.info("Wrote {} offline/bulk records to {}",
-						records.size(), saveDir);
-			}
-			Class<? extends ClientInstance> clientInstanceClass = AlcinaPersistentEntityImpl
-					.getImplementation(ClientInstance.class);
-			Class<? extends DomainTransformRequestPersistent> dtrClass = AlcinaPersistentEntityImpl
-					.getImplementation(DomainTransformRequestPersistent.class);
-			long currentClientInstanceId = 0;
-			int committed = 0;
-			LooseContext.getContext().pushWithKey(
-					TransformConflicts.CONTEXT_OFFLINE_SUPPORT,
-					new TransformConflictsFromOfflineSupport());
-			ReuseIUserHolder reuseIUserHolder = LooseContext
-					.get(CONTEXT_REUSE_IUSER_HOLDER);
-			IUser wrapperUser = reuseIUserHolder == null ? null
-					: reuseIUserHolder.iUser;
-			long idCounter = 1;
-			List<DomainTransformRequest> toCommit = new ArrayList<>();
-			for (int idx = 0; idx < records.size(); idx++) {
-				DeltaApplicationRecord deltaRecord = records.get(idx);
-				long clientInstanceId = deltaRecord.getClientInstanceId();
-				int requestId = deltaRecord.getRequestId();
-				DomainTransformRequest alreadyWritten = cp
-						.getItemByKeyValueKeyValue(dtrClass,
-								"clientInstance.id", clientInstanceId,
-								"requestId", requestId);
-				if (alreadyWritten != null) {
-					if (logger != null) {
-						logger.warn(Ax.format("Request [%s/%s] already written",
-								requestId, clientInstanceId));
-					}
-					continue;
-				}
-				DomainTransformRequest rq = DomainTransformRequest.fromString(
-						deltaRecord.getText(),
-						deltaRecord.getChunkUuidString());
-				ClientInstance clientInstance = clientInstanceClass
-						.newInstance();
-				clientInstance.setAuth(deltaRecord.getClientInstanceAuth());
-				clientInstance.setId(deltaRecord.getClientInstanceId());
-				rq.setClientInstance(clientInstance);
-				if (useWrapperUser == null) {
-					useWrapperUser = PermissionsManager.get().isAdmin()
-							&& LooseContext.getContext().getBoolean(
-									CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS)
-							&& deltaRecord.getUserId() != PermissionsManager
-									.get().getUserId();
-				}
-				DomainTransformLayerWrapper transformLayerWrapper;
-				// TODO - perhaps allow facility to persist multi-user
-				// transforms. but...perhaps better not (keep as is)
-				// NOTE - at the mo, if all are pushed as transactional, just
-				// the last clientInstance is used
-				rq.setRequestId(deltaRecord.getRequestId());
-				rq.setTag(deltaRecord.getTag());
-				// necessary because event id is used by transformpersister
-				// for
-				// pass control etc
-				for (DomainTransformEvent event : rq.getEvents()) {
-					event.setEventId(idCounter++);
-					event.setCommitType(CommitType.TO_STORAGE);
-				}
-				try {
-					if (useWrapperUser) {
-						if (!PermissionsManager.get().isAdmin()) {
-							try {
-								LooseContext.pushWithTrue(
-										ClientInstanceAuthenticationCache.CONTEXT_IDLE_TIMEOUT_DISABLED);
-								if (!cp.validateClientInstance(
-										deltaRecord.getClientInstanceId(),
-										deltaRecord.getClientInstanceAuth())) {
-									throw new RuntimeException(
-											"invalid wrapper authentication");
-								}
-							} finally {
-								LooseContext.pop();
-							}
-						}
-						if (wrapperUser != null && wrapperUser
-								.getId() == deltaRecord.getUserId()) {
-						} else {
-							wrapperUser = Registry
-									.impl(CommonPersistenceProvider.class)
-									.getCommonPersistence().getCleanedUserById(
-											deltaRecord.getUserId());
-							if (reuseIUserHolder != null) {
-								reuseIUserHolder.iUser = wrapperUser;
-							}
-						}
-						if (wrapperUser == null) {
-							// admin persistence
-							wrapperUser = PermissionsManager.get().getUser();
-						}
-						PermissionsManager.get().pushUser(wrapperUser,
-								LoginState.LOGGED_IN);
-					} else {
-						rq.getClientInstance()
-								.setUser(PermissionsManager.get().getUser());
-					}
-					boolean last = idx == records.size() - 1;
-					if (!persistAsOneTransaction || last) {
-						if (last) {
-							rq.getPriorRequestsWithoutResponse()
-									.addAll(toCommit);
-						}
-						transformLayerWrapper = ServletLayerTransforms.get()
-								.transform(rq, true, true, true);
-						ThreadlocalTransformManager.cast().resetTltm(null);
-						if (logger != null) {
-							logger.info(Ax.format(
-									"Request [%s::%s] : %s transforms written, %s ignored",
-									requestId, clientInstanceId,
-									transformLayerWrapper.response
-											.getTransformsProcessed(),
-									transformLayerWrapper.ignored));
-						}
-						if (throwPersistenceExceptions
-								&& !transformLayerWrapper.response
-										.getTransformExceptions().isEmpty()) {
-							throw (transformLayerWrapper.response
-									.getTransformExceptions().get(0));
-						}
-					} else {
-						toCommit.add(rq);
-					}
-				} finally {
-					if (useWrapperUser) {
-						PermissionsManager.get().popUser();
-					}
-				}
-				committed++;
-			}
-			return committed;
-		} catch (Exception e) {
-			e.printStackTrace();
-			logRpcException(e);
-			throw new WebException(e);
-		} finally {
-			LooseContext.getContext().pop();
-		}
+		return TransformCommit.persistBulkTransforms(uncommitted, logger, null,
+				false);
 	}
 
 	@Override
@@ -746,6 +562,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					() -> describeRpcRequest(f_rpcRequest, ""),
 					InternalMetricTypeAlcina.client,
 					Thread.currentThread().getName(), () -> true);
+			TransformCommit.prepareHttpRequestCommitContext(
+					PermissionsManager.get().getClientInstance().getId(),
+					ServletLayerUtils
+							.robustGetRemoteAddr(getThreadLocalRequest()));
 			Method method;
 			try {
 				method = this.getClass().getMethod(name,
@@ -792,7 +612,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			if (TransformManager.hasInstance()) {
 				if (CommonUtils.bv((Boolean) getThreadLocalRequest()
 						.getAttribute(PUSH_TRANSFORMS_AT_END_OF_REQUEST))) {
-					Sx.commit();
+					Transaction.commit();
 				}
 				ThreadlocalTransformManager.cast().resetTltm(null);
 				LooseContext.pop();
@@ -829,7 +649,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformRequestException {
 		try {
-			return ServletLayerTransforms.get().transform(request, false, false,
+			return TransformCommit.get().transform(request, false, false,
 					true).response;
 		} catch (DomainTransformRequestException dtre) {
 			throw dtre;
@@ -1057,8 +877,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected int nextTransformRequestId() {
-		return Registry.impl(ServletLayerTransforms.class)
-				.nextTransformRequestId();
+		return Registry.impl(TransformCommit.class).nextTransformRequestId();
 	}
 
 	protected void onAfterAlcinaAuthentication(String methodName) {
@@ -1082,10 +901,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected void onBeforeSpawnedThreadRun(Map properties) {
-	}
-
-	protected boolean persistOfflineTransformsAsOneTransaction() {
-		return true;
 	}
 
 	protected abstract void processValidLogin(LoginResponse lrb,
@@ -1312,19 +1127,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			onAfterSpawnedThreadRun(properties);
 			LooseContext.getContext().addTopicListener(
 					JobRegistry.TOPIC_JOB_STARTED, startListener);
-			ServletLayerTransforms.setPriority(TransformPriorityStd.Job);
+			TransformCommit.setPriority(TransformPriorityStd.Job);
 			performActionAndWait(this.action);
-		}
-	}
-
-	static class IsWrappedObjectDteFilter
-			implements CollectionFilter<DomainTransformEvent> {
-		Class clazz = AlcinaPersistentEntityImpl
-				.getImplementation(WrappedObject.class);
-
-		@Override
-		public boolean allow(DomainTransformEvent o) {
-			return o.getObjectClass() == clazz;
 		}
 	}
 }

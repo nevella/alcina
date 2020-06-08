@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
-import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 /**
@@ -76,7 +75,7 @@ public class MvccEntityTransactionalCollectionTest<IU extends Entity & IUser, IG
 							"non-committed-tx1: userClass.count()!=initialSize+1 :: "
 									+ Domain.stream(userClass).count());
 					tx1Latch1.countDown();
-					Sx.commit();
+					Transaction.commit();
 					tx1Latch2.countDown();
 					Preconditions.checkState(
 							Domain.stream(userClass).count() == initialSize + 1,

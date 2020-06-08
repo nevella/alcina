@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObjectVersions;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
-import cc.alcina.framework.servlet.Sx;
 
 /**
  * 
@@ -67,7 +66,7 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 							createdGroup.getMemberUsers().size() == initialSize
 									+ 1,
 							"not-committed-tx1: createdGroup.getMemberUsers().size()!=initialSize+1");
-					Sx.commit();
+					Transaction.commit();
 					tx1Latch2.countDown();
 				} catch (Exception e) {
 					notifyThreadException(e);
@@ -112,7 +111,7 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 							Ax.format(
 									"not-committed-tx2: createdGroup.getMemberUsers().size()!=initialSize+1 : ",
 									createdGroup.getMemberUsers().size()));
-					Sx.commit();
+					Transaction.commit();
 					tx2Latch2.countDown();
 				} catch (Exception e) {
 					notifyThreadException(e);
@@ -148,7 +147,7 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 									+ 1,
 							"not-committed-tx3: createdGroup.getMemberUsers().size()!=initialSize+1");
 					Transactions.pauseVacuum(true);
-					Sx.commit();
+					Transaction.commit();
 					Set<? extends IUser> shouldBeThree = createdGroup
 							.getMemberUsers();
 					Transactions.pauseVacuum(false);
@@ -196,7 +195,7 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 		createdUser2.setUserName(username2);
 		createdUser3.setUserName(username3);
 		initialSize = 0;
-		Sx.commit();
+		Transaction.commit();
 		Transaction.end();
 		Thread.sleep(100);
 		startTx1();

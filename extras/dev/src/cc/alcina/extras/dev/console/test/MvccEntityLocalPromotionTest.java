@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.servlet.Sx;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 /**
@@ -29,7 +29,7 @@ public class MvccEntityLocalPromotionTest<IU extends Entity & IUser, IG extends 
 		createdGroup.setGroupName("testgroup-" + suffix);
 		createdUser.setUserName("testuser-" + suffix);
 		createdGroup.domain().addToProperty("memberUsers", createdUser);
-		Sx.commit();
+		Transaction.commit();
 		Preconditions.checkState(Domain.find(createdUser) == createdUser);
 		IU testInstance = userClass.newInstance();
 		testInstance.setId(createdUser.getId());

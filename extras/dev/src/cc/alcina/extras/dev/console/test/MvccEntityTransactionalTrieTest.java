@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreDescriptor.TestSupport;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
-import cc.alcina.framework.servlet.Sx;
 
 /**
  * 
@@ -52,7 +51,7 @@ public class MvccEntityTransactionalTrieTest<IU extends Entity & IUser, IG exten
 					Preconditions.checkState(count == initialCount + 1,
 							"non-committed-tx1: index not visible from tx1");
 					tx1Latch1.countDown();
-					Sx.commit();
+					Transaction.commit();
 					tx1Latch2.countDown();
 					count = projection.getSubstringMatches(testKey).count();
 					Preconditions.checkState(count == initialCount + 1,

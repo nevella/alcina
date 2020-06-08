@@ -8,7 +8,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
-import cc.alcina.framework.entity.entityaccess.TransformPersister;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformPersister;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 
 /**

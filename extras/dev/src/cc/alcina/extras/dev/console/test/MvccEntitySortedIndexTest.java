@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreDescriptor.TestSupport;
-import cc.alcina.framework.servlet.Sx;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 
 /**
  * 
@@ -37,7 +37,7 @@ public class MvccEntitySortedIndexTest<IU extends Entity & IUser, IG extends Ent
 				.createReversedDateEntityInstance();
 		Preconditions.checkState(projection.getSince(date).size() == 1);
 		debug(projection.getSince(date));
-		Sx.commit();
+		Transaction.commit();
 		instance = Registry.impl(TestSupport.class)
 				.createReversedDateEntityInstance();
 		Preconditions.checkState(projection.getSince(date).size() == 2);
@@ -47,7 +47,7 @@ public class MvccEntitySortedIndexTest<IU extends Entity & IUser, IG extends Ent
 		Preconditions.checkState(projection.getSince(date).size() == 3
 				&& projection.getSince(date).get(0) == instance);
 		debug(projection.getSince(date));
-		Sx.commit();
+		Transaction.commit();
 		Preconditions.checkState(projection.getSince(date).size() == 3
 				&& projection.getSince(date).get(0) == instance);
 		debug(projection.getSince(date));

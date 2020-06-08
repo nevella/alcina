@@ -24,6 +24,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit;
 
 public class Transaction {
 	private static ThreadLocal<Transaction> threadLocalInstance = new ThreadLocal() {
@@ -363,6 +364,19 @@ public class Transaction {
 		Preconditions.checkState(getPhase() == TransactionPhase.VACUUM_BEGIN);
 		Transactions.get().vacuumComplete(vacuumableTransactions);
 		setPhase(TransactionPhase.VACUUM_ENDED);
+	}
+
+	public static int commitIfTransformCount(int n) {
+		if (TransformManager.get().getTransforms().size() > n) {
+			return commit();
+		} else {
+			return 0;
+		}
+	}
+
+	public static int commit() {
+		int transformCount = TransformCommit.pushTransformsAsRoot();
+		return transformCount;
 	}
 
 	/*

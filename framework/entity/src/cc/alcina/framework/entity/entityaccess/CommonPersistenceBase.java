@@ -92,10 +92,12 @@ import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
-import cc.alcina.framework.entity.entityaccess.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformCache;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformPersister.TransformPersisterToken;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformPersisterInPersistenceContext;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -197,7 +199,92 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
-	
+	/**
+	 * Note - parameter <em>fixWithPrecreate</em> will only be used in db
+	 * replays for dbs which are somehow missing transform events
+	 *
+	 * @param onlyIfOptimal
+	 */
+	public DetachedEntityCache cacheEntities(List<DomainTransformEvent> items,
+			boolean fixWithPrecreate, boolean onlyCacheIfWouldOptimiseCalls) {
+		Multiset<Class, Set<Long>> lkp = new Multiset<Class, Set<Long>>();
+		Multiset<Class, Set<Long>> creates = new Multiset<Class, Set<Long>>();
+		DetachedEntityCache cache = new DetachedEntityCache();
+		Date precreDate = new Date();
+		for (DomainTransformEvent dte : items) {
+			if (dte.getObjectId() != 0) {
+				lkp.add(dte.getObjectClass(), dte.getObjectId());
+				if (dte.getTransformType() == TransformType.CREATE_OBJECT) {
+					creates.add(dte.getObjectClass(), dte.getObjectId());
+				}
+			}
+			if (dte.getValueId() != 0) {
+				lkp.add(dte.getValueClass(), dte.getValueId());
+			}
+			if (CommonUtils.compareWithNullMinusOne(precreDate,
+					dte.getUtcDate()) > 0) {
+				precreDate = dte.getUtcDate();
+			}
+		}
+		for (Entry<Class, Set<Long>> entry : lkp.entrySet()) {
+			Class storageClass = null;
+			Class clazz = entry.getKey();
+			List<Long> ids = new ArrayList<Long>(entry.getValue());
+			if (clazz == null
+					|| (ids.size() < 2 && onlyCacheIfWouldOptimiseCalls)) {
+				continue; // former means early, incorrect data - can be removed
+				// re 'onlyCacheIfWouldOptimiseCalls': no point making a call if
+				// only
+				// one of class (for
+				// optimisation) - but must if we need the results for mixing
+				// back into domainStore
+			}
+			if (clazz.getAnnotation(javax.persistence.Entity.class) != null) {
+				storageClass = clazz;
+			}
+			if (WrapperPersistable.class.isAssignableFrom(clazz)) {
+				storageClass = getImplementation(WrappedObject.class);
+			}
+			if (storageClass != null) {
+				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
+					List<Long> idsSlice = ids.subList(i,
+							Math.min(ids.size(), i + PRECACHE_RQ_SIZE));
+					List<Entity> resultList = getEntityManager()
+							.createQuery(String.format("from %s where id in %s",
+									storageClass.getSimpleName(),
+									EntityUtils.longsToIdClause(idsSlice)))
+							.getResultList();
+					for (Entity entity : resultList) {
+						cache.put(entity);
+						if (fixWithPrecreate) {
+							entry.getValue().remove(entity.getId());
+						}
+					}
+				}
+				if (fixWithPrecreate && storageClass == clazz) {
+					entry.getValue().removeAll(creates.getAndEnsure(clazz));
+					for (Long lv : entry.getValue()) {
+						System.out.println(
+								String.format("tp: create object: %10s %s", lv,
+										clazz.getSimpleName()));
+						ThreadlocalTransformManager.get().newInstance(clazz, lv,
+								0);
+					}
+				}
+			}
+		}
+		return cache;
+	}
+
+	@Override
+	public void changeJdbcConnectionUrl(String newUrl) {
+		String fieldPath = "emf.sessionFactory.jdbcServices.connectionProvider.dataSource.cm.pool.mcf.connectionURL";
+		try {
+			ResourceUtilities.setField(getEntityManager(), fieldPath, newUrl);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
 	@Override
 	public void connectPermissionsManagerToLiveObjects() {
@@ -1035,7 +1122,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			TransformPersistenceToken token,
 			DomainTransformLayerWrapper wrapper) {
 		AppPersistenceBase.checkNotReadOnly();
-		new TransformPersisterIn().transformInPersistenceContext(
+		new TransformPersisterInPersistenceContext().transformInPersistenceContext(
 				transformPersisterToken, token, this, getEntityManager(),
 				wrapper);
 		return wrapper;
@@ -1336,83 +1423,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	protected IUser projectUserForClientInstance(IUser clonedUser) {
 		return new EntityUtils().detachedCloneIgnorePermissions(clonedUser,
 				null);
-	}
-
-	/**
-	 * Note - parameter <em>fixWithPrecreate</em> will only be used in db
-	 * replays for dbs which are somehow missing transform events
-	 *
-	 * @param onlyIfOptimal
-	 */
-	DetachedEntityCache cacheEntities(List<DomainTransformEvent> items,
-			boolean fixWithPrecreate, boolean onlyCacheIfWouldOptimiseCalls) {
-		Multiset<Class, Set<Long>> lkp = new Multiset<Class, Set<Long>>();
-		Multiset<Class, Set<Long>> creates = new Multiset<Class, Set<Long>>();
-		DetachedEntityCache cache = new DetachedEntityCache();
-		Date precreDate = new Date();
-		for (DomainTransformEvent dte : items) {
-			if (dte.getObjectId() != 0) {
-				lkp.add(dte.getObjectClass(), dte.getObjectId());
-				if (dte.getTransformType() == TransformType.CREATE_OBJECT) {
-					creates.add(dte.getObjectClass(), dte.getObjectId());
-				}
-			}
-			if (dte.getValueId() != 0) {
-				lkp.add(dte.getValueClass(), dte.getValueId());
-			}
-			if (CommonUtils.compareWithNullMinusOne(precreDate,
-					dte.getUtcDate()) > 0) {
-				precreDate = dte.getUtcDate();
-			}
-		}
-		for (Entry<Class, Set<Long>> entry : lkp.entrySet()) {
-			Class storageClass = null;
-			Class clazz = entry.getKey();
-			List<Long> ids = new ArrayList<Long>(entry.getValue());
-			if (clazz == null
-					|| (ids.size() < 2 && onlyCacheIfWouldOptimiseCalls)) {
-				continue; // former means early, incorrect data - can be removed
-				// re 'onlyCacheIfWouldOptimiseCalls': no point making a call if
-				// only
-				// one of class (for
-				// optimisation) - but must if we need the results for mixing
-				// back into domainStore
-			}
-			if (clazz.getAnnotation(javax.persistence.Entity.class) != null) {
-				storageClass = clazz;
-			}
-			if (WrapperPersistable.class.isAssignableFrom(clazz)) {
-				storageClass = getImplementation(WrappedObject.class);
-			}
-			if (storageClass != null) {
-				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
-					List<Long> idsSlice = ids.subList(i,
-							Math.min(ids.size(), i + PRECACHE_RQ_SIZE));
-					List<Entity> resultList = getEntityManager()
-							.createQuery(String.format("from %s where id in %s",
-									storageClass.getSimpleName(),
-									EntityUtils.longsToIdClause(idsSlice)))
-							.getResultList();
-					for (Entity entity : resultList) {
-						cache.put(entity);
-						if (fixWithPrecreate) {
-							entry.getValue().remove(entity.getId());
-						}
-					}
-				}
-				if (fixWithPrecreate && storageClass == clazz) {
-					entry.getValue().removeAll(creates.getAndEnsure(clazz));
-					for (Long lv : entry.getValue()) {
-						System.out.println(
-								String.format("tp: create object: %10s %s", lv,
-										clazz.getSimpleName()));
-						ThreadlocalTransformManager.get().newInstance(clazz, lv,
-								0);
-					}
-				}
-			}
-		}
-		return cache;
 	}
 
 	ClientInstanceAuthenticationCache
@@ -1747,16 +1757,5 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				iid.setLastAccessed(new Date(time));
 			}
 		}
-	}
-	@Override
-	public void changeJdbcConnectionUrl(String newUrl){
-		String fieldPath="emf.sessionFactory.jdbcServices.connectionProvider.dataSource.cm.pool.mcf.connectionURL";
-		try{
-			ResourceUtilities.setField(getEntityManager(),fieldPath,newUrl);
-		}
-		catch(Exception e){
-			throw new WrappedRuntimeException(e);
-		}
-		
 	}
 }

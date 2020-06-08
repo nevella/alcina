@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess;
+package cc.alcina.framework.entity.entityaccess.transforms;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -45,8 +45,10 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken.Pass;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
-import cc.alcina.framework.entity.entityaccess.TransformPersister.TransformPersisterToken;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
+import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 /**
@@ -55,14 +57,14 @@ import cc.alcina.framework.entity.logic.EntityLayerObjects;
  * @author nick@alcina.cc
  *
  */
-public class TransformPersisterIn {
-	public static final String CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM = TransformPersisterIn.class
+public class TransformPersisterInPersistenceContext {
+	public static final String CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM = TransformPersisterInPersistenceContext.class
 			.getName() + ".CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM";
 
-	public static final String CONTEXT_REPLAYING_FOR_LOGS = TransformPersisterIn.class
+	public static final String CONTEXT_REPLAYING_FOR_LOGS = TransformPersisterInPersistenceContext.class
 			.getName() + ".CONTEXT_REPLAYING_FOR_LOGS";
 
-	public static final String CONTEXT_LOG_TO_STDOUT = TransformPersisterIn.class
+	public static final String CONTEXT_LOG_TO_STDOUT = TransformPersisterInPersistenceContext.class
 			.getName() + ".CONTEXT_LOG_TO_STDOUT";
 
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS = 20

@@ -50,6 +50,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase.ServletClassMetadataCacheProvider;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.DbAppender;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
@@ -128,7 +129,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			getStatusNotifier().destroyed();
 			SEUtilities.appShutdown();
 			ResourceUtilities.appShutdown();
-			Registry.impl(ServletLayerTransforms.class).appShutdown();
+			Registry.impl(TransformCommit.class).appShutdown();
 			Registry.appShutdown();
 		} catch (Exception e) {
 			e.printStackTrace();

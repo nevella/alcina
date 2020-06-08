@@ -1,24 +1,14 @@
 package cc.alcina.framework.servlet.actionhandlers;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
-import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit;
 import cc.alcina.framework.gwt.client.action.DtrSimpleAdminPersistenceAction;
-import cc.alcina.framework.servlet.CommonRemoteServletProvider;
 import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
 
 @RegistryLocation(registryPoint = RemoteActionPerformer.class, targetClass = DtrSimpleAdminPersistenceAction.class)
@@ -27,92 +17,15 @@ public class DtrSimpleAdminPersistenceHandler
 	Logger slf4jLogger = LoggerFactory.getLogger(getClass());
 
 	public void commit(DeltaApplicationRecord dar) {
-		int chunkSize = ResourceUtilities.getInteger(
-				DtrSimpleAdminPersistenceHandler.class, "chunkSize", 5000);
-		commit(dar, chunkSize);
-	}
-
-	// Note that this must be called with a new client instance - since we're
-	// incrementing the request id counter. When the admin client calls it,
-	public void commit(DeltaApplicationRecord dar, int chunkSize) {
 		try {
 			jobStarted();
-			DomainTransformRequest fullRequest = DomainTransformRequest
-					.fromString(dar.getText(), dar.getChunkUuidString());
-			int size = fullRequest.getEvents().size();
-			boolean commitAsWrapperUser = ResourceUtilities
-					.is("commitAsWrapperUser");
-			if (size > chunkSize && dar.getChunkUuidString() != null) {
-				getJobTracker().setItemCount(size / chunkSize + 1);
-				int rqIdCounter = dar.getRequestId();
-				for (int idx = 0; idx < size;) {
-					IntPair range = null;
-					if (idx + chunkSize > size) {
-						range = new IntPair(idx, size);
-					} else {
-						int createSearchIdx = idx + chunkSize;
-						int maxCreateIdxDelta = size / 2;
-						for (; createSearchIdx < size
-								&& maxCreateIdxDelta > 0;) {
-							DomainTransformEvent evt = fullRequest.getEvents()
-									.get(createSearchIdx);
-							if (evt.getTransformType() == TransformType.CREATE_OBJECT) {
-								// i.e. trim the range to just before this
-								// create event
-								range = new IntPair(idx, createSearchIdx);
-								break;
-							}
-							if (evt.getTransformType() == TransformType.DELETE_OBJECT) {
-								// i.e. trim the range to just after this create
-								// event
-								range = new IntPair(idx, createSearchIdx + 1);
-								break;
-							}
-							createSearchIdx++;
-							maxCreateIdxDelta--;
-						}
-						if (range == null) {
-							range = new IntPair(idx, idx + chunkSize);
-						}
-					}
-					DomainTransformRequest chunkRequest = DomainTransformRequest
-							.createSubRequest(fullRequest, range);
-					// null UUID, we'll set it in a bit
-					DeltaApplicationRecord chunk = new DeltaApplicationRecord(0,
-							"", dar.getTimestamp(), dar.getUserId(),
-							dar.getClientInstanceId(), rqIdCounter++,
-							dar.getClientInstanceAuth(),
-							DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
-							dar.getProtocolVersion(), dar.getTag(),
-							chunkRequest.getChunkUuidString());
-					List<DomainTransformEvent> subList = fullRequest.getEvents()
-							.subList(range.i1, range.i2);
-					chunkRequest.setRequestId(chunk.getRequestId());
-					chunkRequest.setEvents(
-							new ArrayList<DomainTransformEvent>(subList));
-					chunk.setText(chunkRequest.toString());
-					Registry.impl(CommonRemoteServletProvider.class)
-							.getCommonRemoteServiceServlet()
-							.persistOfflineTransforms(Arrays.asList(
-									new DeltaApplicationRecord[] { chunk }),
-									slf4jLogger, commitAsWrapperUser, true);
-					String message = String.format(
-							"written chunk - writing chunk %s of %s", range,
-							size);
-					System.out.println(message);
-					updateJob(message);
-					idx = range.i2;
-				}
-			} else {
-				dar.setType(
-						DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
-				Registry.impl(CommonRemoteServletProvider.class)
-						.getCommonRemoteServiceServlet()
-						.persistOfflineTransforms(
-								Arrays.asList(
-										new DeltaApplicationRecord[] { dar }),
-								slf4jLogger, commitAsWrapperUser, true);
-			}
+			int chunkSize = ResourceUtilities.getInteger(
+					DtrSimpleAdminPersistenceHandler.class, "chunkSize", 5000);
+			TransformCommit.CommitContext commitContext = new TransformCommit.CommitContext(
+					slf4jLogger, getJobTracker(),
+					message -> updateJob(message));
+			TransformCommit.commitDeltaApplicationRecord(commitContext, dar,
+					chunkSize);
 			jobOk("OK");
 		} catch (Exception ex) {
 			jobError(ex);

@@ -57,7 +57,6 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.servlet.ServletLayerUtils;
-import cc.alcina.framework.servlet.Sx;
 
 @RegistryLocation(registryPoint = DevConsoleCommand.class)
 public abstract class DevConsoleCommand<C extends DevConsole> {
@@ -483,9 +482,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 								DevConsoleRunnable.CONTEXT_ACTION_RESULT);
 						if (ResourceUtilities.is(ServletLayerUtils.class,
 								"commitTestTransforms")) {
-							if (Sx.nonThreadedCommitPoint) {
-								Sx.commit();
-							}
 							// check for dangling transforms
 							Set<DomainTransformEvent> pendingTransforms = TransformManager
 									.get().getTransformsByCommitType(

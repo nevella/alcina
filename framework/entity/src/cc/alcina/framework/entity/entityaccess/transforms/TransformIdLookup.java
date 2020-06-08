@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cc.alcina.framework.entity.entityaccess;
+package cc.alcina.framework.entity.entityaccess.transforms;
 
 import java.util.TreeMap;
 

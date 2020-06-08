@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentE
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
-import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 /**
@@ -55,7 +54,7 @@ public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG exte
 					Preconditions.checkState(foundUser != null,
 							"non-committed-tx1: index not visible from tx1");
 					tx1Latch1.countDown();
-					Sx.commit();
+					Transaction.commit();
 					tx1Latch2.countDown();
 					foundUser = Domain.byProperty(userClass, "email", username);
 					Preconditions.checkState(foundUser != null,

@@ -18,9 +18,9 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.entityaccess.KnownNodePersistentDomainStore;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.servlet.knowns.Knowns.ValueType;
-import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
 public class KnownsPersistenceDomainStore implements KnownsPersistence {
 
@@ -84,7 +84,7 @@ public class KnownsPersistenceDomainStore implements KnownsPersistence {
                 }
                 persistent.setProperties(properties.toPropertyString());
             }
-            DomainTransformLayerWrapper wrapper = ServletLayerTransforms
+            DomainTransformLayerWrapper wrapper = TransformCommit
                     .pushTransforms(null, true, true);
             replaceWithPersistent.stream().forEach(n -> {
                 EntityLocator entityLocator = wrapper.locatorMap

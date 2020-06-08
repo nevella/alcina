@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess;
+package cc.alcina.framework.entity.entityaccess.transforms;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 

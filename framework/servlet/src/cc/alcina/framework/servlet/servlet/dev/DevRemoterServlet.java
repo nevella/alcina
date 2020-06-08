@@ -28,12 +28,12 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.entityaccess.TransformPersisterIn;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformPersisterInPersistenceContext;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
-import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
 public abstract class DevRemoterServlet extends HttpServlet {
 	public static final String DEV_REMOTER_PARAMS = "devRemoterParams";
@@ -63,11 +63,11 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			LooseContext.set(KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER,
 					true);
 			LooseContext.setTrue(
-					TransformPersisterIn.CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM);
+					TransformPersisterInPersistenceContext.CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM);
 			Transaction.begin();
 			Transaction.current().toNoActiveTransaction();
 			LooseContext.setTrue(
-					ServletLayerTransforms.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
+					TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
 			if (!ResourceUtilities.getBoolean(DevRemoterServlet.class,
 					"enabled")) {
 				throw new Exception("DevRemoterServlet disabled");
@@ -148,7 +148,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
 									clientInstance.getId());
 					token.getRequest().setClientInstance(clientInstance);
 					EntityLocatorMap locatorMap = Registry
-							.impl(ServletLayerTransforms.class)
+							.impl(TransformCommit.class)
 							.getLocatorMapForClient(token.getRequest());
 					token.setLocatorMap(locatorMap);
 					token.getRequest().setRequestId(

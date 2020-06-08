@@ -42,6 +42,8 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	public static final String METRIC_LOGGER_PATTERN = "[%c{1}:%X{threadId}] %m%n";
 
+	private static boolean testServer;
+
 	public static void checkNotReadOnly() throws ReadOnlyException {
 		if (isInstanceReadOnly()) {
 			throw new ReadOnlyException(System.getProperty(INSTANCE_READ_ONLY));
@@ -52,8 +54,14 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		return Boolean.getBoolean(INSTANCE_READ_ONLY);
 	}
 
+	// dev console test mode
 	public static boolean isTest() {
 		return Boolean.getBoolean(PERSISTENCE_TEST);
+	}
+
+	// true for app server test mode, devconsole test mode
+	public static boolean isTestServer() {
+		return testServer;
 	}
 
 	public static void setInstanceReadOnly(boolean readonly) {
@@ -63,6 +71,10 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	public static void setTest() {
 		System.setProperty(PERSISTENCE_TEST, String.valueOf(true));
 		Ax.setTest(true);
+	}
+
+	public static void setTestServer(boolean testServer) {
+		AppPersistenceBase.testServer = testServer;
 	}
 
 	protected CommonPersistenceLocal commonPersistence;

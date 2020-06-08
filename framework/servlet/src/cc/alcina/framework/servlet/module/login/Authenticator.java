@@ -21,11 +21,11 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.SessionHelper;
-import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.module.login.LoginRequestHandler.TwoFactorAuthResult;
 
@@ -74,7 +74,7 @@ public abstract class Authenticator<U extends Entity & IUser> {
 					httpServletRequest, httpServletResponse, user);
 			if (user instanceof UserWith2FA) {
 				((UserWith2FA) user).setHasSuccessfullyLoggedIn(true);
-				Sx.commit();
+				Transaction.commit();
 			}
 		}
 		if (httpServletRequest != null) {
@@ -170,7 +170,7 @@ public abstract class Authenticator<U extends Entity & IUser> {
 			((UserWith2FA) user).setAuthenticationSecret(
 					new TwoFactorAuthentication().generateSecret());
 		}
-		Sx.commit();
+		Transaction.commit();
 		if (!LooseContext.is(CONTEXT_BYPASS_PASSWORD_CHECK)
 				&& !PasswordEncryptionSupport.get().check(
 						loginModel.loginBean.getPassword(), user.getSalt(),

@@ -14,7 +14,6 @@ import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
-import cc.alcina.framework.servlet.Sx;
 
 /**
  * 
@@ -77,7 +76,7 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 							!createdGroup.containsUser(createdUser2),
 							"post-delete: referenced group contains user2");
 					tx1Latch1.countDown();
-					Sx.commit();
+					Transaction.commit();
 					tx1Latch2.countDown();
 					Preconditions.checkState(
 							Domain.stream(userClass).count() == initialSize - 1,
@@ -145,7 +144,7 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 		createdGroup.setGroupName("testgroup-" + suffix);
 		createdUser.setUserName(username);
 		createdGroup.domain().addToProperty("memberUsers", createdUser);
-		Sx.commit();
+		Transaction.commit();
 //		HashSetExtension.debugInstance = (HashSetExtension) createdGroup
 //				.getMemberUsers();
 		initialSize = Domain.stream(userClass).count();

@@ -11,8 +11,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentE
 import cc.alcina.framework.common.client.logic.domaintransform.LoginAttempt;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.servlet.ServletLayerUtils;
-import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 public class LoginAttempts {
@@ -60,6 +60,6 @@ public class LoginAttempts {
 		loginAttempt.setSuccess(loginModel.loginResponse.isOk());
 		loginAttempt.setUserAgent(ServletLayerUtils.getUserAgent(
 				CommonRemoteServiceServlet.getContextThreadLocalRequest()));
-		Sx.commit();
+		Transaction.commit();
 	}
 }

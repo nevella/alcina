@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess;
+package cc.alcina.framework.entity.entityaccess.transforms;
 
 import java.io.Serializable;
 
@@ -7,6 +7,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -15,7 +17,8 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken.Pass;
-import cc.alcina.framework.entity.entityaccess.TransformPersisterIn.DeliberatelyThrownWrapperException;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.entityaccess.transforms.TransformPersisterInPersistenceContext.DeliberatelyThrownWrapperException;
 
 public class TransformPersister {
 	private static final String TOPIC_PERSISTING_TRANSFORMS = TransformPersister.class
@@ -38,19 +41,12 @@ public class TransformPersister {
 				listener, add);
 	}
 
-	public static class TransformPersisterToken implements Serializable {
-		static final transient long serialVersionUID = 1;
-
-		long determineExceptionDetailPassStartTime = 0;
-
-		int determinedExceptionCount;
-	}
-
 	public DomainTransformLayerWrapper
 			transformExPersistenceContext(TransformPersistenceToken token) {
 		try {
 			LooseContext.pushWithTrue(
 					DTRProtocolSerializer.CONTEXT_EXCEPTION_DEBUG);
+			TransformPersisterPeer.get().setupCustomTransformContent();
 			TransformPersisterToken persisterToken = new TransformPersisterToken();
 			DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
 			boolean perform = true;
@@ -98,5 +94,24 @@ public class TransformPersister {
 		} finally {
 			LooseContext.pop();
 		}
+	}
+
+	@RegistryLocation(registryPoint = TransformPersisterPeer.class, implementationType = ImplementationType.INSTANCE)
+	public static class TransformPersisterPeer {
+		public static TransformPersister.TransformPersisterPeer get() {
+			return Registry
+					.impl(TransformPersister.TransformPersisterPeer.class);
+		}
+
+		public void setupCustomTransformContent() {
+		}
+	}
+
+	public static class TransformPersisterToken implements Serializable {
+		static final transient long serialVersionUID = 1;
+
+		long determineExceptionDetailPassStartTime = 0;
+
+		int determinedExceptionCount;
 	}
 }

@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
-import cc.alcina.framework.servlet.Sx;
 
 /**
  * 
@@ -81,7 +80,7 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 									- deletedCount,
 							"non-committed-tx1: count not equal from tx1");
 					tx1Latch1.countDown();
-					Sx.commit();
+					Transaction.commit();
 					tx1Latch2.countDown();
 					Preconditions.checkState(
 							getUsersSize() == initialCount + addedCount
