@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.entityaccess.KnownNodePersistentDomainStore;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.servlet.knowns.Knowns.ValueType;
 

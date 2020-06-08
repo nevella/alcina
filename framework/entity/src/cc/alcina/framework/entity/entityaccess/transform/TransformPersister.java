@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.transforms;
+package cc.alcina.framework.entity.entityaccess.transform;
 
 import java.io.Serializable;
 
@@ -18,7 +18,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken.Pass;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformPersisterInPersistenceContext.DeliberatelyThrownWrapperException;
+import cc.alcina.framework.entity.entityaccess.transform.TransformPersisterInPersistenceContext.DeliberatelyThrownWrapperException;
 
 public class TransformPersister {
 	private static final String TOPIC_PERSISTING_TRANSFORMS = TransformPersister.class

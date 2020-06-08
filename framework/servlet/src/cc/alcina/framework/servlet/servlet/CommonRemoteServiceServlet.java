@@ -84,7 +84,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.Doma
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
-import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
@@ -115,11 +114,12 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetricData;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit.TransformPriorityStd;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit.TransformPriorityStd;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
+import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
@@ -155,13 +155,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
 
 	public static final String THRD_LOCAL_RPC_PAYLOAD = "THRD_LOCAL_RPC_PAYLOAD";
-
-	public static final String CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS = CommonRemoteServiceServlet.class
-			.getName() + "."
-			+ "CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS";
-
-	public static final String CONTEXT_REUSE_IUSER_HOLDER = CommonRemoteServiceServlet.class
-			.getName() + ".CONTEXT_REUSE_IUSER_HOLDER";
 
 	public static final String CONTEXT_RPC_USER_ID = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_RPC_USER_ID";
@@ -564,7 +557,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					Thread.currentThread().getName(), () -> true);
 			TransformCommit.prepareHttpRequestCommitContext(
 					PermissionsManager.get().getClientInstance().getId(),
-					ServletLayerUtils
+					PermissionsManager.get().getUserId(), ServletLayerUtils
 							.robustGetRemoteAddr(getThreadLocalRequest()));
 			Method method;
 			try {
@@ -1079,10 +1072,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		protected boolean offerNullSuggestion() {
 			return true;
 		}
-	}
-
-	public static class ReuseIUserHolder {
-		public IUser iUser;
 	}
 
 	class ActionLauncherAsync extends AlcinaChildRunnable {

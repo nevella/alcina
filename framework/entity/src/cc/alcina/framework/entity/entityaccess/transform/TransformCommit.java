@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.transforms;
+package cc.alcina.framework.entity.entityaccess.transform;
 
 import java.io.File;
 import java.sql.Timestamp;
@@ -80,8 +80,6 @@ import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
-import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
-import cc.alcina.framework.servlet.servlet.TransformPersistenceQueue;
 
 /**
  * 
@@ -90,7 +88,7 @@ import cc.alcina.framework.servlet.servlet.TransformPersistenceQueue;
  */
 @RegistryLocation(registryPoint = TransformCommit.class, implementationType = ImplementationType.SINGLETON)
 public class TransformCommit {
-	private static final String TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION = CommonRemoteServiceServlet.class
+	private static final String TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION = TransformCommit.class
 			.getName() + ".TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION";
 
 	public static final transient String CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH = TransformCommit.class
@@ -104,6 +102,13 @@ public class TransformCommit {
 
 	private static final transient String CONTEXT_HTTP_COMMIT_CONTEXT = TransformCommit.class
 			.getName() + ".CONTEXT_HTTP_COMMIT_CONTEXT";
+
+	public static final String CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS = TransformCommit.class
+			.getName() + "."
+			+ "CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS";
+
+	public static final String CONTEXT_REUSE_IUSER_HOLDER = TransformCommit.class
+			.getName() + ".CONTEXT_REUSE_IUSER_HOLDER";
 
 	// Note that this must be called with a new client instance - since we're
 	// incrementing the request id counter. When the admin client calls it,
@@ -209,6 +214,14 @@ public class TransformCommit {
 				.getPriority() >= TransformPriorityStd.User.getPriority());
 	}
 
+	public static boolean isCommitTestTransforms() {
+		return ResourceUtilities.is("commitTestTransforms");
+	}
+
+	public static boolean isTestTransformCascade() {
+		return ResourceUtilities.is("testTransformCascade");
+	}
+
 	// TODO - this should be renamed to "persist bulk transforms" really, since
 	// also used for large admin commits
 	public static int persistBulkTransforms(
@@ -252,8 +265,8 @@ public class TransformCommit {
 			LooseContext.getContext().pushWithKey(
 					TransformConflicts.CONTEXT_OFFLINE_SUPPORT,
 					new TransformConflictsFromOfflineSupport());
-			CommonRemoteServiceServlet.ReuseIUserHolder reuseIUserHolder = LooseContext
-					.get(CommonRemoteServiceServlet.CONTEXT_REUSE_IUSER_HOLDER);
+			ReuseIUserHolder reuseIUserHolder = LooseContext
+					.get(TransformCommit.CONTEXT_REUSE_IUSER_HOLDER);
 			IUser wrapperUser = reuseIUserHolder == null ? null
 					: reuseIUserHolder.iUser;
 			long idCounter = 1;
@@ -284,7 +297,7 @@ public class TransformCommit {
 				if (useWrapperUser == null) {
 					useWrapperUser = PermissionsManager.get().isAdmin()
 							&& LooseContext.getContext().getBoolean(
-									CommonRemoteServiceServlet.CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS)
+									TransformCommit.CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS)
 							&& deltaRecord.getUserId() != PermissionsManager
 									.get().getUserId();
 				}
@@ -382,9 +395,9 @@ public class TransformCommit {
 	}
 
 	public static void prepareHttpRequestCommitContext(long clientInstanceId,
-			String committerIpAddress) {
+			long userId, String committerIpAddress) {
 		LooseContext.set(CONTEXT_HTTP_COMMIT_CONTEXT,
-				new HttpRequestCommitContext(clientInstanceId,
+				new HttpRequestCommitContext(clientInstanceId, userId,
 						committerIpAddress));
 	}
 
@@ -399,8 +412,7 @@ public class TransformCommit {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			return new DomainTransformLayerWrapper();
 		}
-		if (Ax.isTest() && !ResourceUtilities.is(TransformCommit.class,
-				"testTransformCascade")) {
+		if (Ax.isTest() && !isTestTransformCascade()) {
 			return new DomainTransformLayerWrapper();
 		}
 		if (Ax.isTest() && EntityLayerObjects.get()
@@ -466,8 +478,8 @@ public class TransformCommit {
 	private static int pushTransforms(boolean asRoot) {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
-		if (AppPersistenceBase.isTest() && !ResourceUtilities
-				.is(TransformCommit.class, "testTransformCascade")) {
+		if (AppPersistenceBase.isTest()
+				&& !TransformCommit.isTestTransformCascade()) {
 			if (!LooseContext
 					.is(TransformCommit.CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH)) {
 				TransformManager.get().clearTransforms();
@@ -603,8 +615,11 @@ public class TransformCommit {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, map, Registry.impl(TransformLoggingPolicy.class),
 					false, false, false, logger, true);
-			persistenceToken.setOriginatingUserId(LooseContext
-					.get(CommonRemoteServiceServlet.CONTEXT_RPC_USER_ID));
+			HttpRequestCommitContext httpRequestCommitContext = LooseContext
+					.ensure(CONTEXT_HTTP_COMMIT_CONTEXT,
+							() -> new HttpRequestCommitContext(0, 0, null));
+			persistenceToken
+					.setOriginatingUserId(httpRequestCommitContext.userId);
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
@@ -628,7 +643,7 @@ public class TransformCommit {
 			throws Exception {
 		HttpRequestCommitContext httpRequestCommitContext = LooseContext.ensure(
 				CONTEXT_HTTP_COMMIT_CONTEXT,
-				() -> new HttpRequestCommitContext(0, null));
+				() -> new HttpRequestCommitContext(0, 0, null));
 		final ClientInstance commitInstance = Registry
 				.impl(CommonPersistenceProvider.class).getCommonPersistence()
 				.createClientInstance(Ax.format(
@@ -859,6 +874,10 @@ public class TransformCommit {
 		}
 	}
 
+	public static class ReuseIUserHolder {
+		public IUser iUser;
+	}
+
 	public interface TransformPriority {
 		int getPriority();
 	}
@@ -891,14 +910,18 @@ public class TransformCommit {
 		}
 	}
 
+	// FIXME - sessioncontext - this should all probably go there
 	private static class HttpRequestCommitContext {
 		private long clientInstanceId;
 
 		private String committerIpAddress;
 
-		public HttpRequestCommitContext(long clientInstanceId,
+		private long userId;
+
+		public HttpRequestCommitContext(long clientInstanceId, long userId,
 				String committerIpAddress) {
 			this.clientInstanceId = clientInstanceId;
+			this.userId = userId;
 			this.committerIpAddress = committerIpAddress;
 		}
 	}

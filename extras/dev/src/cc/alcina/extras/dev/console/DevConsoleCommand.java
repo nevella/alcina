@@ -55,8 +55,8 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.util.ShellWrapper;
-import cc.alcina.framework.servlet.ServletLayerUtils;
 
 @RegistryLocation(registryPoint = DevConsoleCommand.class)
 public abstract class DevConsoleCommand<C extends DevConsole> {
@@ -480,8 +480,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						runnable.run();
 						String msg = LooseContext.getString(
 								DevConsoleRunnable.CONTEXT_ACTION_RESULT);
-						if (ResourceUtilities.is(ServletLayerUtils.class,
-								"commitTestTransforms")) {
+						if (TransformCommit.isCommitTestTransforms()) {
 							// check for dangling transforms
 							Set<DomainTransformEvent> pendingTransforms = TransformManager
 									.get().getTransformsByCommitType(

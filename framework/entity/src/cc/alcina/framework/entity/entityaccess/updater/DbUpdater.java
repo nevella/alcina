@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.updaters;
+package cc.alcina.framework.entity.entityaccess.updater;
 
 import java.sql.Connection;
 import java.sql.Statement;

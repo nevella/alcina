@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.transforms;
+package cc.alcina.framework.entity.entityaccess.transform;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -48,7 +48,7 @@ import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransfo
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformPersister.TransformPersisterToken;
+import cc.alcina.framework.entity.entityaccess.transform.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 /**

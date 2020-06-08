@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.entityaccess.RollingDataItem;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 
 //TODO - lowpri - formal support for "go back a bit" in transform sequence - probably using transform utc date
 public abstract class RollingData<K extends Comparable, V> {

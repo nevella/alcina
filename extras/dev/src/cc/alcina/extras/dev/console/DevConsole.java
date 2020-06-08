@@ -87,15 +87,15 @@ import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
+import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.ShellWrapper;
+import cc.alcina.framework.entity.util.AlcinaChildRunnable.AlcinaChildContextRunner;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
-import cc.alcina.framework.servlet.ServletLayerUtils;
-import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable;
-import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable.AlcinaChildContextRunner;
 
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
 		implements ClipboardOwner {
@@ -906,8 +906,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 						new String[] { "WEB-INF/classes", "WEB-INF/lib" }))
 								.getClasses();
 		ClassrefScanner classrefScanner = new ClassrefScanner();
-		if (ResourceUtilities.not(ServletLayerUtils.class,
-				"commitTestTransforms")) {
+		if (TransformCommit.isCommitTestTransforms()) {
 			classrefScanner.noPersistence();
 		}
 		classrefScanner.scan(cache);

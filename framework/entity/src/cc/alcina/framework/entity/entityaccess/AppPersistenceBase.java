@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
-import cc.alcina.framework.entity.entityaccess.updaters.DbUpdateRunner;
+import cc.alcina.framework.entity.entityaccess.updater.DbUpdateRunner;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;

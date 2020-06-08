@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.servlet;
+package cc.alcina.framework.entity.util;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,6 +18,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 
 public abstract class AlcinaChildRunnable implements Runnable {
 	public static void launchWithCurrentThreadContext(String threadName,
@@ -48,18 +49,38 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		}
 	}
 
-	// FIXME.mvcc.2 - try to avoid this - declarative jobs and/or
+	// FIXME.mvcc.2 - try to avoid this for jobs - declarative jobs and/or
 	// alcinachildrunnables
 	public static void runInTransaction(String threadName,
 			ThrowingRunnable runnable) {
+		runInTransaction(threadName, runnable, false, true);
+	}
+
+	public static void runInTransaction(String threadName,
+			ThrowingRunnable runnable, boolean asRoot,
+			boolean throwExceptions) {
 		AlcinaChildRunnable wrappingRunnable = new AlcinaChildRunnable(
 				threadName) {
 			@Override
 			protected void run0() throws Exception {
-				runnable.run();
+				if (asRoot) {
+					ThreadedPermissionsManager.cast()
+							.runThrowingWithPushedSystemUserIfNeeded(
+									() -> runnable.run());
+				} else {
+					runnable.run();
+				}
 			}
 		};
-		wrappingRunnable.run();
+		try {
+			wrappingRunnable.run();
+		} catch (RuntimeException e) {
+			if (throwExceptions) {
+				throw e;
+			} else {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public static void runInTransaction(ThrowingRunnable runnable) {

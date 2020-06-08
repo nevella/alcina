@@ -4,7 +4,7 @@ import java.util.ConcurrentModificationException;
 
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 
 public abstract class RerunOnTransformDelta {
 	public void run() throws Exception {

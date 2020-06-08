@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.transforms;
+package cc.alcina.framework.entity.entityaccess.transform;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;

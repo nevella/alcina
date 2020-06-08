@@ -42,8 +42,8 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersiste
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformCache;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformPersister.TransformPersisterToken;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCache;
+import cc.alcina.framework.entity.entityaccess.transform.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;

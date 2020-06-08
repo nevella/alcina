@@ -99,7 +99,7 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainSt
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformPersister;
+import cc.alcina.framework.entity.entityaccess.transform.TransformPersister;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjections;
 

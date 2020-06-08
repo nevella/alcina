@@ -30,8 +30,8 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformPersisterInPersistenceContext;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
+import cc.alcina.framework.entity.entityaccess.transform.TransformPersisterInPersistenceContext;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
 

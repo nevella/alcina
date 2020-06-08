@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.transforms;
+package cc.alcina.framework.entity.entityaccess.transform;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,10 +11,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformCommit.TransformPriorityStd;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit.TransformPriorityStd;
+import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
-import cc.alcina.framework.servlet.servlet.AlcinaChildRunnable;
 
 class BackendTransformQueue {
 	private AtEndOfEventSeriesTimer persistTimer;
@@ -85,14 +84,7 @@ class BackendTransformQueue {
 
 	void persistQueue() {
 		AlcinaChildRunnable.runInTransaction("backend-transform-persist",
-				() -> ThreadedPermissionsManager.cast()
-						.runWithPushedSystemUserIfNeeded(() -> {
-							try {
-								persistQueue0();
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-						}));
+				() -> persistQueue0(), true, false);
 	}
 
 	void start() {

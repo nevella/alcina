@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.updaters;
+package cc.alcina.framework.entity.entityaccess.updater;
 
 import java.util.Base64;
 import java.util.List;
@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.entityaccess.transforms.TransformPersisterViaServletLayerPersistence;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
@@ -90,8 +90,7 @@ public abstract class KeyValuePersistentBase<T extends KeyValuePersistentBase>
 
 	private static void persist() {
 		if (!LooseContext.is(CONTEXT_NO_COMMIT)) {
-			TransformPersisterViaServletLayerPersistence.get()
-					.persistTransforms(false);
+			Transaction.commit();
 		}
 	}
 
