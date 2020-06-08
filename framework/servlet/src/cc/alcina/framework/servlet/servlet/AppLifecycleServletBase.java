@@ -53,7 +53,7 @@ import cc.alcina.framework.entity.entityaccess.AppPersistenceBase.ServletClassMe
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.DbAppender;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
-import cc.alcina.framework.entity.logic.AlcinaServerConfig;
+import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
@@ -219,9 +219,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void initBootstrapRegistry() {
-		AlcinaServerConfig config = new AlcinaServerConfig();
+		AlcinaWebappConfig config = new AlcinaWebappConfig();
 		config.setStartDate(new Date());
-		Registry.registerSingleton(AlcinaServerConfig.class, config);
+		Registry.registerSingleton(AlcinaWebappConfig.class, config);
 	}
 
 	protected void initCluster() {
@@ -282,7 +282,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			logger.removeAllAppenders();
 			Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
 			Appender appender = new SafeConsoleAppender(layout);
-			String mainLoggerAppenderName = AlcinaServerConfig.MAIN_LOGGER_APPENDER;
+			String mainLoggerAppenderName = AlcinaWebappConfig.MAIN_LOGGER_APPENDER;
 			appender.setName(mainLoggerAppenderName);
 			logger.addAppender(appender);
 		}
@@ -332,7 +332,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			ServletLayerObjects.get().setMetricLogger(metricLogger);
 			EntityLayerObjects.get().setMetricLogger(metricLogger);
 		}
-		String databaseEventLoggerName = AlcinaServerConfig.get()
+		String databaseEventLoggerName = AlcinaWebappConfig.get()
 				.getDatabaseEventLoggerName();
 		if (EntityLayerObjects.get().getPersistentLogger() == null) {
 			Logger dbLogger = Logger.getLogger(databaseEventLoggerName);
@@ -351,7 +351,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void initRegistry() {
 		Logger logger = Logger
-				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
+				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
 		try {
 			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
 			ClassMetadataCache classes = classMetadataCacheProvider
@@ -373,7 +373,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void initServices() {
 		Logger logger = Logger
-				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
+				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
 		String key = "server layer init";
 		MetricLogging.get().start(key);
 		initCommonServices();
@@ -406,7 +406,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			ResourceUtilities.registerCustomProperties(new ByteArrayInputStream(
 					loggerLevels.getBytes(StandardCharsets.UTF_8)));
 			File propertiesFile = new File(
-					AlcinaServerConfig.get().getCustomPropertiesFilePath());
+					AlcinaWebappConfig.get().getCustomPropertiesFilePath());
 			if (propertiesFile.exists()) {
 				FileInputStream fis = new FileInputStream(propertiesFile);
 				ResourceUtilities.registerCustomProperties(fis);

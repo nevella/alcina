@@ -1902,8 +1902,15 @@ public class DomainStore implements IDomainStore {
 					.apply(event.getObjectLocalId());
 			if (localReplacement != null) {
 				localReplacement.setId(event.getObjectId());
-				// this has to happen after setId, since that will create the
-				// (local) version in the cache
+				// this has to be done, and has to happen after setId, since the
+				// very act of setId will put the
+				// (local) version into the cache in tx phase
+				// TO_DOMAIN_COMMITTED by Transactions.resolve(write==true)
+				//
+				// only local-id objects created by this webapp client instance
+				// will ever be put into the store cache in this phase - thus
+				// preserving the "local ids don't collied because they're on
+				// different transactio ns" logic of the cache
 				store.getCache().removeLocal(localReplacement);
 				store.getCache().put(localReplacement);
 				TransformManager.registerLocalObjectPromotion(localReplacement);

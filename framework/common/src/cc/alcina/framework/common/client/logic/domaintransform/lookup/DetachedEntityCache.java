@@ -32,7 +32,6 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -46,9 +45,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	protected Map<Class, Map<Long, Entity>> domain;
 
-	protected Map<Class, Map<Long, Entity>> local2;
-
-	protected Map<ClientInstance, Map<Class, Map<Long, Entity>>> local;
+	protected Map<Class, Map<Long, Entity>> local;
 
 	private boolean throwOnExisting;
 
@@ -298,7 +295,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		// local.put(clientInstance, perClientInstance);
 		// return perClientInstance;
 		// }
-		return local2;
+		return local;
 	}
 
 	private Map<Long, Entity> local(Class clazz, boolean ensure) {
@@ -327,7 +324,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	protected void createTopMaps() {
 		domain = new LinkedHashMap<>();
 		local = new LinkedHashMap<>();
-		local2 = new LinkedHashMap<>();
+		local = new LinkedHashMap<>();
 	}
 
 	protected void ensureMap(Class clazz) {

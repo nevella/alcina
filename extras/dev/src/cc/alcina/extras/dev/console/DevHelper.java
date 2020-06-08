@@ -66,7 +66,7 @@ import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.TestPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
-import cc.alcina.framework.entity.logic.AlcinaServerConfig;
+import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
@@ -264,9 +264,9 @@ public abstract class DevHelper {
 
     public void initLightweightServices() {
         AppPersistenceBase.setTest();
-        AlcinaServerConfig config = new AlcinaServerConfig();
+        AlcinaWebappConfig config = new AlcinaWebappConfig();
         config.setStartDate(new Date());
-        Registry.registerSingleton(AlcinaServerConfig.class, config);
+        Registry.registerSingleton(AlcinaWebappConfig.class, config);
         registerNames(config);
         initDataFolder();
         Registry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
@@ -502,7 +502,7 @@ public abstract class DevHelper {
         PermissionsManager.get().setUser(user);
     }
 
-    protected abstract void registerNames(AlcinaServerConfig config);
+    protected abstract void registerNames(AlcinaWebappConfig config);
 
     public static class ConsolePrompter implements StringPrompter {
         @Override

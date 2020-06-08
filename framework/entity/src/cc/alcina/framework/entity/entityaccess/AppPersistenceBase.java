@@ -28,7 +28,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.entityaccess.updaters.DbUpdateRunner;
-import cc.alcina.framework.entity.logic.AlcinaServerConfig;
+import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
@@ -170,7 +170,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 			// warmupCaches();
 			new DbUpdateRunner().run(getEntityManager(), preCacheWarmup);
 		} catch (Exception e) {
-			Logger.getLogger(AlcinaServerConfig.get().getMainLoggerName())
+			Logger.getLogger(AlcinaWebappConfig.get().getMainLoggerName())
 					.warn("", e);
 			e.printStackTrace();
 			throw e;
@@ -294,7 +294,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	protected void scanClassRefs() {
 		Logger mainLogger = Logger
-				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
+				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
 		try {
 			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
 			ClassrefScanner classrefScanner = new ClassrefScanner();
@@ -312,7 +312,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	protected void scanRegistry() {
 		Logger mainLogger = Logger
-				.getLogger(AlcinaServerConfig.get().getMainLoggerName());
+				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
 		try {
 			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
 			new RegistryScanner().scan(getClassInfo(mainLogger),

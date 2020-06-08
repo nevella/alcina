@@ -4,11 +4,11 @@ import java.util.Date;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
-public class AlcinaServerConfig {
+public class AlcinaWebappConfig {
 	public static final String MAIN_LOGGER_APPENDER = "MAIN_LOGGER_APPENDER";
 
-	public static AlcinaServerConfig get() {
-		return Registry.impl(AlcinaServerConfig.class);
+	public static AlcinaWebappConfig get() {
+		return Registry.impl(AlcinaWebappConfig.class);
 	}
 
 	private String mainLoggerName;

@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
@@ -207,8 +206,7 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 		@Override
 		protected void createTopMaps() {
 			domain = new LinkedHashMap<>();
-			local = new ConcurrentHashMap<>(100);
-			local2 = new LinkedHashMap<>();
+			local = new LinkedHashMap<>();
 		}
 
 		@Override

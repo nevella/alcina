@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
-import cc.alcina.framework.entity.logic.AlcinaServerConfig;
+import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
@@ -61,7 +61,7 @@ public class ClassMetaServer {
         logger.removeAllAppenders();
         Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
         Appender appender = new ConsoleAppender(layout);
-        String mainLoggerAppenderName = AlcinaServerConfig.MAIN_LOGGER_APPENDER;
+        String mainLoggerAppenderName = AlcinaWebappConfig.MAIN_LOGGER_APPENDER;
         appender.setName(mainLoggerAppenderName);
         logger.addAppender(appender);
         logger.setAdditivity(true);
