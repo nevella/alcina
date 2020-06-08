@@ -85,7 +85,7 @@ public class KnownsPersistenceDomainStore implements KnownsPersistence {
                 persistent.setProperties(properties.toPropertyString());
             }
             DomainTransformLayerWrapper wrapper = TransformCommit
-                    .pushTransforms(null, true, true);
+                    .commitTransforms(null, true, true);
             replaceWithPersistent.stream().forEach(n -> {
                 EntityLocator entityLocator = wrapper.locatorMap
                         .getForLocalId(((KnownNodePersistentDomainStore)n.persistent).getLocalId());

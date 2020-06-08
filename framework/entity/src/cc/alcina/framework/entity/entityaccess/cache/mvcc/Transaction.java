@@ -24,7 +24,6 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 
 public class Transaction {
 	private static ThreadLocal<Transaction> threadLocalInstance = new ThreadLocal() {
@@ -375,7 +374,7 @@ public class Transaction {
 	}
 
 	public static int commit() {
-		int transformCount = TransformCommit.pushTransformsAsRoot();
+		int transformCount = Transaction.commit();
 		return transformCount;
 	}
 

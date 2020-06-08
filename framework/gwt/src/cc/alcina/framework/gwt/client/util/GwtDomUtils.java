@@ -8,10 +8,9 @@ import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Display;
+import com.google.gwt.dom.client.Text;
 
 import cc.alcina.framework.common.client.dom.DomNode;
-
-import com.google.gwt.dom.client.Text;
 
 public class GwtDomUtils {
 	public static List<Element> getChildElements(Element elt) {

@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit.TransformPriorityStd;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
@@ -70,7 +71,7 @@ class BackendTransformQueue {
 			try {
 				LooseContext.push();
 				TransformCommit.setPriority(TransformPriorityStd.Backend_admin);
-				TransformCommit.pushTransformsAsRoot();
+				Transaction.commit();
 			} finally {
 				LooseContext.pop();
 			}

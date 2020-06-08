@@ -16,11 +16,8 @@
 package com.google.gwt.dom.client;
 
 import org.w3c.dom.DOMException;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.UserDataHandler;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
 import cc.alcina.framework.common.client.util.Ax;
 

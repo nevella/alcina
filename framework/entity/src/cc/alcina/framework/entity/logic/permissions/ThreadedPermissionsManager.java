@@ -26,7 +26,6 @@ import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 
 /**
  *

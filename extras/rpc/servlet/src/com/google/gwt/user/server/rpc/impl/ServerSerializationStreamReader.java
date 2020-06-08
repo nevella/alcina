@@ -15,17 +15,6 @@
  */
 package com.google.gwt.user.server.rpc.impl;
 
-import com.google.gwt.user.client.rpc.CustomFieldSerializer;
-import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
-import com.google.gwt.user.client.rpc.SerializationException;
-import com.google.gwt.user.client.rpc.SerializedTypeViolationException;
-import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamReader;
-import com.google.gwt.user.server.Base64Utils;
-import com.google.gwt.user.server.rpc.RPC;
-import com.google.gwt.user.server.rpc.SerializationPolicy;
-import com.google.gwt.user.server.rpc.SerializationPolicyProvider;
-import com.google.gwt.user.server.rpc.ServerCustomFieldSerializer;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -45,6 +34,17 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import com.google.gwt.user.client.rpc.CustomFieldSerializer;
+import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
+import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.client.rpc.SerializedTypeViolationException;
+import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamReader;
+import com.google.gwt.user.server.Base64Utils;
+import com.google.gwt.user.server.rpc.RPC;
+import com.google.gwt.user.server.rpc.SerializationPolicy;
+import com.google.gwt.user.server.rpc.SerializationPolicyProvider;
+import com.google.gwt.user.server.rpc.ServerCustomFieldSerializer;
 
 /**
  * For internal use only. Used for server call serialization. This class is

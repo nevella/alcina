@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.entityaccess.RollingDataItem;
-import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 
 //TODO - lowpri - formal support for "go back a bit" in transform sequence - probably using transform utc date
 public abstract class RollingData<K extends Comparable, V> {
@@ -57,7 +57,7 @@ public abstract class RollingData<K extends Comparable, V> {
 				if (maxRetrieved.isPresent()) {
 					toPersist.setMaxKey(maxRetrieved.get().toString());
 				}
-				TransformCommit.pushTransformsAsRoot();
+				Transaction.commit();
 			}
 		}
 		list = Domain.query(rdImplClass).filter("typeKey", typeKey).list();
@@ -75,7 +75,7 @@ public abstract class RollingData<K extends Comparable, V> {
 			System.out
 					.println("Exception with list deserialization - deleting");
 			list.forEach(Entity::delete);
-			TransformCommit.pushTransformsAsRoot();
+			Transaction.commit();
 			return getValues0(earliestKey);
 		}
 		return map;

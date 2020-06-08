@@ -487,13 +487,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted) throws WebException {
-		TransformCommit.persistBulkTransforms(uncommitted, logger, true, false);
+		TransformCommit.commitBulkTransforms(uncommitted, logger, true, false);
 	}
 
 	public int persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted, Logger logger)
 			throws WebException {
-		return TransformCommit.persistBulkTransforms(uncommitted, logger, null,
+		return TransformCommit.commitBulkTransforms(uncommitted, logger, null,
 				false);
 	}
 

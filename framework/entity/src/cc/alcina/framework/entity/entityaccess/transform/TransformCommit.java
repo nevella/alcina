@@ -168,7 +168,7 @@ public class TransformCommit {
 				chunkRequest.setEvents(
 						new ArrayList<DomainTransformEvent>(subList));
 				chunk.setText(chunkRequest.toString());
-				persistBulkTransforms(
+				commitBulkTransforms(
 						Arrays.asList(new DeltaApplicationRecord[] { chunk }),
 						commitContext.slf4jLogger, commitAsWrapperUser, true);
 				String message = String.format(
@@ -179,7 +179,7 @@ public class TransformCommit {
 			}
 		} else {
 			dar.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
-			persistBulkTransforms(
+			commitBulkTransforms(
 					Arrays.asList(new DeltaApplicationRecord[] { dar }),
 					commitContext.slf4jLogger, commitAsWrapperUser, true);
 		}
@@ -224,7 +224,7 @@ public class TransformCommit {
 
 	// TODO - this should be renamed to "persist bulk transforms" really, since
 	// also used for large admin commits
-	public static int persistBulkTransforms(
+	public static int commitBulkTransforms(
 			List<DeltaApplicationRecord> records, Logger logger,
 			Boolean useWrapperUser, boolean throwPersistenceExceptions)
 			throws WebException {
@@ -401,7 +401,7 @@ public class TransformCommit {
 						committerIpAddress));
 	}
 
-	public static DomainTransformLayerWrapper pushTransforms(String tag,
+	public static DomainTransformLayerWrapper commitTransforms(String tag,
 			boolean asRoot, boolean returnResponse) {
 		if (tag == null) {
 			tag = DomainTransformRequestTagProvider.get().getTag();
@@ -433,17 +433,17 @@ public class TransformCommit {
 		return get().doPersistTransforms(tag, asRoot);
 	}
 
-	public static long pushTransformsAndGetFirstCreationId(boolean asRoot) {
-		DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
+	public static long commitTransformsAndGetFirstCreationId(boolean asRoot) {
+		DomainTransformResponse transformResponse = commitTransforms(null, asRoot,
 				true).response;
 		DomainTransformEvent first = CommonUtils
 				.first(transformResponse.getEventsToUseForClientUpdate());
 		return first == null ? 0 : first.getGeneratedServerId();
 	}
 
-	public static long pushTransformsAndReturnId(boolean asRoot,
+	public static long commitTransformsAndReturnId(boolean asRoot,
 			Entity returnIdFor) {
-		DomainTransformResponse transformResponse = pushTransforms(null, asRoot,
+		DomainTransformResponse transformResponse = commitTransforms(null, asRoot,
 				true).response;
 		for (DomainTransformEvent dte : transformResponse
 				.getEventsToUseForClientUpdate()) {
@@ -457,12 +457,12 @@ public class TransformCommit {
 				"Generated object not found - " + returnIdFor);
 	}
 
-	public static int pushTransformsAsCurrentUser() {
-		return pushTransforms(false);
+	public static int commitTransformsAsCurrentUser() {
+		return commitTransforms(false);
 	}
 
-	public static int pushTransformsAsRoot() {
-		return pushTransforms(true);
+	public static int commitTransformsAsRoot() {
+		return commitTransforms(true);
 	}
 
 	public static void setPriority(TransformPriority priority) {
@@ -475,7 +475,7 @@ public class TransformCommit {
 				TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION);
 	}
 
-	private static int pushTransforms(boolean asRoot) {
+	private static int commitTransforms(boolean asRoot) {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (AppPersistenceBase.isTest()
@@ -486,7 +486,7 @@ public class TransformCommit {
 			}
 			return pendingTransformCount;
 		}
-		pushTransforms(null, asRoot, true);
+		commitTransforms(null, asRoot, true);
 		return pendingTransformCount;
 	}
 

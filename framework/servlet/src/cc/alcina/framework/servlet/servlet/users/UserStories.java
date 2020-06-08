@@ -249,7 +249,7 @@ public class UserStories {
 		story.setClientInstanceId(clientInstance.getId());
 		story.setIid(clientInstance.getIid());
 		long creationId = TransformCommit
-				.pushTransformsAndGetFirstCreationId(true);
+				.commitTransformsAndGetFirstCreationId(true);
 		long storyId = creationId == 0 ? story.getId() : creationId;
 		logger.info("published user story - {}", storyId);
 		build(storyId, delta);
