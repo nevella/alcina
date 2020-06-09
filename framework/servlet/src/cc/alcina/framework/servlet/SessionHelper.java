@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -28,13 +29,14 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
+import cc.alcina.framework.servlet.authentication.AuthenticationException;
 
 /**
  * 
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = SessionHelper.class, implementationType = ImplementationType.SINGLETON)
-public class SessionHelper {
+public abstract class SessionHelper {
 	public static final String SESSION_ATTR_USERNAME = "SESSION_ATTR_USERNAME";
 
 	public static final String SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID = "SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID";
@@ -44,12 +46,7 @@ public class SessionHelper {
 	public static final String SESSION_ATTR_ONE_TIME_STRING = "SESSION_ATTR_ONE_TIME_STRING";
 
 	public static SessionHelper get() {
-		SessionHelper singleton = Registry.checkSingleton(SessionHelper.class);
-		if (singleton == null) {
-			singleton = new SessionHelper();
-			Registry.registerSingleton(SessionHelper.class, singleton);
-		}
-		return singleton;
+		return Registry.impl(SessionHelper.class);
 	}
 
 	public static ClientInstance
@@ -121,10 +118,34 @@ public class SessionHelper {
 		reinitialiseUserState(request, response);
 	}
 
+	public void initUserStateWithCookie(HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse) {
+		CookieHelper cookieHelper = new CookieHelper();
+		cookieHelper.getIid(httpServletRequest, httpServletResponse);
+		initUserState(httpServletRequest, httpServletResponse);
+		String userName = cookieHelper.getRememberedUserName(httpServletRequest,
+				httpServletResponse);
+		if (userName != null && !PermissionsManager.get().isLoggedIn()) {
+			try {
+				LoginResponse lrb = new LoginResponse();
+				lrb.setOk(true);
+				processValidLogin(lrb, userName, httpServletRequest,
+						httpServletResponse);
+			} catch (AuthenticationException e) {
+				// ignore
+			}
+		}
+	}
+
 	public void invalidateSession(HttpServletRequest request,
 			HttpServletResponse response) {
 		getSession(request, response).invalidate();
 	}
+
+	public abstract void processValidLogin(LoginResponse lrb, String userName,
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
+			throws AuthenticationException;
 
 	public void reinitialiseUserState(HttpServletRequest request,
 			HttpServletResponse response) {

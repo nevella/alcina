@@ -17,13 +17,11 @@ import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 
@@ -31,60 +29,54 @@ import cc.alcina.framework.entity.ResourceUtilities;
  *
  * @author Nick Reddel
  */
-public class TailServlet extends HttpServlet {
-    private boolean finished;
+public class TailServlet extends AlcinaServlet {
+	private boolean finished;
 
-    public void doGet(HttpServletRequest request,
-            HttpServletResponse response) {
-        checkAuthenticated(request, response);
-        File logFile = new File(ResourceUtilities.get(getClass(), "file"));
-        String message = Ax.format("Starting tail servlet - %s", logFile);
-        try (RandomAccessFile raf = new RandomAccessFile(logFile, "r")) {
-            raf.seek(raf.length());
-            response.setContentType("text/html");
-            response.getOutputStream()
-                    .write(bytes(Ax.format(
-                            "<html><head><style>body{white-space: pre; font-family:monospace;}</style></head><body>%s<br><hr><br>\n",
-                            message)));
-            response.getOutputStream().flush();
-            while (!finished) {
-                try {
-                    int length = (int) (raf.length() - raf.getFilePointer());
-                    if (length > 0) {
-                        byte[] buf = new byte[length];
-                        raf.readFully(buf);
-                        response.getOutputStream().write(buf);
-                        response.getOutputStream().flush();
-                    }
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    break;
-                }
-            }
-            response.getOutputStream().write(bytes("<hr>Servlet destroyed<hr>"));
-            response.getOutputStream().close();
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
+	@Override
+	public void destroy() {
+		finished = true;
+		super.destroy();
+	}
 
-    @Override
-    public void destroy() {
-        finished = true;
-        super.destroy();
-    }
+	private byte[] bytes(String string) {
+		return string.getBytes(StandardCharsets.UTF_8);
+	}
 
-    private byte[] bytes(String string) {
-        return string.getBytes(StandardCharsets.UTF_8);
-    }
-
-    protected void checkAuthenticated(HttpServletRequest request,
-            HttpServletResponse response) {
-        Registry.impl(CommonRemoteServiceServlet.class)
-                .initUserStateWithCookie(request, response);
-        if (!PermissionsManager.get().isAdmin()) {
-            throw new RuntimeException("Access not permitted");
-        }
-    }
+	@Override
+	protected void handleRequest(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		if (!PermissionsManager.get().isAdmin()) {
+			throw new RuntimeException("Access not permitted");
+		}
+		File logFile = new File(ResourceUtilities.get(getClass(), "file"));
+		String message = Ax.format("Starting tail servlet - %s", logFile);
+		try (RandomAccessFile raf = new RandomAccessFile(logFile, "r")) {
+			raf.seek(raf.length());
+			response.setContentType("text/html");
+			response.getOutputStream().write(bytes(Ax.format(
+					"<html><head><style>body{white-space: pre; font-family:monospace;}</style></head><body>%s<br><hr><br>\n",
+					message)));
+			response.getOutputStream().flush();
+			while (!finished) {
+				try {
+					int length = (int) (raf.length() - raf.getFilePointer());
+					if (length > 0) {
+						byte[] buf = new byte[length];
+						raf.readFully(buf);
+						response.getOutputStream().write(buf);
+						response.getOutputStream().flush();
+					}
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					break;
+				}
+			}
+			response.getOutputStream()
+					.write(bytes("<hr>Servlet destroyed<hr>"));
+			response.getOutputStream().close();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 }

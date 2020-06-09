@@ -61,7 +61,6 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.KnownsDelta;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
-import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
@@ -110,7 +109,6 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetricData;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -125,13 +123,11 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSugges
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
-import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.SessionProvider;
-import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.knowns.KnownsDeltaRequestHandler;
 
@@ -170,9 +166,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_NO_ACTION_LOG";
-
-	public static final String PUSH_TRANSFORMS_AT_END_OF_REQUEST = CommonRemoteServiceServlet.class
-			.getName() + ".PUSH_TRANSFORMS_AT_END_OF_REQUEST";
 
 	public static final String CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS";
@@ -220,6 +213,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	private AtomicInteger callCounter = new AtomicInteger(0);
 
 	private AtomicInteger rpcExceptionLogCounter = new AtomicInteger();
+
+	private AlcinaServletContext alcinaServletContext = new AlcinaServletContext()
+			.withRootPermissions(false);
 
 	@Override
 	@WebMethod(readonlyPermitted = true)
@@ -280,25 +276,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} catch (Exception e) {
 			logRpcException(e);
 			throw new WebException(e);
-		}
-	}
-
-	public void initUserStateWithCookie(HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse) {
-		new CookieHelper().getIid(httpServletRequest, httpServletResponse);
-		Registry.impl(SessionHelper.class).initUserState(httpServletRequest,
-				httpServletResponse);
-		String userName = new CookieHelper()
-				.getRememberedUserName(httpServletRequest, httpServletResponse);
-		if (userName != null && !PermissionsManager.get().isLoggedIn()) {
-			try {
-				LoginResponse lrb = new LoginResponse();
-				lrb.setOk(true);
-				processValidLogin(lrb, userName, httpServletRequest,
-						httpServletResponse);
-			} catch (AuthenticationException e) {
-				// ignore
-			}
 		}
 	}
 
@@ -518,8 +495,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		RPCRequest rpcRequest = null;
 		String threadName = Thread.currentThread().getName();
 		try {
-			Transaction.begin();
-			LooseContext.push();
+			alcinaServletContext.begin(getThreadLocalRequest(),
+					getThreadLocalResponse());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
 					getThreadLocalRequest());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
@@ -536,8 +513,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_PAYLOAD,
 					payload);
 			String name = rpcRequest.getMethod().getName();
-			initUserStateWithCookie(getThreadLocalRequest(),
-					getThreadLocalResponse());
 			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
 					ServletLayerUtils
 							.robustGetRemoteAddr(getThreadLocalRequest()));
@@ -602,20 +577,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} finally {
 			Thread.currentThread().setName(threadName);
 			InternalMetrics.get().endTracker(rpcRequest);
-			if (TransformManager.hasInstance()) {
-				if (CommonUtils.bv((Boolean) getThreadLocalRequest()
-						.getAttribute(PUSH_TRANSFORMS_AT_END_OF_REQUEST))) {
-					Transaction.commit();
-				}
-				ThreadlocalTransformManager.cast().resetTltm(null);
-				LooseContext.pop();
-				Transaction.ensureEnded();
-			} else {
-				try {
-					LooseContext.pop();
-				} catch (Exception e) {// squelch, probably webapp undeployed
-				}
-			}
+			alcinaServletContext.end();
 		}
 	}
 
@@ -895,11 +857,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	protected void onBeforeSpawnedThreadRun(Map properties) {
 	}
-
-	protected abstract void processValidLogin(LoginResponse lrb,
-			String userName, HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse)
-			throws AuthenticationException;
 
 	protected void setLogger(Logger logger) {
 		this.logger = logger;
