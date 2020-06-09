@@ -459,6 +459,18 @@ public class DomainStoreThreads {
 			return time;
 		}
 
+		public long getTimeInVacuum() {
+			long time = Transactions.stats().getTimeInVacuum();
+			if (time > 100) {
+				domainStore.logger.info("Long vacuum time - {} ms - {}\n{}\n\n",
+						time, Transactions.stats().getVacuumThread(),
+						SEUtilities.getStacktraceSlice(
+								Transactions.stats().getVacuumThread(),
+								LONG_LOCK_TRACE_LENGTH, 0));
+			}
+			return time;
+		}
+
 		public boolean isLockingDisabled() {
 			return lockingDisabled;
 		}

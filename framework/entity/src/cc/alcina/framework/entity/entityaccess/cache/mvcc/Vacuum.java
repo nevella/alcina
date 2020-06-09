@@ -24,6 +24,10 @@ class Vacuum {
 
 	boolean paused;
 
+	private long vacuumStarted = 0;
+
+	private Thread vacuumThread = null;
+
 	public void addVacuumable(Vacuumable vacuumable) {
 		Transaction transaction = Transaction.current();
 		if (!vacuumables.containsKey(transaction)) {
@@ -66,6 +70,8 @@ class Vacuum {
 			}
 		}
 		Transaction.begin(TransactionPhase.VACUUM_BEGIN);
+		vacuumThread = Thread.currentThread();
+		vacuumStarted = System.currentTimeMillis();
 		logger.debug("vacuum: transactions with vacuumables: {} : {}",
 				vacuumables.size(), vacuumables.keySet());
 		List<Transaction> vacuumableTransactions = Transactions.get()
@@ -88,6 +94,8 @@ class Vacuum {
 			}
 		}
 		Transaction.current().toVacuumEnded(vacuumableTransactions);
+		vacuumStarted = 0;
+		vacuumThread = null;
 		logger.debug("vacuum: end");
 		Transaction.end();
 	}
@@ -95,6 +103,14 @@ class Vacuum {
 	private void vacuum(Vacuumable vacuumable, Transaction transaction) {
 		logger.trace("would vacuum: {}", vacuumable);
 		vacuumable.vacuum(transaction);
+	}
+
+	long getVacuumStarted() {
+		return this.vacuumStarted;
+	}
+
+	Thread getVacuumThread() {
+		return this.vacuumThread;
 	}
 
 	interface Vacuumable {

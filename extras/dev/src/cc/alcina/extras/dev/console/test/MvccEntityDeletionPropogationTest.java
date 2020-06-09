@@ -1,6 +1,7 @@
 package cc.alcina.extras.dev.console.test;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
@@ -53,11 +54,14 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 					Preconditions.checkState(
 							createdGroup.containsUser(createdUser),
 							"pre-delete: referenced group does not contain user");
-					List removedVersions = Transactions.getRemovedVersions(createdUser);
+					List removedVersions = Transactions
+							.getRemovedVersions(createdUser);
 					createdUser.delete();
 					Preconditions.checkState(
 							Domain.stream(userClass).count() == initialSize - 1,
 							"non-committed-tx1: userClass.count()!=initialSize-1");
+					Set<? extends IUser> memberUsers = createdGroup
+							.getMemberUsers();
 					Preconditions.checkState(
 							!createdGroup.containsUser(createdUser),
 							"post-delete: referenced group contains user");
@@ -145,8 +149,8 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 		createdUser.setUserName(username);
 		createdGroup.domain().addToProperty("memberUsers", createdUser);
 		Transaction.commit();
-//		HashSetExtension.debugInstance = (HashSetExtension) createdGroup
-//				.getMemberUsers();
+		// HashSetExtension.debugInstance = (HashSetExtension) createdGroup
+		// .getMemberUsers();
 		initialSize = Domain.stream(userClass).count();
 		startTx1();
 		startTx2();

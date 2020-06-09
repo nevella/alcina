@@ -171,26 +171,32 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	}
 
 	@Override
+	/*
+	 * only synchronize at the "possibly remove from base" phase - all other
+	 * operations are threadsafe
+	 * 
+	 */
 	public void vacuum(Transaction transaction) {
-		synchronized (baseObject) {
-			ObjectVersion<T> version = versions.get(transaction);
-			/*
-			 * Must change the base before removing transaction (otherwise
-			 * there's a narrow window where we'd return an older version)
-			 */
-			if (transaction
-					.getPhase() == TransactionPhase.TO_DOMAIN_COMMITTED) {
-				// baseObject fields will not be reachable here to app code (all
-				// active txs will be
-				// looking at version.object fields)
-				copyObjectFields(version.object, baseObject);
-			}
-			// Transactions.debugRemoveVersion(baseObject, version);
-			versions.remove(transaction);
-			if (versions.isEmpty()) {
-				logger.trace("removed mvcc versions: {} : {}", baseObject,
-						baseObject.hashCode());
-				((MvccObject) baseObject).__setMvccVersions__(null);
+		ObjectVersion<T> version = versions.get(transaction);
+		/*
+		 * Must change the base before removing transaction (otherwise there's a
+		 * narrow window where we'd return an older version)
+		 */
+		if (transaction.getPhase() == TransactionPhase.TO_DOMAIN_COMMITTED) {
+			// baseObject fields will not be reachable here to app code (all
+			// active txs will be
+			// looking at version.object fields)
+			copyObjectFields(version.object, baseObject);
+		}
+		// Transactions.debugRemoveVersion(baseObject, version);
+		versions.remove(transaction);
+		if (versions.isEmpty()) {
+			synchronized (baseObject) {
+				if (versions.isEmpty()) {
+					logger.trace("removed mvcc versions: {} : {}", baseObject,
+							baseObject.hashCode());
+					((MvccObject) baseObject).__setMvccVersions__(null);
+				}
 			}
 		}
 	}
