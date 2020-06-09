@@ -446,9 +446,17 @@ public class DomainStoreThreads {
 		}
 
 		public long getTimeInDomainStoreWriter() {
-			return domainStorePostProcessStartTime == 0 ? 0
+			long time = domainStorePostProcessStartTime == 0 ? 0
 					: System.currentTimeMillis()
 							- domainStorePostProcessStartTime;
+			if (time > 100) {
+				domainStore.logger.info(
+						"Long postprocess time - {} ms - {}\n{}\n\n", time,
+						postProcessWriterThread,
+						SEUtilities.getStacktraceSlice(postProcessWriterThread,
+								LONG_LOCK_TRACE_LENGTH, 0));
+			}
+			return time;
 		}
 
 		public boolean isLockingDisabled() {
