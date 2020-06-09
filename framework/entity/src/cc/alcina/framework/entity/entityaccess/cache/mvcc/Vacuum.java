@@ -8,6 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
 
 class Vacuum {
@@ -73,7 +74,13 @@ class Vacuum {
 				.addAll(Transactions.get().getCompletedNonDomainTransactions());
 		for (Transaction transaction : vacuumableTransactions) {
 			if (vacuumables.containsKey(transaction)) {
-				logger.debug("vacuuming transaction: {}", transaction);
+				String dtrIdClause = transaction.getTransformRequestId() == 0
+						? ""
+						: Ax.format("- %s ",
+								transaction.getTransformRequestId());
+				logger.debug("vacuuming transaction: {} {}- {} vacuumables",
+						transaction, dtrIdClause,
+						vacuumables.get(transaction).size());
 				vacuumables.get(transaction).keySet()
 						.forEach(v -> this.vacuum(v, transaction));
 				vacuumables.remove(transaction);

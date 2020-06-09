@@ -29,7 +29,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.ThrowingSupplier;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -43,7 +42,6 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStoreTransformSequenc
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
 /**
  * Improvement: rather than a strict dtrp-id queue, use 'happens after' field of
@@ -237,26 +235,25 @@ public class DomainTransformPersistenceQueue {
 		return localToVm ? logger : eventQueue.fireEventThreadLogger;
 	}
 
-	private <T> T
-			runWithDisabledObjectPermissions(ThrowingSupplier<T> supplier) {
-		try {
-			// this prevents a deadlock where we might have a waiting write
-			// preventing us from getting the lock
-			LooseContext.pushWithTrue(DomainStore.CONTEXT_NO_LOCKS);
-			ThreadedPermissionsManager.cast().pushSystemUser();
-			PermissibleFieldFilter
-					.setDisabledPerThreadPerObjectPermissions(true);
-			return supplier.get();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		} finally {
-			PermissibleFieldFilter
-					.setDisabledPerThreadPerObjectPermissions(false);
-			ThreadedPermissionsManager.cast().popSystemUser();
-			LooseContext.pop();
-		}
-	}
-
+	// private <T> T
+	// runWithDisabledObjectPermissions(ThrowingSupplier<T> supplier) {
+	// try {
+	// // this prevents a deadlock where we might have a waiting write
+	// // preventing us from getting the lock
+	// LooseContext.pushWithTrue(DomainStore.CONTEXT_NO_LOCKS);
+	// ThreadedPermissionsManager.cast().pushSystemUser();
+	// PermissibleFieldFilter
+	// .setDisabledPerThreadPerObjectPermissions(true);
+	// return supplier.get();
+	// } catch (Exception e) {
+	// throw new RuntimeException(e);
+	// } finally {
+	// PermissibleFieldFilter
+	// .setDisabledPerThreadPerObjectPermissions(false);
+	// ThreadedPermissionsManager.cast().popSystemUser();
+	// LooseContext.pop();
+	// }
+	// }
 	private void transformRequestPublishedSequential(long id) {
 		synchronized (queueModificationLock) {
 			if (firedOrQueued.contains(id)) {
@@ -281,8 +278,10 @@ public class DomainTransformPersistenceQueue {
 		if (persistedRequestIds.isEmpty()) {
 			return;
 		}
-		getLogger(event.isLocalToVm()).info("fired - {} - range {}",
+		getLogger(event.isLocalToVm()).info("fired - {} - {} events - range {}",
 				event.getTransformPersistenceToken().getRequest().shortId(),
+				event.getTransformPersistenceToken().getRequest().getEvents()
+						.size(),
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
 		synchronized (queueModificationLock) {
@@ -306,9 +305,11 @@ public class DomainTransformPersistenceQueue {
 		}
 		firingThread = Thread.currentThread();
 		Logger logger = getLogger(event.isLocalToVm());
-		logger.info("firing - {} - {} - range {}",
+		logger.info("firing - {} - {} - {} events - range {}",
 				Ax.friendly(event.getPersistenceEventType()),
 				event.getTransformPersistenceToken().getRequest().shortId(),
+				event.getTransformPersistenceToken().getRequest().getEvents()
+						.size(),
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
 	}

@@ -244,7 +244,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 		warmupTransaction.toDomainCommitting(
 				transformSequencer.getHighestVisibleTransactionTimestamp(),
-				store, store.applyTxToGraphCounter.getAndIncrement());
+				store, store.applyTxToGraphCounter.getAndIncrement(), 0L);
 		// get non-many-many obj
 		store.threads.lock(true);
 		// lazy tables, load a segment (for large db dev work)

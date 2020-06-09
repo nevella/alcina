@@ -783,7 +783,8 @@ public class DomainStore implements IDomainStore {
 							.getTransactionCommitTime();
 			Transaction.current().toDomainCommitting(
 					testSensitiveTimestamp(transactionCommitTime), this,
-					applyTxToGraphCounter.getAndIncrement());
+					applyTxToGraphCounter.getAndIncrement(),
+					persistenceEvent.getMaxPersistedRequestId());
 			threads.postProcessWriterThread = Thread.currentThread();
 			postProcessEvent = persistenceEvent;
 			health.domainStorePostProcessStartTime = System.currentTimeMillis();

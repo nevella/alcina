@@ -24,6 +24,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 
 public class Transaction {
 	private static ThreadLocal<Transaction> threadLocalInstance = new ThreadLocal() {
@@ -37,6 +38,19 @@ public class Transaction {
 
 	public static void beginDomainPreparing() {
 		begin(TransactionPhase.TO_DOMAIN_PREPARING);
+	}
+
+	public static int commit() {
+		int transformCount = TransformCommit.commitTransformsAsRoot();
+		return transformCount;
+	}
+
+	public static int commitIfTransformCount(int n) {
+		if (TransformManager.get().getTransforms().size() > n) {
+			return commit();
+		} else {
+			return 0;
+		}
 	}
 
 	public static Transaction current() {
@@ -138,6 +152,8 @@ public class Transaction {
 					.getCurrentThreadStacktraceSlice();
 		}
 	}
+
+	private long transformRequestId;
 
 	private String transactionStartTrace;
 
@@ -286,7 +302,8 @@ public class Transaction {
 	}
 
 	public void toDomainCommitting(Timestamp timestamp, DomainStore store,
-			long sequenceId) {
+			long sequenceId, long transformRequestId) {
+		this.transformRequestId = transformRequestId;
 		Preconditions
 				.checkState(getPhase() == TransactionPhase.TO_DOMAIN_PREPARING
 						&& ThreadlocalTransformManager.get().getTransforms()
@@ -350,6 +367,10 @@ public class Transaction {
 		return this.phase;
 	}
 
+	long getTransformRequestId() {
+		return this.transformRequestId;
+	}
+
 	void setId(TransactionId id) {
 		this.id = id;
 	}
@@ -363,19 +384,6 @@ public class Transaction {
 		Preconditions.checkState(getPhase() == TransactionPhase.VACUUM_BEGIN);
 		Transactions.get().vacuumComplete(vacuumableTransactions);
 		setPhase(TransactionPhase.VACUUM_ENDED);
-	}
-
-	public static int commitIfTransformCount(int n) {
-		if (TransformManager.get().getTransforms().size() > n) {
-			return commit();
-		} else {
-			return 0;
-		}
-	}
-
-	public static int commit() {
-		int transformCount = Transaction.commit();
-		return transformCount;
 	}
 
 	/*
