@@ -48,6 +48,8 @@ public class CopyEx extends Copy {
 				// run in order, last overrides
 				for (BuildMapParams params : buildMapParamsList) {
 					if (params.fromDir.equals(filest.getDir())) {
+						log(String.format("[--] : %s : %s", idx,
+								params.fromDir), Project.MSG_DEBUG);
 						Hashtable<String, String[]> typedMap = map;
 						// checks for difference (not just newer-than). if there
 						// are multiple
@@ -67,6 +69,7 @@ public class CopyEx extends Copy {
 								File toFile = new File(toDir, mappedFiles[0]);
 								String toPath = toFile.getAbsolutePath();
 								String srcPath = src.getAbsolutePath();
+								log("[0] " + srcPath, Project.MSG_DEBUG);
 								boolean unchanged = toFile.exists()
 										&& Math.abs(src.lastModified()
 												- toFile.lastModified()) < 100
