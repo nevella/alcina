@@ -1,12 +1,12 @@
 package cc.alcina.extras.cluster;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
@@ -44,61 +44,75 @@ public class CopyEx extends Copy {
 		}
 		if (buildMapParamsList.size() == orderedFileSets.size()) {
 			Map<String, String> toSrc = new LinkedHashMap<>();
+			log(String.format("Filesets:\n%s",
+					orderedFileSets.stream()
+							.map(ofs -> getCanonicalPath(ofs.getDir()))
+							.collect(Collectors.joining("\n\t"))),
+					Project.MSG_DEBUG);
+			log(String.format("BuildMapParams:\n%s",
+					buildMapParamsList.stream()
+							.map(p -> getCanonicalPath(p.fromDir))
+							.collect(Collectors.joining("\n\t"))),
+					Project.MSG_DEBUG);
 			for (int idx = orderedFileSets.size() - 1; idx >= 0; idx--) {
-				FileSet filest = orderedFileSets.get(idx);
+				FileSet fileset = orderedFileSets.get(idx);
+				log(String.format("[--] : %s : %s", idx,
+						getCanonicalPath(fileset.getDir())), Project.MSG_DEBUG);
 				// run in order, last overrides
-				try {
-					for (BuildMapParams params : buildMapParamsList) {
-						if (params.fromDir.getCanonicalPath()
-								.equals(filest.getDir().getCanonicalPath())) {
-							log(String.format("[--] : %s : %s", idx,
-									params.fromDir), Project.MSG_DEBUG);
-							Hashtable<String, String[]> typedMap = map;
-							// checks for difference (not just newer-than). if
-							// there
-							// are multiple
-							// matches, uses only the first (note, iterating in
-							// reversed order over ordered file sets).
-							fromDir = params.fromDir;
-							toDir = params.toDir;
-							names = params.names;
-							mapper = params.mapper;
-							map = params.map;
-							for (int i = 0; i < names.length; i++) {
-								String name = names[i];
-								if (mapper.mapFileName(name) != null) {
-									final File src = new File(fromDir, name);
-									final String[] mappedFiles = mapper
-											.mapFileName(name);
-									File toFile = new File(toDir,
-											mappedFiles[0]);
-									String toPath = toFile.getAbsolutePath();
-									String srcPath = src.getAbsolutePath();
-									log("[0] " + srcPath, Project.MSG_DEBUG);
-									boolean unchanged = toFile.exists() && Math
-											.abs(src.lastModified() - toFile
-													.lastModified()) < 100
-											&& src.length() == toFile.length();
-									if (toSrc.containsKey(toPath)) {
-										log("[-] " + srcPath,
+				for (BuildMapParams params : buildMapParamsList) {
+					if (getCanonicalPath(params.fromDir)
+							.equals(getCanonicalPath(fileset.getDir()))) {
+						log(String.format("[--] : %s : %s", idx,
+								params.fromDir), Project.MSG_DEBUG);
+						Hashtable<String, String[]> typedMap = map;
+						// checks for difference (not just newer-than). if
+						// there
+						// are multiple
+						// matches, uses only the first (note, iterating in
+						// reversed order over ordered file sets).
+						fromDir = params.fromDir;
+						toDir = params.toDir;
+						names = params.names;
+						mapper = params.mapper;
+						map = params.map;
+						for (int i = 0; i < names.length; i++) {
+							String name = names[i];
+							if (mapper.mapFileName(name) != null) {
+								final File src = new File(fromDir, name);
+								final String[] mappedFiles = mapper
+										.mapFileName(name);
+								File toFile = new File(toDir, mappedFiles[0]);
+								String toPath = toFile.getAbsolutePath();
+								String srcPath = src.getAbsolutePath();
+								log("[0] " + srcPath, Project.MSG_DEBUG);
+								boolean unchanged = toFile.exists()
+										&& Math.abs(src.lastModified()
+												- toFile.lastModified()) < 100
+										&& src.length() == toFile.length();
+								if (toSrc.containsKey(toPath)) {
+									log("[-] " + srcPath, Project.MSG_DEBUG);
+								} else {
+									toSrc.put(toPath, srcPath);
+									if (!unchanged) {
+										log("[+] " + srcPath,
 												Project.MSG_DEBUG);
-									} else {
-										toSrc.put(toPath, srcPath);
-										if (!unchanged) {
-											log("[+] " + srcPath,
-													Project.MSG_DEBUG);
-											map.put(srcPath, new String[] {
-													toFile.getAbsolutePath() });
-										}
+										map.put(srcPath, new String[] {
+												toFile.getAbsolutePath() });
 									}
 								}
 							}
 						}
 					}
-				} catch (IOException e) {
-					e.printStackTrace();
 				}
 			}
+		}
+	}
+
+	String getCanonicalPath(File file) {
+		try {
+			return file.getCanonicalPath();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
 	}
 
