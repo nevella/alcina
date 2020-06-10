@@ -123,9 +123,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				putVersion(version);
 			}
 		}
-		// TODO - remove? It's a hit
-		// logger.trace("created object version: {} : {}", toString(),
-		// hashCode());
 	}
 
 	public T getBaseObject() {
@@ -194,7 +191,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			synchronized (baseObject) {
 				if (versions.isEmpty()) {
 					logger.trace("removed mvcc versions: {} : {}", baseObject,
-							baseObject.hashCode());
+							System.identityHashCode(baseObject));
 					((MvccObject) baseObject).__setMvccVersions__(null);
 				}
 			}
