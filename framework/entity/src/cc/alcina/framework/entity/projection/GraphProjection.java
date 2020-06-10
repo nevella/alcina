@@ -668,6 +668,7 @@ public class GraphProjection {
 			if (replaceMap != null && source instanceof Entity
 					&& replaceMap.containsKey(source)) {
 				source = (T) replaceMap.get(source);
+				sourceClass = source.getClass();
 			}
 			checkReachable = checkReachable(source);
 			// check here unlikely to matter

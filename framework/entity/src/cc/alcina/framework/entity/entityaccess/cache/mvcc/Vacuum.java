@@ -8,8 +8,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 
 class Vacuum {
 	ConcurrentHashMap<Transaction, ConcurrentHashMap<Vacuumable, Vacuumable>> vacuumables = new ConcurrentHashMap<>();
@@ -46,6 +48,9 @@ class Vacuum {
 	}
 
 	public void enqueueVacuum() {
+		if (vacuumables.isEmpty()) {
+			return;
+		}
 		/*
 		 * really, there will only ever be one truly 'active' (because of the
 		 * synchronized block), but this lets us keep calling
@@ -54,7 +59,12 @@ class Vacuum {
 			return;
 		}
 		executor.execute(() -> {
-			vacuum();
+			try {
+				vacuum();
+			} catch (Throwable t) {
+				EntityLayerLogging.log(LogMessageType.WORKER_THREAD_EXCEPTION,
+						"Vacuum exception", t);
+			}
 		});
 	}
 

@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -138,11 +139,11 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
 		threadLocalListeners.add(listener);
-	};
+	}
 
 	public static ThreadlocalTransformManager cast() {
 		return (ThreadlocalTransformManager) TransformManager.get();
-	}
+	};
 
 	/**
 	 * Convenience "override" of TransformManager.get()
@@ -650,6 +651,24 @@ public class ThreadlocalTransformManager extends TransformManager
 				&& transformPropogation.listenToWrappedObject(wrapper)) {
 			registerDomainObject((Entity) wrapper);
 		}
+	}
+
+	@Override
+	public void modifyCollectionProperty(Object objectWithCollection,
+			String collectionPropertyName, Object delta,
+			CollectionModificationType modificationType) {
+		/*
+		 * If one end is mvcc, want both ends to be (for propogation)
+		 */
+		Collection deltaC = CommonUtils.wrapInCollection(delta);
+		if (objectWithCollection instanceof MvccObject
+				|| deltaC.stream().anyMatch(o -> o instanceof MvccObject)) {
+			Preconditions.checkArgument(
+					objectWithCollection instanceof MvccObject && deltaC
+							.stream().allMatch(o -> o instanceof MvccObject));
+		}
+		super.modifyCollectionProperty(objectWithCollection,
+				collectionPropertyName, delta, modificationType);
 	}
 
 	@Override
