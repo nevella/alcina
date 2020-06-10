@@ -363,7 +363,8 @@ class ClassTransformer {
 			boolean sameSource = lastRun != null
 					&& Objects.equals(lastRun.classSources, classSources)
 					&& classSources.size() > 0;
-			if (!sameSource && lastRun.classSources != null
+			if (!sameSource && lastRun != null 
+					&& lastRun.classSources != null
 					&& lastRun.classSources.size() > 0) {
 				ThreeWaySetResult<String> split = CommonUtils
 						.threeWaySplit(lastRun.classSources, classSources);
