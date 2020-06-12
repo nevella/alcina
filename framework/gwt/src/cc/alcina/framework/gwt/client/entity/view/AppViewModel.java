@@ -30,7 +30,7 @@ public class AppViewModel {
 	}
 
 	public void resetProviderFor(Class<? extends VersionableEntity> clazz) {
-		providers.get(clazz).invalidate();
+		getDataProvider(clazz).invalidate();
 	}
 
 	protected <T extends VersionableEntity> DomainStoreDataProvider<T>
