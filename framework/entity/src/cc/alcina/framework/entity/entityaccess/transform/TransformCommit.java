@@ -110,124 +110,11 @@ public class TransformCommit {
 	public static final String CONTEXT_REUSE_IUSER_HOLDER = TransformCommit.class
 			.getName() + ".CONTEXT_REUSE_IUSER_HOLDER";
 
-	// Note that this must be called with a new client instance - since we're
-	// incrementing the request id counter. When the admin client calls it,
-	public static void commitDeltaApplicationRecord(
-			TransformCommit.CommitContext commitContext,
-			DeltaApplicationRecord dar, int chunkSize) throws Exception {
-		DomainTransformRequest fullRequest = DomainTransformRequest
-				.fromString(dar.getText(), dar.getChunkUuidString());
-		int size = fullRequest.getEvents().size();
-		boolean commitAsWrapperUser = ResourceUtilities
-				.is("commitAsWrapperUser");
-		if (size > chunkSize && dar.getChunkUuidString() != null) {
-			commitContext.setItemCount(size / chunkSize + 1);
-			int rqIdCounter = dar.getRequestId();
-			for (int idx = 0; idx < size;) {
-				IntPair range = null;
-				if (idx + chunkSize > size) {
-					range = new IntPair(idx, size);
-				} else {
-					int createSearchIdx = idx + chunkSize;
-					int maxCreateIdxDelta = size / 2;
-					for (; createSearchIdx < size && maxCreateIdxDelta > 0;) {
-						DomainTransformEvent evt = fullRequest.getEvents()
-								.get(createSearchIdx);
-						if (evt.getTransformType() == TransformType.CREATE_OBJECT) {
-							// i.e. trim the range to just before this
-							// create event
-							range = new IntPair(idx, createSearchIdx);
-							break;
-						}
-						if (evt.getTransformType() == TransformType.DELETE_OBJECT) {
-							// i.e. trim the range to just after this create
-							// event
-							range = new IntPair(idx, createSearchIdx + 1);
-							break;
-						}
-						createSearchIdx++;
-						maxCreateIdxDelta--;
-					}
-					if (range == null) {
-						range = new IntPair(idx, idx + chunkSize);
-					}
-				}
-				DomainTransformRequest chunkRequest = DomainTransformRequest
-						.createSubRequest(fullRequest, range);
-				// null UUID, we'll set it in a bit
-				DeltaApplicationRecord chunk = new DeltaApplicationRecord(0, "",
-						dar.getTimestamp(), dar.getUserId(),
-						dar.getClientInstanceId(), rqIdCounter++,
-						dar.getClientInstanceAuth(),
-						DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
-						dar.getProtocolVersion(), dar.getTag(),
-						chunkRequest.getChunkUuidString());
-				List<DomainTransformEvent> subList = fullRequest.getEvents()
-						.subList(range.i1, range.i2);
-				chunkRequest.setRequestId(chunk.getRequestId());
-				chunkRequest.setEvents(
-						new ArrayList<DomainTransformEvent>(subList));
-				chunk.setText(chunkRequest.toString());
-				commitBulkTransforms(
-						Arrays.asList(new DeltaApplicationRecord[] { chunk }),
-						commitContext.slf4jLogger, commitAsWrapperUser, true);
-				String message = String.format(
-						"written chunk - writing chunk %s of %s", range, size);
-				System.out.println(message);
-				commitContext.updateJob(message);
-				idx = range.i2;
-			}
-		} else {
-			dar.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
-			commitBulkTransforms(
-					Arrays.asList(new DeltaApplicationRecord[] { dar }),
-					commitContext.slf4jLogger, commitAsWrapperUser, true);
-		}
-	}
-
-	public static void
-			commitLocalTransformsInChunks(int maxTransformChunkSize) {
-		try {
-			ThreadedPermissionsManager.cast()
-					.runThrowingWithPushedSystemUserIfNeeded(
-							() -> get().commitLocalTranformInChunks0(
-									maxTransformChunkSize));
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		} finally {
-			ThreadlocalTransformManager.cast().resetTltm(null);
-		}
-	}
-
-	public static TransformCommit get() {
-		return Registry.impl(TransformCommit.class);
-	}
-
-	public static TransformPriority getPriority() {
-		return LooseContext.get(CONTEXT_TRANSFORM_PRIORITY);
-	}
-
-	public static boolean hasLessThanUserTransformPriority() {
-		TransformPriority priority = LooseContext
-				.get(CONTEXT_TRANSFORM_PRIORITY);
-		return !(priority == null || priority
-				.getPriority() >= TransformPriorityStd.User.getPriority());
-	}
-
-	public static boolean isCommitTestTransforms() {
-		return ResourceUtilities.is("commitTestTransforms");
-	}
-
-	public static boolean isTestTransformCascade() {
-		return ResourceUtilities.is("testTransformCascade");
-	}
-
 	// TODO - this should be renamed to "persist bulk transforms" really, since
 	// also used for large admin commits
-	public static int commitBulkTransforms(
-			List<DeltaApplicationRecord> records, Logger logger,
-			Boolean useWrapperUser, boolean throwPersistenceExceptions)
-			throws WebException {
+	public static int commitBulkTransforms(List<DeltaApplicationRecord> records,
+			Logger logger, Boolean useWrapperUser,
+			boolean throwPersistenceExceptions) throws WebException {
 		CommonPersistenceLocal cp = Registry
 				.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		boolean persistAsOneTransaction = ResourceUtilities.is(
@@ -394,11 +281,93 @@ public class TransformCommit {
 		}
 	}
 
-	public static void prepareHttpRequestCommitContext(long clientInstanceId,
-			long userId, String committerIpAddress) {
-		LooseContext.set(CONTEXT_HTTP_COMMIT_CONTEXT,
-				new HttpRequestCommitContext(clientInstanceId, userId,
-						committerIpAddress));
+	// Note that this must be called with a new client instance - since we're
+	// incrementing the request id counter. When the admin client calls it,
+	public static void commitDeltaApplicationRecord(
+			TransformCommit.CommitContext commitContext,
+			DeltaApplicationRecord dar, int chunkSize) throws Exception {
+		DomainTransformRequest fullRequest = DomainTransformRequest
+				.fromString(dar.getText(), dar.getChunkUuidString());
+		int size = fullRequest.getEvents().size();
+		boolean commitAsWrapperUser = ResourceUtilities
+				.is("commitAsWrapperUser");
+		if (size > chunkSize && dar.getChunkUuidString() != null) {
+			commitContext.setItemCount(size / chunkSize + 1);
+			int rqIdCounter = dar.getRequestId();
+			for (int idx = 0; idx < size;) {
+				IntPair range = null;
+				if (idx + chunkSize > size) {
+					range = new IntPair(idx, size);
+				} else {
+					int createSearchIdx = idx + chunkSize;
+					int maxCreateIdxDelta = size / 2;
+					for (; createSearchIdx < size && maxCreateIdxDelta > 0;) {
+						DomainTransformEvent evt = fullRequest.getEvents()
+								.get(createSearchIdx);
+						if (evt.getTransformType() == TransformType.CREATE_OBJECT) {
+							// i.e. trim the range to just before this
+							// create event
+							range = new IntPair(idx, createSearchIdx);
+							break;
+						}
+						if (evt.getTransformType() == TransformType.DELETE_OBJECT) {
+							// i.e. trim the range to just after this create
+							// event
+							range = new IntPair(idx, createSearchIdx + 1);
+							break;
+						}
+						createSearchIdx++;
+						maxCreateIdxDelta--;
+					}
+					if (range == null) {
+						range = new IntPair(idx, idx + chunkSize);
+					}
+				}
+				DomainTransformRequest chunkRequest = DomainTransformRequest
+						.createSubRequest(fullRequest, range);
+				// null UUID, we'll set it in a bit
+				DeltaApplicationRecord chunk = new DeltaApplicationRecord(0, "",
+						dar.getTimestamp(), dar.getUserId(),
+						dar.getClientInstanceId(), rqIdCounter++,
+						dar.getClientInstanceAuth(),
+						DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
+						dar.getProtocolVersion(), dar.getTag(),
+						chunkRequest.getChunkUuidString());
+				List<DomainTransformEvent> subList = fullRequest.getEvents()
+						.subList(range.i1, range.i2);
+				chunkRequest.setRequestId(chunk.getRequestId());
+				chunkRequest.setEvents(
+						new ArrayList<DomainTransformEvent>(subList));
+				chunk.setText(chunkRequest.toString());
+				commitBulkTransforms(
+						Arrays.asList(new DeltaApplicationRecord[] { chunk }),
+						commitContext.slf4jLogger, commitAsWrapperUser, true);
+				String message = String.format(
+						"written chunk - writing chunk %s of %s", range, size);
+				System.out.println(message);
+				commitContext.updateJob(message);
+				idx = range.i2;
+			}
+		} else {
+			dar.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
+			commitBulkTransforms(
+					Arrays.asList(new DeltaApplicationRecord[] { dar }),
+					commitContext.slf4jLogger, commitAsWrapperUser, true);
+		}
+	}
+
+	public static void
+			commitLocalTransformsInChunks(int maxTransformChunkSize) {
+		try {
+			ThreadedPermissionsManager.cast()
+					.runThrowingWithPushedSystemUserIfNeeded(
+							() -> get().commitLocalTranformInChunks0(
+									maxTransformChunkSize));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		} finally {
+			ThreadlocalTransformManager.cast().resetTltm(null);
+		}
 	}
 
 	public static DomainTransformLayerWrapper commitTransforms(String tag,
@@ -434,8 +403,8 @@ public class TransformCommit {
 	}
 
 	public static long commitTransformsAndGetFirstCreationId(boolean asRoot) {
-		DomainTransformResponse transformResponse = commitTransforms(null, asRoot,
-				true).response;
+		DomainTransformResponse transformResponse = commitTransforms(null,
+				asRoot, true).response;
 		DomainTransformEvent first = CommonUtils
 				.first(transformResponse.getEventsToUseForClientUpdate());
 		return first == null ? 0 : first.getGeneratedServerId();
@@ -443,8 +412,8 @@ public class TransformCommit {
 
 	public static long commitTransformsAndReturnId(boolean asRoot,
 			Entity returnIdFor) {
-		DomainTransformResponse transformResponse = commitTransforms(null, asRoot,
-				true).response;
+		DomainTransformResponse transformResponse = commitTransforms(null,
+				asRoot, true).response;
 		for (DomainTransformEvent dte : transformResponse
 				.getEventsToUseForClientUpdate()) {
 			if (dte.getObjectLocalId() == returnIdFor.getLocalId()
@@ -463,6 +432,36 @@ public class TransformCommit {
 
 	public static int commitTransformsAsRoot() {
 		return commitTransforms(true);
+	}
+
+	public static TransformCommit get() {
+		return Registry.impl(TransformCommit.class);
+	}
+
+	public static TransformPriority getPriority() {
+		return LooseContext.get(CONTEXT_TRANSFORM_PRIORITY);
+	}
+
+	public static boolean hasLessThanUserTransformPriority() {
+		TransformPriority priority = LooseContext
+				.get(CONTEXT_TRANSFORM_PRIORITY);
+		return !(priority == null || priority
+				.getPriority() >= TransformPriorityStd.User.getPriority());
+	}
+
+	public static boolean isCommitTestTransforms() {
+		return ResourceUtilities.is("commitTestTransforms");
+	}
+
+	public static boolean isTestTransformCascade() {
+		return ResourceUtilities.is("testTransformCascade");
+	}
+
+	public static void prepareHttpRequestCommitContext(long clientInstanceId,
+			long userId, String committerIpAddress) {
+		LooseContext.set(CONTEXT_HTTP_COMMIT_CONTEXT,
+				new HttpRequestCommitContext(clientInstanceId, userId,
+						committerIpAddress));
 	}
 
 	public static void setPriority(TransformPriority priority) {
@@ -800,12 +799,15 @@ public class TransformCommit {
 			DomainTransformLayerWrapper wrapper = Registry
 					.impl(TransformPersistenceQueue.class)
 					.submit(persistenceToken);
-			Date transactionCommitTime = wrapper.persistentRequests.get(0)
-					.getTransactionCommitTime();
+			// Date transactionCommitTime = wrapper.persistentRequests.get(0)
+			// .getTransactionCommitTime();
 			// transactionCommitTime probably not set yet, so use system date
 			// (this timestamp is just advisory - the important one is in
 			// transaction phase TO_DOMAIN, not
 			// this one)
+			//
+			// also, we may have no persistentrequests (if the request has
+			// already been committed)
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			Transaction.current()
 					.toDbPersisted(new Timestamp(System.currentTimeMillis()));

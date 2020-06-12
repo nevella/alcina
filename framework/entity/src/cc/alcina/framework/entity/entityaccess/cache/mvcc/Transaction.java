@@ -106,7 +106,9 @@ public class Transaction {
 
 	public static void ensureEnded() {
 		if (threadLocalInstance.get() != null) {
-			end();
+			if (!threadLocalInstance.get().getPhase().isEnded()) {
+				end();
+			}
 		}
 	}
 
@@ -349,10 +351,21 @@ public class Transaction {
 		case TO_DB_PREPARING:
 			if (TransformManager.get().getTransforms().size() == 0) {
 				break;
+			} else {
+				// we used to fallthrough to an exception if there were
+				// uncommitted transforms but we can't allow dangling
+				// transactions
+				logger.warn(
+						"Ending transaction with uncommitted transforms: {}",
+						TransformManager.get().getTransforms().size());
+				ThreadlocalTransformManager.cast().resetTltm(null);
+				break;
+				// fallthrough
 			}
-			// fallthrough
 		default:
-			throw new MvccException("Ending on invalid phase");
+			throw new MvccException(Ax.format(
+					"Ending on invalid phase: %s %s transforms", getPhase(),
+					TransformManager.get().getTransforms().size()));
 		}
 		ended = true;
 		logger.debug("Ended tx: {}", this);
