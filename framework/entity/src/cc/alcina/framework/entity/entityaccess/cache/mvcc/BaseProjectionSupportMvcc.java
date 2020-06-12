@@ -6,7 +6,8 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
+import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.BplDelegateMapCreator;
+import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -19,7 +20,7 @@ import cc.alcina.framework.common.client.util.trie.MultiTrie;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class BaseProjectionSupportMvcc {
-	public static class BplDelegateMapCreatorFastUnsorted
+	public static class BplDelegateMapCreatorNonTransactional
 			implements DelegateMapCreator {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
@@ -27,18 +28,31 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
-	@RegistryLocation(registryPoint = BaseProjectionLookupBuilder.BplDelegateMapCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-	public static class BplDelegateMapCreatorFastUtil
-			extends BaseProjectionLookupBuilder.BplDelegateMapCreator {
+	@RegistryLocation(registryPoint = BplDelegateMapCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	public static class BplDelegateMapCreatorTransactional
+			extends BplDelegateMapCreator {
+		private boolean nonTransactionalDomain;
+
+		public BplDelegateMapCreatorTransactional() {
+			this.nonTransactionalDomain = IDomainStore
+					.isNonTransactionalDomain();
+		}
+
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {
 			if (getBuilder().getCreators() != null
 					&& getBuilder().getCreators().length > depthFromRoot) {
 				Map map = (Map) getBuilder().getCreators()[depthFromRoot].get();
-				Preconditions.checkState(map instanceof TransactionalMap);
+				Preconditions.checkState((nonTransactionalDomain)
+						^ (map instanceof TransactionalMap));
 				return map;
+			} else {
+				if (nonTransactionalDomain) {
+					return new Object2ObjectLinkedOpenHashMap<>();
+				} else {
+					return new TransactionalMap(Object.class, Object.class);
+				}
 			}
-			return new TransactionalMap(Object.class, Object.class);
 		}
 	}
 
@@ -67,6 +81,14 @@ public class BaseProjectionSupportMvcc {
 		public <K, E extends Entity> MultiTrie<K, Set<E>> create(
 				KeyAnalyzer<? super K> keyAnalyzer, Class<E> entityClass) {
 			return new TransactionalMultiTrie<>(keyAnalyzer, entityClass);
+		}
+	}
+
+	public static class Object2ObjectHashMapCreator
+			implements CollectionCreators.MapCreator {
+		@Override
+		public Map get() {
+			return new Object2ObjectLinkedOpenHashMap();
 		}
 	}
 

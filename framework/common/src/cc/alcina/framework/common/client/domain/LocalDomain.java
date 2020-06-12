@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 public class LocalDomain {
 	private DetachedEntityCache cache = new DetachedEntityCache();
@@ -40,13 +41,19 @@ public class LocalDomain {
 		return this.cache;
 	}
 
-	public void init() {
-		for (DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
-				.values()) {
-			for (DomainStoreLookupDescriptor lookupDescriptor : descriptor.lookupDescriptors) {
-				lookupDescriptor.createLookup();
-				lookupDescriptor.setNonTransactional();
+	public void initialise() {
+		try {
+			LooseContext.pushWithTrue(
+					IDomainStore.CONTEXT_NON_TRANSACTIONAL_DOMAIN_INIT);
+			this.domainDescriptor.initialise();
+			for (DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
+					.values()) {
+				for (DomainStoreLookupDescriptor lookupDescriptor : descriptor.lookupDescriptors) {
+					lookupDescriptor.createLookup();
+				}
 			}
+		} finally {
+			LooseContext.pop();
 		}
 	}
 

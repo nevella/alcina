@@ -906,7 +906,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 						new String[] { "WEB-INF/classes", "WEB-INF/lib" }))
 								.getClasses();
 		ClassrefScanner classrefScanner = new ClassrefScanner();
-		if (TransformCommit.isCommitTestTransforms()) {
+		if (!TransformCommit.isCommitTestTransforms()) {
 			classrefScanner.noPersistence();
 		}
 		classrefScanner.scan(cache);

@@ -375,6 +375,11 @@ public class Transactions {
 			}
 		}
 
+		public long getTimeInVacuum() {
+			return vacuum.getVacuumStarted() == 0 ? 0
+					: System.currentTimeMillis() - vacuum.getVacuumStarted();
+		}
+
 		public long getUncollectedTxCount() {
 			synchronized (transactionMetadataLock) {
 				return committedTransactions.size() + activeTransactions.size();
@@ -383,6 +388,10 @@ public class Transactions {
 
 		public long getVacuumQueueLength() {
 			return vacuum.vacuumables.size();
+		}
+
+		public Thread getVacuumThread() {
+			return vacuum.getVacuumThread();
 		}
 	}
 }

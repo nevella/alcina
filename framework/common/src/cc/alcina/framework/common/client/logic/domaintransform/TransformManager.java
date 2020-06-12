@@ -1934,9 +1934,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 							Object associated = propertyReflector
 									.getPropertyValue(entity);
 							if (association.cascadeDeletes()) {
+								// parent.children
 								if (associated instanceof Set) {
 									((Set<? extends Entity>) associated)
 											.forEach(Entity::delete);
+									// child.parent (!!)
 								} else if (associated instanceof Entity) {
 									((Entity) associated).delete();
 								} else {
@@ -1951,21 +1953,38 @@ public abstract class TransformManager implements PropertyChangeListener,
 														.implementationClass(),
 												association.propertyName());
 								if (associated instanceof Set) {
-									((Set<? extends Entity>) associated)
-											.forEach(
-													e -> associatedObjectAccessor
-															.setPropertyValue(e,
-																	null));
+									Set<? extends Entity> associatedSet = (Set<? extends Entity>) associated;
+									for (Entity associatedEntity : associatedSet) {
+										Object associatedAssociationValue = associatedObjectAccessor
+												.getPropertyValue(
+														associatedEntity);
+										// many-to-many
+										if (associatedAssociationValue instanceof Set) {
+											associatedEntity.domain()
+													.removeFromProperty(
+															association
+																	.propertyName(),
+															entity);
+										} else {
+											// parent.children
+											associatedObjectAccessor
+													.setPropertyValue(
+															associatedEntity,
+															null);
+										}
+									}
 								} else if (associated instanceof Entity) {
 									Object associatedAssociationValue = associatedObjectAccessor
 											.getPropertyValue(associated);
 									if (associatedAssociationValue instanceof Set) {
+										// child.parent
 										((Entity) associated).domain()
 												.removeFromProperty(
 														association
 																.propertyName(),
 														entity);
 									} else if (associated instanceof Entity) {
+										// one-one(!!)
 										associatedObjectAccessor
 												.setPropertyValue(associated,
 														null);

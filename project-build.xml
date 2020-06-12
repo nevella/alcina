@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="project-build" basedir="." default="make-jars" xmlns:if="ant:if">
-	<property name="project.src.dir.2" location="${project.src.dir}" />
-	<property name="project.src.dir.3" location="${project.src.dir}" />
-	<property name="project.src.dir.4" location="${project.src.dir}" />
-	<property name="project.src.dir.5" location="${project.src.dir}" />
-	<property name="project.src.dir.6" location="${project.src.dir}" />
-	<property name="project.src.dir.7" location="${project.src.dir}" />
-	<property name="project.src.dir.8" location="${project.src.dir}" />
+	<property name="project.src.dir.2" value="${project.src.dir}" />
+	<property name="project.src.dir.3" value="${project.src.dir.2}" />
+	<property name="project.src.dir.4" value="${project.src.dir.3}" />
+	<property name="project.src.dir.5" value="${project.src.dir.4}" />
+	<property name="project.src.dir.6" value="${project.src.dir.5}" />
+	<property name="project.src.dir.7" value="${project.src.dir.6}" />
+	<property name="project.src.dir.8" value="${project.src.dir.7}" />
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
 		<classpath>
 			<pathelement location="${framework.lib.dir}/entity/ant-contrib.jar" />

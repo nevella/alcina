@@ -66,8 +66,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
 					TransformPersisterInPersistenceContext.CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM);
 			Transaction.begin();
 			Transaction.current().toNoActiveTransaction();
-			LooseContext.setTrue(
-					TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
+			LooseContext
+					.setTrue(TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
 			if (!ResourceUtilities.getBoolean(DevRemoterServlet.class,
 					"enabled")) {
 				throw new Exception("DevRemoterServlet disabled");
@@ -93,6 +93,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			}
 			throw new ServletException(e);
 		} finally {
+			ThreadlocalTransformManager.get().resetTltm(null);
 			Transaction.current().toNoActiveTransaction();
 			Transaction.end();
 			LooseContext.pop();

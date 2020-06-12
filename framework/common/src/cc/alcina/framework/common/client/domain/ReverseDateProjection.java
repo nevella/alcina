@@ -36,7 +36,7 @@ public abstract class ReverseDateProjection<T extends Entity>
 	@Override
 	protected MultikeyMap<T> createLookup() {
 		return new BaseProjectionLookupBuilder(this)
-				.mapCreators(new CollectionCreators.MapCreator[] { Registry
+				.withMapCreators(new CollectionCreators.MapCreator[] { Registry
 						.impl(CollectionCreators.TreeMapRevCreator.class)
 						.withTypes(types) })
 				.createMultikeyMap();

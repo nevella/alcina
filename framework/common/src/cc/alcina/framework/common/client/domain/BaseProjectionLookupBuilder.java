@@ -16,9 +16,12 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * sorted)
  */
 public class BaseProjectionLookupBuilder {
-	private CollectionCreators.MapCreator[] creators;
+	private CollectionCreators.MapCreator[] mapCreators;
 
 	private BaseProjection projection;
+
+	private BplDelegateMapCreator delegateMapCreator = Registry
+			.impl(BplDelegateMapCreator.class);
 
 	public BaseProjectionLookupBuilder(BaseProjection projection) {
 		this.projection = projection;
@@ -26,33 +29,38 @@ public class BaseProjectionLookupBuilder {
 
 	public <T> MultikeyMap<T> createMultikeyMap() {
 		MultikeyMap<T> map = null;
-		BplDelegateMapCreator mapCreator = Registry
-				.impl(BplDelegateMapCreator.class);
-		mapCreator.setBuilder(this);
-		map = new UnsortedMultikeyMap<T>(projection.getDepth(), 0, mapCreator);
+		delegateMapCreator.setBuilder(this);
+		map = new UnsortedMultikeyMap<T>(projection.getDepth(), 0,
+				delegateMapCreator);
 		return map;
 	}
 
 	public CollectionCreators.MapCreator[] getCreators() {
-		return creators;
+		return mapCreators;
 	}
 
 	public BaseProjection getProjection() {
 		return this.projection;
 	}
 
+	public void setProjection(BaseProjection projection) {
+		this.projection = projection;
+	}
+
 	public BaseProjectionLookupBuilder
-			mapCreators(CollectionCreators.MapCreator... creators) {
+			withDelegateMapCreator(BplDelegateMapCreator delegateMapCreator) {
+		this.delegateMapCreator = delegateMapCreator;
+		return this;
+	}
+
+	public BaseProjectionLookupBuilder
+			withMapCreators(CollectionCreators.MapCreator... creators) {
 		if (creators.length != projection.getDepth()) {
 			throw new RuntimeException(
 					"Mismatched creator array length and depth");
 		}
-		this.creators = creators;
+		this.mapCreators = creators;
 		return this;
-	}
-
-	public void setProjection(BaseProjection projection) {
-		this.projection = projection;
 	}
 
 	public static abstract class BplDelegateMapCreator

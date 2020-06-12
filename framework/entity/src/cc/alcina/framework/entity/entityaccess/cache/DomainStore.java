@@ -483,6 +483,7 @@ public class DomainStore implements IDomainStore {
 				.getDeclaredField("propertyChangeSupport");
 		modificationCheckerField.setAccessible(true);
 		setCheckModificationWriteLock(false);
+		domainDescriptor.initialise();
 		domainDescriptor.registerStore(this);
 		domainDescriptor.perClass.values().stream()
 				.forEach(this::prepareClassDescriptor);

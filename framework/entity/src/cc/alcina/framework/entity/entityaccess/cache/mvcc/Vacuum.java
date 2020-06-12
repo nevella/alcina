@@ -8,8 +8,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 
 class Vacuum {
 	ConcurrentHashMap<Transaction, ConcurrentHashMap<Vacuumable, Vacuumable>> vacuumables = new ConcurrentHashMap<>();
@@ -23,6 +25,10 @@ class Vacuum {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	boolean paused;
+
+	private long vacuumStarted = 0;
+
+	private Thread vacuumThread = null;
 
 	public void addVacuumable(Vacuumable vacuumable) {
 		Transaction transaction = Transaction.current();
@@ -42,6 +48,9 @@ class Vacuum {
 	}
 
 	public void enqueueVacuum() {
+		if (vacuumables.isEmpty()) {
+			return;
+		}
 		/*
 		 * really, there will only ever be one truly 'active' (because of the
 		 * synchronized block), but this lets us keep calling
@@ -50,7 +59,12 @@ class Vacuum {
 			return;
 		}
 		executor.execute(() -> {
-			vacuum();
+			try {
+				vacuum();
+			} catch (Throwable t) {
+				EntityLayerLogging.log(LogMessageType.WORKER_THREAD_EXCEPTION,
+						"Vacuum exception", t);
+			}
 		});
 	}
 
@@ -66,6 +80,8 @@ class Vacuum {
 			}
 		}
 		Transaction.begin(TransactionPhase.VACUUM_BEGIN);
+		vacuumThread = Thread.currentThread();
+		vacuumStarted = System.currentTimeMillis();
 		logger.debug("vacuum: transactions with vacuumables: {} : {}",
 				vacuumables.size(), vacuumables.keySet());
 		List<Transaction> vacuumableTransactions = Transactions.get()
@@ -88,6 +104,8 @@ class Vacuum {
 			}
 		}
 		Transaction.current().toVacuumEnded(vacuumableTransactions);
+		vacuumStarted = 0;
+		vacuumThread = null;
 		logger.debug("vacuum: end");
 		Transaction.end();
 	}
@@ -95,6 +113,14 @@ class Vacuum {
 	private void vacuum(Vacuumable vacuumable, Transaction transaction) {
 		logger.trace("would vacuum: {}", vacuumable);
 		vacuumable.vacuum(transaction);
+	}
+
+	long getVacuumStarted() {
+		return this.vacuumStarted;
+	}
+
+	Thread getVacuumThread() {
+		return this.vacuumThread;
 	}
 
 	interface Vacuumable {
