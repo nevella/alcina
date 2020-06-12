@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 
@@ -66,11 +67,6 @@ public class Transaction {
 		if (!Transactions.isInitialised()) {
 			return;
 		}
-		if (TransformManager.get().getTransforms().size() > 0) {
-			ThreadlocalTransformManager.cast().resetTltm(null);
-			throw new MvccException(
-					"Ending transaction with uncommitted transforms");
-		}
 		threadLocalInstance.get().endTransaction();
 		logger.debug("Removing tx - {} {} {}", threadLocalInstance.get(),
 				Thread.currentThread().getName(),
@@ -106,9 +102,7 @@ public class Transaction {
 
 	public static void ensureEnded() {
 		if (threadLocalInstance.get() != null) {
-			if (!threadLocalInstance.get().getPhase().isEnded()) {
-				end();
-			}
+			end();
 		}
 	}
 
@@ -359,8 +353,10 @@ public class Transaction {
 						"Ending transaction with uncommitted transforms: {}",
 						TransformManager.get().getTransforms().size());
 				ThreadlocalTransformManager.cast().resetTltm(null);
-				break;
-				// fallthrough
+				// fallthrough if test server
+				if (!AppPersistenceBase.isTestServer()) {
+					break;
+				}
 			}
 		default:
 			throw new MvccException(Ax.format(

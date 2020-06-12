@@ -13,18 +13,4 @@ enum TransactionPhase {
 			return false;
 		}
 	}
-
-	public boolean isEnded() {
-		switch (this) {
-		case TO_DB_PERSISTED:
-		case TO_DB_ABORTED:
-		case TO_DOMAIN_COMMITTED:
-		case TO_DOMAIN_ABORTED:
-		case VACUUM_ENDED:
-		case NO_ACTIVE_TRANSACTION:
-			return true;
-		default:
-			return false;
-		}
-	}
 }
