@@ -649,7 +649,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	 * listeners and remove from backing object cache
 	 */
 	public DomainTransformEvent delete(Entity entity) {
-		if (!generateEventIfObjectNotRegistered() && getObject(entity) == null) {
+		if (!generateEventIfObjectNotRegistered()
+				&& getObject(entity) == null) {
 			return null;
 		}
 		registerDomainObject(entity);
@@ -1933,6 +1934,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 						(association, propertyReflector) -> {
 							Object associated = propertyReflector
 									.getPropertyValue(entity);
+							if (association.propertyName().equals("orders")) {
+								int debug = 3;
+							}
 							if (association.cascadeDeletes()) {
 								// parent.children
 								if (associated instanceof Set) {
@@ -1997,11 +2001,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 											.checkArgument(associated == null);
 								}
 							} else {
-								throw Ax.runtimeException(
-										"Association with no delete behaviour: %s.%s",
-										entity.provideEntityClass()
-												.getSimpleName(),
-										propertyReflector.getPropertyName());
+								// this means that a dependent object won't be
+								// dereffed/deleted - so will block deletion if
+								// existing
+								//
+								// throw Ax.runtimeException(
+								// "Association with no delete behaviour:
+								// %s.%s",
+								// entity.provideEntityClass()
+								// .getSimpleName(),
+								// propertyReflector.getPropertyName());
 							}
 						});
 				break;
