@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -140,11 +139,6 @@ public class DomainLookup<T, E extends Entity>
 	@Override
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
-	}
-
-	public void setNonTransactional() {
-		Preconditions.checkState(store.isEmpty());
-		store = new Multiset<>();
 	}
 
 	public void setNormaliser(Converter<T, T> normaliser) {

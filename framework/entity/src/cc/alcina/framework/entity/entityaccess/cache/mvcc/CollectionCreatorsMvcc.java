@@ -11,17 +11,29 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multiset;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 public class CollectionCreatorsMvcc {
-	@RegistryLocation(registryPoint = CollectionCreators.MultisetCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@RegistryLocation(registryPoint = CollectionCreators.MultisetCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	public static class DomainStoreMultisetCreator<K, V>
 			implements CollectionCreators.MultisetCreator<K, V> {
+		private boolean nonTransactionalDomain;
+
+		public DomainStoreMultisetCreator() {
+			this.nonTransactionalDomain = DomainStore
+					.isNonTransactionalDomain();
+		}
+
 		@Override
 		public Multiset<K, Set<V>> create(Class<K> keyClass,
 				Class<V> valueClass) {
 			Preconditions.checkNotNull(keyClass);
 			Preconditions.checkNotNull(valueClass);
-			return new TransactionalMultiset<>(keyClass, valueClass);
+			if (nonTransactionalDomain) {
+				return new Multiset<>();
+			} else {
+				return new TransactionalMultiset<>(keyClass, valueClass);
+			}
 		}
 
 		private final static class TransactionalMultiset<K, V>

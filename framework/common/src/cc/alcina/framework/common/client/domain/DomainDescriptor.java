@@ -81,6 +81,9 @@ public abstract class DomainDescriptor {
 		postLoadTasks.stream().forEach(task -> task.registerStore(domainStore));
 	}
 
+	public void initialise() {
+	}
+
 	public static interface DomainStoreTask {
 		/**
 		 * @return the lock object, if any

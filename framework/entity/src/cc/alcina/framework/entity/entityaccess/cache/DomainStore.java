@@ -152,6 +152,9 @@ public class DomainStore implements IDomainStore {
 	public static final String CONTEXT_NO_LOCKS = DomainStore.class.getName()
 			+ ".CONTEXT_NO_LOCKS";
 
+	public static final String CONTEXT_NON_TRANSACTIONAL_DOMAIN_INIT = DomainStore.class
+			.getName() + ".CONTEXT_NON_TRANSACTIONAL_DOMAIN_INIT";
+
 	public static final Logger LOGGER_WRAPPED_OBJECT_REF_INTEGRITY = AlcinaLogUtils
 			.getTaggedLogger(DomainStore.class, "wrapped_object_ref_integrity");
 	static {
@@ -182,6 +185,10 @@ public class DomainStore implements IDomainStore {
 	public static PerThreadTransaction ensureActiveTransaction() {
 		return null;
 		// return stores().writableStore().transactions().ensureTransaction();
+	}
+
+	public static boolean isNonTransactionalDomain() {
+		return LooseContext.is(CONTEXT_NON_TRANSACTIONAL_DOMAIN_INIT);
 	}
 
 	public static DomainStores stores() {
@@ -483,6 +490,7 @@ public class DomainStore implements IDomainStore {
 				.getDeclaredField("propertyChangeSupport");
 		modificationCheckerField.setAccessible(true);
 		setCheckModificationWriteLock(false);
+		domainDescriptor.initialise();
 		domainDescriptor.registerStore(this);
 		domainDescriptor.perClass.values().stream()
 				.forEach(this::prepareClassDescriptor);
