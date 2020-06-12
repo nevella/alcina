@@ -7,6 +7,7 @@ import java.util.Set;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.BplDelegateMapCreator;
+import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -16,7 +17,6 @@ import cc.alcina.framework.common.client.util.CollectionCreators.MapCreator;
 import cc.alcina.framework.common.client.util.NullFriendlyComparatorWrapper;
 import cc.alcina.framework.common.client.util.trie.KeyAnalyzer;
 import cc.alcina.framework.common.client.util.trie.MultiTrie;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class BaseProjectionSupportMvcc {
@@ -34,7 +34,7 @@ public class BaseProjectionSupportMvcc {
 		private boolean nonTransactionalDomain;
 
 		public BplDelegateMapCreatorTransactional() {
-			this.nonTransactionalDomain = DomainStore
+			this.nonTransactionalDomain = IDomainStore
 					.isNonTransactionalDomain();
 		}
 
@@ -43,7 +43,7 @@ public class BaseProjectionSupportMvcc {
 			if (getBuilder().getCreators() != null
 					&& getBuilder().getCreators().length > depthFromRoot) {
 				Map map = (Map) getBuilder().getCreators()[depthFromRoot].get();
-				Preconditions.checkState((!nonTransactionalDomain)
+				Preconditions.checkState((nonTransactionalDomain)
 						^ (map instanceof TransactionalMap));
 				return map;
 			} else {

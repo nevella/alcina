@@ -5,13 +5,13 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multiset;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 public class CollectionCreatorsMvcc {
 	@RegistryLocation(registryPoint = CollectionCreators.MultisetCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
@@ -20,7 +20,7 @@ public class CollectionCreatorsMvcc {
 		private boolean nonTransactionalDomain;
 
 		public DomainStoreMultisetCreator() {
-			this.nonTransactionalDomain = DomainStore
+			this.nonTransactionalDomain = IDomainStore
 					.isNonTransactionalDomain();
 		}
 

@@ -10,7 +10,6 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 public class LocalDomain {
 	private DetachedEntityCache cache = new DetachedEntityCache();
@@ -45,7 +44,7 @@ public class LocalDomain {
 	public void initialise() {
 		try {
 			LooseContext.pushWithTrue(
-					DomainStore.CONTEXT_NON_TRANSACTIONAL_DOMAIN_INIT);
+					IDomainStore.CONTEXT_NON_TRANSACTIONAL_DOMAIN_INIT);
 			this.domainDescriptor.initialise();
 			for (DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
 					.values()) {
