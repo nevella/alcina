@@ -266,18 +266,18 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	 */
 	protected void initLoggers() {
 		// Logger logger = Logger
-		// .getLogger(AlcinaServerConfig.get().getMainLoggerName());
+		// .getLogger(AlcinaWebappConfig.get().getMainLoggerName());
 		// Layout l = new PatternLayout("%-5p [%c{1}] %m%n");
 		// Appender a = new SafeConsoleAppender(l);
 		// String mainLoggerAppenderName =
-		// AlcinaServerConfig.MAIN_LOGGER_APPENDER;
+		// AlcinaWebappConfig.MAIN_LOGGER_APPENDER;
 		// a.setName(mainLoggerAppenderName);
 		// if (logger.getAppender(mainLoggerAppenderName) == null) {
 		// logger.addAppender(a);
 		// }
 		// logger.setAdditivity(true);
 		//
-		// String databaseEventLoggerName = AlcinaServerConfig.get()
+		// String databaseEventLoggerName = AlcinaWebappConfig.get()
 		// .getDatabaseEventLoggerName();
 		// if (EntityLayerObjects.get().getPersistentLogger() == null) {
 		// Logger dbLogger = Logger.getLogger(databaseEventLoggerName);

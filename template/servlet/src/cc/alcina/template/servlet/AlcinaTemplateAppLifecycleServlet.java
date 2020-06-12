@@ -10,7 +10,7 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.impl.jboss.JBoss7Support;
 import cc.alcina.framework.entity.impl.jboss.JPAHibernateImpl;
 import cc.alcina.framework.entity.impl.jboss.JbossLogMuter;
-import cc.alcina.framework.entity.logic.AlcinaServerConfig;
+import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
@@ -32,14 +32,14 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 
 	@Override
 	protected void initNames() {
-		AlcinaServerConfig.get().setApplicationName("AlcinaTemplate");
-		AlcinaServerConfig.get().setMainLoggerName("cc.alcina.template");
-		AlcinaServerConfig.get().setCustomPropertiesFilePath(
+		AlcinaWebappConfig.get().setApplicationName("AlcinaTemplate");
+		AlcinaWebappConfig.get().setMainLoggerName("cc.alcina.template");
+		AlcinaWebappConfig.get().setCustomPropertiesFilePath(
 				new JPAHibernateImpl().getConfigDirectory().getPath()
 						+ File.separator + "AlcinaTemplate-server.properties");
-		AlcinaServerConfig.get().setMetricLoggerName(
+		AlcinaWebappConfig.get().setMetricLoggerName(
 				"cc.alcina.template.metric.server");
-		AlcinaServerConfig.get().setDatabaseEventLoggerName(
+		AlcinaWebappConfig.get().setDatabaseEventLoggerName(
 				"cc.alcina.template.server.persistentlog");
 	}
 

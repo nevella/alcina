@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.entity.logic.AlcinaServerConfig;
+import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.SessionHelper;
@@ -39,7 +39,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 	public AlcinaTemplateRemoteServiceImpl() {
 		super();
 		setLogger(Logger
-				.getLogger(AlcinaServerConfig.get().getMainLoggerName()));
+				.getLogger(AlcinaWebappConfig.get().getMainLoggerName()));
 	}
 
 	@Override
