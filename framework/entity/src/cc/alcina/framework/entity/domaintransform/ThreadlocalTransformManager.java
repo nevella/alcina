@@ -1208,7 +1208,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	protected boolean generateEventIfObjectNotFound() {
+	protected boolean generateEventIfObjectNotRegistered() {
 		return true;
 	}
 

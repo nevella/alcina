@@ -649,7 +649,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	 * listeners and remove from backing object cache
 	 */
 	public DomainTransformEvent delete(Entity entity) {
-		if (!generateEventIfObjectNotFound() && getObject(entity) == null) {
+		if (!generateEventIfObjectNotRegistered() && getObject(entity) == null) {
 			return null;
 		}
 		registerDomainObject(entity);
@@ -1663,7 +1663,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	protected boolean generateEventIfObjectNotFound() {
+	protected boolean generateEventIfObjectNotRegistered() {
 		return false;
 	}
 
@@ -2041,8 +2041,25 @@ public abstract class TransformManager implements PropertyChangeListener,
 				case NULL_PROPERTY_REF:
 				case CHANGE_PROPERTY_REF:
 					try {
-						tm.apply(evt);
+						// FIXME - mvcc.2 - this listener should go basically
+						// just flip to 'tostorage' if not in a provisional TM
+						// replay/promotion (provisional -> client tm) should go
+						// into separate code
+						//
+						// what essentially happens now is that transforms are
+						// double-applied, which is an issue for deletion (and
+						// maybe creation as well). It was a well-meaning
+						// attempt to improve code reuse, but create/delete are
+						// all customised anyway and association propogation is
+						// handled separately
 						associationPropogation.domainTransform(evt);
+						switch (evt.getTransformType()) {
+						case DELETE_OBJECT:
+							break;
+						default:
+							tm.apply(evt);
+							break;
+						}
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
 					}

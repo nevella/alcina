@@ -5,6 +5,8 @@ import java.lang.annotation.Annotation;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.SEUtilities;
 
 public class JvmPropertyReflector implements PropertyReflector {
 	private String propertyName;
@@ -22,8 +24,11 @@ public class JvmPropertyReflector implements PropertyReflector {
 
 	@Override
 	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
-		return Reflections.propertyAccessor().getAnnotationForProperty(
-				readMethodDeclaringClass, annotationClass, getPropertyName());
+		return readMethodDeclaringClass == null ? null
+				: SEUtilities
+						.getPropertyDescriptorByName(readMethodDeclaringClass,
+								getPropertyName())
+						.getReadMethod().getAnnotation(annotationClass);
 	}
 
 	@Override
@@ -46,5 +51,11 @@ public class JvmPropertyReflector implements PropertyReflector {
 	public void setPropertyValue(Object bean, Object newValue) {
 		Reflections.propertyAccessor().setPropertyValue(bean, getPropertyName(),
 				newValue);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s.%s", readMethodDeclaringClass.getSimpleName(),
+				propertyName);
 	}
 }

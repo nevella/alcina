@@ -309,6 +309,16 @@ public abstract class ClientTransformManager extends TransformManager {
 		return true;
 	}
 
+	@Override
+	protected void beforeDirectCollectionModification(Entity obj,
+			String propertyName, Object value,
+			CollectionModificationType collectionModificationType) {
+		if (isFirePropertyChangesOnConsumedCollectionMods()) {
+			modifyCollectionProperty(obj, propertyName,
+					Collections.singleton(value), collectionModificationType);
+		}
+	}
+
 	protected abstract void callRemotePersistence(
 			WrapperPersistable persistableObject,
 			AsyncCallback<Long> savedCallback);
@@ -334,6 +344,11 @@ public abstract class ClientTransformManager extends TransformManager {
 	}
 
 	@Override
+	protected boolean generateEventIfObjectNotRegistered() {
+		return true;
+	}
+
+	@Override
 	protected void maybeFireCollectionModificationEvent(
 			Class<? extends Object> collectionClass,
 			boolean fromPropertyChange) {
@@ -341,16 +356,6 @@ public abstract class ClientTransformManager extends TransformManager {
 				new CollectionModificationEvent(this, collectionClass,
 						getDomainObjects().getCollection(collectionClass),
 						fromPropertyChange));
-	}
-
-	@Override
-	protected void beforeDirectCollectionModification(Entity obj,
-			String propertyName, Object value,
-			CollectionModificationType collectionModificationType) {
-		if (isFirePropertyChangesOnConsumedCollectionMods()) {
-			modifyCollectionProperty(obj, propertyName,
-					Collections.singleton(value), collectionModificationType);
-		}
 	}
 
 	public class ClientDomainSync {
