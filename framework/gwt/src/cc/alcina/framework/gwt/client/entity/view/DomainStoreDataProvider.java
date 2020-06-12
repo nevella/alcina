@@ -259,6 +259,7 @@ public class DomainStoreDataProvider<T extends Entity>
 
 	public void resetPageSize() {
 		pageSize = 0;
+		lastRange = null;
 	}
 
 	public void search() {
@@ -470,7 +471,6 @@ public class DomainStoreDataProvider<T extends Entity>
 		}
 	}
 
-	// FIXME - insurgenbt
 	private void sortOrFireGroupedResults(ColumnSortEvent event) {
 		if (event == null) {
 			groupedDataHandlerManager.fireEvent(new GroupedDataChangeEvent(
