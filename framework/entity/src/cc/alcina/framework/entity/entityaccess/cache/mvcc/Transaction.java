@@ -346,22 +346,24 @@ public class Transaction {
 			if (TransformManager.get().getTransforms().size() == 0) {
 				break;
 			} else {
-				// we used to fallthrough to an exception if there were
-				// uncommitted transforms but we can't allow dangling
-				// transactions
 				logger.warn(
 						"Ending transaction with uncommitted transforms: {}",
 						TransformManager.get().getTransforms().size());
 				ThreadlocalTransformManager.cast().resetTltm(null);
-				// fallthrough if test server
-				if (!AppPersistenceBase.isTestServer()) {
-					break;
-				}
 			}
 		default:
-			throw new MvccException(Ax.format(
-					"Ending on invalid phase: %s %s transforms", getPhase(),
-					TransformManager.get().getTransforms().size()));
+			// we used to throw to an exception if there were
+			// uncommitted transforms but we can't allow dangling
+			// transactions - we can end up here if an exception is thrown on
+			// postProcess()
+			if (!AppPersistenceBase.isTestServer()) {
+				throw new MvccException(Ax.format(
+						"Ending on invalid phase: %s %s transforms", getPhase(),
+						TransformManager.get().getTransforms().size()));
+			} else {
+				logger.warn("Ending transaction on invalid phase: {}",
+						getPhase());
+			}
 		}
 		ended = true;
 		logger.debug("Ended tx: {}", this);

@@ -48,7 +48,7 @@ public class AlcinaCollectors {
 		return new ToKeyMapCollector(keyMapper, LinkedHashMap::new);
 	}
 
-	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>>
+	public static <T, K> Collector<T, ?, Multimap<K, List<T>>>
 			toKeyMultimap(Function<? super T, ? extends K> keyMapper) {
 		return new ToMultimapCollector(keyMapper, t -> t, Multimap::new);
 	}
