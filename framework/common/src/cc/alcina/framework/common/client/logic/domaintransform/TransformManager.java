@@ -1959,6 +1959,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 								if (associated instanceof Set) {
 									Set<? extends Entity> associatedSet = (Set<? extends Entity>) associated;
 									for (Entity associatedEntity : associatedSet) {
+										associatedEntity.domain().register();
 										Object associatedAssociationValue = associatedObjectAccessor
 												.getPropertyValue(
 														associatedEntity);
@@ -1978,6 +1979,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 										}
 									}
 								} else if (associated instanceof Entity) {
+									((Entity) associated).domain().register();
 									Object associatedAssociationValue = associatedObjectAccessor
 											.getPropertyValue(associated);
 									if (associatedAssociationValue instanceof Set) {
@@ -1993,8 +1995,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 												.setPropertyValue(associated,
 														null);
 									} else {
-										Preconditions.checkArgument(
-												associated == null);
+										throw new UnsupportedOperationException();
 									}
 								} else {
 									Preconditions
