@@ -48,9 +48,6 @@ class Vacuum {
 	}
 
 	public void enqueueVacuum() {
-		if (vacuumables.isEmpty()) {
-			return;
-		}
 		/*
 		 * really, there will only ever be one truly 'active' (because of the
 		 * synchronized block), but this lets us keep calling
@@ -82,8 +79,12 @@ class Vacuum {
 		Transaction.begin(TransactionPhase.VACUUM_BEGIN);
 		vacuumThread = Thread.currentThread();
 		vacuumStarted = System.currentTimeMillis();
-		logger.debug("vacuum: transactions with vacuumables: {} : {}",
-				vacuumables.size(), vacuumables.keySet());
+		if (vacuumables.size() > 0) {
+			logger.debug("vacuum: transactions with vacuumables: {} : {}",
+					vacuumables.size(), vacuumables.keySet());
+		} else {
+			logger.trace("vacuum: removing txs without vacuumables");
+		}
 		List<Transaction> vacuumableTransactions = Transactions.get()
 				.getVacuumableCommittedTransactions();
 		vacuumableTransactions
