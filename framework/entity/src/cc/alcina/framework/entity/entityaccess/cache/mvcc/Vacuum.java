@@ -79,7 +79,8 @@ class Vacuum {
 		Transaction.begin(TransactionPhase.VACUUM_BEGIN);
 		vacuumThread = Thread.currentThread();
 		vacuumStarted = System.currentTimeMillis();
-		if (vacuumables.size() > 0) {
+		boolean debugLevelLogging = vacuumables.size() > 0;
+		if (debugLevelLogging) {
 			logger.debug("vacuum: transactions with vacuumables: {} : {}",
 					vacuumables.size(), vacuumables.keySet());
 		} else {
@@ -107,7 +108,9 @@ class Vacuum {
 		Transaction.current().toVacuumEnded(vacuumableTransactions);
 		vacuumStarted = 0;
 		vacuumThread = null;
-		logger.debug("vacuum: end");
+		if (debugLevelLogging) {
+			logger.debug("vacuum: end");
+		}
 		Transaction.end();
 	}
 

@@ -61,6 +61,7 @@ import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.AssociationPropogationTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -156,7 +157,7 @@ public class DomainStore implements IDomainStore {
 			.getTaggedLogger(DomainStore.class, "wrapped_object_ref_integrity");
 	static {
 		ThreadlocalTransformManager.addThreadLocalDomainTransformListener(
-				new TransformManager.AssociationPropogationTransformListener(
+				new AssociationPropogationTransformListener(
 						CommitType.TO_LOCAL_BEAN));
 		ThreadlocalTransformManager.addThreadLocalDomainTransformListener(
 				new IndexingTransformListener());
