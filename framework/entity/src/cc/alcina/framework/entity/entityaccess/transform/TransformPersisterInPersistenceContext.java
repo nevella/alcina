@@ -143,10 +143,10 @@ public class TransformPersisterInPersistenceContext {
 					return;
 				}
 			}
-			Multimap<Integer, List<Object>> byRequestId = transformRequests
+			Multimap<Integer, List<DomainTransformRequest>> byRequestId = transformRequests
 					.stream().collect(AlcinaCollectors.toKeyMultimap(
 							DomainTransformRequest::getRequestId));
-			Optional<Entry<Integer, List<Object>>> multipleDtrsForOneRequestId = byRequestId
+			Optional<Entry<Integer, List<DomainTransformRequest>>> multipleDtrsForOneRequestId = byRequestId
 					.entrySet().stream().filter(e -> e.getValue().size() > 1)
 					.findFirst();
 			if (multipleDtrsForOneRequestId.isPresent()) {
