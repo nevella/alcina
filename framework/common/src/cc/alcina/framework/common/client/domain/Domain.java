@@ -77,6 +77,9 @@ public class Domain {
 
 	public static <V extends Entity> V detachedToDomain(V entity,
 			List<String> ignoreProperties) {
+		if (Domain.isDomainVersion(entity)) {
+			return entity;
+		}
 		Class<V> clazz = (Class<V>) entity.getClass();
 		V writeable = entity.provideWasPersisted()
 				? Domain.writeable(Domain.find(entity))
