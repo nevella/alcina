@@ -901,6 +901,7 @@ public class DomainStore implements IDomainStore {
 			doEvictions();
 			Transaction.current().toDomainCommitted();
 		} catch (Exception e) {
+			logger.warn("post process exception - pre final", e);
 			Transaction.current().toDomainAborted();
 			causes.add(e);
 		} finally {
