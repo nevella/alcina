@@ -356,7 +356,7 @@ public class Transaction {
 			// uncommitted transforms but we can't allow dangling
 			// transactions - we can end up here if an exception is thrown on
 			// postProcess()
-			if (!AppPersistenceBase.isTestServer()) {
+			if (AppPersistenceBase.isTestServer()) {
 				throw new MvccException(Ax.format(
 						"Ending on invalid phase: %s %s transforms", getPhase(),
 						TransformManager.get().getTransforms().size()));
