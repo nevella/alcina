@@ -723,9 +723,13 @@ public class DomainStore implements IDomainStore {
 
 	// we only have one thread allowed here - but they won't start blocking the
 	// reader thread
-	// TODO - optimise!
+	// FIXME - mvcc.2 - optimise!
 	synchronized void
 			postProcess(DomainTransformPersistenceEvent persistenceEvent) {
+		if (persistenceEvent.getDomainTransformLayerWrapper().persistentRequests
+				.isEmpty()) {
+			return;
+		}
 		DomainModificationMetadataProvider metadataProvider = persistenceEvent
 				.getMetadataProvider();
 		if (metadataProvider == null) {
