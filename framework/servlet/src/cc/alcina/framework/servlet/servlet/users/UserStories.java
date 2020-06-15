@@ -230,6 +230,9 @@ public class UserStories {
 		if (ResourceUtilities.is("disabled")) {
 			return;
 		}
+		if (incoming.getStory().length() > 100000) {
+			return;
+		}
 		ClientInstance clientInstance = SessionHelper
 				.getAuthenticatedSessionClientInstance(
 						CommonRemoteServiceServlet

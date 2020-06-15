@@ -50,6 +50,8 @@ public abstract class UserStoryTeller
 
 	private boolean publishing;
 
+	private int cumulativeCharCount = 0;
+
 	public UserStoryTeller() {
 		super();
 	}
@@ -100,6 +102,10 @@ public abstract class UserStoryTeller
 
 	protected abstract IUserStory createUserStory();
 
+	protected int getMaxCumulativeCharCount() {
+		return 300000;
+	}
+
 	protected void persistLocal() {
 	}
 
@@ -109,7 +115,15 @@ public abstract class UserStoryTeller
 		if (publishDisabled || !publishing) {
 			return;
 		}
-		story.setStory(LogStore.get().dumpLogsAsString());
+		if (cumulativeCharCount > getMaxCumulativeCharCount()) {
+			return;
+		}
+		String contents = LogStore.get().dumpLogsAsString();
+		if (contents.length() > getMaxCumulativeCharCount()) {
+			return;
+		}
+		cumulativeCharCount += contents.length();
+		story.setStory(contents);
 		story.obfuscateClientEvents();
 		persistRemote();
 		Ax.out("persisted user story");
