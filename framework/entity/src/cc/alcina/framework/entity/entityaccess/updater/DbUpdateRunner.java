@@ -35,6 +35,10 @@ public class DbUpdateRunner {
 				if (dbUpdater.runPreCache() ^ preCacheWarmup) {
 					continue;
 				}
+				if (!dbUpdater.runPreCache()) {
+					throw new RuntimeException(
+							"'run pre-cache==false' not supported because of update series collisions. Run as a servlet layer updater");
+				}
 				if (em == null && !dbUpdater.allowNullEntityManager()) {
 					continue;
 				}
@@ -42,16 +46,14 @@ public class DbUpdateRunner {
 						dbUpdater.getUpdateNumber(),
 						dbUpdater.getClass().getSimpleName()));
 				dbUpdater.run(em);
-				if (currentUpdateNumber + 1 == dbUpdater.getUpdateNumber()) {
-					if (em != null) {
-						dbProperty.setPropertyValue(
-								dbUpdater.getUpdateNumber().toString());
-						em.flush();
-					} else {
-						LocalDbPropertyBase.getOrSetLocalDbProperty(
-								LocalDbPropertyBase.DB_UPDATE_VERSION,
-								dbUpdater.getUpdateNumber().toString(), false);
-					}
+				if (em != null) {
+					dbProperty.setPropertyValue(
+							dbUpdater.getUpdateNumber().toString());
+					em.flush();
+				} else {
+					LocalDbPropertyBase.getOrSetLocalDbProperty(
+							LocalDbPropertyBase.DB_UPDATE_VERSION,
+							dbUpdater.getUpdateNumber().toString(), false);
 				}
 			}
 		}

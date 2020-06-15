@@ -893,6 +893,8 @@ public class DevConsoleDebugCommands {
 
 		String regexFilter = null;
 
+		int maxRecordLength = 100000;
+
 		public void addLogRecords(ResultSet rs, List<IL> logRecords)
 				throws SQLException {
 			Optional<Pattern> ignorePattern = Optional.ofNullable(
@@ -953,6 +955,9 @@ public class DevConsoleDebugCommands {
 					"-ignore");
 			regexFilter = filterArgvParam.value;
 			argv = filterArgvParam.argv;
+			filterArgvParam = new FilterArgvParam(argv, "-maxLength");
+			maxRecordLength = Integer.parseInt(filterArgvParam.value);
+			argv = filterArgvParam.argv;
 			List<String> exceptions = Arrays.asList(
 					"UNEXPECTED_SERVLET_EXCEPTION", "ALERT_GENERATION_FAILURE",
 					"JOB_FAILURE_EXCEPTION", "CLUSTER_EXCEPTION",
@@ -983,9 +988,10 @@ public class DevConsoleDebugCommands {
 			String sqlFromEtc = String.format(
 					"from logging l inner join users u on l.user_id=u.id "
 							+ "where l.created_on>? %s %s and "
-							+ " not (l.component_key in %s)"
+							+ " not (l.component_key in %s) and length(l.text)<%s"
 							+ " order by random() %s",
-					exceptionFilter, gtOnlyFilter, ckFilter, limitClause);
+					exceptionFilter, gtOnlyFilter, ckFilter, maxRecordLength,
+					limitClause);
 			int size = 0;
 			{
 				String sql = "select count(l.id) " + sqlFromEtc;
