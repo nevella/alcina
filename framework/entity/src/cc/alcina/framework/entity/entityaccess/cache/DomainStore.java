@@ -538,15 +538,15 @@ public class DomainStore implements IDomainStore {
 		if (isDebug()) {
 			token.lastFilterString = filter.toString();
 		}
-		DomainLookup lookup = getLookupFor(clazz, filter.propertyPath);
+		DomainLookup lookup = getLookupFor(clazz, filter.getPropertyPath());
 		if (lookup != null) {
-			switch (filter.filterOperator) {
+			switch (filter.getFilterOperator()) {
 			case EQ:
 			case IN:
 				// TODO - mvcc.2 - if we have estimates of size, we might be
 				// able to optimise here
 				Set<E> lookupValues = lookup
-						.getKeyMayBeCollection(filter.propertyValue);
+						.getKeyMayBeCollection(filter.getPropertyValue());
 				token.appendEvaluatedValueFilter(lookupValues);
 				return;
 			// all others non-optimised
@@ -1536,9 +1536,9 @@ public class DomainStore implements IDomainStore {
 					idx += filtersConsumed;
 				} else {
 					DomainLookup lookup = getLookupFor(clazz,
-							filter.propertyPath);
+							filter.getPropertyPath());
 					if (lookup != null) {
-						switch (filter.filterOperator) {
+						switch (filter.getFilterOperator()) {
 						case EQ:
 						case IN:
 							filterCost = lookup.estimateFilterCost(entityCount,
@@ -1857,7 +1857,7 @@ public class DomainStore implements IDomainStore {
 
 		public boolean hasIdQuery() {
 			return query.getFilters().stream()
-					.anyMatch(filter -> filter.propertyPath.equals("id"));
+					.anyMatch(filter -> filter.getPropertyPath().equals("id"));
 		}
 
 		public boolean isEmpty() {

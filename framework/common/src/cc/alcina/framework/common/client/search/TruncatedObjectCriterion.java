@@ -44,10 +44,20 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 				&& equivalentTo((SearchCriterion) obj);
 	}
 
+	@Override
+	public boolean equivalentTo(SearchCriterion other) {
+		if (other instanceof TruncatedObjectCriterion) {
+			return other.getClass() == getClass()
+					&& ((TruncatedObjectCriterion) other).getId() == getId();
+		}
+		return super.equivalentTo(other);
+	}
+
 	public String getDisplayText() {
 		return this.displayText;
 	}
 
+	@Override
 	public long getId() {
 		return this.id;
 	}
@@ -73,6 +83,7 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 		this.displayText = displayText;
 	}
 
+	@Override
 	public void setId(long id) {
 		this.id = id;
 	}

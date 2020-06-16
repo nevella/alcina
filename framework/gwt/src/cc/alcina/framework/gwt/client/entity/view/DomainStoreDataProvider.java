@@ -143,6 +143,10 @@ public class DomainStoreDataProvider<T extends Entity>
 		resultsDelta(0, 0, false);
 	}
 
+	public void clearLastSearchDefinition() {
+		lastSearchDefinition = null;
+	}
+
 	public void fireDummyDataChangedEvent() {
 		fireEvent(new DataProviderChangeEvent<T>(allResults));
 	}
@@ -282,9 +286,8 @@ public class DomainStoreDataProvider<T extends Entity>
 				.get().getPosition();
 		if (getLastSearchDefinition() != null
 				&& getLastSearchDefinition().equivalentTo(searchDefinition)
-				&& range.equals(lastRange)
-				&& !Objects.equals(transformLogPosition,
-						this.transformLogPosition)) {
+				&& range.equals(lastRange) && Objects.equals(
+						transformLogPosition, this.transformLogPosition)) {
 			if (activeCallback != null && !activeCallback.isCancelled()) {
 				return;
 			}

@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainFilter;
@@ -185,8 +186,48 @@ public class DomainSearcher<T extends Entity> {
 		}
 
 		@Override
+		public FilterOperator getFilterOperator() {
+			return this.filter.getFilterOperator();
+		}
+
+		@Override
+		public Predicate getPredicate() {
+			return this.filter.getPredicate();
+		}
+
+		@Override
+		public String getPropertyPath() {
+			return this.filter.getPropertyPath();
+		}
+
+		@Override
+		public Object getPropertyValue() {
+			return this.filter.getPropertyValue();
+		}
+
+		@Override
 		public DomainFilter invertIf(boolean invert) {
 			return this.filter.invertIf(invert);
+		}
+
+		@Override
+		public void setFilterOperator(FilterOperator filterOperator) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setPredicate(Predicate predicate) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setPropertyPath(String propertyPath) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setPropertyValue(Object propertyValue) {
+			throw new UnsupportedOperationException();
 		}
 
 		@Override

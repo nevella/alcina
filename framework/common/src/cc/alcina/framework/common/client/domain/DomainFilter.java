@@ -18,13 +18,13 @@ public class DomainFilter {
 		return result;
 	}
 
-	public String propertyPath;
+	private String propertyPath;
 
-	public Object propertyValue;
+	private Object propertyValue;
 
-	public Predicate predicate;
+	private Predicate predicate;
 
-	public FilterOperator filterOperator;
+	private FilterOperator filterOperator;
 
 	public DomainFilter(Predicate predicate) {
 		this.predicate = predicate;
@@ -81,5 +81,37 @@ public class DomainFilter {
 		}
 		return Ax.format("DomainFilter: %s %s %s", propertyPath,
 				filterOperator.operationText(), propertyValue);
+	}
+
+	public String getPropertyPath() {
+		return propertyPath;
+	}
+
+	public void setPropertyPath(String propertyPath) {
+		this.propertyPath = propertyPath;
+	}
+
+	public Object getPropertyValue() {
+		return propertyValue;
+	}
+
+	public void setPropertyValue(Object propertyValue) {
+		this.propertyValue = propertyValue;
+	}
+
+	public Predicate getPredicate() {
+		return predicate;
+	}
+
+	public void setPredicate(Predicate predicate) {
+		this.predicate = predicate;
+	}
+
+	public FilterOperator getFilterOperator() {
+		return filterOperator;
+	}
+
+	public void setFilterOperator(FilterOperator filterOperator) {
+		this.filterOperator = filterOperator;
 	}
 }

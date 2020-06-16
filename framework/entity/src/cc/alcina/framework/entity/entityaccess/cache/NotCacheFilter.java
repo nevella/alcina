@@ -9,7 +9,7 @@ public class NotCacheFilter extends DomainFilter {
 	public NotCacheFilter(DomainFilter filter) {
 		super(null);
 		this.filter = filter;
-		this.predicate = new InverseFilter(filter.asCollectionFilter());
+		this.setPredicate(new InverseFilter(filter.asCollectionFilter()));
 	}
 
 	@Override

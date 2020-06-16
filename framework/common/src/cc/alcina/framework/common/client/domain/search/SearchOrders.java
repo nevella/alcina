@@ -26,7 +26,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		HasEquivalence<SearchOrders<T>> {
 	/*
 	 * Don't access directly - even when altering (call refreshSerializable when
-	 * altering)
+	 * altering). The boolean value is true ascending; false descending
 	 */
 	private Map<SearchOrder<T, ?>, Boolean> cmps = new LinkedHashMap<>();
 
@@ -112,7 +112,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 
 	private String cmpMapper(Entry<SearchOrder<T, ?>, Boolean> entry) {
 		return Ax.format("%s %s", entry.getKey(),
-				entry.getValue() ? "desc" : "asc");
+				!entry.getValue() ? "desc" : "asc");
 	}
 
 	private void refreshSerializable() {
