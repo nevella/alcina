@@ -12,45 +12,48 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.ServletLayerTransforms;
 
 public class ThreadedPmClientInstanceResolverImpl
-        extends ThreadedPmClientInstanceResolver {
-    public static final String CONTEXT_CLIENT_INSTANCE = ThreadedPmClientInstanceResolverImpl.class
-            .getName() + ".CONTEXT_CLIENT_INSTANCE";
+		extends ThreadedPmClientInstanceResolver {
+	public static final String CONTEXT_CLIENT_INSTANCE = ThreadedPmClientInstanceResolverImpl.class
+			.getName() + ".CONTEXT_CLIENT_INSTANCE";
 
-    @Override
-    public ClientInstance getClientInstance() {
-        if (LooseContext.has(CONTEXT_CLIENT_INSTANCE)) {
-            return LooseContext.get(CONTEXT_CLIENT_INSTANCE);
-        }
-        HttpServletRequest request = CommonRemoteServiceServlet
-                .getContextThreadLocalRequest();
-        ClientInstance result = null;
-        if (request != null) {
-            Long clientInstanceId = SessionHelper
-                    .getAuthenticatedSessionClientInstanceId(request);
-            if (clientInstanceId != null) {
-                result = CommonPersistenceProvider.get().getCommonPersistence()
-                        .getClientInstance(clientInstanceId);
-            }
-        }
-        return Optional.<ClientInstance> ofNullable(result).orElse(
-                ServletLayerTransforms.get().getServerAsClientInstance());
-    }
+	@Override
+	public ClientInstance getClientInstance() {
+		if (LooseContext.has(CONTEXT_CLIENT_INSTANCE)) {
+			return LooseContext.get(CONTEXT_CLIENT_INSTANCE);
+		}
+		HttpServletRequest request = CommonRemoteServiceServlet
+				.getContextThreadLocalRequest();
+		ClientInstance result = null;
+		if (request != null) {
+			Long clientInstanceId = SessionHelper
+					.getAuthenticatedSessionClientInstanceId(request);
+			if (clientInstanceId != null) {
+				result = CommonPersistenceProvider.get().getCommonPersistence()
+						.getClientInstance(clientInstanceId);
+			}
+		}
+		return Optional.<ClientInstance> ofNullable(result).orElse(
+				ServletLayerTransforms.get().getServerAsClientInstance());
+	}
 
-    @Override
-    public Long getClientInstanceId() {
-        if (LooseContext.has(CONTEXT_CLIENT_INSTANCE)) {
-            return ((ClientInstance) LooseContext.get(CONTEXT_CLIENT_INSTANCE))
-                    .getId();
-        }
-        HttpServletRequest request = CommonRemoteServiceServlet
-                .getContextThreadLocalRequest();
-        if (request != null) {
-            Long clientInstanceId = SessionHelper
-                    .getAuthenticatedSessionClientInstanceId(request);
-            if (clientInstanceId != null) {
-                return clientInstanceId;
-            }
-        }
-        return ServletLayerTransforms.get().getServerAsClientInstance().getId();
-    }
+	@Override
+	public Long getClientInstanceId() {
+		if (LooseContext.has(CONTEXT_CLIENT_INSTANCE)) {
+			return ((ClientInstance) LooseContext.get(CONTEXT_CLIENT_INSTANCE))
+					.getId();
+		}
+		HttpServletRequest request = CommonRemoteServiceServlet
+				.getContextThreadLocalRequest();
+		if (request != null) {
+			Long clientInstanceId = SessionHelper
+					.getAuthenticatedSessionClientInstanceId(request);
+			if (clientInstanceId != null) {
+				return clientInstanceId;
+			}
+		}
+		ClientInstance serverAsClientInstance = ServletLayerTransforms.get()
+				.getServerAsClientInstance();
+		return serverAsClientInstance == null ? -1
+				: serverAsClientInstance.getId();
+	}
 }
