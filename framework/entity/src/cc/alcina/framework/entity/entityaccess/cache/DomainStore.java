@@ -1203,7 +1203,12 @@ public class DomainStore implements IDomainStore {
 			@Override
 			public Class<? extends Object>
 					resolveEntityClass(Class<? extends Object> clazz) {
-				return storeHandler(clazz).resolveEntityClass(clazz);
+				if (HasId.class.isAssignableFrom(clazz)) {
+					return Mvcc
+							.resolveEntityClass((Class<? extends HasId>) clazz);
+				} else {
+					return clazz;
+				}
 			}
 
 			@Override
@@ -1650,16 +1655,6 @@ public class DomainStore implements IDomainStore {
 		@Override
 		public <V extends Entity> V resolve(V v) {
 			return Transactions.resolve(v, false, false);
-		}
-
-		@Override
-		public Class<? extends Object>
-				resolveEntityClass(Class<? extends Object> clazz) {
-			if (HasId.class.isAssignableFrom(clazz)) {
-				return Mvcc.resolveEntityClass((Class<? extends HasId>) clazz);
-			} else {
-				return clazz;
-			}
 		}
 
 		@Override

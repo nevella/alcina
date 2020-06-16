@@ -306,8 +306,7 @@ public class SyncMerger<T> {
 							.resolveEntityClass(
 									pair.getRight().getObject().getClass())
 							.newInstance();
-					postCreateInstance(newInstance,
-							action == SyncPairAction.CREATE_LEFT);
+					newInstance = postCreateInstance(newInstance, true);
 					newKo.setObject(newInstance);
 					pair.setLeft(newKo);
 				} else {
@@ -315,8 +314,7 @@ public class SyncMerger<T> {
 							.resolveEntityClass(
 									pair.getLeft().getObject().getClass())
 							.newInstance();
-					postCreateInstance(newInstance,
-							action == SyncPairAction.CREATE_RIGHT);
+					newInstance = postCreateInstance(newInstance, false);
 					newKo.setObject(newInstance);
 					pair.setRight(newKo);
 				}
@@ -346,7 +344,8 @@ public class SyncMerger<T> {
 		return true;
 	}
 
-	protected void postCreateInstance(T newInstance, boolean createLeft) {
+	protected T postCreateInstance(T newInstance, boolean createLeft) {
+		return newInstance;
 	}
 
 	protected List<SyncMapping> syncMappings(SyncPair<T> pair) {
