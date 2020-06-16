@@ -31,7 +31,7 @@ public interface ComplexFilter<E extends Entity> extends HasFilterCost {
 		default Stream<E> appendEvaluatedValueFilter(Set<E> values) {
 			Stream<E> incomingStream = getIncomingStream();
 			if (values == null || values.size() == 0) {
-				return incomingStream;
+				return Stream.empty();
 			} else {
 				if (incomingStream == null) {
 					return values.stream();

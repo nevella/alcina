@@ -1462,7 +1462,8 @@ public class DomainStore implements IDomainStore {
 		@Override
 		public Stream<E> getEntitiesForIds(Set<Long> ids) {
 			return (Stream<E>) (Stream<?>) ids.stream()
-					.map(id -> cache.get(this.clazz, id));
+					.map(id -> cache.get(this.clazz, id))
+					.filter(Objects::nonNull);
 		}
 
 		@Override

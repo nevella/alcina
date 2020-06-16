@@ -31,7 +31,7 @@ public class SearchUtils {
 
 	static SearchUtilsRegExpHelper regexpHelper;
 
-	public static final String IDS_REGEX = "(?:ids?: ?)[0-9, ]+";
+	public static final String IDS_REGEX = "(?:ids?: ?)?[0-9][0-9, ]*";
 
 	public static final String REGEX_REGEX = "(?:regex:)(.+)";
 	static {
