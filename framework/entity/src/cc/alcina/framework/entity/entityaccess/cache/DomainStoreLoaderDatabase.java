@@ -486,9 +486,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 								.collect(Collectors.toList());
 						Class clazz = entry.getKey();
 						ids = segmentLoader.filterForQueried(clazz, "id", ids);
-						loadTableOrStoreSegment(clazz,
-								Ax.format(" id in %s", longsToIdClause(ids)),
-								laterLookup);
+						if (ids.size() > 0) {
+							loadTableOrStoreSegment(clazz, Ax
+									.format(" id in %s", longsToIdClause(ids)),
+									laterLookup);
+						}
 						segmentLoader.loadedInPhase(clazz, ids);
 						entry.getValue().clear();
 						return null;
@@ -519,14 +521,19 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 									property.propertyName1,
 									longsToIdClause(ids));
 							segmentClasses.add(property.clazz1);
-							calls.add(() -> {
-								LaterLookup laterLookup = new LaterLookup();
-								laterLookups.add(laterLookup);
-								loadTableOrStoreSegment(property.clazz1,
-										sqlFilter, laterLookup);
-								return null;
-							});
+							if (ids.size() > 0) {
+								calls.add(() -> {
+									LaterLookup laterLookup = new LaterLookup();
+									laterLookups.add(laterLookup);
+									loadTableOrStoreSegment(property.clazz1,
+											sqlFilter, laterLookup);
+									return null;
+								});
+							}
 						} else if (property.type == DomainSegmentPropertyType.STORE_REF_CLAZZ_1_PROP_EQ_CLAZZ_2_ID_LOAD_CLAZZ_2) {
+							if (store.cache.size(property.clazz1) == 0) {
+								continue;
+							}
 							Collection<Long> ids = store.cache.fieldValues(
 									property.clazz1, property.propertyName1);
 							ids = ids.stream().distinct().sorted()
