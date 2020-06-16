@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -117,7 +119,7 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 
 	@Override
 	public Stream<T> wrap(Stream<T> stream) {
-		throw new UnsupportedOperationException();
+		return wrapAll(stream);
 	}
 
 	@Override
@@ -215,6 +217,17 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 			}
 		}
 		return result;
+	}
+
+	protected Stream<T> wrapAll(Stream<T> stream) {
+		List<T> list = stream.collect(Collectors.toList());
+		Preconditions.checkArgument(list.size() < 1000);
+		try {
+			lazyLoad(list);
+			return list.stream();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static class EvictionToken {

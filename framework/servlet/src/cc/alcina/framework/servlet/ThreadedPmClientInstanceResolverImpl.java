@@ -51,6 +51,9 @@ public class ThreadedPmClientInstanceResolverImpl
 				return clientInstanceId;
 			}
 		}
-		return EntityLayerObjects.get().getServerAsClientInstance().getId();
+		ClientInstance serverAsClientInstance = EntityLayerObjects.get()
+				.getServerAsClientInstance();
+		return serverAsClientInstance == null ? -1
+				: serverAsClientInstance.getId();
 	}
 }
