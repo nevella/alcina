@@ -175,6 +175,11 @@ public class Domain {
 		return handler.resolve(v);
 	}
 
+	public static Class<? extends Object>
+			resolveEntityClass(Class<? extends Object> clazz) {
+		return handler.resolveEntityClass(clazz);
+	}
+
 	public static <V extends Entity> V resolveTransactional(
 			DomainListener listener, V value, Object[] path) {
 		return handler.resolveTransactional(listener, value, path);
@@ -254,6 +259,11 @@ public class Domain {
 
 		default <V extends Entity> V resolve(V v) {
 			return v;
+		}
+
+		default Class<? extends Object>
+				resolveEntityClass(Class<? extends Object> clazz) {
+			return clazz;
 		}
 
 		default <V extends Entity> long size(Class<V> clazz) {

@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -301,17 +302,21 @@ public class SyncMerger<T> {
 			try {
 				newKo.setKeyProvider(keyProvider);
 				if (action == SyncPairAction.CREATE_LEFT) {
-					T newInstance = (T) pair.getRight().getObject().getClass()
+					T newInstance = (T) Domain
+							.resolveEntityClass(
+									pair.getRight().getObject().getClass())
 							.newInstance();
 					postCreateInstance(newInstance,
 							action == SyncPairAction.CREATE_LEFT);
 					newKo.setObject(newInstance);
 					pair.setLeft(newKo);
 				} else {
-					T newInstance = (T) pair.getLeft().getObject().getClass()
+					T newInstance = (T) Domain
+							.resolveEntityClass(
+									pair.getLeft().getObject().getClass())
 							.newInstance();
 					postCreateInstance(newInstance,
-							action == SyncPairAction.CREATE_LEFT);
+							action == SyncPairAction.CREATE_RIGHT);
 					newKo.setObject(newInstance);
 					pair.setRight(newKo);
 				}

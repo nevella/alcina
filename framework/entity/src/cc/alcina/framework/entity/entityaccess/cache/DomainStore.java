@@ -61,6 +61,7 @@ import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.AssociationPropogationTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -1200,6 +1201,12 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
+			public Class<? extends Object>
+					resolveEntityClass(Class<? extends Object> clazz) {
+				return storeHandler(clazz).resolveEntityClass(clazz);
+			}
+
+			@Override
 			public <V extends Entity> V resolveTransactional(
 					DomainListener listener, V value, Object[] path) {
 				return value;
@@ -1643,6 +1650,16 @@ public class DomainStore implements IDomainStore {
 		@Override
 		public <V extends Entity> V resolve(V v) {
 			return Transactions.resolve(v, false, false);
+		}
+
+		@Override
+		public Class<? extends Object>
+				resolveEntityClass(Class<? extends Object> clazz) {
+			if (HasId.class.isAssignableFrom(clazz)) {
+				return Mvcc.resolveEntityClass((Class<? extends HasId>) clazz);
+			} else {
+				return clazz;
+			}
 		}
 
 		@Override
