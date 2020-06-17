@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /**
  * 
@@ -42,6 +43,7 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 	public TxtCriterion(String text) {
 		super();
 		setText(text);
+		setOperator(StandardSearchOperator.CONTAINS);
 	}
 
 	@Override
@@ -102,6 +104,10 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 	@Override
 	public String toString() {
 		String string = CommonUtils.nullToEmpty(getText());
+		if (string.length() > 0
+				&& getOperator() != StandardSearchOperator.CONTAINS) {
+			string = Ax.format("%s '%s'", Ax.friendly(getOperator()), string);
+		}
 		return string.length() == 0 ? ""
 				: Ax.isBlank(getDisplayName()) ? Ax.format("\"%s\"", string)
 						: getDisplayName() + ": " + string;

@@ -19,14 +19,14 @@ public class TrieProjection<K, E extends Entity>
 		implements DomainProjection<E> {
 	private boolean enabled = true;
 
-	MultiTrie<K, Set<E>> trie;
+	protected MultiTrie<K, Set<E>> trie;
 
 	private Class<E> entityClass;
 
-	private Function<E, List<K>> keyMapper;
+	private Function<E, Stream<K>> keyMapper;
 
 	public TrieProjection(KeyAnalyzer<? super K> keyAnalyzer,
-			Class<E> entityClass, Function<E, List<K>> keyMapper) {
+			Class<E> entityClass, Function<E, Stream<K>> keyMapper) {
 		this.entityClass = entityClass;
 		this.keyMapper = keyMapper;
 		trie = Registry.impl(MultiTrieCreator.class).create(keyAnalyzer,
@@ -50,13 +50,12 @@ public class TrieProjection<K, E extends Entity>
 
 	@Override
 	public void insert(E o) {
-		List<K> keys = keyMapper.apply(o);
-		for (K key : keys) {
+		keyMapper.apply(o).forEach(key -> {
 			key = normalise(key);
 			trie.add(key, o);
 			List<K> subKeys = extractSubKeys(key);
 			subKeys.forEach(k -> trie.add(k, o));
-		}
+		});
 	}
 
 	@Override
@@ -66,13 +65,12 @@ public class TrieProjection<K, E extends Entity>
 
 	@Override
 	public void remove(E o) {
-		List<K> keys = keyMapper.apply(o);
-		for (K key : keys) {
+		keyMapper.apply(o).forEach(key -> {
 			key = normalise(key);
 			trie.remove(key, o);
 			List<K> subKeys = extractSubKeys(key);
 			subKeys.forEach(k -> trie.remove(k, o));
-		}
+		});
 	}
 
 	@Override

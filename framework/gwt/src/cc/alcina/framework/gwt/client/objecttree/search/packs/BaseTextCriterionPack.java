@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.objecttree.search.packs;
 
 import java.util.Arrays;
+import java.util.List;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
@@ -42,6 +43,11 @@ public class BaseTextCriterionPack {
 				String fieldName) {
 			super(TxtCriterion.class, objectName, fieldName);
 		}
+
+		public BaseTextCriterionSearchable(String category, String name,
+				List<StandardSearchOperator> operators) {
+			super(TxtCriterion.class, category, name, operators);
+		}
 	}
 
 	public static abstract class SubTextCriterionSearchable<T extends TxtCriterion>
@@ -55,6 +61,11 @@ public class BaseTextCriterionPack {
 			super(clazz, objectName, name,
 					Arrays.asList(StandardSearchOperator.CONTAINS,
 							StandardSearchOperator.DOES_NOT_CONTAIN));
+		}
+
+		public SubTextCriterionSearchable(Class<T> clazz, String category,
+				String name, List<StandardSearchOperator> operators) {
+			super(clazz, category, name, operators);
 		}
 
 		@Override
