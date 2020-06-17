@@ -344,6 +344,14 @@ public abstract class ClientTransformManager extends TransformManager {
 	}
 
 	@Override
+	protected Object ensureEndpointInTransformGraph(Object object) {
+		if (object instanceof Entity) {
+			registerDomainObject((Entity) object);
+		}
+		return object;
+	}
+
+	@Override
 	protected boolean generateEventIfObjectNotRegistered() {
 		return true;
 	}

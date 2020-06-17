@@ -1569,11 +1569,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return sb.toString();
 	}
 
-	ApplyToken createApplyToken(DomainTransformEvent event)
-			throws DomainTransformException {
-		return new ApplyToken(event);
-	}
-
 	protected boolean allowUnregisteredEntityTargetObject() {
 		return false;
 	}
@@ -1886,6 +1881,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return true;
 	}
 
+	ApplyToken createApplyToken(DomainTransformEvent event)
+			throws DomainTransformException {
+		return new ApplyToken(event);
+	}
+
 	public enum CollectionModificationType {
 		ADD, REMOVE
 	}
@@ -2100,6 +2100,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 			newTargetValue = transformType == null ? null
 					: getTargetObject(event, false);
+			newTargetValue = ensureEndpointInTransformGraph(newTargetValue);
 			newTargetObject = null;
 			if (newTargetValue instanceof Entity) {
 				newTargetObject = (Entity) newTargetValue;

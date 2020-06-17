@@ -37,18 +37,15 @@ public class AssociationPropogationTransformListener
 		case CHANGE_PROPERTY_REF: {
 			tm.updateAssociation(event, entity, token.existingTargetObject,
 					true);
-			tm.updateAssociation(event, entity, token.newTargetObject,
-					false);
+			tm.updateAssociation(event, entity, token.newTargetObject, false);
 			break;
 		}
 		case ADD_REF_TO_COLLECTION: {
-			tm.updateAssociation(event, entity, token.newTargetObject,
-					false);
+			tm.updateAssociation(event, entity, token.newTargetObject, false);
 			break;
 		}
 		case REMOVE_REF_FROM_COLLECTION: {
-			tm.updateAssociation(event, entity, token.newTargetObject,
-					true);
+			tm.updateAssociation(event, entity, token.newTargetObject, true);
 			break;
 		}
 		case DELETE_OBJECT: {
@@ -57,9 +54,6 @@ public class AssociationPropogationTransformListener
 					(association, propertyReflector) -> {
 						Object associated = propertyReflector
 								.getPropertyValue(entity);
-						if (association.propertyName().equals("orders")) {
-							int debug = 3;
-						}
 						if (association.cascadeDeletes()) {
 							// parent.children
 							if (associated instanceof Set) {
@@ -69,23 +63,19 @@ public class AssociationPropogationTransformListener
 							} else if (associated instanceof Entity) {
 								((Entity) associated).delete();
 							} else {
-								Preconditions
-										.checkArgument(associated == null);
+								Preconditions.checkArgument(associated == null);
 							}
 						} else if (association.dereferenceOnDelete()) {
 							PropertyReflector associatedObjectAccessor = Reflections
-									.propertyAccessor()
-									.getPropertyReflector(
-											association
-													.implementationClass(),
+									.propertyAccessor().getPropertyReflector(
+											association.implementationClass(),
 											association.propertyName());
 							if (associated instanceof Set) {
 								Set<? extends Entity> associatedSet = (Set<? extends Entity>) associated;
 								for (Entity associatedEntity : associatedSet) {
 									associatedEntity.domain().register();
 									Object associatedAssociationValue = associatedObjectAccessor
-											.getPropertyValue(
-													associatedEntity);
+											.getPropertyValue(associatedEntity);
 									// many-to-many
 									if (associatedAssociationValue instanceof Set) {
 										associatedEntity.domain()
@@ -97,8 +87,7 @@ public class AssociationPropogationTransformListener
 										// parent.children
 										associatedObjectAccessor
 												.setPropertyValue(
-														associatedEntity,
-														null);
+														associatedEntity, null);
 									}
 								}
 							} else if (associated instanceof Entity) {
@@ -109,20 +98,17 @@ public class AssociationPropogationTransformListener
 									// child.parent
 									((Entity) associated).domain()
 											.removeFromProperty(
-													association
-															.propertyName(),
+													association.propertyName(),
 													entity);
 								} else if (associated instanceof Entity) {
 									// one-one(!!)
 									associatedObjectAccessor
-											.setPropertyValue(associated,
-													null);
+											.setPropertyValue(associated, null);
 								} else {
 									throw new UnsupportedOperationException();
 								}
 							} else {
-								Preconditions
-										.checkArgument(associated == null);
+								Preconditions.checkArgument(associated == null);
 							}
 						} else {
 							// this means that a dependent object won't be
