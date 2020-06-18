@@ -37,7 +37,7 @@ public class ObjectRef implements Serializable {
 	}
 
 	public ObjectRef(Entity entity) {
-		setClassRef(ClassRef.forClass(entity.getClass()));
+		setClassRef(ClassRef.forClass(entity.provideEntityClass()));
 		setId(entity.getId());
 		setLocalId(entity.getLocalId());
 		if (entity instanceof HasVersionNumber) {

@@ -39,6 +39,8 @@ public @interface DomainProperty {
 
 	boolean ignoreForDeletionChecking() default false;
 
+	boolean index() default true;
+
 	boolean registerChildren() default false;
 
 	/*

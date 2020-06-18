@@ -14,6 +14,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.entity.PersistentSingleton;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
@@ -192,21 +193,22 @@ public class WrappedObjectPersistence {
 
 	private List<PropertyDescriptor> ensureWrapperDescriptors(
 			Class<? extends HasId> clazz) throws Exception {
+		clazz = (Class<? extends HasId>) Domain.resolveEntityClass(clazz);
 		if (!wrapperDescriptors.containsKey(clazz)) {
-			List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
+			List<PropertyDescriptor> perClassWrapperDescriptors = new ArrayList<PropertyDescriptor>();
+			List<PropertyDescriptor> descriptors = SEUtilities
+					.getSortedPropertyDescriptors(clazz);
+			for (PropertyDescriptor pd : descriptors) {
 				if (pd.getReadMethod() != null) {
 					Wrapper info = pd.getReadMethod()
 							.getAnnotation(Wrapper.class);
 					if (info != null) {
-						descriptors.add(pd);
+						perClassWrapperDescriptors.add(pd);
 					}
 				}
 			}
 			synchronized (wrapperDescriptors) {
-				wrapperDescriptors.put(clazz, descriptors);
+				wrapperDescriptors.put(clazz, perClassWrapperDescriptors);
 			}
 		}
 		return wrapperDescriptors.get(clazz);

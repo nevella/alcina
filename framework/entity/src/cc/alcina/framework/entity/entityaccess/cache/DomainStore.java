@@ -75,6 +75,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCa
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
@@ -1753,33 +1754,41 @@ public class DomainStore implements IDomainStore {
 			}
 			DomainStore store = DomainStore.stores()
 					.storeFor(event.getObjectClass());
-			Entity object = TransformManager.get().getObject(event);
+			Entity entity = TransformManager.get().getObject(event);
 			if (event.getTransformType() != TransformType.CREATE_OBJECT) {
 				switch (event.getTransformType()) {
 				case CHANGE_PROPERTY_REF:
 				case CHANGE_PROPERTY_SIMPLE_VALUE:
 				case NULL_PROPERTY_REF: {
+					DomainProperty domainProperty = Reflections
+							.propertyAccessor().getAnnotationForProperty(
+									entity.provideEntityClass(),
+									DomainProperty.class,
+									event.getPropertyName());
+					if (domainProperty != null && !domainProperty.index()) {
+						return;
+					}
 					TransformManager.get().setIgnorePropertyChanges(true);
 					/*
 					 * undo last property change
 					 */
-					Reflections.propertyAccessor().setPropertyValue(object,
+					Reflections.propertyAccessor().setPropertyValue(entity,
 							event.getPropertyName(), event.getOldValue());
-					store.index(object, false);
+					store.index(entity, false);
 					/*
 					 * redo
 					 */
-					Reflections.propertyAccessor().setPropertyValue(object,
+					Reflections.propertyAccessor().setPropertyValue(entity,
 							event.getPropertyName(), event.getNewValue());
 					TransformManager.get().setIgnorePropertyChanges(false);
 					break;
 				}
 				default:
-					store.index(object, false);
+					store.index(entity, false);
 				}
 			}
 			if (event.getTransformType() != TransformType.DELETE_OBJECT) {
-				store.index(object, true);
+				store.index(entity, true);
 			}
 		}
 	}
