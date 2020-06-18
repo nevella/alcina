@@ -13,6 +13,11 @@
  */
 package cc.alcina.framework.entity;
 
+import java.util.concurrent.Callable;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  *
  * @author Nick Reddel
@@ -26,6 +31,19 @@ public class MetricLogging extends MetricLoggingBase {
 			return metricLogging;
 		}
 	};
+
+	public static <T> T callWithKey(Callable<T> callable, String template,
+			Object... args) {
+		String key = Ax.format(template, args);
+		try {
+			MetricLogging.get().start(key);
+			return callable.call();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		} finally {
+			MetricLogging.get().end(key);
+		}
+	}
 
 	public static MetricLogging get() {
 		MetricLogging m = (MetricLogging) TL.get();
