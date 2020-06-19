@@ -37,6 +37,7 @@ import javax.persistence.Query;
 import javax.transaction.UserTransaction;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -1122,9 +1123,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			TransformPersistenceToken token,
 			DomainTransformLayerWrapper wrapper) {
 		AppPersistenceBase.checkNotReadOnly();
-		new TransformPersisterInPersistenceContext().transformInPersistenceContext(
-				transformPersisterToken, token, this, getEntityManager(),
-				wrapper);
+		new TransformPersisterInPersistenceContext()
+				.transformInPersistenceContext(transformPersisterToken, token,
+						this, getEntityManager(), wrapper);
 		return wrapper;
 	}
 
@@ -1729,8 +1730,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 							clientInstanceId);
 			if (instance != null) {
 				instance.setLastAccessed(new Date(time));
+				logger.info("Persisted last access time: {} {}",
+						clientInstanceId, time);
 			}
 		}
+
+		Logger logger = LoggerFactory.getLogger(getClass());
 
 		@Override
 		public void updateIid(String iidKey, String userName,

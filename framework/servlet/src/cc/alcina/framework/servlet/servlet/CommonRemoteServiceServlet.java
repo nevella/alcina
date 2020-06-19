@@ -495,8 +495,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		RPCRequest rpcRequest = null;
 		String threadName = Thread.currentThread().getName();
 		try {
-			alcinaServletContext.begin(getThreadLocalRequest(),
-					getThreadLocalResponse());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
 					getThreadLocalRequest());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
@@ -504,6 +502,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			getThreadLocalRequest().setAttribute(
 					CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS,
 					new StringMap());
+			alcinaServletContext.begin(getThreadLocalRequest(),
+					getThreadLocalResponse());
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			if (rpcRequest
 					.getSerializationPolicy() instanceof LegacySerializationPolicy) {
