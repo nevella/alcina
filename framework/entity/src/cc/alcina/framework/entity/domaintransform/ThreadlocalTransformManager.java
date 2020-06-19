@@ -143,14 +143,14 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public static ThreadlocalTransformManager cast() {
 		return (ThreadlocalTransformManager) TransformManager.get();
-	};
+	}
 
 	/**
 	 * Convenience "override" of TransformManager.get()
 	 */
 	public static ThreadlocalTransformManager get() {
 		return ThreadlocalTransformManager.cast();
-	}
+	};
 
 	public static boolean is() {
 		return TransformManager.get() instanceof ThreadlocalTransformManager;
@@ -607,6 +607,12 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	public List<PropertyInfo> getWritableProperties(Class clazz) {
 		return ObjectPersistenceHelper.get().getWritableProperties(clazz);
+	}
+
+	@Override
+	public boolean handlesAssociationsFor(Class clazz) {
+		DomainStore store = DomainStore.stores().storeFor(clazz);
+		return store.handlesAssociationsFor(clazz);
 	}
 
 	@Override
@@ -1281,13 +1287,15 @@ public class ThreadlocalTransformManager extends TransformManager
 	 * domain store?)
 	 */
 	protected void performDeleteObject(Entity entity) {
-		entity = getObject(entity);
 		if (entityManager != null) {
 			entityManager.remove(entity);
 		} else {
-			deregisterDomainObject(entity);
-			DomainStore.stores().storeFor(entity.provideEntityClass())
-					.remove(entity);
+			if (handlesAssociationsFor(entity.provideEntityClass())) {
+				entity = getObject(entity);
+				deregisterDomainObject(entity);
+				DomainStore.stores().storeFor(entity.provideEntityClass())
+						.remove(entity);
+			}
 		}
 	}
 

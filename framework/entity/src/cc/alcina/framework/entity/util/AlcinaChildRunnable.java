@@ -194,6 +194,10 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		this.runningWithinTransaction = runningWithinTransaction;
 	}
 
+	public void startInNewThread() {
+		new Thread(this).start();
+	}
+
 	public AlcinaChildRunnable withContext(String key, Object value) {
 		copyContext.put(key, value);
 		return this;

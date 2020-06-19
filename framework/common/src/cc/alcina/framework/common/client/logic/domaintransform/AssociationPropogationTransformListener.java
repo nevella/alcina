@@ -30,6 +30,9 @@ public class AssociationPropogationTransformListener
 			return;
 		}
 		TransformManager tm = TransformManager.get();
+		if (!tm.handlesAssociationsFor(event.getObjectClass())) {
+			return;
+		}
 		ApplyToken token = tm.createApplyToken(event);
 		Entity entity = token.object;
 		switch (token.transformType) {

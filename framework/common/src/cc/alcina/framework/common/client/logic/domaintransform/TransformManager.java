@@ -980,6 +980,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return undoManager;
 	}
 
+	public boolean handlesAssociationsFor(Class clazz) {
+		return true;
+	}
+
 	public boolean hasTransforms() {
 		return getTransforms().size() > 0;
 	}

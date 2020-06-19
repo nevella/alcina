@@ -73,7 +73,7 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	public <T extends Entity> T getObject(Class<? extends T> c, long id,
 			long localId) {
 		T t = cache.get(c, id);
-		if (t == null && lazyObjectLoader != null && id != 0) {
+		if (t == null && lazyObjectLoader != null && id > 0) {
 			lazyObjectLoader.loadObject(c, id, localId);
 			t = cache.get(c, id);
 		}

@@ -387,6 +387,10 @@ public class Transaction {
 	}
 
 	void setPhase(TransactionPhase phase) {
+		if (ResourceUtilities.is("debugSetPhase")) {
+			logger.info("{}->{} ::\n{}", this.phase, phase,
+					SEUtilities.getCurrentThreadStacktraceSlice());
+		}
 		this.phase = phase;
 		logger.debug("Transition tx: {}", this);
 	}

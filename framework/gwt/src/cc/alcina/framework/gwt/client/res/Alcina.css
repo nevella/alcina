@@ -142,6 +142,7 @@ table.mainTabPanel .alcina-MainMenu {
 	min-height: 350px;
 }
 
+
 .alcina-MainMenuRight .gwt-Label {
 	line-height: 1em;
 	padding: 8px 15px 7px 15px;
@@ -1987,4 +1988,11 @@ link-selector
 } 
  input.calendarText.alcina-DateBox.iso8601, div.alcina-ObjectTree input.gwt-DateBox.alcina-DateBox.iso8601,input.iso8601{
 	width:300px;
+}
+
+/*
+chrome patches
+*/
+.alcina-MainMenuRight,div.alcina-MainContent .alcina-ContentLeft,div.toolbar,table.mainTabPanel,div.gwt-TabPanel{
+	position:relative;
 }

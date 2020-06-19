@@ -388,6 +388,10 @@ public class DomainStore implements IDomainStore {
 		return loader.getTransformSequencer();
 	}
 
+	public boolean handlesAssociationsFor(Class clazz) {
+		return domainDescriptor.perClass.containsKey(clazz);
+	}
+
 	public DomainStoreInstrumentation instrumentation() {
 		return threads.instrumentation;
 	}
@@ -664,7 +668,8 @@ public class DomainStore implements IDomainStore {
 		checkInLockedSection();
 		T t = cache.get(clazz, id);
 		if (t == null) {
-			if (domainDescriptor.perClass.get(clazz).lazy && id != 0) {
+			if (domainDescriptor.perClass.containsKey(clazz)
+					&& domainDescriptor.perClass.get(clazz).lazy && id != 0) {
 				lazyObjectLoader.loadObject(clazz, id, 0);
 			}
 		}
@@ -730,6 +735,7 @@ public class DomainStore implements IDomainStore {
 			postProcess(DomainTransformPersistenceEvent persistenceEvent) {
 		if (persistenceEvent.getDomainTransformLayerWrapper().persistentRequests
 				.isEmpty()) {
+			Transaction.endAndBeginNew();
 			return;
 		}
 		DomainModificationMetadataProvider metadataProvider = persistenceEvent
@@ -1079,6 +1085,8 @@ public class DomainStore implements IDomainStore {
 
 		DomainStoresDomainHandler storesHandler = new DomainStoresDomainHandler();
 
+		Logger logger = LoggerFactory.getLogger(getClass());
+
 		private DomainStores() {
 			Domain.registerHandler(storesHandler);
 		}
@@ -1262,7 +1270,14 @@ public class DomainStore implements IDomainStore {
 			}
 
 			DomainHandler storeHandler(Class clazz) {
-				return classMap.get(clazz).handler;
+				DomainStore domainStore = classMap.get(clazz);
+				if (domainStore == null) {
+					logger.warn(
+							"No store for {} - defaulting to writable store",
+							clazz);
+					domainStore = writableStore;
+				}
+				return domainStore.handler;
 			}
 		}
 	}
@@ -1752,9 +1767,13 @@ public class DomainStore implements IDomainStore {
 			if (event.getCommitType() != CommitType.TO_LOCAL_BEAN) {
 				return;
 			}
+			TransformManager tm = TransformManager.get();
+			if (!tm.handlesAssociationsFor(event.getObjectClass())) {
+				return;
+			}
 			DomainStore store = DomainStore.stores()
 					.storeFor(event.getObjectClass());
-			Entity entity = TransformManager.get().getObject(event);
+			Entity entity = tm.getObject(event);
 			if (event.getTransformType() != TransformType.CREATE_OBJECT) {
 				switch (event.getTransformType()) {
 				case CHANGE_PROPERTY_REF:
@@ -1768,7 +1787,7 @@ public class DomainStore implements IDomainStore {
 					if (domainProperty != null && !domainProperty.index()) {
 						return;
 					}
-					TransformManager.get().setIgnorePropertyChanges(true);
+					tm.setIgnorePropertyChanges(true);
 					/*
 					 * undo last property change
 					 */
@@ -1780,7 +1799,7 @@ public class DomainStore implements IDomainStore {
 					 */
 					Reflections.propertyAccessor().setPropertyValue(entity,
 							event.getPropertyName(), event.getNewValue());
-					TransformManager.get().setIgnorePropertyChanges(false);
+					tm.setIgnorePropertyChanges(false);
 					break;
 				}
 				default:
