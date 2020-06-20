@@ -7,10 +7,13 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,12 +152,22 @@ public class DomainTransformPersistenceQueue {
 		}
 	}
 
+	public void waitUntilAllQueuedEventsProcessed() {
+		Optional<Long> lastToFireId = getLastToFireId();
+		if (!lastToFireId.isPresent()) {
+			return;
+		} else {
+			new QueueWaiter().pauseUntilProcessed(
+					5 * TimeConstants.ONE_MINUTE_MS, lastToFireId);
+		}
+	}
+
 	public void waitUntilCurrentRequestsProcessed() {
 		waitUntilCurrentRequestsProcessed(60 * TimeConstants.ONE_SECOND_MS);
 	}
 
 	public void waitUntilCurrentRequestsProcessed(long timeoutMs) {
-		new QueueWaiter().pauseUntilProcessed(timeoutMs);
+		new QueueWaiter().pauseUntilProcessed(timeoutMs, Optional.empty());
 	}
 
 	public void waitUntilRequestProcessed(String logOffset) {
@@ -228,6 +241,12 @@ public class DomainTransformPersistenceQueue {
 			List<Long> sequentialUnpublishedTransformIds) {
 		for (Long sequentialId : sequentialUnpublishedTransformIds) {
 			transformRequestPublishedSequential(sequentialId);
+		}
+	}
+
+	private Optional<Long> getLastToFireId() {
+		synchronized (queueModificationLock) {
+			return Optional.<Long> ofNullable(CommonUtils.last(toFire));
 		}
 	}
 
@@ -473,9 +492,15 @@ public class DomainTransformPersistenceQueue {
 	class QueueWaiter {
 		private Set<Long> waiting;
 
-		public void pauseUntilProcessed(long timeoutMs) {
-			synchronized (queueModificationLock) {
-				waiting = new LinkedHashSet<>(firingLocalToVm);
+		public void pauseUntilProcessed(long timeoutMs,
+				Optional<Long> requestId) {
+			if (requestId.isPresent()) {
+				waiting = Stream.of(requestId.get())
+						.collect(Collectors.toSet());
+			} else {
+				synchronized (queueModificationLock) {
+					waiting = new LinkedHashSet<>(firingLocalToVm);
+				}
 			}
 			long startTime = System.currentTimeMillis();
 			while (true) {
