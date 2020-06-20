@@ -81,7 +81,7 @@ public class Domain {
 		if (Domain.isDomainVersion(entity)) {
 			return entity;
 		}
-		Class<V> clazz = (Class<V>) entity.getClass();
+		Class<V> clazz = entity.provideEntityClass();
 		V writeable = entity.provideWasPersisted()
 				? Domain.writeable(Domain.find(entity))
 				: Domain.create(clazz);
