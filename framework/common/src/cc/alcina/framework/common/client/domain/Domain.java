@@ -29,6 +29,7 @@ public class Domain {
 					"lastModificationUser", "creationDate", "creationUser",
 					"versionNumber" });
 
+	// FIXME - mvcc.3 - deprecate (ditto asSet)
 	public static <V extends Entity> List<V> asList(Class<V> clazz) {
 		return handler.stream(clazz).collect(Collectors.toList());
 	}

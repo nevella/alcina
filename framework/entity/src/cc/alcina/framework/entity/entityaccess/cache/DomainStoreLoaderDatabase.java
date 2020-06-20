@@ -1574,6 +1574,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new WrappedRuntimeException(e);
+			} finally {
+				Transaction.split();
 			}
 		}
 	}

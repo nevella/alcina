@@ -16,11 +16,16 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 
 public class AlcinaCollectors {
+	public static Collector<String, ?, String> commaAndList() {
+		return new CommaAndListCollector();
+	}
+
 	public static <T> Comparator<T>
 			comparingCaseInsensitive(Function<? super T, String> keyExtractor) {
 		Objects.requireNonNull(keyExtractor);
@@ -87,6 +92,51 @@ public class AlcinaCollectors {
 	public static <K, T> Collector<K, ?, Map<K, T>>
 			toValueMap(Function<? super K, ? extends T> valueMapper) {
 		return new ToValueMapCollector(valueMapper, LinkedHashMap::new);
+	}
+
+	private static class CommaAndListCollector implements
+			java.util.stream.Collector<String, List<String>, String> {
+		public CommaAndListCollector() {
+		}
+
+		@Override
+		public BiConsumer<List<String>, String> accumulator() {
+			return (l, s) -> l.add(s);
+		}
+
+		@Override
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.of(Characteristics.UNORDERED);
+		}
+
+		@Override
+		public BinaryOperator<List<String>> combiner() {
+			return (l1, l2) -> Stream.concat(l1.stream(), l2.stream())
+					.collect(Collectors.toList());
+		}
+
+		@Override
+		public Function<List<String>, String> finisher() {
+			return l -> {
+				if (l.isEmpty()) {
+					return "";
+				}
+				if (l.size() == 1) {
+					return l.get(0);
+				}
+				return Ax
+						.format("%s and %s",
+								l.stream().limit(l.size() - 1)
+										.collect(Collectors.joining(", ")),
+								l.get(l.size() - 1));
+			};
+		}
+
+		@Override
+		public Supplier<List<String>> supplier() {
+			return () -> new ArrayList<>();
+		}
 	}
 
 	private static class ToItemListCollector<T>
