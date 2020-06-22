@@ -128,7 +128,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 		}
 	}
 
-	public Class<? extends Entity> provideEntityClass() {
+	public Class<? extends Entity> entityClass() {
 		return this.entityClass;
 	}
 

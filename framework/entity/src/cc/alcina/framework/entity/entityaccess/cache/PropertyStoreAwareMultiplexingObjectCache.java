@@ -107,7 +107,7 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 
 	@Override
 	public void put(Entity entity) {
-		getSubCache(entity.provideEntityClass()).put(entity);
+		getSubCache(entity.entityClass()).put(entity);
 	}
 
 	@Override
@@ -122,7 +122,7 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 
 	@Override
 	public void remove(Entity entity) {
-		getSubCache(entity.provideEntityClass()).remove(entity);
+		getSubCache(entity.entityClass()).remove(entity);
 	}
 
 	@Override

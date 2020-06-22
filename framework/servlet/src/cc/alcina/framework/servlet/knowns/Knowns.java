@@ -26,7 +26,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.entityaccess.cache.DomainRunner;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.util.SynchronizedDateFormat;
@@ -253,11 +252,6 @@ public class Knowns {
 
 	private static synchronized KnownRenderableNode
 			fromPersistent(KnownNode node) {
-		return DomainRunner.get(() -> fromPersistent0(node));
-	}
-
-	private static synchronized KnownRenderableNode
-			fromPersistent0(KnownNode node) {
 		return node.persistence.fromPersistent(node);
 	}
 

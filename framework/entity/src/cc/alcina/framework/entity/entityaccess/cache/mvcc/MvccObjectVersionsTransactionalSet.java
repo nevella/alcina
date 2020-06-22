@@ -16,8 +16,8 @@ public class MvccObjectVersionsTransactionalSet
 	}
 
 	@Override
-	protected Class<? extends Entity> provideEntityClass() {
-		return getBaseObject().provideEntityClass();
+	protected Class<? extends Entity> entityClass() {
+		return getBaseObject().entityClass();
 	}
 
 	@Override

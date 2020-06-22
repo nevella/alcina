@@ -254,9 +254,9 @@ public class SyncMerger<T> {
 		Object left = pair.getLeft().getObject();
 		if (left instanceof Entity) {
 			Entity adb = (Entity) left;
-			if (adb.provideIsNonDomain()) {
+			if (adb.domain().isNonDomain()) {
 			} else {
-				adb = adb.writeable();
+				adb = adb;
 				adb.domain().detachFromDomain();
 			}
 			pair.getLeft().setObject(adb);
@@ -267,9 +267,9 @@ public class SyncMerger<T> {
 		Object right = pair.getRight().getObject();
 		if (right instanceof Entity) {
 			Entity adb = (Entity) right;
-			if (adb.provideIsNonDomain()) {
+			if (adb.domain().isNonDomain()) {
 			} else {
-				adb = adb.writeable();
+				adb = adb;
 				adb.domain().detachFromDomain();
 			}
 			pair.getRight().setObject(adb);

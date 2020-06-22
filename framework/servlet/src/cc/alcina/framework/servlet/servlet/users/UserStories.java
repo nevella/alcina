@@ -241,7 +241,7 @@ public class UserStories {
 				incoming.getClientInstanceUid());
 		IUserStory story = null;
 		if (o_story.isPresent()) {
-			story = (IUserStory) ((Entity) o_story.get()).writeable();
+			story = (IUserStory) ((Entity) o_story.get());
 		} else {
 			story = Domain.create(getImplementation());
 			postCreateStory(story, clientInstance);

@@ -417,7 +417,7 @@ public class TransformCommit {
 		for (DomainTransformEvent dte : transformResponse
 				.getEventsToUseForClientUpdate()) {
 			if (dte.getObjectLocalId() == returnIdFor.getLocalId()
-					&& dte.getObjectClass() == returnIdFor.provideEntityClass()
+					&& dte.getObjectClass() == returnIdFor.entityClass()
 					&& dte.getTransformType() == TransformType.CREATE_OBJECT) {
 				return dte.getGeneratedServerId();
 			}

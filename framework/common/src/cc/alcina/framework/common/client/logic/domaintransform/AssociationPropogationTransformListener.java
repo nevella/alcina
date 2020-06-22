@@ -53,7 +53,7 @@ public class AssociationPropogationTransformListener
 		}
 		case DELETE_OBJECT: {
 			Reflections.iterateForPropertyWithAnnotation(
-					entity.provideEntityClass(), Association.class,
+					entity.entityClass(), Association.class,
 					(association, propertyReflector) -> {
 						Object associated = propertyReflector
 								.getPropertyValue(entity);
@@ -121,7 +121,7 @@ public class AssociationPropogationTransformListener
 							// throw Ax.runtimeException(
 							// "Association with no delete behaviour:
 							// %s.%s",
-							// entity.provideEntityClass()
+							// entity.entityClass()
 							// .getSimpleName(),
 							// propertyReflector.getPropertyName());
 						}

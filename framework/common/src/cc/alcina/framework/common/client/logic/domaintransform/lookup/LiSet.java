@@ -56,7 +56,7 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 			}
 			return added;
 		}
-		if (e.provideIsNonDomain()) {
+		if (e.domain().isNonDomain()) {
 			// can't handle non-comparables
 			return toDegenerate(e);
 		}

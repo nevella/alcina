@@ -32,7 +32,7 @@ public class KnownsPersistenceDomainStore implements KnownsPersistence {
         Class<? extends KnownNodePersistentDomainStore> persistentClass = Registry.get()
                 .lookupSingle(KnownNodePersistentDomainStore.class, void.class);
         CachingMap<KnownNodePersistentDomainStore, KnownNodePersistentDomainStore> writeable = new CachingMap<>(
-                kn -> kn.writeable());
+                kn -> kn);
         List<KnownNode> replaceWithPersistent = new ArrayList<>();
         try {
             while (!nodes.isEmpty()) {

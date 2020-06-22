@@ -10,6 +10,7 @@ import com.google.gwt.event.shared.UmbrellaException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 
 /**
  * <p>
@@ -28,7 +29,8 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
  * <li>only <b>now</b> does t2 fire
  * <li>l1 hears, l2
  * <li><b>now</b>, because of cascading support, td1 continues
- * <li>note that child (cascading) threads should not lock on any objects locked by td1  
+ * <li>note that child (cascading) threads should not lock on any objects locked
+ * by td1
  * </ul>
  * hwuh
  *
@@ -38,6 +40,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class CascadingTransformSupport {
 	private static ThreadLocal<CascadingTransformSupport> supports = new ThreadLocal() {
+		@Override
 		protected synchronized CascadingTransformSupport initialValue() {
 			return new CascadingTransformSupport();
 		}
@@ -81,7 +84,16 @@ public class CascadingTransformSupport {
 	}
 
 	public void runTransformingChild(Runnable runnable) {
-		new CascadingTransformWorker(runnable).start();
+		Runnable wrappedRunnable = runnable;
+		if (!(wrappedRunnable instanceof AlcinaChildRunnable)) {
+			wrappedRunnable = new AlcinaChildRunnable("cascading-worker") {
+				@Override
+				protected void run0() throws Exception {
+					runnable.run();
+				}
+			};
+		}
+		new CascadingTransformWorker(wrappedRunnable).start();
 	}
 
 	synchronized void addChildThread(CascadingTransformWorker thread) {

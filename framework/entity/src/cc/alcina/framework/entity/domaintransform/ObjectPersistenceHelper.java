@@ -169,7 +169,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	@Override
 	public <T extends Entity> T getObject(T bean) {
-		return (T) TransformManager.get().getObject(bean.provideEntityClass(),
+		return (T) TransformManager.get().getObject(bean.entityClass(),
 				bean.getId(), bean.getLocalId());
 	}
 

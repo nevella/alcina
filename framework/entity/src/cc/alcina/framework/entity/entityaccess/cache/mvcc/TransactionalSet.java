@@ -88,7 +88,7 @@ public class TransactionalSet<E extends Entity> extends MostlySingleValuedSet<E>
 		}
 	}
 
-	public Class<E> provideEntityClass() {
+	public Class<E> entityClass() {
 		return entityClass;
 	}
 

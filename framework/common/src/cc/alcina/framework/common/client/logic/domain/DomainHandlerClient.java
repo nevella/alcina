@@ -8,7 +8,6 @@ import java.util.stream.Stream;
 import com.google.gwt.core.client.Scheduler;
 
 import cc.alcina.framework.common.client.domain.Domain.DomainHandler;
-import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -29,11 +28,6 @@ public class DomainHandlerClient implements DomainHandler {
 						.resolve(clazz, objectId, resultConsumer);
 			}
 		}
-	}
-
-	@Override
-	public void commitPoint() {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -68,36 +62,18 @@ public class DomainHandlerClient implements DomainHandler {
 	}
 
 	@Override
-	public <V extends Entity> V resolveTransactional(
-			DomainListener listener, V value, Object[] path) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public <V extends Entity> Stream<V> stream(Class<V> clazz) {
 		return values(clazz).stream();
-	}
-
-	@Override
-	public <V extends Entity> V transactionalFind(Class clazz,
-			long id) {
-		return find(clazz, id);
-	}
-
-	@Override
-	public <V extends Entity> V transactionalVersion(V v) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public <V extends Entity> Collection<V> values(Class<V> clazz) {
-		return TransformManager.get().getCollection(clazz);
 	}
 
 	@Override
 	public <V extends Entity> V writeable(V v) {
 		TransformManager.get().registerDomainObject(v);
 		return v;
+	}
+
+	private <V extends Entity> Collection<V> values(Class<V> clazz) {
+		return TransformManager.get().getCollection(clazz);
 	}
 
 	public interface DomainHandlerClientRemoteResolver {

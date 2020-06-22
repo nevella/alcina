@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CollectionModificationType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
@@ -67,6 +66,10 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public T domainIdentity() {
 		return (T) this;
+	}
+
+	public Class<? extends Entity> entityClass() {
+		return getClass();
 	}
 
 	@Override
@@ -147,7 +150,7 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 					return hash;
 				}
 			}
-			int classHash = provideEntityClass().getName().hashCode();
+			int classHash = entityClass().getName().hashCode();
 			if (getLocalId() != 0) {
 				if (GWT.isScript()) {
 					hash = LongWrapperHash.fastHash(getLocalId()) ^ classHash;
@@ -172,40 +175,6 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 			}
 		}
 		return hash;
-	}
-
-	public Class<? extends Entity> provideEntityClass() {
-		return getClass();
-	}
-
-	public long provideIdOrLocalIdIfZero() {
-		return getId() != 0 ? getId() : getLocalId();
-	}
-
-	public boolean provideIsLocal() {
-		return getId() == 0 && getLocalId() != 0;
-	}
-
-	public boolean provideIsNonDomain() {
-		return getId() == 0 && getLocalId() == 0;
-	}
-
-	public String provideStringId() {
-		return getId() == 0 ? null : String.valueOf(getId());
-	}
-
-	public long provideTransactionalId() {
-		if (getId() == 0) {
-			long clientInstanceId = CommonUtils
-					.lv(PermissionsManager.get().getClientInstanceId());
-			return -((clientInstanceId << 32) + getLocalId());
-		} else {
-			return getId();
-		}
-	}
-
-	public boolean provideWasPersisted() {
-		return getId() != 0;
 	}
 
 	// no listeners - this should be invisible to transform listeners
@@ -306,15 +275,16 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 			return (T) Domain.find(Entity.this);
 		}
 
-		/*
-		 * iff Entity.this===domainVersion()
-		 */
-		public boolean isDomainVersion() {
-			return Domain.isDomainVersion(Entity.this);
+		public long getIdOrLocalIdIfZero() {
+			return getId() != 0 ? getId() : getLocalId();
 		}
 
-		public boolean isRegistered() {
-			return TransformManager.get().isRegistered(Entity.this);
+		public boolean isLocal() {
+			return getId() == 0 && getLocalId() != 0;
+		}
+
+		public boolean isNonDomain() {
+			return getId() == 0 && getLocalId() == 0;
 		}
 
 		public T register() {
@@ -328,11 +298,12 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 					propertyName, v, CollectionModificationType.REMOVE);
 		}
 
-		/*
-		 * server-side only
-		 */
-		public T transactionVersion() {
-			return (T) Domain.transactionVersion(Entity.this);
+		public String stringId() {
+			return getId() == 0 ? null : String.valueOf(getId());
+		}
+
+		public boolean wasPersisted() {
+			return getId() != 0;
 		}
 	}
 

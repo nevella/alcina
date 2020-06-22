@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.util.AlcinaParallel.Parameters.Builder;
 
 public class AlcinaParallel {
@@ -111,9 +110,6 @@ public class AlcinaParallel {
 				}
 				permissionsManagerState.copyTo(PermissionsManager.get());
 				LooseContext.putSnapshotProperties(snapshot);
-				if (DomainStore.stores().hasInitialisedDatabaseStore()) {
-					DomainStore.ensureActiveTransaction();
-				}
 				runnable.run();
 			} catch (Throwable t) {
 				t.printStackTrace();

@@ -197,7 +197,7 @@ public class TableElement extends Element {
 		return new NodeList<>(
 				new NodeListWrapped(Collections.singletonList(body)));
 		// throw new UnsupportedOperationException();
-		// // if (provideIsLocal()) {
+		// // if (domain().isLocal()) {
 		// // TableSectionElement body = (TableSectionElement)
 		// // provideLocalDomElement()
 		// // .createOrReturnChild("tbody");

@@ -47,7 +47,6 @@ import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.entityaccess.cache.DomainRunner;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreQuery;
 import cc.alcina.framework.entity.entityaccess.cache.NotCacheFilter;
@@ -67,19 +66,14 @@ public class DomainStoreQueryTranslator {
 
 	private boolean aggregateQuery;
 
-	public List list(DomainStoreCriteria criteria) throws NotHandledException {
+	public List list(DomainStoreCriteria criteria) throws Exception {
 		this.root = criteria;
 		query = DomainStore.stores().query(root.clazz);
 		addRestrictions(criteria);
 		query.raw();
-		new DomainRunner() {
-			@Override
-			protected void run() throws Exception {
-				checkHandlesClass(root.clazz);
-				rawRows = query.list();
-				handleProjections();
-			}
-		};
+		checkHandlesClass(root.clazz);
+		rawRows = query.list();
+		handleProjections();
 		ResultTransformer resultTransformer = criteria.getResultTransformer();
 		List results = groupedRows.asTuples();
 		if (resultTransformer != null) {
@@ -319,29 +313,6 @@ public class DomainStoreQueryTranslator {
 		}
 	}
 
-	public static class SqlInCriterionTranslator
-			extends CriterionTranslator<SQLCriterion> {
-		@Override
-		protected Class<SQLCriterion> getHandledClass() {
-			return SQLCriterion.class;
-		}
-
-		@Override
-		protected DomainFilter handle(SQLCriterion criterion,
-				DomainStoreCriteria domainStoreCriteria,
-				DomainStoreQueryTranslator translator) {
-			String sql = SEUtilities.normalizeWhitespaceAndTrim((String) getValue(criterion, "sql"));
-			Pattern p = Pattern.compile("\\{alias\\}\\.id in\\s+\\((.+)\\)");
-			Matcher m = p.matcher(sql);
-			Preconditions.checkState(m.matches());
-			Collection ids = TransformManager.idListToLongs(m.group(1));
-			return new DomainFilter(
-					translator.translatePropertyPath(criterion,
-							domainStoreCriteria,"id"),
-					ids, FilterOperator.IN);
-		}
-	}
-
 	public static class NotTranslator
 			extends CriterionTranslator<NotExpression> {
 		@Override
@@ -418,6 +389,28 @@ public class DomainStoreQueryTranslator {
 			}
 			return new DomainFilter(propertyName, getValue(criterion, "value"),
 					fop);
+		}
+	}
+
+	public static class SqlInCriterionTranslator
+			extends CriterionTranslator<SQLCriterion> {
+		@Override
+		protected Class<SQLCriterion> getHandledClass() {
+			return SQLCriterion.class;
+		}
+
+		@Override
+		protected DomainFilter handle(SQLCriterion criterion,
+				DomainStoreCriteria domainStoreCriteria,
+				DomainStoreQueryTranslator translator) {
+			String sql = SEUtilities.normalizeWhitespaceAndTrim(
+					(String) getValue(criterion, "sql"));
+			Pattern p = Pattern.compile("\\{alias\\}\\.id in\\s+\\((.+)\\)");
+			Matcher m = p.matcher(sql);
+			Preconditions.checkState(m.matches());
+			Collection ids = TransformManager.idListToLongs(m.group(1));
+			return new DomainFilter(translator.translatePropertyPath(criterion,
+					domainStoreCriteria, "id"), ids, FilterOperator.IN);
 		}
 	}
 

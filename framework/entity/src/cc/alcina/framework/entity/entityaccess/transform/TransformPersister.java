@@ -11,8 +11,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
@@ -21,25 +19,11 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.transform.TransformPersisterInPersistenceContext.DeliberatelyThrownWrapperException;
 
 public class TransformPersister {
-	private static final String TOPIC_PERSISTING_TRANSFORMS = TransformPersister.class
-			.getName() + ".TOPIC_PERSISTING_TRANSFORMS";
-
 	public static final String CONTEXT_TRANSFORM_LAYER_WRAPPER = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_TRANSFORM_LAYER_WRAPPER";
 
 	public static final String CONTEXT_DO_NOT_PERSIST_DTES = TransformPersister.class
 			.getName() + ".CONTEXT_DO_NOT_PERSIST_DTES";
-
-	public static void persistingTransforms() {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_PERSISTING_TRANSFORMS,
-				Thread.currentThread());
-	}
-
-	public static void persistingTransformsListenerDelta(
-			TopicListener<Thread> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_PERSISTING_TRANSFORMS,
-				listener, add);
-	}
 
 	public DomainTransformLayerWrapper
 			transformExPersistenceContext(TransformPersistenceToken token) {

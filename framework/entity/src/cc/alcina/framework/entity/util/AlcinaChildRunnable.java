@@ -126,6 +126,8 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 	Map<String, Object> copyContext = new LinkedHashMap<>();
 
+	private boolean runAsRoot;
+
 	public AlcinaChildRunnable(String name) {
 		this.threadName = name;
 		this.permissionsManagerState = PermissionsManager.get().snapshotState();
@@ -165,6 +167,10 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			this.permissionsManagerState.copyTo(PermissionsManager.get());
 			Thread.currentThread().setContextClassLoader(contextClassLoader);
 			copyContext.forEach((k, v) -> LooseContext.set(k, v));
+			if (runAsRoot) {
+				ThreadedPermissionsManager.cast()
+						.pushSystemOrCurrentUserAsRoot();
+			}
 			Transaction.ensureBegun();
 			run0();
 		} catch (OutOfMemoryError e) {
@@ -185,6 +191,9 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			if (!isRunningWithinTransaction()) {
 				Transaction.ensureEnded();
 			}
+			if (runAsRoot) {
+				ThreadedPermissionsManager.cast().popSystemOrCurrentUser();
+			}
 			LooseContext.confirmDepth(getRunContext().tLooseContextDepth);
 			LooseContext.pop();
 		}
@@ -194,8 +203,10 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		this.runningWithinTransaction = runningWithinTransaction;
 	}
 
-	public void startInNewThread() {
-		new Thread(this).start();
+	public Thread startInNewThread() {
+		Thread thread = new Thread(this);
+		thread.start();
+		return thread;
 	}
 
 	public AlcinaChildRunnable withContext(String key, Object value) {
@@ -205,6 +216,11 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 	public AlcinaChildRunnable withContextSnapshot() {
 		copyContext.putAll(LooseContext.getContext().properties);
+		return this;
+	}
+
+	public AlcinaChildRunnable withRunAsRoot() {
+		runAsRoot = true;
 		return this;
 	}
 

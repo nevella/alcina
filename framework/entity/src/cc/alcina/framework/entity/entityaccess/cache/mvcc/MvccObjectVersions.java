@@ -218,7 +218,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (versions.isEmpty() && !write) {
 			return baseObject;
 		}
-		Class<? extends Entity> entityClass = provideEntityClass();
+		Class<? extends Entity> entityClass = entityClass();
 		Transaction mostRecentTransaction = transaction
 				.mostRecentPriorTransaction(versions.keys(),
 						DomainStore.stores().storeFor(entityClass));
@@ -255,7 +255,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected abstract void copyObjectFields(T fromObject, T toObject);
 
-	protected abstract <E extends Entity> Class<E> provideEntityClass();
+	protected abstract <E extends Entity> Class<E> entityClass();
 
 	protected abstract void register(T object);
 

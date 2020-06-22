@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,9 +68,7 @@ public abstract class BaseProjection<T extends Entity>
 	}
 
 	public <V> V get(Object... objects) {
-		V nonTransactional = (V) lookup.get(objects);
-		return (V) Domain.resolveTransactional(this, (Entity) nonTransactional,
-				objects);
+		return (V) lookup.get(objects);
 	}
 
 	public MultikeyMap<T> getLookup() {
@@ -186,6 +185,11 @@ public abstract class BaseProjection<T extends Entity>
 	@Override
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public <V> Stream<V> typedItems(Class<V> clazz, Object... objects) {
+		Collection<V> items = lookup.items(objects);
+		return (Stream<V>) items(objects).stream();
 	}
 
 	protected MultikeyMap<T> createLookup() {

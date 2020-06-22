@@ -10,7 +10,7 @@ public class MapObjectLookupJvm extends MapObjectLookup {
 		if ((obj.getId() == 0 && obj.getLocalId() == 0)) {
 			return;
 		}
-		Class<? extends Entity> clazz = obj.provideEntityClass();
+		Class<? extends Entity> clazz = obj.entityClass();
 		FastIdLookup lookup = ensureLookup(clazz);
 		lookup.put(obj, obj.getId() == 0);
 	}

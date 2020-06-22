@@ -85,7 +85,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		if (entity == null) {
 			return false;
 		}
-		Class<? extends Entity> clazz = entity.provideEntityClass();
+		Class<? extends Entity> clazz = entity.entityClass();
 		if (!domain.containsKey(clazz)) {
 			return false;
 		}
@@ -176,7 +176,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public void put(Entity entity) {
-		Class<? extends Entity> clazz = entity.provideEntityClass();
+		Class<? extends Entity> clazz = entity.entityClass();
 		ensureMap(clazz);
 		long id = entity.getId();
 		long localId = entity.getLocalId();
@@ -218,7 +218,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public void remove(Entity entity) {
-		Class<? extends Entity> clazz = entity.provideEntityClass();
+		Class<? extends Entity> clazz = entity.entityClass();
 		ensureMap(clazz);
 		long id = entity.getId();
 		long localId = entity.getLocalId();
@@ -233,7 +233,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public void removeLocal(Entity entity) {
-		Class<? extends Entity> clazz = entity.provideEntityClass();
+		Class<? extends Entity> clazz = entity.entityClass();
 		long localId = entity.getLocalId();
 		Preconditions.checkArgument(localId > 0);
 		local(clazz, true).remove(localId, entity);

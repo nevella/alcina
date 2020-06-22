@@ -271,7 +271,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public boolean checkPropertyAccess(Entity entity, String propertyName,
 			boolean read) throws IntrospectionException {
-		if (entity.provideWasPersisted()
+		if (entity.domain().wasPersisted()
 				|| LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
 			PropertyDescriptor descriptor = SEUtilities
 					.getPropertyDescriptorByName(entity.getClass(),
@@ -816,7 +816,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		if (entity.getId() <= 0) {
 			DomainStore store = DomainStore.stores()
-					.storeFor(entity.provideEntityClass());
+					.storeFor(entity.entityClass());
 			DetachedEntityCache cache = store.getCache();
 			if (!cache.contains(entity)) {
 				cache.put(entity);
@@ -1290,10 +1290,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		if (entityManager != null) {
 			entityManager.remove(entity);
 		} else {
-			if (handlesAssociationsFor(entity.provideEntityClass())) {
+			if (handlesAssociationsFor(entity.entityClass())) {
 				entity = getObject(entity);
 				deregisterDomainObject(entity);
-				DomainStore.stores().storeFor(entity.provideEntityClass())
+				DomainStore.stores().storeFor(entity.entityClass())
 						.remove(entity);
 			}
 		}

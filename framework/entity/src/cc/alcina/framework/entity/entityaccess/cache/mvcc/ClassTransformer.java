@@ -161,7 +161,10 @@ class ClassTransformer {
 			ct.init(false);
 			if (ResourceUtilities.is(ClassTransformer.class,
 					"checkClassCorrectness")) {
-				ct.checkFieldAndMethodAccess(true, false, token);
+				if (!ResourceUtilities.is(ClassTransformer.class,
+						"checkClassCorrectnessForceOk")) {
+					ct.checkFieldAndMethodAccess(true, false, token);
+				}
 			}
 			ct.generateMvccClass();
 		}
@@ -363,8 +366,7 @@ class ClassTransformer {
 			boolean sameSource = lastRun != null
 					&& Objects.equals(lastRun.classSources, classSources)
 					&& classSources.size() > 0;
-			if (!sameSource && lastRun != null 
-					&& lastRun.classSources != null
+			if (!sameSource && lastRun != null && lastRun.classSources != null
 					&& lastRun.classSources.size() > 0) {
 				ThreeWaySetResult<String> split = CommonUtils
 						.threeWaySplit(lastRun.classSources, classSources);
@@ -925,13 +927,14 @@ class ClassTransformer {
 					});
 					/*
 					 * override Entity
+					 * 
 					 */
 					tasks.add(() -> {
 						String body = Ax.format("{\n\treturn %s.class;}",
 								originalCtClass.getName());
 						CtMethod newMethod = CtNewMethod.make(Modifier.PUBLIC,
-								classCtClass, "provideEntityClass",
-								new CtClass[0], new CtClass[0], body, ctClass);
+								classCtClass, "entityClass", new CtClass[0],
+								new CtClass[0], body, ctClass);
 						ctClass.addMethod(newMethod);
 					});
 					tasks.add(() -> {
@@ -1001,7 +1004,7 @@ class ClassTransformer {
 								allClassMethods, method)) {
 							continue;
 						}
-						if (method.getName().matches("provideEntityClass")) {
+						if (method.getName().matches("entityClass")) {
 							continue;
 						}
 						/*

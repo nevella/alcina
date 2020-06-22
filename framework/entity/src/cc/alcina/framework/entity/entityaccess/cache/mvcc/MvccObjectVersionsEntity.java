@@ -16,8 +16,8 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
-	protected Class<T> provideEntityClass() {
-		return getBaseObject().provideEntityClass();
+	protected Class<T> entityClass() {
+		return getBaseObject().entityClass();
 	}
 
 	@Override
@@ -27,6 +27,6 @@ public class MvccObjectVersionsEntity<T extends Entity>
 
 	@Override
 	protected boolean wasPersisted(T t) {
-		return t.provideWasPersisted();
+		return t.domain().wasPersisted();
 	}
 }

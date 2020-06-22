@@ -16,8 +16,8 @@ public class MvccObjectVersionsTrieEntry
 	}
 
 	@Override
-	protected <E extends Entity> Class<E> provideEntityClass() {
-		return getBaseObject().provideEntityClass();
+	protected <E extends Entity> Class<E> entityClass() {
+		return getBaseObject().entityClass();
 	}
 
 	@Override

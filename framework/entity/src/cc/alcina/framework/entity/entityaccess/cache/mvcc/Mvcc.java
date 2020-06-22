@@ -26,14 +26,14 @@ public class Mvcc {
 	public static <T extends Entity> T getEntity(EntityManager entityManager,
 			T t) {
 		if (t instanceof MvccObject) {
-			return (T) entityManager.find(t.provideEntityClass(), t.getId());
+			return (T) entityManager.find(t.entityClass(), t.getId());
 		} else {
 			return t;
 		}
 	}
 
 	public static DomainStore getStore(Entity entity) {
-		return DomainStore.stores().storeFor(entity.provideEntityClass());
+		return DomainStore.stores().storeFor(entity.entityClass());
 	}
 
 	public static boolean isMvccObject(Entity entity) {

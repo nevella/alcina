@@ -59,7 +59,7 @@ public abstract class KeyValuePersistentBase<T extends KeyValuePersistentBase>
 		KeyValuePersistentBase writeable = (KeyValuePersistentBase) Domain
 				.findOrCreate(implementation(), "key", keyMapper.apply(key),
 						true)
-				.writeable();
+				;
 		writeable.setParentKey(SEUtilities.getParentPath(key));
 		writeable.setValue(value);
 		persist();
@@ -69,7 +69,7 @@ public abstract class KeyValuePersistentBase<T extends KeyValuePersistentBase>
 		KeyValuePersistentBase writeable = (KeyValuePersistentBase) Domain
 				.findOrCreate(implementation(), "key", keyMapper.apply(key),
 						true)
-				.writeable();
+				;
 		writeable.setParentKey(SEUtilities.getParentPath(key));
 		writeable.serializeObject(value);
 		persist();
@@ -78,7 +78,7 @@ public abstract class KeyValuePersistentBase<T extends KeyValuePersistentBase>
 	public static void remove(String key) {
 		Optional<KeyValuePersistentBase> persistent = byKey(key);
 		if (persistent.isPresent()) {
-			persistent.get().writeable().delete();
+			persistent.get().delete();
 			persist();
 		}
 	}

@@ -85,7 +85,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
@@ -95,14 +94,12 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
-import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreHealth;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreInstrumentation;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
-import cc.alcina.framework.entity.entityaccess.transform.TransformPersister;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjections;
 
@@ -171,22 +168,6 @@ public class DomainStore implements IDomainStore {
 		return new Builder();
 	}
 
-	// FIXME - mvcc.jade - remove
-	public static void checkInLockedSection() {
-		// mvcc.end - remove
-		// if (stores().hasInitialisedDatabaseStore()
-		// && !writableStore().threads.isCurrentThreadHoldingLock()) {
-		// topicNonLoggedAccess().publish(null);
-		// }
-	}
-
-	// FIXME - this is over-called, probably should be changed to strict
-	// start/finish semantics (and made non-static)
-	public static PerThreadTransaction ensureActiveTransaction() {
-		return null;
-		// return stores().writableStore().transactions().ensureTransaction();
-	}
-
 	public static DomainStores stores() {
 		synchronized (DomainStores.class) {
 			if (domainStores == null) {
@@ -234,38 +215,17 @@ public class DomainStore implements IDomainStore {
 
 	Mvcc mvcc;
 
-	private ThreadLocal<PerThreadTransaction> transactions = new ThreadLocal() {
-	};
-
-	private TopicListener<Thread> resetListener = new TopicListener<Thread>() {
-		@Override
-		public void topicPublished(String key, Thread message) {
-			transactions().transactionFinished();
-		}
-	};
-
-	private TopicListener<Thread> persistingListener = new TopicListener<Thread>() {
-		@Override
-		public void topicPublished(String key, Thread message) {
-			transactions().transactionCommitting();
-		}
-	};
-
 	DetachedEntityCache cache;
 
 	private DomainStorePersistenceListener persistenceListener;
 
 	boolean initialised = false;
 
-	private DomainStoreTransactions transactional = new DomainStoreTransactions();
-
 	private Field modificationCheckerField;
 
 	boolean initialising;
 
 	private boolean debug;
-
-	Multimap<Class, List<BaseProjectionHasEquivalenceHash>> cachingProjections = new Multimap<Class, List<BaseProjectionHasEquivalenceHash>>();
 
 	DomainStoreThreads threads;
 
@@ -300,10 +260,6 @@ public class DomainStore implements IDomainStore {
 	}
 
 	private DomainStore() {
-		ThreadlocalTransformManager.topicTransformManagerWasReset()
-				.add(resetListener);
-		TransformPersister.persistingTransformsListenerDelta(persistingListener,
-				true);
 		persistenceListener = new DomainStorePersistenceListener();
 		threads = new DomainStoreThreads(this);
 		threads.maxLockQueueLength = ResourceUtilities
@@ -344,7 +300,6 @@ public class DomainStore implements IDomainStore {
 	}
 
 	public DetachedEntityCache getCache() {
-		checkInLockedSection();
 		return this.cache;
 	}
 
@@ -474,10 +429,6 @@ public class DomainStore implements IDomainStore {
 				domainDescriptor.getClass().getSimpleName());
 	}
 
-	public DomainStoreTransactions transactions() {
-		return transactional;
-	}
-
 	public void warmup() throws Exception {
 		MetricLogging.get().start("domainStore.warmup");
 		initialised = false;
@@ -499,7 +450,7 @@ public class DomainStore implements IDomainStore {
 		mvcc.init();
 		MetricLogging.get().end("mvcc");
 		Transaction.beginDomainPreparing();
-		Transaction.current().setBaseTransaction(true, this);
+		Transaction.current().setBaseTransaction(true);
 		domainDescriptor.perClass.values().stream()
 				.forEach(DomainClassDescriptor::initialise);
 		loader.warmup();
@@ -518,7 +469,7 @@ public class DomainStore implements IDomainStore {
 	// FIXME.mvcc - useentityclass
 	private void addToLazyPropertyEvictionQueue(Entity entity) {
 		LazyPropertyLoadTask task = (LazyPropertyLoadTask) domainDescriptor
-				.getPreProvideTasks(entity.provideEntityClass()).stream()
+				.getPreProvideTasks(entity.entityClass()).stream()
 				.filter(ppt -> ppt instanceof LazyPropertyLoadTask).findFirst()
 				.get();
 		task.addToEvictionQueue(entity);
@@ -665,7 +616,6 @@ public class DomainStore implements IDomainStore {
 	}
 
 	<T extends Entity> T findRaw(Class<T> clazz, long id) {
-		checkInLockedSection();
 		T t = cache.get(clazz, id);
 		if (t == null) {
 			if (domainDescriptor.perClass.containsKey(clazz)
@@ -686,10 +636,6 @@ public class DomainStore implements IDomainStore {
 		return t;
 	}
 
-	<T extends Entity> T findRaw(T t) {
-		return (T) findRaw(t.provideEntityClass(), t.getId());
-	}
-
 	String getCanonicalPropertyPath(Class clazz, String propertyPath) {
 		return domainDescriptor.perClass.get(clazz)
 				.getCanonicalPropertyPath(propertyPath);
@@ -708,7 +654,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	void index(Entity obj, boolean add) {
-		Class<? extends Entity> clazz = obj.provideEntityClass();
+		Class<? extends Entity> clazz = obj.entityClass();
 		if (obj instanceof DomainProxy) {
 			clazz = (Class<? extends Entity>) clazz.getSuperclass();
 		}
@@ -724,7 +670,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	<V extends Entity> boolean isRawValue(V v) {
-		V existing = (V) cache.get(v.provideEntityClass(), v.getId());
+		V existing = (V) cache.get(v.entityClass(), v.getId());
 		return existing == v;
 	}
 
@@ -1170,15 +1116,9 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
-			public void commitPoint() {
-				// Noop
-			}
-
-			@Override
 			public <V extends Entity> V detachedVersion(V v) {
 				return v == null ? null
-						: storeHandler(v.provideEntityClass())
-								.detachedVersion(v);
+						: storeHandler(v.entityClass()).detachedVersion(v);
 			}
 
 			@Override
@@ -1188,8 +1128,7 @@ public class DomainStore implements IDomainStore {
 
 			@Override
 			public <V extends Entity> V find(V v) {
-				return v == null ? null
-						: storeHandler(v.provideEntityClass()).find(v);
+				return v == null ? null : storeHandler(v.entityClass()).find(v);
 			}
 
 			@Override
@@ -1200,8 +1139,7 @@ public class DomainStore implements IDomainStore {
 			@Override
 			public <V extends Entity> boolean isDomainVersion(V v) {
 				return v == null ? null
-						: storeHandler(v.provideEntityClass())
-								.isDomainVersion(v);
+						: storeHandler(v.entityClass()).isDomainVersion(v);
 			}
 
 			@Override
@@ -1221,21 +1159,6 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
-			public <V extends Entity> V resolveTransactional(
-					DomainListener listener, V value, Object[] path) {
-				return value;
-				// DomainStore domainStore = (DomainStore) listener
-				// .getDomainStore();
-				// if (domainStore == null || domainStore.handler == null) {
-				// // localdomain
-				// return value;
-				// } else {
-				// return domainStore.handler.resolveTransactional(listener,
-				// value, path);
-				// }
-			}
-
-			@Override
 			public <V extends Entity> long size(Class<V> clazz) {
 				return storeHandler(clazz).size(clazz);
 			}
@@ -1246,27 +1169,9 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
-			public <V extends Entity> V transactionalFind(Class clazz,
-					long id) {
-				return storeHandler(clazz).transactionalFind(clazz, id);
-			}
-
-			@Override
-			public <V extends Entity> V transactionalVersion(V v) {
-				return v == null ? null
-						: storeHandler(v.provideEntityClass())
-								.transactionalVersion(v);
-			}
-
-			@Override
-			public <V extends Entity> Collection<V> values(Class<V> clazz) {
-				return storeHandler(clazz).values(clazz);
-			}
-
-			@Override
 			public <V extends Entity> V writeable(V v) {
 				return v == null ? null
-						: storeHandler(v.provideEntityClass()).writeable(v);
+						: storeHandler(v.entityClass()).writeable(v);
 			}
 
 			DomainHandler storeHandler(Class clazz) {
@@ -1282,145 +1187,6 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	/*
-	 * Will be removed (mvcc)
-	 */
-	public class DomainStoreTransactions {
-		public volatile int transactionCount;
-
-		Set<Long> activeTransactionThreadIds = new LinkedHashSet<Long>();
-
-		public void ensureReferredPropertyIsTransactional(Entity entity,
-				String propertyName) {
-			// target, even if new object, will still be equals() to old, so no
-			// property change will be fired, which is the desired behaviour
-			Entity target = (Entity) Reflections.propertyAccessor()
-					.getPropertyValue(entity, propertyName);
-			if (target != null) {
-				target = ensureTransactional(target);
-				Reflections.propertyAccessor().setPropertyValue(entity,
-						propertyName, target);
-			}
-		}
-
-		public PerThreadTransaction ensureTransaction() {
-			PerThreadTransaction transaction = transactions.get();
-			if (transaction == null) {
-				Set<DomainTransformEvent> localTransforms = TransformManager
-						.get()
-						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-				int pendingTransformCount = localTransforms.size();
-				if (pendingTransformCount != 0
-						&& !AppPersistenceBase.isTest()) {
-					for (DomainTransformEvent dte : localTransforms) {
-						if (domainDescriptor.perClass.keySet()
-								.contains(dte.getObjectClass())) {
-							throw new DomainStoreException(String.format(
-									"Starting a domain store transaction with an existing transform of a graphed object - %s."
-											+ " In certain cases that might work -- "
-											+ "but better practice to not do so. All transforms: \n%s",
-									dte, localTransforms));
-						}
-					}
-				}
-				transaction = Registry.impl(PerThreadTransaction.class);
-				transaction.store = DomainStore.this;
-				transactions.set(transaction);
-				synchronized (this) {
-					activeTransactionThreadIds
-							.add(Thread.currentThread().getId());
-					transactionCount = activeTransactionThreadIds.size();
-				}
-				transaction.start();
-			}
-			return transaction;
-		}
-
-		public <V extends Entity> V ensureTransactional(V value) {
-			if (value == null) {
-				return null;
-			}
-			if (!transactionActiveInCurrentThread()) {
-				return value;
-			}
-			if (value.getId() == 0) {
-				return value;
-			}
-			return transactions.get().ensureTransactional(value);
-		}
-
-		public <T> T find(Class<T> clazz, long id) {
-			checkInLockedSection();
-			T t = cache.get(clazz, id);
-			if (transactionActiveInCurrentThread() && t != null) {
-				return (T) transactions.get().ensureTransactional((Entity) t);
-			} else {
-				return t;
-			}
-		}
-
-		/*
-		 * FIXME - mvcc - make this the TransactionalMap.values
-		 */
-		public Set immutableRawValues(Class clazz) {
-			return cache.values(clazz);
-		}
-
-		public <T> Map<Long, T> lookup(Class<T> clazz) {
-			checkInLockedSection();
-			return (Map<Long, T>) cache.getMap(clazz);
-		}
-
-		public void requireActiveTransaction() {
-			if (!transactionActiveInCurrentThread()) {
-				throw new RuntimeException(
-						"requires transaction in current thread");
-			}
-		}
-
-		public <V extends Entity> V resolveTransactional(
-				DomainListener listener, V value, Object[] path) {
-			PerThreadTransaction perThreadTransaction = transactions.get();
-			if (perThreadTransaction == null || (value != null
-					&& !isCached(value.provideEntityClass()))) {
-				return value;
-			}
-			return perThreadTransaction.getListenerValue(listener, value, path);
-		}
-
-		public boolean transactionActiveInCurrentThread() {
-			return transactionsActive() && transactions.get() != null;
-		}
-
-		public void transactionCommitting() {
-			PerThreadTransaction transaction = transactions.get();
-			if (transaction != null) {
-				transaction.committing();
-			}
-		}
-
-		public void transactionFinished() {
-			PerThreadTransaction transaction = transactions.get();
-			if (transaction != null) {
-				transaction.end();
-				for (BaseProjectionHasEquivalenceHash listener : cachingProjections
-						.allItems()) {
-					listener.onTransactionEnd();
-				}
-				transactions.remove();
-				synchronized (this) {
-					activeTransactionThreadIds
-							.remove(Thread.currentThread().getId());
-					transactionCount = activeTransactionThreadIds.size();
-				}
-			}
-		}
-
-		public boolean transactionsActive() {
-			return transactionCount != 0;
-		}
-	}
-
 	public static class DomainStoreUpdateException extends Exception {
 		public UmbrellaException umby;
 
@@ -1429,38 +1195,6 @@ public class DomainStore implements IDomainStore {
 		public DomainStoreUpdateException(UmbrellaException umby) {
 			super("Domain store update exception - ignoreable", umby);
 			this.umby = umby;
-		}
-	}
-	/*
-	 * Note - not synchronized - per-thread access only
-	 */
-
-	public static class RawValueReplacer<I> extends DomainReader<I, I> {
-		private DomainStore domainStore;
-
-		public RawValueReplacer(DomainStore domainStore) {
-			this.domainStore = domainStore;
-		}
-
-		@Override
-		protected I read0(I input) throws Exception {
-			if (input == null) {
-				return null;
-			}
-			checkInLockedSection();
-			List<Field> fields = new GraphProjection()
-					.getFieldsForClass(input.getClass());
-			for (Field field : fields) {
-				if (Entity.class.isAssignableFrom(field.getType())) {
-					Entity value = (Entity) field.get(input);
-					if (value != null) {
-						I raw = (I) domainStore.cache.get(field.getType(),
-								value.getId());
-						field.set(input, raw);
-					}
-				}
-			}
-			return input;
 		}
 	}
 
@@ -1608,14 +1342,9 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public void commitPoint() {
-			// do nothing, assume explicit commit in servlet layer
-		}
-
-		@Override
 		public <V extends Entity> V detachedVersion(V v) {
-			return (V) Domain.query(v.provideEntityClass())
-					.filterById(v.getId()).find();
+			return (V) Domain.query(v.entityClass()).filterById(v.getId())
+					.find();
 		}
 
 		@Override
@@ -1625,8 +1354,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public <V extends Entity> V find(V v) {
-			checkInLockedSection();
-			if (!v.provideWasPersisted()) {
+			if (!v.domain().wasPersisted()) {
 				if (v.getLocalId() == 0) {
 					return null;
 				}
@@ -1635,10 +1363,10 @@ public class DomainStore implements IDomainStore {
 				if (locator == null) {
 					return null;
 				} else {
-					return (V) cache.get(v.provideEntityClass(), locator.id);
+					return (V) cache.get(v.entityClass(), locator.id);
 				}
 			} else {
-				return (V) cache.get(v.provideEntityClass(), v.getId());
+				return (V) cache.get(v.entityClass(), v.getId());
 			}
 		}
 
@@ -1675,12 +1403,6 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public <V extends Entity> V resolveTransactional(
-				DomainListener listener, V value, Object[] path) {
-			return transactions().resolveTransactional(listener, value, path);
-		}
-
-		@Override
 		public <V extends Entity> long size(Class<V> clazz) {
 			return cache.size(clazz);
 		}
@@ -1688,22 +1410,6 @@ public class DomainStore implements IDomainStore {
 		@Override
 		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
 			return Domain.query(clazz).stream();
-		}
-
-		@Override
-		public <V extends Entity> V transactionalFind(Class clazz, long id) {
-			return (V) transactions().find(clazz, id);
-		}
-
-		@Override
-		public <V extends Entity> V transactionalVersion(V v) {
-			return (V) transactions().ensureTransactional(v);
-		}
-
-		@Override
-		public <V extends Entity> Collection<V> values(Class<V> clazz) {
-			checkInLockedSection();
-			return cache.immutableRawValues(clazz);
 		}
 
 		@Override
@@ -1716,7 +1422,7 @@ public class DomainStore implements IDomainStore {
 					.get().isListeningTo((SourcesPropertyChangeEvents) out)) {
 				return out;
 			}
-			if (out.provideWasPersisted()) {
+			if (out.domain().wasPersisted()) {
 				out = project(out);
 			} else {
 				out = Domain.detachedToDomain(out);
@@ -1781,8 +1487,7 @@ public class DomainStore implements IDomainStore {
 				case NULL_PROPERTY_REF: {
 					DomainProperty domainProperty = Reflections
 							.propertyAccessor().getAnnotationForProperty(
-									entity.provideEntityClass(),
-									DomainProperty.class,
+									entity.entityClass(), DomainProperty.class,
 									event.getPropertyName());
 					if (domainProperty != null && !domainProperty.index()) {
 						return;

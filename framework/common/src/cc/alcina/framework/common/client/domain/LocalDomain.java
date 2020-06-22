@@ -66,7 +66,7 @@ public class LocalDomain {
 	}
 
 	private synchronized void index(Entity obj, boolean add) {
-		Class<? extends Entity> clazz = obj.provideEntityClass();
+		Class<? extends Entity> clazz = obj.entityClass();
 		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
 				.get(clazz);
 		itemDescriptor.index(obj, add);

@@ -11,18 +11,14 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
 
 public class Transactions {
 	private static Transactions instance;
-
-	private static Map<DomainStore, Transaction> baseTransactions = new LightMap<>();
 
 	private static Multimap removedVersions = new Multimap();
 
@@ -128,10 +124,6 @@ public class Transactions {
 		get().waitForAllToCompleteExSelf0();
 	}
 
-	static Transaction baseTransaction(DomainStore store) {
-		return baseTransactions.get(store);
-	}
-
 	static <T extends MvccObject> T copyObject(T from) {
 		// synchronized (debugMonitor) {
 		T clone = null;
@@ -164,11 +156,6 @@ public class Transactions {
 
 	static Transactions get() {
 		return instance;
-	}
-
-	static synchronized void registerBaseTransaction(DomainStore store,
-			Transaction transaction) {
-		baseTransactions.put(store, transaction);
 	}
 
 	static <K, V> TransactionalTrieEntry<K, V>

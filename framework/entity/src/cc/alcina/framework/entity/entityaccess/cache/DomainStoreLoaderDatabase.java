@@ -208,7 +208,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	public List<DomainTransformRequestPersistent> loadTransformRequests(
 			Collection<Long> ids, Logger logger) throws Exception {
 		synchronized (loadTransformRequestLock) {
-			return DomainReader.get(() -> loadTransformRequests0(ids, logger));
+			return loadTransformRequests0(ids, logger);
 		}
 	}
 
@@ -320,16 +320,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("lookups");
 		MetricLogging.get().start("projections");
-		// deliberately init projections after lookups
-		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
-				.values()) {
-			for (DomainProjection projection : descriptor.projections) {
-				if (projection instanceof BaseProjectionHasEquivalenceHash) {
-					store.cachingProjections
-							.getAndEnsure(projection.getListenedClass());
-				}
-			}
-		}
 		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
 				.values()) {
 			calls.add(new Callable<Void>() {
@@ -338,10 +328,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					for (DomainProjection projection : descriptor.projections) {
 						if (projection.isEnabled()) {
 							store.addValues(projection);
-						}
-						if (projection instanceof BaseProjectionHasEquivalenceHash) {
-							store.cachingProjections.add(
-									projection.getListenedClass(), projection);
 						}
 					}
 					return null;
@@ -1130,7 +1116,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			T domainEntity) {
 		try {
 			TransformManager.get().setIgnorePropertyChanges(true);
-			Class<? extends Entity> clazz = tableEntity.provideEntityClass();
+			Class<? extends Entity> clazz = tableEntity.entityClass();
 			List<ColumnDescriptor> columnDescriptors = this.columnDescriptors
 					.get(clazz);
 			List<PdOperator> pds = descriptors.get(clazz);

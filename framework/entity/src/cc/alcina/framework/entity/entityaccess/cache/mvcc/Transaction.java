@@ -244,11 +244,12 @@ public class Transaction {
 		return result;
 	}
 
-	public void setBaseTransaction(boolean baseTransaction, DomainStore store) {
+	/**
+	 * It's legal to do this after DomainStore.warmup as long as you can
+	 * guarantee that tx object modification is thread-safe
+	 */
+	public void setBaseTransaction(boolean baseTransaction) {
 		this.baseTransaction = baseTransaction;
-		if (baseTransaction) {
-			Transactions.registerBaseTransaction(store, this);
-		}
 	}
 
 	public void setCommittedTransactions(

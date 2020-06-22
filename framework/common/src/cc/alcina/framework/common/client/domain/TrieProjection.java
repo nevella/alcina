@@ -48,6 +48,10 @@ public class TrieProjection<K, E extends Entity>
 				.flatMap(Collection::stream).distinct();
 	}
 
+	public MultiTrie<K, Set<E>> getTrie() {
+		return this.trie;
+	}
+
 	@Override
 	public void insert(E o) {
 		keyMapper.apply(o).forEach(key -> {
@@ -63,6 +67,10 @@ public class TrieProjection<K, E extends Entity>
 		return this.enabled;
 	}
 
+	public boolean isLoadingOnly() {
+		return this.trie.isLoadingOnly();
+	}
+
 	@Override
 	public void remove(E o) {
 		keyMapper.apply(o).forEach(key -> {
@@ -76,6 +84,10 @@ public class TrieProjection<K, E extends Entity>
 	@Override
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public void setLoadingOnly(boolean loadingOnly) {
+		this.trie.setLoadingOnly(loadingOnly);
 	}
 
 	protected List<K> extractSubKeys(K key) {

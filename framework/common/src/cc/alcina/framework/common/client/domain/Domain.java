@@ -1,12 +1,10 @@
 package cc.alcina.framework.common.client.domain;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,24 +46,8 @@ public class Domain {
 		return handler.byProperty(clazz, propertyName, value);
 	}
 
-	public static <V extends Entity> Supplier<Collection>
-			castSupplier(Class<V> clazz) {
-		return () -> values(clazz);
-	}
-
-	public static void commitPoint() {
-		handler.commitPoint();
-	}
-
 	public static <V extends Entity> V create(Class<V> clazz) {
 		return handler.create(clazz);
-	}
-
-	public static <V extends Entity> void delete(Class<V> clazz, long id) {
-		Entity entity = find(clazz, id);
-		if (entity != null) {
-			writeable(entity).delete();
-		}
 	}
 
 	public static <V extends Entity> void delete(V v) {
@@ -81,9 +63,9 @@ public class Domain {
 		if (Domain.isDomainVersion(entity)) {
 			return entity;
 		}
-		Class<V> clazz = entity.provideEntityClass();
-		V writeable = entity.provideWasPersisted()
-				? Domain.writeable(Domain.find(entity))
+		Class<V> clazz = entity.entityClass();
+		V writeable = entity.domain().wasPersisted()
+				? detachedVersion(Domain.find(entity))
 				: Domain.create(clazz);
 		List<PropertyInfo> writableProperties = Reflections.classLookup()
 				.getWritableProperties(clazz);
@@ -137,7 +119,6 @@ public class Domain {
 			Reflections.propertyAccessor().setPropertyValue(first, propertyName,
 					value);
 		} else {
-			first = writeable(first);
 		}
 		return first;
 	}
@@ -181,30 +162,12 @@ public class Domain {
 		return handler.resolveEntityClass(clazz);
 	}
 
-	public static <V extends Entity> V resolveTransactional(
-			DomainListener listener, V value, Object[] path) {
-		return handler.resolveTransactional(listener, value, path);
-	}
-
 	public static <V extends Entity> long size(Class<V> clazz) {
 		return handler.size(clazz);
 	}
 
 	public static <V extends Entity> Stream<V> stream(Class<V> clazz) {
 		return handler.stream(clazz);
-	}
-
-	public static <V extends Entity> V transactionalFind(Class clazz, long id) {
-		return handler.transactionalFind(clazz, id);
-	}
-
-	public static <V extends Entity> V transactionVersion(V v) {
-		return handler.transactionalVersion(v);
-	}
-
-	// FIXME - mvcc.2 - remove
-	public static <V extends Entity> Collection<V> values(Class<V> clazz) {
-		return handler.values(clazz);
 	}
 
 	/**
@@ -218,20 +181,11 @@ public class Domain {
 		public <V extends Entity> void async(Class<V> clazz, long objectId,
 				boolean create, Consumer<V> resultConsumer);
 
-		public void commitPoint();
-
 		public <V extends Entity> V find(Class clazz, long id);
 
 		public <V extends Entity> V find(V v);
 
-		public <V extends Entity> V resolveTransactional(
-				DomainListener listener, V value, Object[] path);
-
 		public <V extends Entity> Stream<V> stream(Class<V> clazz);
-
-		public <V extends Entity> V transactionalFind(Class clazz, long id);
-
-		public <V extends Entity> Collection<V> values(Class<V> clazz);
 
 		public <V extends Entity> V writeable(V v);
 
@@ -270,19 +224,12 @@ public class Domain {
 		default <V extends Entity> long size(Class<V> clazz) {
 			return stream(clazz).count();
 		}
-
-		<V extends Entity> V transactionalVersion(V v);
 	}
 
 	public static class DomainHandlerNonTransactional implements DomainHandler {
 		@Override
 		public <V extends Entity> void async(Class<V> clazz, long objectId,
 				boolean create, Consumer<V> resultConsumer) {
-		}
-
-		@Override
-		public void commitPoint() {
-			throw new UnsupportedOperationException();
 		}
 
 		@Override
@@ -297,8 +244,7 @@ public class Domain {
 
 		@Override
 		public <V extends Entity> V find(V v) {
-			// TODO Auto-generated method stub
-			return null;
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
@@ -317,31 +263,8 @@ public class Domain {
 		}
 
 		@Override
-		public <V extends Entity> V resolveTransactional(
-				DomainListener listener, V value, Object[] path) {
-			return value;
-		}
-
-		@Override
 		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-		@Override
-		public <V extends Entity> V transactionalFind(Class clazz, long id) {
 			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public <V extends Entity> V transactionalVersion(V v) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public <V extends Entity> Collection<V> values(Class<V> clazz) {
-			// TODO Auto-generated method stub
-			return null;
 		}
 
 		@Override
