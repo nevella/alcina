@@ -19,6 +19,6 @@ public @interface DomainStoreProperty {
 	boolean translateObjectWritesToIdWrites() default false;
 
 	public enum DomainStorePropertyLoadType {
-		TRANSIENT, LAZY, EAGER
+		TRANSIENT, LAZY, EAGER, INTERN
 	}
 }
