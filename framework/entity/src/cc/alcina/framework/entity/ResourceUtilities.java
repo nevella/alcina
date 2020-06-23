@@ -921,6 +921,10 @@ public class ResourceUtilities {
 
 	public static void writeStringToFileNoUpdate(String content, String path)
 			throws Exception {
+		if (!new File(path).exists()) {
+			writeStringToFile(content, path);
+			return;
+		}
 		String current = readFileToString(path);
 		if (!current.equals(content)) {
 			writeStringToFile(content, path);
