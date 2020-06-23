@@ -6,7 +6,10 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public class RetryWrapper<T> {
 
-    public static <O> O runWithMaxReties(int maxCount, Callable<O> callable) {
+    static int ONE_SECOND = 1000;
+
+    public static <O> O runWithMaxReties(int maxCount, Callable<O> callable)
+            throws Exception{
         return new RetryWrapper<O>(maxCount, callable).call();
     }
 
@@ -19,7 +22,7 @@ public class RetryWrapper<T> {
         this.callable = callable;
     }
 
-    public T call() {
+    public T call() throws Exception {
         int currentCount = 0;
         Exception lastException = null;
         while (currentCount < maxCount) {
@@ -29,6 +32,7 @@ public class RetryWrapper<T> {
                 lastException = e;
             }
             currentCount++;
+            Thread.sleep((long) Math.pow(2, currentCount) * ONE_SECOND);
         }
         throw new WrappedRuntimeException("Exceeded retry count", lastException);
     }
