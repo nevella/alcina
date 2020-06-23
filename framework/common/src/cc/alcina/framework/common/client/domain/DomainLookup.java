@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.domain;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Function;
@@ -84,6 +85,11 @@ public class DomainLookup<T, E extends Entity>
 
 	public Converter<T, T> getNormaliser() {
 		return this.normaliser;
+	}
+
+	public Set<E> getOrEmpty(T k1) {
+		Set<E> set = get(k1);
+		return set == null ? Collections.emptySet() : set;
 	}
 
 	public PropertyPathAccessor getPropertyPathAccesor() {

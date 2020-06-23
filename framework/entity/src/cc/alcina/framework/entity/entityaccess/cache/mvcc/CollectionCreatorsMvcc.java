@@ -58,7 +58,7 @@ public class CollectionCreatorsMvcc {
 
 			@Override
 			protected void createTopMap() {
-				// do it in *our* init
+				// do it in *our* init (not the superclasses')
 			}
 		}
 	}
