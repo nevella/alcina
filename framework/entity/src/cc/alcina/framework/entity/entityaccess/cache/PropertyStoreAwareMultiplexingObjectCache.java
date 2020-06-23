@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
@@ -71,8 +72,8 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 	}
 
 	@Override
-	public Map<Long, Entity> getCreatedLocalsSnapshot() {
-		return main.getCreatedLocalsSnapshot();
+	public Map<Long, Entity> getCreatedLocals() {
+		return main.getCreatedLocals();
 	}
 
 	@Override
@@ -83,11 +84,6 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 	@Override
 	public Map<Long, Entity> getMap(Class clazz) {
 		return main.getMap(clazz);
-	}
-
-	@Override
-	public <T> Collection<T> immutableRawValues(Class<T> clazz) {
-		return main.immutableRawValues(clazz);
 	}
 
 	@Override
@@ -200,13 +196,17 @@ class PropertyStoreAwareMultiplexingObjectCache extends DetachedEntityCache {
 
 		@Override
 		protected Map<Long, Entity> createIdEntityMap(Class clazz) {
-			return new TransactionalMap(Long.class, clazz);
+			TransactionalMap transactionalMap = new TransactionalMap(Long.class,
+					clazz);
+			transactionalMap.setImmutableValues(true);
+			return transactionalMap;
 		}
 
 		@Override
 		protected void createTopMaps() {
 			domain = new LinkedHashMap<>();
 			local = new LinkedHashMap<>();
+			createdLocals = new ConcurrentHashMap<>();
 		}
 
 		@Override

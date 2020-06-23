@@ -17,7 +17,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -41,11 +40,18 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *
  * @author Nick Reddel
  * 
+ *         Thread safety. For server-side implementations, modifications of
+ *         per-class maps is thread-safe, but modification of the top-level maps
+ *         is not. Server-side, the top-level maps should be fully populated
+ *         before their contents are populated.
+ * 
  */
 public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	protected Map<Class, Map<Long, Entity>> domain;
 
 	protected Map<Class, Map<Long, Entity>> local;
+
+	protected Map<Long, Entity> createdLocals;
 
 	private boolean throwOnExisting;
 
@@ -74,6 +80,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	public void clear() {
 		domain.clear();
 		local.clear();
+		createdLocals.clear();
 	}
 
 	public <T extends Entity> boolean contains(Class<T> clazz, long id) {
@@ -121,10 +128,8 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 				: getLocal(locator.clazz, locator.localId));
 	}
 
-	public Map<Long, Entity> getCreatedLocalsSnapshot() {
-		Map<Long, Entity> result = new HashMap<>();
-		local(false).values().forEach(result::putAll);
-		return result;
+	public Map<Long, Entity> getCreatedLocals() {
+		return createdLocals;
 	}
 
 	public Map<Class, Map<Long, Entity>> getDomain() {
@@ -134,13 +139,6 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	public Map<Long, Entity> getMap(Class clazz) {
 		ensureMap(clazz);
 		return this.domain.get(clazz);
-	}
-
-	// FIXME - mvcc.2 - remove
-	public <T> Collection<T> immutableRawValues(Class<T> clazz) {
-		ensureMap(clazz);
-		return (Collection<T>) Collections
-				.unmodifiableCollection(domain.get(clazz).values());
 	}
 
 	public void invalidate(Class clazz) {
@@ -196,13 +194,14 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 			}
 			domain.get(clazz).put(id, entity);
 		} else {
-			Map<Long, Entity> perClientInstanceClazz = local(clazz, true);
+			Map<Long, Entity> localPerClass = local(clazz, true);
 			if (throwOnExisting) {
-				if (perClientInstanceClazz.containsKey(id)) {
+				if (localPerClass.containsKey(id)) {
 					throw Ax.runtimeException("Double-put: %s", entity);
 				}
 			}
-			perClientInstanceClazz.put(localId, entity);
+			localPerClass.put(localId, entity);
+			createdLocals.put(localId, entity);
 		}
 	}
 
@@ -229,6 +228,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 			domain.get(clazz).remove(id);
 		} else {
 			local(clazz, true).remove(localId, entity);
+			createdLocals.remove(localId, entity);
 		}
 	}
 
@@ -237,6 +237,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		long localId = entity.getLocalId();
 		Preconditions.checkArgument(localId > 0);
 		local(clazz, true).remove(localId, entity);
+		createdLocals.remove(localId, entity);
 	}
 
 	public void setThrowOnExisting(boolean throwOnExisting) {
@@ -272,45 +273,17 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		return stream(clazz).collect(AlcinaCollectors.toLinkedHashSet());
 	}
 
-	private Map<Class, Map<Long, Entity>> local(boolean ensure) {
-		// ClientInstance clientInstance = PermissionsManager.get()
-		// .getClientInstance();
-		// if (clientInstance == null) {
-		// return Collections.emptyMap();
-		// }
-		// Map<Class, Map<Long, Entity>> perClientInstance = local
-		// .get(clientInstance);
-		// if (perClientInstance != null) {
-		// return perClientInstance;
-		// }
-		// if (!ensure) {
-		// return Collections.emptyMap();
-		// }
-		// synchronized (clientInstance) {
-		// perClientInstance = local.get(clientInstance);
-		// if (perClientInstance != null) {
-		// return perClientInstance;
-		// }
-		// perClientInstance = createClientInstanceClassMap();
-		// local.put(clientInstance, perClientInstance);
-		// return perClientInstance;
-		// }
-		return local;
-	}
-
 	private Map<Long, Entity> local(Class clazz, boolean ensure) {
-		Map<Class, Map<Long, Entity>> perClientInstance = local(ensure);
-		if (!perClientInstance.containsKey(clazz)) {
+		Map<Class, Map<Long, Entity>> perClass = local;
+		if (!perClass.containsKey(clazz)) {
 			if (!ensure) {
 				return Collections.emptyMap();
 			}
-			synchronized (this) {
-				if (!perClientInstance.containsKey(clazz)) {
-					perClientInstance.put(clazz, createIdEntityMap(clazz));
-				}
+			if (!perClass.containsKey(clazz)) {
+				perClass.put(clazz, createIdEntityMap(clazz));
 			}
 		}
-		return perClientInstance.get(clazz);
+		return perClass.get(clazz);
 	}
 
 	protected Map<Class, Map<Long, Entity>> createClientInstanceClassMap() {
@@ -324,15 +297,14 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	protected void createTopMaps() {
 		domain = new LinkedHashMap<>();
 		local = new LinkedHashMap<>();
-		local = new LinkedHashMap<>();
+		createdLocals = new LinkedHashMap<>();
 	}
 
 	protected void ensureMap(Class clazz) {
 		if (!domain.containsKey(clazz)) {
-			synchronized (this) {
-				if (!domain.containsKey(clazz)) {
-					domain.put(clazz, createIdEntityMap(clazz));
-				}
+			if (!domain.containsKey(clazz)) {
+				domain.put(clazz, createIdEntityMap(clazz));
+				local(clazz, true);
 			}
 		}
 	}

@@ -222,6 +222,10 @@ public class Transaction {
 		return this.baseTransaction;
 	}
 
+	public boolean isEnded() {
+		return this.ended;
+	}
+
 	public boolean isPreCommit() {
 		return phase == TransactionPhase.TO_DB_PREPARING;
 	}

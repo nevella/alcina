@@ -72,6 +72,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	Comparator<K> comparator;
 
+	private boolean immutableValues;
+
 	public TransactionalMap(Class<K> keyClass, Class<V> valueClass) {
 		Preconditions.checkNotNull(keyClass);
 		Preconditions.checkNotNull(valueClass);
@@ -138,6 +140,14 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		return System.identityHashCode(this);
 	}
 
+	/*
+	 * Signifies that the value, once set, will never be changed. This is not
+	 * checked explicitly
+	 */
+	public boolean isImmutableValues() {
+		return this.immutableValues;
+	}
+
 	public boolean isSorted() {
 		return false;
 	}
@@ -168,6 +178,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		Layer layer = ensureLayer();
 		layer.remove((K) key);
 		return existing;
+	}
+
+	public void setImmutableValues(boolean immutableValues) {
+		this.immutableValues = immutableValues;
 	}
 
 	@Override
@@ -565,8 +579,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		private int size = -1;
 
+		private Transaction transaction;
+
 		public TransactionalEntrySet() {
 			visibleLayers = visibleLayers();
+			transaction = Transaction.current();
 		}
 
 		@Override
@@ -605,8 +622,55 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				}
 				return true;
 			};
-			FilteringIterator<Entry<K, V>> filteringIterator = new FilteringIterator<>(
-					layerIterator, filter);
+			FilteringIterator<Entry<K, V>> filteringIterator = new FilteringIterator<Entry<K, V>>(
+					layerIterator, filter) {
+				@Override
+				public Entry<K, V> next() {
+					Entry<K, V> next2 = super.next();
+					if (transaction.isEnded()) {
+						// this case is generally a long-running job traversing
+						// the
+						// graph. use the current tx state of the map to filter
+						// (less optimal but see the bit about 'long running')
+						// we're guaranteed to not see spurious entities -
+						// although
+						// of course we'll miss those in the later txs
+						// note that this only works for idMaps where we're
+						// guaranteed unchanging value objects - other maps
+						// (projections/lookups) shouldn't be accessed across tx
+						// boundaries
+						//
+						// Because changing the size of the iterator causes
+						// problems (e.g. in stream iteration), instead return
+						// null -- calling code must be prepared to filter
+						// nulls.
+						if (!immutableValues) {
+							throw new MvccException(
+									"Accessing non-immutable value iterator across tx boundary");
+						}
+						if (!TransactionalMap.this
+								.containsKey(next2.getKey())) {
+							return new Entry<K, V>() {
+								@Override
+								public K getKey() {
+									return next2.getKey();
+								}
+
+								@Override
+								public V getValue() {
+									return null;
+								}
+
+								@Override
+								public V setValue(V value) {
+									throw new UnsupportedOperationException();
+								}
+							};
+						}
+					}
+					return next2;
+				}
+			};
 			return filteringIterator;
 		}
 
