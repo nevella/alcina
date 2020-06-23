@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -34,9 +33,10 @@ import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
 import cc.alcina.framework.servlet.publication.delivery.ContentDeliveryEmail;
+import cc.alcina.framework.servlet.servlet.AlcinaServlet;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
-public class ControlServlet extends HttpServlet {
+public class ControlServlet extends AlcinaServlet {
 	public static String invokeRemoteAction(RemoteAction action, String url,
 			String apiKey) {
 		StringMap queryParameters = new StringMap();
@@ -54,13 +54,6 @@ public class ControlServlet extends HttpServlet {
 	}
 
 	Logger logger = LoggerFactory.getLogger(getClass());
-
-	public void writeAndClose(String s, HttpServletResponse resp)
-			throws IOException {
-		resp.setContentType("text/plain");
-		resp.getWriter().write(s);
-		resp.getWriter().close();
-	}
 
 	public void writeAndCloseHtml(String s, HttpServletRequest req,
 			HttpServletResponse resp) throws IOException {
@@ -84,21 +77,21 @@ public class ControlServlet extends HttpServlet {
 		}
 	}
 
-	private void doGet0(HttpServletRequest req, HttpServletResponse resp)
+	private void handle0(HttpServletRequest req, HttpServletResponse resp)
 			throws Exception {
 		try {
 			String apiKey = getApiKey();
 			authenticate(req, req.getParameter("apiKey"), apiKey);
 			ControlServletRequest csr = parseRequest(req, resp);
-			handleRequest(csr, req, resp);
+			handle1(csr, req, resp);
 		} catch (Exception e) {
 			e.printStackTrace();
 			writeAndClose(SEUtilities.getFullExceptionMessage(e), resp);
 		}
 	}
 
-	private void handleRequest(ControlServletRequest csr,
-			HttpServletRequest req, HttpServletResponse resp) throws Exception {
+	private void handle1(ControlServletRequest csr, HttpServletRequest req,
+			HttpServletResponse resp) throws Exception {
 		if (csr.getCommand() == null) {
 			return;
 		}
@@ -227,21 +220,21 @@ public class ControlServlet extends HttpServlet {
 		return emailAddress;
 	}
 
+	protected String getApiKey() {
+		return Registry.impl(AppLifecycleManager.class).getState().getApiKey();
+	}
+
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
+	protected void handleRequest(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
 		try {
-			doGet0(req, resp);
+			handle0(request, response);
 		} catch (Exception e) {
 			if (e instanceof InformException) {
-				writeAndClose(e.getMessage(), resp);
+				writeAndClose(e.getMessage(), response);
 			}
 			throw new ServletException(e);
 		}
-	}
-
-	protected String getApiKey() {
-		return Registry.impl(AppLifecycleManager.class).getState().getApiKey();
 	}
 
 	public static interface ControlServletActionPerformer {

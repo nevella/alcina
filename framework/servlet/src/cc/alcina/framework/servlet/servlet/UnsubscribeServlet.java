@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.servlet.servlet;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -33,7 +32,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
  *
  * @author Nick Reddel
  */
-public class UnsubscribeServlet extends HttpServlet {
+public class UnsubscribeServlet extends AlcinaServlet {
 	private static final String DEFAULT_SERVLET_PATH = "unsubscribe.do";
 
 	public static String defaultHref(PublicationResult publicationResult) {
@@ -47,8 +46,8 @@ public class UnsubscribeServlet extends HttpServlet {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	@Override
-	public void doGet(HttpServletRequest request,
-			HttpServletResponse response) {
+	protected void handleRequest(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
 		FormatBuilder outputBuilder = new FormatBuilder();
 		String queryString = request.getQueryString();
 		try {
