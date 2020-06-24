@@ -10,6 +10,13 @@ public class MvccObjectVersionsTrieEntry
 	}
 
 	@Override
+	protected boolean
+			accessibleFromOtherTransactions(TransactionalTrieEntry t) {
+		// this is impossible to determine, so return 'true'
+		return true;
+	}
+
+	@Override
 	protected void copyObjectFields(TransactionalTrieEntry fromObject,
 			TransactionalTrieEntry toObject) {
 		Transactions.copyObjectFields(fromObject, toObject);
@@ -23,12 +30,5 @@ public class MvccObjectVersionsTrieEntry
 	@Override
 	protected void register(TransactionalTrieEntry object) {
 		// noop
-	}
-
-	@Override
-	protected boolean wasPersisted(TransactionalTrieEntry t) {
-		// never hurts to copy existing values (even if they're actually new)
-		// TODO - could revisit
-		return true;
 	}
 }

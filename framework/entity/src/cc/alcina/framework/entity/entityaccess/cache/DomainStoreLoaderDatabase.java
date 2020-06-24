@@ -93,7 +93,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
-/*FIXME
+/*FIXME - mvcc.4
  * The various loadtable methods are way to overloaded 
  * (and use context vars as well because of call depth). Refactor into a loadparams builder
  */

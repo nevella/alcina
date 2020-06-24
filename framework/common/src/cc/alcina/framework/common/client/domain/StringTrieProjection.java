@@ -32,7 +32,8 @@ so roughly per-length/disintct per-length / size for length n
 per outgoing entity cost:1
 per incoming: 0
 
-// TODO  But...until we have
+// REVISIT mvcc.3
+ *   But...until we have
 			// framework level option to evaulate without lookup, it's always
 			// going to make sense to put trie projections first
  */

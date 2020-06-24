@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.entityaccess.RollingDataItem;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 
-//TODO - lowpri - formal support for "go back a bit" in transform sequence - probably using transform utc date
+//REVIEW - lowpri - formal support for "go back a bit" in transform sequence - probably using transform utc date
 public abstract class RollingData<K extends Comparable, V> {
 	protected String typeKey;
 

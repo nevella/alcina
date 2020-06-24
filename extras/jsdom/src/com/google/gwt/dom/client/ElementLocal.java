@@ -409,10 +409,6 @@ public class ElementLocal extends NodeLocal
 	@Override
 	public void setAttribute(String name, String value) {
 		attributes.put(name, value);
-		// FIXME
-		// if (name.equals("id") && value.length() > 0) {
-		// LocalDomBridge.registerId(this);
-		// }
 	}
 
 	@Override

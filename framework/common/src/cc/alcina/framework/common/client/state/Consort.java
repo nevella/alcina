@@ -347,8 +347,10 @@ public class Consort<D> {
 		wasPlayed(player, resultantStates, true);
 	}
 
-	// TODO - cleanup - this works - unless we want some sort of threaded
+	// FIXME.applifecycle.consort - cleanup - this works - unless we want some
+	// sort of threaded
 	// queue/consumer model - but it ain't so pretty
+	//
 	public void wasPlayed(Player<D> player, Collection<D> resultantStates,
 			boolean keepGoing) {
 		if (!isRunning()) {
@@ -362,7 +364,8 @@ public class Consort<D> {
 		playedCount++;
 		assert playing.contains(player);
 		playing.remove(player);
-		// TODO - warn if resultantstates >1 and a non-parallel consort?
+		// FIXME.applifecycle.consort - warn if resultantstates >1 and a
+		// non-parallel consort?
 		modifyStates(resultantStates, true);
 		metricLogger.debug(Ax.format("%s     %s: %s ms",
 				CommonUtils.padStringLeft("", depth(), '\t'),
@@ -477,11 +480,9 @@ public class Consort<D> {
 							} else {
 								if (!player.isAllowEqualPriority()
 										|| result.isAllowEqualPriority()) {
-									throw new RuntimeException(
-											Ax.format(
-													PLAYERS_WITH_EQUAL_DEPS_ERR,
-													player, result,
-													providerDependencies));
+									throw new RuntimeException(Ax.format(
+											PLAYERS_WITH_EQUAL_DEPS_ERR, player,
+											result, providerDependencies));
 								}
 							}
 						}

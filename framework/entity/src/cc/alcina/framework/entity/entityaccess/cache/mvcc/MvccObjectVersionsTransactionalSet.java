@@ -10,6 +10,12 @@ public class MvccObjectVersionsTransactionalSet
 	}
 
 	@Override
+	protected boolean accessibleFromOtherTransactions(TransactionalSet t) {
+		// this is impossible to determine, so return 'true'
+		return true;
+	}
+
+	@Override
 	protected void copyObjectFields(TransactionalSet fromObject,
 			TransactionalSet toObject) {
 		Transactions.copyObjectFields(fromObject, toObject);
@@ -23,10 +29,5 @@ public class MvccObjectVersionsTransactionalSet
 	@Override
 	protected void register(TransactionalSet object) {
 		// noop
-	}
-
-	@Override
-	protected boolean wasPersisted(TransactionalSet t) {
-		return true;
 	}
 }

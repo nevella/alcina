@@ -272,6 +272,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	private List<String> ignoreProperties;
 
+	private GwittirDateRendererProvider dateRendererProvider = new GwittirDateRendererProvider();
+
 	private GwittirBridge() {
 		super();
 	}
@@ -349,6 +351,10 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				.getPropertyReflectors().get(propertyName);
 		return propertyReflector == null ? null
 				: propertyReflector.getAnnotation(annotationClass);
+	}
+
+	public GwittirDateRendererProvider getDateRendererProvider() {
+		return this.dateRendererProvider;
 	}
 
 	// private Set<String> reffedDescriptor = new LinkedHashSet<String>();
@@ -653,7 +659,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		}
 	}
 
-	// TODO - abstract this, clean above function
 	public Validator getValidator(Class clazz, Object obj, String propertyName,
 			ValidationFeedback validationFeedback) {
 		ClientBeanReflector bi = ClientReflector.get()
@@ -762,6 +767,11 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		return false;
 	}
 
+	public void setDateRendererProvider(
+			GwittirDateRendererProvider dateRendererProvider) {
+		this.dateRendererProvider = dateRendererProvider;
+	}
+
 	public void setIgnoreProperties(List<String> ignoreProperties) {
 		this.ignoreProperties = ignoreProperties;
 	}
@@ -837,6 +847,16 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		}
 	}
 
+	public static class GwittirDateRendererProvider {
+		public BoundWidgetProvider getRenderer(Display display) {
+			if (display.rendererHint().equals(HINT_DATE_WITH_TIME_TITLE)) {
+				return AU_DATE_TIME_TITLE_PROVIDER;
+			} else {
+				return AU_DATE_PROVIDER;
+			}
+		}
+	}
+
 	class FieldDisplayNameComparator implements Comparator<Field> {
 		private final ClientBeanReflector bi;
 
@@ -850,25 +870,5 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					.compareTo(bi.getPropertyReflectors()
 							.get(o2.getPropertyName()));
 		}
-	}
-	public static class GwittirDateRendererProvider {
-		public BoundWidgetProvider getRenderer(Display display) {
-			if (display.rendererHint().equals(HINT_DATE_WITH_TIME_TITLE)) {
-				return AU_DATE_TIME_TITLE_PROVIDER;
-			} else {
-				return AU_DATE_PROVIDER;
-			}
-		}
-	}
-
-	private GwittirDateRendererProvider dateRendererProvider = new GwittirDateRendererProvider();
-
-	public GwittirDateRendererProvider getDateRendererProvider() {
-		return this.dateRendererProvider;
-	}
-
-	public void setDateRendererProvider(
-			GwittirDateRendererProvider dateRendererProvider) {
-		this.dateRendererProvider = dateRendererProvider;
 	}
 }

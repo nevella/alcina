@@ -88,7 +88,7 @@ public class PersistedTransformUndo {
 		case CHANGE_PROPERTY_REF:
 		case CHANGE_PROPERTY_SIMPLE_VALUE: {
 			if (!exists) {
-				// ignore default values for the moment -- TODO
+				// ignore default values for the moment -- REVISIT.1
 				System.out.format("generating from default - %s.%s ",
 						evt.getObjectClass().getSimpleName(),
 						evt.getPropertyName());

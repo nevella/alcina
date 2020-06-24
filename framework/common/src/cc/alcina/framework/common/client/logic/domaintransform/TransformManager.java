@@ -75,7 +75,7 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
 
 /**
- * TODO - abstract parts out to ClientTransformManager
+ * FIXME - mvcc.3 - abstract parts out to ClientTransformManager
  * 
  * <h2>Thread safety notes</h2>
  * <ul>
@@ -808,7 +808,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return getDomainObjects().getCollection(clazz);
 	}
 
-	// TODO - mvcc - get rid of objectstore vs objectlookup?
+	// FIXME - mvcc.3 - get rid of objectstore vs objectlookup? Objectlookup
+	// should probably always go via tm
 	public ObjectStore getDomainObjects() {
 		return this.domainObjects;
 	}
@@ -1351,8 +1352,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Entity entity = (Entity) evt.getSource();
 		if (this.getDomainObjects() != null) {
 			if (!provisionalObjects.containsKey(entity)) {
-				maybeFireCollectionModificationEvent(
-						entity.entityClass(), true);
+				maybeFireCollectionModificationEvent(entity.entityClass(),
+						true);
 			}
 		}
 		if (dte.getObjectId() == 0 && dte.getObjectLocalId() == 0) {
@@ -1723,8 +1724,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected void performDeleteObject(Entity entity) {
 		if (getDomainObjects() != null) {
 			getDomainObjects().deregisterObject(entity);
-			maybeFireCollectionModificationEvent(entity.entityClass(),
-					false);
+			maybeFireCollectionModificationEvent(entity.entityClass(), false);
 		}
 	}
 

@@ -30,7 +30,8 @@ import java.lang.annotation.Target;
  * @author Nick Reddel
  */
 public @interface Wrapper {
-	// TODO - currently not implemented. Question is: should it be?
+	// FIXME - mvcc.3 - this is going away. Was: currently not implemented.
+	// Question is: should it be?
 	boolean cascadeDelete() default true;
 
 	Class defaultImplementationType() default Void.class;

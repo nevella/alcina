@@ -37,9 +37,12 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
-
 /**
- * TODO - integrate with main conflict resolution framework
+ * 
+ * 
+ * This is currently a fairly simplistic UI and effectively just shows conflicts
+ * without much resolution support. Resolution is _hardish_ - and often
+ * domain-specific, so this is at least a decent general first pass.
  * 
  * @author Nick Reddel
  */
@@ -123,7 +126,7 @@ public class FromOfflineConflictResolver {
 			initWidget(fp);
 		}
 
-		
+		@Override
 		public void onClick(ClickEvent event) {
 			Widget sender = (Widget) event.getSource();
 			if (sender == discardLink) {
@@ -171,8 +174,8 @@ public class FromOfflineConflictResolver {
 		}
 
 		protected native void copy() /*-{
-										$doc.execCommand("Copy");
-										}-*/;
+      $doc.execCommand("Copy");
+		}-*/;
 	}
 
 	enum TextItem {

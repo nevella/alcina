@@ -189,10 +189,8 @@ public class TransformCommit {
 									.get().getUserId();
 				}
 				DomainTransformLayerWrapper transformLayerWrapper;
-				// TODO - perhaps allow facility to persist multi-user
-				// transforms. but...perhaps better not (keep as is)
-				// NOTE - at the mo, if all are pushed as transactional, just
-				// the last clientInstance is used
+				// NOTE - at the moment, if all records are pushed in one
+				// transaction, just the last clientInstance is used
 				rq.setRequestId(deltaRecord.getRequestId());
 				rq.setTag(deltaRecord.getTag());
 				// necessary because event id is used by transformpersister

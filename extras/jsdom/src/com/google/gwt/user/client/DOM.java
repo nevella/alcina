@@ -1690,7 +1690,9 @@ public class DOM {
 			while (childElement != elem && childElement != null) {
 				if (childElement.uiObjectListener != null
 						&& !dispatchInfo.wasDispatchedTo(childElement)) {
-					// FIXME - bitless?
+					// FIXME - directedlayout - does this handle bitless events
+					// - i.e. touch
+					// events?
 					int bitsSunk = childElement.localEventBitsSunk();
 					if (eventTypeInt != -1 && (bitsSunk & eventTypeInt) == 0) {
 					} else {

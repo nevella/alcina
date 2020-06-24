@@ -31,7 +31,6 @@ import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.util.SynchronizedDateFormat;
 
 /*
- * FIXME - a lot of public statics here that should be encapsulated (consequence of subclassing persistence)
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class Knowns {

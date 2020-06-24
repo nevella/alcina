@@ -19,7 +19,6 @@ import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
 import cc.alcina.framework.common.client.csobjects.JobTracker;
-import cc.alcina.framework.common.client.csobjects.KnownsDelta;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
@@ -42,52 +41,50 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSugges
  * @author Nick Reddel
  */
 public interface CommonRemoteService extends RemoteService {
-    // for dumping dbs
-    @WebMethod
-    public void dumpData(String data);
+	// for dumping dbs
+	@WebMethod
+	public void dumpData(String data);
 
-    public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
-            throws WebException;
+	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
+			throws WebException;
 
-    public LoginResponse hello();
+	public LoginResponse hello();
 
-    @WebMethod()
-    public List<String> listRunningJobs();
+	@WebMethod()
+	public List<String> listRunningJobs();
 
-    @WebMethod
-    public String loadData(String key);
+	@WebMethod
+	public String loadData(String key);
 
-    public Long logClientError(String exceptionToString);
+	public Long logClientError(String exceptionToString);
 
-    public Long logClientError(String exceptionToString, String exceptionType);
+	public Long logClientError(String exceptionToString, String exceptionType);
 
-    // to handle rpc interface drift, use escaped log records
-    public void logClientRecords(String serializedLogRecords);
+	// to handle rpc interface drift, use escaped log records
+	public void logClientRecords(String serializedLogRecords);
 
-    public LoginResponse login(LoginBean loginBean);
+	public LoginResponse login(LoginBean loginBean);
 
-    public void logout();
+	public void logout();
 
-    public void persistOfflineTransforms(
-            List<DeltaApplicationRecord> uncommitted) throws WebException;
+	public void persistOfflineTransforms(
+			List<DeltaApplicationRecord> uncommitted) throws WebException;
 
-    public void ping();
+	public void ping();
 
-    @WebMethod()
-    public JobTracker pollJobStatus(String id, boolean cancel);
+	@WebMethod()
+	public JobTracker pollJobStatus(String id, boolean cancel);
 
-    @WebMethod
-    public DomainTransformResponse transform(DomainTransformRequest request)
-            throws DomainTransformException, DomainTransformRequestException;
+	@WebMethod
+	public DomainTransformResponse transform(DomainTransformRequest request)
+			throws DomainTransformException, DomainTransformRequestException;
 
-    public List<ServerValidator> validateOnServer(
-            List<ServerValidator> validators) throws WebException;
+	public List<ServerValidator> validateOnServer(
+			List<ServerValidator> validators) throws WebException;
 
-    @WebMethod
-    public DomainUpdate waitForTransforms(
-            DomainTransformCommitPosition position) throws PermissionsException;
+	@WebMethod
+	public DomainUpdate waitForTransforms(
+			DomainTransformCommitPosition position) throws PermissionsException;
 
-    KnownsDelta getKnownsDelta(long since);
-
-    Response suggest(BoundSuggestOracleRequest request);
+	Response suggest(BoundSuggestOracleRequest request);
 }

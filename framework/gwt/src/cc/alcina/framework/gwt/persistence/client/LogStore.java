@@ -42,8 +42,6 @@ import cc.alcina.framework.gwt.client.util.Lzw;
  * </ul>
  * <p>
  * This mechanism is app restart, offline and (almost) crash proof <br>
- * TODO - make the 'third layer' (cookie) backup mechanism pluggable - use
- * localstorage where possible
  * </p>
  * 
  * @author nick@alcina.cc

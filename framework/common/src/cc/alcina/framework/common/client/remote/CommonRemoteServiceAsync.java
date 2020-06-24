@@ -19,7 +19,6 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
 import cc.alcina.framework.common.client.csobjects.JobTracker;
-import cc.alcina.framework.common.client.csobjects.KnownsDelta;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
@@ -36,49 +35,47 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSugges
  * @author Nick Reddel
  */
 public interface CommonRemoteServiceAsync {
-    public void getObjectDelta(List<ObjectDeltaSpec> specs,
-            AsyncCallback<List<ObjectDeltaResult>> callback);
+	public void getObjectDelta(List<ObjectDeltaSpec> specs,
+			AsyncCallback<List<ObjectDeltaResult>> callback);
 
-    public void hello(AsyncCallback callback);
+	public void hello(AsyncCallback callback);
 
-    public void listRunningJobs(AsyncCallback<List<String>> callback);
+	public void listRunningJobs(AsyncCallback<List<String>> callback);
 
-    public void logClientError(String exceptionToString,
-            AsyncCallback<Long> callback);
+	public void logClientError(String exceptionToString,
+			AsyncCallback<Long> callback);
 
-    public void login(LoginBean loginBean, AsyncCallback callback);
+	public void login(LoginBean loginBean, AsyncCallback callback);
 
-    public void logout(AsyncCallback callback);
+	public void logout(AsyncCallback callback);
 
-    public void suggest(BoundSuggestOracleRequest request,
-            AsyncCallback<Response> asyncCallback);
+	public void suggest(BoundSuggestOracleRequest request,
+			AsyncCallback<Response> asyncCallback);
 
-    public void transform(DomainTransformRequest request,
-            AsyncCallback<DomainTransformResponse> callback);
+	public void transform(DomainTransformRequest request,
+			AsyncCallback<DomainTransformResponse> callback);
 
-    public void validateOnServer(List<ServerValidator> validators,
-            AsyncCallback<List<ServerValidator>> callback);
+	public void validateOnServer(List<ServerValidator> validators,
+			AsyncCallback<List<ServerValidator>> callback);
 
-    void dumpData(String data, AsyncCallback<Void> callback);
+	void dumpData(String data, AsyncCallback<Void> callback);
 
-    void getKnownsDelta(long since, AsyncCallback<KnownsDelta> callback);
+	void loadData(String key, AsyncCallback<String> callback);
 
-    void loadData(String key, AsyncCallback<String> callback);
+	void logClientError(String exceptionToString, String exceptionType,
+			AsyncCallback<Long> callback);
 
-    void logClientError(String exceptionToString, String exceptionType,
-            AsyncCallback<Long> callback);
+	void logClientRecords(String serializedLogRecords,
+			AsyncCallback<Void> callback);
 
-    void logClientRecords(String serializedLogRecords,
-            AsyncCallback<Void> callback);
+	void persistOfflineTransforms(List<DeltaApplicationRecord> uncommitted,
+			AsyncCallback<Void> callback);
 
-    void persistOfflineTransforms(List<DeltaApplicationRecord> uncommitted,
-            AsyncCallback<Void> callback);
+	void ping(AsyncCallback<Void> callback);
 
-    void ping(AsyncCallback<Void> callback);
+	void pollJobStatus(String id, boolean cancel,
+			AsyncCallback<JobTracker> callback);
 
-    void pollJobStatus(String id, boolean cancel,
-            AsyncCallback<JobTracker> callback);
-
-    void waitForTransforms(DomainTransformCommitPosition position,
-            AsyncCallback<DomainUpdate> callback);
+	void waitForTransforms(DomainTransformCommitPosition position,
+			AsyncCallback<DomainUpdate> callback);
 }

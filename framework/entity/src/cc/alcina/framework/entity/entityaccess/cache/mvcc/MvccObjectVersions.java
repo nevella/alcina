@@ -98,11 +98,16 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		 * In that case, create a copy (to be modified) from the base object
 		 * 
 		 * 
-		 * TODO - explain logic here and in resolve0
+		 * FIXME - mvcc.1 - explain logic here and in resolve0
+		 * 
+		 * Also check the logic here. What about a transform from 'outside'
+		 * against an object in our graph? Doesn't that also need the defensive
+		 * copy?
+		 * 
 		 */
 		baseObject = t;
 		if (initialTransaction.phase == TransactionPhase.TO_DB_PREPARING
-				&& wasPersisted(t)) {
+				&& accessibleFromOtherTransactions(t)) {
 			{
 				ObjectVersion<T> version = new ObjectVersion<>();
 				version.transaction = initialTransaction;
@@ -253,13 +258,13 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
+	protected abstract boolean accessibleFromOtherTransactions(T t);
+
 	protected abstract void copyObjectFields(T fromObject, T toObject);
 
 	protected abstract <E extends Entity> Class<E> entityClass();
 
 	protected abstract void register(T object);
-
-	protected abstract boolean wasPersisted(T t);
 
 	void debugResolvedVersion() {
 		try {

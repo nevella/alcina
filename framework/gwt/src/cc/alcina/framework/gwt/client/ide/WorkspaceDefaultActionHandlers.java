@@ -153,10 +153,10 @@ public class WorkspaceDefaultActionHandlers {
 
 	@RegistryLocation(registryPoint = DeleteActionHandler.class)
 	/*
-	 * TODO - Alcina - the separation of 'deletion of reffing' and 'deletion'
-	 * into two transactions was caused by weird EJB3 behaviour - it works, and
-	 * works offline->online (for 'fromofflinepersistence') -- but there's
-	 * something dodgy going on with Hibernate PersistentSets if they're
+	 * FIXME - mvcc.3 - Alcina - the separation of 'deletion of reffing' and
+	 * 'deletion' into two transactions was caused by weird EJB3 behaviour - it
+	 * works, and works offline->online (for 'fromofflinepersistence') -- but
+	 * there's something dodgy going on with Hibernate PersistentSets if they're
 	 * combined in the one transaction and problem needs to be fixd
 	 */
 	public static class DefaultDeleteActionHandler extends

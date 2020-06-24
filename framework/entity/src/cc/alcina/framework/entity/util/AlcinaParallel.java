@@ -49,7 +49,8 @@ public class AlcinaParallel {
 		try {
 			jobChecker = Registry.impl(AlcinaParallelJobChecker.class);
 		} catch (Exception e) {
-			// TODO - from entity layer
+			// FIXME - mvcc.jobs - the servlet layer jobchecker probably wants
+			// to be registry-copied and this removed
 			jobChecker = new AlcinaParallelJobChecker();
 		}
 		if (parameters.serial) {

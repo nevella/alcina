@@ -26,7 +26,7 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
-	protected boolean wasPersisted(T t) {
+	protected boolean accessibleFromOtherTransactions(T t) {
 		return t.domain().wasPersisted();
 	}
 }

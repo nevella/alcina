@@ -59,7 +59,6 @@ import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.actions.RemoteParametersValidator;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
-import cc.alcina.framework.common.client.csobjects.KnownsDelta;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
@@ -129,7 +128,6 @@ import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.job.JobRegistry;
-import cc.alcina.framework.servlet.knowns.KnownsDeltaRequestHandler;
 
 /**
  *
@@ -247,13 +245,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logRpcException(e);
 			throw new WebException(e.getMessage());
 		}
-	}
-
-	@Override
-	public KnownsDelta getKnownsDelta(long since) {
-		return new KnownsDeltaRequestHandler().getDelta(since,
-				Ax.format("client-instance:%s",
-						PermissionsManager.get().getClientInstance().getId()));
 	}
 
 	@Override

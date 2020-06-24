@@ -90,6 +90,13 @@ public class RenderContext extends LooseContextInstance {
 		super();
 	}
 
+	public Renderer getNodeTypeRenderer(TreeRenderer node) {
+		Function<TreeRenderer, Renderer> nodeToEnumRenderer = get(
+				ENUM_RENDERER_PROVIDER);
+		return nodeToEnumRenderer == null ? null
+				: nodeToEnumRenderer.apply(node);
+	}
+
 	public Callback<Widget> getOnAttachCallback() {
 		return get(ON_ATTACH_CALLBACK);
 	}
@@ -127,6 +134,11 @@ public class RenderContext extends LooseContextInstance {
 		}
 	}
 
+	public void setNodeTypeRenderer(
+			Function<TreeRenderer, Renderer> nodeToEnumRenderer) {
+		set(ENUM_RENDERER_PROVIDER, nodeToEnumRenderer);
+	}
+
 	public void setOnAttachCallback(Callback<Widget> onAttachCallback) {
 		set(ON_ATTACH_CALLBACK, onAttachCallback);
 	}
@@ -141,10 +153,6 @@ public class RenderContext extends LooseContextInstance {
 
 	public void setRootRenderer(TreeRenderer rootRenderer) {
 		set(ROOT_RENDERER, rootRenderer);
-	}
-	
-	public void setNodeTypeRenderer(Function<TreeRenderer, Renderer> nodeToEnumRenderer) {
-		set(ENUM_RENDERER_PROVIDER, nodeToEnumRenderer);
 	}
 
 	public void setSuppressValidationFeedbackFor(Widget widget) {
@@ -168,8 +176,9 @@ public class RenderContext extends LooseContextInstance {
 	 * work during setup), but branch()/merge() for object trees (heavier use of
 	 * alcina) (.get() *will* work during setup)
 	 * 
-	 * TODO - given it's single threaded, push/pop of snapshots probably makes
-	 * even more sense...
+	 * FIXME - directedlayout.1 - - given it's single threaded, push/pop of
+	 * snapshots probably makes even more sense...although the new thinking is
+	 * "rendercontext should be widget-tree based, not call-stack-tree based
 	 * </p>
 	 */
 	@Override
@@ -177,12 +186,5 @@ public class RenderContext extends LooseContextInstance {
 		RenderContext context = new RenderContext();
 		cloneToSnapshot(context);
 		return context;
-	}
-
-	public Renderer getNodeTypeRenderer(TreeRenderer node) {
-		Function<TreeRenderer, Renderer> nodeToEnumRenderer = get(
-				ENUM_RENDERER_PROVIDER);
-		return nodeToEnumRenderer == null ? null
-				: nodeToEnumRenderer.apply(node);
 	}
 }

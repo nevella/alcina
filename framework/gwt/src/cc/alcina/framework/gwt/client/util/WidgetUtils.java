@@ -121,7 +121,8 @@ public class WidgetUtils {
 		return widgets;
 	}
 
-	// TODO - check all calls here either the cp implements haschildhandlers, or
+	// REVISIT - Check all calls here either the cp implements haschildhandlers,
+	// or
 	// explain why t'hell not...(doesn't add handlers to the child widgets would
 	// be a good reason)
 	public static void clearChildren(ComplexPanel cp) {
@@ -240,7 +241,7 @@ public class WidgetUtils {
     return $wnd.document.execCommand("copy");
 	}-*/;
 
-	// TODO - actually Widget.fireEvent() would be much better here - duh...
+	// Wouldn't Widget.fireEvent() would be much better here? ...
 	// nah - this is the right way
 	public static void fireClickOnHandler(final HasClickHandlers source,
 			final ClickHandler handler) {

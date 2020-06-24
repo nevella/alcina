@@ -499,7 +499,7 @@ public class DomainStore implements IDomainStore {
 			switch (filter.getFilterOperator()) {
 			case EQ:
 			case IN:
-				// TODO - mvcc.2 - if we have estimates of size, we might be
+				// FIXME - mvcc.4 - if we have estimates of size, we might be
 				// able to optimise here
 				Set<E> lookupValues = lookup
 						.getKeyMayBeCollection(filter.getPropertyValue());
@@ -787,10 +787,7 @@ public class DomainStore implements IDomainStore {
 						.get(EntityLocator.objectLocator(dte)));
 				if (last.getTransformType() == TransformType.DELETE_OBJECT
 						&& first.getTransformType() != TransformType.CREATE_OBJECT) {
-					// this a check against deletion during cache warmup.
-					// shouldn't happen anyway (trans. isolation)
-					// TODO - check if necessary
-					// (note) also a check against trying to handle deletion of
+					// This checks if we're trying to handle deletion of
 					// lazy objects
 					Entity domainStoreObj = transformManager.getObject(dte,
 							true);

@@ -341,8 +341,8 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 	}
 
 	/*
-	 * TODO - lo-pri are some length checks here to deal with rare parsing
-	 * issues ([2005] FCA 1576: link) fairly armless
+	 * Some length checks here to deal with rare parsing issues for large text
+	 * blocks
 	 */
 	public String getVisibleSubstring(MatchesEmphasisTypes type, T token) {
 		String substring = null;
@@ -452,6 +452,14 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		return new ReversedNonIgnoreableIterator(this);
 	}
 
+	public void rewindToStartOfFirstSlice() {
+		startOffset = startOffsetOfSlice(matched.get(0));
+		matched.clear();
+		matchedByType.clear();
+		tokenCounts.clear();
+		resetSequence();
+	}
+
 	public S sliceForToken(T token) {
 		List<S> slices = slicesForToken(token);
 		return slices.isEmpty() ? null : slices.get(0);
@@ -466,13 +474,7 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 		}
 		return result;
 	}
-	public void rewindToStartOfFirstSlice() {
-		startOffset =startOffsetOfSlice(matched.get(0));
-		matched.clear();
-		matchedByType.clear();
-		tokenCounts.clear();
-		resetSequence();
-	}
+
 	public int startOffsetOfSlice(AbstractParserSlice slice) {
 		Text firstText = slice.getFirstText();
 		int offset = 0;

@@ -543,8 +543,6 @@ public class DomUtils implements NodeFromXpathProvider {
 					foundIndexed = node.getNodeType() == Node.TEXT_NODE;
 					if (foundIndexed && last != null
 							&& last.getNodeType() == Node.TEXT_NODE) {
-						// FIXME - 2019.10 - throw a runtime exception (our
-						// iterator is more woke)
 						throw new RuntimeException(
 								"Split text node from aware iterator");
 						// continue;// ignore - this was orginally a single text
@@ -880,7 +878,7 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	/**
-	 * TODO - av2 - optimise the display-none check on the client
+	 * 
 	 *
 	 * @param maxNodes
 	 * @return true if finished
