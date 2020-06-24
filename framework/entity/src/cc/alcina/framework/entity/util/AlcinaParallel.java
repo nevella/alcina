@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.util.AlcinaParallel.Parameters.Builder;
 
 public class AlcinaParallel {
@@ -101,7 +102,11 @@ public class AlcinaParallel {
 		PermissionsManagerState permissionsManagerState = PermissionsManager
 				.get().snapshotState();
 		return () -> {
+			boolean inTransaction = Transaction.isInTransaction();
 			try {
+				if (parameters.transaction != null && !inTransaction) {
+					Transaction.join(parameters.transaction);
+				}
 				LooseContext.push();
 				if (cancelled) {
 					return null;
@@ -121,6 +126,9 @@ public class AlcinaParallel {
 			} finally {
 				LooseContext.pop();
 				ThreadlocalTransformManager.cast().resetTltm(null);
+				if (parameters.transaction != null && !inTransaction) {
+					Transaction.split();
+				}
 			}
 			return null;
 		};
@@ -160,6 +168,8 @@ public class AlcinaParallel {
 
 		private boolean serial;
 
+		private Transaction transaction;
+
 		public Parameters() {
 		}
 
@@ -169,6 +179,7 @@ public class AlcinaParallel {
 			this.runnables = builder.runnables;
 			this.threadName = builder.threadName;
 			this.serial = builder.withSerial;
+			this.transaction = builder.transaction;
 		}
 
 		public String provideThreadName() {
@@ -186,6 +197,8 @@ public class AlcinaParallel {
 			private String threadName;
 
 			private boolean withSerial;
+
+			private Transaction transaction;
 
 			private Builder() {
 			}
@@ -220,6 +233,11 @@ public class AlcinaParallel {
 
 			public Builder withThreadName(String threadName) {
 				this.threadName = threadName;
+				return this;
+			}
+
+			public Builder withTransaction(Transaction transaction) {
+				this.transaction = transaction;
 				return this;
 			}
 		}

@@ -144,7 +144,7 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return containsKey(string) ? get(string) : string;
 	}
 
-	public String replaceString(String string) {
+	public String replaceSubstrings(String string) {
 		for (Map.Entry<String, String> entry : entrySet()) {
 			string = string.replace(entry.getKey(), entry.getValue());
 		}

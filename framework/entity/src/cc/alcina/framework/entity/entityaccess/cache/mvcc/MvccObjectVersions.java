@@ -216,6 +216,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 */
 	private T resolve0(boolean write) {
 		Transaction transaction = Transaction.current();
+		if (write && transaction.isReadonly()) {
+			throw new MvccException("Writing within a readonly transaction");
+		}
 		ObjectVersion<T> version = versions.get(transaction);
 		if (version != null && version.isCorrectWriteableState(write)) {
 			return version.object;

@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,19 +107,31 @@ public class Transaction {
 		}
 	}
 
+	public static boolean isInTransaction() {
+		return threadLocalInstance.get() != null;
+	}
+
+	/*
+	 * Note that this means the same transaction graph is visible to multiple
+	 * threads. Either make the tx read-only or do all writes on the originating
+	 * thread after all worker threads have 'split' from this 'join'
+	 */
 	public static void join(Transaction transaction) {
 		logger.debug("Joining tx - {} {} {}", transaction,
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
+		transaction.threadCount.incrementAndGet();
 		threadLocalInstance.set(transaction);
 	}
 
 	// inverse of join
 	public static void split() {
-		logger.debug("Removing tx - {} {} {}", threadLocalInstance.get(),
+		Transaction transaction = threadLocalInstance.get();
+		logger.debug("Removing tx - {} {} {}", transaction,
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
 		threadLocalInstance.remove();
+		transaction.threadCount.decrementAndGet();
 	}
 
 	static void begin(TransactionPhase initialPhase) {
@@ -126,8 +139,8 @@ public class Transaction {
 			return;
 		}
 		if (threadLocalInstance.get() != null) {
-			throw Ax.runtimeException("Begin without end: %s - %s",
-					initialPhase, threadLocalInstance.get());
+			throw new MvccException(Ax.format("Begin without end: %s - %s",
+					initialPhase, threadLocalInstance.get()));
 		}
 		switch (initialPhase) {
 		case TO_DB_PREPARING:
@@ -143,11 +156,14 @@ public class Transaction {
 				Thread.currentThread().getId());
 		threadLocalInstance.set(transaction);
 		transaction.originatingThreadName = Thread.currentThread().getName();
+		transaction.threadCount.incrementAndGet();
 		if (ResourceUtilities.is("retainTransactionStartTrace")) {
 			transaction.transactionStartTrace = SEUtilities
 					.getCurrentThreadStacktraceSlice();
 		}
 	}
+
+	private AtomicInteger threadCount = new AtomicInteger();
 
 	private long transformRequestId;
 
@@ -385,6 +401,10 @@ public class Transaction {
 
 	long getTransformRequestId() {
 		return this.transformRequestId;
+	}
+
+	boolean isReadonly() {
+		return threadCount.get() != 1;
 	}
 
 	void setId(TransactionId id) {
