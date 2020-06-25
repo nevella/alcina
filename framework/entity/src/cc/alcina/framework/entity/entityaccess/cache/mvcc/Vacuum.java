@@ -76,42 +76,48 @@ class Vacuum {
 				e.printStackTrace();
 			}
 		}
-		Transaction.begin(TransactionPhase.VACUUM_BEGIN);
-		vacuumThread = Thread.currentThread();
-		vacuumStarted = System.currentTimeMillis();
-		boolean debugLevelLogging = vacuumables.size() > 0;
-		if (debugLevelLogging) {
-			logger.debug("vacuum: transactions with vacuumables: {} : {}",
-					vacuumables.size(), vacuumables.keySet());
-		} else {
-			logger.trace("vacuum: removing txs without vacuumables");
-		}
-		List<Transaction> vacuumableTransactions = Transactions.get()
-				.getVacuumableCommittedTransactions();
-		vacuumableTransactions
-				.addAll(Transactions.get().getCompletedNonDomainTransactions());
-		for (Transaction transaction : vacuumableTransactions) {
-			if (vacuumables.containsKey(transaction)) {
-				String dtrIdClause = transaction.getTransformRequestId() == 0
-						? ""
-						: Ax.format("- %s ",
-								transaction.getTransformRequestId());
-				logger.debug("vacuuming transaction: {} {}- {} vacuumables",
-						transaction, dtrIdClause,
-						vacuumables.get(transaction).size());
-				vacuumables.get(transaction).keySet()
-						.forEach(v -> this.vacuum(v, transaction));
-				vacuumables.remove(transaction);
-				logger.debug("removed vacuumable transaction: {}", transaction);
+		try {
+			Transaction.begin(TransactionPhase.VACUUM_BEGIN);
+			vacuumThread = Thread.currentThread();
+			vacuumStarted = System.currentTimeMillis();
+			boolean debugLevelLogging = vacuumables.size() > 0;
+			if (debugLevelLogging) {
+				logger.debug("vacuum: transactions with vacuumables: {} : {}",
+						vacuumables.size(), vacuumables.keySet());
+			} else {
+				logger.trace("vacuum: removing txs without vacuumables");
 			}
+			List<Transaction> vacuumableTransactions = Transactions.get()
+					.getVacuumableCommittedTransactions();
+			vacuumableTransactions.addAll(
+					Transactions.get().getCompletedNonDomainTransactions());
+			for (Transaction transaction : vacuumableTransactions) {
+				if (vacuumables.containsKey(transaction)) {
+					String dtrIdClause = transaction
+							.getTransformRequestId() == 0 ? ""
+									: Ax.format("- %s ", transaction
+											.getTransformRequestId());
+					logger.debug("vacuuming transaction: {} {}- {} vacuumables",
+							transaction, dtrIdClause,
+							vacuumables.get(transaction).size());
+					vacuumables.get(transaction).keySet()
+							.forEach(v -> this.vacuum(v, transaction));
+					vacuumables.remove(transaction);
+					logger.debug("removed vacuumable transaction: {}",
+							transaction);
+				}
+			}
+			Transaction.current().toVacuumEnded(vacuumableTransactions);
+			vacuumStarted = 0;
+			vacuumThread = null;
+			if (debugLevelLogging) {
+				logger.debug("vacuum: end");
+			}
+		} catch (Exception e) {
+			logger.warn("Vacuum exception", new MvccException(e));
+		} finally {
+			Transaction.end();
 		}
-		Transaction.current().toVacuumEnded(vacuumableTransactions);
-		vacuumStarted = 0;
-		vacuumThread = null;
-		if (debugLevelLogging) {
-			logger.debug("vacuum: end");
-		}
-		Transaction.end();
 	}
 
 	private void vacuum(Vacuumable vacuumable, Transaction transaction) {

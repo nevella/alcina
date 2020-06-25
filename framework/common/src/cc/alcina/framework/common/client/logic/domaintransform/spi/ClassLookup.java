@@ -50,6 +50,10 @@ public interface ClassLookup {
 
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId);
 
+	default boolean handlesClass(Class clazz) {
+		return true;
+	}
+
 	default boolean isPrimitive(Class<?> clazz) {
 		return clazz.isPrimitive();
 	}

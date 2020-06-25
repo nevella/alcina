@@ -18,8 +18,8 @@ public class IntrospectorFactory {
 			System.out.println("Using generated introspector");
 			return GWT.create(Introspector.class);
 		} else {
-			GWT.log("Using JVM introspector", null);
-			System.out.println("Using JVMIntrospector");
+			GWT.log("Using jvm introspector", null);
+			System.out.println("Using jvm introspector");
 			return new JVMIntrospector();
 		}
 	};

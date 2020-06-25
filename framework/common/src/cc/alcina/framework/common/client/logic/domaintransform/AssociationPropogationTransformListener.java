@@ -52,9 +52,8 @@ public class AssociationPropogationTransformListener
 			break;
 		}
 		case DELETE_OBJECT: {
-			Reflections.iterateForPropertyWithAnnotation(
-					entity.entityClass(), Association.class,
-					(association, propertyReflector) -> {
+			Reflections.iterateForPropertyWithAnnotation(entity.entityClass(),
+					Association.class, (association, propertyReflector) -> {
 						Object associated = propertyReflector
 								.getPropertyValue(entity);
 						if (association.cascadeDeletes()) {
@@ -69,6 +68,10 @@ public class AssociationPropogationTransformListener
 								Preconditions.checkArgument(associated == null);
 							}
 						} else if (association.dereferenceOnDelete()) {
+							if (!Reflections.classLookup().handlesClass(
+									association.implementationClass())) {
+								return;
+							}
 							PropertyReflector associatedObjectAccessor = Reflections
 									.propertyAccessor().getPropertyReflector(
 											association.implementationClass(),

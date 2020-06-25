@@ -177,6 +177,7 @@ public class Transaction {
 
 	private boolean baseTransaction;
 
+	// field type is the actual type because we call lastKey()
 	Object2ObjectLinkedOpenHashMap<TransactionId, Transaction> committedTransactions = new Object2ObjectLinkedOpenHashMap<>();
 
 	private TransactionId id;

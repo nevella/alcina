@@ -281,7 +281,9 @@ public class Transactions {
 				} else {
 					// lower our sights
 					highestVacuumableId = activeTransaction.committedTransactions
-							.lastKey();
+							.isEmpty() ? null
+									: activeTransaction.committedTransactions
+											.lastKey();
 					if (highestVacuumableId == null) {
 						return result;
 					}

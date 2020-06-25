@@ -178,6 +178,11 @@ public abstract class ClientReflector implements ClassLookup {
 		return infos;
 	}
 
+	@Override
+	public boolean handlesClass(Class clazz) {
+		return forNameMap.containsKey(clazz.getName());
+	}
+
 	public boolean isInstantiableClass(Class clazz) {
 		try {
 			if (CommonUtils.stdAndPrimitives.contains(clazz)) {
