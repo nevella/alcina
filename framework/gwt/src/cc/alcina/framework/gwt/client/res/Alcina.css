@@ -51,6 +51,7 @@ div.alcina-MainContent div.alcina-ContentRight {
 	margin-left: 25px;
 	background: #ffffff;
 	display: inline;
+	position:relative;
 }
 
 div.alcina-MainContent div.alcina-NoLayoutContentRight {
