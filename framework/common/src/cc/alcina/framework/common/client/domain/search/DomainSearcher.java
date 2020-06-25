@@ -144,12 +144,6 @@ public class DomainSearcher<T extends Entity> {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainLocker.class, implementationType = ImplementationType.SINGLETON)
-	public static class DomainLocker {
-		public void readLock(boolean lock) {
-		}
-	}
-
 	@RegistryLocation(registryPoint = DomainSearcherAppFilter.class, implementationType = ImplementationType.INSTANCE)
 	public static abstract class DomainSearcherAppFilter {
 		public abstract <T extends Entity> Predicate<T>

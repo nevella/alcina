@@ -82,7 +82,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -185,8 +185,8 @@ public class ThreadlocalTransformManager extends TransformManager
 		threadLocalTLTMInstance.set(perThreadTransformManager);
 	}
 
-	public static TopicSupport<Thread> topicTransformManagerWasReset() {
-		return new TopicSupport<>(TOPIC_RESET_THREAD_TRANSFORM_MANAGER);
+	public static Topic<Thread> topicTransformManagerWasReset() {
+		return Topic.global(TOPIC_RESET_THREAD_TRANSFORM_MANAGER);
 	}
 
 	public static ThreadlocalTransformManager ttmInstance() {

@@ -9,15 +9,15 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class NodeLocal implements DomNode, LocalDomNode {
+	private static Node nodeFor(NodeLocal nodeLocal) {
+		return nodeLocal == null ? null : nodeLocal.node();
+	}
+
 	private List<NodeLocal> children;
 
 	protected NodeLocal parentNode;
 
 	protected DocumentLocal ownerDocument;
-
-	// FIXME - node should be typed - and parentnode can be the doc (of the
-	// html/doc elt)
-	protected Node node;
 
 	protected NodeLocal() {
 	}
@@ -99,7 +99,7 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 
 	@Override
 	public Element getParentElement() {
-		return parentNode == null ? null : (Element) parentNode.node;
+		return parentNode == null ? null : (Element) parentNode.node();
 	}
 
 	@Override
@@ -170,9 +170,7 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 	}
 
 	@Override
-	public Node nodeFor() {
-		return node;
-	}
+	public abstract Node node();
 
 	public final String provideLocalDomTree() {
 		return provideLocalDomTree0(new StringBuilder(), 0).toString();
@@ -210,14 +208,11 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 		}
 	}
 
-	private Node nodeFor(NodeLocal nodeLocal) {
-		return nodeLocal == null ? null : nodeLocal.nodeFor();
-	}
-
 	private StringBuilder provideLocalDomTree0(StringBuilder buf, int depth) {
 		for (int idx = 0; idx < depth; idx++) {
 			buf.append(' ');
 		}
+		Node node = node();
 		buf.append(node.getNodeType());
 		buf.append(": ");
 		switch (node.getNodeType()) {
@@ -250,10 +245,6 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 			children = new ArrayList<>();
 		}
 		return children;
-	}
-
-	protected void registerNode(Node node) {
-		this.node = node;
 	}
 
 	abstract void appendOuterHtml(UnsafeHtmlBuilder builder);

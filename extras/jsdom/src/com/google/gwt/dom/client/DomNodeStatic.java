@@ -38,7 +38,7 @@ class DomNodeStatic {
     }
 
     static Element getParentElement(DomNode domNode) {
-        return DOMImpl.impl.getParentElement(domNode.nodeFor());
+        return DOMImpl.impl.getParentElement(domNode.node());
     }
 
     static boolean hasParentElement(DomNode domNode) {
@@ -72,7 +72,7 @@ class DomNodeStatic {
         Element parent = domNode.getParentElement();
         if (parent != null) {
             DomNode parentDomNode = parent.sameTreeNodeFor(domNode);
-            parentDomNode.removeChild(domNode.nodeFor());
+            parentDomNode.removeChild(domNode.node());
         }
     }
 
@@ -82,9 +82,9 @@ class DomNodeStatic {
         }
         String remoteHash = "";
         if (node instanceof LocalDomNode
-                && ((LocalDomNode) node).nodeFor().linkedToRemote()) {
+                && ((LocalDomNode) node).node().linkedToRemote()) {
             remoteHash = String.valueOf(
-                    ((LocalDomNode) node).nodeFor().remote().hashCode());
+                    ((LocalDomNode) node).node().remote().hashCode());
         }
         return Ax
                 .format("%s%s%s%s%s", "    ",

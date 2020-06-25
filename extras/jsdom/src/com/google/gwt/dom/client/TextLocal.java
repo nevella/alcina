@@ -5,6 +5,8 @@ import cc.alcina.framework.common.client.util.Ax;
 public class TextLocal extends NodeLocal implements DomText {
 	private String text;
 
+	private Text textNode;
+
 	TextLocal(DocumentLocal documentLocal, String text) {
 		this.ownerDocument = documentLocal;
 		setData(text);
@@ -51,6 +53,11 @@ public class TextLocal extends NodeLocal implements DomText {
 	}
 
 	@Override
+	public Node node() {
+		return textNode;
+	}
+
+	@Override
 	public void replaceData(int offset, int length, String data) {
 		throw new UnsupportedOperationException();
 	}
@@ -87,5 +94,9 @@ public class TextLocal extends NodeLocal implements DomText {
 
 	void appendUnescaped(UnsafeHtmlBuilder builder) {
 		builder.appendUnsafeHtml(text);
+	}
+
+	void putText(Text textNode) {
+		this.textNode = textNode;
 	}
 }

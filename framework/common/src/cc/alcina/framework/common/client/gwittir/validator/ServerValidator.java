@@ -24,7 +24,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
@@ -50,13 +50,13 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 		return true;
 	}
 
-	public static TopicSupport<ServerValidator>
+	public static Topic<ServerValidator>
 			topicBeforeServerValidationSend() {
-		return new TopicSupport<>(TOPIC_SERVER_VALIDATION_BEFORE_SEND);
+		return Topic.global(TOPIC_SERVER_VALIDATION_BEFORE_SEND);
 	}
 
-	public static TopicSupport<ServerValidator> topicServerValidationResult() {
-		return new TopicSupport<>(TOPIC_SERVER_VALIDATION_RESULT);
+	public static Topic<ServerValidator> topicServerValidationResult() {
+		return Topic.global(TOPIC_SERVER_VALIDATION_RESULT);
 	}
 
 	private String message;

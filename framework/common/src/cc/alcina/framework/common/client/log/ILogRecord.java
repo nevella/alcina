@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.log;
 import java.util.Date;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 
 public interface ILogRecord extends HasId {
 	public static final String COMPONENT_KEY = "componentKey";
@@ -13,8 +13,8 @@ public interface ILogRecord extends HasId {
 	public static final String TOPIC_PERSISTENT_LOG_EVENT_OCCURRED = ILogRecord.class
 			.getName() + "." + "TOPIC_PERSISTENT_LOG_EVENT_OCCURRED";
 
-	public static TopicSupport<ILogRecord> topicPersistentLog() {
-		return new TopicSupport<>(TOPIC_PERSISTENT_LOG_EVENT_OCCURRED);
+	public static Topic<ILogRecord> topicPersistentLog() {
+		return Topic.global(TOPIC_PERSISTENT_LOG_EVENT_OCCURRED);
 	}
 
 	Long getClientInstanceId();

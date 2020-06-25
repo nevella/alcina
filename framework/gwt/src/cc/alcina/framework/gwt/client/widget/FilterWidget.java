@@ -321,8 +321,6 @@ public class FilterWidget extends Composite
 	@Override
 	protected void onAttach() {
 		super.onAttach();
-		// FIXME - localdom - attach/detach issue with popups meant was
-		// attaching to wrong element
 		registrations.add(textBox.addKeyUpHandler(this));
 		registrations.add(textBox.addKeyDownHandler(this));
 		registrations.add(textBox.addBlurHandler(this));

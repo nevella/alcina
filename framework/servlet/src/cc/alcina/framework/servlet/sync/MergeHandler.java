@@ -12,7 +12,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.sync.SyncInterchangeModel;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 
 /**
  * Handle merge - run the mergers (generally per-interchange-model member class)
@@ -27,8 +27,8 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
     private static final String TOPIC_MERGE_COMPLETED = MergeHandler.class
             .getName() + "." + "TOPIC_MERGE_COMPLETED";
 
-    public static TopicSupport<SyncMerger> topicMergeCompleted() {
-        return new TopicSupport<>(TOPIC_MERGE_COMPLETED);
+    public static Topic<SyncMerger> topicMergeCompleted() {
+        return Topic.global(TOPIC_MERGE_COMPLETED);
     }
 
     protected I leftInterchangeModel;

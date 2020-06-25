@@ -10,33 +10,34 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 
+//FIXME - mvcc.3 - remove
 class SourceMetadataProvider extends DomainModificationMetadataProvider {
-    Map<EntityLocator, Entity> locatorOriginalSourceMap = new LinkedHashMap<EntityLocator, Entity>();
+	Map<EntityLocator, Entity> locatorOriginalSourceMap = new LinkedHashMap<EntityLocator, Entity>();
 
-    public SourceMetadataProvider(DomainStore store) {
-        super(store);
-    }
+	public SourceMetadataProvider(DomainStore store) {
+		super(store);
+	}
 
-    @Override
-    public void registerTransforms(List<DomainTransformEvent> transforms) {
-        for (DomainTransformEvent dte : transforms) {
-            EntityLocator locator = EntityLocator.objectLocator(dte);
-            locatorOriginalSourceMap.put(locator, dte.getSource());
-        }
-    }
+	@Override
+	public void registerTransforms(List<DomainTransformEvent> transforms) {
+		for (DomainTransformEvent dte : transforms) {
+			EntityLocator locator = EntityLocator.objectLocator(dte);
+			locatorOriginalSourceMap.put(locator, dte.getSource());
+		}
+	}
 
-    @Override
-    public void updateMetadata(DomainTransformEvent dte,
-            Entity domainStoreObject) {
-        // dte source is clobbered by early precache/preload - this'll probably
-        // go away (why does preload need source?) but using this model for now
-        Entity dbObj = locatorOriginalSourceMap
-                .get(EntityLocator.objectLocator(dte));
-        if (domainStoreObject instanceof HasVersionNumber) {
-            updateVersionNumber(domainStoreObject, dbObj);
-        }
-        if (domainStoreObject instanceof IVersionable) {
-            updateIVersionable(domainStoreObject, dbObj);
-        }
-    }
+	@Override
+	public void updateMetadata(DomainTransformEvent dte,
+			Entity domainStoreObject) {
+		// dte source is clobbered by early precache/preload - this'll probably
+		// go away (why does preload need source?) but using this model for now
+		Entity dbObj = locatorOriginalSourceMap
+				.get(EntityLocator.objectLocator(dte));
+		if (domainStoreObject instanceof HasVersionNumber) {
+			updateVersionNumber(domainStoreObject, dbObj);
+		}
+		if (domainStoreObject instanceof IVersionable) {
+			updateIVersionable(domainStoreObject, dbObj);
+		}
+	}
 }

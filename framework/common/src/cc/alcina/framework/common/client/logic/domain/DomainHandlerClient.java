@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -44,11 +43,6 @@ public class DomainHandlerClient implements DomainHandler {
 	public <V extends Entity> V find(V v) {
 		V find = find(v.getClass(), v.getId());
 		return find == null ? v : find;
-	}
-
-	@Override
-	public <V extends Entity> List<Long> ids(Class<V> clazz) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

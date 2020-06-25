@@ -30,6 +30,7 @@ import javax.persistence.Transient;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
@@ -73,7 +74,8 @@ public class DomainTransformRequest implements Serializable {
 			long clientInstanceId) {
 		DomainTransformRequest request = new DomainTransformRequest();
 		DomainTransformRequestChunkUuid chunkUuid = new DomainTransformRequestChunkUuid();
-		chunkUuid.uuid = Ax.format("%s/%s/%s", clientInstanceId, requestId,
+		chunkUuid.uuid = Ax.format("%s/%s/%s/%s",
+				Reflections.getApplicationName(), clientInstanceId, requestId,
 				generateUUID());
 		request.setChunkUuidString(chunkUuid.serialize());
 		return request;

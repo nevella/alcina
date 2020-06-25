@@ -101,8 +101,8 @@ public abstract class Node
 
 	@Override
 	public Node cloneNode(boolean deep) {
-		// FIXME - maybe - remote should probably always be resolved (so maybe
-		// ok)
+		// The cloned subtree won't be *worse* than the current remote/local
+		// subtree sync
 		return local().cloneNode(deep);
 	}
 
@@ -299,7 +299,7 @@ public abstract class Node
 	}
 
 	@Override
-	public abstract Node nodeFor();
+	public abstract Node node();
 
 	@Override
 	public void normalize() {
@@ -329,7 +329,6 @@ public abstract class Node
 		doPreTreeResolution(oldChild);
 		Node result = local().removeChild(oldChild);
 		remote().removeChild(oldChild);
-		LocalDom.detach(oldChild);
 		return result;
 	}
 
@@ -352,7 +351,6 @@ public abstract class Node
 		doPreTreeResolution(newChild);
 		remote().replaceChild(newChild, oldChild);
 		Node result = local().replaceChild(newChild, oldChild);
-		LocalDom.detach(oldChild);
 		return result;
 	}
 
@@ -496,7 +494,7 @@ public abstract class Node
 	class ChildNodeList extends AbstractList<Node> {
 		@Override
 		public Node get(int index) {
-			return local().getChildren().get(index).node;
+			return local().getChildren().get(index).node();
 		}
 
 		@Override

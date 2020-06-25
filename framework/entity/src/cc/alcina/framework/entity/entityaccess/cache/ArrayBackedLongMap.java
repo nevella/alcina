@@ -12,6 +12,9 @@ import java.util.Set;
 import cc.alcina.framework.common.client.util.Ax;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 
+/*
+ * Unused - slightly more efficient than the fastutil equivs, but really not much...
+ */
 public class ArrayBackedLongMap<V> implements Map<Long, V> {
 	private transient Object[] elementData;
 

@@ -52,7 +52,6 @@ import cc.alcina.framework.entity.entityaccess.transform.TransformPersister.Tran
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 /**
- * FIXME - guarantee uniqueness of chunkuuid (incl cross-store commits)
  * 
  * @author nick@alcina.cc
  *

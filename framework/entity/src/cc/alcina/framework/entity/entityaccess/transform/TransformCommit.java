@@ -53,7 +53,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -466,9 +466,9 @@ public class TransformCommit {
 		LooseContext.set(CONTEXT_TRANSFORM_PRIORITY, priority);
 	}
 
-	public static TopicSupport<TransformPersistenceToken>
+	public static Topic<TransformPersistenceToken>
 			topicUnexpectedExceptionBeforePostTransform() {
-		return new TopicSupport<>(
+		return Topic.global(
 				TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION);
 	}
 

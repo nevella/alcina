@@ -16,7 +16,7 @@ class NodeListLocal<T extends Node> implements DomNodeList<T> {
 	 */
 	public T getItem(int index) {
 		return index < 0 || index >= nodes.size() ? null
-				: (T) nodes.get(index).nodeFor();
+				: (T) nodes.get(index).node();
 	}
 
 	/**

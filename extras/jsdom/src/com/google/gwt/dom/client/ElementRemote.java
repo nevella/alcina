@@ -1069,7 +1069,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		} else {
 			removeAllChildrenElement0();
 		}
-		return nodeFor();
+		return node();
 	}
 
 	final native void removeAllChildrenElement0()/*-{

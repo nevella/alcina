@@ -5,7 +5,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.lux.LuxStyle.LuxStyleStatus;
 
 public class LuxStatusPanel extends Composite {
@@ -42,12 +42,12 @@ public class LuxStatusPanel extends Composite {
 		}
 	};
 
-	private TopicSupport<Boolean> topicCallingRemote;
+	private Topic<Boolean> topicCallingRemote;
 
-	private TopicSupport<String> topicMessage;
+	private Topic<String> topicMessage;
 
-	public void connectToTopics(TopicSupport<Boolean> topicCallingRemote,
-			TopicSupport<String> topicMessage) {
+	public void connectToTopics(Topic<Boolean> topicCallingRemote,
+			Topic<String> topicMessage) {
 		this.topicCallingRemote = topicCallingRemote;
 		this.topicMessage = topicMessage;
 	}

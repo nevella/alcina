@@ -52,9 +52,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StackDebug;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 
 /**
  * <h2>Notes</h2>
@@ -102,19 +100,16 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		}
 	};
 
-	private static final String TOPIC_LOGIN_STATE = PermissionsManager.class
-			.getName() + ".TOPIC_LOGIN_STATE";
-
-	private static final String TOPIC_ONLINE_STATE = PermissionsManager.class
-			.getName() + ".TOPIC_ONLINE_STATE";
-
-	private static final String TOPIC_CLIENT_INSTANCE = PermissionsManager.class
-			.getName() + ".TOPIC_CLIENT_INSTANCE";
-
 	public static final String CONTEXT_CREATION_PARENT = PermissionsManager.class
 			.getName() + ".CONTEXT_CREATION_PARENT";
 
 	public static StackDebug stackDebug = new StackDebug("PermissionsManager");
+
+	private static Topic<ClientInstance> topicClientInstance = Topic.local();
+
+	private static Topic<LoginState> topicLoginState = Topic.local();
+
+	private static Topic<OnlineState> topicOnlineState = Topic.local();
 
 	public static PermissionsManager get() {
 		if (theInstance == null) {
@@ -163,39 +158,6 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		return !isOffline();
 	}
 
-	/*
-	 * FIXME - convert to topicpublisher
-	 */
-	public static void notifyClientInstanceChange(ClientInstance state) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_CLIENT_INSTANCE, state);
-	}
-
-	public static void notifyClientInstanceChangeListenerDelta(
-			TopicListener<ClientInstance> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_CLIENT_INSTANCE,
-				listener, add);
-	}
-
-	public static void notifyLoginState(LoginState state) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_LOGIN_STATE, state);
-	}
-
-	public static void notifyLoginStateListenerDelta(
-			TopicListener<LoginState> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_LOGIN_STATE, listener,
-				add);
-	}
-
-	public static void notifyOnlineState(OnlineState state) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_ONLINE_STATE, state);
-	}
-
-	public static void notifyOnlineStateListenerDelta(
-			TopicListener<OnlineState> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_ONLINE_STATE, listener,
-				add);
-	}
-
 	public static void recursivePopulateGroupMemberships(Set<IGroup> members,
 			Set<IGroup> processed) {
 		while (true) {
@@ -237,6 +199,18 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	public static void
 			setPermissionsExtension(PermissionsExtension permissionsExtension) {
 		PermissionsManager.permissionsExtension = permissionsExtension;
+	}
+
+	public static Topic<ClientInstance> topicClientInstance() {
+		return topicClientInstance;
+	}
+
+	public static Topic<LoginState> topicLoginState() {
+		return topicLoginState;
+	}
+
+	public static Topic<OnlineState> topicOnlineState() {
+		return topicOnlineState;
 	}
 
 	private LoginState loginState = LoginState.NOT_LOGGED_IN;
@@ -685,7 +659,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		ClientInstance old_clientInstance = clientInstance;
 		this.clientInstance = clientInstance;
 		if (!Objects.equals(clientInstance, old_clientInstance)) {
-			notifyClientInstanceChange(clientInstance);
+			topicClientInstance().publish(clientInstance);
 		}
 	}
 
@@ -703,7 +677,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		LoginState old_loginState = this.loginState;
 		this.loginState = loginState;
 		if (loginState != old_loginState) {
-			notifyLoginState(loginState);
+			topicLoginState().publish(loginState);
 		}
 	}
 
@@ -711,7 +685,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		OnlineState old_onlineState = this.onlineState;
 		this.onlineState = onlineState;
 		if (onlineState != old_onlineState) {
-			notifyOnlineState(onlineState);
+			topicOnlineState().publish(onlineState);
 		}
 	}
 

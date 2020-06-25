@@ -929,7 +929,7 @@ public class Document extends Node
 	}
 
 	@Override
-	public Node nodeFor() {
+	public Node node() {
 		return this;
 	}
 

@@ -78,7 +78,10 @@ public class DomainStoreTransformSequencer {
 		try {
 			return getSequentialUnpublishedTransformIds0();
 		} catch (Exception e) {
-			// FIXME - log. Wait for retry (which will be pushed from kafka)
+			// Wait for retry (which will be pushed from kafka)
+			logger.warn(
+					"Issue with getSequentialUnpublishedTransformIds - will retry on next queue event",
+					e);
 			e.printStackTrace();
 			try {
 				if (connection != null) {
@@ -129,8 +132,11 @@ public class DomainStoreTransformSequencer {
 				logger.warn(
 						"Timedout waiting for local vm transform - {} - \n{}\nBlocking thread:\n{}",
 						requestId, debugString(), blockingThreadStacktrace);
-				// FIXME - may need to fire a domainstoreexception here -
-				// probable issue with pg/kafka
+				// FIXME - mvcc.4 - may need to fire a domainstoreexception here
+				// -
+				// probable issue with pg/kafka. On the other hand, our
+				// sequencer logic might be simpler now...(or after
+				// mvcc.3/postprocess optimisations)
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();

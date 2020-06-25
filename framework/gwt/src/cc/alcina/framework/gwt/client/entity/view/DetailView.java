@@ -6,7 +6,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.view.ViewModel.DetailViewModel;
@@ -17,8 +17,8 @@ public abstract class DetailView<DVM extends DetailViewModel>
     private static final String TOPIC_DETAIL_MODEL_OBJECT_SET = DetailView.class
             .getName() + "." + "TOPIC_DETAIL_MODEL_OBJECT_SET";
 
-    public static TopicSupport<Entity> topicDetailModelObjectSet() {
-        return new TopicSupport<>(TOPIC_DETAIL_MODEL_OBJECT_SET);
+    public static Topic<Entity> topicDetailModelObjectSet() {
+        return Topic.global(TOPIC_DETAIL_MODEL_OBJECT_SET);
     }
 
     protected FlowPanel fp;

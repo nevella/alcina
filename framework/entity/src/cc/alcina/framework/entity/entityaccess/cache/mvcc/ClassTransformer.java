@@ -72,7 +72,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListenerReference;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessType;
@@ -281,8 +281,8 @@ class ClassTransformer {
 	static class ClassTransform<H extends Entity> {
 		private static final transient int VERSION = 6;
 
-		transient TopicSupport<MvccCorrectnessIssue> correctnessIssueTopic = TopicSupport
-				.localAnonymousTopic();
+		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
+				.local();
 
 		private int version;
 

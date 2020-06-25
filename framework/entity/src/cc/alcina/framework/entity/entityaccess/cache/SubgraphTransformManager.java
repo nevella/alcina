@@ -23,7 +23,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
-import cc.alcina.framework.entity.entityaccess.cache.PropertyStoreAwareMultiplexingObjectCache.DetachedEntityCacheAccess;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 
 public class SubgraphTransformManager extends TransformManager {
@@ -92,7 +91,7 @@ public class SubgraphTransformManager extends TransformManager {
 
 	@Override
 	protected void createObjectLookup() {
-		store = new DetachedCacheObjectStore(new DetachedEntityCacheAccess());
+		store = new DetachedCacheObjectStore(new DomainStoreEntityCache());
 		setDomainObjects(store);
 	}
 

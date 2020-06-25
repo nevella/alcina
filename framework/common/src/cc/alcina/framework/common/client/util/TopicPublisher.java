@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -69,30 +70,24 @@ public class TopicPublisher {
 		}
 	}
 
-	@FunctionalInterface
-	public interface TopicListener<T> {
-		void topicPublished(String key, T message);
-	}
-
-	public static class TopicListenerReference {
-		private TopicListener listener;
-
-		private TopicSupport topicSupport;
-
-		public TopicListenerReference(TopicSupport topicSupport,
-				TopicListener listener) {
-			this.topicSupport = topicSupport;
-			this.listener = listener;
+	/*
+	 * Global topics are not tied to a particular instance of topic - they're
+	 * application-global message publication points.
+	 * 
+	 * In hindsight, they may be an unnecessary abstraction - since if the topic
+	 * key (string) is visible, generally the API (i.e. the published object
+	 * class) of the topic is as well. That is to say that possibly 'local'
+	 * topics (implemented as static topic fields on the message container
+	 * classs) are probably all we need.
+	 */
+	public static class Topic<T> {
+		public static <T> Topic<T> global(String topic) {
+			Objects.requireNonNull(topic);
+			return new Topic<>(topic, true);
 		}
 
-		public void remove() {
-			topicSupport.remove(listener);
-		}
-	}
-
-	public static class TopicSupport<T> {
-		public static <T> TopicSupport<T> localAnonymousTopic() {
-			return new TopicSupport<>(null, false);
+		public static <T> Topic<T> local() {
+			return new Topic<>(null, false);
 		}
 
 		private String topic;
@@ -101,11 +96,7 @@ public class TopicPublisher {
 
 		private boolean wasPublished;
 
-		public TopicSupport(String topic) {
-			this(topic, true);
-		}
-
-		public TopicSupport(String topic, boolean global) {
+		private Topic(String topic, boolean global) {
 			this.topic = topic;
 			topicPublisher = global ? GlobalTopicPublisher.get()
 					: new TopicPublisher();
@@ -156,6 +147,26 @@ public class TopicPublisher {
 
 		public void remove(TopicListener<T> listener) {
 			delta(listener, false);
+		}
+	}
+
+	@FunctionalInterface
+	public interface TopicListener<T> {
+		void topicPublished(String key, T message);
+	}
+
+	public static class TopicListenerReference {
+		private TopicListener listener;
+
+		private Topic topic;
+
+		public TopicListenerReference(Topic topic, TopicListener listener) {
+			this.topic = topic;
+			this.listener = listener;
+		}
+
+		public void remove() {
+			topic.remove(listener);
 		}
 	}
 }

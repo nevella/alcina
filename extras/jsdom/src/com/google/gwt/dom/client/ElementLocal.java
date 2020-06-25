@@ -68,14 +68,14 @@ public class ElementLocal extends NodeLocal
 
 	@Override
 	public Element createOrReturnChild(String tagName) {
-		Optional<Node> optional = nodeFor().getChildNodes().stream()
+		Optional<Node> optional = node().getChildNodes().stream()
 				.filter(n -> n.getNodeName().equals(tagName)).findFirst();
 		if (optional.isPresent()) {
 			return (Element) optional.get();
 		}
-		Element newElement = nodeFor().getOwnerDocument()
+		Element newElement = node().getOwnerDocument()
 				.createElement(tagName);
-		nodeFor().appendChild(newElement);
+		node().appendChild(newElement);
 		return newElement;
 	}
 
@@ -171,7 +171,7 @@ public class ElementLocal extends NodeLocal
 	public final Element getFirstChildElement() {
 		return getChildNodes().stream().filter(
 				nodeLocal -> nodeLocal.getNodeType() == Node.ELEMENT_NODE)
-				.findFirst().map(nodeLocal -> (Element) nodeLocal.nodeFor())
+				.findFirst().map(nodeLocal -> (Element) nodeLocal.node())
 				.orElse(null);
 	}
 
@@ -179,7 +179,7 @@ public class ElementLocal extends NodeLocal
 	// public final Element getFirstChildElement() {
 	// return resolveChildren().stream()
 	// .filter(node_jvm -> node_jvm.getNodeType() == Node.ELEMENT_NODE)
-	// .findFirst().map(node_jvm -> (Element) node_jvm.nodeFor())
+	// .findFirst().map(node_jvm -> (Element) node_jvm.node())
 	// .orElse(null);
 	// }
 	@Override
@@ -219,7 +219,7 @@ public class ElementLocal extends NodeLocal
 				seen = true;
 			} else {
 				if (seen && node.getNodeType() == Node.ELEMENT_NODE) {
-					return (Element) node.nodeFor();
+					return (Element) node.node();
 				}
 			}
 		}
@@ -282,7 +282,7 @@ public class ElementLocal extends NodeLocal
 				seen = true;
 			} else {
 				if (seen && node.getNodeType() == Node.ELEMENT_NODE) {
-					return (Element) node.nodeFor();
+					return (Element) node.node();
 				}
 			}
 		}
@@ -380,9 +380,13 @@ public class ElementLocal extends NodeLocal
 		return DomElementStatic.hasTagName(this, tagName);
 	}
 
+	@Override
+	public Node node() {
+		return element;
+	}
+
 	public void putElement(Element element) {
 		this.element = element;
-		this.node = element;
 	}
 
 	@Override

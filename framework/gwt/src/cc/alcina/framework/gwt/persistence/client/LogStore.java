@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.res.AlcinaProperties;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
@@ -90,8 +90,8 @@ public class LogStore {
 				add);
 	}
 
-	public static TopicSupport<ClientLogRecord> topicLogEvent() {
-		return new TopicSupport<>(TOPIC_EVENT_OCCURRED);
+	public static Topic<ClientLogRecord> topicLogEvent() {
+		return Topic.global(TOPIC_EVENT_OCCURRED);
 	}
 
 	private RemoteLogPersister remoteLogPersister;

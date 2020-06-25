@@ -88,7 +88,7 @@ public interface DomNode {
 
 	boolean isOrHasChild(Node child);
 
-	Node nodeFor();
+	Node node();
 
 	Node removeAllChildren();
 

@@ -14,15 +14,15 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.servlet.sync.SyncMerger.FirstAndAllLookup;
 
 public class KeyMatchStrategy<T> implements MatchStrategy<T> {
 	public static final String TOPIC_MERGE_ISSUE = MergeHandler.class.getName()
 			+ "." + "TOPIC_MERGE_ISSUE";
 
-	public static TopicSupport<KeyMatchIssue> topicMatchIssue() {
-		return new TopicSupport<>(TOPIC_MERGE_ISSUE);
+	public static Topic<KeyMatchIssue> topicMatchIssue() {
+		return Topic.global(TOPIC_MERGE_ISSUE);
 	}
 
 	private StringKeyProvider<T> keyProvider;

@@ -24,13 +24,20 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.Javascript
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
-/*
- * Refactoring needs - there's a lot of semi-duplication in the 'link remote to localdom' models - i.e. puts to remoteLookup
+/**
+ * FIXME - directedlayout.2 - Refactoring needs - there's a lot of
+ * semi-duplication in the 'link remote to localdom' models - i.e. puts to
+ * remoteLookup
  * 
  * Probably need just one true path
+ * 
+ * Notes re gc => we mainatin a map of remote (browser dom) nodes to local
+ * nodes, but that's weak. Strong refs are via node.remote fields
+ * 
+ * Does not support IE<11
  */
 public class LocalDom {
 	private static LocalDom instance = new LocalDom();
@@ -39,7 +46,6 @@ public class LocalDom {
 
 	private static Map<String, String> declarativeCssNames;
 
-	// FIXME - ie9?
 	public static boolean fastRemoveAll = true;
 
 	private static boolean useRemoteDom = GWT.isClient();
@@ -60,18 +66,6 @@ public class LocalDom {
 
 	public static void debug(ElementRemote elementRemote) {
 		get().debug0(elementRemote);
-	}
-
-	public static void detach(Node node) {
-		// see "removereference"
-		// if (node.wasResolved()) {
-		// LocalDom instance = get();
-		// node.local().walk(nl -> {
-		// if (nl.node.linkedToRemote()) {
-		// instance.removeReference(nl.node.typedRemote());
-		// }
-		// });
-		// }
 	}
 
 	public static void ensureRemote(Node node) {
@@ -148,12 +142,12 @@ public class LocalDom {
 				element.typedRemote().getOuterHtml(), element);
 	}
 
-	public static TopicSupport<Exception> topicException() {
-		return new TopicSupport<>(TOPIC_EXCEPTION);
+	public static Topic<Exception> topicException() {
+		return Topic.global(TOPIC_EXCEPTION);
 	}
 
-	public static TopicSupport<String> unableToParseTopic() {
-		return new TopicSupport<>(LocalDom.TOPIC_UNABLE_TO_PARSE);
+	public static Topic<String> unableToParseTopic() {
+		return Topic.global(LocalDom.TOPIC_UNABLE_TO_PARSE);
 	}
 
 	public static String validateHtml(String html) {
@@ -569,7 +563,8 @@ public class LocalDom {
 			return node;
 		}
 		if (remote.provideIsText()) {
-			// FIXME - non-performant, but rare (exception for selectionish)
+			// FIXME - directedlayout.2 - non-performant, but rare (exception
+			// for selectionish)
 			ElementRemote parentRemote = (ElementRemote) remote
 					.getParentNodeRemote();
 			Node parent = nodeFor0(parentRemote);
@@ -672,24 +667,6 @@ public class LocalDom {
 		element.putRemote(remote, true);
 	}
 
-	@SuppressWarnings("unused")
-	private void removeReference(NodeRemote typedRemote) {
-		// unfortunately doesn't work - if node is later reattached
-		// FIXME - do remove, but add a unique 'reattach id' field
-		// that way we at least lose the remote node ref
-		// also, have a say 30 sec deallocate loop. this is the urkiest of
-		// localdom
-		// note that weakmaps would save'us'ere
-		// Node node = get().remoteLookup.get(typedRemote);
-		// if (node != null && node.provideIsElement()) {
-		// Element element = (Element) node;
-		// pendingResolution.remove(element);
-		// }
-		// get().remoteLookup.remove(typedRemote);
-		//
-		// ended up using weakmaps...
-	}
-
 	private void reparseFromRemote(ElementRemote elem, Element hasNode,
 			ElementRemoteIndex remoteIndex) {
 		List<Integer> sizes = remoteIndex.sizes();
@@ -709,9 +686,14 @@ public class LocalDom {
 				invalid = node.getNodeType() != remoteNode.getNodeType();
 			}
 			if (invalid) {
-				// FIXME - check we have no widgets in the tree - if we do,
-				// we're...not..good. Also remove and remote refs below (albeit
-				// unlikely)
+				/*
+				 * REVISIT - directedlayout.2. Optimised?
+				 * 
+				 * check we have no widgets in the tree - if we do,
+				 * we're...not..good. Also remove and remote refs below (albeit
+				 * unlikely)
+				 * 
+				 */
 				int localIndex = (cursor.getParentElement() == null ? cursor
 						: cursor.getParentElement()).getChildIndexLocal(cursor);
 				cursor.local().clearChildrenAndAttributes0();
@@ -817,7 +799,7 @@ public class LocalDom {
 	}
 
 	private void wasResolved0(Element elem) {
-		elem.local().walk(nl -> nl.node.resolved(resolutionEventId));
+		elem.local().walk(nl -> nl.node().resolved(resolutionEventId));
 		resolutionEventIdDirty = true;
 	}
 

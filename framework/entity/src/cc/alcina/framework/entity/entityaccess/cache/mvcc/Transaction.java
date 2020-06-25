@@ -4,7 +4,6 @@ import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,6 +26,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class Transaction {
 	private static ThreadLocal<Transaction> threadLocalInstance = new ThreadLocal() {
@@ -177,7 +177,7 @@ public class Transaction {
 
 	private boolean baseTransaction;
 
-	Map<TransactionId, Transaction> committedTransactions = new LinkedHashMap<>();
+	Object2ObjectLinkedOpenHashMap<TransactionId, Transaction> committedTransactions = new Object2ObjectLinkedOpenHashMap<>();
 
 	private TransactionId id;
 
@@ -225,10 +225,6 @@ public class Transaction {
 		}
 	}
 
-	public Map<TransactionId, Transaction> getCommittedTransactions() {
-		return committedTransactions;
-	}
-
 	@Override
 	public int hashCode() {
 		return id.hashCode();
@@ -246,35 +242,12 @@ public class Transaction {
 		return phase == TransactionPhase.TO_DB_PREPARING;
 	}
 
-	public Transaction mostRecentPriorTransaction(Enumeration<Transaction> keys,
-			DomainStore store) {
-		Transaction result = null;
-		while (keys.hasMoreElements()) {
-			Transaction element = keys.nextElement();
-			if (element.phase == TransactionPhase.TO_DOMAIN_COMMITTED) {
-				if (committedTransactions.containsKey(element.id)
-						|| element.isBaseTransaction()) {
-					if (result == null
-							|| element.hasHigherCommitIdThan(result, store)) {
-						result = element;
-					}
-				}
-			}
-		}
-		return result;
-	}
-
 	/**
 	 * It's legal to do this after DomainStore.warmup as long as you can
 	 * guarantee that tx object modification is thread-safe
 	 */
 	public void setBaseTransaction(boolean baseTransaction) {
 		this.baseTransaction = baseTransaction;
-	}
-
-	public void setCommittedTransactions(
-			Map<TransactionId, Transaction> committedTransactions) {
-		this.committedTransactions = committedTransactions;
 	}
 
 	public void toDbAborted() {
@@ -405,6 +378,24 @@ public class Transaction {
 
 	boolean isReadonly() {
 		return threadCount.get() != 1;
+	}
+
+	Transaction mostRecentPriorTransaction(Enumeration<Transaction> keys,
+			DomainStore store) {
+		Transaction result = null;
+		while (keys.hasMoreElements()) {
+			Transaction element = keys.nextElement();
+			if (element.phase == TransactionPhase.TO_DOMAIN_COMMITTED) {
+				if (committedTransactions.containsKey(element.id)
+						|| element.isBaseTransaction()) {
+					if (result == null
+							|| element.hasHigherCommitIdThan(result, store)) {
+						result = element;
+					}
+				}
+			}
+		}
+		return result;
 	}
 
 	void setId(TransactionId id) {

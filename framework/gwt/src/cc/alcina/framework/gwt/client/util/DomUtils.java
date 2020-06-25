@@ -63,6 +63,8 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class DomUtils implements NodeFromXpathProvider {
+	public static String containerTagRegex = "(?i)/?(judgment|doc)";
+
 	private static final String DOM_XPATH_MAP = "dom-xpath-map";
 
 	public static final String TEXT_MARKER = "TEXT()";
@@ -493,9 +495,8 @@ public class DomUtils implements NodeFromXpathProvider {
 			if (node == null && ucXpath.endsWith(possiblyWrappedTextPost)) {
 				node = xpathMap.get(ucXpath + "[1]");
 			}
-			// FIXME - generalise to arbitrary non-html
 			if (node == null
-					&& container.getNodeName().matches("(?i)judgment|doc")
+					&& container.getNodeName().matches(containerTagRegex)
 					&& ucXpath.contains("/")) {
 				node = xpathMap
 						.get(ucXpath.substring(ucXpath.indexOf("/") + 1));
@@ -506,7 +507,7 @@ public class DomUtils implements NodeFromXpathProvider {
 					node = xpathMap.get(adjusted);
 					if (node == null) {
 						if (adjusted.isEmpty()
-								|| adjusted.matches("(?i)/(judgment|doc)")) {
+								|| adjusted.matches(containerTagRegex)) {
 							node = container;
 						}
 					}

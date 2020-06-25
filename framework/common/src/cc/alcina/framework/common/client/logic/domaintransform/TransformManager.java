@@ -465,7 +465,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			// 4. post-process; replaying local-to-vm create
 			// 5. post-process; replaying not-local-to-vm create
 			// if (2) or (4) , break at this point
-			// FIXME - clean this up further once client localid->id transitions
+			// FIXME - mvcc.3 - clean this up further once client localid->id
+			// transitions
 			// are updated, and provisional -> bubble universe. Some of these
 			// cases may
 			// not still be here? e.g. (2)
@@ -1367,7 +1368,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
 	}
 
-	// FIXME - mvcc - not needed server-side
 	public <T extends Entity> T registerDomainObject(T entity) {
 		if (getDomainObjects() != null && entity != null) {
 			if (entity.getId() == 0) {

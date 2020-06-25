@@ -76,7 +76,7 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 	}
 
 	@Override
-	public Node nodeFor() {
+	public Node node() {
 		return this;
 	}
 

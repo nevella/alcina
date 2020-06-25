@@ -32,26 +32,32 @@ public abstract class ComplexPanel extends Panel
 	 */
 	private AttachDetachException.Command orphanCommand;
 
+	@Override
 	public Widget getWidget(int index) {
 		return getChildren().get(index);
 	}
 
+	@Override
 	public int getWidgetCount() {
 		return getChildren().size();
 	}
 
+	@Override
 	public int getWidgetIndex(IsWidget child) {
 		return getWidgetIndex(asWidgetOrNull(child));
 	}
 
+	@Override
 	public int getWidgetIndex(Widget child) {
 		return getChildren().indexOf(child);
 	}
 
+	@Override
 	public Iterator<Widget> iterator() {
 		return getChildren().iterator();
 	}
 
+	@Override
 	public boolean remove(int index) {
 		return remove(getWidget(index));
 	}
@@ -69,7 +75,6 @@ public abstract class ComplexPanel extends Panel
 			// Physical detach.
 			Element elem = w.getElement();
 			if (DOM.getParent(elem) == null) {
-				// FIXME - localdom
 			} else {
 				DOM.getParent(elem).removeChild(elem);
 			}
@@ -204,6 +209,7 @@ public abstract class ComplexPanel extends Panel
 		// Only use one orphan command per panel to avoid object creation.
 		if (orphanCommand == null) {
 			orphanCommand = new AttachDetachException.Command() {
+				@Override
 				public void execute(Widget w) {
 					orphan(w);
 				}

@@ -597,7 +597,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 
 	@Override
 	public final Document documentFor() {
-		return (Document) nodeFor();
+		return (Document) node();
 	}
 
 	/**

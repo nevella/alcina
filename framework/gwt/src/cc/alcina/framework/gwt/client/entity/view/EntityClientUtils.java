@@ -12,7 +12,7 @@ import com.google.gwt.view.client.SingleSelectionModel;
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.entity.view.res.DataClientResources;
 
@@ -62,7 +62,7 @@ public class EntityClientUtils {
         table.setStyleName("data-grid");
     }
 
-    public static TopicSupport<Boolean> topicToggleFilter() {
-        return new TopicSupport<>(TOPIC_TOGGLE_FILTER);
+    public static Topic<Boolean> topicToggleFilter() {
+        return Topic.global(TOPIC_TOGGLE_FILTER);
     }
 }

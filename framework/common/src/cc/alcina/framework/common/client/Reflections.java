@@ -23,6 +23,10 @@ public class Reflections {
 		return get().classLookup;
 	}
 
+	public static String getApplicationName() {
+		return get().applicationName;
+	}
+
 	/**
 	 * Convenience method
 	 * 
@@ -66,12 +70,18 @@ public class Reflections {
 		get().propertyAccessor = accessor;
 	}
 
+	public static void setApplicationName(String applicationName) {
+		get().applicationName = applicationName;
+	}
+
 	private static Reflections get() {
 		if (theInstance == null) {
 			theInstance = new Reflections();
 		}
 		return theInstance;
 	}
+
+	private String applicationName = "app";
 
 	private BeanDescriptorProvider beanDescriptorProvider;
 

@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 
 public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
 		implements Serializable {
@@ -12,7 +12,7 @@ public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
 
 	private byte[] bytes;
 
-	private transient TopicSupport<FileSelectorInfo> clearTopicSupport = TopicSupport.localAnonymousTopic();
+	private transient Topic<FileSelectorInfo> clearTopicSupport = Topic.local();
 
 	public byte[] getBytes() {
 		return this.bytes;
@@ -41,7 +41,7 @@ public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
 		topicClear().publish(this);
 	}
 
-	public TopicSupport<FileSelectorInfo> topicClear() {
+	public Topic<FileSelectorInfo> topicClear() {
 		return clearTopicSupport;
 	}
 	

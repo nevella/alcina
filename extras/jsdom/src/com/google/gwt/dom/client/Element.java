@@ -176,7 +176,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 
 	@Override
 	public Element elementFor() {
-		return nodeFor();
+		return node();
 	}
 
 	@Override
@@ -524,7 +524,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	}
 
 	@Override
-	public Element nodeFor() {
+	public Element node() {
 		return this;
 	}
 
@@ -681,7 +681,6 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		} else {
 			local().setInnerHTML(html);
 		}
-		oldChildren.forEach(LocalDom::detach);
 	}
 
 	public void setInnerHTMLWithValidation(String html) {
@@ -708,7 +707,6 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		} else {
 			local().setInnerText(text);
 		}
-		oldChildren.forEach(LocalDom::detach);
 	}
 
 	@Override
@@ -988,7 +986,6 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		} else {
 			local().setInnerSafeHtml(html);
 		}
-		oldChildren.forEach(LocalDom::detach);
 	}
 
 	@Override
@@ -1069,7 +1066,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 			if (linkedToRemote()) {
 				ElementRemote oldRemote = typedRemote();
 				oldRemote.removeAllChildrenElement();
-				local().walk(ln -> ln.node.resetRemote());
+				local().walk(ln -> ln.node().resetRemote());
 				resetRemote();
 				LocalDom.ensureRemoteNodeMaybePendingResolution(Element.this);
 				oldRemote.replaceWith(typedRemote());

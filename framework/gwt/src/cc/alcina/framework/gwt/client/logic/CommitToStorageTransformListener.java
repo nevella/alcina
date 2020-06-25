@@ -50,7 +50,7 @@ import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
@@ -132,9 +132,9 @@ public class CommitToStorageTransformListener extends StateListenable
 				listener, add);
 	}
 
-	public static TopicSupport<DomainTransformResponse>
+	public static Topic<DomainTransformResponse>
 			topicTransformsCommitted() {
-		return new TopicSupport<>(TOPIC_TRANSFORMS_COMMITTED);
+		return Topic.global(TOPIC_TRANSFORMS_COMMITTED);
 	}
 
 	static void notifyCommitDomainException(Throwable message) {

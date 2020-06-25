@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstanceExp
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcTopics.ClientInstanceExpiredExceptionToken;
 
 public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
@@ -33,9 +33,9 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 		return listener;
 	}
 
-	private static TopicSupport<AlcinaRpcRequestBuilder>
+	private static Topic<AlcinaRpcRequestBuilder>
 			topicAlcinaRpcRequestBuilderCreated() {
-		return new TopicSupport<>(TOPIC_ALCINA_RPC_REQUEST_BUILDER_CREATED);
+		return Topic.global(TOPIC_ALCINA_RPC_REQUEST_BUILDER_CREATED);
 	}
 
 	protected boolean recordResult;

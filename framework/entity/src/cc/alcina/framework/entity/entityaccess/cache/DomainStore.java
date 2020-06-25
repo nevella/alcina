@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -41,7 +42,6 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.domain.ComplexFilter;
 import cc.alcina.framework.common.client.domain.ComplexFilter.ComplexFilterContext;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -85,18 +85,17 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreProperty.DomainStorePropertyLoadType;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreHealth;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreThreads.DomainStoreInstrumentation;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
@@ -123,12 +122,6 @@ import cc.alcina.framework.entity.projection.GraphProjections;
 public class DomainStore implements IDomainStore {
 	private static final String TOPIC_UPDATE_EXCEPTION = DomainStore.class
 			.getName() + ".TOPIC_UPDATE_EXCEPTION";
-
-	private static final String TOPIC_MAPPING_EVENT = DomainStore.class
-			.getName() + ".TOPIC_MAPPING_EVENT";
-
-	private static final String TOPIC_NON_LOCKED_ACCESS = DomainStore.class
-			.getName() + ".TOPIC_NON_LOCKED_ACCESS";
 
 	public static final String CONTEXT_DEBUG_QUERY_METRICS = DomainStore.class
 			.getName() + ".CONTEXT_DEBUG_QUERY_METRICS";
@@ -164,6 +157,8 @@ public class DomainStore implements IDomainStore {
 
 	private static DomainStores domainStores;
 
+	static final int LONG_POST_PROCESS_TRACE_LENGTH = 99999;
+
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -178,17 +173,8 @@ public class DomainStore implements IDomainStore {
 		return domainStores;
 	}
 
-	public static TopicSupport<Entity> topicMappingEvent() {
-		return new TopicSupport<>(TOPIC_MAPPING_EVENT);
-	}
-
-	public static TopicSupport<Void> topicNonLoggedAccess() {
-		return new TopicSupport<>(TOPIC_NON_LOCKED_ACCESS);
-	}
-
-	public static TopicSupport<DomainStoreUpdateException>
-			topicUpdateException() {
-		return new TopicSupport<>(TOPIC_UPDATE_EXCEPTION);
+	public static Topic<DomainStoreUpdateException> topicUpdateException() {
+		return Topic.global(TOPIC_UPDATE_EXCEPTION);
 	}
 
 	public static DomainStore writableStore() {
@@ -215,19 +201,17 @@ public class DomainStore implements IDomainStore {
 
 	Mvcc mvcc;
 
+	DomainStoreHealth health = new DomainStoreHealth();
+
 	DetachedEntityCache cache;
 
 	private DomainStorePersistenceListener persistenceListener;
 
 	boolean initialised = false;
 
-	private Field modificationCheckerField;
-
 	boolean initialising;
 
 	private boolean debug;
-
-	DomainStoreThreads threads;
 
 	long timzoneOffset = -1;
 
@@ -254,6 +238,8 @@ public class DomainStore implements IDomainStore {
 
 	AtomicLong applyTxToGraphCounter = new AtomicLong(0);
 
+	Thread postProcessThread;
+
 	public DomainStore(DomainStoreDescriptor descriptor) {
 		this();
 		this.domainDescriptor = descriptor;
@@ -261,42 +247,18 @@ public class DomainStore implements IDomainStore {
 
 	private DomainStore() {
 		persistenceListener = new DomainStorePersistenceListener();
-		threads = new DomainStoreThreads(this);
-		threads.maxLockQueueLength = ResourceUtilities
-				.getInteger(DomainStore.class, "maxLockQueueLength", 120);
-		threads.maxLockQueueTimeForNoDisablement = ResourceUtilities
-				.getLong(DomainStore.class, "maxLockQueueTimeForNoDisablement");
-		publishMappingEvents = ResourceUtilities.is(DomainStore.class,
-				"publishMappingEvents");
 		this.persistenceEvents = new DomainTransformPersistenceEvents(this);
-		// this is where we multiplex...move to app?
-		// FIXME - jade.ceres.2
-		//
-		// yeah - store handler should call stores() store for class() (a proxy)
 		this.handler = new DomainStoreDomainHandler();
 	}
 
 	public void appShutdown() {
-		threads.appShutdown();
 		loader.appShutdown();
 		persistenceEvents.getQueue().appShutdown();
-	}
-
-	public void dumpLocks() {
-		threads.dumpLocks();
 	}
 
 	public void enableAndAddValues(DomainListener listener) {
 		listener.setEnabled(true);
 		addValues(listener);
-	}
-
-	public void externalReadLock(boolean lock) {
-		if (lock) {
-			threads.lock(false);
-		} else {
-			threads.unlock(false);
-		}
 	}
 
 	public DetachedEntityCache getCache() {
@@ -308,11 +270,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	public DomainStoreHealth getHealth() {
-		return threads.health;
-	}
-
-	public String getLockDumpString(String lockDumpCause, boolean full) {
-		return threads.getLockDumpString(lockDumpCause, full);
+		return health;
 	}
 
 	public MemoryStat getMemoryStats(StatType type) {
@@ -347,10 +305,6 @@ public class DomainStore implements IDomainStore {
 		return domainDescriptor.perClass.containsKey(clazz);
 	}
 
-	public DomainStoreInstrumentation instrumentation() {
-		return threads.instrumentation;
-	}
-
 	public boolean isCached(Class clazz) {
 		return domainDescriptor.perClass.containsKey(clazz);
 	}
@@ -362,10 +316,6 @@ public class DomainStore implements IDomainStore {
 	public boolean isCachedTransactional(Class clazz) {
 		return isCached(clazz)
 				&& domainDescriptor.perClass.get(clazz).isTransactional();
-	}
-
-	public boolean isCurrentThreadHoldingLock() {
-		return threads.isCurrentThreadHoldingLock();
 	}
 
 	public boolean isDebug() {
@@ -389,30 +339,8 @@ public class DomainStore implements IDomainStore {
 		loader.onTransformsPersisted();
 	}
 
-	public void readLockExpectLongRunning(boolean lock) {
-		threads.readLockExpectLongRunning(lock);
-	}
-
 	public void remove(Entity entity) {
 		cache.remove(entity);
-	}
-
-	public void runWithWriteLock(Runnable runnable) {
-		try {
-			threads.lock(true);
-			runnable.run();
-		} finally {
-			threads.unlock(true);
-		}
-	}
-
-	/**
-	 * Normally should be true, expect in warmup (where we know threads will be
-	 * non-colliding)
-	 */
-	public void
-			setCheckModificationWriteLock(boolean checkModificationWriteLock) {
-		threads.checkModificationWriteLock = checkModificationWriteLock;
 	}
 
 	public void setConnectionUrl(String newUrl) {
@@ -437,10 +365,6 @@ public class DomainStore implements IDomainStore {
 		lazyObjectLoader = loader.getLazyObjectLoader();
 		cache = transformManager.getDetachedEntityCache();
 		transformManager.getStore().setLazyObjectLoader(lazyObjectLoader);
-		modificationCheckerField = BaseSourcesPropertyChangeEvents.class
-				.getDeclaredField("propertyChangeSupport");
-		modificationCheckerField.setAccessible(true);
-		setCheckModificationWriteLock(false);
 		domainDescriptor.initialise();
 		domainDescriptor.registerStore(this);
 		domainDescriptor.perClass.values().stream()
@@ -459,10 +383,6 @@ public class DomainStore implements IDomainStore {
 		Transaction.end();
 		initialising = false;
 		initialised = true;
-		threads.startLongLockHolderCheck();
-		if (ResourceUtilities.is("checkAccessWithoutLock")) {
-			threads.setupLockedAccessCheck();
-		}
 		MetricLogging.get().end("domainStore.warmup");
 	}
 
@@ -745,10 +665,9 @@ public class DomainStore implements IDomainStore {
 					testSensitiveTimestamp(transactionCommitTime), this,
 					applyTxToGraphCounter.getAndIncrement(),
 					persistenceEvent.getMaxPersistedRequestId());
-			threads.postProcessWriterThread = Thread.currentThread();
+			postProcessThread = Thread.currentThread();
 			postProcessEvent = persistenceEvent;
 			health.domainStorePostProcessStartTime = System.currentTimeMillis();
-			transformManager.startCommit();
 			List<DomainTransformEvent> dtes = (List) persistenceEvent
 					.getDomainTransformLayerWrapper().persistentEvents;
 			List<DomainTransformEvent> filtered = filterInterestedTransforms(
@@ -861,10 +780,9 @@ public class DomainStore implements IDomainStore {
 			Transaction.current().toDomainAborted();
 			causes.add(e);
 		} finally {
-			transformManager.endCommit();
 			TransformManager.get().setIgnorePropertyChanges(false);
 			health.domainStorePostProcessStartTime = 0;
-			threads.postProcessWriterThread = null;
+			postProcessThread = null;
 			postProcessEvent = null;
 			long postProcessTime = System.currentTimeMillis()
 					- postProcessStart;
@@ -901,50 +819,44 @@ public class DomainStore implements IDomainStore {
 
 	<T extends Entity> Stream<T> query(Class<T> clazz,
 			DomainStoreQuery<T> query) {
-		try {
-			threads.lock(false);
-			boolean debugMetrics = isDebug()
-					&& LooseContext.is(CONTEXT_DEBUG_QUERY_METRICS);
-			StringBuilder debugMetricBuilder = new StringBuilder();
-			int filterSize = query.getFilters().size();
-			QueryToken token = new QueryToken(query);
-			token.planner().optimiseFilters();
-			for (; token.idx < filterSize; token.idx++) {
-				int idx = token.idx;
-				long start = System.nanoTime();
-				DomainFilter cacheFilter = query.getFilters().get(idx);
-				DomainFilter nextFilter = idx == filterSize - 1 ? null
-						: query.getFilters().get(idx + 1);
-				applyFilter(clazz, cacheFilter, nextFilter, token);
-				if (debugMetrics) {
-					double ms = (double) (System.nanoTime() - start)
-							/ 1000000.0;
-					String filters = token.lastFilterString;
-					debugMetricBuilder.append(String.format("\t%.3f ms - %s\n",
-							ms, CommonUtils.trimToWsChars(filters, 100, true)));
-				}
-				if (token.isEmpty()) {
-					break;
-				}
+		boolean debugMetrics = isDebug()
+				&& LooseContext.is(CONTEXT_DEBUG_QUERY_METRICS);
+		StringBuilder debugMetricBuilder = new StringBuilder();
+		int filterSize = query.getFilters().size();
+		QueryToken token = new QueryToken(query);
+		token.planner().optimiseFilters();
+		for (; token.idx < filterSize; token.idx++) {
+			int idx = token.idx;
+			long start = System.nanoTime();
+			DomainFilter cacheFilter = query.getFilters().get(idx);
+			DomainFilter nextFilter = idx == filterSize - 1 ? null
+					: query.getFilters().get(idx + 1);
+			applyFilter(clazz, cacheFilter, nextFilter, token);
+			if (debugMetrics) {
+				double ms = (double) (System.nanoTime() - start) / 1000000.0;
+				String filters = token.lastFilterString;
+				debugMetricBuilder.append(String.format("\t%.3f ms - %s\n", ms,
+						CommonUtils.trimToWsChars(filters, 100, true)));
 			}
-			if (debugMetrics && !token.hasIdQuery()) {
-				metricLogger.debug("Query metrics:\n========\n{}\n{}", query,
-						debugMetricBuilder.toString());
+			if (token.isEmpty()) {
+				break;
 			}
-			// FIXME - mvcc.2 - remove isRaw() etc (always raw)
-			if (query.isRaw() || isWillProjectLater()) {
-				Stream stream = token.ensureStream();
-				List<PreProvideTask<T>> preProvideTasks = domainDescriptor
-						.getPreProvideTasks(clazz);
-				for (PreProvideTask<T> preProvideTask : preProvideTasks) {
-					stream = preProvideTask.wrap(stream);
-				}
-				return stream;
-			} else {
-				throw new UnsupportedOperationException();
+		}
+		if (debugMetrics && !token.hasIdQuery()) {
+			metricLogger.debug("Query metrics:\n========\n{}\n{}", query,
+					debugMetricBuilder.toString());
+		}
+		// FIXME - mvcc.2 - remove isRaw() etc (always raw)
+		if (query.isRaw() || isWillProjectLater()) {
+			Stream stream = token.ensureStream();
+			List<PreProvideTask<T>> preProvideTasks = domainDescriptor
+					.getPreProvideTasks(clazz);
+			for (PreProvideTask<T> preProvideTask : preProvideTasks) {
+				stream = preProvideTask.wrap(stream);
 			}
-		} finally {
-			threads.unlock(false);
+			return stream;
+		} else {
+			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -1014,6 +926,55 @@ public class DomainStore implements IDomainStore {
 
 		public DomainStoreException(String message) {
 			super(message);
+		}
+	}
+
+	public class DomainStoreHealth {
+		public long domainStoreMaxPostProcessTime;
+
+		public long domainStorePostProcessStartTime;
+
+		AtomicInteger domainStoreExceptionCount = new AtomicInteger();
+
+		public AtomicInteger getDomainStoreExceptionCount() {
+			return this.domainStoreExceptionCount;
+		}
+
+		public long getMvccOldestTx() {
+			return Transactions.stats().getOldestTxStartTime();
+		}
+
+		public long getMvccUncollectedTxCount() {
+			return Transactions.stats().getUncollectedTxCount();
+		}
+
+		public long getMvccVacuumQueueLength() {
+			return Transactions.stats().getVacuumQueueLength();
+		}
+
+		public long getTimeInDomainStoreWriter() {
+			long time = domainStorePostProcessStartTime == 0 ? 0
+					: System.currentTimeMillis()
+							- domainStorePostProcessStartTime;
+			if (time > 100) {
+				logger.info("Long postprocess time - {} ms - {}\n{}\n\n", time,
+						postProcessThread,
+						SEUtilities.getStacktraceSlice(postProcessThread,
+								LONG_POST_PROCESS_TRACE_LENGTH, 0));
+			}
+			return time;
+		}
+
+		public long getTimeInVacuum() {
+			long time = Transactions.stats().getTimeInVacuum();
+			if (time > 100) {
+				logger.info("Long vacuum time - {} ms - {}\n{}\n\n", time,
+						Transactions.stats().getVacuumThread(),
+						SEUtilities.getStacktraceSlice(
+								Transactions.stats().getVacuumThread(),
+								LONG_POST_PROCESS_TRACE_LENGTH, 0));
+			}
+			return time;
 		}
 	}
 
@@ -1129,11 +1090,6 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
-			public <V extends Entity> List<Long> ids(Class<V> clazz) {
-				return storeHandler(clazz).ids(clazz);
-			}
-
-			@Override
 			public <V extends Entity> boolean isDomainVersion(V v) {
 				return v == null ? null
 						: storeHandler(v.entityClass()).isDomainVersion(v);
@@ -1228,20 +1184,6 @@ public class DomainStore implements IDomainStore {
 		public <E2 extends Entity> DomainLookup<String, E2>
 				getStringLookup(Class<E2> clazz, String propertyPath) {
 			return getLookupFor(clazz, propertyPath);
-		}
-	}
-
-	class DetachedCacheObjectStorePsAware extends DetachedCacheObjectStore {
-		public DetachedCacheObjectStorePsAware() {
-			super(new PropertyStoreAwareMultiplexingObjectCache());
-		}
-
-		@Override
-		public void mapObject(Entity obj) {
-			if (publishMappingEvents) {
-				topicMappingEvent().publish(obj);
-			}
-			super.mapObject(obj);
 		}
 	}
 
@@ -1364,17 +1306,6 @@ public class DomainStore implements IDomainStore {
 				}
 			} else {
 				return (V) cache.get(v.entityClass(), v.getId());
-			}
-		}
-
-		@Override
-		@DomainStoreUnsafe
-		public <V extends Entity> List<Long> ids(Class<V> clazz) {
-			try {
-				threads.lock(false);
-				return new ArrayList<Long>(cache.keys(clazz));
-			} finally {
-				threads.unlock(false);
 			}
 		}
 
@@ -1614,11 +1545,6 @@ public class DomainStore implements IDomainStore {
 	class SubgraphTransformManagerPostProcess extends SubgraphTransformManager {
 		private LocalReplacementCreationObjectResolver localReplacementCreationObjectResolver;
 
-		public void addPropertyStore(DomainClassDescriptor descriptor) {
-			((PropertyStoreAwareMultiplexingObjectCache) store.getCache())
-					.addPropertyStore(descriptor);
-		}
-
 		@Override
 		public Entity getObject(DomainTransformEvent dte,
 				boolean ignoreSource) {
@@ -1643,7 +1569,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		protected void createObjectLookup() {
-			store = new DetachedCacheObjectStorePsAware();
+			store = new DetachedCacheObjectStore(new DomainStoreEntityCache());
 			setDomainObjects(store);
 		}
 
@@ -1677,16 +1603,6 @@ public class DomainStore implements IDomainStore {
 		@Override
 		protected void performDeleteObject(Entity entity) {
 			super.performDeleteObject(entity);
-		}
-
-		void endCommit() {
-			((PropertyStoreAwareMultiplexingObjectCache) store.getCache())
-					.endCommit();
-		}
-
-		void startCommit() {
-			((PropertyStoreAwareMultiplexingObjectCache) store.getCache())
-					.startCommit();
 		}
 	}
 }

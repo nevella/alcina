@@ -118,7 +118,7 @@ public abstract class NodeLocalNull extends NodeLocal {
 	}
 
 	@Override
-	public Node nodeFor() {
+	public Node node() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -148,12 +148,9 @@ public abstract class NodeLocalNull extends NodeLocal {
 	}
 
 	@Override
-	protected void registerNode(Node node) {
-		throw new UnsupportedOperationException();
-	}
-
 	abstract void appendOuterHtml(UnsafeHtmlBuilder builder);
 
+	@Override
 	abstract void appendTextContent(StringBuilder builder);
 
 	void setParentNode(NodeLocalNull local) {

@@ -24,7 +24,7 @@ import com.google.gwt.dom.client.NodeRemote;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.dom.client.TextRemote;
 
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import rocket.selection.client.Selection;
 import rocket.selection.client.SelectionEndPoint;
 import rocket.util.client.Checker;
@@ -37,14 +37,12 @@ import rocket.util.client.JavaScript;
  * 
  *
  */
-// FIXME - localdom2 - fix the element vs text logic hidden formerly by jso
-// cross casting
 abstract public class SelectionSupport {
 	static final String TOPIC_SELECTION_DEBUG = SelectionSupport.class.getName()
 			+ ".TOPIC_SELECTION_DEBUG";
 
-	public static TopicSupport<Integer> selectionDebugTopic() {
-		return new TopicSupport<>(SelectionSupport.TOPIC_SELECTION_DEBUG);
+	public static Topic<Integer> selectionDebugTopic() {
+		return Topic.global(SelectionSupport.TOPIC_SELECTION_DEBUG);
 	}
 
 	native static TextRemote remote(Text text)/*-{

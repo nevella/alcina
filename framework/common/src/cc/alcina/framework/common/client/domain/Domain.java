@@ -123,10 +123,6 @@ public class Domain {
 		return first;
 	}
 
-	public static <V extends Entity> List<Long> ids(Class<V> clazz) {
-		return handler.ids(clazz);
-	}
-
 	public static <V extends Entity> boolean isDomainVersion(V v) {
 		return v == null ? false : handler.isDomainVersion(v);
 	}
@@ -201,8 +197,6 @@ public class Domain {
 
 		<V extends Entity> V detachedVersion(V v);
 
-		<V extends Entity> List<Long> ids(Class<V> clazz);
-
 		<V extends Entity> boolean isDomainVersion(V v);
 
 		default <V extends Entity> List<V> listByProperty(Class<V> clazz,
@@ -244,11 +238,6 @@ public class Domain {
 
 		@Override
 		public <V extends Entity> V find(V v) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public <V extends Entity> List<Long> ids(Class<V> clazz) {
 			throw new UnsupportedOperationException();
 		}
 

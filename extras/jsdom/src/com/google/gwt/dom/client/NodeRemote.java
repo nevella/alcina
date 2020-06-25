@@ -204,11 +204,11 @@ public abstract class NodeRemote extends JavaScriptObject implements DomNode {
     @Override
     public final boolean isOrHasChild(Node child) {
         assert (child != null) : "Child cannot be null";
-        return DOMImpl.impl.isOrHasChild(nodeFor(), child);
+        return DOMImpl.impl.isOrHasChild(node(), child);
     }
 
     @Override
-    public final Node nodeFor() {
+    public final Node node() {
         return LocalDom.nodeFor(this);
     }
 

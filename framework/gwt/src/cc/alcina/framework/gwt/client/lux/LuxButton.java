@@ -9,7 +9,7 @@ import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.SimplePanel;
 
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.widget.APanel;
 
 public class LuxButton extends Composite implements HasClickHandlers {
@@ -37,7 +37,7 @@ public class LuxButton extends Composite implements HasClickHandlers {
 		ensureAsyncIndicator().setVisible(this.performingAsync);
 	}
 
-	public LuxButton withAsyncTopic(TopicSupport<Boolean> topicAsync) {
+	public LuxButton withAsyncTopic(Topic<Boolean> topicAsync) {
 		TopicListener<Boolean> asyncListener = (k, v) -> setPerformingAsync(v);
 		addAttachHandler(e -> topicAsync.delta(asyncListener, e.isAttached()));
 		return this;

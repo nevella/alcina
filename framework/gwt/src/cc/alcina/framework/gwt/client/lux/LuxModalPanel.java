@@ -17,7 +17,6 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 public abstract class LuxModalPanel extends Composite {
 	FlowPanel fp = new FlowPanel();
 
-	// FIXME - move to 'validation support'
 	protected List<ContentViewSections> builders = new ArrayList<>();
 
 	protected Widget statusPanel;

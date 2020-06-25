@@ -1100,12 +1100,6 @@ class DomStyleStatic {
 		domStyle.setProperty(STYLE_WIDTH, value, unit);
 	}
 
-	// FIXME - LD2 - remove (never get remote obj prop)
-	// static String getPropertyImpl(StyleRemote style_Dom, String name) {
-	// // FIXME - more direct call maybe
-	// return DOMImpl.impl.getStyleProperty(
-	// LocalDomBridge.styleObjectFor(style_Dom), name);
-	// }
 	/**
 	 * Set the z-index css property.
 	 */

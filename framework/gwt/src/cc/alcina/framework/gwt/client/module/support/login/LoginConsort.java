@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.module.support.login.LoginConsort.State;
 import cc.alcina.framework.gwt.client.module.support.login.pub.LoginActivity.LoginViewModel;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilderLight;
@@ -37,9 +37,10 @@ public abstract class LoginConsort extends Consort<State> {
 	@SuppressWarnings("unused")
 	private LoginViewModel viewModel;
 
-	TopicSupport<Boolean> topicCallingRemote = new TopicSupport<>(null, false);
+	Topic<Boolean> topicCallingRemote = Topic
+			.local();
 
-	TopicSupport<String> topicMessage = new TopicSupport<>(null, false);
+	Topic<String> topicMessage = Topic.local();
 
 	protected LoginResponse lastResponse;
 

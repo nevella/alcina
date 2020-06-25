@@ -127,7 +127,7 @@ public class LocalDomMutations {
 
     var config = {
       childList : true,
-      //FIXME - localdom.2
+      //FIXME - directedlayout.2 - also monitor attribute changes...maybe? wouldn't hurt for conpleteness n pretty darn easy 
       subtree : true
     };
     this.@LocalDomMutations::observer.observe(
@@ -284,7 +284,7 @@ public class LocalDomMutations {
 					if (!removed.contains(addedRemote)) {
 						boolean alreadyInChildList = childNodesModified.local()
 								.getChildren().stream()
-								.map(child -> child.node.remote())
+								.map(child -> child.node().remote())
 								.anyMatch(node -> node == addedRemote);
 						if (alreadyInChildList) {
 							log(() -> Ax.format(

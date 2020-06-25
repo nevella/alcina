@@ -72,7 +72,6 @@ import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -246,7 +245,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				transformSequencer.getHighestVisibleTransactionTimestamp(),
 				store, store.applyTxToGraphCounter.getAndIncrement(), 0L);
 		// get non-many-many obj
-		store.threads.lock(true);
 		// lazy tables, load a segment (for large db dev work)
 		if (domainDescriptor.getDomainSegmentLoader() != null) {
 			MetricLogging.get().start("initialise-domain-segment");
@@ -258,9 +256,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				.values()) {
 			Class clazz = descriptor.clazz;
 			prepareTable(descriptor);
-			if (descriptor instanceof PropertyStoreItemDescriptor) {
-				store.transformManager.addPropertyStore(descriptor);
-			}
 			// warmup threadsafe
 			store.cache.getMap(clazz);
 		}
@@ -284,7 +279,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			loadingSegment = false;
 			MetricLogging.get().end("domain-segment");
 		}
-		store.threads.unlock(true);
 		MetricLogging.get().start("postLoad");
 		for (final DomainStoreTask task : domainDescriptor.postLoadTasks) {
 			calls.add(new Callable<Void>() {
@@ -336,11 +330,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("projections");
-		store.setCheckModificationWriteLock(true);
 		store.initialising = false;
-		if (ResourceUtilities.getBoolean(DomainStore.class, "dumpLocks")) {
-			store.threads.dumpLocks = true;
-		}
 		// don't close, but indicate that everything write-y from now shd be
 		// single-threaded
 		warmupConnections.keySet().forEach(conn -> closeWarmupConnection(conn));
@@ -473,9 +463,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						Class clazz = entry.getKey();
 						ids = segmentLoader.filterForQueried(clazz, "id", ids);
 						if (ids.size() > 0) {
-							loadTableOrStoreSegment(clazz, Ax
-									.format(" id in %s", longsToIdClause(ids)),
-									laterLookup);
+							loadTableSegment(clazz, Ax.format(" id in %s",
+									longsToIdClause(ids)), laterLookup);
 						}
 						segmentLoader.loadedInPhase(clazz, ids);
 						entry.getValue().clear();
@@ -511,8 +500,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 								calls.add(() -> {
 									LaterLookup laterLookup = new LaterLookup();
 									laterLookups.add(laterLookup);
-									loadTableOrStoreSegment(property.clazz1,
-											sqlFilter, laterLookup);
+									loadTableSegment(property.clazz1, sqlFilter,
+											laterLookup);
 									return null;
 								});
 							}
@@ -532,8 +521,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							calls.add(() -> {
 								LaterLookup laterLookup = new LaterLookup();
 								laterLookups.add(laterLookup);
-								loadTableOrStoreSegment(property.clazz2,
-										sqlFilter, laterLookup);
+								loadTableSegment(property.clazz2, sqlFilter,
+										laterLookup);
 								return null;
 							});
 						}
@@ -648,56 +637,25 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	private void loadPropertyStore(Class clazz, String sqlFilter,
-			PropertyStoreItemDescriptor propertyStoreItemDescriptor)
-			throws SQLException {
-		Connection conn = getConnection();
-		try {
-			ConnResults connResults = ConnResults.builder().withClazz(clazz)
-					.withConn(conn)
-					.withColumnDescriptors(columnDescriptors.get(clazz))
-					.withLoader(this).withSqlFilter(sqlFilter).build();
-			List<PdOperator> pds = descriptors.get(clazz);
-			propertyStoreItemDescriptor.init(store.cache, pds);
-			String simpleName = clazz.getSimpleName();
-			int count = propertyStoreItemDescriptor.getRoughCount();
-			SystemoutCounter ctr = new SystemoutCounter(20000, 10, count, true);
-			ctr.setLogger(store.metricLogger);
-			Iterator<Object[]> iterator = connResults.iterator();
-			while (iterator.hasNext()) {
-				propertyStoreItemDescriptor.addRow(iterator.next());
-				ctr.tick(simpleName);
-			}
-		} finally {
-			releaseConn(conn);
-		}
-	}
-
+	/*
+	 * sublock is now just used to say "this is a lazy load - so index" - no
+	 * actual locking (not needed since the load only applies to this tx)
+	 */
 	private List<Entity> loadTable(Class clazz, String sqlFilter,
 			ClassIdLock sublock, LaterLookup laterLookup) throws Exception {
+		List<Entity> loaded = (List) loadTable0(clazz, sqlFilter, sublock,
+				laterLookup, (!store.initialising || loadingSegment), false);
+		boolean keepDetached = LooseContext
+				.is(DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
 		if (sublock != null) {
-			store.threads.sublock(sublock, true);
-		}
-		try {
-			List<Entity> loaded = (List) loadTable0(clazz, sqlFilter, sublock,
-					laterLookup, (!store.initialising || loadingSegment),
-					false);
-			boolean keepDetached = LooseContext.is(
-					DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
-			if (sublock != null) {
-				laterLookup.resolve();
-				if (!store.initialising && !keepDetached) {
-					for (Entity entity : loaded) {
-						store.index(entity, true);
-					}
+			laterLookup.resolve();
+			if (!store.initialising && !keepDetached) {
+				for (Entity entity : loaded) {
+					store.index(entity, true);
 				}
 			}
-			return loaded;
-		} finally {
-			if (sublock != null) {
-				store.threads.sublock(sublock, false);
-			}
 		}
+		return loaded;
 	}
 
 	private List<HasId> loadTable0(Class clazz, String sqlFilter,
@@ -770,19 +728,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		return loaded;
 	}
 
-	private void loadTableOrStoreSegment(Class clazz, String sqlFilter,
+	private void loadTableSegment(Class clazz, String sqlFilter,
 			LaterLookup laterLookup) throws Exception {
 		synchronized (clazz) {
 			DomainClassDescriptor<?> descriptor = domainDescriptor.perClass
 					.get(clazz);
 			MetricLogging.get().start(clazz.getSimpleName());
-			if (descriptor instanceof PropertyStoreItemDescriptor) {
-				PropertyStoreItemDescriptor propertyStoreItemDescriptor = (PropertyStoreItemDescriptor) descriptor;
-				loadPropertyStore(clazz, sqlFilter,
-						propertyStoreItemDescriptor);
-			} else {
-				loadTable(clazz, sqlFilter, null, laterLookup);
-			}
+			loadTable(clazz, sqlFilter, null, laterLookup);
 			MetricLogging.get().end(clazz.getSimpleName(), store.metricLogger);
 		}
 	}
@@ -1054,13 +1006,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					@Override
 					public Void call() throws Exception {
 						MetricLogging.get().start(clazz.getSimpleName());
-						if (descriptor instanceof PropertyStoreItemDescriptor) {
-							PropertyStoreItemDescriptor propertyStoreItemDescriptor = (PropertyStoreItemDescriptor) descriptor;
-							loadPropertyStore(clazz, null,
-									propertyStoreItemDescriptor);
-						} else {
-							loadTable(clazz, "", null, warmupLaterLookup());
-						}
+						loadTable(clazz, "", null, warmupLaterLookup());
 						MetricLogging.get().end(clazz.getSimpleName(),
 								store.metricLogger);
 						return null;

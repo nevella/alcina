@@ -56,6 +56,7 @@ public class MainTabPanel extends TabPanel {
 	private SimplePanel noTabContentHolder = new SimplePanel();
 
 	private TopicListener<LoginState> visListener = new TopicListener<LoginState>() {
+		@Override
 		public void topicPublished(String key, LoginState message) {
 			refreshButtonPanelVis();
 		}
@@ -104,10 +105,11 @@ public class MainTabPanel extends TabPanel {
 		vp.add(noTabContentHolder);
 		vp.setWidth("100%");
 		addBeforeSelectionHandler(new BeforeSelectionHandler<Integer>() {
+			@Override
 			public void onBeforeSelection(BeforeSelectionEvent<Integer> event) {
 				int tabIndex = event.getItem();
 				getDeckPanel().setVisible(tabIndex >= 0);
-				if(tabIndex !=-1){
+				if (tabIndex != -1) {
 					noTabContentHolder.clear();
 				}
 				noTabContentHolder.setVisible(tabIndex == -1);
@@ -225,17 +227,18 @@ public class MainTabPanel extends TabPanel {
 	@Override
 	protected void onAttach() {
 		super.onAttach();
-		PermissionsManager.notifyLoginStateListenerDelta(visListener, true);
+		PermissionsManager.topicLoginState().delta(visListener, true);
 	}
 
 	@Override
 	protected void onDetach() {
-		PermissionsManager.notifyLoginStateListenerDelta(visListener, false);
+		PermissionsManager.topicLoginState().delta(visListener, false);
 		super.onDetach();
 	}
 
 	public static class SimplePanel100pcHeight extends SimplePanel
 			implements HasLayoutInfo {
+		@Override
 		public LayoutInfo getLayoutInfo() {
 			return new LayoutInfo() {
 				@Override
@@ -243,6 +246,7 @@ public class MainTabPanel extends TabPanel {
 					return SimplePanel100pcHeight.this.iterator();
 				}
 
+				@Override
 				public boolean to100percentOfAvailableHeight() {
 					return true;
 				}

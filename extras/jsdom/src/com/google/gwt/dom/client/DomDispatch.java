@@ -456,10 +456,6 @@ public class DomDispatch implements IDomDispatch {
 		LocalDom.flush();
 	}
 
-	void flush() {
-		// FIXME - needed here?
-	}
-
 	public static class RemoteOnlyException
 			extends UnsupportedOperationException {
 		// leave this on element, only element_browser shd call that (on remote

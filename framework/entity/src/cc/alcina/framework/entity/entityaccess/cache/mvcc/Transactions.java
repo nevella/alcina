@@ -11,11 +11,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class Transactions {
 	private static Transactions instance;
@@ -189,7 +189,7 @@ public class Transactions {
 	private AtomicLong transactionIdCounter = new AtomicLong();
 
 	// these will be in commit order
-	private Map<TransactionId, Transaction> committedTransactions = new LinkedHashMap<>();
+	private Object2ObjectLinkedOpenHashMap<TransactionId, Transaction> committedTransactions = new Object2ObjectLinkedOpenHashMap<>();
 
 	private List<Transaction> completedNonDomainCommittedTransactions = new ArrayList<>();
 
@@ -260,6 +260,9 @@ public class Transactions {
 	 * transaction in their set of visible completed transactions, it can be
 	 * compacted with the base layer
 	 * 
+	 * This code relies on the commit ordering of
+	 * Transactions.committedTransactions and Transaction.committedTransactions.
+	 * 
 	 */
 	List<Transaction> getVacuumableCommittedTransactions() {
 		synchronized (transactionMetadataLock) {
@@ -267,21 +270,18 @@ public class Transactions {
 			if (committedTransactions.isEmpty()) {
 				return result;
 			}
-			// // FIXME - can probably optimise sync here (not sure if need to
-			// // tho')
-			TransactionId highestVacuumableId = CommonUtils
-					.last(committedTransactions.keySet().iterator());
+			TransactionId highestVacuumableId = committedTransactions.lastKey();
 			for (Transaction activeTransaction : activeTransactions.values()) {
-				// 'highest vacuumable' commit was visible to this transaction,
-				// so ... good, continue
 				if (activeTransaction.committedTransactions
 						.containsKey(highestVacuumableId)) {
+					// 'highest vacuumable' commit was visible to this
+					// transaction,
+					// so ... good, continue
 					continue;
 				} else {
 					// lower our sights
-					highestVacuumableId = CommonUtils
-							.last(activeTransaction.committedTransactions
-									.keySet().iterator());
+					highestVacuumableId = activeTransaction.committedTransactions
+							.lastKey();
 					if (highestVacuumableId == null) {
 						return result;
 					}
@@ -307,8 +307,8 @@ public class Transactions {
 			TransactionId transactionId = new TransactionId(
 					this.transactionIdCounter.getAndIncrement());
 			transaction.setId(transactionId);
-			transaction.setCommittedTransactions(
-					new LinkedHashMap<>(committedTransactions));
+			transaction.committedTransactions = new Object2ObjectLinkedOpenHashMap<>(
+					committedTransactions);
 			activeTransactions.put(transactionId, transaction);
 		}
 	}

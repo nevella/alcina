@@ -38,6 +38,11 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
+	public NativeEvent createBlurEvent() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final BRElement createBRElement() {
 		return DomDocumentStatic.createBRElement(this);
 	}
@@ -64,8 +69,20 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
+	public NativeEvent createChangeEvent() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final InputElement createCheckInputElement() {
 		return DomDocumentStatic.createCheckInputElement(this);
+	}
+
+	@Override
+	public NativeEvent createClickEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -76,6 +93,18 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	@Override
 	public final TableColElement createColGroupElement() {
 		return DomDocumentStatic.createColGroupElement(this);
+	}
+
+	@Override
+	public NativeEvent createContextMenuEvent() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createDblClickEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -109,6 +138,11 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
+	public NativeEvent createErrorEvent() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final FieldSetElement createFieldSetElement() {
 		return DomDocumentStatic.createFieldSetElement(this);
 	}
@@ -116,6 +150,11 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	@Override
 	public final InputElement createFileInputElement() {
 		return DomDocumentStatic.createFileInputElement(this);
+	}
+
+	@Override
+	public NativeEvent createFocusEvent() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -154,6 +193,12 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
+	public NativeEvent createHtmlEvent(String type, boolean canBubble,
+			boolean cancelable) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final IFrameElement createIFrameElement() {
 		return DomDocumentStatic.createIFrameElement(this);
 	}
@@ -169,8 +214,62 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
+	public NativeEvent createInputEvent() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final ModElement createInsElement() {
 		return DomDocumentStatic.createInsElement(this);
+	}
+
+	@Override
+	public NativeEvent createKeyCodeEvent(String type, boolean ctrlKey,
+			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createKeyEvent(String type, boolean canBubble,
+			boolean cancelable, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int charCode) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -206,6 +305,52 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	@Override
 	public final MetaElement createMetaElement() {
 		return DomDocumentStatic.createMetaElement(this);
+	}
+
+	@Override
+	public NativeEvent createMouseDownEvent(int detail, int screenX,
+			int screenY, int clientX, int clientY, boolean ctrlKey,
+			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createMouseEvent(String type, boolean canBubble,
+			boolean cancelable, int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int button,
+			Element relatedTarget) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createMouseMoveEvent(int detail, int screenX,
+			int screenY, int clientX, int clientY, boolean ctrlKey,
+			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createMouseOutEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int button,
+			Element relatedTarget) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createMouseOverEvent(int detail, int screenX,
+			int screenY, int clientX, int clientY, boolean ctrlKey,
+			boolean altKey, boolean shiftKey, boolean metaKey, int button,
+			Element relatedTarget) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeEvent createMouseUpEvent(int detail, int screenX, int screenY,
+			int clientX, int clientY, boolean ctrlKey, boolean altKey,
+			boolean shiftKey, boolean metaKey, int button) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -284,6 +429,11 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
+	public NativeEvent createScrollEvent() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final SelectElement createSelectElement() {
 		return DomDocumentStatic.createSelectElement(this);
 	}
@@ -348,7 +498,7 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	public Text createTextNode(String data) {
 		TextLocal local = new TextLocal(this, data);
 		Text text = new Text(local);
-		local.registerNode(text);
+		local.putText(text);
 		return text;
 	}
 
@@ -398,8 +548,33 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
+	public void enableScrolling(boolean enable) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public BodyElement getBody() {
 		return (BodyElement) this.bodyElement;
+	}
+
+	@Override
+	public int getBodyOffsetLeft() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int getBodyOffsetTop() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int getClientHeight() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int getClientWidth() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -410,6 +585,21 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	@Override
 	public Element getDocumentElement() {
 		return null;
+	}
+
+	@Override
+	public String getDomain() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Element getElementById(String elementId) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NodeList<Element> getElementsByTagName(String tagName) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -433,12 +623,77 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
-	public Document nodeFor() {
+	public String getReferrer() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int getScrollHeight() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int getScrollLeft() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int getScrollTop() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int getScrollWidth() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getTitle() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public String getURL() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Element getViewportElement() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void importNode(Node node, boolean deep) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isCSS1Compat() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Document node() {
 		return document;
 	}
 
 	@Override
 	public void setNodeValue(String nodeValue) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setScrollLeft(int left) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setScrollTop(int top) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setTitle(String title) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -450,304 +705,5 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	@Override
 	void appendTextContent(StringBuilder builder) {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public NativeEvent createBlurEvent() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createChangeEvent() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createClickEvent(int detail, int screenX, int screenY,
-			int clientX, int clientY, boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createContextMenuEvent() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createDblClickEvent(int detail, int screenX, int screenY,
-			int clientX, int clientY, boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createErrorEvent() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createFocusEvent() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createHtmlEvent(String type, boolean canBubble,
-			boolean cancelable) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createInputEvent() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createKeyCodeEvent(String type, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int keyCode) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int keyCode) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createKeyDownEvent(boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createKeyEvent(String type, boolean canBubble,
-			boolean cancelable, boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int charCode) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createKeyPressEvent(boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int keyCode) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createKeyUpEvent(boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createMouseDownEvent(int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createMouseEvent(String type, boolean canBubble,
-			boolean cancelable, int detail, int screenX, int screenY,
-			int clientX, int clientY, boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int button,
-			Element relatedTarget) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createMouseMoveEvent(int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createMouseOutEvent(int detail, int screenX, int screenY,
-			int clientX, int clientY, boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int button,
-			Element relatedTarget) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createMouseOverEvent(int detail, int screenX,
-			int screenY, int clientX, int clientY, boolean ctrlKey,
-			boolean altKey, boolean shiftKey, boolean metaKey, int button,
-			Element relatedTarget) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createMouseUpEvent(int detail, int screenX, int screenY,
-			int clientX, int clientY, boolean ctrlKey, boolean altKey,
-			boolean shiftKey, boolean metaKey, int button) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NativeEvent createScrollEvent() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public void enableScrolling(boolean enable) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public int getBodyOffsetLeft() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public int getBodyOffsetTop() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public int getClientHeight() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public int getClientWidth() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public String getDomain() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public Element getElementById(String elementId) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public NodeList<Element> getElementsByTagName(String tagName) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public String getReferrer() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public int getScrollHeight() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public int getScrollLeft() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public int getScrollTop() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public int getScrollWidth() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public String getTitle() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public String getURL() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public Element getViewportElement() {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public void importNode(Node node, boolean deep) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public boolean isCSS1Compat() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void setScrollLeft(int left) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public void setScrollTop(int top) {
-		throw new UnsupportedOperationException();
-		
-	}
-
-	@Override
-	public void setTitle(String title) {
-		throw new UnsupportedOperationException();
-		
 	}
 }

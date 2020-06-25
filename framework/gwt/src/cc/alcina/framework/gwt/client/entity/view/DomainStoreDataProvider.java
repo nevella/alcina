@@ -39,7 +39,7 @@ import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder.SortableColumn;
@@ -63,8 +63,8 @@ public class DomainStoreDataProvider<T extends Entity>
 		topicInvalidateAll().publish(null);
 	}
 
-	public static TopicSupport<Void> topicInvalidateAll() {
-		return new TopicSupport<>(TOPIC_INVALIDATE_ALL);
+	public static Topic<Void> topicInvalidateAll() {
+		return Topic.global(TOPIC_INVALIDATE_ALL);
 	}
 
 	private EntitySearchDefinition searchDefinition;
@@ -430,9 +430,9 @@ public class DomainStoreDataProvider<T extends Entity>
 			if (vr.getStart() == 0) {
 				int length = vr.getLength();
 				int available = start + values.size();
-				// FIXME - hardcoded visible size - this is sort of tricky (I
-				// almost
-				// think design issue with gwt)
+				// Hardcoded visible size - this is sort of tricky (I
+				// almost think design issue with the gwt component...but
+				// probably it's just me)
 				if (available <= visibleRecordsSize
 						&& length > visibleRecordsSize) {
 					hasData.setVisibleRange(0, available);

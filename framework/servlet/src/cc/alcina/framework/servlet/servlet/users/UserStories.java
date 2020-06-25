@@ -35,7 +35,7 @@ import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
@@ -48,8 +48,8 @@ public class UserStories {
 	public static final String TOPIC_USER_STORIES_EVENT_OCCURRED = UserStories.class
 			.getName() + "." + "TOPIC_USER_STORIES_EVENT_OCCURRED";
 
-	public static TopicSupport<ObjectNode> topicUserStoriesEvents() {
-		return new TopicSupport<>(TOPIC_USER_STORIES_EVENT_OCCURRED);
+	public static Topic<ObjectNode> topicUserStoriesEvents() {
+		return Topic.global(TOPIC_USER_STORIES_EVENT_OCCURRED);
 	}
 
 	private String html;
