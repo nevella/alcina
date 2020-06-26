@@ -1228,7 +1228,10 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	protected boolean isIgnorePropertyChangesForEvent(PropertyChangeEvent evt) {
-		return evt.getSource() == ignorePropertyChangesTo;
+		return evt.getSource() == ignorePropertyChangesTo
+				|| (evt.getSource() instanceof WrappedObject
+						&& ((WrappedObject) evt.getSource())
+								.getObject() == ignorePropertyChangesTo);
 	}
 
 	@Override

@@ -348,12 +348,18 @@ public class GraphProjection {
 				|| SafeHtml.class.isAssignableFrom(c);
 	}
 
+	/*
+	 * An artifact from pre-mvcc days
+	 */
 	public static <T> T maxDepthProjectionAndRegister(T t, int depth) {
 		return maxDepthProjectionAndRegister(t, depth, null);
 	}
 
 	public static <T> T maxDepthProjectionAndRegister(T t, int depth,
 			GraphProjectionFieldFilter fieldFilter) {
+		if (t instanceof MvccObject) {
+			return t;
+		}
 		CollectionProjectionFilterWithCache dataFilter = new CollectionProjectionFilterWithCache();
 		GraphProjections projections = GraphProjections.defaultProjections()
 				.dataFilter(dataFilter).maxDepth(depth);
