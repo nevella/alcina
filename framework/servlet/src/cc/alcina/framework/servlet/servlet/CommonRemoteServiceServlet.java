@@ -71,6 +71,7 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
@@ -886,9 +887,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		};
 
 		protected ActionLogItem trackerToResult(final RemoteAction action) {
-			ActionLogItem logItem = Registry
-					.impl(CommonPersistenceProvider.class)
-					.getCommonPersistenceExTransaction()
+			ActionLogItem logItem = AlcinaPersistentEntityImpl
 					.getNewImplementationInstance(ActionLogItem.class);
 			logItem.setActionClass(action.getClass());
 			logItem.setActionDate(new Date());

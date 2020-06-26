@@ -956,7 +956,9 @@ public class DevConsoleDebugCommands {
 			regexFilter = filterArgvParam.value;
 			argv = filterArgvParam.argv;
 			filterArgvParam = new FilterArgvParam(argv, "-maxLength");
-			maxRecordLength = Integer.parseInt(filterArgvParam.value);
+			if (filterArgvParam.value != null) {
+				maxRecordLength = Integer.parseInt(filterArgvParam.value);
+			}
 			argv = filterArgvParam.argv;
 			List<String> exceptions = Arrays.asList(
 					"UNEXPECTED_SERVLET_EXCEPTION", "ALERT_GENERATION_FAILURE",

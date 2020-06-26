@@ -78,7 +78,6 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.NamedThreadFactory;
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentLoaderPhase;
@@ -749,8 +748,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		try {
 			CachingMap<Long, DomainTransformRequestPersistent> loadedRequests = new CachingMap<>(
 					id -> {
-						DomainTransformRequestPersistent request = CommonPersistenceProvider
-								.get().getCommonPersistenceExTransaction()
+						DomainTransformRequestPersistent request = AlcinaPersistentEntityImpl
 								.getNewImplementationInstance(
 										DomainTransformRequestPersistent.class);
 						request.setId(id);

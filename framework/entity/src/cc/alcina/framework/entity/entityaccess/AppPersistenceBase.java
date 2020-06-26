@@ -209,7 +209,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	}
 
 	protected G createBlankGroup() {
-		return (G) getCommonPersistence()
+		return (G) AlcinaPersistentEntityImpl
 				.getNewImplementationInstance(IGroup.class);
 	}
 
