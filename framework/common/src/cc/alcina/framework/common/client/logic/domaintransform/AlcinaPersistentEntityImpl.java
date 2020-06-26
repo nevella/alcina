@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
@@ -22,10 +22,6 @@ public interface AlcinaPersistentEntityImpl {
 	}
 
 	static <A> A getNewImplementationInstance(Class<A> clazz) {
-		try {
-			return getImplementation(clazz).newInstance();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return Reflections.classLookup().newInstance(getImplementation(clazz));
 	}
 }
