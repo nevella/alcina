@@ -52,14 +52,14 @@ public class DateBoxCustomiser implements Customiser, BoundWidgetProvider {
 		}
 
 		public static final native String render0(double millis) /*-{
-      var jsDate = new Date(millis);
-      function pad(n) {
-        return n < 10 ? '0' + n : '' + n;
-      }
-      return jsDate.getUTCFullYear() + "-" + pad(jsDate.getUTCMonth() + 1)
-          + "-" + pad(jsDate.getUTCDate());
-
-		}-*/;
+																	var jsDate = new Date(millis);
+																	function pad(n) {
+																	return n < 10 ? '0' + n : '' + n;
+																	}
+																	return jsDate.getUTCFullYear() + "-" + pad(jsDate.getUTCMonth() + 1)
+																	+ "-" + pad(jsDate.getUTCDate());
+																	
+																	}-*/;
 	}
 
 	@ClientInstantiable

@@ -80,8 +80,8 @@ public class TestResult {
 	@Override
 	public String toString() {
 		String template = "%s [Result]: %s %s %sms";
-		String s = Ax.format(template, getName(), getResultType(),
-				getMessage(), testDuration(true));
+		String s = Ax.format(template, getName(), getResultType(), getMessage(),
+				testDuration(true));
 		if (isRootResult()) {
 			s += Ax.format(",  %sms excl. admin, %sms total",
 					testDurationExcludingAdmin(), testDuration(false));

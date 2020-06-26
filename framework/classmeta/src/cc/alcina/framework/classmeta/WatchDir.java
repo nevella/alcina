@@ -58,7 +58,6 @@ public abstract class WatchDir {
 
 	private boolean trace = false;
 
-	
 	static <T> WatchEvent<T> cast(WatchEvent<?> event) {
 		return (WatchEvent<T>) event;
 	}
@@ -156,7 +155,7 @@ public abstract class WatchDir {
 						// ignore to keep sample readbale
 					}
 				}
-				handleEvent(event,name,child);
+				handleEvent(event, name, child);
 			}
 			// reset key and remove from set if directory no longer accessible
 			boolean valid = key.reset();
@@ -170,5 +169,6 @@ public abstract class WatchDir {
 		}
 	}
 
-	protected abstract void handleEvent(WatchEvent<?> event, Path name, Path child);
+	protected abstract void handleEvent(WatchEvent<?> event, Path name,
+			Path child);
 }

@@ -48,7 +48,6 @@ public class CookieHelper {
 				PermissionsManager.get().getUserName(), false);
 	}
 
-	
 	public List<Cookie> getAddedCookies(HttpServletRequest req) {
 		List<Cookie> addedCookies = (List<Cookie>) req
 				.getAttribute(ADDED_COOKIES_ATTR);
@@ -137,8 +136,8 @@ public class CookieHelper {
 		addToRqAndRsp(request, response, cookie);
 	}
 
-	public void addToRqAndRsp(HttpServletRequest request, HttpServletResponse response,
-			Cookie cookie) {
+	public void addToRqAndRsp(HttpServletRequest request,
+			HttpServletResponse response, Cookie cookie) {
 		getAddedCookies(request).add(cookie);
 		response.addCookie(cookie);
 	}

@@ -85,8 +85,11 @@ public abstract class LuxModalPanel extends Composite {
 
 	protected boolean validate() {
 		for (ContentViewSections sectionsBuilder : builders) {
-			// FIXME - scroll into view - validate should return a
+			// FIXME - directedlayout.2 - scroll into view - validate should
+			// return a
 			// validationresult w widget
+			//
+			// check Jumail's rework of validation?
 			if (!sectionsBuilder.validateSync()) {
 				return false;
 			}

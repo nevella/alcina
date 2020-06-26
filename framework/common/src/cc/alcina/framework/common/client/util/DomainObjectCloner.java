@@ -29,7 +29,6 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 
-
 /**
  *
  * @author Nick Reddel
@@ -101,8 +100,7 @@ public class DomainObjectCloner extends CloneHelper {
 				provisionalObjects.add(obj);
 				return (T) obj;
 			} else {
-				Entity obj = TransformManager.get()
-						.createDomainObject(clazz);
+				Entity obj = TransformManager.get().createDomainObject(clazz);
 				return (T) obj;
 			}
 		} else {

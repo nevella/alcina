@@ -48,7 +48,8 @@ public class NodeChain {
 			List<Node> kids = XmlUtils.nodeListToList(parent.getChildNodes());
 			int kidIndex = kids.indexOf(current);
 			boolean atEdgeClosestToDirection = after
-					? kidIndex == kids.size() - 1 : kidIndex == 0;
+					? kidIndex == kids.size() - 1
+					: kidIndex == 0;
 			boolean cloneParent = result.splitNotIncluding.length() > 0
 					|| !atEdgeClosestToDirection;
 			if (cloneParent) {

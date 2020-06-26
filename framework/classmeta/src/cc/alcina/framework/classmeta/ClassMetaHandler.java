@@ -17,52 +17,52 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class ClassMetaHandler extends AbstractHandler {
-    ClasspathScannerResolver classpathScannerResolver = new ClasspathScannerResolver();
+	ClasspathScannerResolver classpathScannerResolver = new ClasspathScannerResolver();
 
-    @Override
-    public void handle(String target, Request baseRequest,
-            HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
-        try {
-            LooseContext.pushWithTrue(
-                    KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER);
-            MetricLogging.get().start("class-meta");
-            ServletInputStream inputStream = request.getInputStream();
-            byte[] byteArray = ResourceUtilities
-                    .readStreamToByteArray(inputStream);
-            String payload = new String(byteArray, "UTF-8");
-            ClassMetaRequest typedRequest = KryoUtils
-                    .deserializeFromBase64(payload, ClassMetaRequest.class);
-            ClassMetaResponse typedResponse = new ClassMetaResponse();
-            typedResponse.request = typedRequest;
-            switch (typedRequest.type) {
-            case Classes:
-                boolean debug = false;
-                String translationKey = request.getParameter("translation");
-                typedResponse.cache = classpathScannerResolver
-                        .handle(typedRequest, translationKey, debug);
-                if (debug) {
-                    ResourceUtilities.logToFile(typedResponse.cache.dump());
-                }
-                break;
-            default:
-                throw new UnsupportedOperationException();
-            }
-            KryoUtils.serializeToStream(typedResponse,
-                    response.getOutputStream());
-            response.setContentType("application/octet-stream");
-            response.setStatus(HttpServletResponse.SC_OK);
-            baseRequest.setHandled(true);
-            Ax.out("Served class meta: %s", typedResponse);
-            MetricLogging.get().end("class-meta");
-        } catch (Exception e) {
-            throw new ServletException(e);
-        } finally {
-            LooseContext.pop();
-        }
-    }
+	@Override
+	public void handle(String target, Request baseRequest,
+			HttpServletRequest request, HttpServletResponse response)
+			throws IOException, ServletException {
+		try {
+			LooseContext.pushWithTrue(
+					KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER);
+			MetricLogging.get().start("class-meta");
+			ServletInputStream inputStream = request.getInputStream();
+			byte[] byteArray = ResourceUtilities
+					.readStreamToByteArray(inputStream);
+			String payload = new String(byteArray, "UTF-8");
+			ClassMetaRequest typedRequest = KryoUtils
+					.deserializeFromBase64(payload, ClassMetaRequest.class);
+			ClassMetaResponse typedResponse = new ClassMetaResponse();
+			typedResponse.request = typedRequest;
+			switch (typedRequest.type) {
+			case Classes:
+				boolean debug = false;
+				String translationKey = request.getParameter("translation");
+				typedResponse.cache = classpathScannerResolver
+						.handle(typedRequest, translationKey, debug);
+				if (debug) {
+					ResourceUtilities.logToFile(typedResponse.cache.dump());
+				}
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
+			KryoUtils.serializeToStream(typedResponse,
+					response.getOutputStream());
+			response.setContentType("application/octet-stream");
+			response.setStatus(HttpServletResponse.SC_OK);
+			baseRequest.setHandled(true);
+			Ax.out("Served class meta: %s", typedResponse);
+			MetricLogging.get().end("class-meta");
+		} catch (Exception e) {
+			throw new ServletException(e);
+		} finally {
+			LooseContext.pop();
+		}
+	}
 
-    public void refreshJars() {
-        classpathScannerResolver.refreshJars();
-    }
+	public void refreshJars() {
+		classpathScannerResolver.refreshJars();
+	}
 }

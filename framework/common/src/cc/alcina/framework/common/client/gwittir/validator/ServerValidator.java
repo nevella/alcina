@@ -50,8 +50,7 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 		return true;
 	}
 
-	public static Topic<ServerValidator>
-			topicBeforeServerValidationSend() {
+	public static Topic<ServerValidator> topicBeforeServerValidationSend() {
 		return Topic.global(TOPIC_SERVER_VALIDATION_BEFORE_SEND);
 	}
 
@@ -167,7 +166,6 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 					cleanUp();
 				}
 
-				
 				void cleanUp() {
 					validating = false;
 					validated = true;
@@ -182,7 +180,6 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 					psve.setSourceWidget(null);
 				}
 
-				
 				void resolveFeedback(
 						ServerValidator lastValidatorWithException) {
 					if (psve.feedback == null) {

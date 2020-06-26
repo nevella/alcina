@@ -47,109 +47,109 @@ import com.barbarysoftware.watchservice.WatchableFile;
 import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class WatchDirOsX {
-    static <T> WatchEvent<T> cast(WatchEvent<?> event) {
-        return (WatchEvent<T>) event;
-    }
+	static <T> WatchEvent<T> cast(WatchEvent<?> event) {
+		return (WatchEvent<T>) event;
+	}
 
-    private final WatchService watcher;
+	private final WatchService watcher;
 
-    private final Map<WatchKey, Path> keys;
+	private final Map<WatchKey, Path> keys;
 
-    public boolean trace = true;
+	public boolean trace = true;
 
-    private File filter;
+	private File filter;
 
-    private boolean closed;
+	private boolean closed;
 
-    /**
-     * Creates a WatchService and registers the given directory
-     */
-    WatchDirOsX(Path dir) throws IOException {
-        this.watcher = WatchService.newWatchService();
-        this.keys = new HashMap<>();
-        register(dir);
-    }
+	/**
+	 * Creates a WatchService and registers the given directory
+	 */
+	WatchDirOsX(Path dir) throws IOException {
+		this.watcher = WatchService.newWatchService();
+		this.keys = new HashMap<>();
+		register(dir);
+	}
 
-    public void close() {
-        try {
-            watcher.close();
-            closed = true;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+	public void close() {
+		try {
+			watcher.close();
+			closed = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-    /**
-     * Register the given directory with the WatchService
-     */
-    private void register(Path dir) throws IOException {
-        File file = dir.toFile();
-        if (file.isDirectory()) {
-        } else {
-            this.filter = file;
-            file = file.getParentFile();
-        }
-        WatchableFile key = new WatchableFile(file);
-        WatchKey watchKey = key.register(watcher, ENTRY_CREATE, ENTRY_DELETE,
-                ENTRY_MODIFY);
-        if (trace) {
-            System.out.format("register: %s\n", dir);
-        }
-        keys.put(watchKey, dir);
-    }
+	/**
+	 * Register the given directory with the WatchService
+	 */
+	private void register(Path dir) throws IOException {
+		File file = dir.toFile();
+		if (file.isDirectory()) {
+		} else {
+			this.filter = file;
+			file = file.getParentFile();
+		}
+		WatchableFile key = new WatchableFile(file);
+		WatchKey watchKey = key.register(watcher, ENTRY_CREATE, ENTRY_DELETE,
+				ENTRY_MODIFY);
+		if (trace) {
+			System.out.format("register: %s\n", dir);
+		}
+		keys.put(watchKey, dir);
+	}
 
-    protected abstract void handleEvent(WatchEvent<?> event, File file);
+	protected abstract void handleEvent(WatchEvent<?> event, File file);
 
-    /**
-     * Process all events for keys queued to the watcher
-     */
-    void processEvents() {
-        for (;;) {
-            // wait for key to be signalled
-            WatchKey key;
-            try {
-                key = watcher.take();
-            } catch (InterruptedException x) {
-                return;
-            } catch (ClosedWatchServiceException cwse) {
-                return;
-            }
-            try {
-                for (WatchEvent<?> event : key.pollEvents()) {
-                    WatchEvent.Kind kind = event.kind();
-                    // TBD - provide example of how OVERFLOW event is handled
-                    if (kind == OVERFLOW) {
-                        continue;
-                    }
-                    // Context for directory entry event is the file name of
-                    // entry
-                    WatchEvent<File> ev = cast(event);
-                    File file = ev.context();
-                    if (trace) {
-                        System.out.format("%s: %s\n", event.kind().name(),
-                                file);
-                    }
-                    if (filter != null && !filter.equals(file)) {
-                        Ax.out("\t--> filtered (%s only)", filter.getName());
-                    } else {
-                        handleEvent(event, file);
-                    }
-                }
-            } finally {
-                if (closed) {
-                    break;
-                }
-                // reset key and remove from set if directory no longer
-                // accessible
-                boolean valid = key.reset();
-                if (!valid) {
-                    keys.remove(key);
-                    // all directories are inaccessible
-                    if (keys.isEmpty()) {
-                        break;
-                    }
-                }
-            }
-        }
-    }
+	/**
+	 * Process all events for keys queued to the watcher
+	 */
+	void processEvents() {
+		for (;;) {
+			// wait for key to be signalled
+			WatchKey key;
+			try {
+				key = watcher.take();
+			} catch (InterruptedException x) {
+				return;
+			} catch (ClosedWatchServiceException cwse) {
+				return;
+			}
+			try {
+				for (WatchEvent<?> event : key.pollEvents()) {
+					WatchEvent.Kind kind = event.kind();
+					// TBD - provide example of how OVERFLOW event is handled
+					if (kind == OVERFLOW) {
+						continue;
+					}
+					// Context for directory entry event is the file name of
+					// entry
+					WatchEvent<File> ev = cast(event);
+					File file = ev.context();
+					if (trace) {
+						System.out.format("%s: %s\n", event.kind().name(),
+								file);
+					}
+					if (filter != null && !filter.equals(file)) {
+						Ax.out("\t--> filtered (%s only)", filter.getName());
+					} else {
+						handleEvent(event, file);
+					}
+				}
+			} finally {
+				if (closed) {
+					break;
+				}
+				// reset key and remove from set if directory no longer
+				// accessible
+				boolean valid = key.reset();
+				if (!valid) {
+					keys.remove(key);
+					// all directories are inaccessible
+					if (keys.isEmpty()) {
+						break;
+					}
+				}
+			}
+		}
+	}
 }

@@ -29,7 +29,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 
-
 /**
  *
  * @author Nick Reddel

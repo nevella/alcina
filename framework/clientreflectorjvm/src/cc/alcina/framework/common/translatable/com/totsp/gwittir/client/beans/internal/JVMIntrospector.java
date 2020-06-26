@@ -18,13 +18,13 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
     @Override
     public BeanDescriptor getDescriptor(Object object) {
-        // TODO Auto-generated method stub
+        
         return null;
     }
 
     @Override
     public Class resolveClass(Object instance) {
-        // TODO Auto-generated method stub
+        
         return null;
     }
 }

@@ -176,7 +176,7 @@ public class NodeIteratorImpl implements NodeIterator {
 			} else
 				continue accepted_loop;
 		} // while (!accepted) {
-		// no nodes, or no accepted nodes.
+			// no nodes, or no accepted nodes.
 		return null;
 	}
 
@@ -317,7 +317,7 @@ public class NodeIteratorImpl implements NodeIterator {
 				parent = parent.getParentNode();
 			}
 		} // while (parent != null && parent != fRoot) {
-		// end of list, return null
+			// end of list, return null
 		return null;
 	}
 

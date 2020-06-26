@@ -347,7 +347,7 @@ public class Consort<D> {
 		wasPlayed(player, resultantStates, true);
 	}
 
-	// FIXME.applifecycle.consort - cleanup - this works - unless we want some
+	// FIXME - applifecycle.consort - cleanup - this works - unless we want some
 	// sort of threaded
 	// queue/consumer model - but it ain't so pretty
 	//
@@ -364,7 +364,7 @@ public class Consort<D> {
 		playedCount++;
 		assert playing.contains(player);
 		playing.remove(player);
-		// FIXME.applifecycle.consort - warn if resultantstates >1 and a
+		// FIXME - applifecycle.consort - warn if resultantstates >1 and a
 		// non-parallel consort?
 		modifyStates(resultantStates, true);
 		metricLogger.debug(Ax.format("%s     %s: %s ms",

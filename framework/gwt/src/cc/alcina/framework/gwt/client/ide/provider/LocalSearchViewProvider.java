@@ -136,7 +136,6 @@ public class LocalSearchViewProvider implements ViewProvider {
 			search();
 		}
 
-		
 		protected void search() {
 			resultsHolder.clear();
 			Object bean = ClientReflector.get()

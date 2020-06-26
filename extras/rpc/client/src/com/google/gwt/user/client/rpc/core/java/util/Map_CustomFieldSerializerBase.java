@@ -28,7 +28,6 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  */
 @SuppressWarnings("rawtypes")
 public final class Map_CustomFieldSerializerBase {
-	
 	public static void deserialize(SerializationStreamReader streamReader,
 			Map instance) throws SerializationException {
 		int size = streamReader.readInt();
@@ -39,7 +38,6 @@ public final class Map_CustomFieldSerializerBase {
 		}
 	}
 
-	
 	public static void serialize(SerializationStreamWriter streamWriter,
 			Map instance) throws SerializationException {
 		int size = instance.size();

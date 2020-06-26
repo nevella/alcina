@@ -151,7 +151,8 @@ public class BackupFiles extends Task {
 			public int compare(File o1, File o2) {
 				return o1.lastModified() < o2.lastModified() ? -1
 						: o1.lastModified() == o2.lastModified()
-								? -o1.getName().compareTo(o2.getName()) : 1;
+								? -o1.getName().compareTo(o2.getName())
+								: 1;
 			}
 		});
 		for (int i = backups.size() - 1; i >= 0; i--) {

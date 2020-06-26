@@ -130,7 +130,6 @@ public class DomainStoreQueryTranslator {
 	}
 
 	private void addOrders(DomainStoreCriteria criteria) {
-		// TODO Auto-generated method stub
 	}
 
 	private void addRestrictions(DomainStoreCriteria criteria)

@@ -31,7 +31,8 @@ public class UrlBuilder {
 				sb.append(k);
 				sb.append("=");
 				try {
-					sb.append(Registry.impl(UrlComponentEncoder.class).encode(v));
+					sb.append(
+							Registry.impl(UrlComponentEncoder.class).encode(v));
 				} catch (Exception ex) {
 					throw new WrappedRuntimeException(ex);
 				}

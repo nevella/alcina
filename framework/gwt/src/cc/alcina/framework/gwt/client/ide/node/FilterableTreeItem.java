@@ -23,74 +23,74 @@ import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWi
  * @author Nick Reddel
  */
 public abstract class FilterableTreeItem extends TreeItem implements
-        VisualFilterableWithParentEnforcesChildVisibility, NodeFactoryProvider {
-    private NodeFactory nodeFactory;
+		VisualFilterableWithParentEnforcesChildVisibility, NodeFactoryProvider {
+	private NodeFactory nodeFactory;
 
-    public FilterableTreeItem() {
-    }
+	public FilterableTreeItem() {
+	}
 
-    protected abstract void renderHtml();
+	protected abstract void renderHtml();
 
-    @Override
-    protected void maybeLazilyRender() {
-        renderHtml();
-    }
+	@Override
+	protected void maybeLazilyRender() {
+		renderHtml();
+	}
 
-    public FilterableTreeItem(NodeFactory nodeFactory) {
-        this.nodeFactory = nodeFactory;
-    }
+	public FilterableTreeItem(NodeFactory nodeFactory) {
+		this.nodeFactory = nodeFactory;
+	}
 
-    public boolean filter(String filterText) {
-        return filter(filterText, false);
-    }
+	public boolean filter(String filterText) {
+		return filter(filterText, false);
+	}
 
-    @Override
-    protected void ensureElements(boolean isRoot) {
-        if (!isRoot) {
-            return;
-        }
-        super.ensureElements(isRoot);
-    }
+	@Override
+	protected void ensureElements(boolean isRoot) {
+		if (!isRoot) {
+			return;
+		}
+		super.ensureElements(isRoot);
+	}
 
-    public boolean filter(String filterText, boolean enforceVisible) {
-        boolean satisfiesFilter = satisfiesFilter(filterText);
-        boolean satisfiesFilterThisNode = satisfiesFilter;
-        for (int i = 0; i < getChildCount(); i++) {
-            TreeItem child = getChild(i);
-            if (child instanceof VisualFilterableWithParentEnforcesChildVisibility) {
-                VisualFilterableWithParentEnforcesChildVisibility vf = (VisualFilterableWithParentEnforcesChildVisibility) child;
-                satisfiesFilterThisNode |= vf.filter(filterText,
-                        satisfiesFilter | enforceVisible);
-            }
-        }
-        satisfiesFilterThisNode |= getText().toLowerCase().contains(filterText);
-        boolean toVisible = satisfiesFilterThisNode || enforceVisible;
-        if(isUnrendered()) {
-            if(!toVisible){
-                return satisfiesFilterThisNode;
-            }else{
-                ensureElements();
-            }
-        }
-        setVisible(toVisible);
-        if (satisfiesFilterThisNode && filterText != "") {
-            setState(true, false);
-        }
-        return satisfiesFilterThisNode;
-    }
+	public boolean filter(String filterText, boolean enforceVisible) {
+		boolean satisfiesFilter = satisfiesFilter(filterText);
+		boolean satisfiesFilterThisNode = satisfiesFilter;
+		for (int i = 0; i < getChildCount(); i++) {
+			TreeItem child = getChild(i);
+			if (child instanceof VisualFilterableWithParentEnforcesChildVisibility) {
+				VisualFilterableWithParentEnforcesChildVisibility vf = (VisualFilterableWithParentEnforcesChildVisibility) child;
+				satisfiesFilterThisNode |= vf.filter(filterText,
+						satisfiesFilter | enforceVisible);
+			}
+		}
+		satisfiesFilterThisNode |= getText().toLowerCase().contains(filterText);
+		boolean toVisible = satisfiesFilterThisNode || enforceVisible;
+		if (isUnrendered()) {
+			if (!toVisible) {
+				return satisfiesFilterThisNode;
+			} else {
+				ensureElements();
+			}
+		}
+		setVisible(toVisible);
+		if (satisfiesFilterThisNode && filterText != "") {
+			setState(true, false);
+		}
+		return satisfiesFilterThisNode;
+	}
 
-    public NodeFactory getNodeFactory() {
-        return this.nodeFactory;
-    }
+	public NodeFactory getNodeFactory() {
+		return this.nodeFactory;
+	}
 
-    @Override
-    public String getText() {
-       return Ax.blankToEmpty(getText0());
-    }
+	@Override
+	public String getText() {
+		return Ax.blankToEmpty(getText0());
+	}
 
-    protected abstract String getText0() ;
+	protected abstract String getText0();
 
-    protected boolean satisfiesFilter(String filterText) {
-        return getText().toLowerCase().contains(filterText);
-    }
+	protected boolean satisfiesFilter(String filterText) {
+		return getText().toLowerCase().contains(filterText);
+	}
 }

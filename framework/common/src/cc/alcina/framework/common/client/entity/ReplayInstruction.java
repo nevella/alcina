@@ -16,7 +16,7 @@ public class ReplayInstruction {
 
 	public static final String REPLAY_TEXT_WILDCARD = "::replay-wildcard";
 
-	public static String createReplayBody( String path,String text,
+	public static String createReplayBody(String path, String text,
 			String valueMessage) {
 		String body = Ax.format("%s :: [%s]%s", path, text, valueMessage);
 		return body;

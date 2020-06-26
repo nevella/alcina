@@ -8,8 +8,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfo;
 
 public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
-	default boolean debugInequivalence(PropertyInfo pd, Object o1,
-			Object o2) {
+	default boolean debugInequivalence(PropertyInfo pd, Object o1, Object o2) {
 		return false;
 	}
 

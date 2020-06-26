@@ -62,13 +62,13 @@ public class DomainTransformException extends Exception
 	}
 
 	public DomainTransformException(DomainTransformEvent event,
-            DomainTransformExceptionType type, String message) {
-	    this(message);
-	    this.event = event;
-        this.type = type;
-    }
+			DomainTransformExceptionType type, String message) {
+		this(message);
+		this.event = event;
+		this.type = type;
+	}
 
-    public String getDetail() {
+	public String getDetail() {
 		return detail;
 	}
 
@@ -91,7 +91,7 @@ public class DomainTransformException extends Exception
 	public boolean irresolvable() {
 		return type == DomainTransformExceptionType.INVALID_AUTHENTICATION
 				|| type == DomainTransformExceptionType.TOO_MANY_EXCEPTIONS
-						|| type == DomainTransformExceptionType.UNKNOWN;
+				|| type == DomainTransformExceptionType.UNKNOWN;
 	}
 
 	public boolean isSilent() {

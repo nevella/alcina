@@ -8,34 +8,34 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
 public class LuxLink extends Widget implements HasClickHandlers {
-    boolean addedCancelHandler = false;
+	boolean addedCancelHandler = false;
 
-    public LuxLink() {
-        setElement(Document.get().createElement("A"));
-    }
+	public LuxLink() {
+		setElement(Document.get().createElement("A"));
+	}
 
-    @Override
-    public HandlerRegistration addClickHandler(ClickHandler handler) {
-        if (!addedCancelHandler) {
-            addDomHandler(event -> event.preventDefault(),
-                    ClickEvent.getType());
-            addedCancelHandler = true;
-        }
-        return addDomHandler(handler, ClickEvent.getType());
-    }
+	@Override
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		if (!addedCancelHandler) {
+			addDomHandler(event -> event.preventDefault(),
+					ClickEvent.getType());
+			addedCancelHandler = true;
+		}
+		return addDomHandler(handler, ClickEvent.getType());
+	}
 
-    public LuxLink href(String href) {
-        getElement().setAttribute("href", href);
-        return this;
-    }
+	public LuxLink href(String href) {
+		getElement().setAttribute("href", href);
+		return this;
+	}
 
-    public LuxLink style(LuxStyleType style) {
-        style.set(this);
-        return this;
-    }
+	public LuxLink style(LuxStyleType style) {
+		style.set(this);
+		return this;
+	}
 
-    public LuxLink text(String text) {
-        getElement().setInnerText(text);
-        return this;
-    }
+	public LuxLink text(String text) {
+		getElement().setInnerText(text);
+		return this;
+	}
 }

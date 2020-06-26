@@ -994,25 +994,25 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	}
 
 	final native String getClassNameSvg() /*-{
-    var elem = this.@com.google.gwt.dom.client.Element::typedRemote()();
-    var cn = elem.className;
-    //note - someone says IE DOM objects don't support - hence try/catch
-    try {
-      if (cn.hasOwnProperty("baseVal")) {
-        cn = cn.baseVal;
-      }
-      if ((typeof cn).toLowerCase() != "string") {
-        if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
-          cn = 'svg-string';
-        } else {
-          debugger;
-        }
-      }
-    } catch (e) {
-      return "";
-    }
-    return cn;
-	}-*/;
+											var elem = this.@com.google.gwt.dom.client.Element::typedRemote()();
+											var cn = elem.className;
+											//note - someone says IE DOM objects don't support - hence try/catch
+											try {
+											if (cn.hasOwnProperty("baseVal")) {
+											cn = cn.baseVal;
+											}
+											if ((typeof cn).toLowerCase() != "string") {
+											if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
+											cn = 'svg-string';
+											} else {
+											debugger;
+											}
+											}
+											} catch (e) {
+											return "";
+											}
+											return cn;
+											}-*/;
 
 	void pendingResolution() {
 		this.pendingResolution = true;

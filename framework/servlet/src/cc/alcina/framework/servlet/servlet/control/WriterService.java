@@ -18,19 +18,19 @@ import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableSe
  */
 @RegistryLocation(registryPoint = WriterService.class)
 public abstract class WriterService
-        implements RegistrableService, LifecycleService {
-    @Override
-    public void appShutdown() {
-        // this should be called earlier than the general service shutdown - for
-        // the mo' at least
-        // shutdown();
-    }
+		implements RegistrableService, LifecycleService {
+	@Override
+	public void appShutdown() {
+		// this should be called earlier than the general service shutdown - for
+		// the mo' at least
+		// shutdown();
+	}
 
-    public void onApplicationShutdown() {
-        stopService();
-    }
+	public void onApplicationShutdown() {
+		stopService();
+	}
 
-    public void onApplicationStartup() {
-        startService();
-    }
+	public void onApplicationStartup() {
+		startService();
+	}
 }

@@ -68,7 +68,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
-
 /**
  * Currently, it's a schemozzle - this was originally a standalone generator, so
  * there's a mishmash of usages of JVM vs GWT reflection - it does, however,

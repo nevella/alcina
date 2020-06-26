@@ -159,8 +159,8 @@ public class PropertyMapper {
 
 		@Override
 		public String toString() {
-			return Ax.format("propertyMapping: %s ->%s (custom: %s)",
-					leftName, rightName, leftToRightConverter != null
+			return Ax.format("propertyMapping: %s ->%s (custom: %s)", leftName,
+					rightName, leftToRightConverter != null
 							|| rightToLeftConverter != null);
 		}
 

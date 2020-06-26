@@ -78,7 +78,6 @@ import java.util.Map;
  * @author JSON.org
  * @version 2009-04-14
  */
-
 public class JSONArray {
 	/**
 	 * The arrayList where the JSONArray's properties are kept.

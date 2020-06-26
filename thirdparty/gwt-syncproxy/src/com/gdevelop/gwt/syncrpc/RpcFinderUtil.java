@@ -71,7 +71,7 @@ public class RpcFinderUtil {
 		try {
 			response = getResponseText(url);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 		List<String> findRpcNames = findGwtNames(response);
@@ -115,7 +115,7 @@ public class RpcFinderUtil {
 		try {
 			responseCache = getResponseText(cacheurl);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 		List<String> findRpcNames = findGwtNames(responseCache);
@@ -141,7 +141,7 @@ public class RpcFinderUtil {
 		try {
 			responseText = getResponseText(rpcUrl);
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
+			
 			e1.printStackTrace();
 		}
 		BufferedReader reader;
@@ -170,17 +170,17 @@ public class RpcFinderUtil {
 		try {
 			responseText = getResponseText(rpcUrl);
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
+			
 			e1.printStackTrace();
 		}
 		InputStream is = new java.io.StringBufferInputStream(responseText);
 		try {
 			result = SerializationPolicyLoader.loadFromStream(is, null);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
+			
 			e.printStackTrace();
 		}
 		return result;

@@ -51,15 +51,17 @@ public enum OperatingSystem {
 	/**
 	 * Windows Mobile / Windows CE. Exact version unknown.
 	 */
-	WINDOWS(Manufacturer.MICROSOFT, null, 1, "Windows", new String[] { "Windows" }, new String[] { "Palm" }, DeviceType.COMPUTER, null), // catch
-																																			// the
-																																			// rest
-																																			// of
-																																			// older
-																																			// Windows
-																																			// systems
-																																			// (95,
-																																			// NT,...)
+	WINDOWS(Manufacturer.MICROSOFT, null, 1, "Windows",
+			new String[] { "Windows" }, new String[] { "Palm" },
+			DeviceType.COMPUTER, null), // catch
+										// the
+										// rest
+										// of
+										// older
+										// Windows
+										// systems
+										// (95,
+										// NT,...)
 	WINDOWS_7(Manufacturer.MICROSOFT, OperatingSystem.WINDOWS, 21, "Windows 7",
 			new String[] { "Windows NT 6.1" }, null, DeviceType.COMPUTER, null), // before
 																					// Win,
@@ -101,16 +103,20 @@ public enum OperatingSystem {
 	/**
 	 * PalmOS, exact version unkown
 	 */
-	WEBOS(Manufacturer.PALM, null, 11, "WebOS", new String[] { "webOS" }, null, DeviceType.MOBILE, null), PALM(Manufacturer.PALM, null, 10, "PalmOS", new String[] { "Palm" }, null, DeviceType.MOBILE, null),
+	WEBOS(Manufacturer.PALM, null, 11, "WebOS", new String[] { "webOS" }, null,
+			DeviceType.MOBILE, null),
+	PALM(Manufacturer.PALM, null, 10, "PalmOS", new String[] { "Palm" }, null,
+			DeviceType.MOBILE, null),
 	/**
 	 * iOS4, with the release of the iPhone 4, Apple renamed the OS to iOS.
 	 */
-	IOS(Manufacturer.APPLE, null, 2, "iOS", new String[] { "like Mac OS X" }, null, DeviceType.MOBILE, null), // before
-																												// MAC_OS_X_IPHONE
-																												// for
-																												// all
-																												// older
-																												// versions
+	IOS(Manufacturer.APPLE, null, 2, "iOS", new String[] { "like Mac OS X" },
+			null, DeviceType.MOBILE, null), // before
+											// MAC_OS_X_IPHONE
+											// for
+											// all
+											// older
+											// versions
 	iOS4_IPHONE(Manufacturer.APPLE, OperatingSystem.IOS, 41, "iOS 4 (iPhone)",
 			new String[] { "iPhone OS 4" }, null, DeviceType.MOBILE, null), // before
 																			// MAC_OS_X_IPHONE
@@ -134,67 +140,83 @@ public enum OperatingSystem {
 	/**
 	 * Older Mac OS systems before Mac OS X
 	 */
-	MAC_OS(Manufacturer.APPLE, null, 1, "Mac OS", new String[] { "Mac" }, null, DeviceType.COMPUTER, null), // older
-																											// Mac
-																											// OS
-																											// systems
+	MAC_OS(Manufacturer.APPLE, null, 1, "Mac OS", new String[] { "Mac" }, null,
+			DeviceType.COMPUTER, null), // older
+										// Mac
+										// OS
+										// systems
 	/**
 	 * Linux based Maemo software platform by Nokia. Used in the N900 phone.
 	 * http://maemo.nokia.com/
 	 */
-	MAEMO(Manufacturer.NOKIA, null, 2, "Maemo", new String[] { "Maemo" }, null, DeviceType.MOBILE, null),
+	MAEMO(Manufacturer.NOKIA, null, 2, "Maemo", new String[] { "Maemo" }, null,
+			DeviceType.MOBILE, null),
 	/**
 	 * Various Linux based operating systems.
 	 */
-	LINUX(Manufacturer.OTHER, null, 2, "Linux", new String[] { "Linux", "CamelHttpStream" }, null, DeviceType.COMPUTER, null), // CamelHttpStream
-																																// is
-																																// being
-																																// used
-																																// by
-																																// Evolution,
-																																// an
-																																// email
-																																// client
-																																// for
-																																// Linux
+	LINUX(Manufacturer.OTHER, null, 2, "Linux",
+			new String[] { "Linux", "CamelHttpStream" }, null,
+			DeviceType.COMPUTER, null), // CamelHttpStream
+										// is
+										// being
+										// used
+										// by
+										// Evolution,
+										// an
+										// email
+										// client
+										// for
+										// Linux
 	/**
 	 * Other Symbian OS versions
 	 */
-	SYMBIAN(Manufacturer.SYMBIAN, null, 1, "Symbian OS", new String[] { "Symbian", "Series60" }, null, DeviceType.MOBILE, null),
+	SYMBIAN(Manufacturer.SYMBIAN, null, 1, "Symbian OS",
+			new String[] { "Symbian", "Series60" }, null, DeviceType.MOBILE,
+			null),
 	/**
 	 * Symbian OS 9.x versions. Being used by Nokia (N71, N73, N81, N82, N91,
 	 * N92, N95, ...)
 	 */
-	SYMBIAN9(Manufacturer.SYMBIAN, OperatingSystem.SYMBIAN, 20, "Symbian OS 9.x", new String[] { "SymbianOS/9", "Series60/3" }, null, DeviceType.MOBILE, null),
+	SYMBIAN9(Manufacturer.SYMBIAN, OperatingSystem.SYMBIAN, 20,
+			"Symbian OS 9.x", new String[] { "SymbianOS/9", "Series60/3" },
+			null, DeviceType.MOBILE, null),
 	/**
 	 * Symbian OS 8.x versions. Being used by Nokia (6630, 6680, 6681, 6682,
 	 * N70, N72, N90).
 	 */
-	SYMBIAN8(Manufacturer.SYMBIAN, OperatingSystem.SYMBIAN, 15, "Symbian OS 8.x", new String[] { "SymbianOS/8", "Series60/2.6", "Series60/2.8" }, null, DeviceType.MOBILE, null),
+	SYMBIAN8(Manufacturer.SYMBIAN, OperatingSystem.SYMBIAN, 15,
+			"Symbian OS 8.x",
+			new String[] { "SymbianOS/8", "Series60/2.6", "Series60/2.8" },
+			null, DeviceType.MOBILE, null),
 	/**
 	 * Symbian OS 7.x versions. Being used by Nokia (3230, 6260, 6600, 6620,
 	 * 6670, 7610), Panasonic (X700, X800), Samsung (SGH-D720, SGH-D730) and
 	 * Lenovo (P930).
 	 */
-	SYMBIAN7(Manufacturer.SYMBIAN, OperatingSystem.SYMBIAN, 10, "Symbian OS 7.x", new String[] { "SymbianOS/7" }, null, DeviceType.MOBILE, null),
+	SYMBIAN7(Manufacturer.SYMBIAN, OperatingSystem.SYMBIAN, 10,
+			"Symbian OS 7.x", new String[] { "SymbianOS/7" }, null,
+			DeviceType.MOBILE, null),
 	/**
 	 * Symbian OS 6.x versions.
 	 */
-	SYMBIAN6(Manufacturer.SYMBIAN, OperatingSystem.SYMBIAN, 5, "Symbian OS 6.x", new String[] { "SymbianOS/6" }, null, DeviceType.MOBILE, null),
+	SYMBIAN6(Manufacturer.SYMBIAN, OperatingSystem.SYMBIAN, 5, "Symbian OS 6.x",
+			new String[] { "SymbianOS/6" }, null, DeviceType.MOBILE, null),
 	/**
 	 * Nokia's Series 40 operating system. Series 60 (S60) uses the Symbian OS.
 	 */
-	SERIES40(Manufacturer.NOKIA, null, 1, "Series 40", new String[] { "Nokia6300" }, null, DeviceType.MOBILE, null),
+	SERIES40(Manufacturer.NOKIA, null, 1, "Series 40",
+			new String[] { "Nokia6300" }, null, DeviceType.MOBILE, null),
 	/**
 	 * Proprietary operating system used for many Sony Ericsson phones.
 	 */
-	SONY_ERICSSON(Manufacturer.SONY_ERICSSON, null, 1, "Sony Ericsson", new String[] { "SonyEricsson" }, null, DeviceType.MOBILE, null), // after
-																																			// symbian,
-																																			// some
-																																			// SE
-																																			// phones
-																																			// use
-																																			// symbian
+	SONY_ERICSSON(Manufacturer.SONY_ERICSSON, null, 1, "Sony Ericsson",
+			new String[] { "SonyEricsson" }, null, DeviceType.MOBILE, null), // after
+																				// symbian,
+																				// some
+																				// SE
+																				// phones
+																				// use
+																				// symbian
 	SUN_OS(Manufacturer.SUN, null, 1, "SunOS", new String[] { "SunOS" }, null,
 			DeviceType.COMPUTER, null),
 	PSP(Manufacturer.SONY, null, 1, "Sony Playstation",
@@ -203,12 +225,19 @@ public enum OperatingSystem {
 	/**
 	 * Nintendo Wii game console.
 	 */
-	WII(Manufacturer.NINTENDO, null, 1, "Nintendo Wii", new String[] { "Wii" }, null, DeviceType.GAME_CONSOLE, null),
+	WII(Manufacturer.NINTENDO, null, 1, "Nintendo Wii", new String[] { "Wii" },
+			null, DeviceType.GAME_CONSOLE, null),
 	/**
 	 * BlackBerryOS. The BlackBerryOS exists in different version. How relevant
 	 * those versions are, is not clear.
 	 */
-	BLACKBERRY(Manufacturer.BLACKBERRY, null, 1, "BlackBerryOS", new String[] { "BlackBerry" }, null, DeviceType.MOBILE, null), BLACKBERRY6(Manufacturer.BLACKBERRY, OperatingSystem.BLACKBERRY, 6, "BlackBerry 6", new String[] { "Version/6" }, null, DeviceType.MOBILE, null), UNKNOWN(Manufacturer.OTHER, null, 1, "Unknown", new String[0], null, DeviceType.UNKNOWN, null);
+	BLACKBERRY(Manufacturer.BLACKBERRY, null, 1, "BlackBerryOS",
+			new String[] { "BlackBerry" }, null, DeviceType.MOBILE, null),
+	BLACKBERRY6(Manufacturer.BLACKBERRY, OperatingSystem.BLACKBERRY, 6,
+			"BlackBerry 6", new String[] { "Version/6" }, null,
+			DeviceType.MOBILE, null),
+	UNKNOWN(Manufacturer.OTHER, null, 1, "Unknown", new String[0], null,
+			DeviceType.UNKNOWN, null);
 	/**
 	 * Parses user agent string and returns the best match. Returns
 	 * OperatingSystem.UNKNOWN if there is no match.

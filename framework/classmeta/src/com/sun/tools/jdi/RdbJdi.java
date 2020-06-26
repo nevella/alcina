@@ -307,7 +307,6 @@ public class RdbJdi {
 				}
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		// ThreadReferenceImpl threadRef = commandStream.readThreadReference();

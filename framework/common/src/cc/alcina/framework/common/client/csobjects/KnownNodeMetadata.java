@@ -6,7 +6,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.csobjects.KnownStatusRule.KnownStatusRuleImpl;
 
-public class KnownNodeMetadata implements Serializable{
+public class KnownNodeMetadata implements Serializable {
 	public enum Type {
 		Job, Other
 	}
@@ -17,7 +17,7 @@ public class KnownNodeMetadata implements Serializable{
 
 	public KnownStatusRuleImpl statusRule;
 
-	public static class KnownNodeProperty implements Serializable{
+	public static class KnownNodeProperty implements Serializable {
 		public KnownStatusRuleImpl statusRule;
 
 		public String name;

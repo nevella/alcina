@@ -60,363 +60,363 @@ import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 
 public class ClientNotificationsImpl implements ClientNotifications {
-    private static final String LT_NOTIFY_COMPLETED_SAVE = "LT_NOTIFY_COMPLETED_SAVE";
+	private static final String LT_NOTIFY_COMPLETED_SAVE = "LT_NOTIFY_COMPLETED_SAVE";
 
-    private DialogBox dialogBox;
+	private DialogBox dialogBox;
 
-    private HTML dialogHtml;
+	private HTML dialogHtml;
 
-    private String logString = "";
+	private String logString = "";
 
-    protected StandardDataImages images;
+	protected StandardDataImages images;
 
-    private boolean dialogAnimationEnabled = true;
+	private boolean dialogAnimationEnabled = true;
 
-    private boolean logToSysOut;
+	private boolean logToSysOut;
 
-    private Map<String, Long> metricStartTimes = new HashMap<String, Long>();
+	private Map<String, Long> metricStartTimes = new HashMap<String, Long>();
 
-    Map<String, String> localisedMessages;
+	Map<String, String> localisedMessages;
 
-    private TopicListener<String> logListener = new TopicListener<String>() {
-        @Override
-        public void topicPublished(String key, String message) {
-            log(message);
-            System.out.println(message);
-        }
-    };
+	private TopicListener<String> logListener = new TopicListener<String>() {
+		@Override
+		public void topicPublished(String key, String message) {
+			log(message);
+			System.out.println(message);
+		}
+	};
 
-    NonCancellableRemoteDialog notifier = null;
+	NonCancellableRemoteDialog notifier = null;
 
-    public ClientNotificationsImpl() {
-        AlcinaTopics.logListenerDelta(logListener, true);
-    }
+	public ClientNotificationsImpl() {
+		AlcinaTopics.logListenerDelta(logListener, true);
+	}
 
-    @Override
-    public void confirm(String msg, final OkCallback callback) {
-        new OkCancelDialogBox("Confirmation", new Label(msg),
-                new PermissibleActionListener() {
-                    @Override
-                    public void vetoableAction(PermissibleActionEvent evt) {
-                        if (evt.getAction() == OkAction.INSTANCE) {
-                            callback.ok();
-                        }
-                    }
-                }).show();
-    }
+	@Override
+	public void confirm(String msg, final OkCallback callback) {
+		new OkCancelDialogBox("Confirmation", new Label(msg),
+				new PermissibleActionListener() {
+					@Override
+					public void vetoableAction(PermissibleActionEvent evt) {
+						if (evt.getAction() == OkAction.INSTANCE) {
+							callback.ok();
+						}
+					}
+				}).show();
+	}
 
-    public void ensureLocalisedMessages() {
-        if (localisedMessages == null) {
-            localisedMessages = new HashMap<String, String>();
-            localisedMessages.put(LT_NOTIFY_COMPLETED_SAVE,
-                    TextProvider.get().getUiObjectText(
-                            ClientNotificationsImpl.class,
-                            LT_NOTIFY_COMPLETED_SAVE,
-                            "Your offline work has been saved to the server"));
-        }
-    }
+	public void ensureLocalisedMessages() {
+		if (localisedMessages == null) {
+			localisedMessages = new HashMap<String, String>();
+			localisedMessages.put(LT_NOTIFY_COMPLETED_SAVE,
+					TextProvider.get().getUiObjectText(
+							ClientNotificationsImpl.class,
+							LT_NOTIFY_COMPLETED_SAVE,
+							"Your offline work has been saved to the server"));
+		}
+	}
 
-    @Override
-    public String getLogString() {
-        return this.logString;
-    }
+	@Override
+	public String getLogString() {
+		return this.logString;
+	}
 
-    @Override
-    public ModalNotifier getModalNotifier(String message) {
-        if (notifier == null || !notifier.isAttached()) {
-            notifier = new NonCancellableRemoteDialog(message, null, false) {
-                @Override
-                protected boolean initialAnimationEnabled() {
-                    return false;
-                }
-            };
-        }
-        notifier.setText(message);
-        return notifier;
-    }
+	@Override
+	public ModalNotifier getModalNotifier(String message) {
+		if (notifier == null || !notifier.isAttached()) {
+			notifier = new NonCancellableRemoteDialog(message, null, false) {
+				@Override
+				protected boolean initialAnimationEnabled() {
+					return false;
+				}
+			};
+		}
+		notifier.setText(message);
+		return notifier;
+	}
 
-    @Override
-    public void hideDialog() {
-        if (dialogBox != null) {
-            dialogBox.hide();
-        }
-    }
+	@Override
+	public void hideDialog() {
+		if (dialogBox != null) {
+			dialogBox.hide();
+		}
+	}
 
-    @Override
-    public boolean isDialogAnimationEnabled() {
-        return dialogAnimationEnabled;
-    }
+	@Override
+	public boolean isDialogAnimationEnabled() {
+		return dialogAnimationEnabled;
+	}
 
-    public boolean isLogToSysOut() {
-        return this.logToSysOut;
-    }
+	public boolean isLogToSysOut() {
+		return this.logToSysOut;
+	}
 
-    @Override
-    public void log(String s) {
-        log(s, AlcinaTopics.LOG_CATEGORY_MESSAGE);
-    }
+	@Override
+	public void log(String s) {
+		log(s, AlcinaTopics.LOG_CATEGORY_MESSAGE);
+	}
 
-    public void log(String s, String category) {
-        if (logString.length() < 30000) {
-            logString += CommonUtils.formatDate(new Date(),
-                    DateStyle.AU_DATE_TIME_MS) + ": " + s + "\n";
-        }
-        if (GWT.isScript()) {
-            consoleLog(s);
-        }
-        if (logToSysOut) {
-            System.out.println(s);
-        }
-        AlcinaTopics.logCategorisedMessage(new StringPair(category, s));
-    }
+	public void log(String s, String category) {
+		if (logString.length() < 30000) {
+			logString += CommonUtils.formatDate(new Date(),
+					DateStyle.AU_DATE_TIME_MS) + ": " + s + "\n";
+		}
+		if (GWT.isScript()) {
+			consoleLog(s);
+		}
+		if (logToSysOut) {
+			System.out.println(s);
+		}
+		AlcinaTopics.logCategorisedMessage(new StringPair(category, s));
+	}
 
-    @Override
-    public void metricLogEnd(String key) {
-        if (metricStartTimes.containsKey(key)) {
-            log(Ax.format("Metric: %s - %s ms", key,
-                    System.currentTimeMillis() - metricStartTimes.get(key)),
-                    AlcinaTopics.LOG_CATEGORY_METRIC);
-            metricStartTimes.remove(key);
-        }
-    }
+	@Override
+	public void metricLogEnd(String key) {
+		if (metricStartTimes.containsKey(key)) {
+			log(Ax.format("Metric: %s - %s ms", key,
+					System.currentTimeMillis() - metricStartTimes.get(key)),
+					AlcinaTopics.LOG_CATEGORY_METRIC);
+			metricStartTimes.remove(key);
+		}
+	}
 
-    @Override
-    public void metricLogStart(String key) {
-        metricStartTimes.put(key, System.currentTimeMillis());
-    }
+	@Override
+	public void metricLogStart(String key) {
+		metricStartTimes.put(key, System.currentTimeMillis());
+	}
 
-    @Override
-    public void notifyOfCompletedSaveFromOffline() {
-        ensureLocalisedMessages();
-        Window.alert(localisedMessages.get(LT_NOTIFY_COMPLETED_SAVE));
-    }
+	@Override
+	public void notifyOfCompletedSaveFromOffline() {
+		ensureLocalisedMessages();
+		Window.alert(localisedMessages.get(LT_NOTIFY_COMPLETED_SAVE));
+	}
 
-    @Override
-    public void setDialogAnimationEnabled(boolean dialogAnimationEnabled) {
-        this.dialogAnimationEnabled = dialogAnimationEnabled;
-    }
+	@Override
+	public void setDialogAnimationEnabled(boolean dialogAnimationEnabled) {
+		this.dialogAnimationEnabled = dialogAnimationEnabled;
+	}
 
-    public void setLogToSysOut(boolean logToSysOut) {
-        this.logToSysOut = logToSysOut;
-    }
+	public void setLogToSysOut(boolean logToSysOut) {
+		this.logToSysOut = logToSysOut;
+	}
 
-    @Override
-    public void showDevError(Throwable e) {
-        MessageManager.get().icyMessage("GWT exception - " + e.getMessage());
-    }
+	@Override
+	public void showDevError(Throwable e) {
+		MessageManager.get().icyMessage("GWT exception - " + e.getMessage());
+	}
 
-    @Override
-    public void showDialog(String captionHTML, Widget captionWidget, String msg,
-            MessageType messageType, List<Button> extraButtons) {
-        showDialog(captionHTML, captionWidget, msg, messageType, extraButtons,
-                null);
-    }
+	@Override
+	public void showDialog(String captionHTML, Widget captionWidget, String msg,
+			MessageType messageType, List<Button> extraButtons) {
+		showDialog(captionHTML, captionWidget, msg, messageType, extraButtons,
+				null);
+	}
 
-    @Override
-    public void showDialog(String captionHTML, Widget captionWidget, String msg,
-            MessageType messageType, List<Button> extraButtons,
-            String containerStyle) {
-        ensureImages();
-        HorizontalAlignmentConstant align = messageType == MessageType.ERROR
-                ? HasHorizontalAlignment.ALIGN_LEFT
-                : HasHorizontalAlignment.ALIGN_CENTER;
-        if (dialogBox != null) {
-            dialogBox.hide();
-        }
-        String title = CommonUtils.friendlyConstant(messageType);
-        dialogBox = new GlassDialogBox();
-        dialogBox.setAnimationEnabled(dialogAnimationEnabled);
-        AbstractImagePrototype aip = null;
-        String text = "";
-        switch (messageType) {
-        case INFO:
-            aip = AbstractImagePrototype.create(images.info());
-            text = "Information";
-            break;
-        case WARN:
-            aip = AbstractImagePrototype.create(images.warning());
-            text = "Warning";
-            break;
-        case ERROR:
-            aip = AbstractImagePrototype.create(images.error());
-            text = "Problem notification";
-            break;
-        }
-        dialogBox.setText(text);
-        FlexTable ft = new FlexTable();
-        containerStyle = containerStyle != null ? containerStyle
-                : (messageType == MessageType.ERROR
-                        || !CommonUtils.isNullOrEmpty(msg)) ? "medium"
-                                : "narrow";
-        ft.setCellSpacing(4);
-        ft.setStyleName("alcina-Notification");
-        ft.addStyleName(containerStyle);
-        FlexCellFormatter cf = (FlexCellFormatter) ft.getCellFormatter();
-        ft.setWidget(0, 0, aip.createImage());
-        cf.setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_TOP);
-        cf.setWidth(0, 0, "40px");
-        FlowPanel fp = new FlowPanel();
-        fp.setStyleName("text");
-        Widget capWidget = captionHTML != null ? new HTML(captionHTML)
-                : captionWidget;
-        if (captionHTML != null) {
-            capWidget.setStyleName("caption");
-        }
-        fp.add(capWidget);
-        if (!CommonUtils.isNullOrEmpty(msg)&&isViewDetail()) {
-            Link nh = new Link("View detail");
-            nh.addStyleName("pad-5");
-            dialogHtml = new HTML("<span class='logboxpre'>"
-                    + msg.replace("\n", "<br>") + "</span>", true);
-            final ScrollPanel sp = new ScrollPanel(dialogHtml);
-            sp.setStyleName("logbox");
-            sp.setVisible(containerStyle.equals("wide"));
-            nh.addClickHandler(new ClickHandler() {
-                @Override
-                public void onClick(ClickEvent event) {
-                    sp.setVisible(!sp.isVisible());
-                }
-            });
-            if (LooseContext.getBoolean(
-                    ClientNotifications.CONTEXT_AUTOSHOW_DIALOG_DETAIL)) {
-                sp.setVisible(true);
-            }
-            fp.add(nh);
-            fp.add(sp);
-        }
-        ft.setWidget(0, 1, fp);
-        cf.setVerticalAlignment(0, 1, HasVerticalAlignment.ALIGN_MIDDLE);
-        HorizontalPanel hp = new HorizontalPanel();
-        hp.setSpacing(8);
-        Button closeButton = new Button("Close");
-        hp.add(closeButton);
-        if (extraButtons != null) {
-            for (Button b : extraButtons) {
-                hp.add(b);
-            }
-        }
-        ft.setWidget(1, 0, hp);
-        cf.setColSpan(1, 0, 2);
-        cf.setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_CENTER);
-        closeButton.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                dialogBox.hide();
-            }
-        });
-        dialogBox.setWidget(ft);
-        dialogBox.center();
-        dialogBox.show();
-        Scheduler.get().scheduleDeferred(() -> closeButton.setFocus(true));
-    }
+	@Override
+	public void showDialog(String captionHTML, Widget captionWidget, String msg,
+			MessageType messageType, List<Button> extraButtons,
+			String containerStyle) {
+		ensureImages();
+		HorizontalAlignmentConstant align = messageType == MessageType.ERROR
+				? HasHorizontalAlignment.ALIGN_LEFT
+				: HasHorizontalAlignment.ALIGN_CENTER;
+		if (dialogBox != null) {
+			dialogBox.hide();
+		}
+		String title = CommonUtils.friendlyConstant(messageType);
+		dialogBox = new GlassDialogBox();
+		dialogBox.setAnimationEnabled(dialogAnimationEnabled);
+		AbstractImagePrototype aip = null;
+		String text = "";
+		switch (messageType) {
+		case INFO:
+			aip = AbstractImagePrototype.create(images.info());
+			text = "Information";
+			break;
+		case WARN:
+			aip = AbstractImagePrototype.create(images.warning());
+			text = "Warning";
+			break;
+		case ERROR:
+			aip = AbstractImagePrototype.create(images.error());
+			text = "Problem notification";
+			break;
+		}
+		dialogBox.setText(text);
+		FlexTable ft = new FlexTable();
+		containerStyle = containerStyle != null ? containerStyle
+				: (messageType == MessageType.ERROR
+						|| !CommonUtils.isNullOrEmpty(msg)) ? "medium"
+								: "narrow";
+		ft.setCellSpacing(4);
+		ft.setStyleName("alcina-Notification");
+		ft.addStyleName(containerStyle);
+		FlexCellFormatter cf = (FlexCellFormatter) ft.getCellFormatter();
+		ft.setWidget(0, 0, aip.createImage());
+		cf.setVerticalAlignment(0, 0, HasVerticalAlignment.ALIGN_TOP);
+		cf.setWidth(0, 0, "40px");
+		FlowPanel fp = new FlowPanel();
+		fp.setStyleName("text");
+		Widget capWidget = captionHTML != null ? new HTML(captionHTML)
+				: captionWidget;
+		if (captionHTML != null) {
+			capWidget.setStyleName("caption");
+		}
+		fp.add(capWidget);
+		if (!CommonUtils.isNullOrEmpty(msg) && isViewDetail()) {
+			Link nh = new Link("View detail");
+			nh.addStyleName("pad-5");
+			dialogHtml = new HTML("<span class='logboxpre'>"
+					+ msg.replace("\n", "<br>") + "</span>", true);
+			final ScrollPanel sp = new ScrollPanel(dialogHtml);
+			sp.setStyleName("logbox");
+			sp.setVisible(containerStyle.equals("wide"));
+			nh.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent event) {
+					sp.setVisible(!sp.isVisible());
+				}
+			});
+			if (LooseContext.getBoolean(
+					ClientNotifications.CONTEXT_AUTOSHOW_DIALOG_DETAIL)) {
+				sp.setVisible(true);
+			}
+			fp.add(nh);
+			fp.add(sp);
+		}
+		ft.setWidget(0, 1, fp);
+		cf.setVerticalAlignment(0, 1, HasVerticalAlignment.ALIGN_MIDDLE);
+		HorizontalPanel hp = new HorizontalPanel();
+		hp.setSpacing(8);
+		Button closeButton = new Button("Close");
+		hp.add(closeButton);
+		if (extraButtons != null) {
+			for (Button b : extraButtons) {
+				hp.add(b);
+			}
+		}
+		ft.setWidget(1, 0, hp);
+		cf.setColSpan(1, 0, 2);
+		cf.setHorizontalAlignment(1, 0, HasHorizontalAlignment.ALIGN_CENTER);
+		closeButton.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				dialogBox.hide();
+			}
+		});
+		dialogBox.setWidget(ft);
+		dialogBox.center();
+		dialogBox.show();
+		Scheduler.get().scheduleDeferred(() -> closeButton.setFocus(true));
+	}
 
-    protected boolean isViewDetail() {
+	protected boolean isViewDetail() {
 		return true;
 	}
 
 	@Override
-    public void showError(String msg, Throwable throwable) {
-        log("error: " + msg.replace("<br>", "\n") + "\n"
-                + throwable.toString());
-        msg += CommonUtils.isNullOrEmpty(msg) ? "" : "<br><br>";
-        msg += getStandardErrorText();
-        msg = "<div class='errorOops'>Ooops - an error has occurred</div>"
-                + "<div class='errorSub'>" + msg + "</div>";
-        showDialog(msg, null, throwable.toString(), MessageType.ERROR,
-                new ArrayList<Button>());
-    }
+	public void showError(String msg, Throwable throwable) {
+		log("error: " + msg.replace("<br>", "\n") + "\n"
+				+ throwable.toString());
+		msg += CommonUtils.isNullOrEmpty(msg) ? "" : "<br><br>";
+		msg += getStandardErrorText();
+		msg = "<div class='errorOops'>Ooops - an error has occurred</div>"
+				+ "<div class='errorSub'>" + msg + "</div>";
+		showDialog(msg, null, throwable.toString(), MessageType.ERROR,
+				new ArrayList<Button>());
+	}
 
-    @Override
-    public void showError(Throwable caught) {
-        this.showError("", caught);
-    }
+	@Override
+	public void showError(Throwable caught) {
+		this.showError("", caught);
+	}
 
-    @Override
-    public void showLog() {
-        showDialog(Ax.format("<div>Client log</div><hr>"
-                + "<div class='logboxpre' style='width:850px'>%s </div>",
-                (logString + statsString()).replace("\n", "<br>")), null, null,
-                MessageType.INFO, null, "wide");
-        dialogBox.setModal(false);
-        dialogBox.setAutoHideEnabled(true);
-    }
+	@Override
+	public void showLog() {
+		showDialog(Ax.format("<div>Client log</div><hr>"
+				+ "<div class='logboxpre' style='width:850px'>%s </div>",
+				(logString + statsString()).replace("\n", "<br>")), null, null,
+				MessageType.INFO, null, "wide");
+		dialogBox.setModal(false);
+		dialogBox.setAutoHideEnabled(true);
+	}
 
-    @Override
-    public void showMessage(String msg) {
-        showDialog("<div class='info'>" + msg + "</div>", null, null,
-                MessageType.INFO, null);
-    }
+	@Override
+	public void showMessage(String msg) {
+		showDialog("<div class='info'>" + msg + "</div>", null, null,
+				MessageType.INFO, null);
+	}
 
-    @Override
-    public void showMessage(Widget msg) {
-        showDialog(null, msg, null, MessageType.INFO, null);
-    }
+	@Override
+	public void showMessage(Widget msg) {
+		showDialog(null, msg, null, MessageType.INFO, null);
+	}
 
-    @Override
-    public void showWarning(String msg) {
-        showDialog("<div class='warning'>" + msg + "</div>", null, null,
-                MessageType.WARN, null);
-    }
+	@Override
+	public void showWarning(String msg) {
+		showDialog("<div class='warning'>" + msg + "</div>", null, null,
+				MessageType.WARN, null);
+	}
 
-    @Override
-    public void showWarning(String msg, String detail) {
-        showDialog("<div class='warning'>" + msg + "</div>", null, detail,
-                MessageType.WARN, null);
-    }
+	@Override
+	public void showWarning(String msg, String detail) {
+		showDialog("<div class='warning'>" + msg + "</div>", null, detail,
+				MessageType.WARN, null);
+	}
 
-    public native String statsString() /*-{
-    if (!($wnd.__stats)) {
-      return "";
-    }
-    var result = "";
-    var lastEvtGroup = -1;
-    var lastMillis = 0;
-    for ( var k in $wnd.__stats) {
-      var stat = $wnd.__stats[k];
-      var deltaStr = '';
-      for ( var j in stat) {
-        var v = stat[j];
-        result += j + ": " + v + "  ";
+	public native String statsString() /*-{
+										if (!($wnd.__stats)) {
+										return "";
+										}
+										var result = "";
+										var lastEvtGroup = -1;
+										var lastMillis = 0;
+										for ( var k in $wnd.__stats) {
+										var stat = $wnd.__stats[k];
+										var deltaStr = '';
+										for ( var j in stat) {
+										var v = stat[j];
+										result += j + ": " + v + "  ";
+										
+										}
+										
+										var v = stat.evtGroup;
+										if (lastEvtGroup == v) {
+										if (lastMillis != 0) {
+										result += "\ndelta - " + v + " - " + stat.type + ' - '
+										+ (stat.millis - lastMillis) + 'ms\n';
+										}
+										lastMillis = stat.millis;
+										} else {
+										lastMillis = 0;
+										lastEvtGroup = v;
+										}
+										result += "\n\n";
+										}
+										return result;
+										}-*/;
 
-      }
+	private void ensureImages() {
+		if (images == null) {
+			images = GWT.create(StandardDataImages.class);
+		}
+	}
 
-      var v = stat.evtGroup;
-      if (lastEvtGroup == v) {
-        if (lastMillis != 0) {
-          result += "\ndelta - " + v + " - " + stat.type + ' - '
-              + (stat.millis - lastMillis) + 'ms\n';
-        }
-        lastMillis = stat.millis;
-      } else {
-        lastMillis = 0;
-        lastEvtGroup = v;
-      }
-      result += "\n\n";
-    }
-    return result;
-    }-*/;
+	protected native void consoleLog(String s) /*-{
+												try {
+												$wnd.console.log(s);
+												} catch (e) {
+												
+												}
+												}-*/;
 
-    private void ensureImages() {
-        if (images == null) {
-            images = GWT.create(StandardDataImages.class);
-        }
-    }
+	protected String getStandardErrorText() {
+		return "Sorry for the inconvenience, and we'll fix this problem as soon as possible."
+				+ ""
+				+ " If the problem recurs, please try refreshing your browser";
+	}
 
-    protected native void consoleLog(String s) /*-{
-    try {
-      $wnd.console.log(s);
-    } catch (e) {
-
-    }
-    }-*/;
-
-    protected String getStandardErrorText() {
-        return "Sorry for the inconvenience, and we'll fix this problem as soon as possible."
-                + ""
-                + " If the problem recurs, please try refreshing your browser";
-    }
-
-    public enum MessageType {
-        INFO, WARN, ERROR
-    }
+	public enum MessageType {
+		INFO, WARN, ERROR
+	}
 }

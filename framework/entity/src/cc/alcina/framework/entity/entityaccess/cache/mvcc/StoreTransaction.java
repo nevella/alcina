@@ -10,7 +10,6 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
  *
  */
 class StoreTransaction {
-
 	DomainStore store;
 
 	public long committingSequenceId;

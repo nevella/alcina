@@ -85,8 +85,8 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 
 	@Override
 	native public Selection getSelection(final JavaScriptObject window)/*-{
-    return window.getSelection();
-	}-*/;
+																		return window.getSelection();
+																		}-*/;
 
 	@Override
 	public SelectionEndPoint getStart(final Selection selection) {

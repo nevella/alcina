@@ -18,9 +18,9 @@ import java.lang.annotation.Target;
  *
  */
 public @interface DomainStoreDbColumn {
-    boolean customHandler() default false;
+	boolean customHandler() default false;
 
-    String mappedBy() default "";
+	String mappedBy() default "";
 
-    Class targetEntity() default void.class;
+	Class targetEntity() default void.class;
 }

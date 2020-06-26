@@ -14,65 +14,65 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 
 @Bean
 public class RemoteConsoleRequest extends BaseBindable {
-    private transient static String generatedClientInstanceUid;
+	private transient static String generatedClientInstanceUid;
 
-    public static RemoteConsoleRequest create() {
-        Preconditions.checkArgument(GWT.isClient());
-        if (generatedClientInstanceUid == null) {
-            generatedClientInstanceUid = Ax.format("%s__%s", CommonUtils
-                    .formatDate(new Date(), DateStyle.TIMESTAMP_HUMAN),
-                    Math.random());
-        }
-        RemoteConsoleRequest consoleRequest = new RemoteConsoleRequest();
-        consoleRequest.clientInstanceUid = generatedClientInstanceUid;
-        return consoleRequest;
-    }
+	public static RemoteConsoleRequest create() {
+		Preconditions.checkArgument(GWT.isClient());
+		if (generatedClientInstanceUid == null) {
+			generatedClientInstanceUid = Ax.format("%s__%s", CommonUtils
+					.formatDate(new Date(), DateStyle.TIMESTAMP_HUMAN),
+					Math.random());
+		}
+		RemoteConsoleRequest consoleRequest = new RemoteConsoleRequest();
+		consoleRequest.clientInstanceUid = generatedClientInstanceUid;
+		return consoleRequest;
+	}
 
-    private String commandString;
+	private String commandString;
 
-    private String completionString;
+	private String completionString;
 
-    private String clientInstanceUid;
+	private String clientInstanceUid;
 
-    private RemoteConsoleRequestType type;
+	private RemoteConsoleRequestType type;
 
-    public RemoteConsoleRequest() {
-    }
+	public RemoteConsoleRequest() {
+	}
 
-    public String getClientInstanceUid() {
-        return this.clientInstanceUid;
-    }
+	public String getClientInstanceUid() {
+		return this.clientInstanceUid;
+	}
 
-    public String getCommandString() {
-        return this.commandString;
-    }
+	public String getCommandString() {
+		return this.commandString;
+	}
 
-    public String getCompletionString() {
-        return this.completionString;
-    }
+	public String getCompletionString() {
+		return this.completionString;
+	}
 
-    public RemoteConsoleRequestType getType() {
-        return this.type;
-    }
+	public RemoteConsoleRequestType getType() {
+		return this.type;
+	}
 
-    public void setClientInstanceUid(String clientInstanceUid) {
-        this.clientInstanceUid = clientInstanceUid;
-    }
+	public void setClientInstanceUid(String clientInstanceUid) {
+		this.clientInstanceUid = clientInstanceUid;
+	}
 
-    public void setCommandString(String commandString) {
-        this.commandString = commandString;
-    }
+	public void setCommandString(String commandString) {
+		this.commandString = commandString;
+	}
 
-    public void setCompletionString(String completionString) {
-        this.completionString = completionString;
-    }
+	public void setCompletionString(String completionString) {
+		this.completionString = completionString;
+	}
 
-    public void setType(RemoteConsoleRequestType type) {
-        this.type = type;
-    }
+	public void setType(RemoteConsoleRequestType type) {
+		this.type = type;
+	}
 
-    @ClientInstantiable
-    public enum RemoteConsoleRequestType {
-        STARTUP, GET_RECORDS, COMPLETE, DO_COMMAND, ARROW_UP, ARROW_DOWN
-    }
+	@ClientInstantiable
+	public enum RemoteConsoleRequestType {
+		STARTUP, GET_RECORDS, COMPLETE, DO_COMMAND, ARROW_UP, ARROW_DOWN
+	}
 }

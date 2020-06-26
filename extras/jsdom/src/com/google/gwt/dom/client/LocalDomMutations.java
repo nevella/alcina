@@ -96,56 +96,56 @@ public class LocalDomMutations {
 	}
 
 	private native void checkReceivedRecords() /*-{
-    if (this.@LocalDomMutations::records.length == 0) {
-      return;
-    }
-    var records = this.@LocalDomMutations::records;
-    this.@LocalDomMutations::records = [];
-    this.@LocalDomMutations::handleMutations(*)(records);
-	}-*/;
+												if (this.@LocalDomMutations::records.length == 0) {
+												return;
+												}
+												var records = this.@LocalDomMutations::records;
+												this.@LocalDomMutations::records = [];
+												this.@LocalDomMutations::handleMutations(*)(records);
+												}-*/;
 
 	private native void clearReceivedRecords() /*-{
-    this.@LocalDomMutations::observer.takeRecords();
-    this.@LocalDomMutations::records = [];
-
-	}-*/;
+												this.@LocalDomMutations::observer.takeRecords();
+												this.@LocalDomMutations::records = [];
+												
+												}-*/;
 
 	private native void connectObserver() /*-{
-    if (this.@LocalDomMutations::disabled) {
-      console.log("Mutation tracking not defined");
-      return;
-    }
-    if (this.@LocalDomMutations::debugEntry
-        || this.@LocalDomMutations::firstTimeConnect) {
-      this.@LocalDomMutations::firstTimeConnect = false;
-      console.log("Mutation observer :: connected");
-      //      console.log($doc.documentElement.outerHTML);
-    }
-    //clear the buffer and discard
-    this.@LocalDomMutations::observer.takeRecords();
-    this.@LocalDomMutations::records = [];
-
-    var config = {
-      childList : true,
-      //FIXME - directedlayout.2 - also monitor attribute changes...maybe? wouldn't hurt for conpleteness n pretty darn easy 
-      subtree : true
-    };
-    this.@LocalDomMutations::observer.observe(
-        this.@LocalDomMutations::documentElement, config);
-	}-*/;
+											if (this.@LocalDomMutations::disabled) {
+											console.log("Mutation tracking not defined");
+											return;
+											}
+											if (this.@LocalDomMutations::debugEntry
+											|| this.@LocalDomMutations::firstTimeConnect) {
+											this.@LocalDomMutations::firstTimeConnect = false;
+											console.log("Mutation observer :: connected");
+											//      console.log($doc.documentElement.outerHTML);
+											}
+											//clear the buffer and discard
+											this.@LocalDomMutations::observer.takeRecords();
+											this.@LocalDomMutations::records = [];
+											
+											var config = {
+											childList : true,
+											//FIXME - directedlayout.2 - also monitor attribute changes...maybe? wouldn't hurt for conpleteness n pretty darn easy 
+											subtree : true
+											};
+											this.@LocalDomMutations::observer.observe(
+											this.@LocalDomMutations::documentElement, config);
+											}-*/;
 
 	private native void disconnectObserver() /*-{
-    var mutationsList = this.@LocalDomMutations::observer.takeRecords();
-    if (mutationsList.length) {
-      //      console.log(mutationsList);
-    }
-    this.@LocalDomMutations::records = this.@LocalDomMutations::records
-        .concat(mutationsList);
-    if (!this.@LocalDomMutations::debugEntry) {
-      this.@LocalDomMutations::observerConnected = false;
-      this.@LocalDomMutations::observer.disconnect();
-    }
-	}-*/;
+												var mutationsList = this.@LocalDomMutations::observer.takeRecords();
+												if (mutationsList.length) {
+												//      console.log(mutationsList);
+												}
+												this.@LocalDomMutations::records = this.@LocalDomMutations::records
+												.concat(mutationsList);
+												if (!this.@LocalDomMutations::debugEntry) {
+												this.@LocalDomMutations::observerConnected = false;
+												this.@LocalDomMutations::observer.disconnect();
+												}
+												}-*/;
 
 	private void log(Supplier<String> messageSupplier) {
 		// if (!GWT.isScript()) {
@@ -155,25 +155,25 @@ public class LocalDomMutations {
 	}
 
 	private native void setupObserver() /*-{
-    this.@LocalDomMutations::disabled = this.@LocalDomMutations::disabled
-        || (typeof MutationObserver == "undefined");
-    if (this.@LocalDomMutations::disabled) {
-      console.log("Mutation tracking not defined");
-      return;
-    }
-    this.@LocalDomMutations::documentElement = $doc.documentElement;
-    //console.log(this.@LocalDomMutations::documentElement);
-    var _this = this;
-    var callback = function(mutationsList, observer) {
-      if (mutationsList.length) {
-        //        console.log(mutationsList);
-      }
-      _this.@LocalDomMutations::records = _this.@LocalDomMutations::records
-          .concat(mutationsList);
-    };
-    this.@LocalDomMutations::observer = new MutationObserver(callback);
-
-	}-*/;
+										this.@LocalDomMutations::disabled = this.@LocalDomMutations::disabled
+										|| (typeof MutationObserver == "undefined");
+										if (this.@LocalDomMutations::disabled) {
+										console.log("Mutation tracking not defined");
+										return;
+										}
+										this.@LocalDomMutations::documentElement = $doc.documentElement;
+										//console.log(this.@LocalDomMutations::documentElement);
+										var _this = this;
+										var callback = function(mutationsList, observer) {
+										if (mutationsList.length) {
+										//        console.log(mutationsList);
+										}
+										_this.@LocalDomMutations::records = _this.@LocalDomMutations::records
+										.concat(mutationsList);
+										};
+										this.@LocalDomMutations::observer = new MutationObserver(callback);
+										
+										}-*/;
 
 	// this is called at a tricky place in the GWT event loop, so make sure we
 	// log exceptions
@@ -269,8 +269,8 @@ public class LocalDomMutations {
 			 * elt exists in local children, has no removes - remove adds from
 			 * mutation list
 			 * 
-			 * FIXME: probably issue because recaptcha called during gwt event
-			 * cycle. formalise the
+			 * FIXME - directedlayout.1 - probably issue because recaptcha
+			 * called during gwt event cycle. formalise the
 			 * "shouldn't modify dom during event cycle outside of localdom" -
 			 * or at least wrap in connect/disconnect observer calls
 			 */

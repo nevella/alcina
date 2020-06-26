@@ -35,8 +35,7 @@ public class LuxModule {
 		String css = incoming + "";
 		for (Entry<String, String> entry : entrySet) {
 			{
-				String varDef = Ax.format("var(- %s)",
-						entry.getKey());
+				String varDef = Ax.format("var(- %s)", entry.getKey());
 				boolean found = css.indexOf(varDef) != -1;
 				if (found) {
 					css = replace(css, varDef, entry.getValue());

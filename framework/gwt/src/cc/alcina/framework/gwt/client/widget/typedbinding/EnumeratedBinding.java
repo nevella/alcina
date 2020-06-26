@@ -9,7 +9,7 @@ public interface EnumeratedBinding {
 
 	Class getBoundClass();
 
-	default String getBoundPath(){
+	default String getBoundPath() {
 		return toString();
 	}
 

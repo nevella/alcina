@@ -15,59 +15,59 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 
 public class RemoteConsoleClientUtils {
-    public static void runAsync(Class clazz, Runnable runnable) {
-        GWT.runAsync(clazz, new RunAsyncCallback() {
-            @Override
-            public void onFailure(Throwable reason) {
-                throw new WrappedRuntimeException(reason);
-            }
+	public static void runAsync(Class clazz, Runnable runnable) {
+		GWT.runAsync(clazz, new RunAsyncCallback() {
+			@Override
+			public void onFailure(Throwable reason) {
+				throw new WrappedRuntimeException(reason);
+			}
 
-            @Override
-            public void onSuccess() {
-                runnable.run();
-            }
-        });
-    }
+			@Override
+			public void onSuccess() {
+				runnable.run();
+			}
+		});
+	}
 
-    public static RunAsyncCallback runAsyncCallback(Runnable runnable) {
-        return new RunAsyncCallback() {
-            @Override
-            public void onFailure(Throwable reason) {
-                throw new WrappedRuntimeException(reason);
-            }
+	public static RunAsyncCallback runAsyncCallback(Runnable runnable) {
+		return new RunAsyncCallback() {
+			@Override
+			public void onFailure(Throwable reason) {
+				throw new WrappedRuntimeException(reason);
+			}
 
-            @Override
-            public void onSuccess() {
-                runnable.run();
-            }
-        };
-    }
+			@Override
+			public void onSuccess() {
+				runnable.run();
+			}
+		};
+	}
 
-    public static void submitRequest(RemoteConsoleRequest request,
-            Consumer<RemoteConsoleResponse> consoleResponseConsumer) {
-        String payload = AlcinaBeanSerializer.serializeHolder(request);
-        String href = "/remote-console.do";
-        RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, href);
-        RequestCallback callback = new RequestCallback() {
-            @Override
-            public void onError(Request request, Throwable exception) {
-                throw new WrappedRuntimeException(exception);
-            }
+	public static void submitRequest(RemoteConsoleRequest request,
+			Consumer<RemoteConsoleResponse> consoleResponseConsumer) {
+		String payload = AlcinaBeanSerializer.serializeHolder(request);
+		String href = "/remote-console.do";
+		RequestBuilder builder = new RequestBuilder(RequestBuilder.POST, href);
+		RequestCallback callback = new RequestCallback() {
+			@Override
+			public void onError(Request request, Throwable exception) {
+				throw new WrappedRuntimeException(exception);
+			}
 
-            @Override
-            public void onResponseReceived(Request request, Response response) {
-                String text = response.getText();
-                RemoteConsoleResponse consoleResponse = text.isEmpty() ? null
-                        : AlcinaBeanSerializer.deserializeHolder(text);
-                if (consoleResponseConsumer != null) {
-                    consoleResponseConsumer.accept(consoleResponse);
-                }
-            }
-        };
-        try {
-            builder.sendRequest(payload, callback);
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
+			@Override
+			public void onResponseReceived(Request request, Response response) {
+				String text = response.getText();
+				RemoteConsoleResponse consoleResponse = text.isEmpty() ? null
+						: AlcinaBeanSerializer.deserializeHolder(text);
+				if (consoleResponseConsumer != null) {
+					consoleResponseConsumer.accept(consoleResponse);
+				}
+			}
+		};
+		try {
+			builder.sendRequest(payload, callback);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 }

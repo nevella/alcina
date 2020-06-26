@@ -5,8 +5,8 @@ import java.util.Collections;
 import java.util.List;
 
 public interface SourceFinder {
-    static List<SourceFinder> sourceFinders = Collections
-            .synchronizedList(new ArrayList<>());
+	static List<SourceFinder> sourceFinders = Collections
+			.synchronizedList(new ArrayList<>());
 
-    String findSource(Class clazz);
+	String findSource(Class clazz);
 }

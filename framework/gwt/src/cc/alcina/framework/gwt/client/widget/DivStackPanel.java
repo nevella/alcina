@@ -245,7 +245,8 @@ public class DivStackPanel extends ComplexPanel {
 				String hashString = DOM.getElementPropertyOrAttribute(elem,
 						"__owner");
 				int ownerHash = hashString.length() > 0
-						? Integer.parseInt(hashString) : -1;
+						? Integer.parseInt(hashString)
+						: -1;
 				if (ownerHash == hashCode()) {
 					// Yes, it's mine.
 					return Integer.parseInt(expando);

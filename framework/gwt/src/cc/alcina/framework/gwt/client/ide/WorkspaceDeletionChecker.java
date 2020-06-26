@@ -38,7 +38,6 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
  * 
  * @author Nick Reddel
  */
-
 public class WorkspaceDeletionChecker {
 	public static boolean enabled = false;
 

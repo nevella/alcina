@@ -10,7 +10,6 @@ import cc.alcina.extras.webdriver.api.WDWriter;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class WDToken {
-	
 	private WebDriver webDriver;
 
 	private WDConfigurationItem configuration;

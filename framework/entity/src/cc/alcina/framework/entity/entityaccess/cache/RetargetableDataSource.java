@@ -18,7 +18,6 @@ public interface RetargetableDataSource extends DataSource {
 
 		@Override
 		public Connection getConnection() throws SQLException {
-			// TODO Auto-generated method stub
 			return delegate.getConnection();
 		}
 

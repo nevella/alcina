@@ -57,8 +57,8 @@ public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 	}
 
 	private static native List<Throwable> getLastThrowables() /*-{
-    return $wnd.__com_google_gwt_core_client_impl_Impl_ieThrowables;
-	}-*/;
+																return $wnd.__com_google_gwt_core_client_impl_Impl_ieThrowables;
+																}-*/;
 
 	@Override
 	public void onClose(CloseEvent<Window> event) {
@@ -83,22 +83,22 @@ public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 	}
 
 	private native void deregisterWindowErrorListener() /*-{
-    $wnd.onerror = null;
-    window.onerror = null;
-	}-*/;
+														$wnd.onerror = null;
+														window.onerror = null;
+														}-*/;
 
 	private native void disableEventBusExceptionCatch() /*-{
-    $wnd.__com_google_web_bindery_event_shared_SimpleEventBus_disableEventBusExceptionCatch = true;
-	}-*/;
+														$wnd.__com_google_web_bindery_event_shared_SimpleEventBus_disableEventBusExceptionCatch = true;
+														}-*/;
 
 	private native void registerIEWindowErrorListener() /*-{
-    function AugmentedUncaughtExceptionHandler_windowErrorHandler(sMsg, sUrl,
-        sLine) {
-      var message = "\n\nMessage: " + sMsg + "\nLine: " + sLine + "\nUrl: "
-          + sUrl;
-      @cc.alcina.extras.misc.ie.client.AugmentedUncaughtExceptionHandler::throwToHandler(Ljava/lang/String;)(message);
-    }
-    $wnd.onerror = AugmentedUncaughtExceptionHandler_windowErrorHandler;
-    window.onerror = AugmentedUncaughtExceptionHandler_windowErrorHandler;
-	}-*/;
+														function AugmentedUncaughtExceptionHandler_windowErrorHandler(sMsg, sUrl,
+														sLine) {
+														var message = "\n\nMessage: " + sMsg + "\nLine: " + sLine + "\nUrl: "
+														+ sUrl;
+														@cc.alcina.extras.misc.ie.client.AugmentedUncaughtExceptionHandler::throwToHandler(Ljava/lang/String;)(message);
+														}
+														$wnd.onerror = AugmentedUncaughtExceptionHandler_windowErrorHandler;
+														window.onerror = AugmentedUncaughtExceptionHandler_windowErrorHandler;
+														}-*/;
 }

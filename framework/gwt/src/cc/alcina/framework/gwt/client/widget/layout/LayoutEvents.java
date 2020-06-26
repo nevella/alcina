@@ -66,7 +66,6 @@ public class LayoutEvents {
 		}
 	}
 
-	
 	public void fireLayoutEvent(LayoutEvent event) {
 		if (firingEvents.contains(event.getEventType())) {
 			return;

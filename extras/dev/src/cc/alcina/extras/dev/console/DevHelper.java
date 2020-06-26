@@ -555,29 +555,24 @@ public abstract class DevHelper {
 	public static class NotificationsImpl implements ClientNotifications {
 		@Override
 		public void confirm(String msg, OkCallback callback) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public String getLogString() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public ModalNotifier getModalNotifier(String message) {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public void hideDialog() {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public boolean isDialogAnimationEnabled() {
-			// TODO Auto-generated method stub
 			return false;
 		}
 
@@ -588,12 +583,10 @@ public abstract class DevHelper {
 
 		@Override
 		public void metricLogEnd(String key) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void metricLogStart(String key) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
@@ -602,56 +595,46 @@ public abstract class DevHelper {
 
 		@Override
 		public void setDialogAnimationEnabled(boolean dialogAnimationEnabled) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void showDialog(String captionHTML, Widget captionWidget,
 				String msg, MessageType messageType,
 				List<Button> extraButtons) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void showDialog(String captionHTML, Widget captionWidget,
 				String msg, MessageType messageType, List<Button> extraButtons,
 				String containerStyle) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void showError(String msg, Throwable throwable) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void showError(Throwable caught) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void showLog() {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void showMessage(String msg) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void showMessage(Widget msg) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void showWarning(String msg) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void showWarning(String msg, String detail) {
-			// TODO Auto-generated method stub
 		}
 	}
 

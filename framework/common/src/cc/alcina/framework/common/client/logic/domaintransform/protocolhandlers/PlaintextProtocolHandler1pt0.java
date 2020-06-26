@@ -56,7 +56,6 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 
 	private SimpleStringParser20 asyncParser = null;
 
-
 	public void appendTo(DomainTransformEvent domainTransformEvent,
 			StringBuffer sb) {
 		String ns = domainTransformEvent.getNewStringValue() == null

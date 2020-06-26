@@ -212,7 +212,6 @@ public class TableElement extends Element {
 	 * The table's TFOOT, or null if none exists.
 	 */
 	public TableSectionElement getTFoot() {
-		
 		throw new UnsupportedOperationException();
 		// return LocalDom.nodeFor(getTFoot0(typedRemote()));
 	}
@@ -252,8 +251,8 @@ public class TableElement extends Element {
 	 * @return The newly created row
 	 */
 	public final native TableRowElement insertRow(int index) /*-{
-        return this.insertRow(index);
-	}-*/;
+																return this.insertRow(index);
+																}-*/;
 
 	/**
 	 * The width of the border around the table.
@@ -270,8 +269,8 @@ public class TableElement extends Element {
 	 * The table's CAPTION, or null if none exists.
 	 */
 	public final native void setCaption(TableCaptionElement caption) /*-{
-        this.caption = caption;
-	}-*/;
+																		this.caption = caption;
+																		}-*/;
 
 	/**
 	 * Specifies the horizontal and vertical space between cell content and cell
@@ -322,15 +321,15 @@ public class TableElement extends Element {
 	 * The table's TFOOT, or null if none exists.
 	 */
 	public final native void setTFoot(TableSectionElement tFoot) /*-{
-        this.tFoot = tFoot;
-	}-*/;
+																	this.tFoot = tFoot;
+																	}-*/;
 
 	/**
 	 * The table's THEAD, or null if none exists.
 	 */
 	public final native void setTHead(TableSectionElement tHead) /*-{
-        this.tHead = tHead;
-	}-*/;
+																	this.tHead = tHead;
+																	}-*/;
 
 	/**
 	 * Specifies the desired table width.
@@ -349,8 +348,8 @@ public class TableElement extends Element {
 	 * @return A CAPTION element.
 	 */
 	private native ElementRemote createCaption0(ElementRemote elt) /*-{
-        return elt.createCaption();
-	}-*/;
+																	return elt.createCaption();
+																	}-*/;
 
 	/**
 	 * Create a table footer row or return an existing one.
@@ -358,15 +357,15 @@ public class TableElement extends Element {
 	 * @return A footer element (TFOOT)
 	 */
 	private native ElementRemote createTFoot0(ElementRemote elt) /*-{
-        return elt.createTFoot();
-	}-*/;
+																	return elt.createTFoot();
+																	}-*/;
 
 	/**
 	 * Returns a collection of the table bodies (including implicit ones).
 	 */
 	private final native NodeListRemote getTBodies0(ElementRemote elem) /*-{
-        return elem.tBodies;
-	}-*/;
+																		return elem.tBodies;
+																		}-*/;
 
 	/**
 	 * Create a table header row or return an existing one.
@@ -374,15 +373,15 @@ public class TableElement extends Element {
 	 * @return A new table header element (THEAD)
 	 */
 	native ElementRemote createTHead0(ElementRemote elt) /*-{
-        return elt.createTHead();
-	}-*/;
+															return elt.createTHead();
+															}-*/;
 
 	/**
 	 * Delete the table caption, if one exists.
 	 */
 	native void deleteCaption0(ElementRemote elt) /*-{
-        elt.deleteCaption();
-	}-*/;
+													elt.deleteCaption();
+													}-*/;
 
 	/**
 	 * Delete a table row.
@@ -394,34 +393,34 @@ public class TableElement extends Element {
 	 *            the last row in the table is deleted
 	 */
 	native void deleteRow0(ElementRemote elt, int index) /*-{
-        elt.deleteRow(index);
-	}-*/;
+															elt.deleteRow(index);
+															}-*/;
 
 	/**
 	 * Delete the header from the table, if one exists.
 	 */
 	native void deleteTFoot0(ElementRemote elt) /*-{
-        elt.deleteTFoot();
-	}-*/;
+												elt.deleteTFoot();
+												}-*/;
 
 	/**
 	 * Delete the header from the table, if one exists.
 	 */
 	native void deleteTHead0(ElementRemote elt) /*-{
-        elt.deleteTHead();
-	}-*/;
+												elt.deleteTHead();
+												}-*/;
 
 	/**
 	 * The table's TFOOT, or null if none exists.
 	 */
 	final native ElementRemote getTFoot0(ElementRemote elem) /*-{
-        return elem.tFoot;
-	}-*/;
+																return elem.tFoot;
+																}-*/;
 
 	/**
 	 * The table's THEAD, or null if none exists.
 	 */
 	final native ElementRemote getTHead0(ElementRemote elem) /*-{
-        return elem.tHead;
-	}-*/;
+																return elem.tHead;
+																}-*/;
 }

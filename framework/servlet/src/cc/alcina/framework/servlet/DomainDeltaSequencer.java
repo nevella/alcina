@@ -76,9 +76,8 @@ public class DomainDeltaSequencer {
 
 	public static DomainTranche objectsToTranche(
 			final DetachedEntityCache reachableCache, Long id,
-			Collection<Entity> entities, Class clazz,
-			Class signatureClass, GraphProjectionDualFilter flattenFilter)
-			throws Exception {
+			Collection<Entity> entities, Class clazz, Class signatureClass,
+			GraphProjectionDualFilter flattenFilter) throws Exception {
 		entities = new ArrayList<Entity>(entities);
 		List<DomainTransformEvent> dtes = TransformManager.get()
 				.objectsToDtes(entities, clazz, false);
@@ -90,8 +89,8 @@ public class DomainDeltaSequencer {
 		DomainTranche tranche = new DomainTranche();
 		tranche.setReplayEvents(dtes);
 		tranche.setUnlinkedObjects(
-				new GraphProjection(flattenFilter, flattenFilter).project(entities,
-						null));
+				new GraphProjection(flattenFilter, flattenFilter)
+						.project(entities, null));
 		tranche.setSignature(new DomainModelDeltaSignature()
 				.clazz(signatureClass).requiresHash().id(id));
 		return tranche;

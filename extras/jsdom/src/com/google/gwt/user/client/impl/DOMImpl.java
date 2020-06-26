@@ -32,9 +32,10 @@ public abstract class DOMImpl {
 	 * before toRemote, it'll never be set later
 	 */
 	public static EventListener getEventListener(Element elem) {
-		if(elem.implAccess().linkedToRemote()){
-			EventListener eventListener = getEventListener0(elem.implAccess().typedRemote());
-			if(eventListener!=null){
+		if (elem.implAccess().linkedToRemote()) {
+			EventListener eventListener = getEventListener0(
+					elem.implAccess().typedRemote());
+			if (eventListener != null) {
 				return eventListener;
 			}
 		}

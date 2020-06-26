@@ -11,8 +11,6 @@ public interface MatchStrategy<T> {
 
 	Collection<T> getAmbiguousRightElements();
 
-
-
 	void log(CollectionFilter<T> ignoreAmbiguityForReportingFilter,
 			Logger logger, Class<T> mergedClass);
 }

@@ -53,7 +53,6 @@ import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar.BreadcrumbBarButton;
 import cc.alcina.framework.gwt.client.widget.InputButton;
 
-
 /**
  *
  * @author Nick Reddel
@@ -354,7 +353,6 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 		}
 	}
 
-	
 	class BreadcrumbBarEditableWidgetsButton extends BreadcrumbBarButton
 			implements ClickHandler {
 		public BreadcrumbBarEditableWidgetsButton() {

@@ -36,7 +36,6 @@ public class BasicSearcher implements Searcher {
 		return this.entityManager;
 	}
 
-	
 	public SearchResultsBase search(SearchDefinition def, int pageNumber,
 			EntityManager entityManager) {
 		return searchWithTemp(def, pageNumber, entityManager, null);

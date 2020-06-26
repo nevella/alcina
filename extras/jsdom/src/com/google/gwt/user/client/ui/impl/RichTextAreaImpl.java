@@ -34,83 +34,85 @@ import com.google.gwt.user.client.ui.RichTextArea;
  */
 public class RichTextAreaImpl {
 	protected Element elemDelegating;
-  protected ElementRemote elem;
-  protected HasInitializeHandlers owner;
 
-  public RichTextAreaImpl() {
-	  elemDelegating = createElement();
-	  elem = elemDelegating.implAccess().ensureRemote();
-  }
+	protected ElementRemote elem;
 
-  public Element getElement() {
-    return elemDelegating;
-  }
+	protected HasInitializeHandlers owner;
 
-  public String getHTML() {
-    return elem.getPropertyString("value");
-  }
+	public RichTextAreaImpl() {
+		elemDelegating = createElement();
+		elem = elemDelegating.implAccess().ensureRemote();
+	}
 
-  public String getText() {
-    return elem.getPropertyString("value");
-  }
+	public Element getElement() {
+		return elemDelegating;
+	}
 
-  public void initElement() {
-    onElementInitialized();
-  }
+	public String getHTML() {
+		return elem.getPropertyString("value");
+	}
 
-  public boolean isEnabled() {
-    return !elem.getPropertyBoolean("disabled");
-  }
+	public String getText() {
+		return elem.getPropertyString("value");
+	}
 
-  public void setEnabled(boolean enabled) {
-    elem.setPropertyBoolean("disabled", !enabled);
-  }
+	public void initElement() {
+		onElementInitialized();
+	}
 
-  public native void setFocus(boolean focused) /*-{
-    if (focused) {
-      this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.focus();
-    } else {
-      this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.blur();
-    }
-  }-*/;
+	public boolean isEnabled() {
+		return !elem.getPropertyBoolean("disabled");
+	}
 
-  public void setHTML(@IsSafeHtml String html) {
-    elem.setPropertyString("value", html);
-  }
+	public void setEnabled(boolean enabled) {
+		elem.setPropertyBoolean("disabled", !enabled);
+	}
 
-  public void setOwner(HasInitializeHandlers owner) {
-    this.owner = owner;
-  }
+	public native void setFocus(boolean focused) /*-{
+													if (focused) {
+													this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.focus();
+													} else {
+													this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.blur();
+													}
+													}-*/;
 
-  public void setText(String text) {
-    elem.setPropertyString("value", text);
-  }
+	public void setHTML(@IsSafeHtml String html) {
+		elem.setPropertyString("value", html);
+	}
 
-  /**
-   * @deprecated as of GWT 2.1, use {@link #setOwner(HasInitializeHandlers)}
-   *             instead
-   */
-  @Deprecated
-  public void setWidget(RichTextArea richTextWidget) {
-    setOwner(richTextWidget);
-  }
+	public void setOwner(HasInitializeHandlers owner) {
+		this.owner = owner;
+	}
 
-  public void uninitElement() {
-  }
+	public void setText(String text) {
+		elem.setPropertyString("value", text);
+	}
 
-  protected Element createElement() {
-    return DOM.createTextArea();
-  }
+	/**
+	 * @deprecated as of GWT 2.1, use {@link #setOwner(HasInitializeHandlers)}
+	 *             instead
+	 */
+	@Deprecated
+	public void setWidget(RichTextArea richTextWidget) {
+		setOwner(richTextWidget);
+	}
 
-  protected void hookEvents() {
-    DOM.sinkEvents(elemDelegating, Event.MOUSEEVENTS | Event.KEYEVENTS | Event.ONCHANGE
-        | Event.ONCLICK | Event.FOCUSEVENTS);
-  }
+	public void uninitElement() {
+	}
 
-  protected void onElementInitialized() {
-    hookEvents();
-    if (owner != null) {
-      InitializeEvent.fire(owner);
-    }
-  }
+	protected Element createElement() {
+		return DOM.createTextArea();
+	}
+
+	protected void hookEvents() {
+		DOM.sinkEvents(elemDelegating, Event.MOUSEEVENTS | Event.KEYEVENTS
+				| Event.ONCHANGE | Event.ONCLICK | Event.FOCUSEVENTS);
+	}
+
+	protected void onElementInitialized() {
+		hookEvents();
+		if (owner != null) {
+			InitializeEvent.fire(owner);
+		}
+	}
 }

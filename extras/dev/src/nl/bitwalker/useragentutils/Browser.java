@@ -57,61 +57,82 @@ public enum Browser {
 	/**
 	 * For some strange reason Opera uses 9.80 in the user-agent string.
 	 */
-	OPERA10(Manufacturer.OPERA, Browser.OPERA, 10, "Opera 10", new String[] { "Opera/9.8" }, null, BrowserType.WEB_BROWSER, RenderingEngine.PRESTO, "Version\\/(([\\d]+)\\.([\\w]+))"), OPERA9(Manufacturer.OPERA, Browser.OPERA, 5, "Opera 9", new String[] { "Opera/9" }, null, BrowserType.WEB_BROWSER, RenderingEngine.PRESTO, null), KONQUEROR(Manufacturer.OTHER, null, 1, "Konqueror", new String[] { "Konqueror" }, null, BrowserType.WEB_BROWSER, RenderingEngine.KHTML, "Konqueror\\/(([0-9]+)\\.?([\\w]+)?(-[\\w]+)?)"),
+	OPERA10(Manufacturer.OPERA, Browser.OPERA, 10, "Opera 10",
+			new String[] { "Opera/9.8" }, null, BrowserType.WEB_BROWSER,
+			RenderingEngine.PRESTO, "Version\\/(([\\d]+)\\.([\\w]+))"),
+	OPERA9(Manufacturer.OPERA, Browser.OPERA, 5, "Opera 9",
+			new String[] { "Opera/9" }, null, BrowserType.WEB_BROWSER,
+			RenderingEngine.PRESTO, null),
+	KONQUEROR(Manufacturer.OTHER, null, 1, "Konqueror",
+			new String[] { "Konqueror" }, null, BrowserType.WEB_BROWSER,
+			RenderingEngine.KHTML,
+			"Konqueror\\/(([0-9]+)\\.?([\\w]+)?(-[\\w]+)?)"),
 	/**
 	 * Outlook email client
 	 */
-	OUTLOOK(Manufacturer.MICROSOFT, null, 100, "Outlook", new String[] { "MSOffice" }, null, BrowserType.EMAIL_CLIENT, RenderingEngine.WORD, "MSOffice (([0-9]+))"), // before
-																																										// IE7
+	OUTLOOK(Manufacturer.MICROSOFT, null, 100, "Outlook",
+			new String[] { "MSOffice" }, null, BrowserType.EMAIL_CLIENT,
+			RenderingEngine.WORD, "MSOffice (([0-9]+))"), // before
+															// IE7
 	/**
 	 * Microsoft Outlook 2007 identifies itself as MSIE7 but uses the html
 	 * rendering engine of Word 2007. Example user agent: Mozilla/4.0
 	 * (compatible; MSIE 7.0; Windows NT 6.0; SLCC1; .NET CLR 2.0.50727; .NET
 	 * CLR 3.0.04506; .NET CLR 1.1.4322; MSOffice 12)
 	 */
-	OUTLOOK2007(Manufacturer.MICROSOFT, Browser.OUTLOOK, 107, "Outlook 2007", new String[] { "MSOffice 12" }, null, BrowserType.EMAIL_CLIENT, RenderingEngine.WORD, null), // before
-																																											// IE7
+	OUTLOOK2007(Manufacturer.MICROSOFT, Browser.OUTLOOK, 107, "Outlook 2007",
+			new String[] { "MSOffice 12" }, null, BrowserType.EMAIL_CLIENT,
+			RenderingEngine.WORD, null), // before
+											// IE7
 	/**
 	 * Outlook 2010 is still using the rendering engine of Word.
 	 * http://www.fixoutlook.org
 	 */
-	OUTLOOK2010(Manufacturer.MICROSOFT, Browser.OUTLOOK, 108, "Outlook 2010", new String[] { "MSOffice 14" }, null, BrowserType.EMAIL_CLIENT, RenderingEngine.WORD, null), // before
-																																											// IE7
+	OUTLOOK2010(Manufacturer.MICROSOFT, Browser.OUTLOOK, 108, "Outlook 2010",
+			new String[] { "MSOffice 14" }, null, BrowserType.EMAIL_CLIENT,
+			RenderingEngine.WORD, null), // before
+											// IE7
 	/**
 	 * Family of Internet Explorer browsers
 	 */
-	IE(Manufacturer.MICROSOFT, null, 1, "Internet Explorer", new String[] { "MSIE", "Trident" }, null, BrowserType.WEB_BROWSER, RenderingEngine.TRIDENT, "MSIE (([\\d]+)\\.([\\w]+))"), // before
-																																														// Mozilla
+	IE(Manufacturer.MICROSOFT, null, 1, "Internet Explorer",
+			new String[] { "MSIE", "Trident" }, null, BrowserType.WEB_BROWSER,
+			RenderingEngine.TRIDENT, "MSIE (([\\d]+)\\.([\\w]+))"), // before
+																	// Mozilla
 	/**
 	 * Since version 7 Outlook Express is identifying itself. By detecting
 	 * Outlook Express we can not identify the Internet Explorer version which
 	 * is probably used for the rendering. Obviously this product is now called
 	 * Windows Live Mail Desktop or just Windows Live Mail.
 	 */
-	OUTLOOK_EXPRESS7(Manufacturer.MICROSOFT, Browser.IE, 110, "Windows Live Mail", new String[] { "Outlook-Express/7.0" }, null, BrowserType.EMAIL_CLIENT, RenderingEngine.TRIDENT, null), // before
-																																															// IE7,
-																																															// previously
-																																															// known
-																																															// as
-																																															// Outlook
-																																															// Express.
-																																															// First
-																																															// released
-																																															// in
-																																															// 2006,
-																																															// offered
-																																															// with
-																																															// different
-																																															// name
-																																															// later
+	OUTLOOK_EXPRESS7(Manufacturer.MICROSOFT, Browser.IE, 110,
+			"Windows Live Mail", new String[] { "Outlook-Express/7.0" }, null,
+			BrowserType.EMAIL_CLIENT, RenderingEngine.TRIDENT, null), // before
+																		// IE7,
+																		// previously
+																		// known
+																		// as
+																		// Outlook
+																		// Express.
+																		// First
+																		// released
+																		// in
+																		// 2006,
+																		// offered
+																		// with
+																		// different
+																		// name
+																		// later
 	/**
 	 * Since 2007 the mobile edition of Internet Explorer identifies itself as
 	 * IEMobile in the user-agent. If previous versions have to be detected, use
 	 * the operating system information as well.
 	 */
-	IEMOBILE7(Manufacturer.MICROSOFT, Browser.IE, 121, "IE Mobile 7", new String[] { "IEMobile 7" }, null, BrowserType.MOBILE_BROWSER, RenderingEngine.TRIDENT, null), // before
-																																										// MSIE
-																																										// strings
+	IEMOBILE7(Manufacturer.MICROSOFT, Browser.IE, 121, "IE Mobile 7",
+			new String[] { "IEMobile 7" }, null, BrowserType.MOBILE_BROWSER,
+			RenderingEngine.TRIDENT, null), // before
+											// MSIE
+											// strings
 	IEMOBILE6(Manufacturer.MICROSOFT, Browser.IE, 120, "IE Mobile 6",
 			new String[] { "IEMobile 6" }, null, BrowserType.MOBILE_BROWSER,
 			RenderingEngine.TRIDENT, null), // before MSIE
@@ -143,8 +164,10 @@ public enum Browser {
 	/**
 	 * Google Chrome browser
 	 */
-	CHROME(Manufacturer.GOOGLE, null, 1, "Chrome", new String[] { "Chrome" }, null, BrowserType.WEB_BROWSER, RenderingEngine.WEBKIT, "Chrome\\/(([0-9]+)\\.?([\\w]+)?(\\.[\\w]+)?(\\.[\\w]+)?)"), // before
-																																																	// Mozilla
+	CHROME(Manufacturer.GOOGLE, null, 1, "Chrome", new String[] { "Chrome" },
+			null, BrowserType.WEB_BROWSER, RenderingEngine.WEBKIT,
+			"Chrome\\/(([0-9]+)\\.?([\\w]+)?(\\.[\\w]+)?(\\.[\\w]+)?)"), // before
+																			// Mozilla
 	CHROME10(Manufacturer.GOOGLE, Browser.CHROME, 15, "Chrome 10",
 			new String[] { "Chrome/10" }, null, BrowserType.WEB_BROWSER,
 			RenderingEngine.WEBKIT, null), // before Mozilla

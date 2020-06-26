@@ -7,18 +7,18 @@ import com.google.gwt.resources.client.ImageResource;
 import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
 
 public interface DataClientResources extends ClientBundle {
-    public static final DataClientResources INSTANCE = GWT
-            .create(DataClientResources.class);
+	public static final DataClientResources INSTANCE = GWT
+			.create(DataClientResources.class);
 
-    @Source("dataclient-alcina.css")
-    public SimpleCssResource alcinaCss();
+	@Source("dataclient-alcina.css")
+	public SimpleCssResource alcinaCss();
 
-    @Source("dataclient.css")
-    public SimpleCssResource css();
+	@Source("dataclient.css")
+	public SimpleCssResource css();
 
-    @Source("dataclient-complex.css")
-    public SimpleCssResource cssComplex();
+	@Source("dataclient-complex.css")
+	public SimpleCssResource cssComplex();
 
-    @Source("transparent.png")
-    ImageResource transparent();
+	@Source("transparent.png")
+	ImageResource transparent();
 }

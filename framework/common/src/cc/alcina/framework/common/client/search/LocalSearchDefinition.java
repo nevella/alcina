@@ -31,7 +31,6 @@ public class LocalSearchDefinition extends SearchDefinition {
 		return resultClass;
 	}
 
-	
 	public Collection search() {
 		CollectionFilter filter = buildFilter();
 		return TransformManager.get().filter(getResultClass(), filter);

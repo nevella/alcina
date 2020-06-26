@@ -12,8 +12,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstanceExpiredException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcTopics.ClientInstanceExpiredExceptionToken;
 
 public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {

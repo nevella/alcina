@@ -39,7 +39,6 @@ public abstract class StateListenable {
 		listeners.remove(l);
 	}
 
-	
 	protected void fireStateChanged(String newState) {
 		ArrayList<StateChangeListener> listenersCopy = (ArrayList<StateChangeListener>) listeners
 				.clone();

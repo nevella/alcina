@@ -9,58 +9,58 @@ import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.entity.SEUtilities;
 
 public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
-        implements RemoteActionPerformer<R> {
-    // FIXME - switch to slf4j
-    protected Logger logger;
+		implements RemoteActionPerformer<R> {
+	// FIXME - mvcc.jobs - switch to slf4j
+	protected Logger logger;
 
-    protected org.slf4j.Logger slf4jLogger = LoggerFactory
-            .getLogger(getClass());
+	protected org.slf4j.Logger slf4jLogger = LoggerFactory
+			.getLogger(getClass());
 
-    protected JobTracker jobTracker;
+	protected JobTracker jobTracker;
 
-    boolean started;
+	boolean started;
 
-    public JobTracker getJobTracker() {
-        return jobTracker;
-    }
+	public JobTracker getJobTracker() {
+		return jobTracker;
+	}
 
-    public Logger getLogger() {
-        return this.logger;
-    }
+	public Logger getLogger() {
+		return this.logger;
+	}
 
-    public synchronized void updateJob(String message) {
-        updateJob(message, 1);
-    }
+	public synchronized void updateJob(String message) {
+		updateJob(message, 1);
+	}
 
-    public void updateJob(String message, int completedDelta) {
-        JobRegistry.get().updateJob(message, completedDelta);
-    }
+	public void updateJob(String message, int completedDelta) {
+		JobRegistry.get().updateJob(message, completedDelta);
+	}
 
-    protected void finishJob() {
-    }
+	protected void finishJob() {
+	}
 
-    protected void jobError(Exception exception) {
-        JobRegistry.get().jobError(exception);
-    }
+	protected void jobError(Exception exception) {
+		JobRegistry.get().jobError(exception);
+	}
 
-    protected void jobError(String message) {
-        JobRegistry.get().jobError(message);
-    }
+	protected void jobError(String message) {
+		JobRegistry.get().jobError(message);
+	}
 
-    protected String jobName() {
-        return SEUtilities.friendlyClassName(getClass());
-    }
+	protected String jobName() {
+		return SEUtilities.friendlyClassName(getClass());
+	}
 
-    protected void jobOk(String message) {
-        JobRegistry.get().jobOk(message);
-    }
+	protected void jobOk(String message) {
+		JobRegistry.get().jobOk(message);
+	}
 
-    protected void jobStarted() {
-        if (started) {
-            throw new RuntimeException("Already started");
-        }
-        started = true;
-        jobTracker = JobRegistry.get().startJob(getClass(), jobName(), null);
-        logger = JobRegistry.get().getContextLogger();
-    }
+	protected void jobStarted() {
+		if (started) {
+			throw new RuntimeException("Already started");
+		}
+		started = true;
+		jobTracker = JobRegistry.get().startJob(getClass(), jobName(), null);
+		logger = JobRegistry.get().getContextLogger();
+	}
 }

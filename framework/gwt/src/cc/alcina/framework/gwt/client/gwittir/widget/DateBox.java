@@ -47,18 +47,16 @@ public class DateBox extends AbstractBoundWidget<Date>
 		implements ValueChangeHandler, Focusable {
 	private com.google.gwt.user.datepicker.client.DateBox base;;
 
-	private DateTimeFormat dateTimeFormat; 
+	private DateTimeFormat dateTimeFormat;
 
 	private String text;
 
 	private Date value;
 
 	public DateBox() {
-		this(DateTimeFormat
-				.getFormat("dd/MM/yyyy"));
-		
+		this(DateTimeFormat.getFormat("dd/MM/yyyy"));
 	}
-	
+
 	public DateBox(DateTimeFormat dateTimeFormat) {
 		this.dateTimeFormat = dateTimeFormat;
 		Format dtFormat = new DefaultFormat(getDateTimeFormat());
@@ -70,9 +68,8 @@ public class DateBox extends AbstractBoundWidget<Date>
 		base.addStyleName("alcina-DateBox");
 		initWidget(base);
 	}
-	
-	private BidiConverter<Date,Date> dateTranslator = new BidiIdentityConverter<Date>();
 
+	private BidiConverter<Date, Date> dateTranslator = new BidiIdentityConverter<Date>();
 
 	public BidiConverter<Date, Date> getDateTranslator() {
 		return this.dateTranslator;

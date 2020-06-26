@@ -6,15 +6,15 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 @FunctionalInterface
 public interface ThrowingRunnable {
-    public static void runAll(Collection<ThrowingRunnable> runnables) {
-        try {
-            for (ThrowingRunnable throwingRunnable : runnables) {
-                throwingRunnable.run();
-            }
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
+	public static void runAll(Collection<ThrowingRunnable> runnables) {
+		try {
+			for (ThrowingRunnable throwingRunnable : runnables) {
+				throwingRunnable.run();
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
-    public void run() throws Exception;
+	public void run() throws Exception;
 }

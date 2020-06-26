@@ -25,24 +25,24 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Nick Reddel
  */
 public class FormLabel extends Widget implements HasClickHandlers {
-    /**
-     * Creates an empty span panel.
-     */
-    public FormLabel(String html) {
-        setElement(DOM.createLabel());
-        getElement().setInnerHTML(html);
-    }
+	/**
+	 * Creates an empty span panel.
+	 */
+	public FormLabel(String html) {
+		setElement(DOM.createLabel());
+		getElement().setInnerHTML(html);
+	}
 
-    @Override
-    public HandlerRegistration addClickHandler(ClickHandler handler) {
-        return addDomHandler(handler, ClickEvent.getType());
-    }
+	@Override
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
+	}
 
-    public String getHTML(String src) {
-        return getElement().getInnerHTML();
-    }
+	public String getHTML(String src) {
+		return getElement().getInnerHTML();
+	}
 
-    public void setFor(String widgetId) {
-        getElement().setPropertyString("for", widgetId);
-    }
+	public void setFor(String widgetId) {
+		getElement().setPropertyString("for", widgetId);
+	}
 }

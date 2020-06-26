@@ -26,79 +26,78 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public class RemoteConsoleInit {
-    public void init() {
-        loadCss();
-        addDevCssListener();
-        if (GWT.isScript()) {
-            ClientPropertyReflector
-                    .setDelegateCreator(new JsRegistryDelegateCreator());
-        }
-        CommonUtils.setSupplier = () -> new LightSet();
-        if (GWT.isScript()) {
-            Registry.setDelegateCreator(new JsRegistryDelegateCreator());
-        }
-        JavascriptKeyableLookup.initJs();
-        Registry.get().registerBootstrapServices(ClientReflector.get());
-        Reflections.registerClassLookup(ClientReflector.get());
-        RemoteConsoleModule.get();
-        RemoteConsoleRequest request = RemoteConsoleRequest.create();
-        request.setType(RemoteConsoleRequestType.STARTUP);
-        RemoteConsoleClientUtils.submitRequest(request,
-                this::handleStartupResponse);
-        // model = new JadexInitModel();
-        // model.fromJson(Jx.wndString(JadexInitModel.JS_INTEROP_KEY));
-        // Registry.registerSingleton(ClientNotifications.class,
-        // new JadeNotificationsImpl());
-    }
+	public void init() {
+		loadCss();
+		addDevCssListener();
+		if (GWT.isScript()) {
+			ClientPropertyReflector
+					.setDelegateCreator(new JsRegistryDelegateCreator());
+		}
+		CommonUtils.setSupplier = () -> new LightSet();
+		if (GWT.isScript()) {
+			Registry.setDelegateCreator(new JsRegistryDelegateCreator());
+		}
+		JavascriptKeyableLookup.initJs();
+		Registry.get().registerBootstrapServices(ClientReflector.get());
+		Reflections.registerClassLookup(ClientReflector.get());
+		RemoteConsoleModule.get();
+		RemoteConsoleRequest request = RemoteConsoleRequest.create();
+		request.setType(RemoteConsoleRequestType.STARTUP);
+		RemoteConsoleClientUtils.submitRequest(request,
+				this::handleStartupResponse);
+		// model = new JadexInitModel();
+		// model.fromJson(Jx.wndString(JadexInitModel.JS_INTEROP_KEY));
+		// Registry.registerSingleton(ClientNotifications.class,
+		// new JadeNotificationsImpl());
+	}
 
-    private void addDevCssListener() {
-        NativePreviewHandler handler = new NativePreviewHandler() {
-            @Override
-            public void onPreviewNativeEvent(NativePreviewEvent event) {
-                NativeEvent nativeEvent = event.getNativeEvent();
-                String type = nativeEvent.getType();
-                switch (type) {
-                case "keydown":
-                case "keypress":
-                    break;
-                default:
-                    return;
-                }
-                boolean altKey = nativeEvent.getAltKey();
-                boolean shiftKey = nativeEvent.getShiftKey();
-                // Remote - use jade event sys
-                int keyCode = nativeEvent.getKeyCode();
-                int charCode = nativeEvent.getCharCode();
-                if (type.equals("keydown") && altKey && shiftKey) {
-                    if (keyCode == (int) 'Y') {
-                        DevModule.callDevStyleUI();
-                        event.cancel();
-                        WidgetUtils.squelchCurrentEvent();
-                    }
-                    if (keyCode == (int) 'J') {
-                        RemoteConsoleLayout.get().fire(
-                                RemoteConsoleLayoutMessage.FOCUS_COMMAND_BAR);
-                        event.cancel();
-                        WidgetUtils.squelchCurrentEvent();
-                    }
-                }
-                if (type.equals("keypress")) {
-                    if (altKey && shiftKey && WidgetUtils.recentSquelch()) {
-                        WidgetUtils.squelchCurrentEvent();
-                    }
-                }
-            }
-        };
-        Event.addNativePreviewHandler(handler);
-    }
+	private void addDevCssListener() {
+		NativePreviewHandler handler = new NativePreviewHandler() {
+			@Override
+			public void onPreviewNativeEvent(NativePreviewEvent event) {
+				NativeEvent nativeEvent = event.getNativeEvent();
+				String type = nativeEvent.getType();
+				switch (type) {
+				case "keydown":
+				case "keypress":
+					break;
+				default:
+					return;
+				}
+				boolean altKey = nativeEvent.getAltKey();
+				boolean shiftKey = nativeEvent.getShiftKey();
+				// Remote - use jade event sys
+				int keyCode = nativeEvent.getKeyCode();
+				int charCode = nativeEvent.getCharCode();
+				if (type.equals("keydown") && altKey && shiftKey) {
+					if (keyCode == (int) 'Y') {
+						DevModule.callDevStyleUI();
+						event.cancel();
+						WidgetUtils.squelchCurrentEvent();
+					}
+					if (keyCode == (int) 'J') {
+						RemoteConsoleLayout.get().fire(
+								RemoteConsoleLayoutMessage.FOCUS_COMMAND_BAR);
+						event.cancel();
+						WidgetUtils.squelchCurrentEvent();
+					}
+				}
+				if (type.equals("keypress")) {
+					if (altKey && shiftKey && WidgetUtils.recentSquelch()) {
+						WidgetUtils.squelchCurrentEvent();
+					}
+				}
+			}
+		};
+		Event.addNativePreviewHandler(handler);
+	}
 
-    private void loadCss() {
-        // TODO Auto-generated method stub
-    }
+	private void loadCss() {
+	}
 
-    void handleStartupResponse(RemoteConsoleResponse response) {
-        RemoteConsole.models().setStartupModel(response.getStartupModel());
-        Window.setTitle(Ax.format("DevConsole - %s",
-                response.getStartupModel().getAppName()));
-    }
+	void handleStartupResponse(RemoteConsoleResponse response) {
+		RemoteConsole.models().setStartupModel(response.getStartupModel());
+		Window.setTitle(Ax.format("DevConsole - %s",
+				response.getStartupModel().getAppName()));
+	}
 }

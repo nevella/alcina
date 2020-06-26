@@ -279,7 +279,8 @@ public class LogStoreCompactor extends Consort<Phase> {
 					&& !isCompacted(mergeTo)) {
 				mergeTo.addLogRecord(mergeFrom.getLogRecords().remove(0));
 			}
-			String serialized = Registry.impl(AlcinaBeanSerializer.class).serialize(mergeTo);
+			String serialized = Registry.impl(AlcinaBeanSerializer.class)
+					.serialize(mergeTo);
 			LogStore.get().objectStore.put(minNonCompactedLogRecordId,
 					serialized, this);
 		}

@@ -13,17 +13,15 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package cc.alcina.framework.common.client.util.trie;
 
 /**
  * An abstract implementation of {@link KeyAnalyzer}.
  */
 public abstract class AbstractKeyAnalyzer<K> implements KeyAnalyzer<K> {
-  
-  @SuppressWarnings("unchecked")
-  @Override
-  public int compare(K o1, K o2) {
-    return ((Comparable<K>)o1).compareTo(o2);
-  }
+	@SuppressWarnings("unchecked")
+	@Override
+	public int compare(K o1, K o2) {
+		return ((Comparable<K>) o1).compareTo(o2);
+	}
 }

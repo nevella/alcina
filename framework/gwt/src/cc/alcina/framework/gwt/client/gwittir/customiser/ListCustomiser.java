@@ -48,10 +48,9 @@ public class ListCustomiser implements Customiser {
 	public static final String NO_NULL = "noNull";
 
 	public static final String ADD_HANDLER_CLASS = "addHandlerClass";
-	
+
 	public static final String REFRESH_ON_MODEL_CHANGE = "refreshOnModelChange";
 
-	
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
 			boolean multiple, Custom info) {
 		NamedParameter[] parameters = info.parameters();
@@ -68,8 +67,8 @@ public class ListCustomiser implements Customiser {
 					MAX_SELECTED_ITEMS, 1);
 			boolean nonull = NamedParameter.Support.booleanValue(parameters,
 					NO_NULL);
-			boolean refreshOnModelChange = NamedParameter.Support.booleanValue(parameters,
-			        REFRESH_ON_MODEL_CHANGE);
+			boolean refreshOnModelChange = NamedParameter.Support
+					.booleanValue(parameters, REFRESH_ON_MODEL_CHANGE);
 			ListBoxCollectionProvider lbcp = new ListBoxCollectionProvider(
 					clazz, maxSelectedItems != 1, nonull, renderer, comparator,
 					addHandler);

@@ -143,23 +143,23 @@ public class WidgetUtils {
 	}
 
 	public static native void clearFocussedDocumentElement()/*-{
-    if ($doc.activeElement) {
-      var tagName = $doc.activeElement.tagName.toLowerCase();
-      if (tagName != "body" && tagName != "html") {
-        $doc.activeElement.blur();
-      }
-    }
-	}-*/;
+															if ($doc.activeElement) {
+															var tagName = $doc.activeElement.tagName.toLowerCase();
+															if (tagName != "body" && tagName != "html") {
+															$doc.activeElement.blur();
+															}
+															}
+															}-*/;
 
 	public static final native void click(Element elt) /*-{
-    var elem_remote = elt.@com.google.gwt.dom.client.Element::ensureRemote()();
-    elem_remote.click();
-    try {
-      elem_remote.focus();
-    } catch (e) {
-
-    }
-	}-*/;
+														var elem_remote = elt.@com.google.gwt.dom.client.Element::ensureRemote()();
+														elem_remote.click();
+														try {
+														elem_remote.focus();
+														} catch (e) {
+														
+														}
+														}-*/;
 
 	public static Element clickGetAnchorAncestor(ClickEvent clickEvent) {
 		Event event = Event.as(clickEvent.getNativeEvent());
@@ -222,24 +222,24 @@ public class WidgetUtils {
 	}
 
 	public static native boolean docHasFocus() /*-{
-    if (typeof $wnd.document.hasFocus !== "undefined") {
-      return $wnd.document.hasFocus();
-    } else {
-      return true;
-    }
-	}-*/;
+												if (typeof $wnd.document.hasFocus !== "undefined") {
+												return $wnd.document.hasFocus();
+												} else {
+												return true;
+												}
+												}-*/;
 
 	public static native boolean docIsVisible() /*-{
-    if (typeof $wnd.document.hidden !== "undefined") {
-      return !$wnd.document.hidden;
-    } else {
-      return true;
-    }
-	}-*/;
+												if (typeof $wnd.document.hidden !== "undefined") {
+												return !$wnd.document.hidden;
+												} else {
+												return true;
+												}
+												}-*/;
 
 	public static native boolean execCopy() /*-{
-    return $wnd.document.execCommand("copy");
-	}-*/;
+											return $wnd.document.execCommand("copy");
+											}-*/;
 
 	// Wouldn't Widget.fireEvent() would be much better here? ...
 	// nah - this is the right way
@@ -258,8 +258,8 @@ public class WidgetUtils {
 	}
 
 	public static native void focus(Element elem) /*-{
-    elem.focus();
-	}-*/;
+													elem.focus();
+													}-*/;
 
 	public static int getBestOffsetHeight(Element e) {
 		return getBestOffsetHeight(e, false);
@@ -270,48 +270,48 @@ public class WidgetUtils {
 	}
 
 	public static native String getBoundingClientRect(Element elem) /*-{
-    if (!String.prototype.format) {
-      String.prototype.format = String.prototype.f = function() {
-        var s = this, i = arguments.length;
-
-        while (i--) {
-          s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
-        }
-        return s;
-      };
-    }
-    var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
-    var rect = remote.getBoundingClientRect();
-    return "x:{0}, y:{1},w:{2},h:{3}".format(rect.x, rect.y, rect.width,
-        rect.height);
-	}-*/;
+																	if (!String.prototype.format) {
+																	String.prototype.format = String.prototype.f = function() {
+																	var s = this, i = arguments.length;
+																	
+																	while (i--) {
+																	s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
+																	}
+																	return s;
+																	};
+																	}
+																	var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+																	var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+																	var rect = remote.getBoundingClientRect();
+																	return "x:{0}, y:{1},w:{2},h:{3}".format(rect.x, rect.y, rect.width,
+																	rect.height);
+																	}-*/;
 
 	public static native String getComputedStyle(Element eltMulti,
 			String attributeName)/*-{
-    var elt = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
-    if (elt.currentStyle) {
-      return elt.currentStyle[attributeName];
-    }
-    if ($wnd.getComputedStyle) {
-      return $wnd.getComputedStyle(elt, null)[attributeName];
-    }
-	}-*/;
+									var elt = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
+									if (elt.currentStyle) {
+									return elt.currentStyle[attributeName];
+									}
+									if ($wnd.getComputedStyle) {
+									return $wnd.getComputedStyle(elt, null)[attributeName];
+									}
+									}-*/;
 
 	public static native String getComputedStyleProperty(Element eltMulti,
 			String strCssRule) /*-{
-    var elem = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
-    if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
-      strValue = $doc.defaultView.getComputedStyle(elem, "").getPropertyValue(
-          strCssRule);
-    } else if (oElm.currentStyle) {
-      strCssRule = strCssRule.replace(/\-(\w)/g, function(strMatch, p1) {
-        return p1.toUpperCase();
-      });
-      strValue = oElm.currentStyle[strCssRule];
-    }
-    return strValue;
-	}-*/;
+								var elem = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
+								if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
+								strValue = $doc.defaultView.getComputedStyle(elem, "").getPropertyValue(
+								strCssRule);
+								} else if (oElm.currentStyle) {
+								strCssRule = strCssRule.replace(/\-(\w)/g, function(strMatch, p1) {
+								return p1.toUpperCase();
+								});
+								strValue = oElm.currentStyle[strCssRule];
+								}
+								return strValue;
+								}-*/;
 
 	public static List<Element> getElementAncestors(Element elem) {
 		List<Element> elements = new ArrayList<>();
@@ -324,14 +324,14 @@ public class WidgetUtils {
 
 	public static native Element getElementByNameOrId(Document doc,
 			String name) /*-{
-    var e = doc.getElementById(name);
-    if (!e) {
-      e = doc.getElementsByName(name)
-          && doc.getElementsByName(name).length == 1 ? doc
-          .getElementsByName(name)[0] : null;
-    }
-    return e;
-	}-*/;
+							var e = doc.getElementById(name);
+							if (!e) {
+							e = doc.getElementsByName(name)
+							&& doc.getElementsByName(name).length == 1 ? doc
+							.getElementsByName(name)[0] : null;
+							}
+							return e;
+							}-*/;
 
 	public static Element getElementForAroundPositioning(Element from) {
 		boolean hidden = isZeroOffsetDims(from);
@@ -420,76 +420,76 @@ public class WidgetUtils {
 
 	public static native Element getElementForSelector(Element elto,
 			String selector) /*-{
-    if (!($doc.querySelector)) {
-      return null;
-    }
-    @cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(elto);
-    var elt = elto.@com.google.gwt.dom.client.Element::typedRemote()();
-    var from = (elt) ? elt : $doc;
-    var splits = selector.split("::");
-    for (var idx = 0; idx < splits.length; idx += 2) {
-      var selectorPart = splits[idx];
-      var textRegex = idx == splits.length - 1 ? null : splits[idx + 1];
-      if (textRegex == null) {
-        from = from.querySelector(selectorPart);
-        break;
-      }
-      var nl = from.querySelectorAll(splits[idx]);
-      var found = false;
-      for (var i = 0; i < nl.length; i++) {
-        var item = nl[i];
-        if (item.innerHTML.indexOf(textRegex) != -1
-            || item.innerHTML.match(new RegExp(textRegex))) {
-          from = item;
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        return null;
-      }
-    }
-    var eltout = @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(from);
-    return eltout;
-	}-*/;
+								if (!($doc.querySelector)) {
+								return null;
+								}
+								@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(elto);
+								var elt = elto.@com.google.gwt.dom.client.Element::typedRemote()();
+								var from = (elt) ? elt : $doc;
+								var splits = selector.split("::");
+								for (var idx = 0; idx < splits.length; idx += 2) {
+								var selectorPart = splits[idx];
+								var textRegex = idx == splits.length - 1 ? null : splits[idx + 1];
+								if (textRegex == null) {
+								from = from.querySelector(selectorPart);
+								break;
+								}
+								var nl = from.querySelectorAll(splits[idx]);
+								var found = false;
+								for (var i = 0; i < nl.length; i++) {
+								var item = nl[i];
+								if (item.innerHTML.indexOf(textRegex) != -1
+								|| item.innerHTML.match(new RegExp(textRegex))) {
+								from = item;
+								found = true;
+								break;
+								}
+								}
+								if (!found) {
+								return null;
+								}
+								}
+								var eltout = @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(from);
+								return eltout;
+								}-*/;
 
 	public static native NodeList getElementsForSelector(Element elto,
 			String selector) /*-{
-    if (!($doc.querySelector)) {
-      return null;
-    }
-    var elt = elto.@com.google.gwt.dom.client.Element::typedRemote()();
-    var from = (elt) ? elt : $doc;
-    var nodeList = from.querySelectorAll(selector);
-    return @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(nodeList);
-	}-*/;
+								if (!($doc.querySelector)) {
+								return null;
+								}
+								var elt = elto.@com.google.gwt.dom.client.Element::typedRemote()();
+								var from = (elt) ? elt : $doc;
+								var nodeList = from.querySelectorAll(selector);
+								return @com.google.gwt.dom.client.NodeList::new(Lcom/google/gwt/dom/client/DomNodeList;)(nodeList);
+								}-*/;
 
 	public static native Element getFocussedDocumentElement()/*-{
-    if ($doc.activeElement) {
-      var tagName = $doc.activeElement.tagName.toLowerCase();
-      return tagName != "body" && tagName != "html" ? @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)($doc.activeElement)
-          : null;
-    }
-    return null;
-	}-*/;
+																if ($doc.activeElement) {
+																var tagName = $doc.activeElement.tagName.toLowerCase();
+																return tagName != "body" && tagName != "html" ? @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)($doc.activeElement)
+																: null;
+																}
+																return null;
+																}-*/;
 
 	public static native int getOffsetHeightWithMargins(Element elem) /*-{
-    var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
-    if (remote.style.display == 'none') {
-      return 0;
-    }
-    var h = remote.offsetHeight;
-    var marginTop = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
-    var marginBottom = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
-    if (marginTop.indexOf("px") != -1) {
-      h += parseInt(marginTop.substring(0, marginTop.length - 2));
-    }
-    if (marginBottom.indexOf("px") != -1) {
-      h += parseInt(marginBottom.substring(0, marginBottom.length - 2));
-    }
-    return h;
-	}-*/;
+																		var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+																		var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+																		if (remote.style.display == 'none') {
+																		return 0;
+																		}
+																		var h = remote.offsetHeight;
+																		var marginTop = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
+																		var marginBottom = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
+																		if (marginTop.indexOf("px") != -1) {
+																		h += parseInt(marginTop.substring(0, marginTop.length - 2));
+																		}
+																		if (marginBottom.indexOf("px") != -1) {
+																		h += parseInt(marginBottom.substring(0, marginBottom.length - 2));
+																		}
+																		return h;
+																		}-*/;
 
 	public static <W extends Widget> W getParentWidget(Widget w,
 			Class<W> widgetClass) {
@@ -550,36 +550,36 @@ public class WidgetUtils {
 
 	public native static int getRelativeTopTo(Element elem,
 			Element end) /*-{
-    var top = 0;
-    while (elem != end) {
-      top += elem.offsetTop;
-      elem = elem.offsetParent;
-    }
-    return top;
-	}-*/;
+							var top = 0;
+							while (elem != end) {
+							top += elem.offsetTop;
+							elem = elem.offsetParent;
+							}
+							return top;
+							}-*/;
 
 	public static native int getScrollLeft(Element elem) /*-{
-    var left = 0;
-    var curr = elem;
-    // This intentionally excludes body which has a null offsetParent.
-    while (curr.offsetParent) {
-      left -= curr.scrollLeft;
-      curr = curr.parentNode;
-    }
-
-    return left;
-	}-*/;
+															var left = 0;
+															var curr = elem;
+															// This intentionally excludes body which has a null offsetParent.
+															while (curr.offsetParent) {
+															left -= curr.scrollLeft;
+															curr = curr.parentNode;
+															}
+															
+															return left;
+															}-*/;
 
 	public static native int getScrollTop(Element elem) /*-{
-    var top = 0;
-    var curr = elem;
-    // This intentionally excludes body which has a null offsetParent.
-    while (curr.offsetParent) {
-      top -= curr.scrollTop;
-      curr = curr.parentNode;
-    }
-    return top;
-	}-*/;
+														var top = 0;
+														var curr = elem;
+														// This intentionally excludes body which has a null offsetParent.
+														while (curr.offsetParent) {
+														top -= curr.scrollTop;
+														curr = curr.parentNode;
+														}
+														return top;
+														}-*/;
 
 	public static void hardCancelEvent(NativePreviewEvent event) {
 		event.cancel();
@@ -591,8 +591,8 @@ public class WidgetUtils {
 	}
 
 	public static native boolean isBrowserSupportsCopy() /*-{
-    return $wnd.document.queryCommandSupported("copy");
-	}-*/;
+															return $wnd.document.queryCommandSupported("copy");
+															}-*/;
 
 	public static boolean isLessThanXpixelsFrom(Element e, int hDistance,
 			int vDistance) {
@@ -954,21 +954,21 @@ public class WidgetUtils {
 	}
 
 	public static native void selectElement(Element elem)/*-{
-    var sel, range;
-    var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
-    if ($wnd.getSelection && $doc.createRange) {
-      sel = $wnd.getSelection();
-      range = $doc.createRange();
-      range.selectNodeContents(remote);
-      sel.removeAllRanges();
-      sel.addRange(range);
-    } else if ($doc.body.createTextRange) {
-      range = $doc.body.createTextRange();
-      range.moveToElementText(remote);
-      range.select();
-    }
-	}-*/;
+															var sel, range;
+															var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+															var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+															if ($wnd.getSelection && $doc.createRange) {
+															sel = $wnd.getSelection();
+															range = $doc.createRange();
+															range.selectNodeContents(remote);
+															sel.removeAllRanges();
+															sel.addRange(range);
+															} else if ($doc.body.createTextRange) {
+															range = $doc.body.createTextRange();
+															range.moveToElementText(remote);
+															range.select();
+															}
+															}-*/;
 
 	public static void setColumnVisibility(HTMLTable table, int column,
 			boolean visible) {
@@ -1045,21 +1045,21 @@ public class WidgetUtils {
 	}
 
 	private static native void cancelPossibleIEShortcut() /*-{
-    try {
-      $wnd.event.keyCode = 0; // this is a hack to capture ctrl+f ctrl+p etc
-    } catch (e) {
-
-    }
-	}-*/;
+															try {
+															$wnd.event.keyCode = 0; // this is a hack to capture ctrl+f ctrl+p etc
+															} catch (e) {
+															
+															}
+															}-*/;
 
 	private static native void copyTextToClipboard0(String text) /*-{
-    var textField = $doc.createElement('textarea');
-    textField.innerText = text;
-    $doc.body.appendChild(textField);
-    textField.select();
-    $doc.execCommand('copy');
-    textField.remove();
-	}-*/;
+																	var textField = $doc.createElement('textarea');
+																	textField.innerText = text;
+																	$doc.body.appendChild(textField);
+																	textField.select();
+																	$doc.execCommand('copy');
+																	textField.remove();
+																	}-*/;
 
 	private static void debugScroll(String message) {
 		if (debugScroll) {
@@ -1130,28 +1130,28 @@ public class WidgetUtils {
 
 	private static native boolean isLessThanXpixelsFrom0(Element e,
 			int hDistance, int vDistance, int x, int y) /*-{
-    try {
-      var rects = e.getClientRects();
-      for (var idx = 0; idx < rects.length; idx++) {
-        var rect = rects[idx];
-        var hOk = rect.left - x < hDistance && x - rect.right < hDistance;
-        var vOk = rect.top - y < vDistance && y - rect.bottom < vDistance;
-        if (hOk && vOk) {
-          return true;
-        }
-      }
-      return false;
-    } catch (e2) {
-      return false;
-    }
-	}-*/;
+														try {
+														var rects = e.getClientRects();
+														for (var idx = 0; idx < rects.length; idx++) {
+														var rect = rects[idx];
+														var hOk = rect.left - x < hDistance && x - rect.right < hDistance;
+														var vOk = rect.top - y < vDistance && y - rect.bottom < vDistance;
+														if (hOk && vOk) {
+														return true;
+														}
+														}
+														return false;
+														} catch (e2) {
+														return false;
+														}
+														}-*/;
 
 	private native static boolean
 			isVisibleWithOffsetParent(Element elem)/*-{
-    var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
-    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
-    return (remote.style.display != 'none' && remote.offsetParent != null);
-	}-*/;
+													var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+													var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+													return (remote.style.display != 'none' && remote.offsetParent != null);
+													}-*/;
 
 	private static void morphSplitPanel(SplitLayoutPanel splitPanel,
 			Widget keepChild, boolean restore) {

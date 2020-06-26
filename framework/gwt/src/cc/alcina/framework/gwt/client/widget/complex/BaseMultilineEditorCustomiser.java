@@ -24,6 +24,7 @@ public abstract class BaseMultilineEditorCustomiser<T extends Entity>
 	public void customiseContentViewFactory(
 			ContentViewFactory contentViewFactory, Object model) {
 	}
+
 	protected Predicate<Field> getFieldFilter() {
 		return field -> {
 			switch (field.getPropertyName()) {
@@ -36,6 +37,7 @@ public abstract class BaseMultilineEditorCustomiser<T extends Entity>
 			}
 		};
 	}
+
 	public List<Link> customisePerRowEditActions(List<Link> actions, T rowValue,
 			BaseMultilineEditor editor) {
 		return actions;
@@ -59,7 +61,8 @@ public abstract class BaseMultilineEditorCustomiser<T extends Entity>
 	@Override
 	public BoundWidget get() {
 		BaseMultilineEditor editor = asMultipleGrids()
-				? new BaseMultilineGridEditor() : new BaseMultilineRowEditor();
+				? new BaseMultilineGridEditor()
+				: new BaseMultilineRowEditor();
 		editor.setCustomiser(this);
 		editor.setEditable(editable);
 		return (BoundWidget) editor;

@@ -84,15 +84,14 @@ public class DetachedToDomainPersister<T extends Entity>
 			toReparent = getter.apply(t);
 			if (toReparent instanceof Set) {
 				Set replaceReparent = new LinkedHashSet((Set) toReparent);
-				Set filtered = ((Set<Entity>) toReparent).stream()
-						.filter(o -> {
-							if (o.getId() != 0) {
-								return true;
-							} else {
-								o.setLocalId(0);// need to recreate, detached
-								return false;
-							}
-						}).collect(AlcinaCollectors.toLiSet());
+				Set filtered = ((Set<Entity>) toReparent).stream().filter(o -> {
+					if (o.getId() != 0) {
+						return true;
+					} else {
+						o.setLocalId(0);// need to recreate, detached
+						return false;
+					}
+				}).collect(AlcinaCollectors.toLiSet());
 				((Set) toReparent).removeIf(o -> !filtered.contains(o));
 				toReparent = (V) replaceReparent;
 			} else {
@@ -112,13 +111,16 @@ public class DetachedToDomainPersister<T extends Entity>
 			});
 		}
 	}
+
 	protected boolean detachedToDomainHasDelta(T object) {
 		return detachedToDomainHasDelta(object, null);
 	}
-	protected boolean detachedToDomainHasDelta(T object, List<String> ignorePropertyNames) {
+
+	protected boolean detachedToDomainHasDelta(T object,
+			List<String> ignorePropertyNames) {
 		int preCount = TransformManager.get().getTransforms().size();
 		reparentInstructions.forEach(i -> i.prepare(object));
-		T attached = (T) Domain.detachedToDomain(object,ignorePropertyNames);
+		T attached = (T) Domain.detachedToDomain(object, ignorePropertyNames);
 		detachedToPersisted.put(object, attached);
 		reparentInstructions.forEach(i -> i.withAttached(attached));
 		return TransformManager.get().getTransforms().size() != preCount;

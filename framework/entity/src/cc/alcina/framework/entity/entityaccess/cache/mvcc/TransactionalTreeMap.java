@@ -156,7 +156,6 @@ public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 						(Comparator<? super Long>) comparator);
 			}
 		} else {
-			// FIXME - some more optimisations would be great
 			return (Map<K, V1>) new Object2ObjectAVLTreeMap<>(comparator);
 		}
 	}

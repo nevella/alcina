@@ -460,7 +460,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	@Override
 	public void lostOwnership(Clipboard clipboard, Transferable contents) {
-		// TODO Auto-generated method stub
 	}
 
 	public String padLeft(String str, int tabCount, int charCount) {

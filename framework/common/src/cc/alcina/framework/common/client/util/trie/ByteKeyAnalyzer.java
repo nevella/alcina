@@ -13,69 +13,64 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package cc.alcina.framework.common.client.util.trie;
 
 import java.io.Serializable;
 
-
 /**
  * A {@link KeyAnalyzer} for {@link Byte}s
  */
-public class ByteKeyAnalyzer extends AbstractKeyAnalyzer<Byte> implements Serializable {
-  
-  private static final long serialVersionUID = -5294514513354687850L;
+public class ByteKeyAnalyzer extends AbstractKeyAnalyzer<Byte>
+		implements Serializable {
+	private static final long serialVersionUID = -5294514513354687850L;
 
-  /**
-   * A singleton instance of {@link ByteKeyAnalyzer}
-   */
-  public static final ByteKeyAnalyzer INSTANCE = new ByteKeyAnalyzer();
-  
-  /**
-   * A bit mask where the first bit is 1 and the others are zero
-   */
-  private static final int MSB = 1 << Byte.SIZE-1;
-  
-  /**
-   * Returns a bit mask where the given bit is set
-   */
-  private static int mask(int bit) {
-    return MSB >>> bit;
-  }
-  
-  @Override
-  public int lengthInBits(Byte key) {
-    return Byte.SIZE;
-  }
+	/**
+	 * A singleton instance of {@link ByteKeyAnalyzer}
+	 */
+	public static final ByteKeyAnalyzer INSTANCE = new ByteKeyAnalyzer();
 
-  @Override
-  public boolean isBitSet(Byte key, int bitIndex) {
-    return (key & mask(bitIndex)) != 0;
-  }
+	/**
+	 * A bit mask where the first bit is 1 and the others are zero
+	 */
+	private static final int MSB = 1 << Byte.SIZE - 1;
 
-  @Override
-  public int bitIndex(Byte key, Byte otherKey) {
-    byte keyValue = key.byteValue();
-    if (keyValue == 0) {
-      return NULL_BIT_KEY;
-    }
+	/**
+	 * Returns a bit mask where the given bit is set
+	 */
+	private static int mask(int bit) {
+		return MSB >>> bit;
+	}
 
-    byte otherValue = otherKey.byteValue();
-    
-    if (keyValue != otherValue) {
-      int xorValue = keyValue ^ otherValue;
-      for (int i = 0; i < Byte.SIZE; i++) {
-        if ((xorValue & mask(i)) != 0) {
-          return i;
-        }
-      }
-    }
-    
-    return KeyAnalyzer.EQUAL_BIT_KEY;
-  }
+	@Override
+	public int lengthInBits(Byte key) {
+		return Byte.SIZE;
+	}
 
-  @Override
-  public boolean isPrefix(Byte key, Byte prefix) {
-    return key.equals(prefix);
-  }
+	@Override
+	public boolean isBitSet(Byte key, int bitIndex) {
+		return (key & mask(bitIndex)) != 0;
+	}
+
+	@Override
+	public int bitIndex(Byte key, Byte otherKey) {
+		byte keyValue = key.byteValue();
+		if (keyValue == 0) {
+			return NULL_BIT_KEY;
+		}
+		byte otherValue = otherKey.byteValue();
+		if (keyValue != otherValue) {
+			int xorValue = keyValue ^ otherValue;
+			for (int i = 0; i < Byte.SIZE; i++) {
+				if ((xorValue & mask(i)) != 0) {
+					return i;
+				}
+			}
+		}
+		return KeyAnalyzer.EQUAL_BIT_KEY;
+	}
+
+	@Override
+	public boolean isPrefix(Byte key, Byte prefix) {
+		return key.equals(prefix);
+	}
 }

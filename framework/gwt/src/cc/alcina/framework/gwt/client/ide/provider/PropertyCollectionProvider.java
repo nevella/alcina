@@ -61,7 +61,6 @@ public class PropertyCollectionProvider<E>
 				.addCollectionModificationListener(listener);
 	}
 
-	
 	public Collection<E> getCollection() {
 		Collection<E> colln = (Collection) GwittirBridge.get().getPropertyValue(
 				getDomainObject(), getPropertyReflector().getPropertyName());
@@ -77,7 +76,6 @@ public class PropertyCollectionProvider<E>
 		return l;
 	}
 
-	
 	public Class<? extends E> getCollectionMemberClass() {
 		return getPropertyReflector().getAnnotation(Association.class)
 				.implementationClass();

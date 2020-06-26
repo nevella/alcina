@@ -20,7 +20,6 @@ public class PersistentObjectCriterion extends SearchCriterion {
 	}
 
 	@Override
-	
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		if (classRef == null) {

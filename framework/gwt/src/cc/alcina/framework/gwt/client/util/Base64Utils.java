@@ -194,14 +194,15 @@ public class Base64Utils {
 		}
 		return haveNonZero;
 	}
+
 	public static boolean isBase64(String value) {
-		Set<Character> lookup =new LinkedHashSet<>();
+		Set<Character> lookup = new LinkedHashSet<>();
 		for (char c : base64Chars) {
 			lookup.add(c);
 		}
-		for(int idx=0;idx<value.length();idx++) {
+		for (int idx = 0; idx < value.length(); idx++) {
 			char c = value.charAt(idx);
-			if(!lookup.contains(c)&& c!='=') {
+			if (!lookup.contains(c) && c != '=') {
 				return false;
 			}
 		}

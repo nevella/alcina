@@ -336,7 +336,6 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			AsyncCallback<Void> afterTransformsMarkedAsPersistedCallback = new AsyncCallback<Void>() {
 				@Override
 				public void onFailure(Throwable caught) {
-					// TODO Auto-generated method stub
 				}
 
 				@Override

@@ -62,7 +62,8 @@ public class FileSelectorInfoValidator implements ParameterisedValidator {
 			}
 		}
 		FileSelectorInfo info = (FileSelectorInfo) value;
-		if (info == null || info.getFileName() == null|| info.getBytes() == null) {
+		if (info == null || info.getFileName() == null
+				|| info.getBytes() == null) {
 			if (required) {
 				throw new ValidationException("Required field");
 			}

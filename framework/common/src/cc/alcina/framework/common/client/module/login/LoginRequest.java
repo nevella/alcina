@@ -14,18 +14,20 @@ public class LoginRequest extends BaseBindable {
 	private boolean rememberMe;
 
 	private boolean recoverPassword;
-	
+
 	private String twoFactorAuthenticationCode;
 
 	public String getTwoFactorAuthenticationCode() {
 		return this.twoFactorAuthenticationCode;
 	}
 
-	public void setTwoFactorAuthenticationCode(String twoFactorAuthenticationCode) {
+	public void
+			setTwoFactorAuthenticationCode(String twoFactorAuthenticationCode) {
 		String old_twoFactorAuthenticationCode = this.twoFactorAuthenticationCode;
 		this.twoFactorAuthenticationCode = twoFactorAuthenticationCode;
-		propertyChangeSupport().firePropertyChange("twoFactorAuthenticationCode", old_twoFactorAuthenticationCode, twoFactorAuthenticationCode);
-		
+		propertyChangeSupport().firePropertyChange(
+				"twoFactorAuthenticationCode", old_twoFactorAuthenticationCode,
+				twoFactorAuthenticationCode);
 	}
 
 	private Map<String, String> properties = new LinkedHashMap<>();

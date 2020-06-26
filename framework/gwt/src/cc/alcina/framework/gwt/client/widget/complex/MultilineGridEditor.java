@@ -110,15 +110,19 @@ public abstract class MultilineGridEditor<H extends Entity>
 		List<H> values = new ArrayList<>(getValue());
 		values = filterVisibleValues(values);
 		sortValues(values);
-		values.forEach(v -> TransformManager.get().registerDomainObjectIfNonProvisional(v));
+		values.forEach(v -> TransformManager.get()
+				.registerDomainObjectIfNonProvisional(v));
 		grids = new ArrayList<>();
 		for (H value : values) {
-		    ContentViewFactory contentViewFactory = new ContentViewFactory()
-	                .noCaption().setBeanClass(value.getClass()).editable(editable)
-	                .autoSave(ContentViewFactory.autoSaveFromContentViewAncestor(this)).doNotClone(true);
-	        customiseContentViewFactory(contentViewFactory, getModel());
-	        PaneWrapperWithObjects view = contentViewFactory
-	                .createBeanView(value);
+			ContentViewFactory contentViewFactory = new ContentViewFactory()
+					.noCaption().setBeanClass(value.getClass())
+					.editable(editable)
+					.autoSave(ContentViewFactory
+							.autoSaveFromContentViewAncestor(this))
+					.doNotClone(true);
+			customiseContentViewFactory(contentViewFactory, getModel());
+			PaneWrapperWithObjects view = contentViewFactory
+					.createBeanView(value);
 			GridForm grid = (GridForm) view.getBoundWidget();
 			grid.setModel(value);
 			grid.setValue(value);
@@ -134,9 +138,10 @@ public abstract class MultilineGridEditor<H extends Entity>
 		holder.add(tableToolbarHolder);
 		toolbar.addVetoableActionListener(toolbarListener);
 	}
+
 	protected void customiseContentViewFactory(
-            ContentViewFactory contentViewFactory, Object model) {
-    }
+			ContentViewFactory contentViewFactory, Object model) {
+	}
 
 	protected List<Link> createPerRowEditActions(H rowValue) {
 		Link link = Link.createNoUnderline("Delete", evt -> {
@@ -180,5 +185,6 @@ public abstract class MultilineGridEditor<H extends Entity>
 			return name;
 		}
 	}
+
 	protected abstract void sortValues(List<H> values);
 }

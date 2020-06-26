@@ -36,7 +36,6 @@ public class TreeMap_CustomFieldSerializer
 		Map_CustomFieldSerializerBase.deserialize(streamReader, instance);
 	}
 
-	
 	public static TreeMap instantiate(SerializationStreamReader streamReader)
 			throws SerializationException {
 		if (GWT.isClient()) {

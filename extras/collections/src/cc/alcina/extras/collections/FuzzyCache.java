@@ -10,7 +10,6 @@ import java.util.TreeMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FloatPair;
 
-
 public class FuzzyCache<I, O> {
 	public static ResultConvertor<List, List> LIST_CONVERTER = new ResultConvertor<List, List>() {
 		@Override

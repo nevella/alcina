@@ -40,7 +40,6 @@ public class ScrollPanel100pcHeight extends ScrollPanel
 			 * blocks checking (potentially long) child list
 			 */
 			public Iterator<Widget> getLayoutWidgets() {
-				// TODO Auto-generated method stub
 				return super.getLayoutWidgets();
 			}
 

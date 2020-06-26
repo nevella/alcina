@@ -36,7 +36,6 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 
 	private T value;
 
-	
 	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
 
 	/** Creates a new instance of Label */
@@ -192,7 +191,6 @@ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 		this.base.setTitle(title);
 	}
 
-	
 	public void setValue(T value) {
 		// ("Setting value "+ value, null );
 		Object old = this.getValue();

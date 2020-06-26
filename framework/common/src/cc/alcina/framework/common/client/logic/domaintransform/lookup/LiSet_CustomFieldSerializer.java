@@ -24,7 +24,6 @@ import com.google.gwt.user.client.rpc.core.java.util.Collection_CustomFieldSeria
 /**
  * Custom field serializer for LiSet
  */
-
 public final class LiSet_CustomFieldSerializer
 		extends CustomFieldSerializer<LiSet> {
 	public static void deserialize(SerializationStreamReader streamReader,

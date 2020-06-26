@@ -28,60 +28,60 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
  * @author Nick Reddel
  */
 public abstract class DomainTransformRequestPersistent
-        extends DomainTransformRequest implements HasId {
-    private long id;
+		extends DomainTransformRequest implements HasId {
+	private long id;
 
-    private Long originatingUserId;
+	private Long originatingUserId;
 
-    private Date startPersistTime;
+	private Date startPersistTime;
 
-    private Date transactionCommitTime;
+	private Date transactionCommitTime;
 
-    public void clearForSimplePersistence() {
-        setClientInstance(null);
-        setEvents(null);
-    }
+	public void clearForSimplePersistence() {
+		setClientInstance(null);
+		setEvents(null);
+	}
 
-    @Override
-    @Column(name = "chunk_uuid")
-    public String getChunkUuidString() {
-        return super.getChunkUuidString();
-    }
+	@Override
+	@Column(name = "chunk_uuid")
+	public String getChunkUuidString() {
+		return super.getChunkUuidString();
+	}
 
-    @Override
-    @Transient
-    public long getId() {
-        return id;
-    }
+	@Override
+	@Transient
+	public long getId() {
+		return id;
+	}
 
-    public Long getOriginatingUserId() {
-        return this.originatingUserId;
-    }
+	public Long getOriginatingUserId() {
+		return this.originatingUserId;
+	}
 
-    public Date getStartPersistTime() {
-        return this.startPersistTime;
-    }
+	public Date getStartPersistTime() {
+		return this.startPersistTime;
+	}
 
-    public Date getTransactionCommitTime() {
-        return this.transactionCommitTime;
-    }
+	public Date getTransactionCommitTime() {
+		return this.transactionCommitTime;
+	}
 
-    @Override
-    public void setId(long id) {
-        this.id = id;
-    }
+	@Override
+	public void setId(long id) {
+		this.id = id;
+	}
 
-    public void setOriginatingUserId(Long originatingUserId) {
-        this.originatingUserId = originatingUserId;
-    }
+	public void setOriginatingUserId(Long originatingUserId) {
+		this.originatingUserId = originatingUserId;
+	}
 
-    public void setStartPersistTime(Date startPersistTime) {
-        this.startPersistTime = startPersistTime;
-    }
+	public void setStartPersistTime(Date startPersistTime) {
+		this.startPersistTime = startPersistTime;
+	}
 
-    public void setTransactionCommitTime(Date transactionCommitTime) {
-        this.transactionCommitTime = transactionCommitTime;
-    }
+	public void setTransactionCommitTime(Date transactionCommitTime) {
+		this.transactionCommitTime = transactionCommitTime;
+	}
 
-    public abstract void wrap(DomainTransformRequest dtr);
+	public abstract void wrap(DomainTransformRequest dtr);
 }

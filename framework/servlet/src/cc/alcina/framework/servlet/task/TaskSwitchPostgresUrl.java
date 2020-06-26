@@ -8,16 +8,19 @@ public class TaskSwitchPostgresUrl extends AbstractTaskPerformer {
 	@Override
 	protected void run0() throws Exception {
 		Spec spec = typedValue(Spec.class);
-		DomainStore store = DomainStore.stores().storeFor(spec.descriptorClassName);
+		DomainStore store = DomainStore.stores()
+				.storeFor(spec.descriptorClassName);
 		store.setConnectionUrl(spec.newUrl);
-		if(store==DomainStore.writableStore()){
-			CommonPersistenceProvider.get().getCommonPersistence().changeJdbcConnectionUrl(spec.newUrl);
+		if (store == DomainStore.writableStore()) {
+			CommonPersistenceProvider.get().getCommonPersistence()
+					.changeJdbcConnectionUrl(spec.newUrl);
 		}
-		slf4jLogger.info("Connection url changed to: {}",spec.newUrl);
+		slf4jLogger.info("Connection url changed to: {}", spec.newUrl);
 	}
-	
-	public static class Spec{
+
+	public static class Spec {
 		public String newUrl;
+
 		public String descriptorClassName;
 	}
 }

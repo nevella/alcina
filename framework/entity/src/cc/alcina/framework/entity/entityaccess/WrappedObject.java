@@ -40,117 +40,116 @@ import cc.alcina.framework.entity.util.JaxbUtils;
  * @author Nick Reddel
  */
 public interface WrappedObject<T extends WrapperPersistable> extends HasId {
-    public static final String CONTEXT_CLASSES = WrappedObject.class.getName()
-            + ".CONTEXT_CLASSES";
+	public static final String CONTEXT_CLASSES = WrappedObject.class.getName()
+			+ ".CONTEXT_CLASSES";
 
-    @Transient
-    public T getObject();
+	@Transient
+	public T getObject();
 
-    @Transient
-    public abstract T getObject(ClassLoader classLoader);
+	@Transient
+	public abstract T getObject(ClassLoader classLoader);
 
-    @Lob
-    public abstract String getSerializedXml();
+	@Lob
+	public abstract String getSerializedXml();
 
-    public abstract IUser getUser();
+	public abstract IUser getUser();
 
-    public abstract void setObject(T object);
+	public abstract void setObject(T object);
 
-    public abstract void setSerializedXml(String serializedXml);
+	public abstract void setSerializedXml(String serializedXml);
 
-    public abstract void setUser(IUser user);
+	public abstract void setUser(IUser user);
 
-    public static class WrappedObjectHelper {
-        static List<Class> jaxbSubclasses = null;
+	public static class WrappedObjectHelper {
+		static List<Class> jaxbSubclasses = null;
 
-        public static <T> T clone(T object) {
-            try {
-                String s = xmlSerialize(object);
-                return (T) xmlDeserialize(object.getClass(), s);
-            } catch (Exception e) {
-                throw new WrappedRuntimeException(e);
-            }
-        }
+		public static <T> T clone(T object) {
+			try {
+				String s = xmlSerialize(object);
+				return (T) xmlDeserialize(object.getClass(), s);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 
-        public static synchronized List<Class> ensureJaxbSubclasses(
-                Class addClass) {
-            if (jaxbSubclasses == null) {
-                jaxbSubclasses = Registry.impl(WrappedObjectProvider.class)
-                        .getJaxbSubclasses();
-            }
-            if (addClass == null) {
-                return new ArrayList<Class>(jaxbSubclasses);
-            }
-            ArrayList<Class> classes = new ArrayList<Class>(jaxbSubclasses);
-            classes.add(0, addClass);
-            return classes;
-        }
+		public static synchronized List<Class>
+				ensureJaxbSubclasses(Class addClass) {
+			if (jaxbSubclasses == null) {
+				jaxbSubclasses = Registry.impl(WrappedObjectProvider.class)
+						.getJaxbSubclasses();
+			}
+			if (addClass == null) {
+				return new ArrayList<Class>(jaxbSubclasses);
+			}
+			ArrayList<Class> classes = new ArrayList<Class>(jaxbSubclasses);
+			classes.add(0, addClass);
+			return classes;
+		}
 
-        public static synchronized void withoutRegistry() {
-            jaxbSubclasses = new ArrayList<>();
-        }
+		public static synchronized void withoutRegistry() {
+			jaxbSubclasses = new ArrayList<>();
+		}
 
-        
-        public static <T> T xmlDeserialize(Class<T> clazz, String xmlStr) {
-            if (xmlStr == null) {
-                return null;
-            }
-            try {
-                List<Class> classes = getContextClasses(clazz);
-                JAXBContext jc = JaxbUtils.getContext(classes);
-                Unmarshaller um = jc.createUnmarshaller();
-                StringReader sr = new StringReader(xmlStr);
-                return (T) um.unmarshal(sr);
-            } catch (Exception e) {
-                throw new WrappedRuntimeException(e);
-            }
-        }
+		public static <T> T xmlDeserialize(Class<T> clazz, String xmlStr) {
+			if (xmlStr == null) {
+				return null;
+			}
+			try {
+				List<Class> classes = getContextClasses(clazz);
+				JAXBContext jc = JaxbUtils.getContext(classes);
+				Unmarshaller um = jc.createUnmarshaller();
+				StringReader sr = new StringReader(xmlStr);
+				return (T) um.unmarshal(sr);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 
-        public static String xmlSerialize(Object object) {
-            List<Class> classes = getContextClasses(object.getClass());
-            try {
-                return xmlSerialize(object, classes);
-            } catch (Exception e) {
-                throw new WrappedRuntimeException(e);
-            }
-        }
+		public static String xmlSerialize(Object object) {
+			List<Class> classes = getContextClasses(object.getClass());
+			try {
+				return xmlSerialize(object, classes);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 
-        public static String xmlSerialize(Object object,
-                Collection<Class> jaxbClasses) throws JAXBException {
-            return xmlSerialize(object, jaxbClasses, false);
-        }
+		public static String xmlSerialize(Object object,
+				Collection<Class> jaxbClasses) throws JAXBException {
+			return xmlSerialize(object, jaxbClasses, false);
+		}
 
-        public static String xmlSerialize(Object object,
-                Collection<Class> jaxbClasses, boolean tight)
-                throws JAXBException {
-            JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
-            Marshaller m = jc.createMarshaller();
-            if (!tight) {
-                m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            }
-            StringWriter s = new StringWriter();
-            m.marshal(object, s);
-            return s.toString();
-        }
+		public static String xmlSerialize(Object object,
+				Collection<Class> jaxbClasses, boolean tight)
+				throws JAXBException {
+			JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
+			Marshaller m = jc.createMarshaller();
+			if (!tight) {
+				m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			}
+			StringWriter s = new StringWriter();
+			m.marshal(object, s);
+			return s.toString();
+		}
 
-        public static String xmlSerializeTight(Object object) {
-            List<Class> classes = getContextClasses(object.getClass());
-            try {
-                return xmlSerialize(object, classes, true);
-            } catch (Exception e) {
-                throw new WrappedRuntimeException(e);
-            }
-        }
+		public static String xmlSerializeTight(Object object) {
+			List<Class> classes = getContextClasses(object.getClass());
+			try {
+				return xmlSerialize(object, classes, true);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 
-        protected static <T> List<Class> getContextClasses(Class<T> clazz) {
-            List<Class> classes = null;
-            if (!LooseContext.containsKey(CONTEXT_CLASSES)) {
-                classes = ensureJaxbSubclasses(clazz);
-            } else {
-                classes = new ArrayList<>(
-                        (List) LooseContext.get(CONTEXT_CLASSES));
-            }
-            return classes;
-        }
-    }
+		protected static <T> List<Class> getContextClasses(Class<T> clazz) {
+			List<Class> classes = null;
+			if (!LooseContext.containsKey(CONTEXT_CLASSES)) {
+				classes = ensureJaxbSubclasses(clazz);
+			} else {
+				classes = new ArrayList<>(
+						(List) LooseContext.get(CONTEXT_CLASSES));
+			}
+			return classes;
+		}
+	}
 }

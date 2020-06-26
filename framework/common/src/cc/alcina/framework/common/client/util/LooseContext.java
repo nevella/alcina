@@ -107,8 +107,7 @@ public abstract class LooseContext {
 		return runWithKeyValue(null, Boolean.TRUE, supplier);
 	}
 
-	public static <T> T runWithTrue(String key,
-			ThrowingSupplier<T> supplier) {
+	public static <T> T runWithTrue(String key, ThrowingSupplier<T> supplier) {
 		return runWithKeyValue(key, Boolean.TRUE, supplier);
 	}
 

@@ -28,10 +28,9 @@ public interface CommonRemoteServiceExt extends CommonRemoteService {
 	@WebMethod
 	public <G extends WrapperPersistable> Long persist(G gwpo)
 			throws WebException;
-	
+
 	@WebMethod
-	public <T extends ILogRecord> Long log(T remoteLogRecord)
-			;
+	public <T extends ILogRecord> Long log(T remoteLogRecord);
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber);
 }

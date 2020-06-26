@@ -19,7 +19,8 @@ import cc.alcina.framework.common.client.logic.domain.HasValue;
  * 
  * @author Nick Reddel
  */
-public class DoubleCriterion extends SearchCriterion implements HasValue<Double> {
+public class DoubleCriterion extends SearchCriterion
+		implements HasValue<Double> {
 	static final transient long serialVersionUID = -1L;
 
 	private Double value;
@@ -32,7 +33,6 @@ public class DoubleCriterion extends SearchCriterion implements HasValue<Double>
 	}
 
 	@Override
-	
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		if (value == null) {
@@ -59,7 +59,6 @@ public class DoubleCriterion extends SearchCriterion implements HasValue<Double>
 		Double old_value = this.value;
 		this.value = value;
 		propertyChangeSupport().firePropertyChange("value", old_value, value);
-
 	}
 
 	@Override

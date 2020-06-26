@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
-import cc.alcina.framework.gwt.client.util.ClientUtilsNonGwt;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.Lzw;
 
 /**
@@ -113,7 +113,7 @@ public class RemoteLogPersister {
 
 		public void handleExpectableMaybeOffline(Throwable caught,
 				Player player) {
-			if (ClientUtilsNonGwt.maybeOffline(caught)) {
+			if (ClientUtils.maybeOffline(caught)) {
 				maybeOffline = true;
 				consort.finished();
 			} else {

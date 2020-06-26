@@ -20,110 +20,111 @@ import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
  * I'd call this CrudSearch...but that'd be mean
  */
 public abstract class EntitySearchDefinition extends SearchDefinition {
-    private GroupingParameters groupingParameters;
+	private GroupingParameters groupingParameters;
 
-    private SearchOrders searchOrders = new SearchOrders<>();
+	private SearchOrders searchOrders = new SearchOrders<>();
 
-    private int pageNumber;// 0-based
+	private int pageNumber;// 0-based
 
-    public void addIdsCriterion(Collection<Long> ids) {
-        addCriterionToSoleCriteriaGroup(new TxtCriterion(
-                Ax.format("ids: %s", ids.stream().map(String::valueOf)
-                        .collect(Collectors.joining(", ")))));
-    }
+	public void addIdsCriterion(Collection<Long> ids) {
+		addCriterionToSoleCriteriaGroup(new TxtCriterion(
+				Ax.format("ids: %s", ids.stream().map(String::valueOf)
+						.collect(Collectors.joining(", ")))));
+	}
 
-    public EntityCriteriaGroup dataCriteriaGroup() {
-        return (EntityCriteriaGroup) getCriteriaGroups().iterator().next();
-    }
+	public EntityCriteriaGroup dataCriteriaGroup() {
+		return (EntityCriteriaGroup) getCriteriaGroups().iterator().next();
+	}
 
-    @XmlTransient
-    public GroupingParameters getGroupingParameters() {
-        return groupingParameters;
-    }
+	@XmlTransient
+	public GroupingParameters getGroupingParameters() {
+		return groupingParameters;
+	}
 
-    public int getPageNumber() {
-        return this.pageNumber;
-    }
+	public int getPageNumber() {
+		return this.pageNumber;
+	}
 
-    public SearchOrders getSearchOrders() {
-        return this.searchOrders;
-    }
+	public SearchOrders getSearchOrders() {
+		return this.searchOrders;
+	}
 
-    public boolean provideHasNoCriteria() {
-        assert getCriteriaGroups().size() == 1;
-        return getCriteriaGroups().iterator().next().provideIsEmpty();
-    }
+	public boolean provideHasNoCriteria() {
+		assert getCriteriaGroups().size() == 1;
+		return getCriteriaGroups().iterator().next().provideIsEmpty();
+	}
 
-    public Optional<SearchOrders> provideIdSearchOrder() {
-        TxtCriterion tx = firstCriterion(TxtCriterion.class);
-        if (tx != null && Ax.blankToEmpty(tx.getValue())
-                .matches(SearchUtils.IDS_REGEX)) {
-            SearchOrders result = new SearchOrders<>();
-            result.addOrder(new SpecificIdOrder(
-                    SearchUtils.idsTextToSet(tx.getValue())), true);
-            return Optional.of(result);
-        } else {
-            return Optional.empty();
-        }
-    }
+	public Optional<SearchOrders> provideIdSearchOrder() {
+		TxtCriterion tx = firstCriterion(TxtCriterion.class);
+		if (tx != null && Ax.blankToEmpty(tx.getValue())
+				.matches(SearchUtils.IDS_REGEX)) {
+			SearchOrders result = new SearchOrders<>();
+			result.addOrder(new SpecificIdOrder(
+					SearchUtils.idsTextToSet(tx.getValue())), true);
+			return Optional.of(result);
+		} else {
+			return Optional.empty();
+		}
+	}
 
-    // not quite correct...but...
-    public boolean provideIsSimpleTextSearch() {
-        return provideSimpleTextSearchCriterion() != null;
-    }
+	// not quite correct...but...
+	public boolean provideIsSimpleTextSearch() {
+		return provideSimpleTextSearchCriterion() != null;
+	}
 
-    public TxtCriterion provideSimpleTextSearchCriterion() {
-        TxtCriterion tx = firstCriterion(TxtCriterion.class);
-        if (tx != null && Ax.notBlank(tx.getValue())) {
-            return tx;
-        } else {
-            return null;
-        }
-    }
+	public TxtCriterion provideSimpleTextSearchCriterion() {
+		TxtCriterion tx = firstCriterion(TxtCriterion.class);
+		if (tx != null && Ax.notBlank(tx.getValue())) {
+			return tx;
+		} else {
+			return null;
+		}
+	}
 
-    public abstract <C extends VersionableEntity> Class<C> resultClass();
+	public abstract <C extends VersionableEntity> Class<C> resultClass();
 
-    public void setGroupingParameters(GroupingParameters groupingParameters) {
-        this.groupingParameters = groupingParameters;
-    }
+	public void setGroupingParameters(GroupingParameters groupingParameters) {
+		this.groupingParameters = groupingParameters;
+	}
 
-    public void setPageNumber(int pageNumber) {
-        this.pageNumber = pageNumber;
-    }
+	public void setPageNumber(int pageNumber) {
+		this.pageNumber = pageNumber;
+	}
 
-    public void setSearchOrders(SearchOrders searchOrders) {
-        this.searchOrders = searchOrders;
-    }
+	public void setSearchOrders(SearchOrders searchOrders) {
+		this.searchOrders = searchOrders;
+	}
 
-    @Override
-    public String toString() {
-        return new FormatBuilder().separator(" :: ").appendIfNotBlank(
-                super.toString(), searchOrders, groupingParameters).toString();
-    }
+	@Override
+	public String toString() {
+		return new FormatBuilder().separator(" :: ").appendIfNotBlank(
+				super.toString(), searchOrders, groupingParameters).toString();
+	}
 
-    public void toTextSearch(String text) {
-        SearchUtils.toTextSearch(this, text);
-    }
+	public void toTextSearch(String text) {
+		SearchUtils.toTextSearch(this, text);
+	}
 
-    public <G extends GroupingParameters> G typedGroupingParameters() {
-        return (G) groupingParameters;
-    }
+	public <G extends GroupingParameters> G typedGroupingParameters() {
+		return (G) groupingParameters;
+	}
 
-    protected void init() {
-        getCriteriaGroups().add(new EntityCriteriaGroup());
-        setResultsPerPage(50);
-    }
+	protected void init() {
+		getCriteriaGroups().add(new EntityCriteriaGroup());
+		setResultsPerPage(50);
+	}
 
-    @ClientInstantiable
-    public static class DataNullSearchDefinition extends EntitySearchDefinition {
-        @Override
-        public boolean provideHasNoCriteria() {
-            return true;
-        }
+	@ClientInstantiable
+	public static class DataNullSearchDefinition
+			extends EntitySearchDefinition {
+		@Override
+		public boolean provideHasNoCriteria() {
+			return true;
+		}
 
-        @Override
-        public <C extends VersionableEntity> Class<C> resultClass() {
-            throw new UnsupportedOperationException();
-        }
-    }
+		@Override
+		public <C extends VersionableEntity> Class<C> resultClass() {
+			throw new UnsupportedOperationException();
+		}
+	}
 }

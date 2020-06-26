@@ -37,8 +37,7 @@ public abstract class LoginConsort extends Consort<State> {
 	@SuppressWarnings("unused")
 	private LoginViewModel viewModel;
 
-	Topic<Boolean> topicCallingRemote = Topic
-			.local();
+	Topic<Boolean> topicCallingRemote = Topic.local();
 
 	Topic<String> topicMessage = Topic.local();
 

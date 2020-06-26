@@ -44,6 +44,11 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 	}
 
 	@Override
+	public void appendData(String arg0) throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public Text cast() {
 		return this;
 	}
@@ -64,6 +69,16 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 		return local().getLength();
 	}
 
+	@Override
+	public String getTextContent() throws DOMException {
+		return getData();
+	}
+
+	@Override
+	public String getWholeText() {
+		throw new UnsupportedOperationException();
+	}
+
 	public TextImplAccess implAccess() {
 		return new TextImplAccess();
 	}
@@ -73,6 +88,11 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 		ensureRemoteCheck();
 		local().insertData(offset, data);
 		remote().insertData(offset, data);
+	}
+
+	@Override
+	public boolean isElementContentWhitespace() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -88,6 +108,11 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 	}
 
 	@Override
+	public org.w3c.dom.Text replaceWholeText(String arg0) throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void setData(String data) {
 		ensureRemoteCheck();
 		local().setData(data);
@@ -97,10 +122,11 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 	@Override
 	public Text splitText(int offset) {
 		throw new UnsupportedOperationException();
-		// // FIXME - remote must use created text no9de
-		// Text result = local().splitText(offset);
-		// remote().splitText(offset);
-		// return result;
+	}
+
+	@Override
+	public String substringData(int arg0, int arg1) throws DOMException {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -148,35 +174,5 @@ public class Text extends Node implements DomText, org.w3c.dom.Text {
 		public TextRemote typedRemote() {
 			return Text.this.typedRemote();
 		}
-	}
-
-	@Override
-	public void appendData(String arg0) throws DOMException {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String substringData(int arg0, int arg1) throws DOMException {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String getTextContent() throws DOMException {
-		return getData();
-	}
-
-	@Override
-	public String getWholeText() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public boolean isElementContentWhitespace() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public org.w3c.dom.Text replaceWholeText(String arg0) throws DOMException {
-		throw new UnsupportedOperationException();
 	}
 }

@@ -53,7 +53,6 @@ public class LooseActionRegistry {
 		return handler;
 	}
 
-	
 	public void performForTargetActionAndObject(PermissibleAction action,
 			Object target) {
 		LooseTargetedActionHandler handler = (LooseTargetedActionHandler) Registry
@@ -65,7 +64,6 @@ public class LooseActionRegistry {
 		actionHandlers.put(wp.getName(), wp);
 	}
 
-	
 	void loadFromRegistry() {
 		List<LooseActionHandler> handlers = Registry
 				.impls(LooseActionHandler.class);

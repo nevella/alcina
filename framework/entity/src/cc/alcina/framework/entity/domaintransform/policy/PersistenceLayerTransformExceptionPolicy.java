@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 
-public interface PersistenceLayerTransformExceptionPolicy extends Serializable{
+public interface PersistenceLayerTransformExceptionPolicy extends Serializable {
 	public void checkVersion(Entity obj, DomainTransformEvent event)
 			throws DomainTransformException;
 

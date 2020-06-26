@@ -32,7 +32,6 @@ public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 	}
 
 	@Override
-	
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		if (value == null) {

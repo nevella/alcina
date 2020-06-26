@@ -37,7 +37,6 @@ public class TreeSet_CustomFieldSerializer
 				instance);
 	}
 
-	
 	public static TreeSet instantiate(SerializationStreamReader streamReader)
 			throws SerializationException {
 		if (GWT.isClient()) {

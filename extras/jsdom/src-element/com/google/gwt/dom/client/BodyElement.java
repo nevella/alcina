@@ -27,50 +27,50 @@ import com.google.gwt.core.client.JavaScriptObject;
  */
 @TagName(BodyElement.TAG)
 public class BodyElement extends Element {
-    public static final String TAG = "body";
+	public static final String TAG = "body";
 
-    /**
-     * Assert that the given {@link Element} is compatible with this class and
-     * automatically typecast it.
-     */
-    public static BodyElement as(Element elem) {
-        assert is(elem);
-        return (BodyElement) elem;
-    }
+	/**
+	 * Assert that the given {@link Element} is compatible with this class and
+	 * automatically typecast it.
+	 */
+	public static BodyElement as(Element elem) {
+		assert is(elem);
+		return (BodyElement) elem;
+	}
 
-    /**
-     * Determine whether the given {@link Element} can be cast to this class. A
-     * <code>null</code> node will cause this method to return
-     * <code>false</code>.
-     */
-    public static boolean is(Element elem) {
-        return elem != null && elem.hasTagName(TAG);
-    }
+	/**
+	 * Determine whether the given {@link Element} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Element elem) {
+		return elem != null && elem.hasTagName(TAG);
+	}
 
-    /**
-     * Determines whether the given {@link JavaScriptObject} can be cast to this
-     * class. A <code>null</code> object will cause this method to return
-     * <code>false</code>.
-     */
-    public static boolean is(JavaScriptObject o) {
-        if (Element.is(o)) {
-            return is(Element.as(o));
-        }
-        return false;
-    }
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to this
+	 * class. A <code>null</code> object will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(JavaScriptObject o) {
+		if (Element.is(o)) {
+			return is(Element.as(o));
+		}
+		return false;
+	}
 
-    /**
-     * Determine whether the given {@link Node} can be cast to this class. A
-     * <code>null</code> node will cause this method to return
-     * <code>false</code>.
-     */
-    public static boolean is(Node node) {
-        if (Element.is(node)) {
-            return is((Element) node);
-        }
-        return false;
-    }
+	/**
+	 * Determine whether the given {@link Node} can be cast to this class. A
+	 * <code>null</code> node will cause this method to return
+	 * <code>false</code>.
+	 */
+	public static boolean is(Node node) {
+		if (Element.is(node)) {
+			return is((Element) node);
+		}
+		return false;
+	}
 
-    protected BodyElement() {
-    }
+	protected BodyElement() {
+	}
 }

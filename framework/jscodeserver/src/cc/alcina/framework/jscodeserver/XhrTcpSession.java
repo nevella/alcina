@@ -16,74 +16,74 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class XhrTcpSession {
-    Socket socket;
+	Socket socket;
 
-    public int handleId;
+	public int handleId;
 
-    public int messageId;
+	public int messageId;
 
-    int socketPort;
+	int socketPort;
 
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
+	ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-    private JsCodeserverTcpClientJava client;
+	private JsCodeserverTcpClientJava client;
 
-    private XhrTcpBridge xhrTcpBridge;
+	private XhrTcpBridge xhrTcpBridge;
 
-    int messageLogPer = 100;
+	int messageLogPer = 100;
 
-    public XhrTcpSession(XhrTcpBridge xhrTcpBridge) {
-        this.xhrTcpBridge = xhrTcpBridge;
-    }
+	public XhrTcpSession(XhrTcpBridge xhrTcpBridge) {
+		this.xhrTcpBridge = xhrTcpBridge;
+	}
 
-    /*
-     * single-threaded (since js is)
-     */
-    public void handle(HttpServletRequest request, HttpServletResponse response)
-            throws Exception {
-        if (socket == null) {
-            initSocket(request);
-        }
-        String meta = request.getHeader(XhrTcpBridge.HEADER_META);
-        if (meta != null) {
-            switch (meta) {
-            case "close_socket":
-                client.endSession();
-                xhrTcpBridge.removeSession(this);
-                return;
-            default:
-                throw new UnsupportedOperationException();
-            }
-        }
-        String payload = ResourceUtilities
-                .readStreamToString(request.getInputStream());
-        byte[] bytes = Base64.getDecoder().decode(payload);
-        socket.getOutputStream().write(bytes);
-        // Ax.out(">>> to codeserver - %s bytes", bytes.length);
-        byte[] messageBytes = client.receiveMessageBytes();
-        // Ax.out("<<<to browser - %s bytes - %s", messageBytes.length,
-        // client.getLastMessageName());
-        if (messageId % messageLogPer == 0) {
-            Ax.out("%s :: %s :: %s :: %s",
-                    CommonUtils.formatDate(new Date(),
-                            DateStyle.TIMESTAMP_NO_DAY),
-                    messageId, client.getLastMessageName(),
-                    client.getLastMessageDetails());
-        }
-        response.setHeader(XhrTcpBridge.HEADER_HANDLE_ID,
-                String.valueOf(handleId));
-        response.setHeader(XhrTcpBridge.HEADER_MESSAGE_ID,
-                String.valueOf(messageId++));
-        response.getOutputStream()
-                .write(Base64.getEncoder().encode(messageBytes));
-        response.getOutputStream().close();
-        return;
-    }
+	/*
+	 * single-threaded (since js is)
+	 */
+	public void handle(HttpServletRequest request, HttpServletResponse response)
+			throws Exception {
+		if (socket == null) {
+			initSocket(request);
+		}
+		String meta = request.getHeader(XhrTcpBridge.HEADER_META);
+		if (meta != null) {
+			switch (meta) {
+			case "close_socket":
+				client.endSession();
+				xhrTcpBridge.removeSession(this);
+				return;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+		String payload = ResourceUtilities
+				.readStreamToString(request.getInputStream());
+		byte[] bytes = Base64.getDecoder().decode(payload);
+		socket.getOutputStream().write(bytes);
+		// Ax.out(">>> to codeserver - %s bytes", bytes.length);
+		byte[] messageBytes = client.receiveMessageBytes();
+		// Ax.out("<<<to browser - %s bytes - %s", messageBytes.length,
+		// client.getLastMessageName());
+		if (messageId % messageLogPer == 0) {
+			Ax.out("%s :: %s :: %s :: %s",
+					CommonUtils.formatDate(new Date(),
+							DateStyle.TIMESTAMP_NO_DAY),
+					messageId, client.getLastMessageName(),
+					client.getLastMessageDetails());
+		}
+		response.setHeader(XhrTcpBridge.HEADER_HANDLE_ID,
+				String.valueOf(handleId));
+		response.setHeader(XhrTcpBridge.HEADER_MESSAGE_ID,
+				String.valueOf(messageId++));
+		response.getOutputStream()
+				.write(Base64.getEncoder().encode(messageBytes));
+		response.getOutputStream().close();
+		return;
+	}
 
-    private void initSocket(HttpServletRequest request) throws Exception {
-        socketPort = Integer.parseInt(
-                request.getHeader(XhrTcpBridge.HEADER_CODE_SERVER_PORT));
-        socket = new Socket(ResourceUtilities.get("host"), socketPort);
-        client = new JsCodeserverTcpClientJava(socket);
-    }
+	private void initSocket(HttpServletRequest request) throws Exception {
+		socketPort = Integer.parseInt(
+				request.getHeader(XhrTcpBridge.HEADER_CODE_SERVER_PORT));
+		socket = new Socket(ResourceUtilities.get("host"), socketPort);
+		client = new JsCodeserverTcpClientJava(socket);
+	}
 }

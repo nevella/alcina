@@ -20,11 +20,12 @@ import cc.alcina.framework.common.client.util.Ax;
 @MappedSuperclass
 @DomainTransformPersistable
 @RegistryLocation(registryPoint = KnownNodePersistentDomainStore.class)
-public abstract class KnownNodePersistentDomainStore extends
-		Entity<KnownNodePersistentDomainStore> implements IVersionable,KnownNodePersistent {
+public abstract class KnownNodePersistentDomainStore
+		extends Entity<KnownNodePersistentDomainStore>
+		implements IVersionable, KnownNodePersistent {
 	protected long id;
 
-	private Set<KnownNodePersistentDomainStore> children=new LiSet<>();
+	private Set<KnownNodePersistentDomainStore> children = new LiSet<>();
 
 	private String name;
 
@@ -59,7 +60,6 @@ public abstract class KnownNodePersistentDomainStore extends
 		return this.properties;
 	}
 
-
 	public void setChildren(Set<KnownNodePersistentDomainStore> children) {
 		Set<KnownNodePersistentDomainStore> old_children = this.children;
 		this.children = children;
@@ -90,6 +90,7 @@ public abstract class KnownNodePersistentDomainStore extends
 		propertyChangeSupport().firePropertyChange("properties", old_properties,
 				properties);
 	}
+
 	private String path() {
 		KnownNodePersistentDomainStore cursor = this;
 		List<String> segments = new ArrayList<>();
@@ -99,6 +100,7 @@ public abstract class KnownNodePersistentDomainStore extends
 		Collections.reverse(segments);
 		return segments.stream().collect(Collectors.joining("/"));
 	}
+
 	@Override
 	public String toString() {
 		return Ax.format("%s : %s", id, path());

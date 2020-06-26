@@ -65,7 +65,6 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 	private Renderer<T, String> renderer;
 
 	/** Creates a new instance of ListBox */
-	
 	public SingleSelectionListBox() {
 		super();
 		this.base = new com.google.gwt.user.client.ui.ListBox();
@@ -246,7 +245,6 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		this.base.removeItem(index);
 	}
 
-	
 	public void removeItem(final Object o) {
 		int i = 0;
 		for (Iterator<T> it = this.options.iterator(); it.hasNext(); i++) {

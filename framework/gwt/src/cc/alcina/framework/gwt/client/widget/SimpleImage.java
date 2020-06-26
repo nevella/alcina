@@ -25,19 +25,19 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Nick Reddel
  */
 public class SimpleImage extends Widget implements HasClickHandlers {
-    /**
-     * Creates an empty span panel.
-     */
-    public SimpleImage() {
-        setElement(DOM.createImg());
-    }
+	/**
+	 * Creates an empty span panel.
+	 */
+	public SimpleImage() {
+		setElement(DOM.createImg());
+	}
 
-    @Override
-    public HandlerRegistration addClickHandler(ClickHandler handler) {
-        return addDomHandler(handler, ClickEvent.getType());
-    }
+	@Override
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
+	}
 
-    public void setSrc(String src) {
-        getElement().setPropertyString("src", src);
-    }
+	public void setSrc(String src) {
+		getElement().setPropertyString("src", src);
+	}
 }

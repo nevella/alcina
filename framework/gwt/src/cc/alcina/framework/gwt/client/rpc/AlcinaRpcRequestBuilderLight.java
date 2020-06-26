@@ -16,9 +16,11 @@ public abstract class AlcinaRpcRequestBuilderLight extends RpcRequestBuilder {
 	public void addAlcinaHeaders(RequestBuilder rb) {
 		rb.setHeader("Cache-Control", "no-cache");
 		if (getClientInstanceIdString() != null) {
-			rb.setHeader(AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY,
+			rb.setHeader(
+					AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY,
 					getClientInstanceIdString());
-			rb.setHeader(AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY,
+			rb.setHeader(
+					AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY,
 					getClientInstanceAuthString());
 		}
 	}

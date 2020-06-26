@@ -79,22 +79,22 @@ public class ConsoleLogHandler extends Handler {
 	}
 
 	private native void error(String message) /*-{
-    window.console.error(message);
-	}-*/;
+												window.console.error(message);
+												}-*/;
 
 	private native void info(String message) /*-{
-    window.console.info(message);
-	}-*/;
+												window.console.info(message);
+												}-*/;
 
 	private native boolean isSupported() /*-{
-    return !!window.console;
-	}-*/;
+											return !!window.console;
+											}-*/;
 
 	private native void log(String message) /*-{
-    window.console.log(message);
-	}-*/;
+											window.console.log(message);
+											}-*/;
 
 	private native void warn(String message) /*-{
-    window.console.warn(message);
-	}-*/;
+												window.console.warn(message);
+												}-*/;
 }

@@ -30,10 +30,9 @@ public class PropertyFieldGetter<O> implements Function<O, Object> {
 			try {
 				value = field.getValidator().validate(value);
 			} catch (Exception e) {
-				ClientNotifications.get()
-						.log(Ax.format(
-								"warn - invalid value in property get - %s - %s - %s",
-								object, value, e.getMessage()));
+				ClientNotifications.get().log(Ax.format(
+						"warn - invalid value in property get - %s - %s - %s",
+						object, value, e.getMessage()));
 				// throw new WrappedRuntimeException(e);
 			}
 		}

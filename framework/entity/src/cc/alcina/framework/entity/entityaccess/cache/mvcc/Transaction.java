@@ -308,7 +308,6 @@ public class Transaction {
 		if (this.phase == TransactionPhase.NO_ACTIVE_TRANSACTION) {
 			return;
 		}
-		// FIXME - tx phases
 		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
 				|| phase == TransactionPhase.TO_DOMAIN_PREPARING)
 				&& TransformManager.get().getTransforms().isEmpty());

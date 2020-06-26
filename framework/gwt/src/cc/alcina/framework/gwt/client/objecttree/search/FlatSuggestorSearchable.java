@@ -33,8 +33,8 @@ public class FlatSuggestorSearchable<TC extends TruncatedObjectCriterion>
 		BoundSuggestBox<Object> boundSuggestBox = new BoundSuggestBox<>();
 		TC newInstance = Reflections.classLookup()
 				.newInstance(getCriterionClass());
-		boundSuggestBox.suggestOracle(
-				new BoundSuggestOracle().clazz(newInstance.getObjectClass()).hint(getHint()));
+		boundSuggestBox.suggestOracle(new BoundSuggestOracle()
+				.clazz(newInstance.getObjectClass()).hint(getHint()));
 		boundSuggestBox
 				.setRenderer(new TruncatedObjectHelperRenderer(criterion));
 		return boundSuggestBox;

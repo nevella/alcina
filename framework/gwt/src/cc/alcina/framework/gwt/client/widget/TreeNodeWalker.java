@@ -20,7 +20,6 @@ import com.google.gwt.user.client.ui.TreeItem;
 
 import cc.alcina.framework.common.client.util.Callback;
 
-
 /**
  *
  * @author Nick Reddel
@@ -31,8 +30,11 @@ public class TreeNodeWalker {
 	protected void cancel() {
 		this.cancelled = true;
 	}
-	public abstract static class TreeNodeWalkerCallback implements Callback<TreeItem>{
+
+	public abstract static class TreeNodeWalkerCallback
+			implements Callback<TreeItem> {
 		protected TreeNodeWalker walker;
+
 		protected void cancel() {
 			walker.cancel();
 		}
@@ -44,30 +46,28 @@ public class TreeNodeWalker {
 		for (int i = 0; i < itemCount; i++) {
 			items.push(tree.getItem(i));
 		}
-		walk(items,callback);
-		
+		walk(items, callback);
 	}
 
 	private void walk(Stack<TreeItem> items, Callback callback) {
-		if(callback instanceof TreeNodeWalkerCallback) {
-			((TreeNodeWalkerCallback) callback).walker=this;
-			
+		if (callback instanceof TreeNodeWalkerCallback) {
+			((TreeNodeWalkerCallback) callback).walker = this;
 		}
 		while (!items.isEmpty()) {
-			if(cancelled) {
-				return ;
+			if (cancelled) {
+				return;
 			}
 			TreeItem pop = items.pop();
 			callback.apply(pop);
 			for (int i = 0; i < pop.getChildCount(); i++) {
 				items.push(pop.getChild(i));
 			}
-		}		
+		}
 	}
 
 	public void walk(TreeItem item, Callback callback) {
 		Stack<TreeItem> items = new Stack<TreeItem>();
 		items.push(item);
-		walk(items,callback);
+		walk(items, callback);
 	}
 }

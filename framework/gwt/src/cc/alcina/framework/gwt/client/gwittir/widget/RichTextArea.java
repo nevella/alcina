@@ -55,12 +55,10 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 
 	private boolean maximised = false;
 
-	
 	public RichTextArea() {
 		this(true, "12px");
 	}
 
-	
 	public RichTextArea(boolean withToolbar, String defaultFontSize) {
 		this.defaultFontSize = defaultFontSize;
 		old = base.getHTML();
@@ -184,12 +182,13 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 		super.onDetach();
 	}
 
-	protected native void styleBody(Element elem, String defaultFontSize) /*-{
-        if (elem.contentWindow && elem.contentWindow.document
-                && elem.contentWindow.document.documentElement) {
-            elem.contentWindow.document.documentElement.setAttribute("style",
-                    "font-family: Arial; margin: 2px;font-size:"
-                            + defaultFontSize);
-        }
-	}-*/;
+	protected native void styleBody(Element elem,
+			String defaultFontSize) /*-{
+									if (elem.contentWindow && elem.contentWindow.document
+									&& elem.contentWindow.document.documentElement) {
+									elem.contentWindow.document.documentElement.setAttribute("style",
+									"font-family: Arial; margin: 2px;font-size:"
+									+ defaultFontSize);
+									}
+									}-*/;
 }

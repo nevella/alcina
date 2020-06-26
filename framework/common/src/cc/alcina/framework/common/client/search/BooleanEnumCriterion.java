@@ -16,7 +16,6 @@ public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
 	}
 
 	@Override
-	
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		BooleanEnum value = getValue();

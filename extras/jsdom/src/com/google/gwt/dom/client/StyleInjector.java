@@ -214,8 +214,8 @@ public class StyleInjector {
 	 * <p>
 	 * This method should be used with some caution as StyleInjector may recycle
 	 * StyleElements on certain browsers. Specifically, <strong>applications
-	 * that need to run on Internet Explorer should not use this
-	 * method. </strong>
+	 * that need to run on Internet Explorer should not use this method.
+	 * </strong>
 	 * 
 	 * @param style
 	 *            a StyleElement previously-returned from
@@ -349,40 +349,41 @@ public class StyleInjector {
 		private static int[] styleSheetLengths = new int[MAX_STYLE_SHEETS];
 
 		private static native int getDocumentStyleCount() /*-{
-            var count = 0;
-            for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
-                var sheet = $doc.styleSheets[idx];
-                if (sheet.owningElement.tagName.toLowerCase() == 'style') {
-                    count++;
-                }
-            }
-            return count;
-		}-*/;
+															var count = 0;
+															for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
+															var sheet = $doc.styleSheets[idx];
+															if (sheet.owningElement.tagName.toLowerCase() == 'style') {
+															count++;
+															}
+															}
+															return count;
+															}-*/;
 
-		private static native int getDocumentStyleSheetLength(int index) /*-{
-            var remote = @com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::getDocumentStyleSheet(I)(index);
-            return remote.sheet.cssText.length;
-		}-*/;
+		private static native int
+				getDocumentStyleSheetLength(int index) /*-{
+														var remote = @com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::getDocumentStyleSheet(I)(index);
+														return remote.sheet.cssText.length;
+														}-*/;
 
 		static native StyleElement getDocumentStyleSheet(int index) /*-{
-            for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
-                var sheet = $doc.styleSheets[idx];
-                if (sheet.owningElement.tagName.toLowerCase() == 'style') {
-                    if (index-- == 0) {
-                        var remote = sheet.owningElement;
-                        return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
-                    }
-                }
-            }
-            return null;
-		}-*/;
+																	for (var idx = 0; idx < $doc.styleSheets.length; idx++) {
+																	var sheet = $doc.styleSheets[idx];
+																	if (sheet.owningElement.tagName.toLowerCase() == 'style') {
+																	if (index-- == 0) {
+																	var remote = sheet.owningElement;
+																	return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(remote);
+																	}
+																	}
+																	}
+																	return null;
+																	}-*/;
 
 		private boolean injectedOnce = false;
 
 		public native void appendContents(StyleElement style,
 				String contents) /*-{
-            style.@com.google.gwt.dom.client.Element::ensureRemote()().sheet.cssText += contents;
-		}-*/;
+									style.@com.google.gwt.dom.client.Element::ensureRemote()().sheet.cssText += contents;
+									}-*/;
 
 		@Override
 		public StyleElement injectStyleSheet(String contents) {
@@ -445,15 +446,15 @@ public class StyleInjector {
 
 		public native void prependContents(StyleElement style,
 				String contents) /*-{
-            style.@com.google.gwt.dom.client.Element::ensureRemote()().sheet.cssText = contents + style.sheet.cssText;
-		}-*/;
-		
+									style.@com.google.gwt.dom.client.Element::ensureRemote()().sheet.cssText = contents + style.sheet.cssText;
+									}-*/;
+
 		public native void setContents(StyleElement style,
 				String contents) /*-{
-				debugger;
-				var elem = style.@com.google.gwt.dom.client.Element::ensureRemote()();
-            elem.sheet.cssText = contents ;
-		}-*/;
+									debugger;
+									var elem = style.@com.google.gwt.dom.client.Element::ensureRemote()();
+									elem.sheet.cssText = contents ;
+									}-*/;
 
 		private StyleElement appendToStyleSheet(int idx, String contents,
 				boolean append) {
@@ -467,20 +468,23 @@ public class StyleInjector {
 		}
 
 		private StyleElement created;
-		private  StyleElement createNewStyleSheet(String contents){
+
+		private StyleElement createNewStyleSheet(String contents) {
 			StyleElement styleElement = Document.get().createStyleElement();
 			styleElement.setInnerText(contents);
 			ElementRemote remote = createNewStyleSheet0(contents);
-			//set remote before attach - head will already have been flushed
+			// set remote before attach - head will already have been flushed
 			styleElement.implAccess().setRemote(remote);
-			Document.get().getHead().implAccess().appendChildLocalOnly(styleElement);
+			Document.get().getHead().implAccess()
+					.appendChildLocalOnly(styleElement);
 			return styleElement;
-			
 		}
-		private native ElementRemote createNewStyleSheet0(String contents) /*-{
-			var sheet = $doc.createStyleSheet();
-			sheet.cssText=contents;
-            return sheet.owningElement;
-		}-*/;
+
+		private native ElementRemote
+				createNewStyleSheet0(String contents) /*-{
+														var sheet = $doc.createStyleSheet();
+														sheet.cssText=contents;
+														return sheet.owningElement;
+														}-*/;
 	}
 }

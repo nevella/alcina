@@ -58,8 +58,7 @@ public abstract class KeyValuePersistentBase<T extends KeyValuePersistentBase>
 	public static void persist(String key, String value) {
 		KeyValuePersistentBase writeable = (KeyValuePersistentBase) Domain
 				.findOrCreate(implementation(), "key", keyMapper.apply(key),
-						true)
-				;
+						true);
 		writeable.setParentKey(SEUtilities.getParentPath(key));
 		writeable.setValue(value);
 		persist();
@@ -68,8 +67,7 @@ public abstract class KeyValuePersistentBase<T extends KeyValuePersistentBase>
 	public static void persistObject(String key, Object value) {
 		KeyValuePersistentBase writeable = (KeyValuePersistentBase) Domain
 				.findOrCreate(implementation(), "key", keyMapper.apply(key),
-						true)
-				;
+						true);
 		writeable.setParentKey(SEUtilities.getParentPath(key));
 		writeable.serializeObject(value);
 		persist();

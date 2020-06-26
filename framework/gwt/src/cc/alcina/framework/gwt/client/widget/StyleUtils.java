@@ -36,6 +36,4 @@ public class StyleUtils {
 		w.getElement().getStyle().setProperty("whiteSpace",
 				wrap ? "normal" : "nowrap");
 	}
-
-	
 }

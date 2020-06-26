@@ -9,38 +9,38 @@ import cc.alcina.framework.classmeta.rdb.RdbProxies.RdbEndpointDescriptor;
 import cc.alcina.framework.common.client.util.Ax;
 
 abstract class Transport implements PacketEndpointHost {
-    protected RdbEndpointDescriptor descriptor;
+	protected RdbEndpointDescriptor descriptor;
 
-    protected PacketEndpoint packetEndpoint;
+	protected PacketEndpoint packetEndpoint;
 
-    protected Logger logger = LoggerFactory.getLogger(getClass());
+	protected Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected boolean closed = false;
+	protected boolean closed = false;
 
-    public Transport(RdbEndpointDescriptor descriptor, Endpoint endpoint) {
-        this.descriptor = descriptor;
-        this.packetEndpoint = new PacketEndpoint(this, endpoint);
-    }
+	public Transport(RdbEndpointDescriptor descriptor, Endpoint endpoint) {
+		this.descriptor = descriptor;
+		this.packetEndpoint = new PacketEndpoint(this, endpoint);
+	}
 
-    @Override
-    public PacketEndpoint packetEndpoint() {
-        return packetEndpoint;
-    }
+	@Override
+	public PacketEndpoint packetEndpoint() {
+		return packetEndpoint;
+	}
 
-    @Override
-    public String toString() {
-        return Ax.format("%s::%s", getClass().getSimpleName(), descriptor.name);
-    }
+	@Override
+	public String toString() {
+		return Ax.format("%s::%s", getClass().getSimpleName(), descriptor.name);
+	}
 
-    protected void launch() {
-    }
+	protected void launch() {
+	}
 
-    protected void receivePredictivePackets(List<Packet> predictivePackets) {
-        if (predictivePackets.isEmpty()) {
-            return;
-        }
-        packetEndpoint.receivedPredictivePackets(predictivePackets);
-    }
+	protected void receivePredictivePackets(List<Packet> predictivePackets) {
+		if (predictivePackets.isEmpty()) {
+			return;
+		}
+		packetEndpoint.receivedPredictivePackets(predictivePackets);
+	}
 
-    abstract void close();
+	abstract void close();
 }

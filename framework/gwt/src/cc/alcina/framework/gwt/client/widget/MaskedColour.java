@@ -34,9 +34,9 @@ public class MaskedColour extends Composite {
 			cStyle.setWidth(colorPixelWidth, Unit.PX);
 			cStyle.setHeight(maskImage.getHeight(), Unit.PX);
 			cStyle.setProperty("lineHeight", maskImage.getHeight(), Unit.PX);
-			Image spacer = AbstractImagePrototype
-					.create(((StandardDataImages) GWT
-							.create(StandardDataImages.class)).transparent())
+			Image spacer = AbstractImagePrototype.create(
+					((StandardDataImages) GWT.create(StandardDataImages.class))
+							.transparent())
 					.createImage();
 			Style spacerStyle = spacer.getElement().getStyle();
 			spacerStyle.setWidth(colorPixelWidth, Unit.PX);

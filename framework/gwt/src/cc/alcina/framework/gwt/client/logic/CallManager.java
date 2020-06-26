@@ -61,7 +61,6 @@ public class CallManager {
 		updateDisplay();
 	}
 
-	
 	public void clear() {
 		ArrayList<AsyncCallback> clone = (ArrayList<AsyncCallback>) running
 				.clone();

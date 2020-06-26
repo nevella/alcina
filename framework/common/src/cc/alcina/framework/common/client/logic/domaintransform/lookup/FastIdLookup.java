@@ -9,8 +9,7 @@ public interface FastIdLookup {
 
 	public abstract void put(Entity entity, boolean local);
 
-	public abstract void putAll(Collection<Entity> values,
-			boolean local);
+	public abstract void putAll(Collection<Entity> values, boolean local);
 
 	public abstract void remove(long id, boolean local);
 

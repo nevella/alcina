@@ -12,20 +12,20 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 public class Tour extends JavaScriptObject {
 	static native Tour fromJson(String tourJson) /*-{
-    var v = JSON.parse(tourJson);
-    return v;
-	}-*/;
+													var v = JSON.parse(tourJson);
+													return v;
+													}-*/;
 
 	protected Tour() {
 	}
 
 	final native String getName()/*-{
-    return this.name;
-	}-*/;
+									return this.name;
+									}-*/;
 
 	final native JsArray<Step> getSteps() /*-{
-    return this.steps;
-	}-*/;
+											return this.steps;
+											}-*/;
 
 	public static enum Operator {
 		AND, OR, NOT
@@ -51,22 +51,22 @@ public class Tour extends JavaScriptObject {
 		}
 
 		final private native JsArray<Condition> getConditionsArray()/*-{
-      return (this.conditions) ? this.conditions : [];
-		}-*/;
+																	return (this.conditions) ? this.conditions : [];
+																	}-*/;
 
 		final private native JsArrayString getJsSelectors()/*-{
-      if (!(this.selectors)) {
-        return [];
-      }
-      if (typeof this.selectors == "string") {
-        return [ this.selectors ];
-      }
-      return this.selectors;
-		}-*/;
+															if (!(this.selectors)) {
+															return [];
+															}
+															if (typeof this.selectors == "string") {
+															return [ this.selectors ];
+															}
+															return this.selectors;
+															}-*/;
 
 		final private native String getOperatorString()/*-{
-      return this.action;
-		}-*/;
+														return this.action;
+														}-*/;
 
 		final List<Condition> getConditions() {
 			return ClientUtils.jsArrayToTypedArray(getConditionsArray());
@@ -87,16 +87,16 @@ public class Tour extends JavaScriptObject {
 		}
 
 		final public native String getCaption()/*-{
-      return this.caption;
-		}-*/;
+												return this.caption;
+												}-*/;
 
 		final public native String getDescription()/*-{
-      return this.description;
-		}-*/;
+													return this.description;
+													}-*/;
 
 		final public native RelativeTo getRelativeTo()/*-{
-      return this.relativeTo;
-		}-*/;
+														return this.relativeTo;
+														}-*/;
 	}
 
 	static class RelativeTo extends JavaScriptObject {
@@ -104,28 +104,28 @@ public class Tour extends JavaScriptObject {
 		}
 
 		final public native String getElement()/*-{
-      return this.element;
-		}-*/;
+												return this.element;
+												}-*/;
 
 		final public native int getOffsetHorizontal()/*-{
-      return (this.offsetHorizontal) ? this.offsetHorizontal : 0;
-		}-*/;
+														return (this.offsetHorizontal) ? this.offsetHorizontal : 0;
+														}-*/;
 
 		final public native int getOffsetVertical()/*-{
-      return (this.offsetVertical) ? this.offsetVertical : 0;
-		}-*/;
+													return (this.offsetVertical) ? this.offsetVertical : 0;
+													}-*/;
 
 		final public native int getPointerRightMargin()/*-{
-      return (this.pointerRightMargin) ? this.pointerRightMargin : 0;
-		}-*/;
+														return (this.pointerRightMargin) ? this.pointerRightMargin : 0;
+														}-*/;
 
 		final public native int getPopupFromBottom()/*-{
-      return (this.popupFromBottom) ? this.popupFromBottom : 0;
-		}-*/;
+													return (this.popupFromBottom) ? this.popupFromBottom : 0;
+													}-*/;
 
 		private final native String getDirectionString()/*-{
-      return this.direction;
-		}-*/;
+														return this.direction;
+														}-*/;
 
 		final Pointer getPointer() {
 			return CommonUtils.getEnumValueOrNull(Pointer.class,
@@ -133,8 +133,8 @@ public class Tour extends JavaScriptObject {
 		}
 
 		final native String getPointerString()/*-{
-      return this.pointer;
-		}-*/;
+												return this.pointer;
+												}-*/;
 
 		final PositioningDirection getPositioningDirection() {
 			return CommonUtils.getEnumValueOrNull(PositioningDirection.class,
@@ -149,46 +149,46 @@ public class Tour extends JavaScriptObject {
 
 		final public native String asString()
 		/*-{
-      return JSON.stringify(this);
+		return JSON.stringify(this);
 		}-*/;
 
 		final public native String getActionValue()/*-{
-      return this.actionValue;
-		}-*/;
+													return this.actionValue;
+													}-*/;
 
 		final public native Condition getIgnoreActionIf()/*-{
-      return this.ignoreActionIf;
-		}-*/;
+															return this.ignoreActionIf;
+															}-*/;
 
 		final public native Condition getIgnoreIf()/*-{
-      return this.ignoreIf;
-		}-*/;
+													return this.ignoreIf;
+													}-*/;
 
 		final public native Condition getTarget()/*-{
-      if (!(this.target)) {
-        return null;
-      }
-      return {
-        "selectors" : this.target
-      }
-		}-*/;
+													if (!(this.target)) {
+													return null;
+													}
+													return {
+													"selectors" : this.target
+													}
+													}-*/;
 
 		final public native Condition getWaitFor()/*-{
-      return this.waitFor;
-		}-*/;
+													return this.waitFor;
+													}-*/;
 
 		final private native String getActionString()/*-{
-      return this.action;
-		}-*/;
+														return this.action;
+														}-*/;
 
 		final private native JsArray<PopupInfo> getPopupsArray()/*-{
-      return (this.popups) ? this.popups : [ {
-        caption : this.caption,
-        description : this.description,
-        relativeTo : this.relativeTo
-
-      } ];
-		}-*/;
+																return (this.popups) ? this.popups : [ {
+																caption : this.caption,
+																description : this.description,
+																relativeTo : this.relativeTo
+																
+																} ];
+																}-*/;
 
 		final TourAction getAction() {
 			return CommonUtils.getEnumValueOrNull(TourAction.class,

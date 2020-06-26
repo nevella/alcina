@@ -163,9 +163,10 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			emailAddresses = filter.filterAddresses(emailAddresses);
 			if (systemEmailAddressOfRequestor != null) {
 				String[] tmpSystemEmailBuffer = filter.filterAddresses(
-					new String[] { systemEmailAddressOfRequestor });
-				systemEmailAddressOfRequestor = tmpSystemEmailBuffer.length == 1 ?
-						tmpSystemEmailBuffer[0] : "(null)";
+						new String[] { systemEmailAddressOfRequestor });
+				systemEmailAddressOfRequestor = tmpSystemEmailBuffer.length == 1
+						? tmpSystemEmailBuffer[0]
+						: "(null)";
 			}
 		}
 		for (String email : emailAddresses) {

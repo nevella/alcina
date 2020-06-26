@@ -27,76 +27,75 @@ import cc.alcina.framework.gwt.client.widget.PopupShownEvent.PopupShownHandler;
  * 
  */
 public class PopupShownEvent extends GwtEvent<PopupShownHandler> {
-    /**
-     * Handler type.
-     */
-    private static Type<PopupShownHandler> TYPE = new Type<PopupShownHandler>();
+	/**
+	 * Handler type.
+	 */
+	private static Type<PopupShownHandler> TYPE = new Type<PopupShownHandler>();
 
-    public static void fire(HasPopupShownHandlers source, boolean shown) {
-        PopupShownEvent event = new PopupShownEvent(shown);
-        source.fireEvent(event);
-    }
+	public static void fire(HasPopupShownHandlers source, boolean shown) {
+		PopupShownEvent event = new PopupShownEvent(shown);
+		source.fireEvent(event);
+	}
 
-    /**
-     * Gets the type associated with this event.
-     * 
-     * @return returns the handler type
-     */
-    public static Type<PopupShownHandler> getType() {
-        return TYPE;
-    }
+	/**
+	 * Gets the type associated with this event.
+	 * 
+	 * @return returns the handler type
+	 */
+	public static Type<PopupShownHandler> getType() {
+		return TYPE;
+	}
 
-    private final boolean shown;
+	private final boolean shown;
 
-    /**
-     * Creates a new popupshown event.
-     * 
-     * @param shown
-     * 
-     */
-    public PopupShownEvent(boolean shown) {
-        this.shown = shown;
-    }
+	/**
+	 * Creates a new popupshown event.
+	 * 
+	 * @param shown
+	 * 
+	 */
+	public PopupShownEvent(boolean shown) {
+		this.shown = shown;
+	}
 
-    // The instance knows its of type T, but the TYPE
-    // field itself does not, so we have to do an unsafe cast here.
-    
-    @Override
-    public final Type<PopupShownHandler> getAssociatedType() {
-        return (Type) TYPE;
-    }
+	// The instance knows its of type T, but the TYPE
+	// field itself does not, so we have to do an unsafe cast here.
+	@Override
+	public final Type<PopupShownHandler> getAssociatedType() {
+		return (Type) TYPE;
+	}
 
-    public boolean isShown() {
-        return this.shown;
-    }
+	public boolean isShown() {
+		return this.shown;
+	}
 
-    @Override
-    protected void dispatch(PopupShownHandler handler) {
-        handler.onPopupShown(this);
-    }
+	@Override
+	protected void dispatch(PopupShownHandler handler) {
+		handler.onPopupShown(this);
+	}
 
-    public interface HasPopupShownHandlers extends HasHandlers {
-        /**
-         * Adds a {@link PopupShownEvent} handler.
-         * 
-         * @param handler
-         *            the handler
-         * @return the registration for the event
-         */
-        HandlerRegistration addPopupShownHandler(PopupShownHandler handler);
-    }
+	public interface HasPopupShownHandlers extends HasHandlers {
+		/**
+		 * Adds a {@link PopupShownEvent} handler.
+		 * 
+		 * @param handler
+		 *            the handler
+		 * @return the registration for the event
+		 */
+		HandlerRegistration addPopupShownHandler(PopupShownHandler handler);
+	}
 
-    /**
-     * Handler interface for {@link PopupShownEvent} events.
-     * 
-     */
-    public interface PopupShownHandler extends EventHandler {
-        /**
-         * Called when {@link PopupShownEvent} is fired.
-         * 
-         * @param event
-         *            the {@link PopupShownEvent} that was fired
-         */
-        void onPopupShown(PopupShownEvent event);
-    }
+	/**
+	 * Handler interface for {@link PopupShownEvent} events.
+	 * 
+	 */
+	public interface PopupShownHandler extends EventHandler {
+		/**
+		 * Called when {@link PopupShownEvent} is fired.
+		 * 
+		 * @param event
+		 *            the {@link PopupShownEvent} that was fired
+		 */
+		void onPopupShown(PopupShownEvent event);
+	}
 }

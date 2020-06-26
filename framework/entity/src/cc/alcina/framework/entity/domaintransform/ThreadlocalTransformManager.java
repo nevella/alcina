@@ -1283,8 +1283,16 @@ public class ThreadlocalTransformManager extends TransformManager
 	 * if in 'entityManager' mode (i.e. in a db transaction), let the
 	 * entityManager handle it - otherwise
 	 * 
-	 * FIXME mvcc.2 - maybe non-em instances should have a 'domainobjects' (i.e.
-	 * domain store?)
+	 * FIXME - mvcc.3 - maybe non-em instances should have a 'domainobjects'
+	 * (i.e. domain store?)
+	 * 
+	 * In fact...yes. THere's quite a bit of confusion between object lookup,
+	 * object store and TM (particularly TLTM).
+	 * 
+	 * Write it down (presumably get rid of object lookup) - i feel that object
+	 * store should delegate to domainstore server-side, but need to make the
+	 * interface cleaner. Also, how does this play with
+	 * PostTransactionEntityResolver...and AdjunctTm?
 	 */
 	protected void performDeleteObject(Entity entity) {
 		if (entityManager != null) {

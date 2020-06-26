@@ -136,8 +136,7 @@ public class MetricLoggingBase {
 				: System.currentTimeMillis() - metricStart.get(key);
 		ticksSum.remove(key);
 		String units = "ms";
-		String message = Ax.format("Metric: %s - %s %s%s", key, delta,
-				units,
+		String message = Ax.format("Metric: %s - %s %s%s", key, delta, units,
 				CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - " + extraInfo);
 		if (!muted) {
 			Logger out = overrideLogger == null ? logger : overrideLogger;

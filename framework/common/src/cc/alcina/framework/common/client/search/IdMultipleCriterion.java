@@ -85,9 +85,11 @@ public abstract class IdMultipleCriterion<E extends Entity>
 	public String toString() {
 		return String.valueOf(getValue());
 	}
+
 	public IdMultipleCriterion<E> withValue(E value) {
 		return withValues(LiSet.of(value));
 	}
+
 	public IdMultipleCriterion<E> withValues(Set<E> value) {
 		setValue(value);
 		return this;

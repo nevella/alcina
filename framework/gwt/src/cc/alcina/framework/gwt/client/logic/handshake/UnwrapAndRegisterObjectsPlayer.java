@@ -190,12 +190,13 @@ public class UnwrapAndRegisterObjectsPlayer
 		// apps which allow "always offline" should create a model holder if the
 		// first delta doesn't have a holder;
 		if (currentDelta.getDomainModelHolder() != null) {
-		    if(currentDelta instanceof DtrWrapperBackedDomainModelDelta){
-		        DeltaApplicationRecordType type = ((DtrWrapperBackedDomainModelDelta) currentDelta).getWrapper().getType();
-		        if(type==DeltaApplicationRecordType.REMOTE_DELTA_APPLIED){
-		            HandshakeConsortModel.get().setPriorRemoteConnections(true);
-		        }
-		    }
+			if (currentDelta instanceof DtrWrapperBackedDomainModelDelta) {
+				DeltaApplicationRecordType type = ((DtrWrapperBackedDomainModelDelta) currentDelta)
+						.getWrapper().getType();
+				if (type == DeltaApplicationRecordType.REMOTE_DELTA_APPLIED) {
+					HandshakeConsortModel.get().setPriorRemoteConnections(true);
+				}
+			}
 			registerDomainModelHolder(currentDelta.getDomainModelHolder());
 			return true;
 		}

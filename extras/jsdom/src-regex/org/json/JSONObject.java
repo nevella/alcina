@@ -90,7 +90,6 @@ import java.util.TreeSet;
  * @author JSON.org
  * @version 2010-01-05
  */
-
 public class JSONObject {
 	/**
 	 * It is sometimes more convenient and less ambiguous to have a
@@ -495,7 +494,8 @@ public class JSONObject {
 			}
 			Package objectPackage = object.getClass().getPackage();
 			String objectPackageName = (objectPackage != null
-					? objectPackage.getName() : "");
+					? objectPackage.getName()
+					: "");
 			if (objectPackageName.startsWith("java.")
 					|| objectPackageName.startsWith("javax.")
 					|| object.getClass().getClassLoader() == null) {

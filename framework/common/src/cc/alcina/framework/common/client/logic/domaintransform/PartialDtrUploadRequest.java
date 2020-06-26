@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PartialDtrUploadRequest implements Serializable {
-    public boolean pleaseProvideCurrentStatus;
+	public boolean pleaseProvideCurrentStatus;
 
-    public List<DeltaApplicationRecord> wrappers = new ArrayList<DeltaApplicationRecord>();
+	public List<DeltaApplicationRecord> wrappers = new ArrayList<DeltaApplicationRecord>();
 
-    public boolean hasTransforms() {
-        return wrappers.size() > 0;
-    }
+	public boolean hasTransforms() {
+		return wrappers.size() > 0;
+	}
 }

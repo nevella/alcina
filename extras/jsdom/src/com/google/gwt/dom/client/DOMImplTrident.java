@@ -264,10 +264,11 @@ abstract class DOMImplTrident extends DOMImpl {
 	 * runtime JS exception.
 	 */
 	@Override
-	protected native String getAttribute(ElementRemote elem, String name) /*-{
-																			var attr = elem.getAttribute(name);
-																			return attr == null ? '' : attr + '';
-																			}-*/;
+	protected native String getAttribute(ElementRemote elem,
+			String name) /*-{
+							var attr = elem.getAttribute(name);
+							return attr == null ? '' : attr + '';
+							}-*/;
 
 	@Override
 	protected int getBodyOffsetLeft(DocumentRemote doc) {
@@ -325,10 +326,11 @@ abstract class DOMImplTrident extends DOMImpl {
 	}
 
 	@Override
-	protected native boolean hasAttribute(ElementRemote elem, String name) /*-{
-																			var node = elem.getAttributeNode(name);
-																			return !!(node && node.specified);
-																			}-*/;
+	protected native boolean hasAttribute(ElementRemote elem,
+			String name) /*-{
+							var node = elem.getAttributeNode(name);
+							return !!(node && node.specified);
+							}-*/;
 
 	@Override
 	protected boolean isOrHasChild(NodeRemote parent, NodeRemote child) {

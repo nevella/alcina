@@ -194,8 +194,8 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 
 		public String dumpDistinct() {
 			Multimap<String, List<TdModelThread>> byLines = threads.stream()
-					.filter(tmt -> !tmt.ignoreable()).collect(
-							AlcinaCollectors.toKeyMultimap(tmt -> tmt.lines.toString()));
+					.filter(tmt -> !tmt.ignoreable()).collect(AlcinaCollectors
+							.toKeyMultimap(tmt -> tmt.lines.toString()));
 			String distinctWaits = byLines.entrySet().stream().sorted(
 					(e1, e2) -> e1.getValue().size() - e2.getValue().size())
 					.map(e -> String.format("%5s %-40s", e.getValue().size(),

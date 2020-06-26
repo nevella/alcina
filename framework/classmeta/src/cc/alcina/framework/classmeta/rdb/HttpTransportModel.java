@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 class HttpTransportModel {
-    List<Packet> passthroughPackets = new ArrayList<>();
+	List<Packet> passthroughPackets = new ArrayList<>();
 
-    List<Packet> predictivePackets = new ArrayList<>();
+	List<Packet> predictivePackets = new ArrayList<>();
 
-    boolean eventListener;
+	boolean eventListener;
 
-    String endpointName;
+	String endpointName;
 
-    public boolean close;
+	public boolean close;
 }

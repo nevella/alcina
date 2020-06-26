@@ -25,7 +25,8 @@ import com.google.gwt.event.shared.HasHandlers;
 /**
  * Event thrown when data provider's data
  */
-public class DataProviderChangeEvent<T> extends GwtEvent<DataProviderChangeEvent.Handler> {
+public class DataProviderChangeEvent<T>
+		extends GwtEvent<DataProviderChangeEvent.Handler> {
 	/**
 	 * A singleton instance of Type&lt;Handler&gt;.
 	 */

@@ -28,8 +28,7 @@ public abstract class MapObjectLookup implements ObjectStore {
 
 	public Set<Entity> allValues() {
 		Set<Entity> result = new LinkedHashSet<Entity>();
-		for (Collection<Entity> collection : getCollectionMap()
-				.values()) {
+		for (Collection<Entity> collection : getCollectionMap().values()) {
 			result.addAll(collection);
 		}
 		return result;
@@ -96,14 +95,13 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	@Override
-	public Map<Class<? extends Entity>, Collection<Entity>>
-			getCollectionMap() {
+	public Map<Class<? extends Entity>, Collection<Entity>> getCollectionMap() {
 		return this.perClassLookups.getCollnMap();
 	}
 
 	@Override
-	public <T extends Entity> T getObject(Class<? extends T> c,
-			long id, long localId) {
+	public <T extends Entity> T getObject(Class<? extends T> c, long id,
+			long localId) {
 		FastIdLookup lookup = perClassLookups.getLookup(c);
 		if (lookup == null) {
 			return null;
@@ -159,8 +157,7 @@ public abstract class MapObjectLookup implements ObjectStore {
 			return lookup.values().contains(obj);
 		}
 
-		public Map<Class<? extends Entity>, Collection<Entity>>
-				getCollnMap() {
+		public Map<Class<? extends Entity>, Collection<Entity>> getCollnMap() {
 			Map<Class<? extends Entity>, Collection<Entity>> result = new LinkedHashMap<Class<? extends Entity>, Collection<Entity>>();
 			for (Entry<Class<? extends Entity>, FastIdLookup> entry : lookups
 					.entrySet()) {

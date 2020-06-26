@@ -597,12 +597,12 @@ public class JavaScript {
 											return index;
 											}-*/;
 
-	native private static JavaScriptObject
-			removeProperty0(final JavaScriptObject object, final int index)/*-{
-																			var previousValue = object[index];
-																			delete object[index];
-																			return previousValue || null;
-																			}-*/;
+	native private static JavaScriptObject removeProperty0(
+			final JavaScriptObject object, final int index)/*-{
+															var previousValue = object[index];
+															delete object[index];
+															return previousValue || null;
+															}-*/;
 
 	native private static JavaScriptObject removeProperty0(
 			final JavaScriptObject object, final String propertyName)/*-{

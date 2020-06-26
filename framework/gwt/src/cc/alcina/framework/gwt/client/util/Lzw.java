@@ -24,11 +24,12 @@ public class Lzw {
 																		return encoder.compressToUtf16Str(data);
 																		}-*/;
 
-	native boolean checkRoundtrip0(JavaScriptObject encoder, String data) /*-{
-																			var arr = encoder.compress(data);
-																			var s2 = encoder.decompress(arr);
-																			return data == s2;
-																			}-*/;
+	native boolean checkRoundtrip0(JavaScriptObject encoder,
+			String data) /*-{
+							var arr = encoder.compress(data);
+							var s2 = encoder.decompress(arr);
+							return data == s2;
+							}-*/;
 
 	/**
 	 * Could have done something fancy with utf8 - but given target string is

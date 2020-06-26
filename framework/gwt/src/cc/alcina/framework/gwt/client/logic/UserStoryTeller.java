@@ -25,9 +25,9 @@ public abstract class UserStoryTeller
 
 	public static native void tellJs(String trigger)
 	/*-{
-    var teller = @cc.alcina.framework.gwt.client.logic.UserStoryTeller::get()();
-    teller.@cc.alcina.framework.gwt.client.logic.UserStoryTeller::tell(Ljava/lang/String;)(trigger);
-
+	var teller = @cc.alcina.framework.gwt.client.logic.UserStoryTeller::get()();
+	teller.@cc.alcina.framework.gwt.client.logic.UserStoryTeller::tell(Ljava/lang/String;)(trigger);
+	
 	}-*/;
 
 	/*

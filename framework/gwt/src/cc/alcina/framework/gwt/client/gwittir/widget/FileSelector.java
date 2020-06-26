@@ -109,13 +109,13 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 
 	private native void readAsBinaryString(Html5File file,
 			AsyncCallback<String> callback)/*-{
-    var reader = new FileReader();
-    reader.onloadend = function() {
-      callback.@com.google.gwt.user.client.rpc.AsyncCallback::onSuccess(Ljava/lang/Object;)(reader.result);
-
-    };
-    reader.readAsBinaryString(file);
-	}-*/;
+											var reader = new FileReader();
+											reader.onloadend = function() {
+											callback.@com.google.gwt.user.client.rpc.AsyncCallback::onSuccess(Ljava/lang/Object;)(reader.result);
+											
+											};
+											reader.readAsBinaryString(file);
+											}-*/;
 
 	@Override
 	protected void onAttach() {

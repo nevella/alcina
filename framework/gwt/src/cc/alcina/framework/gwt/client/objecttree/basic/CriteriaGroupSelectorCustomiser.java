@@ -50,7 +50,6 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 		this.showUnselectedOnPopupClose = true;
 	}
 
-	
 	public void setModel(Object model) {
 		this.criteriaGroup = (C) model;
 		addPropertyChangeListener("value", pcl);

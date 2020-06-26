@@ -5,7 +5,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class EntityLayerUtils {
-
 	public static String getLocalHostName() {
 		try {
 			String defined = ResourceUtilities.get(EntityLayerUtils.class,
@@ -19,6 +18,7 @@ public class EntityLayerUtils {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
 	public static String getApplicationHostName() {
 		return ResourceUtilities.get("applicationHostName");
 	}

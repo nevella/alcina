@@ -24,7 +24,6 @@ import cc.alcina.framework.common.client.domain.DomainCollections;
  * @param <K>
  * @param <V>
  */
-
 public class SortedMultiset<K, V extends Set> extends Multiset<K, V> {
 	@Override
 	protected Set createSet() {

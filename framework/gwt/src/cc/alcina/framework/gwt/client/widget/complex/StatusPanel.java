@@ -189,7 +189,8 @@ public class StatusPanel extends Composite {
 	public void setRunning(String runningHtml, String preRunningHtml) {
 		setVisible(runningHtml != null);
 		String pre = CommonUtils.isNotNullOrEmpty(preRunningHtml)
-				? preRunningHtml + "<br>" : "";
+				? preRunningHtml + "<br>"
+				: "";
 		String running = Ax.format(runningTemplate, runningHtml);
 		setContent(pre + running);
 	}

@@ -56,16 +56,15 @@ public class StackDebug {
 						}
 					}
 					if (debug == true) {
-						System.err.println(Ax.format(
-								"***unbalanced stack***"
-										+ "\nThread - %s\npush:\n%s\n\n\npop:\n%s\n\n",
+						System.err.println(Ax.format("***unbalanced stack***"
+								+ "\nThread - %s\npush:\n%s\n\n\npop:\n%s\n\n",
 								thread, CommonUtils.join(lastTraces, "\n"),
 								CommonUtils.join(traces, "\n")));
 					}
 				}
 				String template = "**stack-debug: %s-%s-%s-%s - %s -: \n\t%s\n\n***end-stack-debug\n\n";
-				System.err.println(Ax.format(template, tId,
-						hashCode(), (push ? "PUSH" : "POP"),
+				System.err.println(Ax.format(template, tId, hashCode(),
+						(push ? "PUSH" : "POP"),
 						stack == null ? 0 : stack.size(), traces.length,
 						CommonUtils.join(lines, "\n\t")));
 				Stack<StackTraceElement[]> traceStack = perThreadTraces
@@ -73,8 +72,7 @@ public class StackDebug {
 				List<StackTraceElement[]> traceList = new ArrayList<>(
 						traceStack);
 				for (int idx = 0; idx < traceList.size(); idx++) {
-					System.out.println(
-							Ax.format("\tDebug stack - #%s\n", idx));
+					System.out.println(Ax.format("\tDebug stack - #%s\n", idx));
 					System.out.println(Ax.format("\t\t%s\n\t\t%s\n\n",
 							traceList.get(idx)[0], traceList.get(idx)[1]));
 				}

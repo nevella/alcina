@@ -4,19 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DomainStoreWaitStats {
-    public List<DomainStoreWaitOnLockStat> waitingOnLockStats = new ArrayList<>();
+	public List<DomainStoreWaitOnLockStat> waitingOnLockStats = new ArrayList<>();
 
-    public static class DomainStoreWaitOnLockStat {
-        public long threadId;
+	public static class DomainStoreWaitOnLockStat {
+		public long threadId;
 
-        public String threadName;
+		public String threadName;
 
-        public long persistedMetricId;
+		public long persistedMetricId;
 
-        public long lockTimeMs;
+		public long lockTimeMs;
 
-        public Long bestId() {
-            return persistedMetricId != 0 ? persistedMetricId : threadId;
-        }
-    }
+		public Long bestId() {
+			return persistedMetricId != 0 ? persistedMetricId : threadId;
+		}
+	}
 }

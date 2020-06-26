@@ -28,21 +28,23 @@ import cc.alcina.framework.gwt.client.gwittir.widget.FileSelector;
  */
 public class FileSelectorCustomiser implements Customiser {
 	public static final String ACCEPT_FILTER = "ACCEPT_FILTER";
+
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		NamedParameter[] parameters = info.parameters();
 		String accept = NamedParameter.Support.stringValue(parameters,
 				ACCEPT_FILTER, "");
-		return new FileSelectorProvider(editable,accept);
+		return new FileSelectorProvider(editable, accept);
 	}
 
 	public static class FileSelectorProvider implements BoundWidgetProvider {
 		private boolean editable;
+
 		private String accept;
 
-		public FileSelectorProvider(boolean editable,String accept) {
+		public FileSelectorProvider(boolean editable, String accept) {
 			this.editable = editable;
-			this.accept=accept;
+			this.accept = accept;
 		}
 
 		public BoundWidget get() {

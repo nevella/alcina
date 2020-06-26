@@ -28,18 +28,18 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Nick Reddel
  */
 public class Svg extends Widget implements HasClickHandlers {
-    /**
-     * Creates an empty span panel.
-     */
-    public Svg(TextResource textResource) {
-        String svg = textResource.getText();
-        DivElement div = Document.get().createDivElement();
-        div.setInnerHTML(svg);
-        setElement((Element) div.getChild(0));
-    }
+	/**
+	 * Creates an empty span panel.
+	 */
+	public Svg(TextResource textResource) {
+		String svg = textResource.getText();
+		DivElement div = Document.get().createDivElement();
+		div.setInnerHTML(svg);
+		setElement((Element) div.getChild(0));
+	}
 
-    @Override
-    public HandlerRegistration addClickHandler(ClickHandler handler) {
-        return addDomHandler(handler, ClickEvent.getType());
-    }
+	@Override
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
+	}
 }

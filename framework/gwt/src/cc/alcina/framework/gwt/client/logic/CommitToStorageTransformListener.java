@@ -49,14 +49,14 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolverAction;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
-import cc.alcina.framework.gwt.client.util.ClientUtilsNonGwt;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 /**
  * 
@@ -70,7 +70,7 @@ import cc.alcina.framework.gwt.client.util.ClientUtilsNonGwt;
  *         ditto localRequestId ditto committingRequest
  *         </ul>
  * 
- *         //FIXME mvcc.2 - get rid of statelistenable - publish a typed topic
+ *         //FIXME - mvcc.4 - get rid of statelistenable - publish a typed topic
  *         event
  * 
  */
@@ -132,8 +132,7 @@ public class CommitToStorageTransformListener extends StateListenable
 				listener, add);
 	}
 
-	public static Topic<DomainTransformResponse>
-			topicTransformsCommitted() {
+	public static Topic<DomainTransformResponse> topicTransformsCommitted() {
 		return Topic.global(TOPIC_TRANSFORMS_COMMITTED);
 	}
 
@@ -175,14 +174,6 @@ public class CommitToStorageTransformListener extends StateListenable
 	private int lastCommitSize;
 
 	private boolean queueCommitTimerDisabled;
-
-	public boolean isQueueCommitTimerDisabled() {
-		return this.queueCommitTimerDisabled;
-	}
-
-	public void setQueueCommitTimerDisabled(boolean queueCommitTimerDisabled) {
-		this.queueCommitTimerDisabled = queueCommitTimerDisabled;
-	}
 
 	public CommitToStorageTransformListener() {
 		init();
@@ -241,6 +232,10 @@ public class CommitToStorageTransformListener extends StateListenable
 		return this.currentState;
 	}
 
+	public int getLastCommitSize() {
+		return this.lastCommitSize;
+	}
+
 	public synchronized int getLocalRequestId() {
 		return this.localRequestId;
 	}
@@ -277,6 +272,10 @@ public class CommitToStorageTransformListener extends StateListenable
 		return paused;
 	}
 
+	public boolean isQueueCommitTimerDisabled() {
+		return this.queueCommitTimerDisabled;
+	}
+
 	public boolean isSuppressErrors() {
 		return suppressErrors;
 	}
@@ -291,6 +290,10 @@ public class CommitToStorageTransformListener extends StateListenable
 
 	public void setPaused(boolean paused) {
 		this.paused = paused;
+	}
+
+	public void setQueueCommitTimerDisabled(boolean queueCommitTimerDisabled) {
+		this.queueCommitTimerDisabled = queueCommitTimerDisabled;
 	}
 
 	public void setSuppressErrors(boolean suppressErrors) {
@@ -364,7 +367,7 @@ public class CommitToStorageTransformListener extends StateListenable
 						getTransformExceptionResolver().resolve(dtre, callback);
 						return;
 					}
-					if (ClientUtilsNonGwt.maybeOffline(caught)) {
+					if (ClientUtils.maybeOffline(caught)) {
 						fireStateChanged(OFFLINE);
 					}
 					throw new UnknownTransformFailedException(caught);
@@ -563,10 +566,6 @@ public class CommitToStorageTransformListener extends StateListenable
 		} else {
 			commitRemote(request, commitRemoteCallback);
 		}
-	}
-
-	public int getLastCommitSize() {
-		return this.lastCommitSize;
 	}
 
 	protected void commitRemote(DomainTransformRequest request,

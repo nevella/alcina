@@ -30,99 +30,99 @@ import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 
 public class ClassMetaServer {
-    private static BiPrintStream out;
+	private static BiPrintStream out;
 
-    private static BiPrintStream err;
-    static {
-        err = new BiPrintStream(new ByteArrayOutputStream());
-        err.s1 = System.err;
-        err.s2 = new NullPrintStream();
-        out = new BiPrintStream(new ByteArrayOutputStream());
-        out.s1 = System.out;
-        out.s2 = new NullPrintStream();
-        System.setErr(err);
-        System.setOut(out);
-    }
+	private static BiPrintStream err;
+	static {
+		err = new BiPrintStream(new ByteArrayOutputStream());
+		err.s1 = System.err;
+		err.s2 = new NullPrintStream();
+		out = new BiPrintStream(new ByteArrayOutputStream());
+		out.s1 = System.out;
+		out.s2 = new NullPrintStream();
+		System.setErr(err);
+		System.setOut(out);
+	}
 
-    public static void main(String[] args) {
-        try {
-            new ClassMetaServer().start();
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
+	public static void main(String[] args) {
+		try {
+			new ClassMetaServer().start();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
-    @SuppressWarnings("unused")
-    private RdbProxies rdbProxies;
+	@SuppressWarnings("unused")
+	private RdbProxies rdbProxies;
 
-    private void initLoggers() {
-        Logger logger = Logger.getRootLogger();
-        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
-        logger.removeAllAppenders();
-        Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
-        Appender appender = new ConsoleAppender(layout);
-        String mainLoggerAppenderName = AlcinaWebappConfig.MAIN_LOGGER_APPENDER;
-        appender.setName(mainLoggerAppenderName);
-        logger.addAppender(appender);
-        logger.setAdditivity(true);
-        logger.setLevel(Level.INFO);
-        {
-            Logger metricLogger = Logger.getLogger(MetricLogging.class);
-            if (Ax.isTest()) {
-                metricLogger.removeAllAppenders();
-                Layout metricLayout = new PatternLayout(
-                        AppPersistenceBase.METRIC_LOGGER_PATTERN);
-                metricLogger.addAppender(new SafeConsoleAppender(metricLayout));
-                metricLogger.setAdditivity(false);
-            } else {
-                metricLogger.setAdditivity(true);
-            }
-            metricLogger.setLevel(Level.DEBUG);
-        }
-        EntityLayerLogging.setLevel(AntHandler.class, Level.DEBUG);
-    }
+	private void initLoggers() {
+		Logger logger = Logger.getRootLogger();
+		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
+		logger.removeAllAppenders();
+		Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
+		Appender appender = new ConsoleAppender(layout);
+		String mainLoggerAppenderName = AlcinaWebappConfig.MAIN_LOGGER_APPENDER;
+		appender.setName(mainLoggerAppenderName);
+		logger.addAppender(appender);
+		logger.setAdditivity(true);
+		logger.setLevel(Level.INFO);
+		{
+			Logger metricLogger = Logger.getLogger(MetricLogging.class);
+			if (Ax.isTest()) {
+				metricLogger.removeAllAppenders();
+				Layout metricLayout = new PatternLayout(
+						AppPersistenceBase.METRIC_LOGGER_PATTERN);
+				metricLogger.addAppender(new SafeConsoleAppender(metricLayout));
+				metricLogger.setAdditivity(false);
+			} else {
+				metricLogger.setAdditivity(true);
+			}
+			metricLogger.setLevel(Level.DEBUG);
+		}
+		EntityLayerLogging.setLevel(AntHandler.class, Level.DEBUG);
+	}
 
-    private void initRegistry() {
-        Registry.registerSingleton(TimerWrapperProvider.class,
-                new TimerWrapperProviderJvm());
-        Registry.registerSingleton(RdbProxies.class, new RdbProxies());
-    }
+	private void initRegistry() {
+		Registry.registerSingleton(TimerWrapperProvider.class,
+				new TimerWrapperProviderJvm());
+		Registry.registerSingleton(RdbProxies.class, new RdbProxies());
+	}
 
-    private void start() throws Exception {
-        int port = 10005;
-        Server server = new Server(port);
-        HandlerCollection handlers = new HandlerCollection(true);
-        WrappedObjectHelper.withoutRegistry();
-        initLoggers();
-        initRegistry();
-        ClassMetaHandler metaHandler = new ClassMetaHandler();
-        {
-            ContextHandler ctx = new ContextHandler(handlers, "/meta");
-            ctx.setHandler(metaHandler);
-            handlers.addHandler(ctx);
-        }
-        {
-            ContextHandler ctx = new ContextHandler(handlers, "/persistence");
-            ctx.setHandler(new ClassPersistenceScanHandler(metaHandler));
-            handlers.addHandler(ctx);
-        }
-        {
-            ContextHandler ctx = new ContextHandler(handlers, "/ant");
-            ctx.setHandler(new AntHandler());
-            handlers.addHandler(ctx);
-        }
-        GzipHandler gzipHandler = new GzipHandler();
-        {
-            ContextHandler ctx = new ContextHandler(handlers, "/rdb");
-            gzipHandler.setHandler(new HttpAcceptorHandler());
-            ctx.setHandler(gzipHandler);
-            handlers.addHandler(ctx);
-        }
-        server.setHandler(handlers);
-        server.start();
-        gzipHandler.start();
-        // server.dumpStdErr();
-        RdbProxies.get().start();
-        server.join();
-    }
+	private void start() throws Exception {
+		int port = 10005;
+		Server server = new Server(port);
+		HandlerCollection handlers = new HandlerCollection(true);
+		WrappedObjectHelper.withoutRegistry();
+		initLoggers();
+		initRegistry();
+		ClassMetaHandler metaHandler = new ClassMetaHandler();
+		{
+			ContextHandler ctx = new ContextHandler(handlers, "/meta");
+			ctx.setHandler(metaHandler);
+			handlers.addHandler(ctx);
+		}
+		{
+			ContextHandler ctx = new ContextHandler(handlers, "/persistence");
+			ctx.setHandler(new ClassPersistenceScanHandler(metaHandler));
+			handlers.addHandler(ctx);
+		}
+		{
+			ContextHandler ctx = new ContextHandler(handlers, "/ant");
+			ctx.setHandler(new AntHandler());
+			handlers.addHandler(ctx);
+		}
+		GzipHandler gzipHandler = new GzipHandler();
+		{
+			ContextHandler ctx = new ContextHandler(handlers, "/rdb");
+			gzipHandler.setHandler(new HttpAcceptorHandler());
+			ctx.setHandler(gzipHandler);
+			handlers.addHandler(ctx);
+		}
+		server.setHandler(handlers);
+		server.start();
+		gzipHandler.start();
+		// server.dumpStdErr();
+		RdbProxies.get().start();
+		server.join();
+	}
 }

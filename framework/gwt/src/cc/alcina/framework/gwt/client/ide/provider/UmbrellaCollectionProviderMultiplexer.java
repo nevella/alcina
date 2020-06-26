@@ -36,7 +36,6 @@ import cc.alcina.framework.gwt.client.widget.VisualFilterable.HasSatisfiesFilter
  * 
  * @author Nick Reddel
  */
-
 public class UmbrellaCollectionProviderMultiplexer<T>
 		implements CollectionModificationListener {
 	protected final Collection<T> collection;

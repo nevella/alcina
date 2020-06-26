@@ -14,7 +14,7 @@ public class DevRemoterParams implements Serializable {
 	public boolean cleanEntities;
 
 	public DevRemoterParams.DevRemoterApi api = DevRemoterApi.EJB_BEAN_PROVIDER;
-	
+
 	public long clientInstanceId;
 
 	public boolean asRoot;

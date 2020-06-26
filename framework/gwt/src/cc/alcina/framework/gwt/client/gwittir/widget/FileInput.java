@@ -126,7 +126,7 @@ public class FileInput extends Widget
 	}
 
 	public void setAccept(String accept) {
-		if(Ax.notBlank(accept)) {
+		if (Ax.notBlank(accept)) {
 			inputElement.setAccept(accept);
 		}
 	}

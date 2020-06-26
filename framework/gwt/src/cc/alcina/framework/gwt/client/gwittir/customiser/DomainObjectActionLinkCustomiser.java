@@ -28,7 +28,6 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
 
 @ClientInstantiable
-
 /**
  *
  * @author Nick Reddel
@@ -102,8 +101,9 @@ public class DomainObjectActionLinkCustomiser implements Customiser {
 				AlcinaHistoryItem info = AlcinaHistory.get()
 						.createHistoryInfo();
 				info.setActionName(actionName);
-				info.setClassName(targetClass == null
-						? entity.getClass().getName() : targetClass.getName());
+				info.setClassName(
+						targetClass == null ? entity.getClass().getName()
+								: targetClass.getName());
 				info.setId(entity.getId());
 				info.setLocalId(entity.getLocalId());
 				setTargetHistoryToken(info.toTokenString());

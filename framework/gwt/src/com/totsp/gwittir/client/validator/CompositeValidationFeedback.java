@@ -72,8 +72,8 @@ public class CompositeValidationFeedback extends AbstractValidationFeedback {
 		this.feedbacks.addAll(Arrays.asList(feedbackToAdd));
 		for (ValidationFeedback validationFeedback : feedbackToAdd) {
 			if (validationFeedback instanceof AbstractValidationFeedback) {
-				getMappings()
-						.putAll(((AbstractValidationFeedback) validationFeedback)
+				getMappings().putAll(
+						((AbstractValidationFeedback) validationFeedback)
 								.getMappings());
 			}
 		}

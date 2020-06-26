@@ -7,31 +7,31 @@ import cc.alcina.extras.dev.console.remote.client.common.logic.RemoteConsoleClie
 import cc.alcina.framework.gwt.client.lux.LuxModule;
 
 public class ConsoleModule {
-    private static ConsoleModule consoleModule;
+	private static ConsoleModule consoleModule;
 
-    public static ConsoleModule get() {
-        if (consoleModule == null) {
-            consoleModule = new ConsoleModule();
-        }
-        return consoleModule;
-    }
+	public static ConsoleModule get() {
+		if (consoleModule == null) {
+			consoleModule = new ConsoleModule();
+		}
+		return consoleModule;
+	}
 
-    public ConsoleResources resources = GWT.create(ConsoleResources.class);
+	public ConsoleResources resources = GWT.create(ConsoleResources.class);
 
-    private ConsoleModule() {
-        LuxModule.get().interpolateAndInject(resources.consoleStyles());
-    }
+	private ConsoleModule() {
+		LuxModule.get().interpolateAndInject(resources.consoleStyles());
+	}
 
-    public void startConsoleActivity(AcceptsOneWidget panel,
-            ConsoleActivity consoleActivity) {
-        GWT.runAsync(ConsoleModule.class,
-                RemoteConsoleClientUtils
-                        .runAsyncCallback(() -> startConsoleActivityAsync(panel,
-                                consoleActivity)));
-    }
+	public void startConsoleActivity(AcceptsOneWidget panel,
+			ConsoleActivity consoleActivity) {
+		GWT.runAsync(ConsoleModule.class,
+				RemoteConsoleClientUtils
+						.runAsyncCallback(() -> startConsoleActivityAsync(panel,
+								consoleActivity)));
+	}
 
-    private void startConsoleActivityAsync(AcceptsOneWidget panel,
-            ConsoleActivity consoleActivity) {
-        panel.setWidget(new ConsolePanel(consoleActivity));
-    }
+	private void startConsoleActivityAsync(AcceptsOneWidget panel,
+			ConsoleActivity consoleActivity) {
+		panel.setWidget(new ConsolePanel(consoleActivity));
+	}
 }

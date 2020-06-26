@@ -38,7 +38,6 @@ import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
  * object/action directly, not via history
  */
 @ClientInstantiable
-
 public class ObjectActionLinkCustomiser implements Customiser {
 	public static final String ACTION_CLASS = "actionClass";
 

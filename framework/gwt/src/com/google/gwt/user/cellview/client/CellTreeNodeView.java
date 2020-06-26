@@ -473,7 +473,6 @@ class CellTreeNodeView<T> extends UIObject {
 	 * @param event
 	 *            the native event
 	 */
-	
 	protected void fireEventToCell(NativeEvent event) {
 		if (parentNodeInfo == null) {
 			return;

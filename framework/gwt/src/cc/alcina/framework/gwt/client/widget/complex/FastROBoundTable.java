@@ -65,7 +65,6 @@ import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 
-
 /**
  *
  * @author Nick Reddel
@@ -296,7 +295,8 @@ public class FastROBoundTable extends BoundTableExt {
 		}
 		Property p = pMap.get(col.getPropertyName());
 		BoundWidgetProvider wp = col.getCellProvider() != null
-				? col.getCellProvider() : wpMap.get(col.getPropertyName());
+				? col.getCellProvider()
+				: wpMap.get(col.getPropertyName());
 		if (wp instanceof RequiresContextBindable) {
 			((RequiresContextBindable) wp).setBindable(target);
 		}

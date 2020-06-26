@@ -27,7 +27,7 @@ import com.google.gwt.dom.client.Style.WhiteSpace;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 
 public class StyleLocal implements DomStyle {
-    LightMap<String,String> properties = new LightMap<>();
+	LightMap<String, String> properties = new LightMap<>();
 
 	private Style styleObject;
 

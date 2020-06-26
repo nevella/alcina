@@ -27,6 +27,7 @@ public class MessageManager {
 
 	public static final String TOPIC_ICY_MESSAGE_PUBLISHED = MessageManager.class
 			.getName() + ".TOPIC_ICY_MESSAGE_PUBLISHED";
+
 	public static final String TOPIC_ICY_CENTER_MESSAGE_PUBLISHED = MessageManager.class
 			.getName() + ".TOPIC_ICY_CENTER_MESSAGE_PUBLISHED";
 
@@ -67,9 +68,10 @@ public class MessageManager {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_ICY_MESSAGE_PUBLISHED,
 				message);
 	}
+
 	public void icyCenterMessage(String message) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_ICY_CENTER_MESSAGE_PUBLISHED,
-				message);
+		GlobalTopicPublisher.get()
+				.publishTopic(TOPIC_ICY_CENTER_MESSAGE_PUBLISHED, message);
 	}
 
 	public void showMessage(String message) {

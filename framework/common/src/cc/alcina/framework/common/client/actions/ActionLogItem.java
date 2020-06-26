@@ -42,8 +42,8 @@ public interface ActionLogItem extends Serializable {
 	public void setActionLog(String actionLog);
 
 	public void setShortDescription(String shortDescription);
-	
-	default boolean provideActionSucceeded(){
-	    return !Ax.matches(getShortDescription(), "Job failed:.*");
+
+	default boolean provideActionSucceeded() {
+		return !Ax.matches(getShortDescription(), "Job failed:.*");
 	}
 }

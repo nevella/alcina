@@ -100,8 +100,7 @@ public class DatabaseStatsInfo implements Serializable {
 					CommonUtils.padStringRight(entry.getKey(), 20, ' '),
 					transformCounts.get(entry.getKey()), entry.getValue());
 		}
-		out += Ax.format(template,
-				CommonUtils.padStringRight("total", 20, ' '),
+		out += Ax.format(template, CommonUtils.padStringRight("total", 20, ' '),
 				transformCounts.sum(), transformTexts.sum());
 		out += ("\n\nObject deltas:\n=========\n");
 		for (Entry<String, Integer> entry : deltaSizes.entrySet()) {
@@ -109,13 +108,11 @@ public class DatabaseStatsInfo implements Serializable {
 					CommonUtils.padStringRight(entry.getKey(), 20, ' '),
 					deltaCounts.get(entry.getKey()), entry.getValue());
 		}
-		out += Ax.format(template,
-				CommonUtils.padStringRight("total", 20, ' '), deltaCounts.sum(),
-				deltaSizes.sum());
+		out += Ax.format(template, CommonUtils.padStringRight("total", 20, ' '),
+				deltaCounts.sum(), deltaSizes.sum());
 		out += "\nLogs: \n";
-		out += Ax.format(template,
-				CommonUtils.padStringRight("total", 20, ' '), logSizes.size(),
-				logSizes.sum());
+		out += Ax.format(template, CommonUtils.padStringRight("total", 20, ' '),
+				logSizes.size(), logSizes.sum());
 		out += Ax.format("\n%s %s\n",
 				CommonUtils.padStringRight("Total chars: ", 20, ' '), size());
 		out += Ax.format("\n%s %s\n",

@@ -11,7 +11,8 @@ public class SliceProcessor<T> {
 			processor.process(slice, i);
 		}
 	}
-@FunctionalInterface
+
+	@FunctionalInterface
 	public static interface SliceSubProcessor<T> {
 		void process(List<T> sublist, int startIndex);
 	}

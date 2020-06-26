@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.collections;
 
 import com.totsp.gwittir.client.beans.Converter;
 
-//FIXME - this is outmoded by java 8 / streams / lambdas
+//FIXME - mvcc.3 - this is outmoded by java 8 / streams / lambdas
 public interface KeyValueMapper<K, V, O> {
 	public K getKey(O o);
 

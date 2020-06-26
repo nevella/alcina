@@ -283,11 +283,6 @@ public abstract class UIObject implements HasVisibility {
 	 */
 	private static void updatePrimaryAndDependentStyleNames(Element elem,
 			String newPrimaryStyle) {
-		// if (elem.provideIsDom()) {
-		// updatePrimaryAndDependentStyleNames0(
-		// LocalDomBridge.remote(elem), newPrimaryStyle);
-		// } else {
-		// FIXME - probably delete the static
 		String className = elem.getClassName();
 		if (Ax.isBlank(newPrimaryStyle)) {
 			return;
@@ -306,7 +301,6 @@ public abstract class UIObject implements HasVisibility {
 			}
 		}
 		elem.setClassName(CommonUtils.join(classes, " "));
-		// }
 	}
 
 	/**
@@ -902,8 +896,7 @@ public abstract class UIObject implements HasVisibility {
 														// portion.
 														var numberRegex = @com.google.gwt.user.client.ui.UIObject::numberRegex;
 														if (!numberRegex) {
-														numberRegex = @com.google.gwt.user.client.ui.UIObject::numberRegex =
-														/^(\s*[+-]?((\d+\.?\d*)|(\.\d+))([eE][+-]?\d+)?)(.*)$/;
+														numberRegex = @com.google.gwt.user.client.ui.UIObject::numberRegex = /^(\s*[+-]?((\d+\.?\d*)|(\.\d+))([eE][+-]?\d+)?)(.*)$/;
 														}
 														
 														// Extract the leading numeric portion of s

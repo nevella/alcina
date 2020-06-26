@@ -72,8 +72,9 @@ public class DatabaseStatsCollector {
 
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				tx.executeSql(Ax.format("select * from %s ",
-						dbStore.getTableName()), null, okCallback);
+				tx.executeSql(
+						Ax.format("select * from %s ", dbStore.getTableName()),
+						null, okCallback);
 			}
 
 			@Override

@@ -962,9 +962,8 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 
 		@Override
 		public int hashCode() {
-			return 29 * genericType.hashCode()
-					+ 17 * ((enclosingType == null) ? 0
-							: enclosingType.hashCode())
+			return 29 * genericType.hashCode() + 17
+					* ((enclosingType == null) ? 0 : enclosingType.hashCode())
 					+ Arrays.hashCode(typeArgs);
 		}
 	}

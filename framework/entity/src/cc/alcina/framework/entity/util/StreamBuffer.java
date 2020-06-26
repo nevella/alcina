@@ -53,11 +53,12 @@ public class StreamBuffer extends Thread {
 			closed = true;
 			notifyAll();
 		} catch (IOException ioe) {
-		    if (Ax.blankToEmpty(ioe.getMessage()).matches("(Stream|Socket) closed")) {
-                Ax.out("Stream closed");
-            }else{
-			ioe.printStackTrace();
-            }
+			if (Ax.blankToEmpty(ioe.getMessage())
+					.matches("(Stream|Socket) closed")) {
+				Ax.out("Stream closed");
+			} else {
+				ioe.printStackTrace();
+			}
 		}
 	}
 

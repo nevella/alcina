@@ -24,7 +24,6 @@ import com.google.gwt.user.client.rpc.core.java.util.Collection_CustomFieldSeria
 /**
  * Custom field serializer for LiSet
  */
-
 public final class LightSet_CustomFieldSerializer
 		extends CustomFieldSerializer<LightSet> {
 	public static void deserialize(SerializationStreamReader streamReader,

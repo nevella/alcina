@@ -61,7 +61,7 @@ public class ListBoxEnumProvider implements BoundWidgetProvider {
 		for (Enum e : hiddenValues) {
 			options.remove(e);
 		}
-		if(provider != null){
+		if (provider != null) {
 			options = (List) provider.getValue();
 		}
 		if (isWithNull()) {
@@ -124,6 +124,5 @@ public class ListBoxEnumProvider implements BoundWidgetProvider {
 
 	public void setProvider(HasValue<Collection> provider) {
 		this.provider = provider;
-		
 	}
 }

@@ -22,9 +22,10 @@ public interface LuxTheme1Resources extends ClientBundle {
 
 	@Source("res/lux-form-styles-text.css")
 	public SimpleCssResource luxFormStylesText();
-	
+
 	@Source("res/lux-modal-panel-styles.css")
 	public SimpleCssResource luxModalPanelStyles();
+
 	@Source("res/lux-status-panel-styles.css")
 	public SimpleCssResource luxStatusPanelStyles();
 }

@@ -431,7 +431,8 @@ public class JSONML {
 			} else {
 				if (ja != null) {
 					ja.put(token instanceof String
-							? JSONObject.stringToValue((String) token) : token);
+							? JSONObject.stringToValue((String) token)
+							: token);
 				}
 			}
 		}

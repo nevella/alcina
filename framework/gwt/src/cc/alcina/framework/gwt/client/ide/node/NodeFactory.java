@@ -46,143 +46,142 @@ import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
  * @author Nick Reddel
  */
 public class NodeFactory {
-    protected static final StandardDataImages images = GWT
-            .create(StandardDataImages.class);
+	protected static final StandardDataImages images = GWT
+			.create(StandardDataImages.class);
 
-    public static NodeFactory get() {
-        NodeFactory singleton = Registry.checkSingleton(NodeFactory.class);
-        if (singleton == null) {
-            singleton = new NodeFactory();
-            Registry.registerSingleton(NodeFactory.class, singleton);
-        }
-        return singleton;
-    }
+	public static NodeFactory get() {
+		NodeFactory singleton = Registry.checkSingleton(NodeFactory.class);
+		if (singleton == null) {
+			singleton = new NodeFactory();
+			Registry.registerSingleton(NodeFactory.class, singleton);
+		}
+		return singleton;
+	}
 
-    private Set<Class> childlessBindables = new HashSet<>();
+	private Set<Class> childlessBindables = new HashSet<>();
 
-    private Class lastDomainObjectClass;
+	private Class lastDomainObjectClass;
 
-    private NodeCreator nodeCreator;
+	private NodeCreator nodeCreator;
 
-    private Multimap<Class, List<ClientPropertyReflector>> subCollectionFolders = new Multimap<Class, List<ClientPropertyReflector>>();
+	private Multimap<Class, List<ClientPropertyReflector>> subCollectionFolders = new Multimap<Class, List<ClientPropertyReflector>>();
 
-    protected NodeFactory() {
-        super();
-    }
+	protected NodeFactory() {
+		super();
+	}
 
-    public DomainNode getNodeForDomainObject(
-            SourcesPropertyChangeEvents domainObject) {
-        DomainNode dn = createDomainNode(domainObject);
-        if (childlessBindables.contains(domainObject.getClass())) {
-            return dn;
-        }
-        boolean isChildlessPoorThing = true;
-        ClientBeanReflector bi = ClientReflector.get()
-                .beanInfoForClass(domainObject.getClass());
-        Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
-                .values();
-        Class<? extends Object> c = domainObject.getClass();
-        ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
-        Bean beanInfo = bi.getAnnotation(Bean.class);
-        SortedMultimap<Integer, List<TreeItem>> createdNodes = new SortedMultimap<Integer, List<TreeItem>>();
-        if (!subCollectionFolders.containsKey(c)) {
-            subCollectionFolders.getAndEnsure(c);
-            for (ClientPropertyReflector pr : prs) {
-                PropertyPermissions pp = pr
-                        .getAnnotation(PropertyPermissions.class);
-                Display displayInfo = pr.getDisplayInfo();
-                boolean fieldVisible = displayInfo != null
-                        && ((displayInfo.displayMask()
-                                & Display.DISPLAY_AS_TREE_NODE) != 0)
-                        && PermissionsManager.get()
-                                .checkEffectivePropertyPermission(op, pp,
-                                        domainObject, true)
-                        && PermissionsManager.get().isPermissible(domainObject,
-                                displayInfo.visible());
-                if (fieldVisible) {
-                    subCollectionFolders.add(c, pr);
-                }
-            }
-        }
-        for (ClientPropertyReflector pr : subCollectionFolders.get(c)) {
-            Display displayInfo = pr.getDisplayInfo();
-            isChildlessPoorThing = false;
-            boolean withoutContainer = (displayInfo.displayMask()
-                    & Display.DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER) != 0;
-            boolean lazyCollectionNode = (displayInfo.displayMask()
-                    & Display.DISPLAY_LAZY_COLLECTION_NODE) != 0;
-            // this (lazyCollectionNode) is not implemented - it'd be sort of
-            // hard (but possible)
-            // main thing is, we'd need a parallel (tree) structure of
-            // collections...note not sure about this doc, if ya care, check
-            // it...
-            PropertyCollectionProvider provider = new PropertyCollectionProvider(
-                    domainObject, pr);
-            if (withoutContainer) {
-                // note - should only happen for one property
-                ((DomainCollectionProviderNode) dn)
-                        .setCollectionProvider(provider);
-            } else {
-                // ContainerNode node = lazyCollectionNode ? new
-                // UmbrellaProviderNode(
-                // provider, TextProvider.get().getLabelText(c, pr),
-                // images.folder(), false, this)
-                // : new CollectionProviderNode(provider, TextProvider
-                // .get().getLabelText(c, pr), images.folder(),
-                // false, this);
-                ContainerNode node = new CollectionProviderNode(provider,
-                        TextProvider.get().getLabelText(c, pr), images.folder(),
-                        false, this);
-                createdNodes.add(displayInfo.orderingHint(), node);
-            }
-        }
-        for (TreeItem item : createdNodes.allItems()) {
-            dn.addItem(item);
-        }
-        if (isChildlessPoorThing && dn.getChildCount() == 0) {
-            childlessBindables.add(domainObject.getClass());
-        }
-        return dn;
-    }
+	public DomainNode
+			getNodeForDomainObject(SourcesPropertyChangeEvents domainObject) {
+		DomainNode dn = createDomainNode(domainObject);
+		if (childlessBindables.contains(domainObject.getClass())) {
+			return dn;
+		}
+		boolean isChildlessPoorThing = true;
+		ClientBeanReflector bi = ClientReflector.get()
+				.beanInfoForClass(domainObject.getClass());
+		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
+				.values();
+		Class<? extends Object> c = domainObject.getClass();
+		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
+		Bean beanInfo = bi.getAnnotation(Bean.class);
+		SortedMultimap<Integer, List<TreeItem>> createdNodes = new SortedMultimap<Integer, List<TreeItem>>();
+		if (!subCollectionFolders.containsKey(c)) {
+			subCollectionFolders.getAndEnsure(c);
+			for (ClientPropertyReflector pr : prs) {
+				PropertyPermissions pp = pr
+						.getAnnotation(PropertyPermissions.class);
+				Display displayInfo = pr.getDisplayInfo();
+				boolean fieldVisible = displayInfo != null
+						&& ((displayInfo.displayMask()
+								& Display.DISPLAY_AS_TREE_NODE) != 0)
+						&& PermissionsManager.get()
+								.checkEffectivePropertyPermission(op, pp,
+										domainObject, true)
+						&& PermissionsManager.get().isPermissible(domainObject,
+								displayInfo.visible());
+				if (fieldVisible) {
+					subCollectionFolders.add(c, pr);
+				}
+			}
+		}
+		for (ClientPropertyReflector pr : subCollectionFolders.get(c)) {
+			Display displayInfo = pr.getDisplayInfo();
+			isChildlessPoorThing = false;
+			boolean withoutContainer = (displayInfo.displayMask()
+					& Display.DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER) != 0;
+			boolean lazyCollectionNode = (displayInfo.displayMask()
+					& Display.DISPLAY_LAZY_COLLECTION_NODE) != 0;
+			// this (lazyCollectionNode) is not implemented - it'd be sort of
+			// hard (but possible)
+			// main thing is, we'd need a parallel (tree) structure of
+			// collections...note not sure about this doc, if ya care, check
+			// it...
+			PropertyCollectionProvider provider = new PropertyCollectionProvider(
+					domainObject, pr);
+			if (withoutContainer) {
+				// note - should only happen for one property
+				((DomainCollectionProviderNode) dn)
+						.setCollectionProvider(provider);
+			} else {
+				// ContainerNode node = lazyCollectionNode ? new
+				// UmbrellaProviderNode(
+				// provider, TextProvider.get().getLabelText(c, pr),
+				// images.folder(), false, this)
+				// : new CollectionProviderNode(provider, TextProvider
+				// .get().getLabelText(c, pr), images.folder(),
+				// false, this);
+				ContainerNode node = new CollectionProviderNode(provider,
+						TextProvider.get().getLabelText(c, pr), images.folder(),
+						false, this);
+				createdNodes.add(displayInfo.orderingHint(), node);
+			}
+		}
+		for (TreeItem item : createdNodes.allItems()) {
+			dn.addItem(item);
+		}
+		if (isChildlessPoorThing && dn.getChildCount() == 0) {
+			childlessBindables.add(domainObject.getClass());
+		}
+		return dn;
+	}
 
-    public TreeItem getNodeForObject(Object object) {
-        if (object instanceof SourcesPropertyChangeEvents) {
-            return getNodeForDomainObject((SourcesPropertyChangeEvents) object);
-        }
-        if (object instanceof UmbrellaCollectionProvider) {
-            return getNodeForUmbrella((LazyCollectionProvider) object);
-        }
-        return null;
-    }
+	public TreeItem getNodeForObject(Object object) {
+		if (object instanceof SourcesPropertyChangeEvents) {
+			return getNodeForDomainObject((SourcesPropertyChangeEvents) object);
+		}
+		if (object instanceof UmbrellaCollectionProvider) {
+			return getNodeForUmbrella((LazyCollectionProvider) object);
+		}
+		return null;
+	}
 
-    private UmbrellaProviderNode getNodeForUmbrella(
-            LazyCollectionProvider providerChild) {
-        return new UmbrellaProviderNode(providerChild, null, null, this);
-    }
+	private UmbrellaProviderNode
+			getNodeForUmbrella(LazyCollectionProvider providerChild) {
+		return new UmbrellaProviderNode(providerChild, null, null, this);
+	}
 
-    
-    protected DomainNode createDomainNode(
-            SourcesPropertyChangeEvents domainObject) {
-        Class clazz = domainObject.getClass();
-        if (lastDomainObjectClass != clazz) {
-            nodeCreator = (NodeCreator) Registry.get()
-                    .instantiateSingle(NodeCreator.class, clazz);
-        }
-        return nodeCreator.createDomainNode(domainObject, this);
-    }
+	protected DomainNode
+			createDomainNode(SourcesPropertyChangeEvents domainObject) {
+		Class clazz = domainObject.getClass();
+		if (lastDomainObjectClass != clazz) {
+			nodeCreator = (NodeCreator) Registry.get()
+					.instantiateSingle(NodeCreator.class, clazz);
+		}
+		return nodeCreator.createDomainNode(domainObject, this);
+	}
 
-    @RegistryLocation(registryPoint = NodeCreator.class)
-    @ClientInstantiable
-    public static class DefaultNodeCreator implements NodeCreator {
-        @Override
-        public DomainNode createDomainNode(
-                SourcesPropertyChangeEvents domainObject, NodeFactory factory) {
-            return new DomainNode(domainObject, factory);
-        }
-    }
+	@RegistryLocation(registryPoint = NodeCreator.class)
+	@ClientInstantiable
+	public static class DefaultNodeCreator implements NodeCreator {
+		@Override
+		public DomainNode createDomainNode(
+				SourcesPropertyChangeEvents domainObject, NodeFactory factory) {
+			return new DomainNode(domainObject, factory);
+		}
+	}
 
-    public static interface NodeCreator {
-        public DomainNode createDomainNode(
-                SourcesPropertyChangeEvents domainObject, NodeFactory factory);
-    }
+	public static interface NodeCreator {
+		public DomainNode createDomainNode(
+				SourcesPropertyChangeEvents domainObject, NodeFactory factory);
+	}
 }

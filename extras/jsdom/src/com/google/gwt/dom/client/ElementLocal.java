@@ -73,8 +73,7 @@ public class ElementLocal extends NodeLocal
 		if (optional.isPresent()) {
 			return (Element) optional.get();
 		}
-		Element newElement = node().getOwnerDocument()
-				.createElement(tagName);
+		Element newElement = node().getOwnerDocument().createElement(tagName);
 		node().appendChild(newElement);
 		return newElement;
 	}

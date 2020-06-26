@@ -160,8 +160,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 	private void ensureTable() {
 		try {
 			Statement stmt = conn.createStatement();
-			stmt.executeQuery(
-					Ax.format("select min(id) from %s", tableName));
+			stmt.executeQuery(Ax.format("select min(id) from %s", tableName));
 			postInitCallback.onSuccess(null);
 		} catch (Exception e) {
 			String createSql = "CREATE TABLE  " + "%s"
@@ -344,8 +343,8 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		public void remove(List<String> keys,
 				AsyncCallback<Integer> idCallback) {
 			try {
-				String sql = Ax.format(
-						"select id from %s where key_ in %s ", tableName,
+				String sql = Ax.format("select id from %s where key_ in %s ",
+						tableName,
 						LocalTransformPersistence.stringListToClause(keys));
 				Statement stmt = conn.createStatement();
 				ResultSet rs = stmt.executeQuery(sql);
@@ -354,8 +353,8 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 				while (rs.next()) {
 					ids.add(rs.getInt(1));
 				}
-				sql = Ax.format("delete from %s  where id in (%s)",
-						tableName, CommonUtils.join(ids, ", "));
+				sql = Ax.format("delete from %s  where id in (%s)", tableName,
+						CommonUtils.join(ids, ", "));
 				stmt.executeUpdate(sql);
 				close(stmt);
 				idCallback.onSuccess(CommonUtils.iv(CommonUtils.first(ids)));
@@ -369,8 +368,8 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		public void removeRange(int fromId, int toId,
 				AsyncCallback<Void> valueCallback) {
 			try {
-				String sql = Ax.format(
-						"delete from %s where id>=? and id<=?", tableName);
+				String sql = Ax.format("delete from %s where id>=? and id<=?",
+						tableName);
 				PreparedStatement stmt = conn.prepareStatement(sql);
 				stmt.setInt(1, fromId);
 				stmt.setInt(2, toId);

@@ -174,8 +174,8 @@ public class DomainModelDeltaSignature implements Serializable {
 
 	@Override
 	public String toString() {
-		return Ax.format("ds:%s,%s,%s,%s,%s,%s,%s", classSimpleName,
-				id, sid, userId, contentHash, rpcSignature, contentLength);
+		return Ax.format("ds:%s,%s,%s,%s,%s,%s,%s", classSimpleName, id, sid,
+				userId, contentHash, rpcSignature, contentLength);
 	}
 
 	public DomainModelDeltaSignature userId(long userId) {

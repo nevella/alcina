@@ -445,7 +445,6 @@ public final class ServerSerializationStreamWriter
 
 	// since some java classes need primitives for the constructor, some dudes
 	// will jump the gun
-	
 	public void writeObject(Object instance) throws SerializationException {
 		if (instance == null) {
 			// write a null string
@@ -499,7 +498,8 @@ public final class ServerSerializationStreamWriter
 
 	private LengthConstrainedArray createLengthConstrainedArray() {
 		return LooseContext.is(CONTEXT_CALLING_UA_IE)
-				? new LengthConstrainedArrayIE() : new LengthConstrainedArray();
+				? new LengthConstrainedArrayIE()
+				: new LengthConstrainedArray();
 	}
 
 	/**
@@ -605,7 +605,6 @@ public final class ServerSerializationStreamWriter
 				.hasCustomFieldSerializer(instanceClass);
 		if (customSerializer != null) {
 			// Use custom field serializer
-			
 			CustomFieldSerializer<Object> customFieldSerializer = (CustomFieldSerializer<Object>) SerializabilityUtil
 					.loadCustomFieldSerializer(customSerializer);
 			if (customFieldSerializer == null) {

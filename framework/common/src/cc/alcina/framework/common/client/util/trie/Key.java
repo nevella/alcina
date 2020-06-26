@@ -13,7 +13,6 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-
 package cc.alcina.framework.common.client.util.trie;
 
 /**
@@ -23,24 +22,23 @@ package cc.alcina.framework.common.client.util.trie;
  * @see DefaultKeyAnalyzer
  */
 public interface Key<K> {
-  
-  /**
-   * Returns the key's length in bits.
-   */
-  public int lengthInBits();
-  
-  /**
-   * Returns {@code true} if the given bit is set.
-   */
-  public boolean isBitSet(int bitIndex);
-  
-  /**
-   * Returns the index of the first bit that is different in the two keys.
-   */
-  public int bitIndex(K otherKey);
-  
-  /**
-   * Returns {@code true} if this key is prefixed by the given key.
-   */
-  public boolean isPrefixedBy(K prefix);
+	/**
+	 * Returns the key's length in bits.
+	 */
+	public int lengthInBits();
+
+	/**
+	 * Returns {@code true} if the given bit is set.
+	 */
+	public boolean isBitSet(int bitIndex);
+
+	/**
+	 * Returns the index of the first bit that is different in the two keys.
+	 */
+	public int bitIndex(K otherKey);
+
+	/**
+	 * Returns {@code true} if this key is prefixed by the given key.
+	 */
+	public boolean isPrefixedBy(K prefix);
 }

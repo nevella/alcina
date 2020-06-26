@@ -13,60 +13,60 @@ import cc.alcina.framework.gwt.client.entity.view.ViewModel.DetailViewModel;
 import cc.alcina.framework.gwt.client.place.TypedActivity;
 
 public abstract class TypedModelActivity<P extends Place, VM extends ViewModel>
-        extends TypedActivity<P> {
-    protected VM model;
+		extends TypedActivity<P> {
+	protected VM model;
 
-    public TypedModelActivity(P place) {
-        super(place);
-    }
+	public TypedModelActivity(P place) {
+		super(place);
+	}
 
-    @Override
-    public void onStop() {
-        model.setActive(false);
-        super.onStop();
-    }
+	@Override
+	public void onStop() {
+		model.setActive(false);
+		super.onStop();
+	}
 
-    @Override
-    public void start(AcceptsOneWidget panel, EventBus eventBus) {
-        model = ClientFactory.get().getUiController()
-                .getViewModel(getModelClass());
-        IsWidget view = ClientFactory.get().getUiController().getView(panel,
-                model, place);
-        updateModel();
-        panel.setWidget(view);
-    }
+	@Override
+	public void start(AcceptsOneWidget panel, EventBus eventBus) {
+		model = ClientFactory.get().getUiController()
+				.getViewModel(getModelClass());
+		IsWidget view = ClientFactory.get().getUiController().getView(panel,
+				model, place);
+		updateModel();
+		panel.setWidget(view);
+	}
 
-    protected abstract Class<VM> getModelClass();
+	protected abstract Class<VM> getModelClass();
 
-    protected void updateModel() {
-        model.setActive(true);
-        model.setPlace(place);
-        model.fireUpdated();
-    }
+	protected void updateModel() {
+		model.setActive(true);
+		model.setPlace(place);
+		model.fireUpdated();
+	}
 
-    public static abstract class TypedDetailModelActivity<P extends EntityPlace, VM extends DetailViewModel, T extends Entity>
-            extends TypedModelActivity<P, VM> {
-        public TypedDetailModelActivity(P place) {
-            super(place);
-        }
+	public static abstract class TypedDetailModelActivity<P extends EntityPlace, VM extends DetailViewModel, T extends Entity>
+			extends TypedModelActivity<P, VM> {
+		public TypedDetailModelActivity(P place) {
+			super(place);
+		}
 
-        protected abstract Class<T> getDomainClass();
+		protected abstract Class<T> getDomainClass();
 
-        protected void onCreate(T modelObject) {
-        }
+		protected void onCreate(T modelObject) {
+		}
 
-        @Override
-        protected void updateModel() {
-            super.updateModel();
-            boolean create = place.action == EntityAction.CREATE;
-            model.setModelObject(null);
-            model.setAction(place.action);
-            Domain.async(getDomainClass(), place.id, create, modelObject -> {
-                if (create) {
-                    onCreate(modelObject);
-                }
-                model.setModelObject(modelObject);
-            });
-        }
-    }
+		@Override
+		protected void updateModel() {
+			super.updateModel();
+			boolean create = place.action == EntityAction.CREATE;
+			model.setModelObject(null);
+			model.setAction(place.action);
+			Domain.async(getDomainClass(), place.id, create, modelObject -> {
+				if (create) {
+					onCreate(modelObject);
+				}
+				model.setModelObject(modelObject);
+			});
+		}
+	}
 }

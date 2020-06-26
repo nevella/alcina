@@ -67,8 +67,7 @@ public class RegexValidator implements ParameterisedValidator {
 		String sz = value.toString();
 		if (!sz.replaceAll(getRegex(), REGEX_REPLACE).equals(REGEX_REPLACE)) {
 			String message = feedbackMessage != null ? feedbackMessage
-					: Ax.format("Does not match regex ('%s')",
-							getRegex());
+					: Ax.format("Does not match regex ('%s')", getRegex());
 			throw new ValidationException(feedbackMessage,
 					RegexValidator.class);
 		}

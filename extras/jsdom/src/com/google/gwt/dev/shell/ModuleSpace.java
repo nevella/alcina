@@ -320,10 +320,9 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 			Object[] args) throws Throwable {
 		JsValue result = invokeNative(name, jthis, types, args);
 		if (!result.isUndefined()) {
-			logger.log(TreeLogger.WARN,
-					"JSNI method '" + name + "' returned a value of type "
-							+ result.getTypeString()
-							+ " but was declared void; it should not have returned a value at all",
+			logger.log(TreeLogger.WARN, "JSNI method '" + name
+					+ "' returned a value of type " + result.getTypeString()
+					+ " but was declared void; it should not have returned a value at all",
 					null);
 		}
 	}
@@ -475,7 +474,6 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 	}
 
 	@Override
-	
 	public <T> T rebindAndCreate(String requestedClassName)
 			throws UnableToCompleteException {
 		assert Name.isBinaryName(requestedClassName);

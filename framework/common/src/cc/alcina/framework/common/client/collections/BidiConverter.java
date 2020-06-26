@@ -14,7 +14,7 @@ public abstract class BidiConverter<A, B> {
 		};
 	}
 
-	public  BidiConverter<B, A> invertBidi() {
+	public BidiConverter<B, A> invertBidi() {
 		BidiConverter<A, B> from = this;
 		return new BidiConverter<B, A>() {
 			@Override

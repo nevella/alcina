@@ -468,8 +468,7 @@ public class TransformCommit {
 
 	public static Topic<TransformPersistenceToken>
 			topicUnexpectedExceptionBeforePostTransform() {
-		return Topic.global(
-				TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION);
+		return Topic.global(TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION);
 	}
 
 	private static int commitTransforms(boolean asRoot) {

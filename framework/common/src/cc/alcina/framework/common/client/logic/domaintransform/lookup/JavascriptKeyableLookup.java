@@ -7,9 +7,10 @@ import java.util.NoSuchElementException;
 import com.google.gwt.core.client.JavaScriptObject;
 
 public final class JavascriptKeyableLookup extends JavaScriptObject {
-	public static native JavascriptKeyableLookup create(boolean intLookup)/*-{
-																			return new $wnd.AlcJsKeyableMap(intLookup);
-																			}-*/;
+	public static native JavascriptKeyableLookup
+			create(boolean intLookup)/*-{
+										return new $wnd.AlcJsKeyableMap(intLookup);
+										}-*/;
 
 	public static native void initJs()/*-{
 										if($wnd.AlcJsKeyableMap){

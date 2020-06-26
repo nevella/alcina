@@ -49,7 +49,8 @@ public interface HasOrderValue {
 				}
 			}
 			int add = minDiff != 0 && minDiff < 2 * delta
-					? minDiff < delta ? 2 * delta : delta : 0;
+					? minDiff < delta ? 2 * delta : delta
+					: 0;
 			if (add != 0) {
 				for (HasOrderValue hov : tmp) {
 					int ov = CommonUtils.iv(hov.getOrderValue());

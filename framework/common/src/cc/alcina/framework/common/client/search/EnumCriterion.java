@@ -57,7 +57,6 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 	}
 
 	@Override
-	
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
 		E value = getValue();

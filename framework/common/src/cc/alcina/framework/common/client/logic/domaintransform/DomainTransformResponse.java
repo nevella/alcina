@@ -22,89 +22,89 @@ import java.util.List;
  * @author Nick Reddel
  */
 public class DomainTransformResponse implements Serializable {
-    private long requestId;
+	private long requestId;
 
-    private int transformsProcessed;
+	private int transformsProcessed;
 
-    private String message;
+	private String message;
 
-    private DomainTransformResponseResult result = DomainTransformResponseResult.OK;
+	private DomainTransformResponseResult result = DomainTransformResponseResult.OK;
 
-    private List<DomainTransformEvent> eventsToUseForClientUpdate = new ArrayList<DomainTransformEvent>();
+	private List<DomainTransformEvent> eventsToUseForClientUpdate = new ArrayList<DomainTransformEvent>();
 
-    private List<DomainTransformException> transformExceptions = new ArrayList<DomainTransformException>();
+	private List<DomainTransformException> transformExceptions = new ArrayList<DomainTransformException>();
 
-    private String logOffset;
+	private String logOffset;
 
-    // only when error
-    private DomainTransformRequest request;
+	// only when error
+	private DomainTransformRequest request;
 
-    public List<DomainTransformEvent> getEventsToUseForClientUpdate() {
-        return eventsToUseForClientUpdate;
-    }
+	public List<DomainTransformEvent> getEventsToUseForClientUpdate() {
+		return eventsToUseForClientUpdate;
+	}
 
-    public String getLogOffset() {
-        return this.logOffset;
-    }
+	public String getLogOffset() {
+		return this.logOffset;
+	}
 
-    public String getMessage() {
-        return this.message;
-    }
+	public String getMessage() {
+		return this.message;
+	}
 
-    public DomainTransformRequest getRequest() {
-        return this.request;
-    }
+	public DomainTransformRequest getRequest() {
+		return this.request;
+	}
 
-    public long getRequestId() {
-        return requestId;
-    }
+	public long getRequestId() {
+		return requestId;
+	}
 
-    public DomainTransformResponseResult getResult() {
-        return this.result;
-    }
+	public DomainTransformResponseResult getResult() {
+		return this.result;
+	}
 
-    public List<DomainTransformException> getTransformExceptions() {
-        return this.transformExceptions;
-    }
+	public List<DomainTransformException> getTransformExceptions() {
+		return this.transformExceptions;
+	}
 
-    public int getTransformsProcessed() {
-        return this.transformsProcessed;
-    }
+	public int getTransformsProcessed() {
+		return this.transformsProcessed;
+	}
 
-    public void setLogOffset(String logOffset) {
-        this.logOffset = logOffset;
-    }
+	public void setLogOffset(String logOffset) {
+		this.logOffset = logOffset;
+	}
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+	public void setMessage(String message) {
+		this.message = message;
+	}
 
-    public void setRequest(DomainTransformRequest request) {
-        this.request = request;
-    }
+	public void setRequest(DomainTransformRequest request) {
+		this.request = request;
+	}
 
-    public void setRequestId(long requestId) {
-        this.requestId = requestId;
-    }
+	public void setRequestId(long requestId) {
+		this.requestId = requestId;
+	}
 
-    public void setResult(DomainTransformResponseResult result) {
-        this.result = result;
-    }
+	public void setResult(DomainTransformResponseResult result) {
+		this.result = result;
+	}
 
-    public void setTransformsProcessed(int transformsProcessed) {
-        this.transformsProcessed = transformsProcessed;
-    }
+	public void setTransformsProcessed(int transformsProcessed) {
+		this.transformsProcessed = transformsProcessed;
+	}
 
-    public String toExceptionString() {
-        StringBuffer sb = new StringBuffer();
-        for (DomainTransformException ex : getTransformExceptions()) {
-            sb.append(ex);
-            sb.append("\n");
-        }
-        return sb.toString();
-    }
+	public String toExceptionString() {
+		StringBuffer sb = new StringBuffer();
+		for (DomainTransformException ex : getTransformExceptions()) {
+			sb.append(ex);
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
 
-    public enum DomainTransformResponseResult {
-        OK, FAILURE
-    }
+	public enum DomainTransformResponseResult {
+		OK, FAILURE
+	}
 }

@@ -51,7 +51,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
-
 /**
  *
  * @author Nick Reddel

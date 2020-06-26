@@ -34,70 +34,69 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
  */
 @ClientInstantiable
 public class RadioButtonListCustomiser implements Customiser {
-    public static final String SUPPLIER_CLASS = "supplierClass";
+	public static final String SUPPLIER_CLASS = "supplierClass";
 
-    public static final String RENDERER_CLASS = "rendererClass";
+	public static final String RENDERER_CLASS = "rendererClass";
 
-    public static final String GROUP_NAME = "groupName";
+	public static final String GROUP_NAME = "groupName";
 
-    public static final String RADIO_BUTTON_STYLE_NAME = "radioButtonStyleName";
+	public static final String RADIO_BUTTON_STYLE_NAME = "radioButtonStyleName";
 
-    public static final String COLUMN_COUNT = "columnCount";
+	public static final String COLUMN_COUNT = "columnCount";
 
-    @Override
-    
-    public BoundWidgetProvider getProvider(boolean editable, Class clazz,
-            boolean multiple, Custom info) {
-        NamedParameter[] parameters = info.parameters();
-        if (editable) {
-            Supplier supplier = NamedParameter.Support
-                    .instantiateClass(parameters, SUPPLIER_CLASS);
-            Renderer renderer = NamedParameter.Support
-                    .instantiateClass(parameters, RENDERER_CLASS);
-            String groupName = NamedParameter.Support.stringValue(parameters,
-                    GROUP_NAME, null);
-            String radioButtonStyleName = NamedParameter.Support
-                    .stringValue(parameters, RADIO_BUTTON_STYLE_NAME, null);
-            int columnCount = NamedParameter.Support.intValue(parameters,
-                    COLUMN_COUNT, 1);
-            return new RadioButtonListProvider(supplier, renderer, groupName,
-                    columnCount, radioButtonStyleName);
-        } else {
-            if (multiple) {
-                int maxLength = GwittirBridge.MAX_EXPANDABLE_LABEL_LENGTH;
-                return new ExpandableDomainNodeCollectionLabelProvider(
-                        maxLength, false);
-            } else {
-                return GwittirBridge.DN_LABEL_PROVIDER;
-            }
-        }
-    }
+	@Override
+	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
+			boolean multiple, Custom info) {
+		NamedParameter[] parameters = info.parameters();
+		if (editable) {
+			Supplier supplier = NamedParameter.Support
+					.instantiateClass(parameters, SUPPLIER_CLASS);
+			Renderer renderer = NamedParameter.Support
+					.instantiateClass(parameters, RENDERER_CLASS);
+			String groupName = NamedParameter.Support.stringValue(parameters,
+					GROUP_NAME, null);
+			String radioButtonStyleName = NamedParameter.Support
+					.stringValue(parameters, RADIO_BUTTON_STYLE_NAME, null);
+			int columnCount = NamedParameter.Support.intValue(parameters,
+					COLUMN_COUNT, 1);
+			return new RadioButtonListProvider(supplier, renderer, groupName,
+					columnCount, radioButtonStyleName);
+		} else {
+			if (multiple) {
+				int maxLength = GwittirBridge.MAX_EXPANDABLE_LABEL_LENGTH;
+				return new ExpandableDomainNodeCollectionLabelProvider(
+						maxLength, false);
+			} else {
+				return GwittirBridge.DN_LABEL_PROVIDER;
+			}
+		}
+	}
 
-    public static class RadioButtonListProvider implements BoundWidgetProvider {
-        private Supplier supplier;
+	public static class RadioButtonListProvider implements BoundWidgetProvider {
+		private Supplier supplier;
 
-        private Renderer renderer;
+		private Renderer renderer;
 
-        private String groupName;
+		private String groupName;
 
-        private int columnCount;
+		private int columnCount;
 
-        private String radioButtonStyleName;
+		private String radioButtonStyleName;
 
-        public RadioButtonListProvider(Supplier supplier, Renderer renderer,
-                String groupName, int columnCount,
-                String radioButtonStyleName) {
-            this.supplier = supplier;
-            this.renderer = renderer;
-            this.groupName = groupName;
-            this.columnCount = columnCount;
-            this.radioButtonStyleName = radioButtonStyleName;
-        }
+		public RadioButtonListProvider(Supplier supplier, Renderer renderer,
+				String groupName, int columnCount,
+				String radioButtonStyleName) {
+			this.supplier = supplier;
+			this.renderer = renderer;
+			this.groupName = groupName;
+			this.columnCount = columnCount;
+			this.radioButtonStyleName = radioButtonStyleName;
+		}
 
-        @Override
-        public BoundWidget get() {
-            return new RadioButtonList(groupName, (Collection) supplier.get(),
-                    renderer, columnCount, radioButtonStyleName);
-        }
-    }
+		@Override
+		public BoundWidget get() {
+			return new RadioButtonList(groupName, (Collection) supplier.get(),
+					renderer, columnCount, radioButtonStyleName);
+		}
+	}
 }

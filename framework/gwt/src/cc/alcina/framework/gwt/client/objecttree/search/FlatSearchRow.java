@@ -102,8 +102,8 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 		changes.firePropertyChange("searchable", old_searchable, searchable);
 		if (value != null) {
 			rowAction.unbind(this);
-			LooseContext.runWithTrue(
-					FlatSearchRow.CONTEXT_CHANGING_SEARCHABLE, () -> {
+			LooseContext.runWithTrue(FlatSearchRow.CONTEXT_CHANGING_SEARCHABLE,
+					() -> {
 						controller.setupForNewCriterion(this,
 								old_searchable.hasValue(value));
 						return null;

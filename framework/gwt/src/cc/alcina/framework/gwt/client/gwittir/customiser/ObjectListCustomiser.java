@@ -28,7 +28,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 
 @ClientInstantiable
-
 /**
  *
  * @author Nick Reddel

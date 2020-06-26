@@ -7,7 +7,6 @@ import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 
 public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
 		implements Serializable {
-
 	private String fileName;
 
 	private byte[] bytes;
@@ -44,6 +43,4 @@ public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
 	public Topic<FileSelectorInfo> topicClear() {
 		return clearTopicSupport;
 	}
-	
-	
 }

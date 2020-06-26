@@ -35,8 +35,6 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
 /**
- * FIXME - this and SEDomUtils - there's too much patchery and hackery
- * (particularly with findXpathWithIndexedText and removing/not removing roots)
  * 
  * Why does [1] sometimes need to be suffixed?
  * 
@@ -88,7 +86,7 @@ public class DomUtils implements NodeFromXpathProvider {
 	public static Node debugNode;
 
 	public static Stream<Element> ancestorStream(Element element) {
-		// FIXME-jadex (not optimal)
+		// FIXME - directedlayout.2 - (not optimal)
 		List<Element> elements = new ArrayList<>();
 		Node node = element;
 		while (node != null && node.getNodeType() == Node.ELEMENT_NODE) {

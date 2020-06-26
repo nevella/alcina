@@ -67,8 +67,8 @@ public abstract class BaseRelatedLinkCustomiser<T, R>
 				relationshipsString += Ax.format("\n(%s)",
 						CommonUtils.pluralise("item", relateds.size(), true));
 			}
-			return Ax.format(template, token, relationshipsString)
-					.replace("\n", "<br>\n");
+			return Ax.format(template, token, relationshipsString).replace("\n",
+					"<br>\n");
 		}
 	}
 

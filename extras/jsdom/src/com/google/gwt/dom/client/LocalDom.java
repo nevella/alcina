@@ -175,9 +175,9 @@ public class LocalDom {
 	}
 
 	native static void consoleLog0(String message) /*-{
-    console.log(message);
-
-	}-*/;
+													console.log(message);
+													
+													}-*/;
 
 	static Element createElement(String tagName) {
 		return get().createElement0(tagName);

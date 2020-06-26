@@ -331,18 +331,18 @@ public class ScrollPanel extends SimplePanel implements SourcesScrollEvents,
 	}
 
 	private native void ensureVisibleImpl(Element scroll, Element e) /*-{
-    if (!e)
-      return;
-
-    var item = e;
-    var realOffset = 0;
-    while (item && (item != scroll)) {
-      realOffset += item.offsetTop;
-      item = item.offsetParent;
-    }
-
-    scroll.scrollTop = realOffset - scroll.offsetHeight / 2;
-	}-*/;
+																		if (!e)
+																		return;
+																		
+																		var item = e;
+																		var realOffset = 0;
+																		while (item && (item != scroll)) {
+																		realOffset += item.offsetTop;
+																		item = item.offsetParent;
+																		}
+																		
+																		scroll.scrollTop = realOffset - scroll.offsetHeight / 2;
+																		}-*/;
 
 	/**
 	 * Initialize the widget.

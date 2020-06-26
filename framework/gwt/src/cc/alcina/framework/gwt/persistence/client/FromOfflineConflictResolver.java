@@ -174,8 +174,8 @@ public class FromOfflineConflictResolver {
 		}
 
 		protected native void copy() /*-{
-      $doc.execCommand("Copy");
-		}-*/;
+										$doc.execCommand("Copy");
+										}-*/;
 	}
 
 	enum TextItem {

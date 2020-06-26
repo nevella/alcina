@@ -35,7 +35,8 @@ public class FocusImpl {
 	 * The compiler will optimize out the conditional.
 	 */
 	private static FocusImpl implWidget = (implPanel instanceof FocusImplStandard)
-			? new FocusImpl() : implPanel;
+			? new FocusImpl()
+			: implPanel;
 
 	/**
 	 * Returns the focus implementation class for creating and manipulating

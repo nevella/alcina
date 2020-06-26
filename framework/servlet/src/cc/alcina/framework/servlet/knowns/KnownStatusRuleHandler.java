@@ -154,34 +154,35 @@ public abstract class KnownStatusRuleHandler {
 			}
 		}
 
-		private KnownTagAlcina testRule(OpStatus opStatus,
-				KnownStatusRule rule, Date lastOkDate) {
+		private KnownTagAlcina testRule(OpStatus opStatus, KnownStatusRule rule,
+				Date lastOkDate) {
 			if (opStatus == OpStatus.FAILED) {
 				return KnownTagAlcina.Status_Error;
-			}else if (lastOkDate != null) {
+			} else if (lastOkDate != null) {
 				return checkDateTime(rule, lastOkDate);
 			}
 			return null;
 		}
 
-		private KnownTagAlcina checkDateTime(
-				KnownStatusRule rule, Date lastOkDate) {
+		private KnownTagAlcina checkDateTime(KnownStatusRule rule,
+				Date lastOkDate) {
 			KnownTagAlcina status = KnownTagAlcina.Status_Ok;
 			LocalDateTime now = LocalDateTime.now();
-			LocalDateTime lastOkLt = LocalDateTime.ofInstant(
-					lastOkDate.toInstant(), ZoneId.systemDefault());
+			LocalDateTime lastOkLt = LocalDateTime
+					.ofInstant(lastOkDate.toInstant(), ZoneId.systemDefault());
 			long daysPassed = ChronoUnit.DAYS.between(lastOkLt, now);
-			// Warn if not run by HOUR_OF_DAY(rule.warnValue()) the day after last run
-			if (daysPassed == 1 &&
-					now.getHour() >= rule.warnValue()) {
+			// Warn if not run by HOUR_OF_DAY(rule.warnValue()) the day after
+			// last run
+			if (daysPassed == 1 && now.getHour() >= rule.warnValue()) {
 				status = KnownTagAlcina.Status_Warn;
 			}
-			// Err if not run by HOUR_OF_DAY(rule.errorValue()) the day after last run
-			if (daysPassed == 1 &&
-					now.getHour() >= rule.errorValue()) {
+			// Err if not run by HOUR_OF_DAY(rule.errorValue()) the day after
+			// last run
+			if (daysPassed == 1 && now.getHour() >= rule.errorValue()) {
 				status = KnownTagAlcina.Status_Error;
 			}
-			// Err if not run on the same day and the expected run time has passed
+			// Err if not run on the same day and the expected run time has
+			// passed
 			if (daysPassed > 1) {
 				status = KnownTagAlcina.Status_Error;
 			}

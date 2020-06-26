@@ -22,24 +22,24 @@ import com.google.gwt.dom.client.Element;
  */
 public class TextBoxImpl {
 	public native int getCursorPos(Element elem_multi) /*-{
-        var elem = elem_multi.@com.google.gwt.dom.client.Element::remote()();
-        // Guard needed for FireFox.
-        try {
-            return elem.selectionStart;
-        } catch (e) {
-            return 0;
-        }
-	}-*/;
+														var elem = elem_multi.@com.google.gwt.dom.client.Element::remote()();
+														// Guard needed for FireFox.
+														try {
+														return elem.selectionStart;
+														} catch (e) {
+														return 0;
+														}
+														}-*/;
 
 	public native int getSelectionLength(Element elem_multi) /*-{
-        var elem = elem_multi.@com.google.gwt.dom.client.Element::remote()();
-        // Guard needed for FireFox.
-        try {
-            return elem.selectionEnd - elem.selectionStart;
-        } catch (e) {
-            return 0;
-        }
-	}-*/;
+																var elem = elem_multi.@com.google.gwt.dom.client.Element::remote()();
+																// Guard needed for FireFox.
+																try {
+																return elem.selectionEnd - elem.selectionStart;
+																} catch (e) {
+																return 0;
+																}
+																}-*/;
 
 	public int getTextAreaCursorPos(Element elem) {
 		return getCursorPos(elem);
@@ -51,12 +51,12 @@ public class TextBoxImpl {
 
 	public native void setSelectionRange(Element elem_multi, int pos,
 			int length) /*-{
-
-        var elem = elem_multi.@com.google.gwt.dom.client.Element::remote()();
-        try {
-            elem.setSelectionRange(pos, pos + length);
-        } catch (e) {
-            // Firefox throws exception if TextBox is not visible, even if attached
-        }
-	}-*/;
+						
+						var elem = elem_multi.@com.google.gwt.dom.client.Element::remote()();
+						try {
+						elem.setSelectionRange(pos, pos + length);
+						} catch (e) {
+						// Firefox throws exception if TextBox is not visible, even if attached
+						}
+						}-*/;
 }

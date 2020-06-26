@@ -213,8 +213,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				String sql = Ax.format("CREATE TABLE IF NOT EXISTS "
-						+ "%s" + " (id INTEGER PRIMARY KEY AUTOINCREMENT,"
+				String sql = Ax.format("CREATE TABLE IF NOT EXISTS " + "%s"
+						+ " (id INTEGER PRIMARY KEY AUTOINCREMENT,"
 						+ " key_ TEXT, value_ TEXT)  ", tableName);
 				tx.executeSql(sql, null);
 			}
@@ -228,8 +228,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	}
 
 	protected void onFailure(AsyncCallback callback, SQLError error) {
-		callback.onFailure(new Exception(Ax.format("%s: %s",
-				error.getCode(), error.getMessage())));
+		callback.onFailure(new Exception(
+				Ax.format("%s: %s", error.getCode(), error.getMessage())));
 	}
 
 	class GetHandler {
@@ -359,8 +359,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 					GenericRow row = rs.getItem(i);
 					getResult.add(row.getString("key_"));
 				}
-				System.out.println(Ax.format(
-						"get prefixed: [%s]\n%s\n", keyPrefix, getResult));
+				System.out.println(Ax.format("get prefixed: [%s]\n%s\n",
+						keyPrefix, getResult));
 			}
 		};
 
@@ -531,14 +531,15 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 		}
 
 		private void update() {
-			String sql = Ax.format("update %s set  value_=? where id=?", tableName);
+			String sql = Ax.format("update %s set  value_=? where id=?",
+					tableName);
 			tx.executeSql(sql, new String[] { kv.getValue(), id.toString() },
 					afterInsertCallback);
 		}
 
 		void add() {
-			String sql = Ax.format(
-					"insert into %s (key_,value_) values(?,?)", tableName);
+			String sql = Ax.format("insert into %s (key_,value_) values(?,?)",
+					tableName);
 			tx.executeSql(sql, new String[] { kv.getKey(), kv.getValue() },
 					afterInsertCallback);
 		}
@@ -608,8 +609,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
 				RemoveHandler.this.tx = tx;
-				String sql = Ax.format(
-						"select id from %s where key_ in %s ", tableName,
+				String sql = Ax.format("select id from %s where key_ in %s ",
+						tableName,
 						LocalTransformPersistence.stringListToClause(keys));
 				tx.executeSql(sql, new String[0], getIdCallback);
 			}
@@ -660,8 +661,8 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				String sql = Ax.format(
-						"delete from %s where id>=? and id<=?", tableName);
+				String sql = Ax.format("delete from %s where id>=? and id<=?",
+						tableName);
 				tx.executeSql(sql, new String[] { String.valueOf(fromId),
 						String.valueOf(toId) }, okCallback);
 			}

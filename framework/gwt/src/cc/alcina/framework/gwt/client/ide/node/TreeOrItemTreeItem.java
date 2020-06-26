@@ -37,8 +37,9 @@ public class TreeOrItemTreeItem implements TreeOrItem {
 
 	@Override
 	public TreeOrItem getParent() {
-		return TreeOrItemTree.create(item.getParentItem() != null
-				? item.getParentItem() : item.getTree());
+		return TreeOrItemTree
+				.create(item.getParentItem() != null ? item.getParentItem()
+						: item.getTree());
 	}
 
 	@Override

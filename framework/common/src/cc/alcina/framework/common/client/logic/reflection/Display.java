@@ -30,53 +30,52 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
  * @author Nick Reddel
  */
 public @interface Display {
-    public static final int DISPLAY_AS_PROPERTY = 1;
+	public static final int DISPLAY_AS_PROPERTY = 1;
 
-    public static final int DISPLAY_AS_TREE_NODE = 2;
+	public static final int DISPLAY_AS_TREE_NODE = 2;
 
-    public static final int DISPLAY_RO = 4;
+	public static final int DISPLAY_RO = 4;
 
-    public static final int DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER = 8;
+	public static final int DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER = 8;
 
-    public static final int DISPLAY_WRAP = 16;
+	public static final int DISPLAY_WRAP = 16;
 
-    public static final int DISPLAY_LAZY_COLLECTION_NODE = 32;
+	public static final int DISPLAY_LAZY_COLLECTION_NODE = 32;
 
-    public static final int DISPLAY_WRAP_PROPERTY = DISPLAY_WRAP
-            | DISPLAY_AS_PROPERTY;
+	public static final int DISPLAY_WRAP_PROPERTY = DISPLAY_WRAP
+			| DISPLAY_AS_PROPERTY;
 
-    public static final int DISPLAY_RO_PROPERTY = DISPLAY_AS_PROPERTY
-            | DISPLAY_RO;
+	public static final int DISPLAY_RO_PROPERTY = DISPLAY_AS_PROPERTY
+			| DISPLAY_RO;
 
-    /*
-     * ignore property permissions, let the renderer/transforms handle it
-     */
-    public static final int DISPLAY_EDITABLE = 64;
-    
+	/*
+	 * ignore property permissions, let the renderer/transforms handle it
+	 */
+	public static final int DISPLAY_EDITABLE = 64;
 
-    // note, if you want a r-o property, don't use DISPLAY_RO, you need to set
-    // DISPLAY_AS_PROPERTY | DISPLAY_RO
-    int displayMask() default DISPLAY_AS_PROPERTY;
+	// note, if you want a r-o property, don't use DISPLAY_RO, you need to set
+	// DISPLAY_AS_PROPERTY | DISPLAY_RO
+	int displayMask() default DISPLAY_AS_PROPERTY;
 
-    Class filterClass() default Void.class;
+	Class filterClass() default Void.class;
 
-    boolean focus() default false;
+	boolean focus() default false;
 
-    String helpText() default "";
+	String helpText() default "";
 
-    String iconName() default "";// indicates no icon
+	String iconName() default "";// indicates no icon
 
-    String autocompleteName() default "";
+	String autocompleteName() default "";
 
-    String name();
+	String name();
 
-    int orderingHint() default 100;
+	int orderingHint() default 100;
 
-    String rendererHint() default "";
+	String rendererHint() default "";
 
-    String styleName() default "";
+	String styleName() default "";
 
-    Permission visible() default @Permission(access = AccessLevel.EVERYONE);
+	Permission visible() default @Permission(access = AccessLevel.EVERYONE);
 
-    String widgetStyleName() default "";
+	String widgetStyleName() default "";
 }

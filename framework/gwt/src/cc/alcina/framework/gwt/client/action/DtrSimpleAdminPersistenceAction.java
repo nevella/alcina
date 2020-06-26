@@ -17,7 +17,8 @@ public class DtrSimpleAdminPersistenceAction
 	public DtrSimpleAdminPersistenceAction() {
 		DeltaApplicationRecord wrapper = new DeltaApplicationRecord();
 		if (GWT.isClient()) {
-		    ClientInstance clientInstance = PermissionsManager.get().getClientInstance();
+			ClientInstance clientInstance = PermissionsManager.get()
+					.getClientInstance();
 			wrapper.setClientInstanceAuth(clientInstance.getAuth());
 			wrapper.setClientInstanceId(clientInstance.getId());
 			wrapper.setRequestId(

@@ -68,15 +68,14 @@ public interface PersistentObjectCache<T> {
 		public synchronized void set(T value) {
 			this.value = value;
 		}
-		public void clear(){
-			try{
+
+		public void clear() {
+			try {
 				set(delegate.getPersistedClass().newInstance());
 				persist();
-			}
-			catch(Exception e){
+			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
-			
 		}
 	}
 

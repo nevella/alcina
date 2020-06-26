@@ -58,7 +58,8 @@ class ScrollImpl {
 	 */
 	public int getMinimumHorizontalScrollPosition(Element scrollable) {
 		return isRtl(scrollable)
-				? scrollable.getClientWidth() - scrollable.getScrollWidth() : 0;
+				? scrollable.getClientWidth() - scrollable.getScrollWidth()
+				: 0;
 	}
 
 	/**

@@ -163,9 +163,9 @@ public class Context {
 	/**
 	 * if hasFeature(FEATURE_TO_STRING_AS_SOURCE) returns true, calling toString
 	 * on JS objects gives JS source with code to create an object with all
-	 * enumeratable fields of the original object instead of printing
-	 * "[object <object-type>]". By default {@link #hasFeature(int)} returns
-	 * true only if the current JS version is set to {@link #VERSION_1_2}.
+	 * enumeratable fields of the original object instead of printing "[object
+	 * <object-type>]". By default {@link #hasFeature(int)} returns true only if
+	 * the current JS version is set to {@link #VERSION_1_2}.
 	 */
 	public static final int FEATURE_TO_STRING_AS_SOURCE = 4;
 

@@ -38,7 +38,7 @@ public class ListBoxCollectionProvider implements BoundWidgetProvider {
 	private Comparator comparator;
 
 	private final ListAddItemHandler addHandler;
-	
+
 	private boolean refreshOnModelChange;
 
 	public ListBoxCollectionProvider(Class clazz,
@@ -46,12 +46,12 @@ public class ListBoxCollectionProvider implements BoundWidgetProvider {
 		this(clazz, propertyIsCollection, false);
 	}
 
-    public ListBoxCollectionProvider(Class clazz, boolean propertyIsCollection,
+	public ListBoxCollectionProvider(Class clazz, boolean propertyIsCollection,
 			boolean noNullOption) {
 		this(clazz, propertyIsCollection, noNullOption, null, null, null);
 	}
 
-    public ListBoxCollectionProvider(Class clazz, boolean propertyIsCollection,
+	public ListBoxCollectionProvider(Class clazz, boolean propertyIsCollection,
 			boolean noNullOption, Renderer renderer, Comparator comparator) {
 		this(clazz, propertyIsCollection, noNullOption, renderer, comparator,
 				null);
@@ -73,8 +73,9 @@ public class ListBoxCollectionProvider implements BoundWidgetProvider {
 				!propertyIsCollection && !noNullOption, addHandler);
 		listBox.setRenderer(
 				renderer == null ? DisplayNameRenderer.INSTANCE : renderer);
-		listBox.setComparator(comparator == null
-				? Comparators.EqualsComparator.INSTANCE : comparator);
+		listBox.setComparator(
+				comparator == null ? Comparators.EqualsComparator.INSTANCE
+						: comparator);
 		listBox.setSortOptionsByToString(comparator == null);
 		listBox.setMultipleSelect(propertyIsCollection);
 		listBox.setRefreshOnModelChange(refreshOnModelChange);
@@ -86,14 +87,14 @@ public class ListBoxCollectionProvider implements BoundWidgetProvider {
 	}
 
 	public boolean isRefreshOnModelChange() {
-        return this.refreshOnModelChange;
-    }
+		return this.refreshOnModelChange;
+	}
 
 	public void setFilter(CollectionFilter filter) {
 		this.filter = filter;
 	}
 
 	public void setRefreshOnModelChange(boolean refreshOnModelChange) {
-        this.refreshOnModelChange = refreshOnModelChange;
-    }
+		this.refreshOnModelChange = refreshOnModelChange;
+	}
 }

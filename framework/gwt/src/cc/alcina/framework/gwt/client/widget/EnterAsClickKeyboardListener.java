@@ -65,7 +65,8 @@ public class EnterAsClickKeyboardListener
 
 	private void handleEvent(KeyEvent event) {
 		char charCode = event instanceof KeyPressEvent
-				? ((KeyPressEvent) event).getCharCode() : '0';
+				? ((KeyPressEvent) event).getCharCode()
+				: '0';
 		int keyCode = event.getNativeEvent().getKeyCode();
 		if ((charCode == KeyCodes.KEY_ENTER || keyCode == KeyCodes.KEY_ENTER)
 				&& checkCanClick()) {

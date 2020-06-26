@@ -4,8 +4,8 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.lux.LuxStyle.LuxStyleStatus;
 
 public class LuxStatusPanel extends Composite {

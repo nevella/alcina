@@ -102,7 +102,6 @@ public class DomainStoreTransformSequencer {
 				.get(requestId);
 		if (latch != null) {
 			latch.countDown();
-			// FIXME - sometimes get NPEs here when stress testing
 		}
 	}
 

@@ -4,7 +4,7 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.OmniPlace;
 
-public class KnownPlace extends BasePlace implements OmniPlace{
+public class KnownPlace extends BasePlace implements OmniPlace {
 	public String nodePath;
 
 	public KnownNavigationType navigationType = KnownNavigationType.List;

@@ -36,6 +36,7 @@ import com.google.gwt.http.client.UrlBuilder;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.StatusCodeException;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HTML;
@@ -52,9 +53,11 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.OkCancelPanel;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
+import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
@@ -172,8 +175,8 @@ public class ClientUtils {
 	}
 
 	public static native int getDateTzOffsetMinutes() /*-{
-    return new Date().getTimezoneOffset();
-	}-*/;
+														return new Date().getTimezoneOffset();
+														}-*/;
 
 	public static String getHashIfSelfrefUrl(Element anchor) {
 		String href = anchor.getAttribute("href");
@@ -205,19 +208,19 @@ public class ClientUtils {
 	}
 
 	public static native void invokeJsDebugger() /*-{
-    debugger;
-	}-*/;
+													debugger;
+													}-*/;
 
 	public static native void invokeJsDebugger(Element e) /*-{
-    var v = e;
-    var jso = e.@com.google.gwt.dom.client.Element::typedRemote()();
-    debugger;
-	}-*/;
+															var v = e;
+															var jso = e.@com.google.gwt.dom.client.Element::typedRemote()();
+															debugger;
+															}-*/;
 
 	public static native void invokeJsDebugger(JavaScriptObject jso) /*-{
-    debugger;
-    var v = jso;
-	}-*/;
+																		debugger;
+																		var v = jso;
+																		}-*/;
 
 	public static <T extends JavaScriptObject> List<T>
 			jsArrayToTypedArray(JsArray<T> typedArray) {
@@ -229,18 +232,18 @@ public class ClientUtils {
 	}
 
 	public static native JavaScriptObject jsonParse(String json) /*-{
-    var dateTimeReviver = function(key, value) {
-      var a;
-      if (typeof value === 'string') {
-        a = /__JsDate\((\d*)\)/.exec(value);
-        if (a) {
-          return new Date(+a[1]);
-        }
-      }
-      return value;
-    }
-    return JSON.parse(json, dateTimeReviver);
-	}-*/;
+																	var dateTimeReviver = function(key, value) {
+																	var a;
+																	if (typeof value === 'string') {
+																	a = /__JsDate\((\d*)\)/.exec(value);
+																	if (a) {
+																	return new Date(+a[1]);
+																	}
+																	}
+																	return value;
+																	}
+																	return JSON.parse(json, dateTimeReviver);
+																	}-*/;
 
 	public static List<String>
 			jsStringArrayAsStringList(JsArrayString arrayString) {
@@ -288,6 +291,44 @@ public class ClientUtils {
 				false, fieldFilter, okButtonName);
 	}
 
+	public static boolean maybeOffline(Throwable t) {
+		while (t instanceof WrappedRuntimeException) {
+			if (t == t.getCause() || t.getCause() == null) {
+				break;
+			}
+			t = t.getCause();
+		}
+		if (t.getMessage() != null && t.getMessage()
+				.contains("IOException while sending RPC request")) {
+			return true;
+		}
+		if (t.getMessage() != null && t.getMessage()
+				.contains("IOException while receiving RPC response")) {
+			return true;
+		}
+		if (t instanceof StatusCodeException) {
+			if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)) {
+				return true;
+			}
+			StatusCodeException sce = (StatusCodeException) t;
+			Registry.impl(ClientNotifications.class)
+					.log("** Status code exception: " + sce.getStatusCode());
+			if (sce.getStatusCode() == 0) {
+				return true;
+			}
+			boolean internetExplorerErrOffline = BrowserMod.isInternetExplorer()
+					&& sce.getStatusCode() > 600;
+			if (internetExplorerErrOffline) {
+				return true;
+			}
+			// DNS error in Africa
+			if (t.toString().contains("was not able to resolve the hostname")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static void notImplemented() {
 		Registry.impl(ClientNotifications.class)
 				.showWarning("Not yet implemented");
@@ -301,9 +342,9 @@ public class ClientUtils {
 	}
 
 	public static native String prettyFormatJson(String json)/*-{
-    var obj = JSON.parse(json);
-    return JSON.stringify(obj, null, 2);
-	}-*/;
+																var obj = JSON.parse(json);
+																return JSON.stringify(obj, null, 2);
+																}-*/;
 
 	public static void refireHistoryTokenIfSame(String token) {
 		if (token == null) {
@@ -326,15 +367,15 @@ public class ClientUtils {
 
 	public static native boolean setCssTextViaCssTextProperty(Element elem,
 			String css) /*-{
-    var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
-    var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
-
-    if ('cssText' in sheet) { // Internet Explorer
-      sheet.cssText = css;
-      return true;
-    }
-    return false;//do innerText
-	}-*/;
+						var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
+						var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
+						
+						if ('cssText' in sheet) { // Internet Explorer
+						sheet.cssText = css;
+						return true;
+						}
+						return false;//do innerText
+						}-*/;
 
 	public static void setElementStyle(Element eltMulti, String css) {
 		if (eltMulti.implAccess().linkedToRemote()) {
@@ -399,8 +440,8 @@ public class ClientUtils {
 	}
 
 	public static native String stringify(JavaScriptObject jso) /*-{
-    return JSON.stringify(jso);
-	}-*/;
+																return JSON.stringify(jso);
+																}-*/;
 
 	public static void submitForm(Map<String, String> params, String url) {
 		FormPanel p = new FormPanel("_self");
@@ -492,8 +533,8 @@ public class ClientUtils {
 	}
 
 	public static native String wndString(String key)/*-{
-    return $wnd[key];
-	}-*/;
+														return $wnd[key];
+														}-*/;
 
 	private static void addHidden(Panel p, String key, String value) {
 		p.add(new Hidden(key, value));
@@ -521,13 +562,13 @@ public class ClientUtils {
 
 	private static native void setElementStyle0(Element eltMulti,
 			String css) /*-{
-    var e = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
-    if (e.style && typeof (e.style.cssText) == "string") {
-      e.style.cssText = css;
-    } else {
-      e.style = css;
-    }
-	}-*/;
+						var e = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
+						if (e.style && typeof (e.style.cssText) == "string") {
+						e.style.cssText = css;
+						} else {
+						e.style = css;
+						}
+						}-*/;
 
 	public static class EditContentViewWidgets {
 		public PaneWrapperWithObjects wrapper;

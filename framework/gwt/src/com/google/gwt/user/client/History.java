@@ -64,323 +64,323 @@ import com.google.gwt.event.shared.HandlerRegistration;
  *
  */
 public class History {
-    private static HistoryImpl impl = GWT.create(HistoryImpl.class);
+	private static HistoryImpl impl = GWT.create(HistoryImpl.class);
 
-    static HistoryEventSource historyEventSource = new HistoryEventSource();
+	static HistoryEventSource historyEventSource = new HistoryEventSource();
 
-    private static HistoryTokenEncoder tokenEncoder = GWT
-            .create(HistoryTokenEncoder.class);
+	private static HistoryTokenEncoder tokenEncoder = GWT
+			.create(HistoryTokenEncoder.class);
 
-    static String token = getDecodedHash();
-    static {
-        impl.init();
-    }
+	static String token = getDecodedHash();
+	static {
+		impl.init();
+	}
 
-    public static Function<String, String> tokenInterceptor = null;
+	public static Function<String, String> tokenInterceptor = null;
 
-    /**
-     * Adds a listener to be informed of changes to the browser's history stack.
-     *
-     * @param listener
-     *            the listener to be added
-     * @deprecated use {@link History#addValueChangeHandler(ValueChangeHandler)}
-     *             instead
-     */
-    @Deprecated
-    public static void addHistoryListener(HistoryListener listener) {
-        WrapHistory.add(listener);
-    }
+	/**
+	 * Adds a listener to be informed of changes to the browser's history stack.
+	 *
+	 * @param listener
+	 *            the listener to be added
+	 * @deprecated use {@link History#addValueChangeHandler(ValueChangeHandler)}
+	 *             instead
+	 */
+	@Deprecated
+	public static void addHistoryListener(HistoryListener listener) {
+		WrapHistory.add(listener);
+	}
 
-    /**
-     * Adds a {@link com.google.gwt.event.logical.shared.ValueChangeEvent}
-     * handler to be informed of changes to the browser's history stack.
-     *
-     * @param handler
-     *            the handler
-     * @return the registration used to remove this value change handler
-     */
-    public static HandlerRegistration addValueChangeHandler(
-            ValueChangeHandler<String> handler) {
-        return historyEventSource.addValueChangeHandler(handler);
-    }
+	/**
+	 * Adds a {@link com.google.gwt.event.logical.shared.ValueChangeEvent}
+	 * handler to be informed of changes to the browser's history stack.
+	 *
+	 * @param handler
+	 *            the handler
+	 * @return the registration used to remove this value change handler
+	 */
+	public static HandlerRegistration
+			addValueChangeHandler(ValueChangeHandler<String> handler) {
+		return historyEventSource.addValueChangeHandler(handler);
+	}
 
-    /**
-     * Programmatic equivalent to the user pressing the browser's 'back' button.
-     */
-    public static native void back() /*-{
-                                     $wnd.history.back();
-                                     }-*/;
+	/**
+	 * Programmatic equivalent to the user pressing the browser's 'back' button.
+	 */
+	public static native void back() /*-{
+										$wnd.history.back();
+										}-*/;
 
-    /**
-     * Encode a history token for use as part of a URI.
-     *
-     * @param historyToken
-     *            the token to encode
-     * @return the encoded token, suitable for use as part of a URI
-     */
-    public static String encodeHistoryToken(String historyToken) {
-        return tokenEncoder.encode(historyToken);
-    }
+	/**
+	 * Encode a history token for use as part of a URI.
+	 *
+	 * @param historyToken
+	 *            the token to encode
+	 * @return the encoded token, suitable for use as part of a URI
+	 */
+	public static String encodeHistoryToken(String historyToken) {
+		return tokenEncoder.encode(historyToken);
+	}
 
-    public static String encodeHistoryTokenWithHash(String targetHistoryToken) {
-        return impl.encodeHistoryTokenWithHash(targetHistoryToken);
-    }
+	public static String encodeHistoryTokenWithHash(String targetHistoryToken) {
+		return impl.encodeHistoryTokenWithHash(targetHistoryToken);
+	}
 
-    /**
-     * Fire
-     * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
-     * events with the current history state. This is most often called at the
-     * end of an application's
-     * {@link com.google.gwt.core.client.EntryPoint#onModuleLoad()} to inform
-     * history handlers of the initial application state.
-     */
-    public static void fireCurrentHistoryState() {
-        String currentToken = getToken();
-        historyEventSource.fireValueChangedEvent(currentToken);
-    }
+	/**
+	 * Fire
+	 * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+	 * events with the current history state. This is most often called at the
+	 * end of an application's
+	 * {@link com.google.gwt.core.client.EntryPoint#onModuleLoad()} to inform
+	 * history handlers of the initial application state.
+	 */
+	public static void fireCurrentHistoryState() {
+		String currentToken = getToken();
+		historyEventSource.fireValueChangedEvent(currentToken);
+	}
 
-    /**
-     * Programmatic equivalent to the user pressing the browser's 'forward'
-     * button.
-     */
-    public static native void forward() /*-{
-                                        $wnd.history.forward();
-                                        }-*/;
+	/**
+	 * Programmatic equivalent to the user pressing the browser's 'forward'
+	 * button.
+	 */
+	public static native void forward() /*-{
+										$wnd.history.forward();
+										}-*/;
 
-    /**
-     * Gets the current history token. The handler will not receive a
-     * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
-     * event for the initial token; requiring that an application request the
-     * token explicitly on startup gives it an opportunity to run different
-     * initialization code in the presence or absence of an initial token.
-     *
-     * @return the initial token, or the empty string if none is present.
-     */
-    public static String getToken() {
-        return token;
-    }
+	/**
+	 * Gets the current history token. The handler will not receive a
+	 * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+	 * event for the initial token; requiring that an application request the
+	 * token explicitly on startup gives it an opportunity to run different
+	 * initialization code in the presence or absence of an initial token.
+	 *
+	 * @return the initial token, or the empty string if none is present.
+	 */
+	public static String getToken() {
+		return token;
+	}
 
-    /**
-     * Adds a new browser history entry. Calling this method will cause
-     * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
-     * to be called as well.
-     *
-     * @param historyToken
-     *            the token to associate with the new history item
-     */
-    public static void newItem(String historyToken) {
-        newItem(historyToken, true);
-    }
+	/**
+	 * Adds a new browser history entry. Calling this method will cause
+	 * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+	 * to be called as well.
+	 *
+	 * @param historyToken
+	 *            the token to associate with the new history item
+	 */
+	public static void newItem(String historyToken) {
+		newItem(historyToken, true);
+	}
 
-    /**
-     * Adds a new browser history entry. Calling this method will cause
-     * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
-     * to be called as well if and only if issueEvent is true.
-     *
-     * @param historyToken
-     *            the token to associate with the new history item
-     * @param issueEvent
-     *            true if a
-     *            {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
-     *            event should be issued
-     */
-    public static void newItem(String historyToken, boolean issueEvent) {
-        historyToken = (historyToken == null) ? "" : historyToken;
-        if (tokenInterceptor != null) {
-            historyToken = tokenInterceptor.apply(historyToken);
-        }
-        if (!historyToken.equals(getToken())) {
-            token = historyToken;
-            String updateToken = encodeHistoryToken(historyToken);
-            impl.newToken(updateToken);
-            if (issueEvent) {
-                historyEventSource.fireValueChangedEvent(historyToken);
-            }
-        }
-    }
+	/**
+	 * Adds a new browser history entry. Calling this method will cause
+	 * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+	 * to be called as well if and only if issueEvent is true.
+	 *
+	 * @param historyToken
+	 *            the token to associate with the new history item
+	 * @param issueEvent
+	 *            true if a
+	 *            {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+	 *            event should be issued
+	 */
+	public static void newItem(String historyToken, boolean issueEvent) {
+		historyToken = (historyToken == null) ? "" : historyToken;
+		if (tokenInterceptor != null) {
+			historyToken = tokenInterceptor.apply(historyToken);
+		}
+		if (!historyToken.equals(getToken())) {
+			token = historyToken;
+			String updateToken = encodeHistoryToken(historyToken);
+			impl.newToken(updateToken);
+			if (issueEvent) {
+				historyEventSource.fireValueChangedEvent(historyToken);
+			}
+		}
+	}
 
-    /**
-     * Call all history handlers with the specified token. Note that this does
-     * not change the history system's idea of the current state and is only
-     * kept for backward compatibility. To fire history events for the initial
-     * state of the application, instead call {@link #fireCurrentHistoryState()}
-     * from the application
-     * {@link com.google.gwt.core.client.EntryPoint#onModuleLoad()} method.
-     *
-     * @param historyToken
-     *            history token to fire events for
-     * @deprecated Use {@link #fireCurrentHistoryState()} instead.
-     */
-    @Deprecated
-    public static void onHistoryChanged(String historyToken) {
-        historyEventSource.fireValueChangedEvent(historyToken);
-    }
+	/**
+	 * Call all history handlers with the specified token. Note that this does
+	 * not change the history system's idea of the current state and is only
+	 * kept for backward compatibility. To fire history events for the initial
+	 * state of the application, instead call {@link #fireCurrentHistoryState()}
+	 * from the application
+	 * {@link com.google.gwt.core.client.EntryPoint#onModuleLoad()} method.
+	 *
+	 * @param historyToken
+	 *            history token to fire events for
+	 * @deprecated Use {@link #fireCurrentHistoryState()} instead.
+	 */
+	@Deprecated
+	public static void onHistoryChanged(String historyToken) {
+		historyEventSource.fireValueChangedEvent(historyToken);
+	}
 
-    /**
-     * Removes a history listener.
-     *
-     * @param listener
-     *            the listener to be removed
-     */
-    @Deprecated
-    public static void removeHistoryListener(HistoryListener listener) {
-        WrapHistory.remove(historyEventSource.getHandlers(), listener);
-    }
+	/**
+	 * Removes a history listener.
+	 *
+	 * @param listener
+	 *            the listener to be removed
+	 */
+	@Deprecated
+	public static void removeHistoryListener(HistoryListener listener) {
+		WrapHistory.remove(historyEventSource.getHandlers(), listener);
+	}
 
-    /**
-     * Replace the current history token on top of the browsers history stack.
-     *
-     * <p>
-     * Note: This method has problems. The URL is updated with
-     * window.location.replace, this unfortunately has side effects when using
-     * the deprecated iframe linker (ie. "std" linker). Make sure you are using
-     * the cross site iframe linker when using this method in your code.
-     *
-     * <p>
-     * Calling this method will cause
-     * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
-     * to be called as well.
-     *
-     * @param historyToken
-     *            history token to replace current top entry
-     */
-    public static void replaceItem(String historyToken) {
-        replaceItem(historyToken, true);
-    }
+	/**
+	 * Replace the current history token on top of the browsers history stack.
+	 *
+	 * <p>
+	 * Note: This method has problems. The URL is updated with
+	 * window.location.replace, this unfortunately has side effects when using
+	 * the deprecated iframe linker (ie. "std" linker). Make sure you are using
+	 * the cross site iframe linker when using this method in your code.
+	 *
+	 * <p>
+	 * Calling this method will cause
+	 * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+	 * to be called as well.
+	 *
+	 * @param historyToken
+	 *            history token to replace current top entry
+	 */
+	public static void replaceItem(String historyToken) {
+		replaceItem(historyToken, true);
+	}
 
-    /**
-     * Replace the current history token on top of the browsers history stack.
-     *
-     * <p>
-     * Note: This method has problems. The URL is updated with
-     * window.location.replace, this unfortunately has side effects when using
-     * the deprecated iframe linker (ie. "std" linker). Make sure you are using
-     * the cross site iframe linker when using this method in your code.
-     *
-     * <p>
-     * Calling this method will cause
-     * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
-     * to be called as well if and only if issueEvent is true.
-     *
-     * @param historyToken
-     *            history token to replace current top entry
-     * @param issueEvent
-     *            issueEvent true if a
-     *            {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
-     *            event should be issued
-     */
-    public static void replaceItem(String historyToken, boolean issueEvent) {
-        token = historyToken;
-        impl.replaceToken(encodeHistoryToken(historyToken));
-        if (issueEvent) {
-            fireCurrentHistoryState();
-        }
-    }
+	/**
+	 * Replace the current history token on top of the browsers history stack.
+	 *
+	 * <p>
+	 * Note: This method has problems. The URL is updated with
+	 * window.location.replace, this unfortunately has side effects when using
+	 * the deprecated iframe linker (ie. "std" linker). Make sure you are using
+	 * the cross site iframe linker when using this method in your code.
+	 *
+	 * <p>
+	 * Calling this method will cause
+	 * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+	 * to be called as well if and only if issueEvent is true.
+	 *
+	 * @param historyToken
+	 *            history token to replace current top entry
+	 * @param issueEvent
+	 *            issueEvent true if a
+	 *            {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
+	 *            event should be issued
+	 */
+	public static void replaceItem(String historyToken, boolean issueEvent) {
+		token = historyToken;
+		impl.replaceToken(encodeHistoryToken(historyToken));
+		if (issueEvent) {
+			fireCurrentHistoryState();
+		}
+	}
 
-    private static String getDecodedHash() {
-        String hashToken = Window.Location.getHash();
-        if (hashToken == null || hashToken.isEmpty()) {
-            return "";
-        }
-        return tokenEncoder.decode(hashToken.substring(1));
-    }
+	private static String getDecodedHash() {
+		String hashToken = Window.Location.getHash();
+		if (hashToken == null || hashToken.isEmpty()) {
+			return "";
+		}
+		return tokenEncoder.decode(hashToken.substring(1));
+	}
 
-    // this is called from JS when the native onhashchange occurs
-    private static void onHashChanged() {
-        /*
-         * We guard against firing events twice, some browser (e.g. safari) tend
-         * to fire events on startup if HTML5 pushstate is used.
-         */
-        String hashToken = getDecodedHash();
-        if (!hashToken.equals(getToken())) {
-            token = hashToken;
-            historyEventSource.fireValueChangedEvent(hashToken);
-        }
-    }
+	// this is called from JS when the native onhashchange occurs
+	private static void onHashChanged() {
+		/*
+		 * We guard against firing events twice, some browser (e.g. safari) tend
+		 * to fire events on startup if HTML5 pushstate is used.
+		 */
+		String hashToken = getDecodedHash();
+		if (!hashToken.equals(getToken())) {
+			token = hashToken;
+			historyEventSource.fireValueChangedEvent(hashToken);
+		}
+	}
 
-    /**
-     * History implementation for IE8 using onhashchange.
-     */
-    @SuppressWarnings("unused")
-    private static class HistoryImplIE8 extends HistoryImpl {
-    }
+	/**
+	 * History implementation for IE8 using onhashchange.
+	 */
+	@SuppressWarnings("unused")
+	private static class HistoryImplIE8 extends HistoryImpl {
+	}
 
-    /**
-     * HistoryTokenEncoder is responsible for encoding and decoding history
-     * token, thus ensuring that tokens are safe to use in the browsers URL.
-     */
-    private static class HistoryTokenEncoder {
-        public native String decode(String toDecode) /*-{
-                                                     return $wnd.decodeURI(toDecode.replace("%23", "#"));
-                                                     }-*/;
+	/**
+	 * HistoryTokenEncoder is responsible for encoding and decoding history
+	 * token, thus ensuring that tokens are safe to use in the browsers URL.
+	 */
+	private static class HistoryTokenEncoder {
+		public native String decode(String toDecode) /*-{
+														return $wnd.decodeURI(toDecode.replace("%23", "#"));
+														}-*/;
 
-        public native String encode(String toEncode) /*-{
-                                                     // encodeURI() does *not* encode the '#' character.
-                                                     return $wnd.encodeURI(toEncode).replace("#", "%23");
-                                                     }-*/;
-    }
+		public native String encode(String toEncode) /*-{
+														// encodeURI() does *not* encode the '#' character.
+														return $wnd.encodeURI(toEncode).replace("#", "%23");
+														}-*/;
+	}
 
-    /**
-     * NoopHistoryTokenEncoder does not perform any encoding.
-     */
-    // Used from rebinding
-    @SuppressWarnings("unused")
-    private static class NoopHistoryTokenEncoder extends HistoryTokenEncoder {
-        @Override
-        public String decode(String toDecode) {
-            return toDecode;
-        }
+	/**
+	 * NoopHistoryTokenEncoder does not perform any encoding.
+	 */
+	// Used from rebinding
+	@SuppressWarnings("unused")
+	private static class NoopHistoryTokenEncoder extends HistoryTokenEncoder {
+		@Override
+		public String decode(String toDecode) {
+			return toDecode;
+		}
 
-        @Override
-        public String encode(String toEncode) {
-            return toEncode;
-        }
-    }
+		@Override
+		public String encode(String toEncode) {
+			return toEncode;
+		}
+	}
 
-    @SuppressWarnings("deprecation")
-    private static class WrapHistory
-            extends BaseListenerWrapper<HistoryListener>
-            implements ValueChangeHandler<String> {
-        @Deprecated
-        public static void add(HistoryListener listener) {
-            addValueChangeHandler(new WrapHistory(listener));
-        }
+	@SuppressWarnings("deprecation")
+	private static class WrapHistory
+			extends BaseListenerWrapper<HistoryListener>
+			implements ValueChangeHandler<String> {
+		@Deprecated
+		public static void add(HistoryListener listener) {
+			addValueChangeHandler(new WrapHistory(listener));
+		}
 
-        public static void remove(HandlerManager manager,
-                HistoryListener listener) {
-            baseRemove(manager, listener, ValueChangeEvent.getType());
-        }
+		public static void remove(HandlerManager manager,
+				HistoryListener listener) {
+			baseRemove(manager, listener, ValueChangeEvent.getType());
+		}
 
-        private WrapHistory(HistoryListener listener) {
-            super(listener);
-        }
+		private WrapHistory(HistoryListener listener) {
+			super(listener);
+		}
 
-        @Override
-        public void onValueChange(ValueChangeEvent<String> event) {
-            listener.onHistoryChanged(event.getValue());
-        }
-    }
+		@Override
+		public void onValueChange(ValueChangeEvent<String> event) {
+			listener.onHistoryChanged(event.getValue());
+		}
+	}
 
-    static class HistoryEventSource implements HasValueChangeHandlers<String> {
-        private HandlerManager handlers = new HandlerManager(null);
+	static class HistoryEventSource implements HasValueChangeHandlers<String> {
+		private HandlerManager handlers = new HandlerManager(null);
 
-        @Override
-        public HandlerRegistration addValueChangeHandler(
-                ValueChangeHandler<String> handler) {
-            return handlers.addHandler(ValueChangeEvent.getType(), handler);
-        }
+		@Override
+		public HandlerRegistration
+				addValueChangeHandler(ValueChangeHandler<String> handler) {
+			return handlers.addHandler(ValueChangeEvent.getType(), handler);
+		}
 
-        @Override
-        public void fireEvent(GwtEvent<?> event) {
-            handlers.fireEvent(event);
-        }
+		@Override
+		public void fireEvent(GwtEvent<?> event) {
+			handlers.fireEvent(event);
+		}
 
-        public void fireValueChangedEvent(String newToken) {
-            ValueChangeEvent.fire(this, newToken);
-        }
+		public void fireValueChangedEvent(String newToken) {
+			ValueChangeEvent.fire(this, newToken);
+		}
 
-        public HandlerManager getHandlers() {
-            return handlers;
-        }
-    }
+		public HandlerManager getHandlers() {
+			return handlers;
+		}
+	}
 }

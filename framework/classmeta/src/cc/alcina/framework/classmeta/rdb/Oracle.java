@@ -37,7 +37,6 @@ class Oracle {
 	}
 
 	public Packet createAckPacket(Packet packet) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 

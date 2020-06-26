@@ -77,8 +77,8 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 		}
 		String orderDef = def.orderDescription(true);
 		return tplt == noResultsTemplate ? Ax.format(tplt, searchDef)
-				: Ax.format(tplt, pageNumber, pageCount(),
-						totalResultCount, searchDef, orderDef);
+				: Ax.format(tplt, pageNumber, pageCount(), totalResultCount,
+						searchDef, orderDef);
 	}
 
 	public String getResultsDescriptionText() {

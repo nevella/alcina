@@ -31,7 +31,8 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseT
  *
  * @author Nick Reddel
  * 
- * Note - this *can* be used with non HasLocalId objects - "domainobject" is more an indication that "comes from server"
+ *         Note - this *can* be used with non HasLocalId objects -
+ *         "domainobject" is more an indication that "comes from server"
  */
 public class DomainObjectSuggestCustomiser
 		implements Customiser, BoundWidgetProvider {
@@ -62,8 +63,6 @@ public class DomainObjectSuggestCustomiser
 	private boolean withPlaceholder;
 
 	private String placeholderText;
-	
-	
 
 	@Override
 	public BoundWidget get() {
@@ -92,8 +91,8 @@ public class DomainObjectSuggestCustomiser
 				SHOW_ON_FOCUS);
 		withPlaceholder = NamedParameter.Support
 				.booleanValueDefaultTrue(info.parameters(), WITH_PLACEHOLDER);
-		placeholderText = NamedParameter.Support
-				.stringValue(info.parameters(), PLACEHOLDER,"Type for suggestions");
+		placeholderText = NamedParameter.Support.stringValue(info.parameters(),
+				PLACEHOLDER, "Type for suggestions");
 		return editable ? this
 				: readonlyCustomiserClassValue == null
 						? new RenderedLabelProvider(rendererClassValue, null)

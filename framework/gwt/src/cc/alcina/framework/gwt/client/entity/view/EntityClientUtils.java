@@ -17,52 +17,52 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.entity.view.res.DataClientResources;
 
 public class EntityClientUtils {
-    public static final String TOPIC_TOGGLE_FILTER = EntityClientUtils.class
-            .getName() + "." + "TOPIC_TOGGLE_FILTER";
+	public static final String TOPIC_TOGGLE_FILTER = EntityClientUtils.class
+			.getName() + "." + "TOPIC_TOGGLE_FILTER";
 
-    public static void clearSelection(AbstractCellTable table) {
-        if (table == null) {
-            return;
-        }
-        SelectionModel selectionModel = table.getSelectionModel();
-        if (selectionModel instanceof SingleSelectionModel) {
-            ((SingleSelectionModel) selectionModel).clear();
-        } else if (selectionModel instanceof MultiSelectionModel) {
-            ((MultiSelectionModel) selectionModel).clear();
-        }
-    }
+	public static void clearSelection(AbstractCellTable table) {
+		if (table == null) {
+			return;
+		}
+		SelectionModel selectionModel = table.getSelectionModel();
+		if (selectionModel instanceof SingleSelectionModel) {
+			((SingleSelectionModel) selectionModel).clear();
+		} else if (selectionModel instanceof MultiSelectionModel) {
+			((MultiSelectionModel) selectionModel).clear();
+		}
+	}
 
-    public static Image createLoadingImage(int sizePx) {
-        ImageResource loadingImg = DataClientResources.INSTANCE.transparent();
-        Image image = new Image(loadingImg);
-        image.setStyleName("dg-loading-image");
-        image.setPixelSize(sizePx, sizePx);
-        return image;
-    }
+	public static Image createLoadingImage(int sizePx) {
+		ImageResource loadingImg = DataClientResources.INSTANCE.transparent();
+		Image image = new Image(loadingImg);
+		image.setStyleName("dg-loading-image");
+		image.setPixelSize(sizePx, sizePx);
+		return image;
+	}
 
-    public static boolean isIdList(String str) {
-        return TransformManager.idListToLongs(str).size() > 0;
-    }
+	public static boolean isIdList(String str) {
+		return TransformManager.idListToLongs(str).size() > 0;
+	}
 
-    public static boolean isLoggedIn() {
-        return PermissionsManager.get().isLoggedIn();
-    }
+	public static boolean isLoggedIn() {
+		return PermissionsManager.get().isLoggedIn();
+	}
 
-    public static boolean isTestServer() {
-        return Window.Location.getHref().contains("28080");
-    }
+	public static boolean isTestServer() {
+		return Window.Location.getHref().contains("28080");
+	}
 
-    public static void notImplemented() {
-        ClientNotifications.get().showMessage("Not implemented yet");
-    }
+	public static void notImplemented() {
+		ClientNotifications.get().showMessage("Not implemented yet");
+	}
 
-    public static void setupKeyboardPoliciesAndStyles(AbstractCellTable table) {
-        table.setKeyboardPagingPolicy(KeyboardPagingPolicy.INCREASE_RANGE);
-        table.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.ENABLED);
-        table.setStyleName("data-grid");
-    }
+	public static void setupKeyboardPoliciesAndStyles(AbstractCellTable table) {
+		table.setKeyboardPagingPolicy(KeyboardPagingPolicy.INCREASE_RANGE);
+		table.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.ENABLED);
+		table.setStyleName("data-grid");
+	}
 
-    public static Topic<Boolean> topicToggleFilter() {
-        return Topic.global(TOPIC_TOGGLE_FILTER);
-    }
+	public static Topic<Boolean> topicToggleFilter() {
+		return Topic.global(TOPIC_TOGGLE_FILTER);
+	}
 }

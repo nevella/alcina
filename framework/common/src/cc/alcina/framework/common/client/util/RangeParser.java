@@ -67,7 +67,8 @@ public class RangeParser {
 				startOfInt = startOfInt == -1 ? idx : startOfInt;
 			} else {
 				startOfName = startOfName == -1
-						? startOfInt == -1 ? idx : startOfInt : startOfName;
+						? startOfInt == -1 ? idx : startOfInt
+						: startOfName;
 			}
 		}
 		String err = maybeHandleDelim(idx);

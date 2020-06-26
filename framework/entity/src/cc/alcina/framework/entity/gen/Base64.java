@@ -241,8 +241,8 @@ public class Base64 {
 		catch (java.io.UnsupportedEncodingException uee) {
 			bytes = s.getBytes();
 		} // end catch
-		// </change>
-		// Decode
+			// </change>
+			// Decode
 		bytes = decode(bytes, 0, bytes.length);
 		return bytes;
 	} // end decode
@@ -359,7 +359,7 @@ public class Base64 {
 				encode3to4(source, d + off, len - d, outBuff, e);
 				e += 4;
 			} // end if: some padding needed
-			// Return value according to relevant encoding.
+				// Return value according to relevant encoding.
 			try {
 				return new String(outBuff, 0, e, PREFERRED_ENCODING);
 			} // end try

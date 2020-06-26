@@ -51,10 +51,11 @@ public class MvccEntityTransactionalCollectionTest<IU extends Entity & IUser, IG
 							.sorted(EntityComparator.INSTANCE)
 							.collect(Collectors.toList());
 					long suffix = System.currentTimeMillis();
-					List<IU> users1 = Domain.stream(userClass).collect(Collectors.toList());
-					if(users1.size()!=Domain.stream(userClass).count()){
-						//issue with layer merge, most likely
-						int debug=3;
+					List<IU> users1 = Domain.stream(userClass)
+							.collect(Collectors.toList());
+					if (users1.size() != Domain.stream(userClass).count()) {
+						// issue with layer merge, most likely
+						int debug = 3;
 					}
 					Preconditions.checkArgument(
 							users2.size() == Domain.stream(userClass).count());

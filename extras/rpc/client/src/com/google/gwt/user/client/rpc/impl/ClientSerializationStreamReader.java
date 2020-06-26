@@ -492,7 +492,8 @@ public final class ClientSerializationStreamReader
 				int arg1Length = getStringLength(operation.getArg1());
 				int arg2Length = getStringLength(operation.getArg2());
 				return (arg1Length >= 0 && arg2Length >= 0)
-						? (arg1Length + arg2Length) : -1;
+						? (arg1Length + arg2Length)
+						: -1;
 			}
 			return -1;
 		}

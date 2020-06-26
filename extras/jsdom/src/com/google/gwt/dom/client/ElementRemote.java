@@ -75,8 +75,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 * MAX_INT.
 	 */
 	private static native int toInt32(double val) /*-{
-    return val | 0;
-	}-*/;
+													return val | 0;
+													}-*/;
 
 	/**
 	 * Assert that the given {@link Node} is an {@link Element} and
@@ -124,8 +124,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void blur() /*-{
-    this.blur();
-	}-*/;
+									this.blur();
+									}-*/;
 
 	/**
 	 * Dispatched the given event with this element as its target. The event
@@ -162,8 +162,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void focus() /*-{
-    this.focus();
-	}-*/;
+										this.focus();
+										}-*/;
 
 	/**
 	 * Gets an element's absolute bottom coordinate in the document's coordinate
@@ -237,8 +237,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native String getClassName() /*-{
-    return this.className || "";
-	}-*/;
+												return this.className || "";
+												}-*/;
 
 	/**
 	 * Returns the inner height of an element in pixels, including padding but
@@ -268,8 +268,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native String getDir() /*-{
-    return this.dir;
-	}-*/;
+										return this.dir;
+										}-*/;
 
 	/**
 	 * Returns the draggable attribute of this element.
@@ -279,8 +279,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native String getDraggable() /*-{
-    return this.draggable || null;
-	}-*/;
+												return this.draggable || null;
+												}-*/;
 
 	@Override
 	public final NodeList<Element> getElementsByTagName(String tagName) {
@@ -301,8 +301,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native String getId() /*-{
-    return this.id;
-	}-*/;
+										return this.id;
+										}-*/;
 
 	@Override
 	public final String getInnerHTML() {
@@ -319,8 +319,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native String getLang() /*-{
-    return this.lang;
-	}-*/;
+											return this.lang;
+											}-*/;
 
 	@Override
 	public final Element getNextSiblingElement() {
@@ -350,10 +350,10 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native Element getOffsetParent() /*-{
-    var elem = this.offsetParent ? @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(this.offsetParent)
-        : null;
-    return elem;
-	}-*/;
+													var elem = this.offsetParent ? @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(this.offsetParent)
+													: null;
+													return elem;
+													}-*/;
 
 	/**
 	 * The number of pixels that the upper top corner of the current element is
@@ -374,8 +374,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	@Override
 	public final native String getOuterHtml()/*-{
-    return this.outerHTML;
-	}-*/;
+												return this.outerHTML;
+												}-*/;
 
 	@Override
 	public final Element getPreviousSiblingElement() {
@@ -391,8 +391,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native boolean getPropertyBoolean(String name) /*-{
-    return !!this[name];
-	}-*/;
+																return !!this[name];
+																}-*/;
 
 	/**
 	 * Gets a double property from this element.
@@ -403,8 +403,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native double getPropertyDouble(String name) /*-{
-    return parseFloat(this[name]) || 0.0;
-	}-*/;
+																return parseFloat(this[name]) || 0.0;
+																}-*/;
 
 	/**
 	 * Gets an integer property from this element.
@@ -415,8 +415,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native int getPropertyInt(String name) /*-{
-    return parseInt(this[name]) | 0;
-	}-*/;
+														return parseInt(this[name]) | 0;
+														}-*/;
 
 	/**
 	 * Gets a JSO property from this element.
@@ -427,8 +427,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native JavaScriptObject getPropertyJSO(String name) /*-{
-    return this[name] || null;
-	}-*/;
+																		return this[name] || null;
+																		}-*/;
 
 	/**
 	 * Gets an object property from this element.
@@ -439,8 +439,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native Object getPropertyObject(String name) /*-{
-    return this[name] || null;
-	}-*/;
+																return this[name] || null;
+																}-*/;
 
 	/**
 	 * Gets a property from this element.
@@ -451,13 +451,13 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native String getPropertyString(String name) /*-{
-    return (this[name] == null) ? null : String(this[name]);
-	}-*/;
+																return (this[name] == null) ? null : String(this[name]);
+																}-*/;
 
 	public final native String getPropertyStringDebug(String name) /*-{
-    debugger;
-    return (this[name] == null) ? null : String(this[name]);
-	}-*/;
+																	debugger;
+																	return (this[name] == null) ? null : String(this[name]);
+																	}-*/;
 
 	/**
 	 * The height of the scroll view of an element.
@@ -520,8 +520,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native String getTitle() /*-{
-    return this.title;
-	}-*/;
+											return this.title;
+											}-*/;
 
 	@Override
 	public final boolean hasAttribute(String name) {
@@ -547,8 +547,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void removeAttribute(String name) /*-{
-    this.removeAttribute(name);
-	}-*/;
+															this.removeAttribute(name);
+															}-*/;
 
 	@Override
 	public final boolean removeClassName(String className) {
@@ -582,8 +582,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setAttribute(String name, String value) /*-{
-    this.setAttribute(name, value);
-	}-*/;
+																		this.setAttribute(name, value);
+																		}-*/;
 
 	/**
 	 * The class attribute of the element. This attribute has been renamed due
@@ -595,8 +595,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setClassName(String className) /*-{
-    this.className = className || "";
-	}-*/;
+															this.className = className || "";
+															}-*/;
 
 	/**
 	 * Specifies the base direction of directionally neutral text and the
@@ -604,8 +604,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setDir(String dir) /*-{
-    this.dir = dir;
-	}-*/;
+												this.dir = dir;
+												}-*/;
 
 	@Override
 	public final void setDraggable(String draggable) {
@@ -621,16 +621,16 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setId(String id) /*-{
-    this.id = id;
-	}-*/;
+												this.id = id;
+												}-*/;
 
 	/**
 	 * All of the markup and content within a given element.
 	 */
 	@Override
 	public final native void setInnerHTML(@IsSafeHtml String html) /*-{
-    this.innerHTML = html || '';
-	}-*/;
+																	this.innerHTML = html || '';
+																	}-*/;
 
 	@Override
 	public final void setInnerSafeHtml(SafeHtml html) {
@@ -647,8 +647,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setLang(String lang) /*-{
-    this.lang = lang;
-	}-*/;
+													this.lang = lang;
+													}-*/;
 
 	/**
 	 * Sets a boolean property on this element.
@@ -661,8 +661,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	@Override
 	public final native void setPropertyBoolean(String name,
 			boolean value) /*-{
-    this[name] = value;
-	}-*/;
+							this[name] = value;
+							}-*/;
 
 	/**
 	 * Sets a double property on this element.
@@ -675,8 +675,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	@Override
 	public final native void setPropertyDouble(String name,
 			double value) /*-{
-    this[name] = value;
-	}-*/;
+							this[name] = value;
+							}-*/;
 
 	/**
 	 * Sets an integer property on this element.
@@ -688,8 +688,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setPropertyInt(String name, int value) /*-{
-    this[name] = value;
-	}-*/;
+																	this[name] = value;
+																	}-*/;
 
 	/**
 	 * Sets a JSO property on this element.
@@ -702,8 +702,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	@Override
 	public final native void setPropertyJSO(String name,
 			JavaScriptObject value) /*-{
-    this[name] = value;
-	}-*/;
+									this[name] = value;
+									}-*/;
 
 	/**
 	 * Sets an object property on this element.
@@ -716,8 +716,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	@Override
 	public final native void setPropertyObject(String name,
 			Object value) /*-{
-    this[name] = value;
-	}-*/;
+							this[name] = value;
+							}-*/;
 
 	/**
 	 * Sets a property on this element.
@@ -730,8 +730,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	@Override
 	public final native void setPropertyString(String name,
 			String value) /*-{
-    this[name] = value;
-	}-*/;
+							this[name] = value;
+							}-*/;
 
 	@Override
 	public final void setScrollLeft(int scrollLeft) {
@@ -743,8 +743,8 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setScrollTop(int scrollTop) /*-{
-    this.scrollTop = scrollTop;
-	}-*/;
+															this.scrollTop = scrollTop;
+															}-*/;
 
 	/**
 	 * The index that represents the element's position in the tabbing order.
@@ -755,18 +755,18 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	@Override
 	public final native void setTabIndex(int tabIndex) /*-{
-    this.tabIndex = tabIndex;
-	}-*/;
+														this.tabIndex = tabIndex;
+														}-*/;
 
 	/**
 	 * The element's advisory title.
 	 */
 	@Override
 	public final native void setTitle(String title) /*-{
-    // Setting the title to null results in the string "null" being displayed
-    // on some browsers.
-    this.title = title || '';
-	}-*/;
+													// Setting the title to null results in the string "null" being displayed
+													// on some browsers.
+													this.title = title || '';
+													}-*/;
 
 	@Override
 	public final void sinkEvents(int eventBits) {
@@ -779,14 +779,14 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	}
 
 	private final native JsArrayString getAttributeList()/*-{
-    var result = [];
-    var attrs = this.attributes;
-    for (var i = 0; i < attrs.length; i++) {
-      result.push(attrs[i].name);
-      result.push(attrs[i].value);
-    }
-    return result;
-	}-*/;
+															var result = [];
+															var attrs = this.attributes;
+															for (var i = 0; i < attrs.length; i++) {
+															result.push(attrs[i].name);
+															result.push(attrs[i].value);
+															}
+															return result;
+															}-*/;
 
 	/**
 	 * Returns a NodeList of all descendant Elements with a given tag name, in
@@ -800,267 +800,268 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 */
 	private final native NodeListRemote<Element>
 			getElementsByTagName0(String name) /*-{
-    return this.getElementsByTagName(name);
-	}-*/;
+												return this.getElementsByTagName(name);
+												}-*/;
 
 	private final native double getSubPixelClientHeight() /*-{
-    return this.clientHeight;
-	}-*/;
+															return this.clientHeight;
+															}-*/;
 
 	private final native double getSubPixelClientWidth() /*-{
-    return this.clientWidth;
-	}-*/;
+															return this.clientWidth;
+															}-*/;
 
 	private final native double getSubPixelOffsetHeight() /*-{
-    return this.offsetHeight || 0;
-	}-*/;
+															return this.offsetHeight || 0;
+															}-*/;
 
 	private final native double getSubPixelOffsetLeft() /*-{
-    return this.offsetLeft || 0;
-	}-*/;
+														return this.offsetLeft || 0;
+														}-*/;
 
 	private final native double getSubPixelOffsetTop() /*-{
-    return this.offsetTop || 0;
-	}-*/;
+														return this.offsetTop || 0;
+														}-*/;
 
 	private final native double getSubPixelOffsetWidth() /*-{
-    return this.offsetWidth || 0;
-	}-*/;
+															return this.offsetWidth || 0;
+															}-*/;
 
 	private final native double getSubPixelScrollHeight() /*-{
-    return this.scrollHeight || 0;
-	}-*/;
+															return this.scrollHeight || 0;
+															}-*/;
 
 	private final native double getSubPixelScrollTop() /*-{
-    return this.scrollTop || 0;
-	}-*/;
+														return this.scrollTop || 0;
+														}-*/;
 
 	private final native double getSubPixelScrollWidth() /*-{
-    return this.scrollWidth || 0;
-	}-*/;
+															return this.scrollWidth || 0;
+															}-*/;
 
 	final native void appendChild0(ElementRemote newChild)/*-{
-    this.appendChild(newChild);
-	}-*/;
+															this.appendChild(newChild);
+															}-*/;
 
 	/**
 	 * Explicitly build html by traversing with javascript (cos we can't trust
 	 * IE11, although we can webkit and probably FF)
 	 */
 	final native String buildOuterHtml()/*-{
-
-    function escapeHtml(str, buffer) {
-      var node = document.createTextNode(str);
-      buffer.div.appendChild(node);
-      var result = buffer.div.innerHTML;
-      buffer.div.removeChild(node);
-      return result;
-    }
-    function addNodeToBuiltHtml(node, buffer, depth) {
-      var buf = buffer.buf;
-      //fixme - test
-      switch (node.nodeType) {
-      //TEXT_NODE
-      case 3:
-        buf += escapeHtml(node.data, buffer);
-        break;
-      //PROCESSING_INSTRUCTION_NODE
-      case 7:
-        buf += '<?';
-        buf += node.name;
-        buf += ' ';
-        buf += escapeHtml(node.data, buffer);
-        buf += '?>';
-        //COMMENT_NODE
-      case 8:
-        buf += '<!--';
-        buf += escapeHtml(node.data, buffer);
-        buf += '-->';
-        break;
-      //ELEMENT_NODE
-      case 1:
-        buf += '<';
-        buf += node.tagName;
-        if (node.attributes.length > 0) {
-          for (var idx = 0; idx < node.attributes.length; idx++) {
-            buf += ' ';
-            buf += node.attributes[idx].name;
-            buf += '="';
-            buf += escapeHtml(node.attributes[idx].value, buffer).split("\"")
-                .join("&quot;");
-            buf += '"';
-          }
-        }
-        buf += '>';
-        var idx = 0;
-        var size = node.childNodes.length;
-        buffer.buf = buf;
-        for (; idx < size; idx++) {
-          var child = node.childNodes.item(idx);
-          addNodeToBuiltHtml(child, buffer, depth + 1);
-        }
-        buf = buffer.buf;
-        var re = /^(?:area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
-        if (node.tagName.match(re)) {
-
-        } else {
-          buf += '</';
-          buf += node.tagName;
-          buf += '>';
-        }
-
-        break;
-      default:
-        throw "node not handled:" + node;
-      }
-      buffer.buf = buf;
-
-    }
-    var buffer = {
-      buf : '',
-      div : $doc.createElement('div')
-    }
-    addNodeToBuiltHtml(this, buffer, 0);
-    return buffer.buf;
-	}-*/;
+										
+										function escapeHtml(str, buffer) {
+										var node = document.createTextNode(str);
+										buffer.div.appendChild(node);
+										var result = buffer.div.innerHTML;
+										buffer.div.removeChild(node);
+										return result;
+										}
+										function addNodeToBuiltHtml(node, buffer, depth) {
+										var buf = buffer.buf;
+										//fixme - test
+										switch (node.nodeType) {
+										//TEXT_NODE
+										case 3:
+										buf += escapeHtml(node.data, buffer);
+										break;
+										//PROCESSING_INSTRUCTION_NODE
+										case 7:
+										buf += '<?';
+										buf += node.name;
+										buf += ' ';
+										buf += escapeHtml(node.data, buffer);
+										buf += '?>';
+										//COMMENT_NODE
+										case 8:
+										buf += '<!--';
+										buf += escapeHtml(node.data, buffer);
+										buf += '-->';
+										break;
+										//ELEMENT_NODE
+										case 1:
+										buf += '<';
+										buf += node.tagName;
+										if (node.attributes.length > 0) {
+										for (var idx = 0; idx < node.attributes.length; idx++) {
+										buf += ' ';
+										buf += node.attributes[idx].name;
+										buf += '="';
+										buf += escapeHtml(node.attributes[idx].value, buffer).split("\"")
+										.join("&quot;");
+										buf += '"';
+										}
+										}
+										buf += '>';
+										var idx = 0;
+										var size = node.childNodes.length;
+										buffer.buf = buf;
+										for (; idx < size; idx++) {
+										var child = node.childNodes.item(idx);
+										addNodeToBuiltHtml(child, buffer, depth + 1);
+										}
+										buf = buffer.buf;
+										var re = /^(?:area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr)$/i;
+										if (node.tagName.match(re)) {
+										
+										} else {
+										buf += '</';
+										buf += node.tagName;
+										buf += '>';
+										}
+										
+										break;
+										default:
+										throw "node not handled:" + node;
+										}
+										buffer.buf = buf;
+										
+										}
+										var buffer = {
+										buf : '',
+										div : $doc.createElement('div')
+										}
+										addNodeToBuiltHtml(this, buffer, 0);
+										return buffer.buf;
+										}-*/;
 
 	final native String getInnerHTML0()/*-{
-    return this.innerHTML;
-	}-*/;
+										return this.innerHTML;
+										}-*/;
 
 	/**
 	 * Gets this element's {@link Style} object.
 	 */
 	final native StyleRemote getStyle0() /*-{
-    return this.style;
-	}-*/;
+											return this.style;
+											}-*/;
 
 	final native String getTagNameRemote()/*-{
-    return this.tagName;
-	}-*/;
+											return this.tagName;
+											}-*/;
 
 	final boolean hasTagNameInternal(String tag) {
 		return getTagNameRemote().equals(tag);
 	}
 
 	final native String provideRemoteDomTree0()/*-{
-    function addNode(node, buffer, depth) {
-      var buf = buffer.buf;
-      for (var idx = 0; idx < depth; idx++) {
-        buf += ' ';
-      }
-      buf += node.nodeType;
-      buf += ': ';
-      switch (node.nodeType) {
-      case 3:
-      case 8:
-        buf += '[';
-        buf += node.data.split('\n').join('\\n').split('\t').join('\\t').split(
-            '\r').join('\\r');
-        buf += ']';
-        break;
-      case 1:
-        buf += node.tagName;
-        buf += ' : ';
-        break;
-      }
-      buf += '\n';
-      buffer.buf = buf;
-      if (node.nodeType == 1) {
-        var idx = 0;
-        var size = node.childNodes.length;
-        for (; idx < size; idx++) {
-          var child = node.childNodes.item(idx);
-          addNode(child, buffer, depth + 1);
-        }
-      }
-    }
-    var buffer = {
-      buf : ''
-    };
-    addNode(this, buffer, 0);
-    return buffer.buf;
-	}-*/;
+												function addNode(node, buffer, depth) {
+												var buf = buffer.buf;
+												for (var idx = 0; idx < depth; idx++) {
+												buf += ' ';
+												}
+												buf += node.nodeType;
+												buf += ': ';
+												switch (node.nodeType) {
+												case 3:
+												case 8:
+												buf += '[';
+												buf += node.data.split('\n').join('\\n').split('\t').join('\\t').split(
+												'\r').join('\\r');
+												buf += ']';
+												break;
+												case 1:
+												buf += node.tagName;
+												buf += ' : ';
+												break;
+												}
+												buf += '\n';
+												buffer.buf = buf;
+												if (node.nodeType == 1) {
+												var idx = 0;
+												var size = node.childNodes.length;
+												for (; idx < size; idx++) {
+												var child = node.childNodes.item(idx);
+												addNode(child, buffer, depth + 1);
+												}
+												}
+												}
+												var buffer = {
+												buf : ''
+												};
+												addNode(this, buffer, 0);
+												return buffer.buf;
+												}-*/;
 
-	// FIXME - should also check tagname for really warped dom. unlikely to be
+	// FIXME - directedlayout.2 - should also check tagname for really warped
+	// dom. unlikely to be
 	// an issue though
 	final native ElementRemoteIndex provideRemoteIndex(boolean debug)/*-{
-    var result = {
-      hasNode : null,
-      root : null,
-      indicies : [],
-      ancestors : [],
-      sizes : [],
-      debugData : [],
-      remoteDefined : [],
-      debugLog : '',
-    };
-    var cursor = this;
-    while (true) {
-      var hasNode = @com.google.gwt.dom.client.LocalDom::hasNode(Lcom/google/gwt/core/client/JavaScriptObject;)(cursor);
-      if (hasNode) {
-        result.hasNode = cursor;
-        break;
-      }
-      var parent = cursor.parentElement;
-      if (parent == null) {
-        result.root = cursor;
-        break;
-      }
-      var idx = 0;
-      var size = parent.childNodes.length;
-      for (; idx < size; idx++) {
-        var node = parent.childNodes.item(idx);
-        if (debug) {
-          result.debugLog += "Checking node - depth: " + result.indicies.length;
-          result.debugLog += " - idx: " + idx;
-          result.debugLog += " - Node type: " + node.nodeType;
-          result.debugLog += " - Node name: " + node.nodeName;
-          result.debugLog += " - Cursor type: " + node.nodeType;
-          result.debugLog += " - Cursor name: " + node.nodeName;
-          result.debugLog += "\n";
-        }
-        if (node == cursor) {
-          result.indicies.push(idx);
-          result.ancestors.push(cursor);
-          var className = cursor.className;
-          if (!className.indexOf && typeof className.baseVal == 'string') {
-            className = className.baseVal;
-          }
-          result.remoteDefined
-              .push(className.indexOf(@Element::REMOTE_DEFINED) != -1);
-          break;
-        }
-      }
-      result.sizes.push(size);
-      if (debug) {
-        var buf = '';
-        var idx = 0;
-        for (; idx < size; idx++) {
-          var node = parent.childNodes.item(idx);
-          buf += node.nodeType;
-          buf += ': ';
-          switch (node.nodeType) {
-          case 3:
-          case 8:
-            buf += '[';
-            buf += node.data.split('\n').join('\\n').split('\t').join('\\t');
-            buf += ']';
-            break;
-          case 1:
-            buf += node.tagName;
-            buf += ' : ';
-            break;
-          }
-          buf += "\n";
-        }
-        result.debugData.push(buf);
-      }
-      cursor = parent;
-    }
-    return result;
-
-	}-*/;
+																		var result = {
+																		hasNode : null,
+																		root : null,
+																		indicies : [],
+																		ancestors : [],
+																		sizes : [],
+																		debugData : [],
+																		remoteDefined : [],
+																		debugLog : '',
+																		};
+																		var cursor = this;
+																		while (true) {
+																		var hasNode = @com.google.gwt.dom.client.LocalDom::hasNode(Lcom/google/gwt/core/client/JavaScriptObject;)(cursor);
+																		if (hasNode) {
+																		result.hasNode = cursor;
+																		break;
+																		}
+																		var parent = cursor.parentElement;
+																		if (parent == null) {
+																		result.root = cursor;
+																		break;
+																		}
+																		var idx = 0;
+																		var size = parent.childNodes.length;
+																		for (; idx < size; idx++) {
+																		var node = parent.childNodes.item(idx);
+																		if (debug) {
+																		result.debugLog += "Checking node - depth: " + result.indicies.length;
+																		result.debugLog += " - idx: " + idx;
+																		result.debugLog += " - Node type: " + node.nodeType;
+																		result.debugLog += " - Node name: " + node.nodeName;
+																		result.debugLog += " - Cursor type: " + node.nodeType;
+																		result.debugLog += " - Cursor name: " + node.nodeName;
+																		result.debugLog += "\n";
+																		}
+																		if (node == cursor) {
+																		result.indicies.push(idx);
+																		result.ancestors.push(cursor);
+																		var className = cursor.className;
+																		if (!className.indexOf && typeof className.baseVal == 'string') {
+																		className = className.baseVal;
+																		}
+																		result.remoteDefined
+																		.push(className.indexOf(@Element::REMOTE_DEFINED) != -1);
+																		break;
+																		}
+																		}
+																		result.sizes.push(size);
+																		if (debug) {
+																		var buf = '';
+																		var idx = 0;
+																		for (; idx < size; idx++) {
+																		var node = parent.childNodes.item(idx);
+																		buf += node.nodeType;
+																		buf += ': ';
+																		switch (node.nodeType) {
+																		case 3:
+																		case 8:
+																		buf += '[';
+																		buf += node.data.split('\n').join('\\n').split('\t').join('\\t');
+																		buf += ']';
+																		break;
+																		case 1:
+																		buf += node.tagName;
+																		buf += ' : ';
+																		break;
+																		}
+																		buf += "\n";
+																		}
+																		result.debugData.push(buf);
+																		}
+																		cursor = parent;
+																		}
+																		return result;
+																		
+																		}-*/;
 
 	/** only allow if telling all local nodes that they're detached **/
 	final Node removeAllChildrenElement() {
@@ -1073,14 +1074,14 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	}
 
 	final native void removeAllChildrenElement0()/*-{
-    while (this.lastChild) {
-      this.removeChild(this.lastChild);
-    }
-	}-*/;
+													while (this.lastChild) {
+													this.removeChild(this.lastChild);
+													}
+													}-*/;
 
 	final native void removeFromParent0()/*-{
-    this.parentElement.removeChild(this);
-	}-*/;
+											this.parentElement.removeChild(this);
+											}-*/;
 
 	/**
 	 * Determines whether the given {@link JavaScriptObject} can be cast to an
@@ -1109,20 +1110,20 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		}
 
 		final native JsArray ancestors()/*-{
-      return this.ancestors;
-		}-*/;
+										return this.ancestors;
+										}-*/;
 
 		final native String debugData()/*-{
-      return this.debugData.join("\n\n");
-		}-*/;
+										return this.debugData.join("\n\n");
+										}-*/;
 
 		final native String debugLog()/*-{
-      return this.debugLog;
-		}-*/;
+										return this.debugLog;
+										}-*/;
 
 		final native ElementRemote hasNode()/*-{
-      return this.hasNode;
-		}-*/;
+											return this.hasNode;
+											}-*/;
 
 		final boolean hasRemoteDefined() {
 			for (Boolean value : remoteDefined()) {
@@ -1138,35 +1139,35 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		}
 
 		final native JsArrayInteger jsIndicies()/*-{
-      return this.indicies;
-		}-*/;
+												return this.indicies;
+												}-*/;
 
 		final native JsArrayInteger jsSizes()/*-{
-      return this.sizes;
-		}-*/;
+												return this.sizes;
+												}-*/;
 
 		final List<Boolean> remoteDefined() {
 			return commaSeparatedBoolsToList(stringRemoteDefined());
 		}
 
 		final native ElementRemote root()/*-{
-      return this.root;
-		}-*/;
+											return this.root;
+											}-*/;
 
 		final List<Integer> sizes() {
 			return commaSeparatedIntsToList(stringSizes());
 		}
 
 		final native String stringIndicies()/*-{
-      return this.indicies.join(",");
-		}-*/;
+											return this.indicies.join(",");
+											}-*/;
 
 		final native String stringRemoteDefined()/*-{
-      return this.remoteDefined.join(",");
-		}-*/;
+													return this.remoteDefined.join(",");
+													}-*/;
 
 		final native String stringSizes()/*-{
-      return this.sizes.join(",");
-		}-*/;
+											return this.sizes.join(",");
+											}-*/;
 	}
 }

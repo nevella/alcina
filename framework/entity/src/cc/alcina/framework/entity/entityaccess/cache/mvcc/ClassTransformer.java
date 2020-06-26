@@ -71,8 +71,8 @@ import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListenerReference;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListenerReference;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessType;
@@ -964,25 +964,6 @@ class ClassTransformer {
 					/*
 					 * Wrap non-private methods to ensure dispatch to
 					 * transactionally correct object.
-					 * 
-					 * FIXME.mvcc - temporarily ignore @transient getters and
-					 * setters - this is incorrect (real solution is an
-					 * extension of DomainStore.postProcess to include
-					 * transactional writes to db-transient fields - only
-					 * applied to jvm which sourced the transforms)
-					 * 
-					 * Further thinking - that sorta stuff (version-level
-					 * caches) just shouldn't be on the object - or at least
-					 * shouldn't be publicly accessible.
-					 * 
-					 * Have an snapshot somewhere - and invalidate it on change.
-					 * Hmmm...in which case storing the snapshot on _base_ is
-					 * ok, in which case maybe @transient (-> base) really is
-					 * the right approach
-					 * 
-					 * Hmmm....
-					 * 
-					 * 
 					 */
 					List<Method> allClassMethods = SEUtilities
 							.allClassMethods(originalClass);
@@ -1008,7 +989,13 @@ class ClassTransformer {
 							continue;
 						}
 						/*
-						 * FIXME - reroute to base?
+						 * equals() and hashcode() should not be overridden from
+						 * the Entity definitions - and those are safe across
+						 * versions (i.e. different versions of the same object
+						 * will have the same hashcode and will be equal())
+						 * 
+						 * so it doesn't matter which version we test against,
+						 * hence no need to reroute
 						 */
 						if (method.getName().matches("equals")) {
 							continue;
@@ -1162,12 +1149,6 @@ class ClassTransformer {
 									& Modifier.PRIVATE) != 0) {
 								continue;
 							}
-							// FIXME-apdm - we actually want the below - but
-							// need to look at casting
-							// if ((method.getModifiers()
-							// & Modifier.PRIVATE) != 0) {
-							// continue;
-							// }
 							return true;
 						}
 					}

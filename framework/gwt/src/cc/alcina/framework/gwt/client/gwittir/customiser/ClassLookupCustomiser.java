@@ -30,7 +30,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 
 @ClientInstantiable
-
 /**
  *
  * @author Nick Reddel
@@ -45,10 +44,8 @@ public class ClassLookupCustomiser implements Customiser {
 		NamedParameter[] parameters = info.parameters();
 		Renderer renderer = NamedParameter.Support.instantiateClass(parameters,
 				RENDERER_CLASS);
-		return new RendererClassProvider(editable,
-				NamedParameter.Support
-						.getParameter(info.parameters(), REGISTRY_POINT)
-						.classValue(),
+		return new RendererClassProvider(editable, NamedParameter.Support
+				.getParameter(info.parameters(), REGISTRY_POINT).classValue(),
 				renderer);
 	}
 

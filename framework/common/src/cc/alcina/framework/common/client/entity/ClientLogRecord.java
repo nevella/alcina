@@ -124,9 +124,9 @@ public class ClientLogRecord implements Serializable {
 
 	@Override
 	public String toString() {
-		return Ax.format("%s :: %s :: %s :: %s -- %s",
-				getLocalSeriesId(), getTime(), getClientInstanceId(),
-				getTopic(), CommonUtils.trimToWsChars(getMessage(), 40));
+		return Ax.format("%s :: %s :: %s :: %s -- %s", getLocalSeriesId(),
+				getTime(), getClientInstanceId(), getTopic(),
+				CommonUtils.trimToWsChars(getMessage(), 40));
 	}
 
 	public static class ClientLogRecordIsNonCriticalFilter
@@ -189,9 +189,9 @@ public class ClientLogRecord implements Serializable {
 
 		@Override
 		public String toString() {
-			return Ax.format(
-					"ClientLogRecords: size - %s\t records - %s\n%s", size,
-					logRecords.size(), CommonUtils.join(logRecords, "\n"));
+			return Ax.format("ClientLogRecords: size - %s\t records - %s\n%s",
+					size, logRecords.size(),
+					CommonUtils.join(logRecords, "\n"));
 		}
 
 		private void incrementSize(ClientLogRecord logRecord) {

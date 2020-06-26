@@ -6,8 +6,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 
 @RegistryLocations({
-        @RegistryLocation(registryPoint = KnownsRegistrar.class, implementationType = ImplementationType.SINGLETON),
-        @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class) })
+		@RegistryLocation(registryPoint = KnownsRegistrar.class, implementationType = ImplementationType.SINGLETON),
+		@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class) })
 public abstract class KnownsRegistrar {
-    public abstract void register(KnownsPersistence persistence);
+	public abstract void register(KnownsPersistence persistence);
 }

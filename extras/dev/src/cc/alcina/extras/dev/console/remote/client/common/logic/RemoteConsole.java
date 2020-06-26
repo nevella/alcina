@@ -17,45 +17,45 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 @RegistryLocation(registryPoint = IClientFactory.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 public class RemoteConsole implements IClientFactory {
-    public static RemoteConsole get() {
-        return (RemoteConsole) IClientFactory.get();
-    }
+	public static RemoteConsole get() {
+		return (RemoteConsole) IClientFactory.get();
+	}
 
-    public static RemoteConsoleModels models() {
-        return get().models;
-    }
+	public static RemoteConsoleModels models() {
+		return get().models;
+	}
 
-    private RegistryHistoryMapper historyMapper;
+	private RegistryHistoryMapper historyMapper;
 
-    private PlaceHistoryHandler historyHandler;
+	private PlaceHistoryHandler historyHandler;
 
-    private EventBus eventBus = new SimpleEventBus();
+	private EventBus eventBus = new SimpleEventBus();
 
-    private RemoteConsoleModels models = new RemoteConsoleModels();
+	private RemoteConsoleModels models = new RemoteConsoleModels();
 
-    private final PlaceController placeController = new PlaceController(
-            eventBus) {
-        @Override
-        public void goTo(Place newPlace) {
-            super.goTo(newPlace);
-        }
-    };
+	private final PlaceController placeController = new PlaceController(
+			eventBus) {
+		@Override
+		public void goTo(Place newPlace) {
+			super.goTo(newPlace);
+		}
+	};
 
-    @Override
-    public EventBus getEventBus() {
-        return eventBus;
-    }
+	@Override
+	public EventBus getEventBus() {
+		return eventBus;
+	}
 
-    @Override
-    public PlaceHistoryHandler getHistoryHandler() {
-        return this.historyHandler;
-    }
+	@Override
+	public PlaceHistoryHandler getHistoryHandler() {
+		return this.historyHandler;
+	}
 
-    @Override
-    public void setupPlaceMapping() {
-        historyMapper = Registry.impl(RegistryHistoryMapper.class);
-        historyHandler = new PlaceHistoryHandler(historyMapper);
-        historyHandler.register(placeController, eventBus,
-                () -> new ConsolePlace());
-    }
+	@Override
+	public void setupPlaceMapping() {
+		historyMapper = Registry.impl(RegistryHistoryMapper.class);
+		historyHandler = new PlaceHistoryHandler(historyMapper);
+		historyHandler.register(placeController, eventBus,
+				() -> new ConsolePlace());
+	}
 }

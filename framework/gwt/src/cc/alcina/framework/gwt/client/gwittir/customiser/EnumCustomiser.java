@@ -33,7 +33,6 @@ import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
 @ClientInstantiable
-
 /**
  *
  * @author Nick Reddel
@@ -72,8 +71,10 @@ public class EnumCustomiser implements Customiser {
 				.intValue(info.parameters(), VISIBLE_ITEM_COUNT, 4));
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				RENDERER_CLASS);
-		final Renderer renderer = parameter != null ? (Renderer) Reflections
-				.classLookup().newInstance(parameter.classValue()) : null;
+		final Renderer renderer = parameter != null
+				? (Renderer) Reflections.classLookup()
+						.newInstance(parameter.classValue())
+				: null;
 		if (renderer != null) {
 			provider.setRenderer(renderer);
 		}
@@ -99,8 +100,8 @@ public class EnumCustomiser implements Customiser {
 			hiddenValues
 					.removeAll(((HasValue<Collection>) Reflections.classLookup()
 							.newInstance(parameter.classValue())).getValue());
-			provider.setProvider((HasValue<Collection>) Reflections.classLookup()
-					.newInstance(parameter.classValue()));
+			provider.setProvider((HasValue<Collection>) Reflections
+					.classLookup().newInstance(parameter.classValue()));
 		}
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				FILTER_CLASS);

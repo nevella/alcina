@@ -58,16 +58,23 @@ public enum Application {
 	/**
 	 * MobileMe webmail client by Apple. Previously known as .mac.
 	 */
-	MOBILEME(Manufacturer.APPLE, 40, "MobileMe", new String[] { "www.me.com" }, ApplicationType.WEBMAIL),
+	MOBILEME(Manufacturer.APPLE, 40, "MobileMe", new String[] { "www.me.com" },
+			ApplicationType.WEBMAIL),
 	/**
 	 * Mail.com Mail.com provides consumers with web-based e-mail services
 	 */
-	MAIL_COM(Manufacturer.MMC, 50, "Mail.com", new String[] { ".mail.com" }, ApplicationType.WEBMAIL),
+	MAIL_COM(Manufacturer.MMC, 50, "Mail.com", new String[] { ".mail.com" },
+			ApplicationType.WEBMAIL),
 	/**
 	 * Popular open source webmail client. Often installed by providers or
 	 * privately.
 	 */
-	HORDE(Manufacturer.OTHER, 50, "horde", new String[] { "horde" }, ApplicationType.WEBMAIL), OTHER_WEBMAIL(Manufacturer.OTHER, 60, "Other webmail client", new String[] { "webmail", "webemail" }, ApplicationType.WEBMAIL), UNKNOWN(Manufacturer.OTHER, 0, "Unknown", new String[0], ApplicationType.UNKNOWN);
+	HORDE(Manufacturer.OTHER, 50, "horde", new String[] { "horde" },
+			ApplicationType.WEBMAIL),
+	OTHER_WEBMAIL(Manufacturer.OTHER, 60, "Other webmail client",
+			new String[] { "webmail", "webemail" }, ApplicationType.WEBMAIL),
+	UNKNOWN(Manufacturer.OTHER, 0, "Unknown", new String[0],
+			ApplicationType.UNKNOWN);
 	/*
 	 * Iterates over all Application to compare the signature with the referrer
 	 * string. If no match can be found Application.UNKNOWN will be returned.

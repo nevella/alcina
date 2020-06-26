@@ -34,81 +34,81 @@ import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
  * @author Nick Reddel
  */
 public class SelectorProvider implements BoundWidgetProvider {
-    private final Class selectionObjectClass;
+	private final Class selectionObjectClass;
 
-    private final CollectionFilter filter;
+	private final CollectionFilter filter;
 
-    private final int maxSelectedItems;
+	private final int maxSelectedItems;
 
-    private final Renderer renderer;
+	private final Renderer renderer;
 
-    private boolean useCellList;
+	private boolean useCellList;
 
-    private boolean useMinimalSelector;
+	private boolean useMinimalSelector;
 
-    private boolean useFlatSelector;
+	private boolean useFlatSelector;
 
-    private String hint;
+	private String hint;
 
-    private Class providerClass;
+	private Class providerClass;
 
-    private boolean withNull;
+	private boolean withNull;
 
-    public SelectorProvider(Class selectionObjectClass, CollectionFilter filter,
-            int maxSelectedItems, Renderer renderer, boolean useCellList,
-            boolean useMinimalSelector, boolean useFlatSelector, String hint,
-            Class providerClass, boolean withNull) {
-        this.selectionObjectClass = selectionObjectClass;
-        this.filter = filter;
-        this.maxSelectedItems = maxSelectedItems;
-        this.renderer = renderer;
-        this.useCellList = useCellList;
-        this.useMinimalSelector = useMinimalSelector;
-        this.useFlatSelector = useFlatSelector;
-        this.hint = hint;
-        this.providerClass = providerClass;
-        this.withNull = withNull;
-    }
+	public SelectorProvider(Class selectionObjectClass, CollectionFilter filter,
+			int maxSelectedItems, Renderer renderer, boolean useCellList,
+			boolean useMinimalSelector, boolean useFlatSelector, String hint,
+			Class providerClass, boolean withNull) {
+		this.selectionObjectClass = selectionObjectClass;
+		this.filter = filter;
+		this.maxSelectedItems = maxSelectedItems;
+		this.renderer = renderer;
+		this.useCellList = useCellList;
+		this.useMinimalSelector = useMinimalSelector;
+		this.useFlatSelector = useFlatSelector;
+		this.hint = hint;
+		this.providerClass = providerClass;
+		this.withNull = withNull;
+	}
 
-    @Override
-    public BoundSelector get() {
-        if (useFlatSelector) {
-            Supplier<Collection> provider = new Supplier<Collection>() {
-                @Override
-                public Collection get() {
-                    if (selectionObjectClass.isEnum()) {
-                        List<Object> values = Arrays
-                                .asList(selectionObjectClass.getEnumConstants())
-                                .stream().collect(Collectors.toList());
-                        if (withNull) {
-                            values.add(0, null);
-                        }
-                        return values;
-                    } else {
-                        List values = (List) TransformManager.get()
-                                .getCollection(selectionObjectClass).stream()
-                                .collect(Collectors.toList());
-                        if (withNull) {
-                            values.add(0, null);
-                        }
-                        return values;
-                    }
-                }
-            };
-            if (providerClass != null) {
-                provider = (Supplier<Collection>) Reflections.classLookup()
-                        .newInstance(providerClass);
-            }
-            return new FlatSearchSelector(selectionObjectClass,
-                    maxSelectedItems, renderer, provider);
-        } else if (useMinimalSelector) {
-            BoundSelectorMinimal selectorMinimal = new BoundSelectorMinimal(
-                    selectionObjectClass, filter, maxSelectedItems, renderer,
-                    hint);
-            return selectorMinimal;
-        } else {
-            return new BoundSelector(selectionObjectClass, filter,
-                    maxSelectedItems, renderer, useCellList);
-        }
-    }
+	@Override
+	public BoundSelector get() {
+		if (useFlatSelector) {
+			Supplier<Collection> provider = new Supplier<Collection>() {
+				@Override
+				public Collection get() {
+					if (selectionObjectClass.isEnum()) {
+						List<Object> values = Arrays
+								.asList(selectionObjectClass.getEnumConstants())
+								.stream().collect(Collectors.toList());
+						if (withNull) {
+							values.add(0, null);
+						}
+						return values;
+					} else {
+						List values = (List) TransformManager.get()
+								.getCollection(selectionObjectClass).stream()
+								.collect(Collectors.toList());
+						if (withNull) {
+							values.add(0, null);
+						}
+						return values;
+					}
+				}
+			};
+			if (providerClass != null) {
+				provider = (Supplier<Collection>) Reflections.classLookup()
+						.newInstance(providerClass);
+			}
+			return new FlatSearchSelector(selectionObjectClass,
+					maxSelectedItems, renderer, provider);
+		} else if (useMinimalSelector) {
+			BoundSelectorMinimal selectorMinimal = new BoundSelectorMinimal(
+					selectionObjectClass, filter, maxSelectedItems, renderer,
+					hint);
+			return selectorMinimal;
+		} else {
+			return new BoundSelector(selectionObjectClass, filter,
+					maxSelectedItems, renderer, useCellList);
+		}
+	}
 }

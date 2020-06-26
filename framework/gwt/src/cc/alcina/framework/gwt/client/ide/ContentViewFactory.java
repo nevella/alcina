@@ -113,7 +113,6 @@ import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.layout.ExpandableListPanel;
 
-
 /**
  *
  * @author Nick Reddel
@@ -310,9 +309,8 @@ public class ContentViewFactory {
 		boolean cloned = false;
 		Collection supportingObjects = new ArrayList();
 		if (!doNotClone && !autoSave
-				&& (!(bean instanceof Entity)
-						|| Reflections.objectLookup()
-								.getObject((Entity) bean) != null)) {
+				&& (!(bean instanceof Entity) || Reflections.objectLookup()
+						.getObject((Entity) bean) != null)) {
 			bean = new CloneHelper().shallowishBeanClone(bean);
 			cloned = true;
 		}
@@ -399,8 +397,8 @@ public class ContentViewFactory {
 				}
 				if (bean instanceof Entity && !doNotPrepare) {
 					supportingObjects = ClientTransformManager.cast()
-							.prepareObject((Entity) bean, autoSave,
-									false, true);
+							.prepareObject((Entity) bean, autoSave, false,
+									true);
 				}
 				if (additional != null) {
 					supportingObjects.addAll(additional);
@@ -1178,9 +1176,11 @@ public class ContentViewFactory {
 																.createZeroClick(),
 														sender);
 											} else {
-												// FIXME - probably throw a dev
+												// FIXME - directedlayout.2 -
+												// probably throw a dev
 												// exception - something should
-												// happen here
+												// happen here (which means we
+												// need alcina devex support)
 											}
 										} else {
 											validateAndCommit(sender,

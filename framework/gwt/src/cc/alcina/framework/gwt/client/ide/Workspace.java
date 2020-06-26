@@ -215,7 +215,6 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		visualiser.getViewHolder().showStack(widgetIndex);
 	}
 
-	
 	public void vetoableAction(final PermissibleActionEvent evt) {
 		lastEvent = evt;
 		if (evt.getAction().getClass() == CancelAction.class) {

@@ -94,7 +94,6 @@ public class BasicGridPublisher {
 		}
 
 		@Override
-		
 		protected void renderContent(long publicationId, long publicationUserId)
 				throws Exception {
 			// choose an xsl template based on

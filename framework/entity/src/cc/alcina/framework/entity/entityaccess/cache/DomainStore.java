@@ -95,7 +95,6 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
@@ -384,15 +383,6 @@ public class DomainStore implements IDomainStore {
 		initialising = false;
 		initialised = true;
 		MetricLogging.get().end("domainStore.warmup");
-	}
-
-	// FIXME.mvcc - useentityclass
-	private void addToLazyPropertyEvictionQueue(Entity entity) {
-		LazyPropertyLoadTask task = (LazyPropertyLoadTask) domainDescriptor
-				.getPreProvideTasks(entity.entityClass()).stream()
-				.filter(ppt -> ppt instanceof LazyPropertyLoadTask).findFirst()
-				.get();
-		task.addToEvictionQueue(entity);
 	}
 
 	private <E extends Entity> void applyFilter(final Class clazz,
@@ -750,15 +740,6 @@ public class DomainStore implements IDomainStore {
 					} else {
 						logger.warn("Null domain store object for index - {}",
 								EntityLocator.objectLocator(dte));
-					}
-				}
-				if (dte.getPropertyName() != null) {
-					DomainStoreProperty ann = domainStoreProperties
-							.get(dte.getObjectClass(), dte.getPropertyName());
-					if (ann != null && ann
-							.loadType() == DomainStorePropertyLoadType.LAZY) {
-						addToLazyPropertyEvictionQueue(
-								transformManager.getObject(dte, true));
 					}
 				}
 			}

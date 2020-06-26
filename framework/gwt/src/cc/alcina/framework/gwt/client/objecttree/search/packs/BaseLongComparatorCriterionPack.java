@@ -10,14 +10,14 @@ import com.totsp.gwittir.client.validator.Validator;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.gwittir.validator.LongValidator;
-import cc.alcina.framework.common.client.search.DoubleCriterion;
 import cc.alcina.framework.common.client.search.LongCriterion;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 public class BaseLongComparatorCriterionPack {
-	public interface BaseLongComparatorCriterionHandler<T> extends Function<T, Long> {
+	public interface BaseLongComparatorCriterionHandler<T>
+			extends Function<T, Long> {
 		@Override
 		public Long apply(T t);
 
@@ -54,8 +54,8 @@ public class BaseLongComparatorCriterionPack {
 
 	public static abstract class BaseLongComparatorCriterionSearchable<T extends LongCriterion>
 			extends FlatSearchable<T> {
-		public BaseLongComparatorCriterionSearchable(Class<T> clazz, String objectName,
-				String fieldName) {
+		public BaseLongComparatorCriterionSearchable(Class<T> clazz,
+				String objectName, String fieldName) {
 			super(clazz, objectName, fieldName,
 					Arrays.asList(StandardSearchOperator.EQUALS,
 							StandardSearchOperator.DOES_NOT_EQUAL,

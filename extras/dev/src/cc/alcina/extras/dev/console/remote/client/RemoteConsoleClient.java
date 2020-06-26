@@ -22,17 +22,17 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
  */
 // @formatter:on
 public class RemoteConsoleClient implements EntryPoint {
-    @Override
-    public void onModuleLoad() {
-        // force init
-        LiSet liSet = new LiSet();
-        LocalDom.mutations.setDisabled(true);
-        Document.get().getDocumentElement();
-        Scheduler.get().scheduleDeferred(() -> init0());
-    }
+	@Override
+	public void onModuleLoad() {
+		// force init
+		LiSet liSet = new LiSet();
+		LocalDom.mutations.setDisabled(true);
+		Document.get().getDocumentElement();
+		Scheduler.get().scheduleDeferred(() -> init0());
+	}
 
-    private void init0() {
-        new RemoteConsoleInit().init();
-        RemoteConsoleLayout.get().init();
-    }
+	private void init0() {
+		new RemoteConsoleInit().init();
+		RemoteConsoleLayout.get().init();
+	}
 }

@@ -63,8 +63,8 @@ public interface DeliveryModel {
 	public List<MailInlineImage> provideImages();
 
 	public List<MailAttachment> provideAttachments();
-	
-	default void addAttachment(MailAttachment attachment){
+
+	default void addAttachment(MailAttachment attachment) {
 		provideAttachments().add(attachment);
 	}
 
@@ -104,7 +104,7 @@ public interface DeliveryModel {
 		throw new UnsupportedOperationException();
 	}
 
-	default void removeAttachment(MailAttachment attachment){
+	default void removeAttachment(MailAttachment attachment) {
 		provideAttachments().remove(attachment);
 	}
 }

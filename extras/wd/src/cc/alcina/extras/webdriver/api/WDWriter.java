@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.entity.ResourceUtilities;
 
-
 public class WDWriter {
 	private Writer storageWriter = new StringWriter();
 
@@ -47,7 +46,6 @@ public class WDWriter {
 	}
 
 	public void write(String s, int level) {
-		
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < level; i++) {
 			sb.append("-- ");
@@ -55,8 +53,9 @@ public class WDWriter {
 		sb.append(s);
 		s = sb.toString();
 		if (isStatsOnly()) {
-			if(ResourceUtilities.getBoolean(WDWriter.class, "logStatsToSysOut")){
-			System.out.println(s);
+			if (ResourceUtilities.getBoolean(WDWriter.class,
+					"logStatsToSysOut")) {
+				System.out.println(s);
 			}
 			return;
 		}

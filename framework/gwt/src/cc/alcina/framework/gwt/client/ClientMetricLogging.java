@@ -68,8 +68,7 @@ public class ClientMetricLogging {
 			return;
 		}
 		long elapsed = System.currentTimeMillis() - metricStartTimes.get(key);
-		String message = Ax.format("[Metric] %s - %s ms%s", key,
-				elapsed,
+		String message = Ax.format("[Metric] %s - %s ms%s", key, elapsed,
 				CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - " + extraInfo);
 		if (!isMuted()) {
 			Registry.impl(ClientNotifications.class).log(message);

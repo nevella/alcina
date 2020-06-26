@@ -263,8 +263,8 @@ public class AlcinaHistoryItem {
 
 	@Override
 	public String toString() {
-		return Ax.format("%s\nNot a history token: %s Type: %s",
-				params, notAHistoryToken, type);
+		return Ax.format("%s\nNot a history token: %s Type: %s", params,
+				notAHistoryToken, type);
 	}
 
 	public String toTokenString() {

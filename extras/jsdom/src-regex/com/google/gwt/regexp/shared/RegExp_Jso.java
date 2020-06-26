@@ -153,9 +153,10 @@ public class RegExp_Jso extends JavaScriptObject implements IRegExp {
 	 * @throws RuntimeException
 	 *             if {@code replacement} is invalid
 	 */
-	public final native String replace(String input, String replacement) /*-{
-																			return input.replace(this, replacement);
-																			}-*/;
+	public final native String replace(String input,
+			String replacement) /*-{
+								return input.replace(this, replacement);
+								}-*/;
 
 	/**
 	 * Sets the zero-based position at which to start the next match.

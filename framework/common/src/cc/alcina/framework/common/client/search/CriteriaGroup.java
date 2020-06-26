@@ -104,7 +104,6 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 	/*
 	 * only used for single-table search, compiled out for client
 	 */
-	
 	public EqlWithParameters eql() {
 		EqlWithParameters ewp = new EqlWithParameters();
 		if (criteria.size() == 0) {
@@ -209,7 +208,6 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 				criteria);
 	}
 
-	
 	public <S extends SearchCriterion> S soleCriterion() {
 		return criteria.isEmpty() ? null : (S) criteria.iterator().next();
 	}

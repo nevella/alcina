@@ -202,9 +202,10 @@ class DOMImplStandardBase extends DOMImplStandard {
 	}
 
 	@Override
-	protected native EventTarget eventGetCurrentTarget(NativeEvent event) /*-{
-																			return @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(event.currentTarget || $wnd);
-																			}-*/;
+	protected native EventTarget
+			eventGetCurrentTarget(NativeEvent event) /*-{
+														return @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(event.currentTarget || $wnd);
+														}-*/;
 
 	@Override
 	protected native int eventGetMouseWheelVelocityY(NativeEvent evt) /*-{

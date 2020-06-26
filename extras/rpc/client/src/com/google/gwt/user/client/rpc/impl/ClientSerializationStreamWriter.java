@@ -91,26 +91,26 @@ public final class ClientSerializationStreamWriter
 	 * @return RegExp object
 	 */
 	private static native JavaScriptObject getQuotingRegex() /*-{
-    // "|" = AbstractSerializationStream.RPC_SEPARATOR_CHAR
-    var ua = navigator.userAgent.toLowerCase();
-    if (ua.indexOf("android") != -1) {
-      // initial version of Android WebKit has a double-encoding bug for UTF8,
-      // so we have to encode every non-ASCII character.
-      // TODO(jat): revisit when this bug is fixed in Android
-      return /[\u0000\|\\\u0080-\uFFFF]/g;
-    } else if (ua.indexOf("chrome/11") != -1) {
-      // Chrome 11 mangles many more characters, so quote most of them
-      // TOOD(jat): remove this when/if fixed
-      return /[\u0000\|\\\u0300-\uFFFF]/g;
-    } else if (ua.indexOf("webkit") != -1) {
-      // other WebKit-based browsers need some additional quoting due to combining
-      // forms and normalization (one codepoint being replaced with another).
-      // Verified with Safari 4.0.1 (5530.18)
-      return /[\u0000\|\\\u0300-\u03ff\u0590-\u05FF\u0600-\u06ff\u0730-\u074A\u07eb-\u07f3\u0940-\u0963\u0980-\u09ff\u0a00-\u0a7f\u0b00-\u0b7f\u0e00-\u0e7f\u0f00-\u0fff\u1900-\u194f\u1a00-\u1a1f\u1b00-\u1b7f\u1cda-\u1cdc\u1dc0-\u1dff\u1f00-\u1fff\u2000-\u206f\u20d0-\u20ff\u2100-\u214f\u2300-\u23ff\u2a00-\u2aff\u3000-\u303f\uaab2-\uaab4\uD800-\uFFFF]/g;
-    } else {
-      return /[\u0000\|\\\uD800-\uFFFF]/g;
-    }
-	}-*/;
+																// "|" = AbstractSerializationStream.RPC_SEPARATOR_CHAR
+																var ua = navigator.userAgent.toLowerCase();
+																if (ua.indexOf("android") != -1) {
+																// initial version of Android WebKit has a double-encoding bug for UTF8,
+																// so we have to encode every non-ASCII character.
+																// TODO(jat): revisit when this bug is fixed in Android
+																return /[\u0000\|\\\u0080-\uFFFF]/g;
+																} else if (ua.indexOf("chrome/11") != -1) {
+																// Chrome 11 mangles many more characters, so quote most of them
+																// TOOD(jat): remove this when/if fixed
+																return /[\u0000\|\\\u0300-\uFFFF]/g;
+																} else if (ua.indexOf("webkit") != -1) {
+																// other WebKit-based browsers need some additional quoting due to combining
+																// forms and normalization (one codepoint being replaced with another).
+																// Verified with Safari 4.0.1 (5530.18)
+																return /[\u0000\|\\\u0300-\u03ff\u0590-\u05FF\u0600-\u06ff\u0730-\u074A\u07eb-\u07f3\u0940-\u0963\u0980-\u09ff\u0a00-\u0a7f\u0b00-\u0b7f\u0e00-\u0e7f\u0f00-\u0fff\u1900-\u194f\u1a00-\u1a1f\u1b00-\u1b7f\u1cda-\u1cdc\u1dc0-\u1dff\u1f00-\u1fff\u2000-\u206f\u20d0-\u20ff\u2100-\u214f\u2300-\u23ff\u2a00-\u2aff\u3000-\u303f\uaab2-\uaab4\uD800-\uFFFF]/g;
+																} else {
+																return /[\u0000\|\\\uD800-\uFFFF]/g;
+																}
+																}-*/;
 
 	/**
 	 * Quote characters in a user-supplied string to make sure they are safe to
@@ -121,31 +121,31 @@ public final class ClientSerializationStreamWriter
 	 * @return quoted string
 	 */
 	private static native String quoteStringScript(String str) /*-{
-    //var regex = @com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter::getQuotingRegex;
-    //nick - not that big an impact (rpc not that frequent), and doesn't play nice currently with jscodeserver
-    var regex = @com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter::getQuotingRegex()
-        ();
-    var idx = 0;
-    var out = "";
-    var result;
-    while ((result = regex.exec(str)) != null) {
-      out += str.substring(idx, result.index);
-      idx = result.index + 1;
-      var ch = result[0].charCodeAt(0);
-      if (ch == 0) {
-        out += "\\0";
-      } else if (ch == 92) { // backslash
-        out += "\\\\";
-      } else if (ch == 124) { // vertical bar
-        // 124 = "|" = AbstractSerializationStream.RPC_SEPARATOR_CHAR
-        out += "\\!";
-      } else {
-        var hex = ch.toString(16);
-        out += "\\u0000".substring(0, 6 - hex.length) + hex;
-      }
-    }
-    return out + str.substring(idx);
-	}-*/;
+																//var regex = @com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter::getQuotingRegex;
+																//nick - not that big an impact (rpc not that frequent), and doesn't play nice currently with jscodeserver
+																var regex = @com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter::getQuotingRegex()
+																();
+																var idx = 0;
+																var out = "";
+																var result;
+																while ((result = regex.exec(str)) != null) {
+																out += str.substring(idx, result.index);
+																idx = result.index + 1;
+																var ch = result[0].charCodeAt(0);
+																if (ch == 0) {
+																out += "\\0";
+																} else if (ch == 92) { // backslash
+																out += "\\\\";
+																} else if (ch == 124) { // vertical bar
+																// 124 = "|" = AbstractSerializationStream.RPC_SEPARATOR_CHAR
+																out += "\\!";
+																} else {
+																var hex = ch.toString(16);
+																out += "\\u0000".substring(0, 6 - hex.length) + hex;
+																}
+																}
+																return out + str.substring(idx);
+																}-*/;
 
 	private StringBuilder encodeBuffer;
 

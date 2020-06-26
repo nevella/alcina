@@ -13,12 +13,10 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 public class ClientNotificationsJvmImpl implements ClientNotifications {
 	@Override
 	public void confirm(String msg, OkCallback callback) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public String getLogString() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -29,12 +27,10 @@ public class ClientNotificationsJvmImpl implements ClientNotifications {
 
 	@Override
 	public void hideDialog() {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public boolean isDialogAnimationEnabled() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -45,12 +41,10 @@ public class ClientNotificationsJvmImpl implements ClientNotifications {
 
 	@Override
 	public void metricLogEnd(String key) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void metricLogStart(String key) {
-		// TODO Auto-generated method stub
 	}
 
 	public void notifyOfCompletedSaveFromOffline() {
@@ -58,20 +52,17 @@ public class ClientNotificationsJvmImpl implements ClientNotifications {
 
 	@Override
 	public void setDialogAnimationEnabled(boolean dialogAnimationEnabled) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void showDialog(String captionHTML, Widget captionWidget, String msg,
 			MessageType messageType, List<Button> extraButtons) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void showDialog(String captionHTML, Widget captionWidget, String msg,
 			MessageType messageType, List<Button> extraButtons,
 			String containerStyle) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -87,7 +78,6 @@ public class ClientNotificationsJvmImpl implements ClientNotifications {
 
 	@Override
 	public void showLog() {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -97,7 +87,6 @@ public class ClientNotificationsJvmImpl implements ClientNotifications {
 
 	@Override
 	public void showMessage(Widget msg) {
-		// TODO Auto-generated method stub
 	}
 
 	@Override

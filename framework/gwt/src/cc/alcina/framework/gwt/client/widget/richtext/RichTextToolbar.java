@@ -264,7 +264,6 @@ public class RichTextToolbar extends Composite {
 			richText.addKeyboardListener(listener);
 			richText.addClickListener(listener);
 		}
-		// TODO Auto-generated method stub
 	}
 
 	protected EventListener createEventListener() {

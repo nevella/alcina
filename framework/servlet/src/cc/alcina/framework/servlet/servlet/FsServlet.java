@@ -80,7 +80,6 @@ public abstract class FsServlet extends HttpServlet {
 			out.close();
 			resourceFile.close();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

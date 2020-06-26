@@ -9,7 +9,6 @@ import cc.alcina.framework.common.client.util.Ax;
 
 @ClientInstantiable
 public class ShortDateRenderer implements Renderer<Date, String> {
-
 	public String render(Date date) {
 		return Ax.dateSlash(date);
 	}

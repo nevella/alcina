@@ -81,7 +81,6 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 		runSort(true, 0, table);
 	}
 
-	
 	protected void runSort(final boolean callBackInit, int pageNumber,
 			final HasChunks table) {
 		if (runningCallback != null) {

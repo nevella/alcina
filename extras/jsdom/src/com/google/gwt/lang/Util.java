@@ -24,26 +24,26 @@ import javaemul.internal.annotations.DoNotInline;
  * typeMarker fields.
  */
 final class Util {
-    @DoNotInline
-    public static String makeEnumName(String enumName) {
-        return enumName;
-    }
+	@DoNotInline
+	public static String makeEnumName(String enumName) {
+		return enumName;
+	}
 
-    static native JavaScriptObject getCastableTypeMap(Object o) /*-{
-    return o.@java.lang.Object::castableTypeMap;
-    }-*/;
+	static native JavaScriptObject getCastableTypeMap(Object o) /*-{
+																return o.@java.lang.Object::castableTypeMap;
+																}-*/;
 
-    static native boolean hasTypeMarker(Object o) /*-{
-      o.@java.lang.Object::typeMarker =
-          @com.google.gwt.lang.Runtime::typeMarkerFn(*);
-  }-*/;
+	static native boolean hasTypeMarker(Object o) /*-{
+													o.@java.lang.Object::typeMarker =
+													@com.google.gwt.lang.Runtime::typeMarkerFn(*);
+													}-*/;
 
-    static native void setCastableTypeMap(Object o,
-            JavaScriptObject castableTypeMap) /*-{
-    o.@java.lang.Object::castableTypeMap = castableTypeMap;
-    }-*/;
+	static native void setCastableTypeMap(Object o,
+			JavaScriptObject castableTypeMap) /*-{
+												o.@java.lang.Object::castableTypeMap = castableTypeMap;
+												}-*/;
 
-    static native void setTypeMarker(Object o) /*-{
-    o.@java.lang.Object::castableTypeMap = castableTypeMap;
-  }-*/;
+	static native void setTypeMarker(Object o) /*-{
+												o.@java.lang.Object::castableTypeMap = castableTypeMap;
+												}-*/;
 }

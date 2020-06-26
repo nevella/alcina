@@ -190,7 +190,8 @@ public class BeanResolver {
 								? methodName.substring(4, methodName.length())
 								: "");
 				RProperty p = (properties.containsKey(name)
-						? (RProperty) properties.get(name) : new RProperty());
+						? (RProperty) properties.get(name)
+						: new RProperty());
 				p.setName(name);
 				p.setWriteMethod(w);
 				if ((p.getType() == null)

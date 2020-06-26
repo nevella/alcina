@@ -49,7 +49,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		}
 	}
 
-	// FIXME.mvcc.2 - try to avoid this for jobs - declarative jobs and/or
+	// FIXME - mvcc.jobs - try to avoid this for jobs - declarative jobs and/or
 	// alcinachildrunnables
 	public static void runInTransaction(String threadName,
 			ThrowingRunnable runnable) {

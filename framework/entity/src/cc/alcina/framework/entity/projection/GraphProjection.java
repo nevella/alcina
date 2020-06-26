@@ -701,8 +701,7 @@ public class GraphProjection {
 		} else if (source instanceof DomainProxy) {
 			projected = (T) ((DomainProxy) source).nonProxy();
 		} else if (source instanceof MvccObject) {
-			projected = newInstance(((Entity) source).entityClass(),
-					context);
+			projected = newInstance(((Entity) source).entityClass(), context);
 		} else {
 			projected = newInstance(sourceClass, context);
 		}

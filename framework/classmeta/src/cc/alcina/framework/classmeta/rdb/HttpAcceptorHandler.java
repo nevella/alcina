@@ -15,31 +15,31 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.JacksonUtils;
 
 public class HttpAcceptorHandler extends AbstractHandler {
-    public static void main(String[] args) {
-        String requestJson = ResourceUtilities.readClazzp("tmp.json");
-        HttpTransportModel transportRequest = JacksonUtils
-                .deserialize(requestJson, HttpTransportModel.class);
-    }
+	public static void main(String[] args) {
+		String requestJson = ResourceUtilities.readClazzp("tmp.json");
+		HttpTransportModel transportRequest = JacksonUtils
+				.deserialize(requestJson, HttpTransportModel.class);
+	}
 
-    @Override
-    public void handle(String target, Request baseRequest,
-            HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
-        Ax.out("acceptor handler - thread: " + Thread.currentThread());
-        HttpConnectionPair pair = new HttpConnectionPair();
-        pair.request = request;
-        pair.response = response;
-        String requestJson = ResourceUtilities
-                .readStreamToString(request.getInputStream());
-        HttpTransportModel transportRequest = JacksonUtils
-                .deserialize(requestJson, HttpTransportModel.class);
-        Endpoint endpoint = RdbProxies.get()
-                .endpointByName(transportRequest.endpointName);
-        HttpAcceptorTransport transport = (HttpAcceptorTransport) endpoint.transport;
-        if (transportRequest.close) {
-            Ax.err("***close");
-        }
-        transport.receiveTransportModel(transportRequest, pair);
-        baseRequest.setHandled(true);
-    }
+	@Override
+	public void handle(String target, Request baseRequest,
+			HttpServletRequest request, HttpServletResponse response)
+			throws IOException, ServletException {
+		Ax.out("acceptor handler - thread: " + Thread.currentThread());
+		HttpConnectionPair pair = new HttpConnectionPair();
+		pair.request = request;
+		pair.response = response;
+		String requestJson = ResourceUtilities
+				.readStreamToString(request.getInputStream());
+		HttpTransportModel transportRequest = JacksonUtils
+				.deserialize(requestJson, HttpTransportModel.class);
+		Endpoint endpoint = RdbProxies.get()
+				.endpointByName(transportRequest.endpointName);
+		HttpAcceptorTransport transport = (HttpAcceptorTransport) endpoint.transport;
+		if (transportRequest.close) {
+			Ax.err("***close");
+		}
+		transport.receiveTransportModel(transportRequest, pair);
+		baseRequest.setHandled(true);
+	}
 }

@@ -20,8 +20,8 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
  * @author Nick Reddel
  */
 public interface ObjectLookup {
-	public <T extends Entity> T getObject(Class<? extends T> c,
-			long id, long localId);
+	public <T extends Entity> T getObject(Class<? extends T> c, long id,
+			long localId);
 
 	public <T extends Entity> T getObject(T bean);
 }
