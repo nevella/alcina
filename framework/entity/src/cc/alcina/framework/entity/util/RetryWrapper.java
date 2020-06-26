@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.util;
 import java.util.concurrent.Callable;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 
 public class RetryWrapper<T> {
 
@@ -25,13 +26,17 @@ public class RetryWrapper<T> {
     public T call() throws Exception {
         int currentCount = 0;
         Exception lastException = null;
-        while (currentCount < maxCount) {
+        while (true) {
             try {
                 return callable.call();
             } catch (Exception e) {
                 lastException = e;
             }
             currentCount++;
+            if (currentCount >= maxCount) {
+            	break;
+            }
+            Ax.out("Retrying %s, sleeping...", currentCount);
             Thread.sleep((long) Math.pow(2, currentCount) * ONE_SECOND);
         }
         throw new WrappedRuntimeException("Exceeded retry count", lastException);
