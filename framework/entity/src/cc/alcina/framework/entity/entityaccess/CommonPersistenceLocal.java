@@ -111,8 +111,6 @@ public interface CommonPersistenceLocal {
 
 	public Date getMostRecentClientInstanceCreationDate(IUser o);
 
-	public <A> A getNewImplementationInstance(Class<A> clazz);
-
 	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws Exception;
 
@@ -205,12 +203,12 @@ public interface CommonPersistenceLocal {
 	 */
 	public TransformCache warmupTransformCache();
 
+	void changeJdbcConnectionUrl(String newUrl);
+
 	Integer getHighestPersistedRequestIdForClientInstance(
 			long clientInstanceId);
 
 	long getMaxPublicationIdForUser(IUser user);
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
-
-	void changeJdbcConnectionUrl(String newUrl);
 }
