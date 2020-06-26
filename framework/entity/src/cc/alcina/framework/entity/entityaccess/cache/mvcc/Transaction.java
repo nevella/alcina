@@ -188,6 +188,8 @@ public class Transaction {
 
 	long startTime;
 
+	private boolean multithreadedWritePermitted;
+
 	public Transaction(TransactionPhase initialPhase) {
 		DomainStore.stores().stream().forEach(store -> storeTransactions
 				.put(store, new StoreTransaction(store)));
@@ -239,6 +241,10 @@ public class Transaction {
 		return this.ended;
 	}
 
+	public boolean isMultithreadedWritePermitted() {
+		return this.multithreadedWritePermitted;
+	}
+
 	public boolean isPreCommit() {
 		return phase == TransactionPhase.TO_DB_PREPARING;
 	}
@@ -249,6 +255,11 @@ public class Transaction {
 	 */
 	public void setBaseTransaction(boolean baseTransaction) {
 		this.baseTransaction = baseTransaction;
+	}
+
+	public void setMultithreadedWritePermitted(
+			boolean multithreadedWritePermitted) {
+		this.multithreadedWritePermitted = multithreadedWritePermitted;
 	}
 
 	public void toDbAborted() {
@@ -377,7 +388,7 @@ public class Transaction {
 	}
 
 	boolean isReadonly() {
-		return threadCount.get() != 1;
+		return threadCount.get() != 1 && !isMultithreadedWritePermitted();
 	}
 
 	Transaction mostRecentPriorTransaction(Enumeration<Transaction> keys,

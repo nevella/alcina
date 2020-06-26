@@ -202,7 +202,7 @@ public class DomainStore implements IDomainStore {
 
 	DomainStoreHealth health = new DomainStoreHealth();
 
-	DetachedEntityCache cache;
+	DomainStoreEntityCache cache;
 
 	private DomainStorePersistenceListener persistenceListener;
 
@@ -362,7 +362,8 @@ public class DomainStore implements IDomainStore {
 		initialising = true;
 		transformManager = new SubgraphTransformManagerPostProcess();
 		lazyObjectLoader = loader.getLazyObjectLoader();
-		cache = transformManager.getDetachedEntityCache();
+		cache = (DomainStoreEntityCache) transformManager
+				.getDetachedEntityCache();
 		transformManager.getStore().setLazyObjectLoader(lazyObjectLoader);
 		domainDescriptor.initialise();
 		domainDescriptor.registerStore(this);
@@ -374,6 +375,8 @@ public class DomainStore implements IDomainStore {
 		MetricLogging.get().end("mvcc");
 		Transaction.beginDomainPreparing();
 		Transaction.current().setBaseTransaction(true);
+		domainDescriptor.perClass.keySet()
+				.forEach(clazz -> cache.initialiseMap(clazz));
 		domainDescriptor.perClass.values().stream()
 				.forEach(DomainClassDescriptor::initialise);
 		loader.warmup();

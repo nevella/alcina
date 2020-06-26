@@ -831,6 +831,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					transform.setSource(source);
 				}
 			}
+			Transaction.current().setMultithreadedWritePermitted(true);
 			List<Callable> tasks = new ArrayList<>();
 			for (Class clazz : (Set<Class>) (Set) classIdTransformee.keySet()) {
 				if (IVersionable.class.isAssignableFrom(clazz)

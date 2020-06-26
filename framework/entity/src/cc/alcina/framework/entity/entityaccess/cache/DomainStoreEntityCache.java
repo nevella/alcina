@@ -8,8 +8,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.TransactionalMap;
 
-class DomainStoreEntityCache extends DetachedEntityCache
-		implements DomainStoreCache {
+class DomainStoreEntityCache extends DetachedEntityCache {
 	@Override
 	public void invalidate(Class clazz) {
 		throw new UnsupportedOperationException();
@@ -37,7 +36,17 @@ class DomainStoreEntityCache extends DetachedEntityCache
 	}
 
 	@Override
+	protected void ensureMap(Class clazz) {
+		// noop - prevent possibly concurrent writes by forcing map creation at
+		// domainstore init time
+	}
+
+	@Override
 	protected <T> T getLocal(Class<T> clazz, long localId) {
 		return super.getLocal(clazz, localId);
+	}
+
+	void initialiseMap(Class clazz) {
+		super.ensureMap(clazz);
 	}
 }
