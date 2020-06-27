@@ -291,7 +291,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				}
 			});
 		}
-		invokeAllWithThrow(calls);
+		/*
+		 * running synchronously (do they collide? they do...)
+		 */
+		for (Callable callable : calls) {
+			callable.call();
+		}
+		// invokeAllWithThrow(calls);
 		MetricLogging.get().end("postLoad");
 		MetricLogging.get().start("lookups");
 		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
