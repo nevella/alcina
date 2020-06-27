@@ -80,9 +80,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		this.keyClass = keyClass;
 		this.valueClass = valueClass;
 		init();
-		// if (Math.random() * 1000 < 1) {
-		// int debug = 3;
-		// }
 	}
 
 	@Override
@@ -133,7 +130,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	@Override
 	/*
-	 * Override, since we use these as keys for Vacuum (and the cost would be
+	 * Override, since we use these as keys for vacuum (and the cost would be
 	 * outrageous for large maps)
 	 */
 	public int hashCode() {

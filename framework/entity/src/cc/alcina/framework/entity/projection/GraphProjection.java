@@ -22,13 +22,13 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -43,6 +43,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.safehtml.shared.SafeHtml;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -77,6 +78,8 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessT
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 
 /**
  *
@@ -132,9 +135,6 @@ public class GraphProjection {
 
 	public static final String TOPIC_PROJECTION_COUNT_DELTA = GraphProjection.class
 			.getName() + ".TOPIC_PROJECTION_COUNT_DELTA";
-
-	public static Supplier<Map> reachedSupplier = () -> new IdentityHashMap(
-			10 * LOOKUP_SIZE);
 
 	protected static final Object NULL_MARKER = new Object();
 
@@ -459,7 +459,7 @@ public class GraphProjection {
 
 	private String contextDebugPath;
 
-	protected Map reached = reachedSupplier.get();
+	protected Map reached = new ProjectionIdentityMap();
 
 	Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>(
 			LOOKUP_SIZE);
@@ -484,6 +484,11 @@ public class GraphProjection {
 
 	private int maxDepth = Integer.MAX_VALUE;
 
+	/*
+	 * This denotes 'check reachability of maps and collection subclasses which
+	 * do not return true for 'reachableBySinglePath()' - i.e. doesn't cause a
+	 * check of Set/Multimap/Multikeymap - so is low-cost
+	 */
 	private boolean collectionReachedCheck = true;
 
 	private LinkedHashMap<Entity, Entity> replaceMap = null;
@@ -749,13 +754,18 @@ public class GraphProjection {
 		if (source instanceof DomainProxy) {
 			((DomainProxy) source).beforeProjection();
 		}
-		List<Field> fields = getPrimitiveOrDataFieldsForClass(
+		List<Field> primitiveOrDataFieldsForClass = getPrimitiveOrDataFieldsForClass(
 				projected.getClass());
+		/*
+		 * Force previous statement to evaluate before getting "checkFields"
+		 * value
+		 */
+		Preconditions.checkArgument(primitiveOrDataFieldsForClass.size() >= 0);
 		Set<Field> checkFields = perObjectPermissionFields
 				.get(projected.getClass().getName());
 		// primitive/data before non - to ensure recursively reached collections
 		// are ok
-		for (Field field : fields) {
+		for (Field field : primitiveOrDataFieldsForClass) {
 			if (checkFields.contains(field)) {
 				if (!permitField(field, source)) {
 					continue;
@@ -779,8 +789,8 @@ public class GraphProjection {
 				field.set(projected, value);
 			}
 		}
-		fields = getNonPrimitiveOrDataFieldsForClass(projected.getClass());
-		for (Field field : fields) {
+		for (Field field : getNonPrimitiveOrDataFieldsForClass(
+				projected.getClass())) {
 			if (checkFields.contains(field)) {
 				if (!permitField(field, source)) {
 					continue;
@@ -888,10 +898,6 @@ public class GraphProjection {
 		this.maxDepth = maxDepth;
 	}
 
-	public void setReached(IdentityHashMap reached) {
-		this.reached = reached;
-	}
-
 	public void setReplaceMap(LinkedHashMap<Entity, Entity> replaceMap) {
 		this.replaceMap = replaceMap;
 	}
@@ -933,7 +939,9 @@ public class GraphProjection {
 	}
 
 	private Object getFieldValue(Field field, Object source) throws Exception {
-		if (source instanceof MvccObject) {
+		// Trying hard to avoid the first case (it's very much not optimal)
+		if (source instanceof MvccObject
+				&& ((MvccObject) source).__getMvccVersions__() != null) {
 			return SEUtilities.getPropertyValue(source, field.getName());
 		} else {
 			return field.get(source);
@@ -1177,5 +1185,88 @@ public class GraphProjection {
 
 		Object instantiateShellObject(T initializer,
 				GraphProjectionContext context);
+	}
+
+	/*
+	 * Trying to avoid System.identityHashCode - which doesn't always seem so
+	 * fast. Also, the interplay with object monitor metadata in the object
+	 * header (JVM-dependent) might be slowing us down.
+	 */
+	private static class ProjectionIdentityMap extends AbstractMap {
+		ClassIdKey queryKey = new ClassIdKey();
+
+		private Map<ClassIdKey, Object> entities = new Object2ObjectOpenHashMap<>(
+				4 * LOOKUP_SIZE);
+
+		private Map nonEntities = new Reference2ReferenceOpenHashMap<Object, Object>(
+				100);
+
+		@Override
+		public Set entrySet() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Object get(Object key) {
+			if (key instanceof Entity) {
+				Entity entity = (Entity) key;
+				if (entity.getId() == 0) {
+					return nonEntities.get(key);
+				} else {
+					queryKey.id = entity.getId();
+					queryKey.clazzName = entity.entityClass().getName();
+					return entities.get(queryKey);
+				}
+			} else {
+				return nonEntities.get(key);
+			}
+		}
+
+		@Override
+		public Object put(Object key, Object value) {
+			if (key instanceof Entity) {
+				Entity entityKey = (Entity) key;
+				if (entityKey.getId() == 0) {
+					nonEntities.put(key, value);
+				} else {
+					entities.put(new ClassIdKey(entityKey.getId(),
+							entityKey.entityClass()), value);
+				}
+				return null;
+			} else {
+				nonEntities.put(key, value);
+				return null;
+			}
+		}
+
+		static class ClassIdKey {
+			long id;
+
+			String clazzName;
+
+			ClassIdKey() {
+			}
+
+			ClassIdKey(long id, Class<? extends Entity> clazz) {
+				this.id = id;
+				this.clazzName = clazz.getName();
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof ClassIdKey) {
+					ClassIdKey o = (ClassIdKey) obj;
+					// reference equality for strings ok
+					return o.id == id && o.clazzName == clazzName;
+				} else {
+					return false;
+				}
+			}
+
+			@Override
+			public int hashCode() {
+				return ((int) id) ^ clazzName.hashCode();
+			}
+		}
 	}
 }

@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 
 /*
- * Unused - slightly more efficient than the fastutil equivs, but really not much...
+ * This has a much lower memory requirement than Long2Object
  */
 public class ArrayBackedLongMap<V> implements Map<Long, V> {
 	private transient Object[] elementData;
@@ -259,7 +259,7 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 				throw new RuntimeException(
 						"accessing array backed with negative index");
 			}
-			if (l < 10000000 && l > 0) {
+			if (l < 25000000 && l > 0) {
 				int idx = (int) l;
 				ensureCapacity(idx + 1);
 				return idx;

@@ -148,6 +148,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
 
+	public static final String THRD_LOCAL_USER_NAME = "THRD_LOCAL_USER_NAME";
+
 	public static final String THRD_LOCAL_RPC_PAYLOAD = "THRD_LOCAL_RPC_PAYLOAD";
 
 	public static final String CONTEXT_RPC_USER_ID = CommonRemoteServiceServlet.class
@@ -566,6 +568,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logRpcException(rex);
 			throw rex;
 		} finally {
+			/*
+			 * save the username for metric logging - the user will be cleared
+			 * before the metrics are output
+			 */
+			getThreadLocalRequest().setAttribute(THRD_LOCAL_USER_NAME,
+					PermissionsManager.get().getUserName());
 			Thread.currentThread().setName(threadName);
 			InternalMetrics.get().endTracker(rpcRequest);
 			alcinaServletContext.end();
