@@ -29,13 +29,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
  */
 public abstract class DomainTransformRequestPersistent
 		extends DomainTransformRequest implements HasId {
-	private long id;
-
 	private Long originatingUserId;
 
 	private Date startPersistTime;
 
 	private Date transactionCommitTime;
+
+	private long id;
 
 	public void clearForSimplePersistence() {
 		setClientInstance(null);

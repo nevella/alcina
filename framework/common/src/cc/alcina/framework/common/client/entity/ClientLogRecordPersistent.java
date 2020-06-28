@@ -8,11 +8,13 @@ public abstract class ClientLogRecordPersistent extends ClientLogRecord
 		implements HasId {
 	private long id;
 
+	@Override
 	@Transient
 	public long getId() {
 		return id;
 	}
 
+	@Override
 	public void setId(long id) {
 		this.id = id;
 	}

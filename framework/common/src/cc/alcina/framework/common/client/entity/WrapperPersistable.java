@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.util.Ax;
  */
 public class WrapperPersistable extends Entity<WrapperPersistable>
 		implements Permissible, HasOwner {
-	private long id;
+	
 
 	private transient IUser owner;
 

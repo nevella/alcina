@@ -70,7 +70,7 @@ public class MethodContext {
 	}
 
 	public MethodContext withContextTrue(String key) {
-		context.put(key, Boolean.TRUE.toString());
+		context.put(key, Boolean.TRUE);
 		return this;
 	}
 

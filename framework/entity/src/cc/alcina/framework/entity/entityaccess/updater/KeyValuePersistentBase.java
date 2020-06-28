@@ -92,8 +92,6 @@ public abstract class KeyValuePersistentBase<T extends KeyValuePersistentBase>
 		}
 	}
 
-	protected long id;
-
 	private String key;
 
 	private String value;

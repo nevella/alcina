@@ -166,13 +166,6 @@ public class Domain {
 		return handler.stream(clazz);
 	}
 
-	/**
-	 * if DomainStore, project - if detached (no tm listeners), find and project
-	 */
-	public static <V extends Entity> V writeable(V v) {
-		return handler.writeable(v);
-	}
-
 	public interface DomainHandler {
 		public <V extends Entity> void async(Class<V> clazz, long objectId,
 				boolean create, Consumer<V> resultConsumer);
@@ -182,8 +175,6 @@ public class Domain {
 		public <V extends Entity> V find(V v);
 
 		public <V extends Entity> Stream<V> stream(Class<V> clazz);
-
-		public <V extends Entity> V writeable(V v);
 
 		default <V extends Entity> V byProperty(Class<V> clazz,
 				String propertyName, Object value) {
@@ -253,11 +244,6 @@ public class Domain {
 
 		@Override
 		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public <V extends Entity> V writeable(V v) {
 			throw new UnsupportedOperationException();
 		}
 	}

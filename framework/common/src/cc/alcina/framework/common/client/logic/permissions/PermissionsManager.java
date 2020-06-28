@@ -17,7 +17,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -607,17 +606,6 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		setUser(poppedUser);
 		setRoot(rootStack.pop());
 		return currentUser;
-	}
-
-	public void prepareVersionable(IVersionable u) {
-		Date now = new Date();
-		if (u.getLastModificationDate() == null
-				&& u.getCreationDate() == null) {
-			u.setCreationUser(getUser());
-			u.setCreationDate(now);
-		}
-		u.setLastModificationUser(getUser());
-		u.setLastModificationDate(now);
 	}
 
 	public void pushCurrentUser() {

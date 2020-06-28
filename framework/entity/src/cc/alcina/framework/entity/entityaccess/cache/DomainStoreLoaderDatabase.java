@@ -10,9 +10,11 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -61,6 +63,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.Association;
@@ -90,6 +93,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.EntityUtils;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 
 /*FIXME - mvcc.4
  * The various loadtable methods are way to overloaded 
@@ -879,10 +883,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				continue;
 			}
 			Method rm = pd.getReadMethod();
+			boolean ignore = classDescriptor.isIgnoreColumn(pd.getName());
 			if ((rm.getAnnotation(Transient.class) != null
 					&& rm.getAnnotation(DomainStoreDbColumn.class) == null)
 					|| rm.getAnnotation(DomainStoreProperty.class) != null) {
-				boolean ignore = true;
+				ignore = true;
 				DomainStoreProperty propertyAnnotation = rm
 						.getAnnotation(DomainStoreProperty.class);
 				if (propertyAnnotation != null) {
@@ -892,9 +897,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					ignore = propertyAnnotation
 							.loadType() == DomainStorePropertyLoadType.TRANSIENT;
 				}
-				if (ignore) {
-					continue;
-				}
+			}
+			if (ignore) {
+				continue;
 			}
 			if (classDescriptor.ignoreField(pd.getName())) {
 				continue;
@@ -1130,182 +1135,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		public void injectValue(Object[] row, Entity source);
 	}
 
-	public class LaterLookup {
-		List<LaterItem> list = new ArrayList<>();
-
-		private CustomResolver customResolver;
-
-		private DomainSegmentLoader segmentLoader;
-
-		void add(HasId target, PdOperator pd, HasId source) {
-			list.add(new LaterItem(target, pd, source));
-		}
-
-		void add(Long id, PdOperator pd, HasId hasId) {
-			list.add(new LaterItem(id, pd, hasId));
-		}
-
-		void doResolve() {
-			try {
-				new ResolveRefsTask(list).call();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		void resolve() {
-			doResolve();
-		}
-
-		void resolve(CustomResolver customResolver) {
-			this.customResolver = customResolver;
-			doResolve();
-		}
-
-		void resolve(DomainSegmentLoader segmentLoader) {
-			this.segmentLoader = segmentLoader;
-			doResolve();
-		}
-
-		private final class ResolveRefsTask implements Callable<Void> {
-			private List<LaterItem> items;
-
-			int missingWarningCount = 0;
-
-			private ResolveRefsTask(List<LaterItem> items) {
-				this.items = items;
-			}
-
-			@Override
-			/*
-			 * multithread Problem here is that set() methods need to be synced
-			 * per class (really, pd) ..so run linear
-			 */
-			public Void call() throws Exception {
-				boolean keepDetached = LooseContext.is(
-						DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
-				if (LooseContext.is(
-						DomainStore.CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS)) {
-					this.items.clear();
-					return null;
-				}
-				for (LaterItem item : this.items) {
-					try {
-						PdOperator pdOperator = item.pdOperator;
-						pdOperator.resolveHelper.ensure(item.source.getClass());
-						Method rm = pdOperator.readMethod;
-						long id = item.id;
-						if (pdOperator.resolveHelper.isCustom(customResolver)) {
-							pdOperator.writeMethod.invoke(item.source,
-									pdOperator.resolveHelper.resolveCustom(
-											customResolver, item));
-						} else if (pdOperator.resolveHelper.inJoinTables) {
-							if (keepDetached) {
-								throw new RuntimeException(
-										"Cannot keep join tables detached");
-							}
-							Set set = (Set) pdOperator.readMethod
-									.invoke(item.source, new Object[0]);
-							if (set == null) {
-								set = new LinkedHashSet();
-								pdOperator.writeMethod.invoke(item.source,
-										new Object[] { set });
-							}
-							set.add(item.target);
-						} else if (customResolver != null) {
-							// ignore, customResolver exists and not custom
-							// resolvable
-						} else {
-							Class type = propertyDescriptorFetchTypes
-									.get(pdOperator.pd);
-							Object target = store.cache.get(type, id);
-							if (target == null) {
-								if (segmentLoader == null) {
-									if (missingWarningCount++ < 5) {
-										store.logger.warn(
-												"later-lookup -- missing target: {}, {} for  {}.{} #{}",
-												type, id,
-												item.source.getClass(),
-												pdOperator.name,
-												item.source.getId());
-									}
-								} else {
-									segmentLoader.notifyLater(item, type, id);
-								}
-							}
-							pdOperator.writeMethod.invoke(item.source, target);
-							if (keepDetached) {
-								continue;
-							}
-							PropertyDescriptor targetPd = pdOperator.resolveHelper.targetPd;
-							if (targetPd != null && target != null) {
-								Set set = (Set) targetPd.getReadMethod()
-										.invoke(target, new Object[0]);
-								if (set == null) {
-									set = new LinkedHashSet();
-									targetPd.getWriteMethod().invoke(target,
-											new Object[] { set });
-								}
-								set.add(item.source);
-							}
-							targetPd = pdOperator.resolveHelper.oneToOnePd;
-							if (targetPd != null && target != null) {
-								targetPd.getWriteMethod().invoke(target,
-										new Object[] { item.source });
-							}
-							targetPd = pdOperator.resolveHelper.domainStorePdRev;
-							if (targetPd != null && target != null) {
-								targetPd.getWriteMethod().invoke(target,
-										new Object[] { item.source });
-							}
-						}
-					} catch (Exception e) {
-						if (!store.initialising) {
-							Ax.sysLogHigh(
-									"Issue with later lookup - gotta check");
-							/*
-							 * This can also be caused by very lazy loads with
-							 * multiple backing stores*
-							 */
-						}
-						// possibly a delta during warmup::
-						System.out.println(item);
-						e.printStackTrace();
-					}
-				}
-				if (store.initialising) {
-					// System.out.format("resolverefs - %s - %s\n",
-					// clazz.getSimpleName(), items.size());
-				}
-				// leave the class keys at the top
-				this.items.clear();
-				return null;
-			}
-		}
-
-		class LaterItem {
-			long id;
-
-			PdOperator pdOperator;
-
-			HasId source;
-
-			HasId target;
-
-			public LaterItem(HasId target, PdOperator pd, HasId source) {
-				this.target = target;
-				this.pdOperator = pd;
-				this.source = source;
-			}
-
-			public LaterItem(long id, PdOperator pd, HasId source) {
-				this.id = id;
-				this.pdOperator = pd;
-				this.source = source;
-			}
-		}
-	}
-
 	public class PdOperator {
 		ResolveHelper resolveHelper = new ResolveHelper();
 
@@ -1363,34 +1192,53 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 
 		class ResolveHelper {
-			public PropertyDescriptor domainStorePdRev;
+			PropertyDescriptor domainStorePdRev;
 
-			public PropertyDescriptor oneToOnePd;
+			PropertyDescriptor oneToOnePd;
 
-			public PropertyDescriptor targetPd;
+			PropertyDescriptor targetPd;
 
-			public boolean inJoinTables;
+			PdOperator targetOperator;
+
+			boolean inJoinTables;
 
 			boolean ensured = false;
 
-			public void ensure(Class<? extends HasId> sourceClass) {
+			PdOperator oneToOneOperator;
+
+			PdOperator domainStoreRevOperator;
+
+			void ensure(Class<? extends HasId> sourceClass) {
 				sourceClass = Mvcc.resolveEntityClass(sourceClass);
 				if (!ensured) {
 					inJoinTables = joinTables.containsKey(PdOperator.this.pd);
 					targetPd = manyToOneRev.get(sourceClass, name);
+					if (targetPd != null) {
+						targetOperator = ensurePdOperator(targetPd,
+								targetPd.getReadMethod().getDeclaringClass());
+					}
 					oneToOnePd = oneToOneRev.get(sourceClass, name);
+					if (oneToOnePd != null) {
+						oneToOneOperator = ensurePdOperator(oneToOnePd,
+								oneToOnePd.getReadMethod().getDeclaringClass());
+					}
 					domainStorePdRev = domainStoreColumnRev.get(sourceClass,
 							name);
+					if (domainStorePdRev != null) {
+						domainStoreRevOperator = ensurePdOperator(
+								domainStorePdRev, domainStorePdRev
+										.getReadMethod().getDeclaringClass());
+					}
 					ensured = true;
 				}
 			}
 
-			public boolean isCustom(CustomResolver customResolver) {
+			boolean isCustom(CustomResolver customResolver) {
 				return customResolver != null
 						&& customResolver.handles(PdOperator.this);
 			}
 
-			public Object resolveCustom(CustomResolver customResolver,
+			Object resolveCustom(CustomResolver customResolver,
 					LaterItem item) {
 				return customResolver.resolveCustom(PdOperator.this, item);
 			}
@@ -1427,32 +1275,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						false, true, false);
 				Map<Long, ? extends Entity> idMap = EntityHelper
 						.toIdMap(sources);
-				Class<? extends IUser> userImplCass = AlcinaPersistentEntityImpl
-						.getImplementation(IUser.class);
-				laterLookup.resolve(new CustomResolver() {
-					@Override
-					public boolean handles(PdOperator pdOperator) {
-						switch (pdOperator.name) {
-						case "lastModficationUser":
-						case "creationUser":
-							return true;
-						default:
-							return false;
-						}
-					}
-
-					@Override
-					public Object resolveCustom(PdOperator pdOperator,
-							LaterItem item) {
-						switch (pdOperator.name) {
-						case "lastModficationUser":
-						case "creationUser":
-							return store.cache.get(userImplCass, item.id);
-						default:
-							throw new UnsupportedOperationException();
-						}
-					}
-				});
+				laterLookup.resolve();
 				for (Entity persistentSource : persistentSources) {
 					Entity transformee = idMap.get(persistentSource.getId());
 					if (transformee instanceof HasVersionNumber) {
@@ -1473,18 +1296,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						if (iUserClass == null) {
 							return null;
 						}
-						Long persistentCreationUserId = EntityHelper
-								.getIdOrNull(persistent.getCreationUser());
-						IUser creationUser = store.cache.get(iUserClass,
-								persistentCreationUserId);
-						iVersionable.setCreationUser(creationUser);
-						Long persistentLastModificationUserId = EntityHelper
-								.getIdOrNull(
-										persistent.getLastModificationUser());
-						IUser lastModificationUser = store.cache.get(iUserClass,
-								persistentLastModificationUserId);
-						iVersionable
-								.setLastModificationUser(lastModificationUser);
 					}
 				}
 				return null;
@@ -1937,5 +1748,287 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		boolean handles(PdOperator pdOperator);
 
 		Object resolveCustom(PdOperator pdOperator, LaterItem item);
+	}
+
+	class LaterLookup {
+		List<LaterItem> list = new LaterLookupList();
+
+		private CustomResolver customResolver;
+
+		private DomainSegmentLoader segmentLoader;
+
+		void add(HasId target, PdOperator pd, HasId source) {
+			list.add(new LaterItem(target, pd, source));
+		}
+
+		void add(Long id, PdOperator pd, HasId hasId) {
+			list.add(new LaterItem(id, pd, hasId));
+		}
+
+		void doResolve() {
+			try {
+				new ResolveRefsTask(list).call();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		void resolve() {
+			doResolve();
+		}
+
+		void resolve(CustomResolver customResolver) {
+			this.customResolver = customResolver;
+			doResolve();
+		}
+
+		void resolve(DomainSegmentLoader segmentLoader) {
+			this.segmentLoader = segmentLoader;
+			doResolve();
+		}
+
+		private final class ResolveRefsTask implements Callable<Void> {
+			private List<LaterItem> items;
+
+			int missingWarningCount = 0;
+
+			private ResolveRefsTask(List<LaterItem> items) {
+				this.items = items;
+			}
+
+			@Override
+			/*
+			 * multithread Problem here is that set() methods need to be synced
+			 * per class (really, pd) ..so run linear
+			 */
+			public Void call() throws Exception {
+				boolean keepDetached = LooseContext.is(
+						DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
+				if (LooseContext.is(
+						DomainStore.CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS)) {
+					this.items.clear();
+					return null;
+				}
+				for (LaterItem item : this.items) {
+					try {
+						PdOperator pdOperator = item.pdOperator;
+						pdOperator.resolveHelper.ensure(item.source.getClass());
+						long id = item.id;
+						if (pdOperator.resolveHelper.isCustom(customResolver)) {
+							pdOperator.field.set(item.source,
+									pdOperator.resolveHelper.resolveCustom(
+											customResolver, item));
+						} else if (pdOperator.resolveHelper.inJoinTables) {
+							if (keepDetached) {
+								throw new RuntimeException(
+										"Cannot keep join tables detached");
+							}
+							Set set = (Set) pdOperator.field.get(item.source);
+							if (set == null) {
+								set = new LiSet();
+								pdOperator.field.set(item.source, set);
+							}
+							set.add(item.target);
+						} else if (customResolver != null) {
+							// ignore, customResolver exists and not custom
+							// resolvable
+						} else {
+							Class type = propertyDescriptorFetchTypes
+									.get(pdOperator.pd);
+							Object target = store.cache.get(type, id);
+							if (target == null) {
+								if (segmentLoader == null) {
+									if (missingWarningCount++ < 5) {
+										store.logger.warn(
+												"later-lookup -- missing target: {}, {} for  {}.{} #{}",
+												type, id,
+												item.source.getClass(),
+												pdOperator.name,
+												item.source.getId());
+									}
+								} else {
+									segmentLoader.notifyLater(item, type, id);
+								}
+							}
+							pdOperator.field.set(item.source, target);
+							if (keepDetached) {
+								continue;
+							}
+							PdOperator targetOperator = pdOperator.resolveHelper.targetOperator;
+							if (targetOperator != null && target != null) {
+								Set set = (Set) targetOperator.field
+										.get(target);
+								if (set == null) {
+									set = new LiSet();
+									targetOperator.field.set(target, set);
+								}
+								set.add(item.source);
+							}
+							targetOperator = pdOperator.resolveHelper.oneToOneOperator;
+							if (targetOperator != null && target != null) {
+								targetOperator.field.set(target, item.source);
+							}
+							targetOperator = pdOperator.resolveHelper.domainStoreRevOperator;
+							if (targetOperator != null && target != null) {
+								targetOperator.field.set(target, item.source);
+							}
+						}
+					} catch (Exception e) {
+						if (!store.initialising) {
+							Ax.sysLogHigh(
+									"Issue with later lookup - gotta check");
+							/*
+							 * This can also be caused by very lazy loads with
+							 * multiple backing stores*
+							 */
+						}
+						// possibly a delta during warmup::
+						System.out.println(item);
+						e.printStackTrace();
+					}
+				}
+				if (store.initialising) {
+					// System.out.format("resolverefs - %s - %s\n",
+					// clazz.getSimpleName(), items.size());
+				}
+				// leave the class keys at the top
+				this.items.clear();
+				return null;
+			}
+		}
+
+		class LaterItem {
+			long id;
+
+			PdOperator pdOperator;
+
+			HasId source;
+
+			HasId target;
+
+			LaterItem() {
+			}
+
+			LaterItem(HasId target, PdOperator pd, HasId source) {
+				this.target = target;
+				this.pdOperator = pd;
+				this.source = source;
+			}
+
+			LaterItem(long id, PdOperator pd, HasId source) {
+				this.id = id;
+				this.pdOperator = pd;
+				this.source = source;
+			}
+		}
+
+		class LaterLookupList extends AbstractList<LaterItem> {
+			LaterItem view = new LaterItem();
+
+			LongArrayList ids = new LongArrayList();
+
+			List<PdOperator> pdOperators = new ArrayList<>();
+
+			List<HasId> sources = new ArrayList<>();
+
+			List<HasId> targets = new ArrayList<>();
+
+			@Override
+			public void add(int index, LaterItem element) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public boolean add(LaterItem e) {
+				add(e.id, e.pdOperator, e.source, e.target);
+				return true;
+			}
+
+			@Override
+			public void clear() {
+				ids.clear();
+				pdOperators.clear();
+				sources.clear();
+				targets.clear();
+			}
+
+			@Override
+			public LaterItem get(int index) {
+				view.id = ids.getLong(index);
+				view.pdOperator = pdOperators.get(index);
+				view.source = sources.get(index);
+				view.target = targets.get(index);
+				return view;
+			}
+
+			@Override
+			public Iterator<LaterItem> iterator() {
+				return new Itr();
+			}
+
+			@Override
+			public int size() {
+				return ids.size();
+			}
+
+			private void add(long id, PdOperator pdOperator, HasId source,
+					HasId target) {
+				ids.add(id);
+				pdOperators.add(pdOperator);
+				sources.add(source);
+				targets.add(target);
+			}
+
+			void add(HasId target, PdOperator pd, HasId source) {
+				add(0L, pd, source, target);
+			}
+
+			void add(long id, PdOperator pd, HasId source) {
+				add(id, pd, source, null);
+			}
+
+			private class Itr implements Iterator<LaterItem> {
+				/**
+				 * Index of element to be returned by subsequent call to next.
+				 */
+				int cursor = 0;
+
+				/**
+				 * The modCount value that the iterator believes that the
+				 * backing List should have. If this expectation is violated,
+				 * the iterator has detected concurrent modification.
+				 */
+				int expectedModCount = modCount;
+
+				@Override
+				public boolean hasNext() {
+					return cursor != size();
+				}
+
+				@Override
+				public LaterItem next() {
+					checkForComodification();
+					try {
+						int index = cursor;
+						get(index);
+						cursor = index + 1;
+						return view;
+					} catch (IndexOutOfBoundsException e) {
+						checkForComodification();
+						throw new NoSuchElementException();
+					}
+				}
+
+				@Override
+				public void remove() {
+					throw new UnsupportedOperationException();
+				}
+
+				final void checkForComodification() {
+					if (modCount != expectedModCount)
+						throw new ConcurrentModificationException();
+				}
+			}
+		}
 	}
 }

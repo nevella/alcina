@@ -31,8 +31,6 @@ public class DomainModelDeltaSignature implements Serializable {
 
 	private String classSimpleName = "";
 
-	private long id;
-
 	private long userId;
 
 	private String sid = "0";
@@ -44,6 +42,8 @@ public class DomainModelDeltaSignature implements Serializable {
 	private long contentLength;
 
 	private transient boolean requiresHash;
+
+	private long id;
 
 	public DomainModelDeltaSignature() {
 		userId = PermissionsManager.get().getUserId();
@@ -108,6 +108,7 @@ public class DomainModelDeltaSignature implements Serializable {
 		return this.userId;
 	}
 
+	@Override
 	public int hashCode() {
 		return toString().hashCode();
 	}

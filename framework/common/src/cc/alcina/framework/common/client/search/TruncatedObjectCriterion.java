@@ -13,13 +13,13 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 		extends SearchCriterion implements HasId {
 	static final transient long serialVersionUID = 1;
 
-	private long id;
-
 	private String displayText;
 
 	private transient E value;
 
 	protected E forClientTrimmed;
+
+	private long id;
 
 	public TruncatedObjectCriterion() {
 		setOperator(StandardSearchOperator.EQUALS);

@@ -45,7 +45,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  */
 public abstract class ClientInstance extends Entity<ClientInstance>
 		implements HasIUser, Serializable, Cloneable {
-	private long id;
+	
 
 	private Date helloDate;
 

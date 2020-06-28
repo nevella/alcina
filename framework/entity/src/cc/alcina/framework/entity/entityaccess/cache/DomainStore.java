@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.event.shared.UmbrellaException;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -99,7 +98,6 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.entity.projection.GraphProjections;
 
 /**
  * <h3>Locking notes:</h3>
@@ -125,17 +123,11 @@ public class DomainStore implements IDomainStore {
 	public static final String CONTEXT_DEBUG_QUERY_METRICS = DomainStore.class
 			.getName() + ".CONTEXT_DEBUG_QUERY_METRICS";
 
-	public static final String CONTEXT_WILL_PROJECT_AFTER_READ_LOCK = DomainStore.class
-			.getName() + ".CONTEXT_WILL_PROJECT_AFTER_READ_LOCK";
-
 	public static final String CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH = DomainStore.class
 			.getName() + ".CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH";
 
 	public static final String CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS = DomainStore.class
 			.getName() + ".CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS";
-
-	public static final String CONTEXT_WRITEABLE_PROJECTOR = DomainStore.class
-			.getName() + ".CONTEXT_WRITEABLE_PROJECTOR";
 
 	public static final String CONTEXT_POPULATE_LAZY_PROPERTY_VALUES = DomainStore.class
 			.getName() + ".CONTEXT_POPULATE_LAZY_PROPERTY_VALUES";
@@ -312,11 +304,6 @@ public class DomainStore implements IDomainStore {
 		return cache.contains(clazz, id);
 	}
 
-	public boolean isCachedTransactional(Class clazz) {
-		return isCached(clazz)
-				&& domainDescriptor.perClass.get(clazz).isTransactional();
-	}
-
 	public boolean isDebug() {
 		return this.debug;
 	}
@@ -485,10 +472,6 @@ public class DomainStore implements IDomainStore {
 			}
 		}
 		return null;
-	}
-
-	private boolean isWillProjectLater() {
-		return LooseContext.is(CONTEXT_WILL_PROJECT_AFTER_READ_LOCK);
 	}
 
 	private void prepareClassDescriptor(DomainClassDescriptor classDescriptor) {
@@ -830,18 +813,13 @@ public class DomainStore implements IDomainStore {
 			metricLogger.debug("Query metrics:\n========\n{}\n{}", query,
 					debugMetricBuilder.toString());
 		}
-		// FIXME - mvcc.2 - remove isRaw() etc (always raw)
-		if (query.isRaw() || isWillProjectLater()) {
-			Stream stream = token.ensureStream();
-			List<PreProvideTask<T>> preProvideTasks = domainDescriptor
-					.getPreProvideTasks(clazz);
-			for (PreProvideTask<T> preProvideTask : preProvideTasks) {
-				stream = preProvideTask.wrap(stream);
-			}
-			return stream;
-		} else {
-			throw new UnsupportedOperationException();
+		Stream stream = token.ensureStream();
+		List<PreProvideTask<T>> preProvideTasks = domainDescriptor
+				.getPreProvideTasks(clazz);
+		for (PreProvideTask<T> preProvideTask : preProvideTasks) {
+			stream = preProvideTask.wrap(stream);
 		}
+		return stream;
 	}
 
 	public static class Builder {
@@ -1105,12 +1083,6 @@ public class DomainStore implements IDomainStore {
 				return storeHandler(clazz).stream(clazz);
 			}
 
-			@Override
-			public <V extends Entity> V writeable(V v) {
-				return v == null ? null
-						: storeHandler(v.entityClass()).writeable(v);
-			}
-
 			DomainHandler storeHandler(Class clazz) {
 				DomainStore domainStore = classMap.get(clazz);
 				if (domainStore == null) {
@@ -1261,7 +1233,7 @@ public class DomainStore implements IDomainStore {
 		@Override
 		public <V extends Entity> V byProperty(Class<V> clazz,
 				String propertyName, Object value) {
-			return Domain.query(clazz).raw().filter(propertyName, value).find();
+			return Domain.query(clazz).filter(propertyName, value).find();
 		}
 
 		@Override
@@ -1301,7 +1273,7 @@ public class DomainStore implements IDomainStore {
 		@Override
 		public <V extends Entity> List<V> listByProperty(Class<V> clazz,
 				String propertyName, Object value) {
-			return Domain.query(clazz).raw().filter(propertyName, value).list();
+			return Domain.query(clazz).filter(propertyName, value).list();
 		}
 
 		@Override
@@ -1324,40 +1296,8 @@ public class DomainStore implements IDomainStore {
 			return Domain.query(clazz).stream();
 		}
 
-		@Override
-		public <V extends Entity> V writeable(V v) {
-			V out = v;
-			if (out == null) {
-				return null;
-			}
-			if (ThreadlocalTransformManager.is() && ThreadlocalTransformManager
-					.get().isListeningTo((SourcesPropertyChangeEvents) out)) {
-				return out;
-			}
-			if (out.domain().wasPersisted()) {
-				out = project(out);
-			} else {
-				out = Domain.detachedToDomain(out);
-			}
-			if (ThreadlocalTransformManager.is()) {
-				ThreadlocalTransformManager.get()
-						.listenTo((SourcesPropertyChangeEvents) out);
-			}
-			return out;
-		}
-
-		private <V extends Entity> V project(V v) {
-			if (LooseContext.has(CONTEXT_WRITEABLE_PROJECTOR)) {
-				Function<V, V> projector = LooseContext
-						.get(CONTEXT_WRITEABLE_PROJECTOR);
-				return projector.apply(v);
-			} else {
-				return GraphProjections.defaultProjections().project(v);
-			}
-		}
-
 		<T extends Entity> List<T> list(Class<T> clazz) {
-			return Domain.query(clazz).raw().list();
+			return Domain.query(clazz).list();
 		}
 	}
 

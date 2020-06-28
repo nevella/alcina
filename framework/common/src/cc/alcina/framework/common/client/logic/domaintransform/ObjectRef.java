@@ -25,13 +25,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class ObjectRef implements Serializable {
-	private long id;
-
 	private long localId;
 
 	private ClassRef classRef;
 
 	private int versionNumber;
+
+	private long id;
 
 	public ObjectRef() {
 	}

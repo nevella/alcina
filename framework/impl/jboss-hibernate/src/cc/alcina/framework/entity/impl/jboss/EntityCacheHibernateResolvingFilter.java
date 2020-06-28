@@ -92,7 +92,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				if (impl == null) {
 					if (useRawDomainStore) {
 						if (DomainStore.stores().writableStore()
-								.isCachedTransactional(persistentClass)) {
+								.isCached(persistentClass)) {
 							impl = (T) Domain.find(persistentClass, (Long) id);
 						}
 					}

@@ -15,8 +15,6 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 @DomainTransformPersistable
 public abstract class InternalMetric<U extends InternalMetric>
 		extends Entity<U> {
-	protected long id;
-
 	private String threadName;
 
 	private String callName;

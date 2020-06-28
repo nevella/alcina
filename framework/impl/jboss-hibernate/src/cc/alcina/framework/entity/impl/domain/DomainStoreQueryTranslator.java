@@ -56,7 +56,7 @@ public class DomainStoreQueryTranslator {
 
 	private DomainStoreCriteria root;
 
-	private List rawRows;
+	private List rows;
 
 	private GroupedRows groupedRows;
 
@@ -70,9 +70,8 @@ public class DomainStoreQueryTranslator {
 		this.root = criteria;
 		query = DomainStore.stores().query(root.clazz);
 		addRestrictions(criteria);
-		query.raw();
 		checkHandlesClass(root.clazz);
-		rawRows = query.list();
+		rows = query.list();
 		handleProjections();
 		ResultTransformer resultTransformer = criteria.getResultTransformer();
 		List results = groupedRows.asTuples();
@@ -188,8 +187,8 @@ public class DomainStoreQueryTranslator {
 
 	protected void handleProjections() throws Exception {
 		setupProjectionHelpers();
-		if (rawRows.size() > 0 || !aggregateQuery) {
-			for (Object obj : rawRows) {
+		if (rows.size() > 0 || !aggregateQuery) {
+			for (Object obj : rows) {
 				int i = 0;
 				for (ProjectionHelper projectionHelper : projectionHelpers) {
 					groupedRows.handleProjection(obj, projectionHelper, i++);

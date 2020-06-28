@@ -1045,9 +1045,23 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public void modifyCollectionProperty(Object objectWithCollection,
 			String collectionPropertyName, Object delta,
 			CollectionModificationType modificationType) {
-		Collection deltaC = CommonUtils.wrapInCollection(delta);
 		Collection old = (Collection) propertyAccessor()
 				.getPropertyValue(objectWithCollection, collectionPropertyName);
+		if (!(delta instanceof Collection)) {
+			switch (modificationType) {
+			case ADD:
+				if (old.contains(delta)) {
+					return;
+				}
+				break;
+			case REMOVE:
+				if (!old.contains(delta)) {
+					return;
+				}
+				break;
+			}
+		}
+		Collection deltaC = CommonUtils.wrapInCollection(delta);
 		Collection c = CommonUtils.shallowCollectionClone(old);
 		if (c == null) {
 			// handles the case when we're working within a transaction and try

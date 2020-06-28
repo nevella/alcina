@@ -39,11 +39,11 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
  */
 public abstract class DomainTransformEventPersistent
 		extends DomainTransformEvent implements HasId {
-	private long id;
-
 	private DomainTransformRequestPersistent domainTransformRequestPersistent;
 
 	private Date serverCommitDate;
+
+	private long id;
 
 	public void beforeTransformCommit(EntityManager entityManager) {
 	}

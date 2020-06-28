@@ -134,6 +134,17 @@ public class DomainClassDescriptor<T extends Entity>
 		}
 	}
 
+	public boolean isIgnoreColumn(String name) {
+		return false;
+	}
+
+	public boolean isLazyColumn(String name) {
+		// FIXME - mvcc.1 - should instead decorate the annotation
+		// DomainStoreProperty
+		// (classDescriptor.getPropertyDescriptorAnnotation(clazz,pd))
+		return false;
+	}
+
 	public boolean isTransactional() {
 		return true;
 	}

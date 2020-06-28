@@ -21,8 +21,6 @@ public abstract class DomainQuery<E extends Entity> {
 
 	private List<DomainFilter> filters = new ArrayList<DomainFilter>();
 
-	protected boolean raw = true;
-
 	private boolean nonTransactional;
 
 	protected Class<E> entityClass;
@@ -35,10 +33,6 @@ public abstract class DomainQuery<E extends Entity> {
 
 	public Set<E> asSet() {
 		return stream().collect(Collectors.toSet());
-	}
-
-	public int count() {
-		return raw().list().size();
 	}
 
 	public DomainQuery<E> filter(DomainFilter filter) {
@@ -81,10 +75,6 @@ public abstract class DomainQuery<E extends Entity> {
 		return optional().orElse(null);
 	}
 
-	public E first() {
-		return CommonUtils.first(list());
-	}
-
 	public Class<E> getEntityClass() {
 		return this.entityClass;
 	}
@@ -101,10 +91,6 @@ public abstract class DomainQuery<E extends Entity> {
 		return this.nonTransactional;
 	}
 
-	public boolean isRaw() {
-		return this.raw;
-	}
-
 	public abstract List<E> list();
 
 	public DomainQuery<E> nonTransactional() {
@@ -114,11 +100,6 @@ public abstract class DomainQuery<E extends Entity> {
 
 	public Optional<E> optional() {
 		return stream().findFirst();
-	}
-
-	public DomainQuery<E> raw() {
-		this.raw = true;
-		return this;
 	}
 
 	public void sourceStream(Optional<Stream<E>> sourceStream) {

@@ -35,7 +35,7 @@ public abstract class RollingData<K extends Comparable, V> {
 				.getImplementation(RollingDataItem.class);
 		Function<String, K> keyDeserializer = keyDeserializer();
 		List<? extends RollingDataItem> list = Domain.query(rdImplClass)
-				.filter("typeKey", typeKey).raw().list();
+				.filter("typeKey", typeKey).list();
 		List<K> existingKeys = list.stream().map(RollingDataItem::getMaxKey)
 				.map(k -> keyDeserializer.apply(k))
 				.collect(Collectors.toList());

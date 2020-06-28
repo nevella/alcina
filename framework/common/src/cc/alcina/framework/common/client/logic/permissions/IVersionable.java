@@ -24,17 +24,9 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 public interface IVersionable extends HasId {
 	public Date getCreationDate();
 
-	public IUser getCreationUser();
-
 	public Date getLastModificationDate();
-
-	public IUser getLastModificationUser();
 
 	public void setCreationDate(Date creationDate);
 
-	public void setCreationUser(IUser creationUser);
-
 	public void setLastModificationDate(Date lastModificationDate);
-
-	public void setLastModificationUser(IUser lastModificationUser);
 }

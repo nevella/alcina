@@ -13,11 +13,12 @@
  */
 package cc.alcina.framework.common.client.entity;
 
+import java.util.Date;
+
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 
 /**
  * Only used in entity-layer code
@@ -26,6 +27,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
  */
 public class VersioningEntityListener {
 	public static ThreadLocal<Boolean> disabled = new ThreadLocal() {
+		@Override
 		protected synchronized Boolean initialValue() {
 			return false;
 		}
@@ -36,7 +38,12 @@ public class VersioningEntityListener {
 	public void setVersioningInfo(Object obj) {
 		if (obj instanceof IVersionable && !disabled.get()) {
 			IVersionable iv = (IVersionable) obj;
-			PermissionsManager.get().prepareVersionable(iv);
+			Date now = new Date();
+			if (iv.getLastModificationDate() == null
+					&& iv.getCreationDate() == null) {
+				iv.setCreationDate(now);
+			}
+			iv.setLastModificationDate(now);
 		}
 	}
 }

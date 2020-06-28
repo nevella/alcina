@@ -68,8 +68,6 @@ public abstract class LocalDbPropertyBase extends Entity {
 		return getOrSetLocalDbProperty(key, value, false);
 	}
 
-	protected long id;
-
 	private String propertyKey;
 
 	protected String propertyValue;

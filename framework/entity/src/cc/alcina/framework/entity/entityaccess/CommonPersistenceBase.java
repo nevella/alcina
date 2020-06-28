@@ -706,7 +706,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		GraphProjectionDataFilter filter = Registry
 				.impl(JPAImplementation.class)
 				.getResolvingFilter(Registry.impl(JPAImplementation.class)
-						.getClassrefInstantiator(), cache, false);
+						.getClassrefInstantiator(), cache, true);
 		GraphProjectionFieldFilter allowSourceFilter = new GraphProjectionFieldFilter() {
 			@Override
 			public Boolean permitClass(Class clazz) {

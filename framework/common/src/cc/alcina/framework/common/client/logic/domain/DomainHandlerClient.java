@@ -60,12 +60,6 @@ public class DomainHandlerClient implements DomainHandler {
 		return values(clazz).stream();
 	}
 
-	@Override
-	public <V extends Entity> V writeable(V v) {
-		TransformManager.get().registerDomainObject(v);
-		return v;
-	}
-
 	private <V extends Entity> Collection<V> values(Class<V> clazz) {
 		return TransformManager.get().getCollection(clazz);
 	}

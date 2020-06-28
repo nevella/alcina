@@ -37,9 +37,9 @@ public class ContentNode implements Serializable {
 
 	private List<String> labels = new ArrayList<String>();
 
-	private long id;
-
 	private Date lastModified;
+
+	private long id;
 
 	public ContentNode() {
 	}

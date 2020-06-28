@@ -6,7 +6,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessType;
 
 public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
-	private long id;
+	
 
 	@SuppressWarnings("unused")
 	private long invalidDuplicateFieldName;

@@ -42,6 +42,8 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 	public static final String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class
 			+ ".CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID";
 
+	protected volatile long id = 0;
+
 	protected transient int hash = 0;
 
 	protected transient String comparisonString;
