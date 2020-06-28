@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
@@ -1442,6 +1443,8 @@ public class CommonUtils {
 				clone = (T) ((LiSet) collection).clone();
 			} else if (collection instanceof HashSet) {
 				clone = (T) ((HashSet) collection).clone();
+			} else if (collection instanceof LightSet) {
+				clone = (T) ((LightSet) collection).clone();
 			} else {
 				if (GWT.isClient()) {
 					throw new UnsupportedOperationException();
