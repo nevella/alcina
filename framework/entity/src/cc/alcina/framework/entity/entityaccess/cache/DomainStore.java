@@ -55,6 +55,7 @@ import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
 import cc.alcina.framework.common.client.domain.FilterCost;
 import cc.alcina.framework.common.client.domain.IDomainStore;
+import cc.alcina.framework.common.client.domain.IndexedValueProvider;
 import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
@@ -394,16 +395,17 @@ public class DomainStore implements IDomainStore {
 		if (isDebug()) {
 			token.lastFilterString = filter.toString();
 		}
-		DomainLookup lookup = getLookupFor(clazz, filter.getPropertyPath());
-		if (lookup != null) {
+		IndexedValueProvider<E> valueProvider = getValueProviderFor(clazz,
+				filter.getPropertyPath());
+		if (valueProvider != null) {
 			switch (filter.getFilterOperator()) {
 			case EQ:
 			case IN:
 				// FIXME - mvcc.4 - if we have estimates of size, we might be
 				// able to optimise here
-				Set<E> lookupValues = lookup
+				Set<E> indexedValues = valueProvider
 						.getKeyMayBeCollection(filter.getPropertyValue());
-				token.appendEvaluatedValueFilter(lookupValues);
+				token.appendEvaluatedValueFilter(indexedValues);
 				return;
 			// all others non-optimised
 			default:
@@ -472,6 +474,33 @@ public class DomainStore implements IDomainStore {
 			}
 		}
 		return null;
+	}
+
+	private IndexedValueProvider getValueProviderFor(Class clazz,
+			String propertyName) {
+		if ("id".equals(propertyName)) {
+			return new IndexedValueProvider() {
+				@Override
+				public FilterCost estimateFilterCost(int entityCount,
+						DomainFilter... filters) {
+					return FilterCost.lookupProjectionCost();
+				}
+
+				@Override
+				public Set getKeyMayBeCollection(Object value) {
+					if (value instanceof Collection) {
+						return ((Collection<Long>) value).stream()
+								.map(id -> cache.get(clazz, id))
+								.collect(Collectors.toSet());
+					} else {
+						long id = (long) value;
+						return Collections.singleton(cache.get(clazz, id));
+					}
+				}
+			};
+		} else {
+			return getLookupFor(clazz, propertyName);
+		}
 	}
 
 	private void prepareClassDescriptor(DomainClassDescriptor classDescriptor) {
@@ -1181,14 +1210,14 @@ public class DomainStore implements IDomainStore {
 					}
 					idx += filtersConsumed;
 				} else {
-					DomainLookup lookup = getLookupFor(clazz,
-							filter.getPropertyPath());
-					if (lookup != null) {
+					IndexedValueProvider valueProvider = getValueProviderFor(
+							clazz, filter.getPropertyPath());
+					if (valueProvider != null) {
 						switch (filter.getFilterOperator()) {
 						case EQ:
 						case IN:
-							filterCost = lookup.estimateFilterCost(entityCount,
-									filter);
+							filterCost = valueProvider
+									.estimateFilterCost(entityCount, filter);
 							break;
 						// all others non-optimised
 						default:

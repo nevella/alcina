@@ -25,6 +25,9 @@ public class MethodContext {
 
 	public <T> T call(Callable<T> callable) {
 		try {
+			if (wrappingTransaction) {
+				Transaction.ensureBegun();
+			}
 			if (!context.isEmpty()) {
 				LooseContext.push();
 				context.entrySet().forEach(e -> LooseContext.getContext()
@@ -38,17 +41,11 @@ public class MethodContext {
 				ThreadedPermissionsManager.cast()
 						.pushSystemOrCurrentUserAsRoot();
 			}
-			if (wrappingTransaction) {
-				Transaction.ensureBegun();
-			}
 			return callable.call();
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		} finally {
-			if (wrappingTransaction) {
-				Transaction.endAndBeginNew();
-			}
 			if (rootPermissions
 					&& !ThreadedPermissionsManager.cast().isRoot()) {
 				ThreadedPermissionsManager.cast().popUser();
@@ -58,6 +55,9 @@ public class MethodContext {
 			}
 			if (!context.isEmpty()) {
 				LooseContext.pop();
+			}
+			if (wrappingTransaction) {
+				Transaction.endAndBeginNew();
 			}
 		}
 	}

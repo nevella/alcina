@@ -10,7 +10,6 @@ import java.util.stream.Stream;
 import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.domain.FilterCost.HasFilterCost;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -21,7 +20,7 @@ import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 
 public class DomainLookup<T, E extends Entity>
-		implements DomainListener<E>, HasFilterCost {
+		implements DomainListener<E>, IndexedValueProvider<E> {
 	private Multiset<T, Set<E>> store;
 
 	protected DomainStoreLookupDescriptor descriptor;
@@ -63,6 +62,7 @@ public class DomainLookup<T, E extends Entity>
 		return store.get(k1);
 	}
 
+	@Override
 	public Set<E> getKeyMayBeCollection(Object value) {
 		if (value instanceof Collection) {
 			Set<E> result = new LiSet<>();

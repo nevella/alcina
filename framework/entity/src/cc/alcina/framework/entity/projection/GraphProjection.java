@@ -48,6 +48,7 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.GArrayList;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -1074,7 +1075,7 @@ public class GraphProjection {
 		public void adopt(Class clazz, Field field,
 				GraphProjectionContext parent, Object projectedOwner,
 				Object sourceOwner) {
-			this.clazz = clazz;
+			this.clazz = Domain.resolveEntityClass(clazz);
 			this.field = field;
 			this.sourceOwner = sourceOwner;
 			this.fieldName = field == null ? "" : field.getName();
