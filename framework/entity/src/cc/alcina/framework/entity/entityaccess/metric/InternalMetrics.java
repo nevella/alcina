@@ -124,6 +124,13 @@ public class InternalMetrics {
 						try {
 							slice();
 						} catch (Throwable e) {
+							try {
+								ResourceUtilities.is("enabled");
+							} catch (Exception e1) {
+								// webapp finished
+								timer.cancel();
+								return;
+							}
 							e.printStackTrace();
 						}
 					});
@@ -147,6 +154,13 @@ public class InternalMetrics {
 						try {
 							persist();
 						} catch (Throwable e) {
+							try {
+								ResourceUtilities.is("enabled");
+							} catch (Exception e1) {
+								// webapp finished
+								timer.cancel();
+								return;
+							}
 							e.printStackTrace();
 						}
 					});
