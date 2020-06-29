@@ -74,7 +74,8 @@ public class UserStories {
 		long clientInstanceId = userStory.getClientInstanceId();
 		if (clientInstanceId != 0) {
 			clientInstance = CommonPersistenceProvider.get()
-					.getCommonPersistence().getClientInstance(clientInstanceId);
+					.getCommonPersistenceCache()
+					.getClientInstance(clientInstanceId);
 		} else {
 			try {
 				clientInstance = AlcinaPersistentEntityImpl

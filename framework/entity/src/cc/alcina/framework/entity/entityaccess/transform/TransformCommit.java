@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.WebException;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -219,10 +220,10 @@ public class TransformCommit {
 						if (wrapperUser != null && wrapperUser
 								.getId() == deltaRecord.getUserId()) {
 						} else {
-							wrapperUser = Registry
-									.impl(CommonPersistenceProvider.class)
-									.getCommonPersistence().getCleanedUserById(
-											deltaRecord.getUserId());
+							wrapperUser = Domain.find(
+									AlcinaPersistentEntityImpl
+											.getImplementation(IUser.class),
+									deltaRecord.getUserId());
 							if (reuseIUserHolder != null) {
 								reuseIUserHolder.iUser = wrapperUser;
 							}

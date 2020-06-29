@@ -54,7 +54,7 @@ public abstract class SessionHelper {
 		Long clientInstanceId = getAuthenticatedSessionClientInstanceId(
 				request);
 		if (clientInstanceId != null) {
-			return CommonPersistenceProvider.get().getCommonPersistence()
+			return CommonPersistenceProvider.get().getCommonPersistenceCache()
 					.getClientInstance(clientInstanceId);
 		} else {
 			return null;

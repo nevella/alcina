@@ -28,7 +28,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
-import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -87,8 +86,6 @@ public class TransformPersisterInPersistenceContext {
 			EntityManager entityManager, DomainTransformLayerWrapper wrapper) {
 		Date startPersistTime = new Date();
 		this.entityManager = entityManager;
-		IUser incomingUser = PermissionsManager.get().getUser();
-		commonPersistenceBase.connectPermissionsManagerToLiveObjects(true);
 		EntityLocatorMap locatorMap = token.getLocatorMap();
 		EntityLocatorMap locatorMapClone = (EntityLocatorMap) locatorMap.copy();
 		final DomainTransformRequest request = token.getRequest();
@@ -475,8 +472,6 @@ public class TransformPersisterInPersistenceContext {
 			putExceptionInWrapper(token, e, wrapper);
 			// necessary -- rollback
 			throw new DeliberatelyThrownWrapperException();
-		} finally {
-			PermissionsManager.get().setUser(incomingUser);
 		}
 	}
 

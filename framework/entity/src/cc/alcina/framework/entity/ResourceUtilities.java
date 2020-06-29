@@ -55,6 +55,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
@@ -223,6 +224,13 @@ public class ResourceUtilities {
 
 	public static <T> T fieldwiseCopy(T t, T toInstance, boolean withTransients,
 			boolean withShallowCopiedCollections) {
+		return fieldwiseCopy(t, toInstance, withTransients,
+				withShallowCopiedCollections, null);
+	}
+
+	public static <T> T fieldwiseCopy(T t, T toInstance, boolean withTransients,
+			boolean withShallowCopiedCollections,
+			Set<String> ignoreFieldNames) {
 		try {
 			List<Field> allFields = new ArrayList<Field>();
 			Class c = t.getClass();
@@ -237,6 +245,10 @@ public class ResourceUtilities {
 					}
 					if (Modifier.isTransient(field.getModifiers())
 							&& !withTransients) {
+						continue;
+					}
+					if (ignoreFieldNames != null
+							&& ignoreFieldNames.contains(field.getName())) {
 						continue;
 					}
 					field.setAccessible(true);

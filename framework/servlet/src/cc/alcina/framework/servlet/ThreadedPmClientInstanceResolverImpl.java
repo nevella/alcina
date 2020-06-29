@@ -28,7 +28,8 @@ public class ThreadedPmClientInstanceResolverImpl
 			Long clientInstanceId = SessionHelper
 					.getAuthenticatedSessionClientInstanceId(request);
 			if (clientInstanceId != null) {
-				result = CommonPersistenceProvider.get().getCommonPersistence()
+				result = CommonPersistenceProvider.get()
+						.getCommonPersistenceCache()
 						.getClientInstance(clientInstanceId);
 			}
 		}

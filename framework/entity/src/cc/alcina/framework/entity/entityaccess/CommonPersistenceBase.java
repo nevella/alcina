@@ -70,7 +70,6 @@ import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -94,7 +93,6 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCache;
 import cc.alcina.framework.entity.entityaccess.transform.TransformPersister.TransformPersisterToken;
@@ -111,7 +109,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
  * @author Nick Reddel
  */
 public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends IUser, G extends IGroup, IID extends Iid>
-		implements CommonPersistenceLocal {
+		implements CommonPersistenceLocal, CommonPersistenceCache {
 	// note - this'll be the stack depth of the eql ast processor
 	private static final int PRECACHE_RQ_SIZE = 500;
 
@@ -287,32 +285,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
-	@Override
-	public void connectPermissionsManagerToLiveObjects() {
-		connectPermissionsManagerToLiveObjects(false);
-	}
-
-	public void connectPermissionsManagerToLiveObjects(boolean forWriting) {
-		IUser currentUser = PermissionsManager.get().getUser();
-		if (!Mvcc.isMvccObject((Entity) currentUser)
-				&& getEntityManager().contains(currentUser)) {
-			if (!forWriting) {
-				PermissionsManager.get().getUserGroups();
-			}
-			return;
-		}
-		String userName = currentUser == null ? null
-				: currentUser.getUserName();
-		if (PermissionsManager.get()
-				.getLoginState() == LoginState.NOT_LOGGED_IN) {
-			userName = getAnonymousUserName();
-		}
-		PermissionsManager.get().setUser(getUserByName(userName));
-		if (!forWriting) {
-			PermissionsManager.get().getUserGroups();
-		}
-	}
-
 	/**
 	 * Note...we deliberately crop the client instance user - at the servlet
 	 * layer we (should) always want it lightweight
@@ -379,43 +351,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public abstract String getAnonymousUserName();
 
 	@Override
-	public <US extends IUser> US getCleanedUserById(long userId) {
-		Class<? extends IUser> impl = getImplementation(IUser.class);
-		IUser found = getEntityManager().find(impl, userId);
-		if (found != null) {
-			return (US) getUserByName(found.getUserName(), true);
-		}
-		return null;
-	}
-
-	@Override
 	public ClientInstance getClientInstance(Long clientInstanceId) {
-		return getHandshakeObjectProvider().getClientInstance(clientInstanceId);
+		ClientInstance clientInstance = ensureClientInstanceAuthenticationCache()
+				.getClientInstance(clientInstanceId);
+		if (clientInstance == null) {
+			clientInstance = CommonPersistenceProvider.get()
+					.getCommonPersistence()
+					.getPersistedClientInstance(clientInstanceId);
+		}
+		return clientInstance;
 	}
 
 	public abstract EntityManager getEntityManager();
-
-	@Override
-	public G getGroupByName(String groupName) {
-		List<G> l = getEntityManager().createQuery("select distinct g from "
-				+ getImplementationSimpleClassName(IGroup.class) + " g "
-				+ "left join fetch g.memberOfGroups sg "
-				+ "left join fetch g.memberUsers su " + "where g.groupName = ?")
-				.setParameter(1, groupName).getResultList();
-		return (l.size() == 0) ? null : l.get(0);
-	}
-
-	/**
-	 * Assume that this is always an in-system call (since we're after a
-	 * specific user) so _don't clean based on permissions_
-	 */
-	@Override
-	public G getGroupByName(String groupName, boolean clean) {
-		G group = getGroupByName(groupName);
-		G cleaned = new EntityUtils().detachedCloneIgnorePermissions(group,
-				clean ? createUserAndGroupInstantiator() : null);
-		return cleaned;
-	}
 
 	public HandshakeObjectProvider getHandshakeObjectProvider() {
 		if (handshakeObjectProvider == null) {
@@ -484,18 +431,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
 			boolean createIfNonexistent) {
 		return getItemByKeyValue(clazz, key, value, createIfNonexistent, null,
-				false, true);
+				false);
 	}
 
 	@Override
 	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
-			boolean createIfNonexistent, Long ignoreId, boolean caseInsensitive,
-			boolean livePermissionsManager) {
+			boolean createIfNonexistent, Long ignoreId,
+			boolean caseInsensitive) {
 		boolean hadException = false;
 		try {
-			if (livePermissionsManager) {
-				connectPermissionsManagerToLiveObjects();
-			}
 			String eql = String.format(
 					value == null ? "from %s where %s is null"
 							: caseInsensitive ? "from %s where lower(%s) = ?1"
@@ -604,7 +548,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	@Override
 	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws Exception {
-		connectPermissionsManagerToLiveObjects();
 		ObjectPersistenceHelper.get();
 		long t1 = System.currentTimeMillis();
 		ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
@@ -626,11 +569,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public <T extends WrapperPersistable> WrappedObject<T>
 			getObjectWrapperForUser(HasId wrapperOwner, Class<T> c, long id)
 					throws Exception {
-		connectPermissionsManagerToLiveObjects();
 		WrappedObject<T> wrapper = Registry.impl(WrappedObjectProvider.class)
 				.getObjectWrapperForUser(c, id, getEntityManager());
 		checkWrappedObjectAccess(wrapperOwner, wrapper, c);
 		return wrapper;
+	}
+
+	@Override
+	public ClientInstance getPersistedClientInstance(Long clientInstanceId) {
+		return getHandshakeObjectProvider().getClientInstance(clientInstanceId);
 	}
 
 	@Override
@@ -908,59 +855,38 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	@Override
-	public void logActionItem(ActionLogItem result) {
+	// FIXME - mvcc.4 - persist with transforms
+	public void logActionItem(ActionLogItem actionItem) {
 		AppPersistenceBase.checkNotReadOnly();
-		try {
-			PermissionsManager.get().pushCurrentUser();
-			connectPermissionsManagerToLiveObjects(true);
-			getEntityManager().merge(result);
-		} finally {
-			PermissionsManager.get().popUser();
-		}
+		getEntityManager().merge(actionItem);
 	}
 
 	@Override
+	// FIXME - mvcc.4 - persist with transforms
 	public long merge(HasId hi) {
-		try {
-			PermissionsManager.get().pushCurrentUser();
-			connectPermissionsManagerToLiveObjects(true);
-			AppPersistenceBase.checkNotReadOnly();
-			persistWrappables(hi);
-			HasId merge = getEntityManager().merge(hi);
-			return merge.getId();
-		} finally {
-			PermissionsManager.get().popUser();
-		}
+		AppPersistenceBase.checkNotReadOnly();
+		persistWrappables(hi);
+		HasId merge = getEntityManager().merge(hi);
+		return merge.getId();
 	}
 
 	@Override
+	// FIXME - mvcc.4 - persist with transforms
 	public IUser mergeUser(IUser user) {
-		try {
-			PermissionsManager.get().pushCurrentUser();
-			AppPersistenceBase.checkNotReadOnly();
-			connectPermissionsManagerToLiveObjects();
-			IUser merge = getEntityManager().merge(user);
-			getEntityManager().flush();
-			return merge;
-		} finally {
-			PermissionsManager.get().popUser();
-		}
+		AppPersistenceBase.checkNotReadOnly();
+		IUser merge = getEntityManager().merge(user);
+		getEntityManager().flush();
+		return merge;
 	}
 
 	@Override
 	public <WP extends WrapperPersistable> Long persist(WP gwpo)
 			throws Exception {
-		try {
-			PermissionsManager.get().pushCurrentUser();
-			AppPersistenceBase.checkNotReadOnly();
-			connectPermissionsManagerToLiveObjects(true);
-			WrappedObject<WP> wrapper = (WrappedObject<WP>) getObjectWrapperForUser(
-					gwpo.getClass(), gwpo.getId());
-			wrapper.setObject(gwpo);
-			return wrapper.getId();
-		} finally {
-			PermissionsManager.get().popUser();
-		}
+		AppPersistenceBase.checkNotReadOnly();
+		WrappedObject<WP> wrapper = (WrappedObject<WP>) getObjectWrapperForUser(
+				gwpo.getClass(), gwpo.getId());
+		wrapper.setObject(gwpo);
+		return wrapper.getId();
 	}
 
 	@Override
@@ -1073,28 +999,19 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
-		try {
-			LooseContext.push();
-			PermissionsManager.get().pushCurrentUser();
-			connectPermissionsManagerToLiveObjects();
-			String message = def.validatePermissions();
-			if (message != null) {
-				throw new WrappedRuntimeException(
-						new PermissionsException(message));
-			}
-			Searcher searcher = (Searcher) Registry.get()
-					.instantiateSingle(Searcher.class, def.getClass());
-			SearchResultsBase result = searcher.search(def, pageNumber,
-					getEntityManager());
-			if (LooseContext
-					.getBoolean(Searcher.CONTEXT_RESULTS_ARE_DETACHED)) {
-				return result;
-			} else {
-				return projectSearchResults(result);
-			}
-		} finally {
-			PermissionsManager.get().popUser();
-			LooseContext.pop();
+		String message = def.validatePermissions();
+		if (message != null) {
+			throw new WrappedRuntimeException(
+					new PermissionsException(message));
+		}
+		Searcher searcher = (Searcher) Registry.get()
+				.instantiateSingle(Searcher.class, def.getClass());
+		SearchResultsBase result = searcher.search(def, pageNumber,
+				getEntityManager());
+		if (LooseContext.getBoolean(Searcher.CONTEXT_RESULTS_ARE_DETACHED)) {
+			return result;
+		} else {
+			return projectSearchResults(result);
 		}
 	}
 
@@ -1125,26 +1042,20 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers) {
-		try {
-			PermissionsManager.get().pushCurrentUser();
-			connectPermissionsManagerToLiveObjects();
-			preloadWrappedObjects(wrappers);
-			RuntimeException lastException = null;
-			for (HasId wrapper : wrappers) {
-				try {
-					unwrap(wrapper);
-				} catch (RuntimeException e) {
-					System.out.println(e.getMessage());
-					lastException = e;
-				}
+		preloadWrappedObjects(wrappers);
+		RuntimeException lastException = null;
+		for (HasId wrapper : wrappers) {
+			try {
+				unwrap(wrapper);
+			} catch (RuntimeException e) {
+				System.out.println(e.getMessage());
+				lastException = e;
 			}
-			if (lastException != null) {
-				throw lastException;
-			}
-			return wrappers;
-		} finally {
-			PermissionsManager.get().popUser();
 		}
+		if (lastException != null) {
+			throw lastException;
+		}
+		return wrappers;
 	}
 
 	@Override
@@ -1177,56 +1088,49 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public <T extends ServerValidator> List<T> validate(List<T> validators) {
-		try {
-			PermissionsManager.get().pushCurrentUser();
-			connectPermissionsManagerToLiveObjects();
-			ArrayList<T> result = new ArrayList<T>();
-			for (T serverValidator : validators) {
-				if (serverValidator instanceof ServerUniquenessValidator) {
-					ServerUniquenessValidator suv = (ServerUniquenessValidator) serverValidator;
-					int ctr = 0;
-					String value = suv.getValue();
-					suv.setSuggestedValue(value);
-					while (true) {
-						Object item = getItemByKeyValue(suv.getObjectClass(),
-								suv.getPropertyName(), value, false,
-								suv.getOkId(), suv.isCaseInsensitive(), true);
-						if (item == null) {
-							if (ctr != 0) {
-								suv.setSuggestedValue(value);
-								suv.setMessage("Item exists. Suggested value: "
-										+ value);
-							}
-							break;
+		ArrayList<T> result = new ArrayList<T>();
+		for (T serverValidator : validators) {
+			if (serverValidator instanceof ServerUniquenessValidator) {
+				ServerUniquenessValidator suv = (ServerUniquenessValidator) serverValidator;
+				int ctr = 0;
+				String value = suv.getValue();
+				suv.setSuggestedValue(value);
+				while (true) {
+					Object item = getItemByKeyValue(suv.getObjectClass(),
+							suv.getPropertyName(), value, false, suv.getOkId(),
+							suv.isCaseInsensitive());
+					if (item == null) {
+						if (ctr != 0) {
+							suv.setSuggestedValue(value);
+							suv.setMessage(
+									"Item exists. Suggested value: " + value);
 						}
-						// no suggestions, just error
-						if (suv.getValueTemplate() == null) {
-							suv.setMessage("Item exists");
-							break;
-						}
-						ctr++;
-						value = String.format(suv.getValueTemplate(),
-								suv.getValue() == null ? "" : suv.getValue(),
-								ctr);
+						break;
 					}
-				} else {
-					Class c = EntityLayerObjects.get().getServletLayerRegistry()
-							.lookupSingle(ServerValidator.class,
-									serverValidator.getClass());
-					if (c != null) {
-						ServerValidatorHandler handler = (ServerValidatorHandler) EntityLayerObjects
-								.get().getServletLayerRegistry()
-								.instantiateSingle(ServerValidator.class,
-										serverValidator.getClass());
-						handler.handle(serverValidator, getEntityManager());
+					// no suggestions, just error
+					if (suv.getValueTemplate() == null) {
+						suv.setMessage("Item exists");
+						break;
 					}
+					ctr++;
+					value = String.format(suv.getValueTemplate(),
+							suv.getValue() == null ? "" : suv.getValue(), ctr);
 				}
-				result.add(serverValidator);
+			} else {
+				Class c = EntityLayerObjects.get().getServletLayerRegistry()
+						.lookupSingle(ServerValidator.class,
+								serverValidator.getClass());
+				if (c != null) {
+					ServerValidatorHandler handler = (ServerValidatorHandler) EntityLayerObjects
+							.get().getServletLayerRegistry()
+							.instantiateSingle(ServerValidator.class,
+									serverValidator.getClass());
+					handler.handle(serverValidator, getEntityManager());
+				}
 			}
-			return result;
-		} finally {
-			PermissionsManager.get().popUser();
+			result.add(serverValidator);
 		}
+		return result;
 	}
 
 	@Override
@@ -1648,35 +1552,20 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			Class<? extends ClientInstance> clientInstanceImpl = getImplementation(
 					ClientInstance.class);
 			try {
-				ClientInstance impl = clientInstanceImpl.newInstance();
-				commonPersistence.getEntityManager().persist(impl);
-				impl.setHelloDate(new Date());
-				impl.setUser((IUser) commonPersistence.getEntityManager().find(
-						getImplementation(IUser.class),
-						PermissionsManager.get().getUserId()));
-				impl.setIid(iid);
-				impl.setAuth(Math.abs(new Random().nextInt()));
-				impl.setUserAgent(userAgent);
-				impl.setIpAddress(ipAddress);
-				impl.setBotUserAgent(isBotUserAgent(userAgent));
-				commonPersistence.getEntityManager().flush();
-				commonPersistence.getEntityManager().clear();
-				IUser clonedUser = AlcinaPersistentEntityImpl
-						.getNewImplementationInstance(IUser.class);
-				ResourceUtilities.copyBeanProperties(
-						PermissionsManager.get().getUser(), clonedUser, null,
-						false,
-						Arrays.asList(new String[] { "primaryGroup",
-								"secondaryGroups", "creationUser",
-								"lastModificationUser", "contact" }));
-				impl.setUser(null);
-				ClientInstance instance = new EntityUtils()
-						.detachedCloneIgnorePermissions(impl, null);
-				commonPersistence.ensureClientInstanceAuthenticationCache()
-						.cacheClientInstance(instance);
-				instance.setUser(commonPersistence
-						.projectUserForClientInstance(clonedUser));
-				return instance;
+				ClientInstance persistent = clientInstanceImpl.newInstance();
+				commonPersistence.getEntityManager().persist(persistent);
+				persistent.setHelloDate(new Date());
+				persistent.setUser((IUser) commonPersistence.getEntityManager()
+						.find(getImplementation(IUser.class),
+								PermissionsManager.get().getUserId()));
+				persistent.setIid(iid);
+				persistent.setAuth(Math.abs(new Random().nextInt()));
+				persistent.setUserAgent(userAgent);
+				persistent.setIpAddress(ipAddress);
+				persistent.setBotUserAgent(isBotUserAgent(userAgent));
+				return commonPersistence
+						.ensureClientInstanceAuthenticationCache()
+						.cacheClientInstance(persistent);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -1684,22 +1573,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 		@Override
 		public ClientInstance getClientInstance(long clientInstanceId) {
-			try {
-				PermissionsManager.get().pushCurrentUser();
-				commonPersistence.connectPermissionsManagerToLiveObjects(true);
-				ClientInstance instance = (ClientInstance) commonPersistence
-						.getEntityManager()
-						.find(getImplementation(ClientInstance.class),
-								clientInstanceId);
-				IUser user = Registry.impl(JPAImplementation.class)
-						.getInstantiatedObject(instance.getUser());
-				ClientInstance result = new EntityUtils()
-						.detachedClone(instance, false);
-				result.setUser(new EntityUtils().detachedClone(user));
-				return result;
-			} finally {
-				PermissionsManager.get().popUser();
-			}
+			ClientInstance persistent = (ClientInstance) commonPersistence
+					.getEntityManager()
+					.find(getImplementation(ClientInstance.class),
+							clientInstanceId);
+			return commonPersistence.ensureClientInstanceAuthenticationCache()
+					.cacheClientInstance(persistent);
 		}
 
 		@Override

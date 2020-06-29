@@ -32,7 +32,6 @@ import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
-import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.search.SearchDefinition;
@@ -55,8 +54,6 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
 public interface CommonPersistenceLocal {
 	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
 
-	public abstract void connectPermissionsManagerToLiveObjects();
-
 	public abstract ClientInstance createClientInstance(String userAgent,
 			String iid, String ipAddress);
 
@@ -74,14 +71,6 @@ public interface CommonPersistenceLocal {
 
 	public abstract String getAnonymousUserName();
 
-	public <US extends IUser> US getCleanedUserById(long userId);
-
-	public ClientInstance getClientInstance(Long clientInstanceId);
-
-	public abstract IGroup getGroupByName(String groupName);
-
-	public abstract IGroup getGroupByName(String groupName, boolean clean);
-
 	public abstract Iid getIidByKey(String iid);
 
 	public <T> T getItemById(Class<T> clazz, Long id);
@@ -94,7 +83,7 @@ public interface CommonPersistenceLocal {
 
 	public abstract <T> T getItemByKeyValue(Class<T> clazz, String key,
 			Object value, boolean createIfNonexistent, Long ignoreId,
-			boolean caseInsensitive, boolean livePermissionsManager);
+			boolean caseInsensitive);
 
 	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
 			Object value1, String key2, Object value2);
@@ -116,6 +105,8 @@ public interface CommonPersistenceLocal {
 
 	public <T extends WrapperPersistable> WrappedObject<T>
 			getObjectWrapperForUser(Class<T> c, long id) throws Exception;
+
+	public ClientInstance getPersistedClientInstance(Long clientInstanceId);
 
 	public List<DomainTransformRequestPersistent>
 			getPersistentTransformRequests(long fromId, long toId,

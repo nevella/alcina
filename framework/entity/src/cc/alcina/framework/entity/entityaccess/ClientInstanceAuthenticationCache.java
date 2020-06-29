@@ -8,8 +8,12 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.entity.Iid;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -37,6 +41,9 @@ public class ClientInstanceAuthenticationCache {
 	private Map<Long, String> clientInstanceUserNameMap = new NullWrappingMap<Long, String>(
 			new ConcurrentHashMap());
 
+	private Map<Long, ClientInstance> clientInstanceIdMap = new NullWrappingMap<Long, ClientInstance>(
+			new ConcurrentHashMap());
+
 	private Map<Long, String> clientInstanceIidMap = new NullWrappingMap<Long, String>(
 			new ConcurrentHashMap());
 
@@ -61,19 +68,29 @@ public class ClientInstanceAuthenticationCache {
 			(clientInstanceId, time) -> handshakeObjectProvider
 					.updateClientInstanceAccessTime(clientInstanceId, time));
 
-	public void cacheClientInstance(ClientInstance clientInstance) {
-		clientInstanceAuthMap.put(clientInstance.getId(),
-				clientInstance.getAuth());
-		if (clientInstance.getUser() != null) {
-			clientInstanceUserNameMap.put(clientInstance.getId(),
-					clientInstance.getUser().getUserName());
+	public ClientInstance cacheClientInstance(ClientInstance persistent) {
+		Class<? extends ClientInstance> clientInstanceImplClass = AlcinaPersistentEntityImpl
+				.getImplementation(ClientInstance.class);
+		Class<? extends IUser> iUserImplClass = AlcinaPersistentEntityImpl
+				.getImplementation(IUser.class);
+		ClientInstance forCache = Reflections.classLookup()
+				.newInstance(clientInstanceImplClass);
+		ResourceUtilities.fieldwiseCopy(persistent, forCache, false, false,
+				Collections.singleton("user"));
+		forCache.setUser(
+				Domain.find(iUserImplClass, persistent.getUser().getId()));
+		clientInstanceAuthMap.put(forCache.getId(), forCache.getAuth());
+		if (forCache.getUser() != null) {
+			clientInstanceUserNameMap.put(forCache.getId(),
+					forCache.getUser().getUserName());
 		}
-		if (clientInstance.getIid() != null) {
-			clientInstanceIidMap.put(clientInstance.getId(),
-					clientInstance.getIid());
+		if (forCache.getIid() != null) {
+			clientInstanceIidMap.put(forCache.getId(), forCache.getIid());
 		}
-		clientInstanceLastAccess.setAccessTime(clientInstance.getId(),
-				clientInstance.getLastAccessed(), false);
+		clientInstanceLastAccess.setAccessTime(forCache.getId(),
+				forCache.getLastAccessed(), false);
+		clientInstanceIdMap.put(forCache.getId(), forCache);
+		return forCache;
 	}
 
 	public void cacheIid(Iid iid, boolean resetAccessTime) {
@@ -126,6 +143,10 @@ public class ClientInstanceAuthenticationCache {
 			return false;
 		}
 		return iidUserNameByKeyMap.containsKey(iidKey);
+	}
+
+	public ClientInstance getClientInstance(Long clientInstanceId) {
+		return clientInstanceIdMap.get(clientInstanceId);
 	}
 
 	public String getIidUserNameByKey(String iid) {

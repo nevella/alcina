@@ -33,13 +33,14 @@ public abstract class LocalDbPropertyBase extends Entity {
 		return getOrSetLocalDbProperty(key, null, true);
 	}
 
+	// FIXME - mvcc.4 - this should always be in the domainstore
 	public static LocalDbPropertyBase getLocalDbPropertyObject(String key) {
 		CommonPersistenceLocal cpl = Registry
 				.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		Class<? extends LocalDbPropertyBase> implClass = AlcinaPersistentEntityImpl
 				.getImplementation(LocalDbPropertyBase.class);
 		LocalDbPropertyBase dbProperty = cpl.getItemByKeyValue(implClass,
-				KEY_FIELD_NAME, key, true, null, false, false);
+				KEY_FIELD_NAME, key, true, null, false);
 		return dbProperty;
 	}
 

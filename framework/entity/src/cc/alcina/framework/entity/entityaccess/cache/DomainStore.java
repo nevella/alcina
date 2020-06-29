@@ -489,9 +489,10 @@ public class DomainStore implements IDomainStore {
 				@Override
 				public Set getKeyMayBeCollection(Object value) {
 					if (value instanceof Collection) {
-						return ((Collection<Long>) value).stream()
-								.map(id -> cache.get(clazz, id))
-								.collect(Collectors.toSet());
+						Stream<Entity> stream = ((Collection<Long>) value)
+								.stream()
+								.map(id -> (Entity) cache.get(clazz, id));
+						return (Set) stream.collect(Collectors.toSet());
 					} else {
 						long id = (long) value;
 						return Collections.singleton(cache.get(clazz, id));
