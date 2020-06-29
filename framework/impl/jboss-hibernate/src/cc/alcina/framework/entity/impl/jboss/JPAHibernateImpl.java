@@ -303,6 +303,11 @@ public class JPAHibernateImpl implements JPAImplementation {
 	}
 
 	@Override
+	public boolean isProxy(Entity entity) {
+		return entity instanceof HibernateProxy;
+	}
+
+	@Override
 	public void muteClassloaderLogging(boolean mute) {
 		java.util.logging.Logger logger = java.util.logging.Logger
 				.getLogger("org.jboss.modules");
@@ -349,6 +354,38 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return new EntityLocator((Entity) o);
 	}
 
+	@RegistryLocation(registryPoint = PersistenSetProjectionCreator.class, implementationType = ImplementationType.SINGLETON)
+	public static class PersistenSetProjectionCreator {
+		public Set
+				createPersistentSetProjection(GraphProjectionContext context) {
+			return new HashSet();
+		}
+	}
+
+	public static class UseEntityIdGenerator implements IdentifierGenerator {
+		@Override
+		public Serializable generate(SessionImplementor session, Object object)
+				throws HibernateException {
+			return ((Entity) object).getId();
+		}
+	}
+
+	private static class SavedId {
+		private final IdentifierProperty ip;
+
+		private final IdentifierValue backupUnsavedValue;
+
+		private final IdentifierGenerator identifierGenerator;
+
+		public SavedId(IdentifierProperty ip,
+				IdentifierValue backupUnsavedValue,
+				IdentifierGenerator identifierGenerator) {
+			this.ip = ip;
+			this.backupUnsavedValue = backupUnsavedValue;
+			this.identifierGenerator = identifierGenerator;
+		}
+	}
+
 	static class DomainStoreJoinHandler_ElementCollection
 			implements DomainStoreJoinHandler {
 		private ElementCollection elementCollection;
@@ -384,38 +421,6 @@ public class JPAHibernateImpl implements JPAImplementation {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
-		}
-	}
-
-	@RegistryLocation(registryPoint = PersistenSetProjectionCreator.class, implementationType = ImplementationType.SINGLETON)
-	public static class PersistenSetProjectionCreator {
-		public Set
-				createPersistentSetProjection(GraphProjectionContext context) {
-			return new HashSet();
-		}
-	}
-
-	public static class UseEntityIdGenerator implements IdentifierGenerator {
-		@Override
-		public Serializable generate(SessionImplementor session, Object object)
-				throws HibernateException {
-			return ((Entity) object).getId();
-		}
-	}
-
-	private static class SavedId {
-		private final IdentifierProperty ip;
-
-		private final IdentifierValue backupUnsavedValue;
-
-		private final IdentifierGenerator identifierGenerator;
-
-		public SavedId(IdentifierProperty ip,
-				IdentifierValue backupUnsavedValue,
-				IdentifierGenerator identifierGenerator) {
-			this.ip = ip;
-			this.backupUnsavedValue = backupUnsavedValue;
-			this.identifierGenerator = identifierGenerator;
 		}
 	}
 }

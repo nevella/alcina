@@ -21,6 +21,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
@@ -74,6 +75,8 @@ public interface JPAImplementation {
 	Set<EntityLocator> getSessionEntityLocators(EntityManager entityManager);
 
 	boolean isLazyInitialisationException(Exception e);
+
+	boolean isProxy(Entity e);
 
 	void muteClassloaderLogging(boolean mute);
 }

@@ -22,11 +22,13 @@ public class LiSetSerializer extends CollectionSerializer {
 
 	Map<Collection, List> perSetElements = new IdentityHashMap();
 
+	public void beforeDeseralization() {
+		perSetElements.clear();
+	}
+
 	public void deserializationFinished() {
 		// NOW the hashes'll be ok
-		perSetElements.forEach((collection, list) -> {
-			list.forEach(collection::add);
-		});
+		perSetElements.forEach((collection, list) -> collection.addAll(list));
 	}
 
 	@Override

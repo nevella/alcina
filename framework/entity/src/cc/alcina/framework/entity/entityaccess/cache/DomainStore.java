@@ -581,9 +581,6 @@ public class DomainStore implements IDomainStore {
 
 	void index(Entity obj, boolean add) {
 		Class<? extends Entity> clazz = obj.entityClass();
-		if (obj instanceof DomainProxy) {
-			clazz = (Class<? extends Entity>) clazz.getSuperclass();
-		}
 		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
 				.get(clazz);
 		if (itemDescriptor != null) {

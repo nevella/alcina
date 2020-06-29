@@ -62,6 +62,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.ProjectByValue;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
@@ -73,7 +74,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublishe
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.entityaccess.cache.DomainProxy;
+import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
@@ -710,8 +711,6 @@ public class GraphProjection {
 		if (sourceClass.isArray()) {
 			projected = (T) Array.newInstance(sourceClass.getComponentType(),
 					Array.getLength(source));
-		} else if (source instanceof DomainProxy) {
-			projected = (T) ((DomainProxy) source).nonProxy();
 		} else if (source instanceof MvccObject) {
 			projected = newInstance(((Entity) source).entityClass(), context);
 		} else {
@@ -751,9 +750,6 @@ public class GraphProjection {
 		}
 		if (context != null && context.depth >= maxDepth) {
 			return projected;
-		}
-		if (source instanceof DomainProxy) {
-			((DomainProxy) source).beforeProjection();
 		}
 		List<Field> primitiveOrDataFieldsForClass = getPrimitiveOrDataFieldsForClass(
 				projected.getClass());
@@ -1202,6 +1198,9 @@ public class GraphProjection {
 		private Map nonEntities = new Reference2ReferenceOpenHashMap<Object, Object>(
 				100);
 
+		JPAImplementation jpaImplementation = Registry
+				.implOrNull(JPAImplementation.class);
+
 		@Override
 		public Set entrySet() {
 			throw new UnsupportedOperationException();
@@ -1211,7 +1210,7 @@ public class GraphProjection {
 		public Object get(Object key) {
 			if (key instanceof Entity) {
 				Entity entity = (Entity) key;
-				if (entity.getId() == 0) {
+				if (useNonEntityMap(entity)) {
 					return nonEntities.get(key);
 				} else {
 					queryKey.id = entity.getId();
@@ -1227,7 +1226,7 @@ public class GraphProjection {
 		public Object put(Object key, Object value) {
 			if (key instanceof Entity) {
 				Entity entityKey = (Entity) key;
-				if (entityKey.getId() == 0) {
+				if (useNonEntityMap(entityKey)) {
 					nonEntities.put(key, value);
 				} else {
 					entities.put(new ClassIdKey(entityKey.getId(),
@@ -1238,6 +1237,11 @@ public class GraphProjection {
 				nonEntities.put(key, value);
 				return null;
 			}
+		}
+
+		boolean useNonEntityMap(Entity entity) {
+			return entity.getId() == 0 || (jpaImplementation != null
+					&& jpaImplementation.isProxy(entity));
 		}
 
 		static class ClassIdKey {

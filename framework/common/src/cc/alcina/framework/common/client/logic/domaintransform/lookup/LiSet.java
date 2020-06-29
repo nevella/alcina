@@ -58,7 +58,8 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		}
 		if (e.domain().isNonDomain()) {
 			// can't handle non-comparables
-			return toDegenerate(e);
+			toDegenerate();
+			return degenerate.add(e);
 		}
 		if (isEmpty()) {
 			elementData = new Entity[1];
@@ -73,7 +74,8 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 			return false;
 		} else {
 			if (size == DEGENERATE_THRESHOLD) {
-				return toDegenerate(e);
+				toDegenerate();
+				return degenerate.add(e);
 			}
 			size++;
 			modCount++;
@@ -85,6 +87,14 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 			elementData = newData;
 			return true;
 		}
+	}
+
+	@Override
+	public boolean addAll(Collection<? extends H> c) {
+		if (c.size() >= DEGENERATE_THRESHOLD) {
+			toDegenerate();
+		}
+		return super.addAll(c);
 	}
 
 	@Override
@@ -251,13 +261,12 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		}
 	}
 
-	protected boolean toDegenerate(H e) {
+	protected void toDegenerate() {
 		LinkedHashSet degenerate = new LinkedHashSet<H>();
 		degenerate.addAll(this);
 		this.degenerate = degenerate;
 		elementData = null;
 		size = -1;
-		return degenerate.add(e);
 	}
 
 	class LiSetIterator implements Iterator<H> {

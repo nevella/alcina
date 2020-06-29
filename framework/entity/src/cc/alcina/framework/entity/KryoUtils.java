@@ -55,6 +55,18 @@ public class KryoUtils {
 
 	static Map<Class, Method> resolveMethods = new LinkedHashMap<>();
 
+	private static CachingMap<Class, Method> writeReplaceMethodCache = new CachingMap<>(
+			clazz -> {
+				try {
+					Method writeReplace = clazz
+							.getDeclaredMethod("writeReplace", new Class[0]);
+					writeReplace.setAccessible(true);
+					return writeReplace;
+				} catch (NoSuchMethodException e) {
+					return null;
+				}
+			});
+
 	public static <T> T clone(T t) {
 		Kryo kryo = borrowKryo();
 		try {
@@ -77,6 +89,8 @@ public class KryoUtils {
 			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
 					? new UnsafeInput(bytes)
 					: new Input(bytes);
+			((LiSetSerializer) kryo.getDefaultSerializer(LiSet.class))
+					.beforeDeseralization();
 			T someObject = kryo.readObject(input, knownType);
 			input.close();
 			someObject = resolve(knownType, someObject);
@@ -105,6 +119,8 @@ public class KryoUtils {
 			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
 					? new UnsafeInput(stream)
 					: new Input(stream);
+			((LiSetSerializer) kryo.getDefaultSerializer(LiSet.class))
+					.beforeDeseralization();
 			T someObject = kryo.readObject(input, clazz);
 			input.close();
 			someObject = resolve(clazz, someObject);
@@ -214,18 +230,6 @@ public class KryoUtils {
 		KryoPoolKey key = getContextKey();
 		kryosPool.get(key).returnObject(kryo);
 	}
-
-	private static CachingMap<Class, Method> writeReplaceMethodCache = new CachingMap<>(
-			clazz -> {
-				try {
-					Method writeReplace = clazz
-							.getDeclaredMethod("writeReplace", new Class[0]);
-					writeReplace.setAccessible(true);
-					return writeReplace;
-				} catch (NoSuchMethodException e) {
-					return null;
-				}
-			});
 
 	private static Object writeReplace(Object object) throws Exception {
 		Class<? extends Object> clazz = object.getClass();
