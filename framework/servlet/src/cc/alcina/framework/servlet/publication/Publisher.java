@@ -106,15 +106,10 @@ public class Publisher {
 		publication.setUserPublicationId(publicationUserId);
 		publication.setPublicationUid(SEUtilities.generateId());
 		publication.setPublicationType(contentDefinition.getPublicationType());
-		try {
-			PermissionsManager.get().pushCurrentUser();
-			long id = Registry.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence().merge(publication);
-			result.publicationId = id;
-			result.publicationUid = publication.getPublicationUid();
-		} finally {
-			PermissionsManager.get().popUser();
-		}
+		long id = Registry.impl(CommonPersistenceProvider.class)
+				.getCommonPersistence().merge(publication);
+		result.publicationId = id;
+		result.publicationUid = publication.getPublicationUid();
 	}
 
 	private void postDeliveryPersistence(Long publicationId) {

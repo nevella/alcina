@@ -865,6 +865,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	// FIXME - mvcc.4 - persist with transforms
 	public long merge(HasId hi) {
 		AppPersistenceBase.checkNotReadOnly();
+		if (hi instanceof Publication) {
+			((Publication) hi).setUser(
+					getEntityManager().find(getImplementation(IUser.class),
+							((Publication) hi).getUser().getId()));
+		}
 		persistWrappables(hi);
 		HasId merge = getEntityManager().merge(hi);
 		return merge.getId();
