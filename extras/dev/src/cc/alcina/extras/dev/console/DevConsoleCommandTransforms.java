@@ -865,7 +865,8 @@ public class DevConsoleCommandTransforms {
 			if (forId == null) {
 				return "unknown";
 			}
-			return forId.getRefClass().getSimpleName();
+			return forId.getRefClass() == null ? "<deleted class>"
+					: forId.getRefClass().getSimpleName();
 		}
 	}
 
