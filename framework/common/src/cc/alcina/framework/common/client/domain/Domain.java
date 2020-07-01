@@ -8,6 +8,9 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -26,6 +29,8 @@ public class Domain {
 			.asList(new String[] { "id", "localId", "lastModificationDate",
 					"lastModificationUser", "creationDate", "creationUser",
 					"versionNumber" });
+
+	static Logger logger = LoggerFactory.getLogger(Domain.class);
 
 	// FIXME - mvcc.3 - deprecate (ditto asSet)
 	public static <V extends Entity> List<V> asList(Class<V> clazz) {
@@ -84,6 +89,11 @@ public class Domain {
 			if (alcinaTransient != null) {
 				continue;
 			}
+			logger.info(
+					"detachedToDomain:: %s.%s - ignoreProperties: %s :: [%s]->[%s]",
+					entity.getClass().getSimpleName(),
+					propertyInfo.getPropertyName(), ignoreProperties,
+					propertyInfo.get(entity), propertyInfo.get(writeable));
 			propertyInfo.copy(entity, writeable);
 		}
 		return writeable;
