@@ -16,7 +16,6 @@ package cc.alcina.framework.gwt.client.ide;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -67,7 +66,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		PermissibleActionEvent.PermissibleActionSource {
 	private WSVisualModel visualModel;
 
-	protected SimpleWorkspaceVisualiser visualiser;
+	protected WorkspaceVisualiser visualiser;
 
 	private PermissibleActionEvent.PermissibleActionSupport vetoableActionSupport = new PermissibleActionEvent.PermissibleActionSupport();
 
@@ -79,6 +78,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		this.visualModel = new WSVisualModel();
 	}
 
+	@Override
 	public void addVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
 	}
@@ -108,30 +108,13 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		return this.lastEvent;
 	}
 
+	@Override
 	public LayoutInfo getLayoutInfo() {
-		return new LayoutInfo() {
-			@Override
-			public void afterLayout() {
-				redraw();
-			}
-
-			@Override
-			public Iterator<Widget> getLayoutWidgets() {
-				if (visualiser != null) {
-					return visualiser.getLayoutInfo().getLayoutWidgets();
-				}
-				return new ArrayList<Widget>().iterator();
-			}
-
-			@Override
-			public Iterator<Widget> getWidgetsToResize() {
-				ArrayList<Widget> l = new ArrayList<Widget>();
-				if (visualiser != null) {
-					l.add(visualiser.getVerticalPanel());
-				}
-				return l.iterator();
-			}
-		};
+		if (visualiser == null) {
+			return new LayoutInfo();
+		} else {
+			return visualiser.getLayoutInfo();
+		}
 	}
 
 	public SourcesPropertyChangeEvents getParentDomainObject(Object node) {
@@ -154,7 +137,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		return viewProviderMap.get(action.getClass()).getViewForObject(action);
 	}
 
-	public SimpleWorkspaceVisualiser getVisualiser() {
+	public WorkspaceVisualiser getVisualiser() {
 		return this.visualiser;
 	}
 
@@ -183,15 +166,6 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		handleHasOrderValue(node, newObj);
 	}
 
-	public void redraw() {
-		if (visualiser == null) {
-			return;
-		}
-		visualiser.resetHsbPos();
-		// visualiser.getViewHolder().showStack(
-		// visualiser.getViewHolder().getSelectedIndex(), true);
-	}
-
 	public void registerViewProvider(ViewProvider v,
 			Class<? extends PermissibleAction> actionClass) {
 		viewProviderMap.put(actionClass, v);
@@ -201,6 +175,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		this.vetoableActionSupport.removeAllListeners();
 	}
 
+	@Override
 	public void
 			removeVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
@@ -211,10 +186,10 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 	}
 
 	public void showView(WorkspaceView view) {
-		int widgetIndex = visualiser.getViewHolder().getWidgetIndex(view);
-		visualiser.getViewHolder().showStack(widgetIndex);
+		visualiser.showView(view);
 	}
 
+	@Override
 	public void vetoableAction(final PermissibleActionEvent evt) {
 		lastEvent = evt;
 		if (evt.getAction().getClass() == CancelAction.class) {
@@ -302,7 +277,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		container.add(visualiser);
 	}
 
-	protected SimpleWorkspaceVisualiser createVisualiser() {
+	protected WorkspaceVisualiser createVisualiser() {
 		return new SimpleWorkspaceVisualiser(visualModel, this);
 	}
 
@@ -390,5 +365,12 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		public void setViews(List<WorkspaceView> views) {
 			this.views = views;
 		}
+	}
+
+	public void redraw() {
+		if (visualiser == null) {
+			return;
+		}
+		visualiser.redraw();
 	}
 }

@@ -11,7 +11,7 @@ public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
 
 	private byte[] bytes;
 
-	private transient Topic<FileSelectorInfo> clearTopicSupport = Topic.local();
+	private transient Topic<FileSelectorInfo> clearTopic = Topic.local();
 
 	public byte[] getBytes() {
 		return this.bytes;
@@ -41,6 +41,6 @@ public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
 	}
 
 	public Topic<FileSelectorInfo> topicClear() {
-		return clearTopicSupport;
+		return clearTopic;
 	}
 }

@@ -37,18 +37,21 @@ import com.google.gwt.dev.util.Util;
 import com.google.gwt.resources.ext.AbstractResourceGenerator;
 import com.google.gwt.resources.ext.ResourceContext;
 import com.google.gwt.resources.ext.ResourceGeneratorUtil;
-import com.google.gwt.resources.ext.SupportsGeneratorResultCaching;
 import com.google.gwt.user.rebind.SourceWriter;
 import com.google.gwt.user.rebind.StringSourceWriter;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
+import cc.alcina.framework.gwt.client.gen.SimpleCssResource.ResolveParent;
 
 /**
  * Provides implementations of SimpleCssResource.
  */
 public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
-		implements SupportsGeneratorResultCaching {
+// FIXME - add caching back
+// implements SupportsGeneratorResultCaching {
+{
 	public static final String IGNORE_DATA_URLS = "alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls";
 
 	/**
@@ -92,9 +95,10 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 		sw.println("public String getText() {");
 		sw.indent();
 		String toWrite = Util.readURLAsString(resource);
+		ResolveParent resolveParent = method.getAnnotation(ResolveParent.class);
 		if (context.supportsDataUrls()) {
 			try {
-				toWrite = replaceWithDataUrls(context, toWrite);
+				toWrite = replaceWithDataUrls(context, toWrite, resolveParent);
 			} catch (Exception e) {
 				logger.log(Type.ERROR, "css data url gen", e);
 				throw new UnableToCompleteException();
@@ -123,8 +127,8 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 				.toArray(Empty.STRINGS);
 	}
 
-	private String replaceWithDataUrls(ResourceContext context, String toWrite)
-			throws Exception {
+	private String replaceWithDataUrls(ResourceContext context, String toWrite,
+			ResolveParent resolveParent) throws Exception {
 		Pattern urlPat = Pattern
 				.compile("url\\s*\\((?!'?data:)(?!http:)(.+?)\\)");
 		Matcher m = urlPat.matcher(toWrite);
@@ -149,6 +153,9 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 			ModuleDef module = (ModuleDef) moduleField.get(compilerContext);
 			if (url.startsWith("/")) {
 				url = url.substring(1);
+			}
+			if (url.startsWith("../") && resolveParent != null) {
+				url = url.replaceFirst("\\.\\.", resolveParent.value());
 			}
 			Resource resource = module.findPublicFile(url);
 			if (resource == null) {
@@ -175,16 +182,28 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 			byte[] bytes = ResourceUtilities.readStreamToByteArray(contents);
 			String out = Base64.encodeBytes(bytes);
 			String fileName = url.replaceFirst(".+/", "");
-			String extension = fileName.replaceFirst(".+\\.", "");
+			String extension = fileName.replaceFirst(".+\\.", "").toLowerCase();
 			String mimeType = null;
-			if (extension.toLowerCase().equals("gif")) {
+			if (extension.equals("gif")) {
 				mimeType = "image/gif";
-			} else if (extension.toLowerCase().equals("jpeg")) {
+			} else if (extension.equals("jpeg")) {
 				mimeType = "image/jpeg";
-			} else if (extension.toLowerCase().equals("jpg")) {
+			} else if (extension.equals("jpg")) {
 				mimeType = "image/jpeg";
-			} else if (extension.toLowerCase().equals("png")) {
+			} else if (extension.equals("png")) {
 				mimeType = "image/png";
+			} else if (extension.equals("svg")) {
+				mimeType = "image/svg+xml";
+			} else if (extension.equals("eot")) {
+				mimeType = "application/vnd.ms-fontobject";
+			} else if (extension.equals("woff")) {
+				mimeType = "font/woff";
+			} else if (extension.equals("woff2")) {
+				mimeType = "font/woff2";
+			} else if (extension.equals("ttf")) {
+				mimeType = "font/ttf";
+			} else {
+				throw Ax.runtimeException("unknown mime type: %s", extension);
 			}
 			if (mimeType != null) {
 				String encoded = String.format("url(data:%s;base64,%s)",
@@ -192,13 +211,13 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 				if (encoded.length() > 5000) {
 					// System.out.println("warn - large css sprite - " + url);
 				}
-				if (encoded.length() < MAX_DATA_URL_LENGTH) {
-					toWrite = m.replaceFirst(encoded);
-					m = urlPat.matcher(toWrite);
-				}
-			} else {
-				System.out.println("unable to resolve mime type - " + url);
-				// continue on
+				// IE8 limitation, ignore
+				// if (encoded.length() < MAX_DATA_URL_LENGTH) {
+				toWrite = m.replaceFirst(encoded);
+				m = urlPat.matcher(toWrite);
+				// }else {
+				//
+				// }
 			}
 		}
 		return toWrite;

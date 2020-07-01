@@ -149,7 +149,6 @@ public class DOM {
 	 * 
 	 * @return the newly-created element
 	 */
-	@SuppressWarnings("deprecation")
 	public static Element createButton() {
 		return Document.get().createButtonElement().cast();
 	}
@@ -1103,8 +1102,8 @@ public class DOM {
 	 */
 	public static native int getIntStyleAttribute(Element elem,
 			String attr) /*-{
-							return parseInt(elem.style[attr]) || 0;
-							}-*/;
+    return parseInt(elem.style[attr]) || 0;
+	}-*/;
 
 	/**
 	 * Gets an element's next sibling element.

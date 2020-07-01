@@ -14,6 +14,7 @@
 package cc.alcina.framework.gwt.client.ide;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -43,7 +44,7 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
  * @author Nick Reddel
  */
 public class SimpleWorkspaceVisualiser extends Composite
-		implements HasLayoutInfo {
+		implements HasLayoutInfo, WorkspaceVisualiser {
 	public static double defaultSplitterPosition = 280;
 
 	public static int defaultSplitterSize = 8;
@@ -100,8 +101,10 @@ public class SimpleWorkspaceVisualiser extends Composite
 		resetHsbPos();
 	}
 
+	@Override
 	public void focusVisibleView() {
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+			@Override
 			public void execute() {
 				int selectedIndex = viewHolder.getSelectedIndex();
 				if (selectedIndex != -1) {
@@ -119,11 +122,23 @@ public class SimpleWorkspaceVisualiser extends Composite
 		return ((SimplePanel) contentContainer).getWidget();
 	}
 
+	@Override
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo() {
 			@Override
 			public Iterator<Widget> getLayoutWidgets() {
 				return Arrays.asList(new Widget[] { verticalPanel }).iterator();
+			}
+
+			@Override
+			public Iterator<Widget> getWidgetsToResize() {
+				return (Iterator) Collections.singleton(getVerticalPanel())
+						.iterator();
+			}
+
+			@Override
+			public void afterLayout() {
+				resetHsbPos();
 			}
 		};
 	}
@@ -140,6 +155,7 @@ public class SimpleWorkspaceVisualiser extends Composite
 		return this.viewHolder;
 	}
 
+	@Override
 	public TreeItem selectNodeForObject(Object obj, boolean visibleViewOnly) {
 		for (int i = 0; i < getViewHolder().getWidgetCount(); i++) {
 			if (visibleViewOnly && i != getViewHolder().getSelectedIndex()) {
@@ -163,6 +179,7 @@ public class SimpleWorkspaceVisualiser extends Composite
 		return null;
 	}
 
+	@Override
 	public void setContentWidget(Widget w) {
 		((SimplePanel) contentContainer).setWidget(w);
 	}
@@ -189,6 +206,7 @@ public class SimpleWorkspaceVisualiser extends Composite
 	}
 
 	private class Resize100Vp extends VerticalPanel implements HasLayoutInfo {
+		@Override
 		public LayoutInfo getLayoutInfo() {
 			return new LayoutInfo() {
 				@Override
@@ -198,12 +216,14 @@ public class SimpleWorkspaceVisualiser extends Composite
 							.iterator();
 				}
 
+				@Override
 				public boolean to100percentOfAvailableHeight() {
 					return true;
 				}
 			};
 		};
 
+		@Override
 		public void setHeight(String height) {
 			super.setHeight(height);
 			int h = Integer.valueOf(height.replace("px", "")).intValue();
@@ -212,7 +232,13 @@ public class SimpleWorkspaceVisualiser extends Composite
 		}
 	}
 
+	@Override
 	public void showView(WorkspaceView view) {
 		viewHolder.showStack(viewHolder.getWidgetIndex(view));
+	}
+
+	@Override
+	public void redraw() {
+		resetHsbPos();
 	}
 }

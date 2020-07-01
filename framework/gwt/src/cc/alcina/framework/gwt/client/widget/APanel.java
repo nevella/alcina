@@ -30,7 +30,8 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-public class APanel<O> extends ComplexPanel implements HasClickHandlers {
+public class APanel<O> extends ComplexPanel
+		implements HasClickHandlers, FluidWidget<APanel> {
 	/**
 	 * Creates an empty A panel. Note: adding invalid (block) elements/widgets
 	 * may cause funkeh IE errors
@@ -65,6 +66,7 @@ public class APanel<O> extends ComplexPanel implements HasClickHandlers {
 		add(w, getElement());
 	}
 
+	@Override
 	public HandlerRegistration addClickHandler(ClickHandler handler) {
 		return addDomHandler(handler, ClickEvent.getType());
 	}
@@ -200,12 +202,12 @@ public class APanel<O> extends ComplexPanel implements HasClickHandlers {
 		 * @param elem
 		 */
 		public native void blur(Element elem) /*-{
-												// Attempts to blur elements from within an event callback will generally
-												// be unsuccessful, so we invoke blur() from outside of the callback.
-												$wnd.setTimeout(function() {
-												elem.blur();
-												}, 0);
-												}-*/;
+      // Attempts to blur elements from within an event callback will generally
+      // be unsuccessful, so we invoke blur() from outside of the callback.
+      $wnd.setTimeout(function() {
+        elem.blur();
+      }, 0);
+		}-*/;
 
 		@Override
 		public void onBrowserEvent(Event event) {

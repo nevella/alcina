@@ -27,7 +27,7 @@ import com.google.gwt.user.client.ui.Widget;
  * <img class='gallery' src='FlowPanel.png'/>
  * </p>
  */
-public class LiPanel extends ComplexPanel {
+public class LiPanel extends ComplexPanel implements FluidWidget<LiPanel> {
 	/**
 	 * Creates an empty flow panel.
 	 */

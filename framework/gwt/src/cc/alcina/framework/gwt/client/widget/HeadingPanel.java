@@ -21,7 +21,8 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-public class HeadingPanel extends ComplexPanel {
+public class HeadingPanel extends ComplexPanel
+		implements FluidWidget<HeadingPanel> {
 	/**
 	 * Creates an empty span panel.
 	 */

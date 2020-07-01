@@ -15,6 +15,12 @@
  */
 package cc.alcina.framework.gwt.client.gen;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 import com.google.gwt.resources.client.ResourcePrototype;
 import com.google.gwt.resources.ext.DefaultExtensions;
 import com.google.gwt.resources.ext.ResourceGeneratorType;
@@ -29,4 +35,11 @@ import cc.alcina.framework.entity.gen.SimpleCssResourceGenerator;
 @ResourceGeneratorType(SimpleCssResourceGenerator.class)
 public interface SimpleCssResource extends ResourcePrototype {
 	String getText();
+
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.METHOD)
+	public @interface ResolveParent {
+		String value();
+	}
 }

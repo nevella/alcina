@@ -35,13 +35,13 @@ import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
  * 
  * @author Nick Reddel
  */
-public class Link<T> extends Widget
-		implements HasHTML, HasEnabled, HasClickHandlers, HasItem<T>, HasText {
+public class Link<T> extends Widget implements HasHTML, HasEnabled,
+		HasClickHandlers, HasItem<T>, HasText, FluidWidget<Link> {
 	public static Link createHashHref(String text, String token) {
 		return createHrefNoUnderline(text, "#" + token);
 	}
 
-	public static Link createHref(String text, String href) {
+	public static Link<Object> createHref(String text, String href) {
 		Link link = new Link(text);
 		link.setHref(href);
 		return link;
