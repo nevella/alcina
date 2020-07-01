@@ -340,7 +340,7 @@ class ClassTransformer {
 					.filter(f -> (f.getModifiers() & Modifier.STATIC) == 0)
 					.filter(f -> (f.getModifiers() & Modifier.TRANSIENT) == 0)
 					.filter(f -> !f.getName().matches(
-							"id|localId|creationUser|creationDate|versionNumber|lastModificationUser|lastModificationDate|"
+							"id|localId|creationDate|versionNumber|lastModificationDate|"
 									+ "propertyValue"))
 					.forEach(f -> {
 						fieldsWithProblematicAccess.add(f.getName());

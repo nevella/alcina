@@ -36,8 +36,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 public class DomainObjectCloner extends CloneHelper {
 	public static final Set<String> IGNORE_FOR_DOMAIN_OBJECT_CLONING = new HashSet<String>(
 			Arrays.asList(new String[] { "id", "localId",
-					"lastModificationDate", "lastModificationUser",
-					"creationDate", "creationUser", "versionNumber",
+					"lastModificationDate", "creationDate", "versionNumber",
 					"propertyChangeListeners" }));
 
 	private List provisionalObjects = new ArrayList();
@@ -72,6 +71,7 @@ public class DomainObjectCloner extends CloneHelper {
 		return dpi == null ? false : dpi.cloneForDuplication();
 	}
 
+	@Override
 	protected boolean ignore(Class clazz, String propertyName, Object obj) {
 		if (IGNORE_FOR_DOMAIN_OBJECT_CLONING.contains(propertyName)) {
 			return true;
@@ -91,6 +91,7 @@ public class DomainObjectCloner extends CloneHelper {
 				pp, obj, false);
 	}
 
+	@Override
 	protected <T> T newInstance(T o) {
 		Class clazz = o.getClass();
 		if (o instanceof Entity) {

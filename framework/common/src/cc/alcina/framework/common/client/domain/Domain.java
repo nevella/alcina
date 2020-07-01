@@ -27,8 +27,7 @@ public class Domain {
 
 	public static final List<String> DOMAIN_BASE_VERSIONABLE_PROPERTY_NAMES = Arrays
 			.asList(new String[] { "id", "localId", "lastModificationDate",
-					"lastModificationUser", "creationDate", "creationUser",
-					"versionNumber" });
+					"creationDate", "versionNumber" });
 
 	static Logger logger = LoggerFactory.getLogger(Domain.class);
 

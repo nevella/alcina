@@ -107,17 +107,6 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		return new LinkedHashSet<A>(results);
 	}
 
-	public <A> Set<A> getAllForCreationUser(Class<A> clazz) {
-		Query query = getEntityManager()
-				.createQuery(String.format("from %s where creationUser=?1 ",
-						clazz.getSimpleName()))
-				.setParameter(1, PermissionsManager.get().getUser());
-		// seems to be throwing transactional cache errors
-		// Registry.impl(JPAImplementation.class).cache(query);
-		List results = query.getResultList();
-		return new LinkedHashSet<A>(results);
-	}
-
 	public <A> Set<A> getAllForUser(Class<A> clazz) {
 		Query query = getEntityManager()
 				.createQuery(String.format("from %s where user=?1 ",

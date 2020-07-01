@@ -284,9 +284,6 @@ public class DomainDeltaSequencer {
 		public boolean allow(DomainTransformEvent o) {
 			if (o.getTransformType() == TransformType.CHANGE_PROPERTY_REF || o
 					.getTransformType() == TransformType.ADD_REF_TO_COLLECTION) {
-				if (!checkPropertyName(o)) {
-					return false;
-				}
 				if (o.getValueClass() == null || this.reachableCache
 						.get(o.getValueClass(), o.getValueId()) == null) {
 					return false;
@@ -294,14 +291,6 @@ public class DomainDeltaSequencer {
 				return true;
 			}
 			return false;
-		}
-
-		protected boolean checkPropertyName(DomainTransformEvent o) {
-			if (o.getPropertyName().equals("lastModificationUser")
-					|| o.getPropertyName().equals("creationUser")) {
-				return false;
-			}
-			return true;
 		}
 	}
 }
