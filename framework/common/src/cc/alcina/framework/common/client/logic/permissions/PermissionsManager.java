@@ -63,7 +63,21 @@ import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
  * @author Nick Reddel
  */
 public class PermissionsManager implements Vetoer, DomainTransformListener {
-	public static final String PROP_LOGIN_STATE = "loginState";
+	public static String SYSTEM_GROUP_NAME = "system";
+
+	public static String SYSTEM_USER_NAME = "system_user";
+
+	public static String ANONYMOUS_USER_NAME = "anonymous";
+
+	public static String ANONYMOUS_GROUP_NAME = "anonymous";
+
+	public static String ADMINISTRATORS_GROUP_NAME = "Administrators";
+
+	public static String INITIAL_ADMINISTRATOR_USER_NAME = "admin";
+
+	public static String INITIAL_ADMINISTRATOR_PASSWORD = "admin";
+
+	public static String DEVELOPERS_GROUP_NAME = "Developers";
 
 	private static String administratorGroupName = "Administrators";
 
@@ -393,6 +407,11 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	public OnlineState getOnlineState() {
 		return onlineState;
+	}
+
+	public String getSystemUserName() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	public PermissionsManager getT() {
@@ -746,7 +765,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	}
 
 	protected IUser getSystemUser() {
-		return Registry.impl(UserlandProvider.class).getSystemUser(true);
+		return new UserlandProvider().getSystemUser();
 	}
 
 	protected void nullGroupMap() {

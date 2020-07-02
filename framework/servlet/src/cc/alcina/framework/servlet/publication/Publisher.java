@@ -6,6 +6,7 @@ import java.util.Date;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
@@ -144,8 +145,7 @@ public class Publisher {
 				&& !AppPersistenceBase.isInstanceReadOnly() && !Ax.isTest()) {
 			IUser user = PermissionsManager.get().getUser();
 			if (user == null) {
-				user = CommonPersistenceProvider.get().getCommonPersistence()
-						.getSystemUser(true);
+				user = new UserlandProvider().getSystemUser();
 			}
 			publicationUserId = Registry.impl(PublicationPersistence.class)
 					.getNextPublicationIdForUser(user);

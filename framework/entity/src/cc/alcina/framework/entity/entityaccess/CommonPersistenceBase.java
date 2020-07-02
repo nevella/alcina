@@ -34,7 +34,6 @@ import java.util.regex.Pattern;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.transaction.UserTransaction;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,9 +69,7 @@ import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.Wrapper;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.Publication;
@@ -93,6 +90,8 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCache;
 import cc.alcina.framework.entity.entityaccess.transform.TransformPersister.TransformPersisterToken;
@@ -311,10 +310,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public <T extends HasId> T ensurePersistent(T obj) {
-		if (getEntityManager().contains(obj)) {
+		if (!(obj instanceof MvccObject) && getEntityManager().contains(obj)) {
 			return obj;
 		}
-		return (T) getEntityManager().find(obj.getClass(), obj.getId());
+		return (T) getEntityManager()
+				.find(Mvcc.resolveEntityClass(obj.getClass()), obj.getId());
 	}
 
 	@Override
@@ -341,14 +341,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		List results = query.getResultList();
 		return new LinkedHashSet<A>(results);
 	}
-
-	@Override
-	public IUser getAnonymousUser() {
-		return getUserByName(getAnonymousUserName(), true);
-	}
-
-	@Override
-	public abstract String getAnonymousUserName();
 
 	@Override
 	public ClientInstance getClientInstance(Long clientInstanceId) {
@@ -723,56 +715,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			}
 		}
 		return userName;
-	}
-
-	@Override
-	public U getSystemUser() {
-		return getUserByName(getSystemUserName());
-	}
-
-	@Override
-	public U getSystemUser(boolean clean) {
-		return (U) getUserByName(getSystemUserName(), clean);
-	}
-
-	// FIXME - mvcc.4 - move to permissionsmanager
-	public abstract String getSystemUserName();
-
-	/**
-	 * Note, if you're going to use the user on the servlet layer, always use
-	 * the 'clean' version of this function
-	 */
-	@Override
-	public U getUserByName(String userName) {
-		List<U> l = getEntityManager()
-				.createQuery(
-						String.format(
-								"select distinct u from "
-										+ getImplementationSimpleClassName(
-												IUser.class)
-										+ " u "
-										+ "left join fetch u.primaryGroup "
-										+ "left join fetch u.secondaryGroups g "
-										+ "left join fetch g.memberOfGroups sg "
-										+ "where u.%s = ?1",
-								getUserNamePropertyName()))
-				.setParameter(1, userName).getResultList();
-		return (l.size() == 0) ? null : l.get(0);
-	}
-
-	/**
-	 * Assume that this is always an in-system call (since we're after a
-	 * specific user) so _don't clean based on permissions_
-	 * 
-	 * FIXME - mvcc.4 - remove
-	 */
-	@Override
-	public IUser getUserByName(String userName, boolean clean) {
-		IUser user = getUserByName(userName);
-		PermissionsManager.get().getUserGroups(user);
-		IUser cleaned = new EntityUtils().detachedCloneIgnorePermissions(user,
-				clean ? createUserAndGroupInstantiator() : null);
-		return cleaned;
 	}
 
 	@Override
@@ -1321,8 +1263,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return "userName";
 	}
 
-	protected abstract UserTransaction getUserTransaction();
-
 	protected SearchResultsBase projectSearchResults(SearchResultsBase result) {
 		return new EntityUtils().detachedClone(result);
 	}
@@ -1340,20 +1280,30 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return cache;
 	}
 
+	/**
+	 * Note that this is only for in-tx work - normally use the DomainStore
+	 * access
+	 */
+	U getUserByName(String userName) {
+		List<U> l = getEntityManager()
+				.createQuery(
+						String.format(
+								"select distinct u from "
+										+ getImplementationSimpleClassName(
+												IUser.class)
+										+ " u "
+										+ "left join fetch u.primaryGroup "
+										+ "left join fetch u.secondaryGroups g "
+										+ "left join fetch g.memberOfGroups sg "
+										+ "where u.%s = ?1",
+								getUserNamePropertyName()))
+				.setParameter(1, userName).getResultList();
+		return (l.size() == 0) ? null : l.get(0);
+	}
+
 	@RegistryLocation(registryPoint = CommonPersistenceConnectionProvider.class)
 	public abstract static class CommonPersistenceConnectionProvider {
 		public abstract Connection getConnection();
-	}
-
-	@RegistryLocation(registryPoint = UserlandProvider.class, implementationType = ImplementationType.SINGLETON)
-	public static class DefaultUserlandProvider implements UserlandProvider {
-		IUser cachedCleaned = null;
-
-		@Override
-		public IUser getSystemUser(boolean clean) {
-			return Registry.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence().getSystemUser(clean);
-		}
 	}
 
 	public static class ReadonlyHandshakeObjectProvider

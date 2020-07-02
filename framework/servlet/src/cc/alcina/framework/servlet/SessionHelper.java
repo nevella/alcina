@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -201,9 +202,7 @@ public abstract class SessionHelper {
 	}
 
 	protected IUser getUser(String userName) {
-		CommonPersistenceLocal up = Registry
-				.impl(CommonPersistenceProvider.class).getCommonPersistence();
-		return up.getUserByName(userName, true);
+		return new UserlandProvider().getUserByName(userName);
 	}
 
 	protected boolean isAnonymousUser() {
@@ -213,9 +212,7 @@ public abstract class SessionHelper {
 	protected void resetPermissions(HttpServletRequest request) {
 		ThreadedPermissionsManager.cast().reset();
 		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
-		CommonPersistenceLocal up = Registry
-				.impl(CommonPersistenceProvider.class)
-				.getCommonPersistenceExTransaction();
-		PermissionsManager.get().setUser(getUser(up.getAnonymousUserName()));
+		PermissionsManager.get()
+				.setUser(new UserlandProvider().getAnonymousUser());
 	}
 }

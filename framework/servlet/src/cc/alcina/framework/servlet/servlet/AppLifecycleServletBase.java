@@ -53,6 +53,7 @@ import cc.alcina.framework.entity.entityaccess.AppPersistenceBase.ServletClassMe
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.DbAppender;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -200,6 +201,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void createServletTransformClientInstance() {
 		if (EntityLayerObjects.get().getServerAsClientInstance() == null) {
 			try {
+				Transaction.begin();
 				ThreadedPermissionsManager.cast().pushSystemUser();
 				ClientInstance serverAsClientInstance = Registry
 						.impl(CommonPersistenceProvider.class)
@@ -211,6 +213,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 						.setServerAsClientInstance(serverAsClientInstance);
 			} finally {
 				ThreadedPermissionsManager.cast().popSystemUser();
+				Transaction.end();
 			}
 		}
 	}

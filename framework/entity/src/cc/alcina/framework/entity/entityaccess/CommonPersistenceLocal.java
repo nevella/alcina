@@ -67,10 +67,6 @@ public interface CommonPersistenceLocal {
 
 	public <A> Set<A> getAll(Class<A> clazz);
 
-	public IUser getAnonymousUser();
-
-	public abstract String getAnonymousUserName();
-
 	public abstract Iid getIidByKey(String iid);
 
 	public <T> T getItemById(Class<T> clazz, Long id);
@@ -118,17 +114,6 @@ public interface CommonPersistenceLocal {
 	public List<Publication> getPublications(Collection<Long> ids);
 
 	public String getRememberMeUserName(String iid);
-
-	public abstract IUser getSystemUser();
-
-	public abstract IUser getSystemUser(boolean clean);
-
-	public abstract IUser getUserByName(String userName);
-
-	public abstract IUser getUserByName(String userName, boolean clean);
-
-	public String
-			getUserNameForClientInstanceId(long validatedClientInstanceId);
 
 	public <T extends WrapperPersistable> T getWrappedObjectForUser(
 			Class<? extends T> c, long wrappedObjectId) throws Exception;
@@ -200,6 +185,8 @@ public interface CommonPersistenceLocal {
 			long clientInstanceId);
 
 	long getMaxPublicationIdForUser(IUser user);
+
+	String getUserNameForClientInstanceId(long validatedClientInstanceId);
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
 }

@@ -23,8 +23,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 
 /**
@@ -103,9 +101,7 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 	}
 
 	public boolean isSystemUser() {
-		String systemUserName = ((CommonPersistenceBase) CommonPersistenceProvider
-				.get().getCommonPersistenceExTransaction()).getSystemUserName();
-		return getUserName().equals(systemUserName);
+		return getUserName().equals(PermissionsManager.SYSTEM_USER_NAME);
 	}
 
 	public void popSystemOrCurrentUser() {

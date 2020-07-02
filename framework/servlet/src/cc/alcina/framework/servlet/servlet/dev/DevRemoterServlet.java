@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -26,7 +27,6 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
@@ -105,9 +105,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
 		String encodedParams = req.getParameter(DEV_REMOTER_PARAMS);
 		DevRemoterParams params = KryoUtils.deserializeFromBase64(encodedParams,
 				DevRemoterParams.class);
-		CommonPersistenceLocal up = Registry
-				.impl(CommonPersistenceProvider.class).getCommonPersistence();
-		IUser user = up.getUserByName(params.username, true);
+		IUser user = new UserlandProvider().getUserByName(params.username);
 		try {
 			PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
 			Object api = null;
