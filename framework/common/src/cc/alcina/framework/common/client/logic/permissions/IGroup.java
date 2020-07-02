@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 
@@ -44,27 +45,43 @@ public interface IGroup extends IVersionable {
 		((Entity) this).domain().addToProperty("memberUsers", user);
 	}
 
+	default <IU extends IUser> boolean containsCurrentUser() {
+		return getMemberUsers().contains(PermissionsManager.get().getUser());
+	}
+
 	default <IG extends IGroup> boolean containsGroup(IG group) {
 		return getMemberGroups().contains(group);
 	}
 
+	/*
+	 * Note - does not descend
+	 */
 	default <IU extends IUser> boolean containsUser(IU user) {
 		return getMemberUsers().contains(user);
 	}
 
-	default boolean provideIsMemberOf(IGroup otherGroup) {
+	default <IU extends IUser> boolean
+			containsUserOrMemberGroupContainsUser(IU user) {
+		return forAllMemberGroups(group -> group.containsUser(user));
+	}
+
+	default boolean forAllMemberGroups(Predicate<IGroup> predicate) {
 		Set<IGroup> queued = new HashSet<>();
 		Stack<IGroup> toTraverse = new Stack<>();
 		toTraverse.add(this);
 		while (toTraverse.size() > 0) {
 			IGroup cursor = toTraverse.pop();
-			if (Objects.equals(cursor, otherGroup)) {
+			if (predicate.test(cursor)) {
 				return true;
 			}
 			cursor.getMemberOfGroups().stream().filter(queued::add)
 					.forEach(toTraverse::add);
 		}
 		return false;
+	}
+
+	default boolean provideIsMemberOf(IGroup otherGroup) {
+		return forAllMemberGroups(group -> Objects.equals(group, otherGroup));
 	}
 
 	default <IU extends Entity & IUser> void removeMemberUser(IU user) {

@@ -118,6 +118,7 @@ public class SimpleWorkspaceVisualiser extends Composite
 		});
 	}
 
+	@Override
 	public Widget getContentWidget() {
 		return ((SimplePanel) contentContainer).getWidget();
 	}

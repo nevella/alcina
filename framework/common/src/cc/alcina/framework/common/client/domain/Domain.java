@@ -89,7 +89,7 @@ public class Domain {
 				continue;
 			}
 			logger.info(
-					"detachedToDomain:: %s.%s - ignoreProperties: %s :: [%s]->[%s]",
+					"detachedToDomain:: {}.{} - ignoreProperties: {} :: [{}]->[{}]",
 					entity.getClass().getSimpleName(),
 					propertyInfo.getPropertyName(), ignoreProperties,
 					propertyInfo.get(entity), propertyInfo.get(writeable));

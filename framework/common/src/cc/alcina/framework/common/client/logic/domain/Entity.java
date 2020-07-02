@@ -19,8 +19,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CollectionModificationType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.logic.reflection.PermissionRule;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -246,6 +248,11 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 		public <V extends Entity> void addToProperty(String propertyName, V v) {
 			TransformManager.get().modifyCollectionProperty(Entity.this,
 					propertyName, v, CollectionModificationType.ADD);
+		}
+
+		public <V extends Entity> V checkPermission(PermissionRule rule)
+				throws PermissionsException {
+			return (V) rule.checkPermission(Entity.this);
 		}
 
 		public T detachedToDomain() {

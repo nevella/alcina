@@ -18,4 +18,6 @@ public interface WorkspaceVisualiser extends IsWidget {
 	TreeItem selectNodeForObject(Object singleObj, boolean b);
 
 	void redraw();
+
+	Widget getContentWidget();
 }

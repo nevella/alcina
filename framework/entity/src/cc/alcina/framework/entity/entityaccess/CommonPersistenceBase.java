@@ -735,6 +735,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return (U) getUserByName(getSystemUserName(), clean);
 	}
 
+	// FIXME - mvcc.4 - move to permissionsmanager
 	public abstract String getSystemUserName();
 
 	/**
@@ -762,6 +763,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	/**
 	 * Assume that this is always an in-system call (since we're after a
 	 * specific user) so _don't clean based on permissions_
+	 * 
+	 * FIXME - mvcc.4 - remove
 	 */
 	@Override
 	public IUser getUserByName(String userName, boolean clean) {
