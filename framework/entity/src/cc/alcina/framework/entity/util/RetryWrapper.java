@@ -27,7 +27,11 @@ public class RetryWrapper<T> {
 		Exception lastException = null;
 		while (true) {
 			try {
-				return callable.call();
+				T result = callable.call();
+				if (currentCount > 0) {
+					Ax.out("Retried %s times, succeeded", currentCount);
+				}
+				return result;
 			} catch (Exception e) {
 				lastException = e;
 			}
