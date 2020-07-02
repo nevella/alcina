@@ -1521,6 +1521,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		private boolean lazyProperties;
 
+		private Statement stmt;
+
 		private ConnResults(Builder builder) {
 			this.conn = builder.conn;
 			this.clazz = builder.clazz;
@@ -1551,8 +1553,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			rsSql = null;
 			try {
 				if (rs == null) {
-					conn.setAutoCommit(false);
-					Statement stmt = conn.createStatement();
+					stmt = conn.createStatement();
 					stmt.setFetchSize(20000);
 					if (joinTable) {
 						rsSql = sqlFilter;
@@ -1722,6 +1723,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						} else {
 							finished = true;
 							rs.close();
+							stmt.close();
 						}
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
