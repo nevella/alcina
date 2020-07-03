@@ -302,6 +302,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private boolean ignoreUnrecognizedDomainClassException;
 
+	private boolean associationPropogationDisabled;
+
 	protected TransformManager() {
 		this.transformListenerSupport = new DomainTransformSupport();
 		this.collectionModificationSupport = new CollectionModificationSupport();
@@ -982,7 +984,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public boolean handlesAssociationsFor(Class clazz) {
-		return true;
+		return !associationPropogationDisabled;
 	}
 
 	public boolean hasTransforms() {
@@ -1540,6 +1542,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public boolean resolveMissingObject(DomainTransformEvent evt) {
 		return isReplayingRemoteEvent();
+	}
+
+	public void setAssociationPropogationDisabled(
+			boolean associationPropogationDisabled) {
+		this.associationPropogationDisabled = associationPropogationDisabled;
 	}
 
 	public void setIgnorePropertyChanges(boolean ignorePropertyChanges) {

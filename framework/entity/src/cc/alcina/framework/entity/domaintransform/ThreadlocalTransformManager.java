@@ -611,6 +611,9 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	@Override
 	public boolean handlesAssociationsFor(Class clazz) {
+		if (!super.handlesAssociationsFor(clazz)) {
+			return false;
+		}
 		DomainStore store = DomainStore.stores().storeFor(clazz);
 		return store.handlesAssociationsFor(clazz);
 	}

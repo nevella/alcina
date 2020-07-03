@@ -11,7 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
+import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
 
 public abstract class AlcinaServlet extends HttpServlet {
 	private AlcinaServletContext alcinaContext;
@@ -75,10 +78,21 @@ public abstract class AlcinaServlet extends HttpServlet {
 		}
 	}
 
+	protected boolean trackInternalMetrics() {
+		return false;
+	}
+
 	protected void wrapRequest(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException {
 		try {
 			alcinaContext.begin(request, response);
+			if (trackInternalMetrics()) {
+				InternalMetrics.get().startTracker(request,
+						() -> Ax.format("Alcina servlet %s",
+								getClass().getSimpleName()),
+						InternalMetricTypeAlcina.servlet,
+						Thread.currentThread().getName(), () -> true);
+			}
 			handleRequest(request, response);
 		} catch (Exception e) {
 			logger.warn("Alcina servlet request issue - user {} - url {}",
@@ -86,6 +100,9 @@ public abstract class AlcinaServlet extends HttpServlet {
 					request.getRequestURI());
 			throw new ServletException(e);
 		} finally {
+			if (trackInternalMetrics()) {
+				InternalMetrics.get().endTracker(request);
+			}
 			alcinaContext.end();
 		}
 	}
