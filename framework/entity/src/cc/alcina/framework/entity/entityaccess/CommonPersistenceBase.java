@@ -102,6 +102,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.util.MethodContext;
 
 /**
  *
@@ -869,6 +870,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				getEntityManager().persist(metric);
 			}
 		}
+	}
+
+	@Override
+	public void ping() {
+		MethodContext.instance().withMetricKey("ping").run(() -> {
+			List list = getEntityManager().createNativeQuery("select 1")
+					.getResultList();
+			Ax.out(list.get(0));
+		});
 	}
 
 	@Override

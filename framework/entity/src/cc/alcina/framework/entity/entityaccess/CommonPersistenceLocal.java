@@ -141,6 +141,8 @@ public interface CommonPersistenceLocal {
 
 	public <T extends ILogRecord> long persistLogRecord(T logRecord);
 
+	public void ping();
+
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
 			Long id, GraphProjectionFieldFilter fieldFilter,
 			GraphProjectionDataFilter dataFilter);
