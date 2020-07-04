@@ -541,12 +541,15 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	<T extends Entity> T findRaw(Class<T> clazz, long id) {
+	<T extends Entity> T find(Class<T> clazz, long id) {
 		T t = cache.get(clazz, id);
 		if (t == null) {
 			if (domainDescriptor.perClass.containsKey(clazz)
-					&& domainDescriptor.perClass.get(clazz).lazy && id != 0) {
+					&& domainDescriptor.perClass.get(clazz)
+							.provideNotFullyLoadedOnStartup()
+					&& id != 0) {
 				lazyObjectLoader.loadObject(clazz, id, 0);
+				t = cache.get(clazz, id);
 			}
 		}
 		if (t != null) {
@@ -1271,7 +1274,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public <V extends Entity> V find(Class clazz, long id) {
-			return (V) findRaw(clazz, id);
+			return (V) DomainStore.this.find(clazz, id);
 		}
 
 		@Override

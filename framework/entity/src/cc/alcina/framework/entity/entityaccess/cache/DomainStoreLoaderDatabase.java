@@ -803,8 +803,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					case "objectClassRef":
 					case "valueClassRef":
 						long storeDomainClassRefId = item.id;
-						ClassRef storeClassRef = store.findRaw(
-								classRefImplClass, storeDomainClassRefId);
+						ClassRef storeClassRef = store.find(classRefImplClass,
+								storeDomainClassRefId);
 						ClassRef writableDomainClassRef = ClassRef
 								.forName(storeClassRef.getRefClassName());
 						return writableDomainClassRef;
@@ -1016,7 +1016,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					@Override
 					public Void call() throws Exception {
 						MetricLogging.get().start(clazz.getSimpleName());
-						loadTable(clazz, "", null, warmupLaterLookup());
+						loadTable(clazz, descriptor.getInitialLoadFilter(),
+								null, warmupLaterLookup());
 						MetricLogging.get().end(clazz.getSimpleName(),
 								store.metricLogger);
 						return null;
@@ -1333,7 +1334,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			try {
 				DomainClassDescriptor itemDescriptor = domainDescriptor.perClass
 						.get(c);
-				if (itemDescriptor != null && itemDescriptor.lazy) {
+				if (itemDescriptor != null
+						&& itemDescriptor.provideNotFullyLoadedOnStartup()) {
 					// only one thread should load a given class, for
 					// threadsafety reasons
 					ClassIdLock lock = LockUtils.obtainClassIdLock(c, 0L);

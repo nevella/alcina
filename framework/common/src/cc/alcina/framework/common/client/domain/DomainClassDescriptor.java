@@ -95,6 +95,10 @@ public class DomainClassDescriptor<T extends Entity>
 		return new ArrayList<>();
 	}
 
+	public String getInitialLoadFilter() {
+		return "";
+	}
+
 	public boolean ignoreField(String name) {
 		return false;
 	}
@@ -147,6 +151,10 @@ public class DomainClassDescriptor<T extends Entity>
 
 	public boolean isTransactional() {
 		return true;
+	}
+
+	public boolean provideNotFullyLoadedOnStartup() {
+		return lazy || getInitialLoadFilter().length() > 0;
 	}
 
 	@Override
