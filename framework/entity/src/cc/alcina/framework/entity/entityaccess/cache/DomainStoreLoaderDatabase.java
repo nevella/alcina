@@ -1849,6 +1849,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							if (target == null) {
 								if (segmentLoader == null) {
 									if (missingWarningCount++ < 5) {
+										new Exception().printStackTrace();
 										store.logger.warn(
 												"later-lookup -- missing target: {}, {} for  {}.{} #{}",
 												type, id,

@@ -438,7 +438,16 @@ public class DomainStore implements IDomainStore {
 			return dte;
 		}
 		if (!ann.translateObjectWritesToIdWrites()) {
-			return null;
+			switch (ann.loadType()) {
+			case EAGER:
+			case INTERN:
+				return dte;
+			case LAZY:
+			case TRANSIENT:
+				return null;
+			default:
+				throw new UnsupportedOperationException();
+			}
 		}
 		if (ann.toIdProperty().isEmpty()) {
 			return dte;

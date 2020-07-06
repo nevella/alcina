@@ -1,7 +1,6 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -23,7 +22,8 @@ public class LazyPropertyLoadTask<T extends Entity>
 
 	@Override
 	public Stream<T> wrap(Stream<T> stream) {
-		return stream.peek(t -> lazyLoad(Collections.singletonList(t)));
+		// return stream.peek(t -> lazyLoad(Collections.singletonList(t)));
+		return super.wrap(stream);
 	}
 
 	@Override

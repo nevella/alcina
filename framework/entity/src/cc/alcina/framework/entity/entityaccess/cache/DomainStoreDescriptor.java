@@ -82,6 +82,11 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		throw new UnsupportedOperationException();
 	}
 
+	public void
+			setDomainSegmentLoader(DomainSegmentLoader domainSegmentLoader) {
+		this.domainSegmentLoader = domainSegmentLoader;
+	}
+
 	/**
 	 * TODO: counter stores shallow and deep size of entities (deep: reachable
 	 * non-entity objects) pass up layer
