@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.TreeResolver.DefaultResolver;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -202,7 +202,7 @@ public class DomainClassDescriptor<T extends Entity>
 
 	public static class DomainStorePropertyResolver
 			implements DomainStoreProperty {
-		protected DefaultResolver<DomainStoreProperty> resolver;
+		protected TreeResolver<DomainStoreProperty> resolver;
 
 		public DomainStorePropertyResolver(
 				DomainStorePropertyResolver childResolver) {
@@ -211,7 +211,7 @@ public class DomainClassDescriptor<T extends Entity>
 
 		public DomainStorePropertyResolver(
 				PropertyReflector.Location propertyLocation) {
-			resolver = new DefaultResolver<DomainStoreProperty>(
+			resolver = new TreeResolver<DomainStoreProperty>(
 					propertyLocation, propertyLocation.propertyReflector
 							.getAnnotation(DomainStoreProperty.class));
 		}
@@ -240,9 +240,9 @@ public class DomainClassDescriptor<T extends Entity>
 					"translateObjectWritesToIdWrites");
 		}
 
-		protected DefaultResolver<DomainStoreProperty>
-				createResolver(DefaultResolver<DomainStoreProperty> resolver) {
-			return new DefaultResolver<DomainStoreProperty>(resolver);
+		protected TreeResolver<DomainStoreProperty>
+				createResolver(TreeResolver<DomainStoreProperty> resolver) {
+			return new TreeResolver<DomainStoreProperty>(resolver);
 		}
 	}
 }
