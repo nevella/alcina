@@ -263,8 +263,11 @@ public class Transaction {
 	}
 
 	public void toDbAborted() {
+		// allow 'to aborted' when already aborted - for bubbling exception
+		// handling
 		Preconditions.checkState(getPhase() == TransactionPhase.TO_DB_PERSISTING
-				|| getPhase() == TransactionPhase.TO_DB_PREPARING);
+				|| getPhase() == TransactionPhase.TO_DB_PREPARING
+				|| getPhase() == TransactionPhase.TO_DB_ABORTED);
 		setPhase(TransactionPhase.TO_DB_ABORTED);
 	}
 

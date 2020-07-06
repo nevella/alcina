@@ -92,7 +92,7 @@ public abstract class ClassRef extends Entity {
 				this.refClass = Reflections.classLookup()
 						.getClassForName(this.refClassName);
 			} catch (Exception e) {
-				e.printStackTrace();
+				Ax.simpleExceptionOut(e);
 			}
 		}
 		return this.refClass;

@@ -9,6 +9,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
@@ -107,6 +109,9 @@ public class AlcinaParallel {
 				if (parameters.transaction != null && !inTransaction) {
 					Transaction.join(parameters.transaction);
 				}
+				if (parameters.wrapInTransaction && !inTransaction) {
+					Transaction.begin();
+				}
 				LooseContext.push();
 				if (cancelled) {
 					return null;
@@ -128,6 +133,9 @@ public class AlcinaParallel {
 				ThreadlocalTransformManager.cast().resetTltm(null);
 				if (parameters.transaction != null && !inTransaction) {
 					Transaction.split();
+				}
+				if (parameters.wrapInTransaction && !inTransaction) {
+					Transaction.end();
 				}
 			}
 			return null;
@@ -170,6 +178,8 @@ public class AlcinaParallel {
 
 		private Transaction transaction;
 
+		private boolean wrapInTransaction;
+
 		public Parameters() {
 		}
 
@@ -180,6 +190,7 @@ public class AlcinaParallel {
 			this.threadName = builder.threadName;
 			this.serial = builder.withSerial;
 			this.transaction = builder.transaction;
+			this.wrapInTransaction = builder.wrapInTransaction;
 		}
 
 		public String provideThreadName() {
@@ -199,6 +210,8 @@ public class AlcinaParallel {
 			private boolean withSerial;
 
 			private Transaction transaction;
+
+			private boolean wrapInTransaction;
 
 			private Builder() {
 			}
@@ -236,7 +249,14 @@ public class AlcinaParallel {
 				return this;
 			}
 
+			public Builder withTransaction() {
+				Preconditions.checkArgument(this.transaction == null);
+				this.wrapInTransaction = true;
+				return this;
+			}
+
 			public Builder withTransaction(Transaction transaction) {
+				Preconditions.checkArgument(!this.wrapInTransaction);
 				this.transaction = transaction;
 				return this;
 			}
