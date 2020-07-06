@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.domain;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -15,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.TreeResolver.DefaultResolver;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -28,6 +31,8 @@ public class DomainClassDescriptor<T extends Entity>
 	public List<DomainStoreLookupDescriptor> lookupDescriptors = new ArrayList<DomainStoreLookupDescriptor>();
 
 	public List<DomainProjection> projections = new ArrayList<DomainProjection>();
+
+	private DomainDescriptor domainDescriptor;
 
 	private StringMap propertyAlia = new StringMap();
 
@@ -95,6 +100,10 @@ public class DomainClassDescriptor<T extends Entity>
 		return new ArrayList<>();
 	}
 
+	public DomainDescriptor getDomainDescriptor() {
+		return this.domainDescriptor;
+	}
+
 	public String getInitialLoadFilter() {
 		return "";
 	}
@@ -157,6 +166,19 @@ public class DomainClassDescriptor<T extends Entity>
 		return lazy || getInitialLoadFilter().length() > 0;
 	}
 
+	public DomainStoreProperty resolveDomainStoreProperty(
+			PropertyReflector.Location propertyLocation) {
+		DomainStorePropertyResolver resolver = new DomainStorePropertyResolver(
+				propertyLocation);
+		DomainStorePropertyResolver parent = domainDescriptor
+				.resolveDomainStoreProperty(resolver);
+		return parent.resolver.hasValue() ? parent : null;
+	}
+
+	public void setDomainDescriptor(DomainDescriptor domainDescriptor) {
+		this.domainDescriptor = domainDescriptor;
+	}
+
 	@Override
 	public String toString() {
 		return Ax.format("DomainClassDescriptor: %s", clazz.getName());
@@ -176,5 +198,51 @@ public class DomainClassDescriptor<T extends Entity>
 			addLookup(DomainStoreLookupDescriptor lookup) {
 		lookupDescriptors.add(lookup);
 		return this;
+	}
+
+	public static class DomainStorePropertyResolver
+			implements DomainStoreProperty {
+		protected DefaultResolver<DomainStoreProperty> resolver;
+
+		public DomainStorePropertyResolver(
+				DomainStorePropertyResolver childResolver) {
+			resolver = createResolver(childResolver.resolver);
+		}
+
+		public DomainStorePropertyResolver(
+				PropertyReflector.Location propertyLocation) {
+			resolver = new DefaultResolver<DomainStoreProperty>(
+					propertyLocation, propertyLocation.propertyReflector
+							.getAnnotation(DomainStoreProperty.class));
+		}
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return DomainStoreProperty.class;
+		}
+
+		@Override
+		public DomainStorePropertyLoadType loadType() {
+			Function<DomainStoreProperty, DomainStorePropertyLoadType> function = DomainStoreProperty::loadType;
+			return resolver.resolve(function, "loadType");
+		}
+
+		@Override
+		public String toIdProperty() {
+			Function<DomainStoreProperty, String> function = DomainStoreProperty::toIdProperty;
+			return resolver.resolve(function, "toIdProperty");
+		}
+
+		@Override
+		public boolean translateObjectWritesToIdWrites() {
+			Function<DomainStoreProperty, Boolean> function = DomainStoreProperty::translateObjectWritesToIdWrites;
+			return resolver.resolve(function,
+					"translateObjectWritesToIdWrites");
+		}
+
+		protected DefaultResolver<DomainStoreProperty>
+				createResolver(DefaultResolver<DomainStoreProperty> resolver) {
+			return new DefaultResolver<DomainStoreProperty>(resolver);
+		}
 	}
 }

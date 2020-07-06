@@ -53,6 +53,7 @@ import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
+import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.FilterCost;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.domain.IndexedValueProvider;
@@ -76,6 +77,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
@@ -217,7 +219,7 @@ public class DomainStore implements IDomainStore {
 
 	DomainStoreLoader loader;
 
-	private UnsortedMultikeyMap<DomainStoreProperty> domainStoreProperties = new UnsortedMultikeyMap<>(
+	UnsortedMultikeyMap<DomainStoreProperty> domainStoreProperties = new UnsortedMultikeyMap<>(
 			2);
 
 	private LazyObjectLoader lazyObjectLoader;
@@ -365,8 +367,9 @@ public class DomainStore implements IDomainStore {
 		Transaction.current().setBaseTransaction(true);
 		domainDescriptor.perClass.keySet()
 				.forEach(clazz -> cache.initialiseMap(clazz));
-		domainDescriptor.perClass.values().stream()
-				.forEach(DomainClassDescriptor::initialise);
+		domainDescriptor.perClass.values().stream().forEach(dcd -> {
+			dcd.initialise();
+		});
 		loader.warmup();
 		// loader responsible for this
 		// Transaction.current().toCommitted();
@@ -507,6 +510,7 @@ public class DomainStore implements IDomainStore {
 	private void prepareClassDescriptor(DomainClassDescriptor classDescriptor) {
 		try {
 			Class clazz = classDescriptor.clazz;
+			classDescriptor.setDomainDescriptor(domainDescriptor);
 			List<PropertyDescriptor> pds = new ArrayList<PropertyDescriptor>(
 					Arrays.asList(Introspector.getBeanInfo(clazz)
 							.getPropertyDescriptors()));
@@ -515,19 +519,22 @@ public class DomainStore implements IDomainStore {
 					continue;
 				}
 				Method rm = pd.getReadMethod();
+				PropertyReflector property = Reflections.propertyAccessor()
+						.getPropertyReflector(rm.getDeclaringClass(),
+								pd.getName());
+				DomainStoreProperty domainStorePropertyAnnotation = classDescriptor
+						.resolveDomainStoreProperty(
+								new PropertyReflector.Location(property,
+										clazz));
 				if ((rm.getAnnotation(Transient.class) != null
 						&& rm.getAnnotation(DomainStoreDbColumn.class) == null)
-						|| rm.getAnnotation(
-								DomainStoreProperty.class) != null) {
-					DomainStoreProperty propertyAnnotation = rm
-							.getAnnotation(DomainStoreProperty.class);
-					if (propertyAnnotation != null) {
+						|| domainStorePropertyAnnotation != null) {
+					if (domainStorePropertyAnnotation != null) {
 						Field field = getField(clazz, pd.getName());
 						field.setAccessible(true);
 						domainStoreProperties.put(clazz, field.getName(),
-								propertyAnnotation);
+								domainStorePropertyAnnotation);
 					}
-					continue;
 				}
 			}
 		} catch (Exception e) {

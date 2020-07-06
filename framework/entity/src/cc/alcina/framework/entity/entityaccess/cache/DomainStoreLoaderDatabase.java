@@ -53,6 +53,8 @@ import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
 import cc.alcina.framework.common.client.domain.DomainProjection;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
+import cc.alcina.framework.common.client.domain.DomainStoreProperty;
+import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -88,7 +90,6 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainS
 import cc.alcina.framework.entity.entityaccess.cache.DomainSegmentLoader.DomainSegmentPropertyType;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.LaterLookup.LaterItem;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
@@ -351,7 +352,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private void addColumnName(Class clazz, PropertyDescriptor pd,
 			Class propertyType) {
-		columnDescriptors.add(clazz, new ColumnDescriptor(pd, propertyType));
+		columnDescriptors.add(clazz,
+				new ColumnDescriptor(clazz, pd, propertyType));
 		propertyDescriptorFetchTypes.put(pd, propertyType);
 	}
 
@@ -884,17 +886,17 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 			Method rm = pd.getReadMethod();
 			boolean ignore = classDescriptor.isIgnoreColumn(pd.getName());
+			DomainStoreProperty domaStoreProperty = store.domainStoreProperties
+					.get(clazz, pd.getName());
 			if ((rm.getAnnotation(Transient.class) != null
 					&& rm.getAnnotation(DomainStoreDbColumn.class) == null)
-					|| rm.getAnnotation(DomainStoreProperty.class) != null) {
+					|| domaStoreProperty != null) {
 				ignore = true;
-				DomainStoreProperty propertyAnnotation = rm
-						.getAnnotation(DomainStoreProperty.class);
-				if (propertyAnnotation != null) {
+				if (domaStoreProperty != null) {
 					Field field = store.getField(clazz, pd.getName());
 					field.setAccessible(true);
 					domainStorePropertyFields.put(clazz, field, field);
-					ignore = propertyAnnotation
+					ignore = domaStoreProperty
 							.loadType() == DomainStorePropertyLoadType.TRANSIENT;
 				}
 			}
@@ -1045,7 +1047,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	/*
-	 * Use the writed method of the domain entity (to force a transactional
+	 * Use the write method of the domain entity (to force a transactional
 	 * version) but don't record the property change. The populated version will
 	 * be vacuumed - neatly avoiding any cache invalidation requirements
 	 */
@@ -1360,7 +1362,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		private DomainStorePropertyLoadType loadType = DomainStorePropertyLoadType.EAGER;
 
-		public ColumnDescriptor(PropertyDescriptor pd, Class propertyType) {
+		private Class clazz;
+
+		public ColumnDescriptor(Class clazz, PropertyDescriptor pd,
+				Class propertyType) {
+			this.clazz = clazz;
 			this.pd = pd;
 			type = propertyType;
 			typeIdHasId = HasId.class.isAssignableFrom(type);
@@ -1369,8 +1375,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			if (enumerated != null) {
 				enumType = enumerated.value();
 			}
-			DomainStoreProperty domainStoreProperty = pd.getReadMethod()
-					.getAnnotation(DomainStoreProperty.class);
+			DomainStoreProperty domainStoreProperty = store.domainStoreProperties
+					.get(clazz, pd.getName());
 			if (domainStoreProperty != null) {
 				loadType = domainStoreProperty.loadType();
 			}

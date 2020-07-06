@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.domain.DomainClassDescriptor.DomainStorePropertyResolver;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -71,6 +72,9 @@ public abstract class DomainDescriptor {
 		return (List) perClassTasks.get(clazz);
 	}
 
+	public void initialise() {
+	}
+
 	public boolean joinPropertyCached(Class clazz) {
 		return perClass.containsKey(clazz);
 	}
@@ -81,7 +85,11 @@ public abstract class DomainDescriptor {
 		postLoadTasks.stream().forEach(task -> task.registerStore(domainStore));
 	}
 
-	public void initialise() {
+	public DomainStorePropertyResolver resolveDomainStoreProperty(
+			DomainStorePropertyResolver childResolver) {
+		DomainStorePropertyResolver resolver = new DomainStorePropertyResolver(
+				childResolver);
+		return resolver;
 	}
 
 	public static interface DomainStoreTask {

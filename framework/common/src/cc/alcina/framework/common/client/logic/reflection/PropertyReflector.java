@@ -13,4 +13,16 @@ public interface PropertyReflector {
 	public abstract Object getPropertyValue(Object bean);
 
 	public abstract void setPropertyValue(Object bean, Object newValue);
+
+	public static class Location {
+		public PropertyReflector propertyReflector;
+
+		public Class containingClass;
+
+		public Location(PropertyReflector propertyReflector,
+				Class containingClass) {
+			this.propertyReflector = propertyReflector;
+			this.containingClass = containingClass;
+		}
+	}
 }

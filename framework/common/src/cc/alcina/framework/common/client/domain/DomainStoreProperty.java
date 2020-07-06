@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.cache;
+package cc.alcina.framework.common.client.domain;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

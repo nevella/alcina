@@ -73,7 +73,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	public static String ADMINISTRATORS_GROUP_NAME = "Administrators";
 
-	public static String INITIAL_ADMINISTRATOR_USER_NAME = "admin";
+	public static String INITIAL_ADMINISTRATOR_USER_NAME = "admin@nodomain.cc";
 
 	public static String INITIAL_ADMINISTRATOR_PASSWORD = "admin";
 
