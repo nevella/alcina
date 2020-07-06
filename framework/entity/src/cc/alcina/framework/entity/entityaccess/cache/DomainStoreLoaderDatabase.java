@@ -30,6 +30,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.Column;
@@ -95,6 +96,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 /*FIXME - mvcc.4
  * The various loadtable methods are way to overloaded 
@@ -1362,7 +1364,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		private DomainStorePropertyLoadType loadType = DomainStorePropertyLoadType.EAGER;
 
-		private Class clazz;
+		// debugging
+		Class clazz;
+
+		Map<Object, Object> interns = new Object2ObjectOpenHashMap<>();
 
 		public ColumnDescriptor(Class clazz, PropertyDescriptor pd,
 				Class propertyType) {
@@ -1411,6 +1416,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 
 		public Object getObject(ResultSet rs, int idx) throws Exception {
+			Object object = getObject0(rs, idx);
+			if (object == null) {
+				return null;
+			}
+			return interns.computeIfAbsent(object, Function.identity());
+		}
+
+		private Object getObject0(ResultSet rs, int idx) throws Exception {
 			if (typeIdHasId || type == Long.class || type == long.class) {
 				Long v = rs.getLong(idx);
 				if (rs.wasNull()) {
@@ -1491,6 +1504,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 			throw new RuntimeException(
 					"Unhandled rs type: " + type.getSimpleName());
+		}
+
+		void clearInterns() {
+			interns.clear();
 		}
 	}
 
@@ -1732,6 +1749,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							finished = true;
 							rs.close();
 							stmt.close();
+							if (columnDescriptors != null) {
+								columnDescriptors.forEach(
+										ColumnDescriptor::clearInterns);
+							}
 						}
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
