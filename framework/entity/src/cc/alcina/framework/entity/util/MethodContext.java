@@ -26,7 +26,7 @@ public class MethodContext {
 	public <T> T call(Callable<T> callable) {
 		try {
 			if (wrappingTransaction) {
-				Transaction.ensureBegun();
+				Transaction.begin();
 			}
 			if (!context.isEmpty()) {
 				LooseContext.push();
@@ -57,7 +57,7 @@ public class MethodContext {
 				LooseContext.pop();
 			}
 			if (wrappingTransaction) {
-				Transaction.endAndBeginNew();
+				Transaction.end();
 			}
 		}
 	}

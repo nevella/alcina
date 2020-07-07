@@ -329,8 +329,6 @@ public abstract class DevHelper {
 		}
 	}
 
-	public abstract void readAppObjectGraph();
-
 	public <V> V readObject(V template) {
 		return readObject(template, template.getClass().getSimpleName());
 	}
