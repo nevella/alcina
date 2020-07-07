@@ -881,7 +881,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		clear();
 		MetricLogging.get().end("init-console");
 		try {
-			devHelper.readAppObjectGraph();
 			devHelper.initPostObjectServices();
 		} catch (Exception e) {
 			e.printStackTrace();
