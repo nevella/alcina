@@ -275,8 +275,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		interns = null;
 		MetricLogging.get().start("xrefs");
 		for (LaterLookup ll : warmupLaterLookups) {
-			ll.resolve();
+			calls.add(() -> {
+				ll.resolve();
+				return null;
+			});
 		}
+		invokeAllWithThrow(calls);
 		MetricLogging.get().end("xrefs");
 		warmupLaterLookups.clear();
 		// lazy tables, load a segment (for large db dev work)
