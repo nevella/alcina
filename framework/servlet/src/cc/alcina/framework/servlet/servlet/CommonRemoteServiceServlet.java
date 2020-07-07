@@ -486,7 +486,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public String processCall(String payload) throws SerializationException {
 		RPCRequest rpcRequest = null;
-		String threadName = Thread.currentThread().getName();
 		try {
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
 					getThreadLocalRequest());
@@ -495,9 +494,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			getThreadLocalRequest().setAttribute(
 					CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS,
 					new StringMap());
-			alcinaServletContext.begin(getThreadLocalRequest(),
-					getThreadLocalResponse());
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
+			String suffix = getRpcHandlerThreadNameSuffix(rpcRequest);
+			String name = rpcRequest.getMethod().getName();
+			String threadName = Ax.format("gwt-rpc:%s:%s%s", name,
+					callCounter.incrementAndGet(), suffix);
+			alcinaServletContext.begin(getThreadLocalRequest(),
+					getThreadLocalResponse(), threadName);
 			if (rpcRequest
 					.getSerializationPolicy() instanceof LegacySerializationPolicy) {
 				throw new IncompatibleRemoteServiceException();
@@ -505,7 +508,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_RQ, rpcRequest);
 			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_PAYLOAD,
 					payload);
-			String name = rpcRequest.getMethod().getName();
 			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
 					ServletLayerUtils
 							.robustGetRemoteAddr(getThreadLocalRequest()));
@@ -513,9 +515,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					SessionHelper.getAuthenticatedSessionClientInstanceId(
 							getThreadLocalRequest()));
 			RPCRequest f_rpcRequest = rpcRequest;
-			String suffix = getRpcHandlerThreadNameSuffix(rpcRequest);
-			Thread.currentThread().setName(Ax.format("gwt-rpc:%s:%s%s", name,
-					callCounter.incrementAndGet(), suffix));
 			onAfterAlcinaAuthentication(name);
 			LooseContext.set(CONTEXT_RPC_USER_ID,
 					PermissionsManager.get().getUserId());
@@ -574,7 +573,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			 */
 			getThreadLocalRequest().setAttribute(THRD_LOCAL_USER_NAME,
 					PermissionsManager.get().getUserName());
-			Thread.currentThread().setName(threadName);
 			InternalMetrics.get().endTracker(rpcRequest);
 			alcinaServletContext.end();
 		}

@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.servlet;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -20,6 +21,8 @@ public abstract class AlcinaServlet extends HttpServlet {
 	private AlcinaServletContext alcinaContext;
 
 	Logger logger = LoggerFactory.getLogger(getClass());
+
+	private AtomicInteger callCounter = new AtomicInteger(0);
 
 	public AlcinaServlet() {
 		this.alcinaContext = new AlcinaServletContext()
@@ -85,7 +88,9 @@ public abstract class AlcinaServlet extends HttpServlet {
 	protected void wrapRequest(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException {
 		try {
-			alcinaContext.begin(request, response);
+			String threadName = Ax.format("task-%s:%s",
+					getClass().getSimpleName(), callCounter.incrementAndGet());
+			alcinaContext.begin(request, response, threadName);
 			if (trackInternalMetrics()) {
 				InternalMetrics.get().startTracker(request,
 						() -> Ax.format("Alcina servlet %s",
