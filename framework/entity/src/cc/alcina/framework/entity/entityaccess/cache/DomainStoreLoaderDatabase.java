@@ -25,12 +25,12 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.Column;
@@ -96,7 +96,6 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 /*FIXME - mvcc.4
  * The various loadtable methods are way to overloaded 
@@ -162,6 +161,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					new NamedThreadFactory("domainStore-iLoader"));
 
 	private Transaction warmupTransaction;
+
+	Map<Object, Object> interns = new ConcurrentHashMap<>();
 
 	public DomainStoreLoaderDatabase(DomainStore store,
 			RetargetableDataSource dataSource,
@@ -271,6 +272,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		setupInitialJoinTableCalls(calls);
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("tables");
+		interns = null;
 		MetricLogging.get().start("xrefs");
 		for (LaterLookup ll : warmupLaterLookups) {
 			ll.resolve();
@@ -1367,8 +1369,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		// debugging
 		Class clazz;
 
-		Map<Object, Object> interns = new Object2ObjectOpenHashMap<>();
-
 		public ColumnDescriptor(Class clazz, PropertyDescriptor pd,
 				Class propertyType) {
 			this.clazz = clazz;
@@ -1420,7 +1420,18 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			if (object == null) {
 				return null;
 			}
-			return interns.computeIfAbsent(object, Function.identity());
+			if (interns == null) {
+				return object;
+			}
+			// don't use computeIfAbsent - we're not concerned about the odd
+			// duplicate
+			// return interns.computeIfAbsent(object, Function.identity());
+			Object v;
+			if ((v = interns.get(object)) == null) {
+				interns.put(object, object);
+				v = object;
+			}
+			return v;
 		}
 
 		private Object getObject0(ResultSet rs, int idx) throws Exception {
@@ -1504,10 +1515,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 			throw new RuntimeException(
 					"Unhandled rs type: " + type.getSimpleName());
-		}
-
-		void clearInterns() {
-			interns.clear();
 		}
 	}
 
@@ -1749,10 +1756,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							finished = true;
 							rs.close();
 							stmt.close();
-							if (columnDescriptors != null) {
-								columnDescriptors.forEach(
-										ColumnDescriptor::clearInterns);
-							}
 						}
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
