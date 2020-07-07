@@ -87,6 +87,7 @@ class Vacuum {
 			} else {
 				logger.trace("vacuum: removing txs without vacuumables");
 			}
+			Transactions.get().cancelTimedOutTransactions();
 			List<Transaction> vacuumableTransactions = Transactions.get()
 					.getVacuumableCommittedTransactions();
 			vacuumableTransactions.addAll(

@@ -333,6 +333,34 @@ public class Transaction {
 		return Ax.format("%s::%s", id, phase);
 	}
 
+	public void toTimedOut() {
+		logger.warn(
+				"Transaction timed out.\n\tId: {}\n\tStart: {}\n\tNow: {}\n\tThread: {}\n\nStack:\n{}",
+				id, startTime, System.currentTimeMillis(),
+				originatingThreadName, transactionStartTrace);
+		switch (phase) {
+		case TO_DB_PREPARING:
+			toDbAborted();
+			break;
+		case TO_DOMAIN_COMMITTING:
+		case TO_DOMAIN_PREPARING:
+			// this is possible because the corresponding domain tx hasn't been
+			// committed;
+			toDomainAborted();
+			break;
+		case TO_DB_PERSISTING:
+			// this is ... dodgy, since we *may* be able to cancel (if the db
+			// isn't too far along), but may not.
+			//
+			break;
+		case VACUUM_BEGIN:
+			// well..we'd be in trouble here;
+		default:
+			throw new UnsupportedOperationException(
+					"Cannot cancel transaction in phase " + phase);
+		}
+	}
+
 	private boolean hasHigherCommitIdThan(Transaction otherTransaction,
 			DomainStore store) {
 		long thisStoreTxId = storeTransactions.get(store).committingSequenceId;

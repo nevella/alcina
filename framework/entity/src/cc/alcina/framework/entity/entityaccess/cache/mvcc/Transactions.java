@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
@@ -253,6 +254,21 @@ public class Transactions {
 		}
 	}
 	// static Object debugMonitor = new Object();
+
+	void cancelTimedOutTransactions() {
+		synchronized (transactionMetadataLock) {
+			if (activeTransactions.size() > 0) {
+				Transaction oldest = activeTransactions.values().iterator()
+						.next();
+				if ((System.currentTimeMillis()
+						- oldest.startTime) > ResourceUtilities
+								.getInteger(Transaction.class, "maxAgeSecs")
+								* TimeConstants.ONE_SECOND_MS) {
+					oldest.toTimedOut();
+				}
+			}
+		}
+	}
 
 	/*
 	 * Returns committed transactions which can be vacuumed, and prunes
