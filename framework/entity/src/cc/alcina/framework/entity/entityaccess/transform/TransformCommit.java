@@ -743,6 +743,7 @@ public class TransformCommit {
 		} catch (RuntimeException re) {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			Transaction.current().toDbAborted();
+			Transaction.endAndBeginNew();
 			throw re;
 		} finally {
 			tpm.popUser();
