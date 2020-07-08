@@ -176,17 +176,18 @@ public class BoundSelectorMinimal extends BoundSelector {
 	protected void updateAfterPopdownChange(boolean show) {
 		if (showUnselectedOnPopupClose) {
 			String searchText = search.provideFilterBoxText();
+			// Clear the label first before we do anything more
+			if (unselectedLabel != null) {
+				unselectedLabel.removeFromParent();
+				unselectedLabel = null;
+			}
+			// If an incomplete label is typed, warn
 			if (!show && searchText.length() > 0) {
 				unselectedLabel = new Label(Ax.format(
 						"Nothing selected for '%s' -  please choose a match from the list",
 						searchText));
 				unselectedLabel.setStyleName("unselected-text");
 				cfp.add(unselectedLabel);
-			} else {
-				if (unselectedLabel != null) {
-					unselectedLabel.removeFromParent();
-					unselectedLabel = null;
-				}
 			}
 		}
 	}
