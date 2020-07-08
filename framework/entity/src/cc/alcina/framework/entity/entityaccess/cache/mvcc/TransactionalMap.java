@@ -57,7 +57,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
  * 
  * 'this' acts as a lock on creation addition/removal of a layer (after base transaction)  
  * 
- * TODO - mvcc.4 - _possibly_ optimise with getLong(long l) - putLong(long l) which will lower wrapping/unwrapping overhead
+ * FIXME - mvcc.4 - _possibly_ optimise with getLong(long l) - putLong(long l) which will lower wrapping/unwrapping overhead
  *   
  */
 public class TransactionalMap<K, V> extends AbstractMap<K, V>
@@ -285,8 +285,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				return (Map<K, V1>) new Long2ObjectLinkedOpenHashMap<>();
 			}
 		} else {
-			// FIXME - mvcc.1 - some more optimisations would be great (String?
-			// Enum?)
 			return (Map<K, V1>) new Object2ObjectLinkedOpenHashMap<>();
 		}
 	}

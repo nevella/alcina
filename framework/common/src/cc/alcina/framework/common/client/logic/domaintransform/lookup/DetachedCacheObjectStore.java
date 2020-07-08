@@ -59,7 +59,7 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
-	// FIXME - mvcc.2 - for local-only domains, this is problematic.
+	// FIXME - mvcc.adjunct - for local-only domains, this is problematic.
 	// Probably better to return Map<Class<? extends Entity>, Stream<Entity>>
 	public Map<Class<? extends Entity>, Collection<Entity>> getCollectionMap() {
 		return (Map) cache.getDomain();

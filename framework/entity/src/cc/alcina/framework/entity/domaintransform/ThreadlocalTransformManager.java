@@ -1289,8 +1289,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	 * if in 'entityManager' mode (i.e. in a db transaction), let the
 	 * entityManager handle it - otherwise
 	 * 
-	 * FIXME - mvcc.3 - maybe non-em instances should have a 'domainobjects'
-	 * (i.e. domain store?)
+	 * FIXME - mvcc.adjunct - maybe non-em instances should have a
+	 * 'domainobjects' (i.e. domain store?)
 	 * 
 	 * In fact...yes. THere's quite a bit of confusion between object lookup,
 	 * object store and TM (particularly TLTM).

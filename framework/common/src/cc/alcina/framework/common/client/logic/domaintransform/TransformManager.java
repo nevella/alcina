@@ -75,7 +75,7 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
 
 /**
- * FIXME - mvcc.3 - abstract parts out to ClientTransformManager
+ * FIXME - mvcc.adjunct - abstract parts out to ClientTransformManager
  * 
  * <h2>Thread safety notes</h2>
  * <ul>
@@ -111,7 +111,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private static long eventIdCounter = 0;
 
-	protected static SequentialIdGenerator localIdGenerator = new SequentialIdGenerator();
+	/*
+	 * No localid is allowed past 2 ^ 28 - this gives server apps the headroom
+	 * to add cascaded/triggered transforms (during preprocessing)
+	 */
+	protected static SequentialIdGenerator localIdGenerator = new SequentialIdGenerator(
+			1 << 29);
 
 	private static TransformManager theInstance;
 
@@ -467,7 +472,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			// 4. post-process; replaying local-to-vm create
 			// 5. post-process; replaying not-local-to-vm create
 			// if (2) or (4) , break at this point
-			// FIXME - mvcc.3 - clean this up further once client localid->id
+			// FIXME - mvcc.adjunct - clean this up further once client
+			// localid->id
 			// transitions
 			// are updated, and provisional -> bubble universe. Some of these
 			// cases may
@@ -680,8 +686,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	// FIXME - mvcc.jade - can be removed (since postprocess() ignores
-	// created/deleted)
+	// FIXME - mvcc.4 - can be removed (since postprocess() ignores
+	// created/deleted) - but even better, move that ignore created/deleted to
+	// transformpersister
 	public void deleteObjectOrRemoveTransformsIfLocal(Entity entity) {
 		if (entity.getId() != 0) {
 			delete(entity);
@@ -811,7 +818,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return getDomainObjects().getCollection(clazz);
 	}
 
-	// FIXME - mvcc.3 - get rid of objectstore vs objectlookup? Objectlookup
+	// FIXME - mvcc.adjunct - get rid of objectstore vs objectlookup?
+	// Objectlookup
 	// should probably always go via tm
 	public ObjectStore getDomainObjects() {
 		return this.domainObjects;
@@ -1938,7 +1946,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 				case NULL_PROPERTY_REF:
 				case CHANGE_PROPERTY_REF:
 					try {
-						// FIXME - mvcc.2 - this listener should go basically
+						// FIXME - mvcc.adjunct - this listener should go
+						// basically
 						// just flip to 'tostorage' if not in a provisional TM
 						// replay/promotion (provisional -> client tm) should go
 						// into separate code

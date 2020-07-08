@@ -786,7 +786,6 @@ class ClassTransformer {
 				boolean isInAnnotationExpression = false;
 				boolean mvccAccessCorrectAnnotationPresent = false;
 				Optional<Node> cursor = Optional.<Node> ofNullable(expr);
-				// FIXME - mvcc.2 - can cache a bunch of this
 				while (cursor.isPresent()) {
 					Node node = cursor.get();
 					if (node instanceof MethodDeclaration) {

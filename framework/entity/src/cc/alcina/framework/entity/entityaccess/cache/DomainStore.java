@@ -90,7 +90,6 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
@@ -404,7 +403,8 @@ public class DomainStore implements IDomainStore {
 			switch (filter.getFilterOperator()) {
 			case EQ:
 			case IN:
-				// FIXME - mvcc.4 - if we have estimates of size, we might be
+				// FIXME - mvcc.query - if we have estimates of size, we might
+				// be
 				// able to optimise here
 				Set<E> indexedValues = valueProvider
 						.getKeyMayBeCollection(filter.getPropertyValue());
@@ -437,29 +437,14 @@ public class DomainStore implements IDomainStore {
 		if (ann == null) {
 			return dte;
 		}
-		if (!ann.translateObjectWritesToIdWrites()) {
-			switch (ann.loadType()) {
-			case EAGER:
-			case INTERN:
-				return dte;
-			case LAZY:
-			case TRANSIENT:
-				return null;
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
-		if (ann.toIdProperty().isEmpty()) {
+		switch (ann.loadType()) {
+		case EAGER:
 			return dte;
-		} else {
-			DomainTransformEvent translated = ResourceUtilities
-					.fieldwiseClone(dte, true, false);
-			translated.setPropertyName(ann.toIdProperty());
-			translated.setNewValue(translated.getValueId());
-			TransformManager.get().convertToTargetObject(translated);
-			translated.setTransformType(
-					TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
-			return translated;
+		case LAZY:
+		case TRANSIENT:
+			return null;
+		default:
+			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -618,7 +603,7 @@ public class DomainStore implements IDomainStore {
 
 	// we only have one thread allowed here - but they won't start blocking the
 	// reader thread
-	// FIXME - mvcc.2 - optimise!
+	// FIXME - mvcc.4 - optimise!
 	synchronized void
 			postProcess(DomainTransformPersistenceEvent persistenceEvent) {
 		if (persistenceEvent.getDomainTransformLayerWrapper().persistentRequests
@@ -644,7 +629,9 @@ public class DomainStore implements IDomainStore {
 			// evicted
 			// from hereonin
 			/*
-			 * mvcc.2 - check that eviction thing
+			 * mvcc.kafkarqpropogation - do we need (e.g.)
+			 * transformManager.getObject(dte, true);? - in fact, we filter
+			 * again later on so I think this can all go away
 			 */
 			List<DomainTransformEvent> filtered = filterInterestedTransforms(
 					dtes);

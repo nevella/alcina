@@ -102,6 +102,9 @@ import it.unimi.dsi.fastutil.longs.LongArrayList;
  * (and use context vars as well because of call depth). Refactor into a loadparams builder
  */
 public class DomainStoreLoaderDatabase implements DomainStoreLoader {
+	public static final transient String CONTEXT_SUPPRESS_LATER_LOOKUP_EXCEPTIONS = DomainStoreLoaderDatabase.class
+			.getName() + ".CONTEXT_SUPPRESS_LATER_LOOKUP_EXCEPTIONS";
+
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	private Map<PropertyDescriptor, JoinTable> joinTables;
@@ -1277,6 +1280,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		public Void call() {
 			try {
 				Transaction.join(transaction);
+				LooseContext
+						.pushWithTrue(CONTEXT_SUPPRESS_LATER_LOOKUP_EXCEPTIONS);
 				LaterLookup laterLookup = new LaterLookup();
 				String sqlFilter = Ax.format(" id in %s ",
 						EntityUtils.hasIdsToIdClause(sources));
@@ -1314,6 +1319,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				e.printStackTrace();
 				throw new WrappedRuntimeException(e);
 			} finally {
+				LooseContext.pop();
 				Transaction.split();
 			}
 		}
@@ -1876,7 +1882,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							Object target = store.cache.get(type, id);
 							if (target == null) {
 								if (segmentLoader == null) {
-									if (missingWarningCount++ < 5) {
+									if (missingWarningCount++ < 5
+											&& !LooseContext.is(
+													CONTEXT_SUPPRESS_LATER_LOOKUP_EXCEPTIONS)) {
 										new Exception().printStackTrace();
 										store.logger.warn(
 												"later-lookup -- missing target: {}, {} for  {}.{} #{}",

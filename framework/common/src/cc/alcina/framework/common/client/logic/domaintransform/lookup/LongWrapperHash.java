@@ -16,11 +16,11 @@ public class LongWrapperHash {
 
 	@UnsafeNativeLong
 	public static native int fastHash(long value)/*-{
-													if (value.l === undefined) {
-													return value;
-													}
-													return value.l ^ value.m ^ value.h;
-													}-*/;
+    if (value.l === undefined) {
+      return value;
+    }
+    return value.l ^ value.m ^ value.h;
+	}-*/;
 
 	/* assumes >0 */
 	@UnsafeNativeLong
@@ -48,36 +48,36 @@ public class LongWrapperHash {
 	}
 
 	public static native void logAndThrowTooLarge(Object value)/*-{
-																debugger;
-																var message = "losing higher bits from long: " + value.h + ","
-																+ value.m + "," + value.l;
-																($wnd['console']) && console.log(message);
-																throw message;
-																}-*/;
+    debugger;
+    var message = "losing higher bits from long: " + value.h + "," + value.m
+        + "," + value.l;
+    ($wnd['console']) && console.log(message);
+    throw message;
+	}-*/;
 
 	@UnsafeNativeLong
 	public static native long longFromInt(int value)/*-{
-													return @com.google.gwt.lang.LongLib::fromInt(I)(value);
-													}-*/;
+    return @com.google.gwt.lang.LongLib::fromInt(I)(value);
+	}-*/;
 
 	@UnsafeNativeLong
 	public static native int lowBitsValue(long value)/*-{
-														if (value.h === undefined) {
-														return value;
-														}
-														if (value.h != 0) {
-														@cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::logAndThrowTooLarge(Ljava/lang/Object;)(value);
-														}
-														if (value.m != 0) {
-														if (value.m > @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::MASK_M) {
-														@cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::logAndThrowTooLarge(Ljava/lang/Object;)(value);
-														}
-														// << precedence < +/- !!
-														return (value.m << @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::BITS)
-														| value.l;
-														}
-														return value.l;
-														}-*/;
+    if (value.h === undefined) {
+      return value;
+    }
+    if (value.h != 0) {
+      @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::logAndThrowTooLarge(Ljava/lang/Object;)(value);
+    }
+    if (value.m != 0) {
+      if (value.m > @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::MASK_M) {
+        @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::logAndThrowTooLarge(Ljava/lang/Object;)(value);
+      }
+      // << precedence < +/- !!
+      return (value.m << @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::BITS)
+          | value.l;
+    }
+    return value.l;
+	}-*/;
 
 	private final long value;
 

@@ -33,9 +33,11 @@ public class MutablePropertyChangeSupport {
 	public static void setMuteAll(boolean muteAll) {
 		setMuteAll(muteAll, false);
 	}
-
 	// FIXME - mvcc.4 - get rid of this - and maybe add context muting (for
 	// projection) which returns a muted singletong
+	//
+
+	// ooh, singletong ... yes
 	public static void setMuteAll(boolean muteAll,
 			boolean initLifecycleThread) {
 		if (!GWT.isClient() && !initLifecycleThread) {

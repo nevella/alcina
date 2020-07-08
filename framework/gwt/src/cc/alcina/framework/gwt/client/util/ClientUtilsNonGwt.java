@@ -8,7 +8,7 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 
-//FIXME - mvcc.4 - jvmclient - post merge of localdom - remove (with prejudice)
+//This should stay (because a JVM client won't want the GWT classloader kerfuffle of ClientUtils)
 public class ClientUtilsNonGwt {
 	public static boolean maybeOffline(Throwable t) {
 		while (t instanceof WrappedRuntimeException) {

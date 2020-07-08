@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -151,13 +151,6 @@ public class DomainClassDescriptor<T extends Entity>
 		return false;
 	}
 
-	public boolean isLazyColumn(String name) {
-		// FIXME - mvcc.1 - should instead decorate the annotation
-		// DomainStoreProperty
-		// (classDescriptor.getPropertyDescriptorAnnotation(clazz,pd))
-		return false;
-	}
-
 	public boolean isTransactional() {
 		return true;
 	}
@@ -211,8 +204,8 @@ public class DomainClassDescriptor<T extends Entity>
 
 		public DomainStorePropertyResolver(
 				PropertyReflector.Location propertyLocation) {
-			resolver = new TreeResolver<DomainStoreProperty>(
-					propertyLocation, propertyLocation.propertyReflector
+			resolver = new TreeResolver<DomainStoreProperty>(propertyLocation,
+					propertyLocation.propertyReflector
 							.getAnnotation(DomainStoreProperty.class));
 		}
 
@@ -225,19 +218,6 @@ public class DomainClassDescriptor<T extends Entity>
 		public DomainStorePropertyLoadType loadType() {
 			Function<DomainStoreProperty, DomainStorePropertyLoadType> function = DomainStoreProperty::loadType;
 			return resolver.resolve(function, "loadType");
-		}
-
-		@Override
-		public String toIdProperty() {
-			Function<DomainStoreProperty, String> function = DomainStoreProperty::toIdProperty;
-			return resolver.resolve(function, "toIdProperty");
-		}
-
-		@Override
-		public boolean translateObjectWritesToIdWrites() {
-			Function<DomainStoreProperty, Boolean> function = DomainStoreProperty::translateObjectWritesToIdWrites;
-			return resolver.resolve(function,
-					"translateObjectWritesToIdWrites");
 		}
 
 		protected TreeResolver<DomainStoreProperty>

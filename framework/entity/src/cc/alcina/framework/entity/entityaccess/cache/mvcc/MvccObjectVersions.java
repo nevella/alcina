@@ -98,7 +98,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		 * In that case, create a copy (to be modified) from the base object
 		 * 
 		 * 
-		 * FIXME - mvcc.1 - explain logic here and in resolve0
+		 * FIXME - mvcc.4 - explain logic here and in resolve0
 		 * 
 		 * Also check the logic here. What about a transform from 'outside'
 		 * against an object in our graph? Doesn't that also need the defensive

@@ -14,11 +14,7 @@ import java.lang.annotation.Target;
 public @interface DomainStoreProperty {
 	DomainStorePropertyLoadType loadType() default DomainStorePropertyLoadType.TRANSIENT;
 
-	String toIdProperty() default "";
-
-	boolean translateObjectWritesToIdWrites() default false;
-
 	public enum DomainStorePropertyLoadType {
-		TRANSIENT, LAZY, EAGER, INTERN
+		TRANSIENT, LAZY, EAGER;
 	}
 }

@@ -3,6 +3,15 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 public class SequentialIdGenerator {
 	public static long id;
 
+	private long maxValue = Long.MAX_VALUE;
+
+	public SequentialIdGenerator() {
+	}
+
+	public SequentialIdGenerator(long maxValue) {
+		this.maxValue = maxValue;
+	}
+
 	public synchronized long decrementAndGet() {
 		return --id;
 	}
@@ -12,7 +21,11 @@ public class SequentialIdGenerator {
 	}
 
 	public synchronized long incrementAndGet() {
-		return ++id;
+		long value = ++id;
+		if (value >= maxValue) {
+			throw new IllegalStateException("Counter exceeds maxvalue");
+		}
+		return value;
 	}
 
 	public void reset() {

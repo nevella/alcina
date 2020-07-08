@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 
-//FIXME - mvcc.3 - remove
+//FIXME - mvcc.kafkarqpropogation - remove
 class SourceMetadataProvider extends DomainModificationMetadataProvider {
 	Map<EntityLocator, Entity> locatorOriginalSourceMap = new LinkedHashMap<EntityLocator, Entity>();
 

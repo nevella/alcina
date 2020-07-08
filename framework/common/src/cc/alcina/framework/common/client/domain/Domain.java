@@ -31,7 +31,7 @@ public class Domain {
 
 	static Logger logger = LoggerFactory.getLogger(Domain.class);
 
-	// FIXME - mvcc.3 - deprecate (ditto asSet)
+	// FIXME - mvcc.4 - deprecate (ditto asSet)
 	public static <V extends Entity> List<V> asList(Class<V> clazz) {
 		return handler.stream(clazz).collect(Collectors.toList());
 	}
