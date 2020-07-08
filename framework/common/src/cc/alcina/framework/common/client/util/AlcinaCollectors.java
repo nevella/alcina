@@ -94,6 +94,10 @@ public class AlcinaCollectors {
 		return new ToValueMapCollector(valueMapper, LinkedHashMap::new);
 	}
 
+	private static <I, R> Function<I, R> castingIdentity() {
+		return i -> (R) i;
+	}
+
 	private static class CommaAndListCollector implements
 			java.util.stream.Collector<String, List<String>, String> {
 		public CommaAndListCollector() {
@@ -165,7 +169,7 @@ public class AlcinaCollectors {
 
 		@Override
 		public Function<List<T>, List<T>> finisher() {
-			return null;
+			return castingIdentity();
 		}
 
 		@Override
@@ -243,7 +247,7 @@ public class AlcinaCollectors {
 
 		@Override
 		public Function<Map<K, T>, Map<K, T>> finisher() {
-			return null;
+			return castingIdentity();
 		}
 
 		@Override
@@ -278,7 +282,7 @@ public class AlcinaCollectors {
 
 		@Override
 		public Function<Set<T>, Set<T>> finisher() {
-			return null;
+			return castingIdentity();
 		}
 
 		@Override
@@ -313,7 +317,7 @@ public class AlcinaCollectors {
 
 		@Override
 		public Function<Set<T>, Set<T>> finisher() {
-			return null;
+			return castingIdentity();
 		}
 
 		@Override
@@ -361,7 +365,7 @@ public class AlcinaCollectors {
 
 		@Override
 		public Function<Multimap<K, List<U>>, Multimap<K, List<U>>> finisher() {
-			return null;
+			return castingIdentity();
 		}
 
 		@Override
@@ -409,7 +413,7 @@ public class AlcinaCollectors {
 
 		@Override
 		public Function<Multiset<K, Set<U>>, Multiset<K, Set<U>>> finisher() {
-			return null;
+			return castingIdentity();
 		}
 
 		@Override
@@ -501,7 +505,7 @@ public class AlcinaCollectors {
 
 		@Override
 		public Function<Map<K, T>, Map<K, T>> finisher() {
-			return null;
+			return castingIdentity();
 		}
 
 		@Override

@@ -264,7 +264,15 @@ public class Transactions {
 						- oldest.startTime) > ResourceUtilities
 								.getInteger(Transaction.class, "maxAgeSecs")
 								* TimeConstants.ONE_SECOND_MS) {
-					oldest.toTimedOut();
+					try {
+						oldest.toTimedOut();
+						oldest.endTransaction();
+					} catch (Exception e) {
+						Transaction.logger.warn("Cancel exception",
+								new MvccException(e));
+						// ignore phase checks
+						onTransactionEnded(oldest);
+					}
 				}
 			}
 		}

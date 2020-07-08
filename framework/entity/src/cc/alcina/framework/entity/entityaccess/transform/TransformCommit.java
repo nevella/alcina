@@ -808,8 +808,13 @@ public class TransformCommit {
 			// also, we may have no persistentrequests (if the request has
 			// already been committed)
 			ThreadlocalTransformManager.cast().resetTltm(null);
-			Transaction.current()
-					.toDbPersisted(new Timestamp(System.currentTimeMillis()));
+			if (wrapper.response
+					.getResult() == DomainTransformResponseResult.OK) {
+				Transaction.current().toDbPersisted(
+						new Timestamp(System.currentTimeMillis()));
+			} else {
+				Transaction.current().toDbAborted();
+			}
 			MetricLogging.get().end("transform-commit");
 			handleWrapperTransforms();
 			wrapper.ignored = persistenceToken.ignored;
