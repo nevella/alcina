@@ -66,6 +66,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -1511,6 +1512,31 @@ public abstract class TransformManager implements PropertyChangeListener,
 			CollectionModificationListener listener) {
 		this.collectionModificationSupport
 				.removeCollectionModificationListener(listener);
+	}
+
+	public int removeCreateDeleteTransforms() {
+		Set<DomainTransformEvent> events = getTransformsByCommitType(
+				CommitType.TO_LOCAL_BEAN);
+		Multimap<EntityLocator, List<DomainTransformEvent>> perObjectTransforms = events
+				.stream().collect(AlcinaCollectors
+						.toKeyMultimap(EntityLocator::objectLocator));
+		Multimap<EntityLocator, List<DomainTransformEvent>> perValueTransforms = events
+				.stream().collect(AlcinaCollectors
+						.toKeyMultimap(EntityLocator::valueLocator));
+		int initial = events.size();
+		perObjectTransforms.entrySet().stream().filter(e -> Ax
+				.first(e.getValue())
+				.getTransformType() == TransformType.CREATE_OBJECT
+				&& Ax.last(e.getValue())
+						.getTransformType() == TransformType.DELETE_OBJECT)
+				.forEach(e -> {
+					EntityLocator locator = e.getKey();
+					perObjectTransforms.get(locator)
+							.forEach(this::removeTransform);
+					perValueTransforms.getAndEnsure(locator)
+							.forEach(this::removeTransform);
+				});
+		return initial - events.size();
 	}
 
 	public void

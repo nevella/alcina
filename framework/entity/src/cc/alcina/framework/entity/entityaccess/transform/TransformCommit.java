@@ -374,6 +374,10 @@ public class TransformCommit {
 		if (tag == null) {
 			tag = DomainTransformRequestTagProvider.get().getTag();
 		}
+		int cleared = TransformManager.get().removeCreateDeleteTransforms();
+		if (cleared != 0) {
+			get().logger.info("Cleared {} created/deleted transforms", cleared);
+		}
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (pendingTransformCount == 0) {

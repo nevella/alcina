@@ -2,6 +2,9 @@ package cc.alcina.framework.entity.entityaccess.transform;
 
 import java.io.Serializable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
@@ -24,6 +27,8 @@ public class TransformPersister {
 
 	public static final String CONTEXT_DO_NOT_PERSIST_DTES = TransformPersister.class
 			.getName() + ".CONTEXT_DO_NOT_PERSIST_DTES";
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public DomainTransformLayerWrapper
 			transformExPersistenceContext(TransformPersistenceToken token) {

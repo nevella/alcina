@@ -21,8 +21,6 @@ public abstract class DomainQuery<E extends Entity> {
 
 	private List<DomainFilter> filters = new ArrayList<DomainFilter>();
 
-	private boolean nonTransactional;
-
 	protected Class<E> entityClass;
 
 	private Optional<Stream<E>> sourceStream = Optional.empty();
@@ -87,16 +85,7 @@ public abstract class DomainQuery<E extends Entity> {
 		return this.sourceStream;
 	}
 
-	public boolean isNonTransactional() {
-		return this.nonTransactional;
-	}
-
 	public abstract List<E> list();
-
-	public DomainQuery<E> nonTransactional() {
-		this.nonTransactional = true;
-		return this;
-	}
 
 	public Optional<E> optional() {
 		return stream().findFirst();

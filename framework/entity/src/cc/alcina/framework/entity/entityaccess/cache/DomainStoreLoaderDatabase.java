@@ -102,9 +102,6 @@ import it.unimi.dsi.fastutil.longs.LongArrayList;
  * (and use context vars as well because of call depth). Refactor into a loadparams builder
  */
 public class DomainStoreLoaderDatabase implements DomainStoreLoader {
-	public static final transient String CONTEXT_SUPPRESS_LATER_LOOKUP_EXCEPTIONS = DomainStoreLoaderDatabase.class
-			.getName() + ".CONTEXT_SUPPRESS_LATER_LOOKUP_EXCEPTIONS";
-
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	private Map<PropertyDescriptor, JoinTable> joinTables;
@@ -710,11 +707,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		loaded = new ArrayList<>();
 		PdOperator idOperator = pds.stream().filter(pd -> pd.name.equals("id"))
 				.findFirst().get();
-		Transaction transaction = Transaction.current();
+		Transaction transaction = Transaction.isInTransaction()
+				? Transaction.current()
+				: null;
 		boolean transactional = DomainStore.stores().storeFor(clazz) != null;
 		ignoreIfExisting &= sublock == null;
 		for (Object[] objects : connResults) {
-			HasId hasId = (HasId) (transactional
+			HasId hasId = (HasId) (transactional && !keepDetached
 					? transaction.create(clazz, store)
 					: clazz.newInstance());
 			if (ignoreIfExisting) {
@@ -854,7 +853,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					transform.setSource(source);
 				}
 			}
-			Transaction.current().setMultithreadedWritePermitted(true);
 			List<Callable> tasks = new ArrayList<>();
 			for (Class clazz : (Set<Class>) (Set) classIdTransformee.keySet()) {
 				if (IVersionable.class.isAssignableFrom(clazz)
@@ -862,7 +860,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					Collection<Entity> iversionables = classIdTransformee
 							.asMap(clazz).allValues();
 					tasks.add(new IVersionableLoaderTask(conn, clazz,
-							iversionables, Transaction.current()));
+							iversionables));
 				}
 			}
 			invokeAllWithThrow(tasks, iLoaderExecutor);
@@ -1266,22 +1264,16 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		private Connection conn;
 
-		private Transaction transaction;
-
 		public IVersionableLoaderTask(Connection conn, Class<Entity> clazz,
-				Collection<Entity> sources, Transaction transaction) {
+				Collection<Entity> sources) {
 			this.conn = conn;
 			this.clazz = clazz;
 			this.sources = sources;
-			this.transaction = transaction;
 		}
 
 		@Override
 		public Void call() {
 			try {
-				Transaction.join(transaction);
-				LooseContext
-						.pushWithTrue(CONTEXT_SUPPRESS_LATER_LOOKUP_EXCEPTIONS);
 				LaterLookup laterLookup = new LaterLookup();
 				String sqlFilter = Ax.format(" id in %s ",
 						EntityUtils.hasIdsToIdClause(sources));
@@ -1291,7 +1283,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						false, true, false);
 				Map<Long, ? extends Entity> idMap = EntityHelper
 						.toIdMap(sources);
-				laterLookup.resolve();
+				// not needed - in fact key that we don't (quite hard to track
+				// issue) because otherwise we'll corrupt our graph with lame
+				// fauxness
+				// we're only loading these to get the dates - most of the need
+				// (all?) will go away with mvcc.4
+				// laterLookup.resolve();
 				for (Entity persistentSource : persistentSources) {
 					Entity transformee = idMap.get(persistentSource.getId());
 					if (transformee instanceof HasVersionNumber) {
@@ -1318,9 +1315,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new WrappedRuntimeException(e);
-			} finally {
-				LooseContext.pop();
-				Transaction.split();
 			}
 		}
 	}
@@ -1882,9 +1876,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							Object target = store.cache.get(type, id);
 							if (target == null) {
 								if (segmentLoader == null) {
-									if (missingWarningCount++ < 5
-											&& !LooseContext.is(
-													CONTEXT_SUPPRESS_LATER_LOOKUP_EXCEPTIONS)) {
+									if (missingWarningCount++ < 5) {
 										new Exception().printStackTrace();
 										store.logger.warn(
 												"later-lookup -- missing target: {}, {} for  {}.{} #{}",

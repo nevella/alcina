@@ -54,9 +54,8 @@ public class Ax {
 		System.err.println(format(template, args));
 	}
 
-	public static <T> Optional<T> first(Collection<T> collection) {
-		return collection.size() == 0 ? Optional.empty()
-				: Optional.of(collection.iterator().next());
+	public static <T> T first(Collection<T> collection) {
+		return collection.size() == 0 ? null : collection.iterator().next();
 	}
 
 	public static String format(String template, Object... args) {
@@ -81,6 +80,10 @@ public class Ax {
 
 	public static boolean isTest() {
 		return test;
+	}
+
+	public static <T> BinaryOperator<T> last() {
+		return (a, b) -> b;
 	}
 
 	public static <T> T last(List<T> list) {
@@ -116,6 +119,11 @@ public class Ax {
 
 	public static <T> T nullTo(T t, T ifNull) {
 		return t == null ? ifNull : t;
+	}
+
+	public static <T> Optional<T> optionalFirst(Collection<T> collection) {
+		return collection.size() == 0 ? Optional.empty()
+				: Optional.of(collection.iterator().next());
 	}
 
 	public static void out(Object o) {
@@ -162,9 +170,5 @@ public class Ax {
 				return t;
 			};
 		}
-	}
-
-	public static <T> BinaryOperator<T> last() {
-		return (a, b) -> b;
 	}
 }
