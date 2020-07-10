@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
@@ -159,10 +160,10 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	static native boolean
 			shouldTreeDelegateFocusToElement(Element elem) /*-{
-															var name = elem.nodeName;
-															return ((name == "SELECT") || (name == "INPUT") || (name == "TEXTAREA")
-															|| (name == "OPTION") || (name == "BUTTON") || (name == "LABEL"));
-															}-*/;
+    var name = elem.nodeName;
+    return ((name == "SELECT") || (name == "INPUT") || (name == "TEXTAREA")
+        || (name == "OPTION") || (name == "BUTTON") || (name == "LABEL"));
+	}-*/;
 
 	/**
 	 * Map of TreeItem.widget -> TreeItem.
@@ -1150,22 +1151,33 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		}
 	}
 
-	private void showImage(TreeItem treeItem, AbstractImagePrototype proto) {
+	protected boolean useCssTreeImages() {
+		return false;
+	}
+
+	private void showImage(TreeItem treeItem, AbstractImagePrototype proto,
+			String className) {
 		Element holder = treeItem.getImageHolderElement();
 		Element child = DOM.getFirstChild(holder);
 		if (child == null) {
 			// If no image element has been created yet, create one from the
 			// prototype.
-			child = prototypeCache.elementFromPrototype(proto);
+			if (useCssTreeImages()) {
+				child = Document.get().createSpanElement();
+			} else {
+				child = prototypeCache.elementFromPrototype(proto);
+			}
 			DOM.appendChild(holder, child);
 		} else {
-			if (treeItem.getCurrentImagePrototype(child) == proto) {
+			if (treeItem.getCurrentImagePrototype(child) == proto
+					|| useCssTreeImages()) {
 			} else {
 				// Otherwise, simply apply the prototype to the existing
 				// element.
 				prototypeCache.applyTo(proto, child);
 			}
 		}
+		child.setClassName(className);
 		treeItem.setCurrentImagePrototype(child, proto);
 	}
 
@@ -1353,7 +1365,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	 *            the tree item
 	 */
 	void showClosedImage(TreeItem treeItem) {
-		showImage(treeItem, images.treeClosed());
+		showImage(treeItem, images.treeClosed(), "closed");
 	}
 
 	/**
@@ -1364,7 +1376,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	 */
 	void showLeafImage(TreeItem treeItem) {
 		if (useLeafImages || treeItem.isFullNode()) {
-			showImage(treeItem, images.treeLeaf());
+			showImage(treeItem, images.treeLeaf(), "leaf");
 		} else if (LocaleInfo.getCurrentLocale().isRTL()) {
 			DOM.setStyleAttribute(treeItem.getElement(), "paddingRight",
 					indentValue);
@@ -1381,7 +1393,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	 *            the tree item
 	 */
 	void showOpenImage(TreeItem treeItem) {
-		showImage(treeItem, images.treeOpen());
+		showImage(treeItem, images.treeOpen(), "open");
 	}
 
 	/**
@@ -1402,6 +1414,9 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		 * An image indicating an open branch.
 		 */
 		ImageResource treeOpen();
+		/**
+		 * An image indicating an open branch.
+		 */
 	}
 
 	class AbstractImagePrototypeCache {

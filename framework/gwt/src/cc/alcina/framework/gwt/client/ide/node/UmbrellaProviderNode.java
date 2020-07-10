@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.LazyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
+import cc.alcina.framework.gwt.client.ide.widget.DataTree;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable;
 
 /**
@@ -183,7 +184,11 @@ public class UmbrellaProviderNode extends ContainerNode
 	@Override
 	protected String imageItemHTML(AbstractImagePrototype imageProto,
 			String title) {
-		return imageProto.getHTML() + " " + title;
+		if (((DataTree) getTree()).isUseNodeImages()) {
+			return imageProto.getHTML() + " " + title;
+		} else {
+			return title;
+		}
 	}
 
 	// true == finished

@@ -109,6 +109,7 @@ public class WorkspaceView extends Composite implements HasName,
 		initWidget(widget);
 	}
 
+	@Override
 	public void addVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
 	}
@@ -117,10 +118,12 @@ public class WorkspaceView extends Composite implements HasName,
 		this.vetoableActionSupport.fireVetoableActionEvent(event);
 	}
 
+	@Override
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo();
 	}
 
+	@Override
 	public String getName() {
 		return this.name;
 	}
@@ -129,15 +132,18 @@ public class WorkspaceView extends Composite implements HasName,
 		return this.widget;
 	}
 
+	@Override
 	public void
 			removeVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 
+	@Override
 	public void setName(String name) {
 		this.name = name;
 	}
 
+	@Override
 	protected void onEnsureDebugId(String baseID) {
 		ensureDebugId(getElement(), DEBUG_ID_PREFIX + (id == null ? name : id));
 	}
@@ -183,6 +189,7 @@ public class WorkspaceView extends Composite implements HasName,
 			collapse.setVisible(false);
 			collapse.setStyleName("alcina-Filter-collapse");
 			collapse.addClickHandler(new ClickHandler() {
+				@Override
 				public void onClick(ClickEvent event) {
 					dataTree.collapseToFirstLevel();
 				}
@@ -210,6 +217,7 @@ public class WorkspaceView extends Composite implements HasName,
 			initWidget(fp);
 		}
 
+		@Override
 		public Focusable firstFocusable() {
 			return filter.getTextBox();
 		}
@@ -258,6 +266,7 @@ public class WorkspaceView extends Composite implements HasName,
 			return showCollapseButton;
 		}
 
+		@Override
 		public void onExtraTreeEvent(ExtraTreeEventEvent evt) {
 			List<Class<? extends PermissibleAction>> actions = getAvailableActions(
 					evt.getSource());
@@ -274,12 +283,17 @@ public class WorkspaceView extends Composite implements HasName,
 			}
 		}
 
+		@Override
 		public void onSelection(SelectionEvent<TreeItem> event) {
 			if (LooseContext.getBoolean(CONTEXT_IGNORE_TREE_SELECTION)) {
 				return;
 			}
 			TreeItem item = event.getSelectedItem();
 			onTreeItemSelected(item);
+		}
+
+		protected boolean showTopLevelNode() {
+			return true;
 		}
 
 		public void resetTree() {
@@ -289,8 +303,14 @@ public class WorkspaceView extends Composite implements HasName,
 				Object items = getTopLevelItems();
 				if (items instanceof TreeItem) {
 					TreeItem root = (TreeItem) items;
-					getDataTree().addItem(root);
-					root.setState(true);
+					if (showTopLevelNode()) {
+						getDataTree().addItem(root);
+						root.setState(true);
+					} else {
+						for (int idx = 0; idx < root.getChildCount(); idx++) {
+							getDataTree().addItem(root.getChild(idx));
+						}
+					}
 				} else {
 					Collection<TreeItem> roots = (Collection<TreeItem>) items;
 					for (TreeItem root : roots) {
@@ -299,9 +319,16 @@ public class WorkspaceView extends Composite implements HasName,
 					}
 				}
 			} finally {
-				dataTree.collapseToFirstLevel();
+				if (showTopLevelNode()
+						|| expandFirstLevelNodesOnInitialRender()) {
+					dataTree.collapseToFirstLevel();
+				}
 				this.scroller.setWidget(dataTree);
 			}
+		}
+
+		protected boolean expandFirstLevelNodesOnInitialRender() {
+			return true;
 		}
 
 		public TreeItem selectNodeForObject(Object object) {
@@ -331,6 +358,7 @@ public class WorkspaceView extends Composite implements HasName,
 			filter.getTextBox().setFocus(true);
 		}
 
+		@Override
 		public void vetoableAction(PermissibleActionEvent evt) {
 			TreeItem item = dataTree.getSelectedItem();
 			if (evt.getAction().getClass() == DeleteAction.class) {
@@ -341,7 +369,11 @@ public class WorkspaceView extends Composite implements HasName,
 		}
 
 		protected DataTree createTree() {
-			return new DataTree();
+			return new DataTree(useCssTreeImages(), isUseNodeImages());
+		}
+
+		protected boolean useCssTreeImages() {
+			return false;
 		}
 
 		protected List<Class<? extends PermissibleAction>>
@@ -553,6 +585,11 @@ public class WorkspaceView extends Composite implements HasName,
 						ClientReflector.get().newInstance(ViewAction.class)));
 				RenderContext.get().pop();
 			}
+		}
+
+		protected boolean isUseNodeImages() {
+			// TODO Auto-generated method stub
+			return false;
 		}
 	}
 }

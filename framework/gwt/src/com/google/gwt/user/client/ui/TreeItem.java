@@ -30,7 +30,6 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
-import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * An item that can be contained within a
@@ -206,6 +205,7 @@ public class TreeItem extends UIObject
 	 * @param isItem
 	 *            the wrapper of item to be added
 	 */
+	@Override
 	public void addItem(IsTreeItem isItem) {
 		TreeItem item = isItem.asTreeItem();
 		addItem(item);
@@ -218,6 +218,7 @@ public class TreeItem extends UIObject
 	 *            the item's HTML
 	 * @return the item that was added
 	 */
+	@Override
 	public TreeItem addItem(SafeHtml itemHtml) {
 		TreeItem ret = new TreeItem(itemHtml);
 		addItem(ret);
@@ -243,6 +244,7 @@ public class TreeItem extends UIObject
 	 * @param item
 	 *            the item to be added
 	 */
+	@Override
 	public void addItem(TreeItem item) {
 		// If this is the item's parent, removing the item will affect the child
 		// count.
@@ -257,6 +259,7 @@ public class TreeItem extends UIObject
 	 *            the widget to be added
 	 * @return the item that was added
 	 */
+	@Override
 	public TreeItem addItem(Widget widget) {
 		TreeItem ret = new TreeItem(widget);
 		addItem(ret);
@@ -270,6 +273,7 @@ public class TreeItem extends UIObject
 	 *            the text of the item to be added
 	 * @return the item that was added
 	 */
+	@Override
 	public TreeItem addTextItem(String itemText) {
 		TreeItem ret = new TreeItem();
 		ret.setText(itemText);
@@ -277,6 +281,7 @@ public class TreeItem extends UIObject
 		return ret;
 	}
 
+	@Override
 	public TreeItem asTreeItem() {
 		return this;
 	}
@@ -321,6 +326,7 @@ public class TreeItem extends UIObject
 		return children.indexOf(child);
 	}
 
+	@Override
 	public String getHTML() {
 		return DOM.getInnerHTML(contentElem);
 	}
@@ -343,6 +349,7 @@ public class TreeItem extends UIObject
 		return open;
 	}
 
+	@Override
 	public String getText() {
 		if (((com.google.gwt.dom.client.Element) contentElem) instanceof PotentialElement) {
 			PotentialElement pe = contentElem.cast();
@@ -511,6 +518,7 @@ public class TreeItem extends UIObject
 	 * @param isItem
 	 *            the wrapper of item to be removed
 	 */
+	@Override
 	public void removeItem(IsTreeItem isItem) {
 		if (isItem != null) {
 			TreeItem item = isItem.asTreeItem();
@@ -524,6 +532,7 @@ public class TreeItem extends UIObject
 	 * @param item
 	 *            the item to be removed
 	 */
+	@Override
 	public void removeItem(TreeItem item) {
 		// Validate.
 		if (children == null || !children.contains(item)) {
@@ -551,16 +560,19 @@ public class TreeItem extends UIObject
 	/**
 	 * Removes all of this item's children.
 	 */
+	@Override
 	public void removeItems() {
 		while (getChildCount() > 0) {
 			removeItem(getChild(0));
 		}
 	}
 
+	@Override
 	public void setHTML(SafeHtml html) {
 		setHTML(html.asString());
 	}
 
+	@Override
 	public void setHTML(String html) {
 		setWidget(null);
 		DOM.setInnerHTML(contentElem, html);
@@ -625,6 +637,7 @@ public class TreeItem extends UIObject
 		}
 	}
 
+	@Override
 	public void setText(String text) {
 		setWidget(null);
 		DOM.setInnerText(contentElem, text);
@@ -960,7 +973,6 @@ public class TreeItem extends UIObject
 				item.contentElem.setClassName("gwt-TreeItem");
 				// item.setElement(item.resolve(item.getElement()));
 				convertToFullNode(item);
-				Ax.out("to full node: %s", item.getIndex());
 			}
 			if (state == PotentialState.INSTANTIATED) {
 				item.initChildSpanElement();

@@ -17,6 +17,7 @@ import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.TreeItem;
 
+import cc.alcina.framework.gwt.client.ide.widget.DataTree;
 import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 
@@ -70,7 +71,11 @@ public class ContainerNode extends FilterableTreeItem
 
 	protected String imageItemHTML(AbstractImagePrototype imageProto,
 			String title) {
-		return imageProto.getHTML() + " " + title;
+		if (((DataTree) getTree()).isUseNodeImages()) {
+			return imageProto.getHTML() + " " + title;
+		} else {
+			return title;
+		}
 	}
 
 	@Override

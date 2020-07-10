@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
+import cc.alcina.framework.gwt.client.ide.widget.DataTree;
 import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 
@@ -78,10 +79,12 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 		return (T) super.getUserObject();
 	}
 
+	@Override
 	public void onDetach() {
 		removeListeners();
 	}
 
+	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		refreshFromObject();
 	}
@@ -141,7 +144,11 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 
 	protected String imageItemHTML(AbstractImagePrototype imageProto,
 			String title) {
-		return imageProto.getHTML() + " " + title;
+		if (((DataTree) getTree()).isUseNodeImages()) {
+			return imageProto.getHTML() + " " + title;
+		} else {
+			return title;
+		}
 	}
 
 	@Override

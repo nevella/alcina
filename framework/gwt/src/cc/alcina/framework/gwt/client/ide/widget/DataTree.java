@@ -44,6 +44,10 @@ public class DataTree extends FilterableTree
 
 	protected boolean initialised;
 
+	private boolean useCssTreeImages;
+
+	private boolean useNodeImages;
+
 	public DataTree() {
 		super();
 		sinkEvents(Event.ONDBLCLICK);
@@ -51,6 +55,18 @@ public class DataTree extends FilterableTree
 		this.extraTreeEventSupport = new ExtraTreeEventSupport();
 	}
 
+	public DataTree(boolean useCssTreeImages, boolean useNodeImages) {
+		this();
+		this.useCssTreeImages = useCssTreeImages;
+		this.useNodeImages = useNodeImages;
+	}
+
+	@Override
+	protected boolean useCssTreeImages() {
+		return useCssTreeImages;
+	}
+
+	@Override
 	public void addExtraTreeEventListener(ExtraTreeEventListener listener) {
 		this.extraTreeEventSupport.addExtraTreeEventListener(listener);
 	}
@@ -63,6 +79,7 @@ public class DataTree extends FilterableTree
 		result = null;
 		final boolean classNameTest = (obj instanceof String);
 		TreeNodeWalkerCallback callback = new TreeNodeWalkerCallback() {
+			@Override
 			public void apply(TreeItem target) {
 				Object userObject = target.getUserObject();
 				if (userObject != null) {
@@ -82,6 +99,7 @@ public class DataTree extends FilterableTree
 	public TreeItem findNode(Predicate<TreeItem> predicate) {
 		result = null;
 		TreeNodeWalkerCallback callback = new TreeNodeWalkerCallback() {
+			@Override
 			public void apply(TreeItem target) {
 				if (predicate.test(target)) {
 					result = target;
@@ -118,6 +136,7 @@ public class DataTree extends FilterableTree
 		}
 	}
 
+	@Override
 	public void removeExtraTreeEventListener(ExtraTreeEventListener listener) {
 		this.extraTreeEventSupport.removeExtraTreeEventListener(listener);
 	}
@@ -148,5 +167,9 @@ public class DataTree extends FilterableTree
 		setSelectedItem(null);
 		setSelectedItem(current);
 		ensureSelectedItemVisible();
+	}
+
+	public boolean isUseNodeImages() {
+		return useNodeImages;
 	}
 }

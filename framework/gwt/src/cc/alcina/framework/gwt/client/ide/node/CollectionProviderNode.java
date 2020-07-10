@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
+import cc.alcina.framework.gwt.client.ide.widget.DataTree;
 
 /**
  *
@@ -46,6 +47,7 @@ public class CollectionProviderNode extends ContainerNode
 		this.support.setVolatileOrder(volatileOrder);
 	}
 
+	@Override
 	public void collectionModification(CollectionModificationEvent evt) {
 		this.support.collectionModification(evt);
 	}
@@ -63,10 +65,12 @@ public class CollectionProviderNode extends ContainerNode
 		return this.support.getListenedClass();
 	}
 
+	@Override
 	public PropertyCollectionProvider getPropertyCollectionProvider() {
 		return this.support.getPropertyCollectionProvider();
 	}
 
+	@Override
 	public Object getUserObject() {
 		return this.support.getUserObject();
 	}
@@ -88,18 +92,25 @@ public class CollectionProviderNode extends ContainerNode
 		this.support.refreshChildren(false);
 	}
 
+	@Override
 	public void removeItem(TreeItem item) {
 		super.removeItem(item);
 		support.removeItem(item);
 	}
 
+	@Override
 	public void setCollectionProvider(CollectionProvider collectionProvider) {
 		support = new CollectionRenderingSupport(this);
 		support.setCollectionProvider(collectionProvider);
 	}
 
+	@Override
 	protected String imageItemHTML(AbstractImagePrototype imageProto,
 			String title) {
-		return imageProto.getHTML() + " " + title;
+		if (((DataTree) getTree()).isUseNodeImages()) {
+			return imageProto.getHTML() + " " + title;
+		} else {
+			return title;
+		}
 	}
 }
