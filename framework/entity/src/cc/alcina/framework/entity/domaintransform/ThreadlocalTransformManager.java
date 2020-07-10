@@ -507,7 +507,9 @@ public class ThreadlocalTransformManager extends TransformManager
 				return t;
 			} else {
 				T t = Domain.find(clazz, id);
-				registerDomainObject(t);
+				if (t != null) {
+					registerDomainObject(t);
+				}
 				return t;
 			}
 		}

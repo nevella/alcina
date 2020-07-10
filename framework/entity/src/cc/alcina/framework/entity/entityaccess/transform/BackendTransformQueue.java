@@ -35,6 +35,7 @@ class BackendTransformQueue {
 		if (size > ResourceUtilities.getInteger(BackendTransformQueue.class,
 				"maxRunnables")) {
 			persistQueue();
+			Transaction.ensureBegun();
 		}
 	}
 
