@@ -21,6 +21,8 @@ public class ClusterDefinition {
 
 	public boolean supportsClusterHealth;
 
+	public boolean publicCluster;
+
 	public String zkNamespace;
 
 	public List<ClusterMember> clusterMembers = new ArrayList<>();

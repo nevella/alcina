@@ -148,7 +148,7 @@ public class Ax {
 	}
 
 	public static void simpleExceptionOut(Throwable t) {
-		System.out.println(CommonUtils.toSimpleExceptionMessage(t));
+		System.err.println(CommonUtils.toSimpleExceptionMessage(t));
 	}
 
 	public static void sysLogHigh(String template, Object... args) {

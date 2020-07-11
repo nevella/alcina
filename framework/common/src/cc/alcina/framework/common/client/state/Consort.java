@@ -265,6 +265,7 @@ public class Consort<D> {
 
 	public void onFailure(Throwable throwable) {
 		running = false;
+		Ax.simpleExceptionOut(throwable);
 		topicPublisher.publishTopic(ERROR, throwable);
 		throw new WrappedRuntimeException(throwable);
 	}
