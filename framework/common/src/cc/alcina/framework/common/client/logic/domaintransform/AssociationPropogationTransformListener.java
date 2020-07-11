@@ -56,6 +56,9 @@ public class AssociationPropogationTransformListener
 					Association.class, (association, propertyReflector) -> {
 						Object associated = propertyReflector
 								.getPropertyValue(entity);
+						if (tm.markedForDeletion.contains(associated)) {
+							return;
+						}
 						if (association.cascadeDeletes()) {
 							// parent.children
 							if (associated instanceof Set) {

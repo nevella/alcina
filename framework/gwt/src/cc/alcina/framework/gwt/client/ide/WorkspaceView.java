@@ -292,10 +292,6 @@ public class WorkspaceView extends Composite implements HasName,
 			onTreeItemSelected(item);
 		}
 
-		protected boolean showTopLevelNode() {
-			return true;
-		}
-
 		public void resetTree() {
 			try {
 				this.scroller.remove(dataTree);
@@ -325,10 +321,6 @@ public class WorkspaceView extends Composite implements HasName,
 				}
 				this.scroller.setWidget(dataTree);
 			}
-		}
-
-		protected boolean expandFirstLevelNodesOnInitialRender() {
-			return true;
 		}
 
 		public TreeItem selectNodeForObject(Object object) {
@@ -369,11 +361,11 @@ public class WorkspaceView extends Composite implements HasName,
 		}
 
 		protected DataTree createTree() {
-			return new DataTree(useCssTreeImages(), isUseNodeImages());
+			return new DataTree(useCssTreeImages(), useNodeImages());
 		}
 
-		protected boolean useCssTreeImages() {
-			return false;
+		protected boolean expandFirstLevelNodesOnInitialRender() {
+			return true;
 		}
 
 		protected List<Class<? extends PermissibleAction>>
@@ -587,8 +579,15 @@ public class WorkspaceView extends Composite implements HasName,
 			}
 		}
 
-		protected boolean isUseNodeImages() {
-			// TODO Auto-generated method stub
+		protected boolean showTopLevelNode() {
+			return true;
+		}
+
+		protected boolean useCssTreeImages() {
+			return false;
+		}
+
+		protected boolean useNodeImages() {
 			return false;
 		}
 	}

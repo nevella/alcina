@@ -216,8 +216,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private DetachedEntityCache detachedEntityCache;
 
-	protected Set<Entity> deleted;
-
 	protected Entity ignorePropertyChangesTo;
 
 	DomainTransformEvent lastEvent = null;
@@ -298,7 +296,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		if (entity == null) {
 			return null;
 		}
-		if (deleted.contains(entity)) {
+		if (markedForDeletion.contains(entity)) {
 			if (!LooseContext.is(CONTEXT_IGNORE_DOUBLE_DELETION)) {
 				RuntimeException ex = new RuntimeException(String.format(
 						"Double deletion - %s %s", new EntityLocator(entity),
@@ -309,10 +307,6 @@ public class ThreadlocalTransformManager extends TransformManager
 			return null;
 		}
 		entity = ensureNonProxy(entity);
-		deleted.add(entity);
-		// Ax.out("dbg deletion: %s %s %s
-		// %s",entity.getId(),entity.getLocalId(),entity.hashCode(),System.identityHashCode(entity));
-		// ((MvccObject)entity).__debugResolvedVersion__();
 		DomainTransformEvent event = super.delete(entity);
 		if (event != null) {
 			addTransform(event);
@@ -859,7 +853,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		modifiedObjects = new HashSet<Entity>();
 		modificationEvents = new ArrayList<DomainTransformEvent>();
 		transformListenerSupport.clear();
-		deleted = new LinkedHashSet<Entity>();
+		markedForDeletion = new LinkedHashSet<>();
 		createdObjectLocators.clear();
 		if (!keepExplicitlyPermittedAndFlushAfterTransforms) {
 			explicitlyPermittedTransforms.clear();

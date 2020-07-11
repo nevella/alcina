@@ -310,6 +310,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private boolean associationPropogationDisabled;
 
+	protected Set<Entity> markedForDeletion = new LinkedHashSet<>();
+
 	protected TransformManager() {
 		this.transformListenerSupport = new DomainTransformSupport();
 		this.collectionModificationSupport = new CollectionModificationSupport();
@@ -535,6 +537,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		for (CommitType ct : transformsByType.keySet()) {
 			transformsByType.get(ct).clear();
 		}
+		markedForDeletion.clear();
 	}
 
 	public void clearUserObjects() {
@@ -662,6 +665,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				&& getObject(entity) == null) {
 			return null;
 		}
+		markedForDeletion.add(entity);
 		registerDomainObject(entity);
 		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setObjectId(entity.getId());
@@ -1870,6 +1874,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 						evt.getPropertyName());
 		if (targetObject == null || assoc == null
 				|| assoc.propertyName().length() == 0) {
+			return;
+		}
+		if (markedForDeletion.contains(targetObject)) {
 			return;
 		}
 		targetObject = (Entity) ensureEndpointInTransformGraph(targetObject);
