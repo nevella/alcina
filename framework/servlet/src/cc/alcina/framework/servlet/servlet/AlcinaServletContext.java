@@ -44,15 +44,16 @@ public class AlcinaServletContext {
 		if (TransformManager.hasInstance()) {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			LooseContext.pop();
+			PermissionsManager.get().setUser(null);
 			Transaction.ensureEnded();
 		} else {
+			PermissionsManager.get().setUser(null);
 			try {
 				LooseContext.pop();
 			} catch (Exception e) {// squelch, probably webapp undeployed
 			}
 		}
 		Thread.currentThread().setName(originalThreadName.get());
-		PermissionsManager.get().setUser(null);
 	}
 
 	public AlcinaServletContext withRootPermissions(boolean rootPermissions) {
