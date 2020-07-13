@@ -65,6 +65,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -88,7 +89,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
-import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
 /**
@@ -102,8 +102,7 @@ public class SEUtilities {
 	private static Pattern yearRangePattern = Pattern
 			.compile("(\\d{4})(-(\\d{4}))?");
 
-	private static UnsortedMultikeyMap<PropertyDescriptor> pdLookup = new UnsortedMultikeyMap<PropertyDescriptor>(
-			2);
+	private static Map<Class, Map<String, PropertyDescriptor>> pdLookup = new LinkedHashMap<>();
 
 	private static Map<Class, List<Method>> allMethodsPerClass = new LinkedHashMap<>();
 
@@ -846,29 +845,19 @@ public class SEUtilities {
 		return "";
 	}
 
-	public static Map<String, Object> getPropertiesAsMap(Object obj,
+	public static Map<String, PropertyDescriptor> getPropertiesAsMap(Object obj,
 			List<String> ignore) {
-		try {
-			getPropertyDescriptorByName(obj.getClass(), null);
-			Map<String, PropertyDescriptor> pds = (Map<String, PropertyDescriptor>) pdLookup
-					.asMap(obj.getClass()).delegate();
-			Map<String, Object> props = new LinkedHashMap<String, Object>();
-			for (PropertyDescriptor pd : pds.values()) {
-				if (!ignore.contains(pd.getName())) {
-					props.put(pd.getName(), pd.getReadMethod() == null ? null
-							: pd.getReadMethod().invoke(obj));
-				}
-			}
-			return props;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		Class<? extends Object> clazz = obj.getClass();
+		ensureDescriptorLookup(clazz);
+		return pdLookup.get(clazz).entrySet().stream()
+				.filter(e -> !ignore.contains(e.getKey()))
+				.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
 	}
 
 	public static PropertyDescriptor getPropertyDescriptorByName(Class clazz,
 			String propertyName) {
 		ensureDescriptorLookup(clazz);
-		PropertyDescriptor cached = pdLookup.get(clazz, propertyName);
+		PropertyDescriptor cached = pdLookup.get(clazz).get(propertyName);
 		return cached;
 	}
 
@@ -903,7 +892,7 @@ public class SEUtilities {
 			getSortedPropertyDescriptors(Class clazz) {
 		ensureDescriptorLookup(clazz);
 		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
-				pdLookup.asMap(clazz).allValues());
+				pdLookup.get(clazz).values());
 		Comparator<PropertyDescriptor> pdNameComparator = new Comparator<PropertyDescriptor>() {
 			@Override
 			public int compare(PropertyDescriptor o1, PropertyDescriptor o2) {
@@ -1464,10 +1453,14 @@ public class SEUtilities {
 		try {
 			if (!pdLookup.containsKey(clazz)) {
 				synchronized (pdLookup) {
-					PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-							.getPropertyDescriptors();
-					for (PropertyDescriptor pd : pds) {
-						pdLookup.put(clazz, pd.getName(), pd);
+					if (!pdLookup.containsKey(clazz)) {
+						Map<String, PropertyDescriptor> map = new LinkedHashMap<>();
+						PropertyDescriptor[] pds = Introspector
+								.getBeanInfo(clazz).getPropertyDescriptors();
+						for (PropertyDescriptor pd : pds) {
+							map.put(pd.getName(), pd);
+						}
+						pdLookup.put(clazz, map);
 					}
 				}
 			}
