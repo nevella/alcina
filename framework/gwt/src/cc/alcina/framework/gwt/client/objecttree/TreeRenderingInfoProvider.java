@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
+import cc.alcina.framework.gwt.client.directed.RenderContext;
 
 /**
  * @author nick@alcina.cc

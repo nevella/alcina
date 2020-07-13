@@ -101,49 +101,68 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 
 	private ElementMapperImpl<Widget> widgetMap = new ElementMapperImpl<Widget>();
 
+	private Element headElem;
+
 	/**
 	 * Create a new empty HTML Table.
 	 */
 	public HTMLTable() {
 		tableElem = DOM.createTable();
+		if (isUseTHead()) {
+			headElem = DOM.createTHead();
+			DOM.appendChild(tableElem, headElem);
+		}
 		bodyElem = DOM.createTBody();
 		DOM.appendChild(tableElem, bodyElem);
 		setElement(tableElem);
 	}
 
+	protected boolean isUseTHead() {
+		return false;
+	}
+
+	@Override
 	public HandlerRegistration addClickHandler(ClickHandler handler) {
 		return addDomHandler(handler, ClickEvent.getType());
 	}
 
+	@Override
 	public HandlerRegistration
 			addDoubleClickHandler(DoubleClickHandler handler) {
 		return addDomHandler(handler, DoubleClickEvent.getType());
 	}
 
+	@Override
 	public HandlerRegistration addDragEndHandler(DragEndHandler handler) {
 		return addBitlessDomHandler(handler, DragEndEvent.getType());
 	}
 
+	@Override
 	public HandlerRegistration addDragEnterHandler(DragEnterHandler handler) {
 		return addBitlessDomHandler(handler, DragEnterEvent.getType());
 	}
 
+	@Override
 	public HandlerRegistration addDragHandler(DragHandler handler) {
 		return addBitlessDomHandler(handler, DragEvent.getType());
 	}
 
+	@Override
 	public HandlerRegistration addDragLeaveHandler(DragLeaveHandler handler) {
 		return addBitlessDomHandler(handler, DragLeaveEvent.getType());
 	}
 
+	@Override
 	public HandlerRegistration addDragOverHandler(DragOverHandler handler) {
 		return addBitlessDomHandler(handler, DragOverEvent.getType());
 	}
 
+	@Override
 	public HandlerRegistration addDragStartHandler(DragStartHandler handler) {
 		return addBitlessDomHandler(handler, DragStartEvent.getType());
 	}
 
+	@Override
 	public HandlerRegistration addDropHandler(DropHandler handler) {
 		return addBitlessDomHandler(handler, DropEvent.getType());
 	}
@@ -157,6 +176,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 *             {@link HTMLTable#getCellForEvent(ClickEvent)} to get the cell
 	 *             information (remember to check for a null return value)
 	 */
+	@Override
 	@Deprecated
 	public void addTableListener(TableListener listener) {
 		ListenerWrapper.WrappedTableListener.add(this, listener);
@@ -356,6 +376,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 * 
 	 * @return the iterator
 	 */
+	@Override
 	public Iterator<Widget> iterator() {
 		return new Iterator<Widget>() {
 			final ArrayList<Widget> widgetList = widgetMap.getObjectList();
@@ -367,10 +388,12 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 				findNext();
 			}
 
+			@Override
 			public boolean hasNext() {
 				return nextIndex < widgetList.size();
 			}
 
+			@Override
 			public Widget next() {
 				if (!hasNext()) {
 					throw new NoSuchElementException();
@@ -381,6 +404,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 				return result;
 			}
 
+			@Override
 			public void remove() {
 				if (lastIndex < 0) {
 					throw new IllegalStateException();
@@ -436,6 +460,7 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 * @deprecated Use the {@link HandlerRegistration#removeHandler} method on
 	 *             the object returned by an add*Handler method instead
 	 */
+	@Override
 	@Deprecated
 	public void removeTableListener(TableListener listener) {
 		ListenerWrapper.WrappedTableListener.remove(this, listener);
@@ -654,6 +679,11 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		return DOM.createTD();
 	}
 
+	protected Element createCell(int row) {
+		return resolveContainer(row) == headElem ? DOM.createTH()
+				: DOM.createTD();
+	}
+
 	/**
 	 * Gets the table's TBODY element.
 	 * 
@@ -685,7 +715,16 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 * @return number of columns in the row
 	 */
 	protected int getDOMCellCount(int row) {
-		return getDOMCellCount(bodyElem, row);
+		return getDOMCellCount(resolveContainer(row),
+				resolveRowInContainer(row));
+	}
+
+	protected Element resolveContainer(int row) {
+		return row == 0 && isUseTHead() ? headElem : bodyElem;
+	}
+
+	protected int resolveRowInContainer(int row) {
+		return isUseTHead() ? row == 0 ? 0 : row - 1 : row;
 	}
 
 	/**
@@ -694,7 +733,9 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 * @return Returns the number of rows in the table
 	 */
 	protected int getDOMRowCount() {
-		return getDOMRowCount(bodyElem);
+		return isUseTHead()
+				? getDOMRowCount(bodyElem) + getDOMRowCount(headElem)
+				: getDOMRowCount(bodyElem);
 	}
 
 	@Deprecated
@@ -714,17 +755,19 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		Element td = DOM.eventGetTarget(event);
 		for (; td != null; td = DOM.getParent(td)) {
 			// If it's a TD, it might be the one we're looking for.
-			if (td.getPropertyString("tagName").equalsIgnoreCase("td")) {
+			String tagName = td.getPropertyString("tagName");
+			if (tagName.equalsIgnoreCase("td")
+					|| tagName.equalsIgnoreCase("th")) {
 				// Make sure it's directly a part of this table before returning
 				// it.
 				Element tr = DOM.getParent(td);
-				Element body = DOM.getParent(tr);
-				if (body == bodyElem) {
+				Element container = DOM.getParent(tr);
+				if (container == bodyElem || container == headElem) {
 					return DOM.asOld(td);
 				}
 			}
 			// If we run into this table's body, we're out of options.
-			if (td == bodyElem) {
+			if (td == bodyElem || td == headElem) {
 				return null;
 			}
 		}
@@ -741,8 +784,9 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 * @throws IndexOutOfBoundsException
 	 */
 	protected void insertCell(int row, int column) {
-		Element tr = rowFormatter.getRow(bodyElem, row);
-		Element td = createCell();
+		Element tr = rowFormatter.getRow(resolveContainer(row),
+				resolveRowInContainer(row));
+		Element td = createCell(row);
 		DOM.insertChild(tr, td, column);
 	}
 
@@ -758,9 +802,10 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 * @throws IndexOutOfBoundsException
 	 */
 	protected void insertCells(int row, int column, int count) {
-		Element tr = rowFormatter.getRow(bodyElem, row);
+		Element tr = rowFormatter.getRow(resolveContainer(row),
+				resolveRowInContainer(row));
 		for (int i = column; i < column + count; i++) {
-			Element td = createCell();
+			Element td = createCell(row);
 			DOM.insertChild(tr, td, i);
 		}
 	}
@@ -779,7 +824,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 			checkRowBounds(beforeRow);
 		}
 		Element tr = DOM.createTR();
-		DOM.insertChild(bodyElem, tr, beforeRow);
+		DOM.insertChild(resolveContainer(beforeRow), tr,
+				resolveRowInContainer(beforeRow));
 		return beforeRow;
 	}
 
@@ -887,7 +933,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	protected void removeCell(int row, int column) {
 		checkCellBounds(row, column);
 		Element td = cleanCell(row, column, false);
-		Element tr = rowFormatter.getRow(bodyElem, row);
+		Element tr = rowFormatter.getRow(resolveContainer(row),
+				resolveRowInContainer(row));
 		tr.removeChild(td);
 	}
 
@@ -903,7 +950,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		for (int column = 0; column < columnCount; ++column) {
 			cleanCell(row, column, false);
 		}
-		bodyElem.removeChild(rowFormatter.getRow(bodyElem, row));
+		resolveContainer(row).removeChild(rowFormatter
+				.getRow(resolveContainer(row), resolveRowInContainer(row)));
 	}
 
 	/**
@@ -937,11 +985,12 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		this.rowFormatter = rowFormatter;
 	}
 
-	void addCells(Element tbody, int row, int num) {
-		com.google.gwt.dom.client.Element rowElem = impl.getRows(tbody)
+	void addCells(Element container, int row, int num) {
+		com.google.gwt.dom.client.Element rowElem = impl.getRows(container)
 				.get(row);
 		for (int i = 0; i < num; i++) {
-			TableCellElement tdElement = Document.get().createTDElement();
+			Element tdElement = container == headElem ? DOM.createTH()
+					: DOM.createTD();
 			rowElem.appendChild(tdElement);
 		}
 	}
@@ -1013,7 +1062,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 */
 		public void addStyleName(int row, int column, String styleName) {
 			prepareCell(row, column);
-			Element td = getCellElement(bodyElem, row, column);
+			Element td = getCellElement(resolveContainer(row),
+					resolveRowInContainer(row), column);
 			UIObject.setStyleName(td, styleName, true);
 		}
 
@@ -1029,7 +1079,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 */
 		public Element getElement(int row, int column) {
 			checkCellBounds(row, column);
-			return DOM.asOld(getCellElement(bodyElem, row, column));
+			return DOM.asOld(getCellElement(resolveContainer(row),
+					resolveRowInContainer(row), column));
 		}
 
 		/**
@@ -1090,7 +1141,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 */
 		public void removeStyleName(int row, int column, String styleName) {
 			checkCellBounds(row, column);
-			Element td = getCellElement(bodyElem, row, column);
+			Element td = getCellElement(resolveContainer(row),
+					resolveRowInContainer(row), column);
 			UIObject.setStyleName(td, styleName, false);
 		}
 
@@ -1130,7 +1182,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 */
 		public void setHeight(int row, int column, String height) {
 			prepareCell(row, column);
-			Element elem = getCellElement(bodyElem, row, column);
+			Element elem = getCellElement(resolveContainer(row),
+					resolveRowInContainer(row), column);
 			elem.setPropertyString("height", height);
 		}
 
@@ -1149,7 +1202,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		public void setHorizontalAlignment(int row, int column,
 				HorizontalAlignmentConstant align) {
 			prepareCell(row, column);
-			Element elem = getCellElement(bodyElem, row, column);
+			Element elem = getCellElement(resolveContainer(row),
+					resolveRowInContainer(row), column);
 			elem.setPropertyString("align", align.getTextAlignString());
 		}
 
@@ -1167,8 +1221,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 */
 		public void setStyleName(int row, int column, String styleName) {
 			prepareCell(row, column);
-			UIObject.setStyleName(getCellElement(bodyElem, row, column),
-					styleName);
+			UIObject.setStyleName(getCellElement(resolveContainer(row),
+					resolveRowInContainer(row), column), styleName);
 		}
 
 		/**
@@ -1184,8 +1238,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 * @throws IndexOutOfBoundsException
 		 */
 		public void setStylePrimaryName(int row, int column, String styleName) {
-			UIObject.setStylePrimaryName(getCellElement(bodyElem, row, column),
-					styleName);
+			UIObject.setStylePrimaryName(getCellElement(resolveContainer(row),
+					resolveRowInContainer(row), column), styleName);
 		}
 
 		/**
@@ -1203,8 +1257,9 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		public void setVerticalAlignment(int row, int column,
 				VerticalAlignmentConstant align) {
 			prepareCell(row, column);
-			getCellElement(bodyElem, row, column).getStyle().setProperty(
-					"verticalAlign", align.getVerticalAlignString());
+			getCellElement(resolveContainer(row), resolveRowInContainer(row),
+					column).getStyle().setProperty("verticalAlign",
+							align.getVerticalAlignString());
 		}
 
 		/**
@@ -1240,8 +1295,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		public void setWidth(int row, int column, String width) {
 			// Give the subclass a chance to prepare the cell.
 			prepareCell(row, column);
-			getCellElement(bodyElem, row, column).setPropertyString("width",
-					width);
+			getCellElement(resolveContainer(row), resolveRowInContainer(row),
+					column).setPropertyString("width", width);
 		}
 
 		/**
@@ -1292,7 +1347,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 * @return the cell's TD element
 		 */
 		private Element getRawElement(int row, int column) {
-			return getCellElement(bodyElem, row, column);
+			return getCellElement(resolveContainer(row),
+					resolveRowInContainer(row), column);
 		}
 
 		/**
@@ -1308,7 +1364,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 */
 		protected Element ensureElement(int row, int column) {
 			prepareCell(row, column);
-			return DOM.asOld(getCellElement(bodyElem, row, column));
+			return DOM.asOld(getCellElement(resolveContainer(row),
+					resolveRowInContainer(row), column));
 		}
 
 		/**
@@ -1549,7 +1606,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 */
 		public Element getElement(int row) {
 			checkRowBounds(row);
-			return DOM.asOld(getRow(bodyElem, row));
+			return DOM.asOld(
+					getRow(resolveContainer(row), resolveRowInContainer(row)));
 		}
 
 		/**
@@ -1673,12 +1731,14 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		 */
 		protected Element ensureElement(int row) {
 			prepareRow(row);
-			return DOM.asOld(getRow(bodyElem, row));
+			return DOM.asOld(
+					getRow(resolveContainer(row), resolveRowInContainer(row)));
 		}
 
 		/**
 		 * @deprecated Call and override {@link #getRow(Element, int)} instead.
 		 */
+		@Deprecated
 		protected Element getRow(Element tbody, int row) {
 			return DOM.asOld(impl.getRows(tbody).get(row));
 		}
@@ -1705,13 +1765,15 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 */
 	@SuppressWarnings("unused") // used due to rebinding
 	private static class HTMLTableIEImpl extends HTMLTableStandardImpl {
+		@Override
 		native JsArray<ElementRemote> getCells0(ElementRemote row) /*-{
-																	return row.children;
-																	}-*/;
+      return row.children;
+		}-*/;
 
+		@Override
 		native JsArray<ElementRemote> getRows0(ElementRemote tbody) /*-{
-																	return tbody.children;
-																	}-*/;
+      return tbody.children;
+		}-*/;
 	}
 
 	/**
@@ -1741,12 +1803,12 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		}
 
 		native JsArray<ElementRemote> getCells0(ElementRemote row) /*-{
-																	return row.cells;
-																	}-*/;
+      return row.cells;
+		}-*/;
 
 		native JsArray<ElementRemote> getRows0(ElementRemote tbody) /*-{
-																	return tbody.rows;
-																	}-*/;
+      return tbody.rows;
+		}-*/;
 	}
 
 	static class ElementArray<T extends Node> {

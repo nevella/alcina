@@ -78,6 +78,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.gwt.client.directed.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.FriendlyEnumLabelProvider;
@@ -87,7 +88,6 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.DateBox.DateBoxProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 

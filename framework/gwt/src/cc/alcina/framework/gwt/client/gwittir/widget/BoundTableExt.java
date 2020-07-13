@@ -85,12 +85,12 @@ import com.totsp.gwittir.client.util.ListSorter;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.gwt.client.directed.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.EndRowButtonClickedEvent.EndRowButtonClickedHandler;
 import cc.alcina.framework.gwt.client.gwittir.widget.EndRowButtonClickedEvent.HasEndRowClickedHandlers;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.HasRenderContext;
 import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
 import cc.alcina.framework.gwt.client.widget.SpanPanel;
@@ -248,7 +248,18 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	private String selectedRowLastStyle = BoundTableExt.DEFAULT_STYLE;
 
+	private boolean usesThHeader;
+
+	public boolean isUsesThHeader() {
+		return this.usesThHeader;
+	}
+
+	public void setUsesThHeader(boolean usesThHeader) {
+		this.usesThHeader = usesThHeader;
+	}
+
 	private Timer cleanUpCaches = new Timer() {
+		@Override
 		public void run() {
 			if (value != null) {
 				for (Iterator it = new ArrayList(widgetCache.keySet())
@@ -616,6 +627,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	 * 
 	 * @return The Binding object for this table.
 	 */
+	@Override
 	public Binding getBinding() {
 		return this.topBinding;
 	}
@@ -751,6 +763,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		return this.table.getTitle();
 	}
 
+	@Override
 	public Object getValue() {
 		return value;
 	}
@@ -791,6 +804,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	 * @param numberOfChunks
 	 *            The total number of available chunks of data.
 	 */
+	@Override
 	public void init(Collection c, int numberOfChunks) {
 		this.numberOfChunks = numberOfChunks;
 		this.currentChunk = 0;
@@ -949,6 +963,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	 *            The next requested chunk of SourcesPropertyChangeEvents
 	 *            objects.
 	 */
+	@Override
 	public void setChunk(Collection c) {
 		if (!this.inChunk) {
 			throw new RuntimeException(
@@ -1047,6 +1062,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.base.setStyleName(style, add);
 	}
 
+	@Override
 	public void setValue(Object value) {
 		Collection old = this.value;
 		this.value = (Collection) value;
@@ -1124,6 +1140,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	private void addSelectedClickListener(final SourcesClickEvents widget,
 			final int objectNumber, final int col) {
 		ClickListener l = new ClickListener() {
+			@Override
 			public void onClick(Widget sender) {
 				setActive(true);
 				int row = calculateObjectToRowOffset(objectNumber);
@@ -1137,6 +1154,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	private void addSelectedFocusListener(final HasFocus widget,
 			final int objectNumber, final int col) {
 		FocusListener l = new FocusListener() {
+			@Override
 			public void onFocus(Widget sender) {
 				setActive(true);
 				int row = calculateObjectToRowOffset(objectNumber);
@@ -1147,6 +1165,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				handleSelect(row != selectedRowLastIndex, row, col);
 			}
 
+			@Override
 			public void onLostFocus(Widget sender) {
 			}
 		};
@@ -1212,6 +1231,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		Grid p = new Grid(1, 5);
 		p.setStyleName(BoundTableExt.NAV_STYLE);
 		Button b = new Button("<<", new ClickListener() {
+			@Override
 			public void onClick(Widget sender) {
 				first();
 			}
@@ -1222,6 +1242,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 		p.setWidget(0, 0, b);
 		b = new Button("<", new ClickListener() {
+			@Override
 			public void onClick(Widget sender) {
 				previous();
 			}
@@ -1232,6 +1253,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 		p.setWidget(0, 1, b);
 		b = new Button(">", new ClickListener() {
+			@Override
 			public void onClick(Widget sender) {
 				next();
 			}
@@ -1247,6 +1269,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				HasHorizontalAlignment.ALIGN_CENTER);
 		p.setWidget(0, 3, b);
 		b = new Button(">>", new ClickListener() {
+			@Override
 			public void onClick(Widget sender) {
 				last();
 			}
@@ -1271,6 +1294,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.table.setCellPadding(0);
 		this.table.setCellSpacing(0);
 		table.addTableListener(new TableListener() {
+			@Override
 			public void onCellClicked(SourcesTableEvents sender, int row,
 					int cell) {
 				setActive(true);
@@ -1356,6 +1380,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		if (((this.masks & BoundTableExt.ROW_HANDLE_MASK) > 0)
 				&& ((this.masks & BoundTableExt.MULTIROWSELECT_MASK) > 0)) {
 			this.allRowsHandle = new Button("  ", new ClickListener() {
+				@Override
 				public void onClick(Widget sender) {
 					if ((getSelected() != null)
 							&& (getSelected().size() == 0)) {
@@ -1385,6 +1410,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			this.scroll.setWidget(table);
 			super.initWidget(esp);
 			scroll.addScrollListener(new ScrollListener() {
+				@Override
 				public void onScroll(Widget widget, int scrollLeft,
 						int scrollTop) {
 					// GWT.log("HasProvider: " + (provider != null), null);
@@ -1412,6 +1438,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 		this.addPropertyChangeListener("selected",
 				new PropertyChangeListener() {
+					@Override
 					public void propertyChange(
 							PropertyChangeEvent propertyChangeEvent) {
 						if (getAction() != null) {
@@ -1420,6 +1447,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					}
 				});
 		this.addPropertyChangeListener("active", new PropertyChangeListener() {
+			@Override
 			public void
 					propertyChange(PropertyChangeEvent propertyChangeEvent) {
 				boolean newActive = ((Boolean) propertyChangeEvent
@@ -1710,6 +1738,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			}
 			handle.setStyleName("rowHandle");
 			((HasFocus) handle).addFocusListener(new FocusListener() {
+				@Override
 				public void onFocus(Widget sender) {
 					if (shiftDown) {
 						return;
@@ -1730,10 +1759,12 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					setSelected(newSelected);
 				}
 
+				@Override
 				public void onLostFocus(Widget sender) {
 				}
 			});
 			((SourcesClickEvents) handle).addClickListener(new ClickListener() {
+				@Override
 				public void onClick(Widget sender) {
 					setActive(true);
 					List newSelected = null;
@@ -1767,6 +1798,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			SuggestedKeyBinding kb = new SuggestedKeyBinding(
 					Integer.toString(count).charAt(0), false, true, false);
 			Task task = new Task() {
+				@Override
 				public void run() {
 					List newSelected = new ArrayList(getSelected());
 					if (newSelected.contains(o)) {
@@ -1921,13 +1953,20 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		return widget;
 	}
 
+	public static class FlexTableTHead extends FlexTable {
+		@Override
+		protected boolean isUseTHead() {
+			return true;
+		}
+	}
+
 	protected FlexTable createTableImpl() {
-		return new FlexTable();
+		return usesThHeader ? new FlexTableTHead() : new FlexTable();
 	}
 
 	protected native Element getRow(Element elem, int row)/*-{
-															return elem.rows[row];
-															}-*/;
+    return elem.rows[row];
+	}-*/;
 
 	@Override
 	protected void onAttach() {

@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.gwt.client.logic;
+package cc.alcina.framework.gwt.client.directed;
 
 import java.util.function.Function;
 
@@ -186,5 +186,9 @@ public class RenderContext extends LooseContextInstance {
 		RenderContext context = new RenderContext();
 		cloneToSnapshot(context);
 		return context;
+	}
+
+	public RenderContextStyles styles() {
+		return new RenderContextStyles(this);
 	}
 }

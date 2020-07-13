@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.BlurEvent;
@@ -876,11 +877,19 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 				item.setState(!item.getState(), true);
 				return true;
 			} else if (DOM.isOrHasChild(item.getElement(), hElem)) {
+				if (isToggleSelectionOnLabelClick()) {
+					Scheduler.get().scheduleFinally(
+							() -> item.setState(!item.getState(), true));
+				}
 				onSelection(item, true,
 						!shouldTreeDelegateFocusToElement(hElem));
 				return true;
 			}
 		}
+		return false;
+	}
+
+	protected boolean isToggleSelectionOnLabelClick() {
 		return false;
 	}
 

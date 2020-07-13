@@ -222,6 +222,7 @@ public class FastROBoundTable extends BoundTableExt {
 		if ((this.masks & BoundTableExt.ROW_HANDLE_MASK) > 0) {
 			handle = new CheckBox();
 			handle.addClickHandler(new ClickHandler() {
+				@Override
 				public void onClick(ClickEvent event) {
 					setActive(true);
 					List newSelected = null;
@@ -359,11 +360,13 @@ public class FastROBoundTable extends BoundTableExt {
 			}
 		}
 
+		@Override
 		public void onClick(ClickEvent event) {
 			RowCol rowCol = getRowCol(event);
 			edit(rowCol);
 		}
 
+		@Override
 		public void onMouseMove(MouseMoveEvent event) {
 			RowCol rowCol = getRowCol(event);
 			if (lastRowCol != null && !lastRowCol.equals(rowCol)) {
@@ -374,10 +377,12 @@ public class FastROBoundTable extends BoundTableExt {
 			}
 		}
 
+		@Override
 		public void onMouseOut(MouseOutEvent event) {
 			showEditable(null);
 		}
 
+		@Override
 		public void onMouseOver(MouseOverEvent event) {
 		}
 
@@ -490,6 +495,7 @@ public class FastROBoundTable extends BoundTableExt {
 								null, rpp, -4, -tdh + 4);
 				relativePopupPanel.addCloseHandler(
 						new CloseHandler<RelativePopupPanel>() {
+							@Override
 							public void onClose(
 									CloseEvent<RelativePopupPanel> event) {
 								tableWidget.setValue(editableWidget.getValue());
@@ -510,17 +516,20 @@ public class FastROBoundTable extends BoundTableExt {
 		}
 	}
 
-	private class ROFlexTable extends FlexTable implements HasMouseOverHandlers,
-			HasMouseOutHandlers, HasMouseMoveHandlers {
+	private class ROFlexTable extends FlexTableTHead implements
+			HasMouseOverHandlers, HasMouseOutHandlers, HasMouseMoveHandlers {
+		@Override
 		public HandlerRegistration
 				addMouseMoveHandler(MouseMoveHandler handler) {
 			return addDomHandler(handler, MouseMoveEvent.getType());
 		}
 
+		@Override
 		public HandlerRegistration addMouseOutHandler(MouseOutHandler handler) {
 			return addDomHandler(handler, MouseOutEvent.getType());
 		}
 
+		@Override
 		public HandlerRegistration
 				addMouseOverHandler(MouseOverHandler handler) {
 			return addDomHandler(handler, MouseOverEvent.getType());
@@ -531,6 +540,7 @@ public class FastROBoundTable extends BoundTableExt {
 			return super.getEventTargetCell(event);
 		}
 
+		@Override
 		protected boolean internalClearCell(Element td,
 				boolean clearInnerHTML) {
 			if (!reallyClear) {

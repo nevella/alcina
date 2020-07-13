@@ -88,6 +88,7 @@ import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.directed.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
@@ -101,7 +102,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.GridFormCellRendererGrid;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.Link;
@@ -349,6 +349,7 @@ public class ContentViewFactory {
 		if (tableStyleName != null) {
 			f.addStyleName(tableStyleName);
 		}
+		RenderContext.get().styles().multiRowTable().applyTo(f);
 		f.addAttachHandler(new RecheckVisibilityHandler(f));
 		f.setAutofocusField(GwittirBridge.get().getFieldToFocus(bean, fields));
 		f.setValue(bean);
@@ -494,6 +495,7 @@ public class ContentViewFactory {
 		if (tableStyleName != null) {
 			table.addStyleName(tableStyleName);
 		}
+		RenderContext.get().styles().multiRowTable().applyTo(table);
 		cp.add(table);
 		cp.setBoundWidget(table);
 		if (editable && !autoSave && !noButtons) {
@@ -756,6 +758,7 @@ public class ContentViewFactory {
 			createPaneWrapper(PermissibleActionListener actionListener) {
 		PaneWrapperWithObjects vp = new PaneWrapperWithObjects();
 		vp.setStyleName("alcina-BeanPanel");
+		RenderContext.get().styles().multiRowTable().applyTo(vp, editable);
 		if (actionListener != null) {
 			vp.addVetoableActionListener(actionListener);
 		}

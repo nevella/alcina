@@ -57,6 +57,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.gwt.client.directed.RenderContext;
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
 import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.ContainerNode;
@@ -72,7 +73,6 @@ import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventEvent;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventListener;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventType;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.FilterWidget;
@@ -211,6 +211,7 @@ public class WorkspaceView extends Composite implements HasName,
 				fp.add(w);
 			}
 			this.scroller = new ScrollPanel100pcHeight(dataTree);
+			this.scroller.setStyleName("data-tree-view-scroller");
 			fp.add(scroller);
 			fp.setWidth("100%");
 			dataTree.addSelectionHandler(this);
@@ -303,9 +304,11 @@ public class WorkspaceView extends Composite implements HasName,
 						getDataTree().addItem(root);
 						root.setState(true);
 					} else {
+						List<TreeItem> children = new ArrayList<>();
 						for (int idx = 0; idx < root.getChildCount(); idx++) {
-							getDataTree().addItem(root.getChild(idx));
+							children.add(root.getChild(idx));
 						}
+						children.forEach(getDataTree()::addItem);
 					}
 				} else {
 					Collection<TreeItem> roots = (Collection<TreeItem>) items;

@@ -7,9 +7,9 @@ import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.validator.CompositeValidationFeedback;
 
+import cc.alcina.framework.gwt.client.directed.RenderContext;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections.ContentViewSection;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.lux.LuxButton;
 import cc.alcina.framework.gwt.client.lux.LuxButtonPanel;
 import cc.alcina.framework.gwt.client.lux.LuxContainer;

@@ -67,6 +67,11 @@ public class DataTree extends FilterableTree
 	}
 
 	@Override
+	protected boolean isToggleSelectionOnLabelClick() {
+		return true;
+	}
+
+	@Override
 	public void addExtraTreeEventListener(ExtraTreeEventListener listener) {
 		this.extraTreeEventSupport.addExtraTreeEventListener(listener);
 	}

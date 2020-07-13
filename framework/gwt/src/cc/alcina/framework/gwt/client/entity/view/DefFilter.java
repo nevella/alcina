@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TxtCriterion;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
+import cc.alcina.framework.gwt.client.directed.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchDefinitionEditor;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchRow;
