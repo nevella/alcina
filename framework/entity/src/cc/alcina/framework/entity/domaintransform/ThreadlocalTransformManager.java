@@ -603,6 +603,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		return ObjectPersistenceHelper.get().getTemplateInstance(clazz);
 	}
 
+	public EntityLocatorMap getUserSessionEntityMap() {
+		return this.userSessionEntityMap;
+	}
+
 	@Override
 	public List<PropertyInfo> getWritableProperties(Class clazz) {
 		return ObjectPersistenceHelper.get().getWritableProperties(clazz);

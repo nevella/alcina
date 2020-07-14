@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 public class TransformCascade {
@@ -45,18 +46,22 @@ public class TransformCascade {
 							.getServerAsClientInstance())) {
 				return;
 			}
+			ThreadlocalTransformManager tltm = ThreadlocalTransformManager
+					.cast();
 			try {
-				TransformManager.get().setIgnorePropertyChanges(true);
-				ThreadlocalTransformManager.cast()
-						.setApplyingExternalTransforms(true);
+				tltm.setIgnorePropertyChanges(true);
+				if (tltm.getUserSessionEntityMap() == null) {
+					tltm.setUserSessionEntityMap(TransformCommit.get()
+							.getLocatorMapForClient(token.getRequest()));
+				}
+				tltm.setApplyingExternalTransforms(true);
 				// FIXME - mvcc.3 - index
 				for (DomainTransformEvent event : allEvents) {
 					if (event
 							.getTransformType() == TransformType.CREATE_OBJECT) {
-						Entity instance = (Entity) ThreadlocalTransformManager
-								.cast().newInstance(event.getObjectClass(),
-										event.getObjectId(),
-										event.getObjectLocalId());
+						Entity instance = (Entity) tltm.newInstance(
+								event.getObjectClass(), event.getObjectId(),
+								event.getObjectLocalId());
 						token.getTargetStore().putExternalLocal(instance);
 					}
 					TransformManager.get().apply(event);
@@ -64,9 +69,8 @@ public class TransformCascade {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			} finally {
-				ThreadlocalTransformManager.cast()
-						.setApplyingExternalTransforms(false);
-				TransformManager.get().setIgnorePropertyChanges(false);
+				tltm.setApplyingExternalTransforms(false);
+				tltm.setIgnorePropertyChanges(false);
 			}
 		}
 	}

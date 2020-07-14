@@ -48,6 +48,7 @@ import org.hibernate.tuple.IdentifierProperty;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityClassResolver;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
@@ -91,6 +92,10 @@ public class JPAHibernateImpl implements JPAImplementation {
 	private java.util.logging.Level level;
 
 	private PersistenSetProjectionCreator persistenSetProjectionCreator;
+
+	public JPAHibernateImpl() {
+		Entity.classResolver = new EntityClassResolverImpl();
+	}
 
 	@Override
 	public void afterSpecificSetId(Object fromBefore) throws Exception {
@@ -367,6 +372,17 @@ public class JPAHibernateImpl implements JPAImplementation {
 		public Serializable generate(SessionImplementor session, Object object)
 				throws HibernateException {
 			return ((Entity) object).getId();
+		}
+	}
+
+	private final class EntityClassResolverImpl extends EntityClassResolver {
+		@Override
+		public Class<? extends Entity> entityClass(Entity e) {
+			if (e instanceof HibernateProxy) {
+				return ((HibernateProxy) e).getHibernateLazyInitializer()
+						.getPersistentClass();
+			}
+			return super.entityClass(e);
 		}
 	}
 

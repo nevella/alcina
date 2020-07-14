@@ -238,8 +238,6 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	private ClientInstance clientInstance;
 
-	private IUser instantiatedUser;
-
 	private HashMap<String, IGroup> groupMap;
 
 	private PropertyPermissions defaultPropertyPermissions = new PropertyPermissions() {
@@ -604,7 +602,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 							.isInCreationRequest((Entity) hasOwner)
 					: false;
 		} else {
-			return owner.equals(user) || owner.equals(instantiatedUser);
+			return owner.equals(user);
 		}
 	}
 
@@ -716,7 +714,6 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 			}
 		}
 		this.user = user;
-		this.instantiatedUser = user;
 		if (this.user != null) {
 			this.userId = user.getId();
 		}
@@ -760,20 +757,12 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		return !isPermissible((Permissible) object);
 	}
 
-	protected IUser getInstantiatedUser() {
-		return this.instantiatedUser;
-	}
-
 	protected IUser getSystemUser() {
 		return new UserlandProvider().getSystemUser();
 	}
 
 	protected void nullGroupMap() {
 		groupMap = null;
-	}
-
-	protected void setInstantiatedUser(IUser instantiatedUser) {
-		this.instantiatedUser = instantiatedUser;
 	}
 
 	@ClientInstantiable

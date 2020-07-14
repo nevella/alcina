@@ -40,6 +40,7 @@ public class UniqueInCollectionValidator implements Validator {
 		this.sourceObject = sourceObject;
 	}
 
+	@Override
 	public Object validate(Object value) throws ValidationException {
 		if (value == null) {
 			return value;
@@ -48,7 +49,8 @@ public class UniqueInCollectionValidator implements Validator {
 			if (o != sourceObject && value.equals(Reflections.propertyAccessor()
 					.getPropertyValue(o, propertyName))) {
 				if (o instanceof Entity && sourceObject instanceof Entity) {
-					if (EntityHelper.equals((Entity) o, sourceObject)) {
+					if (EntityHelper.equals((Entity) o,
+							(Entity) sourceObject)) {
 						continue;
 					}
 				}

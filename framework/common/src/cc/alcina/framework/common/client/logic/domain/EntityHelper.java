@@ -85,29 +85,23 @@ public class EntityHelper {
 		return CommonUtils.compareLongs(o1.getId(), o2.getId());
 	}
 
-	public static boolean equals(Entity o1, Object o2) {
+	public static boolean equals(Entity o1, Entity o2) {
 		if (o1 == null) {
 			return o2 == null;
 		}
 		if (o2 == null) {
 			return false;
 		}
-		if (o1.getClass() != o2.getClass()) {
-			// check for hibernate/domain proxies
-			if (o1.getClass().getSuperclass() != o2.getClass()
-					&& o1.getClass() != o2.getClass().getSuperclass()) {
-				return false;
-			}
+		if (o1.entityClass() != o2.entityClass()) {
+			return false;
 		}
 		if (o1.getId() == 0 && o1.getLocalId() == 0) {
 			return o1 == o2;
 		}
-		Entity entity = (Entity) o2;
-		if (o1.getId() != 0 && o1.getId() == entity.getId()) {
-			return true;
+		if (o1.getId() != 0 || o2.getId() != 0) {
+			return o1.getId() == o2.getId();
 		}
-		return (entity.getId() == o1.getId()
-				&& entity.getLocalId() == o1.getLocalId());
+		return o2.getLocalId() == o1.getLocalId();
 	}
 
 	public static <T extends HasId> T getById(Collection<T> values, long id) {

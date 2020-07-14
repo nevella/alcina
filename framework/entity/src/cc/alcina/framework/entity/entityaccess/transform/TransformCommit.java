@@ -583,8 +583,7 @@ public class TransformCommit {
 			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
 			boolean blockUntilAllListenersNotified)
 			throws DomainTransformRequestException {
-		EntityLocatorMap locatorMap = Registry.impl(TransformCommit.class)
-				.getLocatorMapForClient(request);
+		EntityLocatorMap locatorMap = getLocatorMapForClient(request);
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, locatorMap,

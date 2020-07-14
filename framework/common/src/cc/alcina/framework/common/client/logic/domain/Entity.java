@@ -44,6 +44,8 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 	public static final String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class
 			+ ".CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID";
 
+	public static transient EntityClassResolver classResolver = new EntityClassResolver();
+
 	protected volatile long id = 0;
 
 	protected transient int hash = 0;
@@ -72,13 +74,16 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 		return (T) this;
 	}
 
+	// rewritten by class transformer
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public Class<? extends Entity> entityClass() {
-		return getClass();
+		return classResolver.entityClass(this);
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		return EntityHelper.equals(domainIdentity(), obj);
+		return obj instanceof Entity
+				&& EntityHelper.equals(domainIdentity(), (Entity) obj);
 	}
 
 	@Override
@@ -92,10 +97,12 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 	/**
 	 * Used for object referencing within a client domain. Generated from a
 	 * thread-safe increment counter (one counter per domain, not
-	 * per-object-type). Can be 'packed' with the lower 31 bits of the
+	 * per-object-type).
+	 * 
+	 * (Unused but viable) Can be 'packed' with the lower 31 bits of the
 	 * clientInstance id (and negated) to make an effectively globally unique id
-	 * (for the jvm lifetime) that can be used in the same set as the id field
-	 * (per-class, db-generated) ids
+	 * (for the given domainstore/db) that can be used in the same set as the id
+	 * field (per-class, db-generated) ids
 	 */
 	public long getLocalId() {
 		return this.localId;
@@ -330,6 +337,12 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 		@Override
 		public boolean allow(Entity o) {
 			return o != null && (o.getId() == id ^ allowAllExceptId);
+		}
+	}
+
+	public static class EntityClassResolver {
+		public Class<? extends Entity> entityClass(Entity e) {
+			return e.getClass();
 		}
 	}
 

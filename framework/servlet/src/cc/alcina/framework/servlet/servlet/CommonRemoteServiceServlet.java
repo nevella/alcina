@@ -73,6 +73,7 @@ import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
@@ -87,6 +88,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
+import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -601,6 +603,17 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformRequestException {
 		try {
+			for (DomainTransformEvent transform : request.allTransforms()) {
+				if (transform.getObjectClass()
+						.getAnnotation(DomainTransformPersistable.class) != null
+						|| (transform.getValueClass() != null
+								&& transform.getValueClass().getAnnotation(
+										DomainTransformPersistable.class) != null)) {
+					throw new PermissionsException(Ax.format(
+							"Illegal class for client modification: %s",
+							transform));
+				}
+			}
 			return TransformCommit.get().transform(request, false, false,
 					true).response;
 		} catch (DomainTransformRequestException dtre) {
