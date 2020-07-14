@@ -37,7 +37,8 @@ public class TransformPersister {
 					DTRProtocolSerializer.CONTEXT_EXCEPTION_DEBUG);
 			TransformPersisterPeer.get().setupCustomTransformContent();
 			TransformPersisterToken persisterToken = new TransformPersisterToken();
-			DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
+			DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper(
+					token);
 			boolean perform = true;
 			while (perform) {
 				perform = false;

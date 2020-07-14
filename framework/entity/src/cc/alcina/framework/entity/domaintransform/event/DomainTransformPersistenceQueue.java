@@ -221,7 +221,8 @@ public class DomainTransformPersistenceQueue {
 		TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 				dtrp, null, Registry.impl(TransformLoggingPolicy.class), false,
 				false, false, null, true);
-		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
+		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper(
+				persistenceToken);
 		List<DomainTransformEventPersistent> events = new ArrayList<DomainTransformEventPersistent>(
 				(List) dtrp.getEvents());
 		wrapper.persistentEvents = events;

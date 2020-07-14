@@ -59,6 +59,12 @@ public class TransformPersistenceToken implements Serializable {
 
 	private transient DomainStore targetStore = null;
 
+	private TransformCascade transformCascade;
+
+	private DomainTransformLayerWrapper transformResult;
+
+	private boolean localToVm;
+
 	public TransformPersistenceToken(DomainTransformRequest request,
 			EntityLocatorMap locatorMap,
 			TransformLoggingPolicy transformLoggingPolicy, boolean asyncClient,
@@ -75,6 +81,7 @@ public class TransformPersistenceToken implements Serializable {
 		this.transformExceptionPolicy = Registry
 				.impl(PersistenceLayerTransformExceptionPolicyFactory.class)
 				.getPolicy(this, forOfflineTransforms);
+		this.transformCascade = new TransformCascade(this);
 	}
 
 	public List<DomainTransformEvent> getClientUpdateEvents() {
@@ -113,6 +120,10 @@ public class TransformPersistenceToken implements Serializable {
 		return this.targetStore;
 	}
 
+	public TransformCascade getTransformCascade() {
+		return this.transformCascade;
+	}
+
 	public PersistenceLayerTransformExceptionPolicy
 			getTransformExceptionPolicy() {
 		return transformExceptionPolicy;
@@ -124,6 +135,10 @@ public class TransformPersistenceToken implements Serializable {
 
 	public TransformLoggingPolicy getTransformLoggingPolicy() {
 		return this.transformLoggingPolicy;
+	}
+
+	public DomainTransformLayerWrapper getTransformResult() {
+		return this.transformResult;
 	}
 
 	public boolean isAsyncClient() {
@@ -140,6 +155,10 @@ public class TransformPersistenceToken implements Serializable {
 
 	public boolean isIgnoreClientAuthMismatch() {
 		return ignoreClientAuthMismatch;
+	}
+
+	public boolean isLocalToVm() {
+		return this.localToVm;
 	}
 
 	public boolean provideTargetsWritableStore() {
@@ -168,6 +187,10 @@ public class TransformPersistenceToken implements Serializable {
 		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
 	}
 
+	public void setLocalToVm(boolean localToVm) {
+		this.localToVm = localToVm;
+	}
+
 	public void setLocatorMap(EntityLocatorMap locatorMap) {
 		this.locatorMap = locatorMap;
 	}
@@ -192,6 +215,11 @@ public class TransformPersistenceToken implements Serializable {
 	public void setTransformLoggingPolicy(
 			TransformLoggingPolicy transformLoggingPolicy) {
 		this.transformLoggingPolicy = transformLoggingPolicy;
+	}
+
+	public void
+			setTransformResult(DomainTransformLayerWrapper transformResult) {
+		this.transformResult = transformResult;
 	}
 
 	public List<TransformPersistenceToken> toPerStoreTokens() {

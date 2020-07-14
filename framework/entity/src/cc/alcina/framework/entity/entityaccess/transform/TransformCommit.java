@@ -382,16 +382,16 @@ public class TransformCommit {
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (pendingTransformCount == 0) {
 			ThreadlocalTransformManager.cast().resetTltm(null);
-			return new DomainTransformLayerWrapper();
+			return new DomainTransformLayerWrapper(null);
 		}
 		if (Ax.isTest() && !isTestTransformCascade()) {
-			return new DomainTransformLayerWrapper();
+			return new DomainTransformLayerWrapper(null);
 		}
 		if (Ax.isTest() && EntityLayerObjects.get()
 				.getServerAsClientInstance() == null) {
 			// pre-login test tx (say fixing up credentials) - create dummy
 			ThreadlocalTransformManager.cast().resetTltm(null);
-			return new DomainTransformLayerWrapper();
+			return new DomainTransformLayerWrapper(null);
 		}
 		int maxTransformChunkSize = ResourceUtilities.getInteger(
 				TransformCommit.class, "maxTransformChunkSize", 10000);
@@ -400,7 +400,7 @@ public class TransformCommit {
 						.is(TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)
 				&& !Ax.isTest()) {
 			commitLocalTransformsInChunks(maxTransformChunkSize);
-			return new DomainTransformLayerWrapper();
+			return new DomainTransformLayerWrapper(null);
 		}
 		return get().doPersistTransforms(tag, asRoot);
 	}
@@ -768,7 +768,11 @@ public class TransformCommit {
 				return submitAndHandleTransformsWritableStore(perStoreToken);
 			}
 		}
-		DomainTransformLayerWrapper result = new DomainTransformLayerWrapper();
+		TransformPersistenceToken targetingWriteableStore = perStoreTokens
+				.stream().filter(token -> token.provideTargetsWritableStore())
+				.findFirst().orElse(null);
+		DomainTransformLayerWrapper result = new DomainTransformLayerWrapper(
+				targetingWriteableStore);
 		for (TransformPersistenceToken perStoreToken : perStoreTokens) {
 			if (perStoreToken.provideTargetsWritableStore()) {
 				result.merge(

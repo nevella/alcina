@@ -21,15 +21,13 @@ public class DomainTransformPersistenceEvent {
 
 	private List<Runnable> postEventRunnables = new ArrayList<>();
 
-	private boolean localToVm;
-
 	private DomainModificationMetadataProvider metadataProvider;
 
 	public DomainTransformPersistenceEvent(
 			TransformPersistenceToken transformPersistenceToken,
 			DomainTransformLayerWrapper domainTransformLayerWrapper,
 			boolean localToVm) {
-		this.localToVm = localToVm;
+		transformPersistenceToken.setLocalToVm(localToVm);
 		this.transformPersistenceToken = transformPersistenceToken;
 		this.domainTransformLayerWrapper = domainTransformLayerWrapper;
 		persistenceEventType = domainTransformLayerWrapper == null
@@ -80,7 +78,7 @@ public class DomainTransformPersistenceEvent {
 	}
 
 	public boolean isLocalToVm() {
-		return this.localToVm;
+		return transformPersistenceToken.isLocalToVm();
 	}
 
 	public void setMetadataProvider(

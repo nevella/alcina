@@ -23,7 +23,8 @@ public class NaiveTransformPersistenceQueue
 			submit(TransformPersistenceToken persistenceToken) {
 		if (AppPersistenceBase.isTest()
 				&& !TransformCommit.isCommitTestTransforms()) {
-			DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
+			DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper(
+					null);
 			wrapper.response = new DomainTransformResponse();
 			wrapper.response.setResult(DomainTransformResponseResult.OK);
 			return wrapper;
