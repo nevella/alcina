@@ -1,13 +1,21 @@
 package cc.alcina.framework.entity.domaintransform.event;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 public class DomainTransformPersistenceEvents {
 	private List<DomainTransformPersistenceListener> listenerList = new ArrayList<DomainTransformPersistenceListener>();
@@ -17,6 +25,8 @@ public class DomainTransformPersistenceEvents {
 	private DomainTransformPersistenceQueue queue;
 
 	DomainStore domainStore;
+
+	CascadedTransformLocalIdSupport transformLocalIdSupport = new CascadedTransformLocalIdSupport();
 
 	public DomainTransformPersistenceEvents(DomainStore domainStore) {
 		this.domainStore = domainStore;
@@ -39,9 +49,15 @@ public class DomainTransformPersistenceEvents {
 
 	public void fireDomainTransformPersistenceEvent(
 			DomainTransformPersistenceEvent event) {
-		DomainStore.writableStore().onTransformsPersisted();
-		fireDomainTransformPersistenceEvent0(event);
-		event.getPostEventRunnables().forEach(Runnable::run);
+		boolean preProces = event.getDomainTransformLayerWrapper() == null;
+		if (preProces) {
+			transformLocalIdSupport.runWithOffsetLocalIdCounter(
+					() -> fireDomainTransformPersistenceEvent0(event));
+		} else {
+			DomainStore.writableStore().onTransformsPersisted();
+			fireDomainTransformPersistenceEvent0(event);
+			event.getPostEventRunnables().forEach(Runnable::run);
+		}
 	}
 
 	public DomainTransformPersistenceQueue getQueue() {
@@ -140,5 +156,51 @@ public class DomainTransformPersistenceEvents {
 	boolean isUseTransformDbCommitSequencing() {
 		return domainStore.getDomainDescriptor()
 				.isUseTransformDbCommitSequencing();
+	}
+
+	// FIXME - mvcc.4 - add optional
+	// cluster-level counter (allowing for proxy swap etc)
+	//
+	// cluster-level will need reaper and reconstituter
+	static class CascadedTransformLocalIdSupport {
+		Map<Long, AtomicLong> perClientInstanceLocalIdCounter = new LinkedHashMap<>();
+
+		synchronized void runWithOffsetLocalIdCounter(Runnable runnable) {
+			ClientInstance serverAsClientInstance = EntityLayerObjects.get()
+					.getServerAsClientInstance();
+			ClientInstance threadInstance = PermissionsManager.get()
+					.getClientInstance();
+			// hack - Jumail's config? threadInstance should never be null
+			if (threadInstance == null || serverAsClientInstance
+					.getId() == threadInstance.getId()) {
+				runnable.run();
+				return;
+			} else {
+				AtomicLong idCounter = perClientInstanceLocalIdCounter
+						.getOrDefault(threadInstance.getId(),
+								// allow some headroom for alcina fast gwt long
+								// impl - it has maxvalue of 1 << 30 -1
+								//
+								// set the initial created id of cascaded local
+								// instances (per client instance) at 2^28 -
+								// about 5*10^8
+								//
+								// assume we don't get that many per-instance
+								// creation events (for jade, that's guaranteed)
+								new AtomicLong(1 << 29));
+				// tm.sequentialidgenerator throws an
+				// exception at 1^29
+				try {
+					LooseContext.push();
+					ThreadlocalTransformManager.cast()
+							.resetLocalIdCounterForCurrentThread(idCounter);
+					runnable.run();
+				} finally {
+					ThreadlocalTransformManager.cast()
+							.useGlobalLocalIdCounter();
+					LooseContext.pop();
+				}
+			}
+		}
 	}
 }

@@ -75,6 +75,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCacheObjectStore;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
@@ -325,6 +326,10 @@ public class DomainStore implements IDomainStore {
 
 	public void onTransformsPersisted() {
 		loader.onTransformsPersisted();
+	}
+
+	public void putExternalLocal(Entity instance) {
+		cache.putExternalLocal(instance);
 	}
 
 	public void remove(Entity entity) {
@@ -581,6 +586,10 @@ public class DomainStore implements IDomainStore {
 							clazz.getSimpleName(), name));
 		}
 		return field.get();
+	}
+
+	ObjectStore getTmDomainObjects() {
+		return new DetachedCacheObjectStore(new DomainStoreEntityCache());
 	}
 
 	void index(Entity obj, boolean add) {
@@ -1080,6 +1089,11 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
+			public <V extends Entity> V find(EntityLocator locator) {
+				return storeHandler(locator.clazz).find(locator);
+			}
+
+			@Override
 			public <V extends Entity> V find(V v) {
 				return v == null ? null : storeHandler(v.entityClass()).find(v);
 			}
@@ -1278,6 +1292,14 @@ public class DomainStore implements IDomainStore {
 		@Override
 		public <V extends Entity> V find(Class clazz, long id) {
 			return (V) DomainStore.this.find(clazz, id);
+		}
+
+		@Override
+		public <V extends Entity> V find(EntityLocator locator) {
+			if (locator.id != 0) {
+				return DomainHandler.super.find(locator);
+			}
+			return cache.get(locator);
 		}
 
 		@Override
@@ -1526,7 +1548,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		protected void createObjectLookup() {
-			store = new DetachedCacheObjectStore(new DomainStoreEntityCache());
+			store = (DetachedCacheObjectStore) getTmDomainObjects();
 			setDomainObjects(store);
 		}
 

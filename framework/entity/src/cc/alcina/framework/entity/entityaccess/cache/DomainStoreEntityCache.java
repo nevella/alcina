@@ -49,4 +49,8 @@ class DomainStoreEntityCache extends DetachedEntityCache {
 	void initialiseMap(Class clazz) {
 		super.ensureMap(clazz);
 	}
+
+	void putExternalLocal(Entity instance) {
+		super.put0(instance, true);
+	}
 }

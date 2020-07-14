@@ -47,6 +47,12 @@ public class EntityLocator implements Serializable {
 		return new EntityLocator(clazz, id, 0);
 	}
 
+	public static EntityLocator requireIdOrLocalId(Entity entity) {
+		Preconditions
+				.checkArgument(entity.getId() != 0 || entity.getLocalId() != 0);
+		return new EntityLocator(entity);
+	}
+
 	public static EntityLocator valueLocator(DomainTransformEvent dte) {
 		return dte.getValueClass() != null
 				&& (dte.getValueId() != 0 || dte.getValueLocalId() != 0)
@@ -100,6 +106,10 @@ public class EntityLocator implements Serializable {
 
 	public long getId() {
 		return this.id;
+	}
+
+	public <E extends Entity> E getObject() {
+		return Domain.find(this);
 	}
 
 	@Override
@@ -156,11 +166,5 @@ public class EntityLocator implements Serializable {
 		}
 		return Ax.format("%s - %s",
 				clazz == null ? "??" : CommonUtils.simpleClassName(clazz), id);
-	}
-
-	public static EntityLocator requireIdOrLocalId(Entity entity) {
-		Preconditions
-				.checkArgument(entity.getId() != 0 || entity.getLocalId() != 0);
-		return new EntityLocator(entity);
 	}
 }

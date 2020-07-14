@@ -113,7 +113,7 @@ public class Domain {
 	}
 
 	public static <V extends Entity> V find(EntityLocator locator) {
-		return handler.find(locator.clazz, locator.id);
+		return handler.find(locator);
 	}
 
 	public static <V extends Entity> V find(V v) {
@@ -196,6 +196,10 @@ public class Domain {
 		}
 
 		<V extends Entity> V detachedVersion(V v);
+
+		default <V extends Entity> V find(EntityLocator locator) {
+			return find(locator.clazz, locator.id);
+		}
 
 		<V extends Entity> boolean isDomainVersion(V v);
 

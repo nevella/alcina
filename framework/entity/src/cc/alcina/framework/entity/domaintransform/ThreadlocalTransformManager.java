@@ -94,6 +94,7 @@ import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
@@ -150,15 +151,10 @@ public class ThreadlocalTransformManager extends TransformManager
 	 */
 	public static ThreadlocalTransformManager get() {
 		return ThreadlocalTransformManager.cast();
-	};
+	}
 
 	public static boolean is() {
 		return TransformManager.get() instanceof ThreadlocalTransformManager;
-	}
-
-	public static boolean isIgnoreTransformPermissions() {
-		return ResourceUtilities.getBoolean(ThreadlocalTransformManager.class,
-				"ignoreTransformPermissions");
 	}
 
 	public static boolean isInEntityManagerTransaction() {
@@ -177,7 +173,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			return true;
 		}
 		return false;
-	}
+	};
 
 	// for testing
 	public static void registerPerThreadTransformManager(
@@ -193,6 +189,8 @@ public class ThreadlocalTransformManager extends TransformManager
 		ThreadlocalTransformManager tltm = new ThreadlocalTransformManager();
 		return tltm;
 	}
+
+	private boolean ignoreTransformPermissions;
 
 	private PersistenceLayerTransformExceptionPolicy exceptionPolicy;
 
@@ -234,6 +232,11 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private CachingMap<DomainStore, PostTransactionEntityResolver> postTransactionEntityResolvers = new CachingMap<DomainStore, PostTransactionEntityResolver>(
 			PostTransactionEntityResolver::new);
+
+	private boolean applyingExternalTransforms;
+
+	public ThreadlocalTransformManager() {
+	}
 
 	@Override
 	public void addTransform(DomainTransformEvent evt) {
@@ -614,6 +617,16 @@ public class ThreadlocalTransformManager extends TransformManager
 		return store.handlesAssociationsFor(clazz);
 	}
 
+	public boolean isApplyingExternalTransforms() {
+		return this.applyingExternalTransforms;
+	}
+
+	public boolean isIgnoreTransformPermissions() {
+		return this.ignoreTransformPermissions || ResourceUtilities.getBoolean(
+				ThreadlocalTransformManager.class,
+				"ignoreTransformPermissions");
+	}
+
 	@Override
 	public boolean isInCreationRequest(Entity entity) {
 		return createdObjectLocators.contains(new EntityLocator(entity));
@@ -711,14 +724,16 @@ public class ThreadlocalTransformManager extends TransformManager
 				} else {
 					newInstance.setLocalId(localId);
 				}
-				localIdToEntityMap.put(localId, newInstance);
 				EntityLocator entityLocator = new EntityLocator(
 						(Class<? extends Entity>) clazz, newInstance.getId(),
 						localId);
-				if (userSessionEntityMap != null) {
-					userSessionEntityMap.putToLookups(entityLocator);
-				}
+				localIdToEntityMap.put(localId, newInstance);
 				createdObjectLocators.add(entityLocator);
+				if (!isApplyingExternalTransforms()) {
+					if (userSessionEntityMap != null) {
+						userSessionEntityMap.putToLookups(entityLocator);
+					}
+				}
 				return (T) newInstance;
 			}
 			throw new Exception("only construct entities here");
@@ -892,6 +907,11 @@ public class ThreadlocalTransformManager extends TransformManager
 		return postTransactionEntityResolvers.get(domainStore).resolve(v);
 	}
 
+	public void
+			setApplyingExternalTransforms(boolean applyingExternalTransforms) {
+		this.applyingExternalTransforms = applyingExternalTransforms;
+	}
+
 	public void setClientInstance(ClientInstance clientInstance) {
 		this.clientInstance = clientInstance;
 	}
@@ -914,6 +934,11 @@ public class ThreadlocalTransformManager extends TransformManager
 				&& event.getTransformType() != TransformType.CREATE_OBJECT) {
 			this.ignorePropertyChangesTo = getObject(event, true);
 		}
+	}
+
+	public void
+			setIgnoreTransformPermissions(boolean ignoreTransformPermissions) {
+		this.ignoreTransformPermissions = ignoreTransformPermissions;
 	}
 
 	public void setListenToFoundObjects(boolean registerFoundObjects) {
@@ -1147,6 +1172,17 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private boolean explicitlyPermitted(DomainTransformEvent evt) {
 		return explicitlyPermittedTransforms.contains(evt);
+	}
+
+	@Override
+	protected void beforeDirectCollectionModification(Entity obj,
+			String propertyName, Object newTargetValue,
+			CollectionModificationType collectionModificationType) {
+		if (isApplyingExternalTransforms()) {
+			Transactions.resolve(obj, true, false);
+		}
+		super.beforeDirectCollectionModification(obj, propertyName,
+				newTargetValue, collectionModificationType);
 	}
 
 	protected boolean checkHasSufficientInfoForPropertyPersist(Entity entity) {

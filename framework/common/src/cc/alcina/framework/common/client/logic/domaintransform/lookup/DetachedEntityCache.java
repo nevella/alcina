@@ -174,35 +174,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	public void put(Entity entity) {
-		Class<? extends Entity> clazz = entity.entityClass();
-		ensureMap(clazz);
-		long id = entity.getId();
-		long localId = entity.getLocalId();
-		if (id == 0 && localId == 0) {
-			throw new RuntimeException("indexing entity with zero id/localid");
-		}
-		// these will not be put in to-domain phase transactions, so are
-		// harmless
-		// if (id < 0) {
-		// throw new RuntimeException("indexing entity with negative id");
-		// }
-		if (id != 0) {
-			if (throwOnExisting) {
-				if (domain.get(clazz).containsKey(id)) {
-					throw Ax.runtimeException("Double-put: %s", entity);
-				}
-			}
-			domain.get(clazz).put(id, entity);
-		} else {
-			Map<Long, Entity> localPerClass = local(clazz, true);
-			if (throwOnExisting) {
-				if (localPerClass.containsKey(id)) {
-					throw Ax.runtimeException("Double-put: %s", entity);
-				}
-			}
-			localPerClass.put(localId, entity);
-			createdLocals.put(localId, entity);
-		}
+		put0(entity, false);
 	}
 
 	public void putAll(Class clazz, Collection<? extends Entity> values) {
@@ -315,5 +287,39 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		}
 		T t = (T) local(clazz, false).get(localId);
 		return t;
+	}
+
+	protected void put0(Entity entity, boolean external) {
+		Class<? extends Entity> clazz = entity.entityClass();
+		ensureMap(clazz);
+		long id = entity.getId();
+		long localId = entity.getLocalId();
+		if (id == 0 && localId == 0) {
+			throw new RuntimeException("indexing entity with zero id/localid");
+		}
+		// these will not be put in to-domain phase transactions, so are
+		// harmless
+		// if (id < 0) {
+		// throw new RuntimeException("indexing entity with negative id");
+		// }
+		if (id != 0) {
+			if (throwOnExisting) {
+				if (domain.get(clazz).containsKey(id)) {
+					throw Ax.runtimeException("Double-put: %s", entity);
+				}
+			}
+			domain.get(clazz).put(id, entity);
+		} else {
+			Map<Long, Entity> localPerClass = local(clazz, true);
+			if (throwOnExisting) {
+				if (localPerClass.containsKey(id)) {
+					throw Ax.runtimeException("Double-put: %s", entity);
+				}
+			}
+			localPerClass.put(localId, entity);
+			if (!external) {
+				createdLocals.put(localId, entity);
+			}
+		}
 	}
 }
