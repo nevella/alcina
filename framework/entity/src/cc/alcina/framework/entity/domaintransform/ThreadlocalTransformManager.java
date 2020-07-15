@@ -256,6 +256,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		super.apply(evt);
 		if (getEntityManager() != null
 				&& evt.getTransformType() != TransformType.DELETE_OBJECT) {
+			// FIXME - mvcc.4 - remove this method
 			// for use in IVersionable/DomainStore
 			if (evt.getSource() instanceof MvccObject) {
 				evt.setSource(null);
@@ -1182,11 +1183,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	protected void beforeDirectCollectionModification(Entity obj,
 			String propertyName, Object newTargetValue,
 			CollectionModificationType collectionModificationType) {
-		if (isApplyingExternalTransforms()) {
-			Transactions.resolve(obj, true, false);
-		}
-		super.beforeDirectCollectionModification(obj, propertyName,
-				newTargetValue, collectionModificationType);
+		Transactions.resolve(obj, true, false);
 	}
 
 	protected boolean checkHasSufficientInfoForPropertyPersist(Entity entity) {

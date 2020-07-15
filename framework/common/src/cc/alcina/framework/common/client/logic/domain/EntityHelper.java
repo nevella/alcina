@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -146,6 +147,10 @@ public class EntityHelper {
 		}
 	}
 
+	public static <E extends Entity> Collector<E, ?, Map<Long, E>> toIdMap() {
+		return new ToIdMapCollector<>();
+	}
+
 	public static <T extends Entity> Map<Long, T>
 			toIdMap(Collection<T> entities) {
 		return (Map<Long, T>) CollectionFilters
@@ -187,6 +192,41 @@ public class EntityHelper {
 		}
 	}
 
+	private static class ToIdMapCollector<E extends Entity> implements
+			java.util.stream.Collector<E, Map<Long, E>, Map<Long, E>> {
+		public ToIdMapCollector() {
+		}
+
+		@Override
+		public BiConsumer<Map<Long, E>, E> accumulator() {
+			return (map, e) -> map.put(e.getId(), e);
+		}
+
+		@Override
+		public Set<java.util.stream.Collector.Characteristics>
+				characteristics() {
+			return EnumSet.of(Characteristics.IDENTITY_FINISH);
+		}
+
+		@Override
+		public BinaryOperator<Map<Long, E>> combiner() {
+			return (left, right) -> {
+				left.putAll(right);
+				return left;
+			};
+		}
+
+		@Override
+		public Function<Map<Long, E>, Map<Long, E>> finisher() {
+			return Function.identity();
+		}
+
+		@Override
+		public Supplier<Map<Long, E>> supplier() {
+			return () -> new LinkedHashMap<>();
+		}
+	}
+
 	private static class ToIdSetCollector<E extends Entity>
 			implements java.util.stream.Collector<E, Set<Long>, Set<Long>> {
 		public ToIdSetCollector() {
@@ -213,7 +253,7 @@ public class EntityHelper {
 
 		@Override
 		public Function<Set<Long>, Set<Long>> finisher() {
-			return null;
+			return Function.identity();
 		}
 
 		@Override
