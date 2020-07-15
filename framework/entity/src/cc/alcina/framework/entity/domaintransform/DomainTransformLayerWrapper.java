@@ -54,6 +54,10 @@ public class DomainTransformLayerWrapper implements Serializable {
 
 	int mergeCount = 0;
 
+	public DomainTransformLayerWrapper() {
+		// for serialization
+	}
+
 	public DomainTransformLayerWrapper(TransformPersistenceToken token) {
 		if (token != null) {
 			token.setTransformResult(this);

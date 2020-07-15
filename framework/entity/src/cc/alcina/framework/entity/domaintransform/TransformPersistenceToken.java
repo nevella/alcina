@@ -59,7 +59,7 @@ public class TransformPersistenceToken implements Serializable {
 
 	private transient DomainStore targetStore = null;
 
-	private TransformCascade transformCascade;
+	private transient TransformCascade transformCascade;
 
 	private DomainTransformLayerWrapper transformResult;
 
