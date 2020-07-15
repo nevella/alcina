@@ -14,11 +14,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 public class TransformCascade {
 	private TransformPersistenceToken token;
@@ -41,9 +39,7 @@ public class TransformCascade {
 		if (!applied) {
 			applied = true;
 			ensureLookups();
-			if (token.isLocalToVm() && PermissionsManager.get()
-					.getClientInstance().equals(EntityLayerObjects.get()
-							.getServerAsClientInstance())) {
+			if (!token.isLocalToVm() || !token.isAsyncClient()) {
 				return;
 			}
 			ThreadlocalTransformManager tltm = ThreadlocalTransformManager

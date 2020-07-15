@@ -91,6 +91,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
@@ -1425,18 +1426,36 @@ public class DomainStore implements IDomainStore {
 	}
 
 	class InSubgraphFilter implements CollectionFilter<DomainTransformEvent> {
+		private boolean filterUnknownTransformProperties;
+
+		public InSubgraphFilter() {
+			filterUnknownTransformProperties = ResourceUtilities
+					.is(DomainStore.class, "filterUnknownTransformProperties");
+		}
+
 		@Override
-		public boolean allow(DomainTransformEvent o) {
-			if (!domainDescriptor.applyPostTransform(o.getObjectClass(), o)) {
+		public boolean allow(DomainTransformEvent evt) {
+			if (!domainDescriptor.applyPostTransform(evt.getObjectClass(),
+					evt)) {
 				return false;
 			}
-			switch (o.getTransformType()) {
+			if (filterUnknownTransformProperties) {
+				if (Ax.notBlank(evt.getPropertyName())) {
+					PropertyDescriptor descriptor = SEUtilities
+							.getPropertyDescriptorByName(evt.getObjectClass(),
+									evt.getPropertyName());
+					if (descriptor == null) {
+						return false;
+					}
+				}
+			}
+			switch (evt.getTransformType()) {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
 			case CHANGE_PROPERTY_REF:
-				return GraphProjection.isEnumOrEnumSubclass(o.getValueClass())
+				return GraphProjection.isEnumOrEnumSubclass(evt.getValueClass())
 						|| domainDescriptor
-								.applyPostTransform(o.getValueClass(), o);
+								.applyPostTransform(evt.getValueClass(), evt);
 			}
 			return true;
 		}
