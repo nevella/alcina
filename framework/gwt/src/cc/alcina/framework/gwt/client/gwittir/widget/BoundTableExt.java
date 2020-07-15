@@ -248,15 +248,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	private String selectedRowLastStyle = BoundTableExt.DEFAULT_STYLE;
 
-	private boolean usesThHeader;
-
-	public boolean isUsesThHeader() {
-		return this.usesThHeader;
-	}
-
-	public void setUsesThHeader(boolean usesThHeader) {
-		this.usesThHeader = usesThHeader;
-	}
+	private boolean usesTHead;
 
 	private Timer cleanUpCaches = new Timer() {
 		@Override
@@ -812,6 +804,10 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.setValue(c);
 	}
 
+	public boolean isUsesTHead() {
+		return this.usesTHead;
+	}
+
 	/**
 	 * Causes the table to render the last chunk of data.
 	 */
@@ -1060,6 +1056,11 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	@Override
 	public void setStyleName(String style, boolean add) {
 		this.base.setStyleName(style, add);
+	}
+
+	public void setUsesTHead(boolean usesTHead) {
+		this.usesTHead = usesTHead;
+		table.setUsesTHead(usesTHead);
 	}
 
 	@Override
@@ -1318,6 +1319,18 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			this.setStyleName(oldStyleNames);
 		}
 		esp.setWidget(this.table);
+	}
+
+	private void ensureBound(boolean bound) {
+		if (bound) {
+			if (!topBinding.isBound()) {
+				topBinding.bind();
+			}
+		} else {
+			if (topBinding.isBound()) {
+				topBinding.unbind();
+			}
+		}
 	}
 
 	private void handleSelect(boolean toggleRow, int row, int col) {
@@ -1953,15 +1966,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		return widget;
 	}
 
-	public static class FlexTableTHead extends FlexTable {
-		@Override
-		protected boolean isUseTHead() {
-			return true;
-		}
-	}
-
 	protected FlexTable createTableImpl() {
-		return usesThHeader ? new FlexTableTHead() : new FlexTable();
+		return new FlexTable();
 	}
 
 	protected native Element getRow(Element elem, int row)/*-{
@@ -1973,18 +1979,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		super.onAttach();
 		this.renderAll();
 		ensureBound(true);
-	}
-
-	private void ensureBound(boolean bound) {
-		if (bound) {
-			if (!topBinding.isBound()) {
-				topBinding.bind();
-			}
-		} else {
-			if (topBinding.isBound()) {
-				topBinding.unbind();
-			}
-		}
 	}
 
 	@Override

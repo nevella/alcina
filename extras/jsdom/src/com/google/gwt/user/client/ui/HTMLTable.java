@@ -103,22 +103,16 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 
 	private Element headElem;
 
+	private boolean usesTHead;
+
 	/**
 	 * Create a new empty HTML Table.
 	 */
 	public HTMLTable() {
 		tableElem = DOM.createTable();
-		if (isUseTHead()) {
-			headElem = DOM.createTHead();
-			DOM.appendChild(tableElem, headElem);
-		}
 		bodyElem = DOM.createTBody();
 		DOM.appendChild(tableElem, bodyElem);
 		setElement(tableElem);
-	}
-
-	protected boolean isUseTHead() {
-		return false;
 	}
 
 	@Override
@@ -371,6 +365,10 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		}
 	}
 
+	public boolean isUsesTHead() {
+		return this.usesTHead;
+	}
+
 	/**
 	 * Returns an iterator containing all the widgets in this table.
 	 * 
@@ -551,6 +549,14 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		}
 	}
 
+	public void setUsesTHead(boolean usesTHead) {
+		if (usesTHead && !this.usesTHead) {
+			headElem = DOM.createTHead();
+			DOM.insertBefore(tableElem, headElem, bodyElem);
+		}
+		this.usesTHead = usesTHead;
+	}
+
 	/**
 	 * Overloaded version for IsWidget.
 	 * 
@@ -719,21 +725,13 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 				resolveRowInContainer(row));
 	}
 
-	protected Element resolveContainer(int row) {
-		return row == 0 && isUseTHead() ? headElem : bodyElem;
-	}
-
-	protected int resolveRowInContainer(int row) {
-		return isUseTHead() ? row == 0 ? 0 : row - 1 : row;
-	}
-
 	/**
 	 * Directly ask the underlying DOM what the row count is.
 	 * 
 	 * @return Returns the number of rows in the table
 	 */
 	protected int getDOMRowCount() {
-		return isUseTHead()
+		return isUsesTHead()
 				? getDOMRowCount(bodyElem) + getDOMRowCount(headElem)
 				: getDOMRowCount(bodyElem);
 	}
@@ -952,6 +950,14 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 		}
 		resolveContainer(row).removeChild(rowFormatter
 				.getRow(resolveContainer(row), resolveRowInContainer(row)));
+	}
+
+	protected Element resolveContainer(int row) {
+		return row == 0 && isUsesTHead() ? headElem : bodyElem;
+	}
+
+	protected int resolveRowInContainer(int row) {
+		return isUsesTHead() ? row == 0 ? 0 : row - 1 : row;
 	}
 
 	/**

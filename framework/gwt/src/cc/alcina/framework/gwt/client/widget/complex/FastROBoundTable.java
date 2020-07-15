@@ -516,7 +516,7 @@ public class FastROBoundTable extends BoundTableExt {
 		}
 	}
 
-	private class ROFlexTable extends FlexTableTHead implements
+	private class ROFlexTable extends FlexTable implements
 			HasMouseOverHandlers, HasMouseOutHandlers, HasMouseMoveHandlers {
 		@Override
 		public HandlerRegistration
