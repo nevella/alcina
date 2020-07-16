@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicyFactory;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
+import cc.alcina.framework.entity.domaintransform.policy.TransformPersistencePolicy;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 public class TransformPersistenceToken implements Serializable {
@@ -65,6 +66,8 @@ public class TransformPersistenceToken implements Serializable {
 
 	private boolean localToVm;
 
+	private TransformPersistencePolicy transformPersistencePolicy;
+
 	public TransformPersistenceToken(DomainTransformRequest request,
 			EntityLocatorMap locatorMap,
 			TransformLoggingPolicy transformLoggingPolicy, boolean asyncClient,
@@ -82,6 +85,8 @@ public class TransformPersistenceToken implements Serializable {
 				.impl(PersistenceLayerTransformExceptionPolicyFactory.class)
 				.getPolicy(this, forOfflineTransforms);
 		this.transformCascade = new TransformCascade(this);
+		this.transformPersistencePolicy = Registry
+				.impl(TransformPersistencePolicy.class);
 	}
 
 	public List<DomainTransformEvent> getClientUpdateEvents() {
@@ -135,6 +140,10 @@ public class TransformPersistenceToken implements Serializable {
 
 	public TransformLoggingPolicy getTransformLoggingPolicy() {
 		return this.transformLoggingPolicy;
+	}
+
+	public TransformPersistencePolicy getTransformPersistencePolicy() {
+		return this.transformPersistencePolicy;
 	}
 
 	public DomainTransformLayerWrapper getTransformResult() {
@@ -215,6 +224,11 @@ public class TransformPersistenceToken implements Serializable {
 	public void setTransformLoggingPolicy(
 			TransformLoggingPolicy transformLoggingPolicy) {
 		this.transformLoggingPolicy = transformLoggingPolicy;
+	}
+
+	public void setTransformPersistencePolicy(
+			TransformPersistencePolicy transformPersistencePolicy) {
+		this.transformPersistencePolicy = transformPersistencePolicy;
 	}
 
 	public void

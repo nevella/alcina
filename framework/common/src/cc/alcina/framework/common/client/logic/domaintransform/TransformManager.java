@@ -68,6 +68,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -121,7 +122,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private static TransformManager theInstance;
 
-	private static Multimap<Integer, List<Entity>> createdLocalAndPromoted = null;
+	protected static Map<Integer, List<Entity>> createdLocalAndPromoted = null;
 
 	public static String fromEnumValueCollection(Collection objects) {
 		return CommonUtils.join(objects, ",");
@@ -211,7 +212,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	// this method won't be called that often
 	public static void registerLocalObjectPromotion(Entity entity) {
 		if (createdLocalAndPromoted == null) {
-			createdLocalAndPromoted = new Multimap<>();
+			createdLocalAndPromoted = Registry.impl(ConcurrentMapCreator.class)
+					.createMap();
 		}
 		synchronized (createdLocalAndPromoted) {
 			// use the same code as for Entity.hashCode on an object with
@@ -222,7 +224,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 			if (withoutLocalIdHash == 0) {
 				withoutLocalIdHash = -1;
 			}
-			createdLocalAndPromoted.add(withoutLocalIdHash, entity);
+			createdLocalAndPromoted
+					.computeIfAbsent(withoutLocalIdHash, h -> new ArrayList<>())
+					.add(entity);
 		}
 	}
 
@@ -231,18 +235,18 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (createdLocalAndPromoted == null) {
 			return hash;
 		}
-		synchronized (createdLocalAndPromoted) {
-			List<Entity> promotedEntities = createdLocalAndPromoted.get(hash);
-			if (promotedEntities == null) {
-				return hash;
-			}
+		List<Entity> promotedEntities = createdLocalAndPromoted.get(hash);
+		if (promotedEntities == null) {
+			return hash;
+		}
+		synchronized (promotedEntities) {
 			for (Entity promoted : promotedEntities) {
 				if (promoted.equals(entity)) {
 					return promoted.hashCode();
 				}
 			}
-			return hash;
 		}
+		return hash;
 	}
 
 	public static <V> V resolveMaybeDeserialize(V existing, String serialized,

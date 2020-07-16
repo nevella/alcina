@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -9,12 +10,21 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.trie.KeyAnalyzer;
 import cc.alcina.framework.common.client.util.trie.MultiTrie;
 
 public class CollectionCreators {
+	@RegistryLocation(registryPoint = ConcurrentMapCreator.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class ConcurrentMapCreator {
+		public <K, V> Map<K, V> createMap() {
+			return new LinkedHashMap<>();
+		}
+	}
+
 	public interface DelegateMapCreator {
 		Map createDelegateMap(int depthFromRoot, int depth);
 

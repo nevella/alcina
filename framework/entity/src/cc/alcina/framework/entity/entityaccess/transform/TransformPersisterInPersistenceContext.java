@@ -381,7 +381,12 @@ public class TransformPersisterInPersistenceContext {
 						for (DomainTransformEvent event : eventsPersisted) {
 							DomainTransformEventPersistent persistentEvent = dtrEvtImpl
 									.newInstance();
-							tm.persist(persistentEvent);
+							boolean persistEvent = token
+									.getTransformPersistencePolicy()
+									.shouldPersist(event);
+							if (persistEvent) {
+								tm.persist(persistentEvent);
+							}
 							persistentEvent.wrap(event);
 							if (persistentEvent.getObjectClassRef() == null
 									&& !missingClassRefWarned) {
@@ -407,10 +412,14 @@ public class TransformPersisterInPersistenceContext {
 										.getId());
 							}
 							persistentEvent.setServerCommitDate(new Date());
-							persistentEvent.setDomainTransformRequestPersistent(
-									persistentRequest);
-							persistentRequest.getEvents().add(persistentEvent);
-							persistentEvents.add(persistentEvent);
+							if (persistEvent) {
+								persistentEvent
+										.setDomainTransformRequestPersistent(
+												persistentRequest);
+								persistentRequest.getEvents()
+										.add(persistentEvent);
+								persistentEvents.add(persistentEvent);
+							}
 						}
 						if (++requestCount % 100 == 0) {
 							System.out.format(
