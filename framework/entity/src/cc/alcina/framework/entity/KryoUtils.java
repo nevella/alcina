@@ -32,10 +32,11 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class KryoUtils {
@@ -48,10 +49,8 @@ public class KryoUtils {
 	public static final String CONTEXT_USE_UNSAFE_FIELD_SERIALIZER = KryoUtils.class
 			.getName() + ".CONTEXT_USE_UNSAFE_FIELD_SERIALIZER";
 
-	private static CachingMap<KryoPoolKey, KryoPool> kryosPool = new CachingConcurrentMap<>(
-			key -> new KryoPool(
-					ResourceUtilities.is(KryoUtils.class, "usePool")),
-			50);
+	// concurrency - access synchronized on Kryo.class
+	private static CachingMap<KryoPoolKey, KryoPool> kryosPool;
 
 	static Map<Class, Method> resolveMethods = new LinkedHashMap<>();
 
@@ -66,6 +65,9 @@ public class KryoUtils {
 					return null;
 				}
 			});
+	static {
+		resetPool();
+	}
 
 	public static <T> T clone(T t) {
 		Kryo kryo = borrowKryo();
@@ -140,6 +142,13 @@ public class KryoUtils {
 
 	public static void onlyErrorLogging() {
 		Log.set(Log.LEVEL_ERROR);
+	}
+
+	public static void resetPool() {
+		synchronized (Kryo.class) {
+			kryosPool = new CachingMap<>(key -> new KryoPool(
+					ResourceUtilities.is(KryoUtils.class, "usePool")));
+		}
 	}
 
 	public static <T> T serialClone(T t) {
@@ -228,7 +237,11 @@ public class KryoUtils {
 
 	private static void returnKryo(Kryo kryo) {
 		KryoPoolKey key = getContextKey();
-		kryosPool.get(key).returnObject(kryo);
+		KryoPool pool;
+		synchronized (Kryo.class) {
+			pool = kryosPool.get(key);
+		}
+		pool.returnObject(kryo);
 	}
 
 	private static Object writeReplace(Object object) throws Exception {
@@ -246,7 +259,17 @@ public class KryoUtils {
 
 	protected static Kryo borrowKryo() {
 		KryoPoolKey key = getContextKey();
-		return kryosPool.get(key).borrow(key);
+		KryoPool pool;
+		synchronized (Kryo.class) {
+			pool = kryosPool.get(key);
+		}
+		return pool.borrow(key);
+	}
+
+	@RegistryLocation(registryPoint = KryoCreationCustomiser.class, implementationType = ImplementationType.SINGLETON)
+	public static class KryoCreationCustomiser {
+		public void configure(Kryo kryo) {
+		}
 	}
 
 	public static class KryoDeserializationException extends RuntimeException {
@@ -294,7 +317,8 @@ public class KryoUtils {
 				if (objectPool == null) {
 					return factory.create();
 				} else {
-					return objectPool.borrowObject();
+					Kryo kryo = objectPool.borrowObject();
+					return kryo;
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -315,6 +339,11 @@ public class KryoUtils {
 				kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(
 						new SerializingInstantiatorStrategy()));
 				kryo.addDefaultSerializer(LiSet.class, new LiSetSerializer());
+				KryoCreationCustomiser customiser = Registry
+						.implOrNull(KryoCreationCustomiser.class);
+				if (customiser != null) {
+					customiser.configure(kryo);
+				}
 				return kryo;
 			}
 

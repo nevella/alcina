@@ -525,6 +525,11 @@ public class GraphProjection {
 	}
 
 	public List<Field> getFieldsForClass(Class clazz) throws Exception {
+		return getFieldsForClass(clazz, true);
+	}
+
+	public List<Field> getFieldsForClass(Class clazz, boolean forProjection)
+			throws Exception {
 		List<Field> result = projectableFields.get(clazz);
 		if (result == null) {
 			result = new ArrayList<Field>();
@@ -533,7 +538,7 @@ public class GraphProjection {
 			while (c != Object.class) {
 				List<Field> fields = ensureDeclaredNonStaticFields(c);
 				for (Field field : fields) {
-					if (field.getAnnotation(
+					if (forProjection && field.getAnnotation(
 							GraphProjectionTransient.class) != null) {
 						continue;
 					}

@@ -235,6 +235,8 @@ public class DomainStore implements IDomainStore {
 
 	Thread postProcessThread;
 
+	private GraphProjection graphProjection;
+
 	public DomainStore(DomainStoreDescriptor descriptor) {
 		this();
 		this.domainDescriptor = descriptor;
@@ -244,6 +246,7 @@ public class DomainStore implements IDomainStore {
 		persistenceListener = new DomainStorePersistenceListener();
 		this.persistenceEvents = new DomainTransformPersistenceEvents(this);
 		this.handler = new DomainStoreDomainHandler();
+		graphProjection = new GraphProjection();
 	}
 
 	public void appShutdown() {
@@ -578,7 +581,10 @@ public class DomainStore implements IDomainStore {
 	}
 
 	Field getField(Class clazz, String name) throws Exception {
-		List<Field> fields = new GraphProjection().getFieldsForClass(clazz);
+		List<Field> fields = null;
+		synchronized (graphProjection) {
+			fields = graphProjection.getFieldsForClass(clazz, false);
+		}
 		Optional<Field> field = fields.stream()
 				.filter(f -> f.getName().equals(name)).findFirst();
 		if (!field.isPresent()) {
