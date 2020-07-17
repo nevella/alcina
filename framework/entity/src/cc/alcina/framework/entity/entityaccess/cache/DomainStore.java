@@ -1514,7 +1514,7 @@ public class DomainStore implements IDomainStore {
 					stream = streamFromCacheValues();
 				}
 				if (LooseContext.has(DomainQuery.CONTEXT_DEBUG_CONSUMER)) {
-					stream.peek(LooseContext
+					stream = stream.peek(LooseContext
 							.get(DomainQuery.CONTEXT_DEBUG_CONSUMER));
 				}
 			}
