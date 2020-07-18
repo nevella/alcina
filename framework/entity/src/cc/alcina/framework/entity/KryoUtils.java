@@ -20,6 +20,8 @@ import org.objenesis.strategy.SerializingInstantiatorStrategy;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Kryo.DefaultInstantiatorStrategy;
+import com.esotericsoftware.kryo.Serializer;
+import com.esotericsoftware.kryo.factories.SerializerFactory;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.io.UnsafeInput;
@@ -29,6 +31,8 @@ import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.esotericsoftware.minlog.Log;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -37,6 +41,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class KryoUtils {
@@ -290,6 +296,34 @@ public class KryoUtils {
 		}
 	}
 
+	// FIXME - mvcc.4 - inject from mvcc to here
+	private static class MvccInterceptorSerializer
+			implements SerializerFactory {
+		@Override
+		public Serializer makeSerializer(Kryo kryo, Class<?> type) {
+			if (MvccObject.class.isAssignableFrom(type)) {
+				return new MvccObjectSerializer(kryo, type);
+			}
+			return new FieldSerializer<>(kryo, type);
+		}
+	}
+
+	private static class MvccObjectSerializer extends Serializer {
+		public MvccObjectSerializer(Kryo kryo, Class<?> type) {
+		}
+
+		@Override
+		public Object read(Kryo kryo, Input input, Class type) {
+			return Domain.find(Mvcc.resolveEntityClass(type), input.readLong());
+		}
+
+		@Override
+		public void write(Kryo kryo, Output output, Object object) {
+			Entity entity = (Entity) object;
+			output.writeLong(entity.getId());
+		}
+	}
+
 	static class KryoPool {
 		private GenericObjectPool<Kryo> objectPool;
 
@@ -339,6 +373,7 @@ public class KryoUtils {
 				kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(
 						new SerializingInstantiatorStrategy()));
 				kryo.addDefaultSerializer(LiSet.class, new LiSetSerializer());
+				kryo.setDefaultSerializer(new MvccInterceptorSerializer());
 				KryoCreationCustomiser customiser = Registry
 						.implOrNull(KryoCreationCustomiser.class);
 				if (customiser != null) {

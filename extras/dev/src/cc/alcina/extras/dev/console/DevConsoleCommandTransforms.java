@@ -45,7 +45,7 @@ import cc.alcina.framework.entity.console.FilterArgvFlag;
 import cc.alcina.framework.entity.console.FilterArgvParam;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
-import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
 
@@ -261,7 +261,7 @@ public class DevConsoleCommandTransforms {
 					}
 				}
 				return String.format("%s clr.topic in %s", notClause,
-						EntityUtils.stringListToClause(strs));
+						EntityPersistenceHelper.toInStringsClause(strs));
 			}
 
 			@Override
@@ -487,7 +487,7 @@ public class DevConsoleCommandTransforms {
 				List<ClassRef> filteredRefs = CollectionFilters.filter(refs,
 						classNameFilter);
 				return String.format("dte.objectclassref_id in %s",
-						EntityUtils.hasIdsToIdClause(filteredRefs));
+						EntityPersistenceHelper.toInClause(filteredRefs));
 			}
 
 			@Override

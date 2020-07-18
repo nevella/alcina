@@ -33,7 +33,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.entityaccess.transform.TransformPersisterInPersistenceContext;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
 public abstract class DevRemoterServlet extends HttpServlet {
 	public static final String DEV_REMOTER_PARAMS = "devRemoterParams";
@@ -195,7 +195,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			}
 			Object result = out;
 			if (params.cleanEntities) {
-				out = new EntityUtils().detachedClone(out);
+				out = new EntityPersistenceHelper().detachedClone(out);
 			}
 			ArrayList resultHolder = new ArrayList();
 			resultHolder.add(out);

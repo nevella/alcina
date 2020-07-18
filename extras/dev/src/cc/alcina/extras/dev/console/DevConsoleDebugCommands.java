@@ -54,7 +54,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.console.FilterArgvFlag;
 import cc.alcina.framework.entity.console.FilterArgvParam;
-import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.StreamBuffer;
@@ -968,7 +968,7 @@ public class DevConsoleDebugCommands {
 					"TRANSFORM_EXCEPTION", "PARSER_EXCEPTION");
 			exceptionFilter = filterArgvResult.contains
 					? String.format("and l.component_key in %s",
-							EntityUtils.stringListToClause(exceptions))
+							EntityPersistenceHelper.toInStringsClause(exceptions))
 					: exceptionFilter;
 			filterArgvParam = new FilterArgvParam(argv, "-extypes");
 			String customExceptionFilter = filterArgvParam.value;
@@ -976,7 +976,7 @@ public class DevConsoleDebugCommands {
 				exceptions = Arrays.stream(customExceptionFilter.split(","))
 						.collect(Collectors.toList());
 				exceptionFilter = String.format("and l.component_key in %s",
-						EntityUtils.stringListToClause(exceptions));
+						EntityPersistenceHelper.toInStringsClause(exceptions));
 			}
 			argv = filterArgvParam.argv;
 			filterArgvParam = new FilterArgvParam(argv, "-gtid");

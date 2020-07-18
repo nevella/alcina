@@ -90,6 +90,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
+import cc.alcina.framework.entity.entityaccess.cache.DomainLinker;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
@@ -97,7 +98,7 @@ import cc.alcina.framework.entity.entityaccess.transform.TransformCache;
 import cc.alcina.framework.entity.entityaccess.transform.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.entityaccess.transform.TransformPersisterInPersistenceContext;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
@@ -190,7 +191,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			List<Object> resultList = getEntityManager()
 					.createQuery(String.format("from %s where id in %s ",
 							clazz.getSimpleName(),
-							EntityUtils.longsToIdClause(ids)))
+							EntityPersistenceHelper.toInClause(ids)))
 					.getResultList();
 			for (Object object : resultList) {
 				getEntityManager().remove(object);
@@ -251,7 +252,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					List<Entity> resultList = getEntityManager()
 							.createQuery(String.format("from %s where id in %s",
 									storageClass.getSimpleName(),
-									EntityUtils.longsToIdClause(idsSlice)))
+									EntityPersistenceHelper
+											.toInClause(idsSlice)))
 							.getResultList();
 					for (Entity entity : resultList) {
 						cache.put(entity);
@@ -407,7 +409,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			return t;
 		}
 		if (clean) {
-			t = new EntityUtils().detachedClone(t);
+			t = new EntityPersistenceHelper().detachedClone(t);
 		}
 		if (unwrap) {
 			try {
@@ -483,9 +485,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			Collection<Long> ids,
 			InstantiateImplCallback instantiateImplCallback) {
 		String eql = String.format("from %s where  id in %s order by id",
-				clazz.getSimpleName(), EntityUtils.longsToIdClause(ids));
+				clazz.getSimpleName(), EntityPersistenceHelper.toInClause(ids));
 		List results = getEntityManager().createQuery(eql).getResultList();
-		return new EntityUtils().detachedClone(results,
+		return new EntityPersistenceHelper().detachedClone(results,
 				instantiateImplCallback);
 	}
 
@@ -546,7 +548,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
 		tm.setEntityManager(getEntityManager());
 		List<ObjectDeltaResult> delta = tm.getObjectDelta(specs);
-		delta = new EntityUtils().detachedClone(delta);
+		delta = new EntityPersistenceHelper().detachedClone(delta);
 		EntityLayerObjects.get().getMetricLogger()
 				.debug("object delta get - total (ms):"
 						+ (System.currentTimeMillis() - t1));
@@ -608,7 +610,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			String idFilter = specificIds == null
 					? String.format("dtrp.id>=%s and dtrp.id<=%s", fromId, toId)
 					: String.format("dtrp.id in %s",
-							EntityUtils.longsToIdClause(specificIds));
+							EntityPersistenceHelper.toInClause(specificIds));
 			String eql = String.format(
 					"select distinct dtrp " + "from %s dtrp "
 							+ "inner join fetch dtrp.events "
@@ -684,12 +686,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		String sql = Ax.format(
 				"select pub from %s pub where id in %s order by id",
 				getImplementationSimpleClassName(Publication.class),
-				EntityUtils.longsToIdClause(ids));
+				EntityPersistenceHelper.toInClause(ids));
 		List<Publication> publications = getEntityManager().createQuery(sql)
 				.getResultList();
 		unwrap(publications);
-		return new EntityUtils().detachedCloneIgnorePermissions(publications,
-				createUserAndGroupInstantiator());
+		return new EntityPersistenceHelper().detachedCloneIgnorePermissions(
+				publications, createUserAndGroupInstantiator());
 	}
 
 	@Override
@@ -775,7 +777,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						+ " by a.actionDate DESC")
 				.setParameter(1, className).setMaxResults(count)
 				.getResultList();
-		return new EntityUtils().detachedClone(list);
+		return new EntityPersistenceHelper().detachedClone(list);
 	}
 
 	@Override
@@ -883,8 +885,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
-			Long id, GraphProjectionFieldFilter fieldFilter,
-			GraphProjectionDataFilter dataFilter) {
+			Long id) {
 		HasId wrapper = getItemById(clazz, id);
 		if (wrapper == null) {
 			return null;
@@ -892,7 +893,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		UnwrapInfoContainer result = new UnwrapInfoContainer();
 		result.setHasId(wrapper);
 		try {
-			PermissionsManager.get().pushCurrentUser();
 			PropertyDescriptor[] pds = Introspector
 					.getBeanInfo(wrapper.getClass()).getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
@@ -919,12 +919,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					}
 				}
 			}
-			return new GraphProjection(fieldFilter, dataFilter).project(result,
-					null);
+			return DomainLinker.linkToDomain(result);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
-		} finally {
-			PermissionsManager.get().popUser();
 		}
 	}
 
@@ -1001,6 +998,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	@Override
+	// FIXME - mvcc.2 - permissions...?
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers) {
 		preloadWrappedObjects(wrappers);
 		RuntimeException lastException = null;
@@ -1193,7 +1191,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 								+ getImplementation(WrappedObject.class)
 										.getSimpleName()
 								+ " where id in "
-								+ EntityUtils.longsToIdClause(subList));
+								+ EntityPersistenceHelper.toInClause(subList));
 				query.getResultList();
 			}
 		} catch (Exception e) {
@@ -1247,14 +1245,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						+ "order by dtep.id desc",
 				getImplementationSimpleClassName(
 						DomainTransformEventPersistent.class),
-				EntityUtils.longsToIdClause(classRefIds));
+				EntityPersistenceHelper.toInClause(classRefIds));
 		Query query = getEntityManager().createQuery(eql).setParameter(1,
 				sinceId);
 		if (sinceId == 0) {
 			query.setMaxResults(maxTransforms);
 		}
-		return new EntityUtils().detachedClone(query.getResultList(), Registry
-				.impl(JPAImplementation.class).getClassrefInstantiator());
+		// unused, would just require a little tweak of the eql (removed as part
+		// of EntityPersistenceHelper cleanup) to instantiate the classrefs
+		throw new UnsupportedOperationException();
+		// return new EntityPersistenceHelper().detachedClone(
+		// query.getResultList(), Registry.impl(JPAImplementation.class)
+		// .getClassrefInstantiator());
 	}
 
 	protected Collection<Class> getSharedTransformClasses() {
@@ -1273,13 +1275,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return "userName";
 	}
 
-	protected SearchResultsBase projectSearchResults(SearchResultsBase result) {
-		return new EntityUtils().detachedClone(result);
-	}
-
-	protected IUser projectUserForClientInstance(IUser clonedUser) {
-		return new EntityUtils().detachedCloneIgnorePermissions(clonedUser,
-				null);
+	protected SearchResultsBase
+			projectSearchResults(SearchResultsBase results) {
+		return DomainLinker.linkToDomain(results);
 	}
 
 	ClientInstanceAuthenticationCache
@@ -1295,20 +1293,16 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	 * access
 	 */
 	U getUserByName(String userName) {
-		List<U> l = getEntityManager()
+		List<U> list = getEntityManager()
 				.createQuery(
 						String.format(
 								"select distinct u from "
 										+ getImplementationSimpleClassName(
 												IUser.class)
-										+ " u "
-										+ "left join fetch u.primaryGroup "
-										+ "left join fetch u.secondaryGroups g "
-										+ "left join fetch g.memberOfGroups sg "
-										+ "where u.%s = ?1",
+										+ " u " + "where u.%s = ?1",
 								getUserNamePropertyName()))
 				.setParameter(1, userName).getResultList();
-		return (l.size() == 0) ? null : l.get(0);
+		return Ax.first(list);
 	}
 
 	@RegistryLocation(registryPoint = CommonPersistenceConnectionProvider.class)
@@ -1354,12 +1348,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						PermissionsManager.get().getUser(), clonedUser, null,
 						false, Arrays.asList(new String[] { "primaryGroup",
 								"secondaryGroups", "contact" }));
-				ClientInstance instance = new EntityUtils().detachedClone(impl,
-						false);
+				ClientInstance instance = new EntityPersistenceHelper()
+						.detachedClone(impl, false);
 				commonPersistence.ensureClientInstanceAuthenticationCache()
 						.cacheClientInstance(instance);
-				instance.setUser(
-						new EntityUtils().detachedClone(clonedUser, false));
+				instance.setUser(new EntityPersistenceHelper()
+						.detachedClone(clonedUser, false));
 				return instance;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);

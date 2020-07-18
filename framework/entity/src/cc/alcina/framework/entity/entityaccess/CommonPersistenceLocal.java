@@ -43,8 +43,6 @@ import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContaine
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCache;
 import cc.alcina.framework.entity.entityaccess.transform.TransformPersister.TransformPersisterToken;
-import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
-import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 /**
@@ -144,8 +142,7 @@ public interface CommonPersistenceLocal {
 	public void ping();
 
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
-			Long id, GraphProjectionFieldFilter fieldFilter,
-			GraphProjectionDataFilter dataFilter);
+			Long id);
 
 	public EntityLocatorMap reconstituteEntityMap(long l2);
 

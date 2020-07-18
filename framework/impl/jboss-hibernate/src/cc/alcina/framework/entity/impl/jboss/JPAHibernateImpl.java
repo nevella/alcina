@@ -64,7 +64,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.DomainStoreJoinHandler;
-import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
@@ -136,7 +136,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 			Collection<Long> ids) {
 		try {
 			em.createQuery(String.format("delete %s where id in %s ",
-					clazz.getSimpleName(), EntityUtils.longsToIdClause(ids)))
+					clazz.getSimpleName(), EntityPersistenceHelper.toInClause(ids)))
 					.executeUpdate();
 		} catch (Exception e) {
 			// probably a reference error, try with parent delete/cascade

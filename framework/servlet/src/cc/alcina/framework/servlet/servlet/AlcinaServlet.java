@@ -11,11 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
+import cc.alcina.framework.entity.logic.EntityLayerLogging;
 
 public abstract class AlcinaServlet extends HttpServlet {
 	private AlcinaServletContext alcinaContext;
@@ -103,6 +105,7 @@ public abstract class AlcinaServlet extends HttpServlet {
 			logger.warn("Alcina servlet request issue - user {} - url {}",
 					PermissionsManager.get().getUser().toIdNameString(),
 					request.getRequestURI());
+			EntityLayerLogging.persistentLog(LogMessageType.RPC_EXCEPTION, e);
 			throw new ServletException(e);
 		} finally {
 			if (trackInternalMetrics()) {

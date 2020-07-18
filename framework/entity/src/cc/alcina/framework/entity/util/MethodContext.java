@@ -69,6 +69,11 @@ public class MethodContext {
 		});
 	}
 
+	public MethodContext withContextValue(String key, Object value) {
+		context.put(key, value);
+		return this;
+	}
+
 	public MethodContext withContextTrue(String key) {
 		context.put(key, Boolean.TRUE);
 		return this;

@@ -16,6 +16,7 @@ public interface PersistentObjectCache<T> {
 	}
 
 	default SingletonCache<T> asSingletonCache() {
+		withCreateIfNonExistent(true);
 		return new SingletonCache<>(this);
 	}
 
@@ -40,6 +41,17 @@ public interface PersistentObjectCache<T> {
 
 	PersistentObjectCache<T> withRetainInMemory(boolean retainInMemory);
 
+	public interface ClusteredPersistentObjectCacheProvider {
+		public static
+				PersistentObjectCache.ClusteredPersistentObjectCacheProvider
+				get() {
+			return Registry.impl(
+					PersistentObjectCache.ClusteredPersistentObjectCacheProvider.class);
+		}
+
+		<T> PersistentObjectCache<T> createCache(Class<T> clazz);
+	}
+
 	public static class SingletonCache<T> {
 		private PersistentObjectCache<T> delegate;
 
@@ -47,6 +59,15 @@ public interface PersistentObjectCache<T> {
 
 		public SingletonCache(PersistentObjectCache<T> delegate) {
 			this.delegate = delegate;
+		}
+
+		public void clear() {
+			try {
+				set(delegate.getPersistedClass().newInstance());
+				persist();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 
 		public synchronized T get() {
@@ -61,32 +82,12 @@ public interface PersistentObjectCache<T> {
 			delegate.persist(getPath(), value);
 		}
 
-		private String getPath() {
-			return delegate.getPersistedClass().getName();
-		}
-
 		public synchronized void set(T value) {
 			this.value = value;
 		}
 
-		public void clear() {
-			try {
-				set(delegate.getPersistedClass().newInstance());
-				persist();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
-	public interface ClusteredPersistentObjectCacheProvider {
-		<T> PersistentObjectCache<T> createCache(Class<T> clazz);
-
-		public static
-				PersistentObjectCache.ClusteredPersistentObjectCacheProvider
-				get() {
-			return Registry.impl(
-					PersistentObjectCache.ClusteredPersistentObjectCacheProvider.class);
+		private String getPath() {
+			return delegate.getPersistedClass().getName();
 		}
 	}
 }

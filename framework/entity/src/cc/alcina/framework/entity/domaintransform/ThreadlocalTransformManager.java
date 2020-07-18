@@ -99,7 +99,7 @@ import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
 /**
  *
@@ -802,7 +802,7 @@ public class ThreadlocalTransformManager extends TransformManager
 							+ "from  %s dte  "
 							+ " where dte.domainTransformRequestPersistent.id in %s "
 							+ " and dte.objectLocalId!=0 and dte.transformType = ?1",
-					dteName, EntityUtils.longsToIdClause(dtrIds));
+					dteName, EntityPersistenceHelper.toInClause(dtrIds));
 			List<Object[]> idTuples = getEntityManager().createQuery(eql)
 					.setParameter(1, TransformType.CREATE_OBJECT)
 					.getResultList();

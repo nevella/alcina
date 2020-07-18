@@ -43,7 +43,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.EnumSerializer;
 import cc.alcina.framework.common.client.util.HasSize;
-import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.DeltaApplicationRecordToDomainModelDeltaConverter;
@@ -468,7 +468,7 @@ public abstract class JdbcTransformPersistence
 					Math.min(ids.size(), precacheIndex + 1000));
 			try (ResultSet rs = transformCleanupTuple.stmt.executeQuery(String
 					.format("select id,transform from TransformRequests where id in %s order by id",
-							EntityUtils.longsToIdClause(idsSub)))) {
+							EntityPersistenceHelper.toInClause(idsSub)))) {
 				int maxChars = 200000000;
 				while (rs.next()) {
 					String rsId = rs.getString(1);

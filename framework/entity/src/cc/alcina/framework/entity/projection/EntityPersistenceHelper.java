@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -35,50 +34,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
  *
  * @author Nick Reddel
  */
-public class EntityUtils {
-	public static void checkDbIdentifier(String s) {
-		String regex = "\\w+";
-		if (!s.matches(regex)) {
-			throw new RuntimeException("Injection exception");
-		}
-	}
-
-	public static String hasIdsToIdClause(Collection<? extends HasId> hasIds) {
-		return longsToIdClause(hasIdsToIdList(hasIds));
-	}
-
-	public static List<Long>
-			hasIdsToIdList(Collection<? extends HasId> hasIds) {
-		return hasIdsToIdList(hasIds, false);
-	}
-
-	public static List<Long> hasIdsToIdList(Collection<? extends HasId> hasIds,
-			boolean withMinusOne) {
-		List<Long> ids = new ArrayList<Long>();
-		if (withMinusOne) {
-			ids.add(-1L);
-		}
-		for (HasId hasId : hasIds) {
-			ids.add(hasId.getId());
-		}
-		return ids;
-	}
-
-	public static String longArrayToIdClause(Long[] longs) {
-		return longsToIdClause(Arrays.asList(longs));
-	}
-
-	public static String longsToIdClause(Collection<Long> longs) {
-		StringBuffer sb = new StringBuffer();
-		sb.append(" (-1");
-		for (Long long1 : longs) {
-			sb.append(", ");
-			sb.append(long1);
-		}
-		sb.append(") ");
-		return sb.toString();
-	}
-
+public class EntityPersistenceHelper {
 	public static <T extends HasId> void order(List<T> incoming,
 			List<Long> orderValues) {
 		final TreeMap<Long, Integer> orderPositions = new TreeMap<Long, Integer>();
@@ -96,7 +52,44 @@ public class EntityUtils {
 		Collections.sort(incoming, cmp);
 	}
 
-	public static String stringListToClause(Collection<String> strs) {
+	public static List<Long> toIdList(Collection<? extends HasId> hasIds) {
+		return toIdList(hasIds, false);
+	}
+
+	public static List<Long> toIdList(Collection<? extends HasId> hasIds,
+			boolean withMinusOne) {
+		List<Long> ids = new ArrayList<Long>();
+		if (withMinusOne) {
+			ids.add(-1L);
+		}
+		for (HasId hasId : hasIds) {
+			ids.add(hasId.getId());
+		}
+		return ids;
+	}
+
+	public static String toInClause(Collection<?> objs) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(" (-1");
+		for (Object obj : objs) {
+			sb.append(", ");
+			if (obj instanceof Long) {
+				sb.append(obj);
+			} else if (obj instanceof HasId) {
+				sb.append(((HasId) obj).getId());
+			} else {
+				throw new IllegalArgumentException();
+			}
+		}
+		sb.append(") ");
+		return sb.toString();
+	}
+
+	public static String toInLongsClause(Long[] longs) {
+		return toInClause(Arrays.asList(longs));
+	}
+
+	public static String toInStringsClause(Collection<String> strs) {
 		StringBuffer sb = new StringBuffer();
 		if (strs.isEmpty()) {
 			strs.add("value##never##matched--" + SEUtilities.generateId());
@@ -111,6 +104,8 @@ public class EntityUtils {
 		return sb.toString();
 	}
 
+	// FIXME - mvcc.4 - once wrapped object is gone, all 'detachedClone' should
+	// go too
 	public <T> T detachedClone(T source) {
 		return detachedClone(source, false, null);
 	}
@@ -157,11 +152,6 @@ public class EntityUtils {
 		}
 	}
 
-	public <T> T detachedCloneWithDomainStore(T source,
-			InstantiateImplCallback callback) {
-		return detachedClone(source, callback, new DetachedEntityCache(), true);
-	}
-
 	public GraphProjections projections(InstantiateImplCallback callback,
 			DetachedEntityCache cache, boolean useRawDomainStore) {
 		GraphProjectionDataFilter dataFilter = Registry
@@ -170,19 +160,5 @@ public class EntityUtils {
 		return GraphProjections.defaultProjections()
 				.fieldFilter(Registry.impl(PermissibleFieldFilter.class))
 				.dataFilter(dataFilter);
-	}
-
-	static class MultiIdentityMap
-			extends IdentityHashMap<Object, IdentityHashMap<Object, Object>> {
-		public void add(Object o1, Object o2) {
-			ensureKey(o1);
-			get(o1).put(o2, o2);
-		}
-
-		public void ensureKey(Object o1) {
-			if (!containsKey(o1)) {
-				put(o1, new IdentityHashMap<Object, Object>());
-			}
-		}
 	}
 }

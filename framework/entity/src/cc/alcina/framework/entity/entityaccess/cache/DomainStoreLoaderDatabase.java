@@ -94,7 +94,7 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStoreLoaderDatabase.L
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
-import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 
 /*FIXME - mvcc.4
@@ -787,7 +787,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 			String sqlFilter = Ax.format(
 					" domainTransformRequestPersistent_id in %s order by id",
-					EntityUtils.longsToIdClause(ids));
+					EntityPersistenceHelper.toInClause(ids));
 			LaterLookup laterLookup = new LaterLookup();
 			List<? extends DomainTransformEventPersistent> transforms = null;
 			Transaction.ensureDomainPreparingActive();
@@ -872,7 +872,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	private String longsToIdClause(Collection<Long> ids) {
-		return EntityUtils.longsToIdClause(
+		return EntityPersistenceHelper.toInClause(
 				ids.stream().sorted().collect(Collectors.toList()));
 	}
 
@@ -1276,7 +1276,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			try {
 				LaterLookup laterLookup = new LaterLookup();
 				String sqlFilter = Ax.format(" id in %s ",
-						EntityUtils.hasIdsToIdClause(sources));
+						EntityPersistenceHelper.toInClause(sources));
 				ClassIdLock dummySublock = new ClassIdLock(clazz, 0L);
 				List<? extends Entity> persistentSources = (List) loadTable0(
 						conn, clazz, sqlFilter, dummySublock, laterLookup,

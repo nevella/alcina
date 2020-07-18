@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
 public class LazyPropertyLoadTask<T extends Entity>
 		extends LazyLoadProvideTask<T> {
@@ -55,7 +55,7 @@ public class LazyPropertyLoadTask<T extends Entity>
 			LooseContext
 					.setTrue(DomainStore.CONTEXT_POPULATE_LAZY_PROPERTY_VALUES);
 			String sqlFilter = String.format(" id in %s",
-					EntityUtils.hasIdsToIdClause(objects));
+					EntityPersistenceHelper.toInClause(objects));
 			ClassIdLock lock = LockUtils.obtainClassIdLock(clazz, 0);
 			String key = Ax.format("load :: %s (%s)",
 					getClass().getSimpleName(), objects.size());

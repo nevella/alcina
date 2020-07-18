@@ -32,7 +32,7 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStoreWaitStats.Domain
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
 import cc.alcina.framework.entity.entityaccess.metric.ThreadHistory;
 import cc.alcina.framework.entity.entityaccess.metric.ThreadInfoSer;
-import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
@@ -158,7 +158,7 @@ public class DevConsoleCommandInternalMetrics {
 			List<String> filters = new ArrayList<>();
 			if (ids.size() > 0) {
 				filters.add(Ax.format("id in %s",
-						EntityUtils.longsToIdClause(ids)));
+						EntityPersistenceHelper.toInClause(ids)));
 			}
 			if (host.length() > 0) {
 				filters.add(Ax.format("hostname ilike '%%s%'", host));

@@ -34,13 +34,13 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
-import cc.alcina.framework.entity.projection.EntityUtils.MultiIdentityMap;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
+import cc.alcina.framework.entity.projection.StatsFilter.MultiIdentityMap;
 
 public class StatsFilter extends CollectionProjectionFilter {
-	MultiIdentityMap ownerMap = new MultiIdentityMap();
+	StatsFilter.MultiIdentityMap ownerMap = new StatsFilter.MultiIdentityMap();
 
-	MultiIdentityMap owneeMap = new MultiIdentityMap();
+	StatsFilter.MultiIdentityMap owneeMap = new StatsFilter.MultiIdentityMap();
 
 	private Set<Class> calculateOwnerStatsFor;
 
@@ -524,6 +524,20 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 		public int size() {
 			return size;
+		}
+	}
+
+	static class MultiIdentityMap
+			extends IdentityHashMap<Object, IdentityHashMap<Object, Object>> {
+		public void add(Object o1, Object o2) {
+			ensureKey(o1);
+			get(o1).put(o2, o2);
+		}
+	
+		public void ensureKey(Object o1) {
+			if (!containsKey(o1)) {
+				put(o1, new IdentityHashMap<Object, Object>());
+			}
 		}
 	}
 }

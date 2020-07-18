@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.cache.DomainModificationMetadataProvider;
-import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
 public class DomainTransformPersistenceEvent {
 	private final TransformPersistenceToken transformPersistenceToken;
@@ -61,7 +61,7 @@ public class DomainTransformPersistenceEvent {
 		return domainTransformLayerWrapper == null
 				|| domainTransformLayerWrapper.persistentRequests == null
 						? Collections.EMPTY_LIST
-						: EntityUtils.hasIdsToIdList(
+						: EntityPersistenceHelper.toIdList(
 								domainTransformLayerWrapper.persistentRequests);
 	}
 

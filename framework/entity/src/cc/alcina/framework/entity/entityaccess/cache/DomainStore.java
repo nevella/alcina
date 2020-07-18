@@ -267,6 +267,18 @@ public class DomainStore implements IDomainStore {
 		return this.domainDescriptor;
 	}
 
+	public List<Field> getFields(Class clazz) {
+		try {
+			List<Field> fields = null;
+			synchronized (graphProjection) {
+				fields = graphProjection.getFieldsForClass(clazz, false);
+			}
+			return fields;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public DomainStoreHealth getHealth() {
 		return health;
 	}
@@ -581,11 +593,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	Field getField(Class clazz, String name) throws Exception {
-		List<Field> fields = null;
-		synchronized (graphProjection) {
-			fields = graphProjection.getFieldsForClass(clazz, false);
-		}
-		Optional<Field> field = fields.stream()
+		Optional<Field> field = getFields(clazz).stream()
 				.filter(f -> f.getName().equals(name)).findFirst();
 		if (!field.isPresent()) {
 			throw new RuntimeException(
