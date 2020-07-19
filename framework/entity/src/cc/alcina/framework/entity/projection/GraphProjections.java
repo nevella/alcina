@@ -30,13 +30,6 @@ public class GraphProjections {
 		return instance;
 	}
 
-	public static MapObjectLookup reachable(Object target) {
-		CollectionProjectionFilterWithCache dataFilter = (CollectionProjectionFilterWithCache) Registry
-				.impl(CollectionProjectionFilter.class);
-		defaultProjections().dataFilter(dataFilter).project(target);
-		return dataFilter.getObjectLookup();
-	}
-
 	public static MapObjectLookup reachableForClasses(Object target,
 			Class... classes) {
 		CollectionProjectionFilterWithCache dataFilter = (CollectionProjectionFilterWithCache) Registry

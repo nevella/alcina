@@ -43,7 +43,6 @@ import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContaine
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetric;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCache;
 import cc.alcina.framework.entity.entityaccess.transform.TransformPersister.TransformPersisterToken;
-import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 /**
  * 
@@ -81,10 +80,6 @@ public interface CommonPersistenceLocal {
 
 	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
 			Object value1, String key2, Object value2);
-
-	public <T> List<T> getItemsByIdsAndClean(Class<T> clazz,
-			Collection<Long> ids,
-			InstantiateImplCallback instantiateImplCallback);
 
 	public long getLastTransformId();
 

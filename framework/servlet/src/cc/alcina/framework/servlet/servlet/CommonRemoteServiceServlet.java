@@ -703,6 +703,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
+	protected <T> T defaultProjection(T t) {
+		return GraphProjections.defaultProjections().project(t);
+	}
+
 	protected String describeRpcRequest(RPCRequest rpcRequest, String msg) {
 		msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
 		msg += "User: " + PermissionsManager.get().getUserString() + "\n";

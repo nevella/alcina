@@ -18,7 +18,6 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -409,7 +408,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			return t;
 		}
 		if (clean) {
-			t = new EntityPersistenceHelper().detachedClone(t);
+			t = DomainLinker.linkToDomain(t);
 		}
 		if (unwrap) {
 			try {
@@ -481,17 +480,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	@Override
-	public <T> List<T> getItemsByIdsAndClean(Class<T> clazz,
-			Collection<Long> ids,
-			InstantiateImplCallback instantiateImplCallback) {
-		String eql = String.format("from %s where  id in %s order by id",
-				clazz.getSimpleName(), EntityPersistenceHelper.toInClause(ids));
-		List results = getEntityManager().createQuery(eql).getResultList();
-		return new EntityPersistenceHelper().detachedClone(results,
-				instantiateImplCallback);
-	}
-
-	@Override
 	public long getLastTransformId() {
 		String eql = String.format("select max(dtep.id) from %s dtep ",
 				getImplementationSimpleClassName(
@@ -548,7 +536,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
 		tm.setEntityManager(getEntityManager());
 		List<ObjectDeltaResult> delta = tm.getObjectDelta(specs);
-		delta = new EntityPersistenceHelper().detachedClone(delta);
+		delta = DomainLinker.linkToDomain(delta);
 		EntityLayerObjects.get().getMetricLogger()
 				.debug("object delta get - total (ms):"
 						+ (System.currentTimeMillis() - t1));
@@ -690,8 +678,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		List<Publication> publications = getEntityManager().createQuery(sql)
 				.getResultList();
 		unwrap(publications);
-		return new EntityPersistenceHelper().detachedCloneIgnorePermissions(
-				publications, createUserAndGroupInstantiator());
+		return DomainLinker.linkToDomain(publications);
 	}
 
 	@Override
@@ -777,7 +764,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						+ " by a.actionDate DESC")
 				.setParameter(1, className).setMaxResults(count)
 				.getResultList();
-		return new EntityPersistenceHelper().detachedClone(list);
+		return DomainLinker.linkToDomain(list);
 	}
 
 	@Override
@@ -1342,19 +1329,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				impl.setAuth(Math.abs(new Random().nextInt()));
 				impl.setUserAgent(userAgent);
 				impl.setIpAddress(ipAddress);
-				IUser clonedUser = AlcinaPersistentEntityImpl
-						.getNewImplementationInstance(IUser.class);
-				ResourceUtilities.copyBeanProperties(
-						PermissionsManager.get().getUser(), clonedUser, null,
-						false, Arrays.asList(new String[] { "primaryGroup",
-								"secondaryGroups", "contact" }));
-				ClientInstance instance = new EntityPersistenceHelper()
-						.detachedClone(impl, false);
+				impl.setUser(PermissionsManager.get().getUser());
 				commonPersistence.ensureClientInstanceAuthenticationCache()
-						.cacheClientInstance(instance);
-				instance.setUser(new EntityPersistenceHelper()
-						.detachedClone(clonedUser, false));
-				return instance;
+						.cacheClientInstance(impl);
+				return impl;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

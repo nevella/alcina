@@ -21,14 +21,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.entityaccess.JPAImplementation;
-import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
-import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 /**
  *
@@ -105,63 +99,5 @@ public class EntityPersistenceHelper {
 		}
 		sb.append(") ");
 		return sb.toString();
-	}
-
-	// FIXME - mvcc.4 - once wrapped object is gone, all 'detachedClone' should
-	// go too
-	public <T> T detachedClone(T source) {
-		return detachedClone(source, false, null);
-	}
-
-	public <T> T detachedClone(T source, boolean useCache) {
-		return detachedClone(source, useCache, null);
-	}
-
-	public <T> T detachedClone(T source, boolean useCache,
-			InstantiateImplCallback callback) {
-		DetachedEntityCache cache = useCache ? null : new DetachedEntityCache();
-		return detachedClone(source, callback, cache);
-	}
-
-	public <T> T detachedClone(T source, InstantiateImplCallback callback) {
-		return detachedClone(source, false, callback);
-	}
-
-	public <T> T detachedClone(T source, InstantiateImplCallback callback,
-			DetachedEntityCache cache) {
-		return detachedClone(source, callback, cache, false);
-	}
-
-	public <T> T detachedClone(T source, InstantiateImplCallback callback,
-			DetachedEntityCache cache, boolean useRawDomainStore) {
-		try {
-			return projections(callback, cache, useRawDomainStore)
-					.project(source);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public <T> T detachedCloneIgnorePermissions(T source,
-			InstantiateImplCallback callback) {
-		DetachedEntityCache cache = new DetachedEntityCache();
-		GraphProjectionDataFilter dataFilter = Registry
-				.impl(JPAImplementation.class)
-				.getResolvingFilter(callback, cache, false);
-		try {
-			return new GraphProjection(null, dataFilter).project(source, null);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public GraphProjections projections(InstantiateImplCallback callback,
-			DetachedEntityCache cache, boolean useRawDomainStore) {
-		GraphProjectionDataFilter dataFilter = Registry
-				.impl(JPAImplementation.class)
-				.getResolvingFilter(callback, cache, useRawDomainStore);
-		return GraphProjections.defaultProjections()
-				.fieldFilter(Registry.impl(PermissibleFieldFilter.class))
-				.dataFilter(dataFilter);
 	}
 }

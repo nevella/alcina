@@ -28,12 +28,12 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.entityaccess.cache.DomainLinker;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.entityaccess.transform.TransformPersisterInPersistenceContext;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
 public abstract class DevRemoterServlet extends HttpServlet {
 	public static final String DEV_REMOTER_PARAMS = "devRemoterParams";
@@ -195,7 +195,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			}
 			Object result = out;
 			if (params.cleanEntities) {
-				out = new EntityPersistenceHelper().detachedClone(out);
+				out = DomainLinker.linkToDomain(out);
 			}
 			ArrayList resultHolder = new ArrayList();
 			resultHolder.add(out);
