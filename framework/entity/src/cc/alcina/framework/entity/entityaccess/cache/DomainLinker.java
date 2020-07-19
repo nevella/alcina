@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -67,6 +68,8 @@ public class DomainLinker<E extends Entity> {
 
 	private Multiset<Class<? extends Entity>, Set<Long>> queried;
 
+	private List<Runnable> resolveTasks;
+
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	private Predicate<Field> fieldFilter;
@@ -93,6 +96,7 @@ public class DomainLinker<E extends Entity> {
 		if (parent == null) {
 			cache = new DetachedEntityCache();
 			queried = new Multiset<>();
+			resolveTasks = new ArrayList<>();
 		}
 	}
 
@@ -130,17 +134,27 @@ public class DomainLinker<E extends Entity> {
 		 * that subLinkers can find them
 		 */
 		List<E> result = new ArrayList<>();
+		List<String> ignorePropertyNames = DomainStore.writableStore()
+				.getFields(clazz).stream()
+				.filter(f -> Set.class.isAssignableFrom(f.getType()))
+				.map(Field::getName).collect(Collectors.toList());
 		for (Object[] array : objs) {
 			E attached = (E) array[0];
 			E detached = Reflections.classLookup().newInstance(clazz);
-			ResourceUtilities.copyBeanProperties(attached, detached, null,
-					true);
+			result.add(detached);
+			ResourceUtilities.copyBeanProperties(attached, detached, null, true,
+					ignorePropertyNames);
 			cache().put(detached);
+			// only needed for top-level
+			queried().add(clazz, detached.getId());
 			for (Mapping mapping : mappings) {
 				mapping.apply(array, detached);
 			}
 		}
 		mappings.forEach(Mapping::resolve);
+		if (parent == null) {
+			resolveTasks.forEach(Runnable::run);
+		}
 		return result;
 	}
 
@@ -148,16 +162,24 @@ public class DomainLinker<E extends Entity> {
 		return parent == null ? cache : parent.cache();
 	}
 
-	private void link(Set<Long> ids) {
+	private void link(Set<Long> ids, String linkFieldName) {
+		Set<Long> clazzQueried = queried().get(clazz);
+		if (clazzQueried != null) {
+			ids.removeAll(clazzQueried);
+		}
+		if (ids.isEmpty()) {
+			return;
+		}
 		String select = Ax.format(
-				"select distinct %s %s from %s %s where %s.id in %s", alias,
+				"select distinct %s %s from %s %s where %s.%s in %s", alias,
 				createObjectRefSelect(), clazz.getSimpleName(), alias, alias,
-				EntityPersistenceHelper.toInClause(ids));
+				linkFieldName, EntityPersistenceHelper.toInClause(ids));
 		logger.info("Resolve refs query :: {} :: {} ids", clazz.getSimpleName(),
 				ids.size());
 		List<Object[]> resultList = MethodContext.instance()
 				.withMetricKey(metricKey())
 				.call(() -> em.createQuery(select).getResultList());
+		queried().addCollection(clazz, ids);
 		linkAndDetach(resultList);
 	}
 
@@ -168,6 +190,10 @@ public class DomainLinker<E extends Entity> {
 
 	private Multiset<Class<? extends Entity>, Set<Long>> queried() {
 		return parent == null ? queried : parent.queried();
+	}
+
+	List<Runnable> resolveTasks() {
+		return parent == null ? resolveTasks : parent.resolveTasks();
 	}
 
 	@RegistryLocation(registryPoint = DefaultFieldFilter.class, implementationType = ImplementationType.INSTANCE)
@@ -188,7 +214,7 @@ public class DomainLinker<E extends Entity> {
 
 		Mapping(Field field) {
 			this.field = field;
-			if (!isDomainClass()) {
+			if (!isDomainClass() || isOneToMany()) {
 				byEntity = new LinkedHashMap<>();
 			}
 			Association association = SEUtilities
@@ -203,6 +229,12 @@ public class DomainLinker<E extends Entity> {
 					throw new WrappedRuntimeException(e);
 				}
 			}
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s.%s", field.getDeclaringClass().getSimpleName(),
+					field.getName());
 		}
 
 		private Class<? extends Entity> getType() {
@@ -242,6 +274,7 @@ public class DomainLinker<E extends Entity> {
 		void apply0(Object[] array, E detached) throws Exception {
 			if (isOneToMany()) {
 				byEntity.put(detached, null);
+				field.set(detached, new LiSet<>());
 				return;
 			}
 			Long id = (Long) array[offset() + mappingOffset];
@@ -250,17 +283,7 @@ public class DomainLinker<E extends Entity> {
 					field.set(detached, Domain.find(getType(), id));
 					return;
 				} else {
-					if (queried().contains(getType(), id)) {
-						Entity target = cache().get(getType(), id);
-						field.set(detached, target);
-						if (isOneToMany()) {
-							Set set = (Set) associatedField.get(target);
-							set.add(detached);
-						}
-						return;
-					} else {
-						byEntity.put(detached, id);
-					}
+					byEntity.put(detached, id);
 				}
 			}
 		}
@@ -277,18 +300,36 @@ public class DomainLinker<E extends Entity> {
 				subLinker = new DomainLinker<>(em, getType(), "sub",
 						fieldFilter, DomainLinker.this);
 				if (isOneToMany()) {
-					subLinker.link(byEntity.keySet().stream()
-							.collect(EntityHelper.toIdSet()));
+					subLinker.link(
+							byEntity.keySet().stream()
+									.collect(EntityHelper.toIdSet()),
+							associatedField.getName());
 				} else {
 					subLinker.link(byEntity.values().stream()
-							.collect(Collectors.toSet()));
-					byEntity.entrySet().forEach(e -> {
-						try {
-							field.set(e.getKey(),
-									cache().get(getType(), e.getValue()));
-						} catch (Exception e2) {
-							throw new WrappedRuntimeException(e2);
-						}
+							.collect(Collectors.toSet()), "id");
+					/*
+					 * run the resolve tasks at the end since we got noooo idea
+					 * what order things will be called in .... shades of
+					 * DomainStore.LazyLoader (but dissimilar enough to not
+					 * justify shared code)
+					 */
+					resolveTasks().add(() -> {
+						byEntity.entrySet().forEach(e -> {
+							try {
+								E detached = e.getKey();
+								Entity target = cache().get(getType(),
+										e.getValue());
+								field.set(detached, target);
+								if (associatedField != null
+										&& Set.class.isAssignableFrom(
+												associatedField.getType())) {
+									Set set = (Set) associatedField.get(target);
+									set.add(detached);
+								}
+							} catch (Exception e2) {
+								throw new WrappedRuntimeException(e2);
+							}
+						});
 					});
 				}
 			}

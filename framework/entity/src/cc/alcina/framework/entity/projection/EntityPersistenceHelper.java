@@ -72,6 +72,9 @@ public class EntityPersistenceHelper {
 		StringBuffer sb = new StringBuffer();
 		sb.append(" (-1");
 		for (Object obj : objs) {
+			if (obj == null) {
+				continue;
+			}
 			sb.append(", ");
 			if (obj instanceof Long) {
 				sb.append(obj);
