@@ -12,6 +12,8 @@ import java.lang.annotation.Target;
 @Documented
 @Target({ ElementType.METHOD })
 public @interface DomainStoreProperty {
+	boolean ignoreMismatchedCollectionModifications() default false;
+
 	DomainStorePropertyLoadType loadType() default DomainStorePropertyLoadType.TRANSIENT;
 
 	public enum DomainStorePropertyLoadType {

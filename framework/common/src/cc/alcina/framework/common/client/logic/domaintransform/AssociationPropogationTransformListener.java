@@ -103,6 +103,11 @@ public class AssociationPropogationTransformListener
 								((Entity) associated).domain().register();
 								Object associatedAssociationValue = associatedObjectAccessor
 										.getPropertyValue(associated);
+								if (!Reflections.classLookup()
+										.handlesClass(associatedObjectAccessor
+												.getPropertyType())) {
+									return;
+								}
 								if (associatedAssociationValue instanceof Set) {
 									// child.parent
 									((Entity) associated).domain()

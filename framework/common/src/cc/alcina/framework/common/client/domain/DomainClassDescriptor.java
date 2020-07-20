@@ -215,6 +215,13 @@ public class DomainClassDescriptor<T extends Entity>
 		}
 
 		@Override
+		public boolean ignoreMismatchedCollectionModifications() {
+			Function<DomainStoreProperty, Boolean> function = DomainStoreProperty::ignoreMismatchedCollectionModifications;
+			return resolver.resolve(function,
+					"ignoreMismatchedCollectionModifications");
+		}
+
+		@Override
 		public DomainStorePropertyLoadType loadType() {
 			Function<DomainStoreProperty, DomainStorePropertyLoadType> function = DomainStoreProperty::loadType;
 			return resolver.resolve(function, "loadType");

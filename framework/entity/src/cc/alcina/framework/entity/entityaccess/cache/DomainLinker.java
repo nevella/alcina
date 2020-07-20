@@ -225,6 +225,9 @@ public class DomainLinker<E extends Entity> {
 					associatedField = DomainStore.writableStore().getField(
 							association.implementationClass(),
 							association.propertyName());
+					if (!fieldFilter.test(associatedField)) {
+						associatedField = null;
+					}
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}

@@ -45,6 +45,7 @@ import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
@@ -686,9 +687,22 @@ public class ThreadlocalTransformManager extends TransformManager
 		Collection deltaC = CommonUtils.wrapInCollection(delta);
 		if (objectWithCollection instanceof MvccObject
 				|| deltaC.stream().anyMatch(o -> o instanceof MvccObject)) {
-			Preconditions.checkArgument(
-					objectWithCollection instanceof MvccObject && deltaC
-							.stream().allMatch(o -> o instanceof MvccObject));
+			boolean mismatchedEndpoints = !(objectWithCollection instanceof MvccObject
+					&& deltaC.stream().allMatch(o -> o instanceof MvccObject));
+			if (mismatchedEndpoints) {
+				DomainStoreProperty domainStoreProperty = Reflections
+						.propertyAccessor().getAnnotationForProperty(
+								((Entity) objectWithCollection).entityClass(),
+								DomainStoreProperty.class,
+								collectionPropertyName);
+				if (domainStoreProperty != null && domainStoreProperty
+						.ignoreMismatchedCollectionModifications()) {
+					return;
+				} else {
+					Preconditions.checkArgument(!mismatchedEndpoints);
+				}
+			} else {
+			}
 		}
 		super.modifyCollectionProperty(objectWithCollection,
 				collectionPropertyName, delta, modificationType);

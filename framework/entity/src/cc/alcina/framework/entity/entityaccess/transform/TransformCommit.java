@@ -744,6 +744,7 @@ public class TransformCommit {
 				cascadingTransformSupport.afterTransform();
 			}
 		} catch (RuntimeException re) {
+			re.printStackTrace();
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			Transaction.current().toDbAborted();
 			Transaction.endAndBeginNew();
