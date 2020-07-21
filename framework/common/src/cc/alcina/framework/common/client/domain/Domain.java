@@ -98,12 +98,14 @@ public class Domain {
 		return writeable;
 	}
 
+	// FIXME - mvcc.3 - is this needed anymore?
 	public static <V extends Entity> V detachedVersion(Class<V> clazz,
 			long id) {
 		V v = find(clazz, id);
 		return detachedVersion(v);
 	}
 
+	// FIXME - mvcc.3 - is this needed anymore?
 	public static <V extends Entity> V detachedVersion(V v) {
 		return v == null ? null : handler.detachedVersion(v);
 	}

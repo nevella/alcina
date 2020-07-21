@@ -109,9 +109,6 @@ import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ThreadlocalTransformManager extends TransformManager
 		implements PropertyAccessor, ObjectLookup, ClassLookup {
-	public static final String CONTEXT_IGNORE_DOUBLE_DELETION = ThreadlocalTransformManager.class
-			.getName() + ".CONTEXT_IGNORE_DOUBLE_DELETION";
-
 	public static final String CONTEXT_TEST_PERMISSIONS = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_TEST_PERMISSIONS";
 
@@ -299,16 +296,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	public DomainTransformEvent delete(Entity entity) {
 		if (entity == null) {
-			return null;
-		}
-		if (markedForDeletion.contains(entity)) {
-			if (!LooseContext.is(CONTEXT_IGNORE_DOUBLE_DELETION)) {
-				RuntimeException ex = new RuntimeException(String.format(
-						"Double deletion - %s %s", new EntityLocator(entity),
-						CommonUtils.safeToString(entity)));
-				System.out.println(ex.getMessage());
-				ex.printStackTrace();
-			}
 			return null;
 		}
 		entity = ensureNonProxy(entity);

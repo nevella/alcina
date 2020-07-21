@@ -384,6 +384,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 				token.newTargetValue)) {
 			return;
 		}
+		if (markedForDeletion.contains(token.object)
+				|| markedForDeletion.contains(token.newTargetObject)
+				|| markedForDeletion.contains(token.existingTargetObject)) {
+			throw new DomainTransformException(
+					"Modifying object marked for deletion");
+		}
 		getUndoManager().prepareUndo(event);
 		checkVersion(token.object, event);
 		switch (token.transformType) {
@@ -392,7 +398,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		case REMOVE_REF_FROM_COLLECTION:
 		case CHANGE_PROPERTY_REF:
 			if (event.getValueClass() == null) {
-				throw new RuntimeException(
+				throw new DomainTransformException(
 						"null value class for modification requiring a class");
 			}
 		}
