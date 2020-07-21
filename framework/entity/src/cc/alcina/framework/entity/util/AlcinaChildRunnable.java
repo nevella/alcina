@@ -22,7 +22,7 @@ import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 
 public abstract class AlcinaChildRunnable implements Runnable {
 	public static void launchWithCurrentThreadContext(String threadName,
-			Runnable runnable) {
+			ThrowingRunnable runnable) {
 		AlcinaChildRunnable wrappingRunnable = new AlcinaChildRunnable(
 				threadName) {
 			@Override
