@@ -16,6 +16,7 @@ package cc.alcina.framework.gwt.client.ide;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -34,6 +35,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.HasName;
 import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.Widget;
@@ -49,6 +51,7 @@ import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -68,7 +71,6 @@ import cc.alcina.framework.gwt.client.ide.node.UmbrellaProviderNode;
 import cc.alcina.framework.gwt.client.ide.provider.SimpleCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.UmbrellaCollectionProviderMultiplexer;
 import cc.alcina.framework.gwt.client.ide.provider.UmbrellaProvider;
-import cc.alcina.framework.gwt.client.ide.widget.DataTree;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventEvent;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventListener;
@@ -174,6 +176,8 @@ public class WorkspaceView extends Composite implements HasName,
 		private Image collapse;
 
 		protected boolean treeInitialised = false;
+
+		private CollectionModificationListener listener;
 
 		public DataTreeView(String name) {
 			this(name, null);
@@ -309,6 +313,18 @@ public class WorkspaceView extends Composite implements HasName,
 							children.add(root.getChild(idx));
 						}
 						children.forEach(getDataTree()::addItem);
+						if (getDefaultEntityClass() != null
+								&& listener == null) {
+							listener = e -> {
+								if (isAttached()) {
+									Scheduler.get()
+											.scheduleFinally(() -> resetTree());
+								}
+							};
+							TransformManager.get()
+									.addCollectionModificationListener(listener,
+											getDefaultEntityClass());
+						}
 					}
 				} else {
 					Collection<TreeItem> roots = (Collection<TreeItem>) items;
@@ -322,7 +338,15 @@ public class WorkspaceView extends Composite implements HasName,
 						|| expandFirstLevelNodesOnInitialRender()) {
 					dataTree.collapseToFirstLevel();
 				}
-				this.scroller.setWidget(dataTree);
+				// localdom opt - attach out of browser tree
+				Panel parent = (Panel) this.scroller.getParent();
+				if (parent != null) {
+					this.scroller.removeFromParent();
+					this.scroller.setWidget(dataTree);
+					parent.add(this.scroller);
+				} else {
+					this.scroller.setWidget(dataTree);
+				}
 			}
 		}
 
@@ -359,6 +383,11 @@ public class WorkspaceView extends Composite implements HasName,
 			if (evt.getAction().getClass() == DeleteAction.class) {
 				onTreeItemSelected(item);
 			}
+			// hack - do better when we rework this for dirndl
+			if (item == null) {
+				item = new DomainNode(Reflections.classLookup()
+						.newInstance(getDefaultEntityClass()));
+			}
 			fireVetoableActionEvent(
 					new PermissibleActionEvent(item, evt.getAction()));
 		}
@@ -385,6 +414,9 @@ public class WorkspaceView extends Composite implements HasName,
 				ClientBeanReflector info = ClientReflector.get()
 						.beanInfoForClass(domainClass);
 				actions.addAll(info.getActions(userObject));
+			}
+			if (item == null) {
+				actions.addAll(getUnselectedActions());
 			}
 			if (item instanceof HasVisibleCollection) {
 				if (!item.getState()) {
@@ -593,5 +625,15 @@ public class WorkspaceView extends Composite implements HasName,
 		protected boolean useNodeImages() {
 			return false;
 		}
+	}
+
+	protected Class<? extends Entity> getDefaultEntityClass() {
+		return null;
+	}
+
+	protected Collection<? extends Class<? extends PermissibleAction>>
+			getUnselectedActions() {
+		return getDefaultEntityClass() == null ? Collections.emptyList()
+				: Collections.singletonList(CreateAction.class);
 	}
 }

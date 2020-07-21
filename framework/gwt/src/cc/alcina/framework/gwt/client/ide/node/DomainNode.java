@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
-import cc.alcina.framework.gwt.client.ide.widget.DataTree;
+import cc.alcina.framework.gwt.client.ide.DataTree;
 import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 
@@ -86,6 +86,9 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
+		if (getTree() == null) {
+			return;
+		}
 		refreshFromObject();
 	}
 

@@ -237,7 +237,9 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		}
 		if (singleObj instanceof Entity) {
 			Entity entity = (Entity) singleObj;
-			singleObj = TransformManager.get().getObject(entity);
+			if (!entity.domain().isNonDomain()) {
+				singleObj = TransformManager.get().getObject(entity);
+			}
 		}
 		Class<? extends WorkspaceActionHandler> handlerClass = null;
 		if (singleObj != null) {

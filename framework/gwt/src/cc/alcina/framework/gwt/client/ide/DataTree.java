@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.gwt.client.ide.widget;
+package cc.alcina.framework.gwt.client.ide;
 
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -21,6 +21,8 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.TreeItem;
 
+import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
+import cc.alcina.framework.gwt.client.ide.widget.FilterableTree;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventEvent;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventListener;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventSource;

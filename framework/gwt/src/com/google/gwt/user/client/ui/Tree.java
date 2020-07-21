@@ -877,7 +877,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 				item.setState(!item.getState(), true);
 				return true;
 			} else if (DOM.isOrHasChild(item.getElement(), hElem)) {
-				if (isToggleSelectionOnLabelClick()) {
+				if (isToggleSelectionOnLabelClick() && item.isSelected()) {
 					Scheduler.get().scheduleFinally(
 							() -> item.setState(!item.getState(), true));
 				}
