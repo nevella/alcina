@@ -20,7 +20,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
@@ -47,7 +46,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TestTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -85,6 +83,16 @@ import cc.alcina.framework.servlet.ServletLayerObjects;
 
 public abstract class DevHelper {
 	private static final String JBOSS_CONFIG_PATH = "jboss-config-path";
+
+	private static IUser defaultUser;
+
+	public static IUser getDefaultUser() {
+		return DevHelper.defaultUser;
+	}
+
+	public static void setDefaultUser(IUser defaultUser) {
+		DevHelper.defaultUser = defaultUser;
+	}
 
 	private MessagingWriter messagingWriter;
 
@@ -479,25 +487,7 @@ public abstract class DevHelper {
 
 	protected void initPermissionsManager() {
 		IUser user = PermissionsManager.get().getUser();
-		PermissionsManager.register(new ThreadedPermissionsManager() {
-			@Override
-			public PermissionsManager getT() {
-				return null;// same behaviour as threaded (so compat with server
-							// code), but just one instance
-			}
-
-			@Override
-			public synchronized Map<String, ? extends IGroup>
-					getUserGroups(IUser user) {
-				return super.getUserGroups(user);
-			}
-
-			@Override
-			protected synchronized void nullGroupMap() {
-				super.nullGroupMap();
-			}
-		});
-		PermissionsManager.get().setUser(user);
+		PermissionsManager.register(new ThreadedPermissionsManagerDevConsole());
 	}
 
 	protected abstract void registerNames(AlcinaWebappConfig config);
@@ -638,6 +628,23 @@ public abstract class DevHelper {
 
 	public interface StringPrompter {
 		String getValue(String prompt);
+	}
+
+	public class ThreadedPermissionsManagerDevConsole
+			extends ThreadedPermissionsManager {
+		private ThreadedPermissionsManagerDevConsole() {
+		}
+
+		@Override
+		public PermissionsManager getT() {
+			// always start with whatever our default user is
+			PermissionsManager instance = super.getT();
+			if (DevHelper.defaultUser != null && instance.getUser() == null) {
+				instance.setUser(DevHelper.defaultUser);
+				instance.setLoginState(LoginState.LOGGED_IN);
+			}
+			return instance;
+		}
 	}
 
 	@RegistryLocation(registryPoint = RemoteActionLoggerProvider.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.MANUAL_PRIORITY)

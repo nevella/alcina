@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
@@ -20,6 +21,9 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 
 public class EntityLayerLogging {
+	public static final transient String CONTEXT_MUTE_PERSISTENT_LOGGING = EntityLayerLogging.class
+			.getName() + ".CONTEXT_MUTE_PERSISTENT_LOGGING";
+
 	public static void log(LogMessageType componentKey, String message) {
 		EntityLayerObjects.get().getPersistentLogger()
 				.info(componentKey + " - " + message);
@@ -31,6 +35,15 @@ public class EntityLayerLogging {
 				.getPersistentLogger();
 		if (persistentLogger == null) {
 			throwable.printStackTrace();
+			return;
+		}
+		if (LooseContext.is(CONTEXT_MUTE_PERSISTENT_LOGGING)) {
+			Ax.out("*** persistent log muted => %s :: %s", componentKey,
+					message);
+			if (throwable == null) {
+			} else {
+				Ax.simpleExceptionOut(throwable);
+			}
 			return;
 		}
 		persistentLogger.warn(

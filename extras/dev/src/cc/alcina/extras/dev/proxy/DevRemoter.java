@@ -25,6 +25,8 @@ import org.apache.http.params.HttpParams;
 import cc.alcina.extras.dev.proxy.DevProxySupport.DevProxyInterceptor;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
@@ -42,6 +44,7 @@ import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
  * org.apache.http.client is in gwt-dev - so we don't require it in eclipse
  */
 @SuppressWarnings("deprecation")
+@RegistryLocation(registryPoint = DevRemoter.class, implementationType = ImplementationType.INSTANCE)
 public class DevRemoter {
 	private Object interceptionResult;
 
@@ -82,8 +85,9 @@ public class DevRemoter {
 			String address = ResourceUtilities
 					.getBundledString(DevRemoter.class, "address");
 			PostAndClient png = getHttpPost(new URI(address));
-			params.username = ResourceUtilities
-					.getBundledString(DevRemoter.class, "username");
+			// params.username = ResourceUtilities
+			// .getBundledString(DevRemoter.class, "username");
+			params.username = PermissionsManager.get().getUserName();
 			params.asRoot = PermissionsManager.get().isRoot();
 			ClientInstance clientInstance = PermissionsManager.get()
 					.getClientInstance();
@@ -133,6 +137,7 @@ public class DevRemoter {
 							.collect(Collectors.toList());
 				}
 			}
+			customiseResult(obj);
 			return obj;
 		} finally {
 			LooseContext.pop();
@@ -149,6 +154,9 @@ public class DevRemoter {
 			}
 		}
 		return false;
+	}
+
+	protected void customiseResult(Object obj) {
 	}
 
 	class PostAndClient {
