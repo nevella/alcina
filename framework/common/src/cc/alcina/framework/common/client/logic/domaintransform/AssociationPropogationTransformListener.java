@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
@@ -31,6 +32,10 @@ public class AssociationPropogationTransformListener
 		}
 		TransformManager tm = TransformManager.get();
 		if (!tm.handlesAssociationsFor(event.getObjectClass())) {
+			return;
+		}
+		// FIXME - mvcc.adjunct (since the object will be reachable)
+		if (Objects.equals("id", event.getPropertyName())) {
 			return;
 		}
 		ApplyToken token = tm.createApplyToken(event);

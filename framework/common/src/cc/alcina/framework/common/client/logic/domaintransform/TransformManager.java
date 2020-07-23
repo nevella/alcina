@@ -1816,6 +1816,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 					// doesn't generate a "create" event...no, in fact current
 					// way
 					// is better. so ignore all this. it works, it's fine
+					// (come adjunct TM this all ggoes away)
+					Entity newInstance = (Entity) Reflections.classLookup()
+							.newInstance(o.getClass());
+					newInstance.setLocalId(entity.getLocalId());
+					TransformManager.get().registerDomainObject(newInstance);
 					fireCreateObjectEvent(entity.entityClass(), 0,
 							entity.getLocalId());
 				}
