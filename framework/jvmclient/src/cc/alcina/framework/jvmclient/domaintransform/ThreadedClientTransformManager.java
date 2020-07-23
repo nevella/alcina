@@ -4,11 +4,8 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 
 /**
  * <h2>Thread-safety notes</h2>
@@ -37,32 +34,6 @@ public class ThreadedClientTransformManager
 		}
 	};
 
-	EntityLocatorMap userSessionEntityMap = new EntityLocatorMap();
-
-	@Override
-	public <H extends Entity> long getLocalIdForClientInstance(H entity) {
-		return userSessionEntityMap.getLocalIdForClientInstance(entity);
-	}
-
-	@Override
-	public synchronized <T extends Entity> T getObject(Class<? extends T> c,
-			long id, long localId) {
-		if (this.getDomainObjects() != null) {
-			T object = getDomainObjects().getObject(c, id, localId);
-			if (object == null && localId != 0 && id == 0) {
-				EntityLocator entityLocator = userSessionEntityMap
-						.getForLocalId(localId);
-				if (entityLocator != null) {
-					return getDomainObjects().getObject(c,
-							entityLocator.getId(), 0L);
-				}
-			} else {
-				return object;
-			}
-		}
-		return null;
-	}
-
 	@Override
 	public boolean isIgnorePropertyChanges() {
 		return ignorePropertyChanges.get();
@@ -71,19 +42,6 @@ public class ThreadedClientTransformManager
 	@Override
 	public boolean isReplayingRemoteEvent() {
 		return replayingRemoteEvent.get();
-	}
-
-	@Override
-	protected void initCollections() {
-		provisionalObjects = Collections
-				.synchronizedMap(new IdentityHashMap<>());
-	}
-
-	@Override
-	public synchronized void registerEntityMappingPriorToLocalIdDeletion(
-			Class clazz, long id, long localId) {
-		userSessionEntityMap
-				.putToLookups(new EntityLocator(clazz, id, localId));
 	}
 
 	@Override
@@ -103,4 +61,10 @@ public class ThreadedClientTransformManager
 	/*
 	 * all methods that return collections, check iteration
 	 */
+
+	@Override
+	protected void initCollections() {
+		provisionalObjects = Collections
+				.synchronizedMap(new IdentityHashMap<>());
+	}
 }

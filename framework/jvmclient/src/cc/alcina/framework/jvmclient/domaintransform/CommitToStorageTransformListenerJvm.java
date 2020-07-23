@@ -2,7 +2,6 @@ package cc.alcina.framework.jvmclient.domaintransform;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -29,8 +28,6 @@ public class CommitToStorageTransformListenerJvm
 	protected void init() {
 		priorRequestsWithoutResponse = Collections
 				.synchronizedList(new ArrayList<DomainTransformRequest>());
-		localToServerIds = Collections
-				.synchronizedMap(new HashMap<Long, Long>());
 		eventIdsToIgnore = Collections.synchronizedSet(new HashSet<Long>());
 	}
 

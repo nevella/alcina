@@ -285,8 +285,9 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 		}
 
 		/*
-		 * Basically server-side, connected version from a DomainStore //FIXME -
-		 * mvcc.4 - remove
+		 * Basically server-side, connected version from a DomainStore
+		 * 
+		 * //FIXME - mvcc.4 - remove
 		 */
 		public T domainVersion() {
 			return (T) Domain.find(Entity.this);
