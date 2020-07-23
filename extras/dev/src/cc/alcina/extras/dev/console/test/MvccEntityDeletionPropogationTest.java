@@ -14,7 +14,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentE
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 
 /**
  * 
@@ -54,8 +53,6 @@ public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG ext
 					Preconditions.checkState(
 							createdGroup.containsUser(createdUser),
 							"pre-delete: referenced group does not contain user");
-					List removedVersions = Transactions
-							.getRemovedVersions(createdUser);
 					createdUser.delete();
 					Preconditions.checkState(
 							Domain.stream(userClass).count() == initialSize - 1,
