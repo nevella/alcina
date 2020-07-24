@@ -2,12 +2,8 @@ package cc.alcina.framework.entity.projection;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -15,10 +11,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookup;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CountingMap;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
-import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
@@ -43,21 +37,6 @@ public class GraphProjections {
 		allow(classes).dataFilter(dataFilter).project(target);
 		return dataFilter.getObjectLookup();
 	}
-
-	public static Multimap<Class, List> reachableForClasses(Object target,
-			Predicate<Class> classFilter) {
-		IdentityDataFilter dataFilter = new IdentityDataFilter();
-		allow(classFilter).dataFilter(dataFilter).project(target);
-		return dataFilter.byClass;
-	}
-
-	private static GraphProjections allow(Predicate<Class> classFilter) {
-		GraphProjections instance = new GraphProjections();
-		instance.classFilter = classFilter;
-		return instance;
-	}
-
-	private Predicate<Class> classFilter;
 
 	Set<Class> permittedClasses = new LinkedHashSet<Class>();
 
@@ -168,40 +147,9 @@ public class GraphProjections {
 		}
 	}
 
-	private static class IdentityDataFilter
-			extends CollectionProjectionFilterWithCache {
-		Multimap<Class, List> byClass = new Multimap<>();
-
-		@Override
-		public <T> T filterData(T original, T projected,
-				GraphProjectionContext context, GraphProjection graphProjection)
-				throws Exception {
-			if (original instanceof Collection || original instanceof Map) {
-				return super.filterData(original, projected, context,
-						graphProjection);
-			} else {
-				return original;
-			}
-		}
-
-		@Override
-		public <T> boolean keepOriginal(T original,
-				GraphProjectionContext context) {
-			if (original instanceof Collection || original instanceof Map) {
-				return false;
-			} else {
-				byClass.add(original.getClass(), original);
-				return true;
-			}
-		}
-	}
-
 	class PermissibleFieldFilterH extends PermissibleFieldFilter {
 		@Override
 		public Boolean permitClass(Class clazz) {
-			if (classFilter != null) {
-				return classFilter.test(clazz);
-			}
 			if (!Entity.class.isAssignableFrom(clazz)) {
 				return true;
 			}

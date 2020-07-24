@@ -362,6 +362,8 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	private Map<String, Node> xpathMap;
 
+	private Map<Node, String> reverseXpathMap;
+
 	boolean debug = false;
 
 	private NodeFromXpathProvider nodeProvider = null;
@@ -410,7 +412,7 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public String dumpMap(boolean regenerate) {
-		return dumpMap0(regenerate, xpathMap);
+		return dumpMap0(regenerate);
 	}
 
 	public Node dumpNearestMatch(String xpathStr, Node container) {
@@ -430,14 +432,13 @@ public class DomUtils implements NodeFromXpathProvider {
 				System.out.println(
 						"Prefix matched:" + lastMatchedPath + "\n----------\n");
 				Map<String, Node> xpathMap = mapSupplier.get();
-				generateMap((Element) lastMatched, "", xpathMap);
-				dumpMap0(false, xpathMap);
+				generateMap((Element) lastMatched, "");
+				dumpMap0(false);
 				if (count > 3) {
 					System.out.println("Parent map:");
 					xpathMap = mapSupplier.get();
-					generateMap((Element) lastMatched.getParentNode(), "",
-							xpathMap);
-					dumpMap0(false, xpathMap);
+					generateMap((Element) lastMatched.getParentNode(), "");
+					dumpMap0(false);
 				}
 				return lastMatched;
 			} else {
@@ -465,19 +466,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 		String ucXpath = xpathStr.toUpperCase();
 		if (useXpathMap) {
-			if (lastContainer != container) {
-				lastContainer = container;
-				xpathMap = mapSupplier.get();
-				ClientNotifications notifications = Registry
-						.implOrNull(ClientNotifications.class);
-				if (notifications != null) {
-					notifications.metricLogStart(DOM_XPATH_MAP);
-				}
-				generateMap(container, GWT.isClient() ? "" : "/", xpathMap);
-				if (notifications != null) {
-					notifications.metricLogEnd(DOM_XPATH_MAP);
-				}
-			}
+			ensureMaps(container);
 			Node node = null;
 			if (backupNodeResolver != null && backupAbsTextOffset != null) {
 				node = backupNodeResolver.resolve(xpathStr,
@@ -568,9 +557,8 @@ public class DomUtils implements NodeFromXpathProvider {
 		return current;
 	}
 
-	public void generateMap(Node container, String prefix,
-			Map<String, Node> xpathMap) {
-		generateMap0(container, prefix, xpathMap);
+	public void generateMap(Node container, String prefix) {
+		generateMap0(container, prefix);
 	}
 
 	public BackupNodeResolver getBackupNodeResolver() {
@@ -587,6 +575,13 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public Node getPrecededByNonHtmlDomNodes(Text text) {
 		return precededByNonHtmlDomNodes.get(text);
+	}
+
+	public Map<Node, String> getReverseXpathMap(Element container) {
+		if (reverseXpathMap == null) {
+			ensureMaps(container);
+		}
+		return this.reverseXpathMap;
 	}
 
 	public Map<String, Node> getXpathMap() {
@@ -673,12 +668,12 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 	}
 
-	private String dumpMap0(boolean regenerate, Map<String, Node> xpathMap) {
+	private String dumpMap0(boolean regenerate) {
 		StringBuilder builder = new StringBuilder();
 		if (regenerate) {
 			exactTextMap = mapSupplier.get();
 			xpathMap = mapSupplier.get();
-			generateMap(lastContainer, "", xpathMap);
+			generateMap(lastContainer, "");
 		} else {
 			exactTextMap = null;
 		}
@@ -695,8 +690,24 @@ public class DomUtils implements NodeFromXpathProvider {
 		return builder.toString();
 	}
 
-	private void generateMap0(Node container, String prefix,
-			Map<String, Node> xpathMap) {
+	private void ensureMaps(Node container) {
+		if (lastContainer != container) {
+			lastContainer = container;
+			xpathMap = mapSupplier.get();
+			reverseXpathMap = mapSupplier.get();
+			ClientNotifications notifications = Registry
+					.implOrNull(ClientNotifications.class);
+			if (notifications != null) {
+				notifications.metricLogStart(DOM_XPATH_MAP);
+			}
+			generateMap(container, GWT.isClient() ? "" : "/");
+			if (notifications != null) {
+				notifications.metricLogEnd(DOM_XPATH_MAP);
+			}
+		}
+	}
+
+	private void generateMap0(Node container, String prefix) {
 		if (container == null) {
 			return;
 		}
@@ -705,6 +716,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		NodeList nodes = container.getChildNodes();
 		if (prefix.length() <= 1) {
 			xpathMap.put(prefix, container);
+			reverseXpathMap.put(container, prefix);
 		}
 		short lastNodeType = Node.DOCUMENT_NODE;
 		// ignore sequential texts (with wrapping), as per non-map version
@@ -759,11 +771,12 @@ public class DomUtils implements NodeFromXpathProvider {
 				}
 				String xp = prefix + post;
 				xpathMap.put(xp, node);
+				reverseXpathMap.put(node, xp);
 				if (nodeType == Node.ELEMENT_NODE) {
-					generateMap0((Element) node, xp + "/", xpathMap);
+					generateMap0((Element) node, xp + "/");
 					// this won't cause ambiguity
 					if (post.equals("TBODY")) {
-						generateMap0((Element) node, prefix, xpathMap);
+						generateMap0((Element) node, prefix);
 					}
 				} else {
 					if (exactTextMap != null) {
