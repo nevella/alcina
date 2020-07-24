@@ -714,7 +714,12 @@ public class GraphProjection {
 		} else if (source instanceof MvccObject) {
 			projected = newInstance(((Entity) source).entityClass(), context);
 		} else {
-			projected = newInstance(sourceClass, context);
+			if (dataFilter != null
+					&& dataFilter.keepOriginal(source, context)) {
+				projected = source;
+			} else {
+				projected = newInstance(sourceClass, context);
+			}
 		}
 		boolean reachableBySinglePath = reachableBySinglePath(sourceClass);
 		if ((context == null || !reachableBySinglePath) && checkReachable) {
@@ -763,6 +768,9 @@ public class GraphProjection {
 		// primitive/data before non - to ensure recursively reached collections
 		// are ok
 		for (Field field : primitiveOrDataFieldsForClass) {
+			if (projected == source) {
+				continue;
+			}
 			if (checkFields.contains(field)) {
 				if (!permitField(field, source)) {
 					continue;
@@ -1149,6 +1157,11 @@ public class GraphProjection {
 				throws Exception;
 
 		default boolean ignoreObjectHasReadPermissionCheck() {
+			return false;
+		}
+
+		default <T> boolean keepOriginal(T source,
+				GraphProjectionContext context) {
 			return false;
 		}
 

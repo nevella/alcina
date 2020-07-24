@@ -39,7 +39,11 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	@Override
 	public String log(DomNode xmlNode, boolean pretty) {
 		try {
-			XmlUtils.logToFilePretty(xmlNode.domNode());
+			if (pretty) {
+				XmlUtils.logToFilePretty(xmlNode.domNode());
+			} else {
+				XmlUtils.logToFile(xmlNode.domNode());
+			}
 			return "ok";
 		} catch (Exception e) {
 			try {
