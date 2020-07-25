@@ -273,8 +273,9 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 		}
 
 		/*
-		 * Basically server-side, disconnected (lock-safe) version from a
-		 * DomainStore
+		 * A disconnected projection of an entity. Useful for things like
+		 * speculative writes and serialization
+		 * 
 		 */
 		public T detachedVersion() {
 			return (T) Domain.detachedVersion(Entity.this);
@@ -302,7 +303,7 @@ public abstract class Entity<T extends Entity> extends BaseBindable
 		}
 
 		public boolean isNonDomain() {
-			return getId() == 0 && getLocalId() == 0;
+			return !Domain.isDomainVersion(Entity.this);
 		}
 
 		public T register() {
