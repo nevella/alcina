@@ -579,6 +579,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		public TransactionalEntrySet() {
 			visibleLayers = visibleLayers();
 			transaction = Transaction.current();
+			if(transaction.isEnded()){
+				throw new MvccException(
+						"Creating tx entry set outside of a transaction");
+			}
 		}
 
 		@Override
