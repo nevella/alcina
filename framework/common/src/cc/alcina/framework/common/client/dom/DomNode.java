@@ -253,7 +253,7 @@ public class DomNode {
 
 	public boolean isAncestorOf(DomNode cursor) {
 		while (cursor != null) {
-			if (cursor == this) {
+			if (cursor.domNode() == this.domNode()) {
 				return true;
 			}
 			cursor = cursor.parent();

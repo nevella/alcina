@@ -80,6 +80,7 @@ import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolver;
 import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolverHtml;
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNode.DomNodeTree;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -532,7 +533,7 @@ public class XmlUtils {
 
 	public static Node getSucceedingBlock(Node node) {
 		SurroundingBlockTuple tuple = getSurroundingBlockTuple(node);
-		tuple.range.detach();
+		tuple.detach();
 		return tuple.nextBlock;
 	}
 
@@ -589,11 +590,10 @@ public class XmlUtils {
 				}
 			}
 		}
-		Range r = ((DocumentRange) node.getOwnerDocument()).createRange();
-		r.setStartBefore(prev.domNode());
-		r.setEndAfter(next.domNode());
+		
+		
 		tuple.firstNode = prev.domNode();
-		tuple.range = r;
+		tuple.lastNode=next.domNode();
 		return tuple;
 	}
 
@@ -1503,7 +1503,9 @@ public class XmlUtils {
 	}
 
 	public static class SurroundingBlockTuple {
-		public Range range;
+		public Node lastNode;
+
+		private Range range;
 
 		public Node firstNode;
 
@@ -1522,7 +1524,9 @@ public class XmlUtils {
 		}
 
 		public void detach() {
-			range.detach();
+			if (range != null) {
+				range.detach();
+			}
 		}
 
 		@Override
@@ -1569,6 +1573,49 @@ public class XmlUtils {
 			walker = ((DocumentTraversal) doc).createTreeWalker(doc,
 					NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, null, true);
 			walker.setCurrentNode(firstNode);
+		}
+
+		public Range getRange() {
+			if(range==null){
+				range = ((DocumentRange) firstNode.getOwnerDocument()).createRange();
+				range.setStartBefore(firstNode);
+				range.setEndAfter(lastNode);	
+			}
+			return range;
+		}
+
+		public void setRange(Range range) {
+			this.range = range;
+		}
+
+		public Node getCommonAncestorContainer() {
+			if(lastNode==firstNode){
+				return firstNode;
+			}
+			List<DomNode> list = DomNode.from(firstNode).ancestors().orSelf().list();
+			DomNode last = DomNode.from(lastNode);
+			for (DomNode cursor : list) {
+				if(cursor.isAncestorOf(last)){
+					return cursor.domNode();
+				}
+			}
+			return null;
+		}
+
+		public String getContent() {
+			StringBuilder builder = new StringBuilder();
+			DomNodeTree tree = DomNode.from(firstNode).tree();
+			while(true){
+				DomNode currentNode = tree.currentNode();
+				if(currentNode.isText()){
+					builder.append(currentNode.textContent());
+				}
+				if(currentNode.domNode()==lastNode){
+					break;
+				}
+				tree.nextLogicalNode();
+			}
+			return Ax.ntrim(builder.toString());
 		}
 	}
 
