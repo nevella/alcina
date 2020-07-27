@@ -249,7 +249,7 @@ public class Domain {
 
 		@Override
 		public <V extends Entity> boolean isDomainVersion(V v) {
-			throw new UnsupportedOperationException();
+			return v.getId()!=0&&v.getLocalId()!=0;
 		}
 
 		@Override
