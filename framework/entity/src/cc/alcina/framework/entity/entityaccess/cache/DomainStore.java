@@ -621,6 +621,9 @@ public class DomainStore implements IDomainStore {
 	}
 
 	<V extends Entity> boolean isRawValue(V v) {
+		if (!Transaction.isInTransaction()) {
+			return v.getId() != 0 || v.getLocalId() != 0;
+		}
 		V existing = (V) cache.get(v.entityClass(), v.getId());
 		return existing == v;
 	}
