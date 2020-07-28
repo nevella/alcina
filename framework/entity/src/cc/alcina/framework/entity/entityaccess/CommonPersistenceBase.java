@@ -1546,7 +1546,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 							clientInstanceId);
 			if (instance != null) {
 				instance.setLastAccessed(new Date(time));
-				logger.info("Persisted last access time: {} {}",
+				logger.trace("Persisted last access time: {} {}",
 						clientInstanceId, time);
 			}
 		}
