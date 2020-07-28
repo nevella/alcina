@@ -370,6 +370,9 @@ public class DomainStoreTransformSequencer {
 			return;
 		}
 		highestVisibleTransactions = getHighestVisibleTransformRequest(conn);
+		if (highestVisibleTransactions == null) {
+			throw new RuntimeException("Null h.v.t");
+		}
 	}
 
 	@RegistryLocation(registryPoint = TransformPriorityProvider.class, implementationType = ImplementationType.SINGLETON)

@@ -763,6 +763,9 @@ public class GraphProjection {
 		// primitive/data before non - to ensure recursively reached collections
 		// are ok
 		for (Field field : primitiveOrDataFieldsForClass) {
+			if (projected == source) {
+				continue;
+			}
 			if (checkFields.contains(field)) {
 				if (!permitField(field, source)) {
 					continue;

@@ -74,6 +74,8 @@ public class DomainLinker<E extends Entity> {
 
 	private Predicate<Field> fieldFilter;
 
+	private List<Field> fields;
+
 	public DomainLinker(EntityManager em, Class<E> clazz, String alias) {
 		this(em, clazz, alias, null);
 	}
@@ -101,13 +103,14 @@ public class DomainLinker<E extends Entity> {
 	}
 
 	public String createObjectRefSelect() {
-		List<Field> fields = DomainStore.writableStore().getFields(clazz);
-		fields.removeIf(f -> {
-			PropertyDescriptor pd = SEUtilities
-					.getPropertyDescriptorByName(clazz, f.getName());
-			return pd == null || pd.getReadMethod() == null || pd
-					.getReadMethod().getAnnotation(Transient.class) != null;
-		});
+		fields = DomainStore.writableStore().getFields(clazz).stream()
+				.filter(f -> {
+					PropertyDescriptor pd = SEUtilities
+							.getPropertyDescriptorByName(clazz, f.getName());
+					return !(pd == null || pd.getReadMethod() == null
+							|| pd.getReadMethod()
+									.getAnnotation(Transient.class) != null);
+				}).collect(Collectors.toList());
 		this.mappings = fields.stream()
 				.filter(f -> Entity.class.isAssignableFrom(f.getType())
 						|| Set.class.isAssignableFrom(f.getType()))
@@ -134,8 +137,7 @@ public class DomainLinker<E extends Entity> {
 		 * that subLinkers can find them
 		 */
 		List<E> result = new ArrayList<>();
-		List<String> ignorePropertyNames = DomainStore.writableStore()
-				.getFields(clazz).stream()
+		List<String> ignorePropertyNames = fields.stream()
 				.filter(f -> Set.class.isAssignableFrom(f.getType()))
 				.map(Field::getName).collect(Collectors.toList());
 		for (Object[] array : objs) {
@@ -174,10 +176,11 @@ public class DomainLinker<E extends Entity> {
 				"select distinct %s %s from %s %s where %s.%s in %s", alias,
 				createObjectRefSelect(), clazz.getSimpleName(), alias, alias,
 				linkFieldName, EntityPersistenceHelper.toInClause(ids));
-		logger.info("Resolve refs query :: {} :: {} ids", clazz.getSimpleName(),
-				ids.size());
+		logger.trace("Resolve refs query :: {} :: {} ids",
+				clazz.getSimpleName(), ids.size());
+		String metricKey = metricKey();
 		List<Object[]> resultList = MethodContext.instance()
-				.withMetricKey(metricKey())
+				// .withMetricKey(metricKey)
 				.call(() -> em.createQuery(select).getResultList());
 		queried().addCollection(clazz, ids);
 		linkAndDetach(resultList);

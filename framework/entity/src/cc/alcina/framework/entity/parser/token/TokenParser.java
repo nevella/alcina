@@ -118,8 +118,8 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 					}
 				}
 				if (lastSurroundingTuple != null) {
-					if (lastSurroundingTuple.range != null) {
-						lastSurroundingTuple.range.detach();
+					if (lastSurroundingTuple != null) {
+						lastSurroundingTuple.detach();
 					}
 				}
 				lastSurroundingTuple = surroundingTuple;
@@ -140,8 +140,8 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 			}
 		}
 		if (lastSurroundingTuple != null) {
-			if (lastSurroundingTuple.range != null) {
-				lastSurroundingTuple.range.detach();
+			if (lastSurroundingTuple != null) {
+				lastSurroundingTuple.detach();
 			}
 		}
 		peer.flushRunContextAndCatch(true);

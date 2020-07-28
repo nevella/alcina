@@ -41,6 +41,8 @@ public class InnerTexta {
 	public static final int SHOW_NEWLINES_AS_DOUBLE = 8;
 
 	public static final int PRESERVE_TRAILING_NEWLINES = 16;
+	
+	public static final int INCLUDE_INVISIBLE_ELEMENTS =32;
 
 	public static boolean isListElement(Element e) {
 		return HTML_LISTS.contains("," + e.getTagName() + ",");
@@ -74,6 +76,7 @@ public class InnerTexta {
 		Map<Element, Integer> listIndicies = new HashMap<Element, Integer>();
 		boolean showNls = (flags & SHOW_NEWLINES) != 0;
 		boolean showLis = (flags & SHOW_LIST_ITEMS) != 0;
+		boolean showInvisible = (flags & INCLUDE_INVISIBLE_ELEMENTS) != 0;
 		boolean finished = false;
 		while (!finished && (n2 = walker.nextNode()) != null) {
 			if (n2.getNodeType() == Node.ELEMENT_NODE) {
@@ -107,7 +110,7 @@ public class InnerTexta {
 						listIndicies.put(listElt, listIndex + 1);
 					}
 				}
-				if (XmlUtils.isInvisibleContentElement(elt)) {
+				if (XmlUtils.isInvisibleContentElement(elt)&&!showInvisible) {
 					boolean first = true;
 					while (true) {
 						n2 = walker.nextNode();

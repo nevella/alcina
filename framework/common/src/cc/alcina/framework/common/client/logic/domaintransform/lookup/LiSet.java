@@ -15,6 +15,13 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
  * 
  * @author nick@alcina.cc
  * 
+ *         Uses ordering (by id or localid) to speed 'find' ops. This is
+ *         *useful* even though 'index' is mostly used to improve performance in
+ *         add() because we have to check we're not adding an element that
+ *         already exists in the set.
+ * 
+ *         This class handles 'promoted' objects (local->global)
+ * 
  * @param <H>
  */
 public class LiSet<H extends Entity> extends AbstractSet<H>
@@ -172,16 +179,20 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 	}
 
 	private int compare(Entity o1, Entity o2) {
+		if (o1.getLocalId() != 0 || o2.getLocalId() != 0) {
+			if (o2.getLocalId() == 0) {
+				return -1;
+			}
+			if (o1.getLocalId() == 0) {
+				return 1;
+			}
+			// localId is guaranteed < Integer.MAX_VALUE
+			return (int) (o1.getLocalId() - o2.getLocalId());
+		}
 		if (o1.getId() < o2.getId()) {
 			return -1;
 		}
 		if (o1.getId() > o2.getId()) {
-			return 1;
-		}
-		if (o1.getLocalId() < o2.getLocalId()) {
-			return -1;
-		}
-		if (o1.getLocalId() > o2.getLocalId()) {
 			return 1;
 		}
 		return 0;
@@ -199,7 +210,7 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 			if (res == 0) {
 				return arrayPos;
 			}
-			if (res == -1) {
+			if (res < 0) {
 				rangeMax = arrayPos - 1;
 			} else {
 				rangeMin = arrayPos + 1;

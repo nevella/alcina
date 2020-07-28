@@ -163,6 +163,8 @@ public class Publisher {
 		ContentRenderer crh = (ContentRenderer) Registry.get()
 				.instantiateSingle(ContentRenderer.class,
 						publicationContent.getClass());
+		ctx.getVisitorOrNoop().beforeRenderContent();
+		publicationContent = ctx.publicationContent;
 		crh.renderContent(contentDefinition, publicationContent, deliveryModel,
 				publicationId, publicationUserId);
 		ctx.renderedContent = crh.results;

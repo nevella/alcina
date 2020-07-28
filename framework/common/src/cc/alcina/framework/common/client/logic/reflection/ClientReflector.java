@@ -180,7 +180,7 @@ public abstract class ClientReflector implements ClassLookup {
 
 	@Override
 	public boolean handlesClass(Class clazz) {
-		return forNameMap.containsKey(clazz.getName());
+		return beanInfoForClass(clazz) != null;
 	}
 
 	public boolean isInstantiableClass(Class clazz) {

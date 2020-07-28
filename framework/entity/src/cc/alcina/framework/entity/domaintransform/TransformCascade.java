@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -59,6 +60,10 @@ public class TransformCascade {
 								event.getObjectClass(), event.getObjectId(),
 								event.getObjectLocalId());
 						token.getTargetStore().putExternalLocal(instance);
+					}
+					if (WrapperPersistable.class
+							.isAssignableFrom(event.getObjectClass())) {
+						continue;
 					}
 					TransformManager.get().apply(event);
 				}

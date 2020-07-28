@@ -445,162 +445,169 @@ function gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePro
   }
 }
 
-class GwtJsPlugin{
-  constructor(){
-    
-  };
-  init(win){
-    this.win=win;
-    return true;
-  };
-  connect(url, sessionId, codeServer, moduleName,
-      hostedHtmlVersion){
-    this.url=url;
-    this.sessionId=sessionId;
-    this.codeServer=codeServer;
-    this.moduleName = moduleName;
-    this.hostedHtmlVersion=hostedHtmlVersion;
-    var self=this;
-    if(typeof gwt_hm_Message != "undefined"){
-      self.connectAfterLoad.apply(self);
-      return true;
+class GwtJsPlugin {
+    constructor() {
+
+    };
+    init(win) {
+        this.win = win;
+        return true;
+    };
+    connect(url, sessionId, codeServer, moduleName,
+        hostedHtmlVersion) {
+        this.url = url;
+        this.sessionId = sessionId;
+        this.codeServer = codeServer;
+        this.moduleName = moduleName;
+        this.hostedHtmlVersion = hostedHtmlVersion;
+        let codeServerWs = null;
+        //
+        // always use codeServerWs
+        //
+        //
+        //        if (window.location.search.indexOf("gwt.ws.server=") != -1) {
+        //            codeServerWs = window.location.search.replace(/.*gwt.ws.server=([a-zA-Z0-9_:]+).*/, "$1");
+        //        }
+        let regexp = /(.+):([0-9]+)/;
+        codeServerWs = codeServer.replace(regexp, "$1") + ":" + (parseInt(codeServer.replace(regexp, "$2")) + 1);
+        this.codeServerWs = codeServerWs;
+        var self = this;
+        if (typeof gwt_hm_Message != "undefined") {
+            self.connectAfterLoad.apply(self);
+            return true;
+        }
+        var scriptNames = ["common/Message.js", "common/BrowserChannel.js", "impl/JavaObject.js", "impl/ScriptableInstance.js", "impl/LocalObjectTable.js", "common/ieee754.js", "common/Platform.js", "common/HashMap.js", "common/FatalErrorMessage.js", "common/HostChannel.js", "common/InvokeMessage.js", "common/LoadModuleMessage.js", "common/InvokeSpecialMessage.js", "common/AllowedConnections.js", "common/DebugLevel.js", "common/Socket.js", "common/Debug.js", "common/QuitMessage.js", "common/SwitchTransportMessage.js", "common/ProtocolVersionMessage.js", "common/ChooseTransportMessage.js", "common/SessionHandler.js", "common/ByteOrder.js", "common/ReturnMessage.js", "common/ServerMethods.js", "common/LoadJsniMessage.js", "common/Value.js", "common/CheckVersionsMessage.js", "common/FreeValueMessage.js", "common/WebSocketTransport.js", "common/WebSocketTransportClient.js"];
+        scriptNames.forEach(function(scriptName) {
+            var script = $doc.createElement('script');
+            script.src = `/jscodeserver/${scriptName}`;
+            document.getElementsByTagName('head')[0].appendChild(script);
+        });
+        window.setTimeout(function() {
+            self.connectAfterLoad.apply(self);
+        }, 250);
+        return true;
+    };
+    connectAfterLoad() {
+        this.scriptableInstance = new gwt_hm_ScriptableInstance();
+        this.scriptableInstance.init(this.win);
+        this.scriptableInstance.connect(this.url, this.sessionId, this.codeServer, this.moduleName,
+            this.hostedHtmlVersion, this.codeServerWs);
     }
-    var scriptNames=["common/Message.js","common/BrowserChannel.js","impl/JavaObject.js","impl/ScriptableInstance.js","impl/LocalObjectTable.js","common/ieee754.js","common/Platform.js","common/HashMap.js","common/FatalErrorMessage.js","common/HostChannel.js","common/InvokeMessage.js","common/LoadModuleMessage.js","common/InvokeSpecialMessage.js","common/AllowedConnections.js","common/DebugLevel.js","common/Socket.js","common/Debug.js","common/QuitMessage.js","common/SwitchTransportMessage.js","common/ProtocolVersionMessage.js","common/ChooseTransportMessage.js","common/SessionHandler.js","common/ByteOrder.js","common/ReturnMessage.js","common/ServerMethods.js","common/LoadJsniMessage.js","common/Value.js","common/CheckVersionsMessage.js","common/FreeValueMessage.js"];
-    scriptNames.forEach(function(scriptName){
-      var script = $doc.createElement('script');
-      script.src = `/jscodeserver/${scriptName}`;
-      document.getElementsByTagName('head')[0].appendChild(script);
-    });
-    window.setTimeout(function(){
-      self.connectAfterLoad.apply(self);
-    },250);
-    return true;
-  };
-  connectAfterLoad(){
-    this.scriptableInstance = new gwt_hm_ScriptableInstance();
-    this.scriptableInstance.init(this.win);
-    this.scriptableInstance.connect(this.url, this.sessionId, this.codeServer, this.moduleName,
-        this.hostedHtmlVersion)
-  }
-  
+
 }
 var __gwt_jsCodeServerPlugin = new GwtJsPlugin();
 
 class gwt_hm_Message {
-  constructor(){
-    
-  }
-  getType() {
-    throw "abstract";
-  }
-  isAsynchronous() {
-    return false;
-  }
+    constructor() {
+
+    }
+    getType() {
+        throw "abstract";
+    }
+    isAsynchronous() {
+        return false;
+    }
 }
-
-
 
 /* from BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION */
-class gwt_hm_BrowserChannel{
-  
+class gwt_hm_BrowserChannel {
+
 }
-gwt_hm_BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION=2
+gwt_hm_BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION = 2
 
 /* from com.google.gwt.dev.shell.BrowserChannel.SpecialDispatchId */
-gwt_hm_BrowserChannel.SPECIAL_HAS_METHOD=0
-gwt_hm_BrowserChannel.SPECIAL_HAS_PROPERTY=1
-gwt_hm_BrowserChannel.SPECIAL_GET_PROPERTY=2
-gwt_hm_BrowserChannel.SPECIAL_SET_PROPERTY=3
+gwt_hm_BrowserChannel.SPECIAL_HAS_METHOD = 0
+gwt_hm_BrowserChannel.SPECIAL_HAS_PROPERTY = 1
+gwt_hm_BrowserChannel.SPECIAL_GET_PROPERTY = 2
+gwt_hm_BrowserChannel.SPECIAL_SET_PROPERTY = 3
 
 /* from com.google.gwt.dev.shell.BrowserChannel.MessageType */
-gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKE=0
-gwt_hm_BrowserChannel.MESSAGE_TYPE_RETURN=1
-gwt_hm_BrowserChannel.MESSAGE_TYPE_OLD_LOAD_MODULE=2
-gwt_hm_BrowserChannel.MESSAGE_TYPE_QUIT=3
-gwt_hm_BrowserChannel.MESSAGE_TYPE_LOADJSNI=4
-gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKESPECIAL=5
-gwt_hm_BrowserChannel.MESSAGE_TYPE_FREEVALUE=6
-gwt_hm_BrowserChannel.MESSAGE_TYPE_FATAL_ERROR=7
-gwt_hm_BrowserChannel.MESSAGE_TYPE_CHECK_VERSIONS=8
-gwt_hm_BrowserChannel.MESSAGE_TYPE_PROTOCOL_VERSION=9
-gwt_hm_BrowserChannel.MESSAGE_TYPE_CHOOSE_TRANSPORT=10
-gwt_hm_BrowserChannel.MESSAGE_TYPE_SWITCH_TRANSPORT=11
-gwt_hm_BrowserChannel.MESSAGE_TYPE_LOAD_MODULE=12
+gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKE = 0
+gwt_hm_BrowserChannel.MESSAGE_TYPE_RETURN = 1
+gwt_hm_BrowserChannel.MESSAGE_TYPE_OLD_LOAD_MODULE = 2
+gwt_hm_BrowserChannel.MESSAGE_TYPE_QUIT = 3
+gwt_hm_BrowserChannel.MESSAGE_TYPE_LOADJSNI = 4
+gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKESPECIAL = 5
+gwt_hm_BrowserChannel.MESSAGE_TYPE_FREEVALUE = 6
+gwt_hm_BrowserChannel.MESSAGE_TYPE_FATAL_ERROR = 7
+gwt_hm_BrowserChannel.MESSAGE_TYPE_CHECK_VERSIONS = 8
+gwt_hm_BrowserChannel.MESSAGE_TYPE_PROTOCOL_VERSION = 9
+gwt_hm_BrowserChannel.MESSAGE_TYPE_CHOOSE_TRANSPORT = 10
+gwt_hm_BrowserChannel.MESSAGE_TYPE_SWITCH_TRANSPORT = 11
+gwt_hm_BrowserChannel.MESSAGE_TYPE_LOAD_MODULE = 12
 
 /* from com.google.gwt.dev.shell.BrowserChannel.Value.ValueType */
-gwt_hm_BrowserChannel.VALUE_TYPE_NULL=0
-gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN=1
-gwt_hm_BrowserChannel.VALUE_TYPE_BYTE=2
-gwt_hm_BrowserChannel.VALUE_TYPE_CHAR=3
-gwt_hm_BrowserChannel.VALUE_TYPE_SHORT=4
-gwt_hm_BrowserChannel.VALUE_TYPE_INT=5
-gwt_hm_BrowserChannel.VALUE_TYPE_LONG=6
-gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT=7
-gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE=8
-gwt_hm_BrowserChannel.VALUE_TYPE_STRING=9
-gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT=10
-gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT=11
-gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED=12
-
+gwt_hm_BrowserChannel.VALUE_TYPE_NULL = 0
+gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN = 1
+gwt_hm_BrowserChannel.VALUE_TYPE_BYTE = 2
+gwt_hm_BrowserChannel.VALUE_TYPE_CHAR = 3
+gwt_hm_BrowserChannel.VALUE_TYPE_SHORT = 4
+gwt_hm_BrowserChannel.VALUE_TYPE_INT = 5
+gwt_hm_BrowserChannel.VALUE_TYPE_LONG = 6
+gwt_hm_BrowserChannel.VALUE_TYPE_FLOAT = 7
+gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE = 8
+gwt_hm_BrowserChannel.VALUE_TYPE_STRING = 9
+gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT = 10
+gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT = 11
+gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED = 12
 
 //just statics - we need a function with extras
-class gwt_hm_JavaObject {
-}
+class gwt_hm_JavaObject {}
 gwt_hm_JavaObject.isInstance = function(javaObject) {
     return (javaObject) && javaObject.hasOwnProperty("__gwt_java_object_id");
 }
 gwt_hm_JavaObject.getJavaObjectId = function(javaObject) {
-  return javaObject.__gwt_java_object_id;
+    return javaObject.__gwt_java_object_id;
 }
-gwt_hm_JavaObject.dispatch = function(javaObject,sourceArguments) {
-  var args = [];
-  for(var idx=2;idx<sourceArguments.length;idx++){
-    args.push(sourceArguments[idx]);
-  }
-  var dispId = sourceArguments[0];
-  var objectId = gwt_hm_JavaObject.getJavaObjectId(javaObject);
-  var thisObj = sourceArguments[1];
-  if (gwt_hm_JavaObject.isInstance(thisObj)) {
-      objectId = gwt_hm_JavaObject.getJavaObjectId(thisObj);
-  }
-  return javaObject.__gwt_plugin.javaObjectInvoke(objectId, dispId, args, args.length);
+gwt_hm_JavaObject.dispatch = function(javaObject, sourceArguments) {
+    var args = [];
+    for (var idx = 2; idx < sourceArguments.length; idx++) {
+        args.push(sourceArguments[idx]);
+    }
+    var dispId = sourceArguments[0];
+    var objectId = gwt_hm_JavaObject.getJavaObjectId(javaObject);
+    var thisObj = sourceArguments[1];
+    if (gwt_hm_JavaObject.isInstance(thisObj)) {
+        objectId = gwt_hm_JavaObject.getJavaObjectId(thisObj);
+    }
+    return javaObject.__gwt_plugin.javaObjectInvoke(objectId, dispId, args, args.length);
 }
-gwt_hm_JavaObject.propertyDispatcher={
+gwt_hm_JavaObject.propertyDispatcher = {
     set: function(javaObject, prop, value) {
-      var objectId = javaObject.__gwt_java_object_id;
-      var dispId = prop;
-      return javaObject.__gwt_plugin.javaObjectSet(objectId, dispId, value);
+        var objectId = javaObject.__gwt_java_object_id;
+        var dispId = prop;
+        return javaObject.__gwt_plugin.javaObjectSet(objectId, dispId, value);
     },
     get: function(javaObject, prop) {
-      var objectId = javaObject.__gwt_java_object_id;
-      var dispId = prop;
-      if(isNaN(parseInt(dispId))){
-        // string-valued -- e.g. hasOwnProperty
-        return javaObject[prop];
-       }
-      return javaObject.__gwt_plugin.javaObjectGet(objectId, dispId);
+        var objectId = javaObject.__gwt_java_object_id;
+        var dispId = prop;
+        if (isNaN(parseInt(dispId))) {
+            // string-valued -- e.g. hasOwnProperty
+            return javaObject[prop];
+        }
+        return javaObject.__gwt_plugin.javaObjectGet(objectId, dispId);
     },
     has: function(javaObject, prop) {
-      throw "nope";
-      return javaObject.hasOwnProperty(prop);
+        throw "nope";
+        return javaObject.hasOwnProperty(prop);
     }
 };
-gwt_hm_JavaObject.create = function(plugin,id) {
+gwt_hm_JavaObject.create = function(plugin, id) {
     var dispatcher = function() {
-      // we use a function rather than an object because the original NPAPI impl
-      // expects a "default" call target:
-      //
-      // e.g. __static(55) and not __static.callRemote(55)
-      //
-      // we then use power-of-js to add properties to the function (and then
-      // proxy...lordy)
-      //
-      // works though. could rewrite without function/proxy by rewriting
-      // generated js in hostedmode -
-      // but no need, that would be for pre-proxy js engines
-      return gwt_hm_JavaObject.dispatch(arguments.callee,arguments);
+        // we use a function rather than an object because the original NPAPI impl
+        // expects a "default" call target:
+        //
+        // e.g. __static(55) and not __static.callRemote(55)
+        //
+        // we then use power-of-js to add properties to the function (and then
+        // proxy...lordy)
+        //
+        // works though. could rewrite without function/proxy by rewriting
+        // generated js in hostedmode -
+        // but no need, that would be for pre-proxy js engines
+        return gwt_hm_JavaObject.dispatch(arguments.callee, arguments);
     }
-    dispatcher.__gwt_java_object_id = id; 
+    dispatcher.__gwt_java_object_id = id;
     dispatcher.__gwt_plugin = plugin;
     return new Proxy(dispatcher, gwt_hm_JavaObject.propertyDispatcher);
 }
@@ -617,23 +624,28 @@ class gwt_hm_ScriptableInstance {
         return true;
     }
     connect(url, sessionId, codeServer, moduleName,
-        hostedHtmlVersion) {
+        hostedHtmlVersion, codeServerWs) {
         this.url = url;
         this.sessionId = sessionId;
         this.codeServer = codeServer;
+        this.codeServerWs = codeServerWs;
         this.moduleName = moduleName;
         this.hostedHtmlVersion = hostedHtmlVersion;
         this.channel = new gwt_hm_HostChannel();
         var idx = codeServer.indexOf(":");
         var host = codeServer.substring(0, idx);
         var port = parseInt(codeServer.substring(idx + 1));
-        this.channel.connectToHost(host, port);
+        this.doConnect(host, port, codeServerWs, moduleName);
+
+    }
+    async doConnect(host, port, codeServerWs, moduleName) {
+        await this.channel.connectToHost(host, port, codeServerWs, moduleName);
         if (!this.channel.init(this, gwt_hm_BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION,
                 gwt_hm_BrowserChannel.BROWSERCHANNEL_PROTOCOL_VERSION, this.hostedHtmlVersion)) {
             return false;
         }
-        gwt_hm_LoadModuleMessage.send(this.channel, this.url, "", sessionId,
-            moduleName, window.navigator.userAgent, this);
+        gwt_hm_LoadModuleMessage.send(this.channel, this.url, "", this.sessionId,
+            this.moduleName, window.navigator.userAgent, this);
     }
     loadJsni(channel, js) {
         window.eval(js);
@@ -762,17 +774,17 @@ class gwt_hm_ScriptableInstance {
         return retArr;
     }
     javaObjectSet(objectId, dispId, value) {
-      var ret = gwt_hm_ServerMethods.setProperty(this.channel, this, objectId, dispId, this.getAsValue(value));
-      if(ret.isException){
-      //tostring
-        throw ret.retValue.toString();
-      }
+        var ret = gwt_hm_ServerMethods.setProperty(this.channel, this, objectId, dispId, this.getAsValue(value));
+        if (ret.isException) {
+            //tostring
+            throw ret.retValue.toString();
+        }
     }
     javaObjectGet(objectId, dispId) {
         var ret = gwt_hm_ServerMethods.getProperty(this.channel, this, objectId, dispId);
-        if(ret.isException){
-          //tostring
-          throw ret.retValue.toString();
+        if (ret.isException) {
+            //tostring
+            throw ret.retValue.toString();
         }
         return this.resolveLocal(ret.retValue);
     }
@@ -821,98 +833,98 @@ class gwt_hm_LocalObjectTable {
         return this.ids.get(object);
     }
     ensureObjectRef(obj) {
-      if (!this.ids.has(obj)) {
-          this.add(obj);
-      }
-      return this.ids.get(obj);
-  }
-   
+        if (!this.ids.has(obj)) {
+            this.add(obj);
+        }
+        return this.ids.get(obj);
+    }
+
 }
 
-var ieee754={}
-ieee754.read = function (buffer, offset, isLE, mLen, nBytes) {
-  var e, m
-  var eLen = (nBytes * 8) - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var nBits = -7
-  var i = isLE ? (nBytes - 1) : 0
-  var d = isLE ? -1 : 1
-  var s = buffer[offset + i]
+var ieee754 = {}
+ieee754.read = function(buffer, offset, isLE, mLen, nBytes) {
+    var e, m
+    var eLen = (nBytes * 8) - mLen - 1
+    var eMax = (1 << eLen) - 1
+    var eBias = eMax >> 1
+    var nBits = -7
+    var i = isLE ? (nBytes - 1) : 0
+    var d = isLE ? -1 : 1
+    var s = buffer[offset + i]
 
-  i += d
+    i += d
 
-  e = s & ((1 << (-nBits)) - 1)
-  s >>= (-nBits)
-  nBits += eLen
-  for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {}
+    e = s & ((1 << (-nBits)) - 1)
+    s >>= (-nBits)
+    nBits += eLen
+    for (; nBits > 0; e = (e * 256) + buffer[offset + i], i += d, nBits -= 8) {}
 
-  m = e & ((1 << (-nBits)) - 1)
-  e >>= (-nBits)
-  nBits += mLen
-  for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {}
+    m = e & ((1 << (-nBits)) - 1)
+    e >>= (-nBits)
+    nBits += mLen
+    for (; nBits > 0; m = (m * 256) + buffer[offset + i], i += d, nBits -= 8) {}
 
-  if (e === 0) {
-    e = 1 - eBias
-  } else if (e === eMax) {
-    return m ? NaN : ((s ? -1 : 1) * Infinity)
-  } else {
-    m = m + Math.pow(2, mLen)
-    e = e - eBias
-  }
-  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+    if (e === 0) {
+        e = 1 - eBias
+    } else if (e === eMax) {
+        return m ? NaN : ((s ? -1 : 1) * Infinity)
+    } else {
+        m = m + Math.pow(2, mLen)
+        e = e - eBias
+    }
+    return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
 }
 
-ieee754.write = function (buffer, value, offset, isLE, mLen, nBytes) {
-  var e, m, c
-  var eLen = (nBytes * 8) - mLen - 1
-  var eMax = (1 << eLen) - 1
-  var eBias = eMax >> 1
-  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
-  var i = isLE ? 0 : (nBytes - 1)
-  var d = isLE ? 1 : -1
-  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+ieee754.write = function(buffer, value, offset, isLE, mLen, nBytes) {
+    var e, m, c
+    var eLen = (nBytes * 8) - mLen - 1
+    var eMax = (1 << eLen) - 1
+    var eBias = eMax >> 1
+    var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
+    var i = isLE ? 0 : (nBytes - 1)
+    var d = isLE ? 1 : -1
+    var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
 
-  value = Math.abs(value)
+    value = Math.abs(value)
 
-  if (isNaN(value) || value === Infinity) {
-    m = isNaN(value) ? 1 : 0
-    e = eMax
-  } else {
-    e = Math.floor(Math.log(value) / Math.LN2)
-    if (value * (c = Math.pow(2, -e)) < 1) {
-      e--
-      c *= 2
-    }
-    if (e + eBias >= 1) {
-      value += rt / c
+    if (isNaN(value) || value === Infinity) {
+        m = isNaN(value) ? 1 : 0
+        e = eMax
     } else {
-      value += rt * Math.pow(2, 1 - eBias)
+        e = Math.floor(Math.log(value) / Math.LN2)
+        if (value * (c = Math.pow(2, -e)) < 1) {
+            e--
+            c *= 2
+        }
+        if (e + eBias >= 1) {
+            value += rt / c
+        } else {
+            value += rt * Math.pow(2, 1 - eBias)
+        }
+        if (value * c >= 2) {
+            e++
+            c /= 2
+        }
+
+        if (e + eBias >= eMax) {
+            m = 0
+            e = eMax
+        } else if (e + eBias >= 1) {
+            m = ((value * c) - 1) * Math.pow(2, mLen)
+            e = e + eBias
+        } else {
+            m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+            e = 0
+        }
     }
-    if (value * c >= 2) {
-      e++
-      c /= 2
-    }
 
-    if (e + eBias >= eMax) {
-      m = 0
-      e = eMax
-    } else if (e + eBias >= 1) {
-      m = ((value * c) - 1) * Math.pow(2, mLen)
-      e = e + eBias
-    } else {
-      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
-      e = 0
-    }
-  }
+    for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
 
-  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
+    e = (e << mLen) | m
+    eLen += mLen
+    for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
 
-  e = (e << mLen) | m
-  eLen += mLen
-  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
-
-  buffer[offset + i - d] |= s * 128
+    buffer[offset + i - d] |= s * 128
 }
 
 
@@ -931,13 +943,33 @@ class gwt_hm_HostChannel {
     channelId;
     closeSocket = false;
     tcpHost = "";
-    connectToHost(host, port) {
+    /*
+     * Performance timing - is most of our overhead in http?
+     */
+    xhrTimingData = [];
+    xhrTimingCumulativeMilliseconds = 0;
+
+    connectToHost(host, port, codeServerWs, moduleName) {
         // ignore host (for the mo) - assume local, otherwise will need CORS
         //
-        //correction, always use local (rather than routing through remote) - network round trips more than compensates
-        //      this.host = "";
-        this.host = "http://127.0.0.1:"+(parseInt(port)+1);
+        // correction, always use local (rather than routing through remote) -
+        // network round trips more than compensates
+        // this.host = "";
+
+
+        this.host = "http://127.0.0.1:" + (parseInt(port) + 1);
         this.port = port;
+        if (codeServerWs) {
+            this.socketClient = new WebSocketTransportClient(`${host}:${port}`, codeServerWs, moduleName);
+            return new Promise(resolve => {
+                this.socketClient.connect(resolve);
+            });
+        } else {
+            /*
+             * use xhr
+             */
+            return new Promise(resolve => resolve());
+        }
     }
     init(handler, minVersion, maxVersion,
         hostedHtmlVersion) {
@@ -945,17 +977,15 @@ class gwt_hm_HostChannel {
         gwt_hm_CheckVersionsMessage.send(this, minVersion, maxVersion, hostedHtmlVersion);
         var type = this.readByte();
         switch (type) {
-            case gwt_hm_BrowserChannel.MESSAGE_TYPE_PROTOCOL_VERSION:
-                {
-                    var message = gwt_hm_ProtocolVersionMessage.receive(this);
-                    break;
-                }
-            case MESSAGE_TYPE_FATAL_ERROR:
-                {
-                    var message = gwt_hm_FatalErrorMessage.receive(this);
-                    handler.fatalError(this, message.getError());
-                    return false;
-                }
+            case gwt_hm_BrowserChannel.MESSAGE_TYPE_PROTOCOL_VERSION: {
+                var message = gwt_hm_ProtocolVersionMessage.receive(this);
+                break;
+            }
+            case MESSAGE_TYPE_FATAL_ERROR: {
+                var message = gwt_hm_FatalErrorMessage.receive(this);
+                handler.fatalError(this, message.getError());
+                return false;
+            }
             default:
                 return false;
         }
@@ -1049,7 +1079,7 @@ class gwt_hm_HostChannel {
     }
     sendByte(c) {
         if (this.buf_out.length == 0) {
-//            console.log(`send >> ${c}`);
+            // console.log(`send >> ${c}`);
         }
         this.buf_out += String.fromCharCode(c);
     }
@@ -1069,20 +1099,21 @@ class gwt_hm_HostChannel {
         this.buf_out += utf8;
     }
     utf8BinaryStringToStr(str) {
-      var buf = new ArrayBuffer(str.length); // 1 bytes for each utf-8 codepoint
-      var bufView = new Uint8Array(buf);
-      for (var i=0, strLen=str.length; i < strLen; i++) {
-        bufView[i] = str.charCodeAt(i);
-      }
-      var str = new TextDecoder("UTF-8").decode(buf);
-      return str;
+        var buf = new ArrayBuffer(str.length); // 1 bytes for each utf-8
+        // codepoint
+        var bufView = new Uint8Array(buf);
+        for (var i = 0, strLen = str.length; i < strLen; i++) {
+            bufView[i] = str.charCodeAt(i);
+        }
+        var str = new TextDecoder("UTF-8").decode(buf);
+        return str;
     }
     utf16ToUtf8(str) {
         var u8a = new TextEncoder().encode(str);
         var CHUNK_SZ = 0x8000;
         var c = [];
-        for (var i=0; i < u8a.length; i+=CHUNK_SZ) {
-          c.push(String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ)));
+        for (var i = 0; i < u8a.length; i += CHUNK_SZ) {
+            c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
         }
         return c.join("");
     }
@@ -1096,68 +1127,58 @@ class gwt_hm_HostChannel {
             case gwt_hm_BrowserChannel.VALUE_TYPE_UNDEFINED:
                 value.setUndefined();
                 return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN:
-                {
-                    var val = this.readByte();
-                    value.setBoolean(val != 0);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE:
-                {
-                    var val = this.readByte();
-                    value.setByte(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR:
-                {
-                    var val = this.readShort();
-                    value.setChar(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT:
-                {
-                    var val = this.readShort();
-                    value.setShort(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_STRING:
-                {
-                    var val = this.readString();
-                    value.setString(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_INT:
-                {
-                    var val = this.readInt();
-                    value.setInt(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_LONG:
-                {
-                    var val = this.readLong();
-                    value.setLong(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE:
-                {
-                    var val = this.readDouble();
-                    value.setDouble(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT:
-                {
-                    var val = this.readInt();
-                    value.setJavaObjectId(val);
-                }
-                return value;
-            case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT:
-                {
-                    var val = this.readInt();
-                    value.setJsObjectId(val);
-                }
-                return value;
-            default:
-                throw "Unhandled value type sent from server: " + type;
+            case gwt_hm_BrowserChannel.VALUE_TYPE_BOOLEAN: {
+                var val = this.readByte();
+                value.setBoolean(val != 0);
+            }
+            return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_BYTE: {
+            var val = this.readByte();
+            value.setByte(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_CHAR: {
+            var val = this.readShort();
+            value.setChar(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_SHORT: {
+            var val = this.readShort();
+            value.setShort(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_STRING: {
+            var val = this.readString();
+            value.setString(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_INT: {
+            var val = this.readInt();
+            value.setInt(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_LONG: {
+            var val = this.readLong();
+            value.setLong(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_DOUBLE: {
+            var val = this.readDouble();
+            value.setDouble(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_JAVA_OBJECT: {
+            var val = this.readInt();
+            value.setJavaObjectId(val);
+        }
+        return value;
+        case gwt_hm_BrowserChannel.VALUE_TYPE_JS_OBJECT: {
+            var val = this.readInt();
+            value.setJsObjectId(val);
+        }
+        return value;
+        default:
+            throw "Unhandled value type sent from server: " + type;
         }
         return false;
     }
@@ -1206,59 +1227,56 @@ class gwt_hm_HostChannel {
         while (true) {
             this.flush();
             var type = this.readByte(type);
-//            console.log(`message: ${this.messageId} :: ${type} `);
+            // console.log(`message: ${this.messageId} :: ${type} `);
             switch (type) {
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKE:
-                    {
-                        var message = gwt_hm_InvokeMessage.receive(this);
-                        if (parseInt(this.messageId) > 0) {
-//                            console.log(`invoke: ${this.messageId} :: ${message.methodName} [${message.thisRef.intValue}]`);
-                        }
-                        var result = handler.invoke(this, message.thisRef, message.methodName,
-                            message.numArgs, message.args);
-                        handler.sendFreeValues(this);
-                        gwt_hm_ReturnMessage.send(this, result.exception, result.value);
+                case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKE: {
+                    var message = gwt_hm_InvokeMessage.receive(this);
+                    if (parseInt(this.messageId) > 0) {
+                        // console.log(`invoke: ${this.messageId} :: ${message.methodName}
+                        // [${message.thisRef.intValue}]`);
                     }
-                    break;
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKESPECIAL:
-                    {
-                        // scottb: I think this is never used; I think server
-                        // never sends invokeSpecial
-                        var message = gwt_hm_InvokeSpecialMessage.receive(this);
-                        var result = handler.invokeSpecial(this, message._dispatchId, message.methodName,
-                            message.numArgs, message.args);
-                        handler.sendFreeValues(this);
-                        gwt_hm_ReturnMessage.send(this, result.exception, result.value);
-                    }
-                    break;
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_FREEVALUE:
-                    {
-                        var message = gwt_hm_FreeValueMessage.receive(this);
-                        handler.freeValue(this, message.idCount, message.ids);
-                    }
-                    // do not send a response
-                    break;
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_LOADJSNI:
-                    {
-                        var message = gwt_hm_LoadJsniMessage.receive(this);
-                        handler.loadJsni(this, message.js);
-                    }
-                    // do not send a response
-                    break;
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_RETURN:
-                    if (!expectReturn) {
-                        throw "Received unexpected RETURN";
-                    }
-                    return gwt_hm_ReturnMessage.receive(this);
-                case gwt_hm_BrowserChannel.MESSAGE_TYPE_QUIT:
-                    if (expectReturn) {
-                        throw "Received QUIT while waiting for return";
-                    }
-                    this.disconnectFromHost();
-                    return 0;
-                default:
-                    // TODO(jat): error handling
-                    throw "Unexpected message type " + type;
+                    var result = handler.invoke(this, message.thisRef, message.methodName,
+                        message.numArgs, message.args);
+                    handler.sendFreeValues(this);
+                    gwt_hm_ReturnMessage.send(this, result.exception, result.value);
+                }
+                break;
+            case gwt_hm_BrowserChannel.MESSAGE_TYPE_INVOKESPECIAL: {
+                // scottb: I think this is never used; I think server
+                // never sends invokeSpecial
+                var message = gwt_hm_InvokeSpecialMessage.receive(this);
+                var result = handler.invokeSpecial(this, message._dispatchId, message.methodName,
+                    message.numArgs, message.args);
+                handler.sendFreeValues(this);
+                gwt_hm_ReturnMessage.send(this, result.exception, result.value);
+            }
+            break;
+            case gwt_hm_BrowserChannel.MESSAGE_TYPE_FREEVALUE: {
+                var message = gwt_hm_FreeValueMessage.receive(this);
+                handler.freeValue(this, message.idCount, message.ids);
+            }
+            // do not send a response
+            break;
+            case gwt_hm_BrowserChannel.MESSAGE_TYPE_LOADJSNI: {
+                var message = gwt_hm_LoadJsniMessage.receive(this);
+                handler.loadJsni(this, message.js);
+            }
+            // do not send a response
+            break;
+            case gwt_hm_BrowserChannel.MESSAGE_TYPE_RETURN:
+                if (!expectReturn) {
+                    throw "Received unexpected RETURN";
+                }
+                return gwt_hm_ReturnMessage.receive(this);
+            case gwt_hm_BrowserChannel.MESSAGE_TYPE_QUIT:
+                if (expectReturn) {
+                    throw "Received QUIT while waiting for return";
+                }
+                this.disconnectFromHost();
+                return 0;
+            default:
+                // TODO(jat): error handling
+                throw "Unexpected message type " + type;
             }
         }
     }
@@ -1273,9 +1291,35 @@ class gwt_hm_HostChannel {
             debugger;
         }
         this.buf_out = "";
-        this.flushWithBody(body);
+        if (this.socketClient) {
+            this.flushWithBodyWs(body);
+        } else {
+            this.flushWithBodyXhr(body);
+        }
     }
-    flushWithBody(body) {
+    flushWithBodyWs(body) {
+        var t0 = performance.now();
+        var bytes = this.socketClient.send(body);
+        if (this.closeSocket) {
+            this.socketClient.close();
+            return;
+        }
+        let response = "";
+        for (var idx = 0; idx < bytes.length; idx++) {
+            response += String.fromCharCode(bytes[idx]);
+        }
+        this.buf_in = atob(response);
+        this.buf_in_idx = 0;
+        var t1 = performance.now();
+        var xhrTime = t1 - t0;
+        this.xhrTimingData.push(xhrTime);
+        this.xhrTimingCumulativeMilliseconds += xhrTime;
+        if (this.xhrTimingData.length % 1000 == 0) {
+            console.debug(`codeserver ws timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMilliseconds} `);
+        }
+    }
+    flushWithBodyXhr(body) {
+        var t0 = performance.now();
         var xhr = new XMLHttpRequest();
         var url = `${this.host}/jsCodeServer.tcp`;
         xhr.open("POST", url, false);
@@ -1310,6 +1354,13 @@ class gwt_hm_HostChannel {
         this.channelId = xhrChannelId;
         this.buf_in = atob(xhr.responseText);
         this.buf_in_idx = 0;
+        var t1 = performance.now();
+        var xhrTime = t1 - t0;
+        this.xhrTimingData.push(xhrTime);
+        this.xhrTimingCumulativeMicroseconds += xhrTime;
+        if (this.xhrTimingData.length % 1000 == 0) {
+            console.log(`timing data: ${this.xhrTimingData.length} : ${this.xhrTimingCumulativeMicroseconds} `);
+        }
     }
     ensureClear() {
         if (this.buf_out.length > 0) {
@@ -1418,19 +1469,16 @@ gwt_hm_InvokeSpecialMessage.send = function(channel, dispatchId, numArgs, args) 
 }
 
 class gwt_hm_AllowedConnections {
-  /*
-   * static bool matchesRule(const std::string& webHost, const std::string&
-   * codeServer, bool* allowed);
-   */
-  
-  matchesRule(webHost,codeServer){
-    return true;
-  }
+    /*
+     * static bool matchesRule(const std::string& webHost, const std::string&
+     * codeServer, bool* allowed);
+     */
+
+    matchesRule(webHost, codeServer) {
+        return true;
+    }
 
 }
-
-
-
 
 
 
@@ -1447,7 +1495,7 @@ class gwt_hm_QuitMessage extends gwt_hm_Message {
 }
 gwt_hm_QuitMessage.TYPE = gwt_hm_BrowserChannel.MESSAGE_TYPE_QUIT;
 gwt_hm_QuitMessage.send = function(channel) {
-    channel.closeSocket=true;
+    channel.closeSocket = true;
     channel.sendByte(gwt_hm_QuitMessage.TYPE);
     channel.flush();
 }
@@ -1476,27 +1524,25 @@ gwt_hm_ProtocolVersionMessage.receive = function(channel) {
 
 
 class gwt_hm_ByteOrder {
-  
-  //TODO-jscs- 
-  floatFromBytes(bytes){
-    throw "nope";
-   return 0.0; 
-  }
-  doubleFromBytes(bytes){
-    throw "nope";
-    return 0.0; 
-   }
-  bytesFromDouble(double){
-    throw "nope";
-    return []; 
-   }
-  bytesFromFloat(float){
-    throw "nope";
-    return []; 
-   }
+
+    //TODO-jscs- 
+    floatFromBytes(bytes) {
+        throw "nope";
+        return 0.0;
+    }
+    doubleFromBytes(bytes) {
+        throw "nope";
+        return 0.0;
+    }
+    bytesFromDouble(double) {
+        throw "nope";
+        return [];
+    }
+    bytesFromFloat(float) {
+        throw "nope";
+        return [];
+    }
 }
-
-
 
 class gwt_hm_ReturnMessage extends gwt_hm_Message {
     isException;
@@ -1536,13 +1582,13 @@ gwt_hm_ServerMethods.setProperty = function(channel, handler, objectId, dispId, 
     return channel.reactToMessagesWhileWaitingForReturn(handler);
 }
 gwt_hm_ServerMethods.getProperty = function(channel, handler, objectId, dispId) {
-  let args = [];
-  args[0] = new gwt_hm_Value();
-  args[1] = new gwt_hm_Value();
-  args[0].setInt(objectId);
-  args[1].setInt(dispId);
-  gwt_hm_InvokeSpecialMessage.send(channel, gwt_hm_BrowserChannel.SPECIAL_GET_PROPERTY, 2, args);
-  return channel.reactToMessagesWhileWaitingForReturn(handler);
+    let args = [];
+    args[0] = new gwt_hm_Value();
+    args[1] = new gwt_hm_Value();
+    args[0].setInt(objectId);
+    args[1].setInt(dispId);
+    gwt_hm_InvokeSpecialMessage.send(channel, gwt_hm_BrowserChannel.SPECIAL_GET_PROPERTY, 2, args);
+    return channel.reactToMessagesWhileWaitingForReturn(handler);
 }
 
 class gwt_hm_LoadJsniMessage extends gwt_hm_Message {
@@ -1832,6 +1878,256 @@ gwt_hm_FreeValueMessage.send = function(channel, idCount, ids) {
         channel.sendInt(ids[idx]);
     }
     channel.flush();
+}
+
+/*
+ * cleanup - make hostedmode aware of 'am worker' (and make worker load from that file if need be)
+ */
+class WebSocketTransport {
+
+    static MESSAGE_WAIT = 0;
+    static MESSAGE_CONNECT = 1;
+    static MESSAGE_DATA_PACKET = 2;
+    static MESSAGE_WINDOW_UNLOAD = 3;
+    static MESSAGE_SOCKET_CLOSED = 4;
+    
+  /*
+   * bytes - given comms are byte->int, effectively divide by 4. Make *big*
+   * (5*10^6) bcoz this can occasionally be huge, and failing here hurts
+   * debugging more than helps
+   */
+    static BUFFER_SIZE = 50000000; 
+    /*
+     * we may pause in the java codeserver debugger, so make timeout biiiig (5
+     * minutes)
+     */
+    static READ_TIMEOUT = 300000;
+    constructor() {
+
+    };
+    setBuffers(inBuffer, outBuffer) {
+        this.inBuffer = new WebSocketTransportBuffer(inBuffer);
+        this.outBuffer = new WebSocketTransportBuffer(outBuffer);
+    }
+    sendConnect() {
+        return this.sendPacket(WebSocketTransport.MESSAGE_CONNECT, new TextEncoder().encode(""));
+    }
+    send(string) {
+        return this.sendPacket(WebSocketTransport.MESSAGE_DATA_PACKET, new TextEncoder().encode(string));
+    }
+    read(timeout) {
+        return this.inBuffer.read(timeout);
+    }
+    sendPacket(message, data) {
+        this.outBuffer.write(message, data);
+       
+        return this.read(WebSocketTransport.READ_TIMEOUT);
+    }
+}
+class WebSocketTransportBuffer {
+    closed = false;
+    /*
+     * buffer write operation (byte array b[n] - for Atomics.wait to work we
+     * need int32)
+     * 
+     * [0] ::op (0: wait - 1: connect - 2: data packet...etc, see MESSAGE
+     * constants in WebSocketTransport)
+     * 
+     * [1] : n (as int) byte
+     * 
+     * [2=>2+n-1] : data
+     * 
+     */
+    constructor(sharedArrayBuffer) {
+        this.sharedArrayBuffer = sharedArrayBuffer;
+        this.int32 = new Int32Array(sharedArrayBuffer);
+    }
+    read(timeout) {
+        if (this.closed) {
+            throw "Socket closed";
+        }
+        /*
+         * Wait fot the other thread
+         */
+        if (WebSocketTransport_is_worker) {
+            /*
+             * should not be needed (worker will already have a message saying
+             * 'packet ready'). Can't use this on main thread cos 'javascript
+             * doesn't block on main thread'...much
+             */
+            Atomics.wait(this.int32, 0, WebSocketTransport.MESSAGE_WAIT, timeout);
+        } else {
+            let t0 = performance.now();
+            let counter = 0;
+            /*
+             * This works! On the main thread! (this.int32 underlying buffer is
+             * changed by write() on the worker thread)
+             */
+            while (Atomics.load(this.int32, 0) == 0) {
+                if (counter++ % 1000000 == 0) {
+                    var t1 = performance.now();
+                    if (t1 - t0 > timeout) {
+                        this.closed = true;
+                        throw "Read timeout";
+                    }
+                }
+                // don't spook a spectre...?
+            }
+            let message = Atomics.load(this.int32, 0);
+            switch (message) {
+                case WebSocketTransport.MESSAGE_SOCKET_CLOSED:
+                  this.closed=true;
+                    throw "WebSocketTransportClient: received MESSAGE_SOCKET_CLOSED";
+                case WebSocketTransport.MESSAGE_WINDOW_UNLOAD:
+                  this.closed=true;
+                    throw "WebSocketTransportClient: received MESSAGE_WINDOW_UNLOAD";
+            }
+        }
+        var len = this.int32[1];
+        /*
+         * prep for next read (could probably make this array copy nicer, but
+         * dev tools got hung up...?)
+         */
+        Atomics.store(this.int32, 0, WebSocketTransport.MESSAGE_WAIT);
+        let result = [];
+        for (let idx = 0; idx < len; idx++) {
+            result[idx] = this.int32[idx + 2];
+        }
+        return result;
+    }
+    write(message, data) {
+        var v = data.length;
+        Atomics.store(this.int32, 1, data.length);
+        try{
+          if(data.length>1000000){
+           console.log("dev.ws: large message: `data.length` bytes"); 
+          }
+          this.int32.set(data, 2);
+        }catch(e){
+          debugger;
+          throw e;
+        }
+        /*
+         * and now...store the messaage code and wake one sleeping thread
+         * 
+         */
+        Atomics.store(this.int32, 0, message);
+        Atomics.notify(this.int32, 0, 1);
+    }
+}
+class WebSocketTransportSocketChannel extends WebSocketTransport {
+    constructor() {
+        super();
+        onmessage = e => {
+            switch (e.data.message) {
+                case "start":
+                    this.codeServerWs = e.data.codeServerWs;
+                    this.codeServer = e.data.codeServer;
+                    this.setBuffers(e.data.inBuffer.sharedArrayBuffer, e.data.outBuffer.sharedArrayBuffer);
+                    this.start();
+                    break;
+                case "data":
+                    this.onData();
+                    break;
+            }
+        };
+        /*
+         * worker receives close event (caused by window unload)
+         */
+        self.addEventListener('close', e => {
+            this.outBuffer.write(WebSocketTransport.MESSAGE_WINDOW_UNLOAD, new TextEncoder().encode(""));
+        });
+        
+    };
+    start() {
+        this.socket = new WebSocket(`ws://${this.codeServerWs}/jsCodeServerWs.tcp?gwt.codesvr=${this.codeServer}`);
+        this.socket.addEventListener('open', e => {
+            this.onOpen();
+        });
+        this.socket.onmessage = e => this.onMessage(e);
+        this.socket.onclose = e => {
+            this.outBuffer.write(WebSocketTransport.MESSAGE_SOCKET_CLOSED, new TextEncoder().encode(""));
+        };
+    }
+    onOpen() {
+        postMessage({
+            message: "connected"
+        });
+    }
+    onData() {
+        /*
+         * received data from gwt.hosted js - send to codeserver
+         */
+        let bytes = this.read(); // will be int array (but int in byte range -
+        // in fact ascii ) - in our case b64 text
+        let packet = "";
+        for (var idx = 0; idx < bytes.length; idx++) {
+            packet += String.fromCharCode(bytes[idx]);
+        }
+        this.socket.send(packet);
+    }
+    onMessage(e) {
+        /*
+         * received data from codeserver - send to gwt.hosted js
+         */
+        this.outBuffer.write(WebSocketTransport.MESSAGE_DATA_PACKET, new TextEncoder().encode(e.data));
+
+    }
+}
+
+function WebSocketTransport_maybeStartWorker() {
+    if (WebSocketTransport_is_worker) {
+        new WebSocketTransportSocketChannel();
+    }
+}
+var WebSocketTransport_is_worker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+WebSocketTransport_maybeStartWorker();
+
+class WebSocketTransportClient extends WebSocketTransport {
+    connected;
+    constructor(codeServer, codeServerWs, moduleName) {
+        super();
+        this.codeServer = codeServer;
+        this.codeServerWs = codeServerWs;
+        this.moduleName = moduleName;
+    }
+    connect(onConnect) {
+        /*
+         * load socket worker, wait for connect event
+         */
+        this.setBuffers(new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE), new SharedArrayBuffer(WebSocketTransport.BUFFER_SIZE));
+        this.socketWorker = new Worker(`/${this.moduleName}/WebSocketTransport.js`);
+        this.socketWorker.postMessage({
+            message: "start",
+            codeServerWs: this.codeServerWs,
+            codeServer: this.codeServer,
+            inBuffer: this.outBuffer,
+            outBuffer: this.inBuffer
+        });
+        this.socketWorker.onmessage = e => {
+            switch (e.data.message) {
+                case "connected":
+                    this.connected = true;
+                    console.log("websocket connect message received from worker by transport client");
+                    onConnect();
+                    break;
+                case "closed":
+                    break;
+                case "exception":
+                    console.log(e.data.exception);
+                    break;
+            }
+        };
+    }
+    //override (need to send a message to the worker that there's a packet ready)
+    sendPacket(message, data) {
+        this.outBuffer.write(message, data);
+        this.socketWorker.postMessage({
+            message: "data"
+        });
+        return this.read(WebSocketTransport.READ_TIMEOUT);
+    }
+
 }
 $sendStats('moduleStartup', 'moduleEvalEnd');
 gwtOnLoad(__gwtModuleFunction.__errFn, __gwtModuleFunction.__moduleName, __gwtModuleFunction.__moduleBase, __gwtModuleFunction.__softPermutationId,__gwtModuleFunction.__computePropValue);

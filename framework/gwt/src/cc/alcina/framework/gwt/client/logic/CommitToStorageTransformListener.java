@@ -14,10 +14,9 @@
 package cc.alcina.framework.gwt.client.logic;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -159,8 +158,6 @@ public class CommitToStorageTransformListener extends StateListenable
 
 	private int localRequestId = 1;
 
-	protected Map<Long, Long> localToServerIds;
-
 	private List<DomainTransformEvent> synthesisedEvents;
 
 	private boolean reloadRequired = false;
@@ -183,9 +180,8 @@ public class CommitToStorageTransformListener extends StateListenable
 	@Override
 	public synchronized void domainTransform(DomainTransformEvent evt) {
 		if (evt.getCommitType() == CommitType.TO_STORAGE) {
-			String pn = evt.getPropertyName();
-			if (pn != null && (pn.equals(TransformManager.ID_FIELD_NAME)
-					|| pn.equals(TransformManager.LOCAL_ID_FIELD_NAME))) {
+			if (Objects.equals(evt.getPropertyName(),
+					TransformManager.ID_FIELD_NAME)) {
 				return;
 			}
 			TransformManager tm = TransformManager.get();
@@ -423,23 +419,9 @@ public class CommitToStorageTransformListener extends StateListenable
 										TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 								idEvt.setNewStringValue(String.valueOf(id));
 								synthesisedEvents.add(idEvt);
-								idEvt = new DomainTransformEvent();
-								idEvt.setObjectClass(dte.getObjectClass());
-								idEvt.setObjectId(id);
-								idEvt.setPropertyName(
-										TransformManager.LOCAL_ID_FIELD_NAME);
-								idEvt.setNewStringValue("0");
-								idEvt.setValueClass(Long.class);
-								idEvt.setTransformType(
-										TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
-								synthesisedEvents.add(idEvt);
-								localToServerIds.put(dte.getObjectLocalId(),
-										id);
-								tm.registerEntityMappingPriorToLocalIdDeletion(
+								EntityLocator entityLocator = new EntityLocator(
 										dte.getObjectClass(), id,
 										dte.getObjectLocalId());
-								EntityLocator entityLocator = new EntityLocator(
-										dte.getObjectClass(), id, 0L);
 								if (firstCreatedObjectLocator == null) {
 									firstCreatedObjectLocator = entityLocator;
 								}
@@ -470,9 +452,10 @@ public class CommitToStorageTransformListener extends StateListenable
 						for (DomainTransformEvent dte : synthesisedEvents) {
 							try {
 								tm.apply(dte);
-								tm.fireDomainTransform(dte);// this notifies
-								// gears?
-								// well, definitely notifies clients who need to
+								tm.fireDomainTransform(dte);//
+								// this notifies storage (for offline replay)
+								//
+								// also notifies clients who need to
 								// know chanages were committed
 							} catch (DomainTransformException e) {
 								// shouldn't happen, if the server code's ok
@@ -598,7 +581,6 @@ public class CommitToStorageTransformListener extends StateListenable
 
 	protected void init() {
 		priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
-		localToServerIds = new HashMap<Long, Long>();
 		eventIdsToIgnore = new HashSet<Long>();
 	}
 

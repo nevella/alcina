@@ -77,7 +77,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DurationCounter;
 import cc.alcina.framework.common.client.util.LongPair;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -952,11 +951,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.instantiateSingle(Searcher.class, def.getClass());
 		SearchResultsBase result = searcher.search(def, pageNumber,
 				getEntityManager());
-		if (LooseContext.getBoolean(Searcher.CONTEXT_RESULTS_ARE_DETACHED)) {
-			return result;
-		} else {
-			return projectSearchResults(result);
-		}
+		return projectSearchResults(result);
 	}
 
 	public abstract void setEntityManager(EntityManager entityManager);
@@ -985,7 +980,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	@Override
-	// FIXME - mvcc.2 - permissions...?
+	// permissions...? (well, it's going away with FIXME - mvcc.wrapped)
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers) {
 		preloadWrappedObjects(wrappers);
 		RuntimeException lastException = null;

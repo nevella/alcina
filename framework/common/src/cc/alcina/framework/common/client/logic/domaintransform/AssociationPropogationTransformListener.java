@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
@@ -33,8 +34,24 @@ public class AssociationPropogationTransformListener
 		if (!tm.handlesAssociationsFor(event.getObjectClass())) {
 			return;
 		}
+		// FIXME - mvcc.adjunct (since the object will be reachable)
+		if (Objects.equals("id", event.getPropertyName())) {
+			return;
+		}
 		ApplyToken token = tm.createApplyToken(event);
 		Entity entity = token.object;
+		switch (token.transformType) {
+		case ADD_REF_TO_COLLECTION:
+		case REMOVE_REF_FROM_COLLECTION: {
+			Association association = Reflections.propertyAccessor()
+					.getAnnotationForProperty(entity.entityClass(),
+							Association.class, event.getPropertyName());
+			if (association != null && !Reflections.classLookup()
+					.handlesClass(association.implementationClass())) {
+				return;
+			}
+		}
+		}
 		switch (token.transformType) {
 		case NULL_PROPERTY_REF:
 		case CHANGE_PROPERTY_REF: {
@@ -103,11 +120,6 @@ public class AssociationPropogationTransformListener
 								((Entity) associated).domain().register();
 								Object associatedAssociationValue = associatedObjectAccessor
 										.getPropertyValue(associated);
-								if (!Reflections.classLookup()
-										.handlesClass(associatedObjectAccessor
-												.getPropertyType())) {
-									return;
-								}
 								if (associatedAssociationValue instanceof Set) {
 									// child.parent
 									((Entity) associated).domain()

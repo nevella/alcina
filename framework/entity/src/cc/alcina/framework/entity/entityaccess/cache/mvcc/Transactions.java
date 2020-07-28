@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
@@ -21,30 +20,14 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 public class Transactions {
 	private static Transactions instance;
 
-	private static Multimap removedVersions = new Multimap();
-
 	public static <T extends Entity> boolean checkResolved(T t) {
 		return resolve(t, false, false) == t;
-	}
-
-	public static synchronized <T extends Entity> void
-			debugRemoveVersion(T baseObject, ObjectVersion<T> version) {
-		// removedVersions.add(baseObject, version);
 	}
 
 	public static synchronized void ensureInitialised() {
 		if (instance == null) {
 			instance = new Transactions();
 		}
-	}
-
-	public static synchronized <T extends Entity> List<ObjectVersion<T>>
-			getRemovedVersions(T baseObject) {
-		List<ObjectVersion<T>> list = removedVersions.get(baseObject);
-		if (list != null) {
-			list.forEach(ObjectVersion::debugObjectHash);
-		}
-		return list;
 	}
 
 	public static synchronized boolean isInitialised() {

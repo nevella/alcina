@@ -30,6 +30,9 @@ public class PublicationVisitor {
 	public void beforeDelivery() {
 	}
 
+	public void beforeRenderContent() {
+	}
+
 	public void beforeWrapContent() {
 	}
 

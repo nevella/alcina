@@ -23,8 +23,5 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
  * @author Nick Reddel
  */
 public interface Searcher<T extends SearchDefinition> {
-	public static final String CONTEXT_RESULTS_ARE_DETACHED = Searcher.class
-			.getName() + ".CONTEXT_RESULTS_ARE_DETACHED";
-
 	public SearchResultsBase search(T def, int pageNumber, EntityManager em);
 }

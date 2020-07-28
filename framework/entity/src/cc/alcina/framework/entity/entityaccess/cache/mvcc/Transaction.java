@@ -169,6 +169,8 @@ public class Transaction {
 
 	private String transactionStartTrace;
 
+	private String transactionEndTrace;
+
 	private String originatingThreadName;
 
 	boolean ended;
@@ -276,9 +278,15 @@ public class Transaction {
 	public String toDebugString() {
 		String detail = String.format("%10s %14s %14s %s", id, phase,
 				new Date(startTime), originatingThreadName);
-		return transactionStartTrace == null ? detail
-				: Ax.format("%s\n-------\n%s\n", detail, CommonUtils
-						.hangingIndent(transactionStartTrace, false, 2));
+		if (transactionStartTrace != null) {
+			detail = Ax.format("%s\n-------\n%s\n", detail,
+					CommonUtils.hangingIndent(transactionStartTrace, false, 2));
+		}
+		if (transactionEndTrace != null) {
+			detail = Ax.format("%s\n-------\n%s\n", detail,
+					CommonUtils.hangingIndent(transactionEndTrace, false, 2));
+		}
+		return detail;
 	}
 
 	public void toDomainAborted() {
@@ -324,9 +332,10 @@ public class Transaction {
 
 	public void toTimedOut() {
 		logger.warn(
-				"Transaction timed out.\n\tId: {}\n\tStart: {}\n\tNow: {}\n\tThread: {}\n\nStack:\n{}",
+				"Transaction timed out.\n\tId: {}\n\tStart: {}\n\tNow: {}\n\tThread: {}\n\nStack:\n{}\n\nEnd stack:\n{}",
 				id, startTime, System.currentTimeMillis(),
-				originatingThreadName, transactionStartTrace);
+				originatingThreadName, transactionStartTrace,
+				transactionEndTrace);
 		switch (phase) {
 		case TO_DB_PREPARING:
 			toDbAborted();
@@ -389,6 +398,9 @@ public class Transaction {
 				logger.warn("Ending transaction on invalid phase: {}",
 						getPhase());
 			}
+		}
+		if (ResourceUtilities.is("retainTransactionStartTrace")) {
+			transactionEndTrace = SEUtilities.getCurrentThreadStacktraceSlice();
 		}
 		ended = true;
 		logger.debug("Ended tx: {}", this);

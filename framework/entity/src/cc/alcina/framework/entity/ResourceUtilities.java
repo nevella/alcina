@@ -744,7 +744,18 @@ public class ResourceUtilities {
 		try {
 			Properties p = new Properties();
 			if (ios != null) {
+				boolean debugRegistration = customProperties != null
+						&& customProperties.containsKey(
+								"ResourceUtilities.debugPropertyRegistration")
+						&& is(ResourceUtilities.class,
+								"debugPropertyRegistration");
+				if (debugRegistration) {
+					Ax.out("--- debug registration --- %s", ios);
+				}
 				p.load(ios);
+				if (debugRegistration) {
+					Ax.out(p.entrySet());
+				}
 				ios.close();
 				registerCustomProperties(p);
 			}

@@ -253,24 +253,24 @@ public class SyncMerger<T> {
 	protected void ensureLeftWriteable(SyncPair<T> pair) {
 		Object left = pair.getLeft().getObject();
 		if (left instanceof Entity) {
-			Entity adb = (Entity) left;
-			if (adb.domain().isNonDomain()) {
+			Entity entity = (Entity) left;
+			if (entity.domain().isNonDomain()) {
 			} else {
-				adb.domain().detachFromDomain();
+				entity = entity.domain().detachedVersion();
 			}
-			pair.getLeft().setObject(adb);
+			pair.getLeft().setObject(entity);
 		}
 	}
 
 	protected void ensureRightWriteable(SyncPair<T> pair) {
 		Object right = pair.getRight().getObject();
 		if (right instanceof Entity) {
-			Entity adb = (Entity) right;
-			if (adb.domain().isNonDomain()) {
+			Entity entity = (Entity) right;
+			if (entity.domain().isNonDomain()) {
 			} else {
-				adb.domain().detachFromDomain();
+				entity = entity.domain().detachedVersion();
 			}
-			pair.getRight().setObject(adb);
+			pair.getRight().setObject(entity);
 		}
 	}
 

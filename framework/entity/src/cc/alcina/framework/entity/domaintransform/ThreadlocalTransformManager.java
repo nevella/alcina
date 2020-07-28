@@ -416,15 +416,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		return entityManager;
 	}
 
-	@Override
-	public <H extends Entity> long getLocalIdForClientInstance(H entity) {
-		if (userSessionEntityMap != null) {
-			return userSessionEntityMap.getLocalIdForClientInstance(entity);
-		} else {
-			return super.getLocalIdForClientInstance(entity);
-		}
-	}
-
 	public List<DomainTransformEvent> getModificationEvents() {
 		return this.modificationEvents;
 	}

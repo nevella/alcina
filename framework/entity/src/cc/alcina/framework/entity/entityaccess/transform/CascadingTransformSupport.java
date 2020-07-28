@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.gwt.event.shared.UmbrellaException;
 
@@ -111,6 +112,8 @@ public class CascadingTransformSupport {
 		// TODO - zeroex - notify exception via topic
 	}
 
+	private static ConcurrentHashMap<Thread, Object> cascadeThreads = new ConcurrentHashMap<>();
+
 	static class CascadingTransformWorker extends Thread {
 		private CascadingTransformSupport cascadingTransformSupport;
 
@@ -129,13 +132,20 @@ public class CascadingTransformSupport {
 		@Override
 		public final void run() {
 			try {
+				cascadeThreads.put(Thread.currentThread(),
+						CascadingTransformWorker.class);
 				super.run();
 			} catch (Throwable t) {
 				t.printStackTrace();
 				throwable = t;
 			} finally {
 				cascadingTransformSupport.releaseChildThread(this);
+				cascadeThreads.remove(Thread.currentThread());
 			}
 		}
+	}
+
+	public boolean isCascadeThread() {
+		return cascadeThreads.containsKey(Thread.currentThread());
 	}
 }
