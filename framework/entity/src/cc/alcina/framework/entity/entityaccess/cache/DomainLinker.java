@@ -183,9 +183,15 @@ public class DomainLinker<E extends Entity> {
 					clazz.getSimpleName(), ids.size());
 			metricKey = metricKey();
 		}
+		long start = System.currentTimeMillis();
 		List<Object[]> resultList = MethodContext.instance()
 				.withMetricKey(metricKey)
 				.call(() -> em.createQuery(select).getResultList());
+		long end = System.currentTimeMillis();
+		if (end - start > 1000) {
+			logger.debug("Resolve refs query time debug:: {} :: {} ids\n{}",
+					clazz.getSimpleName(), ids.size(), select);
+		}
 		queried().addCollection(clazz, ids);
 		linkAndDetach(resultList);
 	}
