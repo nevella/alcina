@@ -73,7 +73,7 @@ public class DomainLinker<E extends Entity> {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	private Predicate<Field> fieldFilter;
+	private LinkerFilter fieldFilter;
 
 	private List<Field> fields;
 
@@ -82,18 +82,18 @@ public class DomainLinker<E extends Entity> {
 	}
 
 	public DomainLinker(EntityManager em, Class<E> clazz, String alias,
-			Predicate<Field> fieldFilter) {
+			LinkerFilter fieldFilter) {
 		this(em, clazz, alias, fieldFilter, null);
 	}
 
 	private DomainLinker(EntityManager em, Class<E> clazz, String alias,
-			Predicate<Field> fieldFilter, DomainLinker parent) {
+			LinkerFilter fieldFilter, DomainLinker parent) {
 		this.em = em;
 		this.clazz = clazz;
 		this.alias = alias;
 		this.parent = parent;
 		if (fieldFilter == null) {
-			fieldFilter = Registry.impl(DefaultFieldFilter.class);
+			fieldFilter = Registry.impl(LinkerFilter.class);
 		}
 		this.fieldFilter = fieldFilter;
 		if (parent == null) {
@@ -122,7 +122,12 @@ public class DomainLinker<E extends Entity> {
 		if (clause.length() > 0) {
 			clause = ", " + clause;
 		} else {
-			throw new RuntimeException("No outgoing object refs");
+			if (parent != null) {
+				//add a dummy col
+				return Ax.format(", %s.id",alias);
+			} else {
+				throw new RuntimeException("No outgoing object refs");
+			}
 		}
 		return clause;
 	}
@@ -178,8 +183,8 @@ public class DomainLinker<E extends Entity> {
 				createObjectRefSelect(), clazz.getSimpleName(), alias, alias,
 				linkFieldName, EntityPersistenceHelper.toInClause(ids));
 		String metricKey = null;
-		if (!AppPersistenceBase.isTestServer()) {
-			logger.debug("Resolve refs query :: {} :: {} ids",
+		if (!AppPersistenceBase.isTestServer() || true) {
+			logger.info("Resolve refs query :: {} :: {} ids",
 					clazz.getSimpleName(), ids.size());
 			metricKey = metricKey();
 		}
@@ -189,7 +194,7 @@ public class DomainLinker<E extends Entity> {
 				.call(() -> em.createQuery(select).getResultList());
 		long end = System.currentTimeMillis();
 		if (end - start > 1000) {
-			logger.debug("Resolve refs query time debug:: {} :: {} ids\n{}",
+			logger.info("Resolve refs query time debug:: {} :: {} ids\n{}",
 					clazz.getSimpleName(), ids.size(), select);
 		}
 		queried().addCollection(clazz, ids);
@@ -209,9 +214,8 @@ public class DomainLinker<E extends Entity> {
 		return parent == null ? resolveTasks : parent.resolveTasks();
 	}
 
-	@RegistryLocation(registryPoint = DefaultFieldFilter.class, implementationType = ImplementationType.INSTANCE)
-	public static abstract class DefaultFieldFilter
-			implements Predicate<Field> {
+	@RegistryLocation(registryPoint = LinkerFilter.class, implementationType = ImplementationType.INSTANCE)
+	public static abstract class LinkerFilter implements Predicate<Field> {
 	}
 
 	private class Mapping {
