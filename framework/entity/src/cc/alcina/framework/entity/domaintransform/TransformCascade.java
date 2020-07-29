@@ -36,6 +36,10 @@ public class TransformCascade {
 	}
 
 	// this works because of transactions -
+	/*
+	 * Note that there's a chance some of these requests have already applied -
+	 * but that's harmless, as long as we drop the creation events
+	 */
 	public void ensureApplied() {
 		if (!applied) {
 			applied = true;
@@ -56,10 +60,14 @@ public class TransformCascade {
 				for (DomainTransformEvent event : allEvents) {
 					if (event
 							.getTransformType() == TransformType.CREATE_OBJECT) {
-						Entity instance = (Entity) tltm.newInstance(
-								event.getObjectClass(), event.getObjectId(),
-								event.getObjectLocalId());
-						token.getTargetStore().putExternalLocal(instance);
+						//only create our transient event receiver if this request hasn't been applied
+						if (tltm.getUserSessionEntityMap().getForLocalId(
+								event.getObjectLocalId()) == null) {
+							Entity instance = (Entity) tltm.newInstance(
+									event.getObjectClass(), event.getObjectId(),
+									event.getObjectLocalId());
+							token.getTargetStore().putExternalLocal(instance);
+						}
 					}
 					if (WrapperPersistable.class
 							.isAssignableFrom(event.getObjectClass())) {
@@ -110,7 +118,7 @@ public class TransformCascade {
 		}
 
 		public <E extends Entity> E getObject() {
-			return locator.getObject();
+			return TransformManager.get().getObject(locator);
 		}
 
 		@Override

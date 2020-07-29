@@ -978,10 +978,11 @@ public class DomainStore implements IDomainStore {
 			long time = domainStorePostProcessStartTime == 0 ? 0
 					: System.currentTimeMillis()
 							- domainStorePostProcessStartTime;
-			if (time > 100) {
+			Thread postProcessThread2 = postProcessThread;
+			if (time > 100 && postProcessThread2 != null) {
 				logger.info("Long postprocess time - {} ms - {}\n{}\n\n", time,
-						postProcessThread,
-						SEUtilities.getStacktraceSlice(postProcessThread,
+						postProcessThread2,
+						SEUtilities.getStacktraceSlice(postProcessThread2,
 								LONG_POST_PROCESS_TRACE_LENGTH, 0));
 			}
 			return time;
@@ -989,11 +990,11 @@ public class DomainStore implements IDomainStore {
 
 		public long getTimeInVacuum() {
 			long time = Transactions.stats().getTimeInVacuum();
-			if (time > 100) {
+			Thread vacuumThread = Transactions.stats().getVacuumThread();
+			if (time > 100 && vacuumThread != null) {
 				logger.info("Long vacuum time - {} ms - {}\n{}\n\n", time,
-						Transactions.stats().getVacuumThread(),
-						SEUtilities.getStacktraceSlice(
-								Transactions.stats().getVacuumThread(),
+						vacuumThread,
+						SEUtilities.getStacktraceSlice(vacuumThread,
 								LONG_POST_PROCESS_TRACE_LENGTH, 0));
 			}
 			return time;

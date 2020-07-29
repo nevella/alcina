@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -176,11 +177,14 @@ public class DomainLinker<E extends Entity> {
 				"select distinct %s %s from %s %s where %s.%s in %s", alias,
 				createObjectRefSelect(), clazz.getSimpleName(), alias, alias,
 				linkFieldName, EntityPersistenceHelper.toInClause(ids));
-		logger.trace("Resolve refs query :: {} :: {} ids",
-				clazz.getSimpleName(), ids.size());
-		String metricKey = metricKey();
+		String metricKey = null;
+		if (!AppPersistenceBase.isTestServer()) {
+			logger.debug("Resolve refs query :: {} :: {} ids",
+					clazz.getSimpleName(), ids.size());
+			metricKey = metricKey();
+		}
 		List<Object[]> resultList = MethodContext.instance()
-				// .withMetricKey(metricKey)
+				.withMetricKey(metricKey)
 				.call(() -> em.createQuery(select).getResultList());
 		queried().addCollection(clazz, ids);
 		linkAndDetach(resultList);

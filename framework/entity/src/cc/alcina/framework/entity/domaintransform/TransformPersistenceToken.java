@@ -296,4 +296,10 @@ public class TransformPersistenceToken implements Serializable {
 	public enum Pass {
 		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
 	}
+
+	@Override
+	public String toString() {
+		return Ax.format("TransformPersistenceToken - %s requests\n%s",
+				getRequest().allRequests().size(), getRequest());
+	}
 }

@@ -885,7 +885,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public <T extends Entity> T getObject(EntityLocator entityLocator) {
 		return (T) getObject(entityLocator.getClazz(), entityLocator.getId(),
-				0L);
+				entityLocator.localId);
 	}
 
 	@Override
