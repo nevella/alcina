@@ -310,6 +310,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		for (Callable callable : calls) {
 			callable.call();
 		}
+		calls.clear();
 		// invokeAllWithThrow(calls);
 		MetricLogging.get().end("postLoad");
 		MetricLogging.get().start("lookups");

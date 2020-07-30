@@ -98,9 +98,13 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 /**
@@ -374,6 +378,7 @@ public class DomainStore implements IDomainStore {
 		lazyObjectLoader = loader.getLazyObjectLoader();
 		cache = (DomainStoreEntityCache) transformManager
 				.getDetachedEntityCache();
+		cache.setThrowOnExisting(AppPersistenceBase.isTestServer());
 		transformManager.getStore().setLazyObjectLoader(lazyObjectLoader);
 		domainDescriptor.initialise();
 		domainDescriptor.registerStore(this);
@@ -1619,6 +1624,26 @@ public class DomainStore implements IDomainStore {
 		@Override
 		protected void performDeleteObject(Entity entity) {
 			super.performDeleteObject(entity);
+		}
+	}
+
+	// FIXME - mvcc.wrap - goes away
+	public void reloadEntity(Entity wrapped) {
+		Preconditions.checkArgument(wrapped instanceof WrappedObject);
+		cache.remove(wrapped);
+		Entity reloaded = Domain.find(wrapped.entityClass(), wrapped.getId());
+		try {
+			// note that reloaded will be discarded because we're not in a
+			// to-domain
+			// tx
+			SEUtilities.getFieldByName(wrapped.entityClass(), "object").set(wrapped, null);
+			SEUtilities.getFieldByName(wrapped.entityClass(), "serializedXml")
+					.set(wrapped,
+							((WrappedObject) reloaded).getSerializedXml());
+			cache.remove(reloaded);
+			cache.put(wrapped);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 }

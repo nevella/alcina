@@ -925,6 +925,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		this.entityManager = entityManager;
 	}
 
+	// FIXME - mvcc.wrap - can remove
 	public void setIgnorePropertyChangesTo(DomainTransformEvent event) {
 		this.ignorePropertyChangesTo = null;
 		if (event != null

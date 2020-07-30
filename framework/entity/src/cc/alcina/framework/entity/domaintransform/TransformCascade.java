@@ -156,6 +156,9 @@ public class TransformCascade {
 		}
 
 		boolean matches(DomainTransformEvent event) {
+			if(event.getObjectClass()!=clazz){
+				return false;
+			}
 			if (propertyName != null
 					&& !Objects.equals(propertyName, event.getPropertyName())) {
 				return false;
