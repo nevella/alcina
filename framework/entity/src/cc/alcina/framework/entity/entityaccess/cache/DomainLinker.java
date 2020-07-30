@@ -77,9 +77,6 @@ public class DomainLinker<E extends Entity> {
 
 	private List<Field> fields;
 
-	public DomainLinker(EntityManager em, Class<E> clazz, String alias) {
-		this(em, clazz, alias, null);
-	}
 
 	public DomainLinker(EntityManager em, Class<E> clazz, String alias,
 			LinkerFilter fieldFilter) {
@@ -214,8 +211,17 @@ public class DomainLinker<E extends Entity> {
 		return parent == null ? resolveTasks : parent.resolveTasks();
 	}
 
-	@RegistryLocation(registryPoint = LinkerFilter.class, implementationType = ImplementationType.INSTANCE)
 	public static abstract class LinkerFilter implements Predicate<Field> {
+	}
+	public static abstract class LinkerFilterEntity extends LinkerFilter {
+
+		@Override
+		public boolean test(Field t) {
+			if (Entity.class.isAssignableFrom(t.getType())) {
+				return true;
+			}
+			return false;
+		}
 	}
 
 	private class Mapping {
