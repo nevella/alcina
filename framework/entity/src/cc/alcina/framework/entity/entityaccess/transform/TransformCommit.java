@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -497,7 +498,7 @@ public class TransformCommit {
 
 	private Map<Long, EntityLocatorMap> clientInstanceLocatorMap = new HashMap<Long, EntityLocatorMap>();
 
-	private int transformRequestCounter = 1;
+	private AtomicInteger transformRequestCounter = new AtomicInteger(0);
 
 	public void appShutdown() {
 		if (backendTransformQueue != null) {
@@ -505,10 +506,14 @@ public class TransformCommit {
 		}
 	}
 
-	public synchronized void enqueueBackendTransform(Runnable runnable) {
+	public void enqueueBackendTransform(Runnable runnable) {
 		if (backendTransformQueue == null) {
-			backendTransformQueue = new BackendTransformQueue();
-			backendTransformQueue.start();
+			synchronized (this) {
+				if (backendTransformQueue == null) {
+					backendTransformQueue = new BackendTransformQueue();
+					backendTransformQueue.start();
+				}
+			}
 		}
 		backendTransformQueue.enqueue(runnable);
 	}
@@ -572,8 +577,8 @@ public class TransformCommit {
 		}.start();
 	}
 
-	public synchronized int nextTransformRequestId() {
-		return transformRequestCounter++;
+	public int nextTransformRequestId() {
+		return transformRequestCounter.incrementAndGet();
 	}
 
 	/**
@@ -855,10 +860,6 @@ public class TransformCommit {
 
 	Map<Long, EntityLocatorMap> getClientInstanceLocatorMap() {
 		return this.clientInstanceLocatorMap;
-	}
-
-	int getTransformRequestCounter() {
-		return this.transformRequestCounter;
 	}
 
 	public static class CommitContext {
