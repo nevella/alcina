@@ -169,7 +169,7 @@ public class DomainStoreTransformSequencer {
 					Thread blockingThread = loaderDatabase.getStore()
 							.getPersistenceEvents().getQueue()
 							.getFireEventsThread();
-					String blockingThreadStacktrace = SEUtilities
+					String blockingThreadStacktrace = blockingThread==null?"<no blocking thread>":SEUtilities
 							.getFullStacktrace(blockingThread);
 					logger.warn(
 							"Timedout waiting for barrier - {} - \n{} - \nBlocking thread:\n{}",
