@@ -1124,8 +1124,11 @@ public class DomainStore implements IDomainStore {
 
 			@Override
 			public <V extends Entity> boolean isDomainVersion(V v) {
-				return v == null ? null
-						: storeHandler(v.entityClass()).isDomainVersion(v);
+				return v == null ? false
+						: classMap.get(v.entityClass()) == null
+								? (v.getId() != 0 || v.getLocalId() != 0)
+								: storeHandler(v.entityClass())
+										.isDomainVersion(v);
 			}
 
 			@Override
@@ -1636,7 +1639,8 @@ public class DomainStore implements IDomainStore {
 			// note that reloaded will be discarded because we're not in a
 			// to-domain
 			// tx
-			SEUtilities.getFieldByName(wrapped.entityClass(), "object").set(wrapped, null);
+			SEUtilities.getFieldByName(wrapped.entityClass(), "object")
+					.set(wrapped, null);
 			SEUtilities.getFieldByName(wrapped.entityClass(), "serializedXml")
 					.set(wrapped,
 							((WrappedObject) reloaded).getSerializedXml());
