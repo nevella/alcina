@@ -7,6 +7,8 @@ import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.gwt.client.dirndl.StyleType;
+
 public class LuxLink extends Widget implements HasClickHandlers {
 	boolean addedCancelHandler = false;
 
@@ -29,7 +31,7 @@ public class LuxLink extends Widget implements HasClickHandlers {
 		return this;
 	}
 
-	public LuxLink style(LuxStyleType style) {
+	public LuxLink style(StyleType style) {
 		style.set(this);
 		return this;
 	}

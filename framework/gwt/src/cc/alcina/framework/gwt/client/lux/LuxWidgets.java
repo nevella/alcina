@@ -4,6 +4,7 @@ import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.gwt.client.dirndl.StyleType;
 import cc.alcina.framework.gwt.client.widget.Widgets;
 
 public class LuxWidgets {
@@ -60,7 +61,7 @@ public class LuxWidgets {
 		return this;
 	}
 
-	public LuxWidgets withStyle(LuxStyleType style) {
+	public LuxWidgets withStyle(StyleType style) {
 		style.set(widget);
 		return this;
 	}

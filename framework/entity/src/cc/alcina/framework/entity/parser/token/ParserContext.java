@@ -27,7 +27,6 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
-import cc.alcina.framework.entity.XmlUtils.SurroundingBlockTuple;
 
 public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<T>> {
 	public static final String LONG_BLANK_STRING = "        ";

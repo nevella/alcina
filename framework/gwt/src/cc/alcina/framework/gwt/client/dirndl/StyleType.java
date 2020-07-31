@@ -1,11 +1,11 @@
-package cc.alcina.framework.gwt.client.lux;
+package cc.alcina.framework.gwt.client.dirndl;
 
 import com.google.gwt.dom.client.DomElementStatic;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 
-public interface LuxStyleType {
+public interface  StyleType{
 	default void addTo(UIObject uiObject) {
 		uiObject.setStyleName(toName(), true);
 	}
@@ -38,6 +38,10 @@ public interface LuxStyleType {
 	}
 
 	default String toName() {
-		return toString().toLowerCase().replace("_", "-");
+		
+		return prefix()+toString().toLowerCase().replace("_", "-");
+	}
+	default String prefix() {
+		return "";
 	}
 }

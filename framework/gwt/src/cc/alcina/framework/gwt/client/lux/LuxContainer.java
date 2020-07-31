@@ -8,6 +8,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Label;
 
+import cc.alcina.framework.gwt.client.dirndl.StyleType;
 import cc.alcina.framework.gwt.client.widget.HeadingPanel;
 
 public class LuxContainer extends Composite {
@@ -18,7 +19,7 @@ public class LuxContainer extends Composite {
 		initWidget(container);
 	}
 
-	public LuxContainer(LuxStyleType style) {
+	public LuxContainer(StyleType style) {
 		this();
 		style.set(this);
 	}
@@ -53,20 +54,20 @@ public class LuxContainer extends Composite {
 		add(container);
 	}
 
-	public void addStyledHtmlBlock(LuxStyleType style, String htmlString) {
+	public void addStyledHtmlBlock(StyleType style, String htmlString) {
 		HTML html = new HTML(htmlString);
 		style.set(html);
 		add(html);
 	}
 
-	public LuxContainer addStyledPanel(LuxStyleType style) {
+	public LuxContainer addStyledPanel(StyleType style) {
 		LuxContainer container = new LuxContainer();
 		style.set(container);
 		add(container);
 		return container;
 	}
 
-	public void addStyledTextBlock(LuxStyleType style, String text) {
+	public void addStyledTextBlock(StyleType style, String text) {
 		Label label = new Label(text);
 		style.set(label);
 		add(label);

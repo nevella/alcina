@@ -35,7 +35,6 @@ import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
-import cc.alcina.framework.entity.projection.StatsFilter.MultiIdentityMap;
 
 public class StatsFilter extends CollectionProjectionFilter {
 	StatsFilter.MultiIdentityMap ownerMap = new StatsFilter.MultiIdentityMap();

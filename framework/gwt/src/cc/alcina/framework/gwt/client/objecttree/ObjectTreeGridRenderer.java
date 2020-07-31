@@ -19,11 +19,10 @@ import java.util.Map;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlexTable.FlexCellFormatter;
-
-import cc.alcina.framework.gwt.client.dirndl.RenderContext;
-
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 
 /**
  * 

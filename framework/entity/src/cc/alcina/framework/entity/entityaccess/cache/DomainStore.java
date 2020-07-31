@@ -103,8 +103,6 @@ import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 /**

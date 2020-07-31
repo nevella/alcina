@@ -1,16 +1,18 @@
 package cc.alcina.framework.gwt.client.lux;
 
-public enum LuxStyle implements LuxStyleType {
+import cc.alcina.framework.gwt.client.dirndl.StyleType;
+
+public enum LuxStyle implements StyleType {
 	MAIN_PANEL, LUX_SCREEN_CENTER, LUX;
-	public enum LuxStyleHead implements LuxStyleType {
+	public enum LuxStyleHead implements StyleType {
 		TITLE, SUBTITLE, LOGO
 	}
 
-	public enum LuxStyleModal implements LuxStyleType {
+	public enum LuxStyleModal implements StyleType {
 		LUX_MODAL_PANEL, HEAD;
 	}
 
-	public enum LuxStyleStatus implements LuxStyleType {
+	public enum LuxStyleStatus implements StyleType {
 		LUX_STATUS_PANEL, ERROR, LOADING;
 	}
 }

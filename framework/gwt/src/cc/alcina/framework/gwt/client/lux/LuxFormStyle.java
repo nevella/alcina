@@ -1,6 +1,8 @@
 package cc.alcina.framework.gwt.client.lux;
 
-public enum LuxFormStyle implements LuxStyleType {
+import cc.alcina.framework.gwt.client.dirndl.StyleType;
+
+public enum LuxFormStyle implements StyleType {
 	LUX_FORM, LUX_FORM_LABEL, LUX_FORM_ELEMENT, LUX_FORM_LABEL_CONTAINER,
 	NO_LABEL, RADIO, RADIO_GROUP, TEXT, SELECTOR, LUX_FORM_CONTAINER,
 	LUX_FORM_FEEDBACK;
