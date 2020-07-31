@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
+
 public class LockUtils {
 	public static final String ARTICLE_DELETION_LOCK = "ARTICLE_DELETION_LOCK";
 
@@ -70,5 +72,9 @@ public class LockUtils {
 		public void unlock() {
 			this.lock.unlock();
 		}
+	}
+
+	public static ClassIdLock obtainClassIdLock(Entity entity) {
+		return obtainClassIdLock(entity.entityClass(), entity.getId());
 	}
 }
