@@ -34,7 +34,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator.ProcessingServerValidationException;
-import cc.alcina.framework.gwt.client.directed.RenderContext;
+import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.logic.WidgetByElementTracker;
 import cc.alcina.framework.gwt.client.util.GwtDomUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;

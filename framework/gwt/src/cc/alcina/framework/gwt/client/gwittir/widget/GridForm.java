@@ -41,7 +41,7 @@ import com.totsp.gwittir.client.ui.table.AbstractTableWidget;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
-import cc.alcina.framework.gwt.client.directed.RenderContext;
+import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 
 /**

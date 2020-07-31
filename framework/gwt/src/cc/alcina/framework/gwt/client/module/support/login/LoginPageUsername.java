@@ -4,7 +4,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.validator.CompositeValidationFeedback;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.directed.RenderContext;
+import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections.ContentViewSection;
 import cc.alcina.framework.gwt.client.module.support.login.LoginPageUsernameModel.LoginPageUsernameModelBinding;

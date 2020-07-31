@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.directed;
+package cc.alcina.framework.gwt.client.dirndl;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
