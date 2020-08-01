@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.domain;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -13,11 +12,11 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyResolver;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -193,43 +192,5 @@ public class DomainClassDescriptor<T extends Entity>
 		return this;
 	}
 
-	public static class DomainStorePropertyResolver
-			implements DomainStoreProperty {
-		protected TreeResolver<DomainStoreProperty> resolver;
-
-		public DomainStorePropertyResolver(
-				DomainStorePropertyResolver childResolver) {
-			resolver = createResolver(childResolver.resolver);
-		}
-
-		public DomainStorePropertyResolver(
-				PropertyReflector.Location propertyLocation) {
-			resolver = new TreeResolver<DomainStoreProperty>(propertyLocation,
-					propertyLocation.propertyReflector
-							.getAnnotation(DomainStoreProperty.class));
-		}
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return DomainStoreProperty.class;
-		}
-
-		@Override
-		public boolean ignoreMismatchedCollectionModifications() {
-			Function<DomainStoreProperty, Boolean> function = DomainStoreProperty::ignoreMismatchedCollectionModifications;
-			return resolver.resolve(function,
-					"ignoreMismatchedCollectionModifications");
-		}
-
-		@Override
-		public DomainStorePropertyLoadType loadType() {
-			Function<DomainStoreProperty, DomainStorePropertyLoadType> function = DomainStoreProperty::loadType;
-			return resolver.resolve(function, "loadType");
-		}
-
-		protected TreeResolver<DomainStoreProperty>
-				createResolver(TreeResolver<DomainStoreProperty> resolver) {
-			return new TreeResolver<DomainStoreProperty>(resolver);
-		}
-	}
+	
 }
