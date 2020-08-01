@@ -758,7 +758,7 @@ public class ClientReflectionGenerator extends Generator {
 				addImport(annf, returnType);
 				addImport(crf, returnType);
 			}
-			PrintWriter printWriter = context.tryCreate(logger, packageName,
+			PrintWriter printWriter = context.tryCreate(logger, type.getPackage().getName(),
 					implementationName);
 			// if calling from a non-initial module, we just want to add imports
 			// without rewriting (indeed, we can't...) the annotation impls

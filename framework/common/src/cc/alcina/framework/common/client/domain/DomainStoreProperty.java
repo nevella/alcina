@@ -28,10 +28,14 @@ public @interface DomainStoreProperty {
 		TRANSIENT, LAZY, EAGER;
 	}
 
-	@RegistryLocation(registryPoint = DomainStorePropertyResolver.class,implementationType = ImplementationType.INSTANCE)
+	@RegistryLocation(registryPoint = DomainStorePropertyResolver.class, implementationType = ImplementationType.INSTANCE)
 	@ClientInstantiable
 	public static class DomainStorePropertyResolver
 			implements DomainStoreProperty {
+		// for reflection
+		public DomainStorePropertyResolver() {
+		}
+
 		protected TreeResolver<DomainStoreProperty> resolver;
 
 		public DomainStorePropertyResolver(
