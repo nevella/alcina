@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.domain.DomainClassDescriptor.DomainStorePropertyResolver;
+import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyResolver;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;

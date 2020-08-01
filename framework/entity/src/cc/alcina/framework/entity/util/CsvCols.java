@@ -186,5 +186,9 @@ public class CsvCols
 			}
 			return -1;
 		}
+
+		public long getLong(String key) {
+			return Long.parseLong(get(key));
+		}
 	}
 }
