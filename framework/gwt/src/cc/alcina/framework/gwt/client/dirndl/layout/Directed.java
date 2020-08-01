@@ -11,6 +11,7 @@ import java.util.function.Function;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
@@ -27,6 +28,7 @@ public @interface Directed {
 	public Class<? extends DirectedNodeRenderer> renderer() default MockupNodeRenderer.class;
 
 	@RegistryLocation(registryPoint = DirectedResolver.class, implementationType = ImplementationType.INSTANCE)
+	@ClientInstantiable
 	public static class DirectedResolver implements Directed {
 		protected TreeResolver<Directed> resolver;
 
@@ -35,9 +37,10 @@ public @interface Directed {
 		}
 
 		public DirectedResolver(AnnotationLocation propertyLocation) {
-			resolver = new TreeResolver<Directed>(propertyLocation,
+			//Hmmm?
+			resolver = createResolver(new TreeResolver<Directed>(propertyLocation,
 					propertyLocation.propertyReflector
-							.getAnnotation(Directed.class));
+							.getAnnotation(Directed.class)));
 		}
 
 		public DirectedResolver() {
@@ -46,8 +49,8 @@ public @interface Directed {
 		public void setClassLocation(Class classLocation) {
 			Directed leafValue = Reflections.classLookup()
 					.getAnnotationForClass(classLocation, Directed.class);
-			resolver = new TreeResolver<Directed>(
-					new AnnotationLocation(null, classLocation), leafValue);
+			resolver = createResolver(new TreeResolver<Directed>(
+					new AnnotationLocation(null, classLocation), leafValue));
 		}
 
 		@Override

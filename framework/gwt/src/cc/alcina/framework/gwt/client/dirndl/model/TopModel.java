@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.Directed;
 
@@ -10,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.Directed;
  * Should render by delegating to the model field
  */
 @Directed(renderer = DelegatingNodeRenderer.class)
+@Bean
 public class TopModel extends BaseBindable {
     private Object model;
 

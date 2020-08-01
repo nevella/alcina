@@ -6,7 +6,9 @@ package com.totsp.gwittir.client.beans.internal;
 
 import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
@@ -119,8 +121,8 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 				className = clazz.getName();
 				ClientReflectorJvm.checkClassAnnotations(clazz);
 				info = java.beans.Introspector.getBeanInfo(clazz);
-				props = new Property[info.getPropertyDescriptors().length - 1];
-				int index = 0;
+				List<Property> properties = new ArrayList<>();
+				
 				Class enumSubclass = null;
 				for (PropertyDescriptor d : info.getPropertyDescriptors()) {
 					Class<?> propertyType = d.getPropertyType();
@@ -138,18 +140,17 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 						propertyType = enumSubclass;
 						assert propertyType != null;
 					}
-					if (d.getName().equals("class")) {
+					if (d.getName().equals("class")||d.getName().equals("propertyChangeListeners")) {
 						continue;
 					}
-					props[index] = new Property(d.getName(), propertyType,
+					properties.add( new Property(d.getName(), propertyType,
 							d.getReadMethod() == null ? null
 									: new MethodWrapper(d.getReadMethod()),
 							d.getWriteMethod() == null ? null
-									: new MethodWrapper(d.getWriteMethod()));
-					// System.out.println(clazz+" mapped property:
-					// "+props[index]);
-					index++;
+									: new MethodWrapper(d.getWriteMethod())));
 				}
+				props = (Property[]) properties
+						.toArray(new Property[properties.size()]);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}

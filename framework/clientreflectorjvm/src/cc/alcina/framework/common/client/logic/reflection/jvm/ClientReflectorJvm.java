@@ -124,6 +124,9 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
 			clazz -> SEUtilities.getSortedPropertyDescriptors(clazz).stream()
+					// FIXME - mvcc.3 - generalise ignored properties
+					.filter(pd -> !(pd.getName().equals("class")
+							|| pd.getName().equals("propertyChangeListeners")))
 					.map(JvmPropertyReflector::new)
 					.collect(Collectors.toList()),
 			100);
