@@ -846,6 +846,11 @@ public class DomainStore implements IDomainStore {
 			LooseContext.pop();
 		}
 	}
+	
+	public void throwDomainStoreException(String message){
+		health.domainStoreExceptionCount.incrementAndGet();
+		throw new DomainStoreException(message);
+	}
 
 	<T extends Entity> Stream<T> query(Class<T> clazz,
 			DomainStoreQuery<T> query) {
