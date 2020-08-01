@@ -76,6 +76,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCa
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
+import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
@@ -542,7 +543,7 @@ public class DomainStore implements IDomainStore {
 								pd.getName());
 				DomainStoreProperty domainStorePropertyAnnotation = classDescriptor
 						.resolveDomainStoreProperty(
-								new PropertyReflector.Location(property,
+								new AnnotationLocation(property,
 										clazz));
 				if ((rm.getAnnotation(Transient.class) != null
 						&& rm.getAnnotation(DomainStoreDbColumn.class) == null)

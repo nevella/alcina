@@ -3,14 +3,12 @@ package cc.alcina.framework.common.client.logic.reflection;
 import java.util.Optional;
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector.Location;
-
 public class TreeResolver<A> {
 	private A leafValue;
 
 	private TreeResolver<A> childResolver;
 
-	protected Location propertyLocation;
+	protected AnnotationLocation annotationLocation;
 
 	// a root resolver
 	public TreeResolver() {
@@ -25,8 +23,8 @@ public class TreeResolver<A> {
 	 * the class/property tuple where that annotation occurs (i.e. it's the
 	 * context of the evaluation)
 	 */
-	public TreeResolver(Location propertyLocation, A leafValue) {
-		this.propertyLocation = propertyLocation;
+	public TreeResolver(AnnotationLocation annotationLocation, A leafValue) {
+		this.annotationLocation = annotationLocation;
 		this.leafValue = leafValue;
 	}
 
@@ -34,7 +32,9 @@ public class TreeResolver<A> {
 		return leafValue != null
 				|| (childResolver != null && childResolver.hasValue());
 	}
-
+	public <T> T resolve(Function getter, String methodName) {
+		return resolve(getter,methodName,null);
+	}
 	/*
 	 * The spirit of this is:
 	 * 
@@ -54,8 +54,8 @@ public class TreeResolver<A> {
 	 * the root resolver then delegates down as low as it can to get a value
 	 * 
 	 */
-	public <T> T resolve(Function getter, String methodName) {
-		return resolveDescendant(getter, methodName, Optional.empty());
+	public <T> T resolve(Function getter, String methodName,T defaultValue) {
+		return resolveDescendant(getter, methodName, Optional.empty(),defaultValue);
 	}
 
 	protected <T> Optional<T> getValue(Function getter, String methodName) {
@@ -69,16 +69,16 @@ public class TreeResolver<A> {
 		return false;
 	}
 
-	protected Location propertyLocation() {
-		if (propertyLocation != null) {
-			return propertyLocation;
+	protected AnnotationLocation annotationLocation() {
+		if (annotationLocation != null) {
+			return annotationLocation;
 		} else {
-			return childResolver.propertyLocation();
+			return childResolver.annotationLocation();
 		}
 	}
 
 	protected <T> T resolveDescendant(Function getter, String methodName,
-			Optional<T> resolvedValue) {
+			Optional<T> resolvedValue, T defaultValue) {
 		Optional<T> value = getValue(getter, methodName);
 		if (value.isPresent()) {
 			resolvedValue = value;
@@ -87,9 +87,9 @@ public class TreeResolver<A> {
 			return resolvedValue.get();
 		}
 		if (childResolver == null) {
-			return resolvedValue.orElse(null);
+			return resolvedValue.orElse(defaultValue);
 		}
 		return childResolver.resolveDescendant(getter, methodName,
-				resolvedValue);
+				resolvedValue,defaultValue);
 	}
 }
