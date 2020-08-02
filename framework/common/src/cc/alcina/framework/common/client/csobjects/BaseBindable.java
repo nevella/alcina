@@ -29,6 +29,8 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 /**
  * 
  * @author Nick Reddel
+ * 
+ *         FIXME - mvcc.4 - rename to 'Link' and existing 'Link' to 'Href'
  */
 @Introspectable
 public class BaseBindable extends BaseSourcesPropertyChangeEvents

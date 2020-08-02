@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -49,6 +50,7 @@ import com.totsp.gwittir.client.beans.annotations.Omit;
 import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
 import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -67,6 +69,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.SEUtilities;
 
 /**
  * Currently, it's a schemozzle - this was originally a standalone generator, so
@@ -611,7 +614,7 @@ public class ClientReflectionGenerator extends Generator {
 	}
 
 	private List<JMethod> getPropertyGetters(JClassType jct) {
-		ArrayList<JMethod> methods = new ArrayList<JMethod>();
+		List<JMethod> methods = new ArrayList<JMethod>();
 		JMethod[] jms = jct.getInheritableMethods();
 		for (JMethod jm : jms) {
 			String name = jm.getName();
@@ -622,6 +625,27 @@ public class ClientReflectionGenerator extends Generator {
 				}
 			}
 		}
+		// sortMethodsByFieldName
+		Map<String, Integer> fieldOrdinals = new LinkedHashMap<>();
+		Class clazz = Reflections.classLookup()
+				.getClassForName(jct.getQualifiedBinaryName());
+		SEUtilities.allFields(clazz).stream().collect(
+				Collectors.toMap(f -> f.getName(), f -> fieldOrdinals.size()));
+		Comparator<JMethod> comparator = new Comparator<JMethod>() {
+			@Override
+			public int compare(JMethod o1, JMethod o2) {
+				int ordinal1 = fieldOrdinals.computeIfAbsent(o1.getName(),
+						key -> -1);
+				int ordinal2 = fieldOrdinals.computeIfAbsent(o1.getName(),
+						key -> -1);
+				int i = ordinal1 - ordinal2;
+				if (i != 0) {
+					return i;
+				}
+				return o1.getName().compareTo(o2.getName());
+			}
+		};
+		Collections.sort(methods, comparator);
 		return methods;
 	}
 
@@ -758,8 +782,8 @@ public class ClientReflectionGenerator extends Generator {
 				addImport(annf, returnType);
 				addImport(crf, returnType);
 			}
-			PrintWriter printWriter = context.tryCreate(logger, type.getPackage().getName(),
-					implementationName);
+			PrintWriter printWriter = context.tryCreate(logger,
+					type.getPackage().getName(), implementationName);
 			// if calling from a non-initial module, we just want to add imports
 			// without rewriting (indeed, we can't...) the annotation impls
 			if (printWriter != null) {

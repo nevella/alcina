@@ -67,10 +67,27 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (checkedClassAnnotations.contains(clazz)) {
 			return;
 		}
+		IntrospectionException introspectionException = checkClassAnnotationsGenerateException(
+				clazz);
+		if (introspectionException != null) {
+			throw introspectionException;
+		}
+		checkedClassAnnotations.add(clazz);
+	}
+
+	public static boolean canIntrospect(Class clazz) {
+		if (checkedClassAnnotations.contains(clazz)) {
+			return true;
+		}
+		return checkClassAnnotationsGenerateException(clazz) == null;
+	}
+
+	private static IntrospectionException
+			checkClassAnnotationsGenerateException(Class clazz) {
 		int mod = clazz.getModifiers();
 		if (Modifier.isAbstract(mod) || clazz.isAnonymousClass()
 				|| (clazz.isMemberClass() && !Modifier.isStatic(mod))) {
-			throw new IntrospectionException(
+			return new IntrospectionException(
 					"not reflectable class - abstract or non-static", clazz);
 		}
 		boolean introspectable = AnnotationUtils.hasAnnotationNamed(clazz,
@@ -83,11 +100,11 @@ public class ClientReflectorJvm extends ClientReflector {
 		}
 		if (!introspectable && clazz
 				.getAnnotation(IgnoreIntrospectionChecks.class) == null) {
-			throw new IntrospectionException(
+			return new IntrospectionException(
 					"not reflectable class - no clientinstantiable/beandescriptor/introspectable annotation",
 					clazz);
 		}
-		checkedClassAnnotations.add(clazz);
+		return null;
 	}
 
 	public static void checkClassAnnotationsForInstantiation(Class clazz) {
@@ -123,7 +140,8 @@ public class ClientReflectorJvm extends ClientReflector {
 	private CollectionFilter<String> filter;
 
 	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
-			clazz -> SEUtilities.getSortedPropertyDescriptors(clazz).stream()
+			clazz -> SEUtilities.getPropertyDescriptorsSortedByField(clazz)
+					.stream()
 					// FIXME - mvcc.3 - generalise ignored properties
 					.filter(pd -> !(pd.getName().equals("class")
 							|| pd.getName().equals("propertyChangeListeners")))

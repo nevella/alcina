@@ -543,8 +543,8 @@ public class DomainStore implements IDomainStore {
 								pd.getName());
 				DomainStoreProperty domainStorePropertyAnnotation = classDescriptor
 						.resolveDomainStoreProperty(
-								new AnnotationLocation(property,
-										clazz));
+								new AnnotationLocation(clazz,
+										property));
 				if ((rm.getAnnotation(Transient.class) != null
 						&& rm.getAnnotation(DomainStoreDbColumn.class) == null)
 						|| domainStorePropertyAnnotation != null) {

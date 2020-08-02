@@ -70,7 +70,9 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 						"Warn: accessing filtered (reflection) class:\n%s",
 						clazz.getName()));
 			}
-			result = new ReflectionBeanDescriptor(clazz);
+			if (ClientReflectorJvm.canIntrospect(clazz)) {
+				result = new ReflectionBeanDescriptor(clazz);
+			}
 			cache.put(clazz, result);
 		}
 		return result;
@@ -122,7 +124,6 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 				ClientReflectorJvm.checkClassAnnotations(clazz);
 				info = java.beans.Introspector.getBeanInfo(clazz);
 				List<Property> properties = new ArrayList<>();
-				
 				Class enumSubclass = null;
 				for (PropertyDescriptor d : info.getPropertyDescriptors()) {
 					Class<?> propertyType = d.getPropertyType();
@@ -140,10 +141,11 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 						propertyType = enumSubclass;
 						assert propertyType != null;
 					}
-					if (d.getName().equals("class")||d.getName().equals("propertyChangeListeners")) {
+					if (d.getName().equals("class")
+							|| d.getName().equals("propertyChangeListeners")) {
 						continue;
 					}
-					properties.add( new Property(d.getName(), propertyType,
+					properties.add(new Property(d.getName(), propertyType,
 							d.getReadMethod() == null ? null
 									: new MethodWrapper(d.getReadMethod()),
 							d.getWriteMethod() == null ? null

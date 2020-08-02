@@ -61,6 +61,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.regex.Matcher;
@@ -104,9 +105,9 @@ public class SEUtilities {
 
 	private static Map<Class, Map<String, PropertyDescriptor>> pdLookup = new LinkedHashMap<>();
 
-	private static Map<Class, List<Method>> allMethodsPerClass = new LinkedHashMap<>();
+	private static Map<Class, List<Method>> allMethodsPerClass = new ConcurrentHashMap<>();
 
-	private static Map<Class, List<Field>> allFieldsPerClass = new LinkedHashMap<>();
+	private static Map<Class, List<Field>> allFieldsPerClass = new ConcurrentHashMap<>();
 
 	private static Pattern sq_1 = Pattern.compile("(?<=\\s|^|\\(|\\[)\"");
 
@@ -900,6 +901,32 @@ public class SEUtilities {
 			}
 		};
 		Collections.sort(result, pdNameComparator);
+		return result;
+	}
+
+	public static List<PropertyDescriptor>
+			getPropertyDescriptorsSortedByField(Class clazz) {
+		ensureDescriptorLookup(clazz);
+		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
+				pdLookup.get(clazz).values());
+		Map<String, Integer> fieldOrdinals = new LinkedHashMap<>();
+		allFields(clazz).stream().forEach(
+				f -> fieldOrdinals.put(f.getName(), fieldOrdinals.size()));
+		Comparator<PropertyDescriptor> comparator = new Comparator<PropertyDescriptor>() {
+			@Override
+			public int compare(PropertyDescriptor o1, PropertyDescriptor o2) {
+				int ordinal1 = fieldOrdinals.computeIfAbsent(o1.getName(),
+						key -> -1);
+				int ordinal2 = fieldOrdinals.computeIfAbsent(o2.getName(),
+						key -> -1);
+				int i = ordinal1 - ordinal2;
+				if (i != 0) {
+					return i;
+				}
+				return o1.getName().compareTo(o2.getName());
+			}
+		};
+		Collections.sort(result, comparator);
 		return result;
 	}
 
