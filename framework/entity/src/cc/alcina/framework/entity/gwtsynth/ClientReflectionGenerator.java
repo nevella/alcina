@@ -16,6 +16,7 @@ package cc.alcina.framework.entity.gwtsynth;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +51,6 @@ import com.totsp.gwittir.client.beans.annotations.Omit;
 import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
 import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -70,6 +70,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.MethodContext;
 
 /**
  * Currently, it's a schemozzle - this was originally a standalone generator, so
@@ -625,12 +626,11 @@ public class ClientReflectionGenerator extends Generator {
 				}
 			}
 		}
-		// sortMethodsByFieldName
 		Map<String, Integer> fieldOrdinals = new LinkedHashMap<>();
-		Class clazz = Reflections.classLookup()
-				.getClassForName(jct.getQualifiedBinaryName());
-		SEUtilities.allFields(clazz).stream().collect(
-				Collectors.toMap(f -> f.getName(), f -> fieldOrdinals.size()));
+		Class clazz = MethodContext.uncheckExceptions(
+				() -> Class.forName(jct.getQualifiedBinaryName()));
+		SEUtilities.allFields(clazz).stream().map(Field::getName).distinct()
+				.forEach(name -> fieldOrdinals.put(name, fieldOrdinals.size()));
 		Comparator<JMethod> comparator = new Comparator<JMethod>() {
 			@Override
 			public int compare(JMethod o1, JMethod o2) {
@@ -757,13 +757,16 @@ public class ClientReflectionGenerator extends Generator {
 			boolean initial) throws Exception {
 		for (JAnnotationType type : jAnns) {
 			Class<? extends Annotation> annClass = forName(type);
-			String implementationName = type.getName() + "_Impl";
-			ann2impl.put(annClass,
-					type.getPackage().getName() + "." + implementationName);
+			String implementationName = type.getName().replace(".", "_")
+					+ "_Impl";
+			String implName = type.getPackage().getName() + "."
+					+ implementationName;
+			ann2impl.put(annClass, implName);
 		}
 		for (JAnnotationType type : jAnns) {
 			Class<? extends Annotation> annClass = forName(type);
-			String implementationName = type.getName() + "_Impl";
+			String implementationName = type.getName().replace(".", "_")
+					+ "_Impl";
 			String implFQN = type.getPackage().getName() + "."
 					+ implementationName;
 			crf.addImport(implFQN);

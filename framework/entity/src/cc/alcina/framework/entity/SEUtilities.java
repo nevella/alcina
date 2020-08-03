@@ -862,6 +862,32 @@ public class SEUtilities {
 		return cached;
 	}
 
+	public static List<PropertyDescriptor>
+			getPropertyDescriptorsSortedByField(Class clazz) {
+		ensureDescriptorLookup(clazz);
+		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
+				pdLookup.get(clazz).values());
+		Map<String, Integer> fieldOrdinals = new LinkedHashMap<>();
+		allFields(clazz).stream().map(Field::getName).distinct()
+				.forEach(name -> fieldOrdinals.put(name, fieldOrdinals.size()));
+		Comparator<PropertyDescriptor> comparator = new Comparator<PropertyDescriptor>() {
+			@Override
+			public int compare(PropertyDescriptor o1, PropertyDescriptor o2) {
+				int ordinal1 = fieldOrdinals.computeIfAbsent(o1.getName(),
+						key -> -1);
+				int ordinal2 = fieldOrdinals.computeIfAbsent(o2.getName(),
+						key -> -1);
+				int i = ordinal1 - ordinal2;
+				if (i != 0) {
+					return i;
+				}
+				return o1.getName().compareTo(o2.getName());
+			}
+		};
+		Collections.sort(result, comparator);
+		return result;
+	}
+
 	public static Object getPropertyValue(Object bean, String propertyName) {
 		try {
 			return getPropertyDescriptorByName(bean.getClass(), propertyName)
@@ -901,32 +927,6 @@ public class SEUtilities {
 			}
 		};
 		Collections.sort(result, pdNameComparator);
-		return result;
-	}
-
-	public static List<PropertyDescriptor>
-			getPropertyDescriptorsSortedByField(Class clazz) {
-		ensureDescriptorLookup(clazz);
-		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
-				pdLookup.get(clazz).values());
-		Map<String, Integer> fieldOrdinals = new LinkedHashMap<>();
-		allFields(clazz).stream().forEach(
-				f -> fieldOrdinals.put(f.getName(), fieldOrdinals.size()));
-		Comparator<PropertyDescriptor> comparator = new Comparator<PropertyDescriptor>() {
-			@Override
-			public int compare(PropertyDescriptor o1, PropertyDescriptor o2) {
-				int ordinal1 = fieldOrdinals.computeIfAbsent(o1.getName(),
-						key -> -1);
-				int ordinal2 = fieldOrdinals.computeIfAbsent(o2.getName(),
-						key -> -1);
-				int i = ordinal1 - ordinal2;
-				if (i != 0) {
-					return i;
-				}
-				return o1.getName().compareTo(o2.getName());
-			}
-		};
-		Collections.sort(result, comparator);
 		return result;
 	}
 

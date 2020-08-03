@@ -15,6 +15,10 @@ public class MethodContext {
 		return new MethodContext();
 	}
 
+	public static <T> T uncheckExceptions(Callable<T> callable) {
+		return instance().call(callable);
+	}
+
 	private boolean rootPermissions;
 
 	private Map<String, Object> context = new LinkedHashMap<>();
@@ -69,13 +73,13 @@ public class MethodContext {
 		});
 	}
 
-	public MethodContext withContextValue(String key, Object value) {
-		context.put(key, value);
+	public MethodContext withContextTrue(String key) {
+		context.put(key, Boolean.TRUE);
 		return this;
 	}
 
-	public MethodContext withContextTrue(String key) {
-		context.put(key, Boolean.TRUE);
+	public MethodContext withContextValue(String key, Object value) {
+		context.put(key, value);
 		return this;
 	}
 
