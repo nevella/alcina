@@ -468,8 +468,7 @@ public class ThreadlocalTransformManager extends TransformManager
 				// basically, transform events should (must) always have refs to
 				// "real" objects, not wrappers
 				t = ensureNonProxy(t);
-				if (listenToFoundObjects
-						&& t instanceof SourcesPropertyChangeEvents) {
+				if (listenToFoundObjects) {
 					listenTo(t);
 				}
 				if (localId != 0 && t != null) {
@@ -1153,6 +1152,24 @@ public class ThreadlocalTransformManager extends TransformManager
 		return explicitlyPermittedTransforms.contains(evt);
 	}
 
+	// FIXME - mvcc.wrap - inline this to single call site
+	private void listenTo(Entity entity) {
+		if (entity instanceof MvccObject && entity.getId() != 0) {
+			MvccObjectVersions versions = ((MvccObject) entity)
+					.__getMvccVersions__();
+			if (versions == null || versions.getBaseObject() == entity) {
+				throw Ax.runtimeException(
+						"Never register an mvcc object manually - registration is handled on write (on the appropriate version)."
+								+ " Also - ain't threadsafe: \n%s",
+						entity);
+			}
+		}
+		if (!listeningTo.containsKey(entity)) {
+			listeningTo.put(entity, entity);
+			entity.addPropertyChangeListener(this);
+		}
+	}
+
 	@Override
 	protected void beforeDirectCollectionModification(Entity obj,
 			String propertyName, Object newTargetValue,
@@ -1247,22 +1264,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
 		return entityManager != null;
-	}
-
-	protected void listenTo(Entity entity) {
-		if (entity instanceof MvccObject && entity.getId() != 0) {
-			MvccObjectVersions versions = ((MvccObject) entity)
-					.__getMvccVersions__();
-			if (versions == null || versions.getBaseObject() == entity) {
-				throw Ax.runtimeException(
-						"Never register an mvcc object manually - registration is handled on write (on the appropriate version)."
-								+ " Also - ain't threadsafe: \n%s",
-						entity);
-			}
-		}
-		listeningTo.put(entity, entity);
-		entity.removePropertyChangeListener(this);
-		entity.addPropertyChangeListener(this);
 	}
 
 	protected void maybeEnsureSource(DomainTransformEvent evt) {
