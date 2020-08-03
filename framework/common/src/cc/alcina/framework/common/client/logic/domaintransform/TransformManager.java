@@ -729,8 +729,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		transforms.removeAll(toRemove);
 	}
 
-	public void deregisterDomainObject(Object o) {
-		deregisterDomainObjects(CommonUtils.wrapInCollection(o));
+	public void deregisterDomainObject(Entity entity) {
+		deregisterDomainObjects(CommonUtils.wrapInCollection(entity));
 	}
 
 	public void deregisterDomainObjects(Collection<Entity> entities) {
@@ -1059,11 +1059,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public boolean isReplayingRemoteEvent() {
 		return this.replayingRemoteEvent;
-	}
-
-	public void listenTo(SourcesPropertyChangeEvents spce) {
-		// only makes sense on server
-		throw new UnsupportedOperationException();
 	}
 
 	public void modifyCollectionProperty(Object objectWithCollection,

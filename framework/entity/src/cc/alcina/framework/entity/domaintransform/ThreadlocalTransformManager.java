@@ -94,6 +94,7 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObjectVersions;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -208,7 +209,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private boolean listenToFoundObjects;
 
-	private IdentityHashMap<SourcesPropertyChangeEvents, SourcesPropertyChangeEvents> listeningTo = new IdentityHashMap<SourcesPropertyChangeEvents, SourcesPropertyChangeEvents>();
+	private IdentityHashMap<Entity, Entity> listeningTo = new IdentityHashMap<Entity, Entity>();
 
 	private DetachedEntityCache detachedEntityCache;
 
@@ -307,23 +308,17 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public void deregisterDomainObject(Object o) {
-		if (o instanceof SourcesPropertyChangeEvents) {
-			listeningTo.remove(o);
-			((SourcesPropertyChangeEvents) o)
-					.removePropertyChangeListener(this);
-		}
-		super.deregisterDomainObject(o);
+	public void deregisterDomainObject(Entity entity) {
+		listeningTo.remove(entity);
+		entity.removePropertyChangeListener(this);
+		super.deregisterDomainObject(entity);
 	}
 
 	@Override
 	public void deregisterDomainObjects(Collection<Entity> entities) {
 		for (Entity entity : entities) {
-			if (entity instanceof SourcesPropertyChangeEvents) {
-				SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) entity;
-				spce.removePropertyChangeListener(this);
-				listeningTo.remove(spce);
-			}
+			listeningTo.remove(entity);
+			entity.removePropertyChangeListener(this);
 		}
 		super.deregisterDomainObjects(entities);
 	}
@@ -475,19 +470,14 @@ public class ThreadlocalTransformManager extends TransformManager
 				t = ensureNonProxy(t);
 				if (listenToFoundObjects
 						&& t instanceof SourcesPropertyChangeEvents) {
-					((SourcesPropertyChangeEvents) t)
-							.addPropertyChangeListener(this);
+					listenTo(t);
 				}
 				if (localId != 0 && t != null) {
 					localIdToEntityMap.put(localId, t);
 				}
 				return t;
 			} else {
-				T t = Domain.find(clazz, id);
-				if (t != null) {
-					registerDomainObject(t);
-				}
-				return t;
+				return Domain.find(clazz, id);
 			}
 		}
 		return null;
@@ -633,13 +623,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	 */
 	public boolean isUseObjectCreationId() {
 		return useObjectCreationId;
-	}
-
-	@Override
-	public void listenTo(SourcesPropertyChangeEvents spce) {
-		listeningTo.put(spce, spce);
-		spce.removePropertyChangeListener(this);
-		spce.addPropertyChangeListener(this);
 	}
 
 	public void markFlushTransforms() {
@@ -822,9 +805,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	 *
 	 */
 	public <T extends Entity> T registerDomainObject(T entity) {
-		if (entity instanceof SourcesPropertyChangeEvents) {
-			listenTo((SourcesPropertyChangeEvents) entity);
-		}
+		listenTo(entity);
 		if (entity.getId() <= 0) {
 			DomainStore store = DomainStore.stores()
 					.storeFor(entity.entityClass());
@@ -1266,6 +1247,22 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
 		return entityManager != null;
+	}
+
+	protected void listenTo(Entity entity) {
+		if (entity instanceof MvccObject && entity.getId() != 0) {
+			MvccObjectVersions versions = ((MvccObject) entity)
+					.__getMvccVersions__();
+			if (versions == null || versions.getBaseObject() == entity) {
+				throw Ax.runtimeException(
+						"Never register an mvcc object manually - registration is handled on write (on the appropriate version)."
+								+ " Also - ain't threadsafe: \n%s",
+						entity);
+			}
+		}
+		listeningTo.put(entity, entity);
+		entity.removePropertyChangeListener(this);
+		entity.addPropertyChangeListener(this);
 	}
 
 	protected void maybeEnsureSource(DomainTransformEvent evt) {
