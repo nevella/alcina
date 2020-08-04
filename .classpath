@@ -6,8 +6,6 @@
 	<classpathentry kind="src" path="framework/jscodeserver/src"/>
 	<classpathentry kind="src" path="framework/classmeta/src"/>
 	<classpathentry kind="src" path="extras/jsdom/src-regex"/>
-	<classpathentry excluding="com/google/gwt/user/client/translatable/" kind="src" output="framework/extras/rpc/client/build" path="extras/rpc/client/src"/>
-	<classpathentry kind="src" output="framework/extras/rpc/servlet/build" path="extras/rpc/servlet/src"/>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/build" path="framework/clientreflectorjvm/src"/>
 	<classpathentry kind="src" output="framework/jvmclient/build" path="framework/jvmclient/src"/>
 	<classpathentry kind="src" path="extras/collections/src"/>
