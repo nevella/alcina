@@ -1158,10 +1158,9 @@ public class ThreadlocalTransformManager extends TransformManager
 			MvccObjectVersions versions = ((MvccObject) entity)
 					.__getMvccVersions__();
 			if (versions == null || versions.getBaseObject() == entity) {
-				throw Ax.runtimeException(
-						"Never register an mvcc object manually - registration is handled on write (on the appropriate version)."
-								+ " Also - ain't threadsafe: \n%s",
-						entity);
+				// ignore - registration is handled on write (on the appropriate
+				// version)
+				return;
 			}
 		}
 		if (!listeningTo.containsKey(entity)) {

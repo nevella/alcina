@@ -6,13 +6,13 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 
 public class MapObjectLookupJvm extends MapObjectLookup {
 	@Override
-	public void mapObject(Entity obj) {
-		if ((obj.getId() == 0 && obj.getLocalId() == 0)) {
+	public void mapObject(Entity entity) {
+		if ((entity.getId() == 0 && entity.getLocalId() == 0)) {
 			return;
 		}
-		Class<? extends Entity> clazz = obj.entityClass();
+		Class<? extends Entity> clazz = entity.entityClass();
 		FastIdLookup lookup = ensureLookup(clazz);
-		lookup.put(obj, obj.getId() == 0);
+		lookup.put(entity, entity.getId() == 0);
 	}
 
 	@Override

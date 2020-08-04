@@ -11,7 +11,6 @@ import java.util.Set;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -50,6 +49,16 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		this.listener = listener;
 	}
 
+	@Override
+	public synchronized Set<Entity> allValues() {
+		return super.allValues();
+	}
+
+	@Override
+	public synchronized void changeMapping(Entity obj, long id, long localId) {
+		super.changeMapping(obj, id, localId);
+	}
+
 	public void clearReflectionCache() {
 		// because different code modules may have different reflection data
 		registerChildren.clear();
@@ -58,17 +67,6 @@ public class MapObjectLookupClient extends MapObjectLookup {
 	@Override
 	public synchronized void deregisterObject(Entity entity) {
 		super.deregisterObject(entity);
-	}
-
-	@Override
-	public synchronized <T extends Entity> T getObject(Class<? extends T> c,
-			long id, long localId) {
-		return super.getObject(c, id, localId);
-	}
-
-	@Override
-	public synchronized void invalidate(Class<? extends Entity> clazz) {
-		super.invalidate(clazz);
 	}
 
 	@Override
@@ -82,18 +80,14 @@ public class MapObjectLookupClient extends MapObjectLookup {
 	}
 
 	@Override
-	protected synchronized FastIdLookup ensureLookup(Class c) {
-		return super.ensureLookup(c);
+	public synchronized <T extends Entity> T getObject(Class<? extends T> c,
+			long id, long localId) {
+		return super.getObject(c, id, localId);
 	}
 
 	@Override
-	public synchronized void changeMapping(Entity obj, long id, long localId) {
-		super.changeMapping(obj, id, localId);
-	}
-
-	@Override
-	public synchronized Set<Entity> allValues() {
-		return super.allValues();
+	public synchronized void invalidate(Class<? extends Entity> clazz) {
+		super.invalidate(clazz);
 	}
 
 	@Override
@@ -148,19 +142,16 @@ public class MapObjectLookupClient extends MapObjectLookup {
 	}
 
 	private synchronized void mapObjectFromFrontOfQueue() {
-		Entity obj = toRegister.removeFirst();
-		if ((obj.getId() == 0 && obj.getLocalId() == 0)
-				|| mappedObjects.contains(obj)) {
+		Entity entity = toRegister.removeFirst();
+		if ((entity.getId() == 0 && entity.getLocalId() == 0)
+				|| mappedObjects.contains(entity)) {
 			return;
 		}
-		Class<? extends Entity> clazz = obj.getClass();
+		Class<? extends Entity> clazz = entity.getClass();
 		FastIdLookup lookup = ensureLookup(clazz);
-		lookup.put(obj, obj.getId() == 0);
-		if (obj instanceof SourcesPropertyChangeEvents) {
-			SourcesPropertyChangeEvents sb = (SourcesPropertyChangeEvents) obj;
-			sb.removePropertyChangeListener(listener);
-			sb.addPropertyChangeListener(listener);
-		}
+		lookup.put(entity, entity.getId() == 0);
+		entity.removePropertyChangeListener(listener);
+		entity.addPropertyChangeListener(listener);
 		boolean lookupCreated = registerChildren.containsKey(clazz);
 		if (!registerChildren.containsKey(clazz)) {
 			ClientBeanReflector bi = ClientReflector.get()
@@ -182,11 +173,16 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		if (!childRegisterReflectors.isEmpty()) {
 			for (ClientPropertyReflector pr : childRegisterReflectors) {
 				Object value = Reflections.propertyAccessor()
-						.getPropertyValue(obj, pr.getPropertyName());
+						.getPropertyValue(entity, pr.getPropertyName());
 				addObjectOrCollectionToEndOfQueue(value);
 			}
 		}
-		mappedObjects.put(obj);
+		mappedObjects.put(entity);
+	}
+
+	@Override
+	protected synchronized FastIdLookup ensureLookup(Class c) {
+		return super.ensureLookup(c);
 	}
 
 	synchronized void addObjectOrCollectionToEndOfQueue(Object o) {

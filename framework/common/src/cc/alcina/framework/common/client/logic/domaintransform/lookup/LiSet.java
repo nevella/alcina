@@ -248,30 +248,6 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		}
 	}
 
-	private void readObject(java.io.ObjectInputStream s)
-			throws java.io.IOException, ClassNotFoundException {
-		s.defaultReadObject();
-		int arrayLength = s.readInt();
-		if (arrayLength != 0) {
-			// use add, to handle degenerate case
-			for (int i = 0; i < arrayLength; i++) {
-				add((H) s.readObject());
-			}
-		}
-	}
-
-	private void writeObject(java.io.ObjectOutputStream s)
-			throws java.io.IOException {
-		// Write out element count, and any hidden stuff
-		s.defaultWriteObject();
-		// Write out array length
-		s.writeInt(size());
-		// Write out all elements in the proper order.
-		for (Iterator<H> itr = iterator(); itr.hasNext();) {
-			s.writeObject(itr.next());
-		}
-	}
-
 	protected void toDegenerate() {
 		LinkedHashSet degenerate = new LinkedHashSet<H>();
 		degenerate.addAll(this);
