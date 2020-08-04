@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -57,19 +56,9 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
  */
 public final class ClientSerializationStreamReader
 		extends AbstractSerializationStreamReader {
-	private static native JavaScriptObject eval(String encoded) /*-{
-																return eval(encoded);
-																}-*/;
-
-	private static native int getLength(JavaScriptObject array) /*-{
-																return array.length;
-																}-*/;
-
 	private RpcDecoder decoder;
 
 	int index;
-
-	private JavaScriptObject results;
 
 	Serializer serializer;
 
@@ -221,10 +210,12 @@ public final class ClientSerializationStreamReader
 		return index > 0 ? decoder.getStringTable().get(index - 1) : null;
 	}
 
+	@Override
 	protected void rememberDecodedObject(int index, Object o) {
 		super.rememberDecodedObject(index, o);
 	}
 
+	@Override
 	protected int reserveDecodedObjectIndex() {
 		return super.reserveDecodedObjectIndex();
 	}

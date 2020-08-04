@@ -31,11 +31,11 @@ import java.util.Set;
 
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamReader;
 import com.google.gwt.user.server.rpc.SerializationPolicy;
 import com.google.gwt.user.server.rpc.impl.SerializabilityUtil;
 import com.google.gwt.user.server.rpc.impl.SerializedInstanceReference;
-
 
 /**
  * @see com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter
@@ -43,8 +43,7 @@ import com.google.gwt.user.server.rpc.impl.SerializedInstanceReference;
  * @see com.google.gwt.user.server.rpc.impl.ServerSerializationStreamWriter
  * @see com.google.gwt.user.server.rpc.impl.ServerSerializationStreamReader
  */
-public class SyncClientSerializationStreamReader
-        extends AbstractSerializationStreamReader {
+public class SyncClientSerializationStreamReader extends AbstractSerializationStreamReader {
     private static final String MIDDY = "],[";
 
     private static final char JS_ESCAPE_CHAR = '\\';
@@ -59,7 +58,7 @@ public class SyncClientSerializationStreamReader
      * @param <T>
      *            The type of object used to hold the data in the buffer
      */
-    private static class BoundedList<T> extends LinkedList<T> {
+    static class BoundedList<T> extends LinkedList<T> {
         private final Class<?> componentType;
 
         private final int expectedSize;
@@ -87,213 +86,196 @@ public class SyncClientSerializationStreamReader
     /**
      * Enumeration used to provided typed instance readers.
      */
-    private enum ValueReader {
+    enum ValueReader {
         BOOLEAN {
-            Object readValue(SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            Object readValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readBoolean();
             }
         },
         BYTE {
-            Object readValue(SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            Object readValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readByte();
             }
         },
         CHAR {
-            Object readValue(SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            Object readValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readChar();
             }
         },
         DOUBLE {
-            Object readValue(SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            Object readValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readDouble();
             }
         },
         FLOAT {
-            Object readValue(SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            Object readValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readFloat();
             }
         },
         INT {
-            Object readValue(SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            Object readValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readInt();
             }
         },
         LONG {
-            Object readValue(SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            Object readValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readLong();
             }
         },
         OBJECT {
-            Object readValue(SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            Object readValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readObject();
             }
         },
         SHORT {
-            Object readValue(SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            Object readValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readShort();
             }
         },
         STRING {
-            Object readValue(SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            Object readValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readString();
             }
         };
-        abstract Object readValue(SyncClientSerializationStreamReader stream)
-                throws SerializationException;
+        abstract Object readValue(SerializationStreamReader stream) throws SerializationException;
     }
 
     /**
      * Enumeration used to provided typed instance readers for vectors.
      */
-    private enum VectorReader {
+    enum VectorReader {
         BOOLEAN_VECTOR {
-            protected Object readSingleValue(
-                    SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            protected Object readSingleValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readBoolean();
             }
 
-            protected void setSingleValue(Object array, int index,
-                    Object value) {
+            @Override
+            protected void setSingleValue(Object array, int index, Object value) {
                 Array.setBoolean(array, index, (Boolean) value);
             }
         },
         BYTE_VECTOR {
-            protected Object readSingleValue(
-                    SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            protected Object readSingleValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readByte();
             }
 
-            protected void setSingleValue(Object array, int index,
-                    Object value) {
+            @Override
+            protected void setSingleValue(Object array, int index, Object value) {
                 Array.setByte(array, index, (Byte) value);
             }
         },
         CHAR_VECTOR {
-            protected Object readSingleValue(
-                    SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            protected Object readSingleValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readChar();
             }
 
-            protected void setSingleValue(Object array, int index,
-                    Object value) {
+            @Override
+            protected void setSingleValue(Object array, int index, Object value) {
                 Array.setChar(array, index, (Character) value);
             }
         },
         DOUBLE_VECTOR {
-            protected Object readSingleValue(
-                    SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            protected Object readSingleValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readDouble();
             }
 
-            protected void setSingleValue(Object array, int index,
-                    Object value) {
+            @Override
+            protected void setSingleValue(Object array, int index, Object value) {
                 Array.setDouble(array, index, (Double) value);
             }
         },
         FLOAT_VECTOR {
-            protected Object readSingleValue(
-                    SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            protected Object readSingleValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readFloat();
             }
 
-            protected void setSingleValue(Object array, int index,
-                    Object value) {
+            @Override
+            protected void setSingleValue(Object array, int index, Object value) {
                 Array.setFloat(array, index, (Float) value);
             }
         },
         INT_VECTOR {
-            protected Object readSingleValue(
-                    SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            protected Object readSingleValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readInt();
             }
 
-            protected void setSingleValue(Object array, int index,
-                    Object value) {
+            @Override
+            protected void setSingleValue(Object array, int index, Object value) {
                 Array.setInt(array, index, (Integer) value);
             }
         },
         LONG_VECTOR {
-            protected Object readSingleValue(
-                    SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            protected Object readSingleValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readLong();
             }
 
-            protected void setSingleValue(Object array, int index,
-                    Object value) {
+            @Override
+            protected void setSingleValue(Object array, int index, Object value) {
                 Array.setLong(array, index, (Long) value);
             }
         },
         OBJECT_VECTOR {
-            protected Object readSingleValue(
-                    SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            protected Object readSingleValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readObject();
             }
 
-            protected void setSingleValue(Object array, int index,
-                    Object value) {
+            @Override
+            protected void setSingleValue(Object array, int index, Object value) {
                 Array.set(array, index, value);
             }
         },
         SHORT_VECTOR {
-            protected Object readSingleValue(
-                    SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            protected Object readSingleValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readShort();
             }
 
-            protected void setSingleValue(Object array, int index,
-                    Object value) {
+            @Override
+            protected void setSingleValue(Object array, int index, Object value) {
                 Array.setShort(array, index, (Short) value);
             }
         },
         STRING_VECTOR {
-            protected Object readSingleValue(
-                    SyncClientSerializationStreamReader stream)
-                    throws SerializationException {
+            @Override
+            protected Object readSingleValue(SerializationStreamReader stream) throws SerializationException {
                 return stream.readString();
             }
 
-            protected void setSingleValue(Object array, int index,
-                    Object value) {
+            @Override
+            protected void setSingleValue(Object array, int index, Object value) {
                 Array.set(array, index, value);
             }
         };
-        protected abstract Object readSingleValue(
-                SyncClientSerializationStreamReader stream)
-                throws SerializationException;
+        protected abstract Object readSingleValue(SerializationStreamReader stream) throws SerializationException;
 
-        protected abstract void setSingleValue(Object array, int index,
-                Object value);
+        protected abstract void setSingleValue(Object array, int index, Object value);
 
         /**
          * Convert a BoundedList to an array of the correct type. This
          * implementation consumes the BoundedList.
          */
-        protected Object toArray(Class<?> componentType,
-                BoundedList<Object> buffer) throws SerializationException {
+        protected Object toArray(Class<?> componentType, BoundedList<Object> buffer) throws SerializationException {
             if (buffer.getExpectedSize() != buffer.size()) {
-                throw new SerializationException(
-                        "Inconsistent number of elements received. Received "
-                                + buffer.size() + " but expecting "
-                                + buffer.getExpectedSize());
+                throw new SerializationException("Inconsistent number of elements received. Received " + buffer.size()
+                        + " but expecting " + buffer.getExpectedSize());
             }
             Object arr = Array.newInstance(componentType, buffer.size());
             for (int i = 0, n = buffer.size(); i < n; i++) {
@@ -302,8 +284,7 @@ public class SyncClientSerializationStreamReader
             return arr;
         }
 
-        Object read(SyncClientSerializationStreamReader stream,
-                BoundedList<Object> instance) throws SerializationException {
+        Object read(SerializationStreamReader stream, BoundedList<Object> instance) throws SerializationException {
             for (int i = 0, n = instance.getExpectedSize(); i < n; ++i) {
                 instance.add(readSingleValue(stream));
             }
@@ -314,53 +295,33 @@ public class SyncClientSerializationStreamReader
     /**
      * Map of {@link Class} objects to {@link ValueReader}s.
      */
-    private static final Map<Class<?>, ValueReader> CLASS_TO_VALUE_READER = new IdentityHashMap<Class<?>, ValueReader>();
+    static final Map<Class<?>, ValueReader> CLASS_TO_VALUE_READER = new IdentityHashMap<Class<?>, ValueReader>();
 
     /**
      * Map of {@link Class} objects to {@link VectorReader}s.
      */
-    private static final Map<Class<?>, VectorReader> CLASS_TO_VECTOR_READER = new IdentityHashMap<Class<?>, VectorReader>();
+    static final Map<Class<?>, VectorReader> CLASS_TO_VECTOR_READER = new IdentityHashMap<Class<?>, VectorReader>();
     {
-        CLASS_TO_VECTOR_READER.put(boolean[].class,
-                SyncClientSerializationStreamReader.VectorReader.BOOLEAN_VECTOR);
-        CLASS_TO_VECTOR_READER.put(byte[].class,
-                SyncClientSerializationStreamReader.VectorReader.BYTE_VECTOR);
-        CLASS_TO_VECTOR_READER.put(char[].class,
-                SyncClientSerializationStreamReader.VectorReader.CHAR_VECTOR);
-        CLASS_TO_VECTOR_READER.put(double[].class,
-                SyncClientSerializationStreamReader.VectorReader.DOUBLE_VECTOR);
-        CLASS_TO_VECTOR_READER.put(float[].class,
-                SyncClientSerializationStreamReader.VectorReader.FLOAT_VECTOR);
-        CLASS_TO_VECTOR_READER.put(int[].class,
-                SyncClientSerializationStreamReader.VectorReader.INT_VECTOR);
-        CLASS_TO_VECTOR_READER.put(long[].class,
-                SyncClientSerializationStreamReader.VectorReader.LONG_VECTOR);
-        CLASS_TO_VECTOR_READER.put(Object[].class,
-                SyncClientSerializationStreamReader.VectorReader.OBJECT_VECTOR);
-        CLASS_TO_VECTOR_READER.put(short[].class,
-                SyncClientSerializationStreamReader.VectorReader.SHORT_VECTOR);
-        CLASS_TO_VECTOR_READER.put(String[].class,
-                SyncClientSerializationStreamReader.VectorReader.STRING_VECTOR);
-        CLASS_TO_VALUE_READER.put(boolean.class,
-                SyncClientSerializationStreamReader.ValueReader.BOOLEAN);
-        CLASS_TO_VALUE_READER.put(byte.class,
-                SyncClientSerializationStreamReader.ValueReader.BYTE);
-        CLASS_TO_VALUE_READER.put(char.class,
-                SyncClientSerializationStreamReader.ValueReader.CHAR);
-        CLASS_TO_VALUE_READER.put(double.class,
-                SyncClientSerializationStreamReader.ValueReader.DOUBLE);
-        CLASS_TO_VALUE_READER.put(float.class,
-                SyncClientSerializationStreamReader.ValueReader.FLOAT);
-        CLASS_TO_VALUE_READER.put(int.class,
-                SyncClientSerializationStreamReader.ValueReader.INT);
-        CLASS_TO_VALUE_READER.put(long.class,
-                SyncClientSerializationStreamReader.ValueReader.LONG);
-        CLASS_TO_VALUE_READER.put(Object.class,
-                SyncClientSerializationStreamReader.ValueReader.OBJECT);
-        CLASS_TO_VALUE_READER.put(short.class,
-                SyncClientSerializationStreamReader.ValueReader.SHORT);
-        CLASS_TO_VALUE_READER.put(String.class,
-                SyncClientSerializationStreamReader.ValueReader.STRING);
+        CLASS_TO_VECTOR_READER.put(boolean[].class, SyncClientSerializationStreamReader.VectorReader.BOOLEAN_VECTOR);
+        CLASS_TO_VECTOR_READER.put(byte[].class, SyncClientSerializationStreamReader.VectorReader.BYTE_VECTOR);
+        CLASS_TO_VECTOR_READER.put(char[].class, SyncClientSerializationStreamReader.VectorReader.CHAR_VECTOR);
+        CLASS_TO_VECTOR_READER.put(double[].class, SyncClientSerializationStreamReader.VectorReader.DOUBLE_VECTOR);
+        CLASS_TO_VECTOR_READER.put(float[].class, SyncClientSerializationStreamReader.VectorReader.FLOAT_VECTOR);
+        CLASS_TO_VECTOR_READER.put(int[].class, SyncClientSerializationStreamReader.VectorReader.INT_VECTOR);
+        CLASS_TO_VECTOR_READER.put(long[].class, SyncClientSerializationStreamReader.VectorReader.LONG_VECTOR);
+        CLASS_TO_VECTOR_READER.put(Object[].class, SyncClientSerializationStreamReader.VectorReader.OBJECT_VECTOR);
+        CLASS_TO_VECTOR_READER.put(short[].class, SyncClientSerializationStreamReader.VectorReader.SHORT_VECTOR);
+        CLASS_TO_VECTOR_READER.put(String[].class, SyncClientSerializationStreamReader.VectorReader.STRING_VECTOR);
+        CLASS_TO_VALUE_READER.put(boolean.class, SyncClientSerializationStreamReader.ValueReader.BOOLEAN);
+        CLASS_TO_VALUE_READER.put(byte.class, SyncClientSerializationStreamReader.ValueReader.BYTE);
+        CLASS_TO_VALUE_READER.put(char.class, SyncClientSerializationStreamReader.ValueReader.CHAR);
+        CLASS_TO_VALUE_READER.put(double.class, SyncClientSerializationStreamReader.ValueReader.DOUBLE);
+        CLASS_TO_VALUE_READER.put(float.class, SyncClientSerializationStreamReader.ValueReader.FLOAT);
+        CLASS_TO_VALUE_READER.put(int.class, SyncClientSerializationStreamReader.ValueReader.INT);
+        CLASS_TO_VALUE_READER.put(long.class, SyncClientSerializationStreamReader.ValueReader.LONG);
+        CLASS_TO_VALUE_READER.put(Object.class, SyncClientSerializationStreamReader.ValueReader.OBJECT);
+        CLASS_TO_VALUE_READER.put(short.class, SyncClientSerializationStreamReader.ValueReader.SHORT);
+        CLASS_TO_VALUE_READER.put(String.class, SyncClientSerializationStreamReader.ValueReader.STRING);
     }
 
     private List<String> results = new ArrayList<String>();
@@ -373,8 +334,7 @@ public class SyncClientSerializationStreamReader
 
     public static boolean notifyUnhandledControlChars = true;
 
-    public SyncClientSerializationStreamReader(
-            SerializationPolicy serializationPolicy) {
+    public SyncClientSerializationStreamReader(SerializationPolicy serializationPolicy) {
         this.serializationPolicy = serializationPolicy;
     }
 
@@ -385,16 +345,15 @@ public class SyncClientSerializationStreamReader
         super.prepareToRead(encoded);
         if (getVersion() != SERIALIZATION_STREAM_VERSION) {
             throw new IncompatibleRemoteServiceException(
-                    "Expecting version " + SERIALIZATION_STREAM_VERSION
-                            + " from server, got " + getVersion() + ".");
+                    "Expecting version " + SERIALIZATION_STREAM_VERSION + " from server, got " + getVersion() + ".");
         }
         buildStringTable();
     }
 
     Map<String, Class> typeLookup = new LinkedHashMap<String, Class>();
 
-    protected Object deserialize(String typeSignature)
-            throws SerializationException {
+    @Override
+    protected Object deserialize(String typeSignature) throws SerializationException {
         Object instance = null;
         SerializedInstanceReference serializedInstRef = SerializabilityUtil
                 .decodeSerializedInstanceReference(typeSignature);
@@ -411,13 +370,11 @@ public class SyncClientSerializationStreamReader
                 System.err.println("WARN: " + e.getMessage());
             }
             // TODO validateTypeVersions(instanceClass, serializedInstRef);
-            Class<?> customSerializer = SerializabilityUtil
-                    .hasCustomFieldSerializer(instanceClass);
+            Class<?> customSerializer = SerializabilityUtil.hasCustomFieldSerializer(instanceClass);
             int index = reserveDecodedObjectIndex();
             instance = instantiate(customSerializer, instanceClass);
             rememberDecodedObject(index, instance);
-            Object replacement = deserializeImpl(customSerializer,
-                    instanceClass, instance);
+            Object replacement = deserializeImpl(customSerializer, instanceClass, instance);
             // It's possible that deserializing an object requires the original
             // proxy
             // object to be replaced.
@@ -450,6 +407,7 @@ public class SyncClientSerializationStreamReader
         return clazz;
     }
 
+    @Override
     protected String getString(int index) {
         if (index == 0) {
             return null;
@@ -461,30 +419,37 @@ public class SyncClientSerializationStreamReader
         return this.stringTable.get(index - 1);
     }
 
+    @Override
     public boolean readBoolean() {
         return !results.get(--index).equals("0");
     }
 
+    @Override
     public byte readByte() {
         return Byte.parseByte(results.get(--index));
     }
 
+    @Override
     public char readChar() {
         return (char) Integer.parseInt(results.get(--index));
     }
 
+    @Override
     public double readDouble() {
         return Double.parseDouble(results.get(--index));
     }
 
+    @Override
     public float readFloat() {
         return Float.parseFloat(results.get(--index));
     }
 
+    @Override
     public int readInt() {
         return Integer.parseInt(results.get(--index));
     }
 
+    @Override
     public long readLong() {
         if (getVersion() == SERIALIZATION_STREAM_MIN_VERSION) {
             return (long) readDouble() + (long) readDouble();
@@ -496,10 +461,12 @@ public class SyncClientSerializationStreamReader
         }
     }
 
+    @Override
     public short readShort() {
         return Short.parseShort(results.get(--index));
     }
 
+    @Override
     public String readString() {
         return getString(readInt());
     }
@@ -608,10 +575,8 @@ public class SyncClientSerializationStreamReader
         return out;
     }
 
-    private Object instantiate(Class<?> customSerializer,
-            Class<?> instanceClass)
-            throws InstantiationException, IllegalAccessException,
-            IllegalArgumentException, InvocationTargetException,
+    Object instantiate(Class<?> customSerializer, Class<?> instanceClass)
+            throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException,
             NoSuchMethodException, SerializationException {
         if (customSerializer != null) {
             for (Method method : customSerializer.getMethods()) {
@@ -625,8 +590,7 @@ public class SyncClientSerializationStreamReader
             int length = readInt();
             // We don't pre-allocate the array; this prevents an allocation
             // attack
-            return new BoundedList<Object>(instanceClass.getComponentType(),
-                    length);
+            return new BoundedList<Object>(instanceClass.getComponentType(), length);
         } else if (instanceClass.isEnum()) {
             Enum<?>[] enumConstants = (Enum[]) instanceClass.getEnumConstants();
             int ordinal = readInt();
@@ -639,14 +603,11 @@ public class SyncClientSerializationStreamReader
         }
     }
 
-    private Object deserializeImpl(Class<?> customSerializer,
-            Class<?> instanceClass, Object instance)
-            throws NoSuchMethodException, IllegalArgumentException,
-            IllegalAccessException, InvocationTargetException,
+    private Object deserializeImpl(Class<?> customSerializer, Class<?> instanceClass, Object instance)
+            throws NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException,
             SerializationException, ClassNotFoundException {
         if (customSerializer != null) {
-            deserializeWithCustomFieldDeserializer(customSerializer,
-                    instanceClass, instance);
+            deserializeWithCustomFieldDeserializer(customSerializer, instanceClass, instance);
         } else if (instanceClass.isArray()) {
             instance = deserializeArray(instanceClass, instance);
         } else if (instanceClass.isEnum()) {
@@ -657,10 +618,8 @@ public class SyncClientSerializationStreamReader
         return instance;
     }
 
-    private void deserializeWithCustomFieldDeserializer(
-            Class<?> customSerializer, Class<?> instanceClass, Object instance)
-            throws NoSuchMethodException, IllegalAccessException,
-            InvocationTargetException {
+    private void deserializeWithCustomFieldDeserializer(Class<?> customSerializer, Class<?> instanceClass,
+            Object instance) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         assert (!instanceClass.isArray());
         for (Method method : customSerializer.getMethods()) {
             if ("deserialize".equals(method.getName())) {
@@ -679,37 +638,29 @@ public class SyncClientSerializationStreamReader
      * @param instance
      * @throws SerializationException
      */
-    
-    private Object deserializeArray(Class<?> instanceClass, Object instance)
-            throws SerializationException {
+    private Object deserializeArray(Class<?> instanceClass, Object instance) throws SerializationException {
         assert (instanceClass.isArray());
         BoundedList<Object> buffer = (BoundedList<Object>) instance;
         VectorReader instanceReader = CLASS_TO_VECTOR_READER.get(instanceClass);
         if (instanceReader != null) {
             return instanceReader.read(this, buffer);
         } else {
-            return SyncClientSerializationStreamReader.VectorReader.OBJECT_VECTOR
-                    .read(this, buffer);
+            return SyncClientSerializationStreamReader.VectorReader.OBJECT_VECTOR.read(this, buffer);
         }
     }
 
-    private void deserializeClass(Class<?> instanceClass, Object instance)
-            throws SerializationException, IllegalAccessException,
-            NoSuchMethodException, InvocationTargetException,
-            ClassNotFoundException {
-        Set<String> clientFieldNames = serializationPolicy
-                .getClientFieldNamesForEnhancedClass(instanceClass);
+    private void deserializeClass(Class<?> instanceClass, Object instance) throws SerializationException,
+            IllegalAccessException, NoSuchMethodException, InvocationTargetException, ClassNotFoundException {
+        Set<String> clientFieldNames = serializationPolicy.getClientFieldNamesForEnhancedClass(instanceClass);
         if (clientFieldNames != null) {
             readString();// and toss...
         }
-        Field[] serializableFields = SerializabilityUtil
-                .applyFieldSerializationPolicy(instanceClass);
+        Field[] serializableFields = SerializabilityUtil.applyFieldSerializationPolicy(instanceClass);
         for (Field declField : serializableFields) {
             assert (declField != null);
             Object value = deserializeValue(declField.getType());
             boolean isAccessible = declField.isAccessible();
-            boolean needsAccessOverride = !isAccessible
-                    && !Modifier.isPublic(declField.getModifiers());
+            boolean needsAccessOverride = !isAccessible && !Modifier.isPublic(declField.getModifiers());
             if (needsAccessOverride) {
                 // Override access restrictions
                 declField.setAccessible(true);
@@ -718,22 +669,18 @@ public class SyncClientSerializationStreamReader
         }
         Class<?> superClass = instanceClass.getSuperclass();
         if (serializationPolicy.shouldDeserializeFields(superClass)) {
-            deserializeImpl(
-                    SerializabilityUtil.hasCustomFieldSerializer(superClass),
-                    superClass, instance);
+            deserializeImpl(SerializabilityUtil.hasCustomFieldSerializer(superClass), superClass, instance);
         }
     }
 
-    public Object deserializeValue(Class<?> type)
-            throws SerializationException {
+    public Object deserializeValue(Class<?> type) throws SerializationException {
         ValueReader valueReader = CLASS_TO_VALUE_READER.get(type);
         if (valueReader != null) {
             return valueReader.readValue(this);
         } else {
             // Arrays of primitive or reference types need to go through
             // readObject.
-            return SyncClientSerializationStreamReader.ValueReader.OBJECT
-                    .readValue(this);
+            return SyncClientSerializationStreamReader.ValueReader.OBJECT.readValue(this);
         }
     }
 
@@ -801,8 +748,7 @@ public class SyncClientSerializationStreamReader
                     b2 = hex2byte(raw.charAt(++i));
                     b3 = hex2byte(raw.charAt(++i));
                     b4 = hex2byte(raw.charAt(++i));
-                    ch = (char) (b1 * 16 * 16 * 16 + b2 * 16 * 16 + b3 * 16
-                            + b4);
+                    ch = (char) (b1 * 16 * 16 * 16 + b2 * 16 * 16 + b3 * 16 + b4);
                     buffer.append(ch);
                     break;
                 default:
