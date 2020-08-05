@@ -45,6 +45,10 @@ public class Reflections {
 		}
 	}
 
+	public static <T> T newInstance(Class<T> clazz) {
+		return classLookup().newInstance(clazz);
+	}
+
 	public static ObjectLookup objectLookup() {
 		return get().objectLookup;
 	}
