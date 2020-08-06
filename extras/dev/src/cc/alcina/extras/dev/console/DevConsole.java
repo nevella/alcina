@@ -30,6 +30,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.stream.Collectors;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -67,6 +69,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
 import cc.alcina.extras.dev.console.DevHelper.StringPrompter;
+import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_InitConsole;
+import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_InitConsole.StatCategory_InitJaxbServices;
+import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_InitConsole.StatCategory_InitLightweightServices;
+import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_InitPostObjectServices;
+import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_Start;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -87,6 +94,9 @@ import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.metric.StartupStats;
+import cc.alcina.framework.entity.entityaccess.metric.StartupStats.KeyedStat;
+import cc.alcina.framework.entity.entityaccess.metric.StartupStats.LogProvider;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
@@ -106,8 +116,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	private static BiPrintStream devErr;
 
 	private static BiPrintStream devOut;
+
+	private static long startupTime;
 	// has to happen early, otherwise can never redirect
 	static {
+		startupTime = System.currentTimeMillis();
 		err = new BiPrintStream(new ByteArrayOutputStream());
 		devErr = new BiPrintStream(new ByteArrayOutputStream());
 		err.s1 = System.err;
@@ -223,6 +236,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	private boolean headless;
 
 	Stack<Class<? extends DevConsoleCommand>> shells = new Stack<>();
+
+	public ConsoleStatLogProvider logProvider;
 
 	public DevConsole() {
 		shells.push(DevConsoleCommand.class);
@@ -830,6 +845,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	protected void init() throws Exception {
 		instance = this;
+		long statStartInit = System.currentTimeMillis();
 		MetricLogging.get().start("init-console");
 		// osx =>
 		// https://bugs.openjdk.java.net/browse/JDK-8179209
@@ -838,6 +854,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		devHelper.loadDefaultLoggingProperties();
 		devHelper.loadJbossConfig(new ConsolePrompter());
 		devHelper.initLightweightServices();
+		long statEndInitLightweightServices = System.currentTimeMillis();
 		logger = devHelper.getTestLogger();
 		loadCommandMap();
 		System.setProperty("awt.useSystemAAFontSettings", "gasp");
@@ -856,6 +873,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					return null;
 				});
 		initJaxb();
+		long statEndInitJaxbServices = System.currentTimeMillis();
 		initState();
 		devHelper.loadJbossConfig(null);
 		boolean waitForUi = !devHelper.configLoaded;
@@ -880,15 +898,15 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 		clear();
 		MetricLogging.get().end("init-console");
-		try {
-			devHelper.initPostObjectServices();
-		} catch (Exception e) {
-			e.printStackTrace();
-			consoleLeft.err(String.format("Problem retrieving object graph"
-					+ " - reloading from server\n\t%s\n\n", e));
-			performCommand("gen-objects");
-			return;
-		}
+		this.logProvider = new ConsoleStatLogProvider();
+		new StatCategory_Start().emit(startupTime);
+		new StatCategory_InitLightweightServices()
+				.emit(statEndInitLightweightServices);
+		new StatCategory_InitJaxbServices().emit(statEndInitJaxbServices);
+		new StatCategory_InitConsole().emit(System.currentTimeMillis());
+		devHelper.initPostObjectServices();
+		new StatCategory_InitPostObjectServices()
+				.emit(System.currentTimeMillis());
 		if (!props.lastCommand.matches("|q|re|restart")) {
 			runningLastCommand = true;
 			performCommand(props.lastCommand);
@@ -1001,6 +1019,54 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		consolePropertiesFile = getDevFile("console-properties.xml");
 		consoleHistoryFile = getDevFile("console-history.xml");
 		consoleStringsFile = getDevFile("console-strings.xml");
+	}
+
+	public static class ConsoleStat_StatCategory_InitConsole extends KeyedStat {
+		public ConsoleStat_StatCategory_InitConsole() {
+			super(StatCategory_Start.class, StatCategory_InitConsole.class);
+		}
+
+		public static class ConsoleStat_StatCategory_InitJaxbServices
+				extends KeyedStat {
+			public ConsoleStat_StatCategory_InitJaxbServices() {
+				super(StatCategory_InitLightweightServices.class,
+						StatCategory_InitJaxbServices.class);
+			}
+		}
+
+		public static class ConsoleStat_StatCategory_InitLightweightServices
+				extends KeyedStat {
+			public ConsoleStat_StatCategory_InitLightweightServices() {
+				super(StatCategory_Start.class,
+						StatCategory_InitLightweightServices.class);
+			}
+		}
+	}
+
+	public static class ConsoleStatAll extends KeyedStat {
+		public ConsoleStatAll() {
+			super(StatCategory_Start.class, StatCategory_All.class);
+		}
+	}
+
+	public static class ConsoleStatLogProvider implements LogProvider {
+		List<String> stats = Collections.synchronizedList(new ArrayList<>());
+
+		String log;
+
+		public ConsoleStatLogProvider() {
+			StartupStats.topicEmitStat().add((k, v) -> {
+				stats.add(v);
+			});
+		}
+
+		@Override
+		public String getLog() {
+			if (log == null) {
+				log = stats.stream().collect(Collectors.joining("\n"));
+			}
+			return log;
+		}
 	}
 
 	public enum DevConsoleStyle {

@@ -200,14 +200,17 @@ public class DomainTransformPersistenceQueue {
 
 	public void waitUntilToFireQueueEmpty() {
 		while (true) {
+			int size = 0;
 			synchronized (queueModificationLock) {
-				if (toFire.size() == 0) {
+				size = toFire.size();
+				if (size < 10) {
 					return;
 				}
 			}
 			try {
 				Thread.sleep(1000);
-				logger.warn("Waiting for toFire queue to empty");
+				logger.warn("Waiting for toFire queue to (mostly) empty [{}]",
+						size);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
