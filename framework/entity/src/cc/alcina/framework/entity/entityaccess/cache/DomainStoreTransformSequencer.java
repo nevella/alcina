@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -169,8 +170,9 @@ public class DomainStoreTransformSequencer {
 					Thread blockingThread = loaderDatabase.getStore()
 							.getPersistenceEvents().getQueue()
 							.getFireEventsThread();
-					String blockingThreadStacktrace = blockingThread==null?"<no blocking thread>":SEUtilities
-							.getFullStacktrace(blockingThread);
+					String blockingThreadStacktrace = blockingThread == null
+							? "<no blocking thread>"
+							: SEUtilities.getFullStacktrace(blockingThread);
 					logger.warn(
 							"Timedout waiting for barrier - {} - \n{} - \nBlocking thread:\n{}",
 							requestId, debugString(), blockingThreadStacktrace);
@@ -245,6 +247,10 @@ public class DomainStoreTransformSequencer {
 
 	private List<Long> getSequentialUnpublishedTransformIds0()
 			throws Exception {
+		if (highestVisibleTransactions == null) {
+			// not yet finished with marking - come back later please
+			return Collections.emptyList();
+		}
 		List<Long> unpublishedIds = new ArrayList<>();
 		Connection conn = getConnection();
 		/*
@@ -372,6 +378,9 @@ public class DomainStoreTransformSequencer {
 		highestVisibleTransactions = getHighestVisibleTransformRequest(conn);
 		if (highestVisibleTransactions == null) {
 			throw new RuntimeException("Null h.v.t");
+		} else {
+			logger.info("Marked highest visible transactions - %s",
+					highestVisibleTransactions);
 		}
 	}
 
