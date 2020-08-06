@@ -1056,7 +1056,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 		public ConsoleStatLogProvider() {
 			StartupStats.topicEmitStat().add((k, v) -> {
-				Ax.out(v);
 				stats.add(v);
 			});
 		}
