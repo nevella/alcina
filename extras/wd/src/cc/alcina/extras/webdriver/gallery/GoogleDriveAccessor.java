@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.List;
-
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
@@ -21,142 +20,122 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class GoogleDriveAccessor {
-	private JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
-	private DriveAccess driveAccess;
+    private JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
-	private Drive service;
+    private DriveAccess driveAccess;
 
-	public File ensureFolder(String folderPath) throws IOException {
-		String parentId = driveAccess.folderId;
-		File file = null;
-		ensureDrive();
-		String pageToken = null;
-		for (String part : folderPath.split("/")) {
-			FileList result = service.files().list().setQ(Ax.format(
-					"mimeType = 'application/vnd.google-apps.folder' and '%s' in parents",
-					parentId)).setSpaces("drive")
-					.setFields("nextPageToken, files(id, name)")
-					.setPageToken(pageToken).setPageSize(1).execute();
-			if (result.getFiles().size() == 1) {
-				file = result.getFiles().get(0);
-			} else {
-				File fileMetadata = new File();
-				fileMetadata.setName(part);
-				fileMetadata.setMimeType("application/vnd.google-apps.folder");
-				fileMetadata.setParents(Collections.singletonList(parentId));
-				file = service.files().create(fileMetadata).setFields("id")
-						.execute();
-				Ax.out("Created folder: %s", part);
-			}
-			parentId = file.getId();
-		}
-		return file;
-	}
+    private Drive service;
 
-	public File upload(File folder, byte[] bytes, String name)
-			throws IOException {
-		File fileMetadata = new File();
-		fileMetadata.setName(name);
-		fileMetadata.setParents(Collections.singletonList(folder.getId()));
-		String type = null;
-		switch (name.replaceFirst(".+\\.(.+)", "$1")) {
-		case "html":
-			type = "text/html";
-			break;
-		case "png":
-			type = "image/png";
-			break;
-		default:
-			throw new UnsupportedOperationException();
-		}
-		ByteArrayContent mediaContent = new ByteArrayContent(type, bytes);
-		File file = service.files().create(fileMetadata, mediaContent)
-				.setFields("id").execute();
-		Ax.out("Uploaded file: %s", name);
-		return file;
-	}
+    public File ensureFolder(String folderPath) throws IOException {
+        String parentId = driveAccess.folderId;
+        File file = null;
+        ensureDrive();
+        String pageToken = null;
+        for (String part : folderPath.split("/")) {
+            FileList result = service.files().list().setQ(Ax.format("mimeType = 'application/vnd.google-apps.folder' and '%s' in parents", parentId)).setSpaces("drive").setFields("nextPageToken, files(id, name)").setPageToken(pageToken).setPageSize(1).execute();
+            if (result.getFiles().size() == 1) {
+                file = result.getFiles().get(0);
+            } else {
+                File fileMetadata = new File();
+                fileMetadata.setName(part);
+                fileMetadata.setMimeType("application/vnd.google-apps.folder");
+                fileMetadata.setParents(Collections.singletonList(parentId));
+                file = service.files().create(fileMetadata).setFields("id").execute();
+                Ax.out("Created folder: %s", part);
+            }
+            parentId = file.getId();
+        }
+        return file;
+    }
 
-	public GoogleDriveAccessor withDriveAccess(DriveAccess sheetAccess) {
-		this.driveAccess = sheetAccess;
-		return this;
-	}
+    public File upload(File folder, byte[] bytes, String name) throws IOException {
+        File fileMetadata = new File();
+        fileMetadata.setName(name);
+        fileMetadata.setParents(Collections.singletonList(folder.getId()));
+        String type = null;
+        switch(name.replaceFirst(".+\\.(.+)", "$1")) {
+            case "html":
+                type = "text/html";
+                break;
+            case "png":
+                type = "image/png";
+                break;
+            default:
+                throw new UnsupportedOperationException();
+        }
+        ByteArrayContent mediaContent = new ByteArrayContent(type, bytes);
+        File file = service.files().create(fileMetadata, mediaContent).setFields("id").execute();
+        Ax.out("Uploaded file: %s", name);
+        return file;
+    }
 
-	private Credential getCredentials(NetHttpTransport transport)
-			throws IOException {
-		// Load client secrets.
-		InputStream in = new FileInputStream(driveAccess.credentialsPath);
-		GoogleClientSecrets clientSecrets = GoogleClientSecrets
-				.load(JSON_FACTORY, new InputStreamReader(in));
-		// Build flow and trigger user authorization request.
-		GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
-				transport, JSON_FACTORY, clientSecrets, driveAccess.scopes)
-						.setDataStoreFactory(
-								new FileDataStoreFactory(new java.io.File(
-										driveAccess.credentialsStorageLocalPath)))
-						.setAccessType("offline").build();
-		LocalServerReceiver receiver = new LocalServerReceiver.Builder()
-				.setPort(8888).build();
-		return new AuthorizationCodeInstalledApp(flow, receiver)
-				.authorize("user");
-	}
+    public GoogleDriveAccessor withDriveAccess(DriveAccess sheetAccess) {
+        this.driveAccess = sheetAccess;
+        return this;
+    }
 
-	void ensureDrive() {
-		if (service != null) {
-			return;
-		}
-		try {
-			final NetHttpTransport httpTransport = GoogleNetHttpTransport
-					.newTrustedTransport();
-			service = new Drive.Builder(httpTransport, JSON_FACTORY,
-					getCredentials(httpTransport))
-							.setApplicationName(driveAccess.applicationName)
-							.build();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    private Credential getCredentials(NetHttpTransport transport) throws IOException {
+        // Load client secrets.
+        InputStream in = new FileInputStream(driveAccess.credentialsPath);
+        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
+        // Build flow and trigger user authorization request.
+        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(transport, JSON_FACTORY, clientSecrets, driveAccess.scopes).setDataStoreFactory(new FileDataStoreFactory(new java.io.File(driveAccess.credentialsStorageLocalPath))).setAccessType("offline").build();
+        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
+        return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+    }
 
-	public static class DriveAccess {
-		private List<String> scopes;
+    void ensureDrive() {
+        if (service != null) {
+            return;
+        }
+        try {
+            final NetHttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+            service = new Drive.Builder(httpTransport, JSON_FACTORY, getCredentials(httpTransport)).setApplicationName(driveAccess.applicationName).build();
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-		private String applicationName;
+    public static class DriveAccess {
 
-		private String folderId;
+        private List<String> scopes;
 
-		private String credentialsPath;
+        private String applicationName;
 
-		private String credentialsStorageLocalPath;
+        private String folderId;
 
-		public DriveAccess withApplicationName(String applicationName) {
-			this.applicationName = applicationName;
-			return this;
-		}
+        private String credentialsPath;
 
-		public DriveAccess withCredentialsPath(String credentialsPath) {
-			this.credentialsPath = credentialsPath;
-			return this;
-		}
+        private String credentialsStorageLocalPath;
 
-		public DriveAccess withCredentialsStorageLocalPath(
-				String credentialsStorageLocalPath) {
-			this.credentialsStorageLocalPath = credentialsStorageLocalPath;
-			return this;
-		}
+        public DriveAccess withApplicationName(String applicationName) {
+            this.applicationName = applicationName;
+            return this;
+        }
 
-		public DriveAccess withFolderId(String folderId) {
-			this.folderId = folderId;
-			return this;
-		}
+        public DriveAccess withCredentialsPath(String credentialsPath) {
+            this.credentialsPath = credentialsPath;
+            return this;
+        }
 
-		public DriveAccess withScopes(List<String> scopes) {
-			this.scopes = scopes;
-			return this;
-		}
-	}
+        public DriveAccess withCredentialsStorageLocalPath(String credentialsStorageLocalPath) {
+            this.credentialsStorageLocalPath = credentialsStorageLocalPath;
+            return this;
+        }
+
+        public DriveAccess withFolderId(String folderId) {
+            this.folderId = folderId;
+            return this;
+        }
+
+        public DriveAccess withScopes(List<String> scopes) {
+            this.scopes = scopes;
+            return this;
+        }
+    }
 }
