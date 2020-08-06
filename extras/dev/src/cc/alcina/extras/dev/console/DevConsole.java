@@ -66,14 +66,14 @@ import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import cc.alcina.extras.dev.console.DevConsole.StatCategory_All.StatCategory_InitConsole;
-import cc.alcina.extras.dev.console.DevConsole.StatCategory_All.StatCategory_InitConsole.StatCategory_InitJaxbServices;
-import cc.alcina.extras.dev.console.DevConsole.StatCategory_All.StatCategory_InitConsole.StatCategory_InitLightweightServices;
-import cc.alcina.extras.dev.console.DevConsole.StatCategory_All.StatCategory_InitPostObjectServices;
-import cc.alcina.extras.dev.console.DevConsole.StatCategory_All.StatCategory_Start;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
 import cc.alcina.extras.dev.console.DevHelper.StringPrompter;
+import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_InitConsole;
+import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_InitConsole.StatCategory_InitJaxbServices;
+import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_InitConsole.StatCategory_InitLightweightServices;
+import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_InitPostObjectServices;
+import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_Start;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -97,7 +97,6 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.metric.StartupStats;
 import cc.alcina.framework.entity.entityaccess.metric.StartupStats.KeyedStat;
 import cc.alcina.framework.entity.entityaccess.metric.StartupStats.LogProvider;
-import cc.alcina.framework.entity.entityaccess.metric.StartupStats.StatCategory;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
@@ -1317,46 +1316,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				for (Runnable r : buffer) {
 					r.run();
 				}
-			}
-		}
-	}
-
-	public static class StatCategory_All extends StatCategory {
-		public StatCategory_All() {
-			super(null, "console");
-		}
-
-		public static class StatCategory_InitConsole extends StatCategory {
-			public StatCategory_InitConsole() {
-				super(StatCategory_All.class, "init");
-			}
-
-			public static class StatCategory_InitJaxbServices
-					extends StatCategory {
-				public StatCategory_InitJaxbServices() {
-					super(StatCategory_InitConsole.class, "init-jaxb");
-				}
-			}
-
-			public static class StatCategory_InitLightweightServices
-					extends StatCategory {
-				public StatCategory_InitLightweightServices() {
-					super(StatCategory_InitConsole.class,
-							"init-lightweight-services");
-				}
-			}
-		}
-
-		public static class StatCategory_InitPostObjectServices
-				extends StatCategory {
-			public StatCategory_InitPostObjectServices() {
-				super(StatCategory_All.class, "init-postobject-services");
-			}
-		}
-
-		public static class StatCategory_Start extends StatCategory {
-			public StatCategory_Start() {
-				super(StatCategory_All.class, "console-start");
 			}
 		}
 	}

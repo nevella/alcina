@@ -78,5 +78,18 @@
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-serialization-3.14.11-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javassist-3.18.1-GA.jar" sourcepath="/g/minor/javassist"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/scrypt-1.4.0.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/google-api-client-1.25.0.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/google-api-client-jackson2-1.25.0.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/google-api-client-java6-1.25.0.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/google-api-services-sheets-v4-rev565-1.25.0-sources.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/google-api-services-sheets-v4-rev565-1.25.0.jar" sourcepath="lib/extras/google/google-api-services-sheets-v4-rev565-1.25.0-sources.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/google-http-client-1.25.0.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/google-http-client-jackson2-1.25.0.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/google-oauth-client-1.25.0.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/google-oauth-client-java6-1.25.0.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/google-oauth-client-jetty-1.25.0.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/gson-2.1.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/protobuf-java-2.4.1.jar"/>
+	<classpathentry kind="lib" path="lib/extras/google/google-api-services-drive-v3-rev161-1.25.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

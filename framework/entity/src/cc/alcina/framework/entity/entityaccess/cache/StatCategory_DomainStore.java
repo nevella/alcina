@@ -1,6 +1,6 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import cc.alcina.framework.entity.entityaccess.metric.StartupStats.StatCategory;
+import cc.alcina.framework.entity.entityaccess.metric.StatCategory;
 
 public class StatCategory_DomainStore extends StatCategory {
 	public StatCategory_DomainStore() {

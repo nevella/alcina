@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class StartupStats {
-	private static Topic<String> topicEmitStat = Topic.local();
+	static Topic<String> topicEmitStat = Topic.local();
 
 	public static Topic<String> topicEmitStat() {
 		return topicEmitStat;
@@ -97,47 +97,6 @@ public class StartupStats {
 	@FunctionalInterface
 	public interface LogProvider {
 		public String getLog();
-	}
-
-	public static abstract class StatCategory {
-		private Class<? extends StatCategory> parent;
-
-		private String name;
-
-		public StatCategory(Class<? extends StatCategory> parent, String name) {
-			this.parent = parent;
-			this.name = name;
-		}
-
-		public void emit() {
-			emit(System.currentTimeMillis());
-		}
-
-		public void emit(long time) {
-			String timeStamp = new SimpleDateFormat("HH:mm:ss,SSS")
-					.format(new Date(time));
-			String key = Ax.format("[alc-%s]", getClass().getSimpleName());
-			topicEmitStat.publish(Ax.format("%s %s :: end", timeStamp, key));
-		}
-
-		public boolean isParallel() {
-			return false;
-		}
-
-		public String name() {
-			return name;
-		}
-
-		public Class<? extends StatCategory> parent() {
-			return parent;
-		}
-
-		protected int depth() {
-			if (parent == null) {
-				return 0;
-			}
-			return Reflections.newInstance(parent).depth() + 1;
-		}
 	}
 
 	@RegistryLocation(registryPoint = StatProvider.class)
