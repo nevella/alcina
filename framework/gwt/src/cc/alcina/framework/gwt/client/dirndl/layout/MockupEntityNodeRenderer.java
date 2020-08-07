@@ -1,7 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import java.util.Optional;
-
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -17,12 +15,12 @@ public class MockupEntityNodeRenderer extends LeafNodeRenderer {
 	}
 
 	@Override
-	public Optional<Widget> render(Node node) {
+	public Widget render(Node node) {
 		// TODO bind to the reflector;
-		Optional<Widget> rendered = super.render(node);
-		rendered.get().getElement().setInnerText(Ax.format("[%s] :: %s",
+		Widget rendered = super.render(node);
+		rendered.getElement().setInnerText(Ax.format("[%s] :: %s",
 				node.model.getClass().getSimpleName(), node.model.toString()));
-		NodeRendererStyle.MOCKUP_ENTITY_NODE.set(rendered.get());
+		NodeRendererStyle.MOCKUP_ENTITY_NODE.set(rendered);
 		return rendered;
 	}
 }

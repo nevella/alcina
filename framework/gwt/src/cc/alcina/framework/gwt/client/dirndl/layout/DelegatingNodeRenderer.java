@@ -1,22 +1,28 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.google.common.base.Preconditions;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 /*
  * For holder objects in a node tree - delegate to the unique (modificable) child
  */
-public class DelegatingNodeRenderer extends DirectedNodeRenderer{
-
+public class DelegatingNodeRenderer extends DirectedNodeRenderer {
 	@Override
-	public Optional<Widget> render(Node node) {
-		Preconditions.checkArgument(node.descriptor.getProperties().length==1);
-		return Optional.empty();
+	public List<Widget> renderWithDefaults(Node node) {
+		List<Widget> result = new ArrayList<>();
+		for (Node child : node.children) {
+			result.addAll(child.render());
+		}
+		return result;
+	}
+
+	// Not called
+	@Override
+	public Widget render(Node node) {
+		throw new UnsupportedOperationException();
 	}
 }

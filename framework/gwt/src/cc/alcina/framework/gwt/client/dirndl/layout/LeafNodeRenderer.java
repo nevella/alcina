@@ -1,7 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import java.util.Optional;
-
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -15,9 +13,9 @@ public class LeafNodeRenderer extends DirectedNodeRenderer {
 	}
 
 	@Override
-	public Optional<Widget> render(Node node) {
+	public Widget render(Node node) {
 		String tag = getTag(node);
 		Preconditions.checkArgument(Ax.notBlank(tag));
-		return Optional.of(new SimpleWidget(tag));
+		return new SimpleWidget(tag);
 	}
 }

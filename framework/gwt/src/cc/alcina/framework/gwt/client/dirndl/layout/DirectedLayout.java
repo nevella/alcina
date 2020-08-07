@@ -2,8 +2,8 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.ui.Panel;
@@ -27,7 +27,9 @@ public class DirectedLayout {
 		this.parent = parent;
 		Node root = new Node();
 		root.model = model;
-		return root.render().orElse(null);
+		List<Widget> rendered = root.render();
+		Preconditions.checkState(rendered.size() == 1);
+		return rendered.get(0);
 	}
 
 	public class Node {
@@ -49,11 +51,12 @@ public class DirectedLayout {
 
 		private Accessor accessor;
 
-		Optional<Widget> render() {
+		List<Widget> render() {
 			return render(false);
 		}
 
-		private Optional<Widget> render(boolean intermediateChild) {
+		// FIXME - change from List to render result (mostly single widget)...
+		private List<Widget> render(boolean intermediateChild) {
 			this.descriptor = model == null ? null
 					: Reflections.beanDescriptorProvider().getDescriptor(model);
 			renderer = resolveRenderer();
@@ -64,8 +67,8 @@ public class DirectedLayout {
 			if (renderer instanceof HasWrappingDirecteds) {
 				List<Directed> wrappers = ((HasWrappingDirecteds) renderer)
 						.getWrappingDirecteds(this);
-				Optional<Widget> rootResult = null;
-				Optional<Widget> cursor = null;
+				Widget rootResult = null;
+				Widget cursor = null;
 				Node nodeCursor = this;
 				for (Directed directed : wrappers) {
 					Node wrapperChild = new Node();
@@ -75,17 +78,19 @@ public class DirectedLayout {
 					wrapperChild.directed = directed;
 					nodeCursor.children.add(wrapperChild);
 					boolean intermediate = directed != Ax.last(wrappers);
-					Optional<Widget> widget = wrapperChild.render(intermediate);
+					List<Widget> widgets = wrapperChild.render(intermediate);
+					Preconditions.checkState(widgets.size() == 1);
+					Widget widget = widgets.get(0);
 					if (rootResult == null) {
 						rootResult = widget;
 					}
 					if (cursor != null) {
-						((Panel) cursor.get()).add(widget.get());
+						((Panel) cursor).add(widget);
 					}
 					cursor = widget;
 					nodeCursor = wrapperChild;
 				}
-				return rootResult;
+				return Collections.singletonList(rootResult);
 			}
 			if (intermediateChild) {
 				// will be handled by the calling loop
@@ -110,15 +115,7 @@ public class DirectedLayout {
 					}
 				}
 			}
-			Optional<Widget> result = renderer.renderWithDefaults(this);
-			if (!result.isPresent()) {
-				/*
-				 * passthrough wrapper model
-				 */
-				Preconditions
-						.checkArgument(descriptor.getProperties().length == 1);
-				return children.get(0).render();
-			}
+			List<Widget> result = renderer.renderWithDefaults(this);
 			return result;
 		}
 

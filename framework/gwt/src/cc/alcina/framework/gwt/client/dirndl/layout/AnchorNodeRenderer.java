@@ -5,7 +5,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.Optional;
 
 import com.google.gwt.user.client.ui.Widget;
 
@@ -27,11 +26,11 @@ public class AnchorNodeRenderer extends ContainerNodeRenderer {
 	}
 
 	@Override
-	public Optional<Widget> render(Node node) {
+	public Widget render(Node node) {
 		AnchorNodeRendererArgs args = node
 				.annotation(AnchorNodeRendererArgs.class);
-		Optional<Widget> rendered = super.render(node);
-		rendered.get().getElement().setAttribute("href", args.href());
+		Widget rendered = super.render(node);
+		rendered.getElement().setAttribute("href", args.href());
 		return rendered;
 	}
 }

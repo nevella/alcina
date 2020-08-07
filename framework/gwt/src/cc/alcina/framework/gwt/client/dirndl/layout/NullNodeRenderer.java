@@ -1,7 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import java.util.Optional;
-
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -10,9 +8,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 public class NullNodeRenderer extends DirectedNodeRenderer {
 	@Override
-	public Optional<Widget> render(Node node) {
+	public Widget render(Node node) {
 		Label label = new Label(Ax.format("Null model :: %s", node.path()));
 		NodeRendererStyle.MOCKUP_NODE.set(label.getElement());
-		return Optional.of(label);
+		return label;
 	}
 }

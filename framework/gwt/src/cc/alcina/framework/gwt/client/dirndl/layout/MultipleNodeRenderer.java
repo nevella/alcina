@@ -8,7 +8,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -74,7 +73,7 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 	}
 
 	@Override
-	public Optional<Widget> render(Node node) {
+	public Widget render(Node node) {
 		throw new UnsupportedOperationException();
 	}
 

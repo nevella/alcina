@@ -1,7 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import java.util.Optional;
-
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -15,13 +13,13 @@ public class ContainerNodeRenderer extends DirectedNodeRenderer {
 	}
 
 	@Override
-	public Optional<Widget> render(Node node) {
+	public Widget render(Node node) {
 		String tag = getTag(node);
 		Preconditions.checkArgument(Ax.notBlank(tag));
-		FlowPanel widget = new FlowPanel(tag);
+		FlowPanel panel = new FlowPanel(tag);
 		for (Node child : node.children) {
-			widget.add(child.render().get());
+			child.render().forEach(panel::add);
 		}
-		return Optional.of(widget);
+		return panel;
 	}
 }
