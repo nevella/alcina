@@ -35,6 +35,8 @@ public class SheetPersister {
 
 	private GoogleDriveAccessor driveAccessor;
 
+	private String dateStamp;
+
 	public void persist(File base, Element configuration, String userAgentType)
 			throws Exception {
 		this.configuration = configuration;
@@ -42,6 +44,9 @@ public class SheetPersister {
 		files = Arrays.stream(base.listFiles())
 				.sorted(Comparator.comparing(File::lastModified))
 				.map(GalleryFile::new).collect(Collectors.toList());
+		ZonedDateTime utcZoned = ZonedDateTime.now(ZoneId.of("UTC"));
+		dateStamp = utcZoned.format(DateTimeFormatter
+				.ofPattern("yyyyMMdd.HHmmss").withZone(ZoneId.of("UTC")));
 		uploadImages();
 		updateSheet();
 	}
@@ -55,12 +60,13 @@ public class SheetPersister {
 			List<List<Object>> values = Arrays.asList(
 					Arrays.asList("App", configuration.name),
 					Arrays.asList("Hashes", hashes),
-					Arrays.asList("User agent", userAgentType));
+					Arrays.asList("User agent", userAgentType),
+					Arrays.asList("Timestamp (UTC)", dateStamp));
 			sheetAccessor.update("A1", values);
 		}
 		GridRange gridRange = new GridRange();
 		gridRange.setStartRowIndex(0);
-		gridRange.setEndRowIndex(3);
+		gridRange.setEndRowIndex(4);
 		gridRange.setStartColumnIndex(0);
 		gridRange.setEndColumnIndex(1);
 		sheetAccessor.bold(gridRange);
@@ -107,11 +113,8 @@ public class SheetPersister {
 	void uploadImages() throws IOException {
 		driveAccessor = new GoogleDriveAccessor()
 				.withDriveAccess(configuration.asDriveAccess());
-		ZonedDateTime utcZoned = ZonedDateTime.now(ZoneId.of("UTC"));
-		String date = utcZoned.format(DateTimeFormatter
-				.ofPattern("yyyyMMdd.HHmmss").withZone(ZoneId.of("UTC")));
 		String folderPath = Ax.format("%s/%s/%s", configuration.name,
-				userAgentType, date);
+				userAgentType, dateStamp);
 		this.folder = driveAccessor.ensureFolder(folderPath);
 		files.forEach(GalleryFile::upload);
 	}

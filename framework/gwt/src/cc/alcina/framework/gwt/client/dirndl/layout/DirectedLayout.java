@@ -11,6 +11,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.TypedParameter;
@@ -94,7 +95,7 @@ public class DirectedLayout {
 			if (renderer instanceof HasDirectedModel) {
 				childSource = ((HasDirectedModel) renderer).getDirectedModel();
 			}
-			if (childSource != null) {
+			if (childSource instanceof BaseBindable) {
 				List<PropertyReflector> propertyReflectors = Reflections
 						.classLookup()
 						.getPropertyReflectors((childSource.getClass()));
@@ -102,12 +103,10 @@ public class DirectedLayout {
 					for (PropertyReflector propertyReflector : propertyReflectors) {
 						Node child = new Node();
 						child.parent = this;
-						child.model = propertyReflector
-								.getPropertyValue(childSource);
-						children.add(child);
 						child.propertyReflector = propertyReflector;
 						child.model = propertyReflector
 								.getPropertyValue(childSource);
+						children.add(child);
 					}
 				}
 			}
@@ -134,8 +133,13 @@ public class DirectedLayout {
 				((DirectedResolver) directed).setLocation(
 						new AnnotationLocation(clazz, propertyReflector));
 			}
-			renderer = Reflections.classLookup()
-					.newInstance(directed.renderer());
+			Class<? extends DirectedNodeRenderer> rendererClass = directed
+					.renderer();
+			if (rendererClass == VoidNodeRenderer.class) {
+				rendererClass = Registry.get().lookupSingle(
+						DirectedNodeRenderer.class, model.getClass());
+			}
+			renderer = Reflections.classLookup().newInstance(rendererClass);
 			return renderer;
 		}
 

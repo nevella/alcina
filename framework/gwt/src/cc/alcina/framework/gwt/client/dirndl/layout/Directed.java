@@ -27,7 +27,7 @@ public @interface Directed {
 
 	TypedParameter[] parameters() default {};
 
-	public Class<? extends DirectedNodeRenderer> renderer() default MockupNodeRenderer.class;
+	public Class<? extends DirectedNodeRenderer> renderer() default VoidNodeRenderer.class;
 
 	@RegistryLocation(registryPoint = DirectedResolver.class, implementationType = ImplementationType.INSTANCE)
 	@ClientInstantiable
@@ -70,7 +70,7 @@ public @interface Directed {
 		public Class<? extends DirectedNodeRenderer> renderer() {
 			Function<Directed, Class<? extends DirectedNodeRenderer>> function = Directed::renderer;
 			return resolver.resolve(function, "renderer",
-					MockupNodeRenderer.class);
+					VoidNodeRenderer.class);
 		}
 
 		protected TreeResolver<Directed>

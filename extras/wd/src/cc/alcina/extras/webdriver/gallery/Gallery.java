@@ -85,7 +85,7 @@ public class Gallery {
 	}
 
 	private void end0() {
-		if (galleryConfiguration != null && ResourceUtilities.is("upload")) {
+		if (galleryConfiguration != null) {
 			try {
 				new SheetPersister().persist(base, configuration,
 						userAgentType);
@@ -106,23 +106,29 @@ public class Gallery {
 			throw new WrappedRuntimeException(e);
 		}
 		String currentUrl = remoteDriver.getCurrentUrl();
-		String base = currentUrl.replaceFirst("(http?s://.+?)/.+?", "$1");
+		String base = currentUrl.replaceFirst("(https?://.+?)/.+", "$1");
 		String pageSource = (String) remoteDriver
 				.executeScript("return document.documentElement.outerHTML;");
 		try {
 			Document w3cdoc = ResourceUtilities
 					.loadHtmlDocumentFromString(pageSource);
 			DomDoc doc = new DomDoc(w3cdoc);
-			doc.xpath("//script").forEach(DomNode::removeFromParent);
-			List<DomNode> stylesheetNodes = doc
-					.xpath("//link[@rel='stylesheet']").nodes();
+			doc.xpath("//script | //SCRIPT").forEach(DomNode::removeFromParent);
+			List<DomNode> stylesheetNodes = doc.xpath(
+					"//link[@rel='stylesheet'] | //LINK[@rel='stylesheet']")
+					.nodes();
 			for (DomNode node : stylesheetNodes) {
 				String href = node.attr("href");
 				if (href.startsWith("/")) {
 					String resolved = base + href;
-					String contents = ResourceUtilities
-							.readUrlAsString(resolved);
-					node.builder().tag("style").text(contents).insertAfter();
+					try {
+						String contents = ResourceUtilities
+								.readUrlAsString(resolved);
+						node.builder().tag("style").text(contents)
+								.insertAfter();
+					} catch (Exception e) {
+						Ax.simpleExceptionOut(e);
+					}
 					node.removeFromParent();
 				}
 			}
