@@ -100,6 +100,10 @@ import it.unimi.dsi.fastutil.longs.LongArrayList;
 /*FIXME - mvcc.4
  * The various loadtable methods are way to overloaded 
  * (and use context vars as well because of call depth). Refactor into a loadparams builder
+ * 
+ * FIXME - mvcc.5
+ * 
+ * warmup connections would ideally be all in the same tx (no idea if that's even possible). or ... 1 connection multiple statements?
  */
 public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	Logger logger = LoggerFactory.getLogger(getClass());
@@ -873,8 +877,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	private String longsToIdClause(Collection<Long> ids) {
-		return EntityPersistenceHelper.toInClause(
-				ids.stream().sorted().collect(Collectors.toList()));
+		return EntityPersistenceHelper
+				.toInClause(ids.stream().sorted().collect(Collectors.toList()));
 	}
 
 	private void prepareTable(DomainClassDescriptor classDescriptor)

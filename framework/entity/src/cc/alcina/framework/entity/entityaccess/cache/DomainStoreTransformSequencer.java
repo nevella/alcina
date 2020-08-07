@@ -241,6 +241,7 @@ public class DomainStoreTransformSequencer {
 							transactionsData);
 				}
 			}
+			conn.commit();
 			return transactionsData;
 		}
 	}
