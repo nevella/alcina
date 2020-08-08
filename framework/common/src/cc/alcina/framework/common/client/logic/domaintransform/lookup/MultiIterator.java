@@ -67,8 +67,8 @@ public class MultiIterator<E> extends FilteringIterator<E> {
 				continue;
 			}
 			E e = iterator.peek();
-			// requires null safe comparator with
-			if (!minPopulated || comparator.compare(min, e) < 0) {
+			// requires null safe comparator
+			if (!minPopulated || comparator.compare(e, min) < 0) {
 				min = e;
 				currentIteratorIndex = iteratorIdx;
 			}

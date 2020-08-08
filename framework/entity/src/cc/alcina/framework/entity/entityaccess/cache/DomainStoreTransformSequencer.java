@@ -380,7 +380,7 @@ public class DomainStoreTransformSequencer {
 		if (highestVisibleTransactions == null) {
 			throw new RuntimeException("Null h.v.t");
 		} else {
-			logger.info("Marked highest visible transactions - %s",
+			logger.info("Marked highest visible transactions - {}",
 					highestVisibleTransactions);
 		}
 	}
