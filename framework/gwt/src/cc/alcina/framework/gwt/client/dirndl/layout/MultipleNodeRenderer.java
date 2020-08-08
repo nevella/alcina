@@ -14,10 +14,15 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.TypedParameter;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 public class MultipleNodeRenderer extends DirectedNodeRenderer
 		implements HasWrappingDirecteds {
+	/*
+	 * Fabricates a 'directed' out of the supplied tag & css class
+	 */
 	private final class DirectedImplementation implements Directed {
 		private final int idx;
 
@@ -51,6 +56,11 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 		@Override
 		public String cssClass() {
 			return this.args.cssClasses()[this.idx];
+		}
+
+		@Override
+		public Behaviour behaviour() {
+			return null;
 		}
 	}
 

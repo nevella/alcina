@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.dirndl.layout;
+package cc.alcina.framework.gwt.client.dirndl.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -10,8 +10,11 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-// in fact, should only be an inner annotation for @Directed
-@Target(ElementType.METHOD)
+@Target(ElementType.TYPE)
 @ClientVisible
-public @interface Behaviour {
+public @interface Ref {
+	// the unique (for Reference subtype) serialization id
+	String value();
+
+	String displayName() default "";
 }

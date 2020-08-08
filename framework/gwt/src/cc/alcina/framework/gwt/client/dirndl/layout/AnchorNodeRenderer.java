@@ -5,9 +5,12 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.function.Function;
 
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
@@ -16,8 +19,21 @@ public class AnchorNodeRenderer extends ContainerNodeRenderer {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface AnchorNodeRendererArgs {
-		String href();
+	public @interface AnchorNodeRendererHref {
+		String value();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	public @interface AnchorNodeRendererHrefProvider {
+		Class<? extends AnchorNodeRendererHrefFunction> value();
+	}
+
+	@ClientInstantiable
+	public static abstract class AnchorNodeRendererHrefFunction<A>
+			implements Function<A, String> {
 	}
 
 	@Override
@@ -27,10 +43,15 @@ public class AnchorNodeRenderer extends ContainerNodeRenderer {
 
 	@Override
 	public Widget render(Node node) {
-		AnchorNodeRendererArgs args = node
-				.annotation(AnchorNodeRendererArgs.class);
+		AnchorNodeRendererHref hrefConstant = node
+				.annotation(AnchorNodeRendererHref.class);
+		AnchorNodeRendererHrefProvider hrefProvider = node
+				.annotation(AnchorNodeRendererHrefProvider.class);
 		Widget rendered = super.render(node);
-		rendered.getElement().setAttribute("href", args.href());
+		String href = hrefConstant != null ? hrefConstant.value()
+				: (String) Reflections.newInstance(hrefProvider.value())
+						.apply(node.model);
+		rendered.getElement().setAttribute("href", href);
 		return rendered;
 	}
 }

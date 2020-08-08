@@ -67,10 +67,10 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (checkedClassAnnotations.contains(clazz)) {
 			return;
 		}
-		IntrospectionException introspectionException = checkClassAnnotationsGenerateException(
-				clazz);
-		if (introspectionException != null) {
-			throw introspectionException;
+		IntrospectionCheckResult checkResult = checkClassAnnotationsGenerateException(
+				clazz, true);
+		if (!checkResult.canIntrospect) {
+			throw checkResult.exception;
 		}
 		checkedClassAnnotations.add(clazz);
 	}
@@ -79,16 +79,29 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (checkedClassAnnotations.contains(clazz)) {
 			return true;
 		}
-		return checkClassAnnotationsGenerateException(clazz) == null;
+		return checkClassAnnotationsGenerateException(clazz,
+				false).canIntrospect;
 	}
 
-	private static IntrospectionException
-			checkClassAnnotationsGenerateException(Class clazz) {
+	private static class IntrospectionCheckResult {
+		boolean canIntrospect;
+
+		IntrospectionException exception;
+	}
+
+	private static IntrospectionCheckResult
+			checkClassAnnotationsGenerateException(Class clazz,
+					boolean generateExceptions) {
+		IntrospectionCheckResult result = new IntrospectionCheckResult();
 		int mod = clazz.getModifiers();
 		if (Modifier.isAbstract(mod) || clazz.isAnonymousClass()
 				|| (clazz.isMemberClass() && !Modifier.isStatic(mod))) {
-			return new IntrospectionException(
-					"not reflectable class - abstract or non-static", clazz);
+			if (generateExceptions) {
+				result.exception = new IntrospectionException(
+						"not reflectable class - abstract or non-static",
+						clazz);
+			}
+			return result;
 		}
 		boolean introspectable = AnnotationUtils.hasAnnotationNamed(clazz,
 				ClientInstantiable.class)
@@ -100,11 +113,15 @@ public class ClientReflectorJvm extends ClientReflector {
 		}
 		if (!introspectable && clazz
 				.getAnnotation(IgnoreIntrospectionChecks.class) == null) {
-			return new IntrospectionException(
-					"not reflectable class - no clientinstantiable/beandescriptor/introspectable annotation",
-					clazz);
+			if (generateExceptions) {
+				result.exception = new IntrospectionException(
+						"not reflectable class - no clientinstantiable/beandescriptor/introspectable annotation",
+						clazz);
+			}
+			return result;
 		}
-		return null;
+		result.canIntrospect = true;
+		return result;
 	}
 
 	public static void checkClassAnnotationsForInstantiation(Class clazz) {

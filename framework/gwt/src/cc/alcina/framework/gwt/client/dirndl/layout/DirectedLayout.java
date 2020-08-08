@@ -18,7 +18,8 @@ import cc.alcina.framework.common.client.logic.reflection.TypedParameter;
 import cc.alcina.framework.common.client.logic.reflection.TypedParameter.Accessor;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.dirndl.layout.Directed.DirectedResolver;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
 
 public class DirectedLayout {
 	Widget parent;
@@ -32,7 +33,7 @@ public class DirectedLayout {
 		return rendered.get(0);
 	}
 
-	public class Node {
+	public static class Node {
 		Object model;
 
 		DirectedNodeRenderer renderer;
@@ -40,8 +41,6 @@ public class DirectedLayout {
 		BeanDescriptor descriptor;
 
 		Directed directed;
-
-		Object childSource;
 
 		List<Node> children = new ArrayList<>();
 
@@ -60,6 +59,10 @@ public class DirectedLayout {
 			this.descriptor = model == null ? null
 					: Reflections.beanDescriptorProvider().getDescriptor(model);
 			renderer = resolveRenderer();
+			if (renderer instanceof NotRenderedNodeRenderer) {
+				// to avoid adding model children
+				return Collections.emptyList();
+			}
 			/*
 			 * allow insertion of multiple nodes for one model object - loop
 			 * without adding model children until the final Directed
@@ -70,25 +73,29 @@ public class DirectedLayout {
 				Widget rootResult = null;
 				Widget cursor = null;
 				Node nodeCursor = this;
+				List<Widget> widgets = null;
 				for (Directed directed : wrappers) {
-					Node wrapperChild = new Node();
-					wrapperChild.parent = nodeCursor;
-					wrapperChild.model = model;
+					Node wrapperChild = nodeCursor.addChild(model);
 					wrapperChild.propertyReflector = propertyReflector;
 					wrapperChild.directed = directed;
-					nodeCursor.children.add(wrapperChild);
 					boolean intermediate = directed != Ax.last(wrappers);
-					List<Widget> widgets = wrapperChild.render(intermediate);
-					Preconditions.checkState(widgets.size() == 1);
-					Widget widget = widgets.get(0);
-					if (rootResult == null) {
-						rootResult = widget;
+					widgets = wrapperChild.render(intermediate);
+					if (directed == Ax.last(wrappers) && widgets.size() != 1) {
+						if (cursor != null) {
+							widgets.forEach(((Panel) cursor)::add);
+						}
+					} else {
+						Preconditions.checkState(widgets.size() == 1);
+						Widget widget = widgets.get(0);
+						if (rootResult == null) {
+							rootResult = widget;
+						}
+						if (cursor != null) {
+							((Panel) cursor).add(widget);
+						}
+						cursor = widget;
+						nodeCursor = wrapperChild;
 					}
-					if (cursor != null) {
-						((Panel) cursor).add(widget);
-					}
-					cursor = widget;
-					nodeCursor = wrapperChild;
 				}
 				return Collections.singletonList(rootResult);
 			}
@@ -96,27 +103,29 @@ public class DirectedLayout {
 				// will be handled by the calling loop
 				return renderer.renderWithDefaults(this);
 			}
-			childSource = model;
-			if (renderer instanceof HasDirectedModel) {
-				childSource = ((HasDirectedModel) renderer).getDirectedModel();
-			}
-			if (childSource instanceof BaseBindable) {
+			if (model instanceof BaseBindable
+					&& !(renderer instanceof HasDirectedModel)) {
 				List<PropertyReflector> propertyReflectors = Reflections
 						.classLookup()
-						.getPropertyReflectors((childSource.getClass()));
+						.getPropertyReflectors((model.getClass()));
 				if (propertyReflectors != null) {
 					for (PropertyReflector propertyReflector : propertyReflectors) {
-						Node child = new Node();
-						child.parent = this;
+						Node child = addChild(
+								propertyReflector.getPropertyValue(model));
 						child.propertyReflector = propertyReflector;
-						child.model = propertyReflector
-								.getPropertyValue(childSource);
-						children.add(child);
 					}
 				}
 			}
 			List<Widget> result = renderer.renderWithDefaults(this);
 			return result;
+		}
+
+		Node addChild(Object childModel) {
+			Node child = new Node();
+			child.parent = this;
+			child.model = childModel;
+			children.add(child);
+			return child;
 		}
 
 		private DirectedNodeRenderer resolveRenderer() {
@@ -133,6 +142,9 @@ public class DirectedLayout {
 			Class<? extends DirectedNodeRenderer> rendererClass = directed
 					.renderer();
 			if (rendererClass == VoidNodeRenderer.class) {
+				if (model.getClass() == String.class) {
+					int debug = 3;
+				}
 				rendererClass = Registry.get().lookupSingle(
 						DirectedNodeRenderer.class, model.getClass());
 			}
@@ -168,9 +180,14 @@ public class DirectedLayout {
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			// TODO - dirndl - do we resolve? I think...not - just directed
 			// (hardcode there)
-			return new AnnotationLocation(
+			A annotation = new AnnotationLocation(
 					model == null ? null : model.getClass(), propertyReflector)
 							.getAnnotation(clazz);
+			if (annotation == null && parent != null
+					&& parent.renderer instanceof CollectionNodeRenderer) {
+				return parent.annotation(clazz);
+			}
+			return annotation;
 		}
 	}
 }

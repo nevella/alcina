@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.dirndl.layout;
+package cc.alcina.framework.gwt.client.dirndl.annotation;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
@@ -15,6 +15,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
 import cc.alcina.framework.common.client.logic.reflection.TypedParameter;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.VoidNodeRenderer;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -28,6 +30,8 @@ public @interface Directed {
 	TypedParameter[] parameters() default {};
 
 	public Class<? extends DirectedNodeRenderer> renderer() default VoidNodeRenderer.class;
+
+	public Behaviour behaviour() default @Behaviour();
 
 	@RegistryLocation(registryPoint = DirectedResolver.class, implementationType = ImplementationType.INSTANCE)
 	@ClientInstantiable
@@ -89,6 +93,12 @@ public @interface Directed {
 		public String tag() {
 			Function<Directed, String> function = Directed::tag;
 			return resolver.resolve(function, "tag", "");
+		}
+
+		@Override
+		public Behaviour behaviour() {
+			Function<Directed, Behaviour> function = Directed::behaviour;
+			return resolver.resolve(function, "behaviour", null);
 		}
 	}
 }
