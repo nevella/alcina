@@ -1,0 +1,30 @@
+package ${referredObject-package-name};
+
+import ${referredEntity-name};
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
+import cc.alcina.framework.gwt.client.objecttree.search.packs.BaseTruncatedObjectCriterionPack.BaseTruncatedObjectCriterionSearchable;
+
+public class ${criterionPack-simpleName} {
+	public class ${criterion-simpleName} extends TruncatedObjectCriterion<${referredObject-simpleName}> {
+		public ${criterion-simpleName}() {
+		}
+	
+		public ${criterion-simpleName}(${referredObject-simpleName} o) {
+			setValue(o);
+		}
+	
+		@Override
+		public Class<${referredObject-simpleName}> getObjectClass() {
+			return ${referredObject-simpleName}.class;
+		}
+	}
+	
+	public static class ${referredObjectSearchable-simpleName} extends
+			BaseTruncatedObjectCriterionSearchable<${criterion-simpleName}> {
+		public ${referredObjectSearchable-simpleName}(Class fromObjectClass) {
+			super(CommonUtils.deInfix(fromObjectClass.getSimpleName()),
+					${criterion-simpleName}.class);
+		}
+	}
+}

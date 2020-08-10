@@ -1,0 +1,15 @@
+package ${searchDefinition-package};
+
+import ${entity-name};
+
+import cc.alcina.framework.common.client.domain.search.SearchOrder;
+
+public class ${searchOrders-simpleName} {
+	public static class ${entity-simpleName}IdOrder
+			extends SearchOrder<${entity-simpleName}, Long> {
+		@Override
+		public Long apply(${entity-simpleName} t) {
+			return t.getId();
+		}
+	}
+}

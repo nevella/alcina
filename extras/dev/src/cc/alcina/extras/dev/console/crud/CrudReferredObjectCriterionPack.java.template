@@ -1,0 +1,43 @@
+package ${searchDefinition-package-name};
+
+import java.util.function.Function;
+
+import ${referredEntity-name};
+import ${entity-name};
+import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
+import cc.alcina.framework.gwt.client.objecttree.search.packs.BaseTruncatedObjectCriterionPack.BaseTruncatedObjectCriterionHandler;
+public  class ${criterionPack-simpleName}{
+	public static class ${criterion-simpleName} extends TruncatedObjectCriterion<${referredObject-simpleName}> {
+		public ${criterion-simpleName}() {
+		}
+	
+		public ${criterion-simpleName}(${referredObject-simpleName} o) {
+			setValue(o);
+		}
+	
+		@Override
+		public Class<${referredObject-simpleName}> getObjectClass() {
+			return ${referredObject-simpleName}.class;
+		}
+	}
+	public  static class ${criterionHandler-simpleName} extends
+				${baseCriterionHandler-simpleName}<${criterion-simpleName}> implements
+				BaseTruncatedObjectCriterionHandler<${entity-simpleName}, ${referredObject-simpleName}> {
+		@Override
+		public DomainFilter getFilter(${criterion-simpleName} sc) {
+			return getFilter0(sc);
+		}
+
+		@Override
+		public Function<${entity-simpleName}, ${referredObject-simpleName}> getLinkedObjectMapper() {
+			return o -> o.provide${referredObject-simpleName}();
+		}
+
+		@Override
+		public Class<${criterion-simpleName}> handlesSearchCriterion() {
+			return ${criterion-simpleName}.class;
+		}
+	}
+	
+}
