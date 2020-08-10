@@ -236,6 +236,8 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 					referredObjectName);
 			set("criterion-simpleName", "%sObjectCriterion",
 					referredObjectName);
+			set("entityCriterion-simpleName", "%s%sObjectCriterion", entityName,
+					referredObjectName);
 			set("referredObjectSearchable-simpleName", "%sObjectSearchable",
 					referredObjectName);
 			set("referredObject-name", "%s.%s", this.referredObjectPackageName,

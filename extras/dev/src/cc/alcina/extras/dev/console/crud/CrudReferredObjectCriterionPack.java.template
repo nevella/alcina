@@ -8,11 +8,11 @@ import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.BaseTruncatedObjectCriterionPack.BaseTruncatedObjectCriterionHandler;
 public  class ${criterionPack-simpleName}{
-	public static class ${criterion-simpleName} extends TruncatedObjectCriterion<${referredObject-simpleName}> {
-		public ${criterion-simpleName}() {
+	public static class ${entityCriterion-simpleName} extends TruncatedObjectCriterion<${referredObject-simpleName}> {
+		public ${entityCriterion-simpleName}() {
 		}
 	
-		public ${criterion-simpleName}(${referredObject-simpleName} o) {
+		public ${entityCriterion-simpleName}(${referredObject-simpleName} o) {
 			setValue(o);
 		}
 	
