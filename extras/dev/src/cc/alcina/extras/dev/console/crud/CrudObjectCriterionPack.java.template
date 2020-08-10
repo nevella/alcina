@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.BaseTruncatedObjectCriterionPack.BaseTruncatedObjectCriterionSearchable;
 
 public class ${criterionPack-simpleName} {
-	public class ${criterion-simpleName} extends TruncatedObjectCriterion<${referredObject-simpleName}> {
+	public static class ${criterion-simpleName} extends TruncatedObjectCriterion<${referredObject-simpleName}> {
 		public ${criterion-simpleName}() {
 		}
 	
