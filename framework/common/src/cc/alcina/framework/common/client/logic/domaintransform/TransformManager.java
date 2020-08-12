@@ -1824,10 +1824,27 @@ public abstract class TransformManager implements PropertyChangeListener,
 					CommitType.TO_LOCAL_BEAN);
 			trs = (Set) ((LinkedHashSet) trs).clone();
 			deregisterProvisionalObjects(objects);
-			for (DomainTransformEvent dte : trs) {
-				if (objects.contains(dte.getSource())) {
+			for (DomainTransformEvent event : trs) {
+				if (objects.contains(event.getSource())) {
 					try {
-						apply(dte);
+						ApplyToken token = createApplyToken(event);
+						switch (event.getTransformType()) {
+						case ADD_REF_TO_COLLECTION:
+							modifyCollectionProperty(token.object,
+									event.getPropertyName(),
+									token.newTargetObject,
+									CollectionModificationType.ADD);
+							break;
+						case REMOVE_REF_FROM_COLLECTION:
+							modifyCollectionProperty(token.object,
+									event.getPropertyName(),
+									token.newTargetObject,
+									CollectionModificationType.REMOVE);
+							break;
+						default:
+							apply(event);
+							break;
+						}
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
 					}
