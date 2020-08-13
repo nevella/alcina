@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.domaintransform;
 
+import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 
@@ -30,5 +31,24 @@ public class ClientInstanceTransportImpl extends ClientInstance {
 
 	@Override
 	public void setUser(IUser user) {
+	}
+
+	@Override
+	public AuthenticationSession getAuthenticationSession() {
+		return null;
+	}
+
+	@Override
+	public void setAuthenticationSession(
+			AuthenticationSession authenticationSession) {
+	}
+
+	@Override
+	public ClientInstance getReplaces() {
+		return null;
+	}
+
+	@Override
+	public void setReplaces(ClientInstance replaces) {
 	}
 }

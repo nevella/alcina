@@ -357,18 +357,23 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		return this.dateRendererProvider;
 	}
 
-	// private Set<String> reffedDescriptor = new LinkedHashSet<String>();
 	@Override
 	public BeanDescriptor getDescriptor(Object o) {
 		Class c = o.getClass();
-		// if (reffedDescriptor!=null &&
-		// !reffedDescriptor.contains(c.getName())){
-		// reffedDescriptor.add(c.getName());
-		// System.out.println(c.getName());
-		// }
 		BeanDescriptor bd = descriptorClassLookup.get(c);
 		if (bd == null) {
 			bd = Introspector.INSTANCE.getDescriptor(o);
+			descriptorClassLookup.put(c, bd);
+		}
+		return bd;
+	}
+
+	@Override
+	public BeanDescriptor getDescriptorOrNull(Object o) {
+		Class c = o.getClass();
+		BeanDescriptor bd = descriptorClassLookup.get(c);
+		if (bd == null) {
+			bd = Introspector.INSTANCE.getDescriptorOrNull(o);
 			descriptorClassLookup.put(c, bd);
 		}
 		return bd;

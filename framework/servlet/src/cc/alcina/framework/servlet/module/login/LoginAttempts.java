@@ -55,7 +55,7 @@ public class LoginAttempts {
 		loginAttempt.setUserNameLowerCase(
 				loginModel.loginRequest.getUserName().toLowerCase());
 		loginAttempt.setDate(new Date());
-		loginAttempt.setIpAddress(ServletLayerUtils.robustGetRemoteAddr(
+		loginAttempt.setIpAddress(ServletLayerUtils.robustGetRemoteAddress(
 				CommonRemoteServiceServlet.getContextThreadLocalRequest()));
 		loginAttempt.setSuccess(loginModel.loginResponse.isOk());
 		loginAttempt.setUserAgent(ServletLayerUtils.getUserAgent(

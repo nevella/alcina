@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.common.client.logic.domaintransform;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.MappedSuperclass;
@@ -37,6 +36,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  * Important note - the subclass IUser field should be @GwtTransient - to
  * prevent accidental access of possibly different IUser objects
  * 
+ * ....hhmmm,, actually the user field is needed on the client in, say, hello()
+ * - client has to take care of this
+ * 
  * @author nick@alcina.cc
  * 
  *         Note that the localid field won't be used (clientinstances are not
@@ -44,9 +46,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  *
  */
 public abstract class ClientInstance extends Entity<ClientInstance>
-		implements HasIUser, Serializable, Cloneable {
-	
-
+		implements HasIUser, Cloneable {
 	private Date helloDate;
 
 	private Integer auth;
@@ -74,6 +74,17 @@ public abstract class ClientInstance extends Entity<ClientInstance>
 
 	@GwtTransient
 	private Boolean expired;
+
+	@Transient
+	public abstract AuthenticationSession getAuthenticationSession();
+
+	public abstract void setAuthenticationSession(
+			AuthenticationSession authenticationSession);
+
+	@Transient
+	public abstract ClientInstance getReplaces();
+
+	public abstract void setReplaces(ClientInstance replaces);
 
 	@Override
 	public abstract ClientInstance clone();

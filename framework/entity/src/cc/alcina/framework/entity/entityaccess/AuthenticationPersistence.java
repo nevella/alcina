@@ -24,13 +24,13 @@ import cc.alcina.framework.common.client.util.NullWrappingMap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 
-@RegistryLocation(registryPoint = ClientInstanceAuthenticationCache.class, implementationType = ImplementationType.SINGLETON)
-public class ClientInstanceAuthenticationCache {
-	public static final transient String CONTEXT_IDLE_TIMEOUT_DISABLED = ClientInstanceAuthenticationCache.class
+@RegistryLocation(registryPoint = AuthenticationPersistence.class, implementationType = ImplementationType.SINGLETON)
+public class AuthenticationPersistence {
+	public static final transient String CONTEXT_IDLE_TIMEOUT_DISABLED = AuthenticationPersistence.class
 			.getName() + ".CONTEXT_IDLE_TIMEOUT_DISABLED";
 
-	public static ClientInstanceAuthenticationCache get() {
-		return Registry.impl(ClientInstanceAuthenticationCache.class);
+	public static AuthenticationPersistence get() {
+		return Registry.impl(AuthenticationPersistence.class);
 	}
 
 	HandshakeObjectProvider handshakeObjectProvider;
@@ -113,8 +113,8 @@ public class ClientInstanceAuthenticationCache {
 	 * @return false if expired
 	 */
 	public boolean checkClientInstanceExpiration(long id) {
-		int idleTimeoutSecs = ResourceUtilities.getInteger(
-				ClientInstanceAuthenticationCache.class, "idleTimeoutSecs");
+		int idleTimeoutSecs = ResourceUtilities
+				.getInteger(AuthenticationPersistence.class, "idleTimeoutSecs");
 		if (idleTimeoutSecs == 0
 				|| LooseContext.is(CONTEXT_IDLE_TIMEOUT_DISABLED)) {
 			return true;
@@ -210,7 +210,7 @@ public class ClientInstanceAuthenticationCache {
 		boolean checkAccessTimeAndUpdateIfNotExpired(K key) {
 			long now = System.currentTimeMillis();
 			int idleTimeoutSecs = ResourceUtilities.getInteger(
-					ClientInstanceAuthenticationCache.class, "idleTimeoutSecs");
+					AuthenticationPersistence.class, "idleTimeoutSecs");
 			if (idleTimeoutSecs == 0
 					|| LooseContext.is(CONTEXT_IDLE_TIMEOUT_DISABLED)) {
 			} else {
@@ -228,5 +228,17 @@ public class ClientInstanceAuthenticationCache {
 			}
 			return true;
 		}
+	}
+
+	public void createClientInstance(Iid iid, String userAgent,
+			String remoteAddress) {
+		// FIXME - mvcc.wrap
+		// response.setClientInstance(MobilityLabBeanProvider.get()
+		// .getCommonPersistenceBean().createClientInstance(getUserAgent(),
+		// new CookieHelper().getIid(getThreadLocalRequest(),
+		// getThreadLocalResponse()),
+		// ServletLayerUtils
+		// .robustGetRemoteAddress(getThreadLocalRequest())));
+		// TODO Auto-generated method stub
 	}
 }

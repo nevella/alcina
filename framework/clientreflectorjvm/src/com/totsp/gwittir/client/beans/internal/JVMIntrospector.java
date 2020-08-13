@@ -174,4 +174,9 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 					"Unknown property: " + name + " on class " + className);
 		}
 	}
+
+	@Override
+	public BeanDescriptor getDescriptorOrNull(Object object) {
+		return getDescriptor(object);
+	}
 }

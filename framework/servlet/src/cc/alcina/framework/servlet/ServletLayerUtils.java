@@ -82,7 +82,7 @@ public class ServletLayerUtils {
 		return stringMap;
 	}
 
-	public static String robustGetRemoteAddr(HttpServletRequest request) {
+	public static String robustGetRemoteAddress(HttpServletRequest request) {
 		if (request == null) {
 			return null;
 		}

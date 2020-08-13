@@ -21,6 +21,11 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
         
         return null;
     }
+    @Override
+    public BeanDescriptor getDescriptorOrNull(Object object) {
+        
+        return null;
+    }
 
     @Override
     public Class resolveClass(Object instance) {

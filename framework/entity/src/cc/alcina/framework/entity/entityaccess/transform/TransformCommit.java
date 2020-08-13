@@ -69,7 +69,7 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
-import cc.alcina.framework.entity.entityaccess.ClientInstanceAuthenticationCache;
+import cc.alcina.framework.entity.entityaccess.AuthenticationPersistence;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
@@ -207,7 +207,7 @@ public class TransformCommit {
 						if (!PermissionsManager.get().isAdmin()) {
 							try {
 								LooseContext.pushWithTrue(
-										ClientInstanceAuthenticationCache.CONTEXT_IDLE_TIMEOUT_DISABLED);
+										AuthenticationPersistence.CONTEXT_IDLE_TIMEOUT_DISABLED);
 								if (!cp.validateClientInstance(
 										deltaRecord.getClientInstanceId(),
 										deltaRecord.getClientInstanceAuth())) {

@@ -57,7 +57,8 @@ public class DirectedLayout {
 		// FIXME - change from List to render result (mostly single widget)...
 		private List<Widget> render(boolean intermediateChild) {
 			this.descriptor = model == null ? null
-					: Reflections.beanDescriptorProvider().getDescriptor(model);
+					: Reflections.beanDescriptorProvider()
+							.getDescriptorOrNull(model);
 			renderer = resolveRenderer();
 			if (renderer instanceof NotRenderedNodeRenderer) {
 				// to avoid adding model children

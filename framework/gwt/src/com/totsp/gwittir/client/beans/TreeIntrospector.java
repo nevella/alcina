@@ -34,6 +34,7 @@ public abstract class TreeIntrospector implements Introspector {
 		}
 	}
 
+	@Override
 	public BeanDescriptor getDescriptorOrNull(Object object) {
 		if (object == null) {
 			throw new NullPointerException("Attempt to introspect null object");
@@ -56,9 +57,9 @@ public abstract class TreeIntrospector implements Introspector {
 
 	public native JavaScriptObject getNativeMethod(Class declaringClass,
 			String methodName) /*-{
-								return this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup
-								.get(declaringClass)[methodName];
-								}-*/;
+    return this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup
+        .get(declaringClass)[methodName];
+	}-*/;
 
 	public void registerChild(TreeIntrospector child) {
 		introspectors.add(0, child);
@@ -66,9 +67,9 @@ public abstract class TreeIntrospector implements Introspector {
 
 	public native JavaScriptObject
 			registerMethodDeclaringType(Class declaringClass) /*-{
-																return this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup
-																.set(declaringClass, []);
-																}-*/;
+    return this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup
+        .set(declaringClass, []);
+	}-*/;
 
 	@Override
 	public Class resolveClass(Object instance) {
@@ -77,8 +78,8 @@ public abstract class TreeIntrospector implements Introspector {
 	}
 
 	private native void initMethodLookup()/*-{
-											this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup = new Map();
-											}-*/;
+    this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup = new Map();
+	}-*/;
 
 	protected abstract BeanDescriptor getDescriptor0(Object object);
 

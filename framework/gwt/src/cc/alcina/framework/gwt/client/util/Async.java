@@ -43,7 +43,7 @@ public class Async {
 		}
 	}
 
-	public static AsyncCallbackBuilder callbackBuilder() {
-		return new AsyncCallbackBuilder();
+	public static <T> AsyncCallbackBuilder<T> callbackBuilder() {
+		return new AsyncCallbackBuilder<T>();
 	}
 }

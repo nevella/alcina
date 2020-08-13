@@ -12,6 +12,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.servlet.SessionHelper;
+import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class AlcinaServletContext {
@@ -31,6 +32,8 @@ public class AlcinaServletContext {
 		if (rootPermissions) {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 		} else {
+			AuthenticationManager.get().initialiseContext(
+					new HttpContext(httpServletRequest, httpServletResponse));
 			SessionHelper.get().initUserStateWithCookie(httpServletRequest,
 					httpServletResponse);
 		}

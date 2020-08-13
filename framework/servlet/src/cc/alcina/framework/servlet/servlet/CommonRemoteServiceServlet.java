@@ -174,6 +174,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
+	public static HttpContext getHttpContext() {
+		HttpContext context = new HttpContext();
+		context.request = getContextThreadLocalRequest();
+		context.response = getContextThreadLocalResponse();
+		return context;
+	}
+
 	public static HttpServletRequest getContextThreadLocalRequest() {
 		return LooseContext.get(
 				CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_REQUEST);
@@ -512,7 +519,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					payload);
 			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
 					ServletLayerUtils
-							.robustGetRemoteAddr(getThreadLocalRequest()));
+							.robustGetRemoteAddress(getThreadLocalRequest()));
 			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_INSTANCE_ID,
 					SessionHelper.getAuthenticatedSessionClientInstanceId(
 							getThreadLocalRequest()));
@@ -527,7 +534,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			TransformCommit.prepareHttpRequestCommitContext(
 					PermissionsManager.get().getClientInstance().getId(),
 					PermissionsManager.get().getUserId(), ServletLayerUtils
-							.robustGetRemoteAddr(getThreadLocalRequest()));
+							.robustGetRemoteAddress(getThreadLocalRequest()));
 			Method method;
 			try {
 				method = this.getClass().getMethod(name,

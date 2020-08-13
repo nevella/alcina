@@ -106,10 +106,12 @@ import cc.alcina.framework.entity.util.MethodContext;
 /**
  *
  * @author Nick Reddel
+ * 
+ *         FIXME - mvcc.4 - de-generify; remove getitemby methods
  */
 public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends IUser, G extends IGroup, IID extends Iid>
 		implements CommonPersistenceLocal, CommonPersistenceCache {
-	// note - this'll be the stack depth of the eql ast processor
+	// note - this'll be a function of the stack depth of the eql ast processor
 	private static final int PRECACHE_RQ_SIZE = 500;
 
 	public static final transient String CONTEXT_CLIENT_IP_ADDRESS = CommonPersistenceBase.class
@@ -1262,10 +1264,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return DomainLinker.linkToDomain(results);
 	}
 
-	ClientInstanceAuthenticationCache
-			ensureClientInstanceAuthenticationCache() {
-		ClientInstanceAuthenticationCache cache = Registry
-				.impl(ClientInstanceAuthenticationCache.class);
+	AuthenticationPersistence ensureClientInstanceAuthenticationCache() {
+		AuthenticationPersistence cache = Registry
+				.impl(AuthenticationPersistence.class);
 		cache.handshakeObjectProvider = getHandshakeObjectProvider();
 		return cache;
 	}
