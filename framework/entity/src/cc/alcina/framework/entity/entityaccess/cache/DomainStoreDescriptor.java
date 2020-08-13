@@ -370,5 +370,7 @@ root
 		public abstract TrieProjection getTrieProjection();
 
 		public abstract Class<? extends Entity> getTypeWithLazyProperties();
+
+		public abstract void performReversedDateModification(Entity entity);
 	}
 }

@@ -1,0 +1,26 @@
+package ${searchDefinition-package};
+
+import ${entity-name};
+
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
+import cc.alcina.framework.gwt.client.entity.search.EntityCriteriaGroup;
+import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
+
+@PermissibleChildClasses({ EntityCriteriaGroup.class })
+@SearchDefinitionSerializationInfo("${entity-simpleName}")
+@RegistryLocation(registryPoint = SearchDefinitionSerializationInfo.class)
+@Bean(displayNamePropertyName = "name")
+public class ${searchDefinition-simpleName} extends EntitySearchDefinition {
+	public ${searchDefinition-simpleName}() {
+		init();
+	}
+
+	@Override
+	public <C extends VersionableEntity> Class<C> resultClass() {
+		return (Class<C>) ${entity-simpleName}.class;
+	}
+}

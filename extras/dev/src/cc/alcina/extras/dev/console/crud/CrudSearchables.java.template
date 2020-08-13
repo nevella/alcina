@@ -1,0 +1,17 @@
+package ${searchDefinition-package-name};
+
+import java.util.ArrayList;
+import java.util.List;
+
+import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
+import ${entity-name};
+
+public class ${searchables-simpleName} {
+	public List<FlatSearchable> createSearchables() {
+		List<FlatSearchable> searchables = new ArrayList<>();
+		searchables.add(new ${textCriterionSearchable-packageName}());
+		${block-referredCriterionSearchables}
+		searchables.sort(null);
+		return searchables;
+	}
+}

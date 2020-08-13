@@ -21,6 +21,8 @@
 		-->
 		<delete dir="${extras.collections.build.dir}" />
 		<delete dir="${extras.dev.build.dir}" />
+		<delete dir="${extras.rpc.client.build.dir}" />
+		<delete dir="${extras.rpc.servlet.build.dir}" />
 		<delete dir="${framework.jvmclient.build.dir}" />
 		<delete dir="${framework.clientreflectorjvm.build.dir}" />
 		<delete dir="${framework.classmeta.build.dir}" />
@@ -48,7 +50,28 @@
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
-
+		<mkdir dir="${extras.rpc.client.build.dir}" />
+		<javac target="8" source="8" includeantruntime="false" debug="on"  destdir="${extras.rpc.client.build.dir}">
+			<src path="${extras.rpc.client.src.dir}"/>
+			<exclude name="com/google/gwt/user/client/translatable/**"/>
+			<classpath>
+				<path refid="framework.common.lib.path" />
+				<pathelement path="${framework.entity.build.dir}" />
+			</classpath>
+			<compilerarg value="${alcina.compiler.args}" />
+		</javac>
+		<mkdir dir="${extras.rpc.servlet.build.dir}" />
+		<javac target="8" source="8" includeantruntime="false" debug="on"  destdir="${extras.rpc.servlet.build.dir}">
+			<src path="${extras.rpc.client.src.dir}"/>
+			<src path="${extras.rpc.servlet.src.dir}"/>
+			<exclude name="com/google/gwt/user/client/translatable/**"/>
+			<classpath>
+				<path refid="framework.common.lib.path" />
+				<pathelement path="${framework.entity.build.dir}" />
+			</classpath>
+			<compilerarg value="${alcina.compiler.args}" />
+		</javac>
+ 
 		<mkdir dir="${extras.misc.build.dir}" />
 		<javac target="8" source="8" includeantruntime="false" debug="on" destdir="${extras.misc.build.dir}">
 			<classpath>

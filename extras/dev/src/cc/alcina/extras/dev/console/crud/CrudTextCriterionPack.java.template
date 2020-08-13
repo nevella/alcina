@@ -1,0 +1,36 @@
+package ${searchDefinition-package};
+
+import ${entity-name};
+
+import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.search.TxtCriterion;
+import cc.alcina.framework.gwt.client.objecttree.search.packs.BaseTextCriterionPack.BaseTextCriterionHandler;
+import cc.alcina.framework.gwt.client.objecttree.search.packs.BaseTextCriterionPack.BaseTextCriterionSearchable;
+
+public class ${textCriterionPack-simpleName} {
+	public static class ${textCriterionHandler-simpleName}
+			extends ${baseCriterionHandler-simpleName}<TxtCriterion>
+			implements BaseTextCriterionHandler<${entity-simpleName}> {
+		@Override
+		public DomainFilter getFilter(TxtCriterion sc) {
+			return getFilter0(sc);
+		}
+
+		@Override
+		public Class<TxtCriterion> handlesSearchCriterion() {
+			return TxtCriterion.class;
+		}
+
+		@Override
+		public boolean test(${entity-simpleName} o, String text) {
+			return false;
+		}
+	}
+
+	static class ${textCriterionSearchable-simpleName}
+			extends BaseTextCriterionSearchable {
+		public ${textCriterionSearchable-simpleName}() {
+			super("REAM.DE");
+		}
+	}
+}

@@ -10,3 +10,5 @@
 /dist-tasks
 /.gwt-tmp
 /extras/jsdom/build*
+/extras/rpc/client/build
+/extras/rpc/servlet/build

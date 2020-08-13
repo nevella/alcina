@@ -1,0 +1,33 @@
+package ${place-package-name};
+
+import ${entity-name};
+import ${searchDefinition-name};
+import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
+import cc.alcina.framework.gwt.client.entity.place.EntityPlaceTokenizer;
+
+public class ${place-simpleName} extends EntityPlace<${searchDefinition-simpleName}>
+		 {
+
+	@Override
+	protected ${searchDefinition-simpleName} createSearchDefinition() {
+		return new ${searchDefinition-simpleName}();
+	}
+
+	public static class ${place-simpleName}Tokenizer extends
+			EntityPlaceTokenizer<${entity-simpleName}, ${searchDefinition-simpleName}, ${place-simpleName}> {
+		@Override
+		public Class<${entity-simpleName}> getModelClass() {
+			return ${entity-simpleName}.class;
+		}
+
+		@Override
+		public String getPrefix() {
+			return "${token}";
+		}
+
+		@Override
+		public Class<${place-simpleName}> getTokenizedClass() {
+			return ${place-simpleName}.class;
+		}
+	}
+}

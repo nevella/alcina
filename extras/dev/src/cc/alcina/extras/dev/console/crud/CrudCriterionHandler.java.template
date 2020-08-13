@@ -1,0 +1,14 @@
+package ${searchDefinition-package};
+
+import ${entity-name};
+import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
+import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.search.SearchDefinition;
+
+public abstract class ${baseCriterionHandler-simpleName}<SC extends SearchCriterion>
+		extends DomainCriterionHandler<SC> {
+	@Override
+	public Class<? extends SearchDefinition> handlesSearchDefinition() {
+		return ${searchDefinition-simpleName}.class;
+	}
+}

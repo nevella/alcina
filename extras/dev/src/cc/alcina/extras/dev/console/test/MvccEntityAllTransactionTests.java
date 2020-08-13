@@ -24,6 +24,8 @@ public class MvccEntityAllTransactionTests extends AbstractTaskPerformer {
 		Transactions.waitForAllToCompleteExSelf();
 		new MvccEntitySortedIndexTest().run();
 		Transactions.waitForAllToCompleteExSelf();
+		new MvccEntitySortedIndexTest2().run();
+		Transactions.waitForAllToCompleteExSelf();
 		new MvccEntityLazyPropertyTest().run();
 		Transactions.waitForAllToCompleteExSelf();
 		new MvccEntityTransactionalLoadTest().run();
