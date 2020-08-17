@@ -192,7 +192,7 @@ public class ActionProgress extends Composite
 	}
 
 	public void fireNullPropertyChange(String name) {
-		this.propertyChangeSupport.fireNullPropertyChange(name);
+		this.propertyChangeSupport.fireUnspecifiedPropertyChange(name);
 	}
 
 	public void firePropertyChange(PropertyChangeEvent evt) {

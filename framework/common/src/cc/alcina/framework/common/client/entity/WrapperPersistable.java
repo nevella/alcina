@@ -29,8 +29,6 @@ import cc.alcina.framework.common.client.util.Ax;
  */
 public class WrapperPersistable extends Entity<WrapperPersistable>
 		implements Permissible, HasOwner {
-	
-
 	private transient IUser owner;
 
 	@Override
@@ -43,9 +41,9 @@ public class WrapperPersistable extends Entity<WrapperPersistable>
 	 * !not! be read. For listeners on collection properties
 	 */
 	@Override
-	public void fireNullPropertyChange(String name) {
+	public void fireUnspecifiedPropertyChange(String name) {
 		((MutablePropertyChangeSupport) this.propertyChangeSupport())
-				.fireNullPropertyChange(name);
+				.fireUnspecifiedPropertyChange(name);
 	}
 
 	@Override

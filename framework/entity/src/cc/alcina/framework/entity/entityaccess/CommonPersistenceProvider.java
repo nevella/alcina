@@ -26,9 +26,5 @@ public interface CommonPersistenceProvider {
 
 	public CommonPersistenceLocal getCommonPersistence();
 
-	default CommonPersistenceCache getCommonPersistenceCache() {
-		return (CommonPersistenceCache) getCommonPersistenceExTransaction();
-	}
-
 	CommonPersistenceLocal getCommonPersistenceExTransaction();
 }

@@ -145,7 +145,7 @@ public class Publisher {
 				&& !AppPersistenceBase.isInstanceReadOnly() && !Ax.isTest()) {
 			IUser user = PermissionsManager.get().getUser();
 			if (user == null) {
-				user = new UserlandProvider().getSystemUser();
+				user = UserlandProvider.get().getSystemUser();
 			}
 			publicationUserId = Registry.impl(PublicationPersistence.class)
 					.getNextPublicationIdForUser(user);

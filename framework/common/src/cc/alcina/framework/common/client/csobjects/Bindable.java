@@ -30,18 +30,18 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  * 
  * @author Nick Reddel
  * 
- *         FIXME - mvcc.4 - rename to 'Link' and existing 'Link' to 'Href'
+ *         FIXME - mvcc.4 - rename to 'Bindable'
  */
 @Introspectable
-public class BaseBindable extends BaseSourcesPropertyChangeEvents
+public class Bindable extends BaseSourcesPropertyChangeEvents
 		implements Serializable {
 	@Bean(displayNamePropertyName = "id", actions = @ObjectActions({
 			@Action(actionClass = ViewAction.class) }))
 	@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT), delete = @Permission(access = AccessLevel.ROOT))
-	public static class BaseBindableAdapter extends BaseBindable {
+	public static class BaseBindableAdapter extends Bindable {
 	}
 
-	public static class BaseBindableWithContext<T> extends BaseBindable
+	public static class BaseBindableWithContext<T> extends Bindable
 			implements HasContext<T> {
 		private transient T _context;
 
@@ -57,7 +57,7 @@ public class BaseBindable extends BaseSourcesPropertyChangeEvents
 	}
 
 	@Bean
-	public static class BaseBindableWrapper<T> extends BaseBindable
+	public static class BaseBindableWrapper<T> extends Bindable
 			implements ObjectWrapper<T> {
 		protected T wrapee;
 

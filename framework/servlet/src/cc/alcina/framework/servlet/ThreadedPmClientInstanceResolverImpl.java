@@ -6,9 +6,9 @@ import javax.servlet.http.HttpServletRequest;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPmClientInstanceResolver;
+import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 public class ThreadedPmClientInstanceResolverImpl
@@ -21,19 +21,9 @@ public class ThreadedPmClientInstanceResolverImpl
 		if (LooseContext.has(CONTEXT_CLIENT_INSTANCE)) {
 			return LooseContext.get(CONTEXT_CLIENT_INSTANCE);
 		}
-		HttpServletRequest request = CommonRemoteServiceServlet
-				.getContextThreadLocalRequest();
-		ClientInstance result = null;
-		if (request != null) {
-			Long clientInstanceId = SessionHelper
-					.getAuthenticatedSessionClientInstanceId(request);
-			if (clientInstanceId != null) {
-				result = CommonPersistenceProvider.get()
-						.getCommonPersistenceCache()
-						.getClientInstance(clientInstanceId);
-			}
-		}
-		return Optional.<ClientInstance> ofNullable(result)
+		Optional<ClientInstance> result = AuthenticationManager.get()
+				.getContextClientInstance();
+		return result
 				.orElse(EntityLayerObjects.get().getServerAsClientInstance());
 	}
 
@@ -46,8 +36,9 @@ public class ThreadedPmClientInstanceResolverImpl
 		HttpServletRequest request = CommonRemoteServiceServlet
 				.getContextThreadLocalRequest();
 		if (request != null) {
-			Long clientInstanceId = SessionHelper
-					.getAuthenticatedSessionClientInstanceId(request);
+			Long clientInstanceId = AuthenticationManager.get()
+					.getContextClientInstance().map(ClientInstance::getId)
+					.orElse(null);
 			if (clientInstanceId != null) {
 				return clientInstanceId;
 			}

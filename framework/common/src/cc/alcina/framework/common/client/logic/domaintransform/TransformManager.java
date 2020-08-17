@@ -310,7 +310,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private boolean ignoreUnrecognizedDomainClassException;
 
-	private boolean associationPropogationDisabled;
+	private boolean associationPropagationDisabled;
 
 	protected Set<Entity> markedForDeletion = new LinkedHashSet<>();
 
@@ -1006,7 +1006,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public boolean handlesAssociationsFor(Class clazz) {
-		return !associationPropogationDisabled;
+		return !associationPropagationDisabled;
 	}
 
 	public boolean hasTransforms() {
@@ -1578,9 +1578,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return isReplayingRemoteEvent();
 	}
 
-	public void setAssociationPropogationDisabled(
-			boolean associationPropogationDisabled) {
-		this.associationPropogationDisabled = associationPropogationDisabled;
+	public void setAssociationPropagationDisabled(
+			boolean associationPropagationDisabled) {
+		this.associationPropagationDisabled = associationPropagationDisabled;
 	}
 
 	public void setIgnorePropertyChanges(boolean ignorePropertyChanges) {
@@ -1674,7 +1674,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// of this (check if all wrapperpersistable changes use new collections)
 		if (obj instanceof WrapperPersistable) {
 			((WrapperPersistable) obj)
-					.fireNullPropertyChange(UNSPECIFIC_PROPERTY_CHANGE);
+					.fireUnspecifiedPropertyChange(UNSPECIFIC_PROPERTY_CHANGE);
 		}
 	}
 
@@ -1957,7 +1957,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public static class CommitToLocalDomainTransformListener
 			implements DomainTransformListener {
-		AssociationPropogationTransformListener associationPropogation = new AssociationPropogationTransformListener(
+		AssociationPropagationTransformListener associationPropagation = new AssociationPropagationTransformListener(
 				CommitType.TO_LOCAL_GRAPH);
 
 		/**
@@ -1972,7 +1972,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			if (evt.getCommitType() == CommitType.TO_LOCAL_GRAPH) {
 				TransformManager tm = TransformManager.get();
 				try {
-					associationPropogation.domainTransform(evt);
+					associationPropagation.domainTransform(evt);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}

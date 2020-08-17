@@ -26,7 +26,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.StateListenable;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -296,14 +295,6 @@ public class CommitToStorageTransformListener extends StateListenable
 		this.suppressErrors = suppressErrors;
 	}
 
-	private ClientInstance getClientInstance() {
-		ClientInstance clientInstance = PermissionsManager.get()
-				.getClientInstance();
-		clientInstance = clientInstance.clone();
-		clientInstance.setUser(null);
-		return clientInstance;
-	}
-
 	protected boolean canTransitionToOnline() {
 		return true;
 	}
@@ -326,7 +317,7 @@ public class CommitToStorageTransformListener extends StateListenable
 				.createPersistableRequest(requestId,
 						PermissionsManager.get().getClientInstanceId());
 		request.setRequestId(requestId);
-		request.setClientInstance(getClientInstance());
+		request.setClientInstance(PermissionsManager.get().getClientInstance());
 		request.getEvents().addAll(transformQueue);
 		lastCommitSize = transformQueue.size();
 		request.getEventIdsToIgnore().addAll(eventIdsToIgnore);
@@ -467,7 +458,7 @@ public class CommitToStorageTransformListener extends StateListenable
 								// made it back from the server
 								// actually, e.g. deletion - there'll be a
 								// version
-								// change which gets propogated back
+								// change which gets propagated back
 								// more correct would be to record deleted
 								// objects...but it don't matter much
 								if (e.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND

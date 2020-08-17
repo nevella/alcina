@@ -96,8 +96,8 @@ public class LocalDom {
 		return get().isPending0(nodeRemote);
 	}
 
-	public static boolean isStopPropogation(NativeEvent evt) {
-		return get().isStopPropogation0(evt);
+	public static boolean isStopPropagation(NativeEvent evt) {
+		return get().isStopPropagation0(evt);
 	}
 
 	public static boolean isUseRemoteDom() {
@@ -481,7 +481,7 @@ public class LocalDom {
 				.anyMatch(n -> n.remote() == nodeRemote);
 	}
 
-	private boolean isStopPropogation0(NativeEvent evt) {
+	private boolean isStopPropagation0(NativeEvent evt) {
 		List<String> list = eventMods.get(evt);
 		return list != null && (list.contains("eventStopPropagation")
 				|| list.contains("eventCancelBubble"));

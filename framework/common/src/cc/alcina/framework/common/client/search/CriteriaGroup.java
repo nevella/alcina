@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -42,7 +42,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 @Bean(displayNamePropertyName = "displayName")
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 public abstract class CriteriaGroup<SC extends SearchCriterion>
-		extends BaseBindable implements TreeRenderable, Permissible,
+		extends Bindable implements TreeRenderable, Permissible,
 		HasPermissionsValidation, HasReflectiveEquivalence<CriteriaGroup> {
 	static final transient long serialVersionUID = -1L;
 

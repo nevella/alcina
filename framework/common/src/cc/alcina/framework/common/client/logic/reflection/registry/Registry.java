@@ -365,7 +365,7 @@ public class Registry {
 			if (!required) {
 				return new ArrayList<>(0);
 			}
-			System.out.println(registry.toString());
+			// System.out.println(registry.toString());
 			throw new RuntimeException(Ax.format("Unable to locate %s - %s",
 					registryPoint, targetClass));
 		}

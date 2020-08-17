@@ -14,7 +14,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
-import cc.alcina.framework.common.client.logic.reflection.TypedParameter;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.VoidNodeRenderer;
 
@@ -27,11 +26,9 @@ public @interface Directed {
 
 	public String tag() default "";
 
-	TypedParameter[] parameters() default {};
-
 	public Class<? extends DirectedNodeRenderer> renderer() default VoidNodeRenderer.class;
 
-	public Behaviour behaviour() default @Behaviour();
+	public Behaviour[] behaviours() default {};
 
 	@RegistryLocation(registryPoint = DirectedResolver.class, implementationType = ImplementationType.INSTANCE)
 	@ClientInstantiable
@@ -55,13 +52,6 @@ public @interface Directed {
 		@Override
 		public Class<? extends Annotation> annotationType() {
 			return Directed.class;
-		}
-
-		@Override
-		public TypedParameter[] parameters() {
-			Function<Directed, TypedParameter[]> function = Directed::parameters;
-			return resolver.resolve(function, "parameters",
-					new TypedParameter[0]);
 		}
 
 		@Override
@@ -96,9 +86,9 @@ public @interface Directed {
 		}
 
 		@Override
-		public Behaviour behaviour() {
-			Function<Directed, Behaviour> function = Directed::behaviour;
-			return resolver.resolve(function, "behaviour", null);
+		public Behaviour[] behaviours() {
+			Function<Directed, Behaviour[]> function = Directed::behaviours;
+			return resolver.resolve(function, "behaviours", new Behaviour[0]);
 		}
 	}
 }

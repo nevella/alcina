@@ -67,9 +67,18 @@ public class BaseSourcesPropertyChangeEvents
 	/**
 	 * Useful for collection listeners - a "check the kids" thing
 	 */
-	public void fireNullPropertyChange(String name) {
+	public void fireUnspecifiedPropertyChange(String name) {
 		((MutablePropertyChangeSupport) this.propertyChangeSupport())
-				.fireNullPropertyChange(name);
+				.fireUnspecifiedPropertyChange(name);
+	}
+
+	/**
+	 * Indicates that the object has changed. May be interpreted as "re-render
+	 * the whole object"
+	 */
+	public void fireUnspecifiedPropertyChange(Object propagationId) {
+		((MutablePropertyChangeSupport) this.propertyChangeSupport())
+				.fireUnspecifiedPropertyChange(propagationId);
 	}
 
 	public void firePropertyChange(PropertyChangeEvent evt) {

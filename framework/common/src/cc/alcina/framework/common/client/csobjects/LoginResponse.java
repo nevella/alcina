@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 
 /**
  * 
@@ -31,6 +32,16 @@ public class LoginResponse implements Serializable {
 	private String errorMsg;
 
 	private ClientInstance clientInstance;
+
+	private IUser user;
+
+	public IUser getUser() {
+		return this.user;
+	}
+
+	public void setUser(IUser user) {
+		this.user = user;
+	}
 
 	private Map<String, String> properties = new LinkedHashMap<>();
 

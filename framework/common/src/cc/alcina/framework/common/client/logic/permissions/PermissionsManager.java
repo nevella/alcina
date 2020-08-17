@@ -758,7 +758,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	}
 
 	protected IUser getSystemUser() {
-		return new UserlandProvider().getSystemUser();
+		return UserlandProvider.get().getSystemUser();
 	}
 
 	protected void nullGroupMap() {

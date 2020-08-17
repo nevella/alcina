@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -181,6 +183,8 @@ public class Transactions {
 	private Map<TransactionId, Transaction> activeTransactions = new LinkedHashMap<>();
 
 	private Object transactionMetadataLock = new Object();
+
+	private List<EntityLocator> enqueuedLazyLoads = new ArrayList<>();
 
 	public List<Transaction> getCompletedNonDomainTransactions() {
 		synchronized (transactionMetadataLock) {
@@ -388,6 +392,25 @@ public class Transactions {
 
 		public Thread getVacuumThread() {
 			return vacuum.getVacuumThread();
+		}
+	}
+
+	public static void enqueueLazyLoad(EntityLocator locator) {
+		synchronized (get().enqueuedLazyLoads) {
+			get().enqueuedLazyLoads.add(locator);
+		}
+	}
+
+	public static List<EntityLocator> getEnqueuedLazyLoads() {
+		return get().getEnqueuedLazyLoads0();
+	}
+
+	private List<EntityLocator> getEnqueuedLazyLoads0() {
+		synchronized (enqueuedLazyLoads) {
+			List<EntityLocator> result = enqueuedLazyLoads.stream()
+					.collect(Collectors.toList());
+			enqueuedLazyLoads.clear();
+			return result;
 		}
 	}
 }

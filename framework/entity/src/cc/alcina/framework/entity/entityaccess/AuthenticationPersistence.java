@@ -1,28 +1,30 @@
 package cc.alcina.framework.entity.entityaccess;
 
-import java.util.Collections;
 import java.util.Date;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
+import java.util.function.Function;
 
-import cc.alcina.framework.common.client.Reflections;
+import javax.persistence.EntityManager;
+
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.entity.Iid;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.Iid;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.NullWrappingMap;
-import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 
 @RegistryLocation(registryPoint = AuthenticationPersistence.class, implementationType = ImplementationType.SINGLETON)
 public class AuthenticationPersistence {
@@ -33,212 +35,175 @@ public class AuthenticationPersistence {
 		return Registry.impl(AuthenticationPersistence.class);
 	}
 
-	HandshakeObjectProvider handshakeObjectProvider;
+	public ClientInstance getClientInstance(long clientInstanceId) {
+		return domainImpl(ClientInstance.class, clientInstanceId);
+	}
 
-	private Map<Long, Integer> clientInstanceAuthMap = new NullWrappingMap<Long, Integer>(
-			new ConcurrentHashMap());
+	private <V extends Entity> V domainImpl(Class<V> clazz,
+			long clientInstanceId) {
+		long id = clientInstanceId;
+		return Domain.find(AlcinaPersistentEntityImpl.getImplementation(clazz),
+				id);
+	}
 
-	private Map<Long, String> clientInstanceUserNameMap = new NullWrappingMap<Long, String>(
-			new ConcurrentHashMap());
+	private <V extends Entity> V persistentImpl(EntityManager em, V v) {
+		return (V) em.find(v.entityClass(), v.getId());
+	}
 
-	private Map<Long, ClientInstance> clientInstanceIdMap = new NullWrappingMap<Long, ClientInstance>(
-			new ConcurrentHashMap());
-
-	private Map<Long, String> clientInstanceIidMap = new NullWrappingMap<Long, String>(
-			new ConcurrentHashMap());
-
-	private Map<String, String> iidUserNameByKeyMap = new NullWrappingMap<String, String>(
-			new ConcurrentHashMap());
-
-	private AccessMap<String> iidLastAccess = new AccessMap<String>(
-			(instanceId, time) -> {
-				CommonPersistenceBase commonPersistence = handshakeObjectProvider
-						.getCommonPersistence();
-				if (commonPersistence != null) {
-					Iid iid = commonPersistence.getIidByKey(instanceId);
-					if (iid == null || iid.getId() == 0) {
-						return;
-					}
-					handshakeObjectProvider.updateIidAccessTime(iid.getId(),
-							time);
-				}
-			});
-
-	private AccessMap<Long> clientInstanceLastAccess = new AccessMap<Long>(
-			(clientInstanceId, time) -> handshakeObjectProvider
-					.updateClientInstanceAccessTime(clientInstanceId, time));
-
-	public ClientInstance cacheClientInstance(ClientInstance persistent) {
-		Class<? extends ClientInstance> clientInstanceImplClass = AlcinaPersistentEntityImpl
+	public ClientInstance createClientInstance(AuthenticationSession session,
+			String userAgent, String remoteAddress) {
+		Class<? extends ClientInstance> clazz = AlcinaPersistentEntityImpl
 				.getImplementation(ClientInstance.class);
-		Class<? extends IUser> iUserImplClass = AlcinaPersistentEntityImpl
-				.getImplementation(IUser.class);
-		ClientInstance forCache = Reflections.classLookup()
-				.newInstance(clientInstanceImplClass);
-		ResourceUtilities.fieldwiseCopy(persistent, forCache, false, false,
-				Collections.singleton("user"));
-		forCache.setUser(
-				Domain.find(iUserImplClass, persistent.getUser().getId()));
-		clientInstanceAuthMap.put(forCache.getId(), forCache.getAuth());
-		if (forCache.getUser() != null) {
-			clientInstanceUserNameMap.put(forCache.getId(),
-					forCache.getUser().getUserName());
-		}
-		if (forCache.getIid() != null) {
-			clientInstanceIidMap.put(forCache.getId(), forCache.getIid());
-		}
-		clientInstanceLastAccess.setAccessTime(forCache.getId(),
-				forCache.getLastAccessed(), false);
-		clientInstanceIdMap.put(forCache.getId(), forCache);
-		return forCache;
+		ClientInstance clientInstance = Domain.create(clazz);
+		clientInstance.setAuthenticationSession(session);
+		clientInstance.setHelloDate(new Date());
+		clientInstance.setUserAgent(userAgent);
+		clientInstance.setAuth(Math.abs(new Random().nextInt()));
+		clientInstance.setIpAddress(remoteAddress);
+		clientInstance
+				.setBotUserAgent(EntityLayerUtils.isBotUserAgent(userAgent));
+		return clientInstance;
 	}
 
-	public void cacheIid(Iid iid, boolean resetAccessTime) {
-		if (iid.getInstanceId() == null) {
-			return;
+	private Map<String, String> lookupQueries = new ConcurrentHashMap<>();
+
+	public Iid getIid(String instanceId) {
+		Class<? extends Iid> clazz = AlcinaPersistentEntityImpl
+				.getImplementation(Iid.class);
+		Optional<? extends Iid> domainEntity = Domain.query(clazz)
+				.filter("instanceId", instanceId).optional();
+		if (domainEntity.isPresent()) {
+			return domainEntity.get();
 		}
-		iidUserNameByKeyMap.put(iid.getInstanceId(),
-				iid.getRememberMeUser() == null ? null
-						: iid.getRememberMeUser().getUserName());
-		iidLastAccess.setAccessTime(iid.getInstanceId(), iid.getLastAccessed(),
-				resetAccessTime);
+		String query = Ax.format("select id from %s where %s='%s'",
+				clazz.getSimpleName(), "instanceId", instanceId);
+		if (lookupQueries.put(query, query) != null) {
+			return null;
+		}
+		Long id = Ax.first((List<Long>) callWithEntityManager(
+				em -> em.createQuery(query).getResultList()));
+		return id == null ? null : Domain.find(clazz, id);
 	}
 
-	public void cacheUserNameFor(long validatedClientInstanceId,
-			String userName) {
-		clientInstanceUserNameMap.put(validatedClientInstanceId, userName);
+	public Iid createIid(String instanceId) {
+		Class<? extends Iid> clazz = AlcinaPersistentEntityImpl
+				.getImplementation(Iid.class);
+		Iid iid = Domain.create(clazz);
+		iid.setInstanceId(instanceId);
+		return iid;
 	}
 
-	/**
-	 * @return false if expired
-	 */
-	public boolean checkClientInstanceExpiration(long id) {
-		int idleTimeoutSecs = ResourceUtilities
-				.getInteger(AuthenticationPersistence.class, "idleTimeoutSecs");
-		if (idleTimeoutSecs == 0
-				|| LooseContext.is(CONTEXT_IDLE_TIMEOUT_DISABLED)) {
-			return true;
+	public AuthenticationSession getAuthenticationSession(String sessionId) {
+		Class<? extends AuthenticationSession> clazz = AlcinaPersistentEntityImpl
+				.getImplementation(AuthenticationSession.class);
+		Optional<? extends AuthenticationSession> domainEntity = Domain
+				.query(clazz).filter("sessionId", sessionId).optional();
+		if (domainEntity.isPresent()) {
+			return domainEntity.get();
 		}
-		String userName = clientInstanceUserNameMap.get(id);
-		// only applies to logged in users
-		if (userName == null || Objects.equals(userName,
-				PermissionsManager.getAnonymousUserName())) {
-			return true;
+		String query = Ax.format(
+				"select authenticationSession.id from %s authenticationSession where %s='%s'",
+				clazz.getSimpleName(), "sessionId", sessionId);
+		if (lookupQueries.put(query, query) != null) {
+			return null;
 		}
-		if (!clientInstanceLastAccess
-				.checkAccessTimeAndUpdateIfNotExpired(id)) {
-			return false;
-		} else {
-			String iid = clientInstanceIidMap.get(id);
-			if (iid != null) {
-				return iidLastAccess.checkAccessTimeAndUpdateIfNotExpired(iid);
-			} else {
-				return true;
-			}
+		Long id = Ax.first((List<Long>) callWithEntityManager(
+				em -> em.createQuery(query).getResultList()));
+		if (id == null) {
+			return null;
 		}
+		AuthenticationSession session = Domain.find(clazz, id);
+		return session;
 	}
 
-	public boolean containsIIdKey(String iidKey) {
-		if (iidKey == null) {
-			return false;
-		}
-		return iidUserNameByKeyMap.containsKey(iidKey);
+	public AuthenticationSession createAuthenticationSession(Iid iid,
+			Date startDate, String sessionId, IUser user,
+			String authenticationType) {
+		Class<? extends AuthenticationSession> clazz = AlcinaPersistentEntityImpl
+				.getImplementation(AuthenticationSession.class);
+		AuthenticationSession session = Domain.create(clazz);
+		session.setIid(iid);
+		session.setSessionId(sessionId);
+		session.setUser(user);
+		session.setAuthenticationType(authenticationType);
+		session.setStartTime(startDate);
+		return session;
 	}
 
-	public ClientInstance getClientInstance(Long clientInstanceId) {
-		return clientInstanceIdMap.get(clientInstanceId);
+	public void wasAccessed(ClientInstance clientInstance) {
+		TransformCommit.get().enqueueBackendTransform(() -> {
+			clientInstance.setLastAccessed(new Date());
+			clientInstance.getAuthenticationSession()
+					.setLastAccessed(new Date());
+		});
 	}
 
-	public String getIidUserNameByKey(String iid) {
+	private <V> V callWithEntityManager(Function<EntityManager, V> function) {
+		return CommonPersistenceProvider.get().getCommonPersistence()
+				.callWithEntityManager(function);
+	}
+
+	public ClientInstance createBootstrapClientInstance() {
+		ClientInstance persistent = callWithEntityManager(
+				em -> createBootstrapClientInstance(em));
+		Domain.find(persistent.getAuthenticationSession().getIid());
+		Domain.find(persistent.getAuthenticationSession());
+		return Domain.find(persistent);
+	}
+
+	private ClientInstance createBootstrapClientInstance(EntityManager em) {
+		String hostName = EntityLayerUtils.getLocalHostName();
+		String authenticationSessionUid = Ax.format("servlet:%s", hostName);
+		String iidUid = authenticationSessionUid;
+		Iid iid = (Iid) Ax.first(em.createQuery(Ax.format(
+				"select iid from %s iid where instanceId = '%s'",
+				AlcinaPersistentEntityImpl
+						.getImplementationSimpleClassName(Iid.class),
+				iidUid)).getResultList());
 		if (iid == null) {
-			return null;
+			iid = AlcinaPersistentEntityImpl
+					.getNewImplementationInstance(Iid.class);
+			iid.setInstanceId(iidUid);
+			em.persist(iid);
 		}
-		String userName = iidUserNameByKeyMap.get(iid);
-		if (userName == null) {
-			return userName;
+		AuthenticationSession authenticationSession = (AuthenticationSession) Ax
+				.first(em.createQuery(Ax.format(
+						"select authenticationSession from %s authenticationSession where sessionId = '%s'",
+						AlcinaPersistentEntityImpl
+								.getImplementationSimpleClassName(
+										AuthenticationSession.class),
+						authenticationSessionUid)).getResultList());
+		if (authenticationSession == null) {
+			authenticationSession = AlcinaPersistentEntityImpl
+					.getNewImplementationInstance(AuthenticationSession.class);
+			authenticationSession.setSessionId(authenticationSessionUid);
+			authenticationSession.setStartTime(new Date());
+			authenticationSession.setUser((IUser) persistentImpl(em,
+					(Entity) PermissionsManager.get().getUser()));
+			authenticationSession.setAuthenticationType("server-instance");
+			em.persist(authenticationSession);
 		}
-		if (iidLastAccess.checkAccessTimeAndUpdateIfNotExpired(iid)) {
-			return iidUserNameByKeyMap.get(iid);
-		} else {
-			return null;
-		}
+		ClientInstance clientInstance = AlcinaPersistentEntityImpl
+				.getNewImplementationInstance(ClientInstance.class);
+		clientInstance.setHelloDate(new Date());
+		clientInstance.setUserAgent(authenticationSessionUid);
+		clientInstance.setAuthenticationSession(authenticationSession);
+		clientInstance.setAuth(Math.abs(new Random().nextInt()));
+		clientInstance.setIpAddress("127.0.0.1");
+		clientInstance.setBotUserAgent(false);
+		em.persist(clientInstance);
+		return clientInstance;
 	}
 
-	public String getUserNameFor(long validatedClientInstanceId) {
-		if (!clientInstanceUserNameMap.containsKey(validatedClientInstanceId)) {
-			return null;
-		}
-		return clientInstanceUserNameMap.get(validatedClientInstanceId);
+	public void putSession(ClientInstance instance,
+			AuthenticationSession session) {
+		instance.setAuthenticationSession(session);
+		Transaction.commit();
 	}
 
-	public boolean isCached(Long id, Integer auth) {
-		return auth != null && id != null
-				&& clientInstanceAuthMap.containsKey(id)
-				&& auth.intValue() == CommonUtils
-						.iv(clientInstanceAuthMap.get(id));
-	}
-
-	static class AccessMap<K> {
-		private BiConsumer<K, Long> lastAccessPersister;
-
-		Map<K, Long> lastAccessed = Collections
-				.synchronizedMap(new LinkedHashMap<>());
-
-		public AccessMap(BiConsumer<K, Long> lastAccessPersister) {
-			this.lastAccessPersister = lastAccessPersister;
-		}
-
-		public void setAccessTime(K key, Date lastAccessedDate,
-				boolean resetAccessTime) {
-			if (lastAccessed.containsKey(key) && !resetAccessTime) {
-				return;
-			}
-			long lastAccessedTime = lastAccessedDate == null || resetAccessTime
-					? now()
-					: lastAccessedDate.getTime();
-			lastAccessed.put(key, lastAccessedTime);
-			lastAccessPersister.accept(key, lastAccessedTime);
-		}
-
-		private long now() {
-			return System.currentTimeMillis();
-		}
-
-		/**
-		 * @return false if expired
-		 */
-		boolean checkAccessTimeAndUpdateIfNotExpired(K key) {
-			long now = System.currentTimeMillis();
-			int idleTimeoutSecs = ResourceUtilities.getInteger(
-					AuthenticationPersistence.class, "idleTimeoutSecs");
-			if (idleTimeoutSecs == 0
-					|| LooseContext.is(CONTEXT_IDLE_TIMEOUT_DISABLED)) {
-			} else {
-				Long lastAccess = lastAccessed.get(key);
-				if (lastAccess != null && (now - lastAccess > idleTimeoutSecs
-						* TimeConstants.ONE_SECOND_MS)) {
-					return false;
-				}
-				if (lastAccess == null || (now - lastAccess)
-						* 10 > idleTimeoutSecs * TimeConstants.ONE_SECOND_MS) {
-					// greater than 10% delta, persist
-					lastAccessPersister.accept(key, now);
-				}
-				lastAccessed.put(key, now);
-			}
-			return true;
-		}
-	}
-
-	public void createClientInstance(Iid iid, String userAgent,
-			String remoteAddress) {
-		// FIXME - mvcc.wrap
-		// response.setClientInstance(MobilityLabBeanProvider.get()
-		// .getCommonPersistenceBean().createClientInstance(getUserAgent(),
-		// new CookieHelper().getIid(getThreadLocalRequest(),
-		// getThreadLocalResponse()),
-		// ServletLayerUtils
-		// .robustGetRemoteAddress(getThreadLocalRequest())));
-		// TODO Auto-generated method stub
+	public boolean validateClientInstance(long clientInstanceId,
+			int clientInstanceAuth) {
+		return Optional.ofNullable(getClientInstance(clientInstanceId))
+				.map(ci -> ci.getAuth() == clientInstanceAuth).orElse(false);
 	}
 }

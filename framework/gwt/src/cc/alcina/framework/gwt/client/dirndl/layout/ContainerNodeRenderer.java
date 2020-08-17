@@ -18,7 +18,7 @@ public class ContainerNodeRenderer extends DirectedNodeRenderer {
 		Preconditions.checkArgument(Ax.notBlank(tag));
 		FlowPanel panel = new FlowPanel(tag);
 		for (Node child : node.children) {
-			child.render().forEach(panel::add);
+			child.render().widgets.forEach(panel::add);
 		}
 		return panel;
 	}

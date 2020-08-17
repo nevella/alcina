@@ -12,7 +12,7 @@ import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -39,7 +39,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
  */
 @MappedSuperclass
 @RegistryLocation(registryPoint = Entity.class, implementationType = ImplementationType.MULTIPLE)
-public abstract class Entity<T extends Entity> extends BaseBindable
+public abstract class Entity<T extends Entity> extends Bindable
 		implements HasVersionNumber, HasId {
 	public static final String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class
 			+ ".CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID";

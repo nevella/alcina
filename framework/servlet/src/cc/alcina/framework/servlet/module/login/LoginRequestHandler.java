@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.module.login.LoginRequest;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
+import cc.alcina.framework.servlet.authentication.Authenticator;
 
 @RegistryLocation(registryPoint = LoginRequestHandler.class, implementationType = ImplementationType.INSTANCE)
 public abstract class LoginRequestHandler<U extends IUser> {
@@ -104,10 +104,8 @@ public abstract class LoginRequestHandler<U extends IUser> {
 	}
 
 	protected void processLogin() throws Exception {
-		authenticator.processValidLogin(
-				CommonRemoteServiceServlet.getContextThreadLocalRequest(),
-				CommonRemoteServiceServlet.getContextThreadLocalResponse(),
-				loginResponse, loginModel.user.getUserName(), true);
+		authenticator.processValidLogin(loginResponse,
+				loginModel.user.getUserName(), true);
 	}
 
 	protected boolean validateAccount() throws Exception {

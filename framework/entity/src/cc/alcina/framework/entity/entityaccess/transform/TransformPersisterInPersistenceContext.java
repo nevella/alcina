@@ -112,8 +112,9 @@ public class TransformPersisterInPersistenceContext {
 				putExceptionInWrapper(token, ex, wrapper);
 				return;
 			}
-			if (persistentClientInstance.getUser().getId() != PermissionsManager
-					.get().getUserId() && !token.isIgnoreClientAuthMismatch()) {
+			if (persistentClientInstance.provideUser()
+					.getId() != PermissionsManager.get().getUserId()
+					&& !token.isIgnoreClientAuthMismatch()) {
 				if (!token.getTransformExceptionPolicy()
 						.ignoreClientAuthMismatch(persistentClientInstance,
 								request)) {
@@ -176,7 +177,7 @@ public class TransformPersisterInPersistenceContext {
 				EntityLayerObjects.get().getMetricLogger().info(String.format(
 						"domain transform - %s - clid:"
 								+ "%s - rqid:%s - prev-per-cli-id:%s",
-						persistentClientInstance.getUser().getUserName(),
+						persistentClientInstance.provideUser().getUserName(),
 						request.getClientInstance().getId(),
 						transformRequests.stream()
 								.map(DomainTransformRequest::getRequestId)

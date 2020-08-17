@@ -46,8 +46,8 @@ public class ControlServlet extends AlcinaServlet {
 		queryParameters.put("actionJson",
 				JacksonUtils.serializeWithDefaultsAndTypes(action));
 		try {
-			return new SimpleQuery(url, null, null)
-					.withQueryParameters(queryParameters).asString();
+			return new SimpleQuery(url)
+					.withQueryStringParameters(queryParameters).asString();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

@@ -47,8 +47,16 @@ public class ClientPropertyReflector
 
 	private Class propertyType;
 
-	public ClientPropertyReflector(String propertyName, Class propertyType,
-			Annotation[] anns) {
+	private Class definingType;
+
+	@Override
+	public Class getDefiningType() {
+		return this.definingType;
+	}
+
+	public ClientPropertyReflector(Class definingType, String propertyName,
+			Class propertyType, Annotation[] anns) {
+		this.definingType = definingType;
 		this.propertyName = propertyName;
 		this.propertyType = propertyType;
 		this.annotations = annotationLookupCreator.createDelegateMap(0, 0);
@@ -110,13 +118,15 @@ public class ClientPropertyReflector
 	}
 
 	@Override
+	public boolean isReadOnly() {
+		return Reflections.propertyAccessor().isReadOnly(getDefiningType(),
+				getPropertyName());
+	}
+
+	@Override
 	public Object getPropertyValue(Object bean) {
 		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
 		return propertyAccessor.getPropertyValue(bean, getPropertyName());
-	}
-
-	public void setPropertyType(Class propertyType) {
-		this.propertyType = propertyType;
 	}
 
 	@Override

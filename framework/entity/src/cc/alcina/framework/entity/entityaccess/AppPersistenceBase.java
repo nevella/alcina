@@ -8,10 +8,6 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.log4j.Logger;
 
-import cc.alcina.framework.common.client.entity.Iid;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.permissions.IGroup;
-import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -23,7 +19,7 @@ import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 
-public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IUser, G extends IGroup, IID extends Iid> {
+public abstract class AppPersistenceBase {
 	public static final String PERSISTENCE_TEST = AppPersistenceBase.class
 			.getName() + ".PERSISTENCE_TEST";
 

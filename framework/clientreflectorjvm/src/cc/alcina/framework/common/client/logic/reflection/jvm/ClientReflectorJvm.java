@@ -162,7 +162,7 @@ public class ClientReflectorJvm extends ClientReflector {
 					// FIXME - mvcc.3 - generalise ignored properties
 					.filter(pd -> !(pd.getName().equals("class")
 							|| pd.getName().equals("propertyChangeListeners")))
-					.map(JvmPropertyReflector::new)
+					.map(pd -> new JvmPropertyReflector(clazz, pd))
 					.collect(Collectors.toList()),
 			100);
 
@@ -304,7 +304,7 @@ public class ClientReflectorJvm extends ClientReflector {
 					retained.add(a);
 				}
 				propertyReflectors.put(pd.getName(),
-						new ClientPropertyReflector(pd.getName(),
+						new ClientPropertyReflector(clazz, pd.getName(),
 								pd.getPropertyType(),
 								(Annotation[]) retained.toArray(
 										new Annotation[retained.size()])));

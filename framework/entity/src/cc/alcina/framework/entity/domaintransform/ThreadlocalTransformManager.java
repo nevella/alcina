@@ -99,7 +99,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
+import cc.alcina.framework.entity.logic.EntityLayerTransformPropagation;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
@@ -629,10 +629,10 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public void maybeListenToObjectWrapper(WrappedObject wrapper) {
-		EntityLayerTransformPropogation transformPropogation = Registry
-				.impl(EntityLayerTransformPropogation.class, void.class, true);
-		if (transformPropogation != null
-				&& transformPropogation.listenToWrappedObject(wrapper)) {
+		EntityLayerTransformPropagation transformPropagation = Registry
+				.impl(EntityLayerTransformPropagation.class, void.class, true);
+		if (transformPropagation != null
+				&& transformPropagation.listenToWrappedObject(wrapper)) {
 			registerDomainObject((Entity) wrapper);
 		}
 	}
@@ -642,7 +642,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			String collectionPropertyName, Object delta,
 			CollectionModificationType modificationType) {
 		/*
-		 * If one end is mvcc, want both ends to be (for propogation)
+		 * If one end is mvcc, want both ends to be (for propagation)
 		 */
 		Collection deltaC = CommonUtils.wrapInCollection(delta);
 		if (objectWithCollection instanceof MvccObject
@@ -1438,5 +1438,12 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public static class UncomittedTransformsException extends Exception {
+	}
+
+	@Override
+	public boolean isReadOnly(Class objectClass, String propertyName) {
+		return SEUtilities
+				.getPropertyDescriptorByName(objectClass, propertyName)
+				.getWriteMethod() == null;
 	}
 }

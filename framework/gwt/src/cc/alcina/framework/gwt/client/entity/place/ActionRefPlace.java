@@ -1,8 +1,12 @@
 package cc.alcina.framework.gwt.client.entity.place;
 
+import java.util.Optional;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
+import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
+import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Reference;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -16,6 +20,13 @@ public class ActionRefPlace extends BasePlace {
 	}
 
 	public ActionRefPlace() {
+	}
+
+	public Optional<ActionHandler> getActionHandler() {
+		return Optional
+				.ofNullable(Reflections.classLookup().getAnnotationForClass(ref,
+						ActionRefHandler.class))
+				.map(ann -> Reflections.newInstance(ann.value()));
 	}
 
 	public ActionRefPlace(Class<? extends ActionRef> ref) {

@@ -37,12 +37,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.entityaccess.AuthenticationPersistence;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.Sx;
-import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
+import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 public class UserStories {
 	public static final String TOPIC_USER_STORIES_EVENT_OCCURRED = UserStories.class
@@ -73,8 +72,7 @@ public class UserStories {
 		ClientInstance clientInstance = null;
 		long clientInstanceId = userStory.getClientInstanceId();
 		if (clientInstanceId != 0) {
-			clientInstance = CommonPersistenceProvider.get()
-					.getCommonPersistenceCache()
+			clientInstance = AuthenticationPersistence.get()
 					.getClientInstance(clientInstanceId);
 		} else {
 			try {
@@ -94,9 +92,9 @@ public class UserStories {
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
 		DomNode body = doc.xpath("//body").node();
 		body.builder().tag("h2").text("User Story").append();
-		String idNameString = clientInstance.getUser() == null
+		String idNameString = clientInstance.provideUser() == null
 				? userStory.getEmail()
-				: clientInstance.getUser().toIdNameString();
+				: clientInstance.provideUser().toIdNameString();
 		String location = userStory.getLocation();
 		if (Ax.notBlank(location)) {
 			location = Ax.format("%s :: %s", location,
@@ -234,10 +232,8 @@ public class UserStories {
 		if (incoming.getStory().length() > 100000) {
 			return;
 		}
-		ClientInstance clientInstance = SessionHelper
-				.getAuthenticatedSessionClientInstance(
-						CommonRemoteServiceServlet
-								.getContextThreadLocalRequest());
+		ClientInstance clientInstance = AuthenticationManager.get()
+				.getContextClientInstance().orElse(null);
 		Optional<? extends IUserStory> o_story = getUserStory(clientInstance,
 				incoming.getClientInstanceUid());
 		IUserStory story = null;

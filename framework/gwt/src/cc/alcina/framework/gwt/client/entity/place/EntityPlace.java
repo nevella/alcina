@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.entity.place;
 
+import java.util.Collections;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
@@ -49,6 +51,20 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 	}
 
 	@Override
+	public String toNameString() {
+		Entity modelObject = provideEntity();
+		if (modelObject != null) {
+			if (modelObject instanceof HasDisplayName) {
+				return ((HasDisplayName) modelObject).displayName();
+			} else {
+				return super.toString();
+			}
+		} else {
+			return provideCategoryString();
+		}
+	}
+
+	@Override
 	public String toTitleString() {
 		String category = super.toTitleString();
 		if (id != 0) {
@@ -73,5 +89,19 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 			}
 		}
 		return super.toTitleString();
+	}
+
+	public Class<? extends Entity> provideEntityClass() {
+		return RegistryHistoryMapper.get().getEntityClass(getClass());
+	}
+
+	public <E extends Entity> E provideEntity() {
+		return (E) TransformManager.get().getObject(provideEntityClass(), id,
+				0);
+	}
+
+	public String provideCategoryString() {
+		return CommonUtils.pluralise(provideEntityClass().getSimpleName(),
+				Collections.emptyList());
 	}
 }

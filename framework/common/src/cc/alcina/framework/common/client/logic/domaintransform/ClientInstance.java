@@ -14,39 +14,29 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.Date;
+import java.util.Optional;
 
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.permissions.HasIUser;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 
 @MappedSuperclass
-@ClientInstantiable
 /**
  *
  * @author Nick Reddel
  */
-@Introspectable
+@Bean
 /**
- * Important note - the subclass IUser field should be @GwtTransient - to
- * prevent accidental access of possibly different IUser objects
- * 
- * ....hhmmm,, actually the user field is needed on the client in, say, hello()
- * - client has to take care of this
  * 
  * @author nick@alcina.cc
  * 
- *         Note that the localid field won't be used (clientinstances are not
- *         transform-persisted)
- *
  */
-public abstract class ClientInstance extends Entity<ClientInstance>
-		implements HasIUser, Cloneable {
+public abstract class ClientInstance extends Entity<ClientInstance> {
 	private Date helloDate;
 
 	private Integer auth;
@@ -86,21 +76,6 @@ public abstract class ClientInstance extends Entity<ClientInstance>
 
 	public abstract void setReplaces(ClientInstance replaces);
 
-	@Override
-	public abstract ClientInstance clone();
-
-	public ClientInstance copyPropertiesTo(ClientInstance other) {
-		other.id = id;
-		other.setLocalId(getLocalId());
-		other.helloDate = helloDate;
-		other.auth = auth;
-		other.userAgent = userAgent;
-		other.iid = iid;
-		other.lastAccessed = lastAccessed;
-		other.expired = expired;
-		return other;
-	}
-
 	public Integer getAuth() {
 		return auth;
 	}
@@ -123,6 +98,9 @@ public abstract class ClientInstance extends Entity<ClientInstance>
 		return id;
 	}
 
+	/*
+	 * FIXME - mvcc.5 - remove (once mvcc.auth has settled)
+	 */
 	public String getIid() {
 		return this.iid;
 	}
@@ -193,5 +171,10 @@ public abstract class ClientInstance extends Entity<ClientInstance>
 			userAgent = userAgent.substring(0, 200);
 		}
 		this.userAgent = userAgent;
+	}
+
+	public IUser provideUser() {
+		return Optional.ofNullable(getAuthenticationSession())
+				.map(AuthenticationSession::getUser).orElse(null);
 	}
 }

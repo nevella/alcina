@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.actions.RemoteParameters;
-import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
@@ -41,7 +41,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
  * @author Nick Reddel
  */
 @ReflectionModule("Admin")
-public class DeltaApplicationRecord extends BaseBindable
+public class DeltaApplicationRecord extends Bindable
 		implements RemoteParameters {
 	private int id;
 

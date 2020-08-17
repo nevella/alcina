@@ -27,6 +27,7 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
+import cc.alcina.framework.entity.entityaccess.AuthenticationPersistence;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.DomainLinker;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
@@ -105,7 +106,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
 		String encodedParams = req.getParameter(DEV_REMOTER_PARAMS);
 		DevRemoterParams params = KryoUtils.deserializeFromBase64(encodedParams,
 				DevRemoterParams.class);
-		IUser user = new UserlandProvider().getUserByName(params.username);
+		IUser user = UserlandProvider.get().getUserByName(params.username);
 		try {
 			PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
 			Object api = null;
@@ -138,9 +139,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				if (transformMethod) {
 					// assume as root
 					TransformPersistenceToken token = (TransformPersistenceToken) params.args[1];
-					ClientInstance clientInstance = CommonPersistenceProvider
-							.get().getCommonPersistenceCache()
-							.getClientInstance(params.clientInstanceId);
+					ClientInstance clientInstance = AuthenticationPersistence
+							.get().getClientInstance(params.clientInstanceId);
 					Integer highestPersistedRequestId = CommonPersistenceProvider
 							.get().getCommonPersistence()
 							.getHighestPersistedRequestIdForClientInstance(
@@ -158,7 +158,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
 						tpm.pushSystemUser();
 						token.setIgnoreClientAuthMismatch(true);
 					} else {
-						tpm.pushUser(clientInstance.getUser(),
+						tpm.pushUser(clientInstance.provideUser(),
 								LoginState.LOGGED_IN);
 					}
 					params.cleanEntities = true;

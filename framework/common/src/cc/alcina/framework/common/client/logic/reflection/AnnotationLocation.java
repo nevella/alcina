@@ -22,7 +22,11 @@ public class AnnotationLocation {
 				return annotation;
 			}
 		}
-		return Reflections.classLookup().getAnnotationForClass(containingClass,
-				annotationClass);
+		if (containingClass == null) {
+			return null;
+		} else {
+			return Reflections.classLookup()
+					.getAnnotationForClass(containingClass, annotationClass);
+		}
 	}
 }

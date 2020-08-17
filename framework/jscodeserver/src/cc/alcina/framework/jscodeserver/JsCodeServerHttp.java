@@ -54,7 +54,7 @@ public class JsCodeServerHttp {
 		}
 		server.setHandler(handlers);
 		server.start();
-		server.dumpStdErr();
+		// server.dumpStdErr();
 		server.join();
 	}
 

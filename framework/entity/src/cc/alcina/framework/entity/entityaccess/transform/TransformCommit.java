@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -77,7 +78,7 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreTransformSequencer.TransformPriorityProvider;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
+import cc.alcina.framework.entity.logic.EntityLayerTransformPropagation;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.DataFolderProvider;
@@ -175,14 +176,14 @@ public class TransformCommit {
 					}
 					continue;
 				}
-				DomainTransformRequest rq = DomainTransformRequest.fromString(
-						deltaRecord.getText(),
-						deltaRecord.getChunkUuidString());
+				DomainTransformRequest request = DomainTransformRequest
+						.fromString(deltaRecord.getText(),
+								deltaRecord.getChunkUuidString());
 				ClientInstance clientInstance = clientInstanceClass
 						.newInstance();
 				clientInstance.setAuth(deltaRecord.getClientInstanceAuth());
 				clientInstance.setId(deltaRecord.getClientInstanceId());
-				rq.setClientInstance(clientInstance);
+				request.setClientInstance(clientInstance);
 				if (useWrapperUser == null) {
 					useWrapperUser = PermissionsManager.get().isAdmin()
 							&& LooseContext.getContext().getBoolean(
@@ -193,12 +194,12 @@ public class TransformCommit {
 				DomainTransformLayerWrapper transformLayerWrapper;
 				// NOTE - at the moment, if all records are pushed in one
 				// transaction, just the last clientInstance is used
-				rq.setRequestId(deltaRecord.getRequestId());
-				rq.setTag(deltaRecord.getTag());
+				request.setRequestId(deltaRecord.getRequestId());
+				request.setTag(deltaRecord.getTag());
 				// necessary because event id is used by transformpersister
 				// for
 				// pass control etc
-				for (DomainTransformEvent event : rq.getEvents()) {
+				for (DomainTransformEvent event : request.getEvents()) {
 					event.setEventId(idCounter++);
 					event.setCommitType(CommitType.TO_STORAGE);
 				}
@@ -208,9 +209,12 @@ public class TransformCommit {
 							try {
 								LooseContext.pushWithTrue(
 										AuthenticationPersistence.CONTEXT_IDLE_TIMEOUT_DISABLED);
-								if (!cp.validateClientInstance(
-										deltaRecord.getClientInstanceId(),
-										deltaRecord.getClientInstanceAuth())) {
+								if (!AuthenticationPersistence.get()
+										.validateClientInstance(
+												deltaRecord
+														.getClientInstanceId(),
+												deltaRecord
+														.getClientInstanceAuth())) {
 									throw new RuntimeException(
 											"invalid wrapper authentication");
 								}
@@ -236,17 +240,23 @@ public class TransformCommit {
 						PermissionsManager.get().pushUser(wrapperUser,
 								LoginState.LOGGED_IN);
 					} else {
-						rq.getClientInstance()
-								.setUser(PermissionsManager.get().getUser());
+						if (!Objects.equals(
+								request.getClientInstance().provideUser(),
+								PermissionsManager.get().getUser())) {
+							throw new UnsupportedOperationException(
+									"May need to create an additional authenticationSession");
+							// request.getClientInstance()
+							// .setUser(PermissionsManager.get().getUser());
+						}
 					}
 					boolean last = idx == records.size() - 1;
 					if (!persistAsOneTransaction || last) {
 						if (last) {
-							rq.getPriorRequestsWithoutResponse()
+							request.getPriorRequestsWithoutResponse()
 									.addAll(toCommit);
 						}
-						transformLayerWrapper = get().transform(rq, true, true,
-								true);
+						transformLayerWrapper = get().transform(request, true,
+								true, true);
 						ThreadlocalTransformManager.cast().resetTltm(null);
 						if (logger != null) {
 							logger.info(Ax.format(
@@ -263,7 +273,7 @@ public class TransformCommit {
 									.getTransformExceptions().get(0));
 						}
 					} else {
-						toCommit.add(rq);
+						toCommit.add(request);
 					}
 				} finally {
 					if (useWrapperUser) {
@@ -541,9 +551,9 @@ public class TransformCommit {
 	}
 
 	public void handleWrapperTransforms() {
-		EntityLayerTransformPropogation transformPropogation = Registry
-				.impl(EntityLayerTransformPropogation.class, void.class, true);
-		if (transformPropogation == null) {
+		EntityLayerTransformPropagation transformPropagation = Registry
+				.impl(EntityLayerTransformPropagation.class, void.class, true);
+		if (transformPropagation == null) {
 			return;
 		}
 		ThreadlocalTransformManager.cast().getTransforms();
@@ -649,13 +659,15 @@ public class TransformCommit {
 		HttpRequestCommitContext httpRequestCommitContext = LooseContext.ensure(
 				CONTEXT_HTTP_COMMIT_CONTEXT,
 				() -> new HttpRequestCommitContext(0, 0, null));
-		final ClientInstance commitInstance = Registry
-				.impl(CommonPersistenceProvider.class).getCommonPersistence()
-				.createClientInstance(Ax.format(
-						"servlet-bulk: %s - derived from client instance : %s",
-						EntityLayerUtils.getLocalHostName(),
-						httpRequestCommitContext.clientInstanceId), null,
-						httpRequestCommitContext.committerIpAddress);
+		ClientInstance fromInstance = AuthenticationPersistence.get()
+				.getClientInstance(httpRequestCommitContext.clientInstanceId);
+		String uaString = Ax.format(
+				"servlet-bulk: %s - derived from client instance : %s",
+				EntityLayerUtils.getLocalHostName(),
+				httpRequestCommitContext.clientInstanceId);
+		final ClientInstance commitInstance = AuthenticationPersistence.get()
+				.createClientInstance(fromInstance.getAuthenticationSession(),
+						uaString, httpRequestCommitContext.committerIpAddress);
 		List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
 				TransformManager.get()
 						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN));

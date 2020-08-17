@@ -127,8 +127,8 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseT
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
-import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.SessionProvider;
+import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 import cc.alcina.framework.servlet.job.JobRegistry;
 
 /**
@@ -521,8 +521,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					ServletLayerUtils
 							.robustGetRemoteAddress(getThreadLocalRequest()));
 			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_INSTANCE_ID,
-					SessionHelper.getAuthenticatedSessionClientInstanceId(
-							getThreadLocalRequest()));
+					AuthenticationManager
+							.provideAuthenticatedClientInstanceId());
 			RPCRequest f_rpcRequest = rpcRequest;
 			onAfterAlcinaAuthentication(name);
 			LooseContext.set(CONTEXT_RPC_USER_ID,
@@ -673,8 +673,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		if (!waitForTransformsEnabled()) {
 			throw new PermissionsException();
 		}
-		Long clientInstanceId = Registry.impl(SessionHelper.class)
-				.getAuthenticatedClientInstanceId(getThreadLocalRequest());
+		Long clientInstanceId = AuthenticationManager
+				.provideAuthenticatedClientInstanceId();
 		if (clientInstanceId == null) {
 			throw new PermissionsException();
 		}

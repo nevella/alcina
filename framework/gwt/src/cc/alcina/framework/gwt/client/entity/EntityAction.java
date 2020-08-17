@@ -46,6 +46,12 @@ public enum EntityAction {
 		public Class<? extends PermissibleAction> actionClass() {
 			throw new UnsupportedOperationException();
 		}
+	},
+	SEARCH {
+		@Override
+		public Class<? extends PermissibleAction> actionClass() {
+			throw new UnsupportedOperationException();
+		}
 	};
 	public abstract Class<? extends PermissibleAction> actionClass();
 

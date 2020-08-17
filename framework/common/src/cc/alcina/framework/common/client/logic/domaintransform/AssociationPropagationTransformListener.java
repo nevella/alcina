@@ -16,11 +16,11 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
  * CommitToLocalDomainTransformListener), during mvcc transactions after
  * property changes (server)
  */
-public class AssociationPropogationTransformListener
+public class AssociationPropagationTransformListener
 		implements DomainTransformListener {
 	private CommitType filterType;
 
-	public AssociationPropogationTransformListener(CommitType filterType) {
+	public AssociationPropagationTransformListener(CommitType filterType) {
 		this.filterType = filterType;
 	}
 

@@ -79,7 +79,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
 			clazz -> SEUtilities.getSortedPropertyDescriptors(clazz).stream()
-					.map(JvmPropertyReflector::new)
+					.map(pd -> new JvmPropertyReflector(clazz, pd))
 					.collect(Collectors.toList()),
 			100);
 
@@ -295,5 +295,12 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 			return Enum.valueOf(evt.getValueClass(), evt.getNewStringValue());
 		}
 		return null;
+	}
+
+	@Override
+	public boolean isReadOnly(Class objectClass, String propertyName) {
+		return SEUtilities
+				.getPropertyDescriptorByName(objectClass, propertyName)
+				.getWriteMethod() == null;
 	}
 }

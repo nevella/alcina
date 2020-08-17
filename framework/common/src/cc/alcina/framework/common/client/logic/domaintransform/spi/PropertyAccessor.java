@@ -38,4 +38,6 @@ public interface PropertyAccessor {
 	default boolean hasPropertyKey(Object left, String leftName) {
 		return true;
 	}
+
+	public boolean isReadOnly(Class objectClass, String propertyName);
 }

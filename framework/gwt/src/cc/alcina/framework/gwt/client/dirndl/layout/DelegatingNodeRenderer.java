@@ -15,7 +15,7 @@ public class DelegatingNodeRenderer extends DirectedNodeRenderer {
 	public List<Widget> renderWithDefaults(Node node) {
 		List<Widget> result = new ArrayList<>();
 		for (Node child : node.children) {
-			result.addAll(child.render());
+			result.addAll(child.render().widgets);
 		}
 		return result;
 	}

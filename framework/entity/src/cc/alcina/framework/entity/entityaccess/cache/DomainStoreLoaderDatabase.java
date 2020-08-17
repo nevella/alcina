@@ -1879,6 +1879,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							Class type = propertyDescriptorFetchTypes
 									.get(pdOperator.pd);
 							Object target = store.cache.get(type, id);
+							if (target == null && store.isInitialised()) {
+								if (domainDescriptor.perClass.get(type)
+										.provideNotFullyLoadedOnStartup()) {
+									target = store.find(type, id);
+								}
+							}
 							if (target == null) {
 								if (segmentLoader == null) {
 									if (missingWarningCount++ < 5) {

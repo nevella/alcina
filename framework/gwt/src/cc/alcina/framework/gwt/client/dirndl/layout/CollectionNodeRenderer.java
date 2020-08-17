@@ -32,11 +32,11 @@ public class CollectionNodeRenderer extends DirectedNodeRenderer {
 		Collection collection = (Collection) node.model;
 		int idx = 0;
 		for (Object object : collection) {
-			Node child = node.addChild(object);
+			Node child = node.addChild(object, null, null);
 			if (args != null) {
 				child.directed = args.value();
 			}
-			result.addAll(child.render());
+			result.addAll(child.render().widgets);
 		}
 		return result;
 	}

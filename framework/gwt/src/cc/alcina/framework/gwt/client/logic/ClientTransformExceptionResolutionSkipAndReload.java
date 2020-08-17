@@ -16,7 +16,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
-import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -206,7 +206,7 @@ public class ClientTransformExceptionResolutionSkipAndReload
 	}
 
 	@Bean(displayNamePropertyName = "recommendedAction")
-	public static class DTEView extends BaseBindable {
+	public static class DTEView extends Bindable {
 		boolean reloadRequired = false;
 
 		RecommendedAction recommendedAction;

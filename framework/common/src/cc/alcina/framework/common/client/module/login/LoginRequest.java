@@ -3,10 +3,10 @@ package cc.alcina.framework.common.client.module.login;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 
-public class LoginRequest extends BaseBindable {
+public class LoginRequest extends Bindable {
 	private String userName;
 
 	private String password;

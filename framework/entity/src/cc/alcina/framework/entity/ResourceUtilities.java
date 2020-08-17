@@ -674,7 +674,8 @@ public class ResourceUtilities {
 
 	public static byte[] readUrlAsBytesWithPost(String strUrl, String postBody,
 			StringMap headers) throws Exception {
-		return new SimpleQuery(strUrl, postBody, headers).asBytes();
+		return new SimpleQuery(strUrl).withPostBody(postBody)
+				.withHeaders(headers).asBytes();
 	}
 
 	public static String readUrlAsString(String strUrl) throws Exception {
@@ -997,7 +998,7 @@ public class ResourceUtilities {
 
 		private String postBody;
 
-		private StringMap headers;
+		private StringMap headers = new StringMap();
 
 		private HttpURLConnection connection;
 
@@ -1009,12 +1010,10 @@ public class ResourceUtilities {
 
 		private String contentDisposition;
 
-		private StringMap queryParameters;
+		private StringMap queryStringParameters;
 
-		public SimpleQuery(String strUrl, String postBody, StringMap headers) {
+		public SimpleQuery(String strUrl) {
 			this.strUrl = strUrl;
-			this.postBody = postBody;
-			this.headers = headers;
 		}
 
 		public byte[] asBytes() throws Exception {
@@ -1023,11 +1022,11 @@ public class ResourceUtilities {
 			if (headers == null) {
 				headers = new StringMap();
 			}
-			if (queryParameters != null) {
+			if (queryStringParameters != null) {
 				if (!strUrl.contains("?")) {
 					strUrl += "?";
 				}
-				strUrl += queryParameters.entrySet().stream().map(e -> {
+				strUrl += queryStringParameters.entrySet().stream().map(e -> {
 					return Ax.format("%s=%s", e.getKey(),
 							UrlComponentEncoder.get().encode(e.getValue()));
 				}).collect(Collectors.joining("&"));
@@ -1102,9 +1101,6 @@ public class ResourceUtilities {
 
 		public SimpleQuery withBasicAuthentication(String username,
 				String password) {
-			if (headers == null) {
-				headers = new StringMap();
-			}
 			String auth = Ax.format("%s:%s", username, password);
 			headers.put("Authorization",
 					Ax.format("Basic %s", Base64.getEncoder().encodeToString(
@@ -1117,13 +1113,34 @@ public class ResourceUtilities {
 			return this;
 		}
 
+		public SimpleQuery withHeaders(StringMap headers) {
+			this.headers = headers;
+			return this;
+		}
+
 		public SimpleQuery withGzip(boolean gzip) {
 			this.gzip = gzip;
 			return this;
 		}
 
-		public SimpleQuery withQueryParameters(StringMap queryParameters) {
-			this.queryParameters = queryParameters;
+		public SimpleQuery
+				withQueryStringParameters(StringMap queryStringParameters) {
+			this.queryStringParameters = queryStringParameters;
+			return this;
+		}
+
+		public SimpleQuery
+				withPostBodyQueryParameters(StringMap queryParameters) {
+			postBody = queryParameters.entrySet().stream().map(e -> {
+				return Ax.format("%s=%s", e.getKey(),
+						UrlComponentEncoder.get().encode(e.getValue()));
+			}).collect(Collectors.joining("&"));
+			headers.put("content-type", "application/x-www-form-urlencoded");
+			return this;
+		}
+
+		public SimpleQuery withPostBody(String postBody) {
+			this.postBody = postBody;
 			return this;
 		}
 

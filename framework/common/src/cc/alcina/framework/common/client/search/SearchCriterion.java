@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client.search;
 
 import java.util.Collection;
 
-import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
@@ -33,7 +33,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 @Bean(displayNamePropertyName = "displayName", allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
-public abstract class SearchCriterion extends BaseBindable
+public abstract class SearchCriterion extends Bindable
 		implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion> {
 	public static final transient String CONTEXT_ENSURE_DISPLAY_NAME = SearchCriterion.class
 			+ ".CONTEXT_ENSURE_DISPLAY_NAME";

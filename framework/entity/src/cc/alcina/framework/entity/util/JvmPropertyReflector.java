@@ -6,39 +6,33 @@ import java.lang.annotation.Annotation;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.SEUtilities;
 
 public class JvmPropertyReflector implements PropertyReflector {
-	private String propertyName;
+	private Class clazz;
 
-	private Class propertyType;
+	private PropertyDescriptor propertyDescriptor;
 
-	private Class<?> readMethodDeclaringClass;
-
-	public JvmPropertyReflector(PropertyDescriptor pd) {
-		propertyName = pd.getName();
-		propertyType = pd.getPropertyType();
-		readMethodDeclaringClass = pd.getReadMethod() == null ? null
-				: pd.getReadMethod().getDeclaringClass();
+	public JvmPropertyReflector(Class clazz,
+			PropertyDescriptor propertyDescriptor) {
+		this.clazz = clazz;
+		this.propertyDescriptor = propertyDescriptor;
 	}
 
 	@Override
 	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
-		return readMethodDeclaringClass == null ? null
-				: SEUtilities
-						.getPropertyDescriptorByName(readMethodDeclaringClass,
-								getPropertyName())
-						.getReadMethod().getAnnotation(annotationClass);
+		return propertyDescriptor.getReadMethod() == null ? null
+				: propertyDescriptor.getReadMethod()
+						.getAnnotation(annotationClass);
 	}
 
 	@Override
 	public String getPropertyName() {
-		return propertyName;
+		return propertyDescriptor.getName();
 	}
 
 	@Override
 	public Class getPropertyType() {
-		return propertyType;
+		return propertyDescriptor.getPropertyType();
 	}
 
 	@Override
@@ -55,7 +49,16 @@ public class JvmPropertyReflector implements PropertyReflector {
 
 	@Override
 	public String toString() {
-		return Ax.format("%s.%s", readMethodDeclaringClass.getSimpleName(),
-				propertyName);
+		return Ax.format("%s.%s", clazz.getSimpleName(), getPropertyName());
+	}
+
+	@Override
+	public Class getDefiningType() {
+		return clazz;
+	}
+
+	@Override
+	public boolean isReadOnly() {
+		return propertyDescriptor.getWriteMethod() == null;
 	}
 }

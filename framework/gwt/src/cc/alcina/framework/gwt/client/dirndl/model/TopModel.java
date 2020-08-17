@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
-import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
  */
 @Directed(renderer = DelegatingNodeRenderer.class)
 @Bean
-public class TopModel extends BaseBindable {
+public class TopModel extends Bindable {
     private Object model;
 
     public Object getModel() {

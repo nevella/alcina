@@ -67,4 +67,9 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 		}
 		return pathAccessor;
 	}
+
+	@Override
+	public boolean isReadOnly(Class objectClass, String propertyName) {
+		return false;
+	}
 }

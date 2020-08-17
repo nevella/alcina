@@ -13,4 +13,8 @@ public interface PropertyReflector {
 	public abstract Object getPropertyValue(Object bean);
 
 	public abstract void setPropertyValue(Object bean, Object newValue);
+
+	public abstract Class getDefiningType();
+
+	public abstract boolean isReadOnly();
 }

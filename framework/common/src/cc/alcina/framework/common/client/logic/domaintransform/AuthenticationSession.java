@@ -13,68 +13,62 @@
  */
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import java.util.Comparator;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
-
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
+import cc.alcina.framework.common.client.util.Ax;
 
+@DomainTransformPersistable
 @MappedSuperclass
-@ClientInstantiable
-@Introspectable
 public abstract class AuthenticationSession
 		extends Entity<AuthenticationSession> implements HasIUser {
 	private Date startTime;
 
 	private Date endTime;
 
-	@Transient
-	public abstract Set<? extends ClientInstance> getClientInstances();
+	private String sessionId;
+
+	private int maxInstances;
+
+	private String authenticationType;
+
+	private Date lastAccessed;
+
+	private String endReason;
+
+	@Override
+	public String toString() {
+		return Ax.format(
+				"%s :: {id: %s - user: %s - start: %s - type: %s - end reason: %s",
+				toStringEntity(), sessionId, getUser(), startTime,
+				authenticationType, endReason);
+	}
 
 	@Transient
 	public abstract Set<? extends AuthenticationSessionAttribute>
 			getAttributes();
 
-	private String iid;
-
-	private String authenticationType;
-
 	public String getAuthenticationType() {
 		return this.authenticationType;
 	}
 
-	public void setAuthenticationType(String authenticationType) {
-		this.authenticationType = authenticationType;
-	}
+	@Transient
+	public abstract Set<? extends ClientInstance> getClientInstances();
 
-	public String getIid() {
-		return this.iid;
-	}
-
-	public void setIid(String iid) {
-		this.iid = iid;
-	}
-
-	public Date getStartTime() {
-		return this.startTime;
-	}
-
-	public void setStartTime(Date startTime) {
-		this.startTime = startTime;
+	public String getEndReason() {
+		return this.endReason;
 	}
 
 	public Date getEndTime() {
 		return this.endTime;
-	}
-
-	public void setEndTime(Date endTime) {
-		this.endTime = endTime;
 	}
 
 	@Override
@@ -83,8 +77,88 @@ public abstract class AuthenticationSession
 		return id;
 	}
 
+	@Transient
+	public abstract Iid getIid();
+
+	public Date getLastAccessed() {
+		return this.lastAccessed;
+	}
+
+	public int getMaxInstances() {
+		return this.maxInstances;
+	}
+
+	public String getSessionId() {
+		return this.sessionId;
+	}
+
+	public Date getStartTime() {
+		return this.startTime;
+	}
+
+	public boolean provideIsExpired() {
+		return endTime != null;
+	}
+
+	public Optional<Date> provideLastAccessed() {
+		return getClientInstances().stream()
+				.map(ClientInstance::getLastAccessed)
+				.max(Comparator.naturalOrder());
+	}
+
+	public void setAuthenticationType(String authenticationType) {
+		String old_authenticationType = this.authenticationType;
+		this.authenticationType = authenticationType;
+		propertyChangeSupport().firePropertyChange("authenticationType",
+				old_authenticationType, authenticationType);
+	}
+
+	public void setEndReason(String endReason) {
+		String old_endReason = this.endReason;
+		this.endReason = endReason;
+		propertyChangeSupport().firePropertyChange("endReason", old_endReason,
+				endReason);
+	}
+
+	public void setEndTime(Date endTime) {
+		Date old_endTime = this.endTime;
+		this.endTime = endTime;
+		propertyChangeSupport().firePropertyChange("endTime", old_endTime,
+				endTime);
+	}
+
 	@Override
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public abstract void setIid(Iid iid);
+
+	public void setLastAccessed(Date lastAccessed) {
+		Date old_lastAccessed = this.lastAccessed;
+		this.lastAccessed = lastAccessed;
+		propertyChangeSupport().firePropertyChange("lastAccessed",
+				old_lastAccessed, lastAccessed);
+	}
+
+	public void setMaxInstances(int maxInstances) {
+		int old_maxInstances = this.maxInstances;
+		this.maxInstances = maxInstances;
+		propertyChangeSupport().firePropertyChange("maxInstances",
+				old_maxInstances, maxInstances);
+	}
+
+	public void setSessionId(String sessionId) {
+		String old_sessionId = this.sessionId;
+		this.sessionId = sessionId;
+		propertyChangeSupport().firePropertyChange("sessionId", old_sessionId,
+				sessionId);
+	}
+
+	public void setStartTime(Date startTime) {
+		Date old_startTime = this.startTime;
+		this.startTime = startTime;
+		propertyChangeSupport().firePropertyChange("startTime", old_startTime,
+				startTime);
 	}
 }

@@ -80,7 +80,7 @@ class HttpInitiatorTransport extends Transport {
 		model.endpointName = descriptor.transportEndpointName;
 		String payload = JacksonUtils.serialize(model);
 		try {
-			SimpleQuery post = new SimpleQuery(url, payload, null)
+			SimpleQuery post = new SimpleQuery(url).withPostBody(payload)
 					.withGzip(true);
 			maybeSimulateTransportDelay();
 			String strResponse = post.asString();

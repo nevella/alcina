@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -63,7 +64,7 @@ import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domaintransform.AssociationPropogationTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.AssociationPropagationTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -147,7 +148,7 @@ public class DomainStore implements IDomainStore {
 			.getTaggedLogger(DomainStore.class, "wrapped_object_ref_integrity");
 	static {
 		ThreadlocalTransformManager.addThreadLocalDomainTransformListener(
-				new AssociationPropogationTransformListener(
+				new AssociationPropagationTransformListener(
 						CommitType.TO_LOCAL_BEAN));
 		ThreadlocalTransformManager.addThreadLocalDomainTransformListener(
 				new IndexingTransformListener());
@@ -543,8 +544,7 @@ public class DomainStore implements IDomainStore {
 								pd.getName());
 				DomainStoreProperty domainStorePropertyAnnotation = classDescriptor
 						.resolveDomainStoreProperty(
-								new AnnotationLocation(clazz,
-										property));
+								new AnnotationLocation(clazz, property));
 				if ((rm.getAnnotation(Transient.class) != null
 						&& rm.getAnnotation(DomainStoreDbColumn.class) == null)
 						|| domainStorePropertyAnnotation != null) {
@@ -567,6 +567,8 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	Map<EntityLocator, Boolean> lazyLoadAttempted = new ConcurrentHashMap<>();
+
 	<T extends Entity> T find(Class<T> clazz, long id) {
 		T t = cache.get(clazz, id);
 		if (t == null) {
@@ -574,8 +576,22 @@ public class DomainStore implements IDomainStore {
 					&& domainDescriptor.perClass.get(clazz)
 							.provideNotFullyLoadedOnStartup()
 					&& id != 0) {
-				lazyObjectLoader.loadObject(clazz, id, 0);
-				t = cache.get(clazz, id);
+				EntityLocator locator = new EntityLocator(clazz, id, 0L);
+				boolean toDomainCommitting = Transaction.current()
+						.isToDomainCommitting();
+				if (!lazyLoadAttempted.containsKey(locator)) {
+					lazyObjectLoader.loadObject(clazz, id, 0);
+					t = cache.get(clazz, id);
+					if (t != null && !toDomainCommitting) {
+						Transactions.enqueueLazyLoad(locator);
+					}
+				}
+				// can only record checks during 'toDomainCommitting' (otherwise
+				// located objects (and refs to them) will be discarded at end
+				// of tx)
+				if (toDomainCommitting) {
+					lazyLoadAttempted.put(locator, Boolean.TRUE);
+				}
 			}
 		}
 		if (t != null) {
@@ -660,7 +676,7 @@ public class DomainStore implements IDomainStore {
 			// evicted
 			// from hereonin
 			/*
-			 * mvcc.kafkarqpropogation - do we need (e.g.)
+			 * mvcc.kafkarqpropagation - do we need (e.g.)
 			 * transformManager.getObject(dte, true);? - in fact, we filter
 			 * again later on so I think this can all go away
 			 */
@@ -705,6 +721,9 @@ public class DomainStore implements IDomainStore {
 					testSensitiveTimestamp(transactionCommitTime), this,
 					applyTxToGraphCounter.getAndIncrement(),
 					persistenceEvent.getMaxPersistedRequestId());
+			// opportunistically load any lazy loads in this tx phase, to ensure
+			// they become a non-vacuumable part of the graph
+			Transactions.getEnqueuedLazyLoads().forEach(Domain::find);
 			postProcessThread = Thread.currentThread();
 			postProcessEvent = persistenceEvent;
 			health.domainStorePostProcessStartTime = System.currentTimeMillis();
@@ -847,8 +866,8 @@ public class DomainStore implements IDomainStore {
 			LooseContext.pop();
 		}
 	}
-	
-	public void throwDomainStoreException(String message){
+
+	public void throwDomainStoreException(String message) {
 		health.domainStoreExceptionCount.incrementAndGet();
 		throw new DomainStoreException(message);
 	}
@@ -1328,7 +1347,7 @@ public class DomainStore implements IDomainStore {
 		@Override
 		public <V extends Entity> V find(EntityLocator locator) {
 			if (locator.id != 0) {
-				return DomainHandler.super.find(locator);
+				return find(locator.clazz, locator.id);
 			}
 			return cache.get(locator);
 		}
@@ -1347,7 +1366,7 @@ public class DomainStore implements IDomainStore {
 					return (V) cache.get(v.entityClass(), locator.id);
 				}
 			} else {
-				return (V) cache.get(v.entityClass(), v.getId());
+				return (V) find(v.entityClass(), v.getId());
 			}
 		}
 

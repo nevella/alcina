@@ -50,7 +50,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase.ServletClassMetadataCacheProvider;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.entityaccess.AuthenticationPersistence;
 import cc.alcina.framework.entity.entityaccess.DbAppender;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
@@ -58,7 +58,6 @@ import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
@@ -170,7 +169,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initCluster();
 			getStatusNotifier().deploying();
 			initEntityLayer();
-			createServletTransformClientInstance();
 			initCustom();
 			ServletLayerUtils.setAppServletInitialised(true);
 			launchPostInitTasks();
@@ -199,22 +197,19 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void createServletTransformClientInstance() {
-		if (EntityLayerObjects.get().getServerAsClientInstance() == null) {
-			try {
-				Transaction.begin();
-				ThreadedPermissionsManager.cast().pushSystemUser();
-				ClientInstance serverAsClientInstance = Registry
-						.impl(CommonPersistenceProvider.class)
-						.getCommonPersistence().createClientInstance(
-								"servlet: "
-										+ EntityLayerUtils.getLocalHostName(),
-								null, null);
-				EntityLayerObjects.get()
-						.setServerAsClientInstance(serverAsClientInstance);
-			} finally {
-				ThreadedPermissionsManager.cast().popSystemUser();
-				Transaction.end();
-			}
+		if (EntityLayerObjects.get().getServerAsClientInstance() != null) {
+			throw new IllegalStateException();
+		}
+		try {
+			Transaction.begin();
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			ClientInstance serverAsClientInstance = AuthenticationPersistence
+					.get().createBootstrapClientInstance();
+			EntityLayerObjects.get()
+					.setServerAsClientInstance(serverAsClientInstance);
+		} finally {
+			ThreadedPermissionsManager.cast().popSystemUser();
+			Transaction.end();
 		}
 	}
 

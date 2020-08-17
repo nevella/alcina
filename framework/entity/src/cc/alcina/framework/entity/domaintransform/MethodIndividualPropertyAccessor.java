@@ -36,10 +36,14 @@ public class MethodIndividualPropertyAccessor implements PropertyReflector {
 
 	public MethodIndividualPropertyAccessor(Class clazz, String propertyName) {
 		this.constructorTimeClass = clazz;
-		methodDeclaringClass = null;// be lazy
+		methodDeclaringClass = clazz;
 		/*
-		 * 2020-04-15 -- really not sure about this lazy method approach -
-		 * trying without to see...
+		 * Because we may be hitting subclass methods, we need to dynamically
+		 * check object (sub)-type each time (if accessing a specific object) to
+		 * see if we have the correct methods cached.
+		 * 
+		 * But some methods (e.g. getAnnotation) won't have a target object - so
+		 * popuplate on startup
 		 */
 		Pattern indexedPattern = Pattern.compile("(.+)\\[(\\d+)\\]");
 		Matcher m = indexedPattern.matcher(propertyName);
@@ -157,5 +161,15 @@ public class MethodIndividualPropertyAccessor implements PropertyReflector {
 			this.writeMethod = pd.getWriteMethod();
 			methodDeclaringClass = clazz;
 		}
+	}
+
+	@Override
+	public Class getDefiningType() {
+		return constructorTimeClass;
+	}
+
+	@Override
+	public boolean isReadOnly() {
+		return writeMethod == null;
 	}
 }

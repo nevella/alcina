@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
@@ -91,7 +91,7 @@ public abstract class AlcinaBeanSerializer {
 	}
 
 	@Bean
-	public static class SerializationHolder extends BaseBindable {
+	public static class SerializationHolder extends Bindable {
 		private List listValue;
 
 		private Map mapValue;

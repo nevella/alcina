@@ -84,7 +84,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
 			clazz -> SEUtilities.getSortedPropertyDescriptors(clazz).stream()
-					.map(JvmPropertyReflector::new)
+					.map(pd -> new JvmPropertyReflector(clazz, pd))
 					.collect(Collectors.toList()),
 			100);
 
@@ -266,6 +266,12 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		return (ThreadlocalTransformManager.cast()).newInstance(clazz, objectId,
 				localId);
+	}
+
+	@Override
+	public boolean isReadOnly(Class objectClass, String propertyName) {
+		return (ThreadlocalTransformManager.cast()).isReadOnly(objectClass,
+				propertyName);
 	}
 
 	@Override

@@ -20,7 +20,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
  * @author nick@alcina.cc
  *
  */
-public class MvccEntityDeletionPropogationTest<IU extends Entity & IUser, IG extends Entity & IGroup>
+public class MvccEntityDeletionPropagationTest<IU extends Entity & IUser, IG extends Entity & IGroup>
 		extends MvccEntityTransactionTest {
 	Class<IG> groupClass = (Class<IG>) AlcinaPersistentEntityImpl
 			.getImplementation(IGroup.class);

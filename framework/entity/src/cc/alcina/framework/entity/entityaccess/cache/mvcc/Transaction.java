@@ -481,4 +481,8 @@ public class Transaction {
 			return CommonUtils.compareLongs(o1.id.id, o2.id.id);
 		}
 	}
+
+	public boolean isToDomainCommitting() {
+		return phase == TransactionPhase.TO_DOMAIN_COMMITTING;
+	}
 }

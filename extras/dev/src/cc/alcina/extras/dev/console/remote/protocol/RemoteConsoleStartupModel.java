@@ -1,10 +1,10 @@
 package cc.alcina.extras.dev.console.remote.protocol;
 
-import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 
 @Bean
-public class RemoteConsoleStartupModel extends BaseBindable {
+public class RemoteConsoleStartupModel extends Bindable {
 	private String appName;
 
 	public String getAppName() {

@@ -17,6 +17,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+
+import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
 
@@ -25,12 +28,10 @@ import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
-import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.publication.Publication;
@@ -51,8 +52,7 @@ import cc.alcina.framework.entity.entityaccess.transform.TransformPersister.Tran
 public interface CommonPersistenceLocal {
 	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
 
-	public abstract ClientInstance createClientInstance(String userAgent,
-			String iid, String ipAddress);
+	public <V> V callWithEntityManager(Function<EntityManager, V> call);
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception;
 
@@ -63,8 +63,6 @@ public interface CommonPersistenceLocal {
 	public <T> T findImplInstance(Class<? extends T> clazz, long id);
 
 	public <A> Set<A> getAll(Class<A> clazz);
-
-	public abstract Iid getIidByKey(String iid);
 
 	public <T> T getItemById(Class<T> clazz, Long id);
 
@@ -95,8 +93,6 @@ public interface CommonPersistenceLocal {
 	public <T extends WrapperPersistable> WrappedObject<T>
 			getObjectWrapperForUser(Class<T> c, long id) throws Exception;
 
-	public ClientInstance getPersistedClientInstance(Long clientInstanceId);
-
 	public List<DomainTransformRequestPersistent>
 			getPersistentTransformRequests(long fromId, long toId,
 					Collection<Long> specificIds, boolean mostRecentOnly,
@@ -106,12 +102,8 @@ public interface CommonPersistenceLocal {
 
 	public List<Publication> getPublications(Collection<Long> ids);
 
-	public String getRememberMeUserName(String iid);
-
 	public <T extends WrapperPersistable> T getWrappedObjectForUser(
 			Class<? extends T> c, long wrappedObjectId) throws Exception;
-
-	public abstract boolean isValidIid(String iidKey);
 
 	public List<ActionLogItem> listLogItemsForClass(String className,
 			int count);
@@ -139,7 +131,7 @@ public interface CommonPersistenceLocal {
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
 			Long id);
 
-	public EntityLocatorMap reconstituteEntityMap(long l2);
+	public EntityLocatorMap reconstituteEntityMap(long clientInstanceId);
 
 	public void remove(Object o);
 
@@ -157,15 +149,10 @@ public interface CommonPersistenceLocal {
 
 	public HasId unwrap(HasId wrapper);
 
-	public abstract void updateIid(String iidKey, String userName,
-			boolean rememberMe);
-
 	public void updatePublicationMimeMessageId(Long publicationId,
 			String mimeMessageId);
 
 	public <T extends ServerValidator> List<T> validate(List<T> validators);
-
-	public boolean validateClientInstance(long id, int auth);
 
 	/**
 	 * Used for supporting mixed rpc/transform domain loads
@@ -179,8 +166,6 @@ public interface CommonPersistenceLocal {
 			long clientInstanceId);
 
 	long getMaxPublicationIdForUser(IUser user);
-
-	String getUserNameForClientInstanceId(long validatedClientInstanceId);
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
 }

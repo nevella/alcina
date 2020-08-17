@@ -99,4 +99,9 @@ public class DomNodePropertyAccessor implements PropertyAccessor {
 			}
 		}
 	}
+
+	@Override
+	public boolean isReadOnly(Class objectClass, String propertyName) {
+		return false;
+	}
 }

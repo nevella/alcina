@@ -1,10 +1,7 @@
-package cc.alcina.framework.servlet.module.login;
+package cc.alcina.framework.servlet.authentication;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import com.lambdaworks.crypto.SCrypt;
 
@@ -13,8 +10,11 @@ import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.UserWith2FA;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -24,11 +24,12 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
-import cc.alcina.framework.servlet.CookieHelper;
-import cc.alcina.framework.servlet.SessionHelper;
-import cc.alcina.framework.servlet.authentication.AuthenticationException;
+import cc.alcina.framework.servlet.module.login.LoginAttempts;
+import cc.alcina.framework.servlet.module.login.LoginModel;
 import cc.alcina.framework.servlet.module.login.LoginRequestHandler.TwoFactorAuthResult;
+import cc.alcina.framework.servlet.module.login.TwoFactorAuthentication;
 
+@RegistryLocation(registryPoint = Authenticator.class, implementationType = ImplementationType.INSTANCE)
 public abstract class Authenticator<U extends Entity & IUser> {
 	public static final String CONTEXT_BYPASS_PASSWORD_CHECK = Authenticator.class
 			.getName() + ".CONTEXT_BYPASS_PASSWORD_CHECK";
@@ -51,16 +52,15 @@ public abstract class Authenticator<U extends Entity & IUser> {
 	}
 
 	public U createUser(String userName, String password) {
-		U user = Domain.create(getUserClass());
+		U user = (U) Domain.create((Class) AlcinaPersistentEntityImpl
+				.getImplementation(IUser.class));
 		user.setUserName(userName);
 		setPassword(user, password);
 		return user;
 	}
 
-	public void processValidLogin(HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse,
-			LoginResponse loginResponse, String userName, boolean rememberMe)
-			throws AuthenticationException {
+	public void processValidLogin(LoginResponse loginResponse, String userName,
+			boolean rememberMe) throws AuthenticationException {
 		if (loginModel == null) {
 			LoginBean loginBean = new LoginBean();
 			loginBean.setUserName(userName);
@@ -70,20 +70,16 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		}
 		U user = validateAccount(loginResponse, userName);
 		if (loginResponse.isOk()) {
-			Registry.impl(SessionHelper.class).setupSessionForUser(
-					httpServletRequest, httpServletResponse, user);
+			AuthenticationSession authenticationSession = AuthenticationManager
+					.get().createAuthenticationSession(new Date(), user,
+							"password", true);
+			if (!rememberMe) {
+				authenticationSession.setMaxInstances(1);
+			}
 			if (user instanceof UserWith2FA) {
 				((UserWith2FA) user).setHasSuccessfullyLoggedIn(true);
-				Transaction.commit();
 			}
-		}
-		if (httpServletRequest != null) {
-			createClientInstance(httpServletRequest, httpServletResponse,
-					loginResponse);
-			if (rememberMe) {
-				new CookieHelper().setRememberMeCookie(httpServletRequest,
-						httpServletResponse, rememberMe);
-			}
+			Transaction.commit();
 		}
 	}
 
@@ -146,21 +142,12 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		return false;
 	}
 
-	protected abstract void createClientInstance(
-			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse,
-			LoginResponse loginResponse);
-
-	protected abstract U getUser(String userName);
-
-	protected abstract Class<U> getUserClass();
-
 	protected boolean
 			validateLoginAttemptFromHistory(LoginModel<U> loginModel) {
 		return true;
 	}
 
-	protected boolean validatePassword(LoginModel<U> loginModel) {
+	public boolean validatePassword(LoginModel<U> loginModel) {
 		U user = loginModel.user;
 		if (user.getSalt() == null) {
 			user.setSalt(user.getUserName());
@@ -182,9 +169,9 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		}
 	}
 
-	protected boolean validateUsername(LoginModel<U> loginModel) {
+	public boolean validateUsername(LoginModel<U> loginModel) {
 		String userName = loginModel.loginBean.getUserName();
-		loginModel.user = getUser(userName);
+		loginModel.user = UserlandProvider.get().getUserByName(userName);
 		if (loginModel.user == null) {
 			loginModel.loginResponse
 					.setErrorMsg("Email address not registered");
@@ -241,5 +228,11 @@ public abstract class Authenticator<U extends Entity & IUser> {
 				throw new WrappedRuntimeException(e);
 			}
 		}
+	}
+
+	public void logOut() {
+		AuthenticationManager.get().createAuthenticationSession(new Date(),
+				UserlandProvider.get().getAnonymousUser(), "logout", false);
+		Transaction.commit();
 	}
 }

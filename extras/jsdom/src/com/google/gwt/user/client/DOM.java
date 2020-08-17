@@ -1711,7 +1711,7 @@ public class DOM {
 					LocalDom.log(LocalDomDebug.DOM_MOUSE_EVENT, message);
 				}
 				eventListener.onBrowserEvent(event);
-				if (LocalDom.isStopPropogation(event)) {
+				if (LocalDom.isStopPropagation(event)) {
 					return;
 				}
 			}

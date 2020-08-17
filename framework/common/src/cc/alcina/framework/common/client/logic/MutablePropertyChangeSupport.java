@@ -24,6 +24,8 @@ import com.google.gwt.core.client.GWT;
  * 
  */
 public class MutablePropertyChangeSupport {
+	public static final transient Object UNSPECIFIED_PROPERTY_CHANGE = new Object();
+
 	private static boolean muteAll = false;
 
 	public static boolean isMuteAll() {
@@ -68,15 +70,35 @@ public class MutablePropertyChangeSupport {
 	}
 
 	/**
-	 * Sort of a hack - taking advantage of propertychangesupport null!=null -
-	 * note that the old/newvalues of the propertychangeevent should !not! be
-	 * read. For listeners on collection properties
+	 * Taking advantage of propertychangesupport null != null - note that the
+	 * old/newvalues of the propertychangeevent should !not! be read. For
+	 * listeners on collection properties
 	 */
-	public void fireNullPropertyChange(String name) {
+	public void fireUnspecifiedPropertyChange(String name) {
+		fireUnspecifiedPropertyChange(name, UNSPECIFIED_PROPERTY_CHANGE);
+	}
+
+	/**
+	 * Taking advantage of propertychangesupport null != null - note that the
+	 * old/newvalues of the propertychangeevent should !not! be read. Indicates
+	 * "this object has changed - possibly below the child/field level"
+	 */
+	public void fireUnspecifiedPropertyChange(Object propagationId) {
+		fireUnspecifiedPropertyChange(null, propagationId);
+	}
+
+	private void fireUnspecifiedPropertyChange(String name,
+			Object propagationId) {
 		if (isMuteAll() || delegate == null) {
 			return;
 		}
-		delegate.firePropertyChange(name, null, null);
+		PropertyChangeEvent changeEvent = new PropertyChangeEvent(sourceBean,
+				name, null, null);
+		if (propagationId == null) {
+			propagationId = UNSPECIFIED_PROPERTY_CHANGE;
+		}
+		changeEvent.setPropagationId(propagationId);
+		delegate.firePropertyChange(changeEvent);
 	}
 
 	public void firePropertyChange(PropertyChangeEvent evt) {

@@ -27,15 +27,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -47,7 +45,6 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.ClientLogRecordPersistent;
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
-import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
@@ -56,7 +53,6 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstanceExpiredException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
@@ -64,7 +60,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -109,8 +104,7 @@ import cc.alcina.framework.entity.util.MethodContext;
  * 
  *         FIXME - mvcc.4 - de-generify; remove getitemby methods
  */
-public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends IUser, G extends IGroup, IID extends Iid>
-		implements CommonPersistenceLocal, CommonPersistenceCache {
+public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	// note - this'll be a function of the stack depth of the eql ast processor
 	private static final int PRECACHE_RQ_SIZE = 500;
 
@@ -119,45 +113,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public static final transient String CONTEXT_CLIENT_INSTANCE_ID = CommonPersistenceBase.class
 			.getName() + ".CONTEXT_CLIENT_INSTANCE_ID";
-
-	private static Class<? extends HandshakeObjectProvider> handshakeObjectProviderClass = CheckReadOnlyHandshakeObjectProvider.class;
-
-	private static Pattern botExtraUa;
-
-	private static Pattern botUa;
-
-	public static Class<? extends HandshakeObjectProvider>
-			getHandshakeObjectProviderClass() {
-		return handshakeObjectProviderClass;
-	}
-
-	public static Boolean isBotExtraUserAgent(String userAgent) {
-		return botExtraUa != null && botExtraUa.matcher(userAgent).find();
-	}
-
-	public static Boolean isBotUserAgent(String userAgent) {
-		if (botUa == null) {
-			botUa = Pattern.compile("(AdsBot-Google|AhrefsBot|bingbot|googlebot"
-					+ "|ArchiveTeam|curl|facebookexternalhit|HggH"
-					+ "|LoadImpactPageAnalyzer|LoadImpactRload|servlet"
-					+ "|WebCache|WebQL|WeCrawlForThePeace|Wget"
-					+ "|python-requests|FlipboardProxy|"
-					+ "BingPreview|Baiduspider|YandexBot|Java|rogerbot|Slackbot)",
-					Pattern.CASE_INSENSITIVE);
-			String botExtraRegex = ResourceUtilities
-					.get(CommonPersistenceBase.class, "botUserAgentExtra");
-			botExtraUa = botExtraRegex.isEmpty() ? null
-					: Pattern.compile(botExtraRegex);
-		}
-		return CommonUtils.isNullOrEmpty(userAgent)
-				|| botUa.matcher(userAgent).find()
-				|| isBotExtraUserAgent(userAgent);
-	}
-
-	public static void setHandshakeObjectProviderClass(
-			Class<? extends HandshakeObjectProvider> handshakeObjectProviderClass) {
-		CommonPersistenceBase.handshakeObjectProviderClass = handshakeObjectProviderClass;
-	}
 
 	private static <A> Class<? extends A> getImplementation(Class<A> clazz) {
 		return AlcinaPersistentEntityImpl.getImplementation(clazz);
@@ -168,8 +123,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.getImplementationSimpleClassName(clazz);
 	}
 
-	private HandshakeObjectProvider handshakeObjectProvider;
-
 	public CommonPersistenceBase() {
 		ObjectPersistenceHelper.get();
 	}
@@ -178,6 +131,39 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		this();
 		this.setEntityManager(em);
 	}
+
+	@Override
+	public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
+		EntityLocatorMap map = locatorMaps.get(clientInstanceId);
+		if (map == null) {
+			if (getEntityManager() == null) {
+				// call back in an entity context
+				return CommonPersistenceProvider.get().getCommonPersistence()
+						.getLocatorMap(clientInstanceId);
+			}
+			// presumably null, but no harm in being light-on-the-ground
+			EntityManager cachedEntityManager = ThreadlocalTransformManager
+					.get().getEntityManager();
+			ThreadlocalTransformManager.get()
+					.setEntityManager(getEntityManager());
+			ThreadlocalTransformManager.get()
+					.setUserSessionEntityMap(new EntityLocatorMap());
+			ClientInstance clientInstanceImpl = AlcinaPersistentEntityImpl
+					.getNewImplementationInstance(ClientInstance.class);
+			clientInstanceImpl.setId(clientInstanceId);
+			// don't get the real client instance - don't want to attach
+			// live permissions objects
+			ThreadlocalTransformManager.get()
+					.setClientInstance(clientInstanceImpl);
+			map = ThreadlocalTransformManager.get().reconstituteEntityMap();
+			ThreadlocalTransformManager.get()
+					.setEntityManager(cachedEntityManager);
+		}
+		return map;
+	}
+
+	Map<Long, EntityLocatorMap> locatorMaps = Collections
+			.synchronizedMap(new LinkedHashMap<>());
 
 	/**
 	 * An implementation can perform a (direct sql) accelerated delete - but you
@@ -287,17 +273,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
-	/**
-	 * Note...we deliberately crop the client instance user - at the servlet
-	 * layer we (should) always want it lightweight
-	 */
-	@Override
-	public CI createClientInstance(String userAgent, String iid,
-			String ipAddress) {
-		return (CI) getHandshakeObjectProvider().createClientInstance(userAgent,
-				iid, ipAddress);
-	}
-
 	@Override
 	public <T> T ensureObject(T t, String key, String value) throws Exception {
 		T newT = (T) getItemByKeyValue(t.getClass(), key, value, false);
@@ -345,32 +320,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return new LinkedHashSet<A>(results);
 	}
 
-	@Override
-	public ClientInstance getClientInstance(Long clientInstanceId) {
-		ClientInstance clientInstance = ensureClientInstanceAuthenticationCache()
-				.getClientInstance(clientInstanceId);
-		if (clientInstance == null) {
-			clientInstance = CommonPersistenceProvider.get()
-					.getCommonPersistence()
-					.getPersistedClientInstance(clientInstanceId);
-		}
-		return clientInstance;
-	}
-
 	public abstract EntityManager getEntityManager();
-
-	public HandshakeObjectProvider getHandshakeObjectProvider() {
-		if (handshakeObjectProvider == null) {
-			try {
-				handshakeObjectProvider = handshakeObjectProviderClass
-						.newInstance();
-				handshakeObjectProvider.setCommonPersistence(this);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-		return handshakeObjectProvider;
-	}
 
 	@Override
 	public Integer getHighestPersistedRequestIdForClientInstance(
@@ -384,16 +334,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		Integer result = (Integer) getEntityManager().createQuery(eql)
 				.getSingleResult();
 		return result;
-	}
-
-	@Override
-	public IID getIidByKey(String iid) {
-		List<IID> l = getEntityManager().createQuery("from "
-				+ getImplementationSimpleClassName(Iid.class)
-				+ " i left join fetch i.rememberMeUser where i.instanceId = ?")
-				.setParameter(1, iid).getResultList();
-		return (IID) ((l.size() == 0) ? AlcinaPersistentEntityImpl
-				.getNewImplementationInstance(Iid.class) : l.get(0));
 	}
 
 	@Override
@@ -490,11 +430,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	@Override
-	public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
-		return getHandshakeObjectProvider().getLocatorMap(clientInstanceId);
-	}
-
-	@Override
 	public long getMaxPublicationIdForUser(IUser user) {
 		List<Long> longs = getEntityManager()
 				.createQuery(Ax.format(
@@ -520,7 +455,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public Date getMostRecentClientInstanceCreationDate(IUser o) {
-		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(
+		Class<? extends ClientInstance> clientInstanceImpl = (Class<? extends ClientInstance>) getImplementation(
 				ClientInstance.class);
 		List<Date> resultList = getEntityManager().createQuery(String.format(
 				"select ci.helloDate from %s ci where ci.user.id = ?1 order by id desc",
@@ -557,11 +492,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.getObjectWrapperForUser(c, id, getEntityManager());
 		checkWrappedObjectAccess(wrapperOwner, wrapper, c);
 		return wrapper;
-	}
-
-	@Override
-	public ClientInstance getPersistedClientInstance(Long clientInstanceId) {
-		return getHandshakeObjectProvider().getClientInstance(clientInstanceId);
 	}
 
 	@Override
@@ -683,76 +613,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	@Override
-	public String getRememberMeUserName(String iidKey) {
-		String userName = ensureClientInstanceAuthenticationCache()
-				.getIidUserNameByKey(iidKey);
-		if (userName == null && !ensureClientInstanceAuthenticationCache()
-				.containsIIdKey(iidKey)) {
-			Iid iid = getIidByKey(iidKey);
-			if (iid != null) {
-				ensureClientInstanceAuthenticationCache().cacheIid(iid, false);
-				userName = iid.getRememberMeUser() == null ? null
-						: iid.getRememberMeUser().getUserName();
-			} else {
-				// this iid is not in the db, but ... do we care? possibly RO
-				// db. persist it
-				// TODO very outside chance of DOS here
-				Iid newIid = AlcinaPersistentEntityImpl
-						.getNewImplementationInstance(Iid.class);
-				newIid.setInstanceId(iidKey);
-				getEntityManager().persist(newIid);
-				ensureClientInstanceAuthenticationCache().cacheIid(newIid,
-						true);
-			}
-		}
-		return userName;
-	}
-
-	@Override
-	public String
-			getUserNameForClientInstanceId(long validatedClientInstanceId) {
-		String userName = ensureClientInstanceAuthenticationCache()
-				.getUserNameFor(validatedClientInstanceId);
-		if (userName == null) {
-			Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(
-					ClientInstance.class);
-			CI ci = getItemById(clientInstanceImpl, validatedClientInstanceId);
-			if (ci != null) {
-				userName = ci.getUser().getUserName();
-			}
-			ensureClientInstanceAuthenticationCache()
-					.cacheUserNameFor(validatedClientInstanceId, userName);
-		}
-		return userName;
-	}
-
-	@Override
 	public <T extends WrapperPersistable> T getWrappedObjectForUser(
 			Class<? extends T> c, long id) throws Exception {
 		T wofu = (T) Registry.impl(WrappedObjectProvider.class)
 				.getWrappedObjectForUser(c, id, getEntityManager());
 		return (T) wofu;
-	}
-
-	public void iidUpdated(Iid iid, boolean create) {
-	}
-
-	@Override
-	public boolean isValidIid(String iidKey) {
-		if (!ensureClientInstanceAuthenticationCache().containsIIdKey(iidKey)) {
-			List list = getEntityManager()
-					.createQuery("from "
-							+ getImplementationSimpleClassName(Iid.class)
-							+ " i  where i.instanceId = ?1")
-					.setParameter(1, iidKey).getResultList();
-			if (list.isEmpty()) {
-				return false;
-			} else {
-				ensureClientInstanceAuthenticationCache()
-						.cacheIid((Iid) list.get(0), false);
-			}
-		}
-		return true;
 	}
 
 	@Override
@@ -770,7 +635,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public List<Long> listRecentClientInstanceIds(String iidKey) {
-		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(
+		Class<? extends ClientInstance> clientInstanceImpl = (Class<? extends ClientInstance>) getImplementation(
 				ClientInstance.class);
 		return getEntityManager().createQuery(String.format(
 				"select ci.id from %s ci where ci.iid = ?1 order by id desc",
@@ -1012,11 +877,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	@Override
-	public void updateIid(String iidKey, String userName, boolean rememberMe) {
-		getHandshakeObjectProvider().updateIid(iidKey, userName, rememberMe);
-	}
-
-	@Override
 	public void updatePublicationMimeMessageId(Long publicationId,
 			String mimeMessageId) {
 		getEntityManager()
@@ -1073,28 +933,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			result.add(serverValidator);
 		}
 		return result;
-	}
-
-	@Override
-	public boolean validateClientInstance(long id, int auth) {
-		if (ensureClientInstanceAuthenticationCache().isCached(id, auth)) {
-			if (!ensureClientInstanceAuthenticationCache()
-					.checkClientInstanceExpiration(id)) {
-				throw new ClientInstanceExpiredException();
-			}
-			return true;
-		}
-		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(
-				ClientInstance.class);
-		List<CI> clientInstances = getEntityManager().createQuery(String.format(
-				"select ci from %s ci inner join fetch ci.user where ci.id=%s",
-				clientInstanceImpl.getSimpleName(), id)).getResultList();
-		CI ci = CommonUtils.first(clientInstances);
-		boolean authorised = ci != null && ci.getAuth() == auth;
-		if (authorised) {
-			ensureClientInstanceAuthenticationCache().cacheClientInstance(ci);
-		}
-		return authorised;
 	}
 
 	/**
@@ -1264,19 +1102,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return DomainLinker.linkToDomain(results);
 	}
 
-	AuthenticationPersistence ensureClientInstanceAuthenticationCache() {
-		AuthenticationPersistence cache = Registry
-				.impl(AuthenticationPersistence.class);
-		cache.handshakeObjectProvider = getHandshakeObjectProvider();
-		return cache;
-	}
-
 	/**
 	 * Note that this is only for in-tx work - normally use the DomainStore
 	 * access
 	 */
-	U getUserByName(String userName) {
-		List<U> list = getEntityManager()
+	IUser getUserByName(String userName) {
+		List<IUser> list = getEntityManager()
 				.createQuery(
 						String.format(
 								"select distinct u from "
@@ -1293,284 +1124,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		public abstract Connection getConnection();
 	}
 
-	public static class ReadonlyHandshakeObjectProvider
-			implements HandshakeObjectProvider {
-		static long clientInstanceIdCounter = 0;
-
-		private CommonPersistenceBase commonPersistence;
-
-		@Override
-		public ClientInstance createClientInstance(String userAgent, String iid,
-				String ipAddress) {
-			long newId = 0;
-			synchronized (ReadonlyHandshakeObjectProvider.class) {
-				if (clientInstanceIdCounter == 0) {
-					clientInstanceIdCounter = (Long) commonPersistence
-							.getEntityManager()
-							.createQuery(String.format("select max(id) from %s",
-									AlcinaPersistentEntityImpl
-											.getImplementationSimpleClassName(
-													ClientInstance.class)))
-							.getSingleResult();
-				}
-				newId = ++clientInstanceIdCounter;
-			}
-			Class<? extends ClientInstance> clientInstanceImpl = getImplementation(
-					ClientInstance.class);
-			try {
-				ClientInstance impl = clientInstanceImpl.newInstance();
-				impl.setId(newId);
-				impl.setHelloDate(new Date());
-				impl.setUser(PermissionsManager.get().getUser());
-				impl.setAuth(Math.abs(new Random().nextInt()));
-				impl.setUserAgent(userAgent);
-				impl.setIpAddress(ipAddress);
-				impl.setUser(PermissionsManager.get().getUser());
-				commonPersistence.ensureClientInstanceAuthenticationCache()
-						.cacheClientInstance(impl);
-				return impl;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		@Override
-		public ClientInstance getClientInstance(long clientInstanceId) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public CommonPersistenceBase getCommonPersistence() {
-			return this.commonPersistence;
-		}
-
-		@Override
-		public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void
-				setCommonPersistence(CommonPersistenceBase commonPersistence) {
-			this.commonPersistence = commonPersistence;
-		}
-
-		@Override
-		public void updateClientInstanceAccessTime(long clientInstanceId,
-				long time) {
-			// noop
-		}
-
-		@Override
-		public void updateIid(String iidKey, String userName,
-				boolean rememberMe) {
-			if (!rememberMe) {
-				try {
-					Iid impl = (Iid) getImplementation(Iid.class).newInstance();
-					impl.setInstanceId(iidKey);
-					commonPersistence.ensureClientInstanceAuthenticationCache()
-							.cacheIid(impl, true);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			} else {
-				// ignore
-			}
-		}
-
-		@Override
-		public void updateIidAccessTime(long iidId, long time) {
-			// noop
-		}
-	}
-
-	static class CheckReadOnlyHandshakeObjectProvider
-			implements HandshakeObjectProvider {
-		ReadonlyHandshakeObjectProvider readOnlyProvider = new ReadonlyHandshakeObjectProvider();
-
-		WriterHandshakeObjectProvider writerHandshakeObjectProvider = new WriterHandshakeObjectProvider();
-
-		Map<Long, EntityLocatorMap> locatorMaps = Collections
-				.synchronizedMap(new LinkedHashMap<>());
-
-		@Override
-		public ClientInstance createClientInstance(String userAgent, String iid,
-				String ipAddress) {
-			ClientInstance clientInstance = delegate()
-					.createClientInstance(userAgent, iid, ipAddress);
-			locatorMaps.put(clientInstance.getId(), new EntityLocatorMap());
-			return clientInstance;
-		}
-
-		@Override
-		public ClientInstance getClientInstance(long clientInstanceId) {
-			return delegate().getClientInstance(clientInstanceId);
-		}
-
-		@Override
-		public CommonPersistenceBase getCommonPersistence() {
-			return delegate().getCommonPersistence();
-		}
-
-		@Override
-		public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
-			EntityLocatorMap map = locatorMaps.get(clientInstanceId);
-			if (map == null) {
-				CommonPersistenceBase commonPersistence = writerHandshakeObjectProvider.commonPersistence;
-				if (commonPersistence.getEntityManager() == null) {
-					// call back in an entity context
-					return CommonPersistenceProvider.get()
-							.getCommonPersistence()
-							.getLocatorMap(clientInstanceId);
-				}
-				// presumably null, but no harm in being light-on-the-ground
-				EntityManager cachedEntityManager = ThreadlocalTransformManager
-						.get().getEntityManager();
-				ThreadlocalTransformManager.get()
-						.setEntityManager(commonPersistence.getEntityManager());
-				ThreadlocalTransformManager.get()
-						.setUserSessionEntityMap(new EntityLocatorMap());
-				ClientInstance clientInstanceImpl = AlcinaPersistentEntityImpl
-						.getNewImplementationInstance(ClientInstance.class);
-				clientInstanceImpl.setId(clientInstanceId);
-				// don't get the real client instance - don't want to attach
-				// live permissions objects
-				ThreadlocalTransformManager.get()
-						.setClientInstance(clientInstanceImpl);
-				map = ThreadlocalTransformManager.get().reconstituteEntityMap();
-				ThreadlocalTransformManager.get()
-						.setEntityManager(cachedEntityManager);
-			}
-			return map;
-		}
-
-		@Override
-		public void
-				setCommonPersistence(CommonPersistenceBase commonPersistence) {
-			readOnlyProvider.setCommonPersistence(commonPersistence);
-			writerHandshakeObjectProvider
-					.setCommonPersistence(commonPersistence);
-		}
-
-		@Override
-		public void updateClientInstanceAccessTime(long clientInstanceId,
-				long time) {
-			delegate().updateClientInstanceAccessTime(clientInstanceId, time);
-		}
-
-		@Override
-		public void updateIid(String iidKey, String userName,
-				boolean rememberMe) {
-			delegate().updateIid(iidKey, userName, rememberMe);
-		}
-
-		@Override
-		public void updateIidAccessTime(long iidId, long time) {
-			delegate().updateIidAccessTime(iidId, time);
-		}
-
-		HandshakeObjectProvider delegate() {
-			return AppPersistenceBase.isInstanceReadOnly() ? readOnlyProvider
-					: writerHandshakeObjectProvider;
-		}
-	}
-
-	static class WriterHandshakeObjectProvider
-			implements HandshakeObjectProvider {
-		private CommonPersistenceBase commonPersistence;
-
-		Logger logger = LoggerFactory.getLogger(getClass());
-
-		@Override
-		public ClientInstance createClientInstance(String userAgent, String iid,
-				String ipAddress) {
-			AppPersistenceBase.checkNotReadOnly();
-			Class<? extends ClientInstance> clientInstanceImpl = getImplementation(
-					ClientInstance.class);
-			try {
-				ClientInstance persistent = clientInstanceImpl.newInstance();
-				commonPersistence.getEntityManager().persist(persistent);
-				persistent.setHelloDate(new Date());
-				persistent.setUser((IUser) commonPersistence.getEntityManager()
-						.find(getImplementation(IUser.class),
-								PermissionsManager.get().getUserId()));
-				persistent.setIid(iid);
-				persistent.setAuth(Math.abs(new Random().nextInt()));
-				persistent.setUserAgent(userAgent);
-				persistent.setIpAddress(ipAddress);
-				persistent.setBotUserAgent(isBotUserAgent(userAgent));
-				return commonPersistence
-						.ensureClientInstanceAuthenticationCache()
-						.cacheClientInstance(persistent);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		@Override
-		public ClientInstance getClientInstance(long clientInstanceId) {
-			ClientInstance persistent = (ClientInstance) commonPersistence
-					.getEntityManager()
-					.find(getImplementation(ClientInstance.class),
-							clientInstanceId);
-			return commonPersistence.ensureClientInstanceAuthenticationCache()
-					.cacheClientInstance(persistent);
-		}
-
-		@Override
-		public CommonPersistenceBase getCommonPersistence() {
-			return this.commonPersistence;
-		}
-
-		@Override
-		public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void
-				setCommonPersistence(CommonPersistenceBase commonPersistence) {
-			this.commonPersistence = commonPersistence;
-		}
-
-		@Override
-		public void updateClientInstanceAccessTime(long clientInstanceId,
-				long time) {
-			ClientInstance instance = (ClientInstance) commonPersistence
-					.getEntityManager()
-					.find(getImplementation(ClientInstance.class),
-							clientInstanceId);
-			if (instance != null) {
-				instance.setLastAccessed(new Date(time));
-				logger.trace("Persisted last access time: {} {}",
-						clientInstanceId, time);
-			}
-		}
-
-		@Override
-		public void updateIid(String iidKey, String userName,
-				boolean rememberMe) {
-			Iid iid = commonPersistence.getIidByKey(iidKey);
-			iid.setInstanceId(iidKey);
-			if (rememberMe) {
-				iid.setRememberMeUser(
-						commonPersistence.getUserByName(userName));
-			} else {
-				iid.setRememberMeUser(null);
-			}
-			commonPersistence.iidUpdated(iid, false);
-			commonPersistence.ensureClientInstanceAuthenticationCache()
-					.cacheIid(iid, true);
-			commonPersistence.getEntityManager().merge(iid);
-		}
-
-		@Override
-		public void updateIidAccessTime(long iidId, long time) {
-			Iid iid = (Iid) commonPersistence.getEntityManager()
-					.find(getImplementation(Iid.class), iidId);
-			if (iid != null) {
-				iid.setLastAccessed(new Date(time));
-			}
-		}
+	@Override
+	public <V> V callWithEntityManager(Function<EntityManager, V> call) {
+		return call.apply(getEntityManager());
 	}
 }

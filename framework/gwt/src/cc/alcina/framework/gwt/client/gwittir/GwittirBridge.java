@@ -634,6 +634,11 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			}
 
 			@Override
+			public boolean isReadOnly() {
+				return property.getMutatorMethod() == null;
+			}
+
+			@Override
 			public void setPropertyValue(Object bean, Object value) {
 				try {
 					property.getMutatorMethod().invoke(bean,
@@ -642,12 +647,23 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					throw new WrappedRuntimeException(e);
 				}
 			}
+
+			@Override
+			public Class getDefiningType() {
+				return clazz;
+			}
 		};
 	}
 
 	@Override
 	public Class getPropertyType(Class objectClass, String propertyName) {
 		return ClientReflector.get().getPropertyType(objectClass, propertyName);
+	}
+
+	@Override
+	public boolean isReadOnly(Class objectClass, String propertyName) {
+		return getDescriptorForClass(objectClass).getProperty(propertyName)
+				.getMutatorMethod() == null;
 	}
 
 	@Override

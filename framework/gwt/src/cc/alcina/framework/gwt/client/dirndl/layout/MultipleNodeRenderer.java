@@ -13,7 +13,6 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
-import cc.alcina.framework.common.client.logic.reflection.TypedParameter;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -49,18 +48,13 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 		}
 
 		@Override
-		public TypedParameter[] parameters() {
-			return new TypedParameter[0];
-		}
-
-		@Override
 		public String cssClass() {
 			return this.args.cssClasses()[this.idx];
 		}
 
 		@Override
-		public Behaviour behaviour() {
-			return null;
+		public Behaviour[] behaviours() {
+			return new Behaviour[0];
 		}
 	}
 

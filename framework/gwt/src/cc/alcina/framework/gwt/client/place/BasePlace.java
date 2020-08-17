@@ -84,4 +84,8 @@ public abstract class BasePlace extends Place implements Serializable {
 			return null;
 		}
 	}
+
+	public String toNameString() {
+		return toString();
+	}
 }

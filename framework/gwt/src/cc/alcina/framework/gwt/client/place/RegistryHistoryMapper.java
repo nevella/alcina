@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 
 @ClientInstantiable
 @RegistryLocation(registryPoint = RegistryHistoryMapper.class, implementationType = ImplementationType.SINGLETON)
@@ -136,5 +137,10 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		}
 		lastPlace = place;
 		return place;
+	}
+
+	public Class<? extends Entity>
+			getEntityClass(Class<? extends EntityPlace> placeClass) {
+		return tokenizersByPlace.get(placeClass).getModelClass();
 	}
 }
