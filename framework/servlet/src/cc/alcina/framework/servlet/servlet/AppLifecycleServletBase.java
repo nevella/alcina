@@ -199,22 +199,19 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void createServletTransformClientInstance() {
-		if (EntityLayerObjects.get().getServerAsClientInstance() == null) {
-			try {
-				Transaction.begin();
-				ThreadedPermissionsManager.cast().pushSystemUser();
-				ClientInstance serverAsClientInstance = Registry
-						.impl(CommonPersistenceProvider.class)
-						.getCommonPersistence().createClientInstance(
-								"servlet: "
-										+ EntityLayerUtils.getLocalHostName(),
-								null, null);
-				EntityLayerObjects.get()
-						.setServerAsClientInstance(serverAsClientInstance);
-			} finally {
-				ThreadedPermissionsManager.cast().popSystemUser();
-				Transaction.end();
-			}
+		try {
+			Transaction.ensureBegun();
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			ClientInstance serverAsClientInstance = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence().createClientInstance(
+							"servlet: " + EntityLayerUtils.getLocalHostName(),
+							null, null);
+			EntityLayerObjects.get()
+					.setServerAsClientInstance(serverAsClientInstance);
+		} finally {
+			ThreadedPermissionsManager.cast().popSystemUser();
+			Transaction.end();
 		}
 	}
 

@@ -467,7 +467,7 @@ public class CommitToStorageTransformListener extends StateListenable
 								// made it back from the server
 								// actually, e.g. deletion - there'll be a
 								// version
-								// change which gets propogated back
+								// change which gets propagated back
 								// more correct would be to record deleted
 								// objects...but it don't matter much
 								if (e.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND

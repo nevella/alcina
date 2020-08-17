@@ -10,7 +10,7 @@ import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 
 @Bean
-public abstract class ViewModel<P extends Place> extends BaseBindable {
+public  class ViewModel<P extends Place> extends BaseBindable {
 	private boolean active;
 
 	private boolean updated;
@@ -71,7 +71,7 @@ public abstract class ViewModel<P extends Place> extends BaseBindable {
 				updated);
 	}
 
-	public abstract static class DetailViewModel<P extends Place, T extends Entity>
+	public  static class DetailViewModel<P extends Place, T extends Entity>
 			extends ViewModelWithAction<P> {
 		private T modelObject;
 
@@ -87,7 +87,7 @@ public abstract class ViewModel<P extends Place> extends BaseBindable {
 		}
 	}
 
-	public static abstract class ViewModelWithAction<P extends Place>
+	public static  class ViewModelWithAction<P extends Place>
 			extends ViewModel<P> {
 		public EntityAction action;
 
@@ -104,7 +104,7 @@ public abstract class ViewModel<P extends Place> extends BaseBindable {
 		}
 	}
 
-	public static abstract class ViewModelWithDataProvider<P extends Place, T extends Entity>
+	public static  class ViewModelWithDataProvider<P extends Place, T extends Entity>
 			extends ViewModel<P> {
 		public DomainStoreDataProvider<T> dataProvider;
 
@@ -123,7 +123,7 @@ public abstract class ViewModel<P extends Place> extends BaseBindable {
 		}
 	}
 
-	public static abstract class ViewModelWithDataProviderAndAction<P extends Place, T extends Entity>
+	public static  class ViewModelWithDataProviderAndAction<P extends Place, T extends Entity>
 			extends ViewModelWithDataProvider<P, T> {
 		public EntityAction action;
 
