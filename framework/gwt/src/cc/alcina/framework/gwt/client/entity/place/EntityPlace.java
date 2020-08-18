@@ -6,11 +6,18 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.google.gwt.event.shared.GwtEvent;
+
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
+import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
+import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
+import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
@@ -21,7 +28,44 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 @XmlAccessorType(XmlAccessType.FIELD)
 public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 		GenericBasePlace<SD> implements ClearableIdPlace, HasEntityAction {
-	public EntityAction action;
+	@Ref("edit")
+	@ActionRefHandler(VoidHandler.class)
+	public static class EditRef extends ActionRef {
+	}
+
+	public static class VoidHandler extends ActionHandler {
+		@Override
+		public void handleAction(Node node, GwtEvent event,
+				ActionRefPlace place) {
+		}
+	}
+
+	@Ref("delete")
+	@ActionRefHandler(VoidHandler.class)
+	public static class DeleteRef extends ActionRef {
+	}
+
+	@Ref("create")
+	@ActionRefHandler(VoidHandler.class)
+	public static class CreateRef extends ActionRef {
+	}
+
+	@Ref("view")
+	@ActionRefHandler(VoidHandler.class)
+	public static class ViewRef extends ActionRef {
+	}
+
+	@Ref("preview")
+	@ActionRefHandler(VoidHandler.class)
+	public static class PreviewRef extends ActionRef {
+	}
+
+	public EntityAction action = EntityAction.VIEW;
+
+	public <EP extends EntityPlace> EP withAction(EntityAction action) {
+		this.action = action;
+		return (EP) this;
+	}
 
 	@Override
 	public void clearIds() {

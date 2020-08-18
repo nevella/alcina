@@ -29,7 +29,7 @@ public class AnchorPlaceNodeRenderer extends LeafNodeRenderer {
 			if (actionHandler.isPresent()) {
 				rendered.getElement().setAttribute("href", "#");
 				rendered.addDomHandler(evt -> actionHandler.get()
-						.handleAction(evt, actionRefPlace),
+						.handleAction(node, evt, actionRefPlace),
 						ClickEvent.getType());
 			}
 		}

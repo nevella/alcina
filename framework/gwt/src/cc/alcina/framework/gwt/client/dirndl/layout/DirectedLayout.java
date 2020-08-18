@@ -51,8 +51,7 @@ public class DirectedLayout {
 	public Widget render(ContextResolver resolver, Widget parent,
 			Object model) {
 		this.parent = parent;
-		Node root = new Node(model);
-		root.resolver = resolver;
+		Node root = new Node(resolver, model);
 		List<Widget> rendered = root.render().widgets;
 		Preconditions.checkState(rendered.size() == 1);
 		return rendered.get(0);
@@ -60,28 +59,8 @@ public class DirectedLayout {
 
 	@ClientInstantiable
 	public static class ContextResolver {
-		public DirectedNodeRenderer resolveRenderer(Node node) {
-			DirectedNodeRenderer renderer = null;
-			if (node.model == null
-					&& (node.propertyReflector == null || node.propertyReflector
-							.getAnnotation(Directed.class) == null)) {
-				return new NullNodeRenderer();
-			}
-			if (node.directed == null) {
-				Class clazz = node.model == null ? void.class
-						: node.model.getClass();
-				node.directed = Registry.impl(DirectedResolver.class, clazz);
-				((DirectedResolver) node.directed).setLocation(
-						new AnnotationLocation(clazz, node.propertyReflector));
-			}
-			Class<? extends DirectedNodeRenderer> rendererClass = node.directed
-					.renderer();
-			if (rendererClass == VoidNodeRenderer.class) {
-				rendererClass = Registry.get().lookupSingle(
-						DirectedNodeRenderer.class, node.model.getClass());
-			}
-			renderer = Reflections.classLookup().newInstance(rendererClass);
-			return renderer;
+		public Object resolve(Object model) {
+			return model;
 		}
 	}
 
@@ -132,8 +111,33 @@ public class DirectedLayout {
 
 		public PropertyReflector changeSource;
 
-		protected Node(Object model) {
-			this.model = model;
+		protected Node(ContextResolver resolver, Object model) {
+			this.resolver = resolver;
+			this.model = resolver.resolve(model);
+		}
+
+		public DirectedNodeRenderer resolveRenderer() {
+			DirectedNodeRenderer renderer = null;
+			if (model == null && (propertyReflector == null || propertyReflector
+					.getAnnotation(Directed.class) == null)) {
+				return new NullNodeRenderer();
+			}
+			if (directed == null) {
+				// FIXME - dirndl.0 - no, resolver is from the node tree, not
+				// the class
+				Class clazz = model == null ? void.class : model.getClass();
+				directed = Registry.impl(DirectedResolver.class, clazz);
+				((DirectedResolver) directed).setLocation(
+						new AnnotationLocation(clazz, propertyReflector));
+			}
+			Class<? extends DirectedNodeRenderer> rendererClass = directed
+					.renderer();
+			if (rendererClass == VoidNodeRenderer.class) {
+				rendererClass = Registry.get().lookupSingle(
+						DirectedNodeRenderer.class, model.getClass());
+			}
+			renderer = Reflections.classLookup().newInstance(rendererClass);
+			return renderer;
 		}
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
@@ -197,7 +201,7 @@ public class DirectedLayout {
 			this.descriptor = model == null ? null
 					: Reflections.beanDescriptorProvider()
 							.getDescriptorOrNull(model);
-			renderer = resolver.resolveRenderer(this);
+			renderer = resolveRenderer();
 			if (renderer instanceof NotRenderedNodeRenderer) {
 				// to avoid adding model children
 				return;
@@ -335,7 +339,7 @@ public class DirectedLayout {
 
 		Node addChild(Object childModel, PropertyReflector definingReflector,
 				PropertyReflector changeSource) {
-			Node child = new Node(childModel);
+			Node child = new Node(resolver, childModel);
 			child.propertyReflector = definingReflector;
 			child.changeSource = changeSource;
 			child.resolver = resolver;

@@ -11,6 +11,7 @@ import com.google.gwt.event.shared.GwtEvent;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 
 @RegistryLocation(registryPoint = ActionRef.class)
@@ -21,7 +22,8 @@ public abstract class ActionRef extends Reference {
 
 	@ClientInstantiable
 	public static abstract class ActionHandler {
-		public abstract void handleAction(GwtEvent event, ActionRefPlace place);
+		public abstract void handleAction(Node node, GwtEvent event,
+				ActionRefPlace place);
 	}
 
 	@ClientVisible

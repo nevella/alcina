@@ -69,6 +69,8 @@ import com.google.gwt.user.client.Event;
 public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 		HasWordWrap, HasDirectionalSafeHtml, HasDirectionEstimator,
 		IsEditor<LeafValueEditor<Boolean>> {
+	public static boolean withLabelDecoration = false;
+
 	public static final DirectionEstimator DEFAULT_DIRECTION_ESTIMATOR = DirectionalTextHelper.DEFAULT_DIRECTION_ESTIMATOR;
 
 	final DirectionalTextHelper directionalTextHelper;
@@ -193,20 +195,25 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	}
 
 	protected CheckBox(Element elem) {
-		super(Document.get().createLabelElement());
+		super(withLabelDecoration ? Document.get().createLabelElement() : elem);
 		inputElem = InputElement.as(elem);
-		checkMarkElem = Document.get().createSpanElement();
-		checkMarkElem.setClassName("checkmark");
-		// because we're now wrapping in a Label, this could be a span...but no
-		// need
-		labelElem = Document.get().createLabelElement();
-		getElement().appendChild(inputElem);
-		getElement().appendChild(checkMarkElem);
-		getElement().appendChild(labelElem);
-		String uid = DOM.createUniqueId();
-		inputElem.setPropertyString("id", uid);
-		labelElem.setHtmlFor(uid);
-		directionalTextHelper = new DirectionalTextHelper(labelElem, true);
+		if (withLabelDecoration) {
+			checkMarkElem = Document.get().createSpanElement();
+			checkMarkElem.setClassName("checkmark");
+			// because we're now wrapping in a Label, this could be a span...but
+			// no
+			// need
+			labelElem = Document.get().createLabelElement();
+			getElement().appendChild(inputElem);
+			getElement().appendChild(checkMarkElem);
+			getElement().appendChild(labelElem);
+			String uid = DOM.createUniqueId();
+			inputElem.setPropertyString("id", uid);
+			labelElem.setHtmlFor(uid);
+			directionalTextHelper = new DirectionalTextHelper(labelElem, true);
+		} else {
+			directionalTextHelper = new DirectionalTextHelper(inputElem, true);
+		}
 		// Accessibility: setting tab index to be 0 by default, ensuring element
 		// appears in tab sequence. FocusWidget's setElement method already
 		// calls setTabIndex, which is overridden below. However, at the time
