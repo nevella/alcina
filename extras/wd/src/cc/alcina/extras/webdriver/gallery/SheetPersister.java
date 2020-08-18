@@ -47,7 +47,9 @@ public class SheetPersister {
 		ZonedDateTime utcZoned = ZonedDateTime.now(ZoneId.of("UTC"));
 		dateStamp = utcZoned.format(DateTimeFormatter
 				.ofPattern("yyyyMMdd.HHmmss").withZone(ZoneId.of("UTC")));
-		uploadImages();
+		if (ResourceUtilities.is("uploadImages")) {
+			uploadImages();
+		}
 		updateSheet();
 	}
 
@@ -85,8 +87,12 @@ public class SheetPersister {
 		Map<String, Integer> keyRow = new LinkedHashMap<>();
 		int idx = 6;
 		for (; idx < rowData.size(); idx++) {
-			keyRow.put(rowData.get(idx).getValues().get(0).getFormattedValue(),
-					idx + 1);
+			String formattedValue = rowData.get(idx).getValues().get(0)
+					.getFormattedValue();
+			if (Ax.isBlank(formattedValue)) {
+				break;
+			}
+			keyRow.put(formattedValue, idx + 1);
 		}
 		Map<String, GalleryTuple> nameTuples = new LinkedHashMap<>();
 		files.forEach(file -> nameTuples
