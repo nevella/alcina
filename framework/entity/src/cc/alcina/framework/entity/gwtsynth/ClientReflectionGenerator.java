@@ -163,7 +163,7 @@ public class ClientReflectionGenerator extends Generator {
 			filter.setModuleName(moduleName);
 			String implementationName = String.format("ClientReflector_%s_Impl",
 					moduleName);
-			superClassName = intrType.getQualifiedSourceName();
+			superClassName = getQualifiedSourceName(intrType);
 			crf = new ClassSourceFileComposerFactory(this.packageName,
 					implementationName);
 			PrintWriter printWriter = context.tryCreate(logger, packageName,
@@ -376,7 +376,7 @@ public class ClientReflectionGenerator extends Generator {
 								+ "new ClientPropertyReflector(\"%s\",%s.class,"
 								+ " new Annotation[]{%s}) ;",
 						propertyName,
-						method.getReturnType().getQualifiedSourceName(),
+						getQualifiedSourceName(method.getReturnType()),
 						annArray));
 				sw.println(
 						"propertyReflectors.put(reflector.getPropertyName(), reflector);");
@@ -397,7 +397,7 @@ public class ClientReflectionGenerator extends Generator {
 			sw.println(String.format(
 					"ClientBeanReflector beanReflector = new ClientBeanReflector("
 							+ "%s.class,new Annotation[]{%s},propertyReflectors);",
-					jct.getQualifiedSourceName(), annArray));
+					getQualifiedSourceName(jct), annArray));
 			sw.println(
 					"gwbiMap.put(beanReflector.getBeanClass(),beanReflector );");
 			sw.outdent();
@@ -429,11 +429,11 @@ public class ClientReflectionGenerator extends Generator {
 			String createMethodName = String.format("createInstance%s",
 					methodCount);
 			initNewInstanceNames.put(jClassType, String.format("%s(%s.class);",
-					registerMethodName, jClassType.getQualifiedSourceName()));
+					registerMethodName, getQualifiedSourceName(jClassType)));
 			sw.println(String.format("private Object %s(){", createMethodName));
 			sw.indent();
 			sw.println(String.format("return GWT.create(%s.class);",
-					jClassType.getQualifiedSourceName()));
+					getQualifiedSourceName(jClassType)));
 			sw.outdent();
 			sw.println("};");
 			sw.println();
@@ -500,8 +500,7 @@ public class ClientReflectionGenerator extends Generator {
 		for (JClassType t : allTypes) {
 			if (!filter.omitForModule(t, ReflectionAction.NEW_INSTANCE)) {
 				sw.println(String.format("forNameMap.put(\"%s\",%s.class);",
-						t.getQualifiedBinaryName(),
-						t.getQualifiedSourceName()));
+						t.getQualifiedBinaryName(), getQualifiedSourceName(t)));
 			}
 		}
 		sw.println("");
@@ -513,7 +512,7 @@ public class ClientReflectionGenerator extends Generator {
 				writeAnnImpl(l, ann2impl, 0, false, sb, false);
 				sw.println(
 						String.format("Registry.get().register(%s.class,%s);",
-								clazz.getQualifiedSourceName(), sb));
+								getQualifiedSourceName(clazz), sb));
 			}
 		}
 		sw.outdent();
@@ -570,7 +569,7 @@ public class ClientReflectionGenerator extends Generator {
 					&& !ignore(jClassType,
 							ReflectionAction.BEAN_INFO_DESCRIPTOR)) {
 				results.add(jClassType);
-				crf.addImport(jClassType.getQualifiedSourceName());
+				crf.addImport(getQualifiedSourceName(jClassType));
 			}
 		}
 		return results;
@@ -608,7 +607,7 @@ public class ClientReflectionGenerator extends Generator {
 							cc.alcina.framework.common.client.logic.reflection.Bean.class))
 					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
 				results.add(jClassType);
-				crf.addImport(jClassType.getQualifiedSourceName());
+				crf.addImport(getQualifiedSourceName(jClassType));
 			}
 		}
 		return results;
@@ -654,6 +653,15 @@ public class ClientReflectionGenerator extends Generator {
 		int offset = name.startsWith("is") ? 2 : 3;
 		return name.substring(offset, offset + 1).toLowerCase()
 				+ name.substring(offset + 1);
+	}
+
+	private String getQualifiedSourceName(JType jType) {
+		if (jType.isTypeParameter() != null) {
+			return jType.isTypeParameter().getBaseType()
+					.getQualifiedSourceName();
+		} else {
+			return jType.getQualifiedSourceName();
+		}
 	}
 
 	/**
