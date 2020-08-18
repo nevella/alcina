@@ -375,16 +375,8 @@ public class Transaction {
 		case TO_DOMAIN_ABORTED:
 		case VACUUM_ENDED:
 		case NO_ACTIVE_TRANSACTION:
-			break;
 		case TO_DB_PREPARING:
-			if (TransformManager.get().getTransforms().size() == 0) {
-				break;
-			} else {
-				logger.warn(
-						"Ending transaction with uncommitted transforms: {}",
-						TransformManager.get().getTransforms().size());
-				ThreadlocalTransformManager.cast().resetTltm(null);
-			}
+			break;
 		default:
 			// we used to throw to an exception if there were
 			// uncommitted transforms but we can't allow dangling
@@ -398,6 +390,13 @@ public class Transaction {
 				logger.warn("Ending transaction on invalid phase: {}",
 						getPhase());
 			}
+		}
+		if (TransformManager.get().getTransforms().size() == 0) {
+		} else {
+			// FIXME - mvcc.4 - devex
+			logger.warn("Ending transaction with uncommitted transforms: {} {}",
+					getPhase(), TransformManager.get().getTransforms().size());
+			ThreadlocalTransformManager.cast().resetTltm(null);
 		}
 		if (ResourceUtilities.is("retainTransactionStartTrace")) {
 			transactionEndTrace = SEUtilities.getCurrentThreadStacktraceSlice();

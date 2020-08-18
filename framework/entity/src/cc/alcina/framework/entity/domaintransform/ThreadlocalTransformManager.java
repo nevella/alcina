@@ -33,6 +33,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -136,6 +139,9 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private static ThreadLocalSequentialIdGenerator tlIdGenerator = new ThreadLocalSequentialIdGenerator();
 
+	static Logger logger = LoggerFactory
+			.getLogger(ThreadlocalTransformManager.class);
+
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
 		threadLocalListeners.add(listener);
@@ -159,7 +165,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static boolean isInEntityManagerTransaction() {
 		return get() instanceof ThreadlocalTransformManager
 				&& cast().getEntityManager() != null;
-	}
+	};
 
 	public static boolean isServerOnly(DomainTransformEvent evt) {
 		Class clazz = evt.getObjectClass();
@@ -172,7 +178,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			return true;
 		}
 		return false;
-	};
+	}
 
 	// for testing
 	public static void registerPerThreadTransformManager(
@@ -852,9 +858,15 @@ public class ThreadlocalTransformManager extends TransformManager
 			flushAfterTransforms.clear();
 		}
 		this.lastEvent = null;
-		for (SourcesPropertyChangeEvents spce : listeningTo.keySet()) {
-			if (spce != null) {
-				spce.removePropertyChangeListener(this);
+		for (Entity entity : listeningTo.keySet()) {
+			if (entity != null) {
+				try {
+					entity.removePropertyChangeListener(this);
+				} catch (Exception e) {
+					// FIXME - mvcc.4 - devex
+					logger.warn("Exception  removing listener: {} ",
+							entity.toStringEntity(), e);
+				}
 			}
 		}
 		listeningTo = new IdentityHashMap<>();
