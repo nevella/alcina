@@ -396,8 +396,10 @@ public class Transaction {
 			// FIXME - mvcc.4 - devex
 			logger.warn("Ending transaction with uncommitted transforms: {} {}",
 					getPhase(), TransformManager.get().getTransforms().size());
-			ThreadlocalTransformManager.cast().resetTltm(null);
 		}
+		// need to do this even if transforms == 0 - to clear listeners within
+		// the transaction
+		ThreadlocalTransformManager.cast().resetTltm(null);
 		if (ResourceUtilities.is("retainTransactionStartTrace")) {
 			transactionEndTrace = SEUtilities.getCurrentThreadStacktraceSlice();
 		}
