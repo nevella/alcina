@@ -574,15 +574,6 @@ public class ClientReflectionGenerator extends Generator {
 		return results;
 	}
 
-	private String getQualifiedSourceName(JType jType) {
-		if (jType.isTypeParameter() != null) {
-			return jType.isTypeParameter().getBaseType()
-					.getQualifiedSourceName();
-		} else {
-			return jType.getQualifiedSourceName();
-		}
-	}
-
 	private <T> Set<T> getClassAnnotations(JClassType jct,
 			Class<T> annotationType, boolean allowMultiple) {
 		return (Set) getClassAnnotations(jct,
@@ -661,6 +652,15 @@ public class ClientReflectionGenerator extends Generator {
 		int offset = name.startsWith("is") ? 2 : 3;
 		return name.substring(offset, offset + 1).toLowerCase()
 				+ name.substring(offset + 1);
+	}
+
+	private String getQualifiedSourceName(JType jType) {
+		if (jType.isTypeParameter() != null) {
+			return jType.isTypeParameter().getBaseType()
+					.getQualifiedSourceName();
+		} else {
+			return jType.getQualifiedSourceName();
+		}
 	}
 
 	/**
