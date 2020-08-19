@@ -112,6 +112,9 @@ public class TransformCommit {
 	public static final String CONTEXT_REUSE_IUSER_HOLDER = TransformCommit.class
 			.getName() + ".CONTEXT_REUSE_IUSER_HOLDER";
 
+	public static final transient String CONTEXT_DISABLED = TransformCommit.class
+			.getName() + ".CONTEXT_DISABLED";
+
 	// TODO - this should be renamed to "persist bulk transforms" really, since
 	// also used for large admin commits
 	public static int commitBulkTransforms(List<DeltaApplicationRecord> records,
@@ -386,6 +389,9 @@ public class TransformCommit {
 			return new DomainTransformLayerWrapper(null);
 		}
 		if (Ax.isTest() && !isTestTransformCascade()) {
+			return new DomainTransformLayerWrapper(null);
+		}
+		if (Ax.isTest() && LooseContext.is(CONTEXT_DISABLED)) {
 			return new DomainTransformLayerWrapper(null);
 		}
 		if (Ax.isTest() && EntityLayerObjects.get()
