@@ -41,7 +41,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 @RegistryLocation(registryPoint = Entity.class, implementationType = ImplementationType.MULTIPLE)
 public abstract class Entity<T extends Entity> extends Bindable
 		implements HasVersionNumber, HasId {
-	public static final String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class
+	public static final transient String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class
 			+ ".CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID";
 
 	public static transient EntityClassResolver classResolver = new EntityClassResolver();

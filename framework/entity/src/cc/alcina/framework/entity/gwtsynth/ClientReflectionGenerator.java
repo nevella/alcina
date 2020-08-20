@@ -334,6 +334,9 @@ public class ClientReflectionGenerator extends Generator {
 			sw.indent();
 			sw.println(
 					"Map<String,ClientPropertyReflector> propertyReflectors = new LinkedHashMap<String,ClientPropertyReflector>();");
+			if (jct.getQualifiedSourceName().contains("HeaderContentModel")) {
+				int debug = 3;
+			}
 			for (JMethod method : getPropertyGetters(jct)) {
 				String propertyName = getPropertyNameForReadMethod(method);
 				if (propertyName.equals("class")
@@ -615,13 +618,21 @@ public class ClientReflectionGenerator extends Generator {
 	private List<JMethod> getPropertyGetters(JClassType jct) {
 		List<JMethod> methods = new ArrayList<JMethod>();
 		JMethod[] jms = jct.getInheritableMethods();
-		for (JMethod jm : jms) {
-			String name = jm.getName();
+		Map<JMethod, String> methodPropertyName = new LinkedHashMap<>();
+		for (JMethod method : jms) {
+			String name = method.getName();
 			if ((name.startsWith("get") && name.length() > 3)
 					|| (name.startsWith("is") && name.length() > 2)) {
-				if (jm.getParameters().length == 0) {
-					methods.add(jm);
+				if (method.getParameters().length == 0) {
+					methods.add(method);
 				}
+				int propertyMethodPrefixLength = name.startsWith("get") ? 3 : 2;
+				methodPropertyName.put(method, method.getName()
+						.substring(propertyMethodPrefixLength,
+								propertyMethodPrefixLength + 1)
+						.toLowerCase()
+						+ method.getName()
+								.substring(propertyMethodPrefixLength + 1));
 			}
 		}
 		Map<String, Integer> fieldOrdinals = new LinkedHashMap<>();
@@ -632,9 +643,11 @@ public class ClientReflectionGenerator extends Generator {
 		Comparator<JMethod> comparator = new Comparator<JMethod>() {
 			@Override
 			public int compare(JMethod o1, JMethod o2) {
-				int ordinal1 = fieldOrdinals.computeIfAbsent(o1.getName(),
+				String methodPropertyName1=methodPropertyName.get(o1);
+				String methodPropertyName2=methodPropertyName.get(o2);
+				int ordinal1 = fieldOrdinals.computeIfAbsent(methodPropertyName1,
 						key -> -1);
-				int ordinal2 = fieldOrdinals.computeIfAbsent(o1.getName(),
+				int ordinal2 = fieldOrdinals.computeIfAbsent(methodPropertyName2,
 						key -> -1);
 				int i = ordinal1 - ordinal2;
 				if (i != 0) {

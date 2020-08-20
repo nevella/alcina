@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.logic.domain;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -28,8 +29,14 @@ import cc.alcina.framework.common.client.util.LooseContext;
 @RegistryLocation(registryPoint = VersionableEntity.class)
 public abstract class VersionableEntity<T extends VersionableEntity>
 		extends Entity<T> implements IVersionable {
-	public static final String CONTEXT_FIRE_CREATION_DATE_EVENTS = VersionableEntity.class
+	public static final transient String CONTEXT_FIRE_CREATION_DATE_EVENTS = VersionableEntity.class
 			.getName() + ".CONTEXT_FIRE_CREATION_DATE_EVENTS";
+
+	public static final transient Comparator<? super VersionableEntity> LAST_MODIFIED_COMPARATOR = Comparator
+			.comparing(VersionableEntity::getLastModificationDate);
+
+	public static final transient Comparator<? super VersionableEntity> LAST_MODIFIED_COMPARATOR_DESCENDING = LAST_MODIFIED_COMPARATOR
+			.reversed();
 
 	private Date lastModificationDate;
 

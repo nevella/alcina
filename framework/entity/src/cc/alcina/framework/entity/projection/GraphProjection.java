@@ -576,17 +576,6 @@ public class GraphProjection {
 		return result;
 	}
 
-	/**
-	 * May want to pass the underlying field to filters, rather than accessor
-	 * for ++performance
-	 *
-	 * @return the current portion of the source graph that has already been
-	 *         reached in the traversal
-	 */
-	public Map getReached() {
-		return reached;
-	}
-
 	/*
 	 * if we have: a.b .equals c - but not a.b==c and we want to project c, not
 	 * a.b - put c in this map
@@ -1276,5 +1265,9 @@ public class GraphProjection {
 				return ((int) id) ^ clazzName.hashCode();
 			}
 		}
+	}
+
+	public void registerProjected(Object source, Object projected) {
+		reached.put(source, projected);
 	}
 }

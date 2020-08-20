@@ -68,7 +68,7 @@ public @interface Display {
 	String autocompleteName() default "";
 
 	String name();
-
+//FIXME - dirndl.1 - this should be defined in @Bean (with sections)
 	int orderingHint() default 100;
 
 	String rendererHint() default "";

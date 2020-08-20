@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 public class ModelTransformNodeRenderer extends DirectedNodeRenderer
-		implements HasDirectedModel {
+		implements HasDirectedModel,HandlesModelBinding {
 	@Override
 	public List<Widget> renderWithDefaults(Node node) {
 		List<Widget> result = new ArrayList<>();

@@ -65,15 +65,23 @@ public class CommonSearchSupport {
 				VersionableEntity first = CommonUtils.first(queried);
 				queried.clear();
 				List untyped = queried;
-				untyped.add(
-						GraphProjections.defaultProjections().project(first));
+				untyped.add(project(first));
 			} else {
-				queried = GraphProjections.defaultProjections()
-						.project(queried);
+				queried = project(queried);
 			}
 		}
 		modelSearchResults.queriedResultObjects = queried;
 		return modelSearchResults;
+	}
+
+	private <T> T project(T object) {
+		return Registry.impl(SearchResultProjector.class).project(object);
+	}
+	@RegistryLocation(registryPoint = SearchResultProjector.class,implementationType = ImplementationType.INSTANCE)
+	public static class SearchResultProjector{
+		public <T> T project(T object) {
+			return GraphProjections.defaultProjections().project(object);
+		}
 	}
 
 	public ModelSearchResults searchModel(EntitySearchDefinition def) {

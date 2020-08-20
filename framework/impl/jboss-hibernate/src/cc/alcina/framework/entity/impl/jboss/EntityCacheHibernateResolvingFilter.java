@@ -186,9 +186,9 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 
 	@Override
 	protected Object clonePersistentSet(Set ps, GraphProjectionContext context,
-			GraphProjection graphCloner) throws Exception {
+			GraphProjection graphProjection) throws Exception {
 		Set hs = jpaImplementation.createPersistentSetProjection(context);
-		graphCloner.getReached().put(ps, hs);
+		graphProjection.registerProjected(ps, hs);
 		if (getWasInitialized(ps)) {
 			Iterator itr = ps.iterator();
 			Object value;
@@ -200,11 +200,11 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 							.getHibernateLazyInitializer();
 					Object impl = ((HibernateProxy) value)
 							.getHibernateLazyInitializer().getImplementation();
-					projected = graphCloner.project(impl, value, context,
+					projected = graphProjection.project(impl, value, context,
 							false);
 					getCache().put((Entity) projected);
 				} else {
-					projected = graphCloner.project(value, context);
+					projected = graphProjection.project(value, context);
 				}
 				if (value == null || projected != null) {
 					hs.add(projected);
