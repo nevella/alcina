@@ -1,4 +1,4 @@
-package cc.alcina.extras.dev.console;
+package cc.alcina.extras.dev.console.code;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -15,55 +15,54 @@ import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
+import cc.alcina.extras.dev.console.DevConsoleCommand;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.console.FilterArgvParam;
 
-public class DevConsoleCommandsCode {
-	public static class CmdApplyBuilder extends DevConsoleCommand {
-		@Override
-		public boolean canUseProductionConn() {
-			return true;
-		}
+public class CmdApplyBuilder extends DevConsoleCommand {
+	@Override
+	public boolean canUseProductionConn() {
+		return true;
+	}
 
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "builder" };
-		}
+	@Override
+	public String[] getCommandIds() {
+		return new String[] { "builder" };
+	}
 
-		@Override
-		public String getDescription() {
-			return "convert spec/params object to builder";
-		}
+	@Override
+	public String getDescription() {
+		return "convert spec/params object to builder";
+	}
 
-		@Override
-		public String getUsage() {
-			return "builder <filename> <classname>";
-		}
+	@Override
+	public String getUsage() {
+		return "builder <filename> <classname>";
+	}
 
-		@Override
-		public String run(String[] argv) throws Exception {
-			if (argv.length != 2) {
-				Ax.out("fn/classname");
-				return "";
-			}
-			FilterArgvParam argvParam = new FilterArgvParam(argv);
-			String fileName = argvParam.value;
-			String className = argvParam.next();
-			File file = new File(fileName);
-			CompilationUnit unit = StaticJavaParser.parse(file);
-			TypeDeclaration typeDeclaration = unit
-					.findAll(TypeDeclaration.class).stream()
-					.filter(td -> td.getNameAsString().equals(className))
-					.findFirst().get();
-			BuilderBuilder builderBuilder = new BuilderBuilder(typeDeclaration);
-			builderBuilder.addWiths();
-			ResourceUtilities.write(unit.toString(), file);
-			return "hyup";
+	@Override
+	public String run(String[] argv) throws Exception {
+		if (argv.length != 2) {
+			Ax.out("fn/classname");
+			return "";
 		}
+		FilterArgvParam argvParam = new FilterArgvParam(argv);
+		String fileName = argvParam.value;
+		String className = argvParam.next();
+		File file = new File(fileName);
+		CompilationUnit unit = StaticJavaParser.parse(file);
+		TypeDeclaration typeDeclaration = unit.findAll(TypeDeclaration.class)
+				.stream().filter(td -> td.getNameAsString().equals(className))
+				.findFirst().get();
+		BuilderBuilder builderBuilder = new BuilderBuilder(typeDeclaration);
+		builderBuilder.addWiths();
+		ResourceUtilities.write(unit.toString(), file);
+		return "hyup";
 	}
 
 	static class BuilderBuilder {
+		@SuppressWarnings("unused")
 		private TypeDeclaration typeDeclaration;
 
 		private List<FieldDeclaration> fieldDeclarations = new ArrayList<>();
