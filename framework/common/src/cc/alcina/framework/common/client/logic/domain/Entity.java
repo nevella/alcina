@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrappe
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PermissionRule;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
@@ -39,6 +40,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
  */
 @MappedSuperclass
 @RegistryLocation(registryPoint = Entity.class, implementationType = ImplementationType.MULTIPLE)
+@NonClientRegistryPointType
 public abstract class Entity<T extends Entity> extends BaseBindable
 		implements HasVersionNumber, HasId {
 	public static final String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class
