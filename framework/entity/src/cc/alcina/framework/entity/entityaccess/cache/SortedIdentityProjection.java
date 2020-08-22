@@ -11,7 +11,7 @@ public abstract class SortedIdentityProjection<T extends Entity>
 		implements DomainProjection<T> {
 	private Class<T> listenedClass;
 
-	TreeMap<T, T> sorted = new TreeMap<>(getComparator());
+	SortedMap<T, T> sorted = createSortedMap();
 
 	private boolean enabled;
 
@@ -50,6 +50,10 @@ public abstract class SortedIdentityProjection<T extends Entity>
 	@Override
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	protected SortedMap<T, T> createSortedMap() {
+		return new TreeMap<>(getComparator());
 	}
 
 	protected abstract Comparator<T> getComparator();
