@@ -704,12 +704,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	 * Clipboard's contents.
 	 */
 	public void setClipboardContents(String aString) {
-		try {
-			StringSelection stringSelection = new StringSelection(aString);
-			Clipboard clipboard = Toolkit.getDefaultToolkit()
-					.getSystemClipboard();
-			clipboard.setContents(stringSelection, this);
-		} catch (HeadlessException e) {
+//		try {
+//			StringSelection stringSelection = new StringSelection(aString);
+//			Clipboard clipboard = Toolkit.getDefaultToolkit()
+//					.getSystemClipboard();
+//			clipboard.setContents(stringSelection, this);
+//		} catch (HeadlessException e) {
 			if (isOsX()) {
 				try {
 					String path = "/tmp/pbcopy.txt";
@@ -720,7 +720,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					throw new WrappedRuntimeException(e2);
 				}
 			}
-		}
+//		}
 	}
 
 	public void setCommandLineText(String text) {

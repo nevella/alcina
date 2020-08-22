@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
@@ -34,6 +35,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
+import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
+import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 
 /**
@@ -87,4 +90,7 @@ public interface CommonRemoteService extends RemoteService {
 			DomainTransformCommitPosition position) throws PermissionsException;
 
 	Response suggest(BoundSuggestOracleRequest request);
+	
+	ModelSearchResults getForClass(String className, long objectId);
+    ModelSearchResults searchModel(EntitySearchDefinition def);
 }

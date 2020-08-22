@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
+import cc.alcina.framework.common.client.logic.reflection.NonDomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Wrapper;
@@ -549,5 +550,37 @@ public abstract class ClientTransformManager extends TransformManager {
 				throw new WrappedRuntimeException(e);
 			}
 		}
+	}
+
+	private boolean provisionalEditing;
+
+	public boolean isProvisionalEditing() {
+		return this.provisionalEditing;
+	}
+
+	public void setProvisionalEditing(boolean provisionalEditing) {
+		this.provisionalEditing = provisionalEditing;
+	}
+
+	public Entity ensureEditable(Entity entity) {
+		if (Reflections.classLookup().getAnnotationForClass(entity.getClass(),
+				NonDomainTransformPersistable.class) != null) {
+			Entity editable = (Entity) Reflections
+					.newInstance(entity.entityClass());
+			new CloneHelper().copyBeanProperties(entity, editable, null);
+			entity = editable;
+			if (isProvisionalEditing()) {
+				registerProvisionalObject(entity);
+			}
+		}
+		if (isProvisionalEditing()) {
+			if (!isProvisionalObject(entity)) {
+				entity = new CloneHelper().shallowishBeanClone(entity);
+				registerProvisionalObject(entity);
+			}
+		} else {
+			registerDomainObject(entity);
+		}
+		return entity;
 	}
 }

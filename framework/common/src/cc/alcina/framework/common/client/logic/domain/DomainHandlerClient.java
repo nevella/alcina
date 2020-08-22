@@ -8,6 +8,7 @@ import com.google.gwt.core.client.Scheduler;
 
 import cc.alcina.framework.common.client.domain.Domain.DomainHandler;
 import cc.alcina.framework.common.client.domain.DomainQuery;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
@@ -47,7 +48,7 @@ public class DomainHandlerClient implements DomainHandler {
 
 	@Override
 	public <V extends Entity> boolean isDomainVersion(V v) {
-		return v.getId()!=0||v.getLocalId()!=0;
+		return v.getId() != 0 || v.getLocalId() != 0;
 	}
 
 	@Override

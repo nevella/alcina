@@ -36,10 +36,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -351,7 +353,7 @@ public class GraphProjection {
 				|| SafeHtml.class.isAssignableFrom(c);
 	}
 
-	public static <T> T maxDepthProjectionAndRegister(T t, int depth,
+	public static <T> T maxDepthProjection(T t, int depth,
 			GraphProjectionFieldFilter fieldFilter) {
 		CollectionProjectionFilterWithCache dataFilter = new CollectionProjectionFilterWithCache();
 		GraphProjections projections = GraphProjections.defaultProjections()
@@ -360,10 +362,6 @@ public class GraphProjection {
 			projections.fieldFilter(fieldFilter);
 		}
 		T result = projections.project(t);
-		TransformManager transformManager = TransformManager.get();
-		for (Entity entity : dataFilter.getCache().allValues()) {
-			transformManager.registerDomainObject(entity);
-		}
 		return result;
 	}
 
@@ -640,9 +638,8 @@ public class GraphProjection {
 		}
 	}
 
-	public <T> T project(T source, Object alsoMapTo,
-			GraphProjectionContext context, boolean easysChecked)
-			throws Exception {
+	public <T> T project(T source, T projected, GraphProjectionContext context,
+			boolean easysChecked) throws Exception {
 		traversalCount++;
 		if (source == null) {
 			return null;
@@ -676,12 +673,15 @@ public class GraphProjection {
 			// check here unlikely to matter
 			// if (!reachableBySinglePath) {
 			if (checkReachable) {
-				Object projected = reached.get(source);
-				if (projected != null) {
-					if (projected == NULL_MARKER) {
-						return null;
+				Object reachedInstance = reached.get(source);
+				if (reachedInstance != null) {
+					if (projected != null && projected != reachedInstance) {
 					} else {
-						return (T) projected;
+						if (reachedInstance == NULL_MARKER) {
+							return null;
+						} else {
+							return (T) reachedInstance;
+						}
 					}
 				}
 			}
@@ -696,22 +696,21 @@ public class GraphProjection {
 		if (dumpProjectionStats && context != null) {
 			contextStats.add(context.toPoint());
 		}
-		T projected = null;
-		if (sourceClass.isArray()) {
-			projected = (T) Array.newInstance(sourceClass.getComponentType(),
-					Array.getLength(source));
-		} else if (source instanceof MvccObject) {
-			projected = newInstance(((Entity) source).entityClass(), context);
-		} else {
-			projected = newInstance(sourceClass, context);
+		if (projected == null) {
+			if (sourceClass.isArray()) {
+				projected = (T) Array.newInstance(
+						sourceClass.getComponentType(),
+						Array.getLength(source));
+			} else if (source instanceof MvccObject) {
+				projected = newInstance(((Entity) source).entityClass(),
+						context);
+			} else {
+				projected = newInstance(sourceClass, context);
+			}
 		}
 		boolean reachableBySinglePath = reachableBySinglePath(sourceClass);
 		if ((context == null || !reachableBySinglePath) && checkReachable) {
 			reached.put(source, projected == null ? NULL_MARKER : projected);
-			if (alsoMapTo != null) {
-				reached.put(alsoMapTo,
-						projected == null ? NULL_MARKER : projected);
-			}
 		}
 		if (dataFilter != null) {
 			if (context == null) {
@@ -719,17 +718,16 @@ public class GraphProjection {
 				context.adopt(sourceClass, null, null, projected, source);
 				contexts.add(context);
 			}
+			// FIXME - mvcc.4 - why can't replaceprojected just sub for initial
+			// projected? and what is 'alsomapto'? actually there's a reason -
+			// may switch (A->B) to (A'->B')
+			// so the dataFilter should handle its own projection
 			T replaceProjected = dataFilter.filterData(source, projected,
 					context, this);
 			if (replaceProjected != projected) {
 				if (!reachableBySinglePath && checkReachable) {
 					reached.put(source, replaceProjected == null ? NULL_MARKER
 							: replaceProjected);
-					if (alsoMapTo != null) {
-						reached.put(alsoMapTo,
-								replaceProjected == null ? NULL_MARKER
-										: replaceProjected);
-					}
 				}
 				return replaceProjected;
 			}
@@ -778,10 +776,20 @@ public class GraphProjection {
 				field.set(projected, value);
 			}
 		}
+		List<Field> nonPrimitiveOrDataFieldsForSource = getNonPrimitiveOrDataFieldsForClass(
+				source.getClass());
+		boolean checkFieldExistsInSource = !(source.getClass() == projected
+				.getClass()
+				|| source.getClass().getSuperclass() == projected.getClass());
 		for (Field field : getNonPrimitiveOrDataFieldsForClass(
 				projected.getClass())) {
 			if (checkFields.contains(field)) {
 				if (!permitField(field, source)) {
+					continue;
+				}
+			}
+			if(checkFieldExistsInSource) {
+				if(!nonPrimitiveOrDataFieldsForSource.contains(field)) {
 					continue;
 				}
 			}
@@ -1128,6 +1136,16 @@ public class GraphProjection {
 			return (parent == null ? "" : parent.toString() + "::")
 					+ clazz.getSimpleName() + "." + fieldName;
 		}
+
+		public Optional<Object> parent(Predicate predicate) {
+			if(predicate.test(sourceOwner)){
+				return Optional.of(sourceOwner);
+			}
+			if(parent!=null) {
+				return parent.parent(predicate);
+			}
+			return Optional.empty();
+		}
 	}
 
 	public static interface GraphProjectionDataFilter {
@@ -1267,7 +1285,7 @@ public class GraphProjection {
 		}
 	}
 
-	public void registerProjected(Object source, Object projected) {
-		reached.put(source, projected);
+	public <E> E registerProjected(E source, E projected) {
+		return (E) reached.put(source, projected);
 	}
 }

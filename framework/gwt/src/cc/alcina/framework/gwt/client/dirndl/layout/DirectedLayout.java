@@ -7,7 +7,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -38,10 +40,12 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class DirectedLayout {
-	static Logger logger = LoggerFactory.getLogger(DirectedLayout.class);
+	private static Logger logger = LoggerFactory
+			.getLogger(DirectedLayout.class);
 	static {
 		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.OFF);
 	}
@@ -110,6 +114,8 @@ public class DirectedLayout {
 		private int index;
 
 		public PropertyReflector changeSource;
+
+		private boolean intermediate;
 
 		protected Node(ContextResolver resolver, Object model) {
 			this.resolver = resolver;
@@ -189,10 +195,22 @@ public class DirectedLayout {
 		}
 
 		private String pathSegment() {
-			String thisLoc = Ax.format("[%s]", model == null ? "null model"
+			String thisLoc = Ax.format("{%s}", model == null ? "null model"
 					: model.getClass().getSimpleName());
 			if (propertyReflector != null) {
 				thisLoc = propertyReflector.getPropertyName() + "." + thisLoc;
+			} else {
+				if (parent != null && renderer != null) {
+					thisLoc = Ax.format("(%s).%s",
+							renderer.getClass().getSimpleName(), thisLoc);
+				} else {
+					thisLoc = "---" + "." + thisLoc;
+				}
+			}
+			if (intermediate && rendered != null
+					&& rendered.widgets.size() > 0) {
+				thisLoc += Ax.format("(%s)",
+						rendered.widgets.get(0).getElement().getTagName());
 			}
 			return thisLoc;
 		}
@@ -217,14 +235,15 @@ public class DirectedLayout {
 				Widget cursor = null;
 				Node nodeCursor = this;
 				List<Widget> widgets = null;
+				intermediate = true;
 				for (Directed directed : wrappers) {
 					// for the moment, wrapped nodes have no listeners
 					// (including the leaf).
 					Node wrapperChild = nodeCursor.addChild(model,
 							propertyReflector, null);
 					wrapperChild.directed = directed;
-					boolean intermediate = directed != Ax.last(wrappers);
-					wrapperChild.render(intermediate);
+					wrapperChild.intermediate = directed != Ax.last(wrappers);
+					wrapperChild.render(wrapperChild.intermediate);
 					widgets = wrapperChild.rendered.widgets;
 					if (directed == Ax.last(wrappers) && widgets.size() != 1) {
 						if (cursor != null) {
@@ -274,15 +293,26 @@ public class DirectedLayout {
 				return;
 			}
 			Object childModel = child.model;
+			// even though this (the parent) handles changes,
+			// binding/unbinding on node removal is the responsibility of the
+			// child, so we add to the child's listeners list
 			if (!child.changeSource.isReadOnly()) {
-				listeners.add(new ChildReplacer((Bindable) model,
-						child.changeSource.getPropertyName(), child));
+				// FIXME - dirndl.1 - don't add this to form/table cells
+				ChildReplacer listener = new ChildReplacer((Bindable) model,
+						child.changeSource.getPropertyName(), child);
+				logger.info("added listener :: {} :: {} :: {} :: {}",
+						child.pathSegment(), child.hashCode(),
+						child.changeSource.getPropertyName(),
+						listener.hashCode());
+				child.listeners.add(listener);
 			}
 			if (childModel instanceof Model) {
-				// even though this (the parent) handles changes,
-				// binding/unbinding is the responsibility of the child
-				child.listeners.add(
-						new ChildReplacer((Bindable) childModel, null, child));
+				ChildReplacer listener = new ChildReplacer(
+						(Bindable) childModel, null, child);
+				logger.info("added listener :: {} :: {} :: {} :: {}",
+						child.pathSegment(), child.hashCode(), "(fireUpdate)",
+						listener.hashCode());
+				child.listeners.add(listener);
 			}
 		}
 
@@ -355,7 +385,7 @@ public class DirectedLayout {
 			if (parent == null) {
 				return thisLoc;
 			} else {
-				return parent.path() + "." + thisLoc;
+				return parent.path() + ".\n" + thisLoc;
 			}
 		}
 
@@ -402,7 +432,8 @@ public class DirectedLayout {
 				return Optional.empty();
 			}
 
-			public void swapChildren(Optional<Widget> insertAfterChildWidget,
+			public void swapChildWidgets(
+					Optional<Widget> insertAfterChildWidget,
 					Optional<Widget> oldChildWidget,
 					Optional<Widget> newChildWidget) {
 				if (newChildWidget.isPresent()) {
@@ -420,6 +451,7 @@ public class DirectedLayout {
 			private ChildReplacer(SourcesPropertyChangeEvents bound,
 					String propertyName, Node child) {
 				super(bound, propertyName);
+				// almost surely this is it - overbinding
 				this.child = child;
 			}
 
@@ -430,6 +462,8 @@ public class DirectedLayout {
 						return;
 					}
 				}
+				logger.info("removed listener :: {} :: {}  :: {}",
+						child.pathSegment(), child.hashCode(), this.hashCode());
 				Node newChild = addChild(
 						child.propertyReflector.getPropertyValue(getModel()),
 						child.propertyReflector, child.changeSource);
@@ -440,13 +474,14 @@ public class DirectedLayout {
 						.verifySingleWidgetOrPredecessorSingleOrNoWidget();
 				Optional<Widget> newChildWidget = newChild.rendered
 						.verifySingleOrNullWidget();
-				rendered.swapChildren(insertBeforeChildWidget, oldChildWidget,
-						newChildWidget);
-				removeChild(this.child);
+				rendered.swapChildWidgets(insertBeforeChildWidget,
+						oldChildWidget, newChildWidget);
 				newChild.index = child.index;
-				children.remove(newChild);
+				removeChild(this.child);
 				children.add(newChild.index, newChild);
 				this.child = newChild;
+				// unbind();
+				// no need to unbind - removeChild will have done this
 			}
 		}
 
@@ -466,7 +501,7 @@ public class DirectedLayout {
 				context.node = Node.this;
 				context.gwtEvent = event;
 				context.nodeEvent = eventBinding;
-				logger.info("Firing behaviour {} on {} to {}",
+				logger.trace("Firing behaviour {} on {} to {}",
 						eventBinding.getClass().getSimpleName(),
 						Node.this.pathSegment(),
 						behaviour.handler().getSimpleName());
@@ -504,6 +539,15 @@ public class DirectedLayout {
 		public Node childBefore(Node child) {
 			int idx = children.indexOf(child);
 			return idx == 0 ? null : children.get(idx - 1);
+		}
+		public <T> T ancestorModel(Predicate predicate) {
+			if (predicate.test(model)) {
+				return (T) model;
+			}
+			if (parent != null) {
+				return parent.ancestorModel(predicate);
+			}
+			return null;
 		}
 	}
 

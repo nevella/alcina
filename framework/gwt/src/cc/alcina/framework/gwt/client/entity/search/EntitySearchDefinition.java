@@ -1,6 +1,8 @@
 package cc.alcina.framework.gwt.client.entity.search;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -10,10 +12,13 @@ import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.SpecificIdOrder;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.search.TxtCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 
 /*
@@ -126,5 +131,19 @@ public abstract class EntitySearchDefinition extends SearchDefinition {
 		public <C extends VersionableEntity> Class<C> resultClass() {
 			throw new UnsupportedOperationException();
 		}
+	}
+
+	public List<EntityPlace> provideFilterPlaces() {
+		List<EntityPlace> places = new ArrayList<>();
+		for (SearchCriterion sc : allCriteria()) {
+			if (sc instanceof TruncatedObjectCriterion) {
+				TruncatedObjectCriterion criterion = (TruncatedObjectCriterion) sc;
+				if (criterion.getId() != 0) {
+					places.add(EntityPlace.forClassAndId(
+							criterion.getObjectClass(), criterion.getId()));
+				}
+			}
+		}
+		return places;
 	}
 }

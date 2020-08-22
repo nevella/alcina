@@ -43,10 +43,13 @@ public class RemovablePropertyChangeListener implements PropertyChangeListener {
 	}
 
 	public void unbind() {
-		if (propertyName == null) {
-			bound.removePropertyChangeListener(this);
-		} else {
-			bound.removePropertyChangeListener(propertyName, this);
+		if (bound != null) {
+			if (propertyName == null) {
+				bound.removePropertyChangeListener(this);
+			} else {
+				bound.removePropertyChangeListener(propertyName, this);
+			}
 		}
+		bound = null;
 	}
 }

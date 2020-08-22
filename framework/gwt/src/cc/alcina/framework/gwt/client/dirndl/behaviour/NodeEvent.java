@@ -42,9 +42,9 @@ public abstract class NodeEvent {
 		this.eventReceiver = eventReceiver;
 	}
 
-	static Logger logger = LoggerFactory.getLogger(DirectedLayout.class);
+	static Logger logger = LoggerFactory.getLogger(NodeEvent.class);
 	static {
-		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.OFF);
+		AlcinaLogUtils.sysLogClient(NodeEvent.class, Level.OFF);
 	}
 
 	protected void fireEvent(GwtEvent gwtEvent) {

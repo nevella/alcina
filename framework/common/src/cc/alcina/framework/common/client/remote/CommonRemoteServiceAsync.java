@@ -23,11 +23,14 @@ import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
+import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 
 /**
@@ -78,4 +81,7 @@ public interface CommonRemoteServiceAsync {
 
 	void waitForTransforms(DomainTransformCommitPosition position,
 			AsyncCallback<DomainUpdate> callback);
+	
+	void getForClass(String className, long objectId,AsyncCallback<ModelSearchResults> callback);
+    void searchModel(EntitySearchDefinition def,AsyncCallback<ModelSearchResults > callback);
 }

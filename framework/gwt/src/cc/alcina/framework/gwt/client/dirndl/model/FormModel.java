@@ -2,15 +2,20 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.google.gwt.event.shared.GwtEvent;
+import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.activity.DirectedSingleEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
@@ -18,8 +23,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.NotRenderedNodeRenderer;
+import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
+import cc.alcina.framework.gwt.client.entity.view.ClientFactory;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
 public class FormModel extends Model {
@@ -27,11 +34,11 @@ public class FormModel extends Model {
 
 	protected List<LinkModel> actions = new ArrayList<>();
 
-	private FormModelArgs args;
+	private FormModelState state;
 
 	@Directed(renderer = NotRenderedNodeRenderer.class)
-	public FormModelArgs getArgs() {
-		return this.args;
+	public FormModelState getState() {
+		return this.state;
 	}
 
 	public List<LinkModel> getActions() {
@@ -47,7 +54,9 @@ public class FormModel extends Model {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			((FormModel) node.getModel()).onSave();
+			FormModel formModel = (FormModel) node
+					.ancestorModel(m -> m instanceof FormModel);
+			formModel.onSubmit();
 		}
 	}
 
@@ -64,37 +73,52 @@ public class FormModel extends Model {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			((FormModel) node.getModel()).onCancel();
+			EntityPlace entityPlace = ((EntityPlace) ClientFactory
+					.currentPlace()).copy();
+			entityPlace.action = EntityAction.VIEW;
+			ClientFactory.goTo(entityPlace);
 		}
 	}
 
-	public void onSave() {
-		Ax.out(args);
-	}
-
-	public void onCancel() {
-		// TODO Auto-generated method stub
+	public void onSubmit() {
+		Consumer<Void> onValid = o -> {
+			ClientTransformManager.cast().promoteToDomainObject(getState().model);
+			EntityPlace entityPlace = ((EntityPlace) ClientFactory
+					.currentPlace()).copy();
+			entityPlace.action = EntityAction.VIEW;
+			ClientFactory.goTo(entityPlace);
+		};
+		new FormValidation().validate(onValid, getState().formBinding);
 	}
 
 	@ClientInstantiable
-	public static class FormModelEntityTransformer
-			implements Function<EntityPlace, FormModel> {
+	public static class FormModelEntityTransformer implements
+			Function<DirectedSingleEntityActivity<? extends EntityPlace, ? extends Entity>, FormModel> {
 		@Override
-		public FormModel apply(EntityPlace place) {
-			FormModelArgs args = new FormModelArgs();
-			args.model = place.provideEntity();
-			args.editable = place.action.isEditable();
-			args.adjunct = true;
-			return new FormModelTransformer().apply(args);
+		public FormModel apply(
+				DirectedSingleEntityActivity<? extends EntityPlace, ? extends Entity> activity) {
+			FormModelState state = new FormModelState();
+			Entity entity = activity.getEntity();
+			state.editable = activity.getPlace().action.isEditable();
+			if (entity != null&&state.editable) {
+				entity = ClientTransformManager.cast().ensureEditable(entity);
+			}
+			state.model = entity;
+			state.adjunct = state.editable
+					&& ClientTransformManager.cast().isProvisionalEditing();
+			return new FormModelTransformer().apply(state);
 		}
 	}
 
-	public static class FormModelArgs {
-		private boolean editable;
+	public static class FormModelState {
+		public boolean editable;
 
 		private boolean adjunct;
 
 		private Bindable model;
+
+		// FIXME - dirndl.1 - set up for object binding checks
+		public Binding formBinding = new Binding();
 
 		public Bindable getModel() {
 			return this.model;
@@ -103,11 +127,11 @@ public class FormModel extends Model {
 
 	@ClientInstantiable
 	public static class FormModelTransformer
-			implements Function<FormModelArgs, FormModel> {
+			implements Function<FormModelState, FormModel> {
 		@Override
-		public FormModel apply(FormModelArgs args) {
+		public FormModel apply(FormModelState args) {
 			FormModel model = new FormModel();
-			model.args = args;
+			model.state = args;
 			if (args.model == null) {
 				return model;
 			}
@@ -148,10 +172,18 @@ public class FormModel extends Model {
 		}
 	}
 
-	public static class ValueModel extends Model {
+	public interface ValueModel {
+		Bindable getBindable();
+
+		Field getField();
+
+		String getValueId();
+	}
+
+	public static class FormValueModel extends Model implements ValueModel {
 		protected FormElement formElement;
 
-		public ValueModel() {
+		public FormValueModel() {
 		}
 
 		@Directed(renderer = NotRenderedNodeRenderer.class)
@@ -159,20 +191,23 @@ public class FormModel extends Model {
 			return this.formElement;
 		}
 
-		public ValueModel(FormElement formElement) {
+		public FormValueModel(FormElement formElement) {
 			this.formElement = formElement;
 		}
 
+		@Override
 		public Field getField() {
 			return formElement.field;
 		}
 
 		@Directed(renderer = NotRenderedNodeRenderer.class)
+		@Override
 		public String getValueId() {
 			return formElement.provideId();
 		}
 
 		@Directed(renderer = NotRenderedNodeRenderer.class)
+		@Override
 		public Bindable getBindable() {
 			return formElement.bindable;
 		}
@@ -181,7 +216,7 @@ public class FormModel extends Model {
 	public static class FormElement extends Model {
 		protected LabelModel label;
 
-		protected ValueModel value;
+		protected FormValueModel value;
 
 		private Field field;
 
@@ -203,14 +238,14 @@ public class FormModel extends Model {
 			this.bindable = bindable;
 			this.formElementIdx = ++formElementIdxCounter;
 			this.label = new LabelModel(this);
-			this.value = new ValueModel(this);
+			this.value = new FormValueModel(this);
 		}
 
 		public LabelModel getLabel() {
 			return this.label;
 		}
 
-		public ValueModel getValue() {
+		public FormValueModel getValue() {
 			return this.value;
 		}
 	}

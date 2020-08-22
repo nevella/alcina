@@ -1,14 +1,17 @@
 package cc.alcina.extras.dev.console.code;
 
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.Table;
 
-import com.sun.tools.doclint.Entity;
-
 import cc.alcina.extras.dev.console.DevConsoleCommand;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
+import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 
 public class CmdPersistentClassBuilder extends DevConsoleCommand {
 	@Override
@@ -33,11 +36,15 @@ public class CmdPersistentClassBuilder extends DevConsoleCommand {
 
 	@Override
 	public String run(String[] argv) throws Exception {
-		String collect = Registry.impls(Entity.class).stream()
-				.filter(e -> e.getClass().getAnnotation(Table.class) != null)
-				.map(e -> e.getClass().getName()).sorted()
+		Stream<Class> entities = Registry.get().lookup(Entity.class).stream()
+				.filter(e -> e.getAnnotation(Table.class) != null);
+		Stream<Class> transformPersistent = Stream.of(AlcinaPersistentEntityImpl
+				.getImplementation(DomainTransformRequestPersistent.class),AlcinaPersistentEntityImpl
+				.getImplementation(DomainTransformEventPersistent.class));
+		String collect = Stream.concat(entities, transformPersistent).map(e -> e.getName()).sorted()
 				.map(n -> Ax.format("<class>%s</class>", n))
 				.collect(Collectors.joining("\n"));
+		console.setClipboardContents(collect);
 		Ax.out(collect);
 		return "hyup";
 	}

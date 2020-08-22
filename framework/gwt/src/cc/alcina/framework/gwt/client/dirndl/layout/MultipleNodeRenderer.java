@@ -65,7 +65,7 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 	public @interface MultipleNodeRendererArgs {
 		String[] tags();
 
-		String[] cssClasses();
+		String[] cssClasses() ;
 	}
 
 	@ClientVisible

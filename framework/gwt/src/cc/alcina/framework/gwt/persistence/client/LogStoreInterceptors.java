@@ -67,7 +67,14 @@ public class LogStoreInterceptors {
 			boolean blur, boolean focus) {
 		EventTarget eTarget = nativeEvent.getEventTarget();
 		if (Element.is(eTarget)) {
-			Element e = Element.as(eTarget);
+			Element e = null;
+			try {
+				e=Element.as(eTarget);
+			} catch (Exception e1) {
+				// FIXME - dirndl.1 - some invalid tables happening?
+				Ax.simpleExceptionOut(e1);
+				return;
+			}
 			if (blur || focus) {
 				String tag = e.getTagName().toLowerCase();
 				if (tag.equals("input")

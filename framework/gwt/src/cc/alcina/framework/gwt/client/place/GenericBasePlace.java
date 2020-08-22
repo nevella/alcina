@@ -15,6 +15,7 @@ public abstract class GenericBasePlace<SD extends SearchDefinition>
 	public long id;
 
 	public SD def;
+	
 
 	public GenericBasePlace() {
 		def = createSearchDefinition();

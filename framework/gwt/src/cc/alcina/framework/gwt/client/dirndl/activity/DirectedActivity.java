@@ -68,7 +68,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 						DirectedSingleEntityActivity.class, place.getClass());
 			} else {
 				directedActivity = Registry.impl(
-						DirectedMultipleEntityActivity.class, place.getClass());
+						DirectedMultipleBindableActivity.class, place.getClass());
 			}
 		} else {
 			directedActivity = Registry.impl(DirectedActivity.class,

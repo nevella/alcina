@@ -16,6 +16,8 @@ package cc.alcina.framework.gwt.client.gwittir;
 /**
  *
  * @author Nick Reddel
+ * 
+ * FIXME - dirndl.1 - merge with HasDisplayName??
  */
 public interface HasGeneratedDisplayName {
 	public String generatedDisplayName();

@@ -77,8 +77,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				// the
 				// key in the reached map, so .project() wouldn't work)
 				if (entity != value) {
-					entity = graphProjection.project(entity, value, context,
-							false);
+					entity = (Entity) graphProjection.project(entity, value,
+							context, false);
 					getCache().put((Entity) entity);
 					return (T) entity;
 				}
@@ -188,7 +188,6 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	protected Object clonePersistentSet(Set ps, GraphProjectionContext context,
 			GraphProjection graphProjection) throws Exception {
 		Set hs = jpaImplementation.createPersistentSetProjection(context);
-		graphProjection.registerProjected(ps, hs);
 		if (getWasInitialized(ps)) {
 			Iterator itr = ps.iterator();
 			Object value;

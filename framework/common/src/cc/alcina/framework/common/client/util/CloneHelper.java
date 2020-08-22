@@ -51,28 +51,34 @@ public class CloneHelper {
 	 * called)
 	 */
 	public void copyBeanProperties(Object source, Object target,
-			Set<String> excludeProperties) throws Exception {
-		Property[] prs = Reflections.beanDescriptorProvider()
-				.getDescriptor(target).getProperties();
-		for (Property pr : prs) {
-			if (pr.getMutatorMethod() == null
-					|| pr.getAccessorMethod() == null) {
-				continue;
-			}
-			Object val = pr.getAccessorMethod().invoke(source,
-					CommonUtils.EMPTY_OBJECT_ARRAY);
-			if (val != null) {
-				if (excludeProperties != null
-						&& excludeProperties.contains(pr.getName())) {
+			Set<String> excludeProperties){
+		try {
+			Property[] prs = Reflections.beanDescriptorProvider()
+					.getDescriptor(target).getProperties();
+			for (Property pr : prs) {
+				if (pr.getMutatorMethod() == null
+						|| pr.getAccessorMethod() == null) {
 					continue;
 				}
-				if (val instanceof Collection) {
-					val = CommonUtils.shallowCollectionClone((Collection) val);
+				Object val = pr.getAccessorMethod().invoke(source,
+						CommonUtils.EMPTY_OBJECT_ARRAY);
+				if (val != null) {
+					if (excludeProperties != null
+							&& excludeProperties.contains(pr.getName())) {
+						continue;
+					}
+					if (val instanceof Collection) {
+						val = CommonUtils
+								.shallowCollectionClone((Collection) val);
+					}
+					args[0] = val;
+					pr.getMutatorMethod().invoke(target, args);
 				}
-				args[0] = val;
-				pr.getMutatorMethod().invoke(target, args);
 			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
+		
 	}
 
 	// TODO - wrap exceptions

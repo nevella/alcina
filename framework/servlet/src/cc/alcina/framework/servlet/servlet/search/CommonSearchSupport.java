@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.search.DomainSearcher;
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
@@ -20,7 +21,9 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjections;
+import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.entity.search.SearchContext;
@@ -58,6 +61,7 @@ public class CommonSearchSupport {
 			List<? extends VersionableEntity> queried,
 			EntitySearchDefinition def) {
 		ModelSearchResults modelSearchResults = new ModelSearchResults();
+		modelSearchResults.def = def;
 		if (LooseContext.is(CONTEXT_DO_NOT_PROJECT_SEARCH)) {
 		} else {
 			if (def == null) {
@@ -65,22 +69,43 @@ public class CommonSearchSupport {
 				VersionableEntity first = CommonUtils.first(queried);
 				queried.clear();
 				List untyped = queried;
-				untyped.add(project(first));
+				modelSearchResults.rawEntity = first;
+				modelSearchResults.resultClassName = Optional.ofNullable(first)
+						.map(e -> e.entityClass().getName()).orElse(null);
+				untyped.add(project(first, modelSearchResults));
 			} else {
-				queried = project(queried);
+				queried = project(queried, modelSearchResults);
+				List<EntityPlace> filterPlaces = def.provideFilterPlaces();
+				modelSearchResults.filteringEntities = filterPlaces.stream().map(EntityPlace::asLocator)
+						.map(Domain::find).collect(Collectors.toList());
+				modelSearchResults.filteringEntities =GraphProjection.maxDepthProjection(modelSearchResults.filteringEntities,2,null);
 			}
 		}
 		modelSearchResults.queriedResultObjects = queried;
 		return modelSearchResults;
 	}
 
-	private <T> T project(T object) {
-		return Registry.impl(SearchResultProjector.class).project(object);
+	private <T> T project(T object, ModelSearchResults modelSearchResults) {
+		SearchResultProjector projector = Registry
+				.impl(SearchResultProjector.class);
+		Class<? extends Bindable> projectedClass = projector
+				.getProjectedClass(modelSearchResults);
+		if (projectedClass != null) {
+			modelSearchResults.resultClassName = projectedClass.getName();
+		}
+		return projector.project(object);
 	}
-	@RegistryLocation(registryPoint = SearchResultProjector.class,implementationType = ImplementationType.INSTANCE)
-	public static class SearchResultProjector{
+
+	@RegistryLocation(registryPoint = SearchResultProjector.class, implementationType = ImplementationType.INSTANCE)
+	public static class SearchResultProjector {
 		public <T> T project(T object) {
 			return GraphProjections.defaultProjections().project(object);
+		}
+
+		public Class<? extends Bindable>
+				getProjectedClass(ModelSearchResults modelSearchResults) {
+			return ((EntitySearchDefinition) modelSearchResults.def)
+					.resultClass();
 		}
 	}
 

@@ -15,15 +15,20 @@ package cc.alcina.framework.gwt.client.gwittir;
 
 import com.totsp.gwittir.client.action.BindingAction;
 import com.totsp.gwittir.client.beans.Binding;
+import com.totsp.gwittir.client.beans.interfaces.SetLeft;
 import com.totsp.gwittir.client.ui.BoundWidget;
 
 /**
  * 
  * @author Nick Reddel
  */
-public abstract class BasicBindingAction<T extends BoundWidget<?>>
+public  class BasicBindingAction<T extends BoundWidget<?>>
 		implements BindingAction<T>, HasBinding {
 	protected Binding binding = new Binding();
+	public BasicBindingAction withBinding(Binding binding ) {
+		this.binding=binding;
+		return this;
+	}
 
 	protected boolean wasSet = false;
 
@@ -57,5 +62,7 @@ public abstract class BasicBindingAction<T extends BoundWidget<?>>
 		return false;
 	}
 
-	protected abstract void set0(BoundWidget widget);
+	protected  void set0(BoundWidget widget) {
+		binding.setLeft();
+	}
 }

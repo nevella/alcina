@@ -21,7 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * marker interface - essentially, gimme a classref
+ * 
  * 
  * @author nick@alcina.cc
  *
@@ -30,5 +30,6 @@ import java.lang.annotation.Target;
 @Inherited
 @Documented
 @Target({ ElementType.TYPE })
+@ClientVisible
 public @interface NonDomainTransformPersistable {
 }

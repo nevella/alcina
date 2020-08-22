@@ -39,6 +39,9 @@ public class EntityLocator implements Serializable {
 				Reflections.classLookup().getClassForName(parts[2]),
 				Long.parseLong(parts[0]), Long.parseLong(parts[1]));
 	}
+	public boolean matches(Entity entity) {
+		return instanceLocator(entity).equals(this);
+	}
 
 	public static EntityLocator parseShort(Class clazz, String key) {
 		String simpleName = key.replaceFirst("(\\S+) - (.+)", "$1");

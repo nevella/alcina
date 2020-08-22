@@ -1,26 +1,19 @@
 package cc.alcina.framework.gwt.client.entity.place;
 
-import java.util.Collections;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.google.gwt.event.shared.GwtEvent;
-
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
-import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
-import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
+import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.GenericBasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -28,37 +21,7 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 @XmlAccessorType(XmlAccessType.FIELD)
 public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 		GenericBasePlace<SD> implements ClearableIdPlace, HasEntityAction {
-	@Ref("edit")
-	@ActionRefHandler(VoidHandler.class)
-	public static class EditRef extends ActionRef {
-	}
-
-	public static class VoidHandler extends ActionHandler {
-		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
-		}
-	}
-
-	@Ref("delete")
-	@ActionRefHandler(VoidHandler.class)
-	public static class DeleteRef extends ActionRef {
-	}
-
-	@Ref("create")
-	@ActionRefHandler(VoidHandler.class)
-	public static class CreateRef extends ActionRef {
-	}
-
-	@Ref("view")
-	@ActionRefHandler(VoidHandler.class)
-	public static class ViewRef extends ActionRef {
-	}
-
-	@Ref("preview")
-	@ActionRefHandler(VoidHandler.class)
-	public static class PreviewRef extends ActionRef {
-	}
+	public transient Entity entity;
 
 	public EntityAction action = EntityAction.VIEW;
 
@@ -100,6 +63,8 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 		if (modelObject != null) {
 			if (modelObject instanceof HasDisplayName) {
 				return ((HasDisplayName) modelObject).displayName();
+			}else if (modelObject instanceof HasGeneratedDisplayName) {
+				return ((HasGeneratedDisplayName) modelObject).generatedDisplayName();
 			} else {
 				return super.toString();
 			}
@@ -132,7 +97,7 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 						CommonUtils.trimToWsChars(text, 20, true));
 			}
 		}
-		return super.toTitleString();
+		return provideCategoryString();
 	}
 
 	public Class<? extends Entity> provideEntityClass() {
@@ -140,12 +105,34 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 	}
 
 	public <E extends Entity> E provideEntity() {
-		return (E) TransformManager.get().getObject(provideEntityClass(), id,
-				0);
+		return entity != null ?(E)  entity
+				: (E) TransformManager.get().getObject(provideEntityClass(), id,
+						0);
 	}
 
 	public String provideCategoryString() {
-		return CommonUtils.pluralise(provideEntityClass().getSimpleName(),
-				Collections.emptyList());
+		return CommonUtils.pluralise(provideEntityClass().getSimpleName(), 0,
+				false);
+	}
+
+	public String provideCategoryString(int size) {
+		return CommonUtils.pluralise(provideEntityClass().getSimpleName(), size,
+				true);
+	}
+
+	public EntityPlace withEntity(Entity entity) {
+		this.entity = entity;
+		withHasId(entity);
+		return this;
+	}
+
+	public static EntityPlace forClassAndId(Class clazz, long id) {
+		EntityPlace place = (EntityPlace) RegistryHistoryMapper.get()
+				.getPlaceByModelClass(clazz);
+		return (EntityPlace) place.withId(id);
+	}
+
+	public EntityLocator asLocator() {
+		return new EntityLocator(provideEntityClass(), id, 0);
 	}
 }

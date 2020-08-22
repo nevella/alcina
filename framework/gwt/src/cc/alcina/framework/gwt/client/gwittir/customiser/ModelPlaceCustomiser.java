@@ -18,13 +18,11 @@ import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManySummary;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
+import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
@@ -33,8 +31,7 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  *
  * @author Nick Reddel
  */
-public class OneToManySummaryCustomiser implements Customiser,BoundWidgetProvider {
-
+public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		return this;
@@ -43,37 +40,22 @@ public class OneToManySummaryCustomiser implements Customiser,BoundWidgetProvide
 	@Override
 	public BoundWidget get() {
 		RenderingHtml html = new RenderingHtml();
-		html.setRenderer(new OneToManySummaryToHtmlRenderer(html));
+		html.setRenderer(new ModelPlaceRenderer());
 		html.setStyleName("");
 		return html;
 	}
-	private static class OneToManySummaryToHtmlRenderer implements Renderer<OneToManySummary,String>{
-		private RenderingHtml html;
 
-		public OneToManySummaryToHtmlRenderer(RenderingHtml html) {
-			this.html = html;
-		}
-
+	private static class ModelPlaceRenderer
+			implements Renderer<Entity, String> {
 		@Override
-		public String render(OneToManySummary o) {
-			if(o.getSize()==0) {
-				return "";
-			}
-			Entity source = (Entity) html.getModel();
-			Entity mostRecent = o.getLastModified();
-			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper.get().getPlaceByModelClass(mostRecent.entityClass());
-			EntityPlace  searchPlace = instancePlace.copy();
-			instancePlace.withEntity(mostRecent);
-			TruncatedObjectCriterion objectCriterion = Registry.impl(TruncatedObjectCriterion.class,source.entityClass());
-			objectCriterion.withObject(source);
-			searchPlace.def.addCriterionToSoleCriteriaGroup(objectCriterion);
-			String template = "<a href='#%s'>%s</a> - most recent: %s";
-			String token = searchPlace.toTokenString();
-			return Ax.format(template, token,
-					instancePlace.provideCategoryString( o.getSize()),
-					mostRecent.toString());
+		public String render(Entity source) {
+			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
+					.get().getPlaceByModelClass(source.entityClass());
+			instancePlace.withEntity(source);
+			String template = "<a href='#%s'>%s</a>";
+			String token = instancePlace.toTokenString();
+			// FIXME - dirndl.1 =>safehtml
+			return Ax.format(template, token, ((HasGeneratedDisplayName)source).generatedDisplayName());
 		}
-		
 	}
-
 }

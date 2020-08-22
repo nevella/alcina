@@ -43,7 +43,7 @@ import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
-//
+//FIXME - mvcc.4 - this shouldn't extend entity
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 public abstract class SearchDefinition extends WrapperPersistable
 		implements Serializable, TreeRenderable, ContentDefinition,

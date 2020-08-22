@@ -258,9 +258,12 @@ public class WidgetUtils {
 	}
 
 	public static native void focus(Element elem) /*-{
-    elem.focus();
+		  var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+    var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
+    remote.focus();
 	}-*/;
-
+	
+	
 	public static int getBestOffsetHeight(Element e) {
 		return getBestOffsetHeight(e, false);
 	}
@@ -1250,4 +1253,5 @@ public class WidgetUtils {
 			attachHandlerRegistration.removeHandler();
 		}
 	}
+
 }
