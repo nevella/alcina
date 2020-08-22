@@ -98,7 +98,7 @@ public abstract class LoginRequestHandler<U extends IUser> {
 	 * states to meet security requirements
 	 */
 	protected void postRequestHandled() {
-		if (ResourceUtilities.is(Authenticator.class, "recordLoginAttempts")) {
+		if (ResourceUtilities.is(LoginRequestHandler.class, "recordLoginAttempts")) {
 			new LoginAttempts().handleLoginResult(loginModel);
 		}
 	}
