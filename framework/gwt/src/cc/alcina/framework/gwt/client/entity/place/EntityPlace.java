@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
@@ -62,7 +63,7 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 		if (modelObject != null) {
 			if (modelObject instanceof HasDisplayName) {
 				return ((HasDisplayName) modelObject).displayName();
-			}else if (modelObject instanceof HasDisplayName) {
+			} else if (modelObject instanceof HasDisplayName) {
 				return ((HasDisplayName) modelObject).displayName();
 			} else {
 				return super.toString();
@@ -104,7 +105,7 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 	}
 
 	public <E extends Entity> E provideEntity() {
-		return entity != null ?(E)  entity
+		return entity != null ? (E) entity
 				: (E) TransformManager.get().getObject(provideEntityClass(), id,
 						0);
 	}
@@ -126,12 +127,14 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 	}
 
 	public static EntityPlace forClassAndId(Class clazz, long id) {
-		EntityPlace place = (EntityPlace) RegistryHistoryMapper.get()
-				.getPlaceByModelClass(clazz);
-		return (EntityPlace) place.withId(id);
+		return (EntityPlace) forClass(clazz).withId(id);
 	}
-
 	public EntityLocator asLocator() {
 		return new EntityLocator(provideEntityClass(), id, 0);
+	}
+
+	public static EntityPlace forClass(Class clazz) {
+		return (EntityPlace) RegistryHistoryMapper.get()
+				.getPlaceByModelClass(clazz);
 	}
 }

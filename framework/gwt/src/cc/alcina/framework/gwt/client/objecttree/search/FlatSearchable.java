@@ -1,16 +1,23 @@
 package cc.alcina.framework.gwt.client.objecttree.search;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class FlatSearchable<SC extends SearchCriterion>
@@ -19,6 +26,40 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 	static {
 		comparator = Comparator.comparing(FlatSearchable::getCategory);
 		comparator = comparator.thenComparing(FlatSearchable::getName);
+	}
+
+	@RegistryLocation(registryPoint = HasSearchables.class, targetClass = Entity.class, implementationType = ImplementationType.INSTANCE)
+	@ClientInstantiable
+	public static class HasSearchables {
+		protected List<FlatSearchable> createSearchables() {
+			return new ArrayList<>();
+		}
+
+		public String criterionDisplayName(SearchCriterion criterion) {
+			return searchableForCriterion(criterion)
+					.map(FlatSearchable::toString)
+					.orElse(criterion.getClass().getSimpleName());
+		}
+
+		private Optional<FlatSearchable>
+				searchableForCriterion(SearchCriterion criterion) {
+			ensureSearchables();
+			return null;
+		}
+
+		private Map<SearchCriterion, FlatSearchable> searchables;
+
+		private void ensureSearchables() {
+			if (searchables == null) {
+				searchables = createSearchables().stream()
+						.collect(AlcinaCollectors
+								.toKeyMap(FlatSearchable::getCriterion));
+			}
+		}
+
+		public String criterionValue(SearchCriterion criterion) {
+			return criterion.provideValueAsRenderableText();
+		}
 	}
 
 	private Class<SC> clazz;

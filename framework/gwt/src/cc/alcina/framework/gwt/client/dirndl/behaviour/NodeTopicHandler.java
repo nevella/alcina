@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 
-public class NodeTopicHandler extends NodeEventHandler {
+public class NodeTopicHandler extends NodeEvent.AbstractHandler {
 	@Override
 	public void onEvent(NodeEvent.Context eventContext) {
 		eventContext.node.publishTopic(

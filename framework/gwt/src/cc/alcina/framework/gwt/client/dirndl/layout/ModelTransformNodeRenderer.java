@@ -16,10 +16,12 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-public class ModelTransformNodeRenderer extends DirectedNodeRenderer
-		implements HasDirectedModel,HandlesModelBinding {
+public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
+		HasDirectedModel, HandlesModelBinding, RendersToParentContainer {
 	@Override
 	public List<Widget> renderWithDefaults(Node node) {
 		List<Widget> result = new ArrayList<>();
@@ -56,8 +58,47 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer
 		Class<? extends ModelTransform> value();
 	}
 
+	public interface ModelTransform<A, B extends Bindable>
+			extends Function<A, B> {
+	}
+
 	@ClientInstantiable
-	public abstract static class ModelTransform<A, B extends Bindable>
-			implements Function<A, B> {
+	public abstract static class AbstractModelTransform<A, B extends Bindable>
+			implements ModelTransform<A, B> {
+	}
+
+	public static class PlaceholderModelTransform
+			extends AbstractModelTransform<Object, Bindable> {
+		@Override
+		public Bindable apply(Object t) {
+			PlaceholderModel model = new PlaceholderModel();
+			return model;
+		}
+	}
+
+	@Directed(renderer = DelegatingNodeRenderer.class)
+	public static class PlaceholderModel extends Model {
+		private String value = "Placeholder";
+
+		public String getValue() {
+			return this.value;
+		}
+
+		public void setValue(String value) {
+			this.value = value;
+		}
+	}
+
+	public static class BlankModelTransform
+			extends AbstractModelTransform<Object, Bindable> {
+		@Override
+		public Bindable apply(Object t) {
+			BlankModel model = new BlankModel();
+			return model;
+		}
+	}
+
+	@Directed(renderer = NotRenderedNodeRenderer.class)
+	public static class BlankModel extends Model {
 	}
 }

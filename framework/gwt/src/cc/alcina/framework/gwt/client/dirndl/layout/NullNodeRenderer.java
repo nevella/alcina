@@ -9,7 +9,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 public class NullNodeRenderer extends DirectedNodeRenderer {
 	@Override
 	public Widget render(Node node) {
-		Label label = new Label(Ax.format("Null model :: %s", node.path()));
+		Label label = new Label(Ax.format("Null model :: ... %s", node.pathSegment()));
 		NodeRendererStyle.MOCKUP_NODE.set(label.getElement());
 		return label;
 	}

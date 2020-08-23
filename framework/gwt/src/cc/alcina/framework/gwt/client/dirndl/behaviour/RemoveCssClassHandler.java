@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 
-public class RemoveCssClassHandler extends NodeEventHandler {
+public class RemoveCssClassHandler extends NodeEvent.AbstractHandler {
 	@Override
 	public void onEvent(NodeEvent.Context eventContext) {
 		Arrays.stream(eventContext.annotation(RemoveCssClassHandlerArgs.class)

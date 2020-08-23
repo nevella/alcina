@@ -1,13 +1,14 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
-@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = String.class)
-public class TextNodeRenderer extends LeafNodeRenderer {
+@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = SafeHtml.class)
+public class SafeHtmlNodeRenderer extends LeafNodeRenderer {
 	@Override
 	protected String getTag(Node node) {
 		return Ax.blankTo(super.getTag(node), "span");
@@ -15,17 +16,12 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 	@Override
 	public Widget render(Node node) {
-		// TODO bind to the reflector;
 		Widget rendered = super.render(node);
-		rendered.getElement().setInnerText(getText(node));
+		rendered.getElement().setInnerSafeHtml((SafeHtml) node.model);
+		if(getTag(node).equals("a")) {
+			rendered.getElement().setAttribute("href", "#");	
+		}
 		return rendered;
 	}
 
-	protected String getText(Node node) {
-		return node.model == null ? "<null text>" : node.model.toString();
-	}
-	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Number.class)
-	public static class NumberNodeRenderer extends TextNodeRenderer {
-		
-	}
 }

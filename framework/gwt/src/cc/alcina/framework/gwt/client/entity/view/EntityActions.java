@@ -68,6 +68,7 @@ public class EntityActions {
 			EntityPlace entityPlace = ((EntityPlace) ClientFactory
 					.currentPlace()).copy();
 			entityPlace.action = EntityAction.CREATE;
+			entityPlace.withId(0);
 			ClientFactory.goTo(entityPlace);
 		}
 	}

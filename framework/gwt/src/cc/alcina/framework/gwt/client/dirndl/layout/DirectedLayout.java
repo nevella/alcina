@@ -192,7 +192,7 @@ public class DirectedLayout {
 			rendered.behaviours.forEach(BehaviourBinding::bind);
 		}
 
-		private String pathSegment() {
+		String pathSegment() {
 			String thisLoc = Ax.format("{%s}", model == null ? "null model"
 					: model.getClass().getSimpleName());
 			if (propertyReflector != null) {
@@ -407,23 +407,19 @@ public class DirectedLayout {
 				return widgets.get(0);
 			}
 
-			public Optional<Widget> verifySingleOrNullWidget() {
-				Preconditions.checkState(widgets.size() <= 1);
-				return Optional.ofNullable(Ax.first(widgets));
-			}
-
 			private FlowPanel verifyContainer() {
+				if(renderer instanceof RendersToParentContainer) {
+					return parent.rendered.verifyContainer();
+				}
 				return (FlowPanel) verifySingleWidget();
 			}
 
-			public Optional<Widget>
-					verifySingleWidgetOrPredecessorSingleOrNoWidget() {
+			public Optional<Widget> lastWidgetOrPredecessorLastWidget() {
 				Node cursor = Node.this;
 				while (cursor != null) {
-					Optional<Widget> widget = cursor.rendered
-							.verifySingleOrNullWidget();
-					if (widget.isPresent()) {
-						return widget;
+					Widget last = Ax.last(cursor.rendered.widgets);
+					if (last != null) {
+						return Optional.of(last);
 					}
 					cursor = parent.childBefore(cursor);
 				}
@@ -432,14 +428,14 @@ public class DirectedLayout {
 
 			public void swapChildWidgets(
 					Optional<Widget> insertAfterChildWidget,
-					Optional<Widget> oldChildWidget,
-					Optional<Widget> newChildWidget) {
-				if (newChildWidget.isPresent()) {
+					List<Widget> oldChildWidgets,
+					List<Widget> newChildWidgets) {
+				for (int idx = newChildWidgets.size() - 1; idx >= 0; idx--) {
 					int index = insertAfterChildWidget.map(this::getChildIndex)
 							.orElse(-1) + 1;
-					verifyContainer().insert(newChildWidget.get(), index);
+					verifyContainer().insert(newChildWidgets.get(idx), index);
 				}
-				oldChildWidget.ifPresent(Widget::removeFromParent);
+				oldChildWidgets.forEach(Widget::removeFromParent);
 			}
 		}
 
@@ -466,14 +462,12 @@ public class DirectedLayout {
 						child.propertyReflector.getPropertyValue(getModel()),
 						child.propertyReflector, child.changeSource);
 				newChild.render();
-				Optional<Widget> oldChildWidget = this.child.rendered
-						.verifySingleOrNullWidget();
+				List<Widget> oldChildWidgets = this.child.rendered.widgets;
 				Optional<Widget> insertBeforeChildWidget = this.child.rendered
-						.verifySingleWidgetOrPredecessorSingleOrNoWidget();
-				Optional<Widget> newChildWidget = newChild.rendered
-						.verifySingleOrNullWidget();
+						.lastWidgetOrPredecessorLastWidget();
+				List<Widget> newChildWidgets = newChild.rendered.widgets;
 				rendered.swapChildWidgets(insertBeforeChildWidget,
-						oldChildWidget, newChildWidget);
+						oldChildWidgets, newChildWidgets);
 				newChild.index = child.index;
 				removeChild(this.child);
 				children.add(newChild.index, newChild);
@@ -538,6 +532,7 @@ public class DirectedLayout {
 			int idx = children.indexOf(child);
 			return idx == 0 ? null : children.get(idx - 1);
 		}
+
 		public <T> T ancestorModel(Predicate predicate) {
 			if (predicate.test(model)) {
 				return (T) model;

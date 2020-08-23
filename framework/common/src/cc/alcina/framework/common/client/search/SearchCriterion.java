@@ -154,4 +154,8 @@ public abstract class SearchCriterion extends Bindable
 	public enum Direction {
 		ASCENDING, DESCENDING
 	}
+
+	public String provideValueAsRenderableText() {
+		return toString();
+	}
 }

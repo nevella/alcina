@@ -2,17 +2,16 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedMultipleBindableActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.NotRenderedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -87,9 +86,8 @@ public class TableModel extends Model {
 		}
 	}
 
-	@ClientInstantiable
-	public static class TableModelBindableTransformer implements
-			Function<DirectedMultipleBindableActivity<? extends EntityPlace, ? extends Bindable>, TableModel> {
+	public static class TableModelBindableTransformer extends
+			AbstractModelTransform<DirectedMultipleBindableActivity<? extends EntityPlace, ? extends Bindable>, TableModel> {
 		@Override
 		public TableModel apply(
 				DirectedMultipleBindableActivity<? extends EntityPlace, ? extends Bindable> activity) {

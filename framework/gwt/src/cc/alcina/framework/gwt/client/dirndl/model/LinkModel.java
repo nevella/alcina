@@ -5,6 +5,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.List;
 import java.util.Optional;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -13,6 +14,7 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
@@ -33,7 +35,9 @@ public class LinkModel {
 		this.primaryAction = primaryAction;
 		return this;
 	}
-
+	public LinkModel withActionRef(Class<? extends ActionRef> clazz) {
+		return withPlace(new ActionRefPlace(clazz));
+	}
 	public LinkModel withPlace(BasePlace place) {
 		this.place = place;
 		return this;
@@ -107,5 +111,8 @@ public class LinkModel {
 
 	public boolean isPrimaryAction() {
 		return this.primaryAction;
+	}
+	public void addTo(List<LinkModel> actions) {
+		actions.add(this);
 	}
 }

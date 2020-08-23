@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 
-public class ToggleCssClassHandler extends NodeEventHandler {
+public class ToggleCssClassHandler extends NodeEvent.AbstractHandler {
 	@Override
 	public void onEvent(NodeEvent.Context eventContext) {
 		Arrays.stream(eventContext.annotation(ToggleCssClassHandlerArgs.class)

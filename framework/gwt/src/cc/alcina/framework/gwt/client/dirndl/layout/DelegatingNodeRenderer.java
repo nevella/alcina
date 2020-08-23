@@ -10,7 +10,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 /*
  * For holder objects in a node tree - delegate to the unique (modificable) child
  */
-public class DelegatingNodeRenderer extends DirectedNodeRenderer {
+public class DelegatingNodeRenderer extends DirectedNodeRenderer implements RendersToParentContainer {
 	@Override
 	public List<Widget> renderWithDefaults(Node node) {
 		List<Widget> result = new ArrayList<>();

@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
@@ -63,7 +64,8 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	public static Activity forPlace(Place place) {
 		DirectedActivity directedActivity = null;
 		if (place instanceof EntityPlace) {
-			if (((EntityPlace) place).id != 0) {
+			EntityPlace entityPlace = (EntityPlace) place;
+			if (entityPlace.id != 0 ||entityPlace.action==EntityAction.CREATE) {
 				directedActivity = Registry.impl(
 						DirectedSingleEntityActivity.class, place.getClass());
 			} else {

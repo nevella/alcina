@@ -8,7 +8,6 @@ import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEventHandler;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic.VoidTopic;
 
@@ -18,7 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic.VoidTopic;
 @Target(ElementType.TYPE_USE)
 @ClientVisible
 public @interface Behaviour {
-	Class<? extends NodeEventHandler> handler();
+	Class<? extends NodeEvent.Handler> handler();
 
 	Class<? extends NodeEvent> event();
 

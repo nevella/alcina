@@ -36,6 +36,14 @@ public abstract class NodeEvent {
 		}
 	}
 
+	public interface Handler {
+		public abstract void onEvent(NodeEvent.Context eventContext);
+	}
+
+	@ClientInstantiable
+	public static abstract class AbstractHandler implements Handler {
+	}
+
 	private NodeEventReceiver eventReceiver;
 
 	public void setReceiver(NodeEventReceiver eventReceiver) {
