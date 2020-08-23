@@ -195,21 +195,23 @@ public class AuthenticationManager {
 			if (Ax.matches(headerId, "\\d+")) {
 				ClientInstance instance = persistence
 						.getClientInstance(Long.parseLong(headerId));
-				if (instance.getAuthenticationSession() == null) {
-					persistence.putSession(instance, context.session);
-				}
-				String headerAuth = context.httpContext.request.getHeader(
-						AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY);
-				if (Ax.matches(headerAuth, "\\d+")) {
-					if (instance.getAuth().intValue() == Integer
-							.parseInt(headerAuth)) {
-						if (!instance.getAuthenticationSession()
-								.provideIsExpired()) {
-							context.clientInstance = instance;
-						} else {
-							context.httpContext.response.addHeader(
-									AlcinaRpcRequestBuilder.RESPONSE_HEADER_CLIENT_INSTANCE_EXPIRED,
-									"true");
+				if (instance != null) {
+					if (instance.getAuthenticationSession() == null) {
+						persistence.putSession(instance, context.session);
+					}
+					String headerAuth = context.httpContext.request.getHeader(
+							AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY);
+					if (Ax.matches(headerAuth, "\\d+")) {
+						if (instance.getAuth().intValue() == Integer
+								.parseInt(headerAuth)) {
+							if (!instance.getAuthenticationSession()
+									.provideIsExpired()) {
+								context.clientInstance = instance;
+							} else {
+								context.httpContext.response.addHeader(
+										AlcinaRpcRequestBuilder.RESPONSE_HEADER_CLIENT_INSTANCE_EXPIRED,
+										"true");
+							}
 						}
 					}
 				}
