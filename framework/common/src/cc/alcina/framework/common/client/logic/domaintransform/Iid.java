@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.common.client.logic.domaintransform;
 
-import java.util.Date;
 import java.util.Set;
 
 import javax.persistence.MappedSuperclass;

@@ -15,7 +15,6 @@ package cc.alcina.framework.gwt.client.gwittir;
 
 import com.totsp.gwittir.client.action.BindingAction;
 import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.interfaces.SetLeft;
 import com.totsp.gwittir.client.ui.BoundWidget;
 
 /**

@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
-import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.GenericBasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -63,8 +62,8 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 		if (modelObject != null) {
 			if (modelObject instanceof HasDisplayName) {
 				return ((HasDisplayName) modelObject).displayName();
-			}else if (modelObject instanceof HasGeneratedDisplayName) {
-				return ((HasGeneratedDisplayName) modelObject).generatedDisplayName();
+			}else if (modelObject instanceof HasDisplayName) {
+				return ((HasDisplayName) modelObject).displayName();
 			} else {
 				return super.toString();
 			}

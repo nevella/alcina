@@ -15,12 +15,12 @@
  */
 package com.google.gwt.dev.shell;
 
-import com.google.gwt.core.ext.TreeLogger;
-import com.google.gwt.dev.util.TypeInfo;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+
+import com.google.gwt.core.ext.TreeLogger;
+import com.google.gwt.dev.util.TypeInfo;
 
 /**
  * Glue layer that performs GWT-specific operations on JsValues. Used to isolate

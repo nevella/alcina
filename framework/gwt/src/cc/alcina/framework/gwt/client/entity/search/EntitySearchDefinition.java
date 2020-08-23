@@ -30,6 +30,18 @@ public abstract class EntitySearchDefinition extends SearchDefinition {
 	private SearchOrders searchOrders = new SearchOrders<>();
 
 	private int pageNumber;// 0-based
+	
+	//return editable dataobjects (either the entity class or a dataobject extending it)
+	private boolean returnSingleDataObjectImplementations;
+
+	public boolean isReturnSingleDataObjectImplementations() {
+		return this.returnSingleDataObjectImplementations;
+	}
+
+	public void setReturnSingleDataObjectImplementations(
+			boolean returnSingleDataObjectImplementations) {
+		this.returnSingleDataObjectImplementations = returnSingleDataObjectImplementations;
+	}
 
 	public void addIdsCriterion(Collection<Long> ids) {
 		addCriterionToSoleCriteriaGroup(new TxtCriterion(

@@ -42,11 +42,11 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 import cc.alcina.framework.entity.util.JvmPropertyReflector;
 import cc.alcina.framework.entity.util.MethodWrapper;
-import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 /**
@@ -104,8 +104,8 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	@Override
 	public String displayNameForObject(Object o) {
-		if (o instanceof HasGeneratedDisplayName) {
-			return ((HasGeneratedDisplayName) o).generatedDisplayName();
+		if (o instanceof HasDisplayName) {
+			return ((HasDisplayName) o).displayName();
 		}
 		String dnpn = "id";
 		Bean info = o.getClass().getAnnotation(Bean.class);

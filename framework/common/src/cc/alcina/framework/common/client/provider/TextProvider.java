@@ -22,8 +22,8 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 
 /**
  * Support for localisations. Defaults to a simple provider
@@ -93,8 +93,8 @@ public class TextProvider {
 	}
 
 	public String getObjectName(Object o, ClientBeanReflector beanReflector) {
-		if (o instanceof HasGeneratedDisplayName) {
-			return ((HasGeneratedDisplayName) o).generatedDisplayName();
+		if (o instanceof HasDisplayName) {
+			return ((HasDisplayName) o).displayName();
 		}
 		String dnpn = beanReflector.getDisplayNamePropertyName();
 		Object pv = GwittirBridge.get().getPropertyValue(o, dnpn);
@@ -121,7 +121,7 @@ public class TextProvider {
 	}
 
 	public void setObjectName(Entity newObj, String name) {
-		if (newObj instanceof HasGeneratedDisplayName) {
+		if (newObj instanceof HasDisplayName) {
 			return;
 		}
 		String dnpn = ClientReflector.get().beanInfoForClass(newObj.getClass())

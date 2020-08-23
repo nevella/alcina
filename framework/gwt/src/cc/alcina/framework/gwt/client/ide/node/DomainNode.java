@@ -30,8 +30,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 import cc.alcina.framework.gwt.client.ide.DataTree;
 import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
@@ -53,7 +53,7 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 		setUserObject(object);
 		ClientBeanReflector info = ClientReflector.get()
 				.beanInfoForClass(getUserObject().getClass());
-		if (object instanceof HasGeneratedDisplayName) {
+		if (object instanceof HasDisplayName) {
 			object.addPropertyChangeListener(this);
 		} else {
 			String displayNamePropertyName = info.getGwBeanInfo()
@@ -123,7 +123,7 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 
 	public void removeListeners() {
 		T object = getUserObject();
-		if (object instanceof HasGeneratedDisplayName) {
+		if (object instanceof HasDisplayName) {
 			return;
 		}
 		ClientBeanReflector info = ClientReflector.get()

@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.ManyToMany;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -14,6 +16,7 @@ import cc.alcina.framework.common.client.logic.domain.EntityDataObject.EntitySin
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.projection.CollectionProjectionFilter;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
@@ -27,8 +30,17 @@ import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 public class EntityDataObjectProjector {
 	private boolean multiple;
 
+	private boolean projectAsSingleEntityDataObjects;
+
+	public EntityDataObjectProjector withProjectAsSingleEntityDataObjects(
+			boolean projectAsSingleEntityDataObjects) {
+		this.projectAsSingleEntityDataObjects = projectAsSingleEntityDataObjects;
+		return this;
+	}
+
 	public <T> T project(T object) {
-		multiple = object instanceof Collection;
+		multiple = object instanceof Collection
+				&& !projectAsSingleEntityDataObjects;
 		if (multiple) {
 			Collection<VersionableEntity> collection = (Collection) object;
 			if (collection.size() > 0) {
@@ -92,9 +104,10 @@ public class EntityDataObjectProjector {
 				// is
 				// to filter entity.[oneToMany]
 				if (original instanceof Set) {
-					if (context.parent(o -> o instanceof VersionableEntity)
-							.isPresent()) {
-						return (T) new LiSet();
+					Set replacement = maybeReplaceSet(original, projected,
+							context);
+					if (replacement != projected) {
+						return (T) replacement;
 					}
 				}
 			}
@@ -123,5 +136,22 @@ public class EntityDataObjectProjector {
 			}
 		}
 		return clazz;
+	}
+
+	public <T> Set maybeReplaceSet(T original, T projected,
+			GraphProjectionContext context) {
+		if (context.parent(o -> o instanceof VersionableEntity).isPresent()
+				&& original instanceof LiSet
+				&& context.sourceOwner instanceof VersionableEntity) {
+			if (SEUtilities
+					.getPropertyDescriptorByName(
+							context.sourceOwner.getClass(),
+							context.fieldName)
+					.getReadMethod().getAnnotation(ManyToMany.class) != null) {
+			} else {
+				return new LiSet();
+			}
+		}
+		return (Set) projected;
 	}
 }

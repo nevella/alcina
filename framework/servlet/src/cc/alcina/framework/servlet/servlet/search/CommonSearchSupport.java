@@ -72,9 +72,9 @@ public class CommonSearchSupport {
 				modelSearchResults.rawEntity = first;
 				modelSearchResults.resultClassName = Optional.ofNullable(first)
 						.map(e -> e.entityClass().getName()).orElse(null);
-				untyped.add(project(first, modelSearchResults));
+				untyped.add(project(first, modelSearchResults,true));
 			} else {
-				queried = project(queried, modelSearchResults);
+				queried = project(queried, modelSearchResults,def.isReturnSingleDataObjectImplementations());
 				List<EntityPlace> filterPlaces = def.provideFilterPlaces();
 				modelSearchResults.filteringEntities = filterPlaces.stream().map(EntityPlace::asLocator)
 						.map(Domain::find).collect(Collectors.toList());
@@ -85,9 +85,10 @@ public class CommonSearchSupport {
 		return modelSearchResults;
 	}
 
-	private <T> T project(T object, ModelSearchResults modelSearchResults) {
+	private <T> T project(T object, ModelSearchResults modelSearchResults, boolean projectAsSingleEntityDataObjects) {
 		SearchResultProjector projector = Registry
 				.impl(SearchResultProjector.class);
+		projector.setProjectAsSingleEntityDataObjects(projectAsSingleEntityDataObjects);
 		Class<? extends Bindable> projectedClass = projector
 				.getProjectedClass(modelSearchResults);
 		if (projectedClass != null) {
@@ -98,6 +99,16 @@ public class CommonSearchSupport {
 
 	@RegistryLocation(registryPoint = SearchResultProjector.class, implementationType = ImplementationType.INSTANCE)
 	public static class SearchResultProjector {
+		private boolean projectAsSingleEntityDataObjects;
+		public boolean isProjectAsSingleEntityDataObjects() {
+			return this.projectAsSingleEntityDataObjects;
+		}
+
+		public void setProjectAsSingleEntityDataObjects(
+				boolean projectAsSingleEntityDataObjects) {
+			this.projectAsSingleEntityDataObjects = projectAsSingleEntityDataObjects;
+		}
+
 		public <T> T project(T object) {
 			return GraphProjections.defaultProjections().project(object);
 		}

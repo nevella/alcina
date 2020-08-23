@@ -21,8 +21,8 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
-import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
@@ -40,22 +40,34 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 	@Override
 	public BoundWidget get() {
 		RenderingHtml html = new RenderingHtml();
-		html.setRenderer(new ModelPlaceRenderer());
+		html.setRenderer(new ModelPlaceRenderer(html));
 		html.setStyleName("");
 		return html;
 	}
 
 	private static class ModelPlaceRenderer
-			implements Renderer<Entity, String> {
+			implements Renderer<Object, String> {
+		private RenderingHtml html;
+
+		public ModelPlaceRenderer(RenderingHtml html) {
+			this.html = html;
+		}
+
 		@Override
-		public String render(Entity source) {
+		public String render(Object  source) {
+			Entity entity = null;
+			if(source instanceof Entity) {
+				entity = (Entity) source;
+			}else {
+				entity = (Entity) html.getModel();
+			}
 			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
-					.get().getPlaceByModelClass(source.entityClass());
-			instancePlace.withEntity(source);
+					.get().getPlaceByModelClass(entity.entityClass());
+			instancePlace.withEntity(entity);
 			String template = "<a href='#%s'>%s</a>";
 			String token = instancePlace.toTokenString();
 			// FIXME - dirndl.1 =>safehtml
-			return Ax.format(template, token, ((HasGeneratedDisplayName)source).generatedDisplayName());
+			return Ax.format(template, token, ((HasDisplayName)source).displayName());
 		}
 	}
 }
