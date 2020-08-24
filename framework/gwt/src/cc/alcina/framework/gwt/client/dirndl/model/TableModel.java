@@ -8,6 +8,10 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedMultipleBindableActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
@@ -59,6 +63,14 @@ public class TableModel extends Model {
 
 	public static class TableColumn extends Model {
 		private Field field;
+		@Directed(renderer = NotRenderedNodeRenderer.class)
+		public Field getField() {
+			return this.field;
+		}
+
+		public void setField(Field field) {
+			this.field = field;
+		}
 
 		private String caption;
 
@@ -92,7 +104,7 @@ public class TableModel extends Model {
 		public TableModel apply(
 				DirectedMultipleBindableActivity<? extends EntityPlace, ? extends Bindable> activity) {
 			TableModel model = new TableModel();
-			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
+			BoundWidgetTypeFactory factory = Registry.impl(TableTypeFactory.class);
 			if (activity.getSearchResults() == null) {
 				return model;
 			}
@@ -108,9 +120,14 @@ public class TableModel extends Model {
 			activity.getSearchResults().queriedResultObjects.stream()
 					.map(bindable -> new TableRow(model, bindable))
 					.forEach(model.rows::add);
-			// add actions
+			// add actions if editable and adjunct
 			return model;
 		}
+	}
+	@RegistryLocation(registryPoint = TableTypeFactory.class,implementationType = ImplementationType.INSTANCE)
+	@ClientInstantiable
+	public static class TableTypeFactory extends BoundWidgetTypeFactory{
+		
 	}
 
 	public static class TableRow extends Model {

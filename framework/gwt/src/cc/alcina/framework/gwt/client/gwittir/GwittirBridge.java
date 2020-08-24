@@ -408,25 +408,25 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				SIMPLE_FACTORY, null);
 	}
 
-	public Field getField(Class c, String propertyName, boolean editableWidgets,
+	public Field getField(Class clazz, String propertyName, boolean editableWidgets,
 			boolean multiple, BoundWidgetTypeFactory factory, Object obj) {
-		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(c);
+		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(clazz);
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
 		Bean beanInfo = bi.getAnnotation(Bean.class);
 		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
-		obj = obj != null ? obj : ClientReflector.get().getTemplateInstance(c);
-		ClientPropertyReflector pr = bi.getPropertyReflectors()
+		obj = obj != null ? obj : ClientReflector.get().getTemplateInstance(clazz);
+		ClientPropertyReflector propertyReflector = bi.getPropertyReflectors()
 				.get(propertyName);
-		Property p = getProperty(obj, pr.getPropertyName());
-		BoundWidgetProvider bwp = factory.getWidgetProvider(p.getType());
+		Property p = getProperty(obj, propertyReflector.getPropertyName());
+		BoundWidgetProvider bwp = factory.getWidgetProvider(p.getType(),clazz,beanInfo,propertyReflector);
 		int position = multiple ? RelativePopupValidationFeedback.BOTTOM
 				: RelativePopupValidationFeedback.RIGHT;
-		if (pr != null && pr.getDisplayInfo() != null) {
-			PropertyPermissions pp = pr
+		if (propertyReflector != null && propertyReflector.getDisplayInfo() != null) {
+			PropertyPermissions pp = propertyReflector
 					.getAnnotation(PropertyPermissions.class);
-			Display display = pr.getDisplayInfo();
-			Association association = pr.getAnnotation(Association.class);
+			Display display = propertyReflector.getDisplayInfo();
+			Association association = propertyReflector.getAnnotation(Association.class);
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, obj, true)
 					&& display != null
@@ -464,7 +464,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				bwp = fieldEditable ? new ListBoxEnumProvider(domainType, true)
 						: NOWRAP_LABEL_PROVIDER;
 			}
-			if (bwp != null && !fieldEditable) {
+			if (bwp != null && !fieldEditable && !(bwp instanceof Customiser)) {
 				if (isDomainClass) {
 					bwp = propertyIsCollection
 							? new ExpandableDomainNodeCollectionLabelProvider(
@@ -484,7 +484,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					}
 				}
 			}
-			Custom customiserInfo = pr.getAnnotation(Custom.class);
+			Custom customiserInfo = propertyReflector.getAnnotation(Custom.class);
 			if (customiserInfo != null) {
 				Customiser customiser = (Customiser) ClientReflector.get()
 						.newInstance(customiserInfo.customiserClass(), 0, 0);
@@ -505,13 +505,13 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 										: "gwittir-ValidationPopup-right");
 					} else {
 						validationFeedback = validationFeedbackSupplier
-								.apply(pr.getPropertyName());
+								.apply(propertyReflector.getPropertyName());
 					}
 					validator = getValidator(domainType, obj,
-							pr.getPropertyName(), validationFeedback);
+							propertyReflector.getPropertyName(), validationFeedback);
 				}
-				Field field = new Field(pr.getPropertyName(),
-						TextProvider.get().getLabelText(c, pr), bwp, validator,
+				Field field = new Field(propertyReflector.getPropertyName(),
+						TextProvider.get().getLabelText(clazz, propertyReflector), bwp, validator,
 						validationFeedback,
 						getDefaultConverter(bwp, p.getType()));
 				if (!display.styleName().isEmpty()) {
@@ -564,9 +564,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					bwp = NOWRAP_LABEL_PROVIDER;
 				}
 			}
-			return new Field(pr.getPropertyName(),
-					TextProvider.get().getLabelText(c, pr), bwp,
-					getValidator(p.getType(), obj, pr.getPropertyName(), vf),
+			return new Field(propertyReflector.getPropertyName(),
+					TextProvider.get().getLabelText(clazz, propertyReflector), bwp,
+					getValidator(p.getType(), obj, propertyReflector.getPropertyName(), vf),
 					vf, getDefaultConverter(bwp, p.getType()));
 		}
 		return null;

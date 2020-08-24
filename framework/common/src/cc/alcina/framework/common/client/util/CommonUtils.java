@@ -42,6 +42,7 @@ import com.google.gwt.core.client.GWT;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -1957,5 +1958,15 @@ public class CommonUtils {
 			return format("First: %s\nBoth: %s\nSecond: %s", firstOnly,
 					intersection, secondOnly);
 		}
+	}
+
+	public static boolean hasSuperClass(Class clazz, Class superClass) {
+		while(clazz!=null&&clazz!=Object.class) {
+			if(clazz==superClass) {
+				return true;
+			}
+			clazz=clazz.getSuperclass();
+		}
+		return false;
 	}
 }

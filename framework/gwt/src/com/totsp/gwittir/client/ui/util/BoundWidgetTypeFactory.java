@@ -25,6 +25,9 @@ import com.totsp.gwittir.client.ui.Checkbox;
 import com.totsp.gwittir.client.ui.Label;
 import com.totsp.gwittir.client.ui.TextBox;
 
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
+
 /**
  * DOCUMENT ME!
  * 
@@ -54,7 +57,7 @@ public class BoundWidgetTypeFactory {
 
 	/** Creates a new instance of BoundWidgetTypeFactory */
 	public BoundWidgetTypeFactory() {
-		super();
+		this(true);
 	}
 
 	public BoundWidgetTypeFactory(boolean defaults) {
@@ -95,5 +98,10 @@ public class BoundWidgetTypeFactory {
 				? registry.get(propertyName)
 				: registry.get(type);
 		return val;
+	}
+
+	public BoundWidgetProvider getWidgetProvider(Class propertyType, Class modelType, Bean beanInfo,
+			ClientPropertyReflector propertyReflector) {
+		return getWidgetProvider(propertyType);
 	}
 }

@@ -354,6 +354,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		filter.getTextBox().addBlurHandler(new BlurHandler() {
 			@Override
 			public void onBlur(BlurEvent event) {
+				if("".isEmpty()) {
+					return;
+				}
 				System.out.println("onblur - ignore:" + ignoreNextBlur);
 				if (System.currentTimeMillis() - ignoreNextBlur < 100) {
 					ignoreNextBlur = 0;

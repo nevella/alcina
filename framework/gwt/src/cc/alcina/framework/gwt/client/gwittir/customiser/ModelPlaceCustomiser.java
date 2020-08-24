@@ -13,6 +13,9 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
+import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -54,11 +57,11 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 		}
 
 		@Override
-		public String render(Object  source) {
+		public String render(Object source) {
 			Entity entity = null;
-			if(source instanceof Entity) {
+			if (source instanceof Entity) {
 				entity = (Entity) source;
-			}else {
+			} else {
 				entity = (Entity) html.getModel();
 			}
 			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
@@ -66,8 +69,8 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 			instancePlace.withEntity(entity);
 			String template = "<a href='#%s'>%s</a>";
 			String token = instancePlace.toTokenString();
-			// FIXME - dirndl.1 =>safehtml
-			return Ax.format(template, token, ((HasDisplayName)source).displayName());
+			return Ax.format(template, token, SafeHtmlUtils
+					.htmlEscape(((HasDisplayName) entity).displayName()));
 		}
 	}
 }

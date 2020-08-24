@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.validator.Validator;
@@ -44,16 +45,22 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 		private Optional<FlatSearchable>
 				searchableForCriterion(SearchCriterion criterion) {
 			ensureSearchables();
-			return null;
+			return Optional.ofNullable(searchables.get(criterion.getClass()));
 		}
 
-		private Map<SearchCriterion, FlatSearchable> searchables;
+		private Map<Class<? extends SearchCriterion>, FlatSearchable> searchables;
+
+		public List<FlatSearchable> getSearchables() {
+			ensureSearchables();
+			return this.searchables.values().stream()
+					.collect(Collectors.toList());
+		}
 
 		private void ensureSearchables() {
 			if (searchables == null) {
 				searchables = createSearchables().stream()
 						.collect(AlcinaCollectors
-								.toKeyMap(FlatSearchable::getCriterion));
+								.toKeyMap(FlatSearchable::getCriterionClass));
 			}
 		}
 
@@ -154,6 +161,7 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 
 	@Override
 	public String toString() {
-		return Ax.format("%s : %s", category, name);
+		return Ax.isBlank(category) ? name
+				: Ax.format("%s : %s", category, name);
 	}
 }

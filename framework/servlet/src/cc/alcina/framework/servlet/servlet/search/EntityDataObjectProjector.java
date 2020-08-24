@@ -141,11 +141,10 @@ public class EntityDataObjectProjector {
 	public <T> Set maybeReplaceSet(T original, T projected,
 			GraphProjectionContext context) {
 		if (context.parent(o -> o instanceof VersionableEntity).isPresent()
-				&& original instanceof LiSet
 				&& context.sourceOwner instanceof VersionableEntity) {
 			if (SEUtilities
 					.getPropertyDescriptorByName(
-							context.sourceOwner.getClass(),
+							((Entity)context.sourceOwner).entityClass(),
 							context.fieldName)
 					.getReadMethod().getAnnotation(ManyToMany.class) != null) {
 			} else {
