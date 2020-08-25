@@ -64,6 +64,10 @@ public abstract class Entity<T extends Entity> extends Bindable
 	public void delete() {
 		Domain.delete(domainIdentity());
 	}
+	
+	public void reHash() {
+		hash=0;
+	}
 
 	@MvccAccess(type = MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY)
 	public DomainSupport domain() {

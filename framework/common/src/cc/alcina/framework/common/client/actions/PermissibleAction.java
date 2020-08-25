@@ -19,6 +19,8 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.Vetoer;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * 
@@ -44,7 +46,9 @@ public class PermissibleAction implements Permissible {
 		this.displayName = displayName;
 		this.cssClassName = cssClassName;
 	}
-
+	public String getDescription() {
+		return "";
+	}
 	public AccessLevel accessLevel() {
 		return AccessLevel.LOGGED_IN;
 	}
@@ -150,5 +154,12 @@ public class PermissibleAction implements Permissible {
 	}
 
 	public void wasCalled() {
+	}
+
+	public String provideId() {
+		if(Ax.notBlank(getActionName())) {
+			return getActionName();
+		}
+		return CommonUtils.restId(getClass().getSimpleName().replaceFirst("(.+)Action", "$1"));
 	}
 }

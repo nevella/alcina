@@ -40,7 +40,7 @@ public class LuxStyleValidationFeedback extends AbstractValidationFeedback {
 	public void handleException(Object source, ValidationException exception) {
 		Widget object = (Widget) source;
 		object.addStyleName(this.styleName);
-		Widget formElement = WidgetUtils.getParentWidgetSatisfyingTypedCallback(
+		Widget formElement = WidgetUtils.getAncestorWidgetSatisfyingTypedCallback(
 				object,
 				widget -> LuxFormStyle.LUX_FORM_ELEMENT.hasStyle(widget));
 		formElement.addStyleName(this.styleName);
@@ -50,7 +50,7 @@ public class LuxStyleValidationFeedback extends AbstractValidationFeedback {
 	public void resolve(Object source) {
 		Widget object = (Widget) source;
 		object.removeStyleName(this.styleName);
-		Widget formElement = WidgetUtils.getParentWidgetSatisfyingTypedCallback(
+		Widget formElement = WidgetUtils.getAncestorWidgetSatisfyingTypedCallback(
 				object,
 				widget -> LuxFormStyle.LUX_FORM_ELEMENT.hasStyle(widget));
 		formElement.removeStyleName(this.styleName);

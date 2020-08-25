@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
 @RegistryLocation(registryPoint = DirectedActivity.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
@@ -67,10 +68,19 @@ public class DirectedActivity<P extends BasePlace> extends Model
 			EntityPlace entityPlace = (EntityPlace) place;
 			if (entityPlace.id != 0 ||entityPlace.action==EntityAction.CREATE) {
 				directedActivity = Registry.impl(
-						DirectedSingleEntityActivity.class, place.getClass());
+						DirectedEntityActivity.class, place.getClass());
 			} else {
 				directedActivity = Registry.impl(
-						DirectedMultipleBindableActivity.class, place.getClass());
+						DirectedEntitySearchActivity.class, place.getClass());
+			}
+		}else if (place instanceof CategoryNamePlace) {
+			CategoryNamePlace categoryPlace = (CategoryNamePlace) place;
+			if (categoryPlace.nodeName==null) {
+				directedActivity = Registry.impl(
+						DirectedCategoriesActivity.class, place.getClass());
+			} else {
+				directedActivity = Registry.impl(
+						DirectedCategoryActivity.class, place.getClass());
 			}
 		} else {
 			directedActivity = Registry.impl(DirectedActivity.class,

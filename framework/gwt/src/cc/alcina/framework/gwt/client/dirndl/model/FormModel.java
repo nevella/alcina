@@ -6,28 +6,36 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import com.google.gwt.event.shared.GwtEvent;
+import com.google.gwt.place.shared.Place;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
+import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
+import cc.alcina.framework.common.client.actions.PermissibleEntityAction;
+import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.dirndl.activity.DirectedSingleEntityActivity;
+import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.BlankModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.NotRenderedNodeRenderer;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.view.ClientFactory;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
 public class FormModel extends Model {
 	protected List<FormElement> elements = new ArrayList<>();
@@ -46,17 +54,17 @@ public class FormModel extends Model {
 	}
 
 	@Ref("submit")
-	@ActionRefHandler(SaveHandler.class)
+	@ActionRefHandler(SubmitHandler.class)
 	public static class SubmitRef extends ActionRef {
 	}
 
-	public static class SaveHandler extends ActionHandler {
+	public static class SubmitHandler extends ActionHandler {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
 			FormModel formModel = (FormModel) node
 					.ancestorModel(m -> m instanceof FormModel);
-			formModel.onSubmit();
+			formModel.onSubmit(node);
 		}
 	}
 
@@ -73,39 +81,78 @@ public class FormModel extends Model {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			EntityPlace entityPlace = ((EntityPlace) ClientFactory
-					.currentPlace()).copy();
-			entityPlace.action = EntityAction.VIEW;
-			ClientFactory.goTo(entityPlace);
+			Place currentPlace = ClientFactory.currentPlace();
+			if (currentPlace instanceof EntityPlace) {
+				EntityPlace entityPlace = ((EntityPlace) currentPlace).copy();
+				entityPlace.action = EntityAction.VIEW;
+				ClientFactory.goTo(entityPlace);
+			} else if (currentPlace instanceof CategoryNamePlace) {
+				CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
+						.copy();
+				categoryNamePlace.nodeName = null;
+				ClientFactory.goTo(categoryNamePlace);
+			}
 		}
 	}
 
-	public void onSubmit() {
+	public void onSubmit(Node node) {
 		Consumer<Void> onValid = o -> {
-			ClientTransformManager.cast().promoteToDomainObject(getState().model);
-			EntityPlace entityPlace = ((EntityPlace) ClientFactory
-					.currentPlace()).copy();
-			entityPlace.action = EntityAction.VIEW;
-			ClientFactory.goTo(entityPlace);
+			if (getState().model instanceof Entity) {
+				ClientTransformManager.cast()
+						.promoteToDomainObject(getState().model);
+			}
+			if (ClientFactory.currentPlace() instanceof EntityPlace) {
+				EntityPlace entityPlace = ((EntityPlace) ClientFactory
+						.currentPlace()).copy();
+				entityPlace.action = EntityAction.VIEW;
+				ClientFactory.goTo(entityPlace);
+			} else if (ClientFactory
+					.currentPlace() instanceof CategoryNamePlace) {
+				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) ClientFactory
+						.currentPlace();
+				DefaultPermissibleActionHandler.handleAction(null,
+						categoryNamePlace.provideAction(), node);
+			}
 		};
 		new FormValidation().validate(onValid, getState().formBinding);
 	}
 
 	@ClientInstantiable
-	public static class FormModelEntityTransformer implements
-			Function<DirectedSingleEntityActivity<? extends EntityPlace, ? extends Entity>, FormModel> {
+	public static class EntityTransformer implements
+			Function<DirectedEntityActivity<? extends EntityPlace, ? extends Entity>, FormModel> {
 		@Override
 		public FormModel apply(
-				DirectedSingleEntityActivity<? extends EntityPlace, ? extends Entity> activity) {
+				DirectedEntityActivity<? extends EntityPlace, ? extends Entity> activity) {
 			FormModelState state = new FormModelState();
 			Entity entity = activity.getEntity();
 			state.editable = activity.getPlace().action.isEditable();
-			if (entity != null&&state.editable) {
+			if (entity != null && state.editable) {
 				entity = ClientTransformManager.cast().ensureEditable(entity);
 			}
 			state.model = entity;
 			state.adjunct = state.editable
 					&& ClientTransformManager.cast().isProvisionalEditing();
+			return new FormModelTransformer().apply(state);
+		}
+	}
+
+	@ClientInstantiable
+	public static class PermissibleActionFormTransformer
+			implements Function<PermissibleAction, FormModel> {
+		@Override
+		public FormModel apply(PermissibleAction action) {
+			FormModelState state = new FormModelState();
+			state.editable=true;
+			state.adjunct=true;
+			if(action instanceof PermissibleEntityAction) {
+				Entity entity =((PermissibleEntityAction) action).getEntity();
+				entity = ClientTransformManager.cast().ensureEditable(entity);
+				state.model = entity;
+			}else if(action instanceof RemoteActionWithParameters) {
+				state.model=(Bindable) ((RemoteActionWithParameters) action).getParameters();
+			}else if (action instanceof LocalActionWithParameters) {
+				state.model = new BlankModel();
+			}
 			return new FormModelTransformer().apply(state);
 		}
 	}

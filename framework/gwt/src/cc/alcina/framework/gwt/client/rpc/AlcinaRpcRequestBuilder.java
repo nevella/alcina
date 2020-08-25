@@ -6,10 +6,13 @@ import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.RpcRequestBuilder;
+import com.google.gwt.user.client.rpc.impl.RequestCallbackAdapter;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstanceExpiredException;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet_CustomFieldSerializer;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
@@ -176,6 +179,23 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 		private final RequestCallback originalCallback;
 
 		public WrappingCallback(RequestCallback originalCallback) {
+			if(originalCallback instanceof RequestCallbackAdapter) {
+				RequestCallbackAdapter adapter = (RequestCallbackAdapter) originalCallback;
+				AsyncCallback inner = adapter.getCallback();
+				AsyncCallback innerWrapper = new AsyncCallback() {
+
+					@Override
+					public void onFailure(Throwable caught) {
+						inner.onFailure(caught);
+					}
+
+					@Override
+					public void onSuccess(Object result) {
+						LiSet_CustomFieldSerializer.rehashLiSets();
+						inner.onSuccess(result);
+					}
+				};
+			}
 			this.originalCallback = originalCallback;
 		}
 

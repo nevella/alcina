@@ -22,13 +22,15 @@ import com.totsp.gwittir.client.validator.ValidationFeedback;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.objecttree.IsRenderableFilter;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**
  * 
- * @author Nick Reddel
+ * @author Nick Reddel //FIXME - dirndl.1 - delegate to DirectedContext (if
+ *         there is one), and eventually remove
  */
 public class RenderContext extends LooseContextInstance {
 	private static final String ON_DETACH_CALLBACK = RenderContext.class
@@ -43,7 +45,7 @@ public class RenderContext extends LooseContextInstance {
 	private static final String IS_RENDERABLE_FILTER = RenderContext.class
 			.getName() + ".IS_RENDERABLE_FILTER";
 
-	private static final String VALIDATION_FEEDBACK_SUPPLIER = RenderContext.class
+	public static final String VALIDATION_FEEDBACK_SUPPLIER = RenderContext.class
 			.getName() + ".VALIDATION_FEEDBACK_SUPPLIER";
 
 	private static final String SUPPRESS_VALIDATION_FEEDBACK_FOR = RenderContext.class
@@ -56,6 +58,17 @@ public class RenderContext extends LooseContextInstance {
 			.getName() + ".ENUM_RENDERER_PROVIDER";
 
 	private static RenderContext trunk = null;
+
+	@Override
+	public <T> T get(String key) {
+		if (DirectedLayout.current != null) {
+			T t = DirectedLayout.current.resolveRenderContextProperty(key);
+			if (t != null) {
+				return t;
+			}
+		}
+		return super.get(key);
+	}
 
 	/**
 	 * In the case of object tree rendering, it makes sense to temporarily make

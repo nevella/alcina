@@ -14,9 +14,9 @@ import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 
-@RegistryLocation(registryPoint = DirectedMultipleBindableActivity.class, implementationType = ImplementationType.INSTANCE)
+@RegistryLocation(registryPoint = DirectedEntitySearchActivity.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
-public class DirectedMultipleBindableActivity<EP extends EntityPlace, B extends Bindable>
+public class DirectedEntitySearchActivity<EP extends EntityPlace, B extends Bindable>
 		extends DirectedActivity<EP> {
 	private transient ModelSearchResults<B> searchResults;
 

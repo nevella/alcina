@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @ClientInstantiable
@@ -58,19 +59,29 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 
 		@Override
 		public String render(Object source) {
+			Object hasDisplayName = source;
+			BasePlace place = null;
 			Entity entity = null;
 			if (source instanceof Entity) {
 				entity = (Entity) source;
-			} else {
+			} else if (html.getModel() instanceof Entity) {
 				entity = (Entity) html.getModel();
+			} else if (html.getModel() instanceof BasePlace) {
+				place = (BasePlace) html.getModel();
+			}else if (source instanceof BasePlace) {
+				place = (BasePlace) source;
 			}
-			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
-					.get().getPlaceByModelClass(entity.entityClass());
-			instancePlace.withEntity(entity);
+			if (entity != null) {
+				EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
+						.get().getPlaceByModelClass(entity.entityClass());
+				instancePlace.withEntity(entity);
+				place = instancePlace;
+				hasDisplayName = entity;
+			}
 			String template = "<a href='#%s'>%s</a>";
-			String token = instancePlace.toTokenString();
-			return Ax.format(template, token, SafeHtmlUtils
-					.htmlEscape(((HasDisplayName) entity).displayName()));
+			String token = place.toTokenString();
+			return Ax.format(template, token, SafeHtmlUtils.htmlEscape(
+					((HasDisplayName) hasDisplayName).displayName()));
 		}
 	}
 }

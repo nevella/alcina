@@ -61,19 +61,19 @@ public class LooseContextInstance {
 	}
 
 	public boolean getBoolean(String key) {
-		return properties.get(key) == Boolean.TRUE;
+		return get(key) == Boolean.TRUE;
 	}
 
 	public boolean getBooleanDefaultTrue(String key) {
-		return properties.get(key) != Boolean.FALSE;
+		return get(key) != Boolean.FALSE;
 	}
 
 	public Float getFloat(String key) {
-		return (Float) properties.get(key);
+		return (Float) get(key);
 	}
 
 	public Integer getInteger(String key) {
-		Object obj = properties.get(key);
+		Object obj = get(key);
 		if (obj instanceof String) {
 			try {
 				return Integer.parseInt((String) obj);
@@ -81,7 +81,7 @@ public class LooseContextInstance {
 				return null;
 			}
 		}
-		return (Integer) properties.get(key);
+		return (Integer) get(key);
 	}
 
 	public int getInteger(String key, int defaultValue) {
@@ -89,7 +89,7 @@ public class LooseContextInstance {
 	}
 
 	public String getString(String key) {
-		return (String) properties.get(key);
+		return (String) get(key);
 	}
 
 	public void pop() {
@@ -201,7 +201,7 @@ public class LooseContextInstance {
 
 	public void putSnapshotProperties(LooseContextInstance snapshot) {
 		for (String key : snapshot.properties.keySet()) {
-			set(key, snapshot.properties.get(key));
+			set(key, snapshot.get(key));
 		}
 	}
 }

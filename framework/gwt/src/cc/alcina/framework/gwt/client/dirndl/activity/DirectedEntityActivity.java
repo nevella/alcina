@@ -11,9 +11,9 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 
-@RegistryLocation(registryPoint = DirectedSingleEntityActivity.class, implementationType = ImplementationType.INSTANCE)
+@RegistryLocation(registryPoint = DirectedEntityActivity.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
-public class DirectedSingleEntityActivity<EP extends EntityPlace, E extends Entity>
+public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 		extends DirectedActivity<EP> {
 	private E entity;
 

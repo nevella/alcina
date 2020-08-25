@@ -494,7 +494,7 @@ public class WidgetUtils {
     return h;
 	}-*/;
 
-	public static <W extends Widget> W getParentWidget(Widget w,
+	public static <W extends Widget> W getAncestorWidget(Widget w,
 			Class<W> widgetClass) {
 		while (w != null) {
 			if (w.getClass() == widgetClass) {
@@ -505,7 +505,7 @@ public class WidgetUtils {
 		return null;
 	}
 
-	public static <W extends Widget> W getParentWidget(Widget w,
+	public static <W extends Widget> W getAncestorWidget(Widget w,
 			String widgetClassName) {
 		while (w != null) {
 			if (CommonUtils.simpleClassName(w.getClass())
@@ -517,7 +517,7 @@ public class WidgetUtils {
 		return null;
 	}
 
-	public static Widget getParentWidgetSatisfyingCallback(Widget w,
+	public static Widget getAncestorWidgetSatisfyingCallback(Widget w,
 			CollectionFilter<Object> callback) {
 		while (w != null) {
 			if (callback.allow(w)) {
@@ -528,7 +528,7 @@ public class WidgetUtils {
 		return null;
 	}
 
-	public static <T extends Widget> T getParentWidgetSatisfyingTypedCallback(
+	public static <T extends Widget> T getAncestorWidgetSatisfyingTypedCallback(
 			Widget w, CollectionFilter<Widget> callback) {
 		while (w != null) {
 			if (callback.allow(w)) {
@@ -688,7 +688,7 @@ public class WidgetUtils {
 				return o instanceof RelativePopupPanel;
 			}
 		};
-		RelativePopupPanel pp = (RelativePopupPanel) getParentWidgetSatisfyingCallback(
+		RelativePopupPanel pp = (RelativePopupPanel) getAncestorWidgetSatisfyingCallback(
 				w, callback);
 		if (pp != null) {
 			pp.hide();

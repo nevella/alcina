@@ -6,8 +6,10 @@ import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 
@@ -26,7 +28,6 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
  */
 public class LiSet<H extends Entity> extends AbstractSet<H>
 		implements Cloneable, Serializable {
-	static final transient long serialVersionUID = 1;
 
 	static final transient int DEGENERATE_THRESHOLD = 30;
 
@@ -36,6 +37,15 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		return result;
 	}
 
+	
+	public void reHash() {
+		List<H> entities = stream().collect(Collectors.toList());
+		degenerate=null;
+		elementData=null;
+		size=0;
+		modCount=0;
+		entities.stream().peek(Entity::reHash).forEach(this::add);
+	}
 	private transient Entity[] elementData;
 
 	transient int size = 0;

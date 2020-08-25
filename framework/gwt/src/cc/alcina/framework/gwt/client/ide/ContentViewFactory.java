@@ -131,7 +131,7 @@ public class ContentViewFactory {
 			+ ".CONTEXT_VALIDATING_BEAN";
 
 	public static boolean autoSaveFromContentViewAncestor(Widget child) {
-		PaneWrapperWithObjects container = WidgetUtils.getParentWidget(child,
+		PaneWrapperWithObjects container = WidgetUtils.getAncestorWidget(child,
 				PaneWrapperWithObjects.class);
 		if (container != null) {
 			return container.autoSave;
@@ -169,7 +169,7 @@ public class ContentViewFactory {
 
 	public static void registerProvisionalObjectWithContentViewAncestor(
 			Widget child, Object o) {
-		PaneWrapperWithObjects container = WidgetUtils.getParentWidget(child,
+		PaneWrapperWithObjects container = WidgetUtils.getAncestorWidget(child,
 				PaneWrapperWithObjects.class);
 		if (container != null) {
 			if (container.getObjects() != null) {

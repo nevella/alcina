@@ -21,8 +21,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  *
  * @author Nick Reddel
  */
-public interface PermissibleActionHandler {
-	public void handleAction(Widget sourceWidget, PermissibleAction action,
+public interface PermissibleActionHandler<A extends PermissibleAction> {
+	public void handleAction(Widget sourceWidget, A action,
 			Object target);
 
 	public static class DefaultPermissibleActionHandler {

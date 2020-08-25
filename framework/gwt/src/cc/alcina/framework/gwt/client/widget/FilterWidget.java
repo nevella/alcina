@@ -326,7 +326,7 @@ public class FilterWidget extends Composite
 		registrations.add(textBox.addBlurHandler(this));
 		registrations.add(textBox.addClickHandler(this));
 		if (isFocusOnAttach()
-				&& WidgetUtils.getParentWidget(this, "GridForm") == null) {
+				&& WidgetUtils.getAncestorWidget(this, "GridForm") == null) {
 			// just in case this widget is inside a popup panel e.g.
 			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 				@Override

@@ -1969,4 +1969,8 @@ public class CommonUtils {
 		}
 		return false;
 	}
+
+	public static String restId(String string) {
+		return deInfix(string).replaceFirst("^ ", "").replace(" ", "-").toLowerCase();
+	}
 }

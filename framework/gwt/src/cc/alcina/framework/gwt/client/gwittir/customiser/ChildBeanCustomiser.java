@@ -140,7 +140,7 @@ public class ChildBeanCustomiser implements Customiser {
 					// really...'PaneWrapperWithObjects' - let's do this dance
 					// again...
 					PaneWrapperWithObjects container = WidgetUtils
-							.getParentWidget(ChildBeanWidget.this,
+							.getAncestorWidget(ChildBeanWidget.this,
 									PaneWrapperWithObjects.class);
 					if (container != null) {
 						if (container.getObjects() != null) {

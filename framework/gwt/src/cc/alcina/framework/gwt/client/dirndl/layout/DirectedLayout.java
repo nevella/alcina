@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
@@ -48,6 +49,8 @@ public class DirectedLayout {
 		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.OFF);
 	}
 
+	public static Node current = null;
+
 	Widget parent;
 
 	public Widget render(ContextResolver resolver, Widget parent,
@@ -61,8 +64,12 @@ public class DirectedLayout {
 
 	@ClientInstantiable
 	public static class ContextResolver {
-		public Object resolve(Object model) {
+		public Object resolveModel(Object model) {
 			return model;
+		}
+
+		public <T> T resolveRenderContextProperty(String key) {
+			return null;
 		}
 	}
 
@@ -117,7 +124,8 @@ public class DirectedLayout {
 
 		protected Node(ContextResolver resolver, Object model) {
 			this.resolver = resolver;
-			this.model = resolver.resolve(model);
+			this.model = resolver.resolveModel(model);
+			current = this;
 		}
 
 		public DirectedNodeRenderer resolveRenderer() {
@@ -282,6 +290,7 @@ public class DirectedLayout {
 					}
 				}
 			}
+			current = this;// after leaving child travers
 			rendered.widgets = renderer.renderWithDefaults(this);
 			return;
 		}
@@ -324,6 +333,7 @@ public class DirectedLayout {
 		}
 
 		private void render(boolean intermediateChild) {
+			current = this;
 			DirectedContextResolver directedContextResolver = annotation(
 					DirectedContextResolver.class);
 			if (directedContextResolver != null) {
@@ -332,6 +342,7 @@ public class DirectedLayout {
 			}
 			populateWidgets(intermediateChild);
 			bindBehaviours();
+			current = null;
 		}
 
 		private Node resolveNodeSegment(String segment) {
@@ -408,7 +419,7 @@ public class DirectedLayout {
 			}
 
 			private FlowPanel verifyContainer() {
-				if(renderer instanceof RendersToParentContainer) {
+				if (renderer instanceof RendersToParentContainer) {
 					return parent.rendered.verifyContainer();
 				}
 				return (FlowPanel) verifySingleWidget();
@@ -456,9 +467,13 @@ public class DirectedLayout {
 						return;
 					}
 				}
+				if(child.propertyReflector==null && evt.getPropertyName()!=null) {
+					return;
+				}
 				logger.info("removed listener :: {} :: {}  :: {}",
 						child.pathSegment(), child.hashCode(), this.hashCode());
 				Node newChild = addChild(
+						child.propertyReflector==null?evt.getNewValue():
 						child.propertyReflector.getPropertyValue(getModel()),
 						child.propertyReflector, child.changeSource);
 				newChild.render();
@@ -541,6 +556,10 @@ public class DirectedLayout {
 				return parent.ancestorModel(predicate);
 			}
 			return null;
+		}
+
+		public <T> T resolveRenderContextProperty(String key) {
+			return resolver.resolveRenderContextProperty(key);
 		}
 	}
 

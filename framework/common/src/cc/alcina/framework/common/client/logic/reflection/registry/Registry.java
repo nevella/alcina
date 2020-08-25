@@ -474,9 +474,13 @@ public class Registry {
 							+ " probably should be instance - %s",
 					registeringClassKey.name()));
 		}
+		if (targetClassKey.simpleName().contains("OptionsAction")) {
+			int debug = 3;
+		}
 		if (registered.size() == 1
-				&& (targetClassKey != keys.undefinedTargetKey()
-						|| implementationType != ImplementationType.MULTIPLE)) {
+				// && (targetClassKey != keys.undefinedTargetKey()
+				// || implementationType != ImplementationType.MULTIPLE)) {
+				&& implementationType != ImplementationType.MULTIPLE) {
 			Integer currentPriority = targetPriority.get(registryPointKey,
 					targetClassKey);
 			if (currentPriority > infoPriority) {

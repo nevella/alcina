@@ -10,6 +10,7 @@ import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
@@ -33,6 +34,14 @@ public abstract class NodeEvent {
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			return node.annotation(clazz);
+		}
+
+		public <B extends Bindable> B typedModel() {
+			return (B) node.getModel();
+		}
+
+		public <E extends GwtEvent> E typedEvent() {
+			return (E) gwtEvent;
 		}
 	}
 

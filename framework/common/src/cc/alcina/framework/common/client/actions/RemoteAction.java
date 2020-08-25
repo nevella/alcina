@@ -35,7 +35,5 @@ public class RemoteAction extends PermissibleAction implements Serializable {
 		return AccessLevel.ADMIN;
 	}
 
-	public String getDescription() {
-		return "";
-	}
+	
 }

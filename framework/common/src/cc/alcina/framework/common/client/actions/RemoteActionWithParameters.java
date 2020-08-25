@@ -22,7 +22,7 @@ import java.io.Serializable;
  *
  */
 public class RemoteActionWithParameters<T extends RemoteParameters>
-		extends RemoteAction implements Serializable {
+		extends RemoteAction{
 	private T parameters;
 
 	public RemoteActionWithParameters() {

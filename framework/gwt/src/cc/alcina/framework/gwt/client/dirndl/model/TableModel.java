@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
@@ -9,10 +10,14 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.dirndl.activity.DirectedMultipleBindableActivity;
+import cc.alcina.framework.common.client.util.HasDisplayName;
+import cc.alcina.framework.gwt.client.dirndl.activity.DirectedCategoriesActivity;
+import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntitySearchActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractModelTransform;
@@ -20,6 +25,8 @@ import cc.alcina.framework.gwt.client.dirndl.layout.NotRenderedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceCustomiser;
+import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
 public class TableModel extends Model {
 	protected TableHeader header = new TableHeader();
@@ -63,6 +70,7 @@ public class TableModel extends Model {
 
 	public static class TableColumn extends Model {
 		private Field field;
+
 		@Directed(renderer = NotRenderedNodeRenderer.class)
 		public Field getField() {
 			return this.field;
@@ -98,13 +106,14 @@ public class TableModel extends Model {
 		}
 	}
 
-	public static class TableModelBindableTransformer extends
-			AbstractModelTransform<DirectedMultipleBindableActivity<? extends EntityPlace, ? extends Bindable>, TableModel> {
+	public static class DirectedEntitySearchActivityTransformer extends
+			AbstractModelTransform<DirectedEntitySearchActivity<? extends EntityPlace, ? extends Bindable>, TableModel> {
 		@Override
 		public TableModel apply(
-				DirectedMultipleBindableActivity<? extends EntityPlace, ? extends Bindable> activity) {
+				DirectedEntitySearchActivity<? extends EntityPlace, ? extends Bindable> activity) {
 			TableModel model = new TableModel();
-			BoundWidgetTypeFactory factory = Registry.impl(TableTypeFactory.class);
+			BoundWidgetTypeFactory factory = Registry
+					.impl(TableTypeFactory.class);
 			if (activity.getSearchResults() == null) {
 				return model;
 			}
@@ -124,10 +133,64 @@ public class TableModel extends Model {
 			return model;
 		}
 	}
-	@RegistryLocation(registryPoint = TableTypeFactory.class,implementationType = ImplementationType.INSTANCE)
+
+	public static class DirectedCategoriesActivityTransformer extends
+			AbstractModelTransform<DirectedCategoriesActivity<?>, TableModel> {
+		@Override
+		public TableModel apply(DirectedCategoriesActivity<?> activity) {
+			TableModel model = new TableModel();
+			BoundWidgetTypeFactory factory = Registry
+					.impl(TableTypeFactory.class);
+			List<CategoryNamePlace> places = activity.getPlace()
+					.getNamedPlaces();
+			Class<? extends Bindable> resultClass = CategoryNamePlaceTableAdapter.class;
+			GwittirBridge.get()
+					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
+							Reflections.classLookup().getTemplateInstance(
+									resultClass),
+							factory, false, true)
+					.stream().map(TableColumn::new)
+					.forEach(model.header.columns::add);
+			places.stream().map(CategoryNamePlaceTableAdapter::new)
+					.map(bindable -> new TableRow(model, bindable))
+					.forEach(model.rows::add);
+			return model;
+		}
+
+		public static class CategoryNamePlaceTableAdapter extends Model
+				implements HasDisplayName {
+			private CategoryNamePlace place;
+
+			public CategoryNamePlaceTableAdapter() {
+			}
+
+			public CategoryNamePlaceTableAdapter(CategoryNamePlace place) {
+				this.place = place;
+			}
+
+			@Display(name = "Name", orderingHint = 10)
+			@Custom(customiserClass = ModelPlaceCustomiser.class)
+			public CategoryNamePlace getPlace() {
+				return place;
+			}
+
+			@Display(name = "Description", orderingHint = 20)
+			public String getDescription() {
+				return Objects.equals(place.provideAction().getDisplayName(),
+						place.provideAction().getDescription()) ? ""
+								: place.provideAction().getDescription();
+			}
+
+			@Override
+			public String displayName() {
+				return place.provideAction().getDisplayName();
+			}
+		}
+	}
+
+	@RegistryLocation(registryPoint = TableTypeFactory.class, implementationType = ImplementationType.INSTANCE)
 	@ClientInstantiable
-	public static class TableTypeFactory extends BoundWidgetTypeFactory{
-		
+	public static class TableTypeFactory extends BoundWidgetTypeFactory {
 	}
 
 	public static class TableRow extends Model {
