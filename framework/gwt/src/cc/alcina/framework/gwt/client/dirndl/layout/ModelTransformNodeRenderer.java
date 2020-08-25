@@ -25,10 +25,10 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 	@Override
 	public List<Widget> renderWithDefaults(Node node) {
 		List<Widget> result = new ArrayList<>();
-		if (node.getModel() == null) {
+		Object directedModel = getDirectedModel(node);
+		if (directedModel == null) {
 			return Collections.emptyList();
 		}
-		Object directedModel = getDirectedModel(node);
 		Node child = node.addChild(directedModel, null, node.propertyReflector);
 		result.addAll(child.render().widgets);
 		return result;
@@ -42,11 +42,11 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 
 	@Override
 	public Object getDirectedModel(Node node) {
-		if (node.model == null) {
-			return null;
-		}
 		ModelTransformNodeRendererArgs args = node
 				.annotation(ModelTransformNodeRendererArgs.class);
+		if (node.model == null && !args.transformsNull()) {
+			return null;
+		}
 		return Reflections.newInstance(args.value()).apply(node.model);
 	}
 
@@ -56,6 +56,7 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 	@Target({ ElementType.TYPE, ElementType.METHOD })
 	public @interface ModelTransformNodeRendererArgs {
 		Class<? extends ModelTransform> value();
+		boolean transformsNull() default false;
 	}
 
 	public interface ModelTransform<A, B extends Bindable>

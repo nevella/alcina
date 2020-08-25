@@ -147,6 +147,9 @@ public abstract class EntitySearchDefinition extends SearchDefinition {
 
 	public List<EntityPlace> provideFilterPlaces() {
 		List<EntityPlace> places = new ArrayList<>();
+		if(allCriteria().size()!=1) {
+			return places;
+		}
 		for (SearchCriterion sc : allCriteria()) {
 			if (sc instanceof TruncatedObjectCriterion) {
 				TruncatedObjectCriterion criterion = (TruncatedObjectCriterion) sc;

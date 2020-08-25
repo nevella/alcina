@@ -25,6 +25,7 @@ public class FlatSuggestorSearchable<TC extends TruncatedObjectCriterion>
 
 	@Override
 	public AbstractBoundWidget createEditor() {
+		
 		throw new UnsupportedOperationException();
 	}
 

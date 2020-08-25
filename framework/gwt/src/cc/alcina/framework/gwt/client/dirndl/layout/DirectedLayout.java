@@ -37,8 +37,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Handler;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -173,9 +175,16 @@ public class DirectedLayout {
 			String[] segments = path.split("/");
 			Node firstSegment = resolveNodeSegment(segments[0]);
 			if (segments.length == 1) {
-				Preconditions
-						.checkState(firstSegment.rendered.widgets.size() == 1);
-				return firstSegment;
+				Node cursor = firstSegment;
+				while (true) {
+					Preconditions
+							.checkState(cursor.rendered.widgets.size() == 1);
+					if (cursor.intermediate) {
+						cursor = cursor.children.get(0);
+					} else {
+						return cursor;
+					}
+				}
 			}
 			return firstSegment.resolveNodeSegment(
 					path.substring(segments[0].length() + 1));
@@ -303,7 +312,7 @@ public class DirectedLayout {
 			// even though this (the parent) handles changes,
 			// binding/unbinding on node removal is the responsibility of the
 			// child, so we add to the child's listeners list
-			if (!child.changeSource.isReadOnly()) {
+			if (!child.changeSource.isReadOnly() && model instanceof Bindable) {
 				// FIXME - dirndl.1 - don't add this to form/table cells
 				ChildReplacer listener = new ChildReplacer((Bindable) model,
 						child.changeSource.getPropertyName(), child);
@@ -467,14 +476,20 @@ public class DirectedLayout {
 						return;
 					}
 				}
-				if(child.propertyReflector==null && evt.getPropertyName()!=null) {
+				if (child.propertyReflector == null
+						&& evt.getPropertyName() != null) {
+					// the 'null name' listener and 'non-null' are listening at
+					// different layers of the model
+					//
+					// FIXME - dirndl.1 - elaborate this
 					return;
 				}
 				logger.info("removed listener :: {} :: {}  :: {}",
 						child.pathSegment(), child.hashCode(), this.hashCode());
 				Node newChild = addChild(
-						child.propertyReflector==null?evt.getNewValue():
-						child.propertyReflector.getPropertyValue(getModel()),
+						child.propertyReflector == null ? evt.getNewValue()
+								: child.propertyReflector
+										.getPropertyValue(getModel()),
 						child.propertyReflector, child.changeSource);
 				newChild.render();
 				List<Widget> oldChildWidgets = this.child.rendered.widgets;
@@ -508,11 +523,20 @@ public class DirectedLayout {
 				context.node = Node.this;
 				context.gwtEvent = event;
 				context.nodeEvent = eventBinding;
+				Class<? extends Handler> handlerClass = behaviour.handler();
+				Handler handler = null;
+				// allow context-sensitive handlers
+				if (context.node.renderer.getClass() == handlerClass) {
+					handler = (Handler) context.node.renderer;
+				} else if (context.node.model.getClass() == handlerClass) {
+					handler = (Handler) context.node.model;
+				} else {
+					handler = Reflections.newInstance(handlerClass);
+				}
 				logger.trace("Firing behaviour {} on {} to {}",
 						eventBinding.getClass().getSimpleName(),
-						Node.this.pathSegment(),
-						behaviour.handler().getSimpleName());
-				Reflections.newInstance(behaviour.handler()).onEvent(context);
+						Node.this.pathSegment(), handlerClass.getSimpleName());
+				handler.onEvent(context);
 			}
 
 			private void bindEvent(boolean bind) {
@@ -521,6 +545,10 @@ public class DirectedLayout {
 						eventBinding = Reflections
 								.newInstance(behaviour.event());
 						eventBinding.setReceiver(this);
+					}
+					if (behaviour.eventSourcePath()
+							.contains("criteriaSelector")) {
+						int debug = 3;
 					}
 					Widget widgetToBind = resolveWidget(
 							behaviour.eventSourcePath());

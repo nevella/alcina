@@ -7,7 +7,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
-@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = SafeHtml.class)
 public class SafeHtmlNodeRenderer extends LeafNodeRenderer {
 	@Override
 	protected String getTag(Node node) {
