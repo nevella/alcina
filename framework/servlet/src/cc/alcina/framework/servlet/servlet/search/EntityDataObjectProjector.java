@@ -84,9 +84,12 @@ public class EntityDataObjectProjector {
 				// passthrough
 			} else if (original instanceof VersionableEntity) {
 				if (multiple) {
-					if (context.depth() > 2) {
-						return null;
-					}
+					// FIXME - dirndl.2 - we can't (because of graphiness) guarantee
+					// objects that exist at depth==2 are encountered first at
+					// depth ==2
+					// if (context.depth() > 2) {
+					// return null;
+					// }
 				} else {
 					EntitySingleDataObjectDecorator singleDataObjectDecorator = Registry
 							.implOrNull(EntitySingleDataObjectDecorator.class,
@@ -144,7 +147,7 @@ public class EntityDataObjectProjector {
 				&& context.sourceOwner instanceof VersionableEntity) {
 			if (SEUtilities
 					.getPropertyDescriptorByName(
-							((Entity)context.sourceOwner).entityClass(),
+							((Entity) context.sourceOwner).entityClass(),
 							context.fieldName)
 					.getReadMethod().getAnnotation(ManyToMany.class) != null) {
 			} else {

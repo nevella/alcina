@@ -53,7 +53,7 @@ public class FormValidation {
 					null);
 			if (!bindingValid) {
 				for (Validator v : validators) {
-					if (v instanceof ServerValidator) {
+					if (v instanceof ServerValidator && "fixme".isEmpty()) {
 						ServerValidator sv = (ServerValidator) v;
 						if (sv.isValidating()) {
 							final CancellableRemoteDialog crd = new NonCancellableRemoteDialog(
