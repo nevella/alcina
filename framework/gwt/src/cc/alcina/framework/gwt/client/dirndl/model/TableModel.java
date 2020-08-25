@@ -176,14 +176,14 @@ public class TableModel extends Model {
 
 			@Display(name = "Description", orderingHint = 20)
 			public String getDescription() {
-				return Objects.equals(place.provideAction().getDisplayName(),
-						place.provideAction().getDescription()) ? ""
-								: place.provideAction().getDescription();
+				return Objects.equals(place.ensureAction().getDisplayName(),
+						place.ensureAction().getDescription()) ? ""
+								: place.ensureAction().getDescription();
 			}
 
 			@Override
 			public String displayName() {
-				return place.provideAction().getDisplayName();
+				return place.ensureAction().getDisplayName();
 			}
 		}
 	}

@@ -111,7 +111,7 @@ public class FormModel extends Model {
 				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) ClientFactory
 						.currentPlace();
 				DefaultPermissibleActionHandler.handleAction(null,
-						categoryNamePlace.provideAction(), node);
+						categoryNamePlace.ensureAction(), node);
 			}
 		};
 		new FormValidation().validate(onValid, getState().formBinding);
