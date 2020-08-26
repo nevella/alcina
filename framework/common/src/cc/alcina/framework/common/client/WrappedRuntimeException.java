@@ -78,6 +78,16 @@ public class WrappedRuntimeException extends RuntimeException {
 		this.suggestedAction = suggestedAction;
 	}
 
+	public Throwable containsOfClass(Class throwableClass) {
+		Throwable cause = getCause();
+		if (throwableClass.isInstance(cause)) {
+			return cause;
+		} else if (cause instanceof WrappedRuntimeException) {
+			return ((WrappedRuntimeException) cause).containsOfClass(throwableClass);
+		}
+		return null;
+	}
+
 	public enum SuggestedAction {
 		CANCEL_STARTUP, NOTIFY_WARNING, NOTIFY_ERROR, EXPECTED_EXCEPTION,
 		NOTIFY_AND_SHUTDOWN, HANDLE_INTERRUPTED_ACTION_SILENT,
