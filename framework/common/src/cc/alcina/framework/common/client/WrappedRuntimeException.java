@@ -80,7 +80,7 @@ public class WrappedRuntimeException extends RuntimeException {
 
 	public Throwable containsOfClass(Class throwableClass) {
 		Throwable cause = getCause();
-		if (throwableClass.isInstance(cause)) {
+		if (throwableClass.isInstance((Object) cause)) {
 			return cause;
 		} else if (cause instanceof WrappedRuntimeException) {
 			return ((WrappedRuntimeException) cause).containsOfClass(throwableClass);
