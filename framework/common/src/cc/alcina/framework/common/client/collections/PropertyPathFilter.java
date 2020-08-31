@@ -42,6 +42,7 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 		}
 		Object propertyValue = accessor.getChainedProperty(o);
 		if (targetIsCollection && filterOperator == FilterOperator.EQ) {
+			// FIXME - mvcc.4 - throw an exception (operator should be IN))
 			return ((Collection) targetValue).contains(o);
 		}
 		if (propertyValue instanceof Collection) {
