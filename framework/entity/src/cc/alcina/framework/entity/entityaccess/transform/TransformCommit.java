@@ -380,7 +380,8 @@ public class TransformCommit {
 		}
 		int cleared = TransformManager.get().removeCreateDeleteTransforms();
 		if (cleared != 0) {
-			get().logger.info("Cleared {} created/deleted transforms", cleared);
+			get().logger.trace("Cleared {} created/deleted transforms",
+					cleared);
 		}
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
