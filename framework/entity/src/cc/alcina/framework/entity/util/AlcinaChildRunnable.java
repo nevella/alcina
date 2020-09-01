@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -59,6 +61,12 @@ public abstract class AlcinaChildRunnable implements Runnable {
 	public static void runInTransaction(String threadName,
 			ThrowingRunnable runnable, boolean asRoot,
 			boolean throwExceptions) {
+		runInTransaction(threadName, runnable, asRoot, throwExceptions, false);
+	}
+
+	public static void runInTransaction(String threadName,
+			ThrowingRunnable runnable, boolean asRoot,
+			boolean throwExceptions, boolean inNewThread) {
 		AlcinaChildRunnable wrappingRunnable = new AlcinaChildRunnable(
 				threadName) {
 			@Override
@@ -72,19 +80,30 @@ public abstract class AlcinaChildRunnable implements Runnable {
 				}
 			}
 		};
-		try {
-			wrappingRunnable.run();
-		} catch (RuntimeException e) {
-			if (throwExceptions) {
-				throw e;
-			} else {
-				e.printStackTrace();
+		if (inNewThread) {
+			Preconditions.checkArgument(!throwExceptions,
+				"Can't throw exceptions in a new thread");
+			wrappingRunnable.startInNewThread();
+		} else {
+			try {
+				wrappingRunnable.run();
+			} catch (RuntimeException e) {
+				if (throwExceptions) {
+					throw e;
+				} else {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
 
 	public static void runInTransaction(ThrowingRunnable runnable) {
 		runInTransaction(null, runnable);
+	}
+
+	public static void runInTransactionNewThread(String threadName,
+			ThrowingRunnable runnable) {
+		runInTransaction(threadName, runnable, false, false, false);
 	}
 
 	public static <T> Consumer<T>
