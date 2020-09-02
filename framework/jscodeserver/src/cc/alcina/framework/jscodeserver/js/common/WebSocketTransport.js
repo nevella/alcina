@@ -13,8 +13,10 @@ class WebSocketTransport {
    * bytes - given comms are byte->int, effectively divide by 4. Make *big*
    * (5*10^6) bcoz this can occasionally be huge, and failing here hurts
    * debugging more than helps
+   * 
+   * ...bump - sometimes need 20 million int buffer - make it 40*10^6
    */
-    static BUFFER_SIZE = 50000000; 
+    static BUFFER_SIZE = 40*1000*1000; 
     /*
      * we may pause in the java codeserver debugger, so make timeout biiiig (5
      * minutes)
@@ -118,7 +120,7 @@ class WebSocketTransportBuffer {
         Atomics.store(this.int32, 1, data.length);
         try{
           if(data.length>1000000){
-           console.log("dev.ws: large message: `data.length` bytes"); 
+           console.log(`dev.ws: large message: ${data.length} bytes`); 
           }
           this.int32.set(data, 2);
         }catch(e){
