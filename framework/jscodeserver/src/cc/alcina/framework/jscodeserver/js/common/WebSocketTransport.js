@@ -14,9 +14,9 @@ class WebSocketTransport {
    * (5*10^6) bcoz this can occasionally be huge, and failing here hurts
    * debugging more than helps
    * 
-   * ...bump - sometimes need 20 million int buffer - make it 40*10^6
+   * ...bump - sometimes need 40 million int buffer - so it 160*10^6
    */
-    static BUFFER_SIZE = 40*1000*1000; 
+    static BUFFER_SIZE = 160*1000*1000; 
     /*
      * we may pause in the java codeserver debugger, so make timeout biiiig (5
      * minutes)
