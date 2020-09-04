@@ -810,7 +810,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	 *
 	 */
 	public <T extends Entity> T registerDomainObject(T entity) {
-		if (Ax.isTest()) {
+		if (Ax.isTest()
+				&& DomainStore.writableStore().isCached(entity.entityClass())) {
 			DomainStore.writableStore().getCache().put(entity);
 		}
 		listenTo(entity);

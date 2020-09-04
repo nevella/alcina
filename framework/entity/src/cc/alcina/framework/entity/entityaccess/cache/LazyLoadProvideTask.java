@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multiset;
@@ -224,8 +225,11 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 
 	protected Stream<T> wrapAll(Stream<T> stream) {
 		List<T> list = stream.collect(Collectors.toList());
-		Preconditions.checkArgument(list.size() < 100000,
-				"Max length of lazyload task is 100000");
+		if (list.size() > 100000) {
+			Ax.err("Lazy load size: %s", list.size());
+		}
+		// Preconditions.checkArgument(list.size() < 100000,
+		// "Max length of lazyload task is 100000");
 		try {
 			lazyLoad(list);
 			return list.stream();

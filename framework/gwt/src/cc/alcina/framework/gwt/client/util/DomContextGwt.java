@@ -48,10 +48,7 @@ public class DomContextGwt extends DomContext {
 	@Override
 	protected boolean isVisibleAncestorChain0(org.w3c.dom.Element w3cElem) {
 		Element elem = (Element) w3cElem;
-		if (!WidgetUtils.isVisibleAncestorChain(elem)) {
-			return false;
-		}
-		return false;
+		return WidgetUtils.isVisibleAncestorChain(elem);
 	}
 
 	@Override
