@@ -41,7 +41,16 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 	/**
 	 * {@link AsyncCallback} to notify or success or failure.
 	 */
-	private final AsyncCallback<T> callback;
+	private  AsyncCallback<T> callback;
+	
+	public AsyncCallback<T> getCallback() {
+		return this.callback;
+	}
+
+	public void setCallback(AsyncCallback<T> callback) {
+		this.callback = callback;
+	}
+
 
 	/**
 	 * Used for stats recording.

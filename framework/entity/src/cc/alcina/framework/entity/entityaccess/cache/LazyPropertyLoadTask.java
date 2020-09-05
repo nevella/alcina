@@ -15,6 +15,9 @@ import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
 public class LazyPropertyLoadTask<T extends Entity>
 		extends LazyLoadProvideTask<T> {
+	private static final String CONTEXT_IN_LAZY_PROPERTY_LOAD = LazyLoadProvideTask.class
+			.getName() + ".CONTEXT_IN_LAZY_PROPERTY_LOAD";
+
 	public LazyPropertyLoadTask(Class<T> clazz, DomainStore domainStore) {
 		super(5 * TimeConstants.ONE_SECOND_MS, 10, clazz);
 		registerStore(domainStore);
@@ -49,11 +52,16 @@ public class LazyPropertyLoadTask<T extends Entity>
 
 	@Override
 	protected void lazyLoad(Collection objects) {
+		if(LooseContext.is(CONTEXT_IN_LAZY_PROPERTY_LOAD)){
+			return;
+		}
 		try {
 			LooseContext.pushWithTrue(
 					DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
 			LooseContext
 					.setTrue(DomainStore.CONTEXT_POPULATE_LAZY_PROPERTY_VALUES);
+			LooseContext
+					.setTrue(CONTEXT_IN_LAZY_PROPERTY_LOAD);
 			String sqlFilter = String.format(" id in %s",
 					EntityPersistenceHelper.toInClause(objects));
 			ClassIdLock lock = LockUtils.obtainClassIdLock(clazz, 0);

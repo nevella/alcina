@@ -27,7 +27,12 @@ public class MethodContext {
 
 	private boolean wrappingTransaction;
 
+	private ClassLoader contextClassLoader;
+	
+	private ClassLoader entryClassLoader;
+
 	public <T> T call(Callable<T> callable) {
+		entryClassLoader = Thread.currentThread().getContextClassLoader();
 		try {
 			if (wrappingTransaction) {
 				Transaction.begin();
@@ -45,11 +50,15 @@ public class MethodContext {
 				ThreadedPermissionsManager.cast()
 						.pushSystemOrCurrentUserAsRoot();
 			}
+			if(contextClassLoader!=null){
+				Thread.currentThread().setContextClassLoader(contextClassLoader);
+			}	
 			return callable.call();
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		} finally {
+			Thread.currentThread().setContextClassLoader(entryClassLoader);
 			if (rootPermissions
 					&& !ThreadedPermissionsManager.cast().isRoot()) {
 				ThreadedPermissionsManager.cast().popUser();
@@ -96,5 +105,10 @@ public class MethodContext {
 	public MethodContext withWrappingTransaction() {
 		this.wrappingTransaction = true;
 		return this;
+	}
+
+	public MethodContext withContextClassloader(ClassLoader contextClassLoader) {
+		this.contextClassLoader = contextClassLoader;
+		return this;		
 	}
 }

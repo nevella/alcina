@@ -24,8 +24,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AuthenticationPersistence;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
-import cc.alcina.framework.servlet.ServletLayerUtils;
-import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
+import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
 import cc.alcina.framework.servlet.servlet.HttpContext;
 
 /**
@@ -62,7 +61,7 @@ public class AuthenticationManager {
 
 		String userName;
 
-		HttpContext httpContext;
+		AuthenticationTokenStore tokenStore;
 
 		private Authenticator<?> localAuthenticator = Registry
 				.impl(Authenticator.class);
@@ -85,22 +84,21 @@ public class AuthenticationManager {
 	}
 
 	private void createClientInstance(AuthenticationContext context) {
-		String userAgent = CommonRemoteServiceServlet
-				.getUserAgent(context.httpContext.request);
+		String userAgent = context.tokenStore.getUserAgent();
 		context.clientInstance = persistence.createClientInstance(
-				context.session, userAgent, ServletLayerUtils
-						.robustGetRemoteAddress(context.httpContext.request));
+				context.session, userAgent,
+				context.tokenStore.getRemoteAddress(),context.tokenStore.getReferrer(),context.tokenStore.getUrl());
 	}
 
 	private void ensureIid(AuthenticationContext context) {
-		String instanceId = context.httpContext.getCookieValue(COOKIE_NAME_IID);
+		String instanceId = context.tokenStore.getCookieValue(COOKIE_NAME_IID);
 		instanceId = validateClientUid(instanceId);
 		if (Ax.notBlank(instanceId)) {
 			context.iid = persistence.getIid(instanceId);
 		}
 		if (context.iid == null) {
 			instanceId = SEUtilities.generateId();
-			context.httpContext.setCookieValue(COOKIE_NAME_IID, instanceId);
+			context.tokenStore.setCookieValue(COOKIE_NAME_IID, instanceId);
 			context.iid = persistence.createIid(instanceId);
 		}
 	}
@@ -127,8 +125,8 @@ public class AuthenticationManager {
 		AuthenticationSession session = persistence.createAuthenticationSession(
 				context.iid, startDate, sessionId, user, authenticationType);
 		context.session = session;
-		context.httpContext.setCookieValue(COOKIE_NAME_SESSIONID, sessionId);
-		logger.warn("Created session :: cookie: {} user: {} type: {}",
+		context.tokenStore.setCookieValue(COOKIE_NAME_SESSIONID, sessionId);
+		logger.info("Created session :: cookie: {} user: {} type: {}",
 				sessionId, user, authenticationType);
 		if (createClientInstance) {
 			createClientInstance(context);
@@ -136,14 +134,14 @@ public class AuthenticationManager {
 		return session;
 	}
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
-	public void initialiseContext(HttpContext httpContext) {
+	public void initialiseContext(AuthenticationTokenStore tokenStore) {
 		AuthenticationContext context = ensureContext();
 		IUser anonymousUser = UserlandProvider.get().getAnonymousUser();
 		PermissionsManager.get().setUser(anonymousUser);
 		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
-		context.httpContext = httpContext;
+		context.tokenStore = tokenStore;
 		ensureIid(context);
 		ensureAuthenticationSession(context);
 		setupClientInstanceFromHeaders(context);
@@ -160,19 +158,19 @@ public class AuthenticationManager {
 	}
 
 	private void ensureAuthenticationSession(AuthenticationContext context) {
-		String sessionId = context.httpContext
+		String sessionId = context.tokenStore
 				.getCookieValue(COOKIE_NAME_SESSIONID);
 		sessionId = validateClientUid(sessionId);
-		logger.warn("Ensure session: id {}", sessionId);
+		logger.trace("Ensure session: id {}", sessionId);
 		if (Ax.notBlank(sessionId)) {
 			context.session = persistence.getAuthenticationSession(sessionId);
 		}
 		if (context.session != null) {
 			Registry.impl(AuthenticationExpiration.class)
 					.checkExpiration(context.session);
-			logger.warn("Check expiration :: session {}", context.session);
+			logger.trace("Check expiration :: session {}", context.session);
 			if (context.session.provideIsExpired()) {
-				logger.warn("Session expired :: session {}", context.session);
+				logger.info("Session expired :: session {}", context.session);
 				context.session = null;
 			}
 		}
@@ -189,7 +187,7 @@ public class AuthenticationManager {
 
 	private void setupClientInstanceFromHeaders(AuthenticationContext context) {
 		try {
-			String headerId = context.httpContext.request.getHeader(
+			String headerId = context.tokenStore.getHeaderValue(
 					AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY);
 			headerId = validateClientUid(headerId);
 			if (Ax.matches(headerId, "\\d+")) {
@@ -199,7 +197,7 @@ public class AuthenticationManager {
 					if (instance.getAuthenticationSession() == null) {
 						persistence.putSession(instance, context.session);
 					}
-					String headerAuth = context.httpContext.request.getHeader(
+					String headerAuth = context.tokenStore.getHeaderValue(
 							AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY);
 					if (Ax.matches(headerAuth, "\\d+")) {
 						if (instance.getAuth().intValue() == Integer
@@ -208,7 +206,7 @@ public class AuthenticationManager {
 									.provideIsExpired()) {
 								context.clientInstance = instance;
 							} else {
-								context.httpContext.response.addHeader(
+								context.tokenStore.addHeader(
 										AlcinaRpcRequestBuilder.RESPONSE_HEADER_CLIENT_INSTANCE_EXPIRED,
 										"true");
 							}
@@ -229,5 +227,14 @@ public class AuthenticationManager {
 	public static Long provideAuthenticatedClientInstanceId() {
 		return get().getContextClientInstance().map(ClientInstance::getId)
 				.orElse(null);
+	}
+
+	public ClientInstance createNonHttpClientInstance(String format,
+			IUser user) {
+		return null;
+	}
+
+	public Long getContextClientInstanceId() {
+		return getContextClientInstance().map(ClientInstance::getId).orElse(null);
 	}
 }

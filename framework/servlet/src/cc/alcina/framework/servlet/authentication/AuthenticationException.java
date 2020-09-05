@@ -17,7 +17,7 @@ package cc.alcina.framework.servlet.authentication;
  *
  * @author Nick Reddel
  */
-public class AuthenticationException extends Exception {
+public class AuthenticationException extends RuntimeException {
 	public AuthenticationException(Exception e) {
 		super(e);
 	}

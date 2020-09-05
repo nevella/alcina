@@ -35,51 +35,36 @@ public class CookieUtils {
 		throw new UnsupportedOperationException();
 	}
 
-	private static List<Cookie> getAddedCookies(HttpServletRequest req) {
-		List<Cookie> addedCookies = (List<Cookie>) req
+	private static List<Cookie> getAddedCookies(HttpServletRequest request) {
+		List<Cookie> addedCookies = (List<Cookie>) request
 				.getAttribute(ADDED_COOKIES_ATTR);
 		if (addedCookies == null) {
 			addedCookies = new ArrayList<Cookie>();
-			req.setAttribute(ADDED_COOKIES_ATTR, addedCookies);
+			request.setAttribute(ADDED_COOKIES_ATTR, addedCookies);
 		}
 		return addedCookies;
 	}
 
-	public static String getCookieValueByName(HttpServletRequest req,
-			String n) {
+	public static String getCookieValueByName(HttpServletRequest request,
+			String name) {
 		// Try added cookies first
-		List<Cookie> addedCookies = getAddedCookies(req);
+		List<Cookie> addedCookies = getAddedCookies(request);
 		for (Cookie cookie : addedCookies) {
-			if (cookie.getName().equals(n)) {
+			if (cookie.getName().equals(name)) {
 				return cookie.getValue();
 			}
 		}
 		// Then try original cookies
-		Cookie[] cookies = req.getCookies();
+		Cookie[] cookies = request.getCookies();
 		if (cookies == null) {
 			return null;
 		}
 		for (Cookie cookie : cookies) {
-			if (cookie.getName().equals(n)) {
+			if (cookie.getName().equals(name)) {
 				return cookie.getValue();
 			}
 		}
 		return null;
-	}
-
-	public String getIid(HttpServletRequest request,
-			HttpServletResponse response) {
-		throw new UnsupportedOperationException();
-	}
-
-	public String getRememberedUserName(HttpServletRequest request,
-			HttpServletResponse response) {
-		throw new UnsupportedOperationException();
-	}
-
-	public void setRememberMeCookie(HttpServletRequest request,
-			HttpServletResponse response, boolean rememberMe) {
-		throw new UnsupportedOperationException();
 	}
 
 	public static void addToRequestAndResponse(HttpServletRequest request,

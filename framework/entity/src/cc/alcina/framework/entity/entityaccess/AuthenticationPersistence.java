@@ -51,7 +51,7 @@ public class AuthenticationPersistence {
 	}
 
 	public ClientInstance createClientInstance(AuthenticationSession session,
-			String userAgent, String remoteAddress) {
+			String userAgent, String remoteAddress, String referrer, String url) {
 		Class<? extends ClientInstance> clazz = AlcinaPersistentEntityImpl
 				.getImplementation(ClientInstance.class);
 		ClientInstance clientInstance = Domain.create(clazz);
@@ -60,6 +60,8 @@ public class AuthenticationPersistence {
 		clientInstance.setUserAgent(userAgent);
 		clientInstance.setAuth(Math.abs(new Random().nextInt()));
 		clientInstance.setIpAddress(remoteAddress);
+		clientInstance.setReferrer(referrer);
+		clientInstance.setUrl(url);
 		clientInstance
 				.setBotUserAgent(EntityLayerUtils.isBotUserAgent(userAgent));
 		return clientInstance;

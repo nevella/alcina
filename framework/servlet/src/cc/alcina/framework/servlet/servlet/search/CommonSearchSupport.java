@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.servlet.search;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -115,12 +116,11 @@ public class CommonSearchSupport {
 
 		public Class<? extends Bindable>
 				getProjectedClass(ModelSearchResults modelSearchResults) {
-			return ((EntitySearchDefinition) modelSearchResults.def)
-					.resultClass();
+			return modelSearchResults.resultClass();
 		}
 	}
 
-	public ModelSearchResults searchModel(EntitySearchDefinition def) {
+	public ModelSearchResults searchModel(EntitySearchDefinition def,Function<SearchContext,ModelSearchResults> customSearchHandler) {
 		if (def.getGroupingParameters() != null) {
 			def.setResultsPerPage(99999999);
 		}
@@ -139,6 +139,12 @@ public class CommonSearchSupport {
 			Optional<SearchOrders> idOrder = def.provideIdSearchOrder();
 			if (idOrder.isPresent()) {
 				searchContext.orders = idOrder.get();
+			}
+			if(customSearchHandler!=null) {
+				ModelSearchResults customResults = customSearchHandler.apply(searchContext);
+				if(customResults!=null) {
+					return customResults;
+				}
 			}
 			Stream<VersionableEntity> search = new DomainSearcher().search(def,
 					clazz, searchContext.orders);

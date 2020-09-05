@@ -38,10 +38,10 @@ public class Bindable extends BaseSourcesPropertyChangeEvents
 	@Bean(displayNamePropertyName = "id", actions = @ObjectActions({
 			@Action(actionClass = ViewAction.class) }))
 	@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT), delete = @Permission(access = AccessLevel.ROOT))
-	public static class BaseBindableAdapter extends Bindable {
+	public static class BindableAdapter extends Bindable {
 	}
 
-	public static class BaseBindableWithContext<T> extends Bindable
+	public static class BindableWithContext<T> extends Bindable
 			implements HasContext<T> {
 		private transient T _context;
 
@@ -57,14 +57,14 @@ public class Bindable extends BaseSourcesPropertyChangeEvents
 	}
 
 	@Bean
-	public static class BaseBindableWrapper<T> extends Bindable
+	public static class BindableWrapper<T> extends Bindable
 			implements ObjectWrapper<T> {
 		protected T wrapee;
 
-		public BaseBindableWrapper() {
+		public BindableWrapper() {
 		}
 
-		public BaseBindableWrapper(T wrapee) {
+		public BindableWrapper(T wrapee) {
 			this.wrapee = wrapee;
 		}
 

@@ -21,8 +21,14 @@ public class ThreadHistoryElement {
 
 	public int elidedStacktraceFrameCount;
 
-	public void elideIfMoreLinesThan(int max) {
-		elidedStacktraceFrameCount = CommonUtils
-				.elideList(threadInfo.stackTrace, max);
+	public void elideIfMoreLinesThan(int maxFrames) {
+		int size = threadInfo.stackTrace.size();
+		if(size>maxFrames){
+			if(size>10000){
+				int debug=3;
+			}
+			threadInfo.stackTrace = threadInfo.stackTrace.subList(0, maxFrames);
+			this.elidedStacktraceFrameCount += size-maxFrames;
+		}
 	}
 }

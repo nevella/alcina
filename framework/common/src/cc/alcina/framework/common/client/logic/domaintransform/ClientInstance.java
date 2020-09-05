@@ -126,19 +126,31 @@ public abstract class ClientInstance extends Entity<ClientInstance> {
 	}
 
 	public void setAuth(Integer auth) {
+		Integer old_auth = this.auth;
 		this.auth = auth;
+		propertyChangeSupport().firePropertyChange("auth", old_auth, auth);
+		
 	}
 
 	public void setBotUserAgent(Boolean botUserAgent) {
+		Boolean old_botUserAgent = this.botUserAgent;
 		this.botUserAgent = botUserAgent;
+		propertyChangeSupport().firePropertyChange("botUserAgent", old_botUserAgent, botUserAgent);
+		
 	}
 
 	public void setExpired(Boolean expired) {
+		Boolean old_expired = this.expired;
 		this.expired = expired;
+		propertyChangeSupport().firePropertyChange("expired", old_expired, expired);
+		
 	}
 
 	public void setHelloDate(Date helloDate) {
+		Date old_helloDate = this.helloDate;
 		this.helloDate = helloDate;
+		propertyChangeSupport().firePropertyChange("helloDate", old_helloDate, helloDate);
+		
 	}
 
 	@Override
@@ -147,30 +159,48 @@ public abstract class ClientInstance extends Entity<ClientInstance> {
 	}
 
 	public void setIid(String iid) {
+		String old_iid = this.iid;
 		this.iid = iid;
+		propertyChangeSupport().firePropertyChange("iid", old_iid, iid);
+		
 	}
 
 	public void setIpAddress(String ipAddress) {
+		String old_ipAddress = this.ipAddress;
 		this.ipAddress = ipAddress;
+		propertyChangeSupport().firePropertyChange("ipAddress", old_ipAddress, ipAddress);
+		
 	}
 
 	public void setLastAccessed(Date lastAccessed) {
+		Date old_lastAccessed = this.lastAccessed;
 		this.lastAccessed = lastAccessed;
+		propertyChangeSupport().firePropertyChange("lastAccessed", old_lastAccessed, lastAccessed);
+		
 	}
 
 	public void setReferrer(String referrer) {
+		String old_referrer = this.referrer;
 		this.referrer = referrer;
+		propertyChangeSupport().firePropertyChange("referrer", old_referrer, referrer);
+		
 	}
 
 	public void setUrl(String url) {
+		String old_url = this.url;
 		this.url = url;
+		propertyChangeSupport().firePropertyChange("url", old_url, url);
+		
 	}
 
 	public void setUserAgent(String userAgent) {
 		if (userAgent != null && userAgent.length() > 200) {
 			userAgent = userAgent.substring(0, 200);
 		}
+		String old_userAgent = this.userAgent;
 		this.userAgent = userAgent;
+		propertyChangeSupport().firePropertyChange("userAgent", old_userAgent, userAgent);
+		
 	}
 
 	public IUser provideUser() {

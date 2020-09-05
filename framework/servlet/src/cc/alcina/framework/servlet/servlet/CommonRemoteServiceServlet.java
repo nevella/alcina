@@ -103,7 +103,6 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.actions.RequiresHttpSession;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
@@ -955,10 +954,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			RemoteActionPerformer performer = (RemoteActionPerformer) Registry
 					.get().instantiateSingle(RemoteActionPerformer.class,
 							action.getClass());
-			if (performer instanceof RequiresHttpSession) {
-				RequiresHttpSession rhs = (RequiresHttpSession) performer;
-				rhs.setHttpSession(getSession());
-			}
 			boolean nonPersistent = LooseContext
 					.is(JobRegistry.CONTEXT_NON_PERSISTENT) || Ax.isTest();
 			TransformManager transformManager = TransformManager.get();

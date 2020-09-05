@@ -39,6 +39,10 @@ public abstract class Authenticator<U extends Entity & IUser> {
 	public Authenticator() {
 		super();
 	}
+	
+	public static Authenticator get(){
+		return Registry.impl(Authenticator.class);
+	}
 
 	public LoginResponse authenticate(LoginBean loginBean)
 			throws AuthenticationException {
@@ -84,7 +88,7 @@ public abstract class Authenticator<U extends Entity & IUser> {
 	}
 
 	public void setPassword(U user, String password) {
-		if (user.getSalt() == null) {
+		if (Ax.isBlank(user.getSalt() )) {
 			user.setSalt(user.getUserName());
 		}
 		user.setPassword(PasswordEncryptionSupport.get()
@@ -179,7 +183,7 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		return loginModel.user != null;
 	}
 
-	void authenticate(LoginBean loginBean, LoginModel loginModel)
+	public void authenticate(LoginBean loginBean, LoginModel loginModel)
 			throws AuthenticationException {
 		if (!validateUsername(loginModel)) {
 			return;

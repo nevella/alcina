@@ -64,8 +64,8 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 	}
 
 	public void evictDependents(EvictionToken evictionToken,
-			Collection<? extends Entity> hilis) {
-		hilis.stream().forEach(
+			Collection<? extends Entity> entities) {
+		entities.stream().forEach(
 				hili -> this.evict(evictionToken, hili.getId(), false));
 	}
 

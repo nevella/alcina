@@ -163,7 +163,7 @@ public class ActionProgress extends Composite
 							}
 						}
 						setJobInfo(info);
-						fireNullPropertyChange("Updated");
+						fireUnspecifiedPropertyChange("Updated");
 					}
 				};
 				if (!checking) {
@@ -191,7 +191,7 @@ public class ActionProgress extends Composite
 		}
 	}
 
-	public void fireNullPropertyChange(String name) {
+	public void fireUnspecifiedPropertyChange(String name) {
 		this.propertyChangeSupport.fireUnspecifiedPropertyChange(name);
 	}
 

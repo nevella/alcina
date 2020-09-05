@@ -37,7 +37,11 @@ public class ThreadHistory {
 		element.threadInfo.stackTrace = Arrays.asList(stackTrace).stream()
 				.collect(Collectors.toList());
 		element.elideIfMoreLinesThan(maxStackLines);
-		this.elidedElementCount += CommonUtils.elideList(elements, maxFrames);
+		int size=elements.size();
+		if(size>maxFrames){
+			elements = elements.subList(0, maxFrames);
+			this.elidedElementCount += size-maxFrames;
+		}
 		elementCount = elements.size();
 	}
 
