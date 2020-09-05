@@ -178,7 +178,13 @@ public class AuthenticationManager {
 			createAuthenticationSession(new Date(),
 					UserlandProvider.get().getAnonymousUser(), "anonymous",
 					false);
+		}else{
+			//FIXME - mvcc.5 - drop
+			if(context.session.getIid().getRememberMeUser_id()!=null){
+				persistence.populateSessionUserFromRememberMeUser(context.session);
+			}
 		}
+		
 	}
 
 	private String validateClientUid(String uid) {

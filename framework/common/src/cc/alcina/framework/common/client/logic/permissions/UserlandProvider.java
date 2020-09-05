@@ -33,4 +33,11 @@ public class UserlandProvider {
 								.getImplementation(IUser.class),
 						"userName", name);
 	}
+	public <U extends Entity & IUser> U getUserById(Long id) {
+		return (U) Domain
+				.find(
+						(Class<U>) AlcinaPersistentEntityImpl
+								.getImplementation(IUser.class),id);
+	}
+
 }

@@ -21,7 +21,7 @@ import java.util.Set;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.util.Ax;
@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.util.Ax;
 @DomainTransformPersistable
 @MappedSuperclass
 public abstract class AuthenticationSession
-		extends Entity<AuthenticationSession> implements HasIUser {
+		extends VersionableEntity<AuthenticationSession> implements HasIUser {
 	private Date startTime;
 
 	private Date endTime;

@@ -21,7 +21,7 @@ import javax.persistence.Transient;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 
-import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 
@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
  * @author nick@alcina.cc
  * 
  */
-public abstract class ClientInstance extends Entity<ClientInstance> {
+public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 	private Date helloDate;
 
 	private Integer auth;

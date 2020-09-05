@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.Iid;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -207,5 +208,12 @@ public class AuthenticationPersistence {
 			int clientInstanceAuth) {
 		return Optional.ofNullable(getClientInstance(clientInstanceId))
 				.map(ci -> ci.getAuth() == clientInstanceAuth).orElse(false);
+	}
+
+	public void populateSessionUserFromRememberMeUser(AuthenticationSession session) {
+		Iid iid = session.getIid();
+		session.setUser(UserlandProvider.get().getUserById(iid.getRememberMeUser_id()));
+		iid.setRememberMeUser_id(null);
+		Transaction.commit();
 	}
 }
