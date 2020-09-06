@@ -1662,13 +1662,16 @@ public class DomainStore implements IDomainStore {
 			// note that reloaded will be discarded because we're not in a
 			// to-domain
 			// tx
-			SEUtilities.getFieldByName(wrapped.entityClass(), "object")
-					.set(wrapped, null);
-			SEUtilities.getFieldByName(wrapped.entityClass(), "serializedXml")
-					.set(wrapped,
-							((WrappedObject) reloaded).getSerializedXml());
-			cache.remove(reloaded);
-			cache.put(wrapped);
+			if (reloaded != null) {
+				SEUtilities.getFieldByName(wrapped.entityClass(), "object")
+						.set(wrapped, null);
+				SEUtilities
+						.getFieldByName(wrapped.entityClass(), "serializedXml")
+						.set(wrapped,
+								((WrappedObject) reloaded).getSerializedXml());
+				cache.remove(reloaded);
+				cache.put(wrapped);
+			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
