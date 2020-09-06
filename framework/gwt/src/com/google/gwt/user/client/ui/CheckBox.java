@@ -69,7 +69,7 @@ import com.google.gwt.user.client.Event;
 public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 		HasWordWrap, HasDirectionalSafeHtml, HasDirectionEstimator,
 		IsEditor<LeafValueEditor<Boolean>> {
-	public static boolean withLabelDecoration = false;
+	public static boolean withLabelDecoration = true;
 
 	public static final DirectionEstimator DEFAULT_DIRECTION_ESTIMATOR = DirectionalTextHelper.DEFAULT_DIRECTION_ESTIMATOR;
 

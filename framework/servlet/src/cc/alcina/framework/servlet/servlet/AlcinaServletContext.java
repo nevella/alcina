@@ -32,11 +32,10 @@ public class AlcinaServletContext {
 		looseContextDepth.set(LooseContext.depth());
 		HttpContext httpContext = new HttpContext(httpServletRequest, httpServletResponse);
 		LooseContext.set(CONTEXT_HTTP_CONTEXT, httpContext);
+		AuthenticationManager.get().initialiseContext(
+				httpContext);
 		if (rootPermissions) {
 			ThreadedPermissionsManager.cast().pushSystemUser();
-		} else {
-			AuthenticationManager.get().initialiseContext(
-					httpContext);
 		}
 	}
 
