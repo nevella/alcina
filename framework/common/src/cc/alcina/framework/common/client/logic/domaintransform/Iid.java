@@ -39,7 +39,10 @@ public abstract class Iid extends VersionableEntity<Iid> {
 	}
 
 	public void setRememberMeUser_id(Long rememberMeUser_id) {
+		Long old_rememberMeUser_id = this.rememberMeUser_id;
 		this.rememberMeUser_id = rememberMeUser_id;
+		propertyChangeSupport().firePropertyChange("rememberMeUser_id", old_rememberMeUser_id, rememberMeUser_id);
+		
 	}
 
 	@Transient

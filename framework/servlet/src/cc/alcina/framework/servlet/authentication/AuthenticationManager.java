@@ -87,7 +87,8 @@ public class AuthenticationManager {
 		String userAgent = context.tokenStore.getUserAgent();
 		context.clientInstance = persistence.createClientInstance(
 				context.session, userAgent,
-				context.tokenStore.getRemoteAddress(),context.tokenStore.getReferrer(),context.tokenStore.getUrl());
+				context.tokenStore.getRemoteAddress(),
+				context.tokenStore.getReferrer(), context.tokenStore.getUrl());
 	}
 
 	private void ensureIid(AuthenticationContext context) {
@@ -167,11 +168,13 @@ public class AuthenticationManager {
 		}
 		if (context.session != null) {
 			IUser sessionUser = context.session.getUser();
-			boolean anonymousSession = Objects.equals(sessionUser.getUserName(),PermissionsManager.ANONYMOUS_USER_NAME);
+			boolean anonymousSession = Objects.equals(sessionUser.getUserName(),
+					PermissionsManager.ANONYMOUS_USER_NAME);
 			IUser anonymousUser = UserlandProvider.get().getAnonymousUser();
-			if(anonymousSession&&sessionUser!=anonymousUser){
-				//handle differing anonymous user sessions (some authentication providers have >1 'anonymous' users)
-				context.session=createAuthenticationSession(new Date(),
+			if (anonymousSession && sessionUser != anonymousUser) {
+				// handle differing anonymous user sessions (some authentication
+				// providers have >1 'anonymous' users)
+				context.session = createAuthenticationSession(new Date(),
 						anonymousUser, "replace-anonymous", false);
 			}
 		}
@@ -185,16 +188,16 @@ public class AuthenticationManager {
 			}
 		}
 		if (context.session == null) {
+			// FIXME - mvcc.5 - drop
 			createAuthenticationSession(new Date(),
 					UserlandProvider.get().getAnonymousUser(), "anonymous",
 					false);
-		}else{
-			//FIXME - mvcc.5 - drop
-			if(context.session.getIid().getRememberMeUser_id()!=null){
-				persistence.populateSessionUserFromRememberMeUser(context.session);
+			if (context.session.getIid().getRememberMeUser_id() != null) {
+				persistence
+						.populateSessionUserFromRememberMeUser(context.session);
 			}
+		} else {
 		}
-		
 	}
 
 	private String validateClientUid(String uid) {
@@ -251,6 +254,7 @@ public class AuthenticationManager {
 	}
 
 	public Long getContextClientInstanceId() {
-		return getContextClientInstance().map(ClientInstance::getId).orElse(null);
+		return getContextClientInstance().map(ClientInstance::getId)
+				.orElse(null);
 	}
 }
