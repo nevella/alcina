@@ -138,10 +138,10 @@ public class AuthenticationManager {
 
 	public void initialiseContext(AuthenticationTokenStore tokenStore) {
 		AuthenticationContext context = ensureContext();
+		context.tokenStore = tokenStore;
 		IUser anonymousUser = UserlandProvider.get().getAnonymousUser();
 		PermissionsManager.get().setUser(anonymousUser);
 		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
-		context.tokenStore = tokenStore;
 		ensureIid(context);
 		ensureAuthenticationSession(context);
 		setupClientInstanceFromHeaders(context);
