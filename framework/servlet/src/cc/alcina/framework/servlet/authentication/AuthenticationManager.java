@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.authentication;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -25,7 +26,6 @@ import cc.alcina.framework.entity.entityaccess.AuthenticationPersistence;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
-import cc.alcina.framework.servlet.servlet.HttpContext;
 
 /**
  * This class handles authentication of each web request.
@@ -164,6 +164,16 @@ public class AuthenticationManager {
 		logger.trace("Ensure session: id {}", sessionId);
 		if (Ax.notBlank(sessionId)) {
 			context.session = persistence.getAuthenticationSession(sessionId);
+		}
+		if (context.session != null) {
+			IUser sessionUser = context.session.getUser();
+			boolean anonymousSession = Objects.equals(sessionUser.getUserName(),PermissionsManager.ANONYMOUS_USER_NAME);
+			IUser anonymousUser = UserlandProvider.get().getAnonymousUser();
+			if(anonymousSession&&sessionUser!=anonymousUser){
+				//handle differing anonymous user sessions (some authentication providers have >1 'anonymous' users)
+				context.session=createAuthenticationSession(new Date(),
+						anonymousUser, "replace-anonymous", false);
+			}
 		}
 		if (context.session != null) {
 			Registry.impl(AuthenticationExpiration.class)
