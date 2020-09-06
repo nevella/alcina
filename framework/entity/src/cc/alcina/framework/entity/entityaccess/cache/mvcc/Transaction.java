@@ -486,4 +486,8 @@ public class Transaction {
 	public boolean isToDomainCommitting() {
 		return phase == TransactionPhase.TO_DOMAIN_COMMITTING;
 	}
+
+	public long provideAge() {
+		return System.currentTimeMillis()-startTime;
+	}
 }
