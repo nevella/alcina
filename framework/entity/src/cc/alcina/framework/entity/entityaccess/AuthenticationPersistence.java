@@ -10,6 +10,9 @@ import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
@@ -210,9 +213,12 @@ public class AuthenticationPersistence {
 				.map(ci -> ci.getAuth() == clientInstanceAuth).orElse(false);
 	}
 
+	private Logger logger = LoggerFactory.getLogger(getClass());
 	public void populateSessionUserFromRememberMeUser(AuthenticationSession session) {
 		Iid iid = session.getIid();
-		session.setUser(UserlandProvider.get().getUserById(iid.getRememberMeUser_id()));
+		Long rememberMeUser_id = iid.getRememberMeUser_id();
+		session.setUser(UserlandProvider.get().getUserById(rememberMeUser_id));
+		logger.warn("Nulling iid rememberMeUser_id :: {} - {}",iid.getId(),rememberMeUser_id);
 		iid.setRememberMeUser_id(null);
 		Transaction.commit();
 	}

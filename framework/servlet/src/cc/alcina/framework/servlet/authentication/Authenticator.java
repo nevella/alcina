@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.UserWith2FA;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
@@ -238,5 +239,9 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		AuthenticationManager.get().createAuthenticationSession(new Date(),
 				UserlandProvider.get().getAnonymousUser(), "logout", false);
 		Transaction.commit();
+	}
+
+	public void onClientInstanceCreated(ClientInstance clientInstance) {
+		//customisation hook
 	}
 }

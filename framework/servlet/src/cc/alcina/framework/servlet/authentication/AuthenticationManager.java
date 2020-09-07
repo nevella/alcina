@@ -89,6 +89,7 @@ public class AuthenticationManager {
 				context.session, userAgent,
 				context.tokenStore.getRemoteAddress(),
 				context.tokenStore.getReferrer(), context.tokenStore.getUrl());
+		Registry.impl(Authenticator.class).onClientInstanceCreated(context.clientInstance);
 	}
 
 	private void ensureIid(AuthenticationContext context) {
