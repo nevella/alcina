@@ -166,7 +166,10 @@ public class AuthenticationManager {
 		if (Ax.notBlank(sessionId)) {
 			context.session = persistence.getAuthenticationSession(sessionId);
 		}
-		if (context.session != null) {
+		boolean validSession = context.session != null
+				&& context.session.getUser() != null
+				&& !context.session.provideIsExpired();
+		if (validSession) {
 			IUser sessionUser = context.session.getUser();
 			boolean anonymousSession = Objects.equals(sessionUser.getUserName(),
 					PermissionsManager.ANONYMOUS_USER_NAME);
@@ -178,7 +181,7 @@ public class AuthenticationManager {
 						anonymousUser, "replace-anonymous", false);
 			}
 		}
-		if (context.session != null) {
+		if (validSession) {
 			Registry.impl(AuthenticationExpiration.class)
 					.checkExpiration(context.session);
 			logger.trace("Check expiration :: session {}", context.session);
@@ -187,11 +190,11 @@ public class AuthenticationManager {
 				context.session = null;
 			}
 		}
-		if (context.session == null) {
-			// FIXME - mvcc.5 - drop
+		if (!validSession) {
 			createAuthenticationSession(new Date(),
 					UserlandProvider.get().getAnonymousUser(), "anonymous",
 					false);
+			// FIXME - mvcc.5 - drop
 			if (context.session.getIid().getRememberMeUser_id() != null) {
 				persistence
 						.populateSessionUserFromRememberMeUser(context.session);
