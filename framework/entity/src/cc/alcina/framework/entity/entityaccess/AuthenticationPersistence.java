@@ -72,6 +72,7 @@ public class AuthenticationPersistence {
 		return clientInstance;
 	}
 
+	@SuppressWarnings("unused")
 	private Map<String, String> lookupQueries = new ConcurrentHashMap<>();
 
 	public Iid getIid(String instanceId) {
@@ -84,9 +85,12 @@ public class AuthenticationPersistence {
 		}
 		String query = Ax.format("select id from %s where %s='%s'",
 				clazz.getSimpleName(), "instanceId", instanceId);
-		if (lookupQueries.put(query, query) != null) {
-			return null;
-		}
+		/*
+		 * caching issue if not in postProcess - see DomainStore.find
+		 */
+//		if (lookupQueries.put(query, query) != null) {
+//			return null;
+//		}
 		Long id = Ax.first((List<Long>) callWithEntityManager(
 				em -> em.createQuery(query).getResultList()));
 		return id == null ? null : Domain.find(clazz, id);
@@ -111,9 +115,12 @@ public class AuthenticationPersistence {
 		String query = Ax.format(
 				"select authenticationSession.id from %s authenticationSession where %s='%s'",
 				clazz.getSimpleName(), "sessionId", sessionId);
-		if (lookupQueries.put(query, query) != null) {
-			return null;
-		}
+		/*
+		 * caching issue if not in postProcess - see DomainStore.find
+		 */
+//		if (lookupQueries.put(query, query) != null) {
+//			return null;
+//		}
 		Long id = Ax.first((List<Long>) callWithEntityManager(
 				em -> em.createQuery(query).getResultList()));
 		if (id == null) {
