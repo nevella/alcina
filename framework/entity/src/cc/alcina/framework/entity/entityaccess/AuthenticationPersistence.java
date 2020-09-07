@@ -55,7 +55,8 @@ public class AuthenticationPersistence {
 	}
 
 	public ClientInstance createClientInstance(AuthenticationSession session,
-			String userAgent, String remoteAddress, String referrer, String url) {
+			String userAgent, String remoteAddress, String referrer,
+			String url) {
 		Class<? extends ClientInstance> clazz = AlcinaPersistentEntityImpl
 				.getImplementation(ClientInstance.class);
 		ClientInstance clientInstance = Domain.create(clazz);
@@ -214,11 +215,15 @@ public class AuthenticationPersistence {
 	}
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
-	public void populateSessionUserFromRememberMeUser(AuthenticationSession session) {
+
+	public void populateSessionUserFromRememberMeUser(
+			AuthenticationSession session) {
 		Iid iid = session.getIid();
 		Long rememberMeUser_id = iid.getRememberMeUser_id();
 		session.setUser(UserlandProvider.get().getUserById(rememberMeUser_id));
-		logger.warn("Nulling iid rememberMeUser_id :: {} - {}",iid.getId(),rememberMeUser_id);
+		session.setAuthenticationType("legacy-iid");
+		logger.warn("Nulling iid rememberMeUser_id :: {} - {}", iid.getId(),
+				rememberMeUser_id);
 		iid.setRememberMeUser_id(null);
 		Transaction.commit();
 	}

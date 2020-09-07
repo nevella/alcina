@@ -89,7 +89,8 @@ public class AuthenticationManager {
 				context.session, userAgent,
 				context.tokenStore.getRemoteAddress(),
 				context.tokenStore.getReferrer(), context.tokenStore.getUrl());
-		Registry.impl(Authenticator.class).onClientInstanceCreated(context.clientInstance);
+		Registry.impl(Authenticator.class)
+				.onClientInstanceCreated(context.clientInstance);
 	}
 
 	private void ensureIid(AuthenticationContext context) {
@@ -99,6 +100,10 @@ public class AuthenticationManager {
 			context.iid = persistence.getIid(instanceId);
 		}
 		if (context.iid == null) {
+			if (Ax.notBlank(instanceId)) {
+				logger.warn("Invalid iid cookie :: {} {}", instanceId,
+						context.tokenStore.getRemoteAddress());
+			}
 			instanceId = SEUtilities.generateId();
 			context.tokenStore.setCookieValue(COOKIE_NAME_IID, instanceId);
 			context.iid = persistence.createIid(instanceId);
