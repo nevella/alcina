@@ -31,6 +31,8 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.persistence.EntityManager;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Query;
 
 import org.slf4j.Logger;
@@ -1229,6 +1231,22 @@ public class ThreadlocalTransformManager extends TransformManager
 			}
 		}
 		collection.add(tgt);
+	}
+
+	@Override
+	protected boolean
+			shouldApplyCollectionModification(DomainTransformEvent event) {
+		// significant optimisation - avoids need to iterate/instantiate the
+		// persistent collection if it's @OneToMany and has an @Association
+		if (entityManager != null) {
+			return Reflections.propertyAccessor().getAnnotationForProperty(
+					event.getObjectClass(), OneToMany.class,
+					event.getPropertyName()) == null
+					|| Reflections.propertyAccessor().getAnnotationForProperty(
+							event.getObjectClass(), Association.class,
+							event.getPropertyName()) == null;
+		}
+		return true;
 	}
 
 	@Override

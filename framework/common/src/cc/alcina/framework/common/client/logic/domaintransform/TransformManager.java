@@ -451,10 +451,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 			beforeDirectCollectionModification(token.object,
 					event.getPropertyName(), token.newTargetValue,
 					CollectionModificationType.ADD);
-			Set set = (Set) propertyAccessor().getPropertyValue(token.object,
-					event.getPropertyName());
-			if (!set.contains(token.newTargetValue)) {
-				doubleCheckAddition(set, token.newTargetValue);
+			if (shouldApplyCollectionModification(event)) {
+				Set set = (Set) propertyAccessor().getPropertyValue(
+						token.object, event.getPropertyName());
+				if (!set.contains(token.newTargetValue)) {
+					doubleCheckAddition(set, token.newTargetValue);
+				}
 			}
 			objectModified(token.object, event, false);
 			collectionChanged(token.object, token.newTargetValue);
@@ -464,11 +466,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 			beforeDirectCollectionModification(token.object,
 					event.getPropertyName(), token.newTargetValue,
 					CollectionModificationType.REMOVE);
-			Set set = (Set) propertyAccessor().getPropertyValue(token.object,
-					event.getPropertyName());
-			boolean wasContained = set.remove(token.newTargetValue);
-			if (!wasContained) {
-				doubleCheckRemoval(set, token.newTargetValue);
+			if (shouldApplyCollectionModification(event)) {
+				Set set = (Set) propertyAccessor().getPropertyValue(
+						token.object, event.getPropertyName());
+				boolean wasContained = set.remove(token.newTargetValue);
+				if (!wasContained) {
+					doubleCheckRemoval(set, token.newTargetValue);
+				}
 			}
 			collectionChanged(token.object, token.newTargetValue);
 			break;
@@ -531,6 +535,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 					+ token.transformType;
 		}
 		currentEvent = null;
+	}
+
+	protected boolean
+			shouldApplyCollectionModification(DomainTransformEvent event) {
+		return true;
 	}
 
 	public void appShutdown() {
