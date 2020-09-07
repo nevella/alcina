@@ -244,7 +244,7 @@ public class TransformCommit {
 								LoginState.LOGGED_IN);
 					} else {
 						if (!Objects.equals(
-								request.getClientInstance().provideUser(),
+								Domain.find(request.getClientInstance()).provideUser(),
 								PermissionsManager.get().getUser())) {
 							throw new UnsupportedOperationException(
 									"May need to create an additional authenticationSession");
