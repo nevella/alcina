@@ -83,7 +83,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 					maybeLog(eiie, className);
 					out = createMetadata(className, found);
 					out.invalid = true;
-				} catch (ClassNotFoundException e) {
+				} catch (ClassNotFoundException | TypeNotPresentException e) {
 					maybeLog(e, className);
 					out = createMetadata(className, found);
 					out.invalid = true;
