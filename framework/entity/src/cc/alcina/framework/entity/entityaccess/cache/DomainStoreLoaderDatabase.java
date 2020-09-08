@@ -744,7 +744,21 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						}
 					}
 				} else {
-					pdOperator.field.set(hasId, objects[i]);
+					try {
+						pdOperator.field.set(hasId, objects[i]);
+					} catch (Exception e) {
+						if ((pdOperator.field.getType() == int.class
+								|| pdOperator.field.getType() == long.class)
+								&& objects[i] == null) {
+							pdOperator.field.set(hasId, 0);
+							logger.warn(
+									"Replaced int/null with int/0 :: {}.{} - id: {}",
+									pdOperator.clazz.getSimpleName(),
+									pdOperator.field.getName(), hasId.getId());
+						} else {
+							throw e;
+						}
+					}
 				}
 			}
 			if (!keepDetached && hasId instanceof Entity) {
