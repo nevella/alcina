@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
 public class LazyPropertyLoadTask<T extends Entity>
@@ -26,6 +27,9 @@ public class LazyPropertyLoadTask<T extends Entity>
 	@Override
 	public Stream<T> wrap(Stream<T> stream) {
 		// return stream.peek(t -> lazyLoad(Collections.singletonList(t)));
+		if(ResourceUtilities.is(LazyLoadProvideTask.class,"CONTEXT_LAZY_LOAD_DISABLED")){
+			return stream;
+		}
 		return super.wrap(stream);
 	}
 

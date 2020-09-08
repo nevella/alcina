@@ -225,11 +225,8 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 
 	protected Stream<T> wrapAll(Stream<T> stream) {
 		List<T> list = stream.collect(Collectors.toList());
-		if (list.size() > 100000) {
-			Ax.err("Lazy load size: %s", list.size());
-		}
-		// Preconditions.checkArgument(list.size() < 100000,
-		// "Max length of lazyload task is 100000");
+		Preconditions.checkArgument(list.size() < 100000,
+				"Max length of lazyload task is 100000");
 		try {
 			lazyLoad(list);
 			return list.stream();
