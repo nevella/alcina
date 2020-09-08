@@ -679,7 +679,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	 * listeners and remove from backing object cache
 	 */
 	public DomainTransformEvent delete(Entity entity) {
-		if (!generateEventIfObjectNotRegistered()
+		if (!generateEventIfObjectNotRegistered(entity)
 				&& getObject(entity) == null) {
 			return null;
 		}
@@ -1726,7 +1726,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	protected boolean generateEventIfObjectNotRegistered() {
+	protected boolean generateEventIfObjectNotRegistered(Entity entity) {
 		return false;
 	}
 

@@ -1276,8 +1276,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	protected boolean generateEventIfObjectNotRegistered() {
-		return true;
+	protected boolean generateEventIfObjectNotRegistered(Entity entity) {
+		return Ax.isTest()||!DomainStore.writableStore().isCached(entity.entityClass());
 	}
 
 	@Override

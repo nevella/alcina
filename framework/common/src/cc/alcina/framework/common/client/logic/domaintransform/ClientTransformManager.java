@@ -353,7 +353,7 @@ public abstract class ClientTransformManager extends TransformManager {
 	}
 
 	@Override
-	protected boolean generateEventIfObjectNotRegistered() {
+	protected boolean generateEventIfObjectNotRegistered(Entity entity) {
 		return true;
 	}
 
