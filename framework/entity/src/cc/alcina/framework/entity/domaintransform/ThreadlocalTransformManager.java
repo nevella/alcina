@@ -1220,14 +1220,16 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	@Override
 	protected void doubleCheckAddition(Collection collection, Object tgt) {
-		JPAImplementation jpaImplementation = Registry
-				.impl(JPAImplementation.class);
-		tgt = jpaImplementation.getInstantiatedObject(tgt);
-		for (Iterator itr = collection.iterator(); itr.hasNext();) {
-			Object next = itr.next();
-			if (jpaImplementation.areEquivalentIgnoreInstantiationState(next,
-					tgt)) {
-				return;
+		if (entityManager != null) {
+			JPAImplementation jpaImplementation = Registry
+					.impl(JPAImplementation.class);
+			tgt = jpaImplementation.getInstantiatedObject(tgt);
+			for (Iterator itr = collection.iterator(); itr.hasNext();) {
+				Object next = itr.next();
+				if (jpaImplementation
+						.areEquivalentIgnoreInstantiationState(next, tgt)) {
+					return;
+				}
 			}
 		}
 		collection.add(tgt);
