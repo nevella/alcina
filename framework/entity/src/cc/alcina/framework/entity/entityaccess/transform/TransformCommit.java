@@ -103,7 +103,7 @@ public class TransformCommit {
 	public static final transient String CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK = TransformCommit.class
 			.getName() + ".CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK";
 
-	private static final transient String CONTEXT_HTTP_COMMIT_CONTEXT = TransformCommit.class
+	private static final transient String CONTEXT_TRANSFORM_COMMIT_CONTEXT = TransformCommit.class
 			.getName() + ".CONTEXT_HTTP_COMMIT_CONTEXT";
 
 	public static final String CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS = TransformCommit.class
@@ -244,7 +244,8 @@ public class TransformCommit {
 								LoginState.LOGGED_IN);
 					} else {
 						if (!Objects.equals(
-								Domain.find(request.getClientInstance()).provideUser(),
+								Domain.find(request.getClientInstance())
+										.provideUser(),
 								PermissionsManager.get().getUser())) {
 							throw new UnsupportedOperationException(
 									"May need to create an additional authenticationSession");
@@ -413,6 +414,14 @@ public class TransformCommit {
 		}
 		int maxTransformChunkSize = ResourceUtilities.getInteger(
 				TransformCommit.class, "maxTransformChunkSize", 10000);
+		/*
+		 * If context not set (by http request), it's from the server
+		 */
+		LooseContext.ensure(CONTEXT_TRANSFORM_COMMIT_CONTEXT,
+				() -> new TransformCommitContext(
+						EntityLayerObjects.get().getServerAsClientInstance()
+								.getId(),
+						PermissionsManager.get().getUserId(), null));
 		if (pendingTransformCount > maxTransformChunkSize
 				&& !LooseContext
 						.is(TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)
@@ -480,8 +489,8 @@ public class TransformCommit {
 
 	public static void prepareHttpRequestCommitContext(long clientInstanceId,
 			long userId, String committerIpAddress) {
-		LooseContext.set(CONTEXT_HTTP_COMMIT_CONTEXT,
-				new HttpRequestCommitContext(clientInstanceId, userId,
+		LooseContext.set(CONTEXT_TRANSFORM_COMMIT_CONTEXT,
+				new TransformCommitContext(clientInstanceId, userId,
 						committerIpAddress));
 	}
 
@@ -637,11 +646,10 @@ public class TransformCommit {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, map, Registry.impl(TransformLoggingPolicy.class),
 					false, false, false, logger, true);
-			HttpRequestCommitContext httpRequestCommitContext = LooseContext
-					.ensure(CONTEXT_HTTP_COMMIT_CONTEXT,
-							() -> new HttpRequestCommitContext(0, 0, null));
+			TransformCommitContext transformCommitContext = LooseContext
+					.get(CONTEXT_TRANSFORM_COMMIT_CONTEXT);
 			persistenceToken
-					.setOriginatingUserId(httpRequestCommitContext.userId);
+					.setOriginatingUserId(transformCommitContext.userId);
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
@@ -663,9 +671,9 @@ public class TransformCommit {
 
 	private void commitLocalTranformInChunks0(int maxTransformChunkSize)
 			throws Exception {
-		HttpRequestCommitContext httpRequestCommitContext = LooseContext.ensure(
-				CONTEXT_HTTP_COMMIT_CONTEXT,
-				() -> new HttpRequestCommitContext(0, 0, null));
+		TransformCommitContext httpRequestCommitContext = LooseContext.ensure(
+				CONTEXT_TRANSFORM_COMMIT_CONTEXT,
+				() -> new TransformCommitContext(0, 0, null));
 		ClientInstance fromInstance = AuthenticationPersistence.get()
 				.getClientInstance(httpRequestCommitContext.clientInstanceId);
 		String uaString = Ax.format(
@@ -674,7 +682,8 @@ public class TransformCommit {
 				httpRequestCommitContext.clientInstanceId);
 		final ClientInstance commitInstance = AuthenticationPersistence.get()
 				.createClientInstance(fromInstance.getAuthenticationSession(),
-						uaString, httpRequestCommitContext.committerIpAddress,null,null);
+						uaString, httpRequestCommitContext.committerIpAddress,
+						null, null);
 		List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
 				TransformManager.get()
 						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN));
@@ -945,14 +954,14 @@ public class TransformCommit {
 	}
 
 	// FIXME - sessioncontext - this should all probably go there
-	private static class HttpRequestCommitContext {
+	private static class TransformCommitContext {
 		private long clientInstanceId;
 
 		private String committerIpAddress;
 
 		private long userId;
 
-		public HttpRequestCommitContext(long clientInstanceId, long userId,
+		public TransformCommitContext(long clientInstanceId, long userId,
 				String committerIpAddress) {
 			this.clientInstanceId = clientInstanceId;
 			this.userId = userId;
