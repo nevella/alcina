@@ -136,7 +136,16 @@ public class AuthenticationPersistence {
 		Class<? extends AuthenticationSession> clazz = AlcinaPersistentEntityImpl
 				.getImplementation(AuthenticationSession.class);
 		AuthenticationSession session = Domain.create(clazz);
-//		session.setIid(iid);
+		if(iid.getVersionNumber()==-1){
+			iid.setVersionNumber(0);
+			String eql = Ax.format("update iid set optlock=0 where id=%s",iid.getId());
+			callWithEntityManager(em->{
+				em.createNativeQuery(eql).executeUpdate();
+				//
+				return  null;
+			});
+		}
+		session.setIid(iid);
 		session.setSessionId(sessionId);
 		session.setUser(user);
 		session.setAuthenticationType(authenticationType);

@@ -750,9 +750,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						if ((pdOperator.field.getType() == int.class
 								|| pdOperator.field.getType() == long.class)
 								&& objects[i] == null) {
-							pdOperator.field.set(hasId, 0);
+							pdOperator.field.set(hasId, -1);
 							logger.warn(
-									"Replaced int/null with int/0 :: {}.{} - id: {}",
+									"Replaced int/null with int/-1 :: {}.{} - id: {}",
 									pdOperator.clazz.getSimpleName(),
 									pdOperator.field.getName(), hasId.getId());
 						} else {
