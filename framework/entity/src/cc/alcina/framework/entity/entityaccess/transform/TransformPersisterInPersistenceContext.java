@@ -46,6 +46,7 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken.Pass
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
+import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.transform.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -222,9 +223,20 @@ public class TransformPersisterInPersistenceContext {
 							if (event
 									.getCommitType() == CommitType.TO_STORAGE) {
 								if (!replaying) {
-									tm.setIgnorePropertyChangesTo(event);
+									boolean wrappedObjectAssignable = WrappedObject.class
+											.isAssignableFrom(
+													event.getObjectClass());
+									if (wrappedObjectAssignable) {
+										tm.setIgnorePropertyChangesTo(event);
+									} else {
+										tm.setIgnorePropertyChanges(true);
+									}
 									tm.fireDomainTransform(event);
-									tm.setIgnorePropertyChangesTo(null);
+									if (wrappedObjectAssignable) {
+										tm.setIgnorePropertyChanges(false);
+									} else {
+										tm.setIgnorePropertyChangesTo(null);
+									}
 									if (tm.provideIsMarkedFlushTransform(
 											event)) {
 										tm.flush();
@@ -434,7 +446,10 @@ public class TransformPersisterInPersistenceContext {
 					event -> event.beforeTransformCommit(getEntityManager()));
 			switch (token.getPass()) {
 			case TRY_COMMIT:
-				tm.flush(persistentEvents);
+				if (ResourceUtilities.is(TransformPersister.class,
+						"flushWithEveryRequest")) {
+					tm.flush(persistentEvents);
+				}
 				DomainTransformResponse response = new DomainTransformResponse();
 				response.getEventsToUseForClientUpdate()
 						.addAll(token.getClientUpdateEvents());

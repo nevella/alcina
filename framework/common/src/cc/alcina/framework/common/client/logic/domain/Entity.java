@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.PermissionRule;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess;
@@ -64,9 +65,9 @@ public abstract class Entity<T extends Entity> extends Bindable
 	public void delete() {
 		Domain.delete(domainIdentity());
 	}
-	
+
 	public void reHash() {
-		hash=0;
+		hash = 0;
 	}
 
 	@MvccAccess(type = MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY)
@@ -220,7 +221,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		}
 		String dn = Reflections.classLookup()
 				.displayNameForObject(domainIdentity());
-		dn = !CommonUtils.isNullOrEmpty(dn) ? dn : "[Object]";
+		dn = Ax.blankTo(dn, this::toStringEntity);
 		return dn.substring(0, dn.length());
 	}
 

@@ -82,6 +82,7 @@ import cc.alcina.framework.entity.logic.EntityLayerTransformPropagation;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.DataFolderProvider;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 
 /**
@@ -103,8 +104,8 @@ public class TransformCommit {
 	public static final transient String CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK = TransformCommit.class
 			.getName() + ".CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK";
 
-	private static final transient String CONTEXT_TRANSFORM_COMMIT_CONTEXT = TransformCommit.class
-			.getName() + ".CONTEXT_HTTP_COMMIT_CONTEXT";
+	private static final transient String CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT = TransformCommit.class
+			.getName() + ".CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT";
 
 	public static final String CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS = TransformCommit.class
 			.getName() + "."
@@ -116,8 +117,6 @@ public class TransformCommit {
 	public static final transient String CONTEXT_DISABLED = TransformCommit.class
 			.getName() + ".CONTEXT_DISABLED";
 
-	// TODO - this should be renamed to "persist bulk transforms" really, since
-	// also used for large admin commits
 	public static int commitBulkTransforms(List<DeltaApplicationRecord> records,
 			Logger logger, Boolean useWrapperUser,
 			boolean throwPersistenceExceptions) throws WebException {
@@ -296,7 +295,7 @@ public class TransformCommit {
 	}
 
 	// Note that this must be called with a new client instance - since we're
-	// incrementing the request id counter. When the admin client calls it,
+	// incrementing the request id counter
 	public static void commitDeltaApplicationRecord(
 			TransformCommit.CommitContext commitContext,
 			DeltaApplicationRecord dar, int chunkSize) throws Exception {
@@ -417,15 +416,13 @@ public class TransformCommit {
 		/*
 		 * If context not set (by http request), it's from the server
 		 */
-		LooseContext.ensure(CONTEXT_TRANSFORM_COMMIT_CONTEXT,
-				() -> new TransformCommitContext(
+		LooseContext.ensure(CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT,
+				() -> new CommitClientInstanceContext(
 						EntityLayerObjects.get().getServerAsClientInstance()
 								.getId(),
-						PermissionsManager.get().getUserId(), null));
+						PermissionsManager.get().getUserId(), "0.0.0.0"));
 		if (pendingTransformCount > maxTransformChunkSize
-				&& !LooseContext
-						.is(TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)
-				&& !Ax.isTest()) {
+				&& !LooseContext.is(CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)) {
 			commitLocalTransformsInChunks(maxTransformChunkSize);
 			return new DomainTransformLayerWrapper(null);
 		}
@@ -489,8 +486,8 @@ public class TransformCommit {
 
 	public static void prepareHttpRequestCommitContext(long clientInstanceId,
 			long userId, String committerIpAddress) {
-		LooseContext.set(CONTEXT_TRANSFORM_COMMIT_CONTEXT,
-				new TransformCommitContext(clientInstanceId, userId,
+		LooseContext.set(CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT,
+				new CommitClientInstanceContext(clientInstanceId, userId,
 						committerIpAddress));
 	}
 
@@ -646,10 +643,9 @@ public class TransformCommit {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, map, Registry.impl(TransformLoggingPolicy.class),
 					false, false, false, logger, true);
-			TransformCommitContext transformCommitContext = LooseContext
-					.get(CONTEXT_TRANSFORM_COMMIT_CONTEXT);
-			persistenceToken
-					.setOriginatingUserId(transformCommitContext.userId);
+			CommitClientInstanceContext clientInstanceContext = LooseContext
+					.get(CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT);
+			persistenceToken.setOriginatingUserId(clientInstanceContext.userId);
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
@@ -671,25 +667,22 @@ public class TransformCommit {
 
 	private void commitLocalTranformInChunks0(int maxTransformChunkSize)
 			throws Exception {
-		TransformCommitContext httpRequestCommitContext = LooseContext.ensure(
-				CONTEXT_TRANSFORM_COMMIT_CONTEXT,
-				() -> new TransformCommitContext(0, 0, null));
+		CommitClientInstanceContext commitClientInstanceContext = LooseContext
+				.get(CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT);
 		ClientInstance fromInstance = AuthenticationPersistence.get()
-				.getClientInstance(httpRequestCommitContext.clientInstanceId);
+				.getClientInstance(
+						commitClientInstanceContext.clientInstanceId);
 		String uaString = Ax.format(
 				"servlet-bulk: %s - derived from client instance : %s",
 				EntityLayerUtils.getLocalHostName(),
-				httpRequestCommitContext.clientInstanceId);
-		final ClientInstance commitInstance = AuthenticationPersistence.get()
-				.createClientInstance(fromInstance.getAuthenticationSession(),
-						uaString, httpRequestCommitContext.committerIpAddress,
-						null, null);
+				commitClientInstanceContext.clientInstanceId);
 		List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
 				TransformManager.get()
 						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN));
 		TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).clear();
 		ThreadlocalTransformManager.cast().resetTltm(null);
+		Transaction.endAndBeginNew();
 		/*
 		 * There's a method in this apparent madness. The big request for this
 		 * (new) client instance, rq id #1, will be committed as several chunks
@@ -697,6 +690,14 @@ public class TransformCommit {
 		 * correspondence constant for all those chunks, hence the disposable
 		 * clientinstance
 		 */
+		final ClientInstance commitInstance = AuthenticationPersistence.get()
+				.createClientInstance(fromInstance.getAuthenticationSession(),
+						uaString,
+						commitClientInstanceContext.committerIpAddress, null,
+						null);
+		MethodContext.instance()
+				.withContextTrue(CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)
+				.run(() -> Transaction.commit());
 		int requestId = 1;
 		DomainTransformRequest request = DomainTransformRequest
 				.createPersistableRequest(requestId, commitInstance.getId());
@@ -954,14 +955,14 @@ public class TransformCommit {
 	}
 
 	// FIXME - sessioncontext - this should all probably go there
-	private static class TransformCommitContext {
+	private static class CommitClientInstanceContext {
 		private long clientInstanceId;
 
 		private String committerIpAddress;
 
 		private long userId;
 
-		public TransformCommitContext(long clientInstanceId, long userId,
+		public CommitClientInstanceContext(long clientInstanceId, long userId,
 				String committerIpAddress) {
 			this.clientInstanceId = clientInstanceId;
 			this.userId = userId;

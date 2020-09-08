@@ -10,6 +10,7 @@ import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,9 +167,18 @@ public class AuthenticationPersistence {
 				.callWithEntityManager(function);
 	}
 
+	public static class BootstrapInstanceCreator implements Function<EntityManager, ClientInstance>{
+
+		@Override
+		public ClientInstance apply(EntityManager em) {
+			return AuthenticationPersistence
+					.get().createBootstrapClientInstance(em);
+		}
+		
+	}
 	public ClientInstance createBootstrapClientInstance() {
 		ClientInstance persistent = callWithEntityManager(
-				em -> createBootstrapClientInstance(em));
+				new BootstrapInstanceCreator());
 		Domain.find(persistent.getAuthenticationSession().getIid());
 		Domain.find(persistent.getAuthenticationSession());
 		return Domain.find(persistent);
@@ -215,7 +225,18 @@ public class AuthenticationPersistence {
 		clientInstance.setIpAddress("127.0.0.1");
 		clientInstance.setBotUserAgent(false);
 		em.persist(clientInstance);
-		return clientInstance;
+		Iid detachedIid = AlcinaPersistentEntityImpl
+				.getNewImplementationInstance(Iid.class);
+		detachedIid.setId(iid.getId());
+		AuthenticationSession detachedSession = AlcinaPersistentEntityImpl
+				.getNewImplementationInstance(AuthenticationSession.class);
+		detachedSession.setId(authenticationSession.getId());
+		detachedSession.setIid(detachedIid);
+		ClientInstance detachedInstance = AlcinaPersistentEntityImpl
+				.getNewImplementationInstance(ClientInstance.class);
+		detachedInstance.setId(clientInstance.getId());
+		detachedInstance.setAuthenticationSession(detachedSession);
+		return detachedInstance;
 	}
 
 	public void putSession(ClientInstance instance,

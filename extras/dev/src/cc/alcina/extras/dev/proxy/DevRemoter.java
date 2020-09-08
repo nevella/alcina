@@ -37,6 +37,8 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersiste
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.PostTransactionEntityResolver;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
 
@@ -92,6 +94,10 @@ public class DevRemoter {
 			ClientInstance clientInstance = PermissionsManager.get()
 					.getClientInstance();
 			if (clientInstance != null) {
+				if (clientInstance.getId() == 0) {
+					clientInstance = EntityLayerObjects.get()
+							.getServerAsClientInstance();
+				}
 				params.clientInstanceId = clientInstance.getId();
 			}
 			params.methodName = methodName;
