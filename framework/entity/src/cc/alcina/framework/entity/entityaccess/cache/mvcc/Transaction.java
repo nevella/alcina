@@ -57,7 +57,7 @@ public class Transaction {
 
 	public static Transaction current() {
 		Transaction transaction = threadLocalInstance.get();
-		if (transaction == null) {
+		if (transaction == null||transaction.getPhase()==TransactionPhase.TO_DB_ABORTED) {
 			throw new MvccException("No current transaction");
 		} else {
 			return transaction;

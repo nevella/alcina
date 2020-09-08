@@ -252,10 +252,15 @@ public class Transactions {
 								.getInteger(Transaction.class, "maxAgeSecs")
 								* TimeConstants.ONE_SECOND_MS) {
 					try {
+						Transaction.logger.error(
+								"Cancelling timed out transaction :: {}",
+								oldest);
 						oldest.toTimedOut();
-						oldest.endTransaction();
+						// only the tx thread should end the transaction (calls
+						// to Transaction.current() will throw)
+						// oldest.endTransaction();
 					} catch (Exception e) {
-						Transaction.logger.warn("Cancel exception",
+						Transaction.logger.error("Cancel exception",
 								new MvccException(e));
 						// ignore phase checks
 						onTransactionEnded(oldest);
