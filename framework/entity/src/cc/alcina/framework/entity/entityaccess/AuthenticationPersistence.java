@@ -136,7 +136,7 @@ public class AuthenticationPersistence {
 		Class<? extends AuthenticationSession> clazz = AlcinaPersistentEntityImpl
 				.getImplementation(AuthenticationSession.class);
 		AuthenticationSession session = Domain.create(clazz);
-		session.setIid(iid);
+//		session.setIid(iid);
 		session.setSessionId(sessionId);
 		session.setUser(user);
 		session.setAuthenticationType(authenticationType);
