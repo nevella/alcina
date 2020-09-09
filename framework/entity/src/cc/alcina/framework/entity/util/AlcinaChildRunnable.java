@@ -103,7 +103,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 	public static void runInTransactionNewThread(String threadName,
 			ThrowingRunnable runnable) {
-		runInTransaction(threadName, runnable, false, false, false);
+		runInTransaction(threadName, runnable, false, false, true);
 	}
 
 	public static <T> Consumer<T>
