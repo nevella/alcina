@@ -13,8 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
-import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -36,6 +34,7 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * @author Nick Reddel
  */
 public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
+	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		return this;
@@ -59,6 +58,9 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 
 		@Override
 		public String render(Object source) {
+			if (source == null) {
+				return "";
+			}
 			Object hasDisplayName = source;
 			BasePlace place = null;
 			Entity entity = null;
@@ -68,7 +70,7 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 				entity = (Entity) html.getModel();
 			} else if (html.getModel() instanceof BasePlace) {
 				place = (BasePlace) html.getModel();
-			}else if (source instanceof BasePlace) {
+			} else if (source instanceof BasePlace) {
 				place = (BasePlace) source;
 			}
 			if (entity != null) {

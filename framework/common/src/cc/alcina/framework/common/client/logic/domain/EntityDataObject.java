@@ -33,8 +33,8 @@ public interface EntityDataObject {
 		public abstract EDO createDataObject();
 	}
 
-	public interface EntityMultipleDataObjectDecorator<E extends VersionableEntity, B extends Bindable>  extends Function<E,B> {
-
+	public interface EntityMultipleDataObjectDecorator<E extends VersionableEntity, B extends Bindable>
+			extends Function<E, B> {
 		Class<? extends Bindable> getProjectedClass();
 	}
 
@@ -60,13 +60,20 @@ public interface EntityDataObject {
 
 		private E lastModified;
 
+		private String entityClassName;
+
+		public String getEntityClassName() {
+			return this.entityClassName;
+		}
+
 		public OneToManySummary<E> withCollection(Collection<E> collection,
-				ContextProjector projector) {
+				ContextProjector projector, Class<E> entityClass) {
 			size = collection.size();
 			lastModified = collection.stream().sorted(
 					VersionableEntity.LAST_MODIFIED_COMPARATOR_DESCENDING)
 					.findFirst().map(e -> (E) projector.project(e))
 					.orElse(null);
+			entityClassName = entityClass.getName();
 			return this;
 		}
 	}

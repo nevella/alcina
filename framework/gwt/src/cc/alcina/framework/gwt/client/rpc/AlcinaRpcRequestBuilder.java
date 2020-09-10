@@ -179,11 +179,10 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 		private final RequestCallback originalCallback;
 
 		public WrappingCallback(RequestCallback originalCallback) {
-			if(originalCallback instanceof RequestCallbackAdapter) {
+			if (originalCallback instanceof RequestCallbackAdapter) {
 				RequestCallbackAdapter adapter = (RequestCallbackAdapter) originalCallback;
 				AsyncCallback inner = adapter.getCallback();
 				AsyncCallback innerWrapper = new AsyncCallback() {
-
 					@Override
 					public void onFailure(Throwable caught) {
 						inner.onFailure(caught);

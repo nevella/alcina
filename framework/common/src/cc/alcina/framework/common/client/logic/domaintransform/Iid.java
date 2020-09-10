@@ -19,7 +19,6 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
-import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 
 /**
@@ -32,18 +31,6 @@ public abstract class Iid extends VersionableEntity<Iid> {
 	private String instanceId;
 
 	private Long rememberMeUser_id;
-
-	// FIXME - mvcc.5 - remove
-	public Long getRememberMeUser_id() {
-		return this.rememberMeUser_id;
-	}
-
-	public void setRememberMeUser_id(Long rememberMeUser_id) {
-		Long old_rememberMeUser_id = this.rememberMeUser_id;
-		this.rememberMeUser_id = rememberMeUser_id;
-		propertyChangeSupport().firePropertyChange("rememberMeUser_id", old_rememberMeUser_id, rememberMeUser_id);
-		
-	}
 
 	@Transient
 	public abstract Set<? extends AuthenticationSession>
@@ -59,6 +46,11 @@ public abstract class Iid extends VersionableEntity<Iid> {
 		return this.instanceId;
 	}
 
+	// FIXME - mvcc.5 - remove
+	public Long getRememberMeUser_id() {
+		return this.rememberMeUser_id;
+	}
+
 	@Override
 	public void setId(long id) {
 		this.id = id;
@@ -69,5 +61,12 @@ public abstract class Iid extends VersionableEntity<Iid> {
 		this.instanceId = instanceId;
 		propertyChangeSupport().firePropertyChange("instanceId", old_instanceId,
 				instanceId);
+	}
+
+	public void setRememberMeUser_id(Long rememberMeUser_id) {
+		Long old_rememberMeUser_id = this.rememberMeUser_id;
+		this.rememberMeUser_id = rememberMeUser_id;
+		propertyChangeSupport().firePropertyChange("rememberMeUser_id",
+				old_rememberMeUser_id, rememberMeUser_id);
 	}
 }

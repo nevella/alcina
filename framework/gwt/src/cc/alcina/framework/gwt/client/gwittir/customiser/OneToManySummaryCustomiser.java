@@ -17,6 +17,7 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManySummary;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -33,8 +34,9 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  *
  * @author Nick Reddel
  */
-public class OneToManySummaryCustomiser implements Customiser,BoundWidgetProvider {
-
+public class OneToManySummaryCustomiser
+		implements Customiser, BoundWidgetProvider {
+	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		return this;
@@ -47,7 +49,9 @@ public class OneToManySummaryCustomiser implements Customiser,BoundWidgetProvide
 		html.setStyleName("");
 		return html;
 	}
-	private static class OneToManySummaryToHtmlRenderer implements Renderer<OneToManySummary,String>{
+
+	private static class OneToManySummaryToHtmlRenderer
+			implements Renderer<OneToManySummary, String> {
 		private RenderingHtml html;
 
 		public OneToManySummaryToHtmlRenderer(RenderingHtml html) {
@@ -56,24 +60,29 @@ public class OneToManySummaryCustomiser implements Customiser,BoundWidgetProvide
 
 		@Override
 		public String render(OneToManySummary o) {
-			if(o.getSize()==0) {
-				return "";
-			}
 			Entity source = (Entity) html.getModel();
 			Entity mostRecent = o.getLastModified();
-			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper.get().getPlaceByModelClass(mostRecent.entityClass());
-			EntityPlace  searchPlace = instancePlace.copy();
-			instancePlace.withEntity(mostRecent);
-			TruncatedObjectCriterion objectCriterion = Registry.impl(TruncatedObjectCriterion.class,source.entityClass());
+			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
+					.get().getPlaceByModelClass(Reflections.classLookup()
+							.getClassForName(o.getEntityClassName()));
+			EntityPlace searchPlace = instancePlace.copy();
+			TruncatedObjectCriterion objectCriterion = Registry
+					.impl(TruncatedObjectCriterion.class, source.entityClass());
 			objectCriterion.withObject(source);
 			searchPlace.def.addCriterionToSoleCriteriaGroup(objectCriterion);
-			String template = "<a href='#%s'>%s</a> - most recent: %s";
-			String token = searchPlace.toTokenString();
-			return Ax.format(template, token,
-					instancePlace.provideCategoryString( o.getSize()),
-					mostRecent.toString());
+			if (mostRecent == null) {
+				String template = "<a href='#%s'>%s</a>";
+				String token = searchPlace.toTokenString();
+				return Ax.format(template, token,
+						instancePlace.provideCategoryString(o.getSize()));
+			} else {
+				String template = "<a href='#%s'>%s</a> - most recent: %s";
+				instancePlace.withEntity(mostRecent);
+				String token = searchPlace.toTokenString();
+				return Ax.format(template, token,
+						instancePlace.provideCategoryString(o.getSize()),
+						mostRecent.toString());
+			}
 		}
-		
 	}
-
 }
