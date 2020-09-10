@@ -96,8 +96,8 @@ public class AbstractParserSlice<T extends ParserToken> {
 		}
 	}
 
-	public void extend(Text text, String content) {
-		this.end = new XmlUtils.DOMLocation(text, content.length(), 0);
+	public void extend(Text text, int offset) {
+		this.end = new XmlUtils.DOMLocation(text, offset, 0);
 	}
 
 	public String extractTextForCitable() {

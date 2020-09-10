@@ -48,6 +48,9 @@ public class StructuredTokenParserContext {
 
 	int initialDepthIn = -1;
 
+	/*
+	 * Open joins in the *output* - i.e. nested outputs
+	 */
 	public LinkedList<XmlStructuralJoin> openNodes = new LinkedList<>();
 
 	Map<XmlStructuralJoin, OutputContextRoot> outputContextRoots = new LinkedHashMap<>();

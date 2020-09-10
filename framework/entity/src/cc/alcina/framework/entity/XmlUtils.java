@@ -1459,6 +1459,9 @@ public class XmlUtils {
 			this.node = node;
 			Preconditions.checkArgument(characterOffset >= 0);
 			this.characterOffset = characterOffset;
+			if(characterOffset>0){
+				Preconditions.checkArgument(characterOffset <= node.getNodeValue().length());	
+			}
 			this.nodeIndex = nodeIndex;
 		}
 

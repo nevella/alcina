@@ -290,8 +290,7 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 	public String getCurrentBlocklikeContent() {
 		if (currentBlocklikeContent == null) {
 			if (!allTexts.isEmpty()) {
-				
-				currentBlocklikeContent=XmlUtils
+				currentBlocklikeContent = XmlUtils
 						.getSurroundingBlockTuple(allTexts.get(0)).getContent();
 			}
 		}
@@ -670,6 +669,19 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			return String.format("(%s) (%s%s) %s", offset,
 					(emphasised ? "emph" : "not-emph"),
 					(superscript ? ":super" : ""), textContent);
+		}
+
+		public void extendMatch(AbstractParserSlice slice, String string) {
+			int offset = string.length();
+			for (Text text : texts) {
+				int length = text.getLength();
+				if (offset <= length) {
+					slice.extend(text, offset);
+					return;
+				}
+				offset -= text.getLength();
+			}
+			throw new IllegalArgumentException();
 		}
 	}
 

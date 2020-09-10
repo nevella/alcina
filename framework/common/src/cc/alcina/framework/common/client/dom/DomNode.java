@@ -623,6 +623,10 @@ public class DomNode {
 			return isElement() ? DomNode.this : parent();
 		}
 
+		public Stream<DomNode> stream() {
+			return list().stream();
+		}
+
 		private DomNode getStartingCursor() {
 			return orSelf ? DomNode.this : DomNode.this.parent();
 		}
