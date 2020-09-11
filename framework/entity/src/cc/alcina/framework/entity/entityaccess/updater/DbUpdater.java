@@ -71,7 +71,7 @@ public abstract class DbUpdater implements Comparable<DbUpdater> {
 				j = stmt.executeUpdate(sql);
 				System.out.println(j + "  results");
 			} catch (Exception e) {
-				stmt.executeUpdate(sql);
+				stmt.execute(sql);
 				System.out.println("Statement executed");
 			}
 		} catch (Exception e) {
