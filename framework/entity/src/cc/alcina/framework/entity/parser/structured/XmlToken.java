@@ -36,7 +36,7 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 
 	public void onMatch(C context, XmlStructuralJoin join) {
 		context.wasMatched(join);
-		onMatch0(context, join);
+		onMatchPreWrappers(context, join);
 	}
 
 	public String textContent(DomNode sourceNode) {
@@ -54,5 +54,9 @@ public abstract class XmlToken<C extends StructuredTokenParserContext> {
 		return getCategory();
 	}
 
-	protected abstract void onMatch0(C context, XmlStructuralJoin join);
+	protected void onMatchPostWrappers(C context, XmlStructuralJoin join) {
+	}
+
+	protected abstract void onMatchPreWrappers(C context,
+			XmlStructuralJoin join);
 }

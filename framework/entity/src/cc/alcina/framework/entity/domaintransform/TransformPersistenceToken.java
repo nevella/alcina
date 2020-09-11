@@ -60,7 +60,7 @@ public class TransformPersistenceToken implements Serializable {
 
 	private transient DomainStore targetStore = null;
 
-	private transient TransformCascade transformCascade;
+	private transient TransformCollation transformCollation;
 
 	private DomainTransformLayerWrapper transformResult;
 
@@ -84,7 +84,7 @@ public class TransformPersistenceToken implements Serializable {
 		this.transformExceptionPolicy = Registry
 				.impl(PersistenceLayerTransformExceptionPolicyFactory.class)
 				.getPolicy(this, forOfflineTransforms);
-		this.transformCascade = new TransformCascade(this);
+		this.transformCollation = new TransformCollation(this);
 		this.transformPersistencePolicy = Registry
 				.impl(TransformPersistencePolicy.class);
 	}
@@ -125,8 +125,8 @@ public class TransformPersistenceToken implements Serializable {
 		return this.targetStore;
 	}
 
-	public TransformCascade getTransformCascade() {
-		return this.transformCascade;
+	public TransformCollation getTransformCollation() {
+		return this.transformCollation;
 	}
 
 	public PersistenceLayerTransformExceptionPolicy

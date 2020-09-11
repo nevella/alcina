@@ -537,11 +537,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		currentEvent = null;
 	}
 
-	protected boolean
-			shouldApplyCollectionModification(DomainTransformEvent event) {
-		return true;
-	}
-
 	public void appShutdown() {
 		theInstance = null;
 	}
@@ -1875,6 +1870,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		this.domainObjects = domainObjects;
 	}
 
+	protected boolean
+			shouldApplyCollectionModification(DomainTransformEvent event) {
+		return true;
+	}
+
 	protected void updateAssociation(DomainTransformEvent evt, Entity object,
 			Entity targetObject, boolean remove) {
 		Association assoc = object == null ? null
@@ -1949,10 +1949,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 			// the target object as updated"
 			objectModified(targetObject, evt, true);
 		}
-	}
-
-	protected boolean updateAssociationsWithoutNoChangeCheck() {
-		return true;
 	}
 
 	ApplyToken createApplyToken(DomainTransformEvent event)

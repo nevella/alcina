@@ -19,16 +19,16 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 
-public class TransformCascade {
+public class TransformCollation {
 	private TransformPersistenceToken token;
 
 	private boolean applied;
 
-	private MultikeyMap<EntityCascade> perClass;
+	private MultikeyMap<EntityCollation> perClass;
 
 	private List<DomainTransformEvent> allEvents;
 
-	public TransformCascade(
+	public TransformCollation(
 			TransformPersistenceToken transformPersistenceToken) {
 		this.token = transformPersistenceToken;
 		this.applied = transformPersistenceToken.isLocalToVm();
@@ -60,7 +60,8 @@ public class TransformCascade {
 				for (DomainTransformEvent event : allEvents) {
 					if (event
 							.getTransformType() == TransformType.CREATE_OBJECT) {
-						//only create our transient event receiver if this request hasn't been applied
+						// only create our transient event receiver if this
+						// request hasn't been applied
 						if (tltm.getUserSessionEntityMap().getForLocalId(
 								event.getObjectLocalId()) == null) {
 							Entity instance = (Entity) tltm.newInstance(
@@ -102,18 +103,18 @@ public class TransformCascade {
 			perClass = new UnsortedMultikeyMap<>(2);
 			allEvents.forEach(event -> {
 				EntityLocator locator = EntityLocator.objectLocator(event);
-				perClass.ensure(() -> new EntityCascade(locator),
+				perClass.ensure(() -> new EntityCollation(locator),
 						event.getObjectClass(), locator).events.add(event);
 			});
 		}
 	}
 
-	public class EntityCascade {
+	public class EntityCollation {
 		private EntityLocator locator;
 
 		private List<DomainTransformEvent> events = new ArrayList<>();
 
-		EntityCascade(EntityLocator locator) {
+		EntityCollation(EntityLocator locator) {
 			this.locator = locator;
 		}
 
@@ -150,13 +151,13 @@ public class TransformCascade {
 			return this;
 		}
 
-		private List<DomainTransformEvent> getEvents(EntityCascade ec) {
+		private List<DomainTransformEvent> getEvents(EntityCollation ec) {
 			return ec.events.stream().filter(this::matches)
 					.collect(Collectors.toList());
 		}
 
 		boolean matches(DomainTransformEvent event) {
-			if(event.getObjectClass()!=clazz){
+			if (event.getObjectClass() != clazz) {
 				return false;
 			}
 			if (propertyName != null
@@ -166,19 +167,19 @@ public class TransformCascade {
 			return true;
 		}
 
-		boolean matches(EntityCascade cascade) {
-			return getEvents(cascade).size() > 0;
+		boolean matches(EntityCollation collation) {
+			return getEvents(collation).size() > 0;
 		}
 	}
 
 	public class QueryResult {
-		public EntityCascade entityCascade;
+		public EntityCollation entityCollation;
 
 		public List<DomainTransformEvent> events;
 
-		public QueryResult(EntityCascade ec,
+		public QueryResult(EntityCollation ec,
 				List<DomainTransformEvent> events) {
-			this.entityCascade = ec;
+			this.entityCollation = ec;
 			this.events = events;
 		}
 

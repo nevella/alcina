@@ -33,7 +33,8 @@ public class ElementLocal extends NodeLocal
 		ownerDocument = document_Jvm;
 		this.tagName = tagName;
 		if (!GWT.isScript()) {
-			Preconditions.checkArgument(tagName.matches("[A-Za-z0-9\\-]+"));
+			// . is legal - but gets very confusing with css, so don't permit
+			Preconditions.checkArgument(tagName.matches("[A-Za-z0-9\\-_]+"));
 		}
 	}
 

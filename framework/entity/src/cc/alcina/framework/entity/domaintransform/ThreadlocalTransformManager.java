@@ -31,7 +31,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.persistence.EntityManager;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Query;
 
@@ -619,6 +618,13 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public boolean isListenToFoundObjects() {
 		return listenToFoundObjects;
+	}
+
+	@Override
+	public boolean isReadOnly(Class objectClass, String propertyName) {
+		return SEUtilities
+				.getPropertyDescriptorByName(objectClass, propertyName)
+				.getWriteMethod() == null;
 	}
 
 	public boolean isTransformsExplicitlyPermitted() {
@@ -1236,22 +1242,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	protected boolean
-			shouldApplyCollectionModification(DomainTransformEvent event) {
-		// significant optimisation - avoids need to iterate/instantiate the
-		// persistent collection if it's @OneToMany and has an @Association
-		if (entityManager != null) {
-			return Reflections.propertyAccessor().getAnnotationForProperty(
-					event.getObjectClass(), OneToMany.class,
-					event.getPropertyName()) == null
-					|| Reflections.propertyAccessor().getAnnotationForProperty(
-							event.getObjectClass(), Association.class,
-							event.getPropertyName()) == null;
-		}
-		return true;
-	}
-
-	@Override
 	protected void doubleCheckRemoval(Collection collection, Object tgt) {
 		JPAImplementation jpaImplementation = Registry
 				.impl(JPAImplementation.class);
@@ -1277,7 +1267,8 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	@Override
 	protected boolean generateEventIfObjectNotRegistered(Entity entity) {
-		return Ax.isTest()||!DomainStore.writableStore().isCached(entity.entityClass());
+		return Ax.isTest()
+				|| !DomainStore.writableStore().isCached(entity.entityClass());
 	}
 
 	@Override
@@ -1381,8 +1372,19 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	protected boolean updateAssociationsWithoutNoChangeCheck() {
-		return getEntityManager() == null;
+	protected boolean
+			shouldApplyCollectionModification(DomainTransformEvent event) {
+		// significant optimisation - avoids need to iterate/instantiate the
+		// persistent collection if it's @OneToMany and has an @Association
+		if (entityManager != null) {
+			return Reflections.propertyAccessor().getAnnotationForProperty(
+					event.getObjectClass(), OneToMany.class,
+					event.getPropertyName()) == null
+					|| Reflections.propertyAccessor().getAnnotationForProperty(
+							event.getObjectClass(), Association.class,
+							event.getPropertyName()) == null;
+		}
+		return true;
 	}
 
 	public static class PostTransactionEntityResolver {
@@ -1474,12 +1476,5 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public static class UncomittedTransformsException extends Exception {
-	}
-
-	@Override
-	public boolean isReadOnly(Class objectClass, String propertyName) {
-		return SEUtilities
-				.getPropertyDescriptorByName(objectClass, propertyName)
-				.getWriteMethod() == null;
 	}
 }
