@@ -373,7 +373,8 @@ public class DomainTransformPersistenceQueue {
 
 		@Override
 		public void run() {
-			setName("DomainTransformPersistenceQueue-fire");
+			setName(Ax.format("DomainTransformPersistenceQueue-fire::%s",
+					persistenceEvents.domainStore.name));
 			while (!closed.get()) {
 				try {
 					Long id = null;

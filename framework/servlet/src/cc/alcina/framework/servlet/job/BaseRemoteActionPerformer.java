@@ -10,7 +10,8 @@ import cc.alcina.framework.entity.SEUtilities;
 
 public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 		implements RemoteActionPerformer<R> {
-	// FIXME - mvcc.jobs - switch to slf4j
+	// FIXME - mvcc.jobs - switch to slf4j. Also - logstash logging - put a
+	// counter in the log record?
 	protected Logger logger;
 
 	protected org.slf4j.Logger slf4jLogger = LoggerFactory
