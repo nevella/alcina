@@ -20,11 +20,6 @@ public class EntityLocator implements Serializable {
 		return new EntityLocator(entity);
 	}
 
-	public static EntityLocator objectLocalLocator(DomainTransformEvent dte) {
-		return new EntityLocator(dte.getObjectClass(), 0,
-				dte.getObjectLocalId());
-	}
-
 	public static EntityLocator objectLocator(DomainTransformEvent dte) {
 		return new EntityLocator(dte.getObjectClass(), dte.getObjectId(),
 				dte.getObjectLocalId());
@@ -38,9 +33,6 @@ public class EntityLocator implements Serializable {
 		return new EntityLocator(
 				Reflections.classLookup().getClassForName(parts[2]),
 				Long.parseLong(parts[0]), Long.parseLong(parts[1]));
-	}
-	public boolean matches(Entity entity) {
-		return instanceLocator(entity).equals(this);
 	}
 
 	public static EntityLocator parseShort(Class clazz, String key) {
@@ -81,7 +73,7 @@ public class EntityLocator implements Serializable {
 		this.localId = localId;
 	}
 
-	public EntityLocator(Entity obj) {
+	private EntityLocator(Entity obj) {
 		this.clazz = obj.getClass();
 		this.id = obj.getId();
 		this.localId = obj.getLocalId();
@@ -130,6 +122,10 @@ public class EntityLocator implements Serializable {
 
 	public boolean isLocal() {
 		return localId != 0;
+	}
+
+	public boolean matches(Entity entity) {
+		return entity.toLocator().equals(this);
 	}
 
 	public void setClazz(Class<? extends Entity> clazz) {

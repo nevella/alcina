@@ -136,8 +136,8 @@ public class JPAHibernateImpl implements JPAImplementation {
 			Collection<Long> ids) {
 		try {
 			em.createQuery(String.format("delete %s where id in %s ",
-					clazz.getSimpleName(), EntityPersistenceHelper.toInClause(ids)))
-					.executeUpdate();
+					clazz.getSimpleName(),
+					EntityPersistenceHelper.toInClause(ids))).executeUpdate();
 		} catch (Exception e) {
 			// probably a reference error, try with parent delete/cascade
 			return false;
@@ -356,7 +356,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 			return new EntityLocator(lazy.getPersistentClass(),
 					(Long) lazy.getIdentifier(), 0L);
 		}
-		return new EntityLocator((Entity) o);
+		return ((Entity) o).toLocator();
 	}
 
 	@RegistryLocation(registryPoint = PersistenSetProjectionCreator.class, implementationType = ImplementationType.SINGLETON)

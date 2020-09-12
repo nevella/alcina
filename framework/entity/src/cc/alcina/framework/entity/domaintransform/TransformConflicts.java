@@ -211,12 +211,12 @@ public class TransformConflicts {
 	public static class TransformConflictsFromOfflineSupport {
 		private Set<EntityLocator> checked = new LinkedHashSet<EntityLocator>();
 
-		public void checking(Entity obj) {
-			checked.add(new EntityLocator(obj));
+		public void checking(Entity entity) {
+			checked.add(entity.toLocator());
 		}
 
-		public boolean wasChecked(Entity obj) {
-			return checked.contains(new EntityLocator(obj));
+		public boolean wasChecked(Entity entity) {
+			return checked.contains(entity.toLocator());
 		}
 	}
 }

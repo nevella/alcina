@@ -8,7 +8,6 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.ReverseDateProjection;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -24,7 +23,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 public class MvccEntitySortedIndexTest<IU extends Entity & IUser, IG extends Entity & IGroup>
 		extends MvccEntityTransactionTest {
 	private void debug(List<Entity> list) {
-		Ax.out(list.stream().map(EntityLocator::instanceLocator)
+		Ax.out(list.stream().map(Entity::toLocator)
 				.collect(Collectors.toList()));
 	}
 

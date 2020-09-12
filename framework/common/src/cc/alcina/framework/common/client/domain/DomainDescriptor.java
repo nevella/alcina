@@ -13,8 +13,8 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyResolver;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 
 public abstract class DomainDescriptor {
 	public Map<Class, DomainClassDescriptor<?>> perClass = new LinkedHashMap<>();
@@ -61,11 +61,9 @@ public abstract class DomainDescriptor {
 		return perClass.containsKey(clazz);
 	}
 
-	public boolean customFilterPostProcess(DomainTransformEvent dte) {
+	public boolean customFilterPostProcess(DomainTransformEventPersistent dte) {
 		return true;
 	}
-
-	public abstract Class<? extends IUser> getIUserClass();
 
 	public synchronized <T> List<PreProvideTask<T>>
 			getPreProvideTasks(Class<T> clazz) {
@@ -108,8 +106,6 @@ public abstract class DomainDescriptor {
 		 */
 		public void run(Class clazz, Collection<T> objects, boolean topLevel)
 				throws Exception;
-
-		public void writeLockedCleanup();
 
 		Class<T> forClazz();
 

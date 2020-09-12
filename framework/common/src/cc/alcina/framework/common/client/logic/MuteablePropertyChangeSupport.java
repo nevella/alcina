@@ -23,7 +23,7 @@ import com.google.gwt.core.client.GWT;
  * @author nick@alcina.cc
  * 
  */
-public class MutablePropertyChangeSupport {
+public class MuteablePropertyChangeSupport {
 	public static final transient Object UNSPECIFIED_PROPERTY_CHANGE = new Object();
 
 	private static boolean muteAll = false;
@@ -46,14 +46,14 @@ public class MutablePropertyChangeSupport {
 			throw new RuntimeException(
 					"Mute all should only be set on a single-threaded VM");
 		}
-		MutablePropertyChangeSupport.muteAll = muteAll;
+		MuteablePropertyChangeSupport.muteAll = muteAll;
 	}
 
 	private PropertyChangeSupport delegate;
 
 	private Object sourceBean;
 
-	public MutablePropertyChangeSupport(Object sourceBean) {
+	public MuteablePropertyChangeSupport(Object sourceBean) {
 		this.sourceBean = sourceBean;
 	}
 

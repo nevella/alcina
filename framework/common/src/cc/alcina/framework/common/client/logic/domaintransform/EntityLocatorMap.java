@@ -88,7 +88,7 @@ public class EntityLocatorMap implements Serializable {
 
 	public synchronized EntityLocator getPersistentLocator(Entity entity) {
 		if (entity.getId() != 0) {
-			return new EntityLocator(entity);
+			return entity.toLocator();
 		} else {
 			return localToPersistent.get(entity.getLocalId());
 		}

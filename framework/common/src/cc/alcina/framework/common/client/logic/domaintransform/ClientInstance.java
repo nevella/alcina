@@ -21,6 +21,8 @@ import javax.persistence.Transient;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
@@ -36,6 +38,7 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
  * @author nick@alcina.cc
  * 
  */
+@DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 	private Date helloDate;
 
@@ -65,20 +68,12 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 	@GwtTransient
 	private Boolean expired;
 
-	@Transient
-	public abstract AuthenticationSession getAuthenticationSession();
-
-	public abstract void setAuthenticationSession(
-			AuthenticationSession authenticationSession);
-
-	@Transient
-	public abstract ClientInstance getReplaces();
-
-	public abstract void setReplaces(ClientInstance replaces);
-
 	public Integer getAuth() {
 		return auth;
 	}
+
+	@Transient
+	public abstract AuthenticationSession getAuthenticationSession();
 
 	public Boolean getBotUserAgent() {
 		return this.botUserAgent;
@@ -117,6 +112,9 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 		return this.referrer;
 	}
 
+	@Transient
+	public abstract ClientInstance getReplaces();
+
 	public String getUrl() {
 		return this.url;
 	}
@@ -125,32 +123,39 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 		return this.userAgent;
 	}
 
+	public IUser provideUser() {
+		return Optional.ofNullable(getAuthenticationSession())
+				.map(AuthenticationSession::getUser).orElse(null);
+	}
+
 	public void setAuth(Integer auth) {
 		Integer old_auth = this.auth;
 		this.auth = auth;
 		propertyChangeSupport().firePropertyChange("auth", old_auth, auth);
-		
 	}
+
+	public abstract void setAuthenticationSession(
+			AuthenticationSession authenticationSession);
 
 	public void setBotUserAgent(Boolean botUserAgent) {
 		Boolean old_botUserAgent = this.botUserAgent;
 		this.botUserAgent = botUserAgent;
-		propertyChangeSupport().firePropertyChange("botUserAgent", old_botUserAgent, botUserAgent);
-		
+		propertyChangeSupport().firePropertyChange("botUserAgent",
+				old_botUserAgent, botUserAgent);
 	}
 
 	public void setExpired(Boolean expired) {
 		Boolean old_expired = this.expired;
 		this.expired = expired;
-		propertyChangeSupport().firePropertyChange("expired", old_expired, expired);
-		
+		propertyChangeSupport().firePropertyChange("expired", old_expired,
+				expired);
 	}
 
 	public void setHelloDate(Date helloDate) {
 		Date old_helloDate = this.helloDate;
 		this.helloDate = helloDate;
-		propertyChangeSupport().firePropertyChange("helloDate", old_helloDate, helloDate);
-		
+		propertyChangeSupport().firePropertyChange("helloDate", old_helloDate,
+				helloDate);
 	}
 
 	@Override
@@ -162,35 +167,35 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 		String old_iid = this.iid;
 		this.iid = iid;
 		propertyChangeSupport().firePropertyChange("iid", old_iid, iid);
-		
 	}
 
 	public void setIpAddress(String ipAddress) {
 		String old_ipAddress = this.ipAddress;
 		this.ipAddress = ipAddress;
-		propertyChangeSupport().firePropertyChange("ipAddress", old_ipAddress, ipAddress);
-		
+		propertyChangeSupport().firePropertyChange("ipAddress", old_ipAddress,
+				ipAddress);
 	}
 
 	public void setLastAccessed(Date lastAccessed) {
 		Date old_lastAccessed = this.lastAccessed;
 		this.lastAccessed = lastAccessed;
-		propertyChangeSupport().firePropertyChange("lastAccessed", old_lastAccessed, lastAccessed);
-		
+		propertyChangeSupport().firePropertyChange("lastAccessed",
+				old_lastAccessed, lastAccessed);
 	}
 
 	public void setReferrer(String referrer) {
 		String old_referrer = this.referrer;
 		this.referrer = referrer;
-		propertyChangeSupport().firePropertyChange("referrer", old_referrer, referrer);
-		
+		propertyChangeSupport().firePropertyChange("referrer", old_referrer,
+				referrer);
 	}
+
+	public abstract void setReplaces(ClientInstance replaces);
 
 	public void setUrl(String url) {
 		String old_url = this.url;
 		this.url = url;
 		propertyChangeSupport().firePropertyChange("url", old_url, url);
-		
 	}
 
 	public void setUserAgent(String userAgent) {
@@ -199,12 +204,7 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 		}
 		String old_userAgent = this.userAgent;
 		this.userAgent = userAgent;
-		propertyChangeSupport().firePropertyChange("userAgent", old_userAgent, userAgent);
-		
-	}
-
-	public IUser provideUser() {
-		return Optional.ofNullable(getAuthenticationSession())
-				.map(AuthenticationSession::getUser).orElse(null);
+		propertyChangeSupport().firePropertyChange("userAgent", old_userAgent,
+				userAgent);
 	}
 }

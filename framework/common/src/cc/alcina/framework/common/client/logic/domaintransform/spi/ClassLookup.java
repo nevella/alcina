@@ -50,6 +50,13 @@ public interface ClassLookup {
 
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId);
 
+	default PropertyReflector getPropertyReflector(Class<?> beanClass,
+			String propertyName) {
+		return getPropertyReflectors(beanClass).stream()
+				.filter(pr -> pr.getPropertyName().equals(propertyName))
+				.findFirst().orElse(null);
+	}
+
 	default boolean handlesClass(Class clazz) {
 		return true;
 	}

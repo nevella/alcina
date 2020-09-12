@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD })
 @ClientVisible
 /**
- * Specifies runtime creation type for child properties
+ * Specifies runtime editing behaviour for child properties
  */
 public @interface DomainProperty {
 	boolean cascadeDeletionFromRef() default false;

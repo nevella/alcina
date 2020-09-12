@@ -21,13 +21,16 @@ import java.util.Set;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
-import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.util.Ax;
 
 @DomainTransformPersistable
 @MappedSuperclass
+@DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class AuthenticationSession
 		extends VersionableEntity<AuthenticationSession> implements HasIUser {
 	private Date startTime;
@@ -43,14 +46,6 @@ public abstract class AuthenticationSession
 	private Date lastAccessed;
 
 	private String endReason;
-
-	@Override
-	public String toString() {
-		return Ax.format(
-				"%s :: {id: %s - user: %s - start: %s - type: %s - end reason: %s",
-				toStringEntity(), sessionId, getUser(), startTime,
-				authenticationType, endReason);
-	}
 
 	@Transient
 	public abstract Set<? extends AuthenticationSessionAttribute>
@@ -160,5 +155,13 @@ public abstract class AuthenticationSession
 		this.startTime = startTime;
 		propertyChangeSupport().firePropertyChange("startTime", old_startTime,
 				startTime);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format(
+				"%s :: {id: %s - user: %s - start: %s - type: %s - end reason: %s",
+				toStringEntity(), sessionId, getUser(), startTime,
+				authenticationType, endReason);
 	}
 }

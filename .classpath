@@ -89,5 +89,6 @@
 	<classpathentry kind="lib" path="lib/extras/google/gson-2.1.jar"/>
 	<classpathentry kind="lib" path="lib/extras/google/protobuf-java-2.4.1.jar"/>
 	<classpathentry kind="lib" path="lib/extras/google/google-api-services-drive-v3-rev161-1.25.0.jar"/>
+	<classpathentry kind="lib" path="lib/framework/servlet/cluster/kafka-clients-0.11.1.0-SNAPSHOT.jar" sourcepath="/g/minor/kafka"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

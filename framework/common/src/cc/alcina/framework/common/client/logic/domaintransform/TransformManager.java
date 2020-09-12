@@ -29,7 +29,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -66,7 +65,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -1109,10 +1107,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public boolean objectHasTransforms(Entity entity) {
-		EntityLocator locator = new EntityLocator(entity);
-		return getTransforms().stream().anyMatch(dte -> Objects.equals(locator,
-				EntityLocator.objectLocator(dte))
-				|| Objects.equals(locator, EntityLocator.valueLocator(dte)));
+		return getTransforms().stream().anyMatch(
+				transform -> transform.toObjectLocator().matches(entity)
+						|| transform.toValueLocator().matches(entity));
 	}
 
 	public List<DomainTransformEvent> objectsToDtes(Collection objects,
@@ -1521,25 +1518,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public int removeCreateDeleteTransforms() {
 		Set<DomainTransformEvent> events = getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN);
-		Multimap<EntityLocator, List<DomainTransformEvent>> perObjectTransforms = events
-				.stream().collect(AlcinaCollectors
-						.toKeyMultimap(EntityLocator::objectLocator));
-		Multimap<EntityLocator, List<DomainTransformEvent>> perValueTransforms = events
-				.stream().collect(AlcinaCollectors
-						.toKeyMultimap(EntityLocator::valueLocator));
+		TransformCollation collation = new TransformCollation(
+				events.stream().collect(Collectors.toList()));
 		int initial = events.size();
-		perObjectTransforms.entrySet().stream().filter(e -> Ax
-				.first(e.getValue())
-				.getTransformType() == TransformType.CREATE_OBJECT
-				&& Ax.last(e.getValue())
-						.getTransformType() == TransformType.DELETE_OBJECT)
-				.forEach(e -> {
-					EntityLocator locator = e.getKey();
-					perObjectTransforms.get(locator)
-							.forEach(this::removeTransform);
-					perValueTransforms.getAndEnsure(locator)
-							.forEach(this::removeTransform);
-				});
+		events.stream().filter(collation::isCreatedAndDeleted)
+				.forEach(this::removeTransform);
 		return initial - events.size();
 	}
 

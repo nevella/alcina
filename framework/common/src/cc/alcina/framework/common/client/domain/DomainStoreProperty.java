@@ -25,22 +25,21 @@ public @interface DomainStoreProperty {
 	DomainStorePropertyLoadType loadType() default DomainStorePropertyLoadType.TRANSIENT;
 
 	public enum DomainStorePropertyLoadType {
-		TRANSIENT, LAZY, EAGER;
+		// First two values should be accompanied by
+		// @DomainTransformPropagation(PropagationType.NONE)
+		TRANSIENT, LAZY,
+		//
+		EAGER;
 	}
 
 	@RegistryLocation(registryPoint = DomainStorePropertyResolver.class, implementationType = ImplementationType.INSTANCE)
 	@ClientInstantiable
 	public static class DomainStorePropertyResolver
 			implements DomainStoreProperty {
-		// for reflection
-		public DomainStorePropertyResolver() {
-		}
-
 		protected TreeResolver<DomainStoreProperty> resolver;
 
-		public DomainStorePropertyResolver(
-				DomainStorePropertyResolver childResolver) {
-			resolver = createResolver(childResolver.resolver);
+		// for reflection
+		public DomainStorePropertyResolver() {
 		}
 
 		public DomainStorePropertyResolver(
@@ -48,6 +47,11 @@ public @interface DomainStoreProperty {
 			resolver = new TreeResolver<DomainStoreProperty>(propertyLocation,
 					propertyLocation.propertyReflector
 							.getAnnotation(DomainStoreProperty.class));
+		}
+
+		public DomainStorePropertyResolver(
+				DomainStorePropertyResolver childResolver) {
+			resolver = createResolver(childResolver.resolver);
 		}
 
 		@Override

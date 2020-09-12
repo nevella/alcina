@@ -20,14 +20,20 @@ import javax.persistence.EntityManager;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.gwt.user.client.rpc.GwtTransient;
 import com.totsp.gwittir.client.beans.Converter;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
@@ -44,6 +50,9 @@ public abstract class DomainTransformEventPersistent
 	private Date serverCommitDate;
 
 	private long id;
+
+	@GwtTransient
+	private ExTransformDbMetadata exTransformDbMetadata;
 
 	public void beforeTransformCommit(EntityManager entityManager) {
 	}
@@ -96,9 +105,15 @@ public abstract class DomainTransformEventPersistent
 
 	// persistence in app subclass
 	@Transient
+	@JsonIgnore
 	public DomainTransformRequestPersistent
 			getDomainTransformRequestPersistent() {
 		return domainTransformRequestPersistent;
+	}
+
+	@Transient
+	public ExTransformDbMetadata getExTransformDbMetadata() {
+		return exTransformDbMetadata;
 	}
 
 	@Override
@@ -112,7 +127,20 @@ public abstract class DomainTransformEventPersistent
 	}
 
 	@Transient
+	@JsonIgnore
 	public abstract IUser getUser();
+
+	public void populateDbMetadata(DomainTransformEvent event) {
+		ExTransformDbMetadata metadata = new ExTransformDbMetadata();
+		metadata.fromEvent(event);
+		setExTransformDbMetadata(metadata);
+	}
+
+	public void populateDbMetadata(Entity persistentSource) {
+		ExTransformDbMetadata metadata = new ExTransformDbMetadata();
+		metadata.fromEntity(persistentSource);
+		setExTransformDbMetadata(metadata);
+	}
 
 	public Date provideBestDate() {
 		return serverCommitDate != null ? serverCommitDate : getUtcDate();
@@ -121,6 +149,11 @@ public abstract class DomainTransformEventPersistent
 	public void setDomainTransformRequestPersistent(
 			DomainTransformRequestPersistent domainTransformRequestPersistent) {
 		this.domainTransformRequestPersistent = domainTransformRequestPersistent;
+	}
+
+	public void setExTransformDbMetadata(
+			ExTransformDbMetadata exTransformDbMetadata) {
+		this.exTransformDbMetadata = exTransformDbMetadata;
 	}
 
 	@Override
@@ -162,6 +195,77 @@ public abstract class DomainTransformEventPersistent
 		public DomainTransformEvent
 				convert(DomainTransformEventPersistent original) {
 			return original.toNonPersistentEvent(true);
+		}
+	}
+
+	public static class ExTransformDbMetadata {
+		private Date objectCreationDate;
+
+		private Date objectLastModificationDate;
+
+		private int version;
+
+		public void applyTo(Entity entity) {
+			if (entity instanceof HasVersionNumber) {
+				entity.setVersionNumber(version);
+			}
+			if (entity instanceof IVersionable) {
+				IVersionable iVersionable = (IVersionable) entity;
+				if (iVersionable.getCreationDate() == null) {
+					iVersionable.setCreationDate(objectCreationDate);
+				}
+				iVersionable
+						.setLastModificationDate(objectLastModificationDate);
+			}
+		}
+
+		public void fromEntity(Entity persistentSource) {
+			setVersion(persistentSource.getVersionNumber());
+			if (persistentSource instanceof IVersionable) {
+				IVersionable iVersionable = (IVersionable) persistentSource;
+				objectCreationDate = iVersionable.getCreationDate();
+				objectLastModificationDate = iVersionable
+						.getLastModificationDate();
+			}
+		}
+
+		// these dates won't *exactly* match those from VersioningEntityListener
+		// - but will be close enough
+		public void fromEvent(DomainTransformEvent event) {
+			Date now = new Date();
+			if (event.getTransformType() == TransformType.CREATE_OBJECT) {
+				setObjectCreationDate(now);
+			}
+			setObjectLastModificationDate(now);
+			if (getVersion() == 0) {
+				setVersion(TransformManager.get().getObject(event)
+						.getVersionNumber() + 1);
+			}
+		}
+
+		public Date getObjectCreationDate() {
+			return objectCreationDate;
+		}
+
+		public Date getObjectLastModificationDate() {
+			return objectLastModificationDate;
+		}
+
+		public int getVersion() {
+			return version;
+		}
+
+		public void setObjectCreationDate(Date objectCreationDate) {
+			this.objectCreationDate = objectCreationDate;
+		}
+
+		public void
+				setObjectLastModificationDate(Date objectLastModificationDate) {
+			this.objectLastModificationDate = objectLastModificationDate;
+		}
+
+		public void setVersion(int version) {
+			this.version = version;
 		}
 	}
 }

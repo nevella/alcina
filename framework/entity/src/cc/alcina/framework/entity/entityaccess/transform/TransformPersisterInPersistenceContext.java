@@ -15,8 +15,6 @@ import javax.persistence.OptimisticLockException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -28,6 +26,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -44,6 +43,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken.Pass;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
+import cc.alcina.framework.entity.domaintransform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
@@ -333,38 +333,37 @@ public class TransformPersisterInPersistenceContext {
 				subRequest.updateTransformCommitType(CommitType.ALL_COMMITTED,
 						false);
 				if (token.getPass() == Pass.TRY_COMMIT) {
-					if (ResourceUtilities.is(TransformPersister.class,
-							"flushWithEveryRequest")) {
-						// defaults to true - remember this isn't committing -
-						// isn't much of a speed bump given significant requests
-						// are almost always server-side, non-'with unpublished'
-						/*
-						 * Nice thing about this is that it means no dtrp if
-						 * there are any issues
-						 */
-						entityManager.flush();
+					// if (ResourceUtilities.is(TransformPersister.class,
+					// "flushWithEveryRequest")) {
+					// // defaults to true - remember this isn't committing -
+					// // isn't much of a speed bump given significant requests
+					// // are almost always server-side, non-'with unpublished'
+					// /*
+					// * Nice thing about this is that it means no dtrp if
+					// * there are any issues
+					// */
+					// entityManager.flush();
+					// }
+					// in fact...it doubles the db commit time. Removed
+					if (request.getEventIdsToIgnore().size() > 0) {
+						eventsPersisted
+								.removeIf(event -> request.getEventIdsToIgnore()
+										.contains(event.getEventId()));
 					}
-					CollectionFilter<DomainTransformEvent> filterByPolicy = new CollectionFilter<DomainTransformEvent>() {
-						@Override
-						public boolean allow(DomainTransformEvent event) {
-							return token.getTransformLoggingPolicy()
-									.shouldPersist(event)
-									&& !request.getEventIdsToIgnore()
-											.contains(event.getEventId())
-									&& !LooseContext.is(
-											TransformPersister.CONTEXT_DO_NOT_PERSIST_DTES);
-						}
-					};
-					eventsPersisted = CollectionFilters.filter(eventsPersisted,
-							filterByPolicy);
+					if (LooseContext.is(
+							TransformPersister.CONTEXT_DO_NOT_PERSIST_DTES)) {
+						eventsPersisted.clear();
+					}
 					if (!eventsPersisted.isEmpty()) {
-						Class<? extends DomainTransformRequestPersistent> dtrqImpl = AlcinaPersistentEntityImpl
+						TransformPropagationPolicy propagationPolicy = token
+								.getTransformPropagationPolicy();
+						Class<? extends DomainTransformRequestPersistent> persistentRequestClass = AlcinaPersistentEntityImpl
 								.getImplementation(
 										DomainTransformRequestPersistent.class);
-						Class<? extends DomainTransformEventPersistent> dtrEvtImpl = AlcinaPersistentEntityImpl
+						Class<? extends DomainTransformEventPersistent> persistentEventClass = AlcinaPersistentEntityImpl
 								.getImplementation(
 										DomainTransformEventPersistent.class);
-						DomainTransformRequestPersistent persistentRequest = dtrqImpl
+						DomainTransformRequestPersistent persistentRequest = persistentRequestClass
 								.newInstance();
 						tm.persist(persistentRequest);
 						Calendar defaultCalendar = Calendar.getInstance();
@@ -391,47 +390,51 @@ public class TransformPersisterInPersistenceContext {
 								token.getOriginatingUserId());
 						dtrps.add(persistentRequest);
 						boolean missingClassRefWarned = false;
+						TransformCollation collation = new TransformCollation(
+								eventsPersisted);
 						for (DomainTransformEvent event : eventsPersisted) {
-							DomainTransformEventPersistent persistentEvent = dtrEvtImpl
+							DomainTransformEventPersistent propagationEvent = persistentEventClass
 									.newInstance();
-							boolean persistEvent = token
-									.getTransformPersistencePolicy()
-									.shouldPersist(event);
-							if (persistEvent) {
-								tm.persist(persistentEvent);
+							if (propagationPolicy.shouldPersist(event)) {
+								tm.persist(propagationEvent);
 							}
-							persistentEvent.wrap(event);
-							if (persistentEvent.getObjectClassRef() == null
+							propagationEvent.wrap(event);
+							if (collation.forLocator(event.toObjectLocator())
+									.last() == event) {
+								propagationEvent.populateDbMetadata(event);
+							}
+							if (propagationEvent.getObjectClassRef() == null
 									&& !missingClassRefWarned) {
 								missingClassRefWarned = true;
 								System.out.println(
 										"Warning - persisting transform without a classRef - "
-												+ persistentEvent);
+												+ propagationEvent);
 							}
-							if (persistentEvent.getObjectId() == 0) {
-								persistentEvent.setObjectId(tm.getObject(
-										persistentEvent.getObjectClass(), 0,
-										persistentEvent.getObjectLocalId())
+							if (propagationEvent.getObjectId() == 0) {
+								propagationEvent.setObjectId(tm.getObject(
+										propagationEvent.getObjectClass(), 0,
+										propagationEvent.getObjectLocalId())
 										.getId());
 							}
-							if (persistentEvent.getValueId() == 0
-									&& persistentEvent.getValueLocalId() != 0) {
-								persistentEvent.setValueId(tm
-										.getObject(
-												persistentEvent.getValueClass(),
-												0,
-												persistentEvent
-														.getValueLocalId())
+							if (propagationEvent.getValueId() == 0
+									&& propagationEvent
+											.getValueLocalId() != 0) {
+								propagationEvent.setValueId(tm.getObject(
+										propagationEvent.getValueClass(), 0,
+										propagationEvent.getValueLocalId())
 										.getId());
 							}
-							persistentEvent.setServerCommitDate(new Date());
-							if (persistEvent) {
-								persistentEvent
+							propagationEvent.setServerCommitDate(new Date());
+							if (propagationPolicy
+									.shouldPropagate(propagationEvent)) {
+								// note that this won't persist the 'persistent'
+								// event if propgationType=NON_PERSISTENT
+								propagationEvent
 										.setDomainTransformRequestPersistent(
 												persistentRequest);
 								persistentRequest.getEvents()
-										.add(persistentEvent);
-								persistentEvents.add(persistentEvent);
+										.add(propagationEvent);
+								persistentEvents.add(propagationEvent);
 							}
 						}
 						if (++requestCount % 100 == 0) {

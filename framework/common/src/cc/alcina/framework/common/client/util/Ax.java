@@ -55,7 +55,9 @@ public class Ax {
 	}
 
 	public static <T> T first(Collection<T> collection) {
-		return collection.size() == 0 ? null : collection.iterator().next();
+		return collection.size() == 0 ? null
+				: collection instanceof List ? ((List<T>) collection).get(0)
+						: collection.iterator().next();
 	}
 
 	public static String format(String template, Object... args) {

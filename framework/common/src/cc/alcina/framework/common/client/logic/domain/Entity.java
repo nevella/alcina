@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CollectionModificationType;
@@ -42,6 +43,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 @MappedSuperclass
 @RegistryLocation(registryPoint = Entity.class, implementationType = ImplementationType.MULTIPLE)
 @NonClientRegistryPointType
+@DomainTransformPropagation(PropagationType.PERSISTENT)
 public abstract class Entity<T extends Entity> extends Bindable
 		implements HasVersionNumber, HasId {
 	public static final transient String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class
@@ -64,10 +66,6 @@ public abstract class Entity<T extends Entity> extends Bindable
 
 	public void delete() {
 		Domain.delete(domainIdentity());
-	}
-
-	public void reHash() {
-		hash = 0;
 	}
 
 	@MvccAccess(type = MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY)
@@ -195,6 +193,10 @@ public abstract class Entity<T extends Entity> extends Bindable
 		return hash;
 	}
 
+	public void reHash() {
+		hash = 0;
+	}
+
 	// no listeners - this should be invisible to transform listeners
 	public void setLocalId(long localId) {
 		if (this.localId != 0) {
@@ -208,13 +210,17 @@ public abstract class Entity<T extends Entity> extends Bindable
 		this.versionNumber = versionNumber;
 	}
 
+	public EntityLocator toLocator() {
+		return EntityLocator.instanceLocator(domainIdentity());
+	}
+
 	@Override
 	/*
 	 * the last line is to deal with a weird gwt/ff/webkit bug
 	 */
 	public String toString() {
 		if (Reflections.classLookup() == null) {
-			return new EntityLocator(domainIdentity()).toString();
+			return toLocator().toString();
 		}
 		if (!GwittirUtils.isIntrospectable(getClass())) {
 			return super.toString();
@@ -226,7 +232,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 	}
 
 	public String toStringEntity() {
-		return new EntityLocator(domainIdentity()).toString();
+		return toLocator().toString();
 	}
 
 	public T writeable() {

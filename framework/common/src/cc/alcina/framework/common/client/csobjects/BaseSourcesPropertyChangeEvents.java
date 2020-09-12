@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
-import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.MuteablePropertyChangeSupport;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessType;
 
@@ -32,7 +32,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessT
  */
 public class BaseSourcesPropertyChangeEvents
 		implements SourcesPropertyChangeEvents {
-	private transient MutablePropertyChangeSupport propertyChangeSupport;
+	private transient MuteablePropertyChangeSupport propertyChangeSupport;
 
 	public void addOrRemovePropertyChangeListener(
 			PropertyChangeListener listener, boolean add) {
@@ -68,7 +68,7 @@ public class BaseSourcesPropertyChangeEvents
 	 * Useful for collection listeners - a "check the kids" thing
 	 */
 	public void fireUnspecifiedPropertyChange(String name) {
-		((MutablePropertyChangeSupport) this.propertyChangeSupport())
+		((MuteablePropertyChangeSupport) this.propertyChangeSupport())
 				.fireUnspecifiedPropertyChange(name);
 	}
 
@@ -77,7 +77,7 @@ public class BaseSourcesPropertyChangeEvents
 	 * the whole object"
 	 */
 	public void fireUnspecifiedPropertyChange(Object propagationId) {
-		((MutablePropertyChangeSupport) this.propertyChangeSupport())
+		((MuteablePropertyChangeSupport) this.propertyChangeSupport())
 				.fireUnspecifiedPropertyChange(propagationId);
 	}
 
@@ -133,9 +133,9 @@ public class BaseSourcesPropertyChangeEvents
 	 * domainIdentity()
 	 */
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-	protected MutablePropertyChangeSupport propertyChangeSupport() {
+	protected MuteablePropertyChangeSupport propertyChangeSupport() {
 		if (propertyChangeSupport == null) {
-			propertyChangeSupport = new MutablePropertyChangeSupport(this);
+			propertyChangeSupport = new MuteablePropertyChangeSupport(this);
 		}
 		return propertyChangeSupport;
 	}

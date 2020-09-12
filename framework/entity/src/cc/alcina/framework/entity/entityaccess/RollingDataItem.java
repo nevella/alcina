@@ -21,8 +21,10 @@ import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 
 @MappedSuperclass
 @DomainTransformPersistable
@@ -38,6 +40,7 @@ public abstract class RollingDataItem extends Entity {
 	@Lob
 	@Transient
 	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
+	@DomainTransformPropagation(PropagationType.NONE)
 	public String getData() {
 		return this.data;
 	}

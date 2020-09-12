@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicyFactory;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
-import cc.alcina.framework.entity.domaintransform.policy.TransformPersistencePolicy;
+import cc.alcina.framework.entity.domaintransform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 public class TransformPersistenceToken implements Serializable {
@@ -60,13 +60,13 @@ public class TransformPersistenceToken implements Serializable {
 
 	private transient DomainStore targetStore = null;
 
-	private transient TransformCollation transformCollation;
+	private transient AdjunctTransformCollation transformCollation;
 
 	private DomainTransformLayerWrapper transformResult;
 
 	private boolean localToVm;
 
-	private TransformPersistencePolicy transformPersistencePolicy;
+	private TransformPropagationPolicy transformPropagationPolicy;
 
 	public TransformPersistenceToken(DomainTransformRequest request,
 			EntityLocatorMap locatorMap,
@@ -84,9 +84,9 @@ public class TransformPersistenceToken implements Serializable {
 		this.transformExceptionPolicy = Registry
 				.impl(PersistenceLayerTransformExceptionPolicyFactory.class)
 				.getPolicy(this, forOfflineTransforms);
-		this.transformCollation = new TransformCollation(this);
-		this.transformPersistencePolicy = Registry
-				.impl(TransformPersistencePolicy.class);
+		this.transformCollation = new AdjunctTransformCollation(this);
+		this.transformPropagationPolicy = Registry
+				.impl(TransformPropagationPolicy.class);
 	}
 
 	public List<DomainTransformEvent> getClientUpdateEvents() {
@@ -125,7 +125,7 @@ public class TransformPersistenceToken implements Serializable {
 		return this.targetStore;
 	}
 
-	public TransformCollation getTransformCollation() {
+	public AdjunctTransformCollation getTransformCollation() {
 		return this.transformCollation;
 	}
 
@@ -142,8 +142,8 @@ public class TransformPersistenceToken implements Serializable {
 		return this.transformLoggingPolicy;
 	}
 
-	public TransformPersistencePolicy getTransformPersistencePolicy() {
-		return this.transformPersistencePolicy;
+	public TransformPropagationPolicy getTransformPropagationPolicy() {
+		return this.transformPropagationPolicy;
 	}
 
 	public DomainTransformLayerWrapper getTransformResult() {
@@ -226,9 +226,9 @@ public class TransformPersistenceToken implements Serializable {
 		this.transformLoggingPolicy = transformLoggingPolicy;
 	}
 
-	public void setTransformPersistencePolicy(
-			TransformPersistencePolicy transformPersistencePolicy) {
-		this.transformPersistencePolicy = transformPersistencePolicy;
+	public void setTransformPropagationPolicy(
+			TransformPropagationPolicy transformPropagationPolicy) {
+		this.transformPropagationPolicy = transformPropagationPolicy;
 	}
 
 	public void
@@ -293,13 +293,13 @@ public class TransformPersistenceToken implements Serializable {
 		return map.values().stream().collect(Collectors.toList());
 	}
 
-	public enum Pass {
-		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
-	}
-
 	@Override
 	public String toString() {
 		return Ax.format("TransformPersistenceToken - %s requests\n%s",
 				getRequest().allRequests().size(), getRequest());
+	}
+
+	public enum Pass {
+		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
 	}
 }

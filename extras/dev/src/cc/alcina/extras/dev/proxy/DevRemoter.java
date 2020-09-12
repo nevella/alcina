@@ -7,9 +7,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -31,14 +29,11 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
-import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.PostTransactionEntityResolver;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
 
@@ -116,9 +111,9 @@ public class DevRemoter {
 			InputStream content = response.getEntity().getContent();
 			ArrayList container = KryoUtils.deserializeFromStream(content,
 					ArrayList.class);
-			Object obj = container.get(0);
-			if (obj instanceof Exception) {
-				((Exception) obj).printStackTrace();
+			Object object = container.get(0);
+			if (object instanceof Exception) {
+				((Exception) object).printStackTrace();
 				throw new Exception("Remote exception");
 			}
 			if (methodName.equals("transformInPersistenceContext")) {
@@ -128,23 +123,14 @@ public class DevRemoter {
 										.get(1));
 				DomainTransformLayerWrapper wrapper = (DomainTransformLayerWrapper) container
 						.get(0);
-				List<Long> ids = wrapper.persistentRequests.stream()
-						.map(rq -> rq.getId()).collect(Collectors.toList());
-				if (ids.isEmpty()) {
-				} else {
-					// reload bcoz won't have dte.source filled
-					List<DomainTransformRequestPersistent> requests = DomainStore
-							.writableStore().loadTransformRequests(ids, null);
-					wrapper.persistentRequests = requests;
-					wrapper.persistentEvents = (List<DomainTransformEventPersistent>) (List) requests
-							.stream()
-							.map(DomainTransformRequestPersistent::getEvents)
-							.flatMap(Collection::stream)
-							.collect(Collectors.toList());
-				}
+				// the rare case where we *don't* want an mvcc object (because
+				// we'll later project)
+				wrapper.persistentRequests.forEach(w -> w
+						.setClientInstance(GraphProjection.maxDepthProjection(
+								w.getClientInstance(), 1, null)));
 			}
-			customiseResult(obj);
-			return obj;
+			customiseResult(object);
+			return object;
 		} finally {
 			LooseContext.pop();
 		}

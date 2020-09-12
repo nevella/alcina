@@ -168,6 +168,7 @@ public class DomainTransformEvent
 	}
 
 	@Transient
+	@JsonIgnore
 	public String getObjectClassName() {
 		if (this.objectClassName == null) {
 			Class clazz = getObjectClass();
@@ -455,9 +456,6 @@ public class DomainTransformEvent
 
 	public void setValueLocalId(long valueLocalId) {
 		this.valueLocalId = valueLocalId;
-		if (valueLocalId == 0 && valueId == 0) {
-			int debug = 3;
-		}
 	}
 
 	@Transient
@@ -475,9 +473,17 @@ public class DomainTransformEvent
 		}
 	}
 
+	public EntityLocator toObjectLocator() {
+		return EntityLocator.objectLocator(this);
+	}
+
 	@Override
 	public String toString() {
 		String serialize = new DTRProtocolSerializer().serialize(this);
 		return serialize;
+	}
+
+	public EntityLocator toValueLocator() {
+		return EntityLocator.valueLocator(this);
 	}
 }

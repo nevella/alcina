@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -114,7 +113,7 @@ public abstract class BaseProjection<T extends Entity>
 				e.printStackTrace();
 				System.out.println("Cause - " + t);
 				if (t instanceof Entity) {
-					System.out.println(new EntityLocator(t));
+					System.out.println(((Entity) t).toLocator());
 				}
 			}
 		}

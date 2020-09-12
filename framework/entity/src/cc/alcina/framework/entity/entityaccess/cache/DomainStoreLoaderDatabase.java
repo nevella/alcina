@@ -48,7 +48,6 @@ import javax.persistence.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
@@ -57,20 +56,20 @@ import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
-import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -188,6 +187,21 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	@Override
+	public boolean checkTransformRequestExists(long id) {
+		Class<? extends DomainTransformEvent> transformEventImplClass = domainDescriptor
+				.getShadowDomainTransformEventPersistentClass();
+		String sql = Ax.format(
+				"select id from %s where  domainTransformRequestPersistent_id = %s limit 1;",
+				transformEventImplClass.getAnnotation(Table.class).name(), id);
+		try (Statement statement = getConnection().createStatement()) {
+			ResultSet rs = statement.executeQuery(sql);
+			return rs.next();
+		} catch (SQLException e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	@Override
 	public LazyObjectLoader getLazyObjectLoader() {
 		return backupLazyLoader;
 	}
@@ -215,10 +229,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	@Override
-	public List<DomainTransformRequestPersistent> loadTransformRequests(
-			Collection<Long> ids, Logger logger) throws Exception {
+	public DomainTransformRequestPersistent loadTransformRequest(long id) {
 		synchronized (loadTransformRequestLock) {
-			return loadTransformRequests0(ids, logger);
+			try {
+				return loadTransformRequest0(id);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 
@@ -782,17 +799,17 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	/*
 	 * Logger parameter currently unused
 	 */
-	private List<DomainTransformRequestPersistent> loadTransformRequests0(
-			Collection<Long> ids, Logger logger) throws Exception {
-		store.logger.info("{} - loading transform request {}", store.name, ids);
+	private DomainTransformRequestPersistent loadTransformRequest0(long id)
+			throws Exception {
+		store.logger.info("{} - loading transform request {}", store.name, id);
 		Connection conn = getConnection();
 		try {
 			CachingMap<Long, DomainTransformRequestPersistent> loadedRequests = new CachingMap<>(
-					id -> {
+					rid -> {
 						DomainTransformRequestPersistent request = AlcinaPersistentEntityImpl
 								.getNewImplementationInstance(
 										DomainTransformRequestPersistent.class);
-						request.setId(id);
+						request.setId(rid);
 						return request;
 					});
 			Class<? extends DomainTransformEvent> transformEventImplClass = domainDescriptor
@@ -804,15 +821,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						transformEventImplClass);
 				prepareTable(classDescriptor);
 			}
-			String sqlFilter = Ax.format(
-					" domainTransformRequestPersistent_id in %s order by id",
-					EntityPersistenceHelper.toInClause(ids));
+			String sqlFilter = Ax
+					.format(" domainTransformRequestPersistent_id = %s ", id);
 			LaterLookup laterLookup = new LaterLookup();
 			List<? extends DomainTransformEventPersistent> transforms = null;
 			Transaction.ensureDomainPreparingActive();
 			transforms = (List) loadTable0(transformEventImplClass, sqlFilter,
-					new ClassIdLock(DomainTransformRequestPersistent.class,
-							ids.iterator().next()),
+					new ClassIdLock(DomainTransformRequestPersistent.class, id),
 					laterLookup, false, true);
 			laterLookup.resolve(new CustomResolver() {
 				@Override
@@ -850,41 +865,22 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					|| event.getObjectClassRef().notInVm()
 					|| (event.getValueClassRef() != null
 							&& event.getValueClassRef().notInVm()));
-			// TODO - populate source - see
-			// cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceQueue.FireEventsThread.publishTransformEvent(Long)
-			MultikeyMap<Entity> classIdTransformee = new UnsortedMultikeyMap<>();
-			for (DomainTransformEventPersistent transform : transforms) {
-				transform.getDomainTransformRequestPersistent().getEvents()
-						.add(transform);
-				Class<? extends Entity> transformeeClass = transform
-						.getObjectClass();
-				long id = transform.getObjectId();
-				if (transform
-						.getTransformType() == TransformType.DELETE_OBJECT) {
-					classIdTransformee.remove(transformeeClass, id);
-				} else {
-					Entity source = classIdTransformee.ensure(() -> {
-						Entity instance = Reflections.classLookup()
-								.newInstance(transformeeClass);
-						instance.setId(id);
-						return instance;
-					}, transformeeClass, id);
-					transform.setSource(source);
-				}
-			}
+			TransformCollation collation = new TransformCollation(transforms);
+			Multimap<Class, List<EntityCollation>> toLoad = collation
+					.allEntityCollations()
+					.filter(ec -> !ec.isDeleted()
+							&& store.isCached(ec.getObjectClass())
+							&& IVersionable.class
+									.isAssignableFrom(ec.getObjectClass()))
+					.collect(AlcinaCollectors
+							.toKeyMultimap(EntityCollation::getObjectClass));
 			List<Callable> tasks = new ArrayList<>();
-			for (Class clazz : (Set<Class>) (Set) classIdTransformee.keySet()) {
-				if (IVersionable.class.isAssignableFrom(clazz)
-						&& store.isCached(clazz)) {
-					Collection<Entity> iversionables = classIdTransformee
-							.asMap(clazz).allValues();
-					tasks.add(new IVersionableLoaderTask(conn, clazz,
-							iversionables));
-				}
-			}
+			toLoad.entrySet().forEach(e -> {
+				tasks.add(new IVersionableLoaderTask(conn, e.getKey(),
+						e.getValue()));
+			});
 			invokeAllWithThrow(tasks, iLoaderExecutor);
-			return loadedRequests.values().stream()
-					.collect(Collectors.toList());
+			return loadedRequests.values().stream().findFirst().orElse(null);
 		} finally {
 			releaseConn(conn);
 		}
@@ -1279,15 +1275,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	private class IVersionableLoaderTask implements Callable<Void> {
 		private Class<Entity> clazz;
 
-		private Collection<Entity> sources;
+		private Collection<EntityCollation> collations;
 
 		private Connection conn;
 
 		public IVersionableLoaderTask(Connection conn, Class<Entity> clazz,
-				Collection<Entity> sources) {
+				List<EntityCollation> collations) {
 			this.conn = conn;
 			this.clazz = clazz;
-			this.sources = sources;
+			this.collations = collations;
 		}
 
 		@Override
@@ -1295,40 +1291,27 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			try {
 				LaterLookup laterLookup = new LaterLookup();
 				String sqlFilter = Ax.format(" id in %s ",
-						EntityPersistenceHelper.toInClause(sources));
+						EntityPersistenceHelper.toInClause(collations));
 				ClassIdLock dummySublock = new ClassIdLock(clazz, 0L);
 				List<? extends Entity> persistentSources = (List) loadTable0(
 						conn, clazz, sqlFilter, dummySublock, laterLookup,
 						false, true, false);
-				Map<Long, ? extends Entity> idMap = EntityHelper
-						.toIdMap(sources);
-				// not needed - in fact key that we don't (quite hard to track
+				Map<EntityLocator, EntityCollation> locatorCollation = collations
+						.stream().collect(AlcinaCollectors
+								.toKeyMap(EntityCollation::getLocator));
+				// laterLookup.resolve() definitiely not needed - in fact key
+				// that we don't (quite hard to track
 				// issue) because otherwise we'll corrupt our graph with lame
 				// fauxness
-				// we're only loading these to get the dates - most of the need
-				// (all?) will go away with mvcc.4
+				// we're only loading these to get the non transform metadata,
+				// after all
+				//
 				// laterLookup.resolve();
 				for (Entity persistentSource : persistentSources) {
-					Entity transformee = idMap.get(persistentSource.getId());
-					if (transformee instanceof HasVersionNumber) {
-						((HasVersionNumber) transformee).setVersionNumber(
-								((HasVersionNumber) persistentSource)
-										.getVersionNumber());
-					}
-					if (transformee instanceof IVersionable) {
-						IVersionable iVersionable = (IVersionable) transformee;
-						IVersionable persistent = (IVersionable) persistentSource;
-						iVersionable.setCreationDate(SEUtilities
-								.toJavaDate(persistent.getCreationDate()));
-						iVersionable.setLastModificationDate(
-								SEUtilities.toJavaDate((persistent
-										.getLastModificationDate())));
-						Class<? extends IUser> iUserClass = store.domainDescriptor
-								.getIUserClass();
-						if (iUserClass == null) {
-							return null;
-						}
-					}
+					EntityCollation collation = locatorCollation
+							.get(persistentSource.toLocator());
+					((DomainTransformEventPersistent) collation.last())
+							.populateDbMetadata(persistentSource);
 				}
 				return null;
 			} catch (Exception e) {

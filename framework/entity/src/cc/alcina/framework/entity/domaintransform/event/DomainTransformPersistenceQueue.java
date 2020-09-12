@@ -2,13 +2,13 @@ package cc.alcina.framework.entity.domaintransform.event;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,6 +50,11 @@ import cc.alcina.framework.entity.projection.GraphProjection;
  * Improvement: rather than a strict dtrp-id queue, use 'happens after' field of
  * dtrp to allow out-of-sequence publishing
  * 
+ * 
+ * TODO: doc :
+ * 
+ * how this interacts with ClusterTransformListener how the threading works
+ * 
  * @author nick@alcina.cc
  *
  */
@@ -84,6 +89,8 @@ public class DomainTransformPersistenceQueue {
 
 	private Thread firingThread = null;
 
+	private Map<Long, DomainTransformRequestPersistent> loadedRequests = new ConcurrentHashMap<>();
+
 	public DomainTransformPersistenceQueue(
 			DomainTransformPersistenceEvents persistenceEvents) {
 		this.persistenceEvents = persistenceEvents;
@@ -97,6 +104,18 @@ public class DomainTransformPersistenceQueue {
 		synchronized (toFire) {
 			toFire.notifyAll();
 		}
+	}
+
+	public void
+			cachePersistedRequest(DomainTransformRequestPersistent request) {
+		long requestId = request.getId();
+		synchronized (queueModificationLock) {
+			if (firedOrQueued.contains(requestId)
+					&& !toFire.contains(requestId)) {
+				return;
+			}
+		}
+		loadedRequests.put(requestId, request);
 	}
 
 	public Thread getFireEventsThread() {
@@ -129,6 +148,7 @@ public class DomainTransformPersistenceQueue {
 	public void sequencedTransformRequestPublished() {
 		List<Long> sequentialUnpublishedTransformIds = persistenceEvents.domainStore
 				.getTransformSequencer().getSequentialUnpublishedTransformIds();
+		// filterApplicableRequestIds(sequentialUnpublishedTransformIds);
 		fireSequentialUnpublishedTransformIds(
 				sequentialUnpublishedTransformIds);
 	}
@@ -369,24 +389,23 @@ public class DomainTransformPersistenceQueue {
 	public class FireEventsThread extends Thread {
 		Logger fireEventThreadLogger = LoggerFactory.getLogger(getClass());
 
-		Map<Long, DomainTransformRequestPersistent> loadedRequests = new LinkedHashMap<>();
-
 		@Override
 		public void run() {
 			setName(Ax.format("DomainTransformPersistenceQueue-fire::%s",
 					persistenceEvents.domainStore.name));
-			while (!closed.get()) {
+			while (true) {
 				try {
 					Long id = null;
-					synchronized (toFire) {
-						// double-check
-						if (closed.get()) {
-							break;
-						}
-						if (toFire.isEmpty()) {
+					if (getToFireQueueLength() == 0) {
+						synchronized (toFire) {
 							toFire.wait();
+							if (closed.get()) {
+								return;
+							}
 						}
-						if (!toFire.isEmpty()) {
+					}
+					if (getToFireQueueLength() > 0) {
+						synchronized (queueModificationLock) {
 							id = toFire.pop();
 						}
 					}
@@ -425,7 +444,6 @@ public class DomainTransformPersistenceQueue {
 			} else {
 				try {
 					DomainTransformRequestPersistent request = null;
-					ensureRequestsLoaded(id);
 					request = loadedRequests.get(id);
 					if (request != null) {
 						if (Ax.isTest() && request.getClientInstance() != null
@@ -451,45 +469,31 @@ public class DomainTransformPersistenceQueue {
 								.fireDomainTransformPersistenceEvent(event);
 						loadedRequests.remove(id);
 					} else {
-						fireEventThreadLogger.warn(
-								"publishTransformEvent - missed (no transforms?) dtr {}",
-								id);
+						boolean exists = persistenceEvents.domainStore
+								.checkTransformRequestExists(id);
+						if (exists) {
+							// using cluster queueing - wait for an event from
+							// there
+							fireEventThreadLogger.warn(
+									"publishTransformEvent - received out of order request - will return to front of to-fire on next event -  dtr {}",
+									id);
+							synchronized (toFire) {
+								toFire.wait();
+							}
+							synchronized (queueModificationLock) {
+								toFire.addFirst(id);
+							}
+						} else {
+							fireEventThreadLogger.warn(
+									"publishTransformEvent - missed (no transforms?) dtr {}",
+									id);
+						}
 					}
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				} finally {
 					Transaction.ensureEnded();
 				}
-			}
-		}
-
-		void ensureRequestsLoaded(long ensureId) throws Exception {
-			Set<Long> idsRequired = new LinkedHashSet<>();
-			idsRequired.add(ensureId);
-			synchronized (toFire) {
-				toFire.stream().filter(id -> !loadedRequests.containsKey(id))
-						.forEach(idsRequired::add);
-			}
-			if (!idsRequired.isEmpty()) {
-				List<DomainTransformRequestPersistent> requests = null;
-				requests = persistenceEvents.domainStore.loadTransformRequests(
-						idsRequired, fireEventThreadLogger);
-				if (Ax.isTest()) {
-					List<DomainTransformRequestPersistent> extraRequestData = CommonPersistenceProvider
-							.get().getCommonPersistence()
-							.getPersistentTransformRequests(0, 0, idsRequired,
-									false, true, null);
-					List<DomainTransformRequestPersistent> f_requests = requests;
-					extraRequestData.forEach(r -> {
-						f_requests.stream()
-								.filter(r2 -> r2.getId() == r.getId())
-								.forEach(r2 -> {
-									r2.setRequestId(r.getRequestId());
-									r2.setClientInstance(r.getClientInstance());
-								});
-					});
-				}
-				requests.forEach(r -> loadedRequests.put(r.getId(), r));
 			}
 		}
 	}

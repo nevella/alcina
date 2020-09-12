@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.common.client.logic.reflection;
+package cc.alcina.framework.common.client.logic.domain;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -22,14 +22,17 @@ import java.lang.annotation.Target;
 
 /**
  * 
- * 
  * @author nick@alcina.cc
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target({ ElementType.TYPE })
-@ClientVisible
-public @interface NonDomainTransformPersistable {
+@Target({ ElementType.TYPE, ElementType.METHOD })
+public @interface DomainTransformPropagation {
+	PropagationType value();
+
+	public enum PropagationType {
+		PERSISTENT, NON_PERSISTENT, NONE
+	}
 }

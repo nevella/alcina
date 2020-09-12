@@ -38,16 +38,14 @@ public class TransformHistory {
 				TransformHistory info = get(entities.get(0).entityClass(),
 						EntityHelper.toIdSet(entities));
 				for (Entity entity : entities) {
-					cache.get().put(EntityLocator.instanceLocator(entity),
-							info.filter(entity));
+					cache.get().put(entity.toLocator(), info.filter(entity));
 				}
 			}
 		}
 	}
 
 	public static TransformHistory get(Entity entity) {
-		TransformHistory cached = cache.get()
-				.get(EntityLocator.instanceLocator(entity));
+		TransformHistory cached = cache.get().get(entity.toLocator());
 		return cached != null ? cached
 				: get(entity.getClass(), Collections.singleton(entity.getId()));
 	}
@@ -96,9 +94,8 @@ public class TransformHistory {
 
 	private TransformHistory filter(Entity entity) {
 		TransformHistory info = new TransformHistory();
-		EntityLocator instanceLocator = EntityLocator.instanceLocator(entity);
-		info.transforms = transforms.stream().filter(event -> EntityLocator
-				.objectLocator(event).equals(instanceLocator))
+		info.transforms = transforms.stream()
+				.filter(event -> event.toObjectLocator().matches(entity))
 				.collect(Collectors.toList());
 		return info;
 	}

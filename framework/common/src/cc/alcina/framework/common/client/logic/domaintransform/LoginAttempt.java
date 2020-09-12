@@ -6,9 +6,9 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 

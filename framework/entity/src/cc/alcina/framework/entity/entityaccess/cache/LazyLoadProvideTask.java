@@ -3,10 +3,8 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -21,8 +19,6 @@ import cc.alcina.framework.common.client.domain.DomainDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multiset;
@@ -124,48 +120,6 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 	@Override
 	public Stream<T> wrap(Stream<T> stream) {
 		return wrapAll(stream);
-	}
-
-	@Override
-	public void writeLockedCleanup() {
-		if (evictionDisabled()) {
-			return;
-		}
-		if ("mvcc".length() > 0) {
-			/*
-			 * **probably** get rid of all of fancy eviction - have mvcc/vacuum
-			 * handle all lazy tasks (which - for performance reasons - pretty
-			 * much ensures that lazy graphs are going to be dev-only -- but
-			 * that's ok)
-			 */
-			throw new UnsupportedOperationException();
-		}
-		try {
-			LooseContext.pushWithTrue(CONTEXT_LAZY_LOAD_DISABLED);
-			Iterator<Entry<Long, Long>> itr = idEvictionAge.entrySet()
-					.iterator();
-			EvictionToken evictionToken = new EvictionToken(domainStore, this);
-			while (idEvictionAge
-					.size() > (minEvictionSize
-							+ evictionToken.getTopLevelEvictedCount())
-					&& itr.hasNext()) {
-				Entry<Long, Long> entry = itr.next();
-				if ((System.currentTimeMillis()
-						- entry.getValue()) > minEvictionAge) {
-					try {
-						Long key = entry.getKey();
-						if (!evictionToken.wasEvicted(key, this)) {
-							evict(evictionToken, key, true);
-						}
-					} catch (Exception e) {
-						AlcinaTopics.notifyDevWarning(e);
-					}
-				}
-			}
-			evictionToken.removeEvicted();
-		} finally {
-			LooseContext.pop();
-		}
 	}
 
 	private void registerLoaded(List<T> requireLoad) {

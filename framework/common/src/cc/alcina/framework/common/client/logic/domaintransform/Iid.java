@@ -18,8 +18,10 @@ import java.util.Set;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
-import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 
 /**
  *
@@ -27,6 +29,7 @@ import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersist
  */
 @DomainTransformPersistable
 @MappedSuperclass
+@DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class Iid extends VersionableEntity<Iid> {
 	private String instanceId;
 

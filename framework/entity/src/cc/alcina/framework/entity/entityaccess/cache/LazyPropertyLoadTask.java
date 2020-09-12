@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
 public class LazyPropertyLoadTask<T extends Entity>
@@ -27,15 +26,10 @@ public class LazyPropertyLoadTask<T extends Entity>
 	@Override
 	public Stream<T> wrap(Stream<T> stream) {
 		// return stream.peek(t -> lazyLoad(Collections.singletonList(t)));
-		if(LooseContext.is(LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)){
+		if (LooseContext.is(LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)) {
 			return stream;
 		}
 		return super.wrap(stream);
-	}
-
-	@Override
-	public void writeLockedCleanup() {
-		// noop
 	}
 
 	@Override
@@ -56,7 +50,7 @@ public class LazyPropertyLoadTask<T extends Entity>
 
 	@Override
 	protected void lazyLoad(Collection objects) {
-		if(LooseContext.is(CONTEXT_IN_LAZY_PROPERTY_LOAD)){
+		if (LooseContext.is(CONTEXT_IN_LAZY_PROPERTY_LOAD)) {
 			return;
 		}
 		try {
@@ -64,8 +58,7 @@ public class LazyPropertyLoadTask<T extends Entity>
 					DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
 			LooseContext
 					.setTrue(DomainStore.CONTEXT_POPULATE_LAZY_PROPERTY_VALUES);
-			LooseContext
-					.setTrue(CONTEXT_IN_LAZY_PROPERTY_LOAD);
+			LooseContext.setTrue(CONTEXT_IN_LAZY_PROPERTY_LOAD);
 			String sqlFilter = String.format(" id in %s",
 					EntityPersistenceHelper.toInClause(objects));
 			ClassIdLock lock = LockUtils.obtainClassIdLock(clazz, 0);

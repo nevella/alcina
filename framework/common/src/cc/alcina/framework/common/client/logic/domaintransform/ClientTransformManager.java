@@ -17,9 +17,10 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
-import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.MuteablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
+import cc.alcina.framework.common.client.logic.domain.NonDomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
@@ -31,7 +32,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
-import cc.alcina.framework.common.client.logic.reflection.NonDomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Wrapper;
@@ -420,7 +420,7 @@ public abstract class ClientTransformManager extends TransformManager {
 					Registry.impl(ClientNotifications.class)
 							.log("Cache load/deser.: " + (t2 - t1));
 					notifier.modalOff();
-					MutablePropertyChangeSupport.setMuteAll(true);
+					MuteablePropertyChangeSupport.setMuteAll(true);
 					ClientTransformManager.PersistableTransformListener pl = getPersistableTransformListener();
 					DomainTransformRequest dtr = null;
 					if (pl != null) {
@@ -443,7 +443,7 @@ public abstract class ClientTransformManager extends TransformManager {
 						pl.persistableTransform(dtr,
 								DeltaApplicationRecordType.REMOTE_DELTA_APPLIED);
 					}
-					MutablePropertyChangeSupport.setMuteAll(false);
+					MuteablePropertyChangeSupport.setMuteAll(false);
 					Object[] spec2 = new Object[4];
 					System.arraycopy(spec, 0, spec2, 0, 3);
 					spec2[3] = true;

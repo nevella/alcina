@@ -26,7 +26,6 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -97,7 +96,7 @@ public class DomainTransformLayerWrapper implements Serializable {
 
 	public <V extends Entity> Set<V> getObjectsFor(Class<V> clazz) {
 		return (Set<V>) (Set) getTransformsFor(clazz).stream()
-				.map(EntityLocator::objectLocator).map(Domain::find)
+				.map(DomainTransformEvent::toObjectLocator).map(Domain::find)
 				.filter(Objects::nonNull).collect(Collectors.toSet());
 	}
 
@@ -111,9 +110,8 @@ public class DomainTransformLayerWrapper implements Serializable {
 
 	public Stream<DomainTransformEventPersistent>
 			getTransformsFor(Entity entity) {
-		return getTransformsFor(entity.getClass()).stream()
-				.filter(dte -> EntityLocator.objectLocator(dte)
-						.equals(EntityLocator.instanceLocator(entity)));
+		return getTransformsFor(entity.getClass()).stream().filter(
+				dte -> dte.toObjectLocator().equals(entity.toLocator()));
 	}
 
 	public EntityLocatorMap locatorMapOrEmpty() {

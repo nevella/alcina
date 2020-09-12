@@ -41,7 +41,6 @@ import com.google.gwt.event.shared.UmbrellaException;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.domain.ComplexFilter;
 import cc.alcina.framework.common.client.domain.ComplexFilter.ComplexFilterContext;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -71,6 +70,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCacheObjectStore;
@@ -89,12 +90,12 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
@@ -241,6 +242,8 @@ public class DomainStore implements IDomainStore {
 
 	private GraphProjection graphProjection;
 
+	Map<EntityLocator, Boolean> lazyLoadAttempted = new ConcurrentHashMap<>();
+
 	public DomainStore(DomainStoreDescriptor descriptor) {
 		this();
 		this.domainDescriptor = descriptor;
@@ -256,6 +259,10 @@ public class DomainStore implements IDomainStore {
 	public void appShutdown() {
 		loader.appShutdown();
 		persistenceEvents.getQueue().appShutdown();
+	}
+
+	public boolean checkTransformRequestExists(long id) {
+		return loader.checkTransformRequestExists(id);
 	}
 
 	public void enableAndAddValues(DomainListener listener) {
@@ -335,9 +342,8 @@ public class DomainStore implements IDomainStore {
 		return initialised;
 	}
 
-	public List<DomainTransformRequestPersistent> loadTransformRequests(
-			Collection<Long> ids, Logger logger) throws Exception {
-		return loader.loadTransformRequests(ids, logger);
+	public DomainTransformRequestPersistent loadTransformRequest(long id) {
+		return loader.loadTransformRequest(id);
 	}
 
 	public <T extends Entity> void onLocalObjectCreated(T newInstance) {
@@ -352,6 +358,30 @@ public class DomainStore implements IDomainStore {
 		cache.putExternalLocal(instance);
 	}
 
+	// FIXME - mvcc.wrap - goes away
+	public void reloadEntity(Entity wrapped) {
+		Preconditions.checkArgument(wrapped instanceof WrappedObject);
+		cache.remove(wrapped);
+		Entity reloaded = Domain.find(wrapped.entityClass(), wrapped.getId());
+		try {
+			// note that reloaded will be discarded because we're not in a
+			// to-domain
+			// tx
+			if (reloaded != null) {
+				SEUtilities.getFieldByName(wrapped.entityClass(), "object")
+						.set(wrapped, null);
+				SEUtilities
+						.getFieldByName(wrapped.entityClass(), "serializedXml")
+						.set(wrapped,
+								((WrappedObject) reloaded).getSerializedXml());
+				cache.remove(reloaded);
+				cache.put(wrapped);
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public void remove(Entity entity) {
 		cache.remove(entity);
 	}
@@ -362,6 +392,11 @@ public class DomainStore implements IDomainStore {
 
 	public void setDebug(boolean debug) {
 		this.debug = debug;
+	}
+
+	public void throwDomainStoreException(String message) {
+		health.domainStoreExceptionCount.incrementAndGet();
+		throw new DomainStoreException(message);
 	}
 
 	@Override
@@ -444,42 +479,29 @@ public class DomainStore implements IDomainStore {
 		token.appendFilter(filter.asCollectionFilter());
 	}
 
-	private void doEvictions() {
-		domainDescriptor.preProvideTasks
-				.forEach(PreProvideTask::writeLockedCleanup);
-	}
-
-	private DomainTransformEvent
-			filterForDomainStoreProperty(DomainTransformEvent dte) {
-		switch (dte.getTransformType()) {
+	private DomainTransformEventPersistent
+			filterForDomainStoreProperty(DomainTransformEventPersistent event) {
+		switch (event.getTransformType()) {
 		case CREATE_OBJECT:
 		case DELETE_OBJECT:
 		case ADD_REF_TO_COLLECTION:
 		case REMOVE_REF_FROM_COLLECTION:
-			return dte;
+			return event;
 		}
 		DomainStoreProperty ann = domainStoreProperties
-				.get(dte.getObjectClass(), dte.getPropertyName());
+				.get(event.getObjectClass(), event.getPropertyName());
 		if (ann == null) {
-			return dte;
+			return event;
 		}
 		switch (ann.loadType()) {
 		case EAGER:
-			return dte;
+			return event;
 		case LAZY:
 		case TRANSIENT:
 			return null;
 		default:
 			throw new UnsupportedOperationException();
 		}
-	}
-
-	private List<DomainTransformEvent>
-			filterInterestedTransforms(Collection<DomainTransformEvent> dtes) {
-		return dtes.stream().filter(new InSubgraphFilter())
-				.filter(domainDescriptor::customFilterPostProcess)
-				.map(dte -> filterForDomainStoreProperty(dte))
-				.filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
 	private ComplexFilter getComplexFilterFor(Class clazz,
@@ -561,13 +583,19 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	private List<DomainTransformEventPersistent> removeNonApplicableTransforms(
+			Collection<DomainTransformEventPersistent> events) {
+		return events.stream().filter(new InSubgraphFilter())
+				.filter(domainDescriptor::customFilterPostProcess)
+				.map(event -> filterForDomainStoreProperty(event))
+				.filter(Objects::nonNull).collect(Collectors.toList());
+	}
+
 	void addValues(DomainListener listener) {
 		for (Object o : cache.values(listener.getListenedClass())) {
 			listener.insert((Entity) o);
 		}
 	}
-
-	Map<EntityLocator, Boolean> lazyLoadAttempted = new ConcurrentHashMap<>();
 
 	<T extends Entity> T find(Class<T> clazz, long id) {
 		T t = cache.get(clazz, id);
@@ -648,8 +676,8 @@ public class DomainStore implements IDomainStore {
 		return existing == v;
 	}
 
-	// we only have one thread allowed here - but they won't start blocking the
-	// reader thread
+	// we only have one thread allowed here - but that doesn't block any
+	// non-to-domain transactions
 	// FIXME - mvcc.4 - optimise!
 	synchronized void
 			postProcess(DomainTransformPersistenceEvent persistenceEvent) {
@@ -657,44 +685,6 @@ public class DomainStore implements IDomainStore {
 				.isEmpty()) {
 			Transaction.endAndBeginNew();
 			return;
-		}
-		DomainModificationMetadataProvider metadataProvider = persistenceEvent
-				.getMetadataProvider();
-		if (metadataProvider == null) {
-			metadataProvider = new SourceMetadataProvider(this);
-		}
-		DteToLocatorMapper objectLocator = new DteToLocatorMapper();
-		DteToLocatorMapper valueLocator = new DteToLocatorMapper(true);
-		{
-			List<DomainTransformEvent> dtes = (List) persistenceEvent
-					.getDomainTransformLayerWrapper().persistentEvents;
-			metadataProvider.registerTransforms(dtes);
-			// preload outside of the writer lock - this uses a db conn, and
-			// there
-			// have been some odd networking issues...
-			// note that since method is synchronized, nothing will be
-			// evicted
-			// from hereonin
-			/*
-			 * mvcc.kafkarqpropagation - do we need (e.g.)
-			 * transformManager.getObject(dte, true);? - in fact, we filter
-			 * again later on so I think this can all go away
-			 */
-			List<DomainTransformEvent> filtered = filterInterestedTransforms(
-					dtes);
-			Multimap<EntityLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
-					.multimap(filtered, objectLocator);
-			for (DomainTransformEvent dte : filtered) {
-				DomainTransformEvent first = CommonUtils
-						.first(perObjectTransforms
-								.get(EntityLocator.objectLocator(dte)));
-				DomainTransformEvent last = CommonUtils.last(perObjectTransforms
-						.get(EntityLocator.objectLocator(dte)));
-				if (dte.getTransformType() != TransformType.CREATE_OBJECT
-						&& first == dte) {
-					Entity obj = transformManager.getObject(dte, true);
-				}
-			}
 		}
 		Set<Throwable> causes = new LinkedHashSet<Throwable>();
 		StringBuilder warnBuilder = new StringBuilder();
@@ -727,103 +717,72 @@ public class DomainStore implements IDomainStore {
 			postProcessThread = Thread.currentThread();
 			postProcessEvent = persistenceEvent;
 			health.domainStorePostProcessStartTime = System.currentTimeMillis();
-			List<DomainTransformEvent> dtes = (List) persistenceEvent
+			List<DomainTransformEventPersistent> events = (List) persistenceEvent
 					.getDomainTransformLayerWrapper().persistentEvents;
-			List<DomainTransformEvent> filtered = filterInterestedTransforms(
-					dtes);
-			Multimap<EntityLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
-					.multimap(filtered, objectLocator);
-			Set<EntityLocator> createdAndDeleted = perObjectTransforms
-					.entrySet().stream().filter(e -> {
-						DomainTransformEvent first = e.getValue().get(0);
-						DomainTransformEvent last = CommonUtils
-								.last(e.getValue());
-						return last
-								.getTransformType() == TransformType.DELETE_OBJECT
-								&& first.getTransformType() == TransformType.CREATE_OBJECT;
-					}).map(e -> e.getKey()).collect(Collectors.toSet());
-			if (createdAndDeleted.size() > 0) {
-				filtered.removeIf(dte -> createdAndDeleted
-						.contains(objectLocator.getKey(dte))
-						|| createdAndDeleted
-								.contains(valueLocator.getKey(dte)));
-			}
-			Set<Entity> indexAtEnd = new LinkedHashSet<>();
-			metadataProvider.registerTransforms(filtered);
+			List<DomainTransformEventPersistent> filtered = removeNonApplicableTransforms(
+					events);
+			TransformCollation collation = new TransformCollation(filtered);
+			// this is also checked in TransformCommit
+			// filtered.removeIf(collation::isCreatedAndDeleted);
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
-			for (DomainTransformEvent dte : filtered) {
-				dte.setNewValue(null);// force a lookup from the subgraph
-			}
 			TransformManager.get().setIgnorePropertyChanges(true);
-			for (DomainTransformEvent dte : filtered) {
+			for (DomainTransformEventPersistent transform : filtered) {
 				// remove from indicies before first change - and only if
 				// preexisting object
-				DomainTransformEvent first = CommonUtils
-						.first(perObjectTransforms
-								.get(EntityLocator.objectLocator(dte)));
-				DomainTransformEvent last = CommonUtils.last(perObjectTransforms
-						.get(EntityLocator.objectLocator(dte)));
+				EntityCollation entityCollation = collation
+						.forLocator(transform.toObjectLocator());
+				DomainTransformEvent last = entityCollation.last();
+				DomainTransformEvent first = entityCollation.first();
+				Entity entity = transform
+						.getTransformType() == TransformType.CREATE_OBJECT
+								? null
+								: transformManager.getObject(transform, true);
 				if (last.getTransformType() == TransformType.DELETE_OBJECT
 						&& first.getTransformType() != TransformType.CREATE_OBJECT) {
 					// This checks if we're trying to handle deletion of
 					// lazy objects
-					Entity domainStoreObj = transformManager.getObject(dte,
-							true);
-					if (domainStoreObj == null) {
+					if (entity == null) {
 						continue;
 					}
 				}
-				if (dte.getTransformType() != TransformType.CREATE_OBJECT
-						&& first == dte) {
-					Entity obj = transformManager.getObject(dte, true);
-					if (obj != null) {
-						index(obj, false);
+				if (transform.getTransformType() != TransformType.CREATE_OBJECT
+						&& first == transform) {
+					if (entity != null) {
+						index(entity, false);
 					} else {
-						logger.warn("Null domain store object for index - {}",
-								EntityLocator.objectLocator(dte));
+						logger.warn("Null entity for index - {}",
+								transform.toObjectLocator());
 					}
 				}
 				try {
-					transformManager.apply(dte);
+					transformManager.apply(transform);
 				} catch (DomainTransformException dtex) {
 					if (dtex.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND
-							&& dte.getTransformType() == TransformType.DELETE_OBJECT) {
-						warnBuilder.append(String.format("%s\n%s\n\n", dte,
-								dtex.getType(), dtex.getMessage()));
+							&& transform
+									.getTransformType() == TransformType.DELETE_OBJECT) {
+						warnBuilder.append(String.format("%s\n%s\n\n",
+								transform, dtex.getType(), dtex.getMessage()));
 					} else if (dtex
 							.getType() == DomainTransformExceptionType.TARGET_ENTITY_NOT_FOUND
-							&& dte.getTransformType() == TransformType.REMOVE_REF_FROM_COLLECTION) {
-						warnBuilder.append(String.format("%s\n%s\n\n", dte,
-								dtex.getType(), dtex.getMessage()));
+							&& transform
+									.getTransformType() == TransformType.REMOVE_REF_FROM_COLLECTION) {
+						warnBuilder.append(String.format("%s\n%s\n\n",
+								transform, dtex.getType(), dtex.getMessage()));
 					} else {
 						causes.add(dtex);
 					}
 				}
-				if (dte.getTransformType() != TransformType.DELETE_OBJECT
-						&& last == dte) {
-					Entity domainStoreObject = transformManager.getObject(dte,
-							true);
-					if (domainStoreObject != null) {
-						metadataProvider.updateMetadata(dte, domainStoreObject);
-						index(domainStoreObject, true);
+				if (transform.getTransformType() != TransformType.DELETE_OBJECT
+						&& last == transform) {
+					if (entity != null) {
+						transform.getExTransformDbMetadata().applyTo(entity);
+						index(entity, true);
 					} else {
-						logger.warn("Null domain store object for index - {}",
-								EntityLocator.objectLocator(dte));
+						logger.warn("Null entity for index - {}",
+								transform.toObjectLocator());
 					}
 				}
 			}
-			indexAtEnd.forEach(domainStoreObject -> {
-				List<DomainTransformEvent> list = perObjectTransforms
-						.get(new EntityLocator(domainStoreObject));
-				DomainTransformEvent last = list == null ? null
-						: CommonUtils.last(list);
-				if (last != null && last
-						.getTransformType() == TransformType.DELETE_OBJECT) {
-				} else {
-					index(domainStoreObject, true);
-				}
-			});
-			doEvictions();
 			Transaction.current().toDomainCommitted();
 		} catch (Exception e) {
 			logger.warn("post process exception - pre final", e);
@@ -865,11 +824,6 @@ public class DomainStore implements IDomainStore {
 			}
 			LooseContext.pop();
 		}
-	}
-
-	public void throwDomainStoreException(String message) {
-		health.domainStoreExceptionCount.incrementAndGet();
-		throw new DomainStoreException(message);
 	}
 
 	<T extends Entity> Stream<T> query(Class<T> clazz,
@@ -1423,6 +1377,11 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	/*
+	 * This listener is only fired from property changes (not, for instance,
+	 * during postProcess() - so use of DomainTransformEvent.getNewValue() etc
+	 * is appropriate
+	 */
 	static class IndexingTransformListener implements DomainTransformListener {
 		@Override
 		public void domainTransform(DomainTransformEvent event)
@@ -1474,7 +1433,8 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	class InSubgraphFilter implements CollectionFilter<DomainTransformEvent> {
+	class InSubgraphFilter
+			implements CollectionFilter<DomainTransformEventPersistent> {
 		private boolean filterUnknownTransformProperties;
 
 		public InSubgraphFilter() {
@@ -1483,7 +1443,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public boolean allow(DomainTransformEvent evt) {
+		public boolean allow(DomainTransformEventPersistent evt) {
 			if (!domainDescriptor.applyPostTransform(evt.getObjectClass(),
 					evt)) {
 				return false;
@@ -1650,30 +1610,6 @@ public class DomainStore implements IDomainStore {
 		@Override
 		protected void performDeleteObject(Entity entity) {
 			super.performDeleteObject(entity);
-		}
-	}
-
-	// FIXME - mvcc.wrap - goes away
-	public void reloadEntity(Entity wrapped) {
-		Preconditions.checkArgument(wrapped instanceof WrappedObject);
-		cache.remove(wrapped);
-		Entity reloaded = Domain.find(wrapped.entityClass(), wrapped.getId());
-		try {
-			// note that reloaded will be discarded because we're not in a
-			// to-domain
-			// tx
-			if (reloaded != null) {
-				SEUtilities.getFieldByName(wrapped.entityClass(), "object")
-						.set(wrapped, null);
-				SEUtilities
-						.getFieldByName(wrapped.entityClass(), "serializedXml")
-						.set(wrapped,
-								((WrappedObject) reloaded).getSerializedXml());
-				cache.remove(reloaded);
-				cache.put(wrapped);
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
 		}
 	}
 }

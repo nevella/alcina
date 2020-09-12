@@ -3,14 +3,15 @@ package cc.alcina.framework.entity.domaintransform.event;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
+import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-import cc.alcina.framework.entity.entityaccess.cache.DomainModificationMetadataProvider;
-import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
 public class DomainTransformPersistenceEvent {
 	private final TransformPersistenceToken transformPersistenceToken;
@@ -20,8 +21,6 @@ public class DomainTransformPersistenceEvent {
 	private final DomainTransformPersistenceEventType persistenceEventType;
 
 	private List<Runnable> postEventRunnables = new ArrayList<>();
-
-	private DomainModificationMetadataProvider metadataProvider;
 
 	public DomainTransformPersistenceEvent(
 			TransformPersistenceToken transformPersistenceToken,
@@ -53,16 +52,16 @@ public class DomainTransformPersistenceEvent {
 		return CommonUtils.lv(CollectionFilters.max(getPersistedRequestIds()));
 	}
 
-	public DomainModificationMetadataProvider getMetadataProvider() {
-		return this.metadataProvider;
+	public List<Long> getPersistedRequestIds() {
+		return getPersistedRequests().stream().map(HasId::getId)
+				.collect(Collectors.toList());
 	}
 
-	public List<Long> getPersistedRequestIds() {
+	public List<DomainTransformRequestPersistent> getPersistedRequests() {
 		return domainTransformLayerWrapper == null
 				|| domainTransformLayerWrapper.persistentRequests == null
 						? Collections.EMPTY_LIST
-						: EntityPersistenceHelper.toIdList(
-								domainTransformLayerWrapper.persistentRequests);
+						: domainTransformLayerWrapper.persistentRequests;
 	}
 
 	public DomainTransformPersistenceEventType getPersistenceEventType() {
@@ -79,11 +78,6 @@ public class DomainTransformPersistenceEvent {
 
 	public boolean isLocalToVm() {
 		return transformPersistenceToken.isLocalToVm();
-	}
-
-	public void setMetadataProvider(
-			DomainModificationMetadataProvider metadataProvider) {
-		this.metadataProvider = metadataProvider;
 	}
 
 	public void setPostEventRunnables(List<Runnable> postEventRunnables) {

@@ -70,6 +70,7 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -88,7 +89,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
-import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;

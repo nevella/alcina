@@ -51,6 +51,7 @@ import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
@@ -76,7 +77,6 @@ import cc.alcina.framework.common.client.logic.reflection.AssignmentPermission;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
-import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
@@ -609,7 +609,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	@Override
 	public boolean isInCreationRequest(Entity entity) {
-		return createdObjectLocators.contains(new EntityLocator(entity));
+		return createdObjectLocators.contains(entity.toLocator());
 	}
 
 	public boolean isListeningTo(SourcesPropertyChangeEvents spce) {
@@ -1387,6 +1387,9 @@ public class ThreadlocalTransformManager extends TransformManager
 		return true;
 	}
 
+	/*
+	 * FIXME - mvcc.4 - is this needed?
+	 */
 	public static class PostTransactionEntityResolver {
 		private EntityLocatorMap locatorMap = new EntityLocatorMap();
 
@@ -1408,11 +1411,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		public void
 				addMappings(DomainTransformRequestPersistent persistedRequest) {
 			persistedRequest.allTransforms().stream()
-					.filter(dte -> dte
+					.filter(transform -> transform
 							.getTransformType() == TransformType.CREATE_OBJECT)
-					.forEach(dte -> {
-						locatorMap
-								.putToLookups(EntityLocator.objectLocator(dte));
+					.forEach(transform -> {
+						locatorMap.putToLookups(transform.toObjectLocator());
 					});
 		}
 
