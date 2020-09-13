@@ -67,8 +67,13 @@ public abstract class DbUpdater implements Comparable<DbUpdater> {
 				.impl(CommonPersistenceConnectionProvider.class)
 				.getConnection()) {
 			stmt = conn.createStatement();
-			j = stmt.executeUpdate(sql);
-			System.out.println(j + "  results");
+			try {
+				j = stmt.executeUpdate(sql);
+				System.out.println(j + "  results");
+			} catch (Exception e) {
+				stmt.execute(sql);
+				System.out.println("Statement executed");
+			}
 		} catch (Exception e) {
 			if (e.getMessage().contains("already exists")) {
 				System.out.println("---ignore - already exists");
