@@ -31,8 +31,10 @@ public class TransformPropagationPolicy {
 		// low-priority
 		AnnotationLocation location = new AnnotationLocation(
 				event.getObjectClass(),
-				Reflections.classLookup().getPropertyReflector(
-						event.getObjectClass(), event.getPropertyName()));
+				event.getPropertyName() == null ? null
+						: Reflections.classLookup().getPropertyReflector(
+								event.getObjectClass(),
+								event.getPropertyName()));
 		return location.getAnnotation(DomainTransformPropagation.class);
 	}
 }

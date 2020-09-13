@@ -57,7 +57,8 @@ public class Transaction {
 
 	public static Transaction current() {
 		Transaction transaction = threadLocalInstance.get();
-		if (transaction == null||transaction.getPhase()==TransactionPhase.TO_DB_ABORTED) {
+		if (transaction == null
+				|| transaction.getPhase() == TransactionPhase.TO_DB_ABORTED) {
 			throw new MvccException("No current transaction");
 		} else {
 			return transaction;
@@ -154,6 +155,7 @@ public class Transaction {
 		logger.debug("Joining tx - {} {} {}", transaction,
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
+		transaction.originatingThread = Thread.currentThread();
 		threadLocalInstance.set(transaction);
 		transaction.originatingThreadName = Thread.currentThread().getName();
 		transaction.threadCount.incrementAndGet();
@@ -162,6 +164,8 @@ public class Transaction {
 					.getCurrentThreadStacktraceSlice();
 		}
 	}
+
+	private Thread originatingThread;
 
 	private AtomicInteger threadCount = new AtomicInteger();
 
@@ -243,6 +247,14 @@ public class Transaction {
 
 	public boolean isPreCommit() {
 		return phase == TransactionPhase.TO_DB_PREPARING;
+	}
+
+	public boolean isToDomainCommitting() {
+		return phase == TransactionPhase.TO_DOMAIN_COMMITTING;
+	}
+
+	public long provideAge() {
+		return System.currentTimeMillis() - startTime;
 	}
 
 	/**
@@ -368,6 +380,8 @@ public class Transaction {
 	}
 
 	void endTransaction() {
+		originatingThread = null;
+		ended = true;
 		switch (getPhase()) {
 		case TO_DB_PERSISTED:
 		case TO_DB_ABORTED:
@@ -393,17 +407,17 @@ public class Transaction {
 		}
 		if (TransformManager.get().getTransforms().size() == 0) {
 		} else {
-			// FIXME - mvcc.4 - devex
+			// FIXME - mvcc.4 - mvcc exception
 			logger.warn("Ending transaction with uncommitted transforms: {} {}",
 					getPhase(), TransformManager.get().getTransforms().size());
 		}
-		// need to do this even if transforms == 0 - to clear listeners within
+		// need to do this even if transforms == 0 - to clear listeners setup
+		// during the transaction
 		// the transaction
 		ThreadlocalTransformManager.cast().resetTltm(null);
 		if (ResourceUtilities.is("retainTransactionStartTrace")) {
 			transactionEndTrace = SEUtilities.getCurrentThreadStacktraceSlice();
 		}
-		ended = true;
 		logger.debug("Ended tx: {}", this);
 		Transactions.get().onTransactionEnded(this);
 	}
@@ -481,13 +495,5 @@ public class Transaction {
 			}
 			return CommonUtils.compareLongs(o1.id.id, o2.id.id);
 		}
-	}
-
-	public boolean isToDomainCommitting() {
-		return phase == TransactionPhase.TO_DOMAIN_COMMITTING;
-	}
-
-	public long provideAge() {
-		return System.currentTimeMillis()-startTime;
 	}
 }

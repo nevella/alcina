@@ -1,13 +1,16 @@
 package cc.alcina.framework.servlet.cluster.transform;
 
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
@@ -41,6 +44,7 @@ public class ClusterTransformSerializer {
 	}
 
 	public byte[] serialize(DomainTransformRequestPersistent request) {
+		request = projectRequest(request);
 		byte[] result = null;
 		String json = new JacksonJsonObjectSerializer().withIdRefs()
 				.withTypeInfo().withDefaults(false).serialize(request);
@@ -63,5 +67,19 @@ public class ClusterTransformSerializer {
 		} else {
 			return zipped;
 		}
+		//
+	}
+
+	private DomainTransformRequestPersistent
+			projectRequest(DomainTransformRequestPersistent request) {
+		request.setEvents(
+				request.getEvents().stream().collect(Collectors.toList()));
+		ClientInstance originalClientInstance = request.getClientInstance();
+		ClientInstance clientInstance = (ClientInstance) Reflections
+				.newInstance(originalClientInstance.entityClass());
+		clientInstance.setId(originalClientInstance.getId());
+		clientInstance.setAuth(originalClientInstance.getAuth());
+		request.setClientInstance(clientInstance);
+		return request;
 	}
 }

@@ -813,10 +813,14 @@ public class DomainStore implements IDomainStore {
 							umby);
 					topicUpdateException().publish(updateException);
 					if (updateException.ignoreForDomainStoreExceptionCount) {
-						updateException.printStackTrace();
+						logger.warn("Domain store update warning [non-fatal]",
+								updateException);
 					} else {
 						health.domainStoreExceptionCount.incrementAndGet();
-						throw new DomainStoreException(umby);
+						logger.warn(
+								"Update exception transform request queue data :: {}",
+								persistenceEvents.getQueue().toDebugString());
+						throw updateException;
 					}
 				}
 			} catch (Throwable t) {
@@ -1153,7 +1157,7 @@ public class DomainStore implements IDomainStore {
 		public boolean ignoreForDomainStoreExceptionCount;
 
 		public DomainStoreUpdateException(UmbrellaException umby) {
-			super("Domain store update exception - ignoreable", umby);
+			super(umby);
 			this.umby = umby;
 		}
 	}

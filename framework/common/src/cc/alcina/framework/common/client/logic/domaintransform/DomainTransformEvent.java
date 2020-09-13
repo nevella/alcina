@@ -146,6 +146,7 @@ public class DomainTransformEvent
 	}
 
 	@Transient
+	@JsonIgnore
 	public Object getNewValue() {
 		return this.newValue;
 	}
@@ -201,6 +202,7 @@ public class DomainTransformEvent
 	}
 
 	@Transient
+	@JsonIgnore
 	public Object getOldValue() {
 		return this.oldValue;
 	}

@@ -29,11 +29,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.PostTransactionEntityResolver;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
 
@@ -121,13 +119,6 @@ public class DevRemoter {
 						.setPostTransactionEntityResolver(
 								(PostTransactionEntityResolver) container
 										.get(1));
-				DomainTransformLayerWrapper wrapper = (DomainTransformLayerWrapper) container
-						.get(0);
-				// the rare case where we *don't* want an mvcc object (because
-				// we'll later project)
-				wrapper.persistentRequests.forEach(w -> w
-						.setClientInstance(GraphProjection.maxDepthProjection(
-								w.getClientInstance(), 1, null)));
 			}
 			customiseResult(object);
 			return object;

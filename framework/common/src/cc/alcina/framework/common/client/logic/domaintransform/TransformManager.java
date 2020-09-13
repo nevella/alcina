@@ -1521,7 +1521,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		TransformCollation collation = new TransformCollation(
 				events.stream().collect(Collectors.toList()));
 		int initial = events.size();
-		events.stream().filter(collation::isCreatedAndDeleted)
+		// collect/stream to avoid concurrent modification exception
+		events.stream().collect(Collectors.toList()).stream()
+				.filter(collation::isCreatedAndDeleted)
 				.forEach(this::removeTransform);
 		return initial - events.size();
 	}

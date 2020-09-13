@@ -31,6 +31,9 @@ import cc.alcina.framework.gwt.client.entity.search.SearchContext;
 
 @RegistryLocation(registryPoint = CommonSearchSupport.class, implementationType = ImplementationType.INSTANCE)
 public class CommonSearchSupport {
+	public static final transient String CONTEXT_DO_NOT_PROJECT_SEARCH = CommonSearchSupport.class
+			.getName() + ".CONTEXT_DO_NOT_PROJECT_SEARCH";
+
 	public static CommonSearchSupport get() {
 		CommonSearchSupport singleton = Registry
 				.checkSingleton(CommonSearchSupport.class);
@@ -40,9 +43,6 @@ public class CommonSearchSupport {
 		}
 		return singleton;
 	}
-
-	public static final transient String CONTEXT_DO_NOT_PROJECT_SEARCH = CommonSearchSupport.class
-			.getName() + ".CONTEXT_DO_NOT_PROJECT_SEARCH";
 
 	public <T extends VersionableEntity> ModelSearchResults
 			getForClass(String className, long objectId) {
@@ -58,69 +58,8 @@ public class CommonSearchSupport {
 		}
 	}
 
-	private ModelSearchResults getModelSearchResults(
-			List<? extends VersionableEntity> queried,
-			EntitySearchDefinition def) {
-		ModelSearchResults modelSearchResults = new ModelSearchResults();
-		modelSearchResults.def = def;
-		if (LooseContext.is(CONTEXT_DO_NOT_PROJECT_SEARCH)) {
-		} else {
-			if (def == null) {
-				// single object
-				VersionableEntity first = CommonUtils.first(queried);
-				queried.clear();
-				List untyped = queried;
-				modelSearchResults.rawEntity = first;
-				modelSearchResults.resultClassName = Optional.ofNullable(first)
-						.map(e -> e.entityClass().getName()).orElse(null);
-				untyped.add(project(first, modelSearchResults,true));
-			} else {
-				queried = project(queried, modelSearchResults,def.isReturnSingleDataObjectImplementations());
-				List<EntityPlace> filterPlaces = def.provideFilterPlaces();
-				modelSearchResults.filteringEntities = filterPlaces.stream().map(EntityPlace::asLocator)
-						.map(Domain::find).collect(Collectors.toList());
-				modelSearchResults.filteringEntities =GraphProjection.maxDepthProjection(modelSearchResults.filteringEntities,2,null);
-			}
-		}
-		modelSearchResults.queriedResultObjects = queried;
-		return modelSearchResults;
-	}
-
-	private <T> T project(T object, ModelSearchResults modelSearchResults, boolean projectAsSingleEntityDataObjects) {
-		SearchResultProjector projector = Registry
-				.impl(SearchResultProjector.class);
-		projector.setProjectAsSingleEntityDataObjects(projectAsSingleEntityDataObjects);
-		Class<? extends Bindable> projectedClass = projector
-				.getProjectedClass(modelSearchResults);
-		if (projectedClass != null) {
-			modelSearchResults.resultClassName = projectedClass.getName();
-		}
-		return projector.project(object);
-	}
-
-	@RegistryLocation(registryPoint = SearchResultProjector.class, implementationType = ImplementationType.INSTANCE)
-	public static class SearchResultProjector {
-		private boolean projectAsSingleEntityDataObjects;
-		public boolean isProjectAsSingleEntityDataObjects() {
-			return this.projectAsSingleEntityDataObjects;
-		}
-
-		public void setProjectAsSingleEntityDataObjects(
-				boolean projectAsSingleEntityDataObjects) {
-			this.projectAsSingleEntityDataObjects = projectAsSingleEntityDataObjects;
-		}
-
-		public <T> T project(T object) {
-			return GraphProjections.defaultProjections().project(object);
-		}
-
-		public Class<? extends Bindable>
-				getProjectedClass(ModelSearchResults modelSearchResults) {
-			return modelSearchResults.resultClass();
-		}
-	}
-
-	public ModelSearchResults searchModel(EntitySearchDefinition def,Function<SearchContext,ModelSearchResults> customSearchHandler) {
+	public ModelSearchResults searchModel(EntitySearchDefinition def,
+			Function<SearchContext, ModelSearchResults> customSearchHandler) {
 		if (def.getGroupingParameters() != null) {
 			def.setResultsPerPage(99999999);
 		}
@@ -140,9 +79,10 @@ public class CommonSearchSupport {
 			if (idOrder.isPresent()) {
 				searchContext.orders = idOrder.get();
 			}
-			if(customSearchHandler!=null) {
-				ModelSearchResults customResults = customSearchHandler.apply(searchContext);
-				if(customResults!=null) {
+			if (customSearchHandler != null) {
+				ModelSearchResults customResults = customSearchHandler
+						.apply(searchContext);
+				if (customResults != null) {
 					return customResults;
 				}
 			}
@@ -191,6 +131,75 @@ public class CommonSearchSupport {
 		} finally {
 			MetricLogging.get().end(key);
 			LooseContext.pop();
+		}
+	}
+
+	private ModelSearchResults getModelSearchResults(
+			List<? extends VersionableEntity> queried,
+			EntitySearchDefinition def) {
+		ModelSearchResults modelSearchResults = new ModelSearchResults();
+		modelSearchResults.def = def;
+		if (LooseContext.is(CONTEXT_DO_NOT_PROJECT_SEARCH)) {
+		} else {
+			if (def == null) {
+				// single object
+				VersionableEntity first = CommonUtils.first(queried);
+				queried.clear();
+				List untyped = queried;
+				modelSearchResults.rawEntity = first;
+				modelSearchResults.resultClassName = Optional.ofNullable(first)
+						.map(e -> e.entityClass().getName()).orElse(null);
+				untyped.add(project(first, modelSearchResults, true));
+			} else {
+				queried = project(queried, modelSearchResults,
+						def.isReturnSingleDataObjectImplementations());
+				List<EntityPlace> filterPlaces = def.provideFilterPlaces();
+				modelSearchResults.filteringEntities = filterPlaces.stream()
+						.map(EntityPlace::asLocator).map(Domain::find)
+						.collect(Collectors.toList());
+				modelSearchResults.filteringEntities = GraphProjection
+						.maxDepthProjection(
+								modelSearchResults.filteringEntities, 2, null);
+			}
+		}
+		modelSearchResults.queriedResultObjects = queried;
+		return modelSearchResults;
+	}
+
+	private <T> T project(T object, ModelSearchResults modelSearchResults,
+			boolean projectAsSingleEntityDataObjects) {
+		SearchResultProjector projector = Registry
+				.impl(SearchResultProjector.class);
+		projector.setProjectAsSingleEntityDataObjects(
+				projectAsSingleEntityDataObjects);
+		Class<? extends Bindable> projectedClass = projector
+				.getProjectedClass(modelSearchResults);
+		if (projectedClass != null) {
+			modelSearchResults.resultClassName = projectedClass.getName();
+		}
+		return projector.project(object);
+	}
+
+	@RegistryLocation(registryPoint = SearchResultProjector.class, implementationType = ImplementationType.INSTANCE)
+	public static class SearchResultProjector {
+		private boolean projectAsSingleEntityDataObjects;
+
+		public Class<? extends Bindable>
+				getProjectedClass(ModelSearchResults modelSearchResults) {
+			return modelSearchResults.resultClass();
+		}
+
+		public boolean isProjectAsSingleEntityDataObjects() {
+			return this.projectAsSingleEntityDataObjects;
+		}
+
+		public <T> T project(T object) {
+			return GraphProjections.defaultProjections().project(object);
+		}
+
+		public void setProjectAsSingleEntityDataObjects(
+				boolean projectAsSingleEntityDataObjects) {
+			this.projectAsSingleEntityDataObjects = projectAsSingleEntityDataObjects;
 		}
 	}
 }

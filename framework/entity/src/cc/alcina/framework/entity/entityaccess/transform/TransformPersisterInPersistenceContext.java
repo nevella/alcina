@@ -34,7 +34,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
@@ -449,10 +448,6 @@ public class TransformPersisterInPersistenceContext {
 					event -> event.beforeTransformCommit(getEntityManager()));
 			switch (token.getPass()) {
 			case TRY_COMMIT:
-				if (ResourceUtilities.is(TransformPersister.class,
-						"flushWithEveryRequest")) {
-					tm.flush(persistentEvents);
-				}
 				DomainTransformResponse response = new DomainTransformResponse();
 				response.getEventsToUseForClientUpdate()
 						.addAll(token.getClientUpdateEvents());

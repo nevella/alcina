@@ -160,7 +160,8 @@ public class DomainTransformPersistenceQueue {
 
 	public String toDebugString() {
 		synchronized (queueModificationLock) {
-			return GraphProjection.fieldwiseToString(this);
+			return GraphProjection.fieldwiseToString(this, true, false, 9999,
+					"loadedRequests");
 		}
 	}
 

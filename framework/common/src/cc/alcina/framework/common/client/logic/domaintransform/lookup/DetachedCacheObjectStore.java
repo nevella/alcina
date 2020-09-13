@@ -81,9 +81,9 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
-	public <T extends Entity> T getObject(T bean) {
-		return (T) (bean == null ? null
-				: getObject(bean.getClass(), bean.getId(), 0));
+	public <T extends Entity> T getObject(T entity) {
+		return (T) (entity == null ? null
+				: getObject(entity.entityClass(), entity.getId(), 0));
 	}
 
 	@Override
