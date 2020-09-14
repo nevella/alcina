@@ -14,7 +14,6 @@ import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStoreP
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 
 public abstract class DomainDescriptor {
 	public Map<Class, DomainClassDescriptor<?>> perClass = new LinkedHashMap<>();
@@ -59,10 +58,6 @@ public abstract class DomainDescriptor {
 
 	public boolean applyPostTransform(Class clazz, DomainTransformEvent o) {
 		return perClass.containsKey(clazz);
-	}
-
-	public boolean customFilterPostProcess(DomainTransformEventPersistent dte) {
-		return true;
 	}
 
 	public synchronized <T> List<PreProvideTask<T>>

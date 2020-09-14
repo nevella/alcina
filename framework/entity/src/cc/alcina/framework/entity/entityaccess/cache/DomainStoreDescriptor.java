@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
@@ -52,6 +53,11 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		perClass.values()
 				.forEach(descriptor -> descriptor.addMemoryStats(self));
 		return self;
+	}
+
+	public boolean
+			customFilterPostProcess(DomainTransformEventPersistent transform) {
+		return true;
 	}
 
 	public DomainSegmentLoader getDomainSegmentLoader() {
