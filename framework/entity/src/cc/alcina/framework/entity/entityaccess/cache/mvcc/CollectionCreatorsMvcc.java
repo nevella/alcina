@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multiset;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 public class CollectionCreatorsMvcc {
 	@RegistryLocation(registryPoint = CollectionCreators.MultisetCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
@@ -60,6 +61,14 @@ public class CollectionCreatorsMvcc {
 			protected void createTopMap() {
 				// do it in *our* init (not the superclasses')
 			}
+		}
+	}
+
+	@RegistryLocation(registryPoint = CollectionCreators.HashMapCreator.class, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@ClientInstantiable
+	public static class HashMapCreator {
+		public <K, V> Map<K, V> create() {
+			return new Object2ObjectOpenHashMap<>();
 		}
 	}
 

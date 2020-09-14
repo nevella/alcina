@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,14 @@ public class CollectionCreators {
 
 		default boolean isSorted(Map m) {
 			return m instanceof SortedMap;
+		}
+	}
+
+	@RegistryLocation(registryPoint = CollectionCreators.HashMapCreator.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class HashMapCreator {
+		public <K, V> Map<K, V> create() {
+			return new HashMap<>();
 		}
 	}
 

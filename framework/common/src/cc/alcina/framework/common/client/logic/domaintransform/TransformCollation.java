@@ -43,7 +43,7 @@ public class TransformCollation {
 
 	public Set<EntityLocator> getCreatedAndDeleted() {
 		ensureLookups();
-		return perClass.allValues().stream()
+		return perLocator.values().stream()
 				.filter(EntityCollation::isCreatedAndDeleted)
 				.map(EntityCollation::getLocator).collect(Collectors.toSet());
 	}
@@ -65,7 +65,7 @@ public class TransformCollation {
 	}
 
 	protected void ensureLookups() {
-		if (perClass == null) {
+		if (perLocator == null) {
 			perClass = new UnsortedMultikeyMap<>(2);
 			perLocator = new HashMap<>();
 			allEvents.forEach(event -> {
