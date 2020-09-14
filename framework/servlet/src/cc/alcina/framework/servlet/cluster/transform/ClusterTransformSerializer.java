@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
@@ -80,6 +83,18 @@ public class ClusterTransformSerializer {
 		clientInstance.setId(originalClientInstance.getId());
 		clientInstance.setAuth(originalClientInstance.getAuth());
 		request.setClientInstance(clientInstance);
+		AuthenticationSession originalAuthenticationSession = originalClientInstance
+				.getAuthenticationSession();
+		AuthenticationSession authenticationSession = (AuthenticationSession) Reflections
+				.newInstance(originalAuthenticationSession.entityClass());
+		authenticationSession.setId(originalAuthenticationSession.getId());
+		IUser originalUser = originalClientInstance.provideUser();
+		IUser user = (IUser) Reflections
+				.newInstance(((Entity) originalUser).entityClass());
+		user.setUserName(originalUser.getUserName());
+		user.setId(originalUser.getId());
+		authenticationSession.setUser(user);
+		clientInstance.setAuthenticationSession(authenticationSession);
 		return request;
 	}
 }
