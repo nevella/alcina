@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -13,7 +14,6 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 public class TransformCollation {
 	// class/locator/collation
@@ -67,7 +67,7 @@ public class TransformCollation {
 	protected void ensureLookups() {
 		if (perClass == null) {
 			perClass = new UnsortedMultikeyMap<>(2);
-			perLocator = new Object2ObjectOpenHashMap<>();
+			perLocator = new HashMap<>();
 			allEvents.forEach(event -> {
 				EntityLocator locator = event.toObjectLocator();
 				EntityCollation collation = perClass.ensure(
