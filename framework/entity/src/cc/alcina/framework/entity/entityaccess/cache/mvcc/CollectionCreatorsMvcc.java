@@ -64,7 +64,7 @@ public class CollectionCreatorsMvcc {
 		}
 	}
 
-	@RegistryLocation(registryPoint = CollectionCreators.HashMapCreator.class, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@RegistryLocation(registryPoint = CollectionCreators.HashMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	@ClientInstantiable
 	public static class HashMapCreator {
 		public <K, V> Map<K, V> create() {
