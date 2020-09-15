@@ -68,7 +68,7 @@ public class ClusterTransformListener
 	void handleClusterTransformRequest(ClusterTransformRequest request) {
 		// basically a fall-back - either a huge transform, or a producer that
 		// isn't serializing requests
-		if (request.request == null) {
+		if (request.request == null && domainStore.isInitialised()) {
 			// FIXME - mvcc.5 - allow multi-kafka-frame requests
 			logger.warn("Loading request from db: {}", request.id);
 			request.request = domainStore.loadTransformRequest(request.id);

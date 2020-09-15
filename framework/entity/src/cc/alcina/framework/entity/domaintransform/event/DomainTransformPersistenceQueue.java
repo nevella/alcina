@@ -154,6 +154,16 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public void startEventQueue() {
+		synchronized (queueModificationLock) {
+			firedOrQueued.forEach(id -> {
+				if (loadedRequests.containsKey(id)
+						&& loadedRequests.get(id) == null) {
+					logger.warn("Loading request from db: {}", id);
+					loadedRequests.put(id, persistenceEvents.domainStore
+							.loadTransformRequest(id));
+				}
+			});
+		}
 		eventQueue = new FireEventsThread();
 		eventQueue.start();
 	}
