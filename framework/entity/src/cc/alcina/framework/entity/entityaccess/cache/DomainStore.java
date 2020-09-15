@@ -96,6 +96,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent.ExTransformDbMetadata;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
@@ -775,7 +776,14 @@ public class DomainStore implements IDomainStore {
 				if (transform.getTransformType() != TransformType.DELETE_OBJECT
 						&& last == transform) {
 					if (entity != null) {
-						transform.getExTransformDbMetadata().applyTo(entity);
+						ExTransformDbMetadata dbMetadata = transform
+								.getExTransformDbMetadata();
+						if (dbMetadata != null) {
+							dbMetadata.applyTo(entity);
+						} else {
+							logger.warn("No db metadata for %s",
+									entity.toStringId());
+						}
 						index(entity, true);
 					} else {
 						logger.warn("Null entity for index - {}",
@@ -1598,7 +1606,7 @@ public class DomainStore implements IDomainStore {
 				// only local-id objects created by this webapp client instance
 				// will ever be put into the store cache in this phase - thus
 				// preserving the "local ids don't collied because they're on
-				// different transactio ns" logic of the cache
+				// different transactions" logic of the cache
 				store.getCache().removeLocal(localReplacement);
 				store.getCache().put(localReplacement);
 				TransformManager.registerLocalObjectPromotion(localReplacement);

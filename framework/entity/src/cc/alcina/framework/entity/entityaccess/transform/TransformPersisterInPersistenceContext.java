@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -398,8 +399,16 @@ public class TransformPersisterInPersistenceContext {
 								tm.persist(propagationEvent);
 							}
 							propagationEvent.wrap(event);
+							/*
+							 * Remove all non-propagatable refs (they'll be
+							 * confusing for local commits)
+							 */
+							propagationEvent.setSource(null);
+							propagationEvent.setNewValue(null);
+							propagationEvent.setOldValue(null);
 							if (collation.forLocator(event.toObjectLocator())
-									.last() == event) {
+									.last() == event
+									&& event.getTransformType() != TransformType.DELETE_OBJECT) {
 								propagationEvent.populateDbMetadata(event);
 							}
 							if (propagationEvent.getObjectClassRef() == null
