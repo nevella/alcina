@@ -20,6 +20,11 @@ public class EntityLocator implements Serializable {
 		return new EntityLocator(entity);
 	}
 
+	public static EntityLocator objectLocalLocator(DomainTransformEvent dte) {
+		return new EntityLocator(dte.getObjectClass(), 0,
+				dte.getObjectLocalId());
+	}
+
 	public static EntityLocator objectLocator(DomainTransformEvent dte) {
 		return new EntityLocator(dte.getObjectClass(), dte.getObjectId(),
 				dte.getObjectLocalId());
