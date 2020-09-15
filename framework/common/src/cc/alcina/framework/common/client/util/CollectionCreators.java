@@ -61,7 +61,7 @@ public class CollectionCreators {
 		}
 	}
 
-	@RegistryLocation(registryPoint = MultiTrieCreator.class, implementationType = ImplementationType.INSTANCE)
+	@RegistryLocation(registryPoint = TreeMapRevCreator.class, implementationType = ImplementationType.INSTANCE)
 	public static class TreeMapRevCreator implements MapCreator {
 		public List<Class> types;
 

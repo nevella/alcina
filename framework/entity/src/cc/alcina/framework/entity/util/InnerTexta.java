@@ -41,8 +41,8 @@ public class InnerTexta {
 	public static final int SHOW_NEWLINES_AS_DOUBLE = 8;
 
 	public static final int PRESERVE_TRAILING_NEWLINES = 16;
-	
-	public static final int INCLUDE_INVISIBLE_ELEMENTS =32;
+
+	public static final int INCLUDE_INVISIBLE_ELEMENTS = 32;
 
 	public static boolean isListElement(Element e) {
 		return HTML_LISTS.contains("," + e.getTagName() + ",");
@@ -110,7 +110,7 @@ public class InnerTexta {
 						listIndicies.put(listElt, listIndex + 1);
 					}
 				}
-				if (XmlUtils.isInvisibleContentElement(elt)&&!showInvisible) {
+				if (XmlUtils.isInvisibleContentElement(elt) && !showInvisible) {
 					boolean first = true;
 					while (true) {
 						n2 = walker.nextNode();
@@ -134,7 +134,7 @@ public class InnerTexta {
 			}
 		}
 		String s = result.toString();
-		if (flags == PRESERVE_WHITESPACE) {
+		if ((flags & PRESERVE_WHITESPACE) != 0) {
 			return s;
 		}
 		s = SEUtilities.normalizeWhitespace(s).trim();
