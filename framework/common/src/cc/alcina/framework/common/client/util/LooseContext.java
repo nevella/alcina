@@ -79,6 +79,9 @@ public abstract class LooseContext {
 		getContext().pushWithKey(key, Boolean.FALSE);
 	}
 
+	/*
+	 * Don't evaluate possibly throwing expressions in a call to this!
+	 */
 	public static void pushWithKey(String key, Object value) {
 		getContext().pushWithKey(key, value);
 	}
@@ -107,10 +110,6 @@ public abstract class LooseContext {
 		return runWithKeyValue(null, Boolean.TRUE, supplier);
 	}
 
-	public static <T> T runWithTrue(String key, ThrowingSupplier<T> supplier) {
-		return runWithKeyValue(key, Boolean.TRUE, supplier);
-	}
-
 	public static <T> T runWithKeyValue(String key, Object value,
 			ThrowingSupplier<T> supplier) {
 		try {
@@ -123,12 +122,12 @@ public abstract class LooseContext {
 		}
 	}
 
-	public static void set(String key, Object value) {
-		getContext().set(key, value);
+	public static <T> T runWithTrue(String key, ThrowingSupplier<T> supplier) {
+		return runWithKeyValue(key, Boolean.TRUE, supplier);
 	}
 
-	public static void setTrue(String key) {
-		getContext().setBoolean(key);
+	public static void set(String key, Object value) {
+		getContext().set(key, value);
 	}
 
 	public static void setBoolean(String key, Boolean value) {
@@ -139,6 +138,10 @@ public abstract class LooseContext {
 		if (!has(key)) {
 			set(key, object);
 		}
+	}
+
+	public static void setTrue(String key) {
+		getContext().setBoolean(key);
 	}
 
 	/*
