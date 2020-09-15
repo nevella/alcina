@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -269,9 +270,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			transformSequencer.markHighestVisibleTransformList(conn);
 			releaseConn(conn);
 		}
-		warmupTransaction.toDomainCommitting(
-				transformSequencer.getHighestVisibleTransactionTimestamp(),
+		Timestamp highestVisibleTransactionTimestamp = transformSequencer
+				.getHighestVisibleTransactionTimestamp();
+		warmupTransaction.toDomainCommitting(highestVisibleTransactionTimestamp,
 				store, store.applyTxToGraphCounter.getAndIncrement(), 0L);
+		store.getPersistenceEvents().getQueue().setMuteEventsOnOrBefore(
+				highestVisibleTransactionTimestamp.getTime());
 		// get non-many-many obj
 		// lazy tables, load a segment (for large db dev work)
 		if (domainDescriptor.getDomainSegmentLoader() != null) {

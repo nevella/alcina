@@ -91,6 +91,8 @@ public class DomainTransformPersistenceQueue {
 
 	private Map<Long, DomainTransformRequestPersistent> loadedRequests = new ConcurrentHashMap<>();
 
+	private long muteEventsOnOrBefore;
+
 	public DomainTransformPersistenceQueue(
 			DomainTransformPersistenceEvents persistenceEvents) {
 		this.persistenceEvents = persistenceEvents;
@@ -126,6 +128,10 @@ public class DomainTransformPersistenceQueue {
 		return this.firingThread;
 	}
 
+	public long getMuteEventsOnOrBefore() {
+		return this.muteEventsOnOrBefore;
+	}
+
 	public int getToFireQueueLength() {
 		synchronized (queueModificationLock) {
 			return toFire.size();
@@ -153,11 +159,14 @@ public class DomainTransformPersistenceQueue {
 				sequentialUnpublishedTransformIds);
 	}
 
+	public void setMuteEventsOnOrBefore(long muteEventsOnOrBefore) {
+		this.muteEventsOnOrBefore = muteEventsOnOrBefore;
+	}
+
 	public void startEventQueue() {
 		synchronized (queueModificationLock) {
 			firedOrQueued.forEach(id -> {
-				if (loadedRequests.containsKey(id)
-						&& loadedRequests.get(id) == null) {
+				if (loadedRequests.get(id) == null) {
 					logger.warn("Loading request from db: {}", id);
 					loadedRequests.put(id, persistenceEvents.domainStore
 							.loadTransformRequest(id));
@@ -470,6 +479,11 @@ public class DomainTransformPersistenceQueue {
 							transformSequencer
 									.waitForPostLocalFireEventsThreadBarrier(
 											id);
+							return;
+						}
+						if (request.getTransactionCommitTime()
+								.getTime() <= muteEventsOnOrBefore) {
+							loadedRequests.remove(id);
 							return;
 						}
 						Transaction.current().toNoActiveTransaction();
