@@ -73,8 +73,10 @@ public class ClusterTransformListener
 			logger.warn("Loading request from db: {}", request.id);
 			request.request = domainStore.loadTransformRequest(request.id);
 		}
-		domainStore.getPersistenceEvents().getQueue()
-				.cachePersistedRequest(request.request);
+		if (request.request != null) {
+			domainStore.getPersistenceEvents().getQueue()
+					.cachePersistedRequest(request.request);
+		}
 		domainStore.getPersistenceEvents().getQueue()
 				.transformRequestPublished(request.id);
 	}
