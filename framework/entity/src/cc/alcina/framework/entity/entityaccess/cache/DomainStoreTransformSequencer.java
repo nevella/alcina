@@ -75,7 +75,8 @@ public class DomainStoreTransformSequencer {
 		removed.countDown();
 	}
 
-	public synchronized List<Long> getSequentialUnpublishedTransformIds() {
+	public synchronized List<TransformSequenceEntry>
+			getSequentialUnpublishedRequests() {
 		try {
 			return getSequentialUnpublishedTransformIds0();
 		} catch (Exception e) {
@@ -246,13 +247,13 @@ public class DomainStoreTransformSequencer {
 		}
 	}
 
-	private List<Long> getSequentialUnpublishedTransformIds0()
+	private List<TransformSequenceEntry> getSequentialUnpublishedTransformIds0()
 			throws Exception {
 		if (highestVisibleTransactions == null) {
 			// not yet finished with marking - come back later please
 			return Collections.emptyList();
 		}
-		List<Long> unpublishedIds = new ArrayList<>();
+		List<TransformSequenceEntry> unpublishedIds = new ArrayList<>();
 		Connection conn = getConnection();
 		/*
 		 * normally, commit times are ensured just after the dtrp is committed
@@ -281,37 +282,38 @@ public class DomainStoreTransformSequencer {
 			}
 			pStatement.setTimestamp(1, fromTimestamp);
 			ResultSet rs = pStatement.executeQuery();
-			List<DtrIdTimestamp> txData = new ArrayList<>();
+			List<TransformSequenceEntry> txData = new ArrayList<>();
 			// normally it'll be one dtr per timestamp. If more than 99999,
 			// we're
 			// looking at an initial cleanup - ignore
 			int maxCurrent = 99999;
 			while (rs.next() && maxCurrent-- > 0) {
-				DtrIdTimestamp element = new DtrIdTimestamp();
-				element.id = rs.getLong("id");
-				element.commitTimestamp = rs
+				TransformSequenceEntry entry = new TransformSequenceEntry();
+				entry.persistentRequestId = rs.getLong("id");
+				entry.commitTimestamp = rs
 						.getTimestamp("transactionCommitTime");
-				if (element.commitTimestamp
+				if (entry.commitTimestamp
 						.equals(highestVisibleTransactions.commitTimestamp)
 						&& highestVisibleTransactions.transformListIds
-								.contains(element.id)) {
+								.contains(entry.persistentRequestId)) {
 					continue;// already submitted/published
 				}
-				txData.add(element);
+				txData.add(entry);
 			}
 			rs.close();
 			if (maxCurrent <= 0) {
 				txData.clear();
 			}
-			txData.stream().map(txd -> txd.id).forEach(unpublishedIds::add);
-			Map<Timestamp, List<DtrIdTimestamp>> collect = txData.stream()
-					.collect(AlcinaCollectors
+			txData.forEach(unpublishedIds::add);
+			Map<Timestamp, List<TransformSequenceEntry>> collect = txData
+					.stream().collect(AlcinaCollectors
 							.toKeyMultimap(txd -> txd.commitTimestamp));
 			if (collect.isEmpty()) {
 			} else {
-				Entry<Timestamp, List<DtrIdTimestamp>> last = CommonUtils
+				Entry<Timestamp, List<TransformSequenceEntry>> last = CommonUtils
 						.last(collect.entrySet().iterator());
-				List<Long> lastIds = last.getValue().stream().map(txd -> txd.id)
+				List<Long> lastIds = last.getValue().stream()
+						.map(txd -> txd.persistentRequestId)
 						.collect(Collectors.toList());
 				if (last.getKey()
 						.equals(highestVisibleTransactions.commitTimestamp)) {
@@ -398,10 +400,10 @@ public class DomainStoreTransformSequencer {
 		public abstract boolean useLongQueueWait();
 	}
 
-	static class DtrIdTimestamp {
-		long id;
+	public static class TransformSequenceEntry {
+		public long persistentRequestId;
 
-		Timestamp commitTimestamp;
+		public Timestamp commitTimestamp;
 
 		@Override
 		public String toString() {

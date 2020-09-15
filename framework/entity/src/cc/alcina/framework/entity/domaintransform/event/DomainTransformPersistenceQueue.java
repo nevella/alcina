@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.domaintransform.event;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -42,6 +43,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStoreTransformSequencer;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStoreTransformSequencer.TransformSequenceEntry;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -91,7 +93,9 @@ public class DomainTransformPersistenceQueue {
 
 	private Map<Long, DomainTransformRequestPersistent> loadedRequests = new ConcurrentHashMap<>();
 
-	private long muteEventsOnOrBefore;
+	private Timestamp muteEventsOnOrBefore;
+
+	private Map<Long, TransformSequenceEntry> requestIdSequenceEntry = new ConcurrentHashMap<>();
 
 	public DomainTransformPersistenceQueue(
 			DomainTransformPersistenceEvents persistenceEvents) {
@@ -128,10 +132,6 @@ public class DomainTransformPersistenceQueue {
 		return this.firingThread;
 	}
 
-	public long getMuteEventsOnOrBefore() {
-		return this.muteEventsOnOrBefore;
-	}
-
 	public int getToFireQueueLength() {
 		synchronized (queueModificationLock) {
 			return toFire.size();
@@ -152,15 +152,17 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public void sequencedTransformRequestPublished() {
-		List<Long> sequentialUnpublishedTransformIds = persistenceEvents.domainStore
-				.getTransformSequencer().getSequentialUnpublishedTransformIds();
-		// filterApplicableRequestIds(sequentialUnpublishedTransformIds);
-		fireSequentialUnpublishedTransformIds(
-				sequentialUnpublishedTransformIds);
+		List<TransformSequenceEntry> unpublishedRequests = persistenceEvents.domainStore
+				.getTransformSequencer().getSequentialUnpublishedRequests();
+		unpublishedRequests.forEach(entry -> requestIdSequenceEntry
+				.put(entry.persistentRequestId, entry));
+		fireSequentialUnpublishedTransformRequests(unpublishedRequests.stream()
+				.map(e -> e.persistentRequestId).collect(Collectors.toList()));
 	}
 
-	public void setMuteEventsOnOrBefore(long muteEventsOnOrBefore) {
-		this.muteEventsOnOrBefore = muteEventsOnOrBefore;
+	public void setMuteEventsOnOrBefore(
+			Timestamp highestVisibleTransactionTimestamp) {
+		this.muteEventsOnOrBefore = highestVisibleTransactionTimestamp;
 	}
 
 	public void startEventQueue() {
@@ -281,7 +283,7 @@ public class DomainTransformPersistenceQueue {
 		return persistenceEvent;
 	}
 
-	private void fireSequentialUnpublishedTransformIds(
+	private void fireSequentialUnpublishedTransformRequests(
 			List<Long> sequentialUnpublishedTransformIds) {
 		for (Long sequentialId : sequentialUnpublishedTransformIds) {
 			transformRequestPublishedSequential(sequentialId);
@@ -296,6 +298,18 @@ public class DomainTransformPersistenceQueue {
 
 	private Logger getLogger(boolean localToVm) {
 		return localToVm ? logger : eventQueue.fireEventThreadLogger;
+	}
+
+	private Timestamp
+			getTransactionCommitTime(DomainTransformRequestPersistent request) {
+		if (persistenceEvents.isUseTransformDbCommitSequencing()) {
+			// Guaranteed to exist at this point. Not needed after first get -
+			// in for tmp debugging (FIXME mvcc.4)
+			return requestIdSequenceEntry.get(request.getId()).commitTimestamp;
+		} else {
+			// more or less, more or les...(ensure the callee doesn't block)
+			return new Timestamp(System.currentTimeMillis());
+		}
 	}
 
 	// private <T> T
@@ -481,8 +495,11 @@ public class DomainTransformPersistenceQueue {
 											id);
 							return;
 						}
-						if (request.getTransactionCommitTime()
-								.getTime() <= muteEventsOnOrBefore) {
+						Timestamp transactionCommitTime = getTransactionCommitTime(
+								request);
+						if (transactionCommitTime.before(muteEventsOnOrBefore)
+								|| transactionCommitTime
+										.equals(muteEventsOnOrBefore)) {
 							loadedRequests.remove(id);
 							return;
 						}

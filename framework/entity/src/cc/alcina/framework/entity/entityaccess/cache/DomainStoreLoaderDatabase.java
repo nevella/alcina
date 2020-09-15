@@ -274,8 +274,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				.getHighestVisibleTransactionTimestamp();
 		warmupTransaction.toDomainCommitting(highestVisibleTransactionTimestamp,
 				store, store.applyTxToGraphCounter.getAndIncrement(), 0L);
-		store.getPersistenceEvents().getQueue().setMuteEventsOnOrBefore(
-				highestVisibleTransactionTimestamp.getTime());
+		store.getPersistenceEvents().getQueue()
+				.setMuteEventsOnOrBefore(highestVisibleTransactionTimestamp);
 		// get non-many-many obj
 		// lazy tables, load a segment (for large db dev work)
 		if (domainDescriptor.getDomainSegmentLoader() != null) {
