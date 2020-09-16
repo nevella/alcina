@@ -13,13 +13,23 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public abstract class AlcinaServlet extends HttpServlet {
+	private static Topic<Throwable> topicApplicationThrowables = Topic.local();
+
+	public static Topic<Throwable> topicApplicationThrowables() {
+		return topicApplicationThrowables;
+	}
+
 	private AlcinaServletContext alcinaContext;
 
 	Logger logger = LoggerFactory.getLogger(getClass());
@@ -101,12 +111,13 @@ public abstract class AlcinaServlet extends HttpServlet {
 						Thread.currentThread().getName(), () -> true);
 			}
 			handleRequest(request, response);
-		} catch (Exception e) {
+		} catch (Throwable t) {
+			topicApplicationThrowables().publish(t);
 			logger.warn("Alcina servlet request issue - user {} - url {}",
 					PermissionsManager.get().getUser().toIdNameString(),
 					request.getRequestURI());
-			EntityLayerLogging.persistentLog(LogMessageType.RPC_EXCEPTION, e);
-			throw new ServletException(e);
+			EntityLayerLogging.persistentLog(LogMessageType.RPC_EXCEPTION, t);
+			throw new ServletException(t);
 		} finally {
 			if (trackInternalMetrics()) {
 				InternalMetrics.get().endTracker(request);
