@@ -801,13 +801,18 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	/*
-	 * Logger parameter currently unused
+	 * This method originally supported loading requests for multiple
+	 * ids...hence use of collections
 	 */
-	private DomainTransformRequestPersistent loadTransformRequest0(long id)
-			throws Exception {
-		store.logger.info("{} - loading transform request {}", store.name, id);
+	private DomainTransformRequestPersistent
+			loadTransformRequest0(long requestId) throws Exception {
+		store.logger.info("{} - loading transform request {}", store.name,
+				requestId);
 		Connection conn = getConnection();
 		try {
+			/*
+			 * This method used to
+			 */
 			CachingMap<Long, DomainTransformRequestPersistent> loadedRequests = new CachingMap<>(
 					rid -> {
 						DomainTransformRequestPersistent request = AlcinaPersistentEntityImpl
@@ -816,6 +821,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						request.setId(rid);
 						return request;
 					});
+			if (checkTransformRequestExists(requestId)) {
+				loadedRequests.get(requestId);
+			}
 			Class<? extends DomainTransformEvent> transformEventImplClass = domainDescriptor
 					.getShadowDomainTransformEventPersistentClass();
 			Class<? extends ClassRef> classRefImplClass = domainDescriptor
@@ -825,13 +833,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						transformEventImplClass);
 				prepareTable(classDescriptor);
 			}
-			String sqlFilter = Ax
-					.format(" domainTransformRequestPersistent_id = %s ", id);
+			String sqlFilter = Ax.format(
+					" domainTransformRequestPersistent_id = %s ", requestId);
 			LaterLookup laterLookup = new LaterLookup();
 			List<? extends DomainTransformEventPersistent> transforms = null;
 			Transaction.ensureDomainPreparingActive();
 			transforms = (List) loadTable0(transformEventImplClass, sqlFilter,
-					new ClassIdLock(DomainTransformRequestPersistent.class, id),
+					new ClassIdLock(DomainTransformRequestPersistent.class,
+							requestId),
 					laterLookup, false, true);
 			laterLookup.resolve(new CustomResolver() {
 				@Override

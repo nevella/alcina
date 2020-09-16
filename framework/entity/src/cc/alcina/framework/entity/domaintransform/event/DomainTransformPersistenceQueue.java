@@ -170,8 +170,9 @@ public class DomainTransformPersistenceQueue {
 			firedOrQueued.forEach(id -> {
 				if (loadedRequests.get(id) == null) {
 					logger.warn("Loading request from db: {}", id);
-					loadedRequests.put(id, persistenceEvents.domainStore
-							.loadTransformRequest(id));
+					DomainTransformRequestPersistent persistentRequest = persistenceEvents.domainStore
+							.loadTransformRequest(id);
+					loadedRequests.put(id, persistentRequest);
 				}
 			});
 		}
