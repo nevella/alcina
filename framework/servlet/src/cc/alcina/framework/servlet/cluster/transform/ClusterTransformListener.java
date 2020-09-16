@@ -1,5 +1,8 @@
 package cc.alcina.framework.servlet.cluster.transform;
 
+import java.util.concurrent.Future;
+
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,13 +38,24 @@ public class ClusterTransformListener
 
 	@Override
 	public void onDomainTransformRequestPersistence(
-			DomainTransformPersistenceEvent evt) {
-		TransformPersistenceToken persistenceToken = evt
+			DomainTransformPersistenceEvent event) {
+		TransformPersistenceToken persistenceToken = event
 				.getTransformPersistenceToken();
-		switch (evt.getPersistenceEventType()) {
+		switch (event.getPersistenceEventType()) {
 		case COMMIT_OK:
-			evt.getPersistedRequests()
-					.forEach(transformCommitLog::sendTransformPublishedMessage);
+			event.getPersistedRequests().forEach(request -> {
+				Future<RecordMetadata> f_recordMetadata = transformCommitLog
+						.sendTransformPublishedMessage(request);
+				try {
+					RecordMetadata recordMetadata = f_recordMetadata.get();
+					logger.info("Published transform message: {}",
+							request.getId());
+				} catch (Exception e) {
+					logger.warn("Persist record issue: request {}",
+							request.getId());
+					e.printStackTrace();
+				}
+			});
 			break;
 		}
 	}
@@ -66,6 +80,7 @@ public class ClusterTransformListener
 	}
 
 	void handleClusterTransformRequest(ClusterTransformRequest request) {
+		logger.info("Received transform message: {}", request.id);
 		// basically a fall-back - either a huge transform, or a producer that
 		// isn't serializing requests
 		if (request.request == null && domainStore.isInitialised()) {
