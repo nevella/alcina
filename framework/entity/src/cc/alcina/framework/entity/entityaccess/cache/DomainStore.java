@@ -781,7 +781,7 @@ public class DomainStore implements IDomainStore {
 						if (dbMetadata != null) {
 							dbMetadata.applyTo(entity);
 						} else {
-							logger.warn("No db metadata for %s",
+							logger.warn("No db metadata for {}",
 									entity.toStringId());
 						}
 						index(entity, true);

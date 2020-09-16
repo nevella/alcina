@@ -97,6 +97,9 @@ public class DomainTransformPersistenceQueue {
 
 	private Map<Long, TransformSequenceEntry> requestIdSequenceEntry = new ConcurrentHashMap<>();
 
+	// used to signal this event to a possibly waiting fire events thread
+	private Object persistentRequestCached = new Object();
+
 	public DomainTransformPersistenceQueue(
 			DomainTransformPersistenceEvents persistenceEvents) {
 		this.persistenceEvents = persistenceEvents;
@@ -122,6 +125,9 @@ public class DomainTransformPersistenceQueue {
 			}
 		}
 		loadedRequests.put(requestId, request);
+		synchronized (persistentRequestCached) {
+			persistentRequestCached.notifyAll();
+		}
 	}
 
 	public Thread getFireEventsThread() {
@@ -488,8 +494,27 @@ public class DomainTransformPersistenceQueue {
 						boolean exists = persistenceEvents.domainStore
 								.checkTransformRequestExists(id);
 						if (exists) {
-							// using cluster queueing - wait for an event from
-							// there
+							// Using cluster queueing - an event is visible in
+							// the db for the cluster propagation notification
+							// (kafka) has arrived.
+							//
+							// Wait a maximum of 10 seconds
+							long endWaitLoop = System.currentTimeMillis()
+									+ 10 * TimeConstants.ONE_SECOND_MS;
+							while (true) {
+								request = loadedRequests.get(id);
+								long now = System.currentTimeMillis();
+								if (request == null && now < endWaitLoop) {
+									synchronized (persistentRequestCached) {
+										persistentRequestCached
+												.wait(endWaitLoop - now);
+									}
+								} else {
+									break;
+								}
+							}
+						}
+						if (exists && request == null) {
 							fireEventThreadLogger.warn(
 									"publishTransformEvent - loading request not received via cluster listener -  dtr {}",
 									id);
