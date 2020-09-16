@@ -48,12 +48,20 @@ public class ClusterTransformSerializer {
 
 	public byte[] serialize(DomainTransformRequestPersistent request) {
 		request = projectRequest(request);
+		byte[] zipped = null;
 		byte[] result = null;
-		String json = new JacksonJsonObjectSerializer().withIdRefs()
-				.withTypeInfo().withDefaults(false).serialize(request);
-		byte[] unzipped = json.getBytes(StandardCharsets.UTF_8);
-		byte[] zipped = ResourceUtilities.gzipBytes(unzipped);
-		if (zipped.length > 100000 || request.getEvents().size() > 1000) {
+		try {
+			String json = new JacksonJsonObjectSerializer().withIdRefs()
+					.withTypeInfo().withDefaults(false)
+					.withMaxLength(Integer.MAX_VALUE).serialize(request);
+			byte[] unzipped = json.getBytes(StandardCharsets.UTF_8);
+			zipped = ResourceUtilities.gzipBytes(unzipped);
+		} catch (Exception e) {
+			logger.info("Issue serializing request {}", request.getId());
+			logger.warn("Issue serializing reques", e);
+		}
+		if (zipped == null || zipped.length > 100000
+				|| request.getEvents().size() > 1000) {
 			logger.info(
 					"Large serialized request :: {} :: {} events :: {} bytes",
 					request.getId(), request.getEvents().size(), zipped.length);
