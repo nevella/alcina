@@ -194,11 +194,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		String sql = Ax.format(
 				"select id from %s where  domainTransformRequestPersistent_id = %s limit 1;",
 				transformEventImplClass.getAnnotation(Table.class).name(), id);
-		try (Statement statement = getConnection().createStatement()) {
+		Connection connection = getConnection();
+		try (Statement statement = connection.createStatement()) {
 			ResultSet rs = statement.executeQuery(sql);
 			return rs.next();
 		} catch (SQLException e) {
 			throw new WrappedRuntimeException(e);
+		} finally {
+			releaseConn(connection);
 		}
 	}
 
