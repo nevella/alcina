@@ -173,13 +173,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
-	public static HttpContext getHttpContext() {
-		HttpContext context = new HttpContext();
-		context.request = getContextThreadLocalRequest();
-		context.response = getContextThreadLocalResponse();
-		return context;
-	}
-
 	public static HttpServletRequest getContextThreadLocalRequest() {
 		return LooseContext.get(
 				CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_REQUEST);
@@ -188,6 +181,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static HttpServletResponse getContextThreadLocalResponse() {
 		return LooseContext.get(
 				CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_RESPONSE);
+	}
+
+	public static HttpContext getHttpContext() {
+		HttpContext context = new HttpContext();
+		context.request = getContextThreadLocalRequest();
+		context.response = getContextThreadLocalResponse();
+		return context;
 	}
 
 	public static String getUserAgent(HttpServletRequest rq) {
@@ -382,6 +382,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					exceptionType, CommonUtils.toSimpleExceptionMessage(ex));
 			return;
 		}
+		AlcinaServlet.topicApplicationThrowables().publish(ex);
 		try {
 			LooseContext.pushWithKey(
 					CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
