@@ -195,12 +195,14 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public void waitUntilAllQueuedEventsProcessed() {
-		Optional<Long> lastToFireId = getLastToFireId();
-		if (!lastToFireId.isPresent()) {
-			return;
-		} else {
-			new QueueWaiter().pauseUntilProcessed(
-					5 * TimeConstants.ONE_MINUTE_MS, lastToFireId);
+		while (true) {
+			Optional<Long> lastToFireId = getLastToFireId();
+			if (!lastToFireId.isPresent()) {
+				return;
+			} else {
+				new QueueWaiter().pauseUntilProcessed(
+						365 * TimeConstants.ONE_DAY_MS, lastToFireId);
+			}
 		}
 	}
 
@@ -364,6 +366,8 @@ public class DomainTransformPersistenceQueue {
 		synchronized (queueModificationLock) {
 			lastFired = new LinkedHashSet<>(event.getPersistedRequestIds());
 			appLifetimeEventsFired.addAll(lastFired);
+			// FIXME - mvcc.4 - this interaction with QueueWaiter is complex and
+			// probably needs more (alas!) synchronisation
 			waiterLatch = new CountDownLatch(waiterCounter.get());
 			queueModificationLock.notifyAll();
 		}
@@ -479,6 +483,19 @@ public class DomainTransformPersistenceQueue {
 				try {
 					DomainTransformRequestPersistent request = null;
 					request = loadedRequests.get(id);
+					if (request == null) {
+						boolean exists = persistenceEvents.domainStore
+								.checkTransformRequestExists(id);
+						if (exists) {
+							// using cluster queueing - wait for an event from
+							// there
+							fireEventThreadLogger.warn(
+									"publishTransformEvent - loading request not received via cluster listener -  dtr {}",
+									id);
+							loadedRequests.put(id, persistenceEvents.domainStore
+									.loadTransformRequest(id));
+						}
+					}
 					if (request != null) {
 						if (Ax.isTest() && request.getClientInstance() != null
 								&& request.getClientInstance()
@@ -511,25 +528,9 @@ public class DomainTransformPersistenceQueue {
 								.fireDomainTransformPersistenceEvent(event);
 						loadedRequests.remove(id);
 					} else {
-						boolean exists = persistenceEvents.domainStore
-								.checkTransformRequestExists(id);
-						if (exists) {
-							// using cluster queueing - wait for an event from
-							// there
-							fireEventThreadLogger.warn(
-									"publishTransformEvent - received out of order request - will return to front of to-fire on next event -  dtr {}",
-									id);
-							synchronized (toFire) {
-								toFire.wait();
-							}
-							synchronized (queueModificationLock) {
-								toFire.addFirst(id);
-							}
-						} else {
-							fireEventThreadLogger.warn(
-									"publishTransformEvent - missed (no transforms?) dtr {}",
-									id);
-						}
+						fireEventThreadLogger.warn(
+								"publishTransformEvent - missed (no transforms?) dtr {}",
+								id);
 					}
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
