@@ -694,6 +694,7 @@ public class DomainStore implements IDomainStore {
 		try {
 			LooseContext.pushWithTrue(
 					TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
+			TransformManager.get().setIgnorePropertyChanges(true);
 			postProcessStart = System.currentTimeMillis();
 			MetricLogging.get().start("post-process");
 			Map<Long, Entity> createdLocalsSnapshot = persistenceEvent
@@ -726,7 +727,6 @@ public class DomainStore implements IDomainStore {
 			// this is also checked in TransformCommit
 			// filtered.removeIf(collation::isCreatedAndDeleted);
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
-			TransformManager.get().setIgnorePropertyChanges(true);
 			for (DomainTransformEventPersistent transform : filtered) {
 				// remove from indicies before first change - and only if
 				// preexisting object
@@ -1420,19 +1420,22 @@ public class DomainStore implements IDomainStore {
 					if (domainProperty != null && !domainProperty.index()) {
 						return;
 					}
-					tm.setIgnorePropertyChanges(true);
-					/*
-					 * undo last property change
-					 */
-					Reflections.propertyAccessor().setPropertyValue(entity,
-							event.getPropertyName(), event.getOldValue());
-					store.index(entity, false);
-					/*
-					 * redo
-					 */
-					Reflections.propertyAccessor().setPropertyValue(entity,
-							event.getPropertyName(), event.getNewValue());
-					tm.setIgnorePropertyChanges(false);
+					try {
+						tm.setIgnorePropertyChanges(true);
+						/*
+						 * undo last property change
+						 */
+						Reflections.propertyAccessor().setPropertyValue(entity,
+								event.getPropertyName(), event.getOldValue());
+						store.index(entity, false);
+						/*
+						 * redo
+						 */
+						Reflections.propertyAccessor().setPropertyValue(entity,
+								event.getPropertyName(), event.getNewValue());
+					} finally {
+						tm.setIgnorePropertyChanges(false);
+					}
 					break;
 				}
 				default:

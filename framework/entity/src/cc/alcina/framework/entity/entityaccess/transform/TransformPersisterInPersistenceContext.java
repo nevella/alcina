@@ -228,16 +228,22 @@ public class TransformPersisterInPersistenceContext {
 									boolean wrappedObjectAssignable = WrappedObject.class
 											.isAssignableFrom(
 													event.getObjectClass());
-									if (wrappedObjectAssignable) {
-										tltm.setIgnorePropertyChangesTo(event);
-									} else {
-										tltm.setIgnorePropertyChanges(true);
-									}
-									tltm.fireDomainTransform(event);
-									if (wrappedObjectAssignable) {
-										tltm.setIgnorePropertyChanges(false);
-									} else {
-										tltm.setIgnorePropertyChangesTo(null);
+									try {
+										if (wrappedObjectAssignable) {
+											tltm.setIgnorePropertyChangesTo(
+													event);
+										} else {
+											tltm.setIgnorePropertyChanges(true);
+										}
+										tltm.fireDomainTransform(event);
+									} finally {
+										if (wrappedObjectAssignable) {
+											tltm.setIgnorePropertyChangesTo(
+													null);
+										} else {
+											tltm.setIgnorePropertyChanges(
+													false);
+										}
 									}
 									if (tltm.provideIsMarkedFlushTransform(
 											event)) {
