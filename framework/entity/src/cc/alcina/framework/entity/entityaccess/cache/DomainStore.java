@@ -241,6 +241,8 @@ public class DomainStore implements IDomainStore {
 
 	private GraphProjection graphProjection;
 
+	Map<EntityLocator, Boolean> lazyLoadAttempted = new ConcurrentHashMap<>();
+
 	public DomainStore(DomainStoreDescriptor descriptor) {
 		this();
 		this.domainDescriptor = descriptor;
@@ -352,6 +354,30 @@ public class DomainStore implements IDomainStore {
 		cache.putExternalLocal(instance);
 	}
 
+	// FIXME - mvcc.wrap - goes away
+	public void reloadEntity(Entity wrapped) {
+		Preconditions.checkArgument(wrapped instanceof WrappedObject);
+		cache.remove(wrapped);
+		Entity reloaded = Domain.find(wrapped.entityClass(), wrapped.getId());
+		try {
+			// note that reloaded will be discarded because we're not in a
+			// to-domain
+			// tx
+			if (reloaded != null) {
+				SEUtilities.getFieldByName(wrapped.entityClass(), "object")
+						.set(wrapped, null);
+				SEUtilities
+						.getFieldByName(wrapped.entityClass(), "serializedXml")
+						.set(wrapped,
+								((WrappedObject) reloaded).getSerializedXml());
+				cache.remove(reloaded);
+				cache.put(wrapped);
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public void remove(Entity entity) {
 		cache.remove(entity);
 	}
@@ -362,6 +388,11 @@ public class DomainStore implements IDomainStore {
 
 	public void setDebug(boolean debug) {
 		this.debug = debug;
+	}
+
+	public void throwDomainStoreException(String message) {
+		health.domainStoreExceptionCount.incrementAndGet();
+		throw new DomainStoreException(message);
 	}
 
 	@Override
@@ -567,8 +598,6 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	Map<EntityLocator, Boolean> lazyLoadAttempted = new ConcurrentHashMap<>();
-
 	<T extends Entity> T find(Class<T> clazz, long id) {
 		T t = cache.get(clazz, id);
 		if (t == null) {
@@ -703,6 +732,7 @@ public class DomainStore implements IDomainStore {
 		try {
 			LooseContext.pushWithTrue(
 					TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
+			TransformManager.get().setIgnorePropertyChanges(true);
 			postProcessStart = System.currentTimeMillis();
 			MetricLogging.get().start("post-process");
 			Map<Long, Entity> createdLocalsSnapshot = persistenceEvent
@@ -754,7 +784,6 @@ public class DomainStore implements IDomainStore {
 			for (DomainTransformEvent dte : filtered) {
 				dte.setNewValue(null);// force a lookup from the subgraph
 			}
-			TransformManager.get().setIgnorePropertyChanges(true);
 			for (DomainTransformEvent dte : filtered) {
 				// remove from indicies before first change - and only if
 				// preexisting object
@@ -865,11 +894,6 @@ public class DomainStore implements IDomainStore {
 			}
 			LooseContext.pop();
 		}
-	}
-
-	public void throwDomainStoreException(String message) {
-		health.domainStoreExceptionCount.incrementAndGet();
-		throw new DomainStoreException(message);
 	}
 
 	<T extends Entity> Stream<T> query(Class<T> clazz,
@@ -1449,19 +1473,22 @@ public class DomainStore implements IDomainStore {
 					if (domainProperty != null && !domainProperty.index()) {
 						return;
 					}
-					tm.setIgnorePropertyChanges(true);
-					/*
-					 * undo last property change
-					 */
-					Reflections.propertyAccessor().setPropertyValue(entity,
-							event.getPropertyName(), event.getOldValue());
-					store.index(entity, false);
-					/*
-					 * redo
-					 */
-					Reflections.propertyAccessor().setPropertyValue(entity,
-							event.getPropertyName(), event.getNewValue());
-					tm.setIgnorePropertyChanges(false);
+					try {
+						tm.setIgnorePropertyChanges(true);
+						/*
+						 * undo last property change
+						 */
+						Reflections.propertyAccessor().setPropertyValue(entity,
+								event.getPropertyName(), event.getOldValue());
+						store.index(entity, false);
+						/*
+						 * redo
+						 */
+						Reflections.propertyAccessor().setPropertyValue(entity,
+								event.getPropertyName(), event.getNewValue());
+					} finally {
+						tm.setIgnorePropertyChanges(false);
+					}
 					break;
 				}
 				default:
@@ -1650,30 +1677,6 @@ public class DomainStore implements IDomainStore {
 		@Override
 		protected void performDeleteObject(Entity entity) {
 			super.performDeleteObject(entity);
-		}
-	}
-
-	// FIXME - mvcc.wrap - goes away
-	public void reloadEntity(Entity wrapped) {
-		Preconditions.checkArgument(wrapped instanceof WrappedObject);
-		cache.remove(wrapped);
-		Entity reloaded = Domain.find(wrapped.entityClass(), wrapped.getId());
-		try {
-			// note that reloaded will be discarded because we're not in a
-			// to-domain
-			// tx
-			if (reloaded != null) {
-				SEUtilities.getFieldByName(wrapped.entityClass(), "object")
-						.set(wrapped, null);
-				SEUtilities
-						.getFieldByName(wrapped.entityClass(), "serializedXml")
-						.set(wrapped,
-								((WrappedObject) reloaded).getSerializedXml());
-				cache.remove(reloaded);
-				cache.put(wrapped);
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
 		}
 	}
 }

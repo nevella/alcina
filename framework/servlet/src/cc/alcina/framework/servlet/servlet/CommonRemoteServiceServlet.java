@@ -109,6 +109,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
+import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetricData;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -962,6 +963,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				if (transformManager instanceof ThreadlocalTransformManager) {
 					ThreadlocalTransformManager.get().resetTltm(null);
 				}
+				Transaction.ensureEnded();
+				Transaction.begin();
 				LooseContext.push();
 				if (!LooseContext.has(CONTEXT_THREAD_LOCAL_HTTP_REQUEST)) {
 					ActionPerformerMetricFilter filter = Registry
@@ -1004,6 +1007,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				if (transformManager instanceof ThreadlocalTransformManager) {
 					ThreadlocalTransformManager.get().resetTltm(null);
 				}
+				Transaction.endAndBeginNew();
 			}
 		}
 	}

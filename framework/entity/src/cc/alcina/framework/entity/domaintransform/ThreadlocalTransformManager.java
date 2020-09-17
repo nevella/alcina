@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -143,6 +144,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	static Logger logger = LoggerFactory
 			.getLogger(ThreadlocalTransformManager.class);
 
+	public static Map<Long, String> setIgnoreTrace = new LinkedHashMap<>();
+
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
 		threadLocalListeners.add(listener);
@@ -166,7 +169,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static boolean isInEntityManagerTransaction() {
 		return get() instanceof ThreadlocalTransformManager
 				&& cast().getEntityManager() != null;
-	};
+	}
 
 	public static boolean isServerOnly(DomainTransformEvent evt) {
 		Class clazz = evt.getObjectClass();
@@ -179,7 +182,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			return true;
 		}
 		return false;
-	}
+	};
 
 	// for testing
 	public static void registerPerThreadTransformManager(
