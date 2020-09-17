@@ -233,14 +233,13 @@ public abstract class DomainTransformEventPersistent
 		// - but will be close enough
 		public void fromEvent(DomainTransformEvent event) {
 			Date now = new Date();
-			if (event.getTransformType() == TransformType.CREATE_OBJECT) {
+			if (event.getObjectLocalId() != 0) {
 				setObjectCreationDate(now);
 			}
 			setObjectLastModificationDate(now);
-			if (getVersion() == 0) {
-				setVersion(TransformManager.get().getObject(event)
-						.getVersionNumber() + 1);
-			}
+			setVersion(
+					TransformManager.get().getObject(event).getVersionNumber()
+							+ 1);
 		}
 
 		public Date getObjectCreationDate() {

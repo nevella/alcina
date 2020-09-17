@@ -95,11 +95,13 @@ public class TransformPersisterInPersistenceContext {
 		wrapper.locatorMap = locatorMap;
 		try {
 			ObjectPersistenceHelper.get();
-			ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
+			ThreadlocalTransformManager tltm = ThreadlocalTransformManager
+					.cast();
 			// We know this is thread-local, so we can clear the tm transforms
 			// add the entity version checker now
-			tm.resetTltm(locatorMap, token.getTransformExceptionPolicy(), true);
-			tm.setEntityManager(getEntityManager());
+			tltm.resetTltm(locatorMap, token.getTransformExceptionPolicy(),
+					true);
+			tltm.setEntityManager(getEntityManager());
 			ClientInstance persistentClientInstance = (ClientInstance) commonPersistenceBase
 					.findImplInstance(ClientInstance.class,
 							request.getClientInstance().getId());
@@ -127,7 +129,7 @@ public class TransformPersisterInPersistenceContext {
 					return;
 				}
 			}
-			tm.setClientInstance(persistentClientInstance);
+			tltm.setClientInstance(persistentClientInstance);
 			List<DomainTransformRequest> transformRequests = new ArrayList<DomainTransformRequest>();
 			transformRequests.addAll(request.getPriorRequestsWithoutResponse());
 			transformRequests.add(request);
@@ -227,19 +229,19 @@ public class TransformPersisterInPersistenceContext {
 											.isAssignableFrom(
 													event.getObjectClass());
 									if (wrappedObjectAssignable) {
-										tm.setIgnorePropertyChangesTo(event);
+										tltm.setIgnorePropertyChangesTo(event);
 									} else {
-										tm.setIgnorePropertyChanges(true);
+										tltm.setIgnorePropertyChanges(true);
 									}
-									tm.fireDomainTransform(event);
+									tltm.fireDomainTransform(event);
 									if (wrappedObjectAssignable) {
-										tm.setIgnorePropertyChanges(false);
+										tltm.setIgnorePropertyChanges(false);
 									} else {
-										tm.setIgnorePropertyChangesTo(null);
+										tltm.setIgnorePropertyChangesTo(null);
 									}
-									if (tm.provideIsMarkedFlushTransform(
+									if (tltm.provideIsMarkedFlushTransform(
 											event)) {
-										tm.flush();
+										tltm.flush();
 									}
 								}
 								eventsPersisted.add(event);
@@ -276,11 +278,11 @@ public class TransformPersisterInPersistenceContext {
 											: MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS)) {
 								break loop_dtrs;
 							}
-							tm.fireDomainTransform(event);
+							tltm.fireDomainTransform(event);
 							int dontFlushTilNthTransform = token
 									.getDontFlushTilNthTransform();
 							if (transformCount >= dontFlushTilNthTransform) {
-								tm.flush();
+								tltm.flush();
 								token.setDontFlushTilNthTransform(
 										dontFlushTilNthTransform + 1);
 							}
@@ -365,7 +367,7 @@ public class TransformPersisterInPersistenceContext {
 										DomainTransformEventPersistent.class);
 						DomainTransformRequestPersistent persistentRequest = persistentRequestClass
 								.newInstance();
-						tm.persist(persistentRequest);
+						tltm.persist(persistentRequest);
 						Calendar defaultCalendar = Calendar.getInstance();
 						int offset = defaultCalendar.getTimeZone()
 								.getOffset(startPersistTime.getTime());
@@ -390,13 +392,23 @@ public class TransformPersisterInPersistenceContext {
 								token.getOriginatingUserId());
 						dtrps.add(persistentRequest);
 						boolean missingClassRefWarned = false;
+						/*
+						 * Make sure collation and locator refs match up
+						 */
+						eventsPersisted.forEach(event -> {
+							if (event.getObjectId() == 0) {
+								event.setObjectId(tltm.getUserSessionEntityMap()
+										.getForLocalId(event.getObjectLocalId())
+										.getId());
+							}
+						});
 						TransformCollation collation = new TransformCollation(
 								eventsPersisted);
 						for (DomainTransformEvent event : eventsPersisted) {
 							DomainTransformEventPersistent propagationEvent = persistentEventClass
 									.newInstance();
 							if (propagationPolicy.shouldPersist(event)) {
-								tm.persist(propagationEvent);
+								tltm.persist(propagationEvent);
 							}
 							propagationEvent.wrap(event);
 							/*
@@ -419,7 +431,7 @@ public class TransformPersisterInPersistenceContext {
 												+ propagationEvent);
 							}
 							if (propagationEvent.getObjectId() == 0) {
-								propagationEvent.setObjectId(tm.getObject(
+								propagationEvent.setObjectId(tltm.getObject(
 										propagationEvent.getObjectClass(), 0,
 										propagationEvent.getObjectLocalId())
 										.getId());
@@ -427,7 +439,7 @@ public class TransformPersisterInPersistenceContext {
 							if (propagationEvent.getValueId() == 0
 									&& propagationEvent
 											.getValueLocalId() != 0) {
-								propagationEvent.setValueId(tm.getObject(
+								propagationEvent.setValueId(tltm.getObject(
 										propagationEvent.getValueClass(), 0,
 										propagationEvent.getValueLocalId())
 										.getId());
@@ -461,7 +473,7 @@ public class TransformPersisterInPersistenceContext {
 				response.getEventsToUseForClientUpdate()
 						.addAll(token.getClientUpdateEvents());
 				response.getEventsToUseForClientUpdate()
-						.addAll(tm.getModificationEvents());
+						.addAll(tltm.getModificationEvents());
 				response.setRequestId(request.getRequestId());
 				response.setTransformsProcessed(transformCount);
 				wrapper.response = response;
