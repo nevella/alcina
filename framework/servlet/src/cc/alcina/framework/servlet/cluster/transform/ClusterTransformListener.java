@@ -48,8 +48,9 @@ public class ClusterTransformListener
 						.sendTransformPublishedMessage(request);
 				try {
 					RecordMetadata recordMetadata = f_recordMetadata.get();
-					logger.info("Published transform message: {}",
-							request.getId());
+					logger.info(
+							"Published transform message: {} :: {} transforms",
+							request.getId(), request.getEvents().size());
 				} catch (Exception e) {
 					logger.warn("Persist record issue: request {}",
 							request.getId());

@@ -100,6 +100,8 @@ public class DomainTransformPersistenceQueue {
 	// used to signal this event to a possibly waiting fire events thread
 	private Object persistentRequestCached = new Object();
 
+	private long waitingOnRequestId;
+
 	public DomainTransformPersistenceQueue(
 			DomainTransformPersistenceEvents persistenceEvents) {
 		this.persistenceEvents = persistenceEvents;
@@ -119,8 +121,8 @@ public class DomainTransformPersistenceQueue {
 			cachePersistedRequest(DomainTransformRequestPersistent request) {
 		long requestId = request.getId();
 		synchronized (queueModificationLock) {
-			if (firedOrQueued.contains(requestId)
-					&& !toFire.contains(requestId)) {
+			if (firedOrQueued.contains(requestId) && !toFire.contains(requestId)
+					&& waitingOnRequestId != requestId) {
 				return;
 			}
 		}
@@ -501,6 +503,9 @@ public class DomainTransformPersistenceQueue {
 							// Wait a maximum of 10 seconds
 							long endWaitLoop = System.currentTimeMillis()
 									+ 10 * TimeConstants.ONE_SECOND_MS;
+							synchronized (queueModificationLock) {
+								waitingOnRequestId = id;
+							}
 							while (true) {
 								request = loadedRequests.get(id);
 								long now = System.currentTimeMillis();
@@ -512,6 +517,9 @@ public class DomainTransformPersistenceQueue {
 								} else {
 									break;
 								}
+							}
+							synchronized (queueModificationLock) {
+								waitingOnRequestId = 0L;
 							}
 						}
 						if (exists && request == null) {
