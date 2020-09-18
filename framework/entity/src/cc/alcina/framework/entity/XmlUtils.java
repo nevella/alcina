@@ -590,10 +590,8 @@ public class XmlUtils {
 				}
 			}
 		}
-		
-		
 		tuple.firstNode = prev.domNode();
-		tuple.lastNode=next.domNode();
+		tuple.lastNode = next.domNode();
 		return tuple;
 	}
 
@@ -885,7 +883,8 @@ public class XmlUtils {
 	public static Document loadDocument(String xml, boolean knownUtf8)
 			throws Exception {
 		ByteArrayInputStream bais = null;
-		if (knownUtf8 || xml.contains("encoding=\"UTF-8\"")) {
+		if (knownUtf8 || xml.contains("encoding=\"UTF-8\"")
+				|| xml.contains("encoding=\"utf-8\"")) {
 			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
 			OutputStreamWriter out = new OutputStreamWriter(bOut, "UTF-8");
 			out.write(xml);
@@ -1459,8 +1458,9 @@ public class XmlUtils {
 			this.node = node;
 			Preconditions.checkArgument(characterOffset >= 0);
 			this.characterOffset = characterOffset;
-			if(characterOffset>0){
-				Preconditions.checkArgument(characterOffset <= node.getNodeValue().length());	
+			if (characterOffset > 0) {
+				Preconditions.checkArgument(
+						characterOffset <= node.getNodeValue().length());
 			}
 			this.nodeIndex = nodeIndex;
 		}
@@ -1541,6 +1541,37 @@ public class XmlUtils {
 			return false;
 		}
 
+		public Node getCommonAncestorContainer() {
+			if (lastNode == firstNode) {
+				return firstNode;
+			}
+			List<DomNode> list = DomNode.from(firstNode).ancestors().orSelf()
+					.list();
+			DomNode last = DomNode.from(lastNode);
+			for (DomNode cursor : list) {
+				if (cursor.isAncestorOf(last)) {
+					return cursor.domNode();
+				}
+			}
+			return null;
+		}
+
+		public String getContent() {
+			StringBuilder builder = new StringBuilder();
+			DomNodeTree tree = DomNode.from(firstNode).tree();
+			while (true) {
+				DomNode currentNode = tree.currentNode();
+				if (currentNode.isText()) {
+					builder.append(currentNode.textContent());
+				}
+				if (currentNode.domNode() == lastNode) {
+					break;
+				}
+				tree.nextLogicalNode();
+			}
+			return Ax.ntrim(builder.toString());
+		}
+
 		public Text getCurrentTextChildAndIncrement() {
 			Node n = null;
 			while ((n = walker.getCurrentNode()) != null && !walkerFinished) {
@@ -1555,6 +1586,16 @@ public class XmlUtils {
 				}
 			}
 			return null;
+		}
+
+		public Range getRange() {
+			if (range == null) {
+				range = ((DocumentRange) firstNode.getOwnerDocument())
+						.createRange();
+				range.setStartBefore(firstNode);
+				range.setEndAfter(lastNode);
+			}
+			return range;
 		}
 
 		public Text provideFirstText() {
@@ -1578,47 +1619,8 @@ public class XmlUtils {
 			walker.setCurrentNode(firstNode);
 		}
 
-		public Range getRange() {
-			if(range==null){
-				range = ((DocumentRange) firstNode.getOwnerDocument()).createRange();
-				range.setStartBefore(firstNode);
-				range.setEndAfter(lastNode);	
-			}
-			return range;
-		}
-
 		public void setRange(Range range) {
 			this.range = range;
-		}
-
-		public Node getCommonAncestorContainer() {
-			if(lastNode==firstNode){
-				return firstNode;
-			}
-			List<DomNode> list = DomNode.from(firstNode).ancestors().orSelf().list();
-			DomNode last = DomNode.from(lastNode);
-			for (DomNode cursor : list) {
-				if(cursor.isAncestorOf(last)){
-					return cursor.domNode();
-				}
-			}
-			return null;
-		}
-
-		public String getContent() {
-			StringBuilder builder = new StringBuilder();
-			DomNodeTree tree = DomNode.from(firstNode).tree();
-			while(true){
-				DomNode currentNode = tree.currentNode();
-				if(currentNode.isText()){
-					builder.append(currentNode.textContent());
-				}
-				if(currentNode.domNode()==lastNode){
-					break;
-				}
-				tree.nextLogicalNode();
-			}
-			return Ax.ntrim(builder.toString());
 		}
 	}
 

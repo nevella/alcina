@@ -33,7 +33,7 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 
 	@Override
 	public Node loadFromXml(String xml) throws Exception {
-		return XmlUtils.loadDocument(xml);
+		return XmlUtils.loadDocument(xml, true);
 	}
 
 	@Override

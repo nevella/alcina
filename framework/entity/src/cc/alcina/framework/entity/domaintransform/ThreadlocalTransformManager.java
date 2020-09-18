@@ -98,6 +98,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.entityaccess.cache.LazyLoadProvideTask;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObjectVersions;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
@@ -107,6 +108,7 @@ import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropagation;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
+import cc.alcina.framework.entity.util.MethodContext;
 
 /**
  *
@@ -486,7 +488,11 @@ public class ThreadlocalTransformManager extends TransformManager
 				}
 				return t;
 			} else {
-				return Domain.find(clazz, id);
+				long f_id = id;
+				return MethodContext.instance()
+						.withContextTrue(
+								LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)
+						.call(() -> Domain.find(clazz, f_id));
 			}
 		}
 		return null;
