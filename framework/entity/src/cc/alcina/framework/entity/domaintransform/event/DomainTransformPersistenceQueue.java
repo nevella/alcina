@@ -123,9 +123,13 @@ public class DomainTransformPersistenceQueue {
 		synchronized (queueModificationLock) {
 			if (firedOrQueued.contains(requestId) && !toFire.contains(requestId)
 					&& waitingOnRequestId != requestId) {
+				logger.warn(
+						"Not caching persisted request: {} - waitingOnRequestId: {} - toFire: {}",
+						requestId, waitingOnRequestId, toFire);
 				return;
 			}
 		}
+		logger.info("Cached request: {}", requestId);
 		loadedRequests.put(requestId, request);
 		synchronized (persistentRequestCached) {
 			persistentRequestCached.notifyAll();
