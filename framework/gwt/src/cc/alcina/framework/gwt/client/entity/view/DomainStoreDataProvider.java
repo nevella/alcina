@@ -44,6 +44,7 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder.SortableColumn;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
+import cc.alcina.framework.gwt.client.entity.search.FlatSearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.entity.view.DataProviderChangeEvent.HasDataChangeHandlers;
 import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
@@ -536,7 +537,7 @@ public class DomainStoreDataProvider<T extends Entity>
 
 	@RegistryLocation(registryPoint = SearchModelPerformer.class)
 	public interface SearchModelPerformer {
-		void searchModel(EntitySearchDefinition def,
+		void searchModel(FlatSearchDefinition def,
 				AsyncCallback<ModelSearchResults> callback);
 	}
 
