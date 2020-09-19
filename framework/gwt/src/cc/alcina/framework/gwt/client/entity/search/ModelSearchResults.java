@@ -18,7 +18,7 @@ public class ModelSearchResults<B extends Bindable> implements Serializable {
 
 	public Class<B> resultClass() {
 		if (resultClassName == null && def instanceof EntitySearchDefinition) {
-			return (Class<B>) ((EntitySearchDefinition) def).resultClass();
+			return (Class<B>) ((EntitySearchDefinition) def).entityResultClass();
 		}
 		return Reflections.classLookup().getClassForName(resultClassName);
 	}

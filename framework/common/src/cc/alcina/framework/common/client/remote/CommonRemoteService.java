@@ -34,7 +34,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
-import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
+import cc.alcina.framework.gwt.client.entity.search.FlatSearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 
@@ -89,7 +89,8 @@ public interface CommonRemoteService extends RemoteService {
 			DomainTransformCommitPosition position) throws PermissionsException;
 
 	Response suggest(BoundSuggestOracleRequest request);
-	
+
 	ModelSearchResults getForClass(String className, long objectId);
-    ModelSearchResults searchModel(EntitySearchDefinition def);
+
+	ModelSearchResults searchModel(FlatSearchDefinition def);
 }

@@ -26,6 +26,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
+import cc.alcina.framework.gwt.client.entity.search.FlatSearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.entity.search.SearchContext;
 
@@ -58,7 +59,7 @@ public class CommonSearchSupport {
 		}
 	}
 
-	public ModelSearchResults searchModel(EntitySearchDefinition def,
+	public ModelSearchResults searchModel(FlatSearchDefinition def,
 			Function<SearchContext, ModelSearchResults> customSearchHandler) {
 		if (def.getGroupingParameters() != null) {
 			def.setResultsPerPage(99999999);
@@ -74,7 +75,7 @@ public class CommonSearchSupport {
 			searchContext.groupingParameters = def.getGroupingParameters();
 			MetricLogging.get().start(key);
 			def.initialiseContext();
-			Class clazz = def.resultClass();
+			Class clazz = def.bindableResultClass();
 			Optional<SearchOrders> idOrder = def.provideIdSearchOrder();
 			if (idOrder.isPresent()) {
 				searchContext.orders = idOrder.get();
@@ -99,7 +100,7 @@ public class CommonSearchSupport {
 							rows.subList(range.i1, range.i2));
 			if (searchContext.groupingParameters == null) {
 				searchContext.modelSearchResults = getModelSearchResults(
-						searchContext.queried, def);
+						searchContext.queried, (EntitySearchDefinition) def);
 			} else {
 				searchContext.modelSearchResults = new ModelSearchResults();
 				GroupingHandler groupingHandler = Registry.impl(

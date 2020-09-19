@@ -18,8 +18,9 @@ public class AlcinaServletContext {
 	private static ThreadLocal<Integer> looseContextDepth = new ThreadLocal<>();
 
 	private static ThreadLocal<String> originalThreadName = new ThreadLocal<>();
-	private static final String CONTEXT_HTTP_CONTEXT = AlcinaServletContext.class.getName()+".CONTEXT_HTTP_CONTEXT";
-	
+
+	private static final String CONTEXT_HTTP_CONTEXT = AlcinaServletContext.class
+			.getName() + ".CONTEXT_HTTP_CONTEXT";
 
 	private boolean rootPermissions;
 
@@ -30,19 +31,19 @@ public class AlcinaServletContext {
 		Transaction.begin();
 		LooseContext.push();
 		looseContextDepth.set(LooseContext.depth());
-		HttpContext httpContext = new HttpContext(httpServletRequest, httpServletResponse);
+		HttpContext httpContext = new HttpContext(httpServletRequest,
+				httpServletResponse);
 		LooseContext.set(CONTEXT_HTTP_CONTEXT, httpContext);
-		AuthenticationManager.get().initialiseContext(
-				httpContext);
+		AuthenticationManager.get().initialiseContext(httpContext);
 		if (rootPermissions) {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 		}
 	}
 
-	public static HttpContext httpContext(){
-		return LooseContext.get(CONTEXT_HTTP_CONTEXT)
-				;
+	public static HttpContext httpContext() {
+		return LooseContext.get(CONTEXT_HTTP_CONTEXT);
 	}
+
 	public void end() {
 		if (rootPermissions) {
 			ThreadedPermissionsManager.cast().popSystemUser();

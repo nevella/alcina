@@ -124,7 +124,7 @@ public class EntityDataObjectProjector {
 		Class<VersionableEntity> clazz = null;
 		if (modelSearchResults.def != null) {
 			clazz = ((EntitySearchDefinition) modelSearchResults.def)
-					.resultClass();
+					.entityResultClass();
 			EntityMultipleDataObjectDecorator multipleDataObjectDecorator = Registry
 					.implOrNull(EntityMultipleDataObjectDecorator.class, clazz);
 			if (multipleDataObjectDecorator != null) {

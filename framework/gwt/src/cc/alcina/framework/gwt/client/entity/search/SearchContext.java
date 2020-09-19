@@ -35,7 +35,7 @@ public class SearchContext {
 		return get();
 	}
 
-	public EntitySearchDefinition def;
+	public FlatSearchDefinition def;
 
 	public SearchOrders orders;
 
