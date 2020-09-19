@@ -30,7 +30,6 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  * 
  * @author Nick Reddel
  * 
- *         FIXME - mvcc.4 - rename to 'Bindable'
  */
 @Introspectable
 public class Bindable extends BaseSourcesPropertyChangeEvents
