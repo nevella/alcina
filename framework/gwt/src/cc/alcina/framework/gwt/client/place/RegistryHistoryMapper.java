@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
+import cc.alcina.framework.gwt.client.entity.place.EntityPlaceTokenizer;
 
 @ClientInstantiable
 @RegistryLocation(registryPoint = RegistryHistoryMapper.class, implementationType = ImplementationType.SINGLETON)
@@ -90,8 +91,11 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
 			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
 			if (tokenizer.isCanonicalModelClassTokenizer()) {
-				tokenizersByModelClass.put(tokenizer.getModelClass(),
-						tokenizer);
+				if (tokenizer instanceof EntityPlaceTokenizer) {
+					tokenizersByModelClass.put(
+							((EntityPlaceTokenizer) tokenizer).getModelClass(),
+							tokenizer);
+				}
 			}
 			tokenizer.register(tokenizersByModelClass);
 		}
@@ -141,6 +145,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	public Class<? extends Entity>
 			getEntityClass(Class<? extends EntityPlace> placeClass) {
-		return tokenizersByPlace.get(placeClass).getModelClass();
+		return ((EntityPlaceTokenizer) tokenizersByPlace.get(placeClass))
+				.getModelClass();
 	}
 }

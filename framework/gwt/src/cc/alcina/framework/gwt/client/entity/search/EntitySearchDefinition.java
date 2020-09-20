@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 /*
  * I'd call this CrudSearch...but that'd be mean
  */
-public abstract class EntitySearchDefinition extends FlatSearchDefinition {
+public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 	// return editable dataobjects (either the entity class or a dataobject
 	// extending it)
 	private boolean returnSingleDataObjectImplementations;

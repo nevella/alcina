@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
-import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -35,7 +35,7 @@ public class SearchContext {
 		return get();
 	}
 
-	public FlatSearchDefinition def;
+	public BindableSearchDefinition def;
 
 	public SearchOrders orders;
 
@@ -43,7 +43,7 @@ public class SearchContext {
 
 	public ModelSearchResults modelSearchResults;
 
-	public List<VersionableEntity> queried;
+	public List<Entity> queried;
 
 	public void end() {
 	}

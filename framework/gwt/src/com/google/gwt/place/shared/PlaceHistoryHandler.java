@@ -42,6 +42,9 @@ public class PlaceHistoryHandler {
 	public static final String CONTEXT_IGNORE_NEXT_TOKEN = PlaceHistoryHandler.class
 			.getName() + ".CONTEXT_IGNORE_NEXT_TOKEN";
 
+	public static final String CONTEXT_REPLACE_CURRENT_TOKEN = PlaceHistoryHandler.class
+			.getName() + ".CONTEXT_REPLACE_CURRENT_TOKEN";
+
 	private final Historian historian;
 
 	private final PlaceHistoryMapper mapper;
@@ -207,7 +210,11 @@ public class PlaceHistoryHandler {
 
 		@Override
 		public void newItem(String token, boolean issueEvent) {
-			History.newItem(token, issueEvent);
+			if (LooseContext.is(CONTEXT_REPLACE_CURRENT_TOKEN)) {
+				History.replaceItem(token, issueEvent);
+			} else {
+				History.newItem(token, issueEvent);
+			}
 		}
 	}
 

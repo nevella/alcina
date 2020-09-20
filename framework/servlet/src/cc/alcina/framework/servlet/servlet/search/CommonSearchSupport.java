@@ -3,20 +3,21 @@ package cc.alcina.framework.servlet.servlet.search;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.search.DomainSearcher;
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
-import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -25,8 +26,8 @@ import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
+import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
-import cc.alcina.framework.gwt.client.entity.search.FlatSearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.entity.search.SearchContext;
 
@@ -45,8 +46,8 @@ public class CommonSearchSupport {
 		return singleton;
 	}
 
-	public <T extends VersionableEntity> ModelSearchResults
-			getForClass(String className, long objectId) {
+	public <T extends Entity> ModelSearchResults getForClass(String className,
+			long objectId) {
 		try {
 			T t = null;
 			Class<?> clazz = Class.forName(className);
@@ -59,8 +60,22 @@ public class CommonSearchSupport {
 		}
 	}
 
-	public ModelSearchResults searchModel(FlatSearchDefinition def,
-			Function<SearchContext, ModelSearchResults> customSearchHandler) {
+	public static abstract class CustomSearchHandler<BSD extends BindableSearchDefinition> {
+		private SearchContext searchContext;
+
+		public ModelSearchResults searchModel(SearchContext searchContext) {
+			this.searchContext = searchContext;
+			return searchModel0();
+		}
+
+		protected abstract ModelSearchResults searchModel0();
+
+		protected BSD getSearchDefinition() {
+			return (BSD) searchContext.def;
+		}
+	}
+
+	public ModelSearchResults searchModel(BindableSearchDefinition def) {
 		if (def.getGroupingParameters() != null) {
 			def.setResultsPerPage(99999999);
 		}
@@ -80,24 +95,20 @@ public class CommonSearchSupport {
 			if (idOrder.isPresent()) {
 				searchContext.orders = idOrder.get();
 			}
-			if (customSearchHandler != null) {
-				ModelSearchResults customResults = customSearchHandler
-						.apply(searchContext);
-				if (customResults != null) {
-					return customResults;
-				}
+			Optional<CustomSearchHandler> customSearchHandler = Registry
+					.optional(CustomSearchHandler.class, def.getClass());
+			if (customSearchHandler.isPresent()) {
+				return customSearchHandler.get().searchModel(searchContext);
 			}
-			Stream<VersionableEntity> search = new DomainSearcher().search(def,
-					clazz, searchContext.orders);
-			List<VersionableEntity> rows = search.collect(Collectors.toList());
+			Stream<Entity> search = new DomainSearcher().search(def, clazz,
+					searchContext.orders);
+			List<Entity> rows = search.collect(Collectors.toList());
 			IntPair range = new IntPair(
 					def.getResultsPerPage() * (def.getPageNumber()),
 					def.getResultsPerPage() * (def.getPageNumber() + 1));
 			range = range.intersection(new IntPair(0, rows.size()));
-			searchContext.queried = range == null
-					? new ArrayList<VersionableEntity>()
-					: new ArrayList<VersionableEntity>(
-							rows.subList(range.i1, range.i2));
+			searchContext.queried = range == null ? new ArrayList<Entity>()
+					: new ArrayList<Entity>(rows.subList(range.i1, range.i2));
 			if (searchContext.groupingParameters == null) {
 				searchContext.modelSearchResults = getModelSearchResults(
 						searchContext.queried, (EntitySearchDefinition) def);
@@ -136,15 +147,14 @@ public class CommonSearchSupport {
 	}
 
 	private ModelSearchResults getModelSearchResults(
-			List<? extends VersionableEntity> queried,
-			EntitySearchDefinition def) {
+			List<? extends Entity> queried, EntitySearchDefinition def) {
 		ModelSearchResults modelSearchResults = new ModelSearchResults();
 		modelSearchResults.def = def;
 		if (LooseContext.is(CONTEXT_DO_NOT_PROJECT_SEARCH)) {
 		} else {
 			if (def == null) {
 				// single object
-				VersionableEntity first = CommonUtils.first(queried);
+				Entity first = CommonUtils.first(queried);
 				queried.clear();
 				List untyped = queried;
 				modelSearchResults.rawEntity = first;
@@ -202,5 +212,22 @@ public class CommonSearchSupport {
 				boolean projectAsSingleEntityDataObjects) {
 			this.projectAsSingleEntityDataObjects = projectAsSingleEntityDataObjects;
 		}
+	}
+
+	public void copySearchMetadata(SearchDefinition from, SearchDefinition to) {
+		to.setResultsPerPage(from.getResultsPerPage());
+	}
+
+	public ModelSearchResults toModelSearchResults(
+			SearchResultsBase searchResultsBase,
+			BindableSearchDefinition toSearchDefinition) {
+		ModelSearchResults result = new ModelSearchResults();
+		result.queriedResultObjects = searchResultsBase.getResults();
+		result.pageNumber = toSearchDefinition.getPageNumber();
+		result.def = toSearchDefinition;
+		result.recordCount = searchResultsBase.getTotalResultCount();
+		result.resultClassName = toSearchDefinition.bindableResultClass()
+				.getName();
+		return result;
 	}
 }

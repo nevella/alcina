@@ -224,6 +224,11 @@ public class Registry {
 		return Optional.ofNullable(implOrNull(registryPoint));
 	}
 
+	public static <T> Optional<T> optional(Class<T> registryPoint,
+			Class targetClass) {
+		return Optional.ofNullable(implOrNull(registryPoint, targetClass));
+	}
+
 	public static void registerSingleton(Class<?> registryPoint,
 			Object object) {
 		get().registerSingleton(registryPoint, void.class, object);

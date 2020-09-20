@@ -108,8 +108,8 @@ public class History {
 	 * Programmatic equivalent to the user pressing the browser's 'back' button.
 	 */
 	public static native void back() /*-{
-										$wnd.history.back();
-										}-*/;
+    $wnd.history.back();
+	}-*/;
 
 	/**
 	 * Encode a history token for use as part of a URI.
@@ -144,8 +144,8 @@ public class History {
 	 * button.
 	 */
 	public static native void forward() /*-{
-										$wnd.history.forward();
-										}-*/;
+    $wnd.history.forward();
+	}-*/;
 
 	/**
 	 * Gets the current history token. The handler will not receive a
@@ -311,13 +311,13 @@ public class History {
 	 */
 	private static class HistoryTokenEncoder {
 		public native String decode(String toDecode) /*-{
-														return $wnd.decodeURI(toDecode.replace("%23", "#"));
-														}-*/;
+      return $wnd.decodeURI(toDecode.replace("%23", "#"));
+		}-*/;
 
 		public native String encode(String toEncode) /*-{
-														// encodeURI() does *not* encode the '#' character.
-														return $wnd.encodeURI(toEncode).replace("#", "%23");
-														}-*/;
+      // encodeURI() does *not* encode the '#' character.
+      return $wnd.encodeURI(toEncode).replace("#", "%23");
+		}-*/;
 	}
 
 	/**

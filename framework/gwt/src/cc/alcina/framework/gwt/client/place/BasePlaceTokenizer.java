@@ -52,10 +52,6 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		return value == null ? 0 : CommonUtils.friendlyParseLong(value);
 	}
 
-	public Class<? extends Entity> getModelClass() {
-		return null;
-	}
-
 	@Override
 	public P getPlace(String token) {
 		parts = token.split("/");

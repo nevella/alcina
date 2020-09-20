@@ -5,7 +5,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
@@ -14,13 +13,12 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
-import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
-import cc.alcina.framework.gwt.client.place.GenericBasePlace;
+import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
-		GenericBasePlace<SD> implements ClearableIdPlace, HasEntityAction {
+		BindablePlace<SD> implements ClearableIdPlace, HasEntityAction {
 	public transient Entity entity;
 
 	public EntityAction action = EntityAction.VIEW;
@@ -77,8 +75,8 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 	public String toTitleString() {
 		String category = super.toTitleString();
 		if (id != 0) {
-			BasePlaceTokenizer tokenizer = RegistryHistoryMapper.get()
-					.getTokenizer(this);
+			EntityPlaceTokenizer tokenizer = (EntityPlaceTokenizer) RegistryHistoryMapper
+					.get().getTokenizer(this);
 			Entity modelObject = TransformManager.get()
 					.getObject(tokenizer.getModelClass(), id, 0);
 			if (modelObject == null
@@ -129,6 +127,7 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 	public static EntityPlace forClassAndId(Class clazz, long id) {
 		return (EntityPlace) forClass(clazz).withId(id);
 	}
+
 	public EntityLocator asLocator() {
 		return new EntityLocator(provideEntityClass(), id, 0);
 	}

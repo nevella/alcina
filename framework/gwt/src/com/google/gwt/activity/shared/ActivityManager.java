@@ -34,7 +34,7 @@ import com.google.web.bindery.event.shared.HandlerRegistration;
  */
 public class ActivityManager
 		implements PlaceChangeEvent.Handler, PlaceChangeRequestEvent.Handler {
-	private static final Activity NULL_ACTIVITY = new AbstractActivity() {
+	public static final Activity NULL_ACTIVITY = new AbstractActivity() {
 		@Override
 		public void start(AcceptsOneWidget panel,
 				com.google.gwt.event.shared.EventBus eventBus) {

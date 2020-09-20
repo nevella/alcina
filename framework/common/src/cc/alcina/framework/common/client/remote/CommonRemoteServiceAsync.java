@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
-import cc.alcina.framework.gwt.client.entity.search.FlatSearchDefinition;
+import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 
@@ -84,6 +84,6 @@ public interface CommonRemoteServiceAsync {
 	void getForClass(String className, long objectId,
 			AsyncCallback<ModelSearchResults> callback);
 
-	void searchModel(FlatSearchDefinition def,
+	void searchModel(BindableSearchDefinition def,
 			AsyncCallback<ModelSearchResults> callback);
 }

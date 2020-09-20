@@ -34,7 +34,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
-import cc.alcina.framework.gwt.client.entity.search.FlatSearchDefinition;
+import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 
@@ -92,5 +92,5 @@ public interface CommonRemoteService extends RemoteService {
 
 	ModelSearchResults getForClass(String className, long objectId);
 
-	ModelSearchResults searchModel(FlatSearchDefinition def);
+	ModelSearchResults searchModel(BindableSearchDefinition def);
 }

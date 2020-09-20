@@ -26,7 +26,7 @@ import cc.alcina.framework.gwt.client.entity.search.GroupingParameters;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.place.BasePlace;
-import cc.alcina.framework.gwt.client.place.GenericBasePlace;
+import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
@@ -172,6 +172,16 @@ public class AppController {
 		}
 	}
 
+	public void goToPlaceReplaceCurrent(Place place) {
+		try {
+			LooseContext.pushWithTrue(
+					PlaceHistoryHandler.CONTEXT_REPLACE_CURRENT_TOKEN);
+			ClientFactory.goTo(place);
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
 	public void toggleCurrentPlaceEditing(boolean edit) {
 		Place current = ClientFactory.currentPlace();
 		Place copy = RegistryHistoryMapper.get().copyPlace(current);
@@ -201,7 +211,7 @@ public class AppController {
 				.flushAndRun(() -> afterDeleteSuccess(object));
 	}
 
-	protected void maybeSetId(GenericBasePlace place,
+	protected void maybeSetId(BindablePlace place,
 			Set<? extends VersionableEntity> collection) {
 		if (collection.size() == 1) {
 			VersionableEntity next = collection.iterator().next();

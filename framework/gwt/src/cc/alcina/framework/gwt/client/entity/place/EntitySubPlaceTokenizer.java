@@ -6,14 +6,13 @@ import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 
-public abstract class EntitySubPlaceTokenizer<E extends Enum, HL extends Entity, SD extends EntitySearchDefinition, P extends EntitySubPlace<E, SD>>
+public abstract class EntitySubPlaceTokenizer<E extends Enum, ENT extends Entity, SD extends EntitySearchDefinition, P extends EntitySubPlace<E, SD>>
 		extends BasePlaceTokenizer<P> {
 	protected static final String P_DEF = "d";
 
 	protected static final String P_DETAIL_ACTION = "a";
 
-	@Override
-	public abstract Class<HL> getModelClass();
+	public abstract Class<ENT> getModelClass();
 
 	public E getSub() {
 		return Reflections.classLookup()

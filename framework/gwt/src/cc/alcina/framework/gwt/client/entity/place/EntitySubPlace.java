@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
-import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -26,8 +25,8 @@ public abstract class EntitySubPlace<E extends Enum, SD extends EntitySearchDefi
 			category = HasDisplayName.displayName(sub);
 		}
 		if (id != 0) {
-			BasePlaceTokenizer tokenizer = RegistryHistoryMapper.get()
-					.getTokenizer(this);
+			EntitySubPlaceTokenizer tokenizer = (EntitySubPlaceTokenizer) RegistryHistoryMapper
+					.get().getTokenizer(this);
 			Entity modelObject = TransformManager.get()
 					.getObject(tokenizer.getModelClass(), id, 0);
 			if (modelObject == null

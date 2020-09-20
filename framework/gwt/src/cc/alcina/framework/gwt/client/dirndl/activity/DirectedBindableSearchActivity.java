@@ -4,20 +4,20 @@ import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
-import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
-import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
+import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 
-@RegistryLocation(registryPoint = DirectedEntitySearchActivity.class, implementationType = ImplementationType.INSTANCE)
+@RegistryLocation(registryPoint = DirectedBindableSearchActivity.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
-public class DirectedEntitySearchActivity<EP extends EntityPlace, B extends Bindable>
-		extends DirectedActivity<EP> {
+public class DirectedBindableSearchActivity<BP extends BindablePlace, B extends Bindable & SearchResult>
+		extends DirectedActivity<BP> {
 	private transient ModelSearchResults<B> searchResults;
 
 	public ModelSearchResults<B> getSearchResults() {
@@ -33,7 +33,7 @@ public class DirectedEntitySearchActivity<EP extends EntityPlace, B extends Bind
 
 	@Override
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
-		Registry.impl(CommonRemoteServiceAsync.class).searchModel((EntitySearchDefinition) place.def,
+		Registry.impl(CommonRemoteServiceAsync.class).searchModel(place.def,
 				AsyncCallbackStd.<ModelSearchResults> consumerForm(results -> {
 					setSearchResults(results);
 					fireUpdated();

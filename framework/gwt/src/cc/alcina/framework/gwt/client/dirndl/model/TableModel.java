@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedCategoriesActivity;
-import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntitySearchActivity;
+import cc.alcina.framework.gwt.client.dirndl.activity.DirectedBindableSearchActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractModelTransform;
@@ -107,10 +107,10 @@ public class TableModel extends Model {
 	}
 
 	public static class DirectedEntitySearchActivityTransformer extends
-			AbstractModelTransform<DirectedEntitySearchActivity<? extends EntityPlace, ? extends Bindable>, TableModel> {
+			AbstractModelTransform<DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable>, TableModel> {
 		@Override
 		public TableModel apply(
-				DirectedEntitySearchActivity<? extends EntityPlace, ? extends Bindable> activity) {
+				DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable> activity) {
 			TableModel model = new TableModel();
 			BoundWidgetTypeFactory factory = Registry
 					.impl(TableTypeFactory.class);

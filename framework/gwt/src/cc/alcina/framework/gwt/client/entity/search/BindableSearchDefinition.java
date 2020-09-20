@@ -16,15 +16,16 @@ import cc.alcina.framework.common.client.search.TxtCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
+import cc.alcina.framework.gwt.client.place.BindablePlace;
 
-public abstract class FlatSearchDefinition extends SearchDefinition {
+public abstract class BindableSearchDefinition extends SearchDefinition {
 	private GroupingParameters groupingParameters;
 
 	private SearchOrders searchOrders = new SearchOrders<>();
 
 	private int pageNumber;
 
-	public FlatSearchDefinition() {
+	public BindableSearchDefinition() {
 		super();
 	}
 
@@ -128,4 +129,10 @@ public abstract class FlatSearchDefinition extends SearchDefinition {
 	}
 
 	public abstract Class<? extends Bindable> bindableResultClass();
+
+	public BindablePlace toPlace() {
+		BindablePlace place = BindablePlace.forClass(bindableResultClass());
+		place.def = this;
+		return place;
+	}
 }

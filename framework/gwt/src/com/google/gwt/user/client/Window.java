@@ -156,8 +156,8 @@ public class Window {
 	 *            the message to be displayed.
 	 */
 	public static native void alert(String msg) /*-{
-												$wnd.alert(msg);
-												}-*/;
+    $wnd.alert(msg);
+	}-*/;
 
 	/**
 	 * Displays a message in a modal dialog box, along with the standard 'OK'
@@ -169,8 +169,8 @@ public class Window {
 	 *         'Cancel' is clicked.
 	 */
 	public static native boolean confirm(String msg) /*-{
-														return $wnd.confirm(msg);
-														}-*/;
+    return $wnd.confirm(msg);
+	}-*/;
 
 	/**
 	 * Use this method to explicitly disable the window's scrollbars.
@@ -228,8 +228,8 @@ public class Window {
 	 * @return the window's title.
 	 */
 	public static native String getTitle() /*-{
-											return $doc.title;
-											}-*/;
+    return $doc.title;
+	}-*/;
 
 	/**
 	 * Moves a window's left and top edge to a specified number of pixels
@@ -247,8 +247,8 @@ public class Window {
 	 *            to move the top edge by
 	 */
 	public static native void moveBy(int dx, int dy) /*-{
-														$wnd.moveBy(dx, dy);
-														}-*/;
+    $wnd.moveBy(dx, dy);
+	}-*/;
 
 	/**
 	 * Moves a window's left and top edge to the specified coordinates.
@@ -263,8 +263,8 @@ public class Window {
 	 *            The top coordinate
 	 */
 	public static native void moveTo(int x, int y) /*-{
-													$wnd.moveTo(x, y);
-													}-*/;
+    $wnd.moveTo(x, y);
+	}-*/;
 
 	/**
 	 * Opens a new browser window. The "name" and "features" arguments are
@@ -281,16 +281,16 @@ public class Window {
 	 */
 	public static native void open(String url, String name,
 			String features) /*-{
-								$wnd.open(url, name, features);
-								}-*/;
+    $wnd.open(url, name, features);
+	}-*/;
 
 	/**
 	 * Prints the document in the window, as if the user had issued a "Print"
 	 * command.
 	 */
 	public static native void print() /*-{
-										$wnd.print();
-										}-*/;
+    $wnd.print();
+	}-*/;
 
 	/**
 	 * Displays a request for information in a modal dialog box, along with the
@@ -304,8 +304,8 @@ public class Window {
 	 *         <code>null</code> if 'Cancel' was pressed
 	 */
 	public static native String prompt(String msg, String initialValue) /*-{
-																		return $wnd.prompt(msg, initialValue);
-																		}-*/;
+    return $wnd.prompt(msg, initialValue);
+	}-*/;
 
 	/**
 	 * Removes a window closing listener.
@@ -360,8 +360,8 @@ public class Window {
 	 *            to resize the height by
 	 */
 	public static native void resizeBy(int width, int height) /*-{
-																$wnd.resizeBy(width, height);
-																}-*/;
+    $wnd.resizeBy(width, height);
+	}-*/;
 
 	/**
 	 * Resizes the window to the specified width and height.
@@ -376,8 +376,8 @@ public class Window {
 	 *            The height of the window, in pixels
 	 */
 	public static native void resizeTo(int width, int height) /*-{
-																$wnd.resizeTo(width, height);
-																}-*/;
+    $wnd.resizeTo(width, height);
+	}-*/;
 
 	/**
 	 * Scroll the window to the specified position.
@@ -388,8 +388,8 @@ public class Window {
 	 *            the top scroll position
 	 */
 	public static native void scrollTo(int left, int top) /*-{
-															$wnd.scrollTo(left, top);
-															}-*/;
+    $wnd.scrollTo(left, top);
+	}-*/;
 
 	/**
 	 * Sets the size of the margins used within the window's client area. It is
@@ -401,8 +401,8 @@ public class Window {
 	 *            the window's new margin size, in CSS units.
 	 */
 	public static native void setMargin(String size) /*-{
-														$doc.body.style.margin = size;
-														}-*/;
+    $doc.body.style.margin = size;
+	}-*/;
 
 	/**
 	 * Sets the status text for the window, if permitted by the browser's
@@ -412,8 +412,8 @@ public class Window {
 	 *            the new message to display.
 	 */
 	public static native void setStatus(String status) /*-{
-														$wnd.status = status;
-														}-*/;
+    $wnd.status = status;
+	}-*/;
 
 	/**
 	 * Sets the browser window's title.
@@ -422,8 +422,8 @@ public class Window {
 	 *            the new window title.
 	 */
 	public static native void setTitle(String title) /*-{
-														$doc.title = title;
-														}-*/;
+    $doc.title = title;
+	}-*/;
 
 	/**
 	 * Adds this handler to the Window.
@@ -606,8 +606,8 @@ public class Window {
 		 *            the new URL
 		 */
 		public static native void assign(String newURL) /*-{
-														$wnd.location.assign(newURL);
-														}-*/;
+      $wnd.location.assign(newURL);
+		}-*/;
 
 		/**
 		 * Create a {@link UrlBuilder} based on this {@link Location}.
@@ -657,8 +657,8 @@ public class Window {
 		 * @return the host and port name
 		 */
 		public static native String getHost() /*-{
-												return $wnd.location.host;
-												}-*/;
+      return $wnd.location.host;
+		}-*/;
 
 		/**
 		 * Gets the URL's host name.
@@ -666,8 +666,8 @@ public class Window {
 		 * @return the host name
 		 */
 		public static native String getHostName() /*-{
-													return $wnd.location.hostname;
-													}-*/;
+      return $wnd.location.hostname;
+		}-*/;
 
 		/**
 		 * Gets the entire URL.
@@ -675,8 +675,8 @@ public class Window {
 		 * @return the URL
 		 */
 		public static native String getHref() /*-{
-												return $wnd.location.href;
-												}-*/;
+      return $wnd.location.href;
+		}-*/;
 
 		/**
 		 * Gets the URL's parameter of the specified name. Note that if multiple
@@ -715,8 +715,8 @@ public class Window {
 		 * @return the path to the URL.
 		 */
 		public static native String getPath() /*-{
-												return $wnd.location.pathname;
-												}-*/;
+      return $wnd.location.pathname;
+		}-*/;
 
 		/**
 		 * Gets the URL's port.
@@ -724,8 +724,8 @@ public class Window {
 		 * @return the URL's port
 		 */
 		public static native String getPort() /*-{
-												return $wnd.location.port;
-												}-*/;
+      return $wnd.location.port;
+		}-*/;
 
 		/**
 		 * Gets the URL's protocol.
@@ -733,8 +733,8 @@ public class Window {
 		 * @return the URL's protocol.
 		 */
 		public static native String getProtocol() /*-{
-													return $wnd.location.protocol;
-													}-*/;
+      return $wnd.location.protocol;
+		}-*/;
 
 		/**
 		 * Gets the URL's query string.
@@ -749,8 +749,8 @@ public class Window {
 		 * Reloads the current browser window. All GWT state will be lost.
 		 */
 		public static native void reload() /*-{
-											$wnd.location.reload();
-											}-*/;
+      $wnd.location.reload();
+		}-*/;
 
 		/**
 		 * Replaces the current URL with a new one. All GWT state will be lost.
@@ -761,8 +761,8 @@ public class Window {
 		 *            the new URL
 		 */
 		public static native void replace(String newURL) /*-{
-															$wnd.location.replace(newURL);
-															}-*/;
+      $wnd.location.replace(newURL);
+		}-*/;
 
 		private static void ensureListParameterMap() {
 			final String currentQueryString = getQueryString();
@@ -826,8 +826,8 @@ public class Window {
 		 * @return the window's navigator.appCodeName.
 		 */
 		public static native String getAppCodeName() /*-{
-														return $wnd.navigator.appCodeName;
-														}-*/;
+      return $wnd.navigator.appCodeName;
+		}-*/;
 
 		/**
 		 * Gets the navigator.appName.
@@ -835,8 +835,8 @@ public class Window {
 		 * @return the window's navigator.appName.
 		 */
 		public static native String getAppName() /*-{
-													return $wnd.navigator.appName;
-													}-*/;
+      return $wnd.navigator.appName;
+		}-*/;
 
 		/**
 		 * Gets the navigator.appVersion.
@@ -844,8 +844,8 @@ public class Window {
 		 * @return the window's navigator.appVersion.
 		 */
 		public static native String getAppVersion() /*-{
-													return $wnd.navigator.appVersion;
-													}-*/;
+      return $wnd.navigator.appVersion;
+		}-*/;
 
 		/**
 		 * Gets the navigator.platform.
@@ -853,8 +853,8 @@ public class Window {
 		 * @return the window's navigator.platform.
 		 */
 		public static native String getPlatform() /*-{
-													return $wnd.navigator.platform;
-													}-*/;
+      return $wnd.navigator.platform;
+		}-*/;
 
 		/**
 		 * Gets the navigator.userAgent.
@@ -862,13 +862,13 @@ public class Window {
 		 * @return the window's navigator.userAgent.
 		 */
 		public static native String getUserAgent() /*-{
-													//see http://bugs.jquery.com/ticket/6450
-													try{
-													return $wnd.navigator.userAgent;
-													}catch (e){
-													return "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.2;";
-													}
-													}-*/;
+      //see http://bugs.jquery.com/ticket/6450
+      try {
+        return $wnd.navigator.userAgent;
+      } catch (e) {
+        return "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.2;";
+      }
+		}-*/;
 
 		/**
 		 * Checks whether or not cookies are enabled or disabled.
@@ -885,8 +885,8 @@ public class Window {
 		 * @return the window's navigator.javaEnabled.
 		 */
 		public static native boolean isJavaEnabled() /*-{
-														return $wnd.navigator.javaEnabled();
-														}-*/;
+      return $wnd.navigator.javaEnabled();
+		}-*/;
 
 		private Navigator() {
 		}
@@ -970,11 +970,13 @@ public class Window {
 			super(null);
 		}
 
+		@Override
 		public HandlerRegistration
 				addCloseHandler(CloseHandler<Window> handler) {
 			return addHandler(CloseEvent.getType(), handler);
 		}
 
+		@Override
 		public HandlerRegistration addResizeHandler(ResizeHandler handler) {
 			return addHandler(ResizeEvent.getType(), handler);
 		}

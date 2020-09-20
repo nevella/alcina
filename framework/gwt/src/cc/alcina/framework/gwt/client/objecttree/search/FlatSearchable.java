@@ -18,7 +18,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -29,21 +29,22 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class FlatSearchable<SC extends SearchCriterion>
-		implements Comparable<FlatSearchable>,HasValueChangeHandlers {
+		implements Comparable<FlatSearchable>, HasValueChangeHandlers {
 	private static transient Comparator<FlatSearchable> comparator;
 	static {
 		comparator = Comparator.comparing(FlatSearchable::getCategory);
 		comparator = comparator.thenComparing(FlatSearchable::getName);
 	}
 
-    private HandlerManager handlerManager;
+	private HandlerManager handlerManager;
 
-    public transient SearchDefinition def;
-    private Class<SC> clazz;
+	public transient SearchDefinition def;
 
-    private String category;
-	
-protected String name;
+	private Class<SC> clazz;
+
+	private String category;
+
+	protected String name;
 
 	private SC criterion;
 
@@ -58,10 +59,10 @@ protected String name;
 	}
 
 	@Override
-    public HandlerRegistration addValueChangeHandler(ValueChangeHandler handler) {
-        return ensureHandlers().addHandler(ValueChangeEvent.getType(), handler);
-    }
-
+	public HandlerRegistration
+			addValueChangeHandler(ValueChangeHandler handler) {
+		return ensureHandlers().addHandler(ValueChangeEvent.getType(), handler);
+	}
 
 	@Override
 	public int compareTo(FlatSearchable o) {
@@ -79,11 +80,11 @@ protected String name;
 	}
 
 	@Override
-    public void fireEvent(GwtEvent<?> event) {
-        if (handlerManager != null) {
-            handlerManager.fireEvent(event);
-        }
-    }
+	public void fireEvent(GwtEvent<?> event) {
+		if (handlerManager != null) {
+			handlerManager.fireEvent(event);
+		}
+	}
 
 	public String getCategory() {
 		return this.category;
@@ -146,22 +147,25 @@ protected String name;
 	}
 
 	public FlatSearchable withDef(SearchDefinition def) {
-		this.def=def;
+		this.def = def;
 		return this;
 	}
 
 	HandlerManager ensureHandlers() {
-        return handlerManager == null ? handlerManager = new HandlerManager(this) : handlerManager;
-    }
+		return handlerManager == null
+				? handlerManager = new HandlerManager(this)
+				: handlerManager;
+	}
 
-	@RegistryLocation(registryPoint = HasSearchables.class, targetClass = Entity.class, implementationType = ImplementationType.INSTANCE)
+	@RegistryLocation(registryPoint = HasSearchables.class, targetClass = Bindable.class, implementationType = ImplementationType.INSTANCE)
 	@ClientInstantiable
 	public static class HasSearchables {
 		private Map<Class<? extends SearchCriterion>, FlatSearchable> searchables;
 
 		public String criterionDisplayName(SearchCriterion criterion) {
-			if(criterion instanceof TruncatedObjectCriterion) {
-				return ((TruncatedObjectCriterion) criterion).provideTypeDisplayName();
+			if (criterion instanceof TruncatedObjectCriterion) {
+				return ((TruncatedObjectCriterion) criterion)
+						.provideTypeDisplayName();
 			}
 			return searchableForCriterion(criterion)
 					.map(FlatSearchable::toString)

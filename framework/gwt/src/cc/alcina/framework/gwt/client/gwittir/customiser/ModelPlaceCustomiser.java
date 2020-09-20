@@ -76,9 +76,13 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 			if (entity != null) {
 				EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
 						.get().getPlaceByModelClass(entity.entityClass());
-				instancePlace.withEntity(entity);
-				place = instancePlace;
-				hasDisplayName = entity;
+				if (instancePlace == null) {
+					return String.valueOf(entity.getId());
+				} else {
+					instancePlace.withEntity(entity);
+					place = instancePlace;
+					hasDisplayName = entity;
+				}
 			}
 			String template = "<a href='#%s'>%s</a>";
 			String token = place.toTokenString();

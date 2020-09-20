@@ -6,14 +6,13 @@ import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 
-public abstract class EntityPlaceTokenizer<HL extends Entity, SD extends EntitySearchDefinition, P extends EntityPlace<SD>>
+public abstract class EntityPlaceTokenizer<E extends Entity, SD extends EntitySearchDefinition, P extends EntityPlace<SD>>
 		extends BasePlaceTokenizer<P> {
 	protected static final String P_DEF = "d";
 
 	protected static final String P_DETAIL_ACTION = "a";
 
-	@Override
-	public abstract Class<HL> getModelClass();
+	public abstract Class<E> getModelClass();
 
 	protected void deserializeSearchDefinition(P place) {
 		place.def = searchDefinitionSerializer()
