@@ -4,7 +4,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
 
-public abstract class BindablesPlaceTokenizer<HL extends Bindable, SD extends BindableSearchDefinition, P extends BindablePlace<SD>>
+public abstract class BindablePlaceTokenizer<HL extends Bindable, SD extends BindableSearchDefinition, P extends BindablePlace<SD>>
 		extends BasePlaceTokenizer<P> {
 	protected static final String P_DEF = "d";
 

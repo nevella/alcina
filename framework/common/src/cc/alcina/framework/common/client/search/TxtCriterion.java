@@ -38,12 +38,12 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 	private TxtCriterionType txtCriterionType = TxtCriterionType.CONTAINS;
 
 	public TxtCriterion() {
+		setOperator(StandardSearchOperator.CONTAINS);
 	}
 
 	public TxtCriterion(String text) {
-		super();
+		this();
 		setText(text);
-		setOperator(StandardSearchOperator.CONTAINS);
 	}
 
 	@Override

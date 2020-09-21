@@ -41,9 +41,9 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 @Bean(displayNamePropertyName = "displayName")
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
-public abstract class CriteriaGroup<SC extends SearchCriterion>
-		extends Bindable implements TreeRenderable, Permissible,
-		HasPermissionsValidation, HasReflectiveEquivalence<CriteriaGroup> {
+public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
+		implements TreeRenderable, Permissible, HasPermissionsValidation,
+		HasReflectiveEquivalence<CriteriaGroup> {
 	static final transient long serialVersionUID = -1L;
 
 	private FilterCombinator combinator = FilterCombinator.AND;
@@ -53,6 +53,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 	public CriteriaGroup() {
 	}
 
+	@Override
 	public AccessLevel accessLevel() {
 		return AccessLevel.EVERYONE;
 	}
@@ -158,6 +159,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 		return this.criteria;
 	}
 
+	@Override
 	public abstract String getDisplayName();
 
 	@XmlTransient
@@ -193,6 +195,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 		criteria.remove(criterion);
 	}
 
+	@Override
 	public String rule() {
 		return "";
 	}
@@ -218,13 +221,15 @@ public abstract class CriteriaGroup<SC extends SearchCriterion>
 
 	public void toSoleCriterion(SC criterion) {
 		criteria.clear();
-		criteria.add(criterion);
+		addCriterion(criterion);
 	}
 
+	@Override
 	public String toString() {
 		return asString(true, false);
 	}
 
+	@Override
 	public String validatePermissions() {
 		if (!PermissionsManager.get().isPermissible(this)) {
 			// won't be used in search anyway

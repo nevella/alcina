@@ -42,7 +42,7 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 
 	private Class<SC> clazz;
 
-	private String category;
+	protected String category;
 
 	protected String name;
 

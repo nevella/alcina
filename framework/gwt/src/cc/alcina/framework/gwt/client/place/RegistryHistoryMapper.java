@@ -8,6 +8,7 @@ import java.util.Optional;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -28,7 +29,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	Map<Class, BasePlaceTokenizer> tokenizersByPlace = new LinkedHashMap<>();
 
-	Map<Class<? extends Entity>, BasePlaceTokenizer> tokenizersByModelClass = new LinkedHashMap<>();
+	Map<Class<? extends Bindable>, BasePlaceTokenizer> tokenizersByModelClass = new LinkedHashMap<>();
 
 	Map<Enum, BasePlace> placesBySubPlace = new LinkedHashMap<>();
 
@@ -95,6 +96,11 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 					tokenizersByModelClass.put(
 							((EntityPlaceTokenizer) tokenizer).getModelClass(),
 							tokenizer);
+				}
+				if (tokenizer instanceof BindablePlaceTokenizer) {
+					tokenizersByModelClass
+							.put(((BindablePlaceTokenizer) tokenizer)
+									.getModelClass(), tokenizer);
 				}
 			}
 			tokenizer.register(tokenizersByModelClass);

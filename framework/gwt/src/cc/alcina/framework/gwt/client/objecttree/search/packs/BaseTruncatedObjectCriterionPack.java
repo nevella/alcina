@@ -61,6 +61,13 @@ public class BaseTruncatedObjectCriterionPack {
 			return tc.getId() != 0;
 		}
 
+		public <S extends BaseTruncatedObjectCriterionSearchable> S
+				withOverrideName(String name) {
+			this.name = name;
+			this.category = "";
+			return (S) this;
+		}
+
 		@Override
 		public boolean isNonDefaultValue(TC sc) {
 			sc.ensurePlaceholderObject();

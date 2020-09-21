@@ -32,12 +32,10 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Handler;
@@ -531,7 +529,13 @@ public class DirectedLayout {
 				} else if (context.node.model.getClass() == handlerClass) {
 					handler = (Handler) context.node.model;
 				} else {
-					handler = Reflections.newInstance(handlerClass);
+					Handler ancestorHandler = context.node
+							.ancestorModel(handlerClass);
+					if (ancestorHandler == null) {
+						handler = Reflections.newInstance(handlerClass);
+					} else {
+						handler = ancestorHandler;
+					}
 				}
 				logger.trace("Firing behaviour {} on {} to {}",
 						eventBinding.getClass().getSimpleName(),
@@ -584,6 +588,10 @@ public class DirectedLayout {
 				return parent.ancestorModel(predicate);
 			}
 			return null;
+		}
+
+		public <T> T ancestorModel(Class<T> clazz) {
+			return ancestorModel(model -> model.getClass() == clazz);
 		}
 
 		public <T> T resolveRenderContextProperty(String key) {

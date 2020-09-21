@@ -26,7 +26,7 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 		this.returnSingleDataObjectImplementations = returnSingleDataObjectImplementations;
 	}
 
-	public abstract <C extends VersionableEntity> Class<C> entityResultClass();
+	public abstract <C extends VersionableEntity> Class<C> queriedEntityClass();
 
 	public List<EntityPlace> provideFilterPlaces() {
 		List<EntityPlace> places = new ArrayList<>();
@@ -46,7 +46,7 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 	}
 
 	@Override
-	public Class<? extends Bindable> bindableResultClass() {
-		return entityResultClass();
+	public Class<? extends Bindable> queriedBindableClass() {
+		return queriedEntityClass();
 	}
 }

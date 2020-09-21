@@ -90,7 +90,7 @@ public class CommonSearchSupport {
 			searchContext.groupingParameters = def.getGroupingParameters();
 			MetricLogging.get().start(key);
 			def.initialiseContext();
-			Class clazz = def.bindableResultClass();
+			Class clazz = def.queriedBindableClass();
 			Optional<SearchOrders> idOrder = def.provideIdSearchOrder();
 			if (idOrder.isPresent()) {
 				searchContext.orders = idOrder.get();
@@ -226,7 +226,7 @@ public class CommonSearchSupport {
 		result.pageNumber = toSearchDefinition.getPageNumber();
 		result.def = toSearchDefinition;
 		result.recordCount = searchResultsBase.getTotalResultCount();
-		result.resultClassName = toSearchDefinition.bindableResultClass()
+		result.resultClassName = toSearchDefinition.queriedBindableClass()
 				.getName();
 		return result;
 	}

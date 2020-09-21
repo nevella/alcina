@@ -92,7 +92,7 @@ public class AppController {
 			return;
 		}
 		EntityPlace target = (EntityPlace) RegistryHistoryMapper.get()
-				.getPlaceByModelClass(def.entityResultClass());
+				.getPlaceByModelClass(def.queriedEntityClass());
 		target.action = EntityAction.VIEW;
 		target.def = def;
 		ClientFactory.goTo(target);

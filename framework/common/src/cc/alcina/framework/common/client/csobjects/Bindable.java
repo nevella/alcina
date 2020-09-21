@@ -40,6 +40,7 @@ public class Bindable extends BaseSourcesPropertyChangeEvents
 	public static class BindableAdapter extends Bindable {
 	}
 
+	// FIXME - dirndl.2 - maybe remove?
 	public static class BindableWithContext<T> extends Bindable
 			implements HasContext<T> {
 		private transient T _context;

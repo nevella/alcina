@@ -19,7 +19,7 @@ public class ModelSearchResults<B extends Bindable & SearchResult>
 	public Class<B> resultClass() {
 		if (resultClassName == null && def instanceof EntitySearchDefinition) {
 			return (Class<B>) (Class<?>) ((EntitySearchDefinition) def)
-					.entityResultClass();
+					.queriedEntityClass();
 		}
 		return Reflections.classLookup().getClassForName(resultClassName);
 	}
@@ -43,5 +43,13 @@ public class ModelSearchResults<B extends Bindable & SearchResult>
 	public Entity provideFilteringEntity(EntityLocator locator) {
 		return filteringEntities.stream().filter(locator::matches).findFirst()
 				.orElse(null);
+	}
+
+	public int provideLastPageNumber() {
+		if (recordCount == 0) {
+			return 0;
+		}
+		int pageCount = (recordCount - 1) / def.getResultsPerPage() + 1;
+		return pageCount;
 	}
 }

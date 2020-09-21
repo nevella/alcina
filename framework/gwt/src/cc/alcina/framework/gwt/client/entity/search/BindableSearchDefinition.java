@@ -23,6 +23,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 
 	private SearchOrders searchOrders = new SearchOrders<>();
 
+	// zero based
 	private int pageNumber;
 
 	public BindableSearchDefinition() {
@@ -123,15 +124,15 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		}
 
 		@Override
-		public <C extends VersionableEntity> Class<C> entityResultClass() {
+		public <C extends VersionableEntity> Class<C> queriedEntityClass() {
 			throw new UnsupportedOperationException();
 		}
 	}
 
-	public abstract Class<? extends Bindable> bindableResultClass();
+	public abstract Class<? extends Bindable> queriedBindableClass();
 
 	public BindablePlace toPlace() {
-		BindablePlace place = BindablePlace.forClass(bindableResultClass());
+		BindablePlace place = BindablePlace.forClass(queriedBindableClass());
 		place.def = this;
 		return place;
 	}

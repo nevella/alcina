@@ -1,5 +1,9 @@
 package cc.alcina.framework.common.client.search;
 
+import java.util.Set;
+
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CollectionModificationType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 
 public abstract class AbstractUserCriteriaGroup<SC extends AbstractUserCriterion>
@@ -19,5 +23,12 @@ public abstract class AbstractUserCriteriaGroup<SC extends AbstractUserCriterion
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public void addCriterion(SC criterion) {
+		Set<SC> deltaSet = TransformManager.getDeltaSet(getCriteria(),
+				criterion, CollectionModificationType.ADD);
+		setCriteria(deltaSet);
 	}
 }
