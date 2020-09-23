@@ -46,6 +46,10 @@ public class CommonSearchSupport {
 		return singleton;
 	}
 
+	public void copySearchMetadata(SearchDefinition from, SearchDefinition to) {
+		to.setResultsPerPage(from.getResultsPerPage());
+	}
+
 	public <T extends Entity> ModelSearchResults getForClass(String className,
 			long objectId) {
 		try {
@@ -57,21 +61,6 @@ public class CommonSearchSupport {
 			return getModelSearchResults(list, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static abstract class CustomSearchHandler<BSD extends BindableSearchDefinition> {
-		private SearchContext searchContext;
-
-		public ModelSearchResults searchModel(SearchContext searchContext) {
-			this.searchContext = searchContext;
-			return searchModel0();
-		}
-
-		protected abstract ModelSearchResults searchModel0();
-
-		protected BSD getSearchDefinition() {
-			return (BSD) searchContext.def;
 		}
 	}
 
@@ -146,6 +135,19 @@ public class CommonSearchSupport {
 		}
 	}
 
+	public ModelSearchResults toModelSearchResults(
+			SearchResultsBase searchResultsBase,
+			BindableSearchDefinition toSearchDefinition) {
+		ModelSearchResults result = new ModelSearchResults();
+		result.queriedResultObjects = searchResultsBase.getResults();
+		result.pageNumber = toSearchDefinition.getPageNumber();
+		result.def = toSearchDefinition;
+		result.recordCount = searchResultsBase.getTotalResultCount();
+		result.resultClassName = toSearchDefinition.queriedBindableClass()
+				.getName();
+		return result;
+	}
+
 	private ModelSearchResults getModelSearchResults(
 			List<? extends Entity> queried, EntitySearchDefinition def) {
 		ModelSearchResults modelSearchResults = new ModelSearchResults();
@@ -168,9 +170,14 @@ public class CommonSearchSupport {
 				modelSearchResults.filteringEntities = filterPlaces.stream()
 						.map(EntityPlace::asLocator).map(Domain::find)
 						.collect(Collectors.toList());
+				/*
+				 * Just get non-entity properties, essentially - for things like
+				 * breadcrumbs client-side
+				 */
 				modelSearchResults.filteringEntities = GraphProjection
 						.maxDepthProjection(
-								modelSearchResults.filteringEntities, 2, null);
+								modelSearchResults.filteringEntities, 1, null);
+				;
 			}
 		}
 		modelSearchResults.queriedResultObjects = queried;
@@ -189,6 +196,21 @@ public class CommonSearchSupport {
 			modelSearchResults.resultClassName = projectedClass.getName();
 		}
 		return projector.project(object);
+	}
+
+	public static abstract class CustomSearchHandler<BSD extends BindableSearchDefinition> {
+		private SearchContext searchContext;
+
+		public ModelSearchResults searchModel(SearchContext searchContext) {
+			this.searchContext = searchContext;
+			return searchModel0();
+		}
+
+		protected BSD getSearchDefinition() {
+			return (BSD) searchContext.def;
+		}
+
+		protected abstract ModelSearchResults searchModel0();
 	}
 
 	@RegistryLocation(registryPoint = SearchResultProjector.class, implementationType = ImplementationType.INSTANCE)
@@ -212,22 +234,5 @@ public class CommonSearchSupport {
 				boolean projectAsSingleEntityDataObjects) {
 			this.projectAsSingleEntityDataObjects = projectAsSingleEntityDataObjects;
 		}
-	}
-
-	public void copySearchMetadata(SearchDefinition from, SearchDefinition to) {
-		to.setResultsPerPage(from.getResultsPerPage());
-	}
-
-	public ModelSearchResults toModelSearchResults(
-			SearchResultsBase searchResultsBase,
-			BindableSearchDefinition toSearchDefinition) {
-		ModelSearchResults result = new ModelSearchResults();
-		result.queriedResultObjects = searchResultsBase.getResults();
-		result.pageNumber = toSearchDefinition.getPageNumber();
-		result.def = toSearchDefinition;
-		result.recordCount = searchResultsBase.getTotalResultCount();
-		result.resultClassName = toSearchDefinition.queriedBindableClass()
-				.getName();
-		return result;
 	}
 }
