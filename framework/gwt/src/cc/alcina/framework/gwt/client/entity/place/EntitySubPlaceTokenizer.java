@@ -4,24 +4,12 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
-import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 
 public abstract class EntitySubPlaceTokenizer<E extends Enum, ENT extends Entity, SD extends EntitySearchDefinition, P extends EntitySubPlace<E, SD>>
-		extends BasePlaceTokenizer<P> {
-	protected static final String P_DEF = "d";
-
-	protected static final String P_DETAIL_ACTION = "a";
-
-	public abstract Class<ENT> getModelClass();
-
+		extends EntityPlaceTokenizer<ENT, SD, P> {
 	public E getSub() {
 		return Reflections.classLookup()
 				.getTemplateInstance(getTokenizedClass()).getSub();
-	}
-
-	protected void deserializeSearchDefinition(P place) {
-		place.def = searchDefinitionSerializer()
-				.deserialize(getStringParameter(P_DEF));
 	}
 
 	@Override
