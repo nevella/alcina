@@ -70,6 +70,10 @@ public class CachingClasspathScanner extends ServletClasspathScanner {
 		}
 	}
 
+	public List<URL> getUrls() {
+		return this.urls;
+	}
+
 	@Override
 	public void invokeHandler(URL url) {
 		if (usingRemoteScanner) {
