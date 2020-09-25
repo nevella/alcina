@@ -89,5 +89,6 @@
 	<classpathentry kind="lib" path="lib/extras/google/gson-2.1.jar"/>
 	<classpathentry kind="lib" path="lib/extras/google/protobuf-java-2.4.1.jar"/>
 	<classpathentry kind="lib" path="lib/extras/google/google-api-services-drive-v3-rev161-1.25.0.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/compiler-2.3.7-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
