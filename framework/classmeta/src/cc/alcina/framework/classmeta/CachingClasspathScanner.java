@@ -82,4 +82,12 @@ public class CachingClasspathScanner extends ServletClasspathScanner {
 			super.invokeHandler(url);
 		}
 	}
+
+	public boolean isUsingRemoteScanner() {
+		return this.usingRemoteScanner;
+	}
+
+	public void setUsingRemoteScanner(boolean usingRemoteScanner) {
+		this.usingRemoteScanner = usingRemoteScanner;
+	}
 }

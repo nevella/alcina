@@ -21,6 +21,7 @@ public abstract class TaskCompileAndRunBase extends AbstractTaskPerformer {
 			CachingClasspathScanner scanner = new CachingClasspathScanner("*",
 					true, false, null, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[0]));
+			scanner.setUsingRemoteScanner(true);
 			scanner.getClasses();
 			String classPath = scanner.getUrls().stream().map(Object::toString)
 					.collect(Collectors.joining(":"));
