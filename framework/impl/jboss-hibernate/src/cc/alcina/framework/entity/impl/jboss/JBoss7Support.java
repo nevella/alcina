@@ -47,6 +47,7 @@ public class JBoss7Support {
 		CachingClasspathScanner
 				.installUrlTranslator(new VFSClasspathUrlTranslator());
 		SourceFinder.sourceFinders.add(new SourceFinderVfs());
+		// ServerCodeCompiler.install(new VFSFileManager());
 	}
 
 	public static class VFSClasspathUrlTranslator
