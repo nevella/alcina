@@ -70,6 +70,10 @@ public class CachingClasspathScanner extends ServletClasspathScanner {
 		}
 	}
 
+	public List<URL> getUrls() {
+		return this.urls;
+	}
+
 	@Override
 	public void invokeHandler(URL url) {
 		if (usingRemoteScanner) {
@@ -77,5 +81,13 @@ public class CachingClasspathScanner extends ServletClasspathScanner {
 		} else {
 			super.invokeHandler(url);
 		}
+	}
+
+	public boolean isUsingRemoteScanner() {
+		return this.usingRemoteScanner;
+	}
+
+	public void setUsingRemoteScanner(boolean usingRemoteScanner) {
+		this.usingRemoteScanner = usingRemoteScanner;
 	}
 }

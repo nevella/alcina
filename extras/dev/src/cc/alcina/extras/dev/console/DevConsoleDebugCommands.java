@@ -931,7 +931,7 @@ public class DevConsoleDebugCommands {
 
 		@Override
 		public String getDescription() {
-			return "Download meaningful Jade exceptions for the last x days";
+			return "Download meaningful app exceptions for the last x days";
 		}
 
 		@Override
@@ -968,7 +968,8 @@ public class DevConsoleDebugCommands {
 					"TRANSFORM_EXCEPTION", "PARSER_EXCEPTION");
 			exceptionFilter = filterArgvResult.contains
 					? String.format("and l.component_key in %s",
-							EntityPersistenceHelper.toInStringsClause(exceptions))
+							EntityPersistenceHelper
+									.toInStringsClause(exceptions))
 					: exceptionFilter;
 			filterArgvParam = new FilterArgvParam(argv, "-extypes");
 			String customExceptionFilter = filterArgvParam.value;

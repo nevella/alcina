@@ -10,7 +10,6 @@ import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +26,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
@@ -40,19 +40,41 @@ public class AuthenticationPersistence {
 		return Registry.impl(AuthenticationPersistence.class);
 	}
 
-	public ClientInstance getClientInstance(long clientInstanceId) {
-		return domainImpl(ClientInstance.class, clientInstanceId);
+	@SuppressWarnings("unused")
+	private Map<String, String> lookupQueries = new ConcurrentHashMap<>();
+
+	private Logger logger = LoggerFactory.getLogger(getClass());
+
+	public AuthenticationSession createAuthenticationSession(Iid iid,
+			Date startDate, String sessionId, IUser user,
+			String authenticationType) {
+		Class<? extends AuthenticationSession> clazz = AlcinaPersistentEntityImpl
+				.getImplementation(AuthenticationSession.class);
+		AuthenticationSession session = Domain.create(clazz);
+		if (iid.getVersionNumber() == -1) {
+			iid.setVersionNumber(0);
+			String eql = Ax.format("update iid set optlock=0 where id=%s",
+					iid.getId());
+			callWithEntityManager(em -> {
+				em.createNativeQuery(eql).executeUpdate();
+				//
+				return null;
+			});
+		}
+		session.setIid(iid);
+		session.setSessionId(sessionId);
+		session.setUser(user);
+		session.setAuthenticationType(authenticationType);
+		session.setStartTime(startDate);
+		return session;
 	}
 
-	private <V extends Entity> V domainImpl(Class<V> clazz,
-			long clientInstanceId) {
-		long id = clientInstanceId;
-		return Domain.find(AlcinaPersistentEntityImpl.getImplementation(clazz),
-				id);
-	}
-
-	private <V extends Entity> V persistentImpl(EntityManager em, V v) {
-		return (V) em.find(v.entityClass(), v.getId());
+	public ClientInstance createBootstrapClientInstance() {
+		ClientInstance persistent = callWithEntityManager(
+				new BootstrapInstanceCreator());
+		Domain.find(persistent.getAuthenticationSession().getIid());
+		Domain.find(persistent.getAuthenticationSession());
+		return Domain.find(persistent);
 	}
 
 	public ClientInstance createClientInstance(AuthenticationSession session,
@@ -66,35 +88,12 @@ public class AuthenticationPersistence {
 		clientInstance.setUserAgent(userAgent);
 		clientInstance.setAuth(Math.abs(new Random().nextInt()));
 		clientInstance.setIpAddress(remoteAddress);
-		clientInstance.setReferrer(referrer);
-		clientInstance.setUrl(url);
+		clientInstance
+				.setReferrer(CommonUtils.trimToWsChars(referrer, 240, true));
+		clientInstance.setUrl(CommonUtils.trimToWsChars(url, 240, true));
 		clientInstance
 				.setBotUserAgent(EntityLayerUtils.isBotUserAgent(userAgent));
 		return clientInstance;
-	}
-
-	@SuppressWarnings("unused")
-	private Map<String, String> lookupQueries = new ConcurrentHashMap<>();
-
-	public Iid getIid(String instanceId) {
-		Class<? extends Iid> clazz = AlcinaPersistentEntityImpl
-				.getImplementation(Iid.class);
-		Optional<? extends Iid> domainEntity = Domain.query(clazz)
-				.filter("instanceId", instanceId).optional();
-		if (domainEntity.isPresent()) {
-			return domainEntity.get();
-		}
-		String query = Ax.format("select id from %s where %s='%s'",
-				clazz.getSimpleName(), "instanceId", instanceId);
-		/*
-		 * caching issue if not in postProcess - see DomainStore.find
-		 */
-//		if (lookupQueries.put(query, query) != null) {
-//			return null;
-//		}
-		Long id = Ax.first((List<Long>) callWithEntityManager(
-				em -> em.createQuery(query).getResultList()));
-		return id == null ? null : Domain.find(clazz, id);
 	}
 
 	public Iid createIid(String instanceId) {
@@ -119,9 +118,9 @@ public class AuthenticationPersistence {
 		/*
 		 * caching issue if not in postProcess - see DomainStore.find
 		 */
-//		if (lookupQueries.put(query, query) != null) {
-//			return null;
-//		}
+		// if (lookupQueries.put(query, query) != null) {
+		// return null;
+		// }
 		Long id = Ax.first((List<Long>) callWithEntityManager(
 				em -> em.createQuery(query).getResultList()));
 		if (id == null) {
@@ -131,27 +130,53 @@ public class AuthenticationPersistence {
 		return session;
 	}
 
-	public AuthenticationSession createAuthenticationSession(Iid iid,
-			Date startDate, String sessionId, IUser user,
-			String authenticationType) {
-		Class<? extends AuthenticationSession> clazz = AlcinaPersistentEntityImpl
-				.getImplementation(AuthenticationSession.class);
-		AuthenticationSession session = Domain.create(clazz);
-		if(iid.getVersionNumber()==-1){
-			iid.setVersionNumber(0);
-			String eql = Ax.format("update iid set optlock=0 where id=%s",iid.getId());
-			callWithEntityManager(em->{
-				em.createNativeQuery(eql).executeUpdate();
-				//
-				return  null;
-			});
+	public ClientInstance getClientInstance(long clientInstanceId) {
+		return domainImpl(ClientInstance.class, clientInstanceId);
+	}
+
+	public Iid getIid(String instanceId) {
+		Class<? extends Iid> clazz = AlcinaPersistentEntityImpl
+				.getImplementation(Iid.class);
+		Optional<? extends Iid> domainEntity = Domain.query(clazz)
+				.filter("instanceId", instanceId).optional();
+		if (domainEntity.isPresent()) {
+			return domainEntity.get();
 		}
-		session.setIid(iid);
-		session.setSessionId(sessionId);
-		session.setUser(user);
-		session.setAuthenticationType(authenticationType);
-		session.setStartTime(startDate);
-		return session;
+		String query = Ax.format("select id from %s where %s='%s'",
+				clazz.getSimpleName(), "instanceId", instanceId);
+		/*
+		 * caching issue if not in postProcess - see DomainStore.find
+		 */
+		// if (lookupQueries.put(query, query) != null) {
+		// return null;
+		// }
+		Long id = Ax.first((List<Long>) callWithEntityManager(
+				em -> em.createQuery(query).getResultList()));
+		return id == null ? null : Domain.find(clazz, id);
+	}
+
+	public void populateSessionUserFromRememberMeUser(
+			AuthenticationSession session) {
+		Iid iid = session.getIid();
+		Long rememberMeUser_id = iid.getRememberMeUser_id();
+		session.setUser(UserlandProvider.get().getUserById(rememberMeUser_id));
+		session.setAuthenticationType("legacy-iid");
+		logger.warn("Nulling iid rememberMeUser_id :: {} - {}", iid.getId(),
+				rememberMeUser_id);
+		iid.setRememberMeUser_id(null);
+		Transaction.commit();
+	}
+
+	public void putSession(ClientInstance instance,
+			AuthenticationSession session) {
+		instance.setAuthenticationSession(session);
+		Transaction.commit();
+	}
+
+	public boolean validateClientInstance(long clientInstanceId,
+			int clientInstanceAuth) {
+		return Optional.ofNullable(getClientInstance(clientInstanceId))
+				.map(ci -> ci.getAuth() == clientInstanceAuth).orElse(false);
 	}
 
 	public void wasAccessed(ClientInstance clientInstance) {
@@ -165,23 +190,6 @@ public class AuthenticationPersistence {
 	private <V> V callWithEntityManager(Function<EntityManager, V> function) {
 		return CommonPersistenceProvider.get().getCommonPersistence()
 				.callWithEntityManager(function);
-	}
-
-	public static class BootstrapInstanceCreator implements Function<EntityManager, ClientInstance>{
-
-		@Override
-		public ClientInstance apply(EntityManager em) {
-			return AuthenticationPersistence
-					.get().createBootstrapClientInstance(em);
-		}
-		
-	}
-	public ClientInstance createBootstrapClientInstance() {
-		ClientInstance persistent = callWithEntityManager(
-				new BootstrapInstanceCreator());
-		Domain.find(persistent.getAuthenticationSession().getIid());
-		Domain.find(persistent.getAuthenticationSession());
-		return Domain.find(persistent);
 	}
 
 	private ClientInstance createBootstrapClientInstance(EntityManager em) {
@@ -239,29 +247,23 @@ public class AuthenticationPersistence {
 		return detachedInstance;
 	}
 
-	public void putSession(ClientInstance instance,
-			AuthenticationSession session) {
-		instance.setAuthenticationSession(session);
-		Transaction.commit();
+	private <V extends Entity> V domainImpl(Class<V> clazz,
+			long clientInstanceId) {
+		long id = clientInstanceId;
+		return Domain.find(AlcinaPersistentEntityImpl.getImplementation(clazz),
+				id);
 	}
 
-	public boolean validateClientInstance(long clientInstanceId,
-			int clientInstanceAuth) {
-		return Optional.ofNullable(getClientInstance(clientInstanceId))
-				.map(ci -> ci.getAuth() == clientInstanceAuth).orElse(false);
+	private <V extends Entity> V persistentImpl(EntityManager em, V v) {
+		return (V) em.find(v.entityClass(), v.getId());
 	}
 
-	private Logger logger = LoggerFactory.getLogger(getClass());
-
-	public void populateSessionUserFromRememberMeUser(
-			AuthenticationSession session) {
-		Iid iid = session.getIid();
-		Long rememberMeUser_id = iid.getRememberMeUser_id();
-		session.setUser(UserlandProvider.get().getUserById(rememberMeUser_id));
-		session.setAuthenticationType("legacy-iid");
-		logger.warn("Nulling iid rememberMeUser_id :: {} - {}", iid.getId(),
-				rememberMeUser_id);
-		iid.setRememberMeUser_id(null);
-		Transaction.commit();
+	public static class BootstrapInstanceCreator
+			implements Function<EntityManager, ClientInstance> {
+		@Override
+		public ClientInstance apply(EntityManager em) {
+			return AuthenticationPersistence.get()
+					.createBootstrapClientInstance(em);
+		}
 	}
 }
