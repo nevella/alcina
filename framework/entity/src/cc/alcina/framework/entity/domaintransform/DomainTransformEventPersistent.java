@@ -237,9 +237,10 @@ public abstract class DomainTransformEventPersistent
 				setObjectCreationDate(now);
 			}
 			setObjectLastModificationDate(now);
-			setVersion(
-					TransformManager.get().getObject(event).getVersionNumber()
-							+ 1);
+			Entity entity = TransformManager.get().getObject(event);
+			if (entity != null) {
+				setVersion(entity.getVersionNumber() + 1);
+			}
 		}
 
 		public Date getObjectCreationDate() {

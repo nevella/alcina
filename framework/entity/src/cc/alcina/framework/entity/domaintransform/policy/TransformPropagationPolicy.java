@@ -8,9 +8,14 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
 @RegistryLocation(registryPoint = TransformPropagationPolicy.class, implementationType = ImplementationType.INSTANCE)
 public class TransformPropagationPolicy {
+	public boolean handlesEvent(DomainTransformEvent event) {
+		return DomainStore.stores().storeFor(event.getObjectClass()) != null;
+	}
+
 	public boolean shouldPersist(DomainTransformEvent event) {
 		DomainTransformPropagation propagation = resolvePropagation(event);
 		switch (propagation.value()) {

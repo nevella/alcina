@@ -426,7 +426,8 @@ public class TransformPersisterInPersistenceContext {
 							propagationEvent.setOldValue(null);
 							if (collation.forLocator(event.toObjectLocator())
 									.last() == event
-									&& event.getTransformType() != TransformType.DELETE_OBJECT) {
+									&& event.getTransformType() != TransformType.DELETE_OBJECT
+									&& propagationPolicy.handlesEvent(event)) {
 								propagationEvent.populateDbMetadata(event);
 							}
 							if (propagationEvent.getObjectClassRef() == null
