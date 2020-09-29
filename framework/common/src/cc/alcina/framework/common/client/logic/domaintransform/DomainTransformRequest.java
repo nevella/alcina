@@ -27,6 +27,7 @@ import java.util.Set;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
@@ -203,6 +204,7 @@ public class DomainTransformRequest implements Serializable {
 	 * Persistence defined in app subclass
 	 */
 	@Transient
+	@JsonIgnore
 	public List<DomainTransformRequest> getPriorRequestsWithoutResponse() {
 		return this.priorRequestsWithoutResponse;
 	}
