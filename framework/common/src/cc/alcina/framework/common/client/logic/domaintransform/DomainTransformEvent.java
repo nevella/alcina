@@ -152,6 +152,7 @@ public class DomainTransformEvent
 	}
 
 	@Transient
+	@JsonIgnore
 	public Class getObjectClass() {
 		if (this.objectClass == null) {
 			if (this.objectClassName != null && this.objectClassRef == null) {
@@ -169,7 +170,6 @@ public class DomainTransformEvent
 	}
 
 	@Transient
-	@JsonIgnore
 	public String getObjectClassName() {
 		if (this.objectClassName == null) {
 			Class clazz = getObjectClass();
@@ -226,6 +226,7 @@ public class DomainTransformEvent
 	}
 
 	@Transient
+	@JsonIgnore
 	public Class getValueClass() {
 		if (this.valueClass == null) {
 			if (this.valueClassName != null && this.valueClassRef == null) {
@@ -287,6 +288,20 @@ public class DomainTransformEvent
 
 	public boolean provideIsIdEvent(Class clazz) {
 		return objectClass == clazz && "id".equals(propertyName);
+	}
+
+	public boolean provideNotApplicableToVmDomain() {
+		if (getObjectClassRef() == null || getObjectClassRef().notInVm()) {
+			return true;
+		}
+		switch (getTransformType()) {
+		case CREATE_OBJECT:
+		case DELETE_OBJECT:
+			return false;
+		default:
+			// requires value
+			return getValueClassRef() == null || getValueClassRef().notInVm();
+		}
 	}
 
 	/*

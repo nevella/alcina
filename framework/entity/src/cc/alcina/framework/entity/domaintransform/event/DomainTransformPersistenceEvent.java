@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -39,9 +40,7 @@ public class DomainTransformPersistenceEvent {
 
 	public void ensureTransformsValidForVm() {
 		domainTransformLayerWrapper.persistentEvents
-				.removeIf(evt -> evt.getObjectClassRef().notInVm()
-						|| (evt.getValueClassRef() != null
-								&& evt.getValueClassRef().notInVm()));
+				.removeIf(DomainTransformEvent::provideNotApplicableToVmDomain);
 	}
 
 	public DomainTransformLayerWrapper getDomainTransformLayerWrapper() {

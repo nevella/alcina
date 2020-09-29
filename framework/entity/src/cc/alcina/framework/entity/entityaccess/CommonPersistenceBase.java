@@ -123,6 +123,9 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				.getImplementationSimpleClassName(clazz);
 	}
 
+	Map<Long, EntityLocatorMap> locatorMaps = Collections
+			.synchronizedMap(new LinkedHashMap<>());
+
 	public CommonPersistenceBase() {
 		ObjectPersistenceHelper.get();
 	}
@@ -131,39 +134,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		this();
 		this.setEntityManager(em);
 	}
-
-	@Override
-	public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
-		EntityLocatorMap map = locatorMaps.get(clientInstanceId);
-		if (map == null) {
-			if (getEntityManager() == null) {
-				// call back in an entity context
-				return CommonPersistenceProvider.get().getCommonPersistence()
-						.getLocatorMap(clientInstanceId);
-			}
-			// presumably null, but no harm in being light-on-the-ground
-			EntityManager cachedEntityManager = ThreadlocalTransformManager
-					.get().getEntityManager();
-			ThreadlocalTransformManager.get()
-					.setEntityManager(getEntityManager());
-			ThreadlocalTransformManager.get()
-					.setUserSessionEntityMap(new EntityLocatorMap());
-			ClientInstance clientInstanceImpl = AlcinaPersistentEntityImpl
-					.getNewImplementationInstance(ClientInstance.class);
-			clientInstanceImpl.setId(clientInstanceId);
-			// don't get the real client instance - don't want to attach
-			// live permissions objects
-			ThreadlocalTransformManager.get()
-					.setClientInstance(clientInstanceImpl);
-			map = ThreadlocalTransformManager.get().reconstituteEntityMap();
-			ThreadlocalTransformManager.get()
-					.setEntityManager(cachedEntityManager);
-		}
-		return map;
-	}
-
-	Map<Long, EntityLocatorMap> locatorMaps = Collections
-			.synchronizedMap(new LinkedHashMap<>());
 
 	/**
 	 * An implementation can perform a (direct sql) accelerated delete - but you
@@ -261,6 +231,11 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			}
 		}
 		return cache;
+	}
+
+	@Override
+	public <V> V callWithEntityManager(Function<EntityManager, V> call) {
+		return call.apply(getEntityManager());
 	}
 
 	@Override
@@ -430,6 +405,36 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
+	public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
+		EntityLocatorMap map = locatorMaps.get(clientInstanceId);
+		if (map == null) {
+			if (getEntityManager() == null) {
+				// call back in an entity context
+				return CommonPersistenceProvider.get().getCommonPersistence()
+						.getLocatorMap(clientInstanceId);
+			}
+			// presumably null, but no harm in being light-on-the-ground
+			EntityManager cachedEntityManager = ThreadlocalTransformManager
+					.get().getEntityManager();
+			ThreadlocalTransformManager.get()
+					.setEntityManager(getEntityManager());
+			ThreadlocalTransformManager.get()
+					.setUserSessionEntityMap(new EntityLocatorMap());
+			ClientInstance clientInstanceImpl = AlcinaPersistentEntityImpl
+					.getNewImplementationInstance(ClientInstance.class);
+			clientInstanceImpl.setId(clientInstanceId);
+			// don't get the real client instance - don't want to attach
+			// live permissions objects
+			ThreadlocalTransformManager.get()
+					.setClientInstance(clientInstanceImpl);
+			map = ThreadlocalTransformManager.get().reconstituteEntityMap();
+			ThreadlocalTransformManager.get()
+					.setEntityManager(cachedEntityManager);
+		}
+		return map;
+	}
+
+	@Override
 	public long getMaxPublicationIdForUser(IUser user) {
 		List<Long> longs = getEntityManager()
 				.createQuery(Ax.format(
@@ -545,10 +550,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				dc.endWithLogger(logger, "dtrp-get-dtrps - %s ms");
 			}
 		}
-		dtrps.stream().forEach(dtrp -> dtrp.getEvents()
-				.removeIf(event -> event.getObjectClassRef().notInVm()
-						|| (event.getValueClassRef() != null
-								&& event.getValueClassRef().notInVm())));
+		dtrps.stream().forEach(dtrp -> dtrp.getEvents().removeIf(
+				DomainTransformEvent::provideNotApplicableToVmDomain));
 		if (populateTransformSourceObjects) {
 			DurationCounter dc = new DurationCounter();
 			List<DomainTransformEvent> events = (List) DomainTransformRequest
@@ -1122,10 +1125,5 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	@RegistryLocation(registryPoint = CommonPersistenceConnectionProvider.class)
 	public abstract static class CommonPersistenceConnectionProvider {
 		public abstract Connection getConnection();
-	}
-
-	@Override
-	public <V> V callWithEntityManager(Function<EntityManager, V> call) {
-		return call.apply(getEntityManager());
 	}
 }
