@@ -178,7 +178,9 @@ public class DomainTransformPersistenceQueue {
 					logger.warn("Loading request from db: {}", id);
 					DomainTransformRequestPersistent persistentRequest = persistenceEvents.domainStore
 							.loadTransformRequest(id);
-					loadedRequests.put(id, persistentRequest);
+					if (persistentRequest != null) {
+						loadedRequests.put(id, persistentRequest);
+					}
 				}
 			});
 		}
@@ -518,8 +520,12 @@ public class DomainTransformPersistenceQueue {
 							fireEventThreadLogger.warn(
 									"publishTransformEvent - loading request not received via cluster listener -  dtr {}",
 									id);
-							loadedRequests.put(id, persistenceEvents.domainStore
-									.loadTransformRequest(id));
+							DomainTransformRequestPersistent loadedRequest = persistenceEvents.domainStore
+									.loadTransformRequest(id);
+							if (loadedRequest != null) {
+								loadedRequests.put(id, loadedRequest);
+								request = loadedRequest;
+							}
 						}
 					}
 					if (request != null) {
