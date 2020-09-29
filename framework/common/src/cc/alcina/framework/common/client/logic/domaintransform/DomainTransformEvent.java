@@ -297,6 +297,7 @@ public class DomainTransformEvent
 		switch (getTransformType()) {
 		case CREATE_OBJECT:
 		case DELETE_OBJECT:
+		case NULL_PROPERTY_REF:
 			return false;
 		default:
 			// requires value
