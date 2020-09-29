@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -12,7 +13,19 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 public class TransformPropagationPolicy {
 	public boolean shouldPersist(DomainTransformEvent event) {
 		DomainTransformPropagation propagation = resolvePropagation(event);
-		return propagation.value() == PropagationType.PERSISTENT;
+		switch (propagation.value()) {
+		case NONE:
+			return false;
+		case PERSISTENT:
+			return true;
+		case NON_PERSISTENT:
+			/*
+			 * Always persist non-root transforms (if not propogation::NONE)
+			 */
+			return !PermissionsManager.get().isRoot();
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public boolean shouldPropagate(DomainTransformEvent event) {
@@ -35,6 +48,8 @@ public class TransformPropagationPolicy {
 						: Reflections.classLookup().getPropertyReflector(
 								event.getObjectClass(),
 								event.getPropertyName()));
-		return location.getAnnotation(DomainTransformPropagation.class);
+		DomainTransformPropagation annotation = location
+				.getAnnotation(DomainTransformPropagation.class);
+		return annotation;
 	}
 }

@@ -7,12 +7,15 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 @MappedSuperclass
 @DomainTransformPersistable
+@DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class InternalMetric<U extends InternalMetric>
 		extends Entity<U> {
 	private String threadName;

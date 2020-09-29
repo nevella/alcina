@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -138,7 +139,8 @@ public class TransformCommitLog {
 	}
 
 	private byte[] serialize(DomainTransformRequestPersistent request) {
-		return new ClusterTransformSerializer().serialize(request);
+		return Registry.impl(ClusterTransformSerializer.class)
+				.serialize(request);
 	}
 
 	protected synchronized void checkPollTimeout() {
@@ -258,7 +260,8 @@ public class TransformCommitLog {
 					}
 					for (ConsumerRecord<Void, byte[]> record : records) {
 						try {
-							ClusterTransformRequest request = new ClusterTransformSerializer()
+							ClusterTransformRequest request = Registry
+									.impl(ClusterTransformSerializer.class)
 									.deserialize(record.value());
 							logAcceptRecord(request);
 							payloadConsumer.accept(request);

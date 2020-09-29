@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 
 @MappedSuperclass
 @DomainTransformPersistable
+@DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class RollingDataItem extends Entity {
 	private String data;
 

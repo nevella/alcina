@@ -11,6 +11,8 @@ import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -28,6 +30,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @DomainTransformPersistable
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = KeyValuePersistentBase.class)
+@DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class KeyValuePersistentBase<T extends KeyValuePersistentBase>
 		extends Entity<T> {
 	public static final String CONTEXT_NO_COMMIT = KeyValuePersistentBase.class

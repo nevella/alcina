@@ -14,11 +14,14 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.JacksonUtils;
 
+@RegistryLocation(registryPoint = ClusterTransformSerializer.class, implementationType = ImplementationType.INSTANCE)
 public class ClusterTransformSerializer {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -33,6 +36,7 @@ public class ClusterTransformSerializer {
 			try {
 				byte[] unzipped = ResourceUtilities.gunzipBytes(data);
 				String json = new String(unzipped, StandardCharsets.UTF_8);
+				json = preProcessJson(json);
 				DomainTransformRequestPersistent request = JacksonUtils
 						.deserialize(json,
 								DomainTransformRequestPersistent.class);
@@ -107,5 +111,12 @@ public class ClusterTransformSerializer {
 		authenticationSession.setUser(user);
 		clientInstance.setAuthenticationSession(authenticationSession);
 		return request;
+	}
+
+	/*
+	 * For subclasses, to handle multi-domain-store incoming requests
+	 */
+	protected String preProcessJson(String json) {
+		return json;
 	}
 }

@@ -88,6 +88,17 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		});
 	}
 
+	public JsonNode deserializeJson(String deserJson) {
+		return runWithObjectMapper(mapper -> {
+			String json = deserJson;
+			try {
+				return mapper.readTree(json);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		});
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof JacksonJsonObjectSerializer) {
@@ -128,6 +139,16 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 							json.getBytes(StandardCharsets.UTF_8));
 				}
 				return json;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		});
+	}
+
+	public String serializeJson(JsonNode node) {
+		return runWithObjectMapper(mapper -> {
+			try {
+				return mapper.writeValueAsString(node);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

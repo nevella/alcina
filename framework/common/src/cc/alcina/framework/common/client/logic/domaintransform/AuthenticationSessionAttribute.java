@@ -18,23 +18,23 @@ import javax.persistence.Transient;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 @MappedSuperclass
 @ClientInstantiable
 @Introspectable
+@DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class AuthenticationSessionAttribute
 		extends Entity<AuthenticationSessionAttribute> {
 	private String key;
 
-	public String getKey() {
-		return this.key;
-	}
+	private String serializedValue;
 
-	public void setKey(String key) {
-		this.key = key;
-	}
+	@Transient
+	public abstract AuthenticationSession getAuthenticationSession();
 
 	@Override
 	@Transient
@@ -42,9 +42,8 @@ public abstract class AuthenticationSessionAttribute
 		return id;
 	}
 
-	@Override
-	public void setId(long id) {
-		this.id = id;
+	public String getKey() {
+		return this.key;
 	}
 
 	@Transient
@@ -52,15 +51,19 @@ public abstract class AuthenticationSessionAttribute
 		return this.serializedValue;
 	}
 
+	public abstract void setAuthenticationSession(
+			AuthenticationSession authenticationSession);
+
+	@Override
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
+	}
+
 	public void setSerializedValue(String serializedValue) {
 		this.serializedValue = serializedValue;
 	}
-
-	private String serializedValue;
-
-	@Transient
-	public abstract AuthenticationSession getAuthenticationSession();
-
-	public abstract void setAuthenticationSession(
-			AuthenticationSession authenticationSession);
 }
