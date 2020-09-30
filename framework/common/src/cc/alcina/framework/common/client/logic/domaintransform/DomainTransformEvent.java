@@ -183,8 +183,10 @@ public class DomainTransformEvent
 	@Transient
 	@JsonIgnore
 	public ClassRef getObjectClassRef() {
-		if (this.objectClassRef == null && this.objectClass != null) {
-			this.objectClassRef = ClassRef.forClass(objectClass);
+		if (this.objectClassRef == null) {
+			if (this.getObjectClass() != null) {
+				this.objectClassRef = ClassRef.forClass(objectClass);
+			}
 		}
 		return this.objectClassRef;
 	}
@@ -255,8 +257,10 @@ public class DomainTransformEvent
 	@Transient
 	@JsonIgnore
 	public ClassRef getValueClassRef() {
-		if (this.valueClassRef == null && this.valueClass != null) {
-			this.valueClassRef = ClassRef.forClass(valueClass);
+		if (this.valueClassRef == null) {
+			if (getValueClass() != null) {
+				this.valueClassRef = ClassRef.forClass(valueClass);
+			}
 		}
 		return this.valueClassRef;
 	}
@@ -291,6 +295,14 @@ public class DomainTransformEvent
 	}
 
 	public boolean provideNotApplicableToVmDomain() {
+		boolean not = provideNotApplicableToVmDomain0();
+		if (not) {
+			int debug = 3;
+		}
+		return not;
+	}
+
+	public boolean provideNotApplicableToVmDomain0() {
 		if (getObjectClassRef() == null || getObjectClassRef().notInVm()) {
 			return true;
 		}

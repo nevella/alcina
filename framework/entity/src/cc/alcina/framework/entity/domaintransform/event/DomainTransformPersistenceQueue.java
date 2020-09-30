@@ -281,7 +281,8 @@ public class DomainTransformPersistenceQueue {
 				persistenceToken);
 		List<DomainTransformEventPersistent> events = new ArrayList<DomainTransformEventPersistent>(
 				(List) dtrp.getEvents());
-		wrapper.persistentEvents = events;
+		// cloning issue?
+		wrapper.persistentEvents = new ArrayList<>(events);
 		wrapper.persistentRequests = new ArrayList<>(Arrays.asList(dtrp));
 		DomainTransformResponse dtr = new DomainTransformResponse();
 		dtr.setRequestId(persistenceToken.getRequest().getRequestId());
