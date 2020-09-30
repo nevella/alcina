@@ -68,7 +68,6 @@ import cc.alcina.framework.entity.domaintransform.TransformConflicts;
 import cc.alcina.framework.entity.domaintransform.TransformConflicts.TransformConflictsFromOfflineSupport;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
-import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.AuthenticationPersistence;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
@@ -614,9 +613,8 @@ public class TransformCommit {
 		EntityLocatorMap locatorMap = getLocatorMapForClient(request);
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, locatorMap,
-					Registry.impl(TransformLoggingPolicy.class), true,
-					ignoreClientAuthMismatch, forOfflineTransforms, logger,
+					request, locatorMap, true, ignoreClientAuthMismatch,
+					forOfflineTransforms, logger,
 					blockUntilAllListenersNotified);
 			return submitAndHandleTransforms(persistenceToken);
 		}
@@ -641,8 +639,7 @@ public class TransformCommit {
 		try {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, map, Registry.impl(TransformLoggingPolicy.class),
-					false, false, false, logger, true);
+					request, map, false, false, false, logger, true);
 			CommitClientInstanceContext clientInstanceContext = LooseContext
 					.get(CONTEXT_COMMIT_CLIENT_INSTANCE_CONTEXT);
 			persistenceToken.setOriginatingUserId(clientInstanceContext.userId);

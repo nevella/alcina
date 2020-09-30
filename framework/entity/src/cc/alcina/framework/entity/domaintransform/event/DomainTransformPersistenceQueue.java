@@ -38,7 +38,6 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
@@ -275,8 +274,7 @@ public class DomainTransformPersistenceQueue {
 					DomainTransformRequestPersistent dtrp) {
 		// create an "event" to publish in the queue
 		TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-				dtrp, null, Registry.impl(TransformLoggingPolicy.class), false,
-				false, false, null, true);
+				dtrp, null, false, false, false, null, true);
 		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper(
 				persistenceToken);
 		List<DomainTransformEventPersistent> events = new ArrayList<DomainTransformEventPersistent>(

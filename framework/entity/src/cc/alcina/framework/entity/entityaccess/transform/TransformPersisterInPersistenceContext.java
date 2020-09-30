@@ -413,7 +413,7 @@ public class TransformPersisterInPersistenceContext {
 						for (DomainTransformEvent event : eventsPersisted) {
 							DomainTransformEventPersistent propagationEvent = persistentEventClass
 									.newInstance();
-							if (propagationPolicy.shouldPersist(event)) {
+							if (propagationPolicy.shouldPersistEventRecord(event)) {
 								tltm.persist(propagationEvent);
 							}
 							propagationEvent.wrap(event);

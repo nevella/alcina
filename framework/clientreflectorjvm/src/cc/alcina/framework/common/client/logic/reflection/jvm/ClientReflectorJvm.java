@@ -63,6 +63,14 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	static Set<Class> checkedClassAnnotations = new LinkedHashSet<Class>();
 
+	public static boolean canIntrospect(Class clazz) {
+		if (checkedClassAnnotations.contains(clazz)) {
+			return true;
+		}
+		return checkClassAnnotationsGenerateException(clazz,
+				false).canIntrospect;
+	}
+
 	public static void checkClassAnnotations(Class clazz) {
 		if (checkedClassAnnotations.contains(clazz)) {
 			return;
@@ -75,18 +83,20 @@ public class ClientReflectorJvm extends ClientReflector {
 		checkedClassAnnotations.add(clazz);
 	}
 
-	public static boolean canIntrospect(Class clazz) {
-		if (checkedClassAnnotations.contains(clazz)) {
-			return true;
+	public static void checkClassAnnotationsForInstantiation(Class clazz) {
+		if (checkedClassAnnotationsForInstantiation.contains(clazz)) {
+			return;
 		}
-		return checkClassAnnotationsGenerateException(clazz,
-				false).canIntrospect;
-	}
-
-	private static class IntrospectionCheckResult {
-		boolean canIntrospect;
-
-		IntrospectionException exception;
+		checkClassAnnotations(clazz);
+		if (!AnnotationUtils.hasAnnotationNamed(clazz, ClientInstantiable.class)
+				&& clazz.getAnnotation(IgnoreIntrospectionChecks.class) == null
+				&& clazz.getAnnotation(
+						cc.alcina.framework.common.client.logic.reflection.Bean.class) == null) {
+			throw new IntrospectionException(
+					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation",
+					clazz);
+		}
+		checkedClassAnnotationsForInstantiation.add(clazz);
 	}
 
 	private static IntrospectionCheckResult
@@ -124,22 +134,6 @@ public class ClientReflectorJvm extends ClientReflector {
 		return result;
 	}
 
-	public static void checkClassAnnotationsForInstantiation(Class clazz) {
-		if (checkedClassAnnotationsForInstantiation.contains(clazz)) {
-			return;
-		}
-		checkClassAnnotations(clazz);
-		if (!AnnotationUtils.hasAnnotationNamed(clazz, ClientInstantiable.class)
-				&& clazz.getAnnotation(IgnoreIntrospectionChecks.class) == null
-				&& clazz.getAnnotation(
-						cc.alcina.framework.common.client.logic.reflection.Bean.class) == null) {
-			throw new IntrospectionException(
-					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation",
-					clazz);
-		}
-		checkedClassAnnotationsForInstantiation.add(clazz);
-	}
-
 	private static List<Class> getAllImplementedInterfaces(Class clazz) {
 		List<Class> result = new ArrayList<Class>();
 		while (clazz != null) {
@@ -159,7 +153,7 @@ public class ClientReflectorJvm extends ClientReflector {
 	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
 			clazz -> SEUtilities.getPropertyDescriptorsSortedByField(clazz)
 					.stream()
-					// FIXME - mvcc.3 - generalise ignored properties
+					// FIXME - mvcc.adjunct - generalise ignored properties
 					.filter(pd -> !(pd.getName().equals("class")
 							|| pd.getName().equals("propertyChangeListeners")))
 					.map(pd -> new JvmPropertyReflector(clazz, pd))
@@ -407,5 +401,11 @@ public class ClientReflectorJvm extends ClientReflector {
 			super(CommonUtils.highlightForLog("reason: %s\nclass:%s", message,
 					clazz));
 		}
+	}
+
+	private static class IntrospectionCheckResult {
+		boolean canIntrospect;
+
+		IntrospectionException exception;
 	}
 }

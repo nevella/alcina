@@ -414,7 +414,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					event.getPropertyName(), token.newTargetValue);
 			if (event.getPropertyName()
 					.equals(TransformManager.ID_FIELD_NAME)) {
-				// FIXME - mvcc.3 or 4 (clienttransformmanager rework) - remove
+				// FIXME - mvcc.adjunct (clienttransformmanager rework) - remove
 				getDomainObjects().changeMapping(token.object,
 						event.getObjectId(), event.getObjectLocalId());
 				registerLocalObjectPromotion(token.object);

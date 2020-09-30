@@ -16,7 +16,12 @@ public class TransformPropagationPolicy {
 		return DomainStore.stores().storeFor(event.getObjectClass()) != null;
 	}
 
-	public boolean shouldPersist(DomainTransformEvent event) {
+	/*
+	 * The *results* of the event (changes to the db) are always persisted - the
+	 * name of this method is designed to indicate that we also persist a
+	 * *record* of the event
+	 */
+	public boolean shouldPersistEventRecord(DomainTransformEvent event) {
 		DomainTransformPropagation propagation = resolvePropagation(event);
 		switch (propagation.value()) {
 		case NONE:

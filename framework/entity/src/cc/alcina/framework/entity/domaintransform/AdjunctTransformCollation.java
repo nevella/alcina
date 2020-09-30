@@ -44,7 +44,6 @@ public class AdjunctTransformCollation extends TransformCollation {
 							.getLocatorMapForClient(token.getRequest()));
 				}
 				tltm.setApplyingExternalTransforms(true);
-				// FIXME - mvcc.3 - index
 				for (DomainTransformEvent event : allEvents) {
 					if (event
 							.getTransformType() == TransformType.CREATE_OBJECT) {

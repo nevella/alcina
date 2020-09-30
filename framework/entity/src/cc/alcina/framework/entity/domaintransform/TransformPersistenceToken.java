@@ -21,7 +21,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicyFactory;
-import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.domaintransform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
 
@@ -52,8 +51,6 @@ public class TransformPersistenceToken implements Serializable {
 
 	private transient Logger logger;
 
-	private TransformLoggingPolicy transformLoggingPolicy;
-
 	private boolean blockUntilAllListenersNotified;
 
 	private Long originatingUserId;
@@ -69,13 +66,11 @@ public class TransformPersistenceToken implements Serializable {
 	private TransformPropagationPolicy transformPropagationPolicy;
 
 	public TransformPersistenceToken(DomainTransformRequest request,
-			EntityLocatorMap locatorMap,
-			TransformLoggingPolicy transformLoggingPolicy, boolean asyncClient,
+			EntityLocatorMap locatorMap, boolean asyncClient,
 			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
 			Logger logger, boolean blockUntilAllListenersNotified) {
 		this.request = request;
 		this.locatorMap = locatorMap;
-		this.transformLoggingPolicy = transformLoggingPolicy;
 		this.asyncClient = asyncClient;
 		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
 		this.forOfflineTransforms = forOfflineTransforms;
@@ -136,10 +131,6 @@ public class TransformPersistenceToken implements Serializable {
 
 	public List<DomainTransformException> getTransformExceptions() {
 		return this.transformExceptions;
-	}
-
-	public TransformLoggingPolicy getTransformLoggingPolicy() {
-		return this.transformLoggingPolicy;
 	}
 
 	public TransformPropagationPolicy getTransformPropagationPolicy() {
@@ -221,11 +212,6 @@ public class TransformPersistenceToken implements Serializable {
 		this.transformExceptionPolicy = transformExceptionPolicy;
 	}
 
-	public void setTransformLoggingPolicy(
-			TransformLoggingPolicy transformLoggingPolicy) {
-		this.transformLoggingPolicy = transformLoggingPolicy;
-	}
-
 	public void setTransformPropagationPolicy(
 			TransformPropagationPolicy transformPropagationPolicy) {
 		this.transformPropagationPolicy = transformPropagationPolicy;
@@ -272,10 +258,9 @@ public class TransformPersistenceToken implements Serializable {
 						perStorePriorRequest.setTag(priorRequest.getTag());
 					}
 					TransformPersistenceToken token = new TransformPersistenceToken(
-							request, locatorMap, transformLoggingPolicy,
-							asyncClient, ignoreClientAuthMismatch,
-							forOfflineTransforms, logger,
-							blockUntilAllListenersNotified);
+							request, locatorMap, asyncClient,
+							ignoreClientAuthMismatch, forOfflineTransforms,
+							logger, blockUntilAllListenersNotified);
 					token.targetStore = store;
 					return token;
 				});
