@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Vacuum.Vacuumable;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
@@ -26,10 +27,20 @@ public class Transactions {
 		return resolve(t, false, false) == t;
 	}
 
+	public static void enqueueLazyLoad(EntityLocator locator) {
+		synchronized (get().enqueuedLazyLoads) {
+			get().enqueuedLazyLoads.add(locator);
+		}
+	}
+
 	public static synchronized void ensureInitialised() {
 		if (instance == null) {
 			instance = new Transactions();
 		}
+	}
+
+	public static List<EntityLocator> getEnqueuedLazyLoads() {
+		return get().getEnqueuedLazyLoads0();
 	}
 
 	public static synchronized boolean isInitialised() {
@@ -221,6 +232,15 @@ public class Transactions {
 		return new TransactionsStats();
 	}
 
+	private List<EntityLocator> getEnqueuedLazyLoads0() {
+		synchronized (enqueuedLazyLoads) {
+			List<EntityLocator> result = enqueuedLazyLoads.stream()
+					.collect(Collectors.toList());
+			enqueuedLazyLoads.clear();
+			return result;
+		}
+	}
+
 	private void waitForAllToCompleteExSelf0() {
 		while (true) {
 			synchronized (transactionMetadataLock) {
@@ -247,6 +267,22 @@ public class Transactions {
 			if (activeTransactions.size() > 0) {
 				Transaction oldest = activeTransactions.values().iterator()
 						.next();
+				if (!oldest.publishedLongRunningTxWarning
+						&& (System.currentTimeMillis()
+								- oldest.startTime) > ResourceUtilities
+										.getInteger(Transaction.class,
+												"warnAgeSecs")
+										* TimeConstants.ONE_SECOND_MS) {
+					oldest.publishedLongRunningTxWarning = true;
+					Transaction.logger.warn(
+							"Long running mvcc transaction :: {}", oldest);
+					try {
+						SEUtilities
+								.getStacktraceSlice(oldest.originatingThread);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
 				if ((System.currentTimeMillis()
 						- oldest.startTime) > ResourceUtilities
 								.getInteger(Transaction.class, "maxAgeSecs")
@@ -397,25 +433,6 @@ public class Transactions {
 
 		public Thread getVacuumThread() {
 			return vacuum.getVacuumThread();
-		}
-	}
-
-	public static void enqueueLazyLoad(EntityLocator locator) {
-		synchronized (get().enqueuedLazyLoads) {
-			get().enqueuedLazyLoads.add(locator);
-		}
-	}
-
-	public static List<EntityLocator> getEnqueuedLazyLoads() {
-		return get().getEnqueuedLazyLoads0();
-	}
-
-	private List<EntityLocator> getEnqueuedLazyLoads0() {
-		synchronized (enqueuedLazyLoads) {
-			List<EntityLocator> result = enqueuedLazyLoads.stream()
-					.collect(Collectors.toList());
-			enqueuedLazyLoads.clear();
-			return result;
 		}
 	}
 }

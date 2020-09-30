@@ -165,7 +165,7 @@ public class Transaction {
 		}
 	}
 
-	private Thread originatingThread;
+	Thread originatingThread;
 
 	private AtomicInteger threadCount = new AtomicInteger();
 
@@ -193,6 +193,8 @@ public class Transaction {
 	TransactionPhase phase;
 
 	long startTime;
+
+	boolean publishedLongRunningTxWarning;
 
 	public Transaction(TransactionPhase initialPhase) {
 		DomainStore.stores().stream().forEach(store -> storeTransactions

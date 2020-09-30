@@ -492,30 +492,39 @@ public class DomainTransformPersistenceQueue {
 					DomainTransformRequestPersistent request = null;
 					request = loadedRequests.get(id);
 					if (request == null) {
+						/*
+						 * 'Exists' seems ... to return false when should be
+						 * true, in a few cases
+						 * 
+						 * SQL tx issue? In any case, just advisory for now
+						 */
 						boolean exists = persistenceEvents.domainStore
 								.checkTransformRequestExists(id);
-						if (exists) {
-							// Using cluster queueing - an event is visible in
-							// the db for the cluster propagation notification
-							// (kafka) has arrived.
-							//
-							// Wait a maximum of 10 seconds
-							long endWaitLoop = System.currentTimeMillis()
-									+ 10 * TimeConstants.ONE_SECOND_MS;
-							while (true) {
-								request = loadedRequests.get(id);
-								long now = System.currentTimeMillis();
-								if (request == null && now < endWaitLoop) {
-									synchronized (persistentRequestCached) {
-										persistentRequestCached
-												.wait(endWaitLoop - now);
-									}
-								} else {
-									break;
+						fireEventThreadLogger.info(
+								"publishTransformEvent - no loaded request -  dtr {} - exists {}",
+								id, exists);
+						// if (exists) {
+						// Using cluster queueing - an event is visible in
+						// the db for the cluster propagation notification
+						// (kafka) has arrived.
+						//
+						// Wait a maximum of 10 seconds
+						long endWaitLoop = System.currentTimeMillis()
+								+ 10 * TimeConstants.ONE_SECOND_MS;
+						while (true) {
+							request = loadedRequests.get(id);
+							long now = System.currentTimeMillis();
+							if (request == null && now < endWaitLoop) {
+								synchronized (persistentRequestCached) {
+									persistentRequestCached
+											.wait(endWaitLoop - now);
 								}
+							} else {
+								break;
 							}
 						}
-						if (exists && request == null) {
+						// }
+						if (request == null) {
 							fireEventThreadLogger.warn(
 									"publishTransformEvent - loading request not received via cluster listener -  dtr {}",
 									id);

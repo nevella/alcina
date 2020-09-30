@@ -340,11 +340,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				return mergedLayerList;
 			}
 			List<Layer> visibleNonMerged = new ArrayList<>();
-			for (Transaction committed : current.committedTransactions
-					.values()) {
-				Layer layer = nonMergedTransactionLayers.get(committed);
-				if (layer != null) {
-					visibleNonMerged.add(layer);
+			for (Entry<Transaction, Layer> entry : nonMergedTransactionLayers
+					.entrySet()) {
+				if (current.committedTransactions
+						.containsKey(entry.getKey().getId())) {
+					visibleNonMerged.add(entry.getValue());
 				}
 			}
 			if (visibleNonMerged.isEmpty() && currentLayer == null) {
