@@ -500,7 +500,7 @@ public class DomainTransformPersistenceQueue {
 						 */
 						boolean exists = persistenceEvents.domainStore
 								.checkTransformRequestExists(id);
-						fireEventThreadLogger.info(
+						fireEventThreadLogger.warn(
 								"publishTransformEvent - no loaded request -  dtr {} - exists {}",
 								id, exists);
 						// if (exists) {
@@ -513,6 +513,11 @@ public class DomainTransformPersistenceQueue {
 								+ 10 * TimeConstants.ONE_SECOND_MS;
 						while (true) {
 							request = loadedRequests.get(id);
+							if (request != null) {
+								fireEventThreadLogger.warn(
+										"publishTransformEvent - loaded request during wait - dtr {} ",
+										id);
+							}
 							long now = System.currentTimeMillis();
 							if (request == null && now < endWaitLoop) {
 								synchronized (persistentRequestCached) {
@@ -522,6 +527,12 @@ public class DomainTransformPersistenceQueue {
 							} else {
 								break;
 							}
+						}
+						if (request == null) {
+							fireEventThreadLogger.warn(
+									"publishTransformEvent - no loaded request - last try -  dtr {} - exists {}",
+									id, exists);
+							request = loadedRequests.get(id);
 						}
 						// }
 						if (request == null) {

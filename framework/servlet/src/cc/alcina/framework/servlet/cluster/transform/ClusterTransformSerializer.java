@@ -60,7 +60,6 @@ public class ClusterTransformSerializer {
 					.withTypeInfo().withDefaults(false)
 					.withMaxLength(Integer.MAX_VALUE).serialize(request);
 			unzipped = json.getBytes(StandardCharsets.UTF_8);
-			;
 			zipped = ResourceUtilities.gzipBytes(unzipped);
 		} catch (Exception e) {
 			logger.info("Issue serializing request {}", request.getId());
@@ -72,6 +71,11 @@ public class ClusterTransformSerializer {
 					"Large serialized request :: {} :: {} events :: {} bytes unzipped :: {} bytes zipped",
 					request.getId(), request.getEvents().size(),
 					unzipped.length, zipped.length);
+		}
+		if (zipped.length > 900000) {
+			logger.info(
+					"Large serialized request :: dropping :: {} ::  {} bytes zipped",
+					request.getId(), zipped.length);
 		}
 		if (zipped.length > 900000
 				|| ResourceUtilities.is("serializeRequestIdOnly")) {
