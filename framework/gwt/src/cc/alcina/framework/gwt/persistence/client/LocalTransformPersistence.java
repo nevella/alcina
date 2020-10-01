@@ -82,10 +82,10 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 	public static final String CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS = LocalTransformPersistence.class
 			.getName() + "."
-			+ "CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS";;
+			+ "CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS";
 
 	public static final String TOPIC_PERSISTING = LocalTransformPersistence.class
-			.getName() + "." + "TOPIC_PERSISTING";;
+			.getName() + "." + "TOPIC_PERSISTING";
 
 	private static LocalTransformPersistence localTransformPersistence;
 
@@ -541,7 +541,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	private static class Loader {
-		private final Callback callback;;
+		private final Callback callback;
 
 		private final String data;
 

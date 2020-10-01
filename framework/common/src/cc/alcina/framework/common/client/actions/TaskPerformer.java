@@ -11,12 +11,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.common.client.logic;
+package cc.alcina.framework.common.client.actions;
+
+import cc.alcina.framework.common.client.job.Task;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-public interface Vetoer {
-	boolean veto(Object object);
+public interface TaskPerformer<T extends Task> {
+	void performAction(T task) throws Exception;
 }

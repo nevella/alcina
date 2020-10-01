@@ -155,7 +155,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private Map<JoinTable, DomainClassDescriptor> joinTableClassDescriptor = new LinkedHashMap<>();
 
-	private Object loadTransformRequestLock = new Object();;
+	private Object loadTransformRequestLock = new Object();
 
 	DomainStoreTransformSequencer transformSequencer = new DomainStoreTransformSequencer(
 			this);

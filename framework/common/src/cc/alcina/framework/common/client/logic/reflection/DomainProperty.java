@@ -51,6 +51,15 @@ public @interface DomainProperty {
 	 */
 	boolean serializeOnClient() default false;
 
+	/*
+	 * in some ways just a marker interface. Normal setter pattern is for the
+	 * setXXX() method to call
+	 * setXXXString(AlcinaBeanSerializer.serializeHolder(xxx)); getter pattern
+	 * is:
+	 * 
+	 * xxx = (List) TransformManager.resolveMaybeDeserialize(xxx,
+	 * this.xxxString, new XXX);
+	 */
 	String serializeWithBeanSerialization() default "";
 
 	boolean silentFailOnIllegalWrites() default false;

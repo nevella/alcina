@@ -18,13 +18,16 @@ import java.util.List;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
+import cc.alcina.framework.common.client.actions.ActionLogItem;
+import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
+import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.csobjects.WebException;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
+import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
@@ -32,8 +35,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
+import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
@@ -43,12 +49,9 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSugges
  * @author Nick Reddel
  */
 public interface CommonRemoteService extends RemoteService {
-	// for dumping dbs
-	@WebMethod
-	public void dumpData(String data);
-
-	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
-			throws WebException;
+	@WebMethod(customPermission = @Permission(access = AccessLevel.ADMIN))
+	public List<ActionLogItem> getLogsForAction(RemoteAction action,
+			Integer count);
 
 	public LoginResponse hello();
 
@@ -56,7 +59,7 @@ public interface CommonRemoteService extends RemoteService {
 	public List<String> listRunningJobs();
 
 	@WebMethod
-	public String loadData(String key);
+	public <T extends ILogRecord> Long log(T remoteLogRecord);
 
 	public Long logClientError(String exceptionToString);
 
@@ -69,6 +72,13 @@ public interface CommonRemoteService extends RemoteService {
 
 	public void logout();
 
+	@WebMethod()
+	public String performAction(RemoteAction action);
+
+	@WebMethod
+	public <G extends WrapperPersistable> Long persist(G gwpo)
+			throws WebException;
+
 	public void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted) throws WebException;
 
@@ -76,6 +86,8 @@ public interface CommonRemoteService extends RemoteService {
 
 	@WebMethod()
 	public JobTracker pollJobStatus(String id, boolean cancel);
+
+	public SearchResultsBase search(SearchDefinition def, int pageNumber);
 
 	@WebMethod
 	public DomainTransformResponse transform(DomainTransformRequest request)
@@ -88,9 +100,9 @@ public interface CommonRemoteService extends RemoteService {
 	public DomainUpdate waitForTransforms(
 			DomainTransformCommitPosition position) throws PermissionsException;
 
-	Response suggest(BoundSuggestOracleRequest request);
-
 	ModelSearchResults getForClass(String className, long objectId);
 
 	ModelSearchResults searchModel(BindableSearchDefinition def);
+
+	Response suggest(BoundSuggestOracleRequest request);
 }

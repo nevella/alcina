@@ -24,7 +24,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.ActionLogProvider;
 import cc.alcina.framework.common.client.actions.RemoteAction;
-import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 
 /**
  * 
@@ -33,28 +32,31 @@ import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 public class StandardActionLogProvider implements ActionLogProvider {
 	private Map<Class<? extends RemoteAction>, List<ActionLogItem>> logs = new HashMap<Class<? extends RemoteAction>, List<ActionLogItem>>();
 
+	@Override
 	public void getLogsForAction(final RemoteAction action, int count,
 			final AsyncCallback<List<ActionLogItem>> outerCallback,
 			boolean refresh) {
 		if (logs.get(action.getClass()) == null || refresh) {
 			AsyncCallback<List<ActionLogItem>> callback = new AsyncCallback<List<ActionLogItem>>() {
+				@Override
 				public void onFailure(Throwable caught) {
 					throw new WrappedRuntimeException(caught);
 				}
 
+				@Override
 				public void onSuccess(List<ActionLogItem> result) {
 					logs.put(action.getClass(), result);
 					outerCallback.onSuccess(logs.get(action.getClass()));
 				}
 			};
-			((CommonRemoteServiceExtAsync) ClientBase
-					.getCommonRemoteServiceAsyncInstance())
-							.getLogsForAction(action, count, callback);
+			ClientBase.getCommonRemoteServiceAsyncInstance()
+					.getLogsForAction(action, count, callback);
 		} else {
 			outerCallback.onSuccess(logs.get(action.getClass()));
 		}
 	}
 
+	@Override
 	public void insertLogForAction(RemoteAction action, ActionLogItem item) {
 		if (logs.get(action.getClass()) == null) {
 			logs.put(action.getClass(), new ArrayList<ActionLogItem>());

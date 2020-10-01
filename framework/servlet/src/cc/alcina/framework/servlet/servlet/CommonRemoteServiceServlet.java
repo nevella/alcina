@@ -20,13 +20,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletContext;
@@ -47,21 +42,14 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.gwt.user.server.rpc.UnexpectedException;
 import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
 import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
-import cc.alcina.framework.common.client.actions.ActionResult;
 import cc.alcina.framework.common.client.actions.RemoteAction;
-import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
-import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
-import cc.alcina.framework.common.client.actions.RemoteParametersValidator;
+import cc.alcina.framework.common.client.actions.SynchronousAction;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.domain.search.DomainSearcher;
@@ -69,10 +57,10 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
+import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -82,7 +70,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
@@ -90,35 +77,25 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.remote.CommonRemoteServiceExt;
+import cc.alcina.framework.common.client.remote.CommonRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
-import cc.alcina.framework.entity.entityaccess.metric.InternalMetricData;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
 import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
-import cc.alcina.framework.entity.entityaccess.transform.TransformCommit.TransformPriorityStd;
-import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
-import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
@@ -129,7 +106,8 @@ import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
-import cc.alcina.framework.servlet.job.JobRegistry;
+import cc.alcina.framework.servlet.job.JobRegistry1;
+import cc.alcina.framework.servlet.job2.JobRegistry;
 
 /**
  *
@@ -145,7 +123,7 @@ import cc.alcina.framework.servlet.job.JobRegistry;
  *
  */
 public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
-		implements CommonRemoteServiceExt {
+		implements CommonRemoteService {
 	public static final String UA_NULL_SERVER = "null/server";
 
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
@@ -165,9 +143,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static final String CONTEXT_THREAD_LOCAL_HTTP_RESPONSE = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_RESPONSE";
-
-	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
-			.getName() + ".CONTEXT_NO_ACTION_LOG";
 
 	public static final String CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS";
@@ -215,8 +190,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 
-	private AtomicInteger actionCounter = new AtomicInteger();
-
 	private ThreadLocal<Integer> looseContextDepth = new ThreadLocal<>();
 
 	private AtomicInteger callCounter = new AtomicInteger(0);
@@ -225,25 +198,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	private AlcinaServletContext alcinaServletContext = new AlcinaServletContext()
 			.withRootPermissions(false);
-
-	@Override
-	@WebMethod(readonlyPermitted = true)
-	public void dumpData(String data) {
-		if (!ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class,
-				"dumpPermitted")) {
-			throw new RuntimeException("Dump not permitted");
-		}
-		String key = String.valueOf(System.currentTimeMillis());
-		File dir = getDataDumpsFolder();
-		String path = Ax.format("%s/%s.dat", dir.getPath(), key);
-		File file = new File(path);
-		try {
-			ResourceUtilities.writeStringToFile(data, file);
-			System.out.println("Client db dumped - key: " + key);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
 
 	@WebMethod(readonlyPermitted = true)
 	public <T extends Entity> T getItemById(String className, Long id)
@@ -262,45 +216,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@WebMethod(readonlyPermitted = true)
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
-		checkAnnotatedPermissions(action);
-		return Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistence()
-				.listLogItemsForClass(action.getClass().getName(), count);
-	}
-
-	@Override
-	@WebMethod(readonlyPermitted = true)
-	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
-			throws WebException {
-		try {
-			return Registry.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence().getObjectDelta(specs);
-		} catch (Exception e) {
-			logRpcException(e);
-			throw new WebException(e);
-		}
+		return JobRegistry.get().getLogsForAction(action, count);
 	}
 
 	@Override
 	@WebMethod(readonlyPermitted = true)
 	public List<String> listRunningJobs() {
-		return JobRegistry.get().getRunningJobs();
-	}
-
-	@Override
-	public String loadData(String key) {
-		if (!ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class,
-				"loadDumpPermitted")) {
-			throw new RuntimeException("Load dump not permitted");
-		}
-		File dir = getDataDumpsFolder();
-		String path = Ax.format("%s/%s.dat", dir.getPath(), key);
-		File file = new File(path);
-		try {
-			return ResourceUtilities.readFileToString(file);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return JobRegistry1.get().getRunningJobs();
 	}
 
 	@Override
@@ -412,40 +334,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 * since it spawns a potentially unlimited number of performers
 	 */
 	@Override
-	public String performAction(final RemoteAction action) {
-		checkAnnotatedPermissions(action);
-		final RemoteActionPerformer performer = (RemoteActionPerformer) Registry
-				.get().instantiateSingle(RemoteActionPerformer.class,
-						action.getClass());
-		if (performer instanceof RemoteParametersValidator) {
-			try {
-				((RemoteParametersValidator) performer).validate(
-						((RemoteActionWithParameters) action).getParameters());
-			} catch (ValidationException e) {
-				e.printStackTrace();
-				throw new RuntimeException(e);
-			}
+	public String performAction(RemoteAction action) {
+		JobRegistry jobRegistry = JobRegistry.get();
+		Job job = jobRegistry.start(action);
+		if (action instanceof SynchronousAction) {
+			jobRegistry.waitUntilComplete(job);
+			return jobRegistry.getJobResult(job).getActionLogItem()
+					.getShortDescription();
+		} else {
+			return job.toStringId();
 		}
-		// because we're spawning the thread, we use this pattern to allow for
-		// getting to the countDown() in the spawned thread before the await()
-		// in the launcher
-		ActionLauncherAsync async = new ActionLauncherAsync(
-				performer.getClass().getSimpleName() + "-"
-						+ (actionCounter.incrementAndGet()),
-				action);
-		JobTracker tracker = async.launchAndWaitForTracker();
-		return tracker.getId();
-	}
-
-	@Override
-	public ActionLogItem performActionAndWait(final RemoteAction action)
-			throws WebException {
-		return new ActionLauncher().performActionAndWait(action).actionLogItem;
-	}
-
-	public <T> ActionResult<T> performActionAndWaitForObject(
-			final RemoteAction action) throws WebException {
-		return new ActionLauncher().performActionAndWait(action);
 	}
 
 	@Override
@@ -463,7 +361,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	// TODO - well, lock sync
 	@Override
 	public void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted) throws WebException {
@@ -484,13 +381,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public JobTracker pollJobStatus(String id, boolean cancel) {
 		if (cancel) {
-			JobRegistry.get().cancel(id);
+			JobRegistry1.get().cancel(id);
 		}
-		JobTracker tracker = JobRegistry.get().getTracker(id);
+		JobTracker tracker = JobRegistry1.get().getTracker(id);
 		if (tracker == null) {
 			return null;
 		}
-		return JobRegistry.exportableForm(tracker);
+		return JobRegistry1.exportableForm(tracker);
 	}
 
 	@Override
@@ -696,21 +593,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				CommonUtils.nullToEmpty(clr.getMessage()).replace('\0', ' '));
 	}
 
-	protected void checkAnnotatedPermissions(Object o) {
-		WebMethod ara = o.getClass().getAnnotation(WebMethod.class);
-		if (ara != null) {
-			if (!PermissionsManager.get().isPermissible(
-					new AnnotatedPermissible(ara.customPermission()))) {
-				WrappedRuntimeException e = new WrappedRuntimeException(
-						"Permission denied for action " + o,
-						SuggestedAction.NOTIFY_WARNING);
-				EntityLayerLogging.log(LogMessageType.TRANSFORM_EXCEPTION,
-						"Domain transform permissions exception", e);
-				throw e;
-			}
-		}
-	}
-
 	protected <T> T defaultProjection(T t) {
 		return GraphProjections.defaultProjections().project(t);
 	}
@@ -867,17 +749,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		super.onAfterResponseSerialized(serializedResponse);
 	}
 
-	protected void onAfterSpawnedThreadRun(Map properties) {
-	}
-
 	@Override
 	protected void onBeforeRequestDeserialized(String serializedRequest) {
 		super.onBeforeRequestDeserialized(serializedRequest);
 		looseContextDepth.set(LooseContext.depth());
 		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
-	}
-
-	protected void onBeforeSpawnedThreadRun(Map properties) {
 	}
 
 	protected void setLogger(Logger logger) {
@@ -886,139 +762,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	protected boolean waitForTransformsEnabled() {
 		return false;
-	}
-
-	String describeRemoteAction(RemoteAction remoteAction, String msg) {
-		msg += "Clazz: " + remoteAction.getClass().getName() + "\n";
-		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
-		msg += "\nParameters: \n";
-		try {
-			msg += new JacksonJsonObjectSerializer().withIdRefs()
-					.withMaxLength(1000000).serializeNoThrow(remoteAction);
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-		return msg;
-	}
-
-	public class ActionLauncher<T> {
-		private JobTracker actionTracker;
-
-		TopicListener<JobTracker> startListener = new TopicListener<JobTracker>() {
-			boolean processed = false;
-
-			@Override
-			public void topicPublished(String key, JobTracker message) {
-				if (processed) {
-				} else {
-					processed = true;
-					actionTracker = message;
-				}
-			}
-		};
-
-		protected ActionLogItem trackerToResult(final RemoteAction action) {
-			ActionLogItem logItem = AlcinaPersistentEntityImpl
-					.getNewImplementationInstance(ActionLogItem.class);
-			logItem.setActionClass(action.getClass());
-			logItem.setActionDate(new Date());
-			logItem.setShortDescription(CommonUtils
-					.trimToWsChars(actionTracker.getJobResult(), 220));
-			if (!LooseContext.is(CONTEXT_NO_ACTION_LOG)) {
-				logItem.setActionLog(actionTracker.getLog());
-			}
-			return logItem;
-		}
-
-		protected ActionResult<T> trackerToResult(final RemoteAction action,
-				boolean nonPersistent) {
-			ActionResult<T> result = new ActionResult<T>();
-			if (actionTracker != null) {
-				ActionLogItem logItem = trackerToResult(action);
-				if (!actionTracker.provideIsRoot() || nonPersistent) {
-				} else {
-					try {
-						Registry.impl(CommonPersistenceProvider.class)
-								.getCommonPersistence().logActionItem(logItem);
-					} catch (RuntimeException e) {
-						e.printStackTrace();
-					}
-				}
-				result.actionLogItem = logItem;
-				result.resultObject = (T) actionTracker.getJobResultObject();
-			}
-			return result;
-		}
-
-		ActionResult<T> performActionAndWait(final RemoteAction action)
-				throws WebException {
-			checkAnnotatedPermissions(action);
-			RemoteActionPerformer performer = (RemoteActionPerformer) Registry
-					.get().instantiateSingle(RemoteActionPerformer.class,
-							action.getClass());
-			boolean nonPersistent = LooseContext
-					.is(JobRegistry.CONTEXT_NON_PERSISTENT) || Ax.isTest();
-			TransformManager transformManager = TransformManager.get();
-			try {
-				if (transformManager instanceof ThreadlocalTransformManager) {
-					ThreadlocalTransformManager.get().resetTltm(null);
-				}
-				Transaction.ensureEnded();
-				Transaction.begin();
-				LooseContext.push();
-				if (!LooseContext.has(CONTEXT_THREAD_LOCAL_HTTP_REQUEST)) {
-					ActionPerformerMetricFilter filter = Registry
-							.impl(ActionPerformerMetricFilter.class);
-					InternalMetrics.get().startTracker(action,
-							() -> describeRemoteAction(action, ""),
-							InternalMetricTypeAlcina.service,
-							action.getClass().getSimpleName(), () -> true);
-				}
-				LooseContext.getContext().addTopicListener(
-						JobRegistry.TOPIC_JOB_STARTED, startListener);
-				performer.performAction(action);
-				return trackerToResult(action, nonPersistent);
-			} catch (Throwable t) {
-				Exception e = (Exception) ((t instanceof Exception) ? t
-						: new WrappedRuntimeException(t));
-				if (actionTracker != null && !actionTracker.isComplete()) {
-					JobRegistry.get().jobError(e);
-					trackerToResult(action, nonPersistent);
-				}
-				boolean log = true;
-				if (e instanceof WrappedRuntimeException) {
-					WrappedRuntimeException ire = (WrappedRuntimeException) e;
-					log = ire
-							.getSuggestedAction() != SuggestedAction.EXPECTED_EXCEPTION;
-				}
-				if (log) {
-					if (CommonUtils.extractCauseOfClass(e,
-							CancelledException.class) != null) {
-					} else {
-						logRpcException(e);
-					}
-				}
-				throw new WebException(e);
-			} finally {
-				if (!LooseContext.has(CONTEXT_THREAD_LOCAL_HTTP_REQUEST)) {
-					InternalMetrics.get().endTracker(action);
-				}
-				LooseContext.pop();
-				if (transformManager instanceof ThreadlocalTransformManager) {
-					ThreadlocalTransformManager.get().resetTltm(null);
-				}
-				Transaction.endAndBeginNew();
-			}
-		}
-	}
-
-	@RegistryLocation(registryPoint = ActionPerformerMetricFilter.class, implementationType = ImplementationType.SINGLETON)
-	public static class ActionPerformerMetricFilter
-			implements Predicate<InternalMetricData> {
-		@Override
-		public boolean test(InternalMetricData imd) {
-			return false;
-		}
 	}
 
 	public static abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseType> {
@@ -1046,53 +789,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 		protected boolean offerNullSuggestion() {
 			return true;
-		}
-	}
-
-	class ActionLauncherAsync extends AlcinaChildRunnable {
-		private CountDownLatch latch;
-
-		private RemoteAction action;
-
-		private TopicListener startListener;
-
-		volatile JobTracker tracker;
-
-		private Map properties = new LinkedHashMap();
-
-		ActionLauncherAsync(String name, RemoteAction action) {
-			super(name);
-			this.latch = new CountDownLatch(2);
-			this.action = action;
-			this.startListener = new TopicListener<JobTracker>() {
-				@Override
-				public void topicPublished(String key, JobTracker tracker) {
-					ActionLauncherAsync.this.tracker = tracker;
-					latch.countDown();
-				}
-			};
-		}
-
-		public JobTracker launchAndWaitForTracker() {
-			Thread thread = new Thread(this);
-			onBeforeSpawnedThreadRun(properties);
-			thread.start();
-			latch.countDown();
-			try {
-				latch.await();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			return tracker;
-		}
-
-		@Override
-		protected void run0() throws Exception {
-			onAfterSpawnedThreadRun(properties);
-			LooseContext.getContext().addTopicListener(
-					JobRegistry.TOPIC_JOB_STARTED, startListener);
-			TransformCommit.setPriority(TransformPriorityStd.Job);
-			performActionAndWait(this.action);
 		}
 	}
 }

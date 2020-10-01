@@ -100,6 +100,7 @@ public interface ClassLookup {
 					.getAnnotationForProperty(beanType, DomainProperty.class,
 							propertyName);
 			if (ann != null) {
+				// FIXME - mvcc.adjunct - revisit - remove if possible?
 				serializeCollectionOnClient = ann.serializeOnClient();
 				serializeWithBeanSerialization = ann
 						.serializeWithBeanSerialization();

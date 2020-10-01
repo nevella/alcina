@@ -44,12 +44,10 @@ import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.RemoteAction;
-import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
-import cc.alcina.framework.common.client.actions.SynchronousAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
+import cc.alcina.framework.common.client.logic.HasParameters;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -118,8 +116,7 @@ public abstract class ActionViewProviderBase
 				logItemCount, outerCallback, true);
 	}
 
-	protected abstract void performAction(AsyncCallback<String> asyncCallback,
-			AsyncCallback<ActionLogItem> syncCallback);
+	protected abstract void performAction(AsyncCallback<String> asyncCallback);
 
 	public class ActionLogPanel extends VerticalPanel implements ClickHandler {
 		private static final String RUNNING = "...running";
@@ -159,12 +156,12 @@ public abstract class ActionViewProviderBase
 					"<i>" + action.getDescription() + "</i><br />");
 			this.fp = new FlowPanel();
 			add(description);
-			if (action instanceof RemoteActionWithParameters) {
+			if (action instanceof HasParameters) {
 				ContentViewFactory cvf = new ContentViewFactory();
 				cvf.setNoCaptionsOrButtons(true);
 				this.beanView = cvf.createBeanView(
-						((RemoteActionWithParameters) action).getParameters(),
-						true, null, false, true);
+						((HasParameters) action).getParameters(), true, null,
+						false, true);
 				add(beanView);
 			}
 			this.button = new Button("Run now");
@@ -266,7 +263,7 @@ public abstract class ActionViewProviderBase
 				return;
 			}
 			running(true);
-			performAction(asyncCallback, syncCallback);
+			performAction(asyncCallback);
 		}
 
 		@Override
@@ -336,17 +333,9 @@ public abstract class ActionViewProviderBase
 
 	public static class ActionViewProvider extends ActionViewProviderBase {
 		@Override
-		protected void performAction(AsyncCallback<String> asyncCallback,
-				AsyncCallback<ActionLogItem> syncCallback) {
-			if (action instanceof SynchronousAction) {
-				((CommonRemoteServiceExtAsync) ClientBase
-						.getCommonRemoteServiceAsyncInstance())
-								.performActionAndWait(action, syncCallback);
-			} else {
-				((CommonRemoteServiceExtAsync) ClientBase
-						.getCommonRemoteServiceAsyncInstance())
-								.performAction(action, asyncCallback);
-			}
+		protected void performAction(AsyncCallback<String> asyncCallback) {
+			ClientBase.getCommonRemoteServiceAsyncInstance()
+					.performAction(action, asyncCallback);
 			action.wasCalled();
 		}
 	}

@@ -45,7 +45,7 @@ import cc.alcina.framework.common.client.collections.BidiConverter.BidiIdentityC
  */
 public class DateBox extends AbstractBoundWidget<Date>
 		implements ValueChangeHandler, Focusable {
-	private com.google.gwt.user.datepicker.client.DateBox base;;
+	private com.google.gwt.user.datepicker.client.DateBox base;
 
 	private DateTimeFormat dateTimeFormat;
 

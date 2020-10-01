@@ -31,8 +31,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.logic.Vetoer;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -62,7 +60,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
  * 
  * @author Nick Reddel
  */
-public class PermissionsManager implements Vetoer, DomainTransformListener {
+public class PermissionsManager implements DomainTransformListener {
 	public static String SYSTEM_GROUP_NAME = "system";
 
 	public static String SYSTEM_USER_NAME = "system_user";
@@ -303,7 +301,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		this.userListener = new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
-				nullGroupMap();
+				invalidateGroupMap();
 			}
 		};
 	}
@@ -357,7 +355,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	public void domainTransform(DomainTransformEvent evt)
 			throws DomainTransformException {
 		if (evt.getSource() instanceof IGroup) {
-			nullGroupMap();
+			invalidateGroupMap();
 		}
 	}
 
@@ -427,7 +425,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	public Map<String, ? extends IGroup> getUserGroups(IUser user) {
 		if (user != this.user) {
-			nullGroupMap();
+			invalidateGroupMap();
 		}
 		if (groupMap != null) {
 			return groupMap;
@@ -441,7 +439,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 			}
 			HashMap<String, IGroup> result = groupMap;
 			if (user != this.user) {
-				nullGroupMap();
+				invalidateGroupMap();
 			}
 			return result;
 		}
@@ -703,7 +701,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	}
 
 	public synchronized void setUser(IUser user) {
-		nullGroupMap();
+		invalidateGroupMap();
 		if (this.user != null
 				&& this.user instanceof SourcesPropertyChangeEvents) {
 			SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) this.user;
@@ -743,25 +741,11 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		return state;
 	}
 
-	@Override
-	public boolean veto(Object object) {
-		PermissionsManager pmLocal = PermissionsManager.get();
-		if (pmLocal != this) {
-			return pmLocal.veto(object);
-		}
-		if (!(object instanceof Permissible)) {
-			throw new WrappedRuntimeException(
-					"Object not instance of permissible",
-					SuggestedAction.NOTIFY_WARNING);
-		}
-		return !isPermissible((Permissible) object);
-	}
-
 	protected IUser getSystemUser() {
 		return UserlandProvider.get().getSystemUser();
 	}
 
-	protected void nullGroupMap() {
+	protected void invalidateGroupMap() {
 		groupMap = null;
 	}
 

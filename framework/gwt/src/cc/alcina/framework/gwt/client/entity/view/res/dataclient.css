@@ -379,7 +379,7 @@ table.gwittir-GridForm td.label {
 	content: '';
 	position: absolute;
 	top: 50%;
-	border-bottom: 1px solid #eeeeff;;
+	border-bottom: 1px solid #eeeeff;
 	width: 300px;
 	margin: 0 20px;
 }
@@ -935,7 +935,7 @@ a.button-grey {
 .standard-action-with-param-form {
 	margin: 30px auto;
 	width: 600px;
-	padding: 20px 0 0 60px;;
+	padding: 20px 0 0 60px;
 	border: none;
 }
 

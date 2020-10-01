@@ -3,7 +3,7 @@ package cc.alcina.framework.servlet.knowns;
 import java.util.Date;
 
 import cc.alcina.framework.common.client.csobjects.OpStatus;
-import cc.alcina.framework.servlet.job.JobRegistry;
+import cc.alcina.framework.servlet.job.JobRegistry1;
 
 public class KnownJob extends KnownNode {
 	public OpStatus status;
@@ -21,8 +21,8 @@ public class KnownJob extends KnownNode {
 	}
 
 	public void jobError(Exception e) {
-		JobRegistry.get().warn(e);
-		log = JobRegistry.get().getContextLogBuffer(null);
+		JobRegistry1.get().warn(e);
+		log = JobRegistry1.get().getContextLogBuffer(null);
 		status = OpStatus.FAILED;
 		logProcessTime();
 		persist();
@@ -30,7 +30,7 @@ public class KnownJob extends KnownNode {
 
 	public void jobMessage(String template, Object... params) {
 		String message = String.format(template, params);
-		String logBuffer = JobRegistry.get().getContextLogBuffer(null);
+		String logBuffer = JobRegistry1.get().getContextLogBuffer(null);
 		log = logBuffer + "\n" + message;
 		persist();
 	}
@@ -58,7 +58,7 @@ public class KnownJob extends KnownNode {
 	private void logProcessTime() {
 		end = new Date();
 		String path = path();
-		JobRegistry.get()
+		JobRegistry1.get()
 				.log(String.format("job %s - time %s", path, getTime()));
 	}
 }

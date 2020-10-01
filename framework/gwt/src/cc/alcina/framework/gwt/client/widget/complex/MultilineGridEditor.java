@@ -45,7 +45,7 @@ public abstract class MultilineGridEditor<H extends Entity>
 
 	private Toolbar toolbar;
 
-	BoundTableExt table;;
+	BoundTableExt table;
 
 	private Set<H> value;
 

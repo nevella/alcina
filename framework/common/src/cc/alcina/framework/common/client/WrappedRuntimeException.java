@@ -78,6 +78,7 @@ public class WrappedRuntimeException extends RuntimeException {
 		this.suggestedAction = suggestedAction;
 	}
 
+	// FIXME - mvcc.jobs - remove
 	public enum SuggestedAction {
 		CANCEL_STARTUP, NOTIFY_WARNING, NOTIFY_ERROR, EXPECTED_EXCEPTION,
 		NOTIFY_AND_SHUTDOWN, HANDLE_INTERRUPTED_ACTION_SILENT,

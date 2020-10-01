@@ -18,16 +18,20 @@ import java.util.List;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
+import cc.alcina.framework.common.client.actions.ActionLogItem;
+import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
+import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
+import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
 import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
@@ -37,8 +41,8 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSugges
  * @author Nick Reddel
  */
 public interface CommonRemoteServiceAsync {
-	public void getObjectDelta(List<ObjectDeltaSpec> specs,
-			AsyncCallback<List<ObjectDeltaResult>> callback);
+	public void getLogsForAction(RemoteAction action, Integer count,
+			AsyncCallback<List<ActionLogItem>> callback);
 
 	public void hello(AsyncCallback callback);
 
@@ -51,6 +55,12 @@ public interface CommonRemoteServiceAsync {
 
 	public void logout(AsyncCallback callback);
 
+	public void performAction(RemoteAction action,
+			AsyncCallback<String> callback);
+
+	public void search(SearchDefinition def, int pageNumber,
+			AsyncCallback<SearchResultsBase> callback);
+
 	public void suggest(BoundSuggestOracleRequest request,
 			AsyncCallback<Response> asyncCallback);
 
@@ -60,15 +70,19 @@ public interface CommonRemoteServiceAsync {
 	public void validateOnServer(List<ServerValidator> validators,
 			AsyncCallback<List<ServerValidator>> callback);
 
-	void dumpData(String data, AsyncCallback<Void> callback);
+	void getForClass(String className, long objectId,
+			AsyncCallback<ModelSearchResults> callback);
 
-	void loadData(String key, AsyncCallback<String> callback);
+	void log(ILogRecord remoteLogRecord, AsyncCallback<Long> callback);
 
 	void logClientError(String exceptionToString, String exceptionType,
 			AsyncCallback<Long> callback);
 
 	void logClientRecords(String serializedLogRecords,
 			AsyncCallback<Void> callback);
+
+	<G extends WrapperPersistable> void persist(G gwpo,
+			AsyncCallback<Long> callback);
 
 	void persistOfflineTransforms(List<DeltaApplicationRecord> uncommitted,
 			AsyncCallback<Void> callback);
@@ -78,12 +92,9 @@ public interface CommonRemoteServiceAsync {
 	void pollJobStatus(String id, boolean cancel,
 			AsyncCallback<JobTracker> callback);
 
-	void waitForTransforms(DomainTransformCommitPosition position,
-			AsyncCallback<DomainUpdate> callback);
-
-	void getForClass(String className, long objectId,
-			AsyncCallback<ModelSearchResults> callback);
-
 	void searchModel(BindableSearchDefinition def,
 			AsyncCallback<ModelSearchResults> callback);
+
+	void waitForTransforms(DomainTransformCommitPosition position,
+			AsyncCallback<DomainUpdate> callback);
 }

@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.common.client.actions;
 
-import java.io.Serializable;
+import cc.alcina.framework.common.client.logic.HasParameters;
 
 /**
  * Marker subclass, to be run on the server
@@ -22,16 +22,18 @@ import java.io.Serializable;
  *
  */
 public class RemoteActionWithParameters<T extends RemoteParameters>
-		extends RemoteAction{
+		extends RemoteAction implements HasParameters<T> {
 	private T parameters;
 
 	public RemoteActionWithParameters() {
 	}
 
+	@Override
 	public T getParameters() {
 		return parameters;
 	}
 
+	@Override
 	public void setParameters(T parameters) {
 		this.parameters = parameters;
 	}

@@ -45,7 +45,7 @@ public abstract class MultilineRowEditor<H extends Entity>
 		}
 	};
 
-	private Toolbar toolbar;;
+	private Toolbar toolbar;
 
 	BoundTableExt table;
 

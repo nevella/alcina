@@ -4,12 +4,12 @@ import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.actions.RemoteAction;
-import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
+import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.entity.SEUtilities;
 
 public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
-		implements RemoteActionPerformer<R> {
+		implements TaskPerformer<R> {
 	// FIXME - mvcc.jobs - switch to slf4j. Also - logstash logging - put a
 	// counter in the log record?
 	protected Logger logger;
@@ -34,18 +34,18 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 	}
 
 	public void updateJob(String message, int completedDelta) {
-		JobRegistry.get().updateJob(message, completedDelta);
+		JobRegistry1.get().updateJob(message, completedDelta);
 	}
 
 	protected void finishJob() {
 	}
 
 	protected void jobError(Exception exception) {
-		JobRegistry.get().jobError(exception);
+		JobRegistry1.get().jobError(exception);
 	}
 
 	protected void jobError(String message) {
-		JobRegistry.get().jobError(message);
+		JobRegistry1.get().jobError(message);
 	}
 
 	protected String jobName() {
@@ -53,7 +53,7 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 	}
 
 	protected void jobOk(String message) {
-		JobRegistry.get().jobOk(message);
+		JobRegistry1.get().jobOk(message);
 	}
 
 	protected void jobStarted() {
@@ -61,7 +61,7 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 			throw new RuntimeException("Already started");
 		}
 		started = true;
-		jobTracker = JobRegistry.get().startJob(getClass(), jobName(), null);
-		logger = JobRegistry.get().getContextLogger();
+		jobTracker = JobRegistry1.get().startJob(getClass(), jobName(), null);
+		logger = JobRegistry1.get().getContextLogger();
 	}
 }

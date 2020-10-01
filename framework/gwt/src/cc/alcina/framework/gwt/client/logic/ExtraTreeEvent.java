@@ -54,7 +54,7 @@ public class ExtraTreeEvent {
 	}
 
 	public static class ExtraTreeEventSupport implements ExtraTreeEventSource {
-		private List<ExtraTreeEventListener> listenerList = new ArrayList<ExtraTreeEventListener>();;
+		private List<ExtraTreeEventListener> listenerList = new ArrayList<ExtraTreeEventListener>();
 
 		public void addExtraTreeEventListener(ExtraTreeEventListener listener) {
 			listenerList.add(listener);

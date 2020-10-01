@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.actions;
 
 import java.io.Serializable;
 
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -26,7 +27,8 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  * 
  */
 @WebMethod(customPermission = @Permission(access = AccessLevel.ADMIN))
-public class RemoteAction extends PermissibleAction implements Serializable {
+public class RemoteAction extends PermissibleAction
+		implements Serializable, Task {
 	public RemoteAction() {
 	}
 
@@ -34,6 +36,4 @@ public class RemoteAction extends PermissibleAction implements Serializable {
 	public AccessLevel accessLevel() {
 		return AccessLevel.ADMIN;
 	}
-
-	
 }

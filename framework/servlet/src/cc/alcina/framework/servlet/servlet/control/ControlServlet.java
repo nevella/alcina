@@ -30,11 +30,11 @@ import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.JacksonUtils;
+import cc.alcina.framework.servlet.job2.JobRegistry;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
 import cc.alcina.framework.servlet.publication.delivery.ContentDeliveryEmail;
 import cc.alcina.framework.servlet.servlet.AlcinaServlet;
-import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 public class ControlServlet extends AlcinaServlet {
 	public static String invokeRemoteAction(RemoteAction action, String url,
@@ -198,8 +198,7 @@ public class ControlServlet extends AlcinaServlet {
 					RemoteAction action = (RemoteAction) JacksonUtils
 							.deserialize(actionJson,
 									Class.forName(actionClassName));
-					return Registry.impl(CommonRemoteServiceServlet.class)
-							.performActionAndWait(action).getActionLog();
+					return JobRegistry.get().perform(action).getActionLog();
 				});
 	}
 

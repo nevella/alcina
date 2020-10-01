@@ -29,7 +29,7 @@ class PersistenceDeltaScanner
 
 	Set<String> jarPathsAdded = new LinkedHashSet<>();
 
-	ClassPool pool = new ClassPool();;
+	ClassPool pool = new ClassPool();
 
 	public PersistenceDeltaScanner(ClassPersistenceScanData result) {
 		this.result = result;

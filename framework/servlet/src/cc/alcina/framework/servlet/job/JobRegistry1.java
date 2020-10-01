@@ -54,33 +54,33 @@ import cc.alcina.framework.servlet.Sx;
  * @author Nick Reddel
  */
 @RegistryLocations(value = {
-		@RegistryLocation(registryPoint = JobRegistry.class, implementationType = ImplementationType.SINGLETON),
+		@RegistryLocation(registryPoint = JobRegistry1.class, implementationType = ImplementationType.SINGLETON),
 		@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class) })
-public class JobRegistry implements RegistrableService {
-	static JobRegistry singleton;
+public class JobRegistry1 implements RegistrableService {
+	static JobRegistry1 singleton;
 
-	public static final String TOPIC_JOB_FAILURE = JobRegistry.class.getName()
+	public static final String TOPIC_JOB_FAILURE = JobRegistry1.class.getName()
 			+ ".TOPIC_JOB_FAILURE";
 
-	public static final String TOPIC_JOB_STARTED = JobRegistry.class.getName()
+	public static final String TOPIC_JOB_STARTED = JobRegistry1.class.getName()
 			+ ".TOPIC_JOB_STARTED";
 
-	public static final String CONTEXT_TRACKER = JobRegistry.class.getName()
+	public static final String CONTEXT_TRACKER = JobRegistry1.class.getName()
 			+ ".CONTEXT_TRACKER";
 
-	public static final String CONTEXT_NEXT_JOB_ID = JobRegistry.class.getName()
+	public static final String CONTEXT_NEXT_JOB_ID = JobRegistry1.class.getName()
 			+ ".CONTEXT_NEXT_JOB_ID";
 
-	public static final String CONTEXT_NON_PERSISTENT = JobRegistry.class
+	public static final String CONTEXT_NON_PERSISTENT = JobRegistry1.class
 			.getName() + ".CONTEXT_NON_PERSISTENT";
 
-	public static final String CONTEXT_USE_LOGGER = JobRegistry.class.getName()
+	public static final String CONTEXT_USE_LOGGER = JobRegistry1.class.getName()
 			+ ".CONTEXT_USE_LOGGER";
 
-	public static final String CONTEXT_PERFORMING_CLUSTERED_JOB = JobRegistry.class
+	public static final String CONTEXT_PERFORMING_CLUSTERED_JOB = JobRegistry1.class
 			.getName() + ".CONTEXT_PERFORMING_CLUSTERED_JOB";
 
-	public static final String CONTEXT_REUSE_CURRENT_TRACKER = JobRegistry.class
+	public static final String CONTEXT_REUSE_CURRENT_TRACKER = JobRegistry1.class
 			.getName() + ".CONTEXT_REUSE_CURRENT_TRACKER";
 
 	public static final String NO_LOG = "no-log";
@@ -108,18 +108,18 @@ public class JobRegistry implements RegistrableService {
 		return converter.convert(in);
 	}
 
-	public static JobRegistry get() {
+	public static JobRegistry1 get() {
 		if (singleton == null) {
 			// not thread-safe, make sure it's initialised single-threaded on
 			// app startup
-			singleton = Registry.impl(JobRegistry.class);
+			singleton = Registry.impl(JobRegistry1.class);
 		}
 		return singleton;
 	}
 
 	public static String getLauncherName() {
 		String launcherName = ResourceUtilities
-				.getBundledString(JobRegistry.class, "launcherName");
+				.getBundledString(JobRegistry1.class, "launcherName");
 		launcherName = launcherName.isEmpty()
 				? EntityLayerUtils.getLocalHostName()
 				: launcherName;
@@ -147,7 +147,7 @@ public class JobRegistry implements RegistrableService {
 
 	boolean refuseJobs = false;
 
-	public JobRegistry() {
+	public JobRegistry1() {
 	}
 
 	@Override
@@ -535,11 +535,11 @@ public class JobRegistry implements RegistrableService {
 		private int total = 1;
 
 		public void publish() {
-			JobTracker contextTracker = JobRegistry.get().getContextTracker();
+			JobTracker contextTracker = JobRegistry1.get().getContextTracker();
 			if (contextTracker != null) {
 				contextTracker.setItemCount(total);
 			}
-			JobRegistry.get().updateJob(message, delta);
+			JobRegistry1.get().updateJob(message, delta);
 		}
 
 		public ProgressBuilder withDelta(int delta) {

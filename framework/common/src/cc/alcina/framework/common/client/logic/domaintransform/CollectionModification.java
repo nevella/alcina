@@ -92,7 +92,7 @@ public class CollectionModification {
 			implements CollectionModificationSource {
 		private static List<SupportEvent> queuedEvents = null;
 
-		private static int queueDepth = 0;;
+		private static int queueDepth = 0;
 
 		public static synchronized void queue(boolean push) {
 			queueDepth += push ? 1 : -1;

@@ -81,7 +81,7 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
+import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -900,8 +900,8 @@ public class SEUtilities {
 	public static Class getRemoteActionClass(Class clazz) {
 		RegistryLocation registryLocation = (RegistryLocation) clazz
 				.getAnnotation(RegistryLocation.class);
-		if (registryLocation != null && registryLocation
-				.registryPoint() == RemoteActionPerformer.class) {
+		if (registryLocation != null
+				&& registryLocation.registryPoint() == TaskPerformer.class) {
 			return registryLocation.targetClass();
 		}
 		return null;

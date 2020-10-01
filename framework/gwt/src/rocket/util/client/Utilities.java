@@ -153,14 +153,14 @@ public class Utilities {
 	 * the given array of values which will supply the replacements.
 	 * 
 	 * <pre>
-	 * String input = &quot;Apple's are ${0} and banana are ${1}.&quot;;
+	 * String input = &quot;Apple's are ${0} and banana are ${1}.&quot;
 	 * 
 	 * String[] values = new String[] { &quot;green&quot;, &quot;yellow&quot; };
 	 * 
 	 * String output = Utilities.format(input, values); // =
 	 * 													// &quot;Apple's are green
 	 * 													// and bananas are
-	 * 													// yellow.&quot;;
+	 * 													// yellow.&quot;
 	 * </pre>
 	 * 
 	 * @param text
@@ -512,7 +512,7 @@ public class Utilities {
 	 * Converts a cssPropertyName into a javascript propertyName. eg
 	 * 
 	 * <pre>
-	 * String css = &quot;background-color&quot;;
+	 * String css = &quot;background-color&quot;
 	 * String js = toCamelCase(css);
 	 * System.out.println(css + &quot;&gt;&quot; + js); // prints [[[background-color &gt;
 	 * 									// backgroundColor.]]] without the

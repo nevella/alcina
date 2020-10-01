@@ -47,8 +47,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
@@ -64,7 +62,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
-import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
@@ -104,7 +101,6 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObjectVersions;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropagation;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
@@ -505,35 +501,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		entity = ensureNonProxy(entity);
 		return super.getObject(entity);
-	}
-
-	// TODO - permissions check
-	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
-			throws Exception {
-		List<ObjectDeltaResult> result = new ArrayList<ObjectDeltaResult>();
-		for (ObjectDeltaSpec itemSpec : specs) {
-			ObjectRef ref = itemSpec.getObjectRef();
-			String propertyName = itemSpec.getPropertyName();
-			Association assoc = Reflections.propertyAccessor()
-					.getAnnotationForProperty(ref.getClassRef().getRefClass(),
-							Association.class, propertyName);
-			ObjectDeltaResult itemResult = new ObjectDeltaResult();
-			itemResult.setDeltaSpec(itemSpec);
-			String eql = buildEqlForSpec(itemSpec, assoc.implementationClass());
-			long t1 = System.currentTimeMillis();
-			List results = getEntityManager().createQuery(eql).getResultList();
-			EntityLayerObjects.get().getMetricLogger()
-					.debug("cache eql - total (ms):"
-							+ (System.currentTimeMillis() - t1));
-			try {
-				itemResult.setTransforms(objectsToDtes(results,
-						assoc.implementationClass(), true));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			result.add(itemResult);
-		}
-		return result;
 	}
 
 	public PostTransactionEntityResolver
@@ -1024,38 +991,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public void useGlobalLocalIdCounter() {
 		useTlIdGenerator = false;
-	}
-
-	private String buildEqlForSpec(ObjectDeltaSpec itemSpec, Class assocClass)
-			throws Exception {
-		ObjectRef ref = itemSpec.getObjectRef();
-		Class refClass = ref.getClassRef().getRefClass();
-		List<String> projections = new ArrayList<String>();
-		ClassLookup classLookup = Reflections.classLookup();
-		String specProperty = null;
-		projections.add(Ax.format("t.%s as %s", "id", "id"));
-		List<PropertyInfo> pds = classLookup.getWritableProperties(assocClass);
-		for (PropertyInfo pd : pds) {
-			String propertyName = pd.getPropertyName();
-			if (ignorePropertyForCaching(assocClass, pd.getPropertyType(),
-					propertyName)) {
-				continue;
-			}
-			Class clazz = pd.getPropertyType();
-			if (!Entity.class.isAssignableFrom(clazz)) {
-				projections.add(
-						Ax.format("t.%s as %s", propertyName, propertyName));
-			} else {
-				projections.add(Ax.format("t.%s.id as %s_id", propertyName,
-						propertyName));
-				if (clazz == refClass) {
-					specProperty = propertyName;
-				}
-			}
-		}
-		String template = "select %s from %s t where t.%s.id=%s";
-		return Ax.format(template, CommonUtils.join(projections, ","),
-				assocClass.getSimpleName(), specProperty, ref.getId());
 	}
 
 	private boolean checkPermissions(Entity entity, DomainTransformEvent evt,

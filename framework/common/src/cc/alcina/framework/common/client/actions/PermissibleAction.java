@@ -16,7 +16,6 @@ package cc.alcina.framework.common.client.actions;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.Vetoer;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.util.Ax;
@@ -46,33 +45,38 @@ public class PermissibleAction implements Permissible {
 		this.displayName = displayName;
 		this.cssClassName = cssClassName;
 	}
-	public String getDescription() {
-		return "";
-	}
+
+	@Override
 	public AccessLevel accessLevel() {
 		return AccessLevel.LOGGED_IN;
-	}
-
-	public String getActionGroupName() {
-		return null;
 	}
 
 	public String getActionName() {
 		return this.actionName;
 	}
 
+	// FIXME - dirndl.2 - remove
 	public String getCssClassName() {
 		return cssClassName;
 	}
 
-	public List<Vetoer> getDefaultVetoers() {
-		return null;
+	public String getDescription() {
+		return "";
 	}
 
 	public String getDisplayName() {
 		return displayName != null ? displayName : getActionName();
 	}
 
+	public String provideId() {
+		if (Ax.notBlank(getActionName())) {
+			return getActionName();
+		}
+		return CommonUtils.restId(
+				getClass().getSimpleName().replaceFirst("(.+)Action", "$1"));
+	}
+
+	@Override
 	public String rule() {
 		return null;
 	}
@@ -83,6 +87,9 @@ public class PermissibleAction implements Permissible {
 
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
+	}
+
+	public void wasCalled() {
 	}
 
 	public interface HasPermissibleActionChildren {
@@ -110,6 +117,7 @@ public class PermissibleAction implements Permissible {
 			super(delegate);
 		}
 
+		@Override
 		public List<PermissibleAction> getChildren() {
 			return this.children;
 		}
@@ -123,14 +131,17 @@ public class PermissibleAction implements Permissible {
 			this.delegate = delegate;
 		}
 
+		@Override
 		public AccessLevel accessLevel() {
 			return this.delegate.accessLevel();
 		}
 
+		@Override
 		public String getActionName() {
 			return this.delegate.getActionName();
 		}
 
+		@Override
 		public String getCssClassName() {
 			return this.delegate.getCssClassName();
 		}
@@ -140,26 +151,19 @@ public class PermissibleAction implements Permissible {
 			return this.delegate;
 		}
 
+		@Override
 		public String getDisplayName() {
 			return this.delegate.getDisplayName();
 		}
 
+		@Override
 		public String rule() {
 			return this.delegate.rule();
 		}
 
+		@Override
 		public void setActionName(String actionName) {
 			this.delegate.setActionName(actionName);
 		}
-	}
-
-	public void wasCalled() {
-	}
-
-	public String provideId() {
-		if(Ax.notBlank(getActionName())) {
-			return getActionName();
-		}
-		return CommonUtils.restId(getClass().getSimpleName().replaceFirst("(.+)Action", "$1"));
 	}
 }

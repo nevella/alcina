@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DomainTransformSupport {
-	private List<DomainTransformListener> listenerList = new ArrayList<DomainTransformListener>();;
+	private List<DomainTransformListener> listenerList = new ArrayList<DomainTransformListener>();
 
 	public void addDomainTransformListener(DomainTransformListener listener) {
 		listenerList.add(listener);

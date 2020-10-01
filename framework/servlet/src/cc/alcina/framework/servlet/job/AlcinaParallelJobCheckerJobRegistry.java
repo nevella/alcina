@@ -11,7 +11,7 @@ public class AlcinaParallelJobCheckerJobRegistry
 	private JobTracker jobTracker;
 
 	public AlcinaParallelJobCheckerJobRegistry() {
-		jobTracker = JobRegistry.get().getContextTracker();
+		jobTracker = JobRegistry1.get().getContextTracker();
 	}
 
 	@Override

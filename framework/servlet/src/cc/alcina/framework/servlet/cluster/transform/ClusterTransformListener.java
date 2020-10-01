@@ -11,7 +11,7 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.ExternalTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.servlet.job.JobRegistry;
+import cc.alcina.framework.servlet.job.JobRegistry1;
 
 /**
  * Each server publishes the current max rq id to a node with its hostname
@@ -66,7 +66,7 @@ public class ClusterTransformListener
 		try {
 			transformCommitLog.consumer(commitLogHost,
 					this::handleClusterTransformRequest,
-					JobRegistry.getLauncherName(), System.currentTimeMillis());
+					JobRegistry1.getLauncherName(), System.currentTimeMillis());
 			domainStore.getPersistenceEvents()
 					.addDomainTransformPersistenceListener(this);
 		} catch (Exception e) {

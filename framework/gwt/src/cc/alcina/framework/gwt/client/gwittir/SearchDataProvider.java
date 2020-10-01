@@ -25,7 +25,6 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
-import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -52,10 +51,12 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 		this.converter = converter;
 	}
 
+	@Override
 	public void getChunk(HasChunks table, int chunkNumber) {
 		runSort(false, chunkNumber, table);
 	}
 
+	@Override
 	public String[] getSortableProperties() {
 		BeanDescriptor descriptor = GwittirBridge.get()
 				.getDescriptorForClass(def.getResultClass());
@@ -69,10 +70,12 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 		return (String[]) pNames.toArray(new String[pNames.size()]);
 	}
 
+	@Override
 	public void init(HasChunks table) {
 		runSort(true, 0, table);
 	}
 
+	@Override
 	public void sortOnProperty(HasChunks table, String propertyName,
 			boolean ascending) {
 		def.setOrderDirection(
@@ -91,6 +94,7 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 			}
 		}
 		SearchCallback callback = new SearchCallback(callBackInit) {
+			@Override
 			public void onFailure(Throwable caught) {
 				if (isCancelled()) {
 					return;
@@ -99,6 +103,7 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 				runningCallback = null;
 			}
 
+			@Override
 			public void onSuccess(SearchResultsBase result) {
 				if (isCancelled()) {
 					return;
@@ -142,9 +147,8 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 
 		@Override
 		protected void search(int pageNumber, SearchCallback callback) {
-			((CommonRemoteServiceExtAsync) ClientBase
-					.getCommonRemoteServiceAsyncInstance()).search(def,
-							pageNumber, callback);
+			ClientBase.getCommonRemoteServiceAsyncInstance().search(def,
+					pageNumber, callback);
 		}
 	}
 }

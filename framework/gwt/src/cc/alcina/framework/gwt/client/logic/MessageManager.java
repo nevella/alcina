@@ -38,7 +38,7 @@ public class MessageManager {
 			.getName() + ".TOPIC_EXCEPTION_MESSAGE_PUBLISHED";
 
 	public static final String TOPIC_APP_MESSAGE_PUBLISHED = MessageManager.class
-			.getName() + ".TOPIC_APP_MESSAGE_PUBLISHED";;
+			.getName() + ".TOPIC_APP_MESSAGE_PUBLISHED";
 
 	public static MessageManager get() {
 		MessageManager singleton = Registry

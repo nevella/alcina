@@ -35,7 +35,7 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.IdToStringRenderer;
  */
 public class DomainObjectIdEditor extends AbstractBoundWidget
 		implements ValueChangeHandler {
-	private Class<? extends Entity> domainObjectClass;;
+	private Class<? extends Entity> domainObjectClass;
 
 	private FlowPanel fp;
 

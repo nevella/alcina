@@ -14,10 +14,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
-import cc.alcina.framework.common.client.logic.MuteablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.NonDomainTransformPersistable;
@@ -35,23 +32,14 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Wrapper;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.provider.TextProvider;
-import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.gwt.client.ClientBase;
-import cc.alcina.framework.gwt.client.ClientNotifications;
-import cc.alcina.framework.gwt.client.widget.ModalNotifier;
-import cc.alcina.framework.gwt.client.widget.ModalNotifier.ModalNotifierNull;
 
 public abstract class ClientTransformManager extends TransformManager {
 	public static ClientTransformManager cast() {
 		return (ClientTransformManager) TransformManager.get();
 	}
-
-	protected ClientDomainSync cache;
 
 	private ClientTransformManager.PersistableTransformListener persistableTransformListener;
 
@@ -61,20 +49,38 @@ public abstract class ClientTransformManager extends TransformManager {
 
 	private boolean firePropertyChangesOnConsumedCollectionMods;
 
+	private boolean provisionalEditing;
+
 	public ClientTransformManager() {
 		super();
-		cache = new ClientDomainSync();
 	}
 
 	@Override
 	public void clearUserObjects() {
-		getCache().clearUserObjects();
 		requiresEditPrep.clear();
 		super.clearUserObjects();
 	}
 
-	public ClientDomainSync getCache() {
-		return cache;
+	public Entity ensureEditable(Entity entity) {
+		if (Reflections.classLookup().getAnnotationForClass(entity.getClass(),
+				NonDomainTransformPersistable.class) != null) {
+			Entity editable = (Entity) Reflections
+					.newInstance(entity.entityClass());
+			new CloneHelper().copyBeanProperties(entity, editable, null);
+			entity = editable;
+			if (isProvisionalEditing()) {
+				registerProvisionalObject(entity);
+			}
+		}
+		if (isProvisionalEditing()) {
+			if (!isProvisionalObject(entity)) {
+				entity = new CloneHelper().shallowishBeanClone(entity);
+				registerProvisionalObject(entity);
+			}
+		} else {
+			registerDomainObject(entity);
+		}
+		return entity;
 	}
 
 	public DomainTransformExceptionFilter getDomainTransformExceptionFilter() {
@@ -88,6 +94,10 @@ public abstract class ClientTransformManager extends TransformManager {
 
 	public boolean isFirePropertyChangesOnConsumedCollectionMods() {
 		return this.firePropertyChangesOnConsumedCollectionMods;
+	}
+
+	public boolean isProvisionalEditing() {
+		return this.provisionalEditing;
 	}
 
 	/**
@@ -300,6 +310,10 @@ public abstract class ClientTransformManager extends TransformManager {
 		this.persistableTransformListener = persistableTransformListener;
 	}
 
+	public void setProvisionalEditing(boolean provisionalEditing) {
+		this.provisionalEditing = provisionalEditing;
+	}
+
 	@Override
 	protected boolean allowUnregisteredEntityTargetObject() {
 		return true;
@@ -367,114 +381,14 @@ public abstract class ClientTransformManager extends TransformManager {
 						fromPropertyChange));
 	}
 
-	public class ClientDomainSync {
-		private UnsortedMultikeyMap lkp;
-
-		private ModalNotifier notifier;
-
-		public ClientDomainSync() {
-			clearUserObjects();
-		}
-
-		public void clearUserObjects() {
-			lkp = new UnsortedMultikeyMap(3);
-		}
-
-		public void update(Entity entity, String propertyName,
-				final AsyncCallback callback, final boolean fireTransforms) {
-			if (entity.getId() == 0) {
-				callback.onSuccess(null);
-				return;
-			}
-			final Object[] spec = { entity.getClass(), entity.getId(),
-					propertyName };
-			if (lkp.containsKey(spec)) {
-				callback.onSuccess(null);
-				return;
-			}
-			Collection value = (Collection) Reflections.propertyAccessor()
-					.getPropertyValue(entity, propertyName);
-			if (value != null && !value.isEmpty()) {
-				callback.onSuccess(null);
-				return;
-			}
-			String message = TextProvider.get().getUiObjectText(
-					ClientTransformManager.class, "domain-sync-update",
-					"Loading");
-			notifier = Registry.impl(ClientNotifications.class)
-					.getModalNotifier(message);
-			if (notifier == null) {
-				notifier = new ModalNotifierNull();
-			}
-			final long t1 = System.currentTimeMillis();
-			AsyncCallback<List<ObjectDeltaResult>> innerCallback = new AsyncCallback<List<ObjectDeltaResult>>() {
-				@Override
-				public void onFailure(Throwable caught) {
-					cleanup();
-					callback.onFailure(caught);
-				}
-
-				@Override
-				public void onSuccess(List<ObjectDeltaResult> result) {
-					long t2 = System.currentTimeMillis();
-					Registry.impl(ClientNotifications.class)
-							.log("Cache load/deser.: " + (t2 - t1));
-					notifier.modalOff();
-					MuteablePropertyChangeSupport.setMuteAll(true);
-					ClientTransformManager.PersistableTransformListener pl = getPersistableTransformListener();
-					DomainTransformRequest dtr = null;
-					if (pl != null) {
-						dtr = DomainTransformRequest
-								.createNonServerPersistableRequest();
-						ClientInstance clientInstance = PermissionsManager.get()
-								.getClientInstance();
-						dtr.setClientInstance(clientInstance);
-					}
-					for (ObjectDeltaResult item : result) {
-						replayRemoteEvents(item.getTransforms(),
-								fireTransforms);
-						if (pl != null) {
-							dtr.getEvents().addAll(item.getTransforms());
-						}
-					}
-					if (pl != null) {
-						// ignore failure, since we at least have a (currently)
-						// functioning client, even if persistence is mczapped
-						pl.persistableTransform(dtr,
-								DeltaApplicationRecordType.REMOTE_DELTA_APPLIED);
-					}
-					MuteablePropertyChangeSupport.setMuteAll(false);
-					Object[] spec2 = new Object[4];
-					System.arraycopy(spec, 0, spec2, 0, 3);
-					spec2[3] = true;
-					lkp.put(spec2);
-					Registry.impl(ClientNotifications.class)
-							.log("Cache dte replay: "
-									+ (System.currentTimeMillis() - t2));
-					callback.onSuccess(result);
-				}
-
-				private void cleanup() {
-					notifier.modalOff();
-				}
-			};
-			List<ObjectDeltaSpec> specs = new ArrayList<ObjectDeltaSpec>();
-			specs.add(new ObjectDeltaSpec(entity, propertyName));
-			notifier.modalOn();
-			ClientBase.getCommonRemoteServiceAsyncInstance()
-					.getObjectDelta(specs, innerCallback);
-		}
-	}
-
 	public static class ClientTransformManagerCommon
 			extends ClientTransformManager {
 		@Override
 		protected void callRemotePersistence(
 				WrapperPersistable persistableObject,
 				AsyncCallback<Long> savedCallback) {
-			((CommonRemoteServiceExtAsync) ClientBase
-					.getCommonRemoteServiceAsyncInstance())
-							.persist(persistableObject, savedCallback);
+			ClientBase.getCommonRemoteServiceAsyncInstance()
+					.persist(persistableObject, savedCallback);
 		}
 	}
 
@@ -550,37 +464,5 @@ public abstract class ClientTransformManager extends TransformManager {
 				throw new WrappedRuntimeException(e);
 			}
 		}
-	}
-
-	private boolean provisionalEditing;
-
-	public boolean isProvisionalEditing() {
-		return this.provisionalEditing;
-	}
-
-	public void setProvisionalEditing(boolean provisionalEditing) {
-		this.provisionalEditing = provisionalEditing;
-	}
-
-	public Entity ensureEditable(Entity entity) {
-		if (Reflections.classLookup().getAnnotationForClass(entity.getClass(),
-				NonDomainTransformPersistable.class) != null) {
-			Entity editable = (Entity) Reflections
-					.newInstance(entity.entityClass());
-			new CloneHelper().copyBeanProperties(entity, editable, null);
-			entity = editable;
-			if (isProvisionalEditing()) {
-				registerProvisionalObject(entity);
-			}
-		}
-		if (isProvisionalEditing()) {
-			if (!isProvisionalObject(entity)) {
-				entity = new CloneHelper().shallowishBeanClone(entity);
-				registerProvisionalObject(entity);
-			}
-		} else {
-			registerDomainObject(entity);
-		}
-		return entity;
 	}
 }

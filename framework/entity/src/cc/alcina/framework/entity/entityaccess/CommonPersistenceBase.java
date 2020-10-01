@@ -38,8 +38,6 @@ import org.slf4j.Logger;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
@@ -467,21 +465,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				clientInstanceImpl.getSimpleName())).setParameter(1, o.getId())
 				.setMaxResults(1).getResultList();
 		return CommonUtils.first(resultList);
-	}
-
-	@Override
-	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
-			throws Exception {
-		ObjectPersistenceHelper.get();
-		long t1 = System.currentTimeMillis();
-		ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
-		tm.setEntityManager(getEntityManager());
-		List<ObjectDeltaResult> delta = tm.getObjectDelta(specs);
-		delta = DomainLinker.linkToDomain(delta);
-		EntityLayerObjects.get().getMetricLogger()
-				.debug("object delta get - total (ms):"
-						+ (System.currentTimeMillis() - t1));
-		return delta;
 	}
 
 	@Override

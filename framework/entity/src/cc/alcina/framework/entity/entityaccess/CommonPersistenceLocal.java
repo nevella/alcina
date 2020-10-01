@@ -24,8 +24,6 @@ import javax.persistence.EntityManager;
 import org.slf4j.Logger;
 
 import cc.alcina.framework.common.client.actions.ActionLogItem;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
-import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
@@ -86,9 +84,6 @@ public interface CommonPersistenceLocal {
 	public abstract LongPair getMinMaxIdRange(Class clazz);
 
 	public Date getMostRecentClientInstanceCreationDate(IUser o);
-
-	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
-			throws Exception;
 
 	public <T extends WrapperPersistable> WrappedObject<T>
 			getObjectWrapperForUser(Class<T> c, long id) throws Exception;

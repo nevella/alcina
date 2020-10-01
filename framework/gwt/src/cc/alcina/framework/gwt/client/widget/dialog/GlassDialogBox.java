@@ -77,7 +77,7 @@ public class GlassDialogBox extends DialogBox {
 
 	public GlassDisplayer getGlass() {
 		return this.glass;
-	};;
+	};
 
 	@Override
 	public void hide() {
