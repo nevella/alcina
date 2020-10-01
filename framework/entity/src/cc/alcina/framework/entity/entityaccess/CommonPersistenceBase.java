@@ -406,31 +406,21 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 
 	@Override
 	public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
-		EntityLocatorMap map = locatorMaps.get(clientInstanceId);
-		if (map == null) {
-			if (getEntityManager() == null) {
-				// call back in an entity context
-				return CommonPersistenceProvider.get().getCommonPersistence()
-						.getLocatorMap(clientInstanceId);
-			}
-			// presumably null, but no harm in being light-on-the-ground
-			EntityManager cachedEntityManager = ThreadlocalTransformManager
-					.get().getEntityManager();
-			ThreadlocalTransformManager.get()
-					.setEntityManager(getEntityManager());
-			ThreadlocalTransformManager.get()
-					.setUserSessionEntityMap(new EntityLocatorMap());
-			ClientInstance clientInstanceImpl = AlcinaPersistentEntityImpl
-					.getNewImplementationInstance(ClientInstance.class);
-			clientInstanceImpl.setId(clientInstanceId);
-			// don't get the real client instance - don't want to attach
-			// live permissions objects
-			ThreadlocalTransformManager.get()
-					.setClientInstance(clientInstanceImpl);
-			map = ThreadlocalTransformManager.get().reconstituteEntityMap();
-			ThreadlocalTransformManager.get()
-					.setEntityManager(cachedEntityManager);
-		}
+		// presumably null, but no harm in being light-on-the-ground
+		EntityManager cachedEntityManager = ThreadlocalTransformManager.get()
+				.getEntityManager();
+		ThreadlocalTransformManager.get().setEntityManager(getEntityManager());
+		ThreadlocalTransformManager.get()
+				.setUserSessionEntityMap(new EntityLocatorMap());
+		ClientInstance clientInstanceImpl = AlcinaPersistentEntityImpl
+				.getNewImplementationInstance(ClientInstance.class);
+		clientInstanceImpl.setId(clientInstanceId);
+		// don't get the real client instance - don't want to attach
+		// live permissions objects
+		ThreadlocalTransformManager.get().setClientInstance(clientInstanceImpl);
+		EntityLocatorMap map = ThreadlocalTransformManager.get()
+				.reconstituteEntityMap();
+		ThreadlocalTransformManager.get().setEntityManager(cachedEntityManager);
 		return map;
 	}
 
