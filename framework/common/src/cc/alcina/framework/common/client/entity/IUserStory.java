@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.ReplayInstruction.ReplayLocator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -79,7 +80,7 @@ public interface IUserStory<U extends IUserStory> extends HasId {
 					break;
 				}
 			}
-			buffer.add(AlcinaBeanSerializer.serializeHolder(records));
+			buffer.add(TransformManager.serialize(records));
 		}
 		setStory(buffer.stream().collect(Collectors.joining("\n")));
 	}

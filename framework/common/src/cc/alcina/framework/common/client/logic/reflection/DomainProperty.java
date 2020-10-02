@@ -29,8 +29,6 @@ import java.lang.annotation.Target;
  * Specifies runtime editing behaviour for child properties
  */
 public @interface DomainProperty {
-	boolean cascadeDeletionFromRef() default false;
-
 	boolean cloneForDuplication() default false;
 
 	boolean cloneForProvisionalEditing() default false;
@@ -43,24 +41,20 @@ public @interface DomainProperty {
 
 	boolean registerChildren() default false;
 
-	/*
-	 * This instructs TransformManager.objectsToDtes() to serialize the
-	 * collection. It could probably be removed by doing some sort of loop
-	 * checking in objectsToDtes() - or having a per-call policy. But works ok,
-	 * if a bit layer-separation-gunky
-	 */
-	boolean serializeOnClient() default false;
-
-	/*
-	 * in some ways just a marker interface. Normal setter pattern is for the
-	 * setXXX() method to call
-	 * setXXXString(AlcinaBeanSerializer.serializeHolder(xxx)); getter pattern
-	 * is:
+	/**
+	 * Complex property - handled for property foo as below:
+	 * 
+	 * <ul>
+	 * <li>Requires corresponding LOB string property fooSerialized
+	 * <li>Getter should contain the following code: <code>
+	 * </code> foo = (Class-of-foo)
+	 * TransformManager.resolveMaybeDeserialize(foo, this.fooSerialized, new
+	 * Class-of-foo)
+	 * </ul>
+	 * 
 	 * 
 	 * xxx = (List) TransformManager.resolveMaybeDeserialize(xxx,
 	 * this.xxxString, new XXX);
 	 */
-	String serializeWithBeanSerialization() default "";
-
-	boolean silentFailOnIllegalWrites() default false;
+	boolean serialize() default false;
 }

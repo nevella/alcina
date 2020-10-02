@@ -63,6 +63,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoMana
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
+import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -102,6 +104,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public static final transient String CONTEXT_CONSUME_COLLECTION_MODS_AS_PROPERTY_CHANGES = TransformManager.class
 			.getName() + ".CONTEXT_CONSUME_COLLECTION_MODS_AS_PROPERTY_CHANGES";
+
+	public static final transient String CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE = TransformManager.class
+			.getName() + ".CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE";
 
 	protected static final Set<String> ignorePropertiesForCaching = new HashSet<String>(
 			Arrays.asList(new String[] { "class", "id", "localId",
@@ -260,6 +265,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return defaultValue;
 		}
 		return deserializer.apply(serialized);
+	}
+
+	public static String serialize(Object object) {
+		return AlcinaBeanSerializer.serializeHolder(object);
 	}
 
 	public static String stringId(Entity entity) {
@@ -573,19 +582,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// this dte will never be used - it'll be converted to a series of
 		// add/remove refs
 		if (value instanceof Set) {
-			return;
-		}
-		if (value instanceof List || value instanceof Map) {
-			ClassLookup classLookup = classLookup();
-			PropertyInfo pd = classLookup
-					.getWritableProperties(event.getObjectClass()).stream()
-					.filter(pd1 -> pd1.getPropertyName()
-							.equals(event.getPropertyName()))
-					.findFirst().get();
-			Preconditions.checkArgument(pd.hasSerializeWithBeanSerialization());
-			event.setNewStringValue(
-					Registry.impl(AlcinaBeanSerializer.class).serialize(value));
-			event.setValueClass(String.class);
 			return;
 		}
 		if (value instanceof Entity) {
@@ -961,17 +957,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (valueClass == Date.class) {
 			return new Date(SimpleStringParser.toLong(evt.getNewStringValue()));
 		}
-		if (valueClass == List.class || valueClass == Map.class) {
-			ClassLookup classLookup = classLookup();
-			PropertyInfo pd = classLookup
-					.getWritableProperties(evt.getObjectClass()).stream()
-					.filter(pd1 -> pd1.getPropertyName()
-							.equals(evt.getPropertyName()))
-					.findFirst().get();
-			Preconditions.checkArgument(pd.hasSerializeWithBeanSerialization());
-			return Registry.impl(AlcinaBeanSerializer.class)
-					.deserialize(evt.getNewStringValue());
-		}
 		Enum e = getTargetEnumValue(evt);
 		if (e != null) {
 			return e;
@@ -1176,48 +1161,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 						continue;
 					}
 				}
-				if (value instanceof Collection || value instanceof Map) {
-					if (pd.isSerializableCollection()) {
-						Iterator itr = ((Set) value).iterator();
-						for (; itr.hasNext();) {
-							Object o2 = itr.next();
-							dte = new DomainTransformEvent();
-							dte.setUtcDate(new Date(0L));
-							dte.setObjectId(id);
-							dte.setObjectLocalId(localId);
-							dte.setObjectClass(clazz);
-							dte.setPropertyName(propertyName);
-							dte.setTransformType(
-									TransformType.ADD_REF_TO_COLLECTION);
-							if (o2 instanceof Entity) {
-								Entity h2 = (Entity) o2;
-								dte.setNewValue(null);
-								dte.setValueId(h2.getId());
-								dte.setValueLocalId(h2.getLocalId());
-								dte.setValueClass(h2.entityClass());
-							} else if (o2 instanceof Enum) {
-								Enum e = (Enum) o2;
-								dte.setNewValue(null);
-								dte.setNewStringValue(e.name());
-								dte.setValueClass(e.getDeclaringClass());
-							}
-							dtes.add(dte);
-						}
-					} else if (pd.hasSerializeWithBeanSerialization()) {
-						dte = new DomainTransformEvent();
-						dte.setUtcDate(new Date(0L));
-						dte.setObjectId(id);
-						dte.setObjectLocalId(localId);
-						dte.setObjectClass(clazz);
-						dte.setPropertyName(propertyName);
-						dte.setNewValue(null);
-						AlcinaBeanSerializer serializer = Registry
-								.impl(AlcinaBeanSerializer.class);
-						String serialized = serializer.serialize(value);
-						dte.setNewStringValue(serialized);
-						dte.setValueClass(String.class);
-					}
-				} else {
+				if (pd.isSerialize()) {
+					throw new UnsupportedOperationException();
+				}
+				if (value instanceof Set) {
 					dte = new DomainTransformEvent();
 					dte.setUtcDate(new Date(0L));
 					dte.setObjectClass(clazz);
@@ -1292,14 +1239,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	@Override
-	public synchronized void propertyChange(PropertyChangeEvent evt) {
+	public synchronized void propertyChange(PropertyChangeEvent event) {
 		if (isIgnorePropertyChanges()
-				|| UNSPECIFIC_PROPERTY_CHANGE.equals(evt.getPropertyName())) {
+				|| UNSPECIFIC_PROPERTY_CHANGE.equals(event.getPropertyName())) {
+			return;
+		}
+		if (handleCascadedSerializationChange(event)) {
 			return;
 		}
 		List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>();
-		DomainTransformEvent dte = createTransformFromPropertyChange(evt);
-		dte.setOldValue(evt.getOldValue());
+		DomainTransformEvent dte = createTransformFromPropertyChange(event);
+		dte.setOldValue(event.getOldValue());
 		convertToTargetObject(dte);
 		if (dte.getNewValue() == null) {
 			dte.setTransformType(TransformType.NULL_PROPERTY_REF);
@@ -1308,21 +1258,21 @@ public abstract class TransformManager implements PropertyChangeListener,
 			dte.setTransformType(TransformType.CHANGE_PROPERTY_REF);
 		}
 		if (dte.getNewValue() instanceof Set) {
-			Set typeCheck = (Set) evt.getNewValue();
-			typeCheck = (Set) (typeCheck.isEmpty() && evt.getOldValue() != null
-					? evt.getOldValue()
-					: typeCheck);
+			Set typeCheck = (Set) event.getNewValue();
+			typeCheck = (Set) (typeCheck.isEmpty()
+					&& event.getOldValue() != null ? event.getOldValue()
+							: typeCheck);
 			// Note, we explicitly clear nulls here - it would require an
 			// expansion of the protocols to implement them
 			if (typeCheck.iterator().hasNext()) {
 				if (typeCheck.iterator().next() instanceof Entity) {
-					Set<Entity> oldValues = (Set) evt.getOldValue();
-					Set<Entity> newValues = (Set) evt.getNewValue();
+					Set<Entity> oldValues = (Set) event.getOldValue();
+					Set<Entity> newValues = (Set) event.getNewValue();
 					oldValues.remove(null);
 					newValues.remove(null);
 					for (Entity entity : newValues) {
 						if (!oldValues.contains(entity)) {
-							dte = createTransformFromPropertyChange(evt);
+							dte = createTransformFromPropertyChange(event);
 							dte.setNewValue(null);
 							dte.setValueId(entity.getId());
 							dte.setValueLocalId(entity.getLocalId());
@@ -1334,7 +1284,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					}
 					for (Entity entity : oldValues) {
 						if (!newValues.contains(entity)) {
-							dte = createTransformFromPropertyChange(evt);
+							dte = createTransformFromPropertyChange(event);
 							dte.setNewValue(null);
 							dte.setValueId(entity.getId());
 							dte.setValueLocalId(entity.getLocalId());
@@ -1345,13 +1295,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 						}
 					}
 				} else if (typeCheck.iterator().next() instanceof Enum) {
-					Set<Enum> oldValues = (Set) evt.getOldValue();
-					Set<Enum> newValues = (Set) evt.getNewValue();
+					Set<Enum> oldValues = (Set) event.getOldValue();
+					Set<Enum> newValues = (Set) event.getNewValue();
 					oldValues.remove(null);
 					newValues.remove(null);
 					for (Enum e : newValues) {
 						if (!oldValues.contains(e)) {
-							dte = createTransformFromPropertyChange(evt);
+							dte = createTransformFromPropertyChange(event);
 							dte.setNewValue(null);
 							dte.setNewStringValue(e.name());
 							dte.setValueClass(e.getDeclaringClass());
@@ -1362,7 +1312,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					}
 					for (Enum e : oldValues) {
 						if (!newValues.contains(e)) {
-							dte = createTransformFromPropertyChange(evt);
+							dte = createTransformFromPropertyChange(event);
 							dte.setNewValue(null);
 							dte.setNewStringValue(e.name());
 							dte.setValueClass(e.getDeclaringClass());
@@ -1376,23 +1326,19 @@ public abstract class TransformManager implements PropertyChangeListener,
 		} else {
 			transforms.add(dte);
 		}
-		for (DomainTransformEvent event : transforms) {
-			event.setInImmediatePropertyChangeCommit(true);
+		for (DomainTransformEvent transform : transforms) {
+			transform.setInImmediatePropertyChangeCommit(true);
 		}
 		addTransforms(transforms, true);
-		for (DomainTransformEvent event : transforms) {
-			event.setInImmediatePropertyChangeCommit(false);
+		for (DomainTransformEvent transform : transforms) {
+			transform.setInImmediatePropertyChangeCommit(false);
 		}
-		Entity entity = (Entity) evt.getSource();
+		Entity entity = (Entity) event.getSource();
 		if (this.getDomainObjects() != null) {
 			if (!provisionalObjects.containsKey(entity)) {
 				maybeFireCollectionModificationEvent(entity.entityClass(),
 						true);
 			}
-		}
-		if (dte.getObjectId() == 0 && dte.getObjectLocalId() == 0) {
-			// normally a bug
-			int debugPoint = 7;
 		}
 	}
 
@@ -1720,6 +1666,80 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected Collection getProvisionalObjects() {
 		return provisionalObjects.keySet();
+	}
+
+	protected boolean
+			handleCascadedSerializationChange(PropertyChangeEvent event) {
+		Entity entity = (Entity) event.getSource();
+		boolean serializedPropertyChange = false;
+		boolean toSerializePropertyChange = false;
+		PropertyReflector toSerializeReflector = null;
+		PropertyReflector serializedReflector = null;
+		if (event.getPropertyName().matches("(.+)Serialized")) {
+			String sourcePropertyname = event.getPropertyName()
+					.replaceFirst("(.+)Serialized", "$1");
+			toSerializeReflector = Reflections.classLookup()
+					.getPropertyReflector(entity.entityClass(),
+							sourcePropertyname);
+			serializedReflector = Reflections.classLookup()
+					.getPropertyReflector(entity.entityClass(),
+							event.getPropertyName());
+			serializedPropertyChange = toSerializeReflector != null
+					&& toSerializeReflector
+							.getAnnotation(DomainProperty.class) != null
+					&& toSerializeReflector.getAnnotation(DomainProperty.class)
+							.serialize();
+		} else {
+			toSerializeReflector = Reflections.classLookup()
+					.getPropertyReflector(entity.entityClass(),
+							event.getPropertyName());
+			toSerializePropertyChange = toSerializeReflector != null
+					&& toSerializeReflector
+							.getAnnotation(DomainProperty.class) != null
+					&& toSerializeReflector.getAnnotation(DomainProperty.class)
+							.serialize();
+			serializedReflector = Reflections.classLookup()
+					.getPropertyReflector(entity.entityClass(),
+							event.getPropertyName() + "Serialized");
+		}
+		/*
+		 * If the serialized version is being changed, null the toSerialize
+		 * version *unless* this is called from setToSerialize (to preserve
+		 * object refs)
+		 */
+		if (serializedPropertyChange) {
+			if (LooseContext.is(CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE)) {
+				// setting this serialized value from a non-serialized setter -
+				// do not
+				// propagate
+				return true;
+			}
+			try {
+				LooseContext.pushWithTrue(
+						CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
+				toSerializeReflector.setPropertyValue(entity, null);
+			} finally {
+				LooseContext.pop();
+			}
+		}
+		if (toSerializePropertyChange) {
+			if (LooseContext.is(CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE)) {
+				// setting this value to null to force a refresh - do not
+				// propagate
+				return true;
+			}
+			try {
+				LooseContext.pushWithTrue(
+						CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
+				serializedReflector.setPropertyValue(entity,
+						serialize(event.getNewValue()));
+				// do not persist as a transform
+				return true;
+			} finally {
+				LooseContext.pop();
+			}
+		}
+		return false;
 	}
 
 	protected boolean ignorePropertyForCaching(Class objectType,

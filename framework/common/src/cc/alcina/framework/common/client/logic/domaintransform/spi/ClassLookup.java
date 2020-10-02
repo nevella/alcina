@@ -76,13 +76,11 @@ public interface ClassLookup {
 
 		private Method readMethod;
 
-		private boolean serializeCollectionOnClient;
-
 		private final Class beanType;
 
-		private String serializeWithBeanSerialization;
-
 		private Method writeMethod;
+
+		private boolean serialize;
 
 		public PropertyInfo(Class beanType, String propertyName) {
 			this.propertyName = propertyName;
@@ -100,10 +98,7 @@ public interface ClassLookup {
 					.getAnnotationForProperty(beanType, DomainProperty.class,
 							propertyName);
 			if (ann != null) {
-				// FIXME - mvcc.adjunct - revisit - remove if possible?
-				serializeCollectionOnClient = ann.serializeOnClient();
-				serializeWithBeanSerialization = ann
-						.serializeWithBeanSerialization();
+				serialize = ann.serialize();
 			}
 		}
 
@@ -146,21 +141,13 @@ public interface ClassLookup {
 			return readMethod;
 		}
 
-		public String getSerializeWithBeanSerialization() {
-			return this.serializeWithBeanSerialization;
-		}
-
 		@Override
 		public int hashCode() {
 			return beanType.hashCode() ^ propertyName.hashCode();
 		}
 
-		public boolean hasSerializeWithBeanSerialization() {
-			return Ax.notBlank(this.serializeWithBeanSerialization);
-		}
-
-		public boolean isSerializableCollection() {
-			return serializeCollectionOnClient;
+		public boolean isSerialize() {
+			return this.serialize;
 		}
 
 		public void set(Entity writeable, Object value) {
@@ -169,11 +156,6 @@ public interface ClassLookup {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
-		}
-
-		public void setSerializeWithBeanSerialization(
-				String serializeWithBeanSerialization) {
-			this.serializeWithBeanSerialization = serializeWithBeanSerialization;
 		}
 
 		@Override

@@ -30,7 +30,6 @@ import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHan
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.DeleteActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
-import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 
 public class WorkspaceDefaultActionHandlers {
@@ -166,17 +165,9 @@ public class WorkspaceDefaultActionHandlers {
 				Object node, Object object, final Workspace workspace,
 				Class nodeObjectClass) {
 			final Entity entity = (Entity) object;
-			final WorkspaceDeletionChecker workspaceDeletionChecker = new WorkspaceDeletionChecker();
-			if (WorkspaceDeletionChecker.enabled) {
-				if (!workspaceDeletionChecker.checkPropertyRefs(entity)) {
-					return;
-				} else {
-				}
-			}
 			Registry.impl(ClientNotifications.class).confirm(
 					"Are you sure you want to delete the selected object",
-					new DoDeleteCallback(event, workspace, entity,
-							workspaceDeletionChecker));
+					new DoDeleteCallback(event, workspace, entity));
 		}
 
 		private class DoDeleteCallback implements OkCallback {
@@ -186,15 +177,11 @@ public class WorkspaceDefaultActionHandlers {
 
 			private final Entity entity;
 
-			private final WorkspaceDeletionChecker workspaceDeletionChecker;
-
 			private DoDeleteCallback(PermissibleActionEvent event,
-					Workspace workspace, Entity entity,
-					WorkspaceDeletionChecker workspaceDeletionChecker) {
+					Workspace workspace, Entity entity) {
 				this.event = event;
 				this.workspace = workspace;
 				this.entity = entity;
-				this.workspaceDeletionChecker = workspaceDeletionChecker;
 			}
 
 			@Override
@@ -221,16 +208,7 @@ public class WorkspaceDefaultActionHandlers {
 						}
 					}
 				};
-				if (!this.workspaceDeletionChecker.cascadedDeletions
-						.isEmpty()) {
-					for (Entity cascade : this.workspaceDeletionChecker.cascadedDeletions) {
-						cascade.delete();
-					}
-					Registry.impl(CommitToStorageTransformListener.class)
-							.flushWithOneoffCallback(deleteObjectCallback);
-				} else {
-					deleteObjectCallback.onSuccess(null);
-				}
+				deleteObjectCallback.onSuccess(null);
 			}
 		}
 	}

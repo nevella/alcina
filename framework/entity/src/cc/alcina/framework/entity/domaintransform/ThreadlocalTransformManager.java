@@ -1090,9 +1090,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		if (!checkPropertyAccess(entity, propertyName, false)) {
 			DomainProperty ann = getAnnotationForProperty(entity.getClass(),
 					DomainProperty.class, propertyName);
-			if (ann != null && ann.silentFailOnIllegalWrites()) {
-				return false;
-			}
 			throw new DomainTransformException(new PermissionsException(
 					"Permission denied : write - object/property " + evt));
 		}
