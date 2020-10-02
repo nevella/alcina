@@ -86,7 +86,12 @@ public class Transaction {
 		// && current().getPhase() == TransactionPhase.TO_DB_PREPARING) {
 		// return;// reuse
 		// }
-		end();
+		//
+		/*
+		 * also, to reduce error checking higher in the stack, use 'ensureEnded'
+		 * - the goal of this method is to have a fresh tx
+		 */
+		ensureEnded();
 		begin();
 	}
 

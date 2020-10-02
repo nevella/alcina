@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ImplementationLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
@@ -287,6 +288,9 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
+		if (evt.getTransformType() == TransformType.NULL_PROPERTY_REF) {
+			return null;
+		}
 		if (Enum.class.isAssignableFrom(evt.getValueClass())) {
 			return Enum.valueOf(evt.getValueClass(), evt.getNewStringValue());
 		}

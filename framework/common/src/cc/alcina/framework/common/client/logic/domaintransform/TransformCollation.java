@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -149,6 +150,8 @@ public class TransformCollation {
 
 		private String propertyName;
 
+		private Predicate<DomainTransformEvent> predicate;
+
 		public Query(Class clazz) {
 			this.clazz = clazz;
 		}
@@ -180,11 +183,19 @@ public class TransformCollation {
 					&& !Objects.equals(propertyName, event.getPropertyName())) {
 				return false;
 			}
+			if (predicate != null && !predicate.test(event)) {
+				return false;
+			}
 			return true;
 		}
 
 		boolean matches(EntityCollation collation) {
 			return getEvents(collation).size() > 0;
+		}
+
+		public Query withFilter(Predicate<DomainTransformEvent> predicate) {
+			this.predicate = predicate;
+			return this;
 		}
 	}
 

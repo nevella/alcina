@@ -64,12 +64,14 @@ import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.AssociationPropagationTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -103,10 +105,12 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersisten
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.entityaccess.AuthenticationPersistence;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
+import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 /**
@@ -1315,7 +1319,19 @@ public class DomainStore implements IDomainStore {
 			if (locator.id != 0) {
 				return find(locator.clazz, locator.id);
 			}
-			return cache.get(locator);
+			V entity = cache.get(locator);
+			if (entity == null) {
+				ClientInstance clientInstance = AuthenticationPersistence.get()
+						.getClientInstance(locator.getClientInstanceId());
+				EntityLocatorMap locatorMap = TransformCommit.get()
+						.getLocatorMapForClient(clientInstance, Ax.isTest());
+				EntityLocator persistentLocator = locatorMap
+						.getForLocalId(locator.getLocalId());
+				if (persistentLocator != null) {
+					return find(persistentLocator);
+				}
+			}
+			return entity;
 		}
 
 		@Override

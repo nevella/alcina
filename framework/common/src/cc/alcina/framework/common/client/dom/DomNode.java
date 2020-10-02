@@ -943,6 +943,18 @@ public class DomNode {
 			parent().node.insertBefore(node.node, DomNode.this.node);
 		}
 
+		public DomNode lastDescendant() {
+			DomNode cursor = DomNode.this;
+			while (cursor != null) {
+				DomNode last = cursor.children.lastNode();
+				if (last == null) {
+					return cursor;
+				}
+				cursor = last;
+			}
+			return null;
+		}
+
 		public DomNode nextLogicalNode() {
 			if (hasNextSibling()) {
 				return nextSibling();
@@ -966,17 +978,6 @@ public class DomNode {
 					return xnCursor;
 				}
 				cursor = cursor.getNextSibling();
-			}
-			return null;
-		}
-
-		public DomNode previousLogicalNode() {
-			if (hasNextSibling()) {
-				return nextSibling();
-			}
-			DomNode parent = parent();
-			if (parent != null) {
-				return parent.relative().nextLogicalNode();
 			}
 			return null;
 		}

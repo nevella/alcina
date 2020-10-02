@@ -2,6 +2,10 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -13,6 +17,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 /*
  */
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class EntityLocator implements Serializable {
 	static final transient long serialVersionUID = 1L;
 
@@ -61,13 +66,18 @@ public class EntityLocator implements Serializable {
 						: null;
 	}
 
+	@JsonIgnore
 	public Class<? extends Entity> clazz;
 
+	@JsonIgnore
 	public long id;
 
+	@JsonIgnore
 	public long localId;
 
-	private int hash;
+	public long clientInstanceId;
+
+	private transient int hash;
 
 	public EntityLocator() {
 	}
@@ -76,6 +86,10 @@ public class EntityLocator implements Serializable {
 		this.clazz = clazz;
 		this.id = id;
 		this.localId = localId;
+		if (id == 0) {
+			this.clientInstanceId = PermissionsManager.get()
+					.getClientInstanceId();
+		}
 	}
 
 	private EntityLocator(Entity obj) {
@@ -104,8 +118,16 @@ public class EntityLocator implements Serializable {
 		return this.clazz;
 	}
 
+	public long getClientInstanceId() {
+		return this.clientInstanceId;
+	}
+
 	public long getId() {
 		return this.id;
+	}
+
+	public long getLocalId() {
+		return this.localId;
 	}
 
 	public <E extends Entity> E getObject() {
@@ -115,9 +137,9 @@ public class EntityLocator implements Serializable {
 	@Override
 	public int hashCode() {
 		if (hash == 0) {
-			hash = (id != 0 ? Long.valueOf(id).hashCode()
-					: Long.valueOf(localId).hashCode())
-					^ (clazz == null ? 0 : clazz.hashCode());
+			hash = (int) ((id != 0 ? id : localId)
+					^ (clazz == null ? 0 : clazz.hashCode())
+					^ clientInstanceId);
 			if (hash == 0) {
 				hash = -1;
 			}
@@ -137,8 +159,16 @@ public class EntityLocator implements Serializable {
 		this.clazz = clazz;
 	}
 
+	public void setClientInstanceId(long clientInstanceId) {
+		this.clientInstanceId = clientInstanceId;
+	}
+
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public void setLocalId(long localId) {
+		this.localId = localId;
 	}
 
 	public String toIdPairString() {

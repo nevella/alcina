@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -518,7 +518,7 @@ public class TransformCommit {
 
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 
-	private Map<Long, EntityLocatorMap> clientInstanceLocatorMap = new HashMap<Long, EntityLocatorMap>();
+	private Map<Long, EntityLocatorMap> clientInstanceLocatorMap = new ConcurrentHashMap<>();
 
 	private AtomicInteger transformRequestCounter = new AtomicInteger(0);
 
@@ -540,15 +540,14 @@ public class TransformCommit {
 		backendTransformQueue.enqueue(runnable);
 	}
 
-	public EntityLocatorMap
-			getLocatorMapForClient(ClientInstance clientInstance) {
+	public EntityLocatorMap getLocatorMapForClient(
+			ClientInstance clientInstance, boolean forceRefresh) {
 		Long clientInstanceId = clientInstance.getId();
-		Map<Long, EntityLocatorMap> clientInstanceLocatorMap = getClientInstanceLocatorMap();
-		synchronized (clientInstanceLocatorMap) {
-			if (!clientInstanceLocatorMap.containsKey(clientInstanceId)) {
+		if (!clientInstanceLocatorMap.containsKey(clientInstanceId)
+				|| forceRefresh) {
+			synchronized (clientInstance) {
 				EntityLocatorMap locatorMap = CommonPersistenceProvider.get()
-						.getCommonPersistenceExTransaction()
-						.getLocatorMap(clientInstanceId);
+						.getCommonPersistence().getLocatorMap(clientInstanceId);
 				clientInstanceLocatorMap.put(clientInstanceId, locatorMap);
 			}
 		}
@@ -559,7 +558,8 @@ public class TransformCommit {
 
 	public EntityLocatorMap
 			getLocatorMapForClient(DomainTransformRequest request) {
-		return getLocatorMapForClient(request.getClientInstance());
+		return getLocatorMapForClient(Domain.find(request.getClientInstance()),
+				false);
 	}
 
 	public void handleWrapperTransforms() {
@@ -882,10 +882,6 @@ public class TransformCommit {
 			}
 			LooseContext.getContext().pop();
 		}
-	}
-
-	Map<Long, EntityLocatorMap> getClientInstanceLocatorMap() {
-		return this.clientInstanceLocatorMap;
 	}
 
 	public static class CommitContext {
