@@ -104,7 +104,8 @@ public class DevConsoleCommandTransforms {
 		public String run(String[] argv) throws Exception {
 			String sql = "select ci.*, u.username  "
 					+ "from client_instance ci "
-					+ "inner join users u on ci.user_id=u.id "
+					+ "inner join authenticationsession aus on ci.authenticationsession_id=aus.id "
+					+ "inner join users u on aus.user_id=u.id "
 					+ "where ci.id != -1 %s order by ci.id desc";
 			String arg0 = argv[0];
 			String arg1 = argv.length < 2 ? "0" : argv[1];
@@ -162,7 +163,8 @@ public class DevConsoleCommandTransforms {
 			FilterArgvFlag f3 = new FilterArgvFlag(f2.argv, "-m");
 			String sql = "select %s%s from " + "clientlogrecord clr inner join "
 					+ " client_instance ci on clr.clientinstanceid = ci.id "
-					+ " inner join users u " + "on ci.user_id=u.id " + "where "
+					+ "inner join authenticationsession aus on ci.authenticationsession_id=aus.id "
+					+ "inner join users u on aus.user_id=u.id " + "where "
 					+ " %s order by clr.id desc";
 			String metaSelect = f3.contains ? ""
 					: "clr.time, clr.topic, ci.id, ";
@@ -357,7 +359,8 @@ public class DevConsoleCommandTransforms {
 					.getImplementation(DomainTransformEventPersistent.class);
 			String dteName = class1.getAnnotation(Table.class).name();
 			String sql1 = "select dtr.id as id" + " from client_instance ci "
-					+ "inner join users u on ci.user_id=u.id "
+					+ "inner join authenticationsession aus on ci.authenticationsession_id=aus.id "
+					+ "inner join users u on aus.user_id=u.id "
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
 					+ "where %s order by dtr.id desc";
 			String sql2 = "select ci.id as cli_id, u.username,  "
@@ -370,7 +373,8 @@ public class DevConsoleCommandTransforms {
 					+ " dte.valueclassref_id, "
 					+ "dte.utcDate as utcdate, dte.objectlocalid "
 					+ "from client_instance ci "
-					+ "inner join users u on ci.user_id=u.id "
+					+ "inner join authenticationsession aus on ci.authenticationsession_id=aus.id "
+					+ "inner join users u on aus.user_id=u.id "
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
 					+ " inner join %s dte on dte.domaintransformrequestpersistent_id = dtr.id"
 					+ " where %s %s limit %s";
