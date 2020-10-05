@@ -70,6 +70,11 @@ public class TransformCommitLog {
 		if (!initialised.getAndSet(true)) {
 			topicPartition = new TopicPartition(getTopic(), 0);
 			launchConsumerThread(-1);
+			// make sure we have a valid offset before returning (handles
+			// network outage/timeout on startup)
+			refreshCurrentPosition();
+			logger.info("Started queue :: host {} :: offset {}", hostName,
+					currentConsumerThread.currentOffset);
 			timeoutChecker = new Timer(true);
 			timeoutChecker.scheduleAtFixedRate(new TimerTask() {
 				@Override
@@ -203,7 +208,9 @@ public class TransformCommitLog {
 		 */
 		public void checkCurrentPosition() {
 			checkCurrentPositionLatch = new CountDownLatch(1);
-			consumer.wakeup();
+			if (consumer != null) {
+				consumer.wakeup();
+			}
 			try {
 				checkCurrentPositionLatch.await();
 			} catch (Exception e) {
@@ -223,10 +230,13 @@ public class TransformCommitLog {
 			while (!stopped.get() && !cancelled.get()) {
 				try {
 					if (consumer == null) {
+						/*
+						 * Creates a unique per-vm consumer
+						 */
+						String groupId = Ax.format("%s-%s-%s-%s", getTopic(),
+								hostName, hostUid, consumerThreadCounter.get());
 						Properties props = commitLogHost
-								.createConsumerProperties(Ax.format(
-										"%s-%s-%s-%s", getTopic(), hostName,
-										hostUid, consumerThreadCounter.get()));
+								.createConsumerProperties(groupId);
 						props.put("key.deserializer",
 								"org.apache.kafka.common.serialization.ByteArrayDeserializer");
 						props.put("value.deserializer",
@@ -245,6 +255,9 @@ public class TransformCommitLog {
 					}
 					if (checkCurrentPositionLatch != null) {
 						long position = consumer.position(topicPartition);
+						if (currentOffset == -1) {
+							currentOffset = position - 1;
+						}
 						if (position == currentOffset + 1) {
 							checkCurrentPositionLatch.countDown();
 							checkCurrentPositionLatch = null;
