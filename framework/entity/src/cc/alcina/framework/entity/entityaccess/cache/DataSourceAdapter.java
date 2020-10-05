@@ -8,7 +8,11 @@ import java.util.function.Supplier;
 
 import javax.sql.DataSource;
 
-public class DataSourceAdapter implements DataSource {
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+
+@RegistryLocation(registryPoint = DataSourceAdapter.class, implementationType = ImplementationType.INSTANCE)
+public abstract class DataSourceAdapter implements DataSource {
 	private Supplier<Connection> supplier;
 
 	public DataSourceAdapter() {

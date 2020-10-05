@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.domaintransform.event;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,9 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,7 +31,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LongPair;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -78,11 +76,7 @@ public class DomainTransformPersistenceQueue {
 
 	Object queueModificationLock = new Object();
 
-	AtomicInteger waiterCounter = new AtomicInteger();
-
 	AtomicBoolean closed = new AtomicBoolean(false);
-
-	CountDownLatch waiterLatch;
 
 	private FireEventsThread eventQueue;
 
@@ -98,6 +92,9 @@ public class DomainTransformPersistenceQueue {
 
 	// used to signal this event to a possibly waiting fire events thread
 	private Object persistentRequestCached = new Object();
+
+	private Set<QueueWaiter> waiters = Collections
+			.synchronizedSet(new LinkedHashSet<>());
 
 	public DomainTransformPersistenceQueue(
 			DomainTransformPersistenceEvents persistenceEvents) {
@@ -202,71 +199,30 @@ public class DomainTransformPersistenceQueue {
 		}
 	}
 
-	public void waitUntilAllQueuedEventsProcessed() {
-		while (true) {
-			Optional<Long> lastToFireId = getLastToFireId();
-			if (!lastToFireId.isPresent()) {
-				return;
-			} else {
-				new QueueWaiter().pauseUntilProcessed(
-						365 * TimeConstants.ONE_DAY_MS, lastToFireId);
-			}
-		}
-	}
-
 	public void waitUntilCurrentRequestsProcessed() {
 		waitUntilCurrentRequestsProcessed(60 * TimeConstants.ONE_SECOND_MS);
 	}
 
 	public void waitUntilCurrentRequestsProcessed(long timeoutMs) {
-		new QueueWaiter().pauseUntilProcessed(timeoutMs, Optional.empty());
+		new QueueWaiter(timeoutMs, Optional.empty()).waitForProcessedRequests();
 	}
 
-	public void waitUntilRequestProcessed(String logOffset) {
-		long timeoutMs = 60 * TimeConstants.ONE_SECOND_MS;
-		if (LooseContext.has(CONTEXT_WAIT_TIMEOUT_MS)) {
-			timeoutMs = LooseContext.get(CONTEXT_WAIT_TIMEOUT_MS);
-		}
-		/*
-		 * 'event' in this class means
-		 * "domaintransformrequest of id x were fired" - eventId is the dtrp id
-		 */
-		long eventId = Long.parseLong(logOffset);
-		long startTime = System.currentTimeMillis();
+	public void waitUntilEventQueueIsEmpty() {
 		while (true) {
-			long timeRemaining = -System.currentTimeMillis() + startTime
-					+ timeoutMs;
-			synchronized (queueModificationLock) {
-				try {
-					if (eventId == 0 || appLifetimeEventsFired.contains(eventId)
-							|| timeRemaining <= 0) {
-						break;
-					}
-					queueModificationLock.wait(timeRemaining);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
+			QueueWaiter queueWaiter = null;
+			Optional<Long> lastToFireId = getLastToFireId();
+			if (!lastToFireId.isPresent()) {
+				return;
+			} else {
+				new QueueWaiter(365 * TimeConstants.ONE_DAY_MS, lastToFireId)
+						.waitForProcessedRequests();
 			}
 		}
 	}
 
-	public void waitUntilToFireQueueEmpty() {
-		while (true) {
-			int size = 0;
-			synchronized (queueModificationLock) {
-				size = toFire.size();
-				if (size < 10) {
-					return;
-				}
-			}
-			try {
-				Thread.sleep(1000);
-				logger.warn("Waiting for toFire queue to (mostly) empty [{}]",
-						size);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+	public void waitUntilRequestProcessed(long requestId, long timeoutMs) {
+		new QueueWaiter(timeoutMs, Optional.of(requestId))
+				.waitForProcessedRequests();
 	}
 
 	private DomainTransformPersistenceEvent
@@ -374,15 +330,10 @@ public class DomainTransformPersistenceQueue {
 		synchronized (queueModificationLock) {
 			lastFired = new LinkedHashSet<>(event.getPersistedRequestIds());
 			appLifetimeEventsFired.addAll(lastFired);
-			// FIXME - mvcc.4 - this interaction with QueueWaiter is complex and
-			// probably needs more (alas!) synchronisation
-			waiterLatch = new CountDownLatch(waiterCounter.get());
+			for (QueueWaiter waiter : waiters) {
+				persistedRequestIds.forEach(waiter::notifyFired);
+			}
 			queueModificationLock.notifyAll();
-		}
-		try {
-			waiterLatch.await();
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		firingThread = null;
 	}
@@ -595,34 +546,47 @@ public class DomainTransformPersistenceQueue {
 	class QueueWaiter {
 		private Set<Long> waiting;
 
-		public void pauseUntilProcessed(long timeoutMs,
-				Optional<Long> requestId) {
-			if (requestId.isPresent()) {
-				waiting = Stream.of(requestId.get())
-						.collect(Collectors.toSet());
-			} else {
-				synchronized (queueModificationLock) {
-					waiting = new LinkedHashSet<>(firingLocalToVm);
+		private long timeoutMs;
+
+		QueueWaiter(long timeoutMs, Optional<Long> requestId) {
+			synchronized (queueModificationLock) {
+				this.timeoutMs = timeoutMs;
+				if (requestId.isPresent()) {
+					waiting = Stream.of(requestId.get())
+							.collect(Collectors.toSet());
+					waiting.removeAll(appLifetimeEventsFired);
+				} else {
+					waiting = new LinkedHashSet<>(toFire);
+					waiting.addAll(firingLocalToVm);
 				}
+				waiters.add(this);
 			}
+		}
+
+		void notifyFired(Long requestId) {
+			waiting.remove(requestId);
+		}
+
+		void waitForProcessedRequests() {
 			long startTime = System.currentTimeMillis();
 			while (true) {
 				long timeRemaining = -System.currentTimeMillis() + startTime
 						+ timeoutMs;
 				synchronized (queueModificationLock) {
 					try {
+						/*
+						 * requestId, if defined, may have been fired before we
+						 * got here -
+						 */
 						if (waiting.isEmpty() || timeRemaining <= 0) {
-							break;
+							waiters.remove(this);
+							return;
 						}
-						waiterCounter.incrementAndGet();
 						queueModificationLock.wait(timeRemaining);
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
 					}
 				}
-				waiting.removeAll(lastFired);
-				waiterCounter.decrementAndGet();
-				waiterLatch.countDown();
 			}
 		}
 	}

@@ -58,7 +58,6 @@ import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -72,7 +71,6 @@ import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -95,6 +93,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
 import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
+import cc.alcina.framework.entity.util.SqlUtils;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 
 /*FIXME - mvcc.4
@@ -813,20 +812,21 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				requestId);
 		Connection conn = getConnection();
 		try {
-			/*
-			 * This method used to
-			 */
-			CachingMap<Long, DomainTransformRequestPersistent> loadedRequests = new CachingMap<>(
-					rid -> {
-						DomainTransformRequestPersistent request = AlcinaPersistentEntityImpl
-								.getNewImplementationInstance(
-										DomainTransformRequestPersistent.class);
-						request.setId(rid);
-						return request;
-					});
-			if (checkTransformRequestExists(requestId)) {
-				loadedRequests.get(requestId);
+			if (!checkTransformRequestExists(requestId)) {
+				return null;
 			}
+			DomainTransformRequestPersistent request = store.domainDescriptor
+					.getDomainTransformRequestPersistentClass().newInstance();
+			request.setId(requestId);
+			Statement statement = conn.createStatement();
+			request.setTransactionCommitTime(SqlUtils.getValue(statement,
+					Ax.format(
+							"select transactioncommittime from %s where id=%s",
+							request.getClass().getAnnotation(Table.class)
+									.name(),
+							requestId),
+					Timestamp.class));
+			statement.close();
 			Class<? extends DomainTransformEvent> transformEventImplClass = domainDescriptor
 					.getShadowDomainTransformEventPersistentClass();
 			Class<? extends ClassRef> classRefImplClass = domainDescriptor
@@ -839,9 +839,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			String sqlFilter = Ax.format(
 					" domainTransformRequestPersistent_id = %s ", requestId);
 			LaterLookup laterLookup = new LaterLookup();
-			List<? extends DomainTransformEventPersistent> transforms = null;
 			Transaction.ensureDomainPreparingActive();
-			transforms = (List) loadTable0(transformEventImplClass, sqlFilter,
+			List<? extends DomainTransformEventPersistent> transforms = (List) loadTable0(
+					transformEventImplClass, sqlFilter,
 					new ClassIdLock(DomainTransformRequestPersistent.class,
 							requestId),
 					laterLookup, false, true);
@@ -871,7 +871,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 								.forName(storeClassRef.getRefClassName());
 						return writableDomainClassRef;
 					case "domainTransformRequestPersistent":
-						return loadedRequests.get(item.id);
+						return request;
 					default:
 						throw new UnsupportedOperationException();
 					}
@@ -896,7 +896,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						e.getValue()));
 			});
 			invokeAllWithThrow(tasks, iLoaderExecutor);
-			return loadedRequests.values().stream().findFirst().orElse(null);
+			transforms.forEach(request.getEvents()::add);
+			return request;
 		} finally {
 			releaseConn(conn);
 		}

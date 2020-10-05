@@ -92,12 +92,22 @@ public class SqlUtils {
 					return (T) rs.getString(1);
 				} else if (clazz == Long.class || clazz == long.class) {
 					return (T) Long.valueOf(rs.getLong(1));
+				} else if (clazz == Timestamp.class) {
+					return (T) rs.getTimestamp(1);
+				} else {
+					throw new UnsupportedOperationException();
 				}
 			}
 			if (clazz == long.class) {
 				return (T) Long.valueOf(0L);
-			} else {
+			} else if (clazz == String.class) {
 				return null;
+			} else if (clazz == Long.class) {
+				return null;
+			} else if (clazz == Timestamp.class) {
+				return null;
+			} else {
+				throw new UnsupportedOperationException();
 			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
