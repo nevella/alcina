@@ -250,7 +250,7 @@ public class TransformCommitLog {
 								Collections.singletonList(topicPartition));
 					}
 					if (seekToOffset != -1) {
-						consumer.seek(topicPartition, seekToOffset + 1);
+						consumer.seek(topicPartition, seekToOffset);
 						seekToOffset = -1;
 					}
 					if (checkCurrentPositionLatch != null) {
