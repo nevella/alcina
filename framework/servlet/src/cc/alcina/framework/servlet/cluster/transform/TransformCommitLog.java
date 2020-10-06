@@ -248,13 +248,20 @@ public class TransformCommitLog {
 						consumer = new KafkaConsumer<>(props);
 						consumer.assign(
 								Collections.singletonList(topicPartition));
+						logger.info(
+								"Started consumer :: thread {} :: groupId :: {} :: topicPartion :: {}",
+								tName, groupId, topicPartition);
 					}
 					if (seekToOffset != -1) {
 						consumer.seek(topicPartition, seekToOffset);
 						seekToOffset = -1;
 					}
 					if (checkCurrentPositionLatch != null) {
+						logger.info("Check current position");
 						long position = consumer.position(topicPartition);
+						logger.info(
+								"Current position :: {} - current offset :: {}",
+								position, currentOffset);
 						if (currentOffset == -1) {
 							currentOffset = position - 1;
 						}
