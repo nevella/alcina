@@ -71,9 +71,6 @@ public class TransformCommitLog {
 			topicPartition = new TopicPartition(getTopic(), 0);
 			logger.info("Launch consumer thread :: {}", hostName);
 			launchConsumerThread(-1);
-			// make sure we have a valid offset before returning (handles
-			// network outage/timeout on startup)
-			refreshCurrentPosition();
 			logger.info("Started queue :: host {} :: offset {}", hostName,
 					currentConsumerThread.currentOffset);
 			timeoutChecker = new Timer(true);
@@ -83,6 +80,9 @@ public class TransformCommitLog {
 					checkPollTimeout();
 				}
 			}, pollTimeout, pollTimeout);
+			// make sure we have a valid offset before returning (handles
+			// network outage/timeout on startup)
+			refreshCurrentPosition();
 		}
 	}
 
@@ -260,7 +260,7 @@ public class TransformCommitLog {
 					if (checkCurrentPositionLatch != null) {
 						logger.info("Check current position");
 						if (currentOffset == -1) {
-							consumer.poll(0);
+							consumer.poll(1000);
 							consumer.seekToEnd(
 									Collections.singletonList(topicPartition));
 						}
