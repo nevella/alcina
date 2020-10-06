@@ -69,6 +69,7 @@ public class TransformCommitLog {
 		this.pollTimeout = commitLogHost.getPollTimeout();
 		if (!initialised.getAndSet(true)) {
 			topicPartition = new TopicPartition(getTopic(), 0);
+			logger.info("Launch consumer thread :: {}", hostName);
 			launchConsumerThread(-1);
 			// make sure we have a valid offset before returning (handles
 			// network outage/timeout on startup)
