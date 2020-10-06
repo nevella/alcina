@@ -259,6 +259,11 @@ public class TransformCommitLog {
 					}
 					if (checkCurrentPositionLatch != null) {
 						logger.info("Check current position");
+						if (currentOffset == -1) {
+							consumer.poll(0);
+							consumer.seekToEnd(
+									Collections.singletonList(topicPartition));
+						}
 						long position = consumer.position(topicPartition);
 						logger.info(
 								"Current position :: {} - current offset :: {}",
