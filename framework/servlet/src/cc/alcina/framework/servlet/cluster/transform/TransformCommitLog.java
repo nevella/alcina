@@ -82,7 +82,10 @@ public class TransformCommitLog {
 			}, pollTimeout, pollTimeout);
 			// make sure we have a valid offset before returning (handles
 			// network outage/timeout on startup)
-			refreshCurrentPosition();
+			/*
+			 * Unfortunately, this often (?) caused infinite waits - backing off
+			 */
+			// refreshCurrentPosition();
 		}
 	}
 
