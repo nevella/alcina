@@ -4,8 +4,11 @@ public interface DomainTransformPersistenceListener {
 	public void onDomainTransformRequestPersistence(
 			DomainTransformPersistenceEvent evt);
 
-	// fired outside synchronized block; handles monitors
-	default boolean isSequencingListener() {
+	/*
+	 * Fire this local event outside of the sequential barrier. Ensures that it
+	 * is not blocked (e.g. cache propagation)
+	 */
+	default boolean isPreBarrierListener() {
 		return false;
 	}
 }

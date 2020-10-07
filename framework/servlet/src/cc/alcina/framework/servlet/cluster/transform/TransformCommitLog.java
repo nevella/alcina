@@ -220,9 +220,6 @@ public class TransformCommitLog {
 		 */
 		public void checkCurrentPosition() {
 			checkCurrentPositionLatch = new CountDownLatch(1);
-			if (consumer != null) {
-				consumer.wakeup();
-			}
 			try {
 				checkCurrentPositionLatch.await();
 			} catch (Exception e) {
@@ -286,7 +283,6 @@ public class TransformCommitLog {
 						logger.info("Check current position");
 						if (currentOffset == -1) {
 							performOperation(() -> {
-								consumer.poll(pollTimeout);
 								consumer.seekToEnd(Collections
 										.singletonList(topicPartition));
 							});

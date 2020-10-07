@@ -89,17 +89,14 @@ public class DomainTransformPersistenceEvents {
 						.getDomainTransformLayerWrapper().persistentRequests
 								.get(0));
 			}
-			domainStore.getTransformSequencer()
-					.waitForPreLocalNonFireEventsThreadBarrier(firstRequestId);
-		}
-		for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
-				listenerList)) {
-			if (listener.isSequencingListener()) {
-				if (event.isLocalToVm()
-						|| nonThreadListenerList.contains(listener)) {
+			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
+					listenerList)) {
+				if (listener.isPreBarrierListener() && event.isLocalToVm()) {
 					listener.onDomainTransformRequestPersistence(event);
 				}
 			}
+			domainStore.getTransformSequencer()
+					.waitForPreLocalNonFireEventsThreadBarrier(firstRequestId);
 		}
 		synchronized (this) {
 			try {
@@ -110,7 +107,7 @@ public class DomainTransformPersistenceEvents {
 				}
 				for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
 						listenerList)) {
-					if (listener.isSequencingListener()) {
+					if (listener.isPreBarrierListener()) {
 						continue;
 					}
 					// only fire ex-machine transforms to certain general
