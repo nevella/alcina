@@ -83,7 +83,7 @@ public class EntityLocator implements Serializable {
 	}
 
 	public EntityLocator(Class<? extends Entity> clazz, long id, long localId) {
-		this.clazz = clazz;
+		this.clazz = (Class<? extends Entity>) Domain.resolveEntityClass(clazz);
 		this.id = id;
 		this.localId = localId;
 		if (id == 0) {
@@ -93,7 +93,7 @@ public class EntityLocator implements Serializable {
 	}
 
 	private EntityLocator(Entity obj) {
-		this.clazz = obj.getClass();
+		this.clazz = obj.entityClass();
 		this.id = obj.getId();
 		this.localId = obj.getLocalId();
 	}
@@ -156,7 +156,7 @@ public class EntityLocator implements Serializable {
 	}
 
 	public void setClazz(Class<? extends Entity> clazz) {
-		this.clazz = clazz;
+		this.clazz = (Class<? extends Entity>) Domain.resolveEntityClass(clazz);
 	}
 
 	public void setClientInstanceId(long clientInstanceId) {
