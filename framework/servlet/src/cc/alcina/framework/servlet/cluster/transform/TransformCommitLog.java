@@ -144,8 +144,13 @@ public class TransformCommitLog {
 		String tName = Ax.format("kafka-consumer-%s-%s",
 				getClass().getSimpleName(),
 				consumerThreadCounter.incrementAndGet());
+		CountDownLatch checkCurrentPositionLatch = null;
+		if (currentConsumerThread != null) {
+			checkCurrentPositionLatch = currentConsumerThread.checkCurrentPositionLatch;
+		}
 		currentConsumerThread = new TransformCommitLogThread(classLoader, tName,
 				offset);
+		currentConsumerThread.checkCurrentPositionLatch = checkCurrentPositionLatch;
 		currentConsumerThread.start();
 	}
 
@@ -206,7 +211,7 @@ public class TransformCommitLog {
 
 		private KafkaConsumer<Void, byte[]> consumer;
 
-		private CountDownLatch checkCurrentPositionLatch;
+		CountDownLatch checkCurrentPositionLatch;
 
 		private TransformCommitLogThread(ClassLoader cl, String tName,
 				long previousConsumerCompletedOffset) {
