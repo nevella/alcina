@@ -147,6 +147,7 @@ public class TransformCommitLog {
 		CountDownLatch checkCurrentPositionLatch = null;
 		if (currentConsumerThread != null) {
 			checkCurrentPositionLatch = currentConsumerThread.checkCurrentPositionLatch;
+			logger.info("Restarting consumer with existing position latch");
 		}
 		currentConsumerThread = new TransformCommitLogThread(classLoader, tName,
 				offset);
