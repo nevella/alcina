@@ -293,7 +293,8 @@ public class TransformCommitLog {
 										.singletonList(topicPartition));
 							});
 						}
-						long position = consumer.position(topicPartition);
+						long position = performOperation(
+								() -> consumer.position(topicPartition));
 						logger.info(
 								"Current position :: {} - current offset :: {}",
 								position, currentOffset);
