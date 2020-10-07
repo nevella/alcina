@@ -48,7 +48,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 public class DomainStoreTransformSequencer {
 	private DomainStoreLoaderDatabase loaderDatabase;
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	private HighestVisibleTransactions highestVisibleTransactions;
 
