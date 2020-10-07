@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -25,7 +26,9 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
@@ -83,15 +86,14 @@ public class TransformCommitLog {
 			// make sure we have a valid offset before returning (handles
 			// network outage/timeout on startup)
 			/*
-			 * Unfortunately, this often (?) caused infinite waits - backing off
 			 */
-			// refreshCurrentPosition();
+			refreshCurrentPosition();
 		}
 	}
 
 	public long getCommitPollReturned() {
 		return currentConsumerThread == null ? -1
-				: currentConsumerThread.pollEndTime;
+				: currentConsumerThread.operationEndTime;
 	}
 
 	public long getCommitPosition() {
@@ -155,13 +157,19 @@ public class TransformCommitLog {
 	protected synchronized void checkPollTimeout() {
 		if (currentConsumerThread != null
 				&& !currentConsumerThread.cancelled.get()) {
-			long pollStartTime = currentConsumerThread.pollStartTime;
+			long pollStartTime = currentConsumerThread.operationStartTime;
 			long pollWait = System.currentTimeMillis() - pollStartTime;
 			int multiplier = currentConsumerThread.connected() ? 1 : 4;
 			if (pollStartTime != 0 && pollWait > pollTimeout * multiplier) {
+				if (currentConsumerThread.currentOffset == -1) {
+					logger.warn(
+							"Restarting {} consumer - not started - ordinal {} ",
+							getClass().getSimpleName(),
+							consumerThreadCounter.get());
+				}
 				// can be caused by big gc pauses - but better safe than
 				// sorry...
-				long seek = currentConsumerThread.currentOffset + 1;
+				long seek = currentConsumerThread.currentOffset;
 				logger.warn(
 						"Restarting {} consumer - poll timeout: {} - max {} - ordinal {} - seekTo {}",
 						getClass().getSimpleName(), pollWait, pollTimeout,
@@ -184,9 +192,9 @@ public class TransformCommitLog {
 
 		private final String tName;
 
-		long pollStartTime;
+		long operationStartTime;
 
-		long pollEndTime;
+		long operationEndTime;
 
 		private long pollTimeout;
 
@@ -194,17 +202,17 @@ public class TransformCommitLog {
 
 		private long currentOffset = -1;
 
-		private long seekToOffset;
+		private long previousConsumerCompletedOffset;
 
 		private KafkaConsumer<Void, byte[]> consumer;
 
 		private CountDownLatch checkCurrentPositionLatch;
 
 		private TransformCommitLogThread(ClassLoader cl, String tName,
-				long seekToOffset) {
+				long previousConsumerCompletedOffset) {
 			this.cl = cl;
 			this.tName = tName;
-			this.seekToOffset = seekToOffset;
+			this.previousConsumerCompletedOffset = previousConsumerCompletedOffset;
 		}
 
 		/*
@@ -227,6 +235,11 @@ public class TransformCommitLog {
 		}
 
 		@Override
+		/*
+		 * if operationStartTime !=0, an operation is underway, so this thread
+		 * will be shut down if the operation doesn't return in the allocated
+		 * time
+		 */
 		public void run() {
 			Thread.currentThread().setContextClassLoader(this.cl);
 			Thread.currentThread().setName(this.tName);
@@ -255,17 +268,28 @@ public class TransformCommitLog {
 						logger.info(
 								"Started consumer :: thread {} :: groupId :: {} :: topicPartion :: {}",
 								tName, groupId, topicPartition);
+						if (!AppPersistenceBase.isTestServer()) {
+							/*
+							 * We've just created a new consumer group, and
+							 * kafka seems to hang more than it should at this
+							 * point. So trying a sleep
+							 */
+							Thread.sleep(1000);
+						}
 					}
-					if (seekToOffset != -1) {
-						consumer.seek(topicPartition, seekToOffset);
-						seekToOffset = -1;
+					if (previousConsumerCompletedOffset != -1) {
+						performOperation(() -> consumer.seek(topicPartition,
+								previousConsumerCompletedOffset + 1));
+						previousConsumerCompletedOffset = -1;
 					}
 					if (checkCurrentPositionLatch != null) {
 						logger.info("Check current position");
 						if (currentOffset == -1) {
-							consumer.poll(1000);
-							consumer.seekToEnd(
-									Collections.singletonList(topicPartition));
+							performOperation(() -> {
+								consumer.poll(pollTimeout);
+								consumer.seekToEnd(Collections
+										.singletonList(topicPartition));
+							});
 						}
 						long position = consumer.position(topicPartition);
 						logger.info(
@@ -279,11 +303,8 @@ public class TransformCommitLog {
 							checkCurrentPositionLatch = null;
 						}
 					}
-					pollStartTime = System.currentTimeMillis();
-					ConsumerRecords<Void, byte[]> records = consumer
-							.poll(pollTimeout);
-					pollStartTime = 0;
-					pollEndTime = System.currentTimeMillis();
+					ConsumerRecords<Void, byte[]> records = performOperation(
+							() -> consumer.poll(pollTimeout));
 					if (stopped.get() && !cancelled.get()) {
 						return;// don't commitsync
 					}
@@ -304,13 +325,7 @@ public class TransformCommitLog {
 						checkCurrentPositionLatch.countDown();
 						checkCurrentPositionLatch = null;
 					}
-					// poll's not the correct term here - but effect is the same
-					// - possible blocking on cluster rebalance, so need to
-					// bracket in a watcher
-					pollStartTime = System.currentTimeMillis();
-					consumer.commitSync();
-					pollStartTime = 0;
-					pollEndTime = System.currentTimeMillis();
+					performOperation(() -> consumer.commitSync());
 				} catch (Throwable e) {
 					if (e instanceof WakeupException) {
 					} else {
@@ -343,6 +358,28 @@ public class TransformCommitLog {
 			}
 			logger.warn("Exiting consumer thread {} -  {}",
 					getClass().getSimpleName(), getName());
+		}
+
+		private <V> V performOperation(Callable<V> callable) {
+			try {
+				operationStartTime = System.currentTimeMillis();
+				operationEndTime = 0;
+				V result = callable.call();
+				operationEndTime = System.currentTimeMillis();
+				return result;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			} finally {
+				operationStartTime = 0;
+			}
+		}
+
+		private void performOperation(ThrowingRunnable runnable) {
+			Callable<Object> callable = () -> {
+				runnable.run();
+				return null;
+			};
+			performOperation(callable);
 		}
 	}
 }
