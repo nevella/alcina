@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 
@@ -146,6 +147,10 @@ public class CsvCols
 			return csvCols.grid.get(rowIdx).get(getColumnIndex(key));
 		}
 
+		public String get(Enum key) {
+			return get(Ax.friendly(key));
+		}
+
 		public boolean has(String key) {
 			return get(key).length() > 0;
 		}
@@ -190,5 +195,13 @@ public class CsvCols
 		public long getLong(String key) {
 			return Long.parseLong(get(key));
 		}
+
+		public void set(Enum e, String value) {
+			set(Ax.friendly(e), value);
+		}
+	}
+
+	public void addColumn(Enum e) {
+		addColumn(Ax.friendly(e));
 	}
 }

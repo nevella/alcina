@@ -164,6 +164,9 @@ public class Domain {
 
 	public static Class<? extends Object>
 			resolveEntityClass(Class<? extends Object> clazz) {
+		if (clazz == null) {
+			return null;
+		}
 		return handler.resolveEntityClass(clazz);
 	}
 
