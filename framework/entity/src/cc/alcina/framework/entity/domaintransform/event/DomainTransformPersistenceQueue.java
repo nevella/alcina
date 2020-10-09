@@ -153,9 +153,11 @@ public class DomainTransformPersistenceQueue {
 		}
 	}
 
-	public void sequencedTransformRequestPublished() {
+	public synchronized void sequencedTransformRequestPublished(Long id) {
 		List<TransformSequenceEntry> unpublishedRequests = persistenceEvents.domainStore
 				.getTransformSequencer().getSequentialUnpublishedRequests();
+		logger.debug("Received dtr published: {} ==> sequenced: {} ", id,
+				unpublishedRequests);
 		unpublishedRequests.forEach(entry -> requestIdSequenceEntry
 				.put(entry.persistentRequestId, entry));
 		fireSequentialUnpublishedTransformRequests(unpublishedRequests.stream()
@@ -193,7 +195,7 @@ public class DomainTransformPersistenceQueue {
 
 	public void transformRequestPublished(Long id) {
 		if (persistenceEvents.isUseTransformDbCommitSequencing()) {
-			sequencedTransformRequestPublished();
+			sequencedTransformRequestPublished(id);
 		} else {
 			transformRequestPublishedSequential(id);
 		}
