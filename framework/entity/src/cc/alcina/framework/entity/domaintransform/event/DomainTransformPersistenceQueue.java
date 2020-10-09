@@ -114,6 +114,11 @@ public class DomainTransformPersistenceQueue {
 	public void
 			cachePersistedRequest(DomainTransformRequestPersistent request) {
 		long requestId = request.getId();
+		if (loadedRequests.containsKey(requestId)) {
+			// local request coming in from clustertransformlistener - ignore
+			logger.debug("Did not cache already loaded request: {}", requestId);
+			return;
+		}
 		// we used to check if this request had already been fired - but the
 		// interaction with publish event was complex, it's *very unlikely* that
 		// the request won't make it within the 10 sec timeout, and the memory
@@ -302,12 +307,14 @@ public class DomainTransformPersistenceQueue {
 	private void transformRequestPublishedSequential(long id) {
 		synchronized (queueModificationLock) {
 			if (firedOrQueued.contains(id)) {
+				logger.debug("Ignoring already fired/queued: {} ", id);
 				return;
 			} else {
 				firedOrQueued.add(id);
 				synchronized (toFire) {
+					logger.debug("Adding to toFire queue: {} ", id);
 					toFire.add(id);
-					toFire.notify();
+					toFire.notifyAll();
 				}
 			}
 		}
@@ -398,6 +405,7 @@ public class DomainTransformPersistenceQueue {
 					if (getToFireQueueLength() == 0) {
 						synchronized (toFire) {
 							toFire.wait();
+							logger.debug("Woken from toFire queue wakeup");
 							if (closed.get()) {
 								return;
 							}
@@ -405,7 +413,8 @@ public class DomainTransformPersistenceQueue {
 					}
 					if (getToFireQueueLength() > 0) {
 						synchronized (queueModificationLock) {
-							id = toFire.pop();
+							id = toFire.removeFirst();
+							logger.debug("Removed id from toFire: {}", id);
 						}
 					}
 					if (id != null && !closed.get()) {
@@ -432,6 +441,7 @@ public class DomainTransformPersistenceQueue {
 				local = firingLocalToVm.contains(id);
 			}
 			if (local) {
+				// only the writable store can emit local events
 				DomainStoreTransformSequencer transformSequencer = DomainStore
 						.writableStore().getTransformSequencer();
 				transformSequencer.removePreLocalNonFireEventsThreadBarrier(id);

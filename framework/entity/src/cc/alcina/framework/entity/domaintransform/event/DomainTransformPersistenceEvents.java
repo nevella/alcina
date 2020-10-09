@@ -54,6 +54,7 @@ public class DomainTransformPersistenceEvents {
 			transformLocalIdSupport.runWithOffsetLocalIdCounter(
 					() -> fireDomainTransformPersistenceEvent0(event));
 		} else {
+			event.getPersistedRequests().forEach(queue::cachePersistedRequest);
 			DomainStore.writableStore().onTransformsPersisted();
 			fireDomainTransformPersistenceEvent0(event);
 			event.getPostEventRunnables().forEach(Runnable::run);
@@ -85,9 +86,8 @@ public class DomainTransformPersistenceEvents {
 			if (Ax.isTest()) {
 				// won't know that the companion dev server is persisting this
 				// persistent rq id (and is logically "local") until now
-				queue.registerPersisting(event
-						.getDomainTransformLayerWrapper().persistentRequests
-								.get(0));
+				event.getDomainTransformLayerWrapper().persistentRequests
+						.forEach(queue::registerPersisting);
 			}
 			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
 					listenerList)) {
