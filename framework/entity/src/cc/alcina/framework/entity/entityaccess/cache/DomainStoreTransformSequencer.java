@@ -101,14 +101,31 @@ public class DomainStoreTransformSequencer {
 		}
 	}
 
-	public void removePreLocalNonFireEventsThreadBarrier(long requestId) {
-		logger.debug("Remove local barrier: {}", requestId);
-		CountDownLatch latch = null;
-		synchronized (preLocalNonFireEventsThreadBarrier) {
-			latch = preLocalNonFireEventsThreadBarrier.get(requestId);
-		}
-		if (latch != null) {
-			latch.countDown();
+	public void unblockPreLocalNonFireEventsThreadBarrier(long requestId) {
+		logger.debug("Unblock local barrier: {}", requestId);
+		try {
+			CountDownLatch barrier = null;
+			long abnormalExitTime = System.currentTimeMillis()
+					+ 10 * TimeConstants.ONE_SECOND_MS;
+			while (System.currentTimeMillis() < abnormalExitTime) {
+				synchronized (preLocalNonFireEventsThreadBarrier) {
+					barrier = preLocalNonFireEventsThreadBarrier.get(requestId);
+					if (barrier == null) {
+						preLocalNonFireEventsThreadBarrier.wait(100);
+					} else {
+						break;
+					}
+				}
+			}
+			if (barrier == null) {
+				logger.warn("Timed out waiting for preLocal barrier  {}",
+						requestId);
+				return;
+			} else {
+				barrier.countDown();
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -227,9 +244,16 @@ public class DomainStoreTransformSequencer {
 
 	private CountDownLatch
 			createPreLocalNonFireEventsThreadBarrier(long requestId) {
+		logger.debug("Created wait for pre-local barrier: {}", requestId);
 		synchronized (preLocalNonFireEventsThreadBarrier) {
-			return preLocalNonFireEventsThreadBarrier.computeIfAbsent(requestId,
-					id -> new CountDownLatch(1));
+			CountDownLatch barrier = preLocalNonFireEventsThreadBarrier
+					.get(requestId);
+			if (barrier == null) {
+				barrier = new CountDownLatch(1);
+				preLocalNonFireEventsThreadBarrier.put(requestId, barrier);
+				preLocalNonFireEventsThreadBarrier.notifyAll();
+			}
+			return barrier;
 		}
 	}
 

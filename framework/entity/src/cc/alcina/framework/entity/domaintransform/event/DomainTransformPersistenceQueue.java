@@ -444,7 +444,7 @@ public class DomainTransformPersistenceQueue {
 				// only the writable store can emit local events
 				DomainStoreTransformSequencer transformSequencer = DomainStore
 						.writableStore().getTransformSequencer();
-				transformSequencer.removePreLocalNonFireEventsThreadBarrier(id);
+				transformSequencer.unblockPreLocalNonFireEventsThreadBarrier(id);
 				// transforming thread will now fire...
 				// following call may happen after transformingthread has
 				// removed the barrier, so check there
@@ -519,7 +519,7 @@ public class DomainTransformPersistenceQueue {
 							DomainStoreTransformSequencer transformSequencer = DomainStore
 									.writableStore().getTransformSequencer();
 							transformSequencer
-									.removePreLocalNonFireEventsThreadBarrier(
+									.unblockPreLocalNonFireEventsThreadBarrier(
 											id);
 							transformSequencer
 									.waitForPostLocalFireEventsThreadBarrier(
