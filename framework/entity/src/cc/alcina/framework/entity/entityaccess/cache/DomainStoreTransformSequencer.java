@@ -155,7 +155,7 @@ public class DomainStoreTransformSequencer {
 			CountDownLatch preLocalBarrier = createPreLocalNonFireEventsThreadBarrier(
 					requestId);
 			loaderDatabase.getStore().getPersistenceEvents().getQueue()
-					.sequencedTransformRequestPublished();
+					.sequencedTransformRequestPublished(requestId);
 			try {
 				logger.trace("Wait for pre-local barrier: {}", requestId);
 				// don't wait long - this *tries* to apply transforms in order,
