@@ -29,9 +29,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.PostTransactionEntityResolver;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager.PostTransactionEntityResolver;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
 import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
 

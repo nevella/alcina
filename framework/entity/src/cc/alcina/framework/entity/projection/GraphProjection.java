@@ -76,10 +76,10 @@ import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublishe
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.entityaccess.JPAImplementation;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessType;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
+import cc.alcina.framework.entity.persistence.JPAImplementation;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;

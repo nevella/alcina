@@ -18,8 +18,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.entityaccess.cache.LockUtils;
-import cc.alcina.framework.entity.entityaccess.cache.LockUtils.ClassStringKeyLock;
+import cc.alcina.framework.entity.persistence.cache.LockUtils;
+import cc.alcina.framework.entity.persistence.cache.LockUtils.ClassStringKeyLock;
 
 public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	public static <C> FsObjectCache<C> singletonCache(Class<C> clazz) {

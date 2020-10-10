@@ -41,8 +41,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Mvcc;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
+import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class KryoUtils {

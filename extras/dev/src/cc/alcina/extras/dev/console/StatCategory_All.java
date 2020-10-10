@@ -1,6 +1,6 @@
 package cc.alcina.extras.dev.console;
 
-import cc.alcina.framework.entity.entityaccess.metric.StatCategory;
+import cc.alcina.framework.entity.persistence.metric.StatCategory;
 
 public class StatCategory_All extends StatCategory {
 	public StatCategory_All() {

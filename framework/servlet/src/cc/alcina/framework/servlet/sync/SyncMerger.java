@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.domaintransform.JvmPropertyAccessor;
+import cc.alcina.framework.entity.transform.JvmPropertyAccessor;
 import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogStatus;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
 

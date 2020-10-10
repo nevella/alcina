@@ -1,7 +1,7 @@
 package cc.alcina.extras.dev.console.test;
 
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.entity.entityaccess.mvcc.MvccTestEntity;
+import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.mvcc.MvccTestEntity;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 /**

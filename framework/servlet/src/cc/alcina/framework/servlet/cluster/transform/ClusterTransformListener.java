@@ -7,10 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
-import cc.alcina.framework.entity.domaintransform.event.ExternalTransformPersistenceListener;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.transform.TransformPersistenceToken;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.entity.transform.event.ExternalTransformPersistenceListener;
 import cc.alcina.framework.servlet.job.JobRegistry1;
 
 /**

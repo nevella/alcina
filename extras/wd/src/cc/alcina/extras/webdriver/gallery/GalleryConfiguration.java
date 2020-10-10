@@ -14,7 +14,7 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 import cc.alcina.extras.webdriver.gallery.GoogleDriveAccessor.DriveAccess;
 import cc.alcina.extras.webdriver.gallery.GoogleSheetAccessor.SheetAccess;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)

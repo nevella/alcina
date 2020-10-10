@@ -23,8 +23,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.logic.MuteablePropertyChangeSupport;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessType;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
 /**
  * 

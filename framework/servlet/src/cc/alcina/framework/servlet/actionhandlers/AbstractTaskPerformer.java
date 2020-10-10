@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
@@ -12,7 +13,7 @@ import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
 import cc.alcina.framework.servlet.knowns.KnownJob;
 
-public abstract class AbstractTaskPerformer implements Runnable {
+public abstract class AbstractTaskPerformer implements Runnable, Task {
 	public Logger actionLogger;
 
 	protected org.slf4j.Logger slf4jLogger = LoggerFactory
@@ -78,6 +79,22 @@ public abstract class AbstractTaskPerformer implements Runnable {
 		return this;
 	}
 
+	protected KnownJob getKnownJob() {
+		return null;
+	}
+
+	protected void logDebug(String template, Object... args) {
+		actionLogger.debug(Ax.format(template, args));
+	}
+
+	protected void logInfo(String template, Object... args) {
+		actionLogger.info(Ax.format(template, args));
+	}
+
+	protected void logWarn(String template, Object... args) {
+		actionLogger.warn(Ax.format(template, args));
+	}
+
 	protected void run(boolean throwExceptions) {
 		KnownJob knownJob = getKnownJob();
 		try {
@@ -107,22 +124,6 @@ public abstract class AbstractTaskPerformer implements Runnable {
 		} finally {
 			LooseContext.pop();
 		}
-	}
-
-	protected KnownJob getKnownJob() {
-		return null;
-	}
-
-	protected void logDebug(String template, Object... args) {
-		actionLogger.debug(Ax.format(template, args));
-	}
-
-	protected void logInfo(String template, Object... args) {
-		actionLogger.info(Ax.format(template, args));
-	}
-
-	protected void logWarn(String template, Object... args) {
-		actionLogger.warn(Ax.format(template, args));
 	}
 
 	protected abstract void run0() throws Exception;

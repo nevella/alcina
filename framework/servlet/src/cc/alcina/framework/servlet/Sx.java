@@ -1,6 +1,6 @@
 package cc.alcina.framework.servlet;
 
-import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 
 public class Sx {
 	public static boolean isTest() {

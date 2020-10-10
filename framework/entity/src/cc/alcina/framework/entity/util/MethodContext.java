@@ -7,8 +7,8 @@ import java.util.concurrent.Callable;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 public class MethodContext {
 	public static MethodContext instance() {

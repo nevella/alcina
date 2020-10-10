@@ -18,9 +18,9 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
-import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
-import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
+import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
+import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public abstract class AlcinaServlet extends HttpServlet {

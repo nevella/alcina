@@ -12,9 +12,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentE
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObjectVersions;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 
 /**
  * 

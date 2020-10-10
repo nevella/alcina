@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreDescriptor.TestSupport;
+import cc.alcina.framework.entity.persistence.cache.DomainStoreDescriptor.TestSupport;
 
 /**
  * 

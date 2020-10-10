@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.KnownRenderableNode;
-import cc.alcina.framework.entity.entityaccess.KnownNodePersistent;
+import cc.alcina.framework.entity.persistence.KnownNodePersistent;
 
 public abstract class KnownNode {
 	public transient KnownNodePersistent persistent;

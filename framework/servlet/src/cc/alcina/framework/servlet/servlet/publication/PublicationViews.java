@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.XmlUtils;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
 import cc.alcina.framework.servlet.publication.Publisher.PublicationContentPersister;

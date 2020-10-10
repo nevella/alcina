@@ -18,9 +18,9 @@ import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 public abstract class AlcinaChildRunnable implements Runnable {
 	public static void launchWithCurrentThreadContext(String threadName,

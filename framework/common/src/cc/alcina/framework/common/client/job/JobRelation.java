@@ -1,37 +1,44 @@
 package cc.alcina.framework.common.client.job;
 
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
+
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
+import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
-public abstract class JobRelation extends Entity {
-	private Job from;
-
-	private Job to;
-
+@MappedSuperclass
+@ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
+@Bean
+@RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = JobRelation.class)
+@DomainTransformPropagation(PropagationType.NON_PERSISTENT)
+public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 	private JobRelationType type = JobRelationType.parent_child;
 
-	public Job getFrom() {
-		return this.from;
-	}
+	@Transient
+	public abstract Job getFrom();
 
-	public Job getTo() {
-		return this.to;
-	}
+	@Transient
+	public abstract Job getTo();
 
 	public JobRelationType getType() {
 		return this.type;
 	}
 
-	public void setFrom(Job from) {
-		Job old_from = this.from;
-		this.from = from;
-		propertyChangeSupport().firePropertyChange("from", old_from, from);
+	public abstract void setFrom(Job from);
+
+	@Override
+	public void setId(long id) {
+		this.id = id;
 	}
 
-	public void setTo(Job to) {
-		Job old_to = this.to;
-		this.to = to;
-		propertyChangeSupport().firePropertyChange("to", old_to, to);
-	}
+	public abstract void setTo(Job to);
 
 	public void setType(JobRelationType type) {
 		JobRelationType old_type = this.type;
@@ -40,6 +47,6 @@ public abstract class JobRelation extends Entity {
 	}
 
 	public static enum JobRelationType {
-		parent_child
+		parent_child, cascade
 	}
 }

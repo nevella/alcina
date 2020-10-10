@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 
 @SuppressWarnings("unused")
 public class Gallery {

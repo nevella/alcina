@@ -30,15 +30,15 @@ import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
-import cc.alcina.framework.entity.entityaccess.metric.InternalMetricData;
-import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics;
-import cc.alcina.framework.entity.entityaccess.metric.InternalMetrics.InternalMetricTypeAlcina;
-import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
-import cc.alcina.framework.entity.entityaccess.transform.TransformCommit.TransformPriorityStd;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
+import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
+import cc.alcina.framework.entity.persistence.metric.InternalMetricData;
+import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
+import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.persistence.transform.TransformCommit.TransformPriorityStd;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.servlet.job.JobRegistry1;
@@ -47,6 +47,19 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
 
 @RegistryLocation(registryPoint = JobRegistry.class, implementationType = ImplementationType.SINGLETON)
+/**
+ * <h2>TODO</h2>
+ * <ul>
+ * <li>ensure job object - based on retention policy (either reuse or new)
+ * <li>transition state to starting...housecleaning....running
+ * <li>that sets up the jobcontext object (per thread). contexts are the jvm
+ * tracking thing (holding logger etc), jobs are persistent (and GWT-friendly)
+ * 
+ * </ul>
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 public class JobRegistry extends WriterService {
 	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_NO_ACTION_LOG";

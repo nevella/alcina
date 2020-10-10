@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.console.FilterArgvParam;
-import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 
 public class CmdGenerateCrudUI extends DevConsoleCommand {
 	Spec spec;

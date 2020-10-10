@@ -10,8 +10,8 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
-import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
+import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 
 public class CmdPersistentClassBuilder extends DevConsoleCommand {
 	@Override

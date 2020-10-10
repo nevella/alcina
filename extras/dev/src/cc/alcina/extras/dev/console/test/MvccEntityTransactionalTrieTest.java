@@ -11,8 +11,8 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStoreDescriptor.TestSupport;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.cache.DomainStoreDescriptor.TestSupport;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 /**
  * 

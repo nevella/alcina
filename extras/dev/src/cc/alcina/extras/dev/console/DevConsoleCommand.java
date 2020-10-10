@@ -51,11 +51,11 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
-import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
+import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.mvcc.Transactions;
+import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.ShellWrapper;
 
 @RegistryLocation(registryPoint = DevConsoleCommand.class)

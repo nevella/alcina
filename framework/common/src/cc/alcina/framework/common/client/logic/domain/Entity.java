@@ -31,8 +31,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccAccess.MvccAccessType;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 /**

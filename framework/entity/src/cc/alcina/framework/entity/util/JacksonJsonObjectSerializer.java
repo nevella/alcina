@@ -37,7 +37,7 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.MvccObject;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 
 @RegistryLocation(registryPoint = JsonObjectSerializer.class, implementationType = ImplementationType.INSTANCE)
 public class JacksonJsonObjectSerializer implements JsonObjectSerializer {

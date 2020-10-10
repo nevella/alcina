@@ -25,16 +25,16 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-import cc.alcina.framework.entity.entityaccess.AuthenticationPersistence;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-import cc.alcina.framework.entity.entityaccess.cache.DomainLinker;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
-import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
-import cc.alcina.framework.entity.entityaccess.transform.TransformPersisterInPersistenceContext;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
+import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
+import cc.alcina.framework.entity.persistence.cache.DomainLinker;
+import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 
 public abstract class DevRemoterServlet extends HttpServlet {

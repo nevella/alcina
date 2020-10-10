@@ -21,7 +21,7 @@ import java.util.Set;
 import org.hibernate.proxy.HibernateProxy;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.entityaccess.JPAImplementation;
+import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.projection.CollectionProjectionFilter;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;

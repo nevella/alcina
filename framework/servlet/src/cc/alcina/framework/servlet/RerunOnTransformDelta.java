@@ -2,7 +2,7 @@ package cc.alcina.framework.servlet;
 
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 public abstract class RerunOnTransformDelta {
 	public void run() throws Exception {

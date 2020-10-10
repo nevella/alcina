@@ -4,8 +4,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceQueue;
-import cc.alcina.framework.entity.entityaccess.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 
 public class TransformCollector {
 	public DomainUpdate waitForTransforms(DomainTransformCommitPosition client,

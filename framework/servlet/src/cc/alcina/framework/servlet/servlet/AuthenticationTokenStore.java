@@ -2,7 +2,7 @@ package cc.alcina.framework.servlet.servlet;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.entityaccess.AuthenticationPersistence;
+import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 

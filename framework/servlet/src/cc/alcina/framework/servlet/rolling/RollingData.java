@@ -13,8 +13,8 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.entity.entityaccess.RollingDataItem;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.RollingDataItem;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 //REVIEW - lowpri - formal support for "go back a bit" in transform sequence - probably using transform utc date
 public abstract class RollingData<K extends Comparable, V> {

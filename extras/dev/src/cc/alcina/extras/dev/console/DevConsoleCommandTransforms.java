@@ -43,9 +43,9 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.console.FilterArgvFlag;
 import cc.alcina.framework.entity.console.FilterArgvParam;
-import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
-import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
+import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
+import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
 

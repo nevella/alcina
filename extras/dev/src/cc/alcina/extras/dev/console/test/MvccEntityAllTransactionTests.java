@@ -1,6 +1,6 @@
 package cc.alcina.extras.dev.console.test;
 
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions;
+import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 /**

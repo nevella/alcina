@@ -27,10 +27,10 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
-import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
-import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase;
+import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 
 public class TransformCommitLog {
 	private Producer<Void, byte[]> producer;

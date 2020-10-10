@@ -256,17 +256,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 				s -> AlcinaBeanSerializer.deserializeHolder(s));
 	}
 
-	public static <V> V resolveMaybeDeserialize(V existing, String serialized,
-			V defaultValue, Function<String, V> deserializer) {
-		if (existing != null) {
-			return existing;
-		}
-		if (Ax.isBlank(serialized)) {
-			return defaultValue;
-		}
-		return deserializer.apply(serialized);
-	}
-
 	public static String serialize(Object object) {
 		return AlcinaBeanSerializer.serializeHolder(object);
 	}
@@ -292,6 +281,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 			result.remove(null);
 		}
 		return result;
+	}
+
+	private static <V> V resolveMaybeDeserialize(V existing, String serialized,
+			V defaultValue, Function<String, V> deserializer) {
+		if (existing != null) {
+			return existing;
+		}
+		if (Ax.isBlank(serialized)) {
+			return defaultValue;
+		}
+		return deserializer.apply(serialized);
 	}
 
 	private ObjectStore domainObjects;

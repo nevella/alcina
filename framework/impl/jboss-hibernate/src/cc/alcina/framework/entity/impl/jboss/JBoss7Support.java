@@ -27,7 +27,7 @@ import cc.alcina.framework.classmeta.ClasspathUrlTranslator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.entityaccess.cache.mvcc.SourceFinder;
+import cc.alcina.framework.entity.persistence.mvcc.SourceFinder;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ClasspathVisitor;
 

@@ -18,7 +18,6 @@ import java.io.Serializable;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
-import cc.alcina.framework.common.client.logic.domain.ObjectWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Action;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
@@ -53,24 +52,6 @@ public class Bindable extends BaseSourcesPropertyChangeEvents
 		@Override
 		public void _setContext(T _context) {
 			this._context = _context;
-		}
-	}
-
-	@Bean
-	public static class BindableWrapper<T> extends Bindable
-			implements ObjectWrapper<T> {
-		protected T wrapee;
-
-		public BindableWrapper() {
-		}
-
-		public BindableWrapper(T wrapee) {
-			this.wrapee = wrapee;
-		}
-
-		@Override
-		public T provideWrappee() {
-			return wrapee;
 		}
 	}
 

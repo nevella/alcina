@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.entity.domaintransform.MethodIndividualPropertyAccessor;
+import cc.alcina.framework.entity.transform.MethodIndividualPropertyAccessor;
 
 public class JsonPropertyAccessor implements PropertyAccessor {
 	public static final String TOPIC_NOTIFICATION_MULTIPLE_JSON_SINGLE_JAVA = JsonPropertyAccessor.class
