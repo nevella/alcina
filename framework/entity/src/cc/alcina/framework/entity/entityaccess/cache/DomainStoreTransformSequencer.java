@@ -41,7 +41,16 @@ import cc.alcina.framework.entity.projection.GraphProjection;
  * TODO - this really bridges the db side (and in the right package for that)
  * and domain transform queues - would be nice to split in two and reduce
  * visibility of dtrq package methods. And re-implement as subclass
- * (commit/dbcommit) sequencing
+ * (commit/dbcommit) sequencing.
+ * 
+ * A note re the complexity of the interaction of this class and
+ * DomainTransformPersistenceQueue:: most of the complexity is because we can't
+ * know who will call
+ * DomainTransformPersistenceEvents.fireDomainTransformPersistenceEvent() first
+ * :: the originator of the transforms, or the firing queue. So rather than do
+ * any general initialisation, each thread performs wait/notify loops on the
+ * maps containing the per-thread barriers to ensure that the thread requiring
+ * the barrier has generated it before proceeding.
  * 
  * @author nick@alcina.cc
  *
