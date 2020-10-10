@@ -70,15 +70,14 @@ import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreTransformSequencer.TransformPriorityProvider;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.RemoteTransformPersister;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformConflicts;
-import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.TransformConflicts.TransformConflictsFromOfflineSupport;
+import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -460,19 +459,12 @@ public class TransformCommit {
 		return commitTransforms(true);
 	}
 
+	public static void enqueueTransforms(String transformQueueName,
+			Class<? extends Entity>... entityClassNames) {
+	}
+
 	public static TransformCommit get() {
 		return Registry.impl(TransformCommit.class);
-	}
-
-	public static TransformPriority getPriority() {
-		return LooseContext.get(CONTEXT_TRANSFORM_PRIORITY);
-	}
-
-	public static boolean hasLessThanUserTransformPriority() {
-		TransformPriority priority = LooseContext
-				.get(CONTEXT_TRANSFORM_PRIORITY);
-		return !(priority == null || priority
-				.getPriority() >= TransformPriorityStd.User.getPriority());
 	}
 
 	public static boolean isCommitTestTransforms() {
@@ -490,8 +482,8 @@ public class TransformCommit {
 						committerIpAddress));
 	}
 
-	public static void setPriority(TransformPriority priority) {
-		LooseContext.set(CONTEXT_TRANSFORM_PRIORITY, priority);
+	public static void removeTransforms(String transformQueueName,
+			Class<? extends Entity>... entityClassNames) {
 	}
 
 	public static Topic<TransformPersistenceToken>
@@ -529,14 +521,11 @@ public class TransformCommit {
 	}
 
 	public void enqueueBackendTransform(Runnable runnable) {
-		if (backendTransformQueue == null) {
-			synchronized (this) {
-				if (backendTransformQueue == null) {
-					backendTransformQueue = new BackendTransformQueue();
-					backendTransformQueue.start();
-				}
-			}
-		}
+		enqueueBackendTransform(runnable, null);
+	}
+
+	public void enqueueBackendTransform(Runnable runnable, String queueName) {
+		ensureQueue();
 		backendTransformQueue.enqueue(runnable);
 	}
 
@@ -601,6 +590,11 @@ public class TransformCommit {
 
 	public int nextTransformRequestId() {
 		return transformRequestCounter.incrementAndGet();
+	}
+
+	public void setBackendTransformQueueMaxDelay(String queueName,
+			long delayMs) {
+		ensureQueue();
 	}
 
 	/**
@@ -788,6 +782,17 @@ public class TransformCommit {
 		}
 	}
 
+	protected void ensureQueue() {
+		if (backendTransformQueue == null) {
+			synchronized (this) {
+				if (backendTransformQueue == null) {
+					backendTransformQueue = new BackendTransformQueue();
+					backendTransformQueue.start();
+				}
+			}
+		}
+	}
+
 	protected DomainTransformLayerWrapper submitAndHandleTransforms(
 			TransformPersistenceToken persistenceToken)
 			throws DomainTransformRequestException {
@@ -913,38 +918,6 @@ public class TransformCommit {
 
 	public static class ReuseIUserHolder {
 		public IUser iUser;
-	}
-
-	public interface TransformPriority {
-		int getPriority();
-	}
-
-	@RegistryLocation(registryPoint = TransformPriorityProvider.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-	public static class TransformPriorityProviderServletLayer
-			extends TransformPriorityProvider {
-		@Override
-		public boolean hasLessThanUserTransformPriority() {
-			return TransformCommit.hasLessThanUserTransformPriority();
-		}
-
-		@Override
-		public boolean useLongQueueWait() {
-			return !AppPersistenceBase.isTestServer();
-		}
-	}
-
-	public enum TransformPriorityStd implements TransformPriority {
-		Job(20), Backend_admin(10), User(100);
-		private int priority;
-
-		private TransformPriorityStd(int priority) {
-			this.priority = priority;
-		}
-
-		@Override
-		public int getPriority() {
-			return this.priority;
-		}
 	}
 
 	// FIXME - sessioncontext - this should all probably go there

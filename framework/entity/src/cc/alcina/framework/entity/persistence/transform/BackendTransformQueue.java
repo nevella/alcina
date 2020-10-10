@@ -2,6 +2,8 @@ package cc.alcina.framework.entity.persistence.transform;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
@@ -12,7 +14,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.entity.persistence.transform.TransformCommit.TransformPriorityStd;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
@@ -39,6 +40,8 @@ class BackendTransformQueue {
 
 	private long lastPersistStarted;
 
+	private Map<String, Long> queueMaxDelay = new ConcurrentHashMap<>();
+
 	public void enqueue(Runnable runnable) {
 		int size = 0;
 		synchronized (this) {
@@ -46,6 +49,11 @@ class BackendTransformQueue {
 			size = tasks.size();
 			persistTimer.triggerEventOccurred();
 		}
+	}
+
+	public void setBackendTransformQueueMaxDelay(String queueName,
+			long delayMs) {
+		queueMaxDelay.put(queueName, delayMs);
 	}
 
 	private void persistQueue0() {
@@ -87,7 +95,6 @@ class BackendTransformQueue {
 			}
 			try {
 				LooseContext.push();
-				TransformCommit.setPriority(TransformPriorityStd.Backend_admin);
 				Transaction.commit();
 			} finally {
 				LooseContext.pop();
@@ -132,6 +139,7 @@ class BackendTransformQueue {
 	void start() {
 		int loopDelay = ResourceUtilities
 				.getInteger(BackendTransformQueue.class, "loopDelay");
+		queueMaxDelay.put(null, (long) loopDelay);
 		persistTimer = new AtEndOfEventSeriesTimer<>(loopDelay, new Runnable() {
 			@Override
 			public void run() {

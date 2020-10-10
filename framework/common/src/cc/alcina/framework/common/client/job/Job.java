@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
@@ -24,6 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.servlet.job2.JobResult;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
@@ -31,9 +33,11 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = Job.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
-	private Task taskDefinition;
+	private Task task;
 
-	private String taskDefinitionSerialized;
+	private String taskSerialized;
+
+	private Date runAt;
 
 	private Date start;
 
@@ -52,6 +56,13 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 	private JobResultType resultType;
 
 	private String key;
+
+	private String queue;
+
+	public JobResult asJobResult() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	public double getCompletion() {
 		return this.completion;
@@ -74,12 +85,23 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 		return this.log;
 	}
 
+	@Transient
+	public abstract ClientInstance getPerformer();
+
+	public String getQueue() {
+		return this.queue;
+	}
+
 	public String getResultMessage() {
 		return this.resultMessage;
 	}
 
 	public JobResultType getResultType() {
 		return this.resultType;
+	}
+
+	public Date getRunAt() {
+		return this.runAt;
 	}
 
 	public Date getStart() {
@@ -96,17 +118,17 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 
 	@Transient
 	@DomainProperty(serialize = true)
-	public Task getTaskDefinition() {
-		taskDefinition = TransformManager.resolveMaybeDeserialize(
-				taskDefinition, this.taskDefinitionSerialized, null);
-		return this.taskDefinition;
+	public Task getTask() {
+		task = TransformManager.resolveMaybeDeserialize(task,
+				this.taskSerialized, null);
+		return this.task;
 	}
 
 	@Lob
 	@Type(type = "org.hibernate.type.StringClobType")
 	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
-	public String getTaskDefinitionSerialized() {
-		return this.taskDefinitionSerialized;
+	public String getTaskSerialized() {
+		return this.taskSerialized;
 	}
 
 	@Transient
@@ -143,6 +165,12 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 		propertyChangeSupport().firePropertyChange("log", old_log, log);
 	}
 
+	public abstract void setPerformer(ClientInstance performer);
+
+	public void setQueue(String queue) {
+		this.queue = queue;
+	}
+
 	public void setResultMessage(String resultMessage) {
 		String old_resultMessage = this.resultMessage;
 		this.resultMessage = resultMessage;
@@ -155,6 +183,12 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 		this.resultType = resultType;
 		propertyChangeSupport().firePropertyChange("resultType", old_resultType,
 				resultType);
+	}
+
+	public void setRunAt(Date runAt) {
+		Date old_runAt = this.runAt;
+		this.runAt = runAt;
+		propertyChangeSupport().firePropertyChange("runAt", old_runAt, runAt);
 	}
 
 	public void setStart(Date start) {
@@ -176,17 +210,16 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 				old_statusMessage, statusMessage);
 	}
 
-	public void setTaskDefinition(Task taskDefinition) {
-		Task old_taskDefinition = this.taskDefinition;
-		this.taskDefinition = taskDefinition;
-		propertyChangeSupport().firePropertyChange("taskDefinition",
-				old_taskDefinition, taskDefinition);
+	public void setTask(Task task) {
+		Task old_task = this.task;
+		this.task = task;
+		propertyChangeSupport().firePropertyChange("task", old_task, task);
 	}
 
-	public void setTaskDefinitionSerialized(String taskDefinitionSerialized) {
-		String old_taskDefinitionSerialized = this.taskDefinitionSerialized;
-		this.taskDefinitionSerialized = taskDefinitionSerialized;
-		propertyChangeSupport().firePropertyChange("taskDefinitionSerialized",
-				old_taskDefinitionSerialized, taskDefinitionSerialized);
+	public void setTaskSerialized(String taskSerialized) {
+		String old_taskSerialized = this.taskSerialized;
+		this.taskSerialized = taskSerialized;
+		propertyChangeSupport().firePropertyChange("taskSerialized",
+				old_taskSerialized, taskSerialized);
 	}
 }

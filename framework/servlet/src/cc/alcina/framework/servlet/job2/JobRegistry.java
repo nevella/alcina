@@ -1,26 +1,26 @@
 package cc.alcina.framework.servlet.job2;
 
-import java.util.Date;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
-import cc.alcina.framework.common.client.actions.ActionResult;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
-import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -30,19 +30,13 @@ import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
-import cc.alcina.framework.entity.persistence.metric.InternalMetricData;
-import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
-import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
-import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
-import cc.alcina.framework.entity.persistence.transform.TransformCommit.TransformPriorityStd;
-import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
-import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.servlet.job.JobRegistry1;
-import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
+import cc.alcina.framework.servlet.job2.JobContext.PersistenceType;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
 
@@ -64,11 +58,20 @@ public class JobRegistry extends WriterService {
 	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_NO_ACTION_LOG";
 
+	static final String TRANSFORM_QUEUE_NAME = JobRegistry.class.getName();
+
 	public static JobRegistry get() {
 		return Registry.impl(JobRegistry.class);
 	}
 
 	private AtomicInteger actionCounter = new AtomicInteger();
+
+	private Queue<JobContext> activeJobs = new ConcurrentLinkedQueue<>();
+
+	public JobRegistry() {
+		TransformCommit.get()
+				.setBackendTransformQueueMaxDelay(TRANSFORM_QUEUE_NAME, 1000);
+	}
 
 	public JobResult getJobResult(Job job) {
 		return null;
@@ -83,7 +86,10 @@ public class JobRegistry extends WriterService {
 	}
 
 	public JobResult perform(Task task) {
-		return null;
+		Job job = createJob(task);
+		performJob(job);
+		waitFor(job);
+		return job.asJobResult();
 	}
 
 	public JobResult run(RemoteAction action) {
@@ -121,6 +127,53 @@ public class JobRegistry extends WriterService {
 		// TODO Auto-generated method stub
 	}
 
+	private Job createJob(Task task) {
+		checkAnnotatedPermissions(task);
+		Job job = AlcinaPersistentEntityImpl.create(Job.class);
+		job.setUser(PermissionsManager.get().getUser());
+		job.setKey(task.provideJobKey());
+		job.setState(JobState.PENDING);
+		return job;
+	}
+
+	private void performJob(Job job) {
+		TaskPerformer performer = Registry.impl(TaskPerformer.class,
+				job.getTask().getClass());
+		PersistenceType persistenceType = PersistenceType.Queued;
+		if (!UserlandProvider.get().isSystemUser(job.getUser())) {
+			persistenceType = PersistenceType.Immediate;
+		}
+		if (LooseContext.is(JobRegistry1.CONTEXT_NON_PERSISTENT) || (Ax.isTest()
+				&& !ResourceUtilities.is("persistConsoleJobs"))) {
+			persistenceType = PersistenceType.None;
+		}
+		JobContext context = new JobContext(job, persistenceType, performer);
+		activeJobs.add(context);
+		try {
+			LooseContext.push();
+			context.start();
+			performer.performAction(job.getTask());
+		} catch (Throwable t) {
+			Exception e = (Exception) ((t instanceof Exception) ? t
+					: new WrappedRuntimeException(t));
+			context.onJobException(e);
+			if (CommonUtils.extractCauseOfClass(e,
+					CancelledException.class) != null) {
+			} else {
+				EntityLayerLogging.persistentLog(LogMessageType.TASK_EXCEPTION,
+						e);
+			}
+			throw WrappedRuntimeException.wrapIfNotRuntime(e);
+		} finally {
+			context.end();
+			LooseContext.pop();
+		}
+	}
+
+	private void waitFor(Job job) {
+		// TODO Auto-generated method stub
+	}
+
 	protected void checkAnnotatedPermissions(Object o) {
 		WebMethod annotation = o.getClass().getAnnotation(WebMethod.class);
 		if (annotation != null) {
@@ -136,128 +189,12 @@ public class JobRegistry extends WriterService {
 		}
 	}
 
-	String describeTask(Task task, String msg) {
-		msg += "Clazz: " + task.getClass().getName() + "\n";
-		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
-		msg += "\nParameters: \n";
-		try {
-			msg += new JacksonJsonObjectSerializer().withIdRefs()
-					.withMaxLength(1000000).serializeNoThrow(task);
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-		return msg;
-	}
-
-	public class ActionLauncher<T> {
-		private JobTracker actionTracker;
-
-		TopicListener<JobTracker> startListener = new TopicListener<JobTracker>() {
-			boolean processed = false;
-
-			@Override
-			public void topicPublished(String key, JobTracker message) {
-				if (processed) {
-				} else {
-					processed = true;
-					actionTracker = message;
-				}
-			}
-		};
-
-		protected ActionLogItem trackerToResult(final RemoteAction action) {
-			ActionLogItem logItem = AlcinaPersistentEntityImpl
-					.getNewImplementationInstance(ActionLogItem.class);
-			logItem.setActionClass(action.getClass());
-			logItem.setActionDate(new Date());
-			logItem.setShortDescription(CommonUtils
-					.trimToWsChars(actionTracker.getJobResult(), 220));
-			if (!LooseContext.is(CONTEXT_NO_ACTION_LOG)) {
-				logItem.setActionLog(actionTracker.getLog());
-			}
-			return logItem;
-		}
-
-		protected ActionResult<T> trackerToResult(final RemoteAction action,
-				boolean nonPersistent) {
-			ActionResult<T> result = new ActionResult<T>();
-			if (actionTracker != null) {
-				ActionLogItem logItem = trackerToResult(action);
-				if (!actionTracker.provideIsRoot() || nonPersistent) {
-				} else {
-					try {
-						Registry.impl(CommonPersistenceProvider.class)
-								.getCommonPersistence().logActionItem(logItem);
-					} catch (RuntimeException e) {
-						e.printStackTrace();
-					}
-				}
-				result.actionLogItem = logItem;
-				result.resultObject = (T) actionTracker.getJobResultObject();
-			}
-			return result;
-		}
-
-		ActionResult<T> perform(final RemoteAction action) throws WebException {
-			checkAnnotatedPermissions(action);
-			TaskPerformer performer = (TaskPerformer) Registry.get()
-					.instantiateSingle(TaskPerformer.class, action.getClass());
-			boolean nonPersistent = LooseContext
-					.is(JobRegistry1.CONTEXT_NON_PERSISTENT) || Ax.isTest();
-			TransformManager transformManager = TransformManager.get();
-			boolean noHttpContext = AlcinaServletContext.httpContext() == null;
-			try {
-				if (transformManager instanceof ThreadlocalTransformManager) {
-					ThreadlocalTransformManager.get().resetTltm(null);
-				}
-				Transaction.ensureEnded();
-				Transaction.begin();
-				LooseContext.push();
-				if (noHttpContext) {
-					ActionPerformerMetricFilter filter = Registry
-							.impl(ActionPerformerMetricFilter.class);
-					InternalMetrics.get().startTracker(action,
-							() -> describeTask(action, ""),
-							InternalMetricTypeAlcina.service,
-							action.getClass().getSimpleName(), () -> true);
-				}
-				LooseContext.getContext().addTopicListener(
-						JobRegistry1.TOPIC_JOB_STARTED, startListener);
-				performer.performAction(action);
-				return trackerToResult(action, nonPersistent);
-			} catch (Throwable t) {
-				Exception e = (Exception) ((t instanceof Exception) ? t
-						: new WrappedRuntimeException(t));
-				if (actionTracker != null && !actionTracker.isComplete()) {
-					JobRegistry1.get().jobError(e);
-					trackerToResult(action, nonPersistent);
-				}
-				if (CommonUtils.extractCauseOfClass(e,
-						CancelledException.class) != null) {
-				} else {
-					EntityLayerLogging
-							.persistentLog(LogMessageType.TASK_EXCEPTION, e);
-				}
-				throw new WebException(e);
-			} finally {
-				if (noHttpContext) {
-					InternalMetrics.get().endTracker(action);
-				}
-				LooseContext.pop();
-				if (transformManager instanceof ThreadlocalTransformManager) {
-					ThreadlocalTransformManager.get().resetTltm(null);
-				}
-				Transaction.endAndBeginNew();
-			}
-		}
-	}
-
-	@RegistryLocation(registryPoint = ActionPerformerMetricFilter.class, implementationType = ImplementationType.SINGLETON)
-	public static class ActionPerformerMetricFilter
-			implements Predicate<InternalMetricData> {
+	@RegistryLocation(registryPoint = ActionPerformerTrackMetrics.class, implementationType = ImplementationType.SINGLETON)
+	public static class ActionPerformerTrackMetrics
+			implements Supplier<Boolean> {
 		@Override
-		public boolean test(InternalMetricData imd) {
-			return false;
+		public Boolean get() {
+			return true;
 		}
 	}
 
@@ -306,7 +243,6 @@ public class JobRegistry extends WriterService {
 		protected void run0() throws Exception {
 			LooseContext.getContext().addTopicListener(
 					JobRegistry1.TOPIC_JOB_STARTED, startListener);
-			TransformCommit.setPriority(TransformPriorityStd.Job);
 			perform(this.action);
 		}
 	}

@@ -12,6 +12,10 @@ public interface Task {
 		Registry.impl(Performer.class).perform(this);
 	}
 
+	default String provideJobKey() {
+		return null;
+	}
+
 	public static interface Performer {
 		void perform(Task task);
 	}

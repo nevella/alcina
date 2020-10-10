@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.logic.permissions;
 
+import java.util.Objects;
+
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
@@ -26,6 +28,11 @@ public class UserlandProvider {
 		return getUserByName(PermissionsManager.SYSTEM_USER_NAME);
 	}
 
+	public <U extends Entity & IUser> U getUserById(Long id) {
+		return (U) Domain.find((Class<U>) AlcinaPersistentEntityImpl
+				.getImplementation(IUser.class), id);
+	}
+
 	public <U extends Entity & IUser> U getUserByName(String name) {
 		return (U) Domain
 				.byProperty(
@@ -33,11 +40,9 @@ public class UserlandProvider {
 								.getImplementation(IUser.class),
 						"userName", name);
 	}
-	public <U extends Entity & IUser> U getUserById(Long id) {
-		return (U) Domain
-				.find(
-						(Class<U>) AlcinaPersistentEntityImpl
-								.getImplementation(IUser.class),id);
-	}
 
+	public boolean isSystemUser(IUser user) {
+		return Objects.equals(user,
+				(IUser) getUserByName(PermissionsManager.SYSTEM_USER_NAME));
+	}
 }
