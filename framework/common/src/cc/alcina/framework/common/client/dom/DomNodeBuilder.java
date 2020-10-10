@@ -39,7 +39,7 @@ public class DomNodeBuilder {
 		return appendTo(relativeTo);
 	}
 
-	public DomNode appendAsFirstChild() {
+	public DomNode insertAsFirstChild() {
 		DomNode node = build();
 		relativeTo.node.insertBefore(node.node,
 				relativeTo.node.getFirstChild());

@@ -162,8 +162,12 @@ public class DomainTransformEvent
 				this.objectClass = this.objectClassRef.getRefClass();
 			}
 			if (this.objectClass == null && this.objectClassName != null) {
-				this.objectClass = Reflections.classLookup()
-						.getClassForName(this.objectClassName);
+				try {
+					this.objectClass = Reflections.classLookup()
+							.getClassForName(this.objectClassName);
+				} catch (RuntimeException cnfe) {
+					// not from this vm's set of classes - return null
+				}
 			}
 		}
 		return this.objectClass;
@@ -239,8 +243,12 @@ public class DomainTransformEvent
 			}
 			if (this.valueClass == null && this.valueClassName != null
 					&& !this.valueClassName.equals("null")) {
-				this.valueClass = Reflections.classLookup()
-						.getClassForName(this.valueClassName);
+				try {
+					this.valueClass = Reflections.classLookup()
+							.getClassForName(this.valueClassName);
+				} catch (RuntimeException cnfe) {
+					// not from this vm's set of classes - return null
+				}
 			}
 		}
 		return this.valueClass;
@@ -295,14 +303,6 @@ public class DomainTransformEvent
 	}
 
 	public boolean provideNotApplicableToVmDomain() {
-		boolean not = provideNotApplicableToVmDomain0();
-		if (not) {
-			int debug = 3;
-		}
-		return not;
-	}
-
-	public boolean provideNotApplicableToVmDomain0() {
 		if (getObjectClassRef() == null || getObjectClassRef().notInVm()) {
 			return true;
 		}

@@ -59,6 +59,7 @@ public class MethodIndividualPropertyAccessor implements PropertyReflector {
 		if (pd == null) {
 			Ax.err("No property descriptor - %s.%s", clazz.getSimpleName(),
 					propertyName);
+			return;
 		}
 		this.readMethod = pd.getReadMethod();
 		this.writeMethod = pd.getWriteMethod();
@@ -67,6 +68,11 @@ public class MethodIndividualPropertyAccessor implements PropertyReflector {
 	@Override
 	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
 		return readMethod.getAnnotation(annotationClass);
+	}
+
+	@Override
+	public Class getDefiningType() {
+		return constructorTimeClass;
 	}
 
 	@Override
@@ -121,6 +127,15 @@ public class MethodIndividualPropertyAccessor implements PropertyReflector {
 		}
 	}
 
+	public boolean isInvalid() {
+		return readMethod == null && writeMethod == null;
+	}
+
+	@Override
+	public boolean isReadOnly() {
+		return writeMethod == null;
+	}
+
 	@Override
 	public void setPropertyValue(Object bean, Object value) {
 		try {
@@ -161,15 +176,5 @@ public class MethodIndividualPropertyAccessor implements PropertyReflector {
 			this.writeMethod = pd.getWriteMethod();
 			methodDeclaringClass = clazz;
 		}
-	}
-
-	@Override
-	public Class getDefiningType() {
-		return constructorTimeClass;
-	}
-
-	@Override
-	public boolean isReadOnly() {
-		return writeMethod == null;
 	}
 }

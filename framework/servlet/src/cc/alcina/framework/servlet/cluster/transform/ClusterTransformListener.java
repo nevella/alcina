@@ -37,6 +37,14 @@ public class ClusterTransformListener
 	}
 
 	@Override
+	/*
+	 * So that cache propagation is not blocked by the local event queue
+	 */
+	public boolean isPreBarrierListener() {
+		return true;
+	}
+
+	@Override
 	public void onDomainTransformRequestPersistence(
 			DomainTransformPersistenceEvent event) {
 		TransformPersistenceToken persistenceToken = event

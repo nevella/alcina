@@ -22,6 +22,10 @@ public class AlcinaServletContext {
 	private static final String CONTEXT_HTTP_CONTEXT = AlcinaServletContext.class
 			.getName() + ".CONTEXT_HTTP_CONTEXT";
 
+	public static HttpContext httpContext() {
+		return LooseContext.get(CONTEXT_HTTP_CONTEXT);
+	}
+
 	private boolean rootPermissions;
 
 	public void begin(HttpServletRequest httpServletRequest,
@@ -40,15 +44,16 @@ public class AlcinaServletContext {
 		}
 	}
 
-	public static HttpContext httpContext() {
-		return LooseContext.get(CONTEXT_HTTP_CONTEXT);
-	}
-
 	public void end() {
 		if (rootPermissions) {
 			ThreadedPermissionsManager.cast().popSystemUser();
 		}
-		LooseContext.confirmDepth(looseContextDepth.get());
+		Integer incomingDepth = looseContextDepth.get();
+		if (incomingDepth == null) {
+			// begin failed/did not run
+			return;
+		}
+		LooseContext.confirmDepth(incomingDepth);
 		if (TransformManager.hasInstance()) {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			LooseContext.pop();

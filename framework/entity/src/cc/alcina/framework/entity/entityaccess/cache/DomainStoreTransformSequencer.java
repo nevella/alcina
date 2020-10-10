@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -40,7 +41,16 @@ import cc.alcina.framework.entity.projection.GraphProjection;
  * TODO - this really bridges the db side (and in the right package for that)
  * and domain transform queues - would be nice to split in two and reduce
  * visibility of dtrq package methods. And re-implement as subclass
- * (commit/dbcommit) sequencing
+ * (commit/dbcommit) sequencing.
+ * 
+ * A note re the complexity of the interaction of this class and
+ * DomainTransformPersistenceQueue:: most of the complexity is because we can't
+ * know who will call
+ * DomainTransformPersistenceEvents.fireDomainTransformPersistenceEvent() first
+ * :: the originator of the transforms, or the firing queue. So rather than do
+ * any general initialisation, each thread performs wait/notify loops on the
+ * maps containing the per-thread barriers to ensure that the thread requiring
+ * the barrier has generated it before proceeding.
  * 
  * @author nick@alcina.cc
  *
@@ -48,15 +58,16 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 public class DomainStoreTransformSequencer {
 	private DomainStoreLoaderDatabase loaderDatabase;
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	private HighestVisibleTransactions highestVisibleTransactions;
 
 	private Connection connection;
 
-	// all access via synchronized methods
+	// all access syncrhonized on this map
 	Map<Long, CountDownLatch> preLocalNonFireEventsThreadBarrier = new LinkedHashMap<>();
 
+	// all access syncrhonized on this map
 	Map<Long, CountDownLatch> postLocalFireEventsThreadBarrier = new LinkedHashMap<>();
 
 	DomainStoreTransformSequencer(DomainStoreLoaderDatabase loaderDatabase) {
@@ -68,11 +79,13 @@ public class DomainStoreTransformSequencer {
 				.isUseTransformDbCommitSequencing()) {
 			return;
 		}
-		preLocalNonFireEventsThreadBarrier.remove(requestId);
-		logger.trace("Removing post-local barrier: {}", requestId);
-		CountDownLatch removed = postLocalFireEventsThreadBarrier
-				.remove(requestId);
-		removed.countDown();
+		synchronized (preLocalNonFireEventsThreadBarrier) {
+			preLocalNonFireEventsThreadBarrier.remove(requestId);
+		}
+		logger.debug("Unblocking post-local barrier: {}", requestId);
+		synchronized (postLocalFireEventsThreadBarrier) {
+			postLocalFireEventsThreadBarrier.get(requestId).countDown();
+		}
 	}
 
 	public synchronized List<TransformSequenceEntry>
@@ -97,32 +110,62 @@ public class DomainStoreTransformSequencer {
 		}
 	}
 
-	public synchronized void
-			removePreLocalNonFireEventsThreadBarrier(long requestId) {
-		logger.trace("Remove local barrier: {}", requestId);
-		CountDownLatch latch = preLocalNonFireEventsThreadBarrier
-				.get(requestId);
-		if (latch != null) {
-			latch.countDown();
+	public void unblockPreLocalNonFireEventsThreadBarrier(long requestId) {
+		logger.debug("Unblock local barrier: {}", requestId);
+		try {
+			CountDownLatch barrier = null;
+			long abnormalExitTime = System.currentTimeMillis()
+					+ 10 * TimeConstants.ONE_SECOND_MS;
+			while (System.currentTimeMillis() < abnormalExitTime) {
+				synchronized (preLocalNonFireEventsThreadBarrier) {
+					barrier = preLocalNonFireEventsThreadBarrier.get(requestId);
+					if (barrier == null) {
+						preLocalNonFireEventsThreadBarrier.wait(100);
+					} else {
+						break;
+					}
+				}
+			}
+			if (barrier == null) {
+				logger.warn("Timed out waiting for preLocal barrier  {}",
+						requestId);
+				return;
+			} else {
+				barrier.countDown();
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 
 	// called by the main firing sequence thread, since the local vm transforms
 	// are fired on the transforming thread
+	//
+	// there's a chance this will be called earlier than
+	// waitForPreLocalNonFireEventsThreadBarrier for the same requestId
 	public void waitForPostLocalFireEventsThreadBarrier(long requestId) {
 		try {
 			CountDownLatch barrier = null;
-			synchronized (this) {
-				barrier = postLocalFireEventsThreadBarrier.get(requestId);
+			long abnormalExitTime = System.currentTimeMillis()
+					+ 10 * TimeConstants.ONE_SECOND_MS;
+			while (System.currentTimeMillis() < abnormalExitTime) {
+				synchronized (postLocalFireEventsThreadBarrier) {
+					barrier = postLocalFireEventsThreadBarrier.get(requestId);
+					if (barrier == null) {
+						postLocalFireEventsThreadBarrier.wait(100);
+					} else {
+						break;
+					}
+				}
 			}
 			if (barrier == null) {
-				logger.warn("Already past barrier (that was quick...) {}",
+				logger.warn("Timed out waiting for postLocal barrier  {}",
 						requestId);
 				return;
 			}
 			// wait longer - local transforms are more important to fire in
 			// order. if this is blocking, that be a prob...but why?
-			logger.trace("Wait for post-local barrier: {}", requestId);
+			logger.debug("Wait for post-local barrier: {}", requestId);
 			boolean normalExit = barrier.await(20, TimeUnit.SECONDS);
 			if (!normalExit) {
 				Thread blockingThread = loaderDatabase.getStore()
@@ -131,13 +174,19 @@ public class DomainStoreTransformSequencer {
 						? "(No firing thread)"
 						: SEUtilities.getFullStacktrace(blockingThread);
 				logger.warn(
-						"Timedout waiting for local vm transform - {} - \n{}\nBlocking thread:\n{}",
+						"Timedout waiting for post local barrier/local vm transform - {} - \n{}\nBlocking thread:\n{}",
 						requestId, debugString(), blockingThreadStacktrace);
 				// FIXME - mvcc.4 - may need to fire a domainstoreexception here
 				// -
 				// probable issue with pg/kafka. On the other hand, our
 				// sequencer logic might be simpler now...(or after
 				// mvcc.3/postprocess optimisations)
+			} else {
+				logger.debug("Wait for post-local barrier complete: {}",
+						requestId);
+			}
+			synchronized (postLocalFireEventsThreadBarrier) {
+				postLocalFireEventsThreadBarrier.remove(requestId);
 			}
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -155,9 +204,9 @@ public class DomainStoreTransformSequencer {
 			CountDownLatch preLocalBarrier = createPreLocalNonFireEventsThreadBarrier(
 					requestId);
 			loaderDatabase.getStore().getPersistenceEvents().getQueue()
-					.sequencedTransformRequestPublished();
+					.sequencedTransformRequestPublished(requestId);
 			try {
-				logger.trace("Wait for pre-local barrier: {}", requestId);
+				logger.debug("Wait for pre-local barrier: {}", requestId);
 				// don't wait long - this *tries* to apply transforms in order,
 				// but we don't want to block local work
 				int wait = TransformPriorityProvider.get()
@@ -177,6 +226,9 @@ public class DomainStoreTransformSequencer {
 					logger.warn(
 							"Timedout waiting for barrier - {} - \n{} - \nBlocking thread:\n{}",
 							requestId, debugString(), blockingThreadStacktrace);
+				} else {
+					logger.debug("Wait for pre-local barrier complete: {}",
+							requestId);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -184,16 +236,34 @@ public class DomainStoreTransformSequencer {
 		}
 	}
 
-	private synchronized CountDownLatch
+	private CountDownLatch
 			createPostLocalFireEventsThreadBarrier(long requestId) {
-		return postLocalFireEventsThreadBarrier.computeIfAbsent(requestId,
-				id -> new CountDownLatch(1));
+		logger.debug("Created wait for post-local barrier: {}", requestId);
+		synchronized (postLocalFireEventsThreadBarrier) {
+			CountDownLatch barrier = postLocalFireEventsThreadBarrier
+					.get(requestId);
+			if (barrier == null) {
+				barrier = new CountDownLatch(1);
+				postLocalFireEventsThreadBarrier.put(requestId, barrier);
+				postLocalFireEventsThreadBarrier.notifyAll();
+			}
+			return barrier;
+		}
 	}
 
-	private synchronized CountDownLatch
+	private CountDownLatch
 			createPreLocalNonFireEventsThreadBarrier(long requestId) {
-		return preLocalNonFireEventsThreadBarrier.computeIfAbsent(requestId,
-				id -> new CountDownLatch(1));
+		logger.debug("Created wait for pre-local barrier: {}", requestId);
+		synchronized (preLocalNonFireEventsThreadBarrier) {
+			CountDownLatch barrier = preLocalNonFireEventsThreadBarrier
+					.get(requestId);
+			if (barrier == null) {
+				barrier = new CountDownLatch(1);
+				preLocalNonFireEventsThreadBarrier.put(requestId, barrier);
+				preLocalNonFireEventsThreadBarrier.notifyAll();
+			}
+			return barrier;
+		}
 	}
 
 	private synchronized String debugString() {
@@ -238,7 +308,7 @@ public class DomainStoreTransformSequencer {
 						transactionsData.transformListIds
 								.add(idRs.getLong("id"));
 					}
-					logger.trace("Got highestVisible request data : {}",
+					logger.debug("Got highestVisible request data : {}",
 							transactionsData);
 				}
 			}
@@ -278,7 +348,7 @@ public class DomainStoreTransformSequencer {
 			Timestamp fromTimestamp = highestVisibleTransactions.commitTimestamp;
 			if (CommonUtils.getYear(new Date(fromTimestamp.getTime())) < 1972) {
 				fromTimestamp = new Timestamp(fromTimestamp.getTime() + 1);
-				logger.trace("Bumping timestamp - {}", fromTimestamp.getTime());
+				logger.debug("Bumping timestamp - {}", fromTimestamp.getTime());
 			}
 			pStatement.setTimestamp(1, fromTimestamp);
 			ResultSet rs = pStatement.executeQuery();
@@ -323,7 +393,7 @@ public class DomainStoreTransformSequencer {
 				highestVisibleTransactions.commitTimestamp = last.getKey();
 				highestVisibleTransactions.transformListIds = lastIds;
 			}
-			logger.trace(
+			logger.debug(
 					"Added unpublished ids {} - fromTimestamp {} - new timestamp {}",
 					unpublishedIds, fromTimestamp,
 					highestVisibleTransactions.commitTimestamp);

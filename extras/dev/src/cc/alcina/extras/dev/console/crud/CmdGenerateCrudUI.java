@@ -37,7 +37,7 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 
 	@Override
 	public boolean rerunIfMostRecentOnRestart() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -169,6 +169,7 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 					.readClazzp(unitType.templateRelativePath());
 			String out = replaceLookup.replaceSubstrings(template);
 			String outPath = unitType.outputPath(this);
+			outPath = outPath.replace("/persistent/", "/");
 			ResourceUtilities.write(out, outPath);
 			Ax.out("Wrote %s file: \n\t%s", unitType, outPath);
 		}

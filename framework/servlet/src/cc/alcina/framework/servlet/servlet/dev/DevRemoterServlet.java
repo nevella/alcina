@@ -35,6 +35,7 @@ import cc.alcina.framework.entity.entityaccess.cache.mvcc.Transaction;
 import cc.alcina.framework.entity.entityaccess.transform.TransformCommit;
 import cc.alcina.framework.entity.entityaccess.transform.TransformPersisterInPersistenceContext;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 
 public abstract class DevRemoterServlet extends HttpServlet {
 	public static final String DEV_REMOTER_PARAMS = "devRemoterParams";
@@ -109,6 +110,9 @@ public abstract class DevRemoterServlet extends HttpServlet {
 		IUser user = UserlandProvider.get().getUserByName(params.username);
 		try {
 			PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
+			ClientInstance clientInstance = AuthenticationPersistence.get()
+					.getClientInstance(params.clientInstanceId);
+			PermissionsManager.get().setClientInstance(clientInstance);
 			Object api = null;
 			api = getApi(params, api);
 			List<Class> argTypes = new ArrayList<Class>();
@@ -139,8 +143,6 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				if (transformMethod) {
 					// assume as root
 					TransformPersistenceToken token = (TransformPersistenceToken) params.args[1];
-					ClientInstance clientInstance = AuthenticationPersistence
-							.get().getClientInstance(params.clientInstanceId);
 					Integer highestPersistedRequestId = CommonPersistenceProvider
 							.get().getCommonPersistence()
 							.getHighestPersistedRequestIdForClientInstance(
@@ -177,6 +179,9 @@ public abstract class DevRemoterServlet extends HttpServlet {
 					LooseContext.pushWithBoolean(
 							KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER,
 							false);
+					LooseContext.set(
+							ThreadedPmClientInstanceResolverImpl.CONTEXT_CLIENT_INSTANCE,
+							clientInstance);
 					out = method.invoke(api, params.args);
 				} finally {
 					LooseContext.pop();
