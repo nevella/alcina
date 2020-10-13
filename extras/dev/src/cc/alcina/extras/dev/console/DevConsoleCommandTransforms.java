@@ -350,6 +350,10 @@ public class DevConsoleCommandTransforms {
 			// seems that dtr query generally slows things
 			boolean noDtrQuery = !f.contains;
 			argv = f.argv;
+			f = new FilterArgvFlag(argv, "-oldCi");
+			// seems that dtr query generally slows things
+			boolean oldCi = f.contains;
+			argv = f.argv;
 			Connection conn = getConn();
 			ensureClassRefs(conn);
 			Class<? extends DomainTransformRequestPersistent> clazz = AlcinaPersistentEntityImpl
@@ -358,9 +362,15 @@ public class DevConsoleCommandTransforms {
 			Class<? extends DomainTransformEventPersistent> class1 = AlcinaPersistentEntityImpl
 					.getImplementation(DomainTransformEventPersistent.class);
 			String dteName = class1.getAnnotation(Table.class).name();
-			String sql1 = "select dtr.id as id" + " from client_instance ci "
+			String authClause = "client_instance ci "
 					+ "inner join authenticationsession aus on ci.authenticationsession_id=aus.id "
-					+ "inner join users u on aus.user_id=u.id "
+					+ "inner join users u on aus.user_id=u.id ";
+			String authClauseOld = "client_instance ci "
+					+ "inner join users u on ci.user_id=u.id ";
+			if (oldCi) {
+				authClause = authClauseOld;
+			}
+			String sql1 = "select dtr.id as id" + authClause
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
 					+ "where %s order by dtr.id desc";
 			String sql2 = "select ci.id as cli_id, u.username,  "
@@ -371,10 +381,8 @@ public class DevConsoleCommandTransforms {
 					+ " dte.valueid,"
 					+ " dte.servercommitdate as servercommitdate,"
 					+ " dte.valueclassref_id, "
-					+ "dte.utcDate as utcdate, dte.objectlocalid "
-					+ "from client_instance ci "
-					+ "inner join authenticationsession aus on ci.authenticationsession_id=aus.id "
-					+ "inner join users u on aus.user_id=u.id "
+					+ "dte.utcDate as utcdate, dte.objectlocalid " + "from "
+					+ authClause
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
 					+ " inner join %s dte on dte.domaintransformrequestpersistent_id = dtr.id"
 					+ " where %s %s limit %s";
