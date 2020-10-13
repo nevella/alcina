@@ -110,7 +110,7 @@ public class DomainTransformLayerWrapper implements Serializable {
 
 	public Stream<DomainTransformEventPersistent>
 			getTransformsFor(Entity entity) {
-		return getTransformsFor(entity.getClass()).stream().filter(
+		return getTransformsFor(entity.entityClass()).stream().filter(
 				dte -> dte.toObjectLocator().equals(entity.toLocator()));
 	}
 
