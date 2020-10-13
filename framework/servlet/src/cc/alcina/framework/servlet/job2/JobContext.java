@@ -40,6 +40,10 @@ public class JobContext {
 
 	private PersistenceType persistenceType;
 
+	private int subtaskCount;
+
+	private int subtasksCompleted;
+
 	public JobContext(Job job, PersistenceType persistenceType,
 			TaskPerformer performer) {
 		this.job = job;
@@ -69,9 +73,25 @@ public class JobContext {
 		return this.performer;
 	}
 
+	public int getSubtaskCount() {
+		return this.subtaskCount;
+	}
+
+	public int getSubtasksCompleted() {
+		return this.subtasksCompleted;
+	}
+
 	public void onJobException(Exception e) {
 		job.setResultType(JobResultType.EXCEPTION);
 		logger.warn("Unexpected job exception", e);
+	}
+
+	public void setSubtaskCount(int subtaskCount) {
+		this.subtaskCount = subtaskCount;
+	}
+
+	public void setSubtasksCompleted(int subtasksCompleted) {
+		this.subtasksCompleted = subtasksCompleted;
 	}
 
 	protected void persistMetadata(boolean respectImmediate) {

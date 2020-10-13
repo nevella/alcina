@@ -3,12 +3,12 @@ package cc.alcina.framework.common.client.job;
 import java.util.Date;
 import java.util.Set;
 
+import javax.persistence.Column;
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import org.hibernate.annotations.Type;
-
+import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
@@ -25,7 +25,6 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.servlet.job2.JobResult;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
@@ -59,9 +58,30 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 
 	private String queue;
 
+	private boolean stacktraceRequested;
+
+	private int retryCount;
+
+	private String stacktraceResponse;
+
+	private transient Object producedObject;
+
+	// FIXME - mvcc.jobs - get rid'o'me
 	public JobResult asJobResult() {
-		// TODO Auto-generated method stub
-		return null;
+		JobResult result = new JobResult() {
+			@Override
+			public String getActionLog() {
+				return getLog();
+			}
+
+			@Override
+			// FIXME - mvcc.jobs - get rid'o'me
+			public ActionLogItem getActionLogItem() {
+				throw new UnsupportedOperationException();
+			}
+		};
+		result.setProducedObject(producedObject);
+		return result;
 	}
 
 	public double getCompletion() {
@@ -75,6 +95,7 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 	@Transient
 	public abstract Set<? extends JobRelation> getFromRelations();
 
+	@Column(name = "key_")
 	public String getKey() {
 		return this.key;
 	}
@@ -88,6 +109,11 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 	@Transient
 	public abstract ClientInstance getPerformer();
 
+	@Transient
+	public Object getProducedObject() {
+		return this.producedObject;
+	}
+
 	public String getQueue() {
 		return this.queue;
 	}
@@ -100,8 +126,18 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 		return this.resultType;
 	}
 
+	public int getRetryCount() {
+		return this.retryCount;
+	}
+
 	public Date getRunAt() {
 		return this.runAt;
+	}
+
+	@Lob
+	@Transient
+	public String getStacktraceResponse() {
+		return this.stacktraceResponse;
 	}
 
 	public Date getStart() {
@@ -125,14 +161,18 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 	}
 
 	@Lob
-	@Type(type = "org.hibernate.type.StringClobType")
 	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
+	@Transient
 	public String getTaskSerialized() {
 		return this.taskSerialized;
 	}
 
 	@Transient
 	public abstract Set<? extends JobRelation> getToRelations();
+
+	public boolean isStacktraceRequested() {
+		return this.stacktraceRequested;
+	}
 
 	public void setCompletion(double completion) {
 		double old_completion = this.completion;
@@ -167,6 +207,10 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 
 	public abstract void setPerformer(ClientInstance performer);
 
+	public void setProducedObject(Object producedObject) {
+		this.producedObject = producedObject;
+	}
+
 	public void setQueue(String queue) {
 		this.queue = queue;
 	}
@@ -185,10 +229,31 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 				resultType);
 	}
 
+	public void setRetryCount(int retryCount) {
+		int old_retryCount = this.retryCount;
+		this.retryCount = retryCount;
+		propertyChangeSupport().firePropertyChange("retryCount", old_retryCount,
+				retryCount);
+	}
+
 	public void setRunAt(Date runAt) {
 		Date old_runAt = this.runAt;
 		this.runAt = runAt;
 		propertyChangeSupport().firePropertyChange("runAt", old_runAt, runAt);
+	}
+
+	public void setStacktraceRequested(boolean stacktraceRequested) {
+		boolean old_stacktraceRequested = this.stacktraceRequested;
+		this.stacktraceRequested = stacktraceRequested;
+		propertyChangeSupport().firePropertyChange("stacktraceRequested",
+				old_stacktraceRequested, stacktraceRequested);
+	}
+
+	public void setStacktraceResponse(String stacktraceResponse) {
+		String old_stacktraceResponse = this.stacktraceResponse;
+		this.stacktraceResponse = stacktraceResponse;
+		propertyChangeSupport().firePropertyChange("stacktraceResponse",
+				old_stacktraceResponse, stacktraceResponse);
 	}
 
 	public void setStart(Date start) {

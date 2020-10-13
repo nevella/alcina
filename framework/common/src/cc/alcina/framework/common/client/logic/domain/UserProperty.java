@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.logic.domain;
 
-import java.util.Base64;
 import java.util.Optional;
 
 import javax.persistence.Lob;
@@ -17,8 +16,6 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.entity.KryoUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
@@ -73,10 +70,7 @@ public abstract class UserProperty<T extends UserProperty> extends Entity<T>
 	}
 
 	public void serializeObject(Object object) {
-		byte[] bytes = KryoUtils.serializeToByteArray(object);
-		byte[] zipped = ResourceUtilities.gzipBytes(bytes);
-		String serializeToBase64 = Base64.getEncoder().encodeToString(zipped);
-		setValue(serializeToBase64);
+		setValue(TransformManager.serialize(object));
 	}
 
 	@Override

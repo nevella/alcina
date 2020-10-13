@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.job2;
+package cc.alcina.framework.common.client.job;
 
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 

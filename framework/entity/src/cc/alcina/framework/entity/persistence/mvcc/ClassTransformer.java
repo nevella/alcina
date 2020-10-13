@@ -1051,7 +1051,7 @@ class ClassTransformer {
 							 * point...
 							 */
 							bodyBuilder.line(
-									"%s __instance__ = (%s) cc.alcina.framework.entity.entityaccess.cache.mvcc.Transactions.resolve(this, %s, %s);",
+									"%s __instance__ = (%s) cc.alcina.framework.entity.persistence.mvcc.Transactions.resolve(this, %s, %s);",
 									cf.getName(), cf.getName(),
 									writeResolve
 											&& accessType != MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY,

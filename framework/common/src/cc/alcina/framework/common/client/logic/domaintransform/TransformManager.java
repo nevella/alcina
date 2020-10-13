@@ -1698,9 +1698,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 							.getAnnotation(DomainProperty.class) != null
 					&& toSerializeReflector.getAnnotation(DomainProperty.class)
 							.serialize();
-			serializedReflector = Reflections.classLookup()
-					.getPropertyReflector(entity.entityClass(),
-							event.getPropertyName() + "Serialized");
+			if (toSerializePropertyChange) {
+				serializedReflector = Reflections.classLookup()
+						.getPropertyReflector(entity.entityClass(),
+								event.getPropertyName() + "Serialized");
+			}
 		}
 		/*
 		 * If the serialized version is being changed, null the toSerialize

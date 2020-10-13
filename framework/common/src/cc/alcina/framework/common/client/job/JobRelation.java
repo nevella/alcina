@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -46,7 +47,8 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 		propertyChangeSupport().firePropertyChange("type", old_type, type);
 	}
 
+	@ClientInstantiable
 	public static enum JobRelationType {
-		parent_child, cascade
+		parent_child, cascade, retry
 	}
 }
