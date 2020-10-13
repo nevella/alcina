@@ -84,7 +84,8 @@ public class EntityDataObjectProjector {
 				// passthrough
 			} else if (original instanceof VersionableEntity) {
 				if (multiple) {
-					// FIXME - dirndl.2 - we can't (because of graphiness) guarantee
+					// FIXME - dirndl.2 - we can't (because of graphiness)
+					// guarantee
 					// objects that exist at depth==2 are encountered first at
 					// depth ==2
 					// if (context.depth() > 2) {
@@ -151,7 +152,11 @@ public class EntityDataObjectProjector {
 							context.fieldName)
 					.getReadMethod().getAnnotation(ManyToMany.class) != null) {
 			} else {
-				return new LiSet();
+				if (original instanceof LiSet) {
+					return new LiSet();
+				} else {
+					// non-relational
+				}
 			}
 		}
 		return (Set) projected;
