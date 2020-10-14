@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.persistence.transform;
 
 import java.io.File;
+import java.lang.reflect.Modifier;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -461,6 +463,9 @@ public class TransformCommit {
 
 	public static void enqueueTransforms(String transformQueueName,
 			Class<? extends Entity>... entityClassNames) {
+		List<DomainTransformEvent> transforms = removeTransforms(
+				entityClassNames);
+		BackendTransformQueue.get().enqueue(transforms, transformQueueName);
 	}
 
 	public static TransformCommit get() {
@@ -482,8 +487,20 @@ public class TransformCommit {
 						committerIpAddress));
 	}
 
-	public static void removeTransforms(String transformQueueName,
-			Class<? extends Entity>... entityClassNames) {
+	public static List<DomainTransformEvent>
+			removeTransforms(Class<? extends Entity>... entityClassNames) {
+		Set<Class> toRemove = Arrays.stream(entityClassNames).map(clazz -> {
+			if (Modifier.isAbstract(clazz.getModifiers())) {
+				return AlcinaPersistentEntityImpl.getImplementation(clazz);
+			}
+			return clazz;
+		}).collect(Collectors.toSet());
+		return TransformManager.get().getTransforms().stream()
+				.collect(Collectors.toList()).stream()
+				.filter(transform -> toRemove
+						.contains(transform.getObjectClass()))
+				.map(TransformManager.get()::removeTransform)
+				.collect(Collectors.toList());
 	}
 
 	public static Topic<TransformPersistenceToken>
@@ -506,27 +523,18 @@ public class TransformCommit {
 		return pendingTransformCount;
 	}
 
-	private BackendTransformQueue backendTransformQueue;
-
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 
 	private Map<Long, EntityLocatorMap> clientInstanceLocatorMap = new ConcurrentHashMap<>();
 
 	private AtomicInteger transformRequestCounter = new AtomicInteger(0);
 
-	public void appShutdown() {
-		if (backendTransformQueue != null) {
-			backendTransformQueue.appShutdown();
-		}
-	}
-
 	public void enqueueBackendTransform(Runnable runnable) {
 		enqueueBackendTransform(runnable, null);
 	}
 
 	public void enqueueBackendTransform(Runnable runnable, String queueName) {
-		ensureQueue();
-		backendTransformQueue.enqueue(runnable);
+		BackendTransformQueue.get().enqueue(runnable, queueName);
 	}
 
 	public EntityLocatorMap getLocatorMapForClient(
@@ -594,7 +602,8 @@ public class TransformCommit {
 
 	public void setBackendTransformQueueMaxDelay(String queueName,
 			long delayMs) {
-		ensureQueue();
+		BackendTransformQueue.get().setBackendTransformQueueMaxDelay(queueName,
+				delayMs);
 	}
 
 	/**
@@ -779,17 +788,6 @@ public class TransformCommit {
 			Preconditions.checkState(
 					TransformManager.get().getTransforms().size() == 0);
 			MetricLogging.get().setMuted(muted);
-		}
-	}
-
-	protected void ensureQueue() {
-		if (backendTransformQueue == null) {
-			synchronized (this) {
-				if (backendTransformQueue == null) {
-					backendTransformQueue = new BackendTransformQueue();
-					backendTransformQueue.start();
-				}
-			}
 		}
 	}
 

@@ -52,12 +52,12 @@ import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase.ServletClassMetadataCacheProvider;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.DbAppender;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
-import cc.alcina.framework.entity.persistence.AppPersistenceBase.ServletClassMetadataCacheProvider;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
@@ -67,7 +67,9 @@ import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
+import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected ServletConfig initServletConfig;
@@ -129,7 +131,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			getStatusNotifier().destroyed();
 			SEUtilities.appShutdown();
 			ResourceUtilities.appShutdown();
-			Registry.impl(TransformCommit.class).appShutdown();
+			BackendTransformQueue.get().stopService();
 			Registry.appShutdown();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -280,10 +282,17 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		if (Ax.isTest()) {
 			logger.removeAllAppenders();
 			Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
-			Appender appender = new SafeConsoleAppender(layout);
-			String mainLoggerAppenderName = AlcinaWebappConfig.MAIN_LOGGER_APPENDER;
-			appender.setName(mainLoggerAppenderName);
-			logger.addAppender(appender);
+			{
+				Appender appender = new SafeConsoleAppender(layout);
+				appender.setName(AlcinaWebappConfig.MAIN_LOGGER_APPENDER);
+				logger.addAppender(appender);
+			}
+			{
+				PerThreadAppender appender = new PerThreadAppender(layout);
+				Registry.registerSingleton(PerThreadLogging.class, appender);
+				appender.setName("per-thread-appender");
+				logger.addAppender(appender);
+			}
 		}
 		logger.setAdditivity(true);
 		logger.setLevel(Level.INFO);
@@ -308,8 +317,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 						Field logLevelField = SEUtilities
 								.getFieldByName(handler.getClass(), "logLevel");
 						logLevelField.setAccessible(true);
-						logLevelField.set(handler,
-								java.util.logging.Level.FINE);
+						logLevelField.set(handler, java.util.logging.Level.ALL);
+					} else if (handler.getClass().getName().equals(
+							"cc.alcina.framework.servlet.logging.PerThreadLoggingHandler")) {
+						Registry.registerSingleton(PerThreadLogging.class,
+								handler);
 					}
 				}
 			} catch (Exception e) {

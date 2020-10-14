@@ -20,6 +20,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.servlet.job2.JobRegistry.ActionPerformerTrackMetrics;
+import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 
 public class JobContext {
@@ -57,6 +58,8 @@ public class JobContext {
 		if (noHttpContext) {
 			InternalMetrics.get().endTracker(performer);
 		}
+		String log = Registry.impl(PerThreadLogging.class).endBuffer();
+		job.setLog(log);
 		persistMetadata(true);
 		Transaction.endAndBeginNew();
 	}
@@ -116,8 +119,7 @@ public class JobContext {
 			break;
 		}
 		case None:
-			TransformCommit.removeTransforms(JobRegistry.TRANSFORM_QUEUE_NAME,
-					Job.class, JobRelation.class);
+			TransformCommit.removeTransforms(Job.class, JobRelation.class);
 			break;
 		}
 	}
@@ -140,6 +142,7 @@ public class JobContext {
 		job.setStart(new Date());
 		job.setState(JobState.PROCESSING);
 		persistMetadata(true);
+		Registry.impl(PerThreadLogging.class).beginBuffer();
 		if (noHttpContext) {
 			ActionPerformerTrackMetrics filter = Registry
 					.impl(ActionPerformerTrackMetrics.class);

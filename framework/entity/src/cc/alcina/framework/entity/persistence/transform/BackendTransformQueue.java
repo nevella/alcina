@@ -1,22 +1,30 @@
 package cc.alcina.framework.entity.persistence.transform;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
-import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 
 /*
  * FIXME - mvcc.4 - the threading is overly complex - or could be abstracted out maybe? With a task queue?
@@ -26,72 +34,77 @@ import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
  *  It should run for the app lifetime (other cases of AtEndOfEventSeriesTimer may be misapplied too)
  * 
  * FIXME - mvcc.5 - backup (fs?) persistence of transforms? (get em via scp on fail) (why aren't the runnables run on the originating thread?)
+ * 
+ * synchronization - all access to internal collections synchronized on this
  */
-class BackendTransformQueue {
-	private AtEndOfEventSeriesTimer persistTimer;
-
-	List<Runnable> tasks = new ArrayList<>();
+@RegistryLocation(registryPoint = BackendTransformQueue.class, implementationType = ImplementationType.SINGLETON)
+public class BackendTransformQueue {
+	public static BackendTransformQueue get() {
+		return Registry.impl(BackendTransformQueue.class);
+	}
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	AtomicBoolean persisting = new AtomicBoolean(false);
+	private Map<String, Long> queueMaxDelay = new LinkedHashMap<>();
 
-	AtomicBoolean persistAtEndOfCurrentTask = new AtomicBoolean(false);
+	private Map<String, Long> queueFirstEvent = new LinkedHashMap<>();
 
-	private long lastPersistStarted;
+	private List<DomainTransformEvent> transforms = new ArrayList<>();
 
-	private Map<String, Long> queueMaxDelay = new ConcurrentHashMap<>();
+	private TimerTask scheduledTask = null;
 
-	public void enqueue(Runnable runnable) {
-		int size = 0;
+	private boolean persisting = false;
+
+	private boolean zeroDelayTaskScheduled = false;
+
+	private Timer timer = new Timer("Backend-transform-queue");
+
+	public void enqueue(List<DomainTransformEvent> transforms,
+			String queueName) {
 		synchronized (this) {
-			tasks.add(runnable);
-			size = tasks.size();
-			persistTimer.triggerEventOccurred();
+			this.transforms.addAll(transforms);
+			long now = System.currentTimeMillis();
+			queueFirstEvent.putIfAbsent(queueName, now);
+			maybeEnqueueTask();
+		}
+	}
+
+	public void enqueue(Runnable runnable, String queueName) {
+		CollectingListener collectingListener = new CollectingListener();
+		try {
+			TransformManager.get()
+					.addDomainTransformListener(collectingListener);
+			runnable.run();
+			enqueue(collectingListener.transforms, queueName);
+		} finally {
+			TransformManager.get()
+					.removeDomainTransformListener(collectingListener);
 		}
 	}
 
 	public void setBackendTransformQueueMaxDelay(String queueName,
 			long delayMs) {
-		queueMaxDelay.put(queueName, delayMs);
+		synchronized (this) {
+			queueMaxDelay.put(queueName, delayMs);
+		}
+	}
+
+	public void stopService() {
+		timer.cancel();
 	}
 
 	private void persistQueue0() {
-		boolean doPersist = true;
-		while (doPersist) {
-			lastPersistStarted = System.currentTimeMillis();
-			List<DomainTransformEvent> events = new ArrayList<>();
-			List<Runnable> toCommit = null;
+		while (true) {
 			synchronized (this) {
-				toCommit = tasks;
-				tasks = new ArrayList<>();
-				if (toCommit.size() == 0) {
-					synchronized (persisting) {
-						persisting.set(false);
-					}
-				}
-			}
-			for (Runnable runnable : toCommit) {
-				if (runnable instanceof AlcinaChildRunnable) {
-					((AlcinaChildRunnable) runnable)
-							.setRunningWithinTransaction(true);
-				}
-				ThreadlocalTransformManager.cast().resetTltm(null);
-				try {
-					LooseContext.push();
-					runnable.run();
-					events.addAll(TransformManager.get().getTransforms());
-					TransformManager.get().clearTransforms();
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					LooseContext.pop();
-				}
-			}
-			ThreadlocalTransformManager.get().addTransforms(events, false);
-			if (events.size() > 0) {
-				logger.warn("(Backend queue)  - committing {} transforms",
-						events.size());
+				logger.info("(Backend queue)  - committing {} transforms",
+						transforms.size());
+				Transaction.endAndBeginNew();
+				ThreadlocalTransformManager.get().addTransforms(transforms,
+						false);
+				transforms.clear();
+				persisting = true;
+				zeroDelayTaskScheduled = false;
+				queueFirstEvent.clear();
 			}
 			try {
 				LooseContext.push();
@@ -99,52 +112,69 @@ class BackendTransformQueue {
 			} finally {
 				LooseContext.pop();
 			}
-			doPersist = false;
-			synchronized (persisting) {
-				if (persistAtEndOfCurrentTask.get()) {
-					doPersist = true;
-					persistAtEndOfCurrentTask.set(false);
+			synchronized (this) {
+				if (getCommitDelay().orElse(Long.MAX_VALUE) == 0L) {
+				} else {
+					persisting = false;
+					break;
 				}
 			}
 		}
-		persisting.set(false);
 	}
 
-	void appShutdown() {
-		persistTimer.cancel();
-		// force persist attempt, even if in-flight
-		persisting.set(false);
-		persistQueue();
+	protected Optional<Long> getCommitDelay() {
+		long now = System.currentTimeMillis();
+		Optional<Long> commitDelay = queueFirstEvent.entrySet().stream()
+				.map(e -> {
+					String queueName = e.getKey();
+					Long maxDelay = queueMaxDelay.get(queueName);
+					Long firstEventTime = e.getValue();
+					long queueDelay = firstEventTime + maxDelay - now;
+					return Math.max(queueDelay, 0L);
+				}).collect(Collectors.minBy(Comparator.naturalOrder()));
+		return commitDelay;
 	}
 
-	void persistQueue() {
-		boolean doPersist = false;
-		synchronized (persisting) {
-			if (!persisting.get()) {
-				persisting.set(true);
-				doPersist = true;
-			} else {
-				logger.info(
-						"Not persisting - there's an inflight persistence job started {} ms ago",
-						System.currentTimeMillis() - lastPersistStarted);
-				persistAtEndOfCurrentTask.set(true);
+	/**
+	 * return true if a zero-delay persistence task should run
+	 */
+	protected boolean maybeEnqueueTask() {
+		Optional<Long> commitDelay = getCommitDelay();
+		if (persisting || (zeroDelayTaskScheduled
+				&& commitDelay.get().longValue() == 0)) {
+			// no need to change the current task
+		} else {
+			if (scheduledTask != null) {
+				scheduledTask.cancel();
 			}
+			// commitDelay will be < Long.MAX_VALUE
+			scheduledTask = new TimerTask() {
+				@Override
+				public void run() {
+					AlcinaChildRunnable.runInTransaction(
+							"backend-transform-persist", () -> persistQueue0(),
+							true, false);
+				}
+			};
+			timer.schedule(scheduledTask, commitDelay.get());
+			zeroDelayTaskScheduled = commitDelay.get() == 0;
 		}
-		if (doPersist) {
-			AlcinaChildRunnable.runInTransaction("backend-transform-persist",
-					() -> persistQueue0(), true, false);
-		}
+		return false;
 	}
 
 	void start() {
 		int loopDelay = ResourceUtilities
 				.getInteger(BackendTransformQueue.class, "loopDelay");
 		queueMaxDelay.put(null, (long) loopDelay);
-		persistTimer = new AtEndOfEventSeriesTimer<>(loopDelay, new Runnable() {
-			@Override
-			public void run() {
-				persistQueue();
-			}
-		}).maxDelayFromFirstAction(loopDelay);
+	}
+
+	private static class CollectingListener implements DomainTransformListener {
+		List<DomainTransformEvent> transforms = new ArrayList<>();
+
+		@Override
+		public void domainTransform(DomainTransformEvent evt)
+				throws DomainTransformException {
+			transforms.add(evt);
+		}
 	}
 }

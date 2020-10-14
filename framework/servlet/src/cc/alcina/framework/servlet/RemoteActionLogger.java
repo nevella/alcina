@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 
+//FIXME - mvcc.jobs - remove
 public class RemoteActionLogger extends Logger {
 	private WriterAccessWriterAppender writerAppender;
 

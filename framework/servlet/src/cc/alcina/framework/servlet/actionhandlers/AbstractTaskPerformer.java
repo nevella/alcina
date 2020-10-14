@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.util.Ax;
@@ -13,7 +14,8 @@ import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
 import cc.alcina.framework.servlet.knowns.KnownJob;
 
-public abstract class AbstractTaskPerformer implements Runnable, Task {
+public abstract class AbstractTaskPerformer
+		implements Runnable, Task, TaskPerformer {
 	public Logger actionLogger;
 
 	protected org.slf4j.Logger slf4jLogger = LoggerFactory
@@ -41,6 +43,11 @@ public abstract class AbstractTaskPerformer implements Runnable, Task {
 
 	public void cancel() {
 		this.cancelled = true;
+	}
+
+	@Override
+	public void performAction(Task task) throws Exception {
+		run();
 	}
 
 	@Override

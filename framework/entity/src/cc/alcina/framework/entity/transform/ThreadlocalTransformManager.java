@@ -223,7 +223,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	protected Entity ignorePropertyChangesTo;
 
-	DomainTransformEvent lastEvent = null;
+	DomainTransformEvent lastTransform = null;
 
 	private boolean initialised = false;
 
@@ -726,22 +726,28 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public synchronized void propertyChange(PropertyChangeEvent evt) {
-		if (isIgnorePropertyChangesForEvent(evt)) {
+	public synchronized void propertyChange(PropertyChangeEvent event) {
+		if (isIgnorePropertyChangesForEvent(event)) {
 			return;
 		}
 		if (isIgnorePropertyChanges()
-				|| UNSPECIFIC_PROPERTY_CHANGE.equals(evt.getPropertyName())) {
+				|| UNSPECIFIC_PROPERTY_CHANGE.equals(event.getPropertyName())) {
 			return;
 		}
-		DomainTransformEvent dte = createTransformFromPropertyChange(evt);
-		convertToTargetObject(dte);
-		if (lastEvent != null && lastEvent.equivalentTo(dte)) {
-			// hibernate manipulations can cause a bunch of theses
-			return;
+		if (getEntityManager() != null) {
+			DomainTransformEvent currentTransform = createTransformFromPropertyChange(
+					event);
+			convertToTargetObject(currentTransform);
+			if (lastTransform != null
+					&& lastTransform.equivalentTo(currentTransform)) {
+				// hibernate manipulations can cause a bunch of theses
+				// FIXME - mvcc.4 - do they really?
+				logger.info("ignoring repeat transform: {}", currentTransform);
+				return;
+			}
+			lastTransform = currentTransform;
 		}
-		lastEvent = dte;
-		super.propertyChange(evt);
+		super.propertyChange(event);
 	}
 
 	public boolean provideIsMarkedFlushTransform(DomainTransformEvent event) {
@@ -849,7 +855,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			explicitlyPermittedTransforms.clear();
 			flushAfterTransforms.clear();
 		}
-		this.lastEvent = null;
+		this.lastTransform = null;
 		for (Entity entity : listeningTo.keySet()) {
 			if (entity != null) {
 				try {

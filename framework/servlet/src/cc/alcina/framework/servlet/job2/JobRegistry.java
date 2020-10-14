@@ -134,12 +134,12 @@ public class JobRegistry extends WriterService {
 		job.setUser(PermissionsManager.get().getUser());
 		job.setKey(task.provideJobKey());
 		job.setState(JobState.PENDING);
+		job.setTask(task);
 		return job;
 	}
 
 	private void performJob(Job job) {
-		TaskPerformer performer = Registry.impl(TaskPerformer.class,
-				job.getTask().getClass());
+		TaskPerformer performer = getTaskPerformer(job);
 		PersistenceType persistenceType = PersistenceType.Queued;
 		if (!UserlandProvider.get().isSystemUser(job.getUser())) {
 			persistenceType = PersistenceType.Immediate;
@@ -190,6 +190,14 @@ public class JobRegistry extends WriterService {
 		}
 	}
 
+	protected TaskPerformer getTaskPerformer(Job job) {
+		Task task = job.getTask();
+		if (task instanceof TaskPerformer) {
+			return (TaskPerformer) task;
+		}
+		return Registry.impl(TaskPerformer.class, task.getClass());
+	}
+
 	@RegistryLocation(registryPoint = ActionPerformerTrackMetrics.class, implementationType = ImplementationType.SINGLETON)
 	public static class ActionPerformerTrackMetrics
 			implements Supplier<Boolean> {
@@ -199,6 +207,7 @@ public class JobRegistry extends WriterService {
 		}
 	}
 
+	@RegistryLocation(registryPoint = Task.Performer.class, implementationType = ImplementationType.SINGLETON)
 	public static class Performer implements Task.Performer {
 		@Override
 		public void perform(Task task) {

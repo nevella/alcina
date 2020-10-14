@@ -1479,9 +1479,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		this.transformListenerSupport.removeDomainTransformListener(listener);
 	}
 
-	public void removeTransform(DomainTransformEvent evt) {
-		transforms.remove(evt);
-		getTransformsByCommitType(evt.getCommitType()).remove(evt);
+	public DomainTransformEvent
+			removeTransform(DomainTransformEvent transform) {
+		transforms.remove(transform);
+		getTransformsByCommitType(transform.getCommitType()).remove(transform);
+		return transform;
 	}
 
 	public void removeTransformsFor(Object object) {
@@ -1489,16 +1491,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public void removeTransformsForObjects(Collection c) {
-		Set<DomainTransformEvent> trs = new LinkedHashSet<>(
+		Set<DomainTransformEvent> transforms = new LinkedHashSet<>(
 				getTransformsByCommitType(CommitType.TO_LOCAL_BEAN));
 		if (!(c instanceof Set)) {
 			c = new HashSet(c);
 		}
-		for (DomainTransformEvent dte : trs) {
-			if (c.contains(dte.provideSourceOrMarker())
-					|| c.contains(dte.getNewValue())
-					|| c.contains(dte.provideTargetMarkerForRemoval())) {
-				removeTransform(dte);
+		for (DomainTransformEvent transform : transforms) {
+			if (c.contains(transform.provideSourceOrMarker())
+					|| c.contains(transform.getNewValue())
+					|| c.contains(transform.provideTargetMarkerForRemoval())) {
+				removeTransform(transform);
 			}
 		}
 	}
@@ -1711,17 +1713,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 		 */
 		if (serializedPropertyChange) {
 			if (LooseContext.is(CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE)) {
-				// setting this serialized value from a non-serialized setter -
-				// do not
-				// propagate
-				return true;
-			}
-			try {
-				LooseContext.pushWithTrue(
-						CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
-				toSerializeReflector.setPropertyValue(entity, null);
-			} finally {
-				LooseContext.pop();
+				// setting this serialized value from a non-serialized setter
+				// call -
+				// store the transform but do not propagate
+			} else {
+				try {
+					LooseContext.pushWithTrue(
+							CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
+					toSerializeReflector.setPropertyValue(entity, null);
+				} finally {
+					LooseContext.pop();
+				}
 			}
 		}
 		if (toSerializePropertyChange) {

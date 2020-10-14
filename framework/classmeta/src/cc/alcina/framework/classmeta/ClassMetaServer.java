@@ -25,8 +25,8 @@ import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.util.BiPrintStream;
-import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
+import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 
 public class ClassMetaServer {

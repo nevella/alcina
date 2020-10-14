@@ -13,7 +13,7 @@ public interface Task {
 	}
 
 	default String provideJobKey() {
-		return null;
+		return getClass().getName();
 	}
 
 	public static interface Performer {
