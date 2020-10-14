@@ -31,6 +31,7 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersiste
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.servlet.Sx;
 
 public class TransformCommitLog {
 	private Producer<Void, byte[]> producer;
@@ -119,6 +120,9 @@ public class TransformCommitLog {
 	 * to ensure position should generally throw that exception and retry later)
 	 */
 	public void refreshCurrentPosition() {
+		if (Sx.isTest() && currentConsumerThread.currentOffset != -1) {
+			return;
+		}
 		currentConsumerThread.checkCurrentPosition();
 	}
 
