@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomTokenStream;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.parser.structured.StructuredTokenParserContext.PerNodeExceptionHandler;
 
 public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 	public static List<XmlToken> getTokens(Class<?> tokenClass) {
@@ -87,13 +88,25 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 	}
 
 	protected void handleNode(DomNode node, C context) {
-		for (XmlToken token : tokens) {
-			if (token.matches(context, node)) {
-				XmlStructuralJoin join = new XmlStructuralJoin(node, token);
-				context.logMatch(token);
-				token.onMatch(context, join);
-				break;
+		try {
+			for (XmlToken token : tokens) {
+				if (token.matches(context, node)) {
+					XmlStructuralJoin join = new XmlStructuralJoin(node, token);
+					context.logMatch(token);
+					token.onMatch(context, join);
+					break;
+				}
 			}
+		} catch (RuntimeException e) {
+			if (LooseContext.containsKey(
+					StructuredTokenParserContext.CONTEXT_PER_NODE_EXCEPTION_HANDLER)) {
+				PerNodeExceptionHandler handler = LooseContext.get(
+						StructuredTokenParserContext.CONTEXT_PER_NODE_EXCEPTION_HANDLER);
+				if (handler != null && !handler.isThrow(e)) {
+					return;
+				}
+			}
+			throw e;
 		}
 	}
 }

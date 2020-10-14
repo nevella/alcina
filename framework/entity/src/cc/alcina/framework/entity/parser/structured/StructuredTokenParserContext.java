@@ -28,6 +28,9 @@ public class StructuredTokenParserContext {
 	public static final String CONTEXT_DEBUG_UNMATCHED_NODES = StructuredTokenParserContext.class
 			.getName() + ".CONTEXT_DEBUG_UNMATCHED_NODES";
 
+	public static final String CONTEXT_PER_NODE_EXCEPTION_HANDLER = StructuredTokenParserContext.class
+			.getName() + ".CONTEXT_PER_NODE_EXCEPTION_HANDLER";
+
 	public XmlTokenOutput out;
 
 	public DomTokenStream stream;
@@ -413,5 +416,9 @@ public class StructuredTokenParserContext {
 
 	public static abstract class OutputContextRoot {
 		public XmlStructuralJoin node;
+	}
+
+	public static interface PerNodeExceptionHandler {
+		boolean isThrow(Exception e);
 	}
 }

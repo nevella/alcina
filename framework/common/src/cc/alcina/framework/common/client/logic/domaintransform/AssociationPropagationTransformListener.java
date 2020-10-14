@@ -55,17 +55,17 @@ public class AssociationPropagationTransformListener
 		switch (token.transformType) {
 		case NULL_PROPERTY_REF:
 		case CHANGE_PROPERTY_REF: {
-			tm.updateAssociation(event, entity, token.existingTargetObject,
+			tm.updateAssociation(event, entity, token.existingTargetEntity,
 					true);
-			tm.updateAssociation(event, entity, token.newTargetObject, false);
+			tm.updateAssociation(event, entity, token.newTargetEntity, false);
 			break;
 		}
 		case ADD_REF_TO_COLLECTION: {
-			tm.updateAssociation(event, entity, token.newTargetObject, false);
+			tm.updateAssociation(event, entity, token.newTargetEntity, false);
 			break;
 		}
 		case REMOVE_REF_FROM_COLLECTION: {
-			tm.updateAssociation(event, entity, token.newTargetObject, true);
+			tm.updateAssociation(event, entity, token.newTargetEntity, true);
 			break;
 		}
 		case DELETE_OBJECT: {

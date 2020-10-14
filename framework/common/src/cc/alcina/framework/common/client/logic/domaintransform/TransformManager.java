@@ -382,16 +382,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 		currentEvent = event;
 		ApplyToken token = createApplyToken(event);
 		if (!checkPermissions(token.object, event, event.getPropertyName(),
-				token.existingTargetValue)) {
+				token.existingTargetObject)) {
 			return;
 		}
 		if (!checkPermissions(token.object, event, event.getPropertyName(),
-				token.newTargetValue)) {
+				token.newTargetObject)) {
 			return;
 		}
 		if (markedForDeletion.contains(token.object)
-				|| markedForDeletion.contains(token.newTargetObject)
-				|| markedForDeletion.contains(token.existingTargetObject)) {
+				|| markedForDeletion.contains(token.newTargetEntity)
+				|| markedForDeletion.contains(token.existingTargetEntity)) {
 			throw new DomainTransformException(
 					"Modifying object marked for deletion");
 		}
@@ -420,7 +420,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				return;
 			}
 			propertyAccessor().setPropertyValue(token.object,
-					event.getPropertyName(), token.newTargetValue);
+					event.getPropertyName(), token.newTargetObject);
 			if (event.getPropertyName()
 					.equals(TransformManager.ID_FIELD_NAME)) {
 				// FIXME - mvcc.adjunct (clienttransformmanager rework) - remove
@@ -436,8 +436,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			switch (token.transformType) {
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_REF:
-				if (token.existingTargetValue != token.newTargetValue) {
-					if (token.existingTargetValue instanceof Collection) {
+				if (token.existingTargetObject != token.newTargetObject) {
+					if (token.existingTargetObject instanceof Collection) {
 						throw new RuntimeException(
 								"Should not null a collection property:\n "
 										+ event.toString());
@@ -456,32 +456,32 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// a writeable version
 		case ADD_REF_TO_COLLECTION: {
 			beforeDirectCollectionModification(token.object,
-					event.getPropertyName(), token.newTargetValue,
+					event.getPropertyName(), token.newTargetObject,
 					CollectionModificationType.ADD);
 			if (shouldApplyCollectionModification(event)) {
 				Set set = (Set) propertyAccessor().getPropertyValue(
 						token.object, event.getPropertyName());
-				if (!set.contains(token.newTargetValue)) {
-					doubleCheckAddition(set, token.newTargetValue);
+				if (!set.contains(token.newTargetObject)) {
+					doubleCheckAddition(set, token.newTargetObject);
 				}
 			}
 			objectModified(token.object, event, false);
-			collectionChanged(token.object, token.newTargetValue);
+			collectionChanged(token.object, token.newTargetObject);
 		}
 			break;
 		case REMOVE_REF_FROM_COLLECTION: {
 			beforeDirectCollectionModification(token.object,
-					event.getPropertyName(), token.newTargetValue,
+					event.getPropertyName(), token.newTargetObject,
 					CollectionModificationType.REMOVE);
 			if (shouldApplyCollectionModification(event)) {
 				Set set = (Set) propertyAccessor().getPropertyValue(
 						token.object, event.getPropertyName());
-				boolean wasContained = set.remove(token.newTargetValue);
+				boolean wasContained = set.remove(token.newTargetObject);
 				if (!wasContained) {
-					doubleCheckRemoval(set, token.newTargetValue);
+					doubleCheckRemoval(set, token.newTargetObject);
 				}
 			}
-			collectionChanged(token.object, token.newTargetValue);
+			collectionChanged(token.object, token.newTargetObject);
 			break;
 		}
 		case DELETE_OBJECT:
@@ -2107,13 +2107,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 		TransformType transformType;
 
-		private Object existingTargetValue;
+		Object existingTargetObject;
 
-		Entity existingTargetObject;
+		Entity existingTargetEntity;
 
-		private Object newTargetValue;
+		Object newTargetObject;
 
-		Entity newTargetObject;
+		Entity newTargetEntity;
 
 		ApplyToken(DomainTransformEvent event) throws DomainTransformException {
 			transformType = event.getTransformType();
@@ -2131,27 +2131,27 @@ public abstract class TransformManager implements PropertyChangeListener,
 							DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND);
 				}
 			}
-			existingTargetValue = null;
+			existingTargetObject = null;
 			if (event.isInImmediatePropertyChangeCommit()) {
-				existingTargetValue = event.getOldValue();
+				existingTargetObject = event.getOldValue();
 			} else if (event.getSource() == null
 					|| event.getPropertyName() == null) {
 			} else {
-				existingTargetValue = propertyAccessor().getPropertyValue(
+				existingTargetObject = propertyAccessor().getPropertyValue(
 						event.getSource(), event.getPropertyName());
 			}
-			existingTargetValue = ensureEndpointInTransformGraph(
-					existingTargetValue);
-			existingTargetObject = null;
-			if (existingTargetValue instanceof Entity) {
-				existingTargetObject = (Entity) existingTargetValue;
+			existingTargetObject = ensureEndpointInTransformGraph(
+					existingTargetObject);
+			existingTargetEntity = null;
+			if (existingTargetObject instanceof Entity) {
+				existingTargetEntity = (Entity) existingTargetObject;
 			}
-			newTargetValue = transformType == null ? null
+			newTargetObject = transformType == null ? null
 					: getTargetObject(event, false);
-			newTargetValue = ensureEndpointInTransformGraph(newTargetValue);
-			newTargetObject = null;
-			if (newTargetValue instanceof Entity) {
-				newTargetObject = (Entity) newTargetValue;
+			newTargetObject = ensureEndpointInTransformGraph(newTargetObject);
+			newTargetEntity = null;
+			if (newTargetObject instanceof Entity) {
+				newTargetEntity = (Entity) newTargetObject;
 			}
 		}
 	}
