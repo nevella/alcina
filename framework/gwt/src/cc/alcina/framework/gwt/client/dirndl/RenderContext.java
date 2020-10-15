@@ -59,17 +59,6 @@ public class RenderContext extends LooseContextInstance {
 
 	private static RenderContext trunk = null;
 
-	@Override
-	public <T> T get(String key) {
-		if (DirectedLayout.current != null) {
-			T t = DirectedLayout.current.resolveRenderContextProperty(key);
-			if (t != null) {
-				return t;
-			}
-		}
-		return super.get(key);
-	}
-
 	/**
 	 * In the case of object tree rendering, it makes sense to temporarily make
 	 * the get() instance totally independent - until the initial (sychronous)
@@ -101,6 +90,17 @@ public class RenderContext extends LooseContextInstance {
 
 	private RenderContext() {
 		super();
+	}
+
+	@Override
+	public <T> T get(String key) {
+		if (DirectedLayout.current != null) {
+			T t = DirectedLayout.current.resolveRenderContextProperty(key);
+			if (t != null) {
+				return t;
+			}
+		}
+		return super.get(key);
 	}
 
 	public Renderer getNodeTypeRenderer(TreeRenderer node) {
@@ -199,9 +199,5 @@ public class RenderContext extends LooseContextInstance {
 		RenderContext context = new RenderContext();
 		cloneToSnapshot(context);
 		return context;
-	}
-
-	public RenderContextStyles styles() {
-		return new RenderContextStyles(this);
 	}
 }
