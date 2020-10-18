@@ -349,7 +349,6 @@ public class ContentViewFactory {
 		if (tableStyleName != null) {
 			f.addStyleName(tableStyleName);
 		}
-		RenderContext.get().styles().multiRowTable().applyTo(f);
 		f.addAttachHandler(new RecheckVisibilityHandler(f));
 		f.setAutofocusField(GwittirBridge.get().getFieldToFocus(bean, fields));
 		f.setValue(bean);
@@ -495,7 +494,6 @@ public class ContentViewFactory {
 		if (tableStyleName != null) {
 			table.addStyleName(tableStyleName);
 		}
-		RenderContext.get().styles().multiRowTable().applyTo(table);
 		cp.add(table);
 		cp.setBoundWidget(table);
 		if (editable && !autoSave && !noButtons) {
@@ -758,7 +756,6 @@ public class ContentViewFactory {
 			createPaneWrapper(PermissibleActionListener actionListener) {
 		PaneWrapperWithObjects vp = new PaneWrapperWithObjects();
 		vp.setStyleName("alcina-BeanPanel");
-		RenderContext.get().styles().multiRowTable().applyTo(vp, editable);
 		if (actionListener != null) {
 			vp.addVetoableActionListener(actionListener);
 		}

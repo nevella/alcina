@@ -805,7 +805,18 @@ public class ThreadlocalTransformManager extends TransformManager
 	 */
 	public <T extends Entity> T registerDomainObject(T entity) {
 		if (Ax.isTest()
-				&& DomainStore.writableStore().isCached(entity.entityClass())) {
+				&& DomainStore.writableStore().isCached(entity.entityClass())
+				&& !DomainStore.writableStore().getCache().contains(entity)) {
+			/*
+			 * This usage is key for allowing 'synthetic transform' creation against a dev db... e.g:
+			 * @formatter:off
+			 * 
+			 * 	JadeUser user = new JadeUser(99999).domain().register();
+				user.setUsername("Honeybunny");
+				console.dumpTransforms();
+				
+				@formatter:on
+			 */
 			DomainStore.writableStore().getCache().put(entity);
 		}
 		listenTo(entity);
