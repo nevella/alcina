@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.servlet.servlet;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
@@ -91,8 +90,10 @@ import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.ServerValidatorHandler;
+import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
@@ -101,7 +102,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSugges
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
-import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionProvider;
@@ -221,6 +221,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@Override
 	@WebMethod(readonlyPermitted = true)
+	// FIXME - mvcc.jobs - remove
 	public List<String> listRunningJobs() {
 		return JobRegistry1.get().getRunningJobs();
 	}
@@ -335,14 +336,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 */
 	@Override
 	public String performAction(RemoteAction action) {
-		JobRegistry jobRegistry = JobRegistry.get();
-		Job job = jobRegistry.start(action);
 		if (action instanceof SynchronousAction) {
-			jobRegistry.waitUntilComplete(job);
-			return jobRegistry.getJobResult(job).getActionLogItem()
+			return JobRegistry.get().perform(action).getActionLogItem()
 					.getShortDescription();
 		} else {
-			return job.toStringId();
+			String name = JobRegistry.get().start(action).getName();
+			// make sure the job is available for log callers
+			Transaction.commit();
+			return name;
 		}
 	}
 
@@ -380,14 +381,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@Override
 	public JobTracker pollJobStatus(String id, boolean cancel) {
-		if (cancel) {
-			JobRegistry1.get().cancel(id);
-		}
-		JobTracker tracker = JobRegistry1.get().getTracker(id);
-		if (tracker == null) {
+		Job job = DomainDescriptorJob.get().getJob(id);
+		if (job == null) {
 			return null;
 		}
-		return JobRegistry1.exportableForm(tracker);
+		if (cancel) {
+			job.cancel();
+		}
+		return job.asJobTracker();
 	}
 
 	@Override
@@ -578,14 +579,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 		return new TransformCollector().waitForTransforms(position,
 				clientInstanceId);
-	}
-
-	private File getDataDumpsFolder() {
-		File dataFolder = ServletLayerObjects.get().getDataFolder();
-		File dir = new File(
-				dataFolder.getPath() + File.separator + "client-dumps");
-		dir.mkdirs();
-		return dir;
 	}
 
 	private void sanitiseClrString(ClientLogRecord clr) {

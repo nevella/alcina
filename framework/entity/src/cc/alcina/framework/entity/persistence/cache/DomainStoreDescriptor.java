@@ -84,6 +84,9 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		return true;
 	}
 
+	public void onWarmupComplete(DomainStore domainStore) {
+	}
+
 	public void saveSegmentData() {
 		throw new UnsupportedOperationException();
 	}

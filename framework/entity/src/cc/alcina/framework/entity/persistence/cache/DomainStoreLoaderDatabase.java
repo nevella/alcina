@@ -55,6 +55,7 @@ import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask
 import cc.alcina.framework.common.client.domain.DomainProjection;
 import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
+import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadOracle;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -93,6 +94,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.SqlUtils;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 
@@ -105,6 +107,9 @@ import it.unimi.dsi.fastutil.longs.LongArrayList;
  * warmup connections would ideally be all in the same tx (no idea if that's even possible). or ... 1 connection multiple statements?
  */
 public class DomainStoreLoaderDatabase implements DomainStoreLoader {
+	static final transient String CONTEXT_ALLOW_ALL_LAZY_LOAD = DomainStoreLoaderDatabase.class
+			.getName() + ".CONTEXT_ALLOW_ALL_LAZY_LOAD";
+
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	private Map<PropertyDescriptor, JoinTable> joinTables;
@@ -717,6 +722,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
+	// FIXME - mvcc.jobs - are we including lazy loads in the select?
 	private List<HasId> loadTable0(Connection conn, Class clazz,
 			String sqlFilter, ClassIdLock sublock, LaterLookup laterLookup,
 			boolean ignoreIfExisting, boolean keepDetached,
@@ -1208,6 +1214,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		Class mappedClass;
 
+		DomainStoreProperty domainStoreProperty;
+
+		DomainStorePropertyLoadOracle lazyLoadOracle;
+
 		public PdOperator(PropertyDescriptor pd, Class clazz, int idx)
 				throws Exception {
 			this.pd = pd;
@@ -1225,6 +1235,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			DomainStoreMapping mapping = readMethod
 					.getAnnotation(DomainStoreMapping.class);
 			this.mappedClass = mapping == null ? null : mapping.mapping();
+			this.domainStoreProperty = store.domainStoreProperties.get(clazz,
+					pd.getName());
+			if (this.domainStoreProperty != null && this.domainStoreProperty
+					.loadType() == DomainStorePropertyLoadType.CUSTOM) {
+				this.lazyLoadOracle = Registry
+						.impl(this.domainStoreProperty.customLoadOracle());
+			}
 		}
 
 		public Object read(Entity obj) {
@@ -1893,25 +1910,65 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							Class type = propertyDescriptorFetchTypes
 									.get(pdOperator.pd);
 							Object target = store.cache.get(type, id);
-							if (target == null && store.isInitialised()) {
-								if (domainDescriptor.perClass.get(type)
-										.provideNotFullyLoadedOnStartup()) {
-									target = store.find(type, id);
-								}
-							}
 							if (target == null) {
-								if (segmentLoader == null) {
-									if (missingWarningCount++ < 5) {
-										new Exception().printStackTrace();
-										store.logger.warn(
-												"later-lookup -- missing target: {}, {} for  {}.{} #{}",
-												type, id,
-												item.source.getClass(),
-												pdOperator.name,
-												item.source.getId());
+								boolean loadLazy = domainDescriptor.perClass
+										.get(type)
+										.provideNotFullyLoadedOnStartup();
+								DomainStoreProperty storeProperty = pdOperator.domainStoreProperty;
+								DomainStorePropertyLoadType loadType = DomainStorePropertyLoadType.EAGER;
+								if (storeProperty != null) {
+									loadType = storeProperty.loadType();
+								}
+								switch (loadType) {
+								case EAGER:
+									if (store.isInitialised() || LooseContext
+											.is(CONTEXT_ALLOW_ALL_LAZY_LOAD)) {
+										loadLazy = true;
+										break;
+									} else {
+										throw Ax.runtimeException(
+												"Warmup: eager loading specified of non-fully "
+														+ "loaded target entity class %s :: %s.%s",
+												type.getSimpleName(),
+												pdOperator.clazz
+														.getSimpleName(),
+												pdOperator.name);
 									}
-								} else {
-									segmentLoader.notifyLater(item, type, id);
+								case LAZY:
+									loadLazy = store.isInitialised();
+									break;
+								case TRANSIENT:
+									loadLazy = false;
+									break;
+								case CUSTOM:
+									loadLazy = pdOperator.lazyLoadOracle
+											.shouldLoad((Entity) item.source,
+													store.isInitialised());
+									break;
+								default:
+									throw new UnsupportedOperationException();
+								}
+								if (loadLazy) {
+									target = MethodContext.instance()
+											.withContextTrue(
+													CONTEXT_ALLOW_ALL_LAZY_LOAD)
+											.call(() -> store.find(type, id));
+								}
+								if (target == null) {
+									if (segmentLoader == null) {
+										if (missingWarningCount++ < 5) {
+											new Exception().printStackTrace();
+											store.logger.warn(
+													"later-lookup -- missing target: {}, {} for  {}.{} #{}",
+													type, id,
+													item.source.getClass(),
+													pdOperator.name,
+													item.source.getId());
+										}
+									} else {
+										segmentLoader.notifyLater(item, type,
+												id);
+									}
 								}
 							}
 							pdOperator.field.set(item.source, target);

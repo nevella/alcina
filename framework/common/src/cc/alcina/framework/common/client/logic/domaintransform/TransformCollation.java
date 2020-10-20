@@ -165,6 +165,11 @@ public class TransformCollation {
 					.map(ec -> new QueryResult(ec, getEvents(ec)));
 		}
 
+		public Query withFilter(Predicate<DomainTransformEvent> predicate) {
+			this.predicate = predicate;
+			return this;
+		}
+
 		public Query withPropertyName(String propertyName) {
 			this.propertyName = propertyName;
 			return this;
@@ -192,11 +197,6 @@ public class TransformCollation {
 		boolean matches(EntityCollation collation) {
 			return getEvents(collation).size() > 0;
 		}
-
-		public Query withFilter(Predicate<DomainTransformEvent> predicate) {
-			this.predicate = predicate;
-			return this;
-		}
 	}
 
 	public class QueryResult {
@@ -208,6 +208,10 @@ public class TransformCollation {
 				List<DomainTransformEvent> events) {
 			this.entityCollation = ec;
 			this.events = events;
+		}
+
+		public <E extends Entity> E getObject() {
+			return entityCollation.getObject();
 		}
 
 		public void removeTransformsFromRequest() {

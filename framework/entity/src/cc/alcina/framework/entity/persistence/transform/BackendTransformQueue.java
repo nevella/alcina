@@ -75,6 +75,8 @@ public class BackendTransformQueue {
 			TransformManager.get()
 					.addDomainTransformListener(collectingListener);
 			runnable.run();
+			collectingListener.transforms
+					.forEach(TransformManager.get()::removeTransform);
 			enqueue(collectingListener.transforms, queueName);
 		} finally {
 			TransformManager.get()
@@ -89,7 +91,13 @@ public class BackendTransformQueue {
 		}
 	}
 
-	public void stopService() {
+	public void start() {
+		int loopDelay = ResourceUtilities
+				.getInteger(BackendTransformQueue.class, "loopDelay");
+		queueMaxDelay.put(null, (long) loopDelay);
+	}
+
+	public void stop() {
 		timer.cancel();
 	}
 
@@ -160,12 +168,6 @@ public class BackendTransformQueue {
 			zeroDelayTaskScheduled = commitDelay.get() == 0;
 		}
 		return false;
-	}
-
-	void start() {
-		int loopDelay = ResourceUtilities
-				.getInteger(BackendTransformQueue.class, "loopDelay");
-		queueMaxDelay.put(null, (long) loopDelay);
 	}
 
 	private static class CollectingListener implements DomainTransformListener {

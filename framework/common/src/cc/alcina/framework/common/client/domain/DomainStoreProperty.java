@@ -9,6 +9,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.function.Function;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -20,14 +21,22 @@ import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
 @Documented
 @Target({ ElementType.METHOD })
 public @interface DomainStoreProperty {
+	Class<? extends DomainStorePropertyLoadOracle> customLoadOracle() default DomainStorePropertyLoadOracle.class;
+
 	boolean ignoreMismatchedCollectionModifications() default false;
 
 	DomainStorePropertyLoadType loadType() default DomainStorePropertyLoadType.TRANSIENT;
 
+	public static class DomainStorePropertyLoadOracle<E extends Entity> {
+		public boolean shouldLoad(E entity, boolean duringWarmup) {
+			return false;
+		}
+	}
+
 	public enum DomainStorePropertyLoadType {
 		// First two values should be accompanied by
 		// @DomainTransformPropagation(PropagationType.NONE)
-		TRANSIENT, LAZY,
+		TRANSIENT, LAZY, CUSTOM,
 		//
 		EAGER;
 	}
@@ -57,6 +66,13 @@ public @interface DomainStoreProperty {
 		@Override
 		public Class<? extends Annotation> annotationType() {
 			return DomainStoreProperty.class;
+		}
+
+		@Override
+		public Class<? extends DomainStorePropertyLoadOracle>
+				customLoadOracle() {
+			Function<DomainStoreProperty, Class<? extends DomainStorePropertyLoadOracle>> function = DomainStoreProperty::customLoadOracle;
+			return resolver.resolve(function, "customLoadOracle");
 		}
 
 		@Override

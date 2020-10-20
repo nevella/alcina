@@ -8,9 +8,13 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
+import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
+import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadOracle;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
@@ -25,6 +29,7 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.Ax;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
@@ -35,6 +40,8 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 	private Task task;
 
 	private String taskSerialized;
+
+	private String taskClassName;
 
 	private Date runAt;
 
@@ -66,6 +73,8 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 
 	private transient Object producedObject;
 
+	private boolean clustered;
+
 	// FIXME - mvcc.jobs - get rid'o'me
 	public JobResult asJobResult() {
 		JobResult result = new JobResult() {
@@ -77,11 +86,40 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 			@Override
 			// FIXME - mvcc.jobs - get rid'o'me
 			public ActionLogItem getActionLogItem() {
-				throw new UnsupportedOperationException();
+				ActionLogItem logItem = Reflections
+						.newInstance(AlcinaPersistentEntityImpl
+								.getImplementation(ActionLogItem.class));
+				logItem.setActionClass((Class) getTask().getClass());
+				logItem.setActionClassName(getTaskClassName());
+				logItem.setActionDate(getFinish());
+				logItem.setActionLog(getLog());
+				logItem.setShortDescription(getResultMessage());
+				return logItem;
 			}
 		};
 		result.setProducedObject(producedObject);
 		return result;
+	}
+
+	public JobTracker asJobTracker() {
+		JobTrackerImpl tracker = new JobTrackerImpl();
+		tracker.setCancelled(state == JobState.CANCELLED);
+		tracker.setComplete(state.isComplete());
+		tracker.setEndTime(finish);
+		tracker.setId(key);
+		tracker.setJobName(getTask().getName());
+		tracker.setJobResult(resultMessage);
+		tracker.setJobResultType(getResultType());
+		tracker.setLog(log);
+		tracker.setProgressMessage(statusMessage);
+		tracker.setStartTime(start);
+		return tracker;
+	}
+
+	public void cancel() {
+		if (!getState().isComplete()) {
+			setState(JobState.CANCELLED);
+		}
 	}
 
 	public double getCompletion() {
@@ -160,6 +198,10 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 		return this.task;
 	}
 
+	public String getTaskClassName() {
+		return this.taskClassName;
+	}
+
 	@Lob
 	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
 	@Transient
@@ -170,8 +212,35 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 	@Transient
 	public abstract Set<? extends JobRelation> getToRelations();
 
+	public boolean isClustered() {
+		return this.clustered;
+	}
+
 	public boolean isStacktraceRequested() {
 		return this.stacktraceRequested;
+	}
+
+	public boolean provideIsActive() {
+		return state == JobState.PROCESSING;
+	}
+
+	public boolean provideIsComplete() {
+		return state.isComplete();
+	}
+
+	public boolean provideIsPending() {
+		return state == JobState.PENDING;
+	}
+
+	public String provideName() {
+		return getTask().getName();
+	}
+
+	public void setClustered(boolean clustered) {
+		boolean old_clustered = this.clustered;
+		this.clustered = clustered;
+		propertyChangeSupport().firePropertyChange("clustered", old_clustered,
+				clustered);
 	}
 
 	public void setCompletion(double completion) {
@@ -212,7 +281,9 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 	}
 
 	public void setQueue(String queue) {
+		String old_queue = this.queue;
 		this.queue = queue;
+		propertyChangeSupport().firePropertyChange("queue", old_queue, queue);
 	}
 
 	public void setResultMessage(String resultMessage) {
@@ -281,10 +352,26 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 		propertyChangeSupport().firePropertyChange("task", old_task, task);
 	}
 
+	public void setTaskClassName(String taskClassName) {
+		String old_taskClassName = this.taskClassName;
+		this.taskClassName = taskClassName;
+		propertyChangeSupport().firePropertyChange("taskClassName",
+				old_taskClassName, taskClassName);
+	}
+
 	public void setTaskSerialized(String taskSerialized) {
 		String old_taskSerialized = this.taskSerialized;
 		this.taskSerialized = taskSerialized;
 		propertyChangeSupport().firePropertyChange("taskSerialized",
 				old_taskSerialized, taskSerialized);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s - %s - %s", toLocator(), provideName(), state);
+	}
+
+	public static abstract class ClientInstanceLoadOracle
+			extends DomainStorePropertyLoadOracle<Job> {
 	}
 }

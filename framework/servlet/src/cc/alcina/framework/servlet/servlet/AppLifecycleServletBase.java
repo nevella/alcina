@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
@@ -131,7 +132,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			getStatusNotifier().destroyed();
 			SEUtilities.appShutdown();
 			ResourceUtilities.appShutdown();
-			BackendTransformQueue.get().stopService();
+			BackendTransformQueue.get().stop();
 			Registry.appShutdown();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -171,6 +172,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initCluster();
 			getStatusNotifier().deploying();
 			initEntityLayer();
+			BackendTransformQueue.get().start();
 			initCustom();
 			ServletLayerUtils.setAppServletInitialised(true);
 			launchPostInitTasks();
@@ -321,7 +323,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					} else if (handler.getClass().getName().equals(
 							"cc.alcina.framework.servlet.logging.PerThreadLoggingHandler")) {
 						Registry.registerSingleton(PerThreadLogging.class,
-								handler);
+								new PerThreadLoggingWrapper(handler));
 					}
 				}
 			} catch (Exception e) {
@@ -437,6 +439,41 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	private static class PerThreadLoggingWrapper implements PerThreadLogging {
+		private Object handler;
+
+		public PerThreadLoggingWrapper(Object handler) {
+			// handler is an instance of
+			// cc.alcina.framework.servlet.logging.PerThreadLoggingHandler, but
+			// from a different classloader
+			this.handler = handler;
+		}
+
+		@Override
+		public void beginBuffer() {
+			try {
+				Method method = handler.getClass().getMethod("beginBuffer",
+						new Class[0]);
+				method.setAccessible(true);
+				method.invoke(handler);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		@Override
+		public String endBuffer() {
+			try {
+				Method method = handler.getClass().getMethod("endBuffer",
+						new Class[0]);
+				method.setAccessible(true);
+				return (String) method.invoke(handler);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 

@@ -106,9 +106,9 @@ import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
+import cc.alcina.framework.entity.transform.DomainTransformEventPersistent.ExTransformDbMetadata;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.transform.DomainTransformEventPersistent.ExTransformDbMetadata;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
@@ -441,6 +441,7 @@ public class DomainStore implements IDomainStore {
 		Transaction.end();
 		initialising = false;
 		initialised = true;
+		domainDescriptor.onWarmupComplete(this);
 		MetricLogging.get().end("domainStore.warmup");
 	}
 
@@ -500,8 +501,11 @@ public class DomainStore implements IDomainStore {
 		}
 		switch (ann.loadType()) {
 		case EAGER:
-			return event;
+		case CUSTOM:
 		case LAZY:
+			// LAZY should be filtered by the persister's transformpropagation
+			// policy
+			return event;
 		case TRANSIENT:
 			return null;
 		default:

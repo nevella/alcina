@@ -1,11 +1,11 @@
 package cc.alcina.framework.common.client.job;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public interface Task {
 	default String getName() {
-		return Ax.friendly(getClass().getSimpleName());
+		return CommonUtils.deInfix(getClass().getSimpleName());
 	}
 
 	default void perform() {

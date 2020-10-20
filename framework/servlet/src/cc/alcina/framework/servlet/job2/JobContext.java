@@ -60,6 +60,9 @@ public class JobContext {
 		}
 		String log = Registry.impl(PerThreadLogging.class).endBuffer();
 		job.setLog(log);
+		job.setState(JobState.COMPLETED);
+		job.setFinish(new Date());
+		job.setResultType(JobResultType.OK);
 		persistMetadata(true);
 		Transaction.endAndBeginNew();
 	}
