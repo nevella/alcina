@@ -133,7 +133,7 @@ public class BaseSourcesPropertyChangeEvents
 	 * domainIdentity()
 	 */
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-	protected MuteablePropertyChangeSupport propertyChangeSupport() {
+	public MuteablePropertyChangeSupport propertyChangeSupport() {
 		if (propertyChangeSupport == null) {
 			propertyChangeSupport = new MuteablePropertyChangeSupport(this);
 		}

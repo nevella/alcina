@@ -38,81 +38,25 @@ public class AuthenticationManager {
 	private static final String CONTEXT_AUTHENTICATION_CONTEXT = AuthenticationManager.class
 			.getName() + ".CONTEXT_AUTHENTICATION_CONTEXT";
 
-	private AuthenticationPersistence persistence;
-
 	public static final String COOKIE_NAME_IID = "IID";
 
 	public static final String COOKIE_NAME_SESSIONID = "alcsessionid";
-
-	public AuthenticationManager() {
-		this.persistence = AuthenticationPersistence.get();
-	}
 
 	public static AuthenticationManager get() {
 		return Registry.impl(AuthenticationManager.class);
 	}
 
-	static class AuthenticationContext {
-		Iid iid;
-
-		ClientInstance clientInstance;
-
-		AuthenticationSession session;
-
-		String userName;
-
-		AuthenticationTokenStore tokenStore;
-
-		private Authenticator<?> localAuthenticator = Registry
-				.impl(Authenticator.class);
-
-		<U extends Entity & IUser> Authenticator<U> typedAuthenticator() {
-			return (Authenticator<U>) localAuthenticator;
-		}
+	public static Long provideAuthenticatedClientInstanceId() {
+		return get().getContextClientInstance().map(ClientInstance::getId)
+				.orElse(null);
 	}
 
-	public LoginResponse hello() {
-		AuthenticationContext context = ensureContext();
-		LoginResponse response = new LoginResponse();
-		response.setOk(true);
-		createClientInstance(context);
-		Transaction.commit();
-		response.setClientInstance(context.clientInstance);
-		response.setUser(
-				context.clientInstance.getAuthenticationSession().getUser());
-		return response;
-	}
+	private AuthenticationPersistence persistence;
 
-	private void createClientInstance(AuthenticationContext context) {
-		String userAgent = context.tokenStore.getUserAgent();
-		context.clientInstance = persistence.createClientInstance(
-				context.session, userAgent,
-				context.tokenStore.getRemoteAddress(),
-				context.tokenStore.getReferrer(), context.tokenStore.getUrl());
-		Registry.impl(Authenticator.class)
-				.onClientInstanceCreated(context.clientInstance);
-	}
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
-	private void ensureIid(AuthenticationContext context) {
-		String instanceId = context.tokenStore.getCookieValue(COOKIE_NAME_IID);
-		instanceId = validateClientUid(instanceId);
-		if (Ax.notBlank(instanceId)) {
-			context.iid = persistence.getIid(instanceId);
-		}
-		if (context.iid == null) {
-			if (Ax.notBlank(instanceId)) {
-				logger.warn("Invalid iid cookie :: {} {}", instanceId,
-						context.tokenStore.getRemoteAddress());
-			}
-			instanceId = SEUtilities.generateId();
-			context.tokenStore.setCookieValue(COOKIE_NAME_IID, instanceId);
-			context.iid = persistence.createIid(instanceId);
-		}
-	}
-
-	private AuthenticationContext ensureContext() {
-		return LooseContext.ensure(CONTEXT_AUTHENTICATION_CONTEXT,
-				AuthenticationContext::new);
+	public AuthenticationManager() {
+		this.persistence = AuthenticationPersistence.get();
 	}
 
 	/**
@@ -141,7 +85,31 @@ public class AuthenticationManager {
 		return session;
 	}
 
-	private Logger logger = LoggerFactory.getLogger(getClass());
+	public ClientInstance createNonHttpClientInstance(String format,
+			IUser user) {
+		return null;
+	}
+
+	public Optional<ClientInstance> getContextClientInstance() {
+		return Optional.ofNullable(ensureContext().clientInstance);
+	}
+
+	public Long getContextClientInstanceId() {
+		return getContextClientInstance().map(ClientInstance::getId)
+				.orElse(null);
+	}
+
+	public LoginResponse hello() {
+		AuthenticationContext context = ensureContext();
+		LoginResponse response = new LoginResponse();
+		response.setOk(true);
+		createClientInstance(context);
+		Transaction.commit();
+		response.setClientInstance(context.clientInstance);
+		response.setUser(
+				context.clientInstance.getAuthenticationSession().getUser());
+		return response;
+	}
 
 	public void initialiseContext(AuthenticationTokenStore tokenStore) {
 		AuthenticationContext context = ensureContext();
@@ -162,6 +130,14 @@ public class AuthenticationManager {
 		}
 		// all auth objects persisted as root
 		Transaction.commit();
+	}
+
+	private void createClientInstance(AuthenticationContext context) {
+		String userAgent = context.tokenStore.getUserAgent();
+		context.clientInstance = persistence.createClientInstance(
+				context.session, userAgent,
+				context.tokenStore.getRemoteAddress(),
+				context.tokenStore.getReferrer(), context.tokenStore.getUrl());
 	}
 
 	private void ensureAuthenticationSession(AuthenticationContext context) {
@@ -209,8 +185,26 @@ public class AuthenticationManager {
 		}
 	}
 
-	private String validateClientUid(String uid) {
-		return Ax.matches(uid, "server:.+") ? null : uid;
+	private AuthenticationContext ensureContext() {
+		return LooseContext.ensure(CONTEXT_AUTHENTICATION_CONTEXT,
+				AuthenticationContext::new);
+	}
+
+	private void ensureIid(AuthenticationContext context) {
+		String instanceId = context.tokenStore.getCookieValue(COOKIE_NAME_IID);
+		instanceId = validateClientUid(instanceId);
+		if (Ax.notBlank(instanceId)) {
+			context.iid = persistence.getIid(instanceId);
+		}
+		if (context.iid == null) {
+			if (Ax.notBlank(instanceId)) {
+				logger.warn("Invalid iid cookie :: {} {}", instanceId,
+						context.tokenStore.getRemoteAddress());
+			}
+			instanceId = SEUtilities.generateId();
+			context.tokenStore.setCookieValue(COOKIE_NAME_IID, instanceId);
+			context.iid = persistence.createIid(instanceId);
+		}
 	}
 
 	private void setupClientInstanceFromHeaders(AuthenticationContext context) {
@@ -248,22 +242,26 @@ public class AuthenticationManager {
 		}
 	}
 
-	public Optional<ClientInstance> getContextClientInstance() {
-		return Optional.ofNullable(ensureContext().clientInstance);
+	private String validateClientUid(String uid) {
+		return Ax.matches(uid, "server:.+") ? null : uid;
 	}
 
-	public static Long provideAuthenticatedClientInstanceId() {
-		return get().getContextClientInstance().map(ClientInstance::getId)
-				.orElse(null);
-	}
+	static class AuthenticationContext {
+		Iid iid;
 
-	public ClientInstance createNonHttpClientInstance(String format,
-			IUser user) {
-		return null;
-	}
+		ClientInstance clientInstance;
 
-	public Long getContextClientInstanceId() {
-		return getContextClientInstance().map(ClientInstance::getId)
-				.orElse(null);
+		AuthenticationSession session;
+
+		String userName;
+
+		AuthenticationTokenStore tokenStore;
+
+		private Authenticator<?> localAuthenticator = Registry
+				.impl(Authenticator.class);
+
+		<U extends Entity & IUser> Authenticator<U> typedAuthenticator() {
+			return (Authenticator<U>) localAuthenticator;
+		}
 	}
 }

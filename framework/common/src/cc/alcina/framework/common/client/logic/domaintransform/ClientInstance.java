@@ -68,6 +68,13 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 	@GwtTransient
 	private Boolean expired;
 
+	@GwtTransient
+	/*
+	 * This duplicates authenticationSession.user.id - but is needed for search
+	 * completeness (since older clientinstances have no auth session)
+	 */
+	private Long user_id;
+
 	public Integer getAuth() {
 		return auth;
 	}
@@ -117,6 +124,10 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 
 	public String getUrl() {
 		return this.url;
+	}
+
+	public Long getUser_id() {
+		return this.user_id;
 	}
 
 	public String getUserAgent() {
@@ -196,6 +207,13 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 		String old_url = this.url;
 		this.url = url;
 		propertyChangeSupport().firePropertyChange("url", old_url, url);
+	}
+
+	public void setUser_id(Long user_id) {
+		Long old_user_id = this.user_id;
+		this.user_id = user_id;
+		propertyChangeSupport().firePropertyChange("user_id", old_user_id,
+				user_id);
 	}
 
 	public void setUserAgent(String userAgent) {
