@@ -12,7 +12,6 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.UserWith2FA;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
@@ -35,14 +34,14 @@ public abstract class Authenticator<U extends Entity & IUser> {
 	public static final String CONTEXT_BYPASS_PASSWORD_CHECK = Authenticator.class
 			.getName() + ".CONTEXT_BYPASS_PASSWORD_CHECK";
 
+	public static Authenticator get() {
+		return Registry.impl(Authenticator.class);
+	}
+
 	protected LoginModel loginModel;
 
 	public Authenticator() {
 		super();
-	}
-	
-	public static Authenticator get(){
-		return Registry.impl(Authenticator.class);
 	}
 
 	public LoginResponse authenticate(LoginBean loginBean)
@@ -56,12 +55,29 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		return loginResponse;
 	}
 
+	public void authenticate(LoginBean loginBean, LoginModel loginModel)
+			throws AuthenticationException {
+		if (!validateUsername(loginModel)) {
+			return;
+		}
+		if (!validatePassword(loginModel)) {
+			return;
+		}
+		validateAccount(loginModel.loginResponse, loginBean.getUserName());
+	}
+
 	public U createUser(String userName, String password) {
 		U user = (U) Domain.create((Class) AlcinaPersistentEntityImpl
 				.getImplementation(IUser.class));
 		user.setUserName(userName);
 		setPassword(user, password);
 		return user;
+	}
+
+	public void logOut() {
+		AuthenticationManager.get().createAuthenticationSession(new Date(),
+				UserlandProvider.get().getAnonymousUser(), "logout", false);
+		Transaction.commit();
 	}
 
 	public void processValidLogin(LoginResponse loginResponse, String userName,
@@ -89,7 +105,7 @@ public abstract class Authenticator<U extends Entity & IUser> {
 	}
 
 	public void setPassword(U user, String password) {
-		if (Ax.isBlank(user.getSalt() )) {
+		if (Ax.isBlank(user.getSalt())) {
 			user.setSalt(user.getUserName());
 		}
 		user.setPassword(PasswordEncryptionSupport.get()
@@ -103,6 +119,28 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		if (ResourceUtilities.is(Authenticator.class,
 				"validateLoginAttempts")) {
 			return new LoginAttempts().checkLockedOut(loginModel);
+		} else {
+			return true;
+		}
+	}
+
+	public boolean validatePassword(LoginModel<U> loginModel) {
+		U user = loginModel.user;
+		if (user.getSalt() == null) {
+			user.setSalt(user.getUserName());
+		}
+		if (user instanceof UserWith2FA
+				&& ((UserWith2FA) user).getAuthenticationSecret() == null) {
+			((UserWith2FA) user).setAuthenticationSecret(
+					new TwoFactorAuthentication().generateSecret());
+		}
+		Transaction.commit();
+		if (!LooseContext.is(CONTEXT_BYPASS_PASSWORD_CHECK)
+				&& !PasswordEncryptionSupport.get().check(
+						loginModel.loginBean.getPassword(), user.getSalt(),
+						user.getPasswordHash())) {
+			loginModel.loginResponse.setErrorMsg("Password incorrect");
+			return false;
 		} else {
 			return true;
 		}
@@ -143,37 +181,6 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		return result;
 	}
 
-	protected boolean appUsesTwoFactorAuthentication() {
-		return false;
-	}
-
-	protected boolean
-			validateLoginAttemptFromHistory(LoginModel<U> loginModel) {
-		return true;
-	}
-
-	public boolean validatePassword(LoginModel<U> loginModel) {
-		U user = loginModel.user;
-		if (user.getSalt() == null) {
-			user.setSalt(user.getUserName());
-		}
-		if (user instanceof UserWith2FA
-				&& ((UserWith2FA) user).getAuthenticationSecret() == null) {
-			((UserWith2FA) user).setAuthenticationSecret(
-					new TwoFactorAuthentication().generateSecret());
-		}
-		Transaction.commit();
-		if (!LooseContext.is(CONTEXT_BYPASS_PASSWORD_CHECK)
-				&& !PasswordEncryptionSupport.get().check(
-						loginModel.loginBean.getPassword(), user.getSalt(),
-						user.getPasswordHash())) {
-			loginModel.loginResponse.setErrorMsg("Password incorrect");
-			return false;
-		} else {
-			return true;
-		}
-	}
-
 	public boolean validateUsername(LoginModel<U> loginModel) {
 		String userName = loginModel.loginBean.getUserName();
 		loginModel.user = UserlandProvider.get().getUserByName(userName);
@@ -184,15 +191,13 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		return loginModel.user != null;
 	}
 
-	public void authenticate(LoginBean loginBean, LoginModel loginModel)
-			throws AuthenticationException {
-		if (!validateUsername(loginModel)) {
-			return;
-		}
-		if (!validatePassword(loginModel)) {
-			return;
-		}
-		validateAccount(loginModel.loginResponse, loginBean.getUserName());
+	protected boolean appUsesTwoFactorAuthentication() {
+		return false;
+	}
+
+	protected boolean
+			validateLoginAttemptFromHistory(LoginModel<U> loginModel) {
+		return true;
 	}
 
 	public interface PasswordEncryptionSupport {
@@ -233,15 +238,5 @@ public abstract class Authenticator<U extends Entity & IUser> {
 				throw new WrappedRuntimeException(e);
 			}
 		}
-	}
-
-	public void logOut() {
-		AuthenticationManager.get().createAuthenticationSession(new Date(),
-				UserlandProvider.get().getAnonymousUser(), "logout", false);
-		Transaction.commit();
-	}
-
-	public void onClientInstanceCreated(ClientInstance clientInstance) {
-		//customisation hook
 	}
 }

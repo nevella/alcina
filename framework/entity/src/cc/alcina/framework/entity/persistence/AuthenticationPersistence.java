@@ -84,6 +84,7 @@ public class AuthenticationPersistence {
 				.getImplementation(ClientInstance.class);
 		ClientInstance clientInstance = Domain.create(clazz);
 		clientInstance.setAuthenticationSession(session);
+		clientInstance.setUser_id(session.getUser().getId());
 		clientInstance.setHelloDate(new Date());
 		clientInstance.setUserAgent(userAgent);
 		clientInstance.setAuth(Math.abs(new Random().nextInt()));
