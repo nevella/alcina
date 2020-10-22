@@ -643,12 +643,12 @@ public class ClientReflectionGenerator extends Generator {
 		Comparator<JMethod> comparator = new Comparator<JMethod>() {
 			@Override
 			public int compare(JMethod o1, JMethod o2) {
-				String methodPropertyName1=methodPropertyName.get(o1);
-				String methodPropertyName2=methodPropertyName.get(o2);
-				int ordinal1 = fieldOrdinals.computeIfAbsent(methodPropertyName1,
-						key -> -1);
-				int ordinal2 = fieldOrdinals.computeIfAbsent(methodPropertyName2,
-						key -> -1);
+				String methodPropertyName1 = methodPropertyName.get(o1);
+				String methodPropertyName2 = methodPropertyName.get(o2);
+				int ordinal1 = fieldOrdinals
+						.computeIfAbsent(methodPropertyName1, key -> -1);
+				int ordinal2 = fieldOrdinals
+						.computeIfAbsent(methodPropertyName2, key -> -1);
 				int i = ordinal1 - ordinal2;
 				if (i != 0) {
 					return i;

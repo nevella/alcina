@@ -114,7 +114,7 @@ public class Registry {
 	public static Set<RegistryLocation>
 			filterForRegistryPointUniqueness(Collection annotations) {
 		UnsortedMultikeyMap<RegistryLocation> uniques = new UnsortedMultikeyMap<RegistryLocation>(
-				1);
+				2);
 		List<RegistryLocation> locs = new ArrayList<RegistryLocation>();
 		for (Object ann : annotations) {
 			if (ann instanceof RegistryLocation) {
@@ -124,8 +124,12 @@ public class Registry {
 			}
 		}
 		for (RegistryLocation loc : locs) {
-			if (!uniques.containsKey(loc.registryPoint())) {
-				uniques.put(loc.registryPoint(), loc);
+			boolean existing = loc.targetClass() == void.class
+					? uniques.containsKey(loc.registryPoint())
+					: uniques.containsKey(loc.registryPoint(),
+							loc.targetClass());
+			if (!existing) {
+				uniques.put(loc.registryPoint(), loc.targetClass(), loc);
 			} else {
 				// System.out.println(Ax.format("Discarded - %s, %s",
 				// CommonUtils.simpleClassName(loc.registryPoint()),
@@ -478,9 +482,6 @@ public class Registry {
 					"Non-default priority " + "with Multiple impl type -"
 							+ " probably should be instance - %s",
 					registeringClassKey.name()));
-		}
-		if (targetClassKey.simpleName().contains("OptionsAction")) {
-			int debug = 3;
 		}
 		if (registered.size() == 1
 				// && (targetClassKey != keys.undefinedTargetKey()

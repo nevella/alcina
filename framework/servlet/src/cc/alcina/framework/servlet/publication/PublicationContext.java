@@ -82,21 +82,23 @@ public class PublicationContext {
 		try {
 			Set<Class> jaxbClasses = new HashSet<Class>(
 					Registry.get().lookup(JaxbContextRegistration.class));
+			String contentDefSerialized = "(no xmlrootelement annotation)";
+			try {
+				contentDefSerialized = WrappedObjectHelper
+						.xmlSerialize(contentDefinition, jaxbClasses);
+			} catch (Exception e) {
+			}
 			xmlForm = Ax.format(
 					"Content definition:\n%s\n\n" + "Delivery model:\n%s",
-					WrappedObjectHelper.xmlSerialize(contentDefinition,
-							jaxbClasses),
-					WrappedObjectHelper.xmlSerialize(deliveryModel,
-							jaxbClasses));
+					contentDefSerialized, WrappedObjectHelper
+							.xmlSerialize(deliveryModel, jaxbClasses));
 			if (xmlForm.length() > 5000) {
 				xmlForm = Ax.format(
 						"(Large definition/model)\n"
 								+ "Content definition: %s (%s chars)\n"
 								+ "Delivery model: %s (%s chars)",
 						contentDefinition.getClass().getSimpleName(),
-						WrappedObjectHelper
-								.xmlSerialize(contentDefinition, jaxbClasses)
-								.length(),
+						contentDefSerialized.length(),
 						deliveryModel.getClass().getSimpleName(),
 						WrappedObjectHelper
 								.xmlSerialize(deliveryModel, jaxbClasses)
