@@ -31,6 +31,10 @@ public class JobContext {
 		return LooseContext.get(CONTEXT_CURRENT);
 	}
 
+	public static void info(String template, Object... args) {
+		current().getLogger().info(template, args);
+	}
+
 	private Job job;
 
 	private TaskPerformer performer;

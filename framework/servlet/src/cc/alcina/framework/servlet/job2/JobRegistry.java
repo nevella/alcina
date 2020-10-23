@@ -41,6 +41,7 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.servlet.job.JobRegistry1;
 import cc.alcina.framework.servlet.job2.JobContext.PersistenceType;
+import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
 
@@ -67,6 +68,8 @@ public class JobRegistry extends WriterService {
 	private Queue<JobContext> activeJobs = new ConcurrentLinkedQueue<>();
 
 	private Map<String, JobQueue> activeQueues = new ConcurrentHashMap<>();
+
+	private JobScheduler scheduler = new JobScheduler();
 
 	private TopicListener<String> queueNotifier = (k, name) -> {
 		JobQueue queue = activeQueues.get(name);
@@ -97,6 +100,14 @@ public class JobRegistry extends WriterService {
 		JobQueue queue = start(task);
 		queue.awaitEmpty();
 		return queue.initialJob.asJobResult();
+	}
+
+	public void schedule(Task task) {
+		schedule(task, scheduler.getSchedule(task));
+	}
+
+	public void schedule(Task task, Schedule schedule) {
+		start(task);
 	}
 
 	public JobQueue start(Task task) {
@@ -205,6 +216,11 @@ public class JobRegistry extends WriterService {
 		@Override
 		public void perform(Task task) {
 			get().perform(task);
+		}
+
+		@Override
+		public void schedule(Task task) {
+			get().schedule(task);
 		}
 	}
 
