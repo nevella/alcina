@@ -38,45 +38,6 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
  * @author Nick Reddel
  */
 public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
-	public static class RegistryScannerMetadata
-			extends ClassMetadata<RegistryScannerMetadata> {
-		public RegistryScannerMetadata() {
-		}
-
-		public RegistryScannerMetadata(String className) {
-			super(className);
-		}
-
-		public void register(Class clazz, RegistryLocation rl) {
-			locations.add(new RegistryScannerLazyLocation(clazz, rl));
-		}
-
-		List<RegistryScannerLazyLocation> locations = new ArrayList<>();
-	}
-
-	public static class RegistryScannerLazyLocation {
-		public RegistryScannerLazyLocation() {
-		}
-
-		public RegistryScannerLazyLocation(Class clazz, RegistryLocation rl) {
-			registeringClassClassName = clazz.getName();
-			registryPointClassName = rl.registryPoint().getName();
-			targetClassClassName = rl.targetClass().getName();
-			implementationType = rl.implementationType();
-			priority = rl.priority();
-		}
-
-		String registeringClassClassName;
-
-		String registryPointClassName;
-
-		String targetClassClassName;
-
-		ImplementationType implementationType;
-
-		int priority;
-	}
-
 	private Registry toRegistry;
 
 	public void scan(ClassMetadataCache<ClassMetadata> classDataCache,
@@ -125,12 +86,12 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 				|| Modifier.isAbstract(clazz.getModifiers())
 				|| clazz.isInterface()) {
 		} else {
-			Multimap<Class, List<Annotation>> sca = AnnotationUtils
+			Multimap<Class, List<Annotation>> superclassAnnotations = AnnotationUtils
 					.getSuperclassAnnotations(clazz);
-			AnnotationUtils.filterAnnotations(sca, RegistryLocation.class,
-					RegistryLocations.class);
+			AnnotationUtils.filterAnnotations(superclassAnnotations,
+					RegistryLocation.class, RegistryLocations.class);
 			Set<RegistryLocation> uniques = Registry
-					.filterForRegistryPointUniqueness(sca);
+					.filterForRegistryPointUniqueness(superclassAnnotations);
 			if (uniques.isEmpty()) {
 			} else {
 				for (RegistryLocation rl : uniques) {
@@ -139,5 +100,44 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 			}
 		}
 		return out;
+	}
+
+	public static class RegistryScannerLazyLocation {
+		String registeringClassClassName;
+
+		String registryPointClassName;
+
+		String targetClassClassName;
+
+		ImplementationType implementationType;
+
+		int priority;
+
+		public RegistryScannerLazyLocation() {
+		}
+
+		public RegistryScannerLazyLocation(Class clazz, RegistryLocation rl) {
+			registeringClassClassName = clazz.getName();
+			registryPointClassName = rl.registryPoint().getName();
+			targetClassClassName = rl.targetClass().getName();
+			implementationType = rl.implementationType();
+			priority = rl.priority();
+		}
+	}
+
+	public static class RegistryScannerMetadata
+			extends ClassMetadata<RegistryScannerMetadata> {
+		List<RegistryScannerLazyLocation> locations = new ArrayList<>();
+
+		public RegistryScannerMetadata() {
+		}
+
+		public RegistryScannerMetadata(String className) {
+			super(className);
+		}
+
+		public void register(Class clazz, RegistryLocation rl) {
+			locations.add(new RegistryScannerLazyLocation(clazz, rl));
+		}
 	}
 }

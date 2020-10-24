@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -97,6 +98,9 @@ public class TextProvider {
 			return ((HasDisplayName) o).displayName();
 		}
 		String dnpn = beanReflector.getDisplayNamePropertyName();
+		if (Ax.isBlank(dnpn)) {
+			return ((Entity) o).toStringEntity();
+		}
 		Object pv = GwittirBridge.get().getPropertyValue(o, dnpn);
 		return (pv == null) ? "---"
 				: CommonUtils.trimToWsChars(pv.toString(),
