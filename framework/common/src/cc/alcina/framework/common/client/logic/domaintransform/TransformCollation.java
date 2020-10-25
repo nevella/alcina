@@ -28,6 +28,10 @@ public class TransformCollation {
 		this.allEvents = (List<DomainTransformEvent>) allEvents;
 	}
 
+	public TransformCollation(Set<? extends DomainTransformEvent> allEvents) {
+		this(allEvents.stream().collect(Collectors.toList()));
+	}
+
 	public Stream<EntityCollation> allEntityCollations() {
 		ensureLookups();
 		return perLocator.values().stream();
@@ -165,6 +169,11 @@ public class TransformCollation {
 					.map(ec -> new QueryResult(ec, getEvents(ec)));
 		}
 
+		public Query withFilter(Predicate<DomainTransformEvent> predicate) {
+			this.predicate = predicate;
+			return this;
+		}
+
 		public Query withPropertyName(String propertyName) {
 			this.propertyName = propertyName;
 			return this;
@@ -191,11 +200,6 @@ public class TransformCollation {
 
 		boolean matches(EntityCollation collation) {
 			return getEvents(collation).size() > 0;
-		}
-
-		public Query withFilter(Predicate<DomainTransformEvent> predicate) {
-			this.predicate = predicate;
-			return this;
 		}
 	}
 
