@@ -64,7 +64,6 @@ import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPoint
 import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -692,14 +691,12 @@ public class ClientReflectionGenerator extends Generator {
 		HashMap<JClassType, Set<RegistryLocation>> results = new HashMap<JClassType, Set<RegistryLocation>>();
 		JClassType[] types = typeOracle.getTypes();
 		for (JClassType jct : types) {
-			if ((jct.isAnnotationPresent(RegistryLocation.class)
-					|| jct.isAnnotationPresent(RegistryLocations.class))
-					&& !jct.isAbstract() && !ignore(jct)) {
+			if (!jct.isAbstract() && !ignore(jct)) {
 				Multimap<JClassType, List<Annotation>> superclassAnnotations = new Multimap<>();
 				JClassType cursor = jct;
 				while (cursor.getSuperclass() != null) {
 					superclassAnnotations.addCollection(cursor,
-							Arrays.asList(jct.getAnnotations()));
+							Arrays.asList(cursor.getAnnotations()));
 					cursor = cursor.getSuperclass();
 				}
 				Set<RegistryLocation> locations = Registry
@@ -707,7 +704,9 @@ public class ClientReflectionGenerator extends Generator {
 								superclassAnnotations);
 				CollectionFilters.filterInPlace(locations,
 						CLIENT_VISIBLE_ANNOTATION_FILTER);
-				results.put(jct, locations);
+				if (locations.size() > 0) {
+					results.put(jct, locations);
+				}
 			}
 		}
 		return results;
