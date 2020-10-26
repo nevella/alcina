@@ -28,13 +28,14 @@ public class MethodContext {
 	private boolean wrappingTransaction;
 
 	private ClassLoader contextClassLoader;
-	
+
 	private ClassLoader entryClassLoader;
 
 	public <T> T call(Callable<T> callable) {
 		entryClassLoader = Thread.currentThread().getContextClassLoader();
+		boolean inTransaction = Transaction.isInTransaction();
 		try {
-			if (wrappingTransaction) {
+			if (wrappingTransaction && !inTransaction) {
 				Transaction.begin();
 			}
 			if (!context.isEmpty()) {
@@ -50,9 +51,10 @@ public class MethodContext {
 				ThreadedPermissionsManager.cast()
 						.pushSystemOrCurrentUserAsRoot();
 			}
-			if(contextClassLoader!=null){
-				Thread.currentThread().setContextClassLoader(contextClassLoader);
-			}	
+			if (contextClassLoader != null) {
+				Thread.currentThread()
+						.setContextClassLoader(contextClassLoader);
+			}
 			return callable.call();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -69,7 +71,7 @@ public class MethodContext {
 			if (!context.isEmpty()) {
 				LooseContext.pop();
 			}
-			if (wrappingTransaction) {
+			if (wrappingTransaction && !inTransaction) {
 				Transaction.end();
 			}
 		}
@@ -80,6 +82,12 @@ public class MethodContext {
 			runnable.run();
 			return null;
 		});
+	}
+
+	public MethodContext
+			withContextClassloader(ClassLoader contextClassLoader) {
+		this.contextClassLoader = contextClassLoader;
+		return this;
 	}
 
 	public MethodContext withContextTrue(String key) {
@@ -105,10 +113,5 @@ public class MethodContext {
 	public MethodContext withWrappingTransaction() {
 		this.wrappingTransaction = true;
 		return this;
-	}
-
-	public MethodContext withContextClassloader(ClassLoader contextClassLoader) {
-		this.contextClassLoader = contextClassLoader;
-		return this;		
 	}
 }
