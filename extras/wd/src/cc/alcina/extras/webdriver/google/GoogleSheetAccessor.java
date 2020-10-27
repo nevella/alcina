@@ -1,4 +1,4 @@
-package cc.alcina.extras.webdriver.gallery;
+package cc.alcina.extras.webdriver.google;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,6 +21,7 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.Sheets.Spreadsheets.BatchUpdate;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetResponse;
+import com.google.api.services.sheets.v4.model.BatchUpdateValuesRequest;
 import com.google.api.services.sheets.v4.model.CellData;
 import com.google.api.services.sheets.v4.model.CellFormat;
 import com.google.api.services.sheets.v4.model.GridData;
@@ -28,6 +29,7 @@ import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.RepeatCellRequest;
 import com.google.api.services.sheets.v4.model.Request;
 import com.google.api.services.sheets.v4.model.RowData;
+import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
 import com.google.api.services.sheets.v4.model.TextFormat;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
@@ -67,10 +69,38 @@ public class GoogleSheetAccessor {
 		int debug = 3;
 	}
 
-	public List<RowData> getRowData() {
+	public void ensureSheet() {
+		if (spreadsheet != null) {
+			return;
+		}
+		ensureSheets();
+		try {
+			spreadsheet = service.spreadsheets().get(sheetAccess.spreadSheetId)
+					.setIncludeGridData(true).execute();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public List<RowData> getRowData(int sheetIdx) {
 		ensureSheet();
-		List<GridData> data = spreadsheet.getSheets().get(0).getData();
+		List<GridData> data = spreadsheet.getSheets().get(sheetIdx).getData();
 		return data.get(0).getRowData();
+	}
+
+	public Sheet getSheet(int sheetIdx) {
+		ensureSheet();
+		return spreadsheet.getSheets().get(sheetIdx);
+	}
+
+	public void update(BatchUpdateValuesRequest batchUpdate) {
+		try {
+			service.spreadsheets().values()
+					.batchUpdate(sheetAccess.spreadSheetId, batchUpdate)
+					.execute();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public void update(String range, List<List<Object>> values)
@@ -104,19 +134,6 @@ public class GoogleSheetAccessor {
 				.setPort(8888).build();
 		return new AuthorizationCodeInstalledApp(flow, receiver)
 				.authorize("user");
-	}
-
-	void ensureSheet() {
-		if (spreadsheet != null) {
-			return;
-		}
-		ensureSheets();
-		try {
-			spreadsheet = service.spreadsheets().get(sheetAccess.spreadSheetId)
-					.setIncludeGridData(true).execute();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	void ensureSheets() {

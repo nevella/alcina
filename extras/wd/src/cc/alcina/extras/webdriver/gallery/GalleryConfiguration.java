@@ -11,8 +11,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.sheets.v4.SheetsScopes;
 
-import cc.alcina.extras.webdriver.gallery.GoogleDriveAccessor.DriveAccess;
-import cc.alcina.extras.webdriver.gallery.GoogleSheetAccessor.SheetAccess;
+import cc.alcina.extras.webdriver.google.GoogleDriveAccessor.DriveAccess;
+import cc.alcina.extras.webdriver.google.GoogleSheetAccessor.SheetAccess;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 

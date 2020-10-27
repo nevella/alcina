@@ -8,7 +8,8 @@ import org.openqa.selenium.OutputType;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.w3c.dom.Document;
 
-import cc.alcina.extras.webdriver.gallery.GoogleSheetAccessor.SheetAccess;
+import cc.alcina.extras.webdriver.google.GoogleSheetAccessor;
+import cc.alcina.extras.webdriver.google.GoogleSheetAccessor.SheetAccess;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNode;

@@ -49,6 +49,7 @@ import javax.persistence.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
@@ -68,6 +69,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObject
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.Association;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -556,8 +558,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							if (store.cache.size(property.clazz1) == 0) {
 								continue;
 							}
-							Collection<Long> ids = store.cache.fieldValues(
-									property.clazz1, property.propertyName1);
+							PropertyReflector reflector = Reflections
+									.propertyAccessor()
+									.getPropertyReflector(property.clazz1,
+											property.propertyName1);
+							Collection<Long> ids = store.cache
+									.values(property.clazz1).stream()
+									.map(o -> (Long) reflector
+											.getPropertyValue(o))
+									.distinct().collect(Collectors.toList());
 							ids = ids.stream().distinct().sorted()
 									.collect(Collectors.toList());
 							ids = segmentLoader.filterForQueried(
