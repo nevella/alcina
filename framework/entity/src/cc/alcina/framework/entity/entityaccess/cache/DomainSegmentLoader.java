@@ -47,6 +47,9 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 	MultikeyMap<DomainSegmentLoaderPhase> loadedInPhase = new UnsortedMultikeyMap<>(
 			2);
 
+	// class,propertyname,id->ref_id
+	MultikeyMap<Long> segmentRefs = new UnsortedMultikeyMap<>(3);
+
 	public DomainSegmentLoader() {
 	}
 
@@ -115,6 +118,8 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 		}
 		toResolve.add(item);
 		toLoadIds.add(type, id);
+		segmentRefs.put(((Entity) item.source).entityClass(),
+				item.pdOperator.name, item.source.getId(), id);
 	}
 
 	@Override

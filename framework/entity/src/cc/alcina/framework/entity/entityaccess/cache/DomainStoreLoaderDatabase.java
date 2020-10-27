@@ -169,9 +169,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	Map<Object, Object> interns = new ConcurrentHashMap<>();
 
-	// class,propertyname,id->ref_id
-	private MultikeyMap<Long> segmentRefs = new UnsortedMultikeyMap<>(3);
-
 	public DomainStoreLoaderDatabase(DomainStore store,
 			RetargetableDataSource dataSource,
 			ThreadPoolExecutor warmupExecutor) {
@@ -567,8 +564,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							Collection<Long> ids = store.cache
 									.values(property.clazz1).stream()
 									.map(HasId::getId)
-									.map(id -> segmentRefs.get(property.clazz1,
-											name, id))
+									.map(id -> segmentLoader.segmentRefs
+											.get(property.clazz1, name, id))
 									.distinct().collect(Collectors.toList());
 							ids = ids.stream().distinct().sorted()
 									.collect(Collectors.toList());
