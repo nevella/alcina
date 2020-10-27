@@ -17,12 +17,12 @@ import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.RowData;
 
 import cc.alcina.extras.webdriver.gallery.GalleryConfiguration.Element;
-import cc.alcina.extras.webdriver.google.GoogleDriveAccessor;
-import cc.alcina.extras.webdriver.google.GoogleSheetAccessor;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.ShellWrapper;
+import cc.alcina.framework.servlet.google.GoogleDriveAccessor;
+import cc.alcina.framework.servlet.google.GoogleSheetAccessor;
 
 public class SheetPersister {
 	private File base;

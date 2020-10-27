@@ -8,8 +8,6 @@ import org.openqa.selenium.OutputType;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.w3c.dom.Document;
 
-import cc.alcina.extras.webdriver.google.GoogleSheetAccessor;
-import cc.alcina.extras.webdriver.google.GoogleSheetAccessor.SheetAccess;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNode;
@@ -17,6 +15,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.servlet.google.GoogleSheetAccessor;
+import cc.alcina.framework.servlet.google.GoogleSheetAccessor.SheetAccess;
 
 @SuppressWarnings("unused")
 public class Gallery {

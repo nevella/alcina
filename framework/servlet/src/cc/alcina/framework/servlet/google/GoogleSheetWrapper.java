@@ -1,4 +1,4 @@
-package cc.alcina.extras.webdriver.google;
+package cc.alcina.framework.servlet.google;
 
 import java.util.ArrayList;
 import java.util.Iterator;

@@ -49,7 +49,8 @@ import javax.persistence.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.Reflections;
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
@@ -69,7 +70,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObject
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -168,6 +168,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	private Transaction warmupTransaction;
 
 	Map<Object, Object> interns = new ConcurrentHashMap<>();
+
+	// class,propertyname,id->ref_id
+	private MultikeyMap<Long> segmentRefs = new UnsortedMultikeyMap<>(3);
 
 	public DomainStoreLoaderDatabase(DomainStore store,
 			RetargetableDataSource dataSource,
@@ -558,14 +561,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							if (store.cache.size(property.clazz1) == 0) {
 								continue;
 							}
-							PropertyReflector reflector = Reflections
-									.propertyAccessor()
-									.getPropertyReflector(property.clazz1,
-											property.propertyName1);
+							String name = property.propertyName1;
+							String regex = "(.+)_id";
+							Preconditions.checkArgument(name.matches(regex));
 							Collection<Long> ids = store.cache
 									.values(property.clazz1).stream()
-									.map(o -> (Long) reflector
-											.getPropertyValue(o))
+									.map(HasId::getId)
+									.map(id -> segmentRefs.get(property.clazz1,
+											name, id))
 									.distinct().collect(Collectors.toList());
 							ids = ids.stream().distinct().sorted()
 									.collect(Collectors.toList());

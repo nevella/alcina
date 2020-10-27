@@ -33,6 +33,9 @@
 		<fileset dir="${framework.servlet.lib.dir}">
 			<include name="**/*.jar" />
 		</fileset>
+		<fileset dir="${framework.google.lib.dir}">
+					<include name="**/*.jar" />
+				</fileset>
 	</path>
 	<path id="extras.cluster.lib.path">
 		<fileset dir="${extras.cluster.lib.dir}">
