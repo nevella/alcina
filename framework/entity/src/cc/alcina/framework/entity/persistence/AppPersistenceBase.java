@@ -45,7 +45,8 @@ public abstract class AppPersistenceBase {
 		return Boolean.getBoolean(PERSISTENCE_TEST);
 	}
 
-	// true for app server test mode, devconsole test mode
+	// true for app server test mode. *Not* for devconsole test mode (have to
+	// handle both cases explicitly if they overlap)
 	public static boolean isTestServer() {
 		return testServer;
 	}

@@ -111,39 +111,15 @@ public class Registry {
 		return get().singleton0(clazz, false);
 	}
 
-	public static Set<RegistryLocation>
-			filterForRegistryPointUniqueness(Collection annotations) {
-		UnsortedMultikeyMap<RegistryLocation> uniques = new UnsortedMultikeyMap<RegistryLocation>(
-				1);
-		List<RegistryLocation> locs = new ArrayList<RegistryLocation>();
-		for (Object ann : annotations) {
-			if (ann instanceof RegistryLocation) {
-				locs.add((RegistryLocation) ann);
-			} else if (ann instanceof RegistryLocations) {
-				locs.addAll(Arrays.asList(((RegistryLocations) ann).value()));
-			}
-		}
-		for (RegistryLocation loc : locs) {
-			if (!uniques.containsKey(loc.registryPoint())) {
-				uniques.put(loc.registryPoint(), loc);
-			} else {
-				// System.out.println(Ax.format("Discarded - %s, %s",
-				// CommonUtils.simpleClassName(loc.registryPoint()),
-				// CommonUtils.simpleClassName(loc.targetClass())));
-			}
-		}
-		return new LinkedHashSet<RegistryLocation>(uniques.allValues());
-	}
-
 	public static Set<RegistryLocation> filterForRegistryPointUniqueness(
-			Multimap<Class, List<Annotation>> sca) {
+			Multimap<?, List<Annotation>> superclassAnnotations) {
 		UnsortedMultikeyMap<RegistryLocation> uniques = new UnsortedMultikeyMap<RegistryLocation>(
 				2);
-		UnsortedMultikeyMap<RegistryLocation> pointsForLastSubclass = new UnsortedMultikeyMap<RegistryLocation>(
+		UnsortedMultikeyMap<RegistryLocation> pointsForPrecedingSubclass = new UnsortedMultikeyMap<RegistryLocation>(
 				2);
-		for (Class clazz : sca.keySet()) {
+		for (Object clazzKey : superclassAnnotations.keySet()) {
 			List<RegistryLocation> locs = new ArrayList<RegistryLocation>();
-			for (Object ann : sca.get(clazz)) {
+			for (Object ann : superclassAnnotations.get(clazzKey)) {
 				if (ann instanceof RegistryLocation) {
 					locs.add((RegistryLocation) ann);
 				} else if (ann instanceof RegistryLocations) {
@@ -152,7 +128,8 @@ public class Registry {
 				}
 			}
 			for (RegistryLocation loc : locs) {
-				if (!pointsForLastSubclass.containsKey(loc.registryPoint())) {
+				if (!pointsForPrecedingSubclass
+						.containsKey(loc.registryPoint())) {
 					uniques.put(loc.registryPoint(), loc.targetClass(), loc);
 				} else {
 					if (uniques.get(loc.registryPoint(),
@@ -170,7 +147,7 @@ public class Registry {
 					}
 				}
 			}
-			pointsForLastSubclass.putMulti(uniques);
+			pointsForPrecedingSubclass.putMulti(uniques);
 		}
 		return new LinkedHashSet<RegistryLocation>(uniques.allValues());
 	}
@@ -426,7 +403,7 @@ public class Registry {
 			cachedKey = lookup.size() > 0 ? keys.get(lookup.get(0))
 					: keys.emptyLookupKey();
 			synchronized (exactMap) {
-				exactMap.put(registryPoint, targetClass, cachedKey);
+				exactMap.put(registryPoint, targetClassKey, cachedKey);
 			}
 		}
 		if (cachedKey == keys.emptyLookupKey() && errorOnNull) {
@@ -478,9 +455,6 @@ public class Registry {
 					"Non-default priority " + "with Multiple impl type -"
 							+ " probably should be instance - %s",
 					registeringClassKey.name()));
-		}
-		if (targetClassKey.simpleName().contains("OptionsAction")) {
-			int debug = 3;
 		}
 		if (registered.size() == 1
 				// && (targetClassKey != keys.undefinedTargetKey()

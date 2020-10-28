@@ -28,6 +28,10 @@ public class TransformCollation {
 		this.allEvents = (List<DomainTransformEvent>) allEvents;
 	}
 
+	public TransformCollation(Set<? extends DomainTransformEvent> allEvents) {
+		this(allEvents.stream().collect(Collectors.toList()));
+	}
+
 	public Stream<EntityCollation> allEntityCollations() {
 		ensureLookups();
 		return perLocator.values().stream();

@@ -1,4 +1,4 @@
-package cc.alcina.extras.webdriver.gallery;
+package cc.alcina.framework.servlet.google;
 
 import java.io.FileInputStream;
 import java.io.IOException;

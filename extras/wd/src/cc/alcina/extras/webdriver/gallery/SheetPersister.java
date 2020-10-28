@@ -21,6 +21,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.ShellWrapper;
+import cc.alcina.framework.servlet.google.GoogleDriveAccessor;
+import cc.alcina.framework.servlet.google.GoogleSheetAccessor;
 
 public class SheetPersister {
 	private File base;
@@ -83,7 +85,7 @@ public class SheetPersister {
 		gridRange.setStartColumnIndex(0);
 		gridRange.setEndColumnIndex(4);
 		sheetAccessor.bold(gridRange);
-		List<RowData> rowData = sheetAccessor.getRowData();
+		List<RowData> rowData = sheetAccessor.getRowData(0);
 		Map<String, Integer> keyRow = new LinkedHashMap<>();
 		int idx = 6;
 		for (; idx < rowData.size(); idx++) {

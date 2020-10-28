@@ -64,9 +64,9 @@ import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPoint
 import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.SEUtilities;
@@ -222,6 +222,10 @@ public class ClientReflectionGenerator extends Generator {
 		}
 	}
 
+	/*
+	 * FIXME - 2021 - (originally supported registrylocation annotation
+	 * extraction - but is now basically an implementation of @Inherited)
+	 */
 	public Set<Annotation> getClassAnnotations(JClassType clazz,
 			List<Class<? extends Annotation>> annotationClasses,
 			boolean allowMultiple) {
@@ -643,12 +647,12 @@ public class ClientReflectionGenerator extends Generator {
 		Comparator<JMethod> comparator = new Comparator<JMethod>() {
 			@Override
 			public int compare(JMethod o1, JMethod o2) {
-				String methodPropertyName1=methodPropertyName.get(o1);
-				String methodPropertyName2=methodPropertyName.get(o2);
-				int ordinal1 = fieldOrdinals.computeIfAbsent(methodPropertyName1,
-						key -> -1);
-				int ordinal2 = fieldOrdinals.computeIfAbsent(methodPropertyName2,
-						key -> -1);
+				String methodPropertyName1 = methodPropertyName.get(o1);
+				String methodPropertyName2 = methodPropertyName.get(o2);
+				int ordinal1 = fieldOrdinals
+						.computeIfAbsent(methodPropertyName1, key -> -1);
+				int ordinal2 = fieldOrdinals
+						.computeIfAbsent(methodPropertyName2, key -> -1);
 				int i = ordinal1 - ordinal2;
 				if (i != 0) {
 					return i;
@@ -687,24 +691,21 @@ public class ClientReflectionGenerator extends Generator {
 		HashMap<JClassType, Set<RegistryLocation>> results = new HashMap<JClassType, Set<RegistryLocation>>();
 		JClassType[] types = typeOracle.getTypes();
 		for (JClassType jct : types) {
-			if ((jct.isAnnotationPresent(RegistryLocation.class)
-					|| jct.isAnnotationPresent(RegistryLocations.class))
-					&& !jct.isAbstract()) {
-				Set<RegistryLocation> rls = getClassAnnotations(jct,
-						RegistryLocation.class, true);
-				Set<RegistryLocations> rlsSet = getClassAnnotations(jct,
-						RegistryLocations.class, true);
-				for (RegistryLocations rlcs : rlsSet) {
-					for (RegistryLocation rl : rlcs.value()) {
-						rls.add(rl);
-					}
+			if (!jct.isAbstract() && !ignore(jct)) {
+				Multimap<JClassType, List<Annotation>> superclassAnnotations = new Multimap<>();
+				JClassType cursor = jct;
+				while (cursor.getSuperclass() != null) {
+					superclassAnnotations.addCollection(cursor,
+							Arrays.asList(cursor.getAnnotations()));
+					cursor = cursor.getSuperclass();
 				}
-				rls = new LinkedHashSet<RegistryLocation>(rls);
-				CollectionFilters.filterInPlace(rls,
+				Set<RegistryLocation> locations = Registry
+						.filterForRegistryPointUniqueness(
+								superclassAnnotations);
+				CollectionFilters.filterInPlace(locations,
 						CLIENT_VISIBLE_ANNOTATION_FILTER);
-				rls = Registry.filterForRegistryPointUniqueness(rls);
-				if (!rls.isEmpty() && !ignore(jct)) {
-					results.put(jct, rls);
+				if (locations.size() > 0) {
+					results.put(jct, locations);
 				}
 			}
 		}

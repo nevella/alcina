@@ -11,10 +11,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.sheets.v4.SheetsScopes;
 
-import cc.alcina.extras.webdriver.gallery.GoogleDriveAccessor.DriveAccess;
-import cc.alcina.extras.webdriver.gallery.GoogleSheetAccessor.SheetAccess;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.servlet.google.GoogleDriveAccessor.DriveAccess;
+import cc.alcina.framework.servlet.google.GoogleSheetAccessor.SheetAccess;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)

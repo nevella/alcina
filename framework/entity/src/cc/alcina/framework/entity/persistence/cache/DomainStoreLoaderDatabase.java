@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -536,7 +537,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						if (property.isIgnoreForPhase(phase)) {
 							continue;
 						}
-						if (property.type == DomainSegmentPropertyType.TABLE_REF_CLAZZ_1_RSCOL_REFS_CLAZZ_2) {
+						if (property.type == DomainSegmentPropertyType.CLAZZ_1_RSCOL_REFS_CLAZZ_2) {
 							Collection<Long> ids = store.cache
 									.keys(property.clazz2);
 							ids = ids.stream().distinct().sorted()
@@ -545,7 +546,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 									property.clazz1, property.propertyName1,
 									ids);
 							String sqlFilter = Ax.format(" %s in %s",
-									property.propertyName1,
+									property.columnName1(),
 									longsToIdClause(ids));
 							segmentClasses.add(property.clazz1);
 							if (ids.size() > 0) {
@@ -557,14 +558,18 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 									return null;
 								});
 							}
-						} else if (property.type == DomainSegmentPropertyType.STORE_REF_CLAZZ_1_PROP_EQ_CLAZZ_2_ID_LOAD_CLAZZ_2) {
+						} else if (property.type == DomainSegmentPropertyType.CLAZZ_1_PROP_EQ_CLAZZ_2_ID_LOAD_CLAZZ_2) {
 							if (store.cache.size(property.clazz1) == 0) {
 								continue;
 							}
-							Collection<Long> ids = store.cache.fieldValues(
-									property.clazz1, property.propertyName1);
-							ids = ids.stream().distinct().sorted()
-									.collect(Collectors.toList());
+							Collection<Long> ids = store.cache
+									.values(property.clazz1).stream()
+									.map(HasId::getId)
+									.map(id -> segmentLoader.segmentRefs.get(
+											property.clazz1,
+											property.propertyName1, id))
+									.distinct().filter(Objects::nonNull)
+									.sorted().collect(Collectors.toList());
 							ids = segmentLoader.filterForQueried(
 									property.clazz2, "id", ids);
 							String sqlFilter = Ax.format(" id in %s",
@@ -1232,6 +1237,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			this.joinTable = readMethod.getAnnotation(JoinTable.class);
 			this.oneToMany = readMethod.getAnnotation(OneToMany.class);
 			this.oneToOne = readMethod.getAnnotation(OneToOne.class);
+			// FIXME - mvcc.4 - do we need DomainStoreMapping?
 			DomainStoreMapping mapping = readMethod
 					.getAnnotation(DomainStoreMapping.class);
 			this.mappedClass = mapping == null ? null : mapping.mapping();
@@ -1250,6 +1256,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s.%s [%s]", clazz.getSimpleName(), name,
+					readMethod.getReturnType().getSimpleName());
 		}
 
 		class ResolveHelper {
@@ -1646,7 +1658,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							rsSql += String.format(" where %s", sqlFilter);
 						}
 					}
-					loader.store.sqlLogger.debug(rsSql);
+					loader.store.sqlLogger
+							.debug(CommonUtils.trimToWsChars(rsSql, 1000));
 					rs = stmt.executeQuery(rsSql);
 				}
 				return rs;
