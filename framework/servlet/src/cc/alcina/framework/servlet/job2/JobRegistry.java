@@ -5,16 +5,17 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
-import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobResult;
@@ -71,7 +72,10 @@ public class JobRegistry extends WriterService {
 
 	private JobScheduler scheduler = new JobScheduler();
 
+	Logger logger = LoggerFactory.getLogger(getClass());
+
 	private TopicListener<String> queueNotifier = (k, name) -> {
+		logger.warn("Metadata changed on queue {}", name);
 		JobQueue queue = activeQueues.get(name);
 		if (queue != null) {
 			queue.onMetadataChanged();
@@ -98,7 +102,7 @@ public class JobRegistry extends WriterService {
 
 	public JobResult perform(Task task) {
 		JobQueue queue = start(task);
-		queue.awaitEmpty();
+		queue.allocateUntilEmpty();
 		return queue.initialJob.asJobResult();
 	}
 
@@ -106,8 +110,8 @@ public class JobRegistry extends WriterService {
 		schedule(task, scheduler.getSchedule(task));
 	}
 
-	public void schedule(Task task, Schedule schedule) {
-		start(task);
+	public JobQueue schedule(Task task, Schedule schedule) {
+		return start(task);
 	}
 
 	public JobQueue start(Task task) {
@@ -115,7 +119,7 @@ public class JobRegistry extends WriterService {
 		JobQueue queue = createPerJobQueue(job);
 		Transaction.commit();
 		AlcinaChildRunnable.runInTransactionNewThread(queue.getName(),
-				queue::awaitEmpty);
+				queue::allocateUntilEmpty);
 		return queue;
 	}
 
@@ -126,6 +130,13 @@ public class JobRegistry extends WriterService {
 	@Override
 	public void stopService() {
 		activeQueues.values().forEach(JobQueue::cancel);
+	}
+
+	public void waitForQueue(String queueName) {
+		JobQueue jobQueue = activeQueues.get(queueName);
+		if (jobQueue != null) {
+			jobQueue.awaitEmpty();
+		}
 	}
 
 	private Job createJob(Task task) {
@@ -181,10 +192,14 @@ public class JobRegistry extends WriterService {
 		}
 		JobContext context = new JobContext(job, persistenceType, performer);
 		activeJobs.add(context);
+		boolean taskEnabled = !ResourceUtilities
+				.isDefined(Ax.format("%s.disabled", job.getTaskClassName()));
 		try {
 			LooseContext.push();
 			context.start();
-			performer.performAction(job.getTask());
+			if (taskEnabled) {
+				performer.performAction(job.getTask());
+			}
 		} catch (Throwable t) {
 			Exception e = (Exception) ((t instanceof Exception) ? t
 					: new WrappedRuntimeException(t));
@@ -221,48 +236,6 @@ public class JobRegistry extends WriterService {
 		@Override
 		public void schedule(Task task) {
 			get().schedule(task);
-		}
-	}
-
-	class ActionLauncherAsync extends AlcinaChildRunnable {
-		private CountDownLatch latch;
-
-		private RemoteAction action;
-
-		private TopicListener startListener;
-
-		volatile JobTracker tracker;
-
-		ActionLauncherAsync(String name, RemoteAction action) {
-			super(name);
-			this.latch = new CountDownLatch(2);
-			this.action = action;
-			this.startListener = new TopicListener<JobTracker>() {
-				@Override
-				public void topicPublished(String key, JobTracker tracker) {
-					ActionLauncherAsync.this.tracker = tracker;
-					latch.countDown();
-				}
-			};
-		}
-
-		public JobTracker launchAndWaitForTracker() {
-			Thread thread = new Thread(this);
-			thread.start();
-			latch.countDown();
-			try {
-				latch.await();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			return tracker;
-		}
-
-		@Override
-		protected void run0() throws Exception {
-			LooseContext.getContext().addTopicListener(
-					JobRegistry1.TOPIC_JOB_STARTED, startListener);
-			perform(this.action);
 		}
 	}
 }

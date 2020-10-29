@@ -426,22 +426,8 @@ public class ResourceUtilities {
 		return clientWithJvmProperties;
 	}
 
-	public static boolean isIntegralType(Class c) {
-		if (c.isPrimitive()) {
-			return c != char.class && c != boolean.class && c != float.class
-					&& c != double.class;
-		} else {
-			return c == Integer.class || c == Byte.class || c == Short.class
-					|| c == Long.class;
-		}
-	}
-
-	public static boolean isNullOrEmpty(String s) {
-		return (s == null || s.length() == 0);
-	}
-
-	public static boolean isNumericPrimitive(Class c) {
-		return (c.isPrimitive() && c != char.class && c != boolean.class);
+	public static boolean isDefined(String key) {
+		return customProperties.containsKey(key);
 	}
 
 	public static Document loadDocumentFromInputStream(InputStream is)
@@ -1113,19 +1099,18 @@ public class ResourceUtilities {
 			return this;
 		}
 
-		public SimpleQuery withHeaders(StringMap headers) {
-			this.headers = headers;
-			return this;
-		}
-
 		public SimpleQuery withGzip(boolean gzip) {
 			this.gzip = gzip;
 			return this;
 		}
 
-		public SimpleQuery
-				withQueryStringParameters(StringMap queryStringParameters) {
-			this.queryStringParameters = queryStringParameters;
+		public SimpleQuery withHeaders(StringMap headers) {
+			this.headers = headers;
+			return this;
+		}
+
+		public SimpleQuery withPostBody(String postBody) {
+			this.postBody = postBody;
 			return this;
 		}
 
@@ -1139,8 +1124,9 @@ public class ResourceUtilities {
 			return this;
 		}
 
-		public SimpleQuery withPostBody(String postBody) {
-			this.postBody = postBody;
+		public SimpleQuery
+				withQueryStringParameters(StringMap queryStringParameters) {
+			this.queryStringParameters = queryStringParameters;
 			return this;
 		}
 

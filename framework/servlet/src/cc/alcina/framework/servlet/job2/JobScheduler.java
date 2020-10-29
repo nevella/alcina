@@ -1,11 +1,10 @@
 package cc.alcina.framework.servlet.job2;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.ExecutorService;
 
+import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.common.client.job.Task.ExexcutorServiceProvider;
-import cc.alcina.framework.common.client.job.Task.NoRetryPolicy;
-import cc.alcina.framework.common.client.job.Task.RetryPolicy;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
@@ -23,8 +22,23 @@ public class JobScheduler {
 				.map(p -> p.getSchedule(task, false)).orElse(null);
 	}
 
+	public interface ExecutorServiceProvider {
+		ExecutorService getService();
+	}
+
+	public static class NoRetryPolicy implements RetryPolicy {
+		@Override
+		public boolean shouldRetry(Job failedJob) {
+			return false;
+		}
+	}
+
+	public interface RetryPolicy {
+		boolean shouldRetry(Job failedJob);
+	}
+
 	public static class Schedule {
-		private ExexcutorServiceProvider exexcutorServiceProvider;
+		private ExecutorServiceProvider exexcutorServiceProvider;
 
 		private int queueMaxConcurrentJobs = Integer.MAX_VALUE;
 
@@ -38,7 +52,7 @@ public class JobScheduler {
 
 		private boolean clustered;
 
-		public ExexcutorServiceProvider getExcutorServiceProvider() {
+		public ExecutorServiceProvider getExcutorServiceProvider() {
 			return exexcutorServiceProvider;
 		}
 
@@ -72,7 +86,7 @@ public class JobScheduler {
 		}
 
 		public Schedule withExexcutorServiceProvider(
-				ExexcutorServiceProvider exexcutorServiceProvider) {
+				ExecutorServiceProvider exexcutorServiceProvider) {
 			this.exexcutorServiceProvider = exexcutorServiceProvider;
 			return this;
 		}

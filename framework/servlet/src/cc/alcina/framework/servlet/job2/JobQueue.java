@@ -1,7 +1,9 @@
 package cc.alcina.framework.servlet.job2;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
 import com.google.common.base.Preconditions;
@@ -11,6 +13,7 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 /*
@@ -32,6 +35,10 @@ public class JobQueue {
 	private boolean cancelled = false;
 
 	private boolean metadataChanged = false;
+
+	private boolean finished;
+
+	private List<CountDownLatch> finishedLatches = new ArrayList<>();
 
 	public JobQueue(Job initialJob, ExecutorService executorService,
 			int maxConcurrentJobs, boolean clustered) {
@@ -76,6 +83,7 @@ public class JobQueue {
 								.getServerAsClientInstance());
 						pending.add(job);
 					});
+			Transaction.commit();
 		}
 	}
 
@@ -86,7 +94,7 @@ public class JobQueue {
 	private void releaseAllocationLock() {
 	}
 
-	void awaitEmpty() {
+	void allocateUntilEmpty() {
 		while (!cancelled) {
 			try {
 				acquireAllocationLock();
@@ -102,12 +110,17 @@ public class JobQueue {
 				}
 				if (active.isEmpty() && pending.isEmpty()) {
 					JobRegistry.get().onJobQueueTerminated(this);
+					synchronized (this) {
+						finished = true;
+						finishedLatches.forEach(CountDownLatch::countDown);
+					}
 					return;
 				}
 				synchronized (this) {
 					if (!metadataChanged) {
-						wait();
+						wait(10000);
 					}
+					Transaction.endAndBeginNew();
 					metadataChanged = false;
 				}
 			} catch (Exception e) {
@@ -116,6 +129,15 @@ public class JobQueue {
 			} finally {
 				releaseAllocationLock();
 			}
+		}
+	}
+
+	void awaitEmpty() {
+		synchronized (this) {
+			if (finished) {
+				return;
+			}
+			finishedLatches.add(new CountDownLatch(1));
 		}
 	}
 

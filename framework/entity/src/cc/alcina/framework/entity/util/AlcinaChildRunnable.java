@@ -65,8 +65,8 @@ public abstract class AlcinaChildRunnable implements Runnable {
 	}
 
 	public static void runInTransaction(String threadName,
-			ThrowingRunnable runnable, boolean asRoot,
-			boolean throwExceptions, boolean inNewThread) {
+			ThrowingRunnable runnable, boolean asRoot, boolean throwExceptions,
+			boolean inNewThread) {
 		AlcinaChildRunnable wrappingRunnable = new AlcinaChildRunnable(
 				threadName) {
 			@Override
@@ -82,7 +82,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		};
 		if (inNewThread) {
 			Preconditions.checkArgument(!throwExceptions,
-				"Can't throw exceptions in a new thread");
+					"Can't throw exceptions in a new thread");
 			wrappingRunnable.startInNewThread();
 		} else {
 			try {
@@ -133,7 +133,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		};
 	}
 
-	private boolean runningWithinTransaction;
+	private boolean inTransaction;
 
 	private PermissionsManagerState permissionsManagerState;
 
@@ -165,10 +165,6 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		return this;
 	}
 
-	public boolean isRunningWithinTransaction() {
-		return this.runningWithinTransaction;
-	}
-
 	public AlcinaChildRunnable logExceptions() {
 		getRunContext().logExceptions = true;
 		return this;
@@ -179,6 +175,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		if (threadName != null) {
 			Thread.currentThread().setName(threadName);
 		}
+		inTransaction = Transaction.isInTransaction();
 		try {
 			LooseContext.push();
 			// different thread-local
@@ -207,7 +204,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			}
 			throw new RuntimeException(throwable);
 		} finally {
-			if (!isRunningWithinTransaction()) {
+			if (!inTransaction) {
 				Transaction.ensureEnded();
 			}
 			if (runAsRoot) {
@@ -216,10 +213,6 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			LooseContext.confirmDepth(getRunContext().tLooseContextDepth);
 			LooseContext.pop();
 		}
-	}
-
-	public void setRunningWithinTransaction(boolean runningWithinTransaction) {
-		this.runningWithinTransaction = runningWithinTransaction;
 	}
 
 	public Thread startInNewThread() {
