@@ -1,14 +1,12 @@
 package cc.alcina.framework.entity.util;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
@@ -35,22 +33,6 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		new Thread(wrappingRunnable).start();
 	}
 
-	public static <T> void parallelStream(String name, List<T> items,
-			Consumer<T> consumer) {
-		CountDownLatch latch = new CountDownLatch(items.size());
-		items.stream().forEach(i -> {
-			Runnable itemRunnable = () -> consumer.accept(i);
-			new AlcinaChildContextRunner(
-					Ax.format("%s-%s", name, items.indexOf(i)))
-							.callNewThread(itemRunnable, latch);
-		});
-		try {
-			latch.await();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	// FIXME - mvcc.jobs - try to avoid this for jobs - declarative jobs and/or
 	// alcinachildrunnables
 	public static void runInTransaction(String threadName,
@@ -65,8 +47,8 @@ public abstract class AlcinaChildRunnable implements Runnable {
 	}
 
 	public static void runInTransaction(String threadName,
-			ThrowingRunnable runnable, boolean asRoot,
-			boolean throwExceptions, boolean inNewThread) {
+			ThrowingRunnable runnable, boolean asRoot, boolean throwExceptions,
+			boolean inNewThread) {
 		AlcinaChildRunnable wrappingRunnable = new AlcinaChildRunnable(
 				threadName) {
 			@Override
@@ -82,7 +64,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		};
 		if (inNewThread) {
 			Preconditions.checkArgument(!throwExceptions,
-				"Can't throw exceptions in a new thread");
+					"Can't throw exceptions in a new thread");
 			wrappingRunnable.startInNewThread();
 		} else {
 			try {
