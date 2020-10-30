@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ClassSimpleNameCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ExpandableLabelCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.RenderedLabelCustomiser;
@@ -53,7 +54,11 @@ public class DomainTransformEventView extends DomainTransformEvent
 			@NamedParameter(name = ExpandableLabelCustomiser.SHOW_AS_POPUP, booleanValue = true),
 			@NamedParameter(name = ExpandableLabelCustomiser.MAX_WIDTH, intValue = 30) })
 	public String getNewStringValue() {
-		return super.getNewStringValue();
+		if (getValueId() != 0 || getValueLocalId() != 0) {
+			return Ax.format("id:%s/%s", getValueId(), getValueLocalId());
+		} else {
+			return super.getNewStringValue();
+		}
 	}
 
 	@Override
