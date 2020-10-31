@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.SpecificIdOrder;
-import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TxtCriterion;
@@ -124,7 +124,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		}
 
 		@Override
-		public <C extends VersionableEntity> Class<C> queriedEntityClass() {
+		public <C extends Entity> Class<C> queriedEntityClass() {
 			throw new UnsupportedOperationException();
 		}
 	}

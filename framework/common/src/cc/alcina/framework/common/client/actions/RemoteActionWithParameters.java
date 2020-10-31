@@ -13,8 +13,6 @@
  */
 package cc.alcina.framework.common.client.actions;
 
-import java.io.Serializable;
-
 /**
  * Marker subclass, to be run on the server
  * 
