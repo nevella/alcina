@@ -2,7 +2,6 @@ package cc.alcina.framework.common.client.util;
 
 import com.totsp.gwittir.client.ui.Renderer;
 
-import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 public interface HasDisplayName {

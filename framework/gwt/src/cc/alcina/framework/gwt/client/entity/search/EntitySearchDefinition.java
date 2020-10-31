@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -20,13 +20,6 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 	public boolean isReturnSingleDataObjectImplementations() {
 		return this.returnSingleDataObjectImplementations;
 	}
-
-	public void setReturnSingleDataObjectImplementations(
-			boolean returnSingleDataObjectImplementations) {
-		this.returnSingleDataObjectImplementations = returnSingleDataObjectImplementations;
-	}
-
-	public abstract <C extends VersionableEntity> Class<C> queriedEntityClass();
 
 	public List<EntityPlace> provideFilterPlaces() {
 		List<EntityPlace> places = new ArrayList<>();
@@ -48,5 +41,12 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 	@Override
 	public Class<? extends Bindable> queriedBindableClass() {
 		return queriedEntityClass();
+	}
+
+	public abstract <C extends Entity> Class<C> queriedEntityClass();
+
+	public void setReturnSingleDataObjectImplementations(
+			boolean returnSingleDataObjectImplementations) {
+		this.returnSingleDataObjectImplementations = returnSingleDataObjectImplementations;
 	}
 }

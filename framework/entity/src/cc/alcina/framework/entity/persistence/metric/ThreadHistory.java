@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.persistence.cache.DomainStoreLockState;
 import cc.alcina.framework.entity.persistence.cache.DomainStoreWaitStats;
 
@@ -37,10 +36,10 @@ public class ThreadHistory {
 		element.threadInfo.stackTrace = Arrays.asList(stackTrace).stream()
 				.collect(Collectors.toList());
 		element.elideIfMoreLinesThan(maxStackLines);
-		int size=elements.size();
-		if(size>maxFrames){
+		int size = elements.size();
+		if (size > maxFrames) {
 			elements = elements.subList(0, maxFrames);
-			this.elidedElementCount += size-maxFrames;
+			this.elidedElementCount += size - maxFrames;
 		}
 		elementCount = elements.size();
 	}

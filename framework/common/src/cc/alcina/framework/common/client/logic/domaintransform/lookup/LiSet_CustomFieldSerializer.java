@@ -25,8 +25,6 @@ import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 import com.google.gwt.user.client.rpc.core.java.util.Collection_CustomFieldSerializerBase;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-
 /**
  * Custom field serializer for LiSet
  */
