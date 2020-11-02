@@ -95,6 +95,7 @@ public class FilterableTree extends Tree
 	public void collapseToFirstLevel() {
 		TreeItem item = getSelectedItem();
 		new TreeNodeWalker().walk(this, new Callback<TreeItem>() {
+			@Override
 			public void apply(TreeItem target) {
 				boolean open = target.getParentItem() == null;
 				if (shouldExpandCallback != null
@@ -124,6 +125,7 @@ public class FilterableTree extends Tree
 		Scheduler.get().scheduleIncremental(new ExpandCommand(callback, depth));
 	}
 
+	@Override
 	public boolean filter(String filterText) {
 		this.lastFilteredText = filterText;
 		boolean b = false;
@@ -195,6 +197,7 @@ public class FilterableTree extends Tree
 		return this.shouldExpandCallback;
 	}
 
+	@Override
 	public void moveToFirst() {
 		int visibleCount = 0;
 		TreeItem visibleChild = null;
@@ -237,6 +240,7 @@ public class FilterableTree extends Tree
 		super.onBrowserEvent(event);
 	}
 
+	@Override
 	public void onSelection(SelectionEvent<TreeItem> event) {
 		TreeItem item = event.getSelectedItem();
 		TreeItem lastSelCopy = lastSelected;
@@ -309,7 +313,7 @@ public class FilterableTree extends Tree
 		resetKeyMemory();
 		TreeItem curSelection = getSelectedItem();
 		if (isKeyboardNavigationEnabled(curSelection)) {
-			int code = DOM.eventGetKeyCode(event);
+			int code = event.getKeyCode();
 			switch (standardizeKeycode(code)) {
 			case KeyCodes.KEY_UP: {
 				lastKeyWasUp = true;

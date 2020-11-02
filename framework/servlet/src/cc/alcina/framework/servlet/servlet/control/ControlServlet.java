@@ -91,7 +91,7 @@ public class ControlServlet extends AlcinaServlet {
 	}
 
 	private void handle1(ControlServletRequest csr, HttpServletRequest req,
-			HttpServletResponse resp) throws Exception {
+			HttpServletResponse response) throws Exception {
 		if (csr.getCommand() == null) {
 			return;
 		}
@@ -100,34 +100,34 @@ public class ControlServlet extends AlcinaServlet {
 			Registry.impl(AppLifecycleManager.class).refreshProperties();
 			writeAndClose(
 					String.format("Properties refreshed - %s", new Date()),
-					resp);
+					response);
 			break;
 		case GET_STATUS:
 			ControlServletState status = Registry
 					.impl(AppLifecycleManager.class).getState();
 			if (csr.isJson()) {
 				writeAndClose(new AlcinaBeanSerializerS().serialize(status),
-						resp);
+						response);
 			} else {
 				String msg = status.toString();
 				msg += "\n";
 				msg += Registry.impl(AppLifecycleManager.class)
 						.getLifecycleServlet().dumpCustomProperties();
-				writeAndClose(msg, resp);
+				writeAndClose(msg, response);
 			}
 			break;
 		case CLUSTER_STATUS:
 			writeAndCloseHtml(Registry.impl(ClusterStateProvider.class)
-					.getMemberClusterState(), req, resp);
+					.getMemberClusterState(), req, response);
 			break;
 		case CLUSTER_LEADER:
 			writeAndCloseHtml(Registry.impl(ClusterStateProvider.class)
-					.getClusterLeaderState(), req, resp);
+					.getClusterLeaderState(), req, response);
 			break;
 		case VM_HEALTH:
 			writeAndClose(
 					Registry.impl(ClusterStateProvider.class).getVmHealth(),
-					resp);
+					response);
 			break;
 		case TEST_SENDMAIL: {
 			String toAddress = testSendmail();
@@ -136,13 +136,20 @@ public class ControlServlet extends AlcinaServlet {
 					EntityLayerUtils.getLocalHostName(), ResourceUtilities
 							.get(ContentDeliveryEmail.class, "smtp.host.name"));
 			logger.warn(message);
-			writeAndClose(message, resp);
+			writeAndClose(message, response);
 			break;
 		}
 		case PERFORM_ACTION: {
 			String message = performAction(req);
-			logger.warn(message);
-			writeAndClose(message, resp);
+			logger.info(message);
+			String regex = "(?s)^INFO.{0,50}(<\\?xml|<html).*";
+			if (message.matches(regex)) {
+				response.setContentType("text/html");
+				response.getWriter().write(message.replaceFirst(regex, "$1"));
+				response.getWriter().close();
+			} else {
+				writeAndClose(message, response);
+			}
 			break;
 		}
 		}

@@ -1167,6 +1167,7 @@ public final class CompilingClassLoader extends ClassLoader
 	private class MyInstanceMethodOracle implements InstanceMethodOracle {
 		private final Map<String, Set<JClassType>> signatureToDeclaringClasses = new HashMap<String, Set<JClassType>>();
 
+		@SuppressWarnings("deprecation")
 		public MyInstanceMethodOracle(Set<JClassType> jsoTypes,
 				JClassType javaLangObject, SingleJsoImplData jsoData) {
 			// Record that the JSO implements its own methods

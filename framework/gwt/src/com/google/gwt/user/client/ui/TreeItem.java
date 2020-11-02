@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
  * <h3>Example</h3> {@example com.google.gwt.examples.TreeExample}
  * </p>
  */
+@SuppressWarnings("deprecation")
 public class TreeItem extends UIObject
 		implements IsTreeItem, HasTreeItems, HasHTML, HasSafeHtml {
 	/*
@@ -114,6 +115,8 @@ public class TreeItem extends UIObject
 
 	private Widget widget;
 
+	Map<Element, AbstractImagePrototype> currentImagePrototypesData = new LightMap<>();
+
 	/**
 	 * Creates an empty tree item.
 	 */
@@ -162,41 +165,6 @@ public class TreeItem extends UIObject
 	TreeItem(boolean isRoot) {
 		this.isRoot = isRoot;
 		ensureElements(isRoot);
-	}
-
-	protected void ensureElements(boolean isRoot) {
-		ensureElements();
-	}
-
-	protected void ensureElements() {
-		if (contentElem != null) {
-			return;
-		}
-		Element elem = Document.get().createDivElement();
-		elem.ensureId();
-		setElement(elem);
-		contentElem = Document.get().createDivElement();
-		contentElem.ensureId();
-		// The root item always has children.
-		if (isRoot) {
-			initChildren();
-			impl.ensureState(this, PotentialState.INSTANTIATED);
-		}
-	}
-
-	private List<Integer> getIndex() {
-		ArrayList<Integer> list = new ArrayList<>();
-		populateIndex(list);
-		return list;
-	}
-
-	private void populateIndex(List<Integer> list) {
-		if (getParentItem() == null) {
-			list.add(0, 0);
-			return;
-		}
-		list.add(0, getParentItem().getChildIndex(this));
-		getParentItem().populateIndex(list);
 	}
 
 	/**
@@ -578,10 +546,6 @@ public class TreeItem extends UIObject
 		DOM.setInnerHTML(contentElem, html);
 	}
 
-	protected boolean isUnrendered() {
-		return contentElem == null;
-	}
-
 	/**
 	 * Selects or deselects this item.
 	 * 
@@ -704,6 +668,22 @@ public class TreeItem extends UIObject
 	}
 
 	@SuppressWarnings("unused")
+	private List<Integer> getIndex() {
+		ArrayList<Integer> list = new ArrayList<>();
+		populateIndex(list);
+		return list;
+	}
+
+	private void populateIndex(List<Integer> list) {
+		if (getParentItem() == null) {
+			list.add(0, 0);
+			return;
+		}
+		list.add(0, getParentItem().getChildIndex(this));
+		getParentItem().populateIndex(list);
+	}
+
+	@SuppressWarnings("unused")
 	private Element resolve(Element elem) {
 		if (PotentialElement.isPotential(elem)) {
 			Element replacer = Document.get().createElement(elem.getTagName())
@@ -719,6 +699,26 @@ public class TreeItem extends UIObject
 		for (int i = 0, n = getChildCount(); i < n; ++i) {
 			children.get(i).updateStateRecursiveHelper();
 		}
+	}
+
+	protected void ensureElements() {
+		if (contentElem != null) {
+			return;
+		}
+		Element elem = Document.get().createDivElement();
+		elem.ensureId();
+		setElement(elem);
+		contentElem = Document.get().createDivElement();
+		contentElem.ensureId();
+		// The root item always has children.
+		if (isRoot) {
+			initChildren();
+			impl.ensureState(this, PotentialState.INSTANTIATED);
+		}
+	}
+
+	protected void ensureElements(boolean isRoot) {
+		ensureElements();
 	}
 
 	/**
@@ -758,6 +758,13 @@ public class TreeItem extends UIObject
 		} else {
 			return null;
 		}
+	}
+
+	protected boolean isUnrendered() {
+		return contentElem == null;
+	}
+
+	protected void maybeLazilyRender() {
 	}
 
 	/**
@@ -803,6 +810,10 @@ public class TreeItem extends UIObject
 		return contentElem;
 	}
 
+	AbstractImagePrototype getCurrentImagePrototype(Element child) {
+		return currentImagePrototypesData.get(child);
+	}
+
 	Element getImageElement() {
 		return DOM.getFirstChild(getImageHolderElement());
 	}
@@ -839,6 +850,11 @@ public class TreeItem extends UIObject
 		if ((item.getParentItem() != null) || (item.getTree() != null)) {
 			item.remove();
 		}
+	}
+
+	void setCurrentImagePrototype(Element child,
+			AbstractImagePrototype prototype) {
+		currentImagePrototypesData.put(child, prototype);
 	}
 
 	void setParentItem(TreeItem parent) {
@@ -920,9 +936,6 @@ public class TreeItem extends UIObject
 		if (updateTreeSelection) {
 			tree.maybeUpdateSelection(this, this.open);
 		}
-	}
-
-	protected void maybeLazilyRender() {
 	}
 
 	void updateStateRecursive() {
@@ -1140,15 +1153,4 @@ public class TreeItem extends UIObject
 	enum PotentialState {
 		POTENTIAL, POTENTIAL_CHILDREN, INSTANTIATED
 	}
-
-	AbstractImagePrototype getCurrentImagePrototype(Element child) {
-		return currentImagePrototypesData.get(child);
-	}
-
-	void setCurrentImagePrototype(Element child,
-			AbstractImagePrototype prototype) {
-		currentImagePrototypesData.put(child, prototype);
-	}
-
-	Map<Element, AbstractImagePrototype> currentImagePrototypesData = new LightMap<>();
 }

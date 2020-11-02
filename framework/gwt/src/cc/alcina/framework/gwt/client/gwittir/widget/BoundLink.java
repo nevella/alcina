@@ -15,7 +15,6 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.DOM;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
@@ -45,6 +44,7 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		return this.base.addClickHandler(handler);
 	}
 
+	@Override
 	public void addStyleName(String style) {
 		this.base.addStyleName(style);
 	}
@@ -53,12 +53,14 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		base.setPreventDefault(false);
 	}
 
+	@Override
 	public int getAbsoluteLeft() {
 		int retValue;
 		retValue = this.base.getAbsoluteLeft();
 		return retValue;
 	}
 
+	@Override
 	public int getAbsoluteTop() {
 		int retValue;
 		retValue = this.base.getAbsoluteTop();
@@ -66,15 +68,17 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 	}
 
 	public String getHref() {
-		return DOM.getElementProperty(base.getElement(), "href");
+		return base.getElement().getPropertyString("href");
 	}
 
+	@Override
 	public int getOffsetHeight() {
 		int retValue;
 		retValue = this.base.getOffsetHeight();
 		return retValue;
 	}
 
+	@Override
 	public int getOffsetWidth() {
 		int retValue;
 		retValue = this.base.getOffsetWidth();
@@ -90,6 +94,7 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		return this.renderer;
 	}
 
+	@Override
 	public String getStyleName() {
 		String retValue;
 		retValue = this.base.getStyleName();
@@ -97,7 +102,7 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 	}
 
 	public String getTarget() {
-		return DOM.getElementProperty(base.getElement(), "target");
+		return base.getElement().getPropertyString("target");
 	}
 
 	public String getText() {
@@ -106,12 +111,14 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		return retValue;
 	}
 
+	@Override
 	public String getTitle() {
 		String retValue;
 		retValue = this.base.getTitle();
 		return retValue;
 	}
 
+	@Override
 	public T getValue() {
 		return value;
 	}
@@ -124,12 +131,14 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		return this.base.isEnabled();
 	}
 
+	@Override
 	public boolean isVisible() {
 		boolean retValue;
 		retValue = this.base.isVisible();
 		return retValue;
 	}
 
+	@Override
 	public void removeStyleName(String style) {
 		this.base.removeStyleName(style);
 	}
@@ -142,6 +151,7 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		this.base.setEnabled(enabled);
 	}
 
+	@Override
 	public void setHeight(String height) {
 		this.base.setHeight(height);
 	}
@@ -150,6 +160,7 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		base.setHref(href);
 	}
 
+	@Override
 	public void setPixelSize(int width, int height) {
 		this.base.setPixelSize(width, height);
 	}
@@ -164,26 +175,30 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		this.renderer = newrenderer;
 	}
 
+	@Override
 	public void setSize(String width, String height) {
 		this.base.setSize(width, height);
 	}
 
+	@Override
 	public void setStyleName(String style) {
 		this.base.setStyleName(style);
 	}
 
 	public void setTarget(String target) {
-		DOM.setElementProperty(base.getElement(), "target", target);
+		base.getElement().setPropertyString("target", target);
 	}
 
 	public void setText(String text) {
 		this.base.setText(text);
 	}
 
+	@Override
 	public void setTitle(String title) {
 		this.base.setTitle(title);
 	}
 
+	@Override
 	public void setValue(T value) {
 		// ("Setting value "+ value, null );
 		Object old = this.getValue();
@@ -202,18 +217,22 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		}
 	}
 
+	@Override
 	public void setVisible(boolean visible) {
 		this.base.setVisible(visible);
 	}
 
+	@Override
 	public void setWidth(String width) {
 		this.base.setWidth(width);
 	}
 
+	@Override
 	public void sinkEvents(int eventBitsToAdd) {
 		this.base.sinkEvents(eventBitsToAdd);
 	}
 
+	@Override
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
 	}

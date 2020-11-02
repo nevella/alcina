@@ -102,8 +102,8 @@ public abstract class LooseContext {
 		factoryInstance = tm;
 	}
 
-	public static void remove(String key) {
-		getContext().remove(key);
+	public static <T> T remove(String key) {
+		return getContext().remove(key);
 	}
 
 	public static <T> T run(ThrowingSupplier<T> supplier) {

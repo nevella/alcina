@@ -128,11 +128,6 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 	}
 
 	@Override
-	public void addChangeListener(ChangeListener listener) {
-		this.base.addChangeListener(listener);
-	}
-
-	@Override
 	public void addClickListener(ClickListener listener) {
 		this.base.addClickListener(listener);
 	}
@@ -255,11 +250,6 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 	@Override
 	public boolean isEnabled() {
 		return this.base.isEnabled();
-	}
-
-	@Override
-	public void removeChangeListener(ChangeListener listener) {
-		this.base.removeChangeListener(listener);
 	}
 
 	@Override

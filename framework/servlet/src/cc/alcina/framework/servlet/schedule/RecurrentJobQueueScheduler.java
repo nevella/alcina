@@ -1,9 +1,6 @@
 package cc.alcina.framework.servlet.schedule;
 
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.servlet.job2.JobRegistry;
 import cc.alcina.framework.servlet.schedule.StandardSchedules.RecurrentJobsExecutorSchedule;
 

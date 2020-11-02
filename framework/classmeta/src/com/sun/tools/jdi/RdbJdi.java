@@ -507,20 +507,6 @@ public class RdbJdi {
 		}
 	}
 
-	private Field getFieldMirror(ReferenceTypeImpl referenceType, long ref) {
-		// Fetch all fields for the class, check performance impact
-		// Needs no synchronization now, since fields() returns
-		// unmodifiable local data
-		Iterator<Field> it = allFields(referenceType).iterator();
-		while (it.hasNext()) {
-			FieldImpl field = (FieldImpl) it.next();
-			if (field.ref() == ref) {
-				return field;
-			}
-		}
-		throw new IllegalArgumentException("Invalid field id: " + ref);
-	}
-
 	private void mockDetermineIfDaemonThread(ThreadReferenceImpl thread) {
 		ReferenceType referenceType = thread.referenceType();
 		Field field = referenceType.fieldByName("daemon"); //$NON-NLS-1$
@@ -583,6 +569,20 @@ public class RdbJdi {
 			JDWP.Method.LineTable.process(vm, method.declaringType, method.ref);
 		}
 		method.location();
+	}
+
+	Field getFieldMirror(ReferenceTypeImpl referenceType, long ref) {
+		// Fetch all fields for the class, check performance impact
+		// Needs no synchronization now, since fields() returns
+		// unmodifiable local data
+		Iterator<Field> it = allFields(referenceType).iterator();
+		while (it.hasNext()) {
+			FieldImpl field = (FieldImpl) it.next();
+			if (field.ref() == ref) {
+				return field;
+			}
+		}
+		throw new IllegalArgumentException("Invalid field id: " + ref);
 	}
 
 	public static class RefTypeMethodKey {

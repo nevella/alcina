@@ -581,13 +581,6 @@ public class ClientReflectionGenerator extends Generator {
 		return results;
 	}
 
-	private <T> Set<T> getClassAnnotations(JClassType jct,
-			Class<T> annotationType, boolean allowMultiple) {
-		return (Set) getClassAnnotations(jct,
-				(List) Collections.singletonList(annotationType),
-				allowMultiple);
-	}
-
 	private List<JAnnotationType> getClientVisibleAnnotations(TreeLogger logger,
 			TypeOracle oracle) {
 		List<JAnnotationType> results = new ArrayList<JAnnotationType>();

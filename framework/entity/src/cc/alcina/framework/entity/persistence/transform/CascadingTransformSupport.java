@@ -47,6 +47,8 @@ public class CascadingTransformSupport {
 		}
 	};
 
+	private static ConcurrentHashMap<Thread, Object> cascadeThreads = new ConcurrentHashMap<>();
+
 	public static CascadingTransformSupport get() {
 		return supports.get();
 	}
@@ -84,6 +86,10 @@ public class CascadingTransformSupport {
 		return !waitFor.isEmpty();
 	}
 
+	public boolean isCascadeThread() {
+		return cascadeThreads.containsKey(Thread.currentThread());
+	}
+
 	public void runTransformingChild(Runnable runnable) {
 		Runnable wrappedRunnable = runnable;
 		if (!(wrappedRunnable instanceof AlcinaChildRunnable)) {
@@ -95,6 +101,14 @@ public class CascadingTransformSupport {
 			};
 		}
 		new CascadingTransformWorker(wrappedRunnable).start();
+	}
+
+	public void runTransformingChildIfInPublicationCycle(Runnable runnable) {
+		if (launchingThread == null) {
+			runnable.run();
+		} else {
+			runTransformingChild(runnable);
+		}
 	}
 
 	synchronized void addChildThread(CascadingTransformWorker thread) {
@@ -111,8 +125,6 @@ public class CascadingTransformSupport {
 		}
 		// TODO - zeroex - notify exception via topic
 	}
-
-	private static ConcurrentHashMap<Thread, Object> cascadeThreads = new ConcurrentHashMap<>();
 
 	static class CascadingTransformWorker extends Thread {
 		private CascadingTransformSupport cascadingTransformSupport;
@@ -143,9 +155,5 @@ public class CascadingTransformSupport {
 				cascadeThreads.remove(Thread.currentThread());
 			}
 		}
-	}
-
-	public boolean isCascadeThread() {
-		return cascadeThreads.containsKey(Thread.currentThread());
 	}
 }

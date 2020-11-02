@@ -25,7 +25,7 @@ import cc.alcina.framework.servlet.google.GoogleDriveAccessor;
 import cc.alcina.framework.servlet.google.GoogleSheetAccessor;
 
 public class SheetPersister {
-	private File base;
+	File base;
 
 	List<GalleryFile> files;
 

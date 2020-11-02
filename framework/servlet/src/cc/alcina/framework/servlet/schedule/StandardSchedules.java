@@ -29,10 +29,18 @@ public class StandardSchedules {
 		}
 	}
 
+	public static class MinuteSchedule extends Schedule {
+		public MinuteSchedule() {
+			withQueueName(getClass().getName()).withClustered(true)
+					.withQueueMaxConcurrentJobs(1).withNext(LocalDateTime.now()
+							.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1));
+		}
+	}
+
 	public static class RecurrentJobsExecutorSchedule extends Schedule {
 		public RecurrentJobsExecutorSchedule() {
 			withQueueName(getClass().getName()).withClustered(false)
-					.withQueueMaxConcurrentJobs(4).withExexcutorServiceProvider(
+					.withQueueMaxConcurrentJobs(4).withExcutorServiceProvider(
 							RecurrentJobsExecutorServiceProvider.get());
 		}
 	}
@@ -52,6 +60,14 @@ public class StandardSchedules {
 		@Override
 		public ExecutorService getService() {
 			return service;
+		}
+	}
+
+	public static class TenSecondsSchedule extends Schedule {
+		public TenSecondsSchedule() {
+			withQueueName(getClass().getName()).withClustered(true)
+					.withQueueMaxConcurrentJobs(1)
+					.withNext(LocalDateTime.now().plusSeconds(10));
 		}
 	}
 }

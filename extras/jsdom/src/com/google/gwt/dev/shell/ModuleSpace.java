@@ -473,6 +473,7 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 		}
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public <T> T rebindAndCreate(String requestedClassName)
 			throws UnableToCompleteException {

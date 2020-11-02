@@ -17,6 +17,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PropertyKeyValueMapper;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
@@ -268,6 +270,18 @@ public class Registry {
 		implClassesRegistered = new LinkedHashMap<>();
 	}
 
+	public List<Class> allImplementations(Class registryPoint) {
+		RegistryKey registryPointKey = keys.get(registryPoint);
+		MultikeyMap<RegistryKey> pointLookup = registry.asMapEnsure(false,
+				registryPointKey);
+		if (pointLookup == null) {
+			throw new RuntimeException(
+					Ax.format("Unable to locate %s ", registryPoint));
+		}
+		return pointLookup.allValues().stream().map(RegistryKey::clazz)
+				.collect(Collectors.toList());
+	}
+
 	public void copyFrom(Registry sourceInstance, Class<?> clazz) {
 		RegistryKey key = keys.get(clazz);
 		registry.asMap(key).putMulti(sourceInstance.registry.asMap(key));
@@ -314,6 +328,20 @@ public class Registry {
 		return byKey;
 	}
 
+	public List<RegistryLocation> getLocations(Class registryPoint) {
+		RegistryLocation location = Reflections.classLookup()
+				.getAnnotationForClass(registryPoint, RegistryLocation.class);
+		if (location != null) {
+			return Collections.singletonList(location);
+		}
+		RegistryLocations locations = Reflections.classLookup()
+				.getAnnotationForClass(registryPoint, RegistryLocations.class);
+		if (locations != null) {
+			return Arrays.asList(locations.value());
+		}
+		return Collections.emptyList();
+	}
+
 	public UnsortedMultikeyMap<RegistryKey> getRegistry() {
 		return this.registry;
 	}
@@ -347,7 +375,6 @@ public class Registry {
 			if (!required) {
 				return new ArrayList<>(0);
 			}
-			// System.out.println(registry.toString());
 			throw new RuntimeException(Ax.format("Unable to locate %s - %s",
 					registryPoint, targetClass));
 		}

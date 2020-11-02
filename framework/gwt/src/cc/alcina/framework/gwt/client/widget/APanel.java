@@ -117,7 +117,7 @@ public class APanel<O> extends ComplexPanel
 	public void onBrowserEvent(Event event) {
 		if (DOM.eventGetType(event) == Event.ONCLICK) {
 			if (getHref().startsWith("#") || preventDefault) {
-				DOM.eventPreventDefault(event);
+				event.preventDefault();
 			}
 			if (!bubbling) {
 				DOM.eventCancelBubble(event, true);

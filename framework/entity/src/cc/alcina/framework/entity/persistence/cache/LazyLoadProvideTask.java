@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,9 +18,7 @@ import cc.alcina.framework.common.client.domain.DomainDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.MetricLogging;
 
 /*
@@ -35,10 +32,6 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 	final static Logger logger = LoggerFactory
 			.getLogger(MethodHandles.lookup().lookupClass());
 
-	private long minEvictionAge;
-
-	private int minEvictionSize;
-
 	protected Class<T> clazz;
 
 	private LinkedHashMap<Long, Long> idEvictionAge = new LinkedHashMap<>();
@@ -48,21 +41,8 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 	public LazyLoadProvideTask() {
 	}
 
-	public LazyLoadProvideTask(long minEvictionAge, int minEvictionSize,
-			Class<T> clazz) {
-		this.minEvictionAge = minEvictionAge;
-		this.minEvictionSize = minEvictionSize;
+	public LazyLoadProvideTask(Class<T> clazz) {
 		this.clazz = clazz;
-	}
-
-	public void addToEvictionQueue(Entity entity) {
-		idEvictionAge.put(entity.getId(), System.currentTimeMillis());
-	}
-
-	public void evictDependents(EvictionToken evictionToken,
-			Collection<? extends Entity> entities) {
-		entities.stream().forEach(
-				hili -> this.evict(evictionToken, hili.getId(), false));
 	}
 
 	@Override
@@ -130,13 +110,6 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 
 	protected abstract boolean checkShouldLazyLoad(List<T> toLoad);
 
-	protected void evict(EvictionToken evictionToken, Long key, boolean top) {
-	}
-
-	protected boolean evictionDisabled() {
-		return true;
-	}
-
 	protected DetachedEntityCache getDomainCache() {
 		return domainStore.cache;
 	}
@@ -186,65 +159,6 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 			return list.stream();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static class EvictionToken {
-		public DomainStore store;
-
-		private LazyLoadProvideTask topLevelTask;
-
-		Multiset<LazyLoadProvideTask, Set<Long>> evicted = new Multiset<>();
-
-		public EvictionToken(DomainStore store,
-				LazyLoadProvideTask lazyLoadProvideTask) {
-			this.store = store;
-			this.topLevelTask = lazyLoadProvideTask;
-		}
-
-		public <T extends Entity> T getObject(Long key, Class<T> clazz) {
-			return store.cache.get(clazz, key);
-		}
-
-		public int getTopLevelEvictedCount() {
-			return evicted.getAndEnsure(topLevelTask).size();
-		}
-
-		public void removeEvicted() {
-			FormatBuilder fb = new FormatBuilder();
-			fb.line("Eviction stats:");
-			evicted.entrySet().forEach(e -> {
-				LazyLoadProvideTask task = e.getKey();
-				LinkedHashMap<Long, Long> idEvictionAge = task.idEvictionAge;
-				int s1 = idEvictionAge.size();
-				idEvictionAge.keySet().removeAll(e.getValue());
-				int s2 = idEvictionAge.size();
-				fb.line("\t%s: %s => %s (%s)", task.clazz, s1, s2, s1 - s2);
-			});
-			topLevelTask.lllog(fb.toString());
-		}
-
-		public void removeFromDomainStore(Set<? extends Entity> set) {
-			if (!set.isEmpty()) {
-				Entity item0 = set.iterator().next();
-				Class clazz = item0.getClass();
-				int size1 = store.cache.getMap(clazz).size();
-				for (Entity hili : set) {
-					store.cache.remove(hili);
-				}
-				int size2 = store.cache.getMap(clazz).size();
-				topLevelTask.lllog(
-						"remove from domain store: %s :: %s => %s (%s)",
-						clazz.getSimpleName(), size1, size2, size1 - size2);
-			}
-		}
-
-		public void setEvicted(Long key, LazyLoadProvideTask task) {
-			evicted.add(task, key);
-		}
-
-		public boolean wasEvicted(Long key, LazyLoadProvideTask task) {
-			return evicted.contains(task, key);
 		}
 	}
 }

@@ -23,8 +23,6 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.Comparator;
 
-import com.google.gwt.user.client.ui.ChangeListener;
-import com.google.gwt.user.client.ui.ChangeListenerCollection;
 import com.google.gwt.user.client.ui.Composite;
 import com.totsp.gwittir.client.action.Action;
 import com.totsp.gwittir.client.action.BindingAction;
@@ -47,8 +45,6 @@ public abstract class AbstractBoundWidget<T> extends Composite
 
 	private Action<BoundWidget<T>> action;
 
-	private ChangeListenerCollection changeListeners = new ChangeListenerCollection();
-
 	private Comparator comparator;
 
 	private Object model;
@@ -65,47 +61,48 @@ public abstract class AbstractBoundWidget<T> extends Composite
 	public AbstractBoundWidget() {
 	}
 
-	public void addChangeListener(ChangeListener listener) {
-		changeListeners.add(listener);
-	}
-
+	@Override
 	public void addPropertyChangeListener(PropertyChangeListener l) {
 		changes.addPropertyChangeListener(l);
 	}
 
+	@Override
 	public void addPropertyChangeListener(String propertyName,
 			PropertyChangeListener l) {
 		changes.addPropertyChangeListener(propertyName, l);
 	}
 
+	@Override
 	public Action<BoundWidget<T>> getAction() {
 		return action;
 	}
 
+	@Override
 	public Comparator getComparator() {
 		return comparator;
 	}
 
+	@Override
 	public KeyBinding getKeyBinding() {
 		return this.binding;
 	}
 
+	@Override
 	public Object getModel() {
 		return model;
 	}
 
+	@Override
 	public PropertyChangeListener[] getPropertyChangeListeners() {
 		return changes.getPropertyChangeListeners();
 	}
 
-	public void removeChangeListener(ChangeListener listener) {
-		changeListeners.remove(listener);
-	}
-
+	@Override
 	public void removePropertyChangeListener(PropertyChangeListener l) {
 		changes.removePropertyChangeListener(l);
 	}
 
+	@Override
 	public void removePropertyChangeListener(String propertyName,
 			PropertyChangeListener l) {
 		changes.removePropertyChangeListener(propertyName, l);
@@ -115,6 +112,7 @@ public abstract class AbstractBoundWidget<T> extends Composite
 	 * Removes any old associated action including the bindings, and also sets
 	 * the new action including any bindings.
 	 */
+	@Override
 	public void setAction(Action<BoundWidget<T>> action) {
 		if (this.action != null) {
 			this.cleanupAction();
@@ -130,10 +128,12 @@ public abstract class AbstractBoundWidget<T> extends Composite
 		}
 	}
 
+	@Override
 	public void setComparator(Comparator comparator) {
 		this.comparator = comparator;
 	}
 
+	@Override
 	public void setKeyBinding(final KeyBinding binding) {
 		this.binding = binding;
 		if (this.binding != null && this.isAttached()) {
@@ -148,6 +148,7 @@ public abstract class AbstractBoundWidget<T> extends Composite
 		}
 	}
 
+	@Override
 	public void setModel(Object model) {
 		Object old = this.getModel();
 		cleanupAction();
@@ -195,10 +196,6 @@ public abstract class AbstractBoundWidget<T> extends Composite
 		if (this.getAction() instanceof BindingAction) {
 			((BindingAction<BoundWidget<T>>) getAction()).set(this);
 		}
-	}
-
-	protected void fireChange() {
-		changeListeners.fireChange(this);
 	}
 
 	@Override

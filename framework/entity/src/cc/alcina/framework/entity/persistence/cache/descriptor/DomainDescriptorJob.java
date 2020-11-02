@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ClientInstanceLoadOracle;
 import cc.alcina.framework.common.client.job.JobRelation;
+import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -63,12 +64,21 @@ public class DomainDescriptorJob {
 				.getImplementation(JobRelation.class));
 	}
 
+	public int getActiveJobCount(String queueName) {
+		return (int) Domain.query(jobImplClass).filter("queue", queueName)
+				.filter("state", JobState.PROCESSING).stream().count();
+	}
+
 	public Job getJob(String id) {
 		Job job = Domain.query(jobImplClass).filter("key", id).find();
 		if (job == null) {
 			job = getMostRecentJobForQueue(id);
 		}
 		return job;
+	}
+
+	public Stream<? extends Job> getJobsForQueue(String queueName) {
+		return Domain.query(jobImplClass).filter("queue", queueName).stream();
 	}
 
 	public Stream<? extends Job> getJobsForTask(RemoteAction action) {

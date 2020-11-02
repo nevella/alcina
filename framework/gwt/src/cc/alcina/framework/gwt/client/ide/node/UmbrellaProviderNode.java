@@ -192,6 +192,7 @@ public class UmbrellaProviderNode extends ContainerNode
 	}
 
 	// true == finished
+	@SuppressWarnings("deprecation")
 	protected boolean openToObject(Object userObject) {
 		setState(true, false);
 		for (int i = 0; i < getChildCount(); i++) {

@@ -3,16 +3,16 @@ package cc.alcina.framework.servlet.logging;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
 
+import cc.alcina.framework.common.client.util.LooseContext;
+
 public class PerThreadLoggingHandler extends Handler
 		implements PerThreadLogging {
-	private static ThreadLocal<PerThreadBuffer> buffers = new ThreadLocal<>();
+	private static final String CONTEXT_BUFFER = PerThreadLoggingHandler.class
+			.getName() + ".CONTEXT_BUFFER";
 
 	@Override
 	public void beginBuffer() {
-		if (buffers.get() != null) {
-			throw new IllegalStateException("Per-thread buffer should be null");
-		}
-		buffers.set(new PerThreadBuffer());
+		LooseContext.set(CONTEXT_BUFFER, new PerThreadBuffer());
 	}
 
 	@Override
@@ -21,8 +21,7 @@ public class PerThreadLoggingHandler extends Handler
 
 	@Override
 	public String endBuffer() {
-		PerThreadBuffer buffer = buffers.get();
-		buffers.remove();
+		PerThreadBuffer buffer = LooseContext.remove(CONTEXT_BUFFER);
 		return buffer.toString();
 	}
 
@@ -32,8 +31,8 @@ public class PerThreadLoggingHandler extends Handler
 
 	@Override
 	public void publish(LogRecord record) {
-		// publishes all events - doesn't filter by level
-		PerThreadBuffer buffer = buffers.get();
+		// publishes all events - doesn't filter by log level
+		PerThreadBuffer buffer = LooseContext.get(CONTEXT_BUFFER);
 		if (buffer != null) {
 			buffer.publish(record);
 		}

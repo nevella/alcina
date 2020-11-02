@@ -28,6 +28,7 @@ import com.google.gwt.user.client.Element;
  *         TODO remove xxx0 make all methods straight jsni moving checks to
  *         jsni.
  */
+@SuppressWarnings("deprecation")
 public class JavaScript {
 	/**
 	 * Convenience method which takes a Element and returns a JavaScriptObject
@@ -37,8 +38,8 @@ public class JavaScript {
 	 */
 	public native static JavaScriptObject
 			castFromElement(final Element element)/*-{
-													return element;
-													}-*/;
+    return element;
+	}-*/;
 
 	/**
 	 * Convenience method which takes a JavaScriptObject and casts it to an
@@ -52,8 +53,8 @@ public class JavaScript {
 	 */
 	public native static Element
 			castToElement(final JavaScriptObject object)/*-{
-														return object;
-														}-*/;
+    return object;
+	}-*/;
 
 	public static boolean getBoolean(final JavaScriptObject object,
 			final int index) {
@@ -430,80 +431,80 @@ public class JavaScript {
 
 	private native static boolean getBoolean0(final JavaScriptObject object,
 			final int index)/*-{
-							return !!object[index];
-							}-*/;
+    return !!object[index];
+	}-*/;
 
 	private native static boolean getBoolean0(final JavaScriptObject object,
 			final String propertyName)/*-{
-										return !!object[propertyName];
-										}-*/;
+    return !!object[propertyName];
+	}-*/;
 
 	private native static double getDouble0(final JavaScriptObject object,
 			final int index)/*-{
-							var value = object[index];
-							if (typeof (value) == "undefined") {
-							throw "The object does not contain a property called \"" + index
-							+ "\", object: " + object;
-							}
-							return value;
-							}-*/;
+    var value = object[index];
+    if (typeof (value) == "undefined") {
+      throw "The object does not contain a property called \"" + index
+          + "\", object: " + object;
+    }
+    return value;
+	}-*/;
 
 	private native static double getDouble0(final JavaScriptObject object,
 			final String propertyName)/*-{
-										var value = object[propertyName];
-										if (typeof (value) == "undefined") {
-										throw "The object does not contain a property called \""
-										+ propertyName + "\", object: " + object;
-										}
-										return value;
-										}-*/;
+    var value = object[propertyName];
+    if (typeof (value) == "undefined") {
+      throw "The object does not contain a property called \"" + propertyName
+          + "\", object: " + object;
+    }
+    return value;
+	}-*/;
 
 	native private static Element getElement0(final JavaScriptObject object,
 			final int index)/*-{
-							var value = object[index];
-							return value || null;
-							}-*/;
+    var value = object[index];
+    return value || null;
+	}-*/;
 
 	native private static Element getElement0(final JavaScriptObject object,
 			final String propertyName)/*-{
-										var value = object[propertyName];
-										return value || null;
-										}-*/;
+    var value = object[propertyName];
+    return value || null;
+	}-*/;
 
 	private native static int getInteger0(final JavaScriptObject object,
 			final int index)/*-{
-							var value = object[index];
-							if (typeof (value) == "undefined") {
-							throw "The object does not contain a property called \"" + index
-							+ "\", object: " + object;
-							}
-							return value;
-							}-*/;
+    var value = object[index];
+    if (typeof (value) == "undefined") {
+      throw "The object does not contain a property called \"" + index
+          + "\", object: " + object;
+    }
+    return value;
+	}-*/;
 
 	private native static int getInteger0(final JavaScriptObject object,
 			final String propertyName)/*-{
-										//		@rocket.util.client.Checker::checkNotNull(Ljava/lang/Object;Ljava/lang/String;)("parameter:object", object );
-										//		@rocket.util.client.Checker::checkNotNull(Ljava/lang/Object;Ljava/lang/String;)("parameter:propertyName", object );
-										
-										var value = object[propertyName];
-										if (typeof (value) == "undefined") {
-										throw "The object does not contain a property called \""
-										+ propertyName + "\", object: " + object;
-										}
-										return value;
-										}-*/;
+    //		@rocket.util.client.Checker::checkNotNull(Ljava/lang/Object;Ljava/lang/String;)("parameter:object", object );
+    //		@rocket.util.client.Checker::checkNotNull(Ljava/lang/Object;Ljava/lang/String;)("parameter:propertyName", object );
+
+    var value = object[propertyName];
+    if (typeof (value) == "undefined") {
+      throw "The object does not contain a property called \"" + propertyName
+          + "\", object: " + object;
+    }
+    return value;
+	}-*/;
 
 	native private static JavaScriptObject
 			getObject0(final JavaScriptObject object, final int index)/*-{
-																		var value = object[index];
-																		return value || null;
-																		}-*/;
+    var value = object[index];
+    return value || null;
+	}-*/;
 
 	native private static JavaScriptObject getObject0(
 			final JavaScriptObject object, final String propertyName)/*-{
-																		var value = object[propertyName];
-																		return value || null;
-																		}-*/;
+    var value = object[propertyName];
+    return value || null;
+	}-*/;
 
 	/**
 	 * Retrieves the property count for the given native object. If the length
@@ -515,149 +516,149 @@ public class JavaScript {
 	 */
 	native private static int
 			getPropertyCount0(final JavaScriptObject nativeObject)/*-{
-																	var propertyCount = nativeObject.length;
-																	if (typeof (propertyCount) != "number") {
-																	
-																	// length not found need to count properties...
-																	propertyCount = 0;
-																	for (propertyName in nativeObject) {
-																	propertyCount++;
-																	}
-																	}
-																	return propertyCount;
-																	}-*/;
+    var propertyCount = nativeObject.length;
+    if (typeof (propertyCount) != "number") {
+
+      // length not found need to count properties...
+      propertyCount = 0;
+      for (propertyName in nativeObject) {
+        propertyCount++;
+      }
+    }
+    return propertyCount;
+	}-*/;
 
 	native static private JavaScriptObject
 			getPropertyNames0(final JavaScriptObject object)/*-{
-															var names = new Array();
-															
-															for (name in object) {
-															names.push(name);
-															}
-															
-															return names;
-															}-*/;
+    var names = new Array();
+
+    for (name in object) {
+      names.push(name);
+    }
+
+    return names;
+	}-*/;
 
 	private static native String getString0(final JavaScriptObject object,
 			final int index)/*-{
-							var value = object[index];
-							return value ? "" + value : null;
-							}-*/;
+    var value = object[index];
+    return value ? "" + value : null;
+	}-*/;
 
 	private static native String getString0(final JavaScriptObject object,
 			final String propertyName)/*-{
-										var value = object[propertyName];
-										return value ? "" + value : null;
-										}-*/;
+    var value = object[propertyName];
+    return value ? "" + value : null;
+	}-*/;
 
 	native private static String getType0(final JavaScriptObject object,
 			final int index)/*-{
-							return typeof (object[index]);
-							}-*/;
+    return typeof (object[index]);
+	}-*/;
 
 	native private static String getType0(final JavaScriptObject object,
 			final String propertyName)/*-{
-										return typeof (object[propertyName]);
-										}-*/;
+    return typeof (object[propertyName]);
+	}-*/;
 
 	private static native boolean hasProperty0(final JavaScriptObject object,
 			final int index)/*-{
-							var value = object[index];
-							return typeof (value) != "undefined";
-							}-*/;
+    var value = object[index];
+    return typeof (value) != "undefined";
+	}-*/;
 
 	private static native boolean hasProperty0(final JavaScriptObject object,
 			final String propertyName)/*-{
-										var value = object[propertyName];
-										
-										return typeof (value) != "undefined";
-										}-*/;
+    var value = object[propertyName];
+
+    return typeof (value) != "undefined";
+	}-*/;
 
 	native private static int indexOf0(final JavaScriptObject array,
 			final JavaScriptObject element)/*-{
-											var index = -1;
-											for (var i = 0; i < array.length; i++) {
-											if (array[i] == element) {
-											index = i;
-											break;
-											}
-											}
-											return index;
-											}-*/;
+    var index = -1;
+    for (var i = 0; i < array.length; i++) {
+      if (array[i] == element) {
+        index = i;
+        break;
+      }
+    }
+    return index;
+	}-*/;
 
 	native private static int lastIndexOf0(final JavaScriptObject array,
 			final JavaScriptObject element)/*-{
-											var index = -1;
-											for (var i = array.length - 1; i >= 0; i--) {
-											if (array[i] == element) {
-											index = i;
-											break;
-											}
-											}
-											return index;
-											}-*/;
+    var index = -1;
+    for (var i = array.length - 1; i >= 0; i--) {
+      if (array[i] == element) {
+        index = i;
+        break;
+      }
+    }
+    return index;
+	}-*/;
 
 	native private static JavaScriptObject removeProperty0(
 			final JavaScriptObject object, final int index)/*-{
-															var previousValue = object[index];
-															delete object[index];
-															return previousValue || null;
-															}-*/;
+    var previousValue = object[index];
+    delete object[index];
+    return previousValue || null;
+	}-*/;
 
 	native private static JavaScriptObject removeProperty0(
 			final JavaScriptObject object, final String propertyName)/*-{
-																		var previousValue = object[propertyName];
-																		delete object[propertyName];
-																		return previousValue || null;
-																		}-*/;
+    var previousValue = object[propertyName];
+    delete object[propertyName];
+    return previousValue || null;
+	}-*/;
 
 	private static native void setBoolean0(final JavaScriptObject object,
 			final int index, final boolean booleanValue)/*-{
-														object[index] = booleanValue;
-														}-*/;
+    object[index] = booleanValue;
+	}-*/;
 
 	private static native void setBoolean0(final JavaScriptObject object,
 			final String propertyName, final boolean booleanValue)/*-{
-																	object[propertyName] = booleanValue;
-																	}-*/;
+    object[propertyName] = booleanValue;
+	}-*/;
 
 	private static native void setDouble0(final JavaScriptObject object,
 			final int index, final double value)/*-{
-												object[index] = value;
-												}-*/;
+    object[index] = value;
+	}-*/;
 
 	private static native void setDouble0(final JavaScriptObject object,
 			final String propertyName, final double value)/*-{
-															object[propertyName] = value;
-															}-*/;
+    object[propertyName] = value;
+	}-*/;
 
 	private static native void setInteger0(final JavaScriptObject object,
 			final int index, final int intValue)/*-{
-												object[index] = intValue;
-												}-*/;
+    object[index] = intValue;
+	}-*/;
 
 	private static native void setInteger0(final JavaScriptObject object,
 			final String propertyName, final int intValue)/*-{
-															object[propertyName] = intValue;
-															}-*/;
+    object[propertyName] = intValue;
+	}-*/;
 
 	native private static void setObject0(final JavaScriptObject object,
 			final int index, final JavaScriptObject value)/*-{
-															object[index] = value;
-															}-*/;
+    object[index] = value;
+	}-*/;
 
 	native private static void setObject0(final JavaScriptObject object,
 			final String propertyName, final JavaScriptObject value)/*-{
-																	object[propertyName] = value;
-																	}-*/;
+    object[propertyName] = value;
+	}-*/;
 
 	private static native void setString0(final JavaScriptObject object,
 			final int index, final String value)/*-{
-												object[index] = value;
-												}-*/;
+    object[index] = value;
+	}-*/;
 
 	private static native void setString0(final JavaScriptObject object,
 			final String propertyName, final String value)/*-{
-															object[propertyName] = value;
-															}-*/;
+    object[propertyName] = value;
+	}-*/;
 }

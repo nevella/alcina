@@ -71,6 +71,7 @@ import com.google.gwt.user.client.ui.Image;
  * line }</li>
  * </ul>
  */
+@SuppressWarnings("deprecation")
 public class SliderBar extends FocusPanel
 		implements HasValueChangeHandlers<Double> {
 	/**

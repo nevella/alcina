@@ -61,8 +61,6 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 	 */
 	private static final int MAX_STRING_CHUNK = 16383;
 
-	private static final int MAX_DATA_URL_LENGTH = 32766;
-
 	boolean logMissingUrlResources = true;
 
 	@Override

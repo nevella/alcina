@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class Message {
-	private Class commandSet;
+	Class commandSet;
 
 	private Class command;
 
@@ -29,20 +29,20 @@ public class Message {
 		}
 	}
 
-	int getCommandSetId() {
-		return commandSetId;
+	@Override
+	public String toString() {
+		return Ax.format("message: %s", name());
 	}
 
 	int getCommandId() {
 		return commandId;
 	}
 
-	String name() {
-		return command.getSimpleName();
+	int getCommandSetId() {
+		return commandSetId;
 	}
 
-	@Override
-	public String toString() {
-		return Ax.format("message: %s", name());
+	String name() {
+		return command.getSimpleName();
 	}
 }

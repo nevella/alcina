@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
 public class LazyPropertyLoadTask<T extends Entity>
@@ -19,7 +18,7 @@ public class LazyPropertyLoadTask<T extends Entity>
 			.getName() + ".CONTEXT_IN_LAZY_PROPERTY_LOAD";
 
 	public LazyPropertyLoadTask(Class<T> clazz, DomainStore domainStore) {
-		super(5 * TimeConstants.ONE_SECOND_MS, 10, clazz);
+		super(clazz);
 		registerStore(domainStore);
 	}
 
@@ -35,11 +34,6 @@ public class LazyPropertyLoadTask<T extends Entity>
 	@Override
 	protected boolean checkShouldLazyLoad(List toLoad) {
 		return true;
-	}
-
-	@Override
-	protected boolean evictionDisabled() {
-		return false;
 	}
 
 	@Override

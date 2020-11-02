@@ -68,6 +68,7 @@ import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.job2.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
@@ -395,6 +396,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		initRegistry();
 		initCommonImplServices();
 		initCustomServices();
+		scheduleJobs();
 		MetricLogging.get().end(key);
 	}
 
@@ -442,13 +444,18 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 	}
 
+	protected void scheduleJobs() {
+		JobRegistry.get().scheduleJobs(true);
+	}
+
 	private static class PerThreadLoggingWrapper implements PerThreadLogging {
 		private Object handler;
 
 		public PerThreadLoggingWrapper(Object handler) {
 			// handler is an instance of
 			// cc.alcina.framework.servlet.logging.PerThreadLoggingHandler, but
-			// from a different classloader
+			// from a different classloader - so call begin/end buffer via
+			// reflection
 			this.handler = handler;
 		}
 

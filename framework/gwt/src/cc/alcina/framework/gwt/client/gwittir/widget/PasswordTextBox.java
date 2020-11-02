@@ -57,26 +57,31 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.setComparator(SimpleComparator.INSTANCE);
 		if (updateOnKeypress) {
 			this.addKeyboardListener(new KeyboardListener() {
+				@Override
 				public void onKeyDown(Widget sender, char keyCode,
 						int modifiers) {
 				}
 
+				@Override
 				public void onKeyPress(Widget sender, char keyCode,
 						int modifiers) {
 					changes.firePropertyChange("value", old, getValue());
 					old = (String) getValue();
 				}
 
+				@Override
 				public void onKeyUp(Widget sender, char keyCode,
 						int modifiers) {
 				}
 			});
 		} else {
 			this.addKeyboardListener(new KeyboardListener() {
+				@Override
 				public void onKeyDown(Widget sender, char keyCode,
 						int modifiers) {
 				}
 
+				@Override
 				public void onKeyPress(Widget sender, char keyCode,
 						int modifiers) {
 					if (keyCode == KeyboardListener.KEY_ENTER) {
@@ -85,12 +90,14 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 					}
 				}
 
+				@Override
 				public void onKeyUp(Widget sender, char keyCode,
 						int modifiers) {
 				}
 			});
 		}
 		this.base.addChangeListener(new ChangeListener() {
+			@Override
 			public void onChange(Widget sender) {
 				changes.firePropertyChange("value", old, getValue());
 				old = (String) getValue();
@@ -104,14 +111,17 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.base.addChangeListener(listener);
 	}
 
+	@Override
 	public void addClickListener(ClickListener listener) {
 		this.base.addClickListener(listener);
 	}
 
+	@Override
 	public void addFocusListener(FocusListener listener) {
 		this.base.addFocusListener(listener);
 	}
 
+	@Override
 	public void addKeyboardListener(KeyboardListener listener) {
 		this.base.addKeyboardListener(listener);
 	}
@@ -120,12 +130,14 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.base.cancelKey();
 	}
 
+	@Override
 	public Action getAction() {
 		Action retValue;
 		retValue = super.getAction();
 		return retValue;
 	}
 
+	@Override
 	public Comparator getComparator() {
 		Comparator retValue;
 		retValue = super.getComparator();
@@ -144,6 +156,7 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		return retValue;
 	}
 
+	@Override
 	public Object getModel() {
 		Object retValue;
 		retValue = super.getModel();
@@ -156,12 +169,14 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		return retValue;
 	}
 
+	@Override
 	public int getOffsetHeight() {
 		int retValue;
 		retValue = this.base.getOffsetHeight();
 		return retValue;
 	}
 
+	@Override
 	public int getOffsetWidth() {
 		int retValue;
 		retValue = this.base.getOffsetWidth();
@@ -180,12 +195,14 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		return retValue;
 	}
 
+	@Override
 	public String getStyleName() {
 		String retValue;
 		retValue = this.base.getStyleName();
 		return retValue;
 	}
 
+	@Override
 	public int getTabIndex() {
 		return this.base.getTabIndex();
 	}
@@ -194,10 +211,12 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		return this.base.getText();
 	}
 
+	@Override
 	public String getTitle() {
 		return this.base.getTitle();
 	}
 
+	@Override
 	public String getValue() {
 		try {
 			return this.base.getText().length() == 0 ? null
@@ -212,6 +231,7 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		return this.base.getVisibleLength();
 	}
 
+	@Override
 	public boolean isEnabled() {
 		return this.base.isEnabled();
 	}
@@ -220,18 +240,22 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.changeListeners.add(listener);
 	}
 
+	@Override
 	public void removeClickListener(ClickListener listener) {
 		this.base.removeClickListener(listener);
 	}
 
+	@Override
 	public void removeFocusListener(FocusListener listener) {
-		this.changeListeners.remove(listener);
+		this.base.removeFocusListener(listener);
 	}
 
+	@Override
 	public void removeKeyboardListener(KeyboardListener listener) {
 		this.base.removeKeyboardListener(listener);
 	}
 
+	@Override
 	public void removeStyleName(String style) {
 		this.base.removeStyleName(style);
 	}
@@ -240,10 +264,12 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.base.selectAll();
 	}
 
+	@Override
 	public void setAccessKey(char key) {
 		this.base.setAccessKey(key);
 	}
 
+	@Override
 	public void setAction(Action action) {
 		super.setAction(action);
 	}
@@ -252,14 +278,17 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.base.setCursorPos(pos);
 	}
 
+	@Override
 	public void setEnabled(boolean enabled) {
 		this.base.setEnabled(enabled);
 	}
 
+	@Override
 	public void setFocus(boolean focused) {
 		this.base.setFocus(focused);
 	}
 
+	@Override
 	public void setHeight(String height) {
 		this.base.setHeight(height);
 	}
@@ -272,6 +301,7 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.base.setMaxLength(length);
 	}
 
+	@Override
 	public void setModel(Object model) {
 		super.setModel(model);
 	}
@@ -280,6 +310,7 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.base.setName(name);
 	}
 
+	@Override
 	public void setPixelSize(int width, int height) {
 		this.base.setPixelSize(width, height);
 	}
@@ -291,14 +322,17 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.base.setSelectionRange(pos, length);
 	}
 
+	@Override
 	public void setSize(String width, String height) {
 		this.base.setSize(width, height);
 	}
 
+	@Override
 	public void setStyleName(String style) {
 		this.base.setStyleName(style);
 	}
 
+	@Override
 	public void setTabIndex(int index) {
 		this.base.setTabIndex(index);
 	}
@@ -311,10 +345,12 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.base.setTextAlignment(align);
 	}
 
+	@Override
 	public void setTitle(String title) {
 		this.base.setTitle(title);
 	}
 
+	@Override
 	public void setValue(String value) {
 		String old = this.getValue();
 		this.setText(CommonUtils.nullToEmpty(value));
@@ -328,14 +364,17 @@ public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
 		this.base.setVisibleLength(length);
 	}
 
+	@Override
 	public void setWidth(String width) {
 		this.base.setWidth(width);
 	}
 
+	@Override
 	public void sinkEvents(int eventBitsToAdd) {
 		this.base.sinkEvents(eventBitsToAdd);
 	}
 
+	@Override
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
 	}

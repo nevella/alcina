@@ -35,6 +35,7 @@ import com.google.gwt.user.client.ui.Widget;
  * to text when progress is greater than 50 percent }</li>
  * </ul>
  */
+@SuppressWarnings("deprecation")
 public class ProgressBar extends Widget {
 	/**
 	 * The bar element that displays the progress.

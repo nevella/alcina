@@ -182,6 +182,12 @@ public class DomainStore implements IDomainStore {
 		return Topic.global(TOPIC_UPDATE_EXCEPTION);
 	}
 
+	public static void waitUntilCurrentRequestsProcessed() {
+		writableStore().getPersistenceEvents().getQueue()
+				.waitUntilCurrentRequestsProcessed();
+		Transaction.endAndBeginNew();
+	}
+
 	public static DomainStore writableStore() {
 		return stores().writableStore();
 	}

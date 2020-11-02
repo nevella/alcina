@@ -37,7 +37,6 @@ import javax.tools.StandardJavaFileManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("StaticNonFinalField")
 public class CachedCompiler implements Closeable {
 	private static final Logger LOG = LoggerFactory
 			.getLogger(CachedCompiler.class);
@@ -97,8 +96,9 @@ public class CachedCompiler implements Closeable {
 		if (fileManager == null) {
 			StandardJavaFileManager standardJavaFileManager = s_compiler
 					.getStandardFileManager(null, null, null);
-			fileManagerMap.put(classLoader, fileManager = new ServerJavaFileManager(
-					standardJavaFileManager));
+			fileManagerMap.put(classLoader,
+					fileManager = new ServerJavaFileManager(
+							standardJavaFileManager));
 		}
 		for (Map.Entry<String, byte[]> entry : compileFromJava(className,
 				javaCode, printWriter, fileManager).entrySet()) {
@@ -137,12 +137,6 @@ public class CachedCompiler implements Closeable {
 	}
 
 	Map<String, byte[]> compileFromJava(String className, String javaCode,
-			ServerJavaFileManager fileManager) {
-		return compileFromJava(className, javaCode, DEFAULT_WRITER,
-				fileManager);
-	}
-
-	Map<String, byte[]> compileFromJava(String className, String javaCode,
 			final PrintWriter writer, ServerJavaFileManager fileManager) {
 		Iterable<? extends JavaFileObject> compilationUnits;
 		if (sourceDir != null) {
@@ -178,5 +172,11 @@ public class CachedCompiler implements Closeable {
 			return Collections.emptyMap();
 		}
 		return result;
+	}
+
+	Map<String, byte[]> compileFromJava(String className, String javaCode,
+			ServerJavaFileManager fileManager) {
+		return compileFromJava(className, javaCode, DEFAULT_WRITER,
+				fileManager);
 	}
 }

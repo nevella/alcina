@@ -120,11 +120,6 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 	}
 
 	@Override
-	public void addChangeListener(ChangeListener listener) {
-		this.base.addChangeListener(listener);
-	}
-
-	@Override
 	public void addClickListener(ClickListener listener) {
 		this.base.addClickListener(listener);
 	}
@@ -270,11 +265,6 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 
 	public boolean isReadOnly() {
 		return this.base.isReadOnly();
-	}
-
-	@Override
-	public void removeChangeListener(ChangeListener listener) {
-		this.changeListeners.add(listener);
 	}
 
 	@Override

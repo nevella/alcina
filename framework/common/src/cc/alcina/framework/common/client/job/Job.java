@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.job;
 
 import java.util.Date;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -16,6 +17,7 @@ import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadOracle;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
+import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -74,6 +76,8 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 	private transient Object producedObject;
 
 	private boolean clustered;
+
+	private int performerVersionNumber;
 
 	// FIXME - mvcc.jobs - get rid'o'me
 	public JobResult asJobResult() {
@@ -146,6 +150,10 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 
 	@Transient
 	public abstract ClientInstance getPerformer();
+
+	public int getPerformerVersionNumber() {
+		return this.performerVersionNumber;
+	}
 
 	@Transient
 	public Object getProducedObject() {
@@ -236,6 +244,12 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 		return getTask().getName();
 	}
 
+	public Optional<Job> provideParent() {
+		return getToRelations().stream()
+				.filter(rel -> rel.getType() == JobRelationType.parent_child)
+				.findFirst().map(JobRelation::getFrom);
+	}
+
 	public void setClustered(boolean clustered) {
 		boolean old_clustered = this.clustered;
 		this.clustered = clustered;
@@ -275,6 +289,13 @@ public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
 	}
 
 	public abstract void setPerformer(ClientInstance performer);
+
+	public void setPerformerVersionNumber(int performerVersionNumber) {
+		int old_performerVersionNumber = this.performerVersionNumber;
+		this.performerVersionNumber = performerVersionNumber;
+		propertyChangeSupport().firePropertyChange("performerVersionNumber",
+				old_performerVersionNumber, performerVersionNumber);
+	}
 
 	public void setProducedObject(Object producedObject) {
 		this.producedObject = producedObject;

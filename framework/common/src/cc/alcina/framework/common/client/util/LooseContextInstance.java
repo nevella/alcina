@@ -141,8 +141,14 @@ public class LooseContextInstance {
 		}
 	}
 
-	public void remove(String key) {
-		properties.remove(key);
+	public void putSnapshotProperties(LooseContextInstance snapshot) {
+		for (String key : snapshot.properties.keySet()) {
+			set(key, snapshot.get(key));
+		}
+	}
+
+	public <T> T remove(String key) {
+		return (T) properties.remove(key);
 	}
 
 	public void removeTopicListener(String key, TopicListener listener) {
@@ -196,12 +202,6 @@ public class LooseContextInstance {
 	void clearStack() {
 		while (!stack.isEmpty()) {
 			pop();
-		}
-	}
-
-	public void putSnapshotProperties(LooseContextInstance snapshot) {
-		for (String key : snapshot.properties.keySet()) {
-			set(key, snapshot.get(key));
 		}
 	}
 }

@@ -33,6 +33,7 @@ import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.HasCollapseHandle
  * 
  * @author Nick Reddel
  */
+@SuppressWarnings("deprecation")
 public class DivStackPanel extends ComplexPanel {
 	private static final String DEFAULT_STYLENAME = "gwt-StackPanel";
 

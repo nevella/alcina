@@ -48,8 +48,9 @@ import org.slf4j.LoggerFactory;
 import sun.misc.Unsafe;
 
 /**
- * This class support loading and debugging Java Classes dynamically.
+ * This class supports loading and debugging Java Classes dynamically. WIP
  */
+@SuppressWarnings("resource")
 public enum CompilerUtils {
 	;
 	public static final boolean DEBUGGING = isDebug();
@@ -274,7 +275,6 @@ public enum CompilerUtils {
 				javaCode);
 	}
 
-	@SuppressWarnings("ReturnOfNull")
 	private static byte[] readBytes(File file) {
 		if (!file.exists())
 			return null;

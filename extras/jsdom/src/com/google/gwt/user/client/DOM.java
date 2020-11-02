@@ -1734,6 +1734,7 @@ public class DOM {
 		impl.maybeInitializeEventSystem();
 	}
 
+	@SuppressWarnings("deprecation")
 	private static class NativePreview extends BaseListenerWrapper<EventPreview>
 			implements Event.NativePreviewHandler {
 		@Deprecated

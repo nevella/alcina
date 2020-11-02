@@ -20,6 +20,7 @@ import com.google.gwt.user.client.DOM;
  *
  * @author Nick Reddel
  */
+@SuppressWarnings("deprecation")
 public class StyledAWidget<O> extends Link {
 	private Element spanElem;
 
@@ -43,6 +44,7 @@ public class StyledAWidget<O> extends Link {
 		}
 	}
 
+	@Override
 	public String getTarget() {
 		return DOM.getElementProperty(anchorElem, "target");
 	}
@@ -52,6 +54,7 @@ public class StyledAWidget<O> extends Link {
 		DOM.setInnerHTML(spanElem, html);
 	}
 
+	@Override
 	public void setTarget(String target) {
 		DOM.setElementProperty(anchorElem, "target", target);
 	}

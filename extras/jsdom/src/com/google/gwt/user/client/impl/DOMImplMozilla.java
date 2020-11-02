@@ -40,28 +40,24 @@ class DOMImplMozilla extends DOMImplStandard {
 	}
 
 	private native void initSyntheticMouseUpEvents() /*-{
-														$wnd.addEventListener(
-														'mouseout',
-														$entry(function(evt) {
-														var cap = @com.google.gwt.user.client.impl.DOMImplStandard::captureElem; 
-														if (cap && !evt.relatedTarget) {
-														// Mozilla has the interesting habit of sending a mouseout event
-														// with an 'html' element as the target when the mouse is released
-														// outside of the browser window.
-														if ('html' == evt.target.tagName.toLowerCase()) {
-														// When this occurs, we synthesize a mouseup event, which is
-														// useful for all sorts of dragging code (like in DialogBox).
-														var muEvent = $doc.createEvent('MouseEvents');
-														muEvent.initMouseEvent('mouseup', true, true, $wnd, 0,
-														evt.screenX, evt.screenY, evt.clientX, evt.clientY, evt.ctrlKey,
-														evt.altKey, evt.shiftKey, evt.metaKey, evt.button, null);
-														cap.dispatchEvent(muEvent);
-														}
-														}
-														}),
-														true
-														);
-														}-*/;
+    $wnd.addEventListener('mouseout', $entry(function(evt) {
+      var cap = @com.google.gwt.user.client.impl.DOMImplStandard::captureElem;
+      if (cap && !evt.relatedTarget) {
+        // Mozilla has the interesting habit of sending a mouseout event
+        // with an 'html' element as the target when the mouse is released
+        // outside of the browser window.
+        if ('html' == evt.target.tagName.toLowerCase()) {
+          // When this occurs, we synthesize a mouseup event, which is
+          // useful for all sorts of dragging code (like in DialogBox).
+          var muEvent = $doc.createEvent('MouseEvents');
+          muEvent.initMouseEvent('mouseup', true, true, $wnd, 0, evt.screenX,
+              evt.screenY, evt.clientX, evt.clientY, evt.ctrlKey, evt.altKey,
+              evt.shiftKey, evt.metaKey, evt.button, null);
+          cap.dispatchEvent(muEvent);
+        }
+      }
+    }), true);
+	}-*/;
 
 	@Override
 	protected void initEventSystem() {
@@ -69,10 +65,11 @@ class DOMImplMozilla extends DOMImplStandard {
 		initSyntheticMouseUpEvents();
 	}
 
-	@SuppressWarnings("deprecation")
 	native void sinkEventsMozilla(ElementRemote elem, int bits) /*-{
-																if (bits & 0x20000) {
-																elem.addEventListener('DOMMouseScroll', @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent, false);
-																}
-																}-*/;
+    if (bits & 0x20000) {
+      elem.addEventListener('DOMMouseScroll',
+          @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent,
+          false);
+    }
+	}-*/;
 }

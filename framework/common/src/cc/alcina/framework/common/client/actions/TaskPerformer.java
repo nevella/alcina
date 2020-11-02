@@ -20,5 +20,9 @@ import cc.alcina.framework.common.client.job.Task;
  * @author Nick Reddel
  */
 public interface TaskPerformer<T extends Task> {
+	default int getVersionNumber() {
+		return 0;
+	}
+
 	void performAction(T task) throws Exception;
 }

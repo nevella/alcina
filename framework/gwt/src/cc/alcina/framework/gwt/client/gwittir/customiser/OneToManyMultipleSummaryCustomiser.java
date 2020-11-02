@@ -30,11 +30,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
  */
 public class OneToManyMultipleSummaryCustomiser
 		implements Customiser, BoundWidgetProvider {
-	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, Custom info) {
-		return this;
-	}
-
 	@Override
 	public BoundWidget get() {
 		RenderingHtml html = new RenderingHtml();
@@ -43,8 +38,15 @@ public class OneToManyMultipleSummaryCustomiser
 		return html;
 	}
 
+	@Override
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
+			boolean multiple, Custom info) {
+		return this;
+	}
+
 	private static class OneToManyMultipleSummaryToHtmlRenderer
 			implements Renderer<OneToManyMultipleSummary, String> {
+		@SuppressWarnings("unused")
 		private RenderingHtml html;
 
 		public OneToManyMultipleSummaryToHtmlRenderer(RenderingHtml html) {

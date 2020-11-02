@@ -31,6 +31,7 @@ import com.google.gwt.user.client.ui.SourcesKeyboardEvents;
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
+@SuppressWarnings("deprecation")
 public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		HasEnabled, SourcesClickEvents, HasFocus, SourcesKeyboardEvents {
 	private com.google.gwt.user.client.ui.CheckBox base;
@@ -52,26 +53,32 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		this.setChecked(value);
 	}
 
+	@Override
 	public void addClickListener(ClickListener listener) {
 		this.base.addClickListener(listener);
 	}
 
+	@Override
 	public void addFocusListener(FocusListener listener) {
 		this.base.addFocusListener(listener);
 	}
 
+	@Override
 	public void addKeyboardListener(KeyboardListener listener) {
 		this.base.addKeyboardListener(listener);
 	}
 
+	@Override
 	public void addStyleName(String style) {
 		this.base.addStyleName(style);
 	}
 
+	@Override
 	public int getAbsoluteLeft() {
 		return this.base.getAbsoluteLeft();
 	}
 
+	@Override
 	public int getAbsoluteTop() {
 		return this.base.getAbsoluteTop();
 	}
@@ -84,10 +91,12 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		return this.base.getName();
 	}
 
+	@Override
 	public String getStyleName() {
 		return this.base.getStyleName();
 	}
 
+	@Override
 	public int getTabIndex() {
 		return this.base.getTabIndex();
 	}
@@ -96,10 +105,12 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		return this.base.getText();
 	}
 
+	@Override
 	public String getTitle() {
 		return this.base.getTitle();
 	}
 
+	@Override
 	public Boolean getValue() {
 		return this.isChecked() ? Boolean.TRUE : Boolean.FALSE;
 	}
@@ -108,26 +119,32 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		return this.base.isChecked();
 	}
 
+	@Override
 	public boolean isEnabled() {
 		return this.base.isEnabled();
 	}
 
+	@Override
 	public void removeClickListener(ClickListener listener) {
 		this.base.removeClickListener(listener);
 	}
 
+	@Override
 	public void removeFocusListener(FocusListener listener) {
 		this.base.removeFocusListener(listener);
 	}
 
+	@Override
 	public void removeKeyboardListener(KeyboardListener listener) {
 		this.base.removeKeyboardListener(listener);
 	}
 
+	@Override
 	public void removeStyleName(String style) {
 		this.base.removeStyleName(style);
 	}
 
+	@Override
 	public void setAccessKey(char key) {
 		this.base.setAccessKey(key);
 	}
@@ -136,14 +153,17 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		this.base.setChecked(checked);
 	}
 
+	@Override
 	public void setEnabled(boolean enabled) {
 		this.base.setEnabled(enabled);
 	}
 
+	@Override
 	public void setFocus(boolean focused) {
 		this.base.setFocus(focused);
 	}
 
+	@Override
 	public void setHeight(String height) {
 		this.base.setHeight(height);
 	}
@@ -156,18 +176,22 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		this.base.setName(name);
 	}
 
+	@Override
 	public void setPixelSize(int width, int height) {
 		this.base.setPixelSize(width, height);
 	}
 
+	@Override
 	public void setSize(String width, String height) {
 		this.base.setSize(width, height);
 	}
 
+	@Override
 	public void setStyleName(String style) {
 		this.base.setStyleName(style);
 	}
 
+	@Override
 	public void setTabIndex(int index) {
 		this.base.setTabIndex(index);
 	}
@@ -181,6 +205,7 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		this.base.setTitle(title);
 	}
 
+	@Override
 	public void setValue(Boolean value) {
 		Boolean old = this.getValue();
 		this.setChecked(value);
@@ -189,6 +214,7 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		}
 	}
 
+	@Override
 	public void setWidth(String width) {
 		this.base.setWidth(width);
 	}

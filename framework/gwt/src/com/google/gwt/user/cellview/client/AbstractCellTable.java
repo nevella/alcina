@@ -1617,7 +1617,6 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	protected void onBrowserEvent2(Event event) {
 		// Get the event target.
@@ -2006,7 +2005,6 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 				CellBasedWidgetImpl.get().processHtml(html));
 	}
 
-	@SuppressWarnings("deprecation")
 	@Override
 	protected void replaceChildren(List<T> values, int start, SafeHtml html) {
 		refreshHeadersAndColumnsImpl();
@@ -2644,8 +2642,8 @@ public abstract class AbstractCellTable<T> extends AbstractHasData<T> {
 		 * Return true if using Gecko 1.9.2 (Firefox 3.6) or earlier.
 		 */
 		private native boolean isGecko192OrBefore() /*-{
-													return @com.google.gwt.dom.client.DOMImplMozilla::isGecko192OrBefore()();
-													}-*/;
+      return @com.google.gwt.dom.client.DOMImplMozilla::isGecko192OrBefore()();
+		}-*/;
 
 		/**
 		 * Firefox 3.6 and earlier convert td elements to divs if the tbody is
