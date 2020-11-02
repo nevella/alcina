@@ -13,8 +13,6 @@ import cc.alcina.framework.common.client.util.Multimap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 
 public class GraphTraversal {
-	private Predicate<Class> filter;
-
 	public static Multimap<Class, List<?>> getClassStats(Object object,
 			Predicate<Class> filter) {
 		Multimap<Class, List<?>> map = new Multimap<>();
@@ -23,10 +21,7 @@ public class GraphTraversal {
 		return map;
 	}
 
-	public GraphTraversal withFilter(Predicate<Class> filter) {
-		this.filter = filter;
-		return this;
-	}
+	private Predicate<Class> filter;
 
 	private Reference2ReferenceOpenHashMap reached = new Reference2ReferenceOpenHashMap();
 
@@ -40,6 +35,11 @@ public class GraphTraversal {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public GraphTraversal withFilter(Predicate<Class> filter) {
+		this.filter = filter;
+		return this;
 	}
 
 	private void add(Object object) {
@@ -58,9 +58,6 @@ public class GraphTraversal {
 		pending.push(from);
 		while (pending.size() > 0) {
 			Object object = pending.pop();
-			if (object.getClass().getName().contains("MultiDiff")) {
-				int debug = 3;
-			}
 			consumer.accept(object);
 			reached.put(object, object);
 			if (object instanceof Collection) {

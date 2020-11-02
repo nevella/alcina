@@ -430,9 +430,6 @@ public class DomainTransformEvent
 
 	public void setObjectLocalId(long localId) {
 		this.objectLocalId = localId;
-		if (objectLocalId == 0 && objectId == 0) {
-			int debug = 3;
-		}
 	}
 
 	public void setObjectVersionNumber(Integer objectVersionNumber) {

@@ -338,9 +338,6 @@ public class ClientReflectionGenerator extends Generator {
 			sw.indent();
 			sw.println(
 					"Map<String,ClientPropertyReflector> propertyReflectors = new LinkedHashMap<String,ClientPropertyReflector>();");
-			if (jct.getQualifiedSourceName().contains("HeaderContentModel")) {
-				int debug = 3;
-			}
 			for (JMethod method : getPropertyGetters(jct)) {
 				String propertyName = getPropertyNameForReadMethod(method);
 				if (propertyName.equals("class")

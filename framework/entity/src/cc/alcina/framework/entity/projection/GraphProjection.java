@@ -646,7 +646,7 @@ public class GraphProjection {
 		if (context != null) {
 			if (contextDebugPath != null) {
 				if (context.toString().contains(contextDebugPath)) {
-					int debug = 3;
+					int debug = 4;
 				}
 			}
 		}
@@ -787,8 +787,8 @@ public class GraphProjection {
 					continue;
 				}
 			}
-			if(checkFieldExistsInSource) {
-				if(!nonPrimitiveOrDataFieldsForSource.contains(field)) {
+			if (checkFieldExistsInSource) {
+				if (!nonPrimitiveOrDataFieldsForSource.contains(field)) {
 					continue;
 				}
 			}
@@ -878,6 +878,10 @@ public class GraphProjection {
 			}
 		}
 		return c;
+	}
+
+	public <E> E registerProjected(E source, E projected) {
+		return (E) reached.put(source, projected);
 	}
 
 	public void setCollectionReachedCheck(boolean collectionReachedCheck) {
@@ -1100,6 +1104,16 @@ public class GraphProjection {
 			return clazz.hashCode() ^ fieldName.hashCode();
 		}
 
+		public Optional<Object> parent(Predicate predicate) {
+			if (predicate.test(sourceOwner)) {
+				return Optional.of(sourceOwner);
+			}
+			if (parent != null) {
+				return parent.parent(predicate);
+			}
+			return Optional.empty();
+		}
+
 		public String toPath(boolean withToString) {
 			String string = "?";
 			if (withToString) {
@@ -1134,16 +1148,6 @@ public class GraphProjection {
 		public String toString() {
 			return (parent == null ? "" : parent.toString() + "::")
 					+ clazz.getSimpleName() + "." + fieldName;
-		}
-
-		public Optional<Object> parent(Predicate predicate) {
-			if(predicate.test(sourceOwner)){
-				return Optional.of(sourceOwner);
-			}
-			if(parent!=null) {
-				return parent.parent(predicate);
-			}
-			return Optional.empty();
 		}
 	}
 
@@ -1282,9 +1286,5 @@ public class GraphProjection {
 				return ((int) id) ^ clazzName.hashCode();
 			}
 		}
-	}
-
-	public <E> E registerProjected(E source, E projected) {
-		return (E) reached.put(source, projected);
 	}
 }

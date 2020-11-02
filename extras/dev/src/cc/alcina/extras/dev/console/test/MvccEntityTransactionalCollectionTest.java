@@ -55,7 +55,6 @@ public class MvccEntityTransactionalCollectionTest<IU extends Entity & IUser, IG
 							.collect(Collectors.toList());
 					if (users1.size() != Domain.stream(userClass).count()) {
 						// issue with layer merge, most likely
-						int debug = 3;
 					}
 					Preconditions.checkArgument(
 							users2.size() == Domain.stream(userClass).count());

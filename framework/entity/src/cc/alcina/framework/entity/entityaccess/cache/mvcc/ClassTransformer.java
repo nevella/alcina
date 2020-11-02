@@ -67,7 +67,6 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
@@ -366,12 +365,12 @@ class ClassTransformer {
 			boolean sameSource = lastRun != null
 					&& Objects.equals(lastRun.classSources, classSources)
 					&& classSources.size() > 0;
-			if (!sameSource && lastRun != null && lastRun.classSources != null
-					&& lastRun.classSources.size() > 0) {
-				ThreeWaySetResult<String> split = CommonUtils
-						.threeWaySplit(lastRun.classSources, classSources);
-				int debug = 3;
-			}
+			// if (!sameSource && lastRun != null && lastRun.classSources !=
+			// null
+			// && lastRun.classSources.size() > 0) {
+			// ThreeWaySetResult<String> split = CommonUtils
+			// .threeWaySplit(lastRun.classSources, classSources);
+			// }
 			return sameSource;
 		}
 

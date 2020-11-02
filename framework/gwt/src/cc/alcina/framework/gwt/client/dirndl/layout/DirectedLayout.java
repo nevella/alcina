@@ -92,10 +92,6 @@ public class DirectedLayout {
 	 * </p>
 	 */
 	public static class Node {
-		public Object getModel() {
-			return this.model;
-		}
-
 		private ContextResolver resolver;
 
 		final Object model;
@@ -128,28 +124,18 @@ public class DirectedLayout {
 			current = this;
 		}
 
-		public DirectedNodeRenderer resolveRenderer() {
-			DirectedNodeRenderer renderer = null;
-			if (model == null && (propertyReflector == null || propertyReflector
-					.getAnnotation(Directed.class) == null)) {
-				return new NullNodeRenderer();
+		public <T> T ancestorModel(Class<T> clazz) {
+			return ancestorModel(model -> model.getClass() == clazz);
+		}
+
+		public <T> T ancestorModel(Predicate predicate) {
+			if (predicate.test(model)) {
+				return (T) model;
 			}
-			if (directed == null) {
-				// FIXME - dirndl.0 - no, resolver is from the node tree, not
-				// the class
-				Class clazz = model == null ? void.class : model.getClass();
-				directed = Registry.impl(DirectedResolver.class, clazz);
-				((DirectedResolver) directed).setLocation(
-						new AnnotationLocation(clazz, propertyReflector));
+			if (parent != null) {
+				return parent.ancestorModel(predicate);
 			}
-			Class<? extends DirectedNodeRenderer> rendererClass = directed
-					.renderer();
-			if (rendererClass == VoidNodeRenderer.class) {
-				rendererClass = Registry.get().lookupSingle(
-						DirectedNodeRenderer.class, model.getClass());
-			}
-			renderer = Reflections.classLookup().newInstance(rendererClass);
-			return renderer;
+			return null;
 		}
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
@@ -163,6 +149,15 @@ public class DirectedLayout {
 				return parent.annotation(clazz);
 			}
 			return annotation;
+		}
+
+		public Node childBefore(Node child) {
+			int idx = children.indexOf(child);
+			return idx == 0 ? null : children.get(idx - 1);
+		}
+
+		public Object getModel() {
+			return this.model;
 		}
 
 		public void publishTopic(Class<? extends NodeTopic> topic) {
@@ -188,6 +183,34 @@ public class DirectedLayout {
 					path.substring(segments[0].length() + 1));
 		}
 
+		public <T> T resolveRenderContextProperty(String key) {
+			return resolver.resolveRenderContextProperty(key);
+		}
+
+		public DirectedNodeRenderer resolveRenderer() {
+			DirectedNodeRenderer renderer = null;
+			if (model == null && (propertyReflector == null || propertyReflector
+					.getAnnotation(Directed.class) == null)) {
+				return new NullNodeRenderer();
+			}
+			if (directed == null) {
+				// FIXME - dirndl.0 - no, resolver is from the node tree, not
+				// the class
+				Class clazz = model == null ? void.class : model.getClass();
+				directed = Registry.impl(DirectedResolver.class, clazz);
+				((DirectedResolver) directed).setLocation(
+						new AnnotationLocation(clazz, propertyReflector));
+			}
+			Class<? extends DirectedNodeRenderer> rendererClass = directed
+					.renderer();
+			if (rendererClass == VoidNodeRenderer.class) {
+				rendererClass = Registry.get().lookupSingle(
+						DirectedNodeRenderer.class, model.getClass());
+			}
+			renderer = Reflections.classLookup().newInstance(rendererClass);
+			return renderer;
+		}
+
 		public Widget resolveWidget(String path) {
 			return resolveNode(path).rendered.verifySingleWidget();
 		}
@@ -195,6 +218,34 @@ public class DirectedLayout {
 		@Override
 		public String toString() {
 			return path();
+		}
+
+		private void addListeners(Node child) {
+			if (child.changeSource == null) {
+				return;
+			}
+			Object childModel = child.model;
+			// even though this (the parent) handles changes,
+			// binding/unbinding on node removal is the responsibility of the
+			// child, so we add to the child's listeners list
+			if (!child.changeSource.isReadOnly() && model instanceof Bindable) {
+				// FIXME - dirndl.1 - don't add this to form/table cells
+				ChildReplacer listener = new ChildReplacer((Bindable) model,
+						child.changeSource.getPropertyName(), child);
+				logger.info("added listener :: {} :: {} :: {} :: {}",
+						child.pathSegment(), child.hashCode(),
+						child.changeSource.getPropertyName(),
+						listener.hashCode());
+				child.listeners.add(listener);
+			}
+			if (childModel instanceof Model) {
+				ChildReplacer listener = new ChildReplacer(
+						(Bindable) childModel, null, child);
+				logger.info("added listener :: {} :: {} :: {} :: {}",
+						child.pathSegment(), child.hashCode(), "(fireUpdate)",
+						listener.hashCode());
+				child.listeners.add(listener);
+			}
 		}
 
 		private void bindBehaviours() {
@@ -205,27 +256,6 @@ public class DirectedLayout {
 			rendered.behaviours = Arrays.stream(directed.behaviours())
 					.map(BehaviourBinding::new).collect(Collectors.toList());
 			rendered.behaviours.forEach(BehaviourBinding::bind);
-		}
-
-		String pathSegment() {
-			String thisLoc = Ax.format("{%s}", model == null ? "null model"
-					: model.getClass().getSimpleName());
-			if (propertyReflector != null) {
-				thisLoc = propertyReflector.getPropertyName() + "." + thisLoc;
-			} else {
-				if (parent != null && renderer != null) {
-					thisLoc = Ax.format("(%s).%s",
-							renderer.getClass().getSimpleName(), thisLoc);
-				} else {
-					thisLoc = "---" + "." + thisLoc;
-				}
-			}
-			if (intermediate && rendered != null
-					&& rendered.widgets.size() > 0) {
-				thisLoc += Ax.format("(%s)",
-						rendered.widgets.get(0).getElement().getTagName());
-			}
-			return thisLoc;
 		}
 
 		private void populateWidgets(boolean intermediateChild) {
@@ -300,34 +330,6 @@ public class DirectedLayout {
 			current = this;// after leaving child travers
 			rendered.widgets = renderer.renderWithDefaults(this);
 			return;
-		}
-
-		private void addListeners(Node child) {
-			if (child.changeSource == null) {
-				return;
-			}
-			Object childModel = child.model;
-			// even though this (the parent) handles changes,
-			// binding/unbinding on node removal is the responsibility of the
-			// child, so we add to the child's listeners list
-			if (!child.changeSource.isReadOnly() && model instanceof Bindable) {
-				// FIXME - dirndl.1 - don't add this to form/table cells
-				ChildReplacer listener = new ChildReplacer((Bindable) model,
-						child.changeSource.getPropertyName(), child);
-				logger.info("added listener :: {} :: {} :: {} :: {}",
-						child.pathSegment(), child.hashCode(),
-						child.changeSource.getPropertyName(),
-						listener.hashCode());
-				child.listeners.add(listener);
-			}
-			if (childModel instanceof Model) {
-				ChildReplacer listener = new ChildReplacer(
-						(Bindable) childModel, null, child);
-				logger.info("added listener :: {} :: {} :: {} :: {}",
-						child.pathSegment(), child.hashCode(), "(fireUpdate)",
-						listener.hashCode());
-				child.listeners.add(listener);
-			}
 		}
 
 		/*
@@ -405,6 +407,27 @@ public class DirectedLayout {
 			}
 		}
 
+		String pathSegment() {
+			String thisLoc = Ax.format("{%s}", model == null ? "null model"
+					: model.getClass().getSimpleName());
+			if (propertyReflector != null) {
+				thisLoc = propertyReflector.getPropertyName() + "." + thisLoc;
+			} else {
+				if (parent != null && renderer != null) {
+					thisLoc = Ax.format("(%s).%s",
+							renderer.getClass().getSimpleName(), thisLoc);
+				} else {
+					thisLoc = "---" + "." + thisLoc;
+				}
+			}
+			if (intermediate && rendered != null
+					&& rendered.widgets.size() > 0) {
+				thisLoc += Ax.format("(%s)",
+						rendered.widgets.get(0).getElement().getTagName());
+			}
+			return thisLoc;
+		}
+
 		Rendered render() {
 			render(false);
 			return rendered;
@@ -418,18 +441,6 @@ public class DirectedLayout {
 			public int getChildIndex(Widget childWidget) {
 				FlowPanel panel = verifyContainer();
 				return panel.getWidgetIndex(childWidget);
-			}
-
-			public Widget verifySingleWidget() {
-				Preconditions.checkState(widgets.size() == 1);
-				return widgets.get(0);
-			}
-
-			private FlowPanel verifyContainer() {
-				if (renderer instanceof RendersToParentContainer) {
-					return parent.rendered.verifyContainer();
-				}
-				return (FlowPanel) verifySingleWidget();
 			}
 
 			public Optional<Widget> lastWidgetOrPredecessorLastWidget() {
@@ -454,6 +465,18 @@ public class DirectedLayout {
 					verifyContainer().insert(newChildWidgets.get(idx), index);
 				}
 				oldChildWidgets.forEach(Widget::removeFromParent);
+			}
+
+			public Widget verifySingleWidget() {
+				Preconditions.checkState(widgets.size() == 1);
+				return widgets.get(0);
+			}
+
+			private FlowPanel verifyContainer() {
+				if (renderer instanceof RendersToParentContainer) {
+					return parent.rendered.verifyContainer();
+				}
+				return (FlowPanel) verifySingleWidget();
 			}
 		}
 
@@ -550,10 +573,6 @@ public class DirectedLayout {
 								.newInstance(behaviour.event());
 						eventBinding.setReceiver(this);
 					}
-					if (behaviour.eventSourcePath()
-							.contains("criteriaSelector")) {
-						int debug = 3;
-					}
 					Widget widgetToBind = resolveWidget(
 							behaviour.eventSourcePath());
 					eventBinding.bind(widgetToBind, true);
@@ -573,29 +592,6 @@ public class DirectedLayout {
 					bindEvent(true);
 				}
 			}
-		}
-
-		public Node childBefore(Node child) {
-			int idx = children.indexOf(child);
-			return idx == 0 ? null : children.get(idx - 1);
-		}
-
-		public <T> T ancestorModel(Predicate predicate) {
-			if (predicate.test(model)) {
-				return (T) model;
-			}
-			if (parent != null) {
-				return parent.ancestorModel(predicate);
-			}
-			return null;
-		}
-
-		public <T> T ancestorModel(Class<T> clazz) {
-			return ancestorModel(model -> model.getClass() == clazz);
-		}
-
-		public <T> T resolveRenderContextProperty(String key) {
-			return resolver.resolveRenderContextProperty(key);
 		}
 	}
 
