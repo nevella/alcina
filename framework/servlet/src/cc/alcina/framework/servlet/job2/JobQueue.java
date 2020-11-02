@@ -1,23 +1,32 @@
 package cc.alcina.framework.servlet.job2;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicLong;
 
-import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.servlet.job2.JobRegistry.QueueStat;
+import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
 
 /*
- * Threading - all access is from the launching job thread. Access to the field metadataChanged 
+ * Threading - all access is from the launching job thread, except access to the fields metadataChanged/finished/finishedLatches (synchronized)  
  */
 public class JobQueue {
 	ExecutorService executorService;
@@ -34,11 +43,21 @@ public class JobQueue {
 
 	private boolean cancelled = false;
 
-	private boolean metadataChanged = false;
+	private LinkedList<Long> metadataChanged = new LinkedList<>();
+
+	private AtomicLong metadataChangedCounter = new AtomicLong();
 
 	private boolean finished;
 
 	private List<CountDownLatch> finishedLatches = new ArrayList<>();
+
+	private JobRegistry jobRegistry = JobRegistry.get();
+
+	private Schedule schedule;
+
+	volatile boolean allocating;
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public JobQueue(Job initialJob, ExecutorService executorService,
 			int maxConcurrentJobs, boolean clustered) {
@@ -51,14 +70,24 @@ public class JobQueue {
 		initialJob.setQueue(name);
 	}
 
+	public JobQueue(Schedule schedule) {
+		this.schedule = schedule;
+		this.name = schedule.getQueueName();
+		this.executorService = schedule.getExcutorServiceProvider()
+				.getService();
+		this.maxConcurrentJobs = schedule.getQueueMaxConcurrentJobs();
+	}
+
 	public String getName() {
 		return name;
 	}
 
 	public void onMetadataChanged() {
-		synchronized (this) {
-			metadataChanged = true;
-			notify();
+		synchronized (metadataChanged) {
+			long event = metadataChangedCounter.get();
+			logger.debug("publish metadatachanged: {} {}", name, event);
+			metadataChanged.add(event);
+			metadataChanged.notifyAll();
 		}
 	}
 
@@ -67,77 +96,98 @@ public class JobQueue {
 		return GraphProjection.fieldwiseToString(this);
 	}
 
-	private void acquireAllocationLock() {
-		Preconditions.checkState(!initialJob.isClustered());
-	}
-
+	// TODO - document
 	private void allocateJobs() {
 		pending.removeIf(Job::provideIsComplete);
 		active.removeIf(Job::provideIsComplete);
-		long limit = maxConcurrentJobs - (active.size() + pending.size())
-				+ calculateDesiredPendingSize();
-		if (limit > 0) {
-			DomainDescriptorJob.get().getUnallocatedJobsForQueue(name)
-					.limit(limit).forEach(job -> {
-						job.setPerformer(EntityLayerObjects.get()
-								.getServerAsClientInstance());
+		boolean scheduled = schedule != null;
+		/*
+		 * jobs (currently) are either max 1 (time-wise scheduled) or
+		 * maxConcurrent/executor-limited. If time-wise scheduled, only the
+		 * cluster leader should perform
+		 */
+		if (scheduled && schedule.getQueueMaxConcurrentJobs() == 1) {
+			if (!jobRegistry.jobExcutors.isCurrentScheduledJobExecutor()) {
+				return;
+			}
+			int activeJobs = DomainDescriptorJob.get().getActiveJobCount(name);
+			Optional<? extends Job> unallocated = DomainDescriptorJob.get()
+					.getUnallocatedJobsForQueue(name).findFirst();
+			if (unallocated.isPresent()
+					&& unallocated.get().getRunAt().before(new Date())) {
+				jobRegistry.withJobMetadataLock(name, isClustered(), () -> {
+					Job job = unallocated.get();
+					job.setPerformer(EntityLayerObjects.get()
+							.getServerAsClientInstance());
+					if (schedule.getQueueMaxConcurrentJobs() <= activeJobs) {
+						job.setState(JobState.SKIPPED);
+					} else {
 						pending.add(job);
-					});
-			Transaction.commit();
+					}
+					Transaction.commit();
+				});
+			}
+		} else {
+			long limit = maxConcurrentJobs - (active.size() + pending.size())
+					+ calculateDesiredPendingSize();
+			if (limit > 0) {
+				jobRegistry.withJobMetadataLock(name, isClustered(), () -> {
+					DomainDescriptorJob.get().getUnallocatedJobsForQueue(name)
+							.limit(limit).forEach(job -> {
+								job.setPerformer(EntityLayerObjects.get()
+										.getServerAsClientInstance());
+								pending.add(job);
+							});
+					Transaction.commit();
+				});
+			}
 		}
 	}
 
+	// TODO - for large distributed jobs, get an adjustable chunk of 'pending'
+	// to reduce contention/db writes
 	private int calculateDesiredPendingSize() {
 		return 0;
 	}
 
-	private void releaseAllocationLock() {
-	}
-
-	void allocateUntilEmpty() {
-		while (!cancelled) {
-			try {
-				acquireAllocationLock();
-				allocateJobs();
-				boolean submitted = false;
-				if (active.size() < maxConcurrentJobs) {
-					if (pending.size() > 0) {
-						Job toSubmit = pending.remove(0);
-						active.add(toSubmit);
-						executorService.submit(
-								() -> JobRegistry.get().performJob(toSubmit));
-					}
-				}
-				if (active.isEmpty() && pending.isEmpty()) {
-					JobRegistry.get().onJobQueueTerminated(this);
-					synchronized (this) {
-						finished = true;
-						finishedLatches.forEach(CountDownLatch::countDown);
-					}
-					return;
-				}
-				synchronized (this) {
-					if (!metadataChanged) {
-						wait(10000);
-					}
-					Transaction.endAndBeginNew();
-					metadataChanged = false;
-				}
-			} catch (Exception e) {
-				JobContext.current().onJobException(e);
-				throw WrappedRuntimeException.wrapIfNotRuntime(e);
-			} finally {
-				releaseAllocationLock();
-			}
+	private int getMetadataChangedQueueLength() {
+		synchronized (metadataChanged) {
+			return metadataChanged.size();
 		}
 	}
 
+	protected boolean isClustered() {
+		return schedule != null ? schedule.isClustered()
+				: initialJob.isClustered();
+	}
+
+	QueueStat asQueueStat() {
+		QueueStat stat = new QueueStat();
+		stat.name = name;
+		stat.active = active.size();
+		stat.pending = pending.size();
+		stat.total = (int) DomainDescriptorJob.get().getJobsForQueue(name)
+				.count();
+		return stat;
+	}
+
 	void awaitEmpty() {
+		CountDownLatch latch = null;
 		synchronized (this) {
 			if (finished) {
 				return;
 			}
-			finishedLatches.add(new CountDownLatch(1));
+			latch = new CountDownLatch(1);
+			finishedLatches.add(latch);
+		}
+		try {
+			if (!allocating) {
+				allocating = true;
+				loopAllocations();
+			}
+			latch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -145,6 +195,63 @@ public class JobQueue {
 		cancelled = true;
 		active.forEach(Job::cancel);
 		onMetadataChanged();
+	}
+
+	void loopAllocations() {
+		while (!cancelled) {
+			try {
+				allocateJobs();
+				boolean submitted = false;
+				if (active.size() < maxConcurrentJobs) {
+					if (pending.size() > 0) {
+						Job toSubmit = pending.remove(0);
+						active.add(toSubmit);
+						executorService
+								.submit(() -> jobRegistry.performJob(toSubmit));
+					}
+				}
+				logger.debug(
+						"allocation status metadatachanged: {} - active {} - pending {}",
+						name, active, pending.size());
+				//
+				if (active.isEmpty() && pending.isEmpty() && (schedule == null
+						|| schedule.getQueueMaxConcurrentJobs() != 1)) {
+					jobRegistry.onJobQueueTerminated(this);
+					synchronized (this) {
+						finished = true;
+						finishedLatches.forEach(CountDownLatch::countDown);
+					}
+					return;
+				}
+				logger.debug("await metadatachanged");
+				boolean hadEvent = false;
+				Long id = null;
+				if (getMetadataChangedQueueLength() == 0) {
+					synchronized (metadataChanged) {
+						metadataChanged.wait(10000);
+					}
+				}
+				if (getMetadataChangedQueueLength() > 0) {
+					synchronized (metadataChanged) {
+						id = metadataChanged.removeFirst();
+						logger.debug("Removed event from toFire: {}", id);
+					}
+				} else {
+					// FIXME - the timeout *shouldn't* be needed -
+					// but...kafka timeouts...gcs...
+					if (name.matches(
+							ResourceUtilities.get("logMetadataTimeouts"))) {
+						logger.info("Timed out waiting for metadata change: {}",
+								name);
+					}
+				}
+				DomainStore.waitUntilCurrentRequestsProcessed();
+			} catch (Exception e) {
+				JobContext.current().onJobException(e);
+				throw WrappedRuntimeException.wrapIfNotRuntime(e);
+			} finally {
+			}
+		}
 	}
 
 	public static interface AllocationLocker {

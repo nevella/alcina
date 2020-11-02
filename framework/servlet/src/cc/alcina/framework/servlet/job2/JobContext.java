@@ -68,7 +68,12 @@ public class JobContext {
 		job.setFinish(new Date());
 		job.setResultType(JobResultType.OK);
 		persistMetadata(true);
-		Transaction.endAndBeginNew();
+		if (persistenceType == PersistenceType.None) {
+			// don't end transaction (job metadata changes needed for queue
+			// exit)
+		} else {
+			Transaction.endAndBeginNew();
+		}
 	}
 
 	public Job getJob() {
@@ -125,6 +130,9 @@ public class JobContext {
 					Job.class, JobRelation.class);
 			break;
 		}
+		/*
+		 * very limited support (no scheduled jobs e.g.)
+		 */
 		case None:
 			TransformCommit.removeTransforms(Job.class, JobRelation.class);
 			break;
@@ -148,6 +156,7 @@ public class JobContext {
 		LooseContext.set(CONTEXT_CURRENT, this);
 		job.setStart(new Date());
 		job.setState(JobState.PROCESSING);
+		job.setPerformerVersionNumber(performer.getVersionNumber());
 		persistMetadata(true);
 		Registry.impl(PerThreadLogging.class).beginBuffer();
 		if (noHttpContext) {
