@@ -103,7 +103,6 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 						Set<? extends IUser> memberUsers = createdGroup
 								.getMemberUsers();
 						long size2 = memberUsers.stream().count();
-						int debug = 3;
 					}
 					Preconditions.checkState(
 							createdGroup.getMemberUsers().size() == initialSize
@@ -138,10 +137,6 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 					Set<? extends IUser> memberUsers = createdGroup
 							.getMemberUsers();
 					long size2 = memberUsers.stream().count();
-					if (createdGroup.getMemberUsers().size() != initialSize
-							+ 1) {
-						int debug = 3;
-					}
 					Preconditions.checkState(
 							createdGroup.getMemberUsers().size() == initialSize
 									+ 1,
@@ -154,7 +149,6 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 					Transactions.waitForAllToCompleteExSelf();
 					Set<? extends IUser> shouldBeThree2 = createdGroup
 							.getMemberUsers();
-					int debug = 3;
 					Preconditions.checkState(
 							createdGroup.getMemberUsers().size() == initialSize
 									+ 3,

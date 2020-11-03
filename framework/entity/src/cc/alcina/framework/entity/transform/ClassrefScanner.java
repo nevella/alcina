@@ -317,9 +317,6 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 	protected ClassrefScannerMetadata process(Class clazz, String className,
 			ClassMetadata found) {
 		ClassrefScannerMetadata out = createMetadata(className, found);
-		if (className.contains("DeviceLogMessage")) {
-			int debug = 3;
-		}
 		if ((!Modifier.isPublic(clazz.getModifiers()))
 				|| (Modifier.isAbstract(clazz.getModifiers())
 						&& !clazz.isEnum())) {

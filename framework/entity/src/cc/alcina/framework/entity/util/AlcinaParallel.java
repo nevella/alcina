@@ -130,12 +130,14 @@ public class AlcinaParallel {
 				exceptions.add(t);
 			} finally {
 				LooseContext.pop();
-				ThreadlocalTransformManager.cast().resetTltm(null);
-				if (parameters.transaction != null && !inTransaction) {
-					Transaction.split();
-				}
-				if (parameters.wrapInTransaction && !inTransaction) {
-					Transaction.end();
+				if (!inTransaction) {
+					ThreadlocalTransformManager.cast().resetTltm(null);
+					if (parameters.transaction != null) {
+						Transaction.split();
+					}
+					if (parameters.wrapInTransaction) {
+						Transaction.end();
+					}
 				}
 			}
 			return null;

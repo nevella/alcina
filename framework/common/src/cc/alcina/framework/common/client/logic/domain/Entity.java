@@ -197,11 +197,9 @@ public abstract class Entity<T extends Entity> extends Bindable
 		hash = 0;
 	}
 
-	// no listeners - this should be invisible to transform listeners
+	// not a propertychangeevent source - this should be invisible to transform
+	// listeners
 	public void setLocalId(long localId) {
-		if (this.localId != 0) {
-			int debug = 3;
-		}
 		this.localId = localId;
 	}
 

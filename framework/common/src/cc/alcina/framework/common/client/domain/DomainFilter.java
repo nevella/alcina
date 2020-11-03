@@ -48,11 +48,6 @@ public class DomainFilter {
 			@Override
 			public boolean allow(Object o) {
 				return predicate.test(o);
-				// boolean test = predicate.test(o);
-				// if (!test) {
-				// int debug = 3;
-				// }
-				// return test;
 			}
 
 			@Override
@@ -66,11 +61,43 @@ public class DomainFilter {
 		return predicate == null;
 	}
 
+	public FilterOperator getFilterOperator() {
+		return filterOperator;
+	}
+
+	public Predicate getPredicate() {
+		return predicate;
+	}
+
+	public String getPropertyPath() {
+		return propertyPath;
+	}
+
+	public Object getPropertyValue() {
+		return propertyValue;
+	}
+
 	public DomainFilter invertIf(boolean invert) {
 		if (invert) {
 			predicate = predicate.negate();
 		}
 		return this;
+	}
+
+	public void setFilterOperator(FilterOperator filterOperator) {
+		this.filterOperator = filterOperator;
+	}
+
+	public void setPredicate(Predicate predicate) {
+		this.predicate = predicate;
+	}
+
+	public void setPropertyPath(String propertyPath) {
+		this.propertyPath = propertyPath;
+	}
+
+	public void setPropertyValue(Object propertyValue) {
+		this.propertyValue = propertyValue;
 	}
 
 	@Override
@@ -81,37 +108,5 @@ public class DomainFilter {
 		}
 		return Ax.format("DomainFilter: %s %s %s", propertyPath,
 				filterOperator.operationText(), propertyValue);
-	}
-
-	public String getPropertyPath() {
-		return propertyPath;
-	}
-
-	public void setPropertyPath(String propertyPath) {
-		this.propertyPath = propertyPath;
-	}
-
-	public Object getPropertyValue() {
-		return propertyValue;
-	}
-
-	public void setPropertyValue(Object propertyValue) {
-		this.propertyValue = propertyValue;
-	}
-
-	public Predicate getPredicate() {
-		return predicate;
-	}
-
-	public void setPredicate(Predicate predicate) {
-		this.predicate = predicate;
-	}
-
-	public FilterOperator getFilterOperator() {
-		return filterOperator;
-	}
-
-	public void setFilterOperator(FilterOperator filterOperator) {
-		this.filterOperator = filterOperator;
 	}
 }

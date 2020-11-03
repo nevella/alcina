@@ -311,7 +311,7 @@ public class SEUtilities {
 						if (c1 > 0 || c1 != -c2) {
 							int c1a = comparator.compare(e1, e2);
 							int c2a = comparator.compare(e2, e1);
-							int debug = 3;
+							int debug = 4;
 						}
 					}
 				}

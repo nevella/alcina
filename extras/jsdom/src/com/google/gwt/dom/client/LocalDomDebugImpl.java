@@ -95,7 +95,6 @@ public class LocalDomDebugImpl {
 		ElementRemoteIndex remoteIndex = elementRemote.provideRemoteIndex(true);
 		remoteDebug = remoteIndex.getString();
 		log(LocalDomDebug.DEBUG_ISSUE, issue);
-		int debug = 3;
 	}
 
 	private void debugNodeFor0(ElementRemote elementRemote, Element hasNode,
@@ -135,6 +134,5 @@ public class LocalDomDebugImpl {
 				hasNode.remote().hashCode());
 		LocalDom.debug(hasNode.typedRemote());
 		log(LocalDomDebug.DEBUG_ISSUE, "mismatched sizes");
-		int debug = 3;
 	}
 }

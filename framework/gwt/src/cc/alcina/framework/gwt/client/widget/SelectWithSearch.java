@@ -29,7 +29,6 @@ import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.event.dom.client.BlurEvent;
@@ -354,7 +353,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		filter.getTextBox().addBlurHandler(new BlurHandler() {
 			@Override
 			public void onBlur(BlurEvent event) {
-				if("".isEmpty()) {
+				if ("".isEmpty()) {
 					return;
 				}
 				System.out.println("onblur - ignore:" + ignoreNextBlur);
@@ -718,33 +717,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		this.itemMap = itemMap;
 		if (isSortGroupContents()) {
 			for (List<T> ttl : itemMap.values()) {
-				try {
-					Collections.sort((List) ttl);
-				} catch (RuntimeException e) {
-					// TimSort issue
-					if (!GWT.isProdMode()) {
-						for (int i = 0; i < 10000; i++) {
-							int size = ttl.size();
-							Comparable i1 = (Comparable) ttl
-									.get((int) (size * Math.random()));
-							Comparable i2 = (Comparable) ttl
-									.get((int) (size * Math.random()));
-							Comparable i3 = (Comparable) ttl
-									.get((int) (size * Math.random()));
-							int c1 = i1.compareTo(i2);
-							int c2 = i2.compareTo(i1);
-							if (c1 != -c2) {
-								int debug = 3;
-							}
-							if (i1.compareTo(i2) < 0 && i2.compareTo(i3) < 0
-									&& i1.compareTo(i3) >= 0) {
-								int debug = 3;
-							}
-						}
-					} else {
-						throw (e);
-					}
-				}
+				Collections.sort((List) ttl);
 			}
 		}
 		if (keys == null) {

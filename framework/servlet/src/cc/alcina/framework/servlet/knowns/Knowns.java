@@ -130,7 +130,7 @@ public class Knowns {
 
 	public static void handleStatusRule(KnownRenderableNode node) {
 		if (Objects.equals(debugStatusPath, node.path())) {
-			int debug = 3;
+			int debug = 4;
 		}
 		if (node.field != null) {
 			Field field = (Field) node.field;

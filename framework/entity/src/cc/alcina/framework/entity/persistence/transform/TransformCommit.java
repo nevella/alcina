@@ -397,6 +397,7 @@ public class TransformCommit {
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (pendingTransformCount == 0) {
 			ThreadlocalTransformManager.cast().resetTltm(null);
+			Transaction.endAndBeginNew();
 			return new DomainTransformLayerWrapper(null);
 		}
 		if (Ax.isTest() && !isTestTransformCascade()) {

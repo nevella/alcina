@@ -554,7 +554,7 @@ public class WDUtils {
 					return elements;
 				}
 			} catch (Exception e) {
-				int debug = 3;
+				int debug = 4;
 			}
 			try {
 				Thread.sleep(100);
@@ -647,7 +647,6 @@ public class WDUtils {
 
 	private static void throwAfterTimeout(RuntimeException e) {
 		boolean tryAgain = false;
-		int debug = 3;
 		if (!tryAgain) {
 			throw e;
 		}

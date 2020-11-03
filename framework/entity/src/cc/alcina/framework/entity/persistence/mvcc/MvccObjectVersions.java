@@ -277,11 +277,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			long localId = (long) SEUtilities
 					.getFieldByName(resolved.getClass(), "localId")
 					.get(resolved);
-			// if (id == 0 && localId == 0) {
-			// synchronized (Transactions.debugMonitor) {
-			// int debug = 3;
-			// }
-			// }
 			Ax.out("dbg resolved: %s %s %s", id, localId,
 					System.identityHashCode(resolved));
 		} catch (Exception e) {

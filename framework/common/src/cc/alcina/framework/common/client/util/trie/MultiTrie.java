@@ -136,7 +136,7 @@ public class MultiTrie<K, V extends Set<? extends Entity>>
 
 		public boolean addCached(K key, Entity item) {
 			if (!cache.containsKey(key)) {
-				cache.put(key, new LiSet<>());
+				cache.put(key, (Set<Entity>) createNewSet());
 			}
 			return cache.get(key).add(item);
 		}

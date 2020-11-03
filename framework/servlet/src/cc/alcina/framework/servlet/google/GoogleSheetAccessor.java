@@ -66,7 +66,6 @@ public class GoogleSheetAccessor {
 		BatchUpdate update = service.spreadsheets().batchUpdate(
 				sheetAccess.spreadSheetId, batchUpdateSpreadsheetRequest);
 		BatchUpdateSpreadsheetResponse response = update.execute();
-		int debug = 3;
 	}
 
 	public void ensureSheet() {

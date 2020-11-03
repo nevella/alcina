@@ -258,14 +258,14 @@ public class BiPrintStream extends PrintStream {
 	}
 
 	private void debugPrint() {
-		int debug = 3;
+		int debug = 4;
 	}
 
 	private void debugPrint(Object obj) {
 		if (debugMarker != null) {
 			String s = String.valueOf(obj);
 			if (s != null && s.matches(debugMarker)) {
-				int debug = 3;
+				int debug = 4;
 			}
 		}
 	}
