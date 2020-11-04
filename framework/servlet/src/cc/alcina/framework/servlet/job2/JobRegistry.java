@@ -20,6 +20,8 @@ import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.job.JobRelation;
+import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobResult;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
@@ -87,13 +89,14 @@ public class JobRegistry extends WriterService {
 		scheduler.onQueueChanged(name);
 	};
 
-	JobExecutors jobExcutors = Registry.impl(JobExecutors.class);
+	JobExecutors jobExecutors;
 
 	public JobRegistry() {
 		TransformCommit.get()
 				.setBackendTransformQueueMaxDelay(TRANSFORM_QUEUE_NAME, 1000);
 		DomainDescriptorJob.get().queueChanged.add(queueNotifier);
 		scheduler = new JobScheduler(this);
+		jobExecutors = Registry.impl(JobExecutors.class);
 	}
 
 	public List<QueueStat> getActiveQueueStats() {
@@ -171,6 +174,14 @@ public class JobRegistry extends WriterService {
 		if (jobQueue != null) {
 			jobQueue.awaitEmpty();
 		}
+	}
+
+	private void createJobRelation(Job from, Job to, JobRelationType type) {
+		JobRelation relation = AlcinaPersistentEntityImpl
+				.create(JobRelation.class);
+		relation.setFrom(from);
+		relation.setTo(to);
+		relation.setType(type);
 	}
 
 	private JobQueue createPerJobQueue(Job job) {
@@ -263,6 +274,11 @@ public class JobRegistry extends WriterService {
 		job.setState(JobState.PENDING);
 		job.setTask(task);
 		job.setTaskClassName(task.getClass().getName());
+		JobContext creationContext = JobContext.get();
+		if (creationContext != null) {
+			createJobRelation(creationContext.getJob(), job,
+					JobRelationType.parent_child);
+		}
 		return job;
 	}
 
@@ -283,10 +299,10 @@ public class JobRegistry extends WriterService {
 	void withJobMetadataLock(String queueName, boolean clustered,
 			Runnable runnable) {
 		try {
-			jobExcutors.allocationLock(queueName, clustered, true);
+			jobExecutors.allocationLock(queueName, clustered, true);
 			runnable.run();
 		} finally {
-			jobExcutors.allocationLock(queueName, clustered, false);
+			jobExecutors.allocationLock(queueName, clustered, false);
 		}
 	}
 
@@ -301,17 +317,22 @@ public class JobRegistry extends WriterService {
 
 	@RegistryLocation(registryPoint = JobExecutors.class, implementationType = ImplementationType.INSTANCE)
 	public static class JobExceutorsSingle implements JobExecutors {
-	}
-
-	public interface JobExecutors {
-		default void allocationLock(String name, boolean clustered,
+		@Override
+		public void allocationLock(String name, boolean clustered,
 				boolean acquire) {
 			// Preconditions.checkState(!clustered);
 		}
 
-		default boolean isCurrentScheduledJobExecutor() {
+		@Override
+		public boolean isCurrentScheduledJobExecutor() {
 			return true;
 		}
+	}
+
+	public interface JobExecutors {
+		void allocationLock(String name, boolean clustered, boolean acquire);
+
+		boolean isCurrentScheduledJobExecutor();
 	}
 
 	public static class PendingStat {

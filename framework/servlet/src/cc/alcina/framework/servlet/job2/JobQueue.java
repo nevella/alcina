@@ -107,14 +107,14 @@ public class JobQueue {
 		 * cluster leader should perform
 		 */
 		if (scheduled && schedule.getQueueMaxConcurrentJobs() == 1) {
-			if (!jobRegistry.jobExcutors.isCurrentScheduledJobExecutor()) {
+			if (!jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()) {
 				return;
 			}
 			int activeJobs = DomainDescriptorJob.get().getActiveJobCount(name);
 			Optional<? extends Job> unallocated = DomainDescriptorJob.get()
 					.getUnallocatedJobsForQueue(name).findFirst();
-			if (unallocated.isPresent()
-					&& unallocated.get().getRunAt().before(new Date())) {
+			if (unallocated.isPresent() && (unallocated.get().getRunAt() == null
+					|| unallocated.get().getRunAt().before(new Date()))) {
 				jobRegistry.withJobMetadataLock(name, isClustered(), () -> {
 					Job job = unallocated.get();
 					job.setPerformer(EntityLayerObjects.get()
@@ -247,7 +247,7 @@ public class JobQueue {
 				}
 				DomainStore.waitUntilCurrentRequestsProcessed();
 			} catch (Exception e) {
-				JobContext.current().onJobException(e);
+				JobContext.get().onJobException(e);
 				throw WrappedRuntimeException.wrapIfNotRuntime(e);
 			} finally {
 			}

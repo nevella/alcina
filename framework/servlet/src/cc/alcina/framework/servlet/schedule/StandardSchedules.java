@@ -13,6 +13,14 @@ import cc.alcina.framework.servlet.job2.JobScheduler.ExecutorServiceProvider;
 import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
 
 public class StandardSchedules {
+	public static class AppStartupJobSchedule extends Schedule {
+		public AppStartupJobSchedule() {
+			withQueueName(getClass().getName()).withClustered(false)
+					.withQueueMaxConcurrentJobs(4).withExcutorServiceProvider(
+							RecurrentJobsExecutorServiceProvider.get());
+		}
+	}
+
 	public static class DailySchedule extends Schedule {
 		public DailySchedule() {
 			withQueueName(getClass().getName()).withClustered(true)

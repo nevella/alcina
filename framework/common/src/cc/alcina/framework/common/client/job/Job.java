@@ -38,7 +38,7 @@ import cc.alcina.framework.common.client.util.Ax;
 @Bean
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = Job.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
-public abstract class Job<T extends Job> extends Entity<T> implements HasIUser {
+public abstract class Job extends Entity<Job> implements HasIUser {
 	private Task task;
 
 	private String taskSerialized;

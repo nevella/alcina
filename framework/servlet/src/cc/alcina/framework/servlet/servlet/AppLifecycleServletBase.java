@@ -176,6 +176,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			BackendTransformQueue.get().start();
 			initCustom();
 			ServletLayerUtils.setAppServletInitialised(true);
+			scheduleJobs();
 			launchPostInitTasks();
 		} catch (Throwable e) {
 			Ax.out("Exception in lifecycle servlet init");
@@ -396,7 +397,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		initRegistry();
 		initCommonImplServices();
 		initCustomServices();
-		scheduleJobs();
 		MetricLogging.get().end(key);
 	}
 

@@ -77,6 +77,7 @@ public class JobScheduler {
 
 	private void ensureScheduled(Class<? extends Task> clazz,
 			LocalDateTime nextRun) {
+		logger.info("Ensure schedule - {} - {}", clazz, nextRun);
 		Schedule schedule = getSchedule(clazz, false);
 		JobRegistry.get().withJobMetadataLock(schedule.getQueueName(),
 				schedule.isClustered(), () -> {
@@ -141,7 +142,7 @@ public class JobScheduler {
 		if (applicationStartup) {
 			ensureQueues();
 		}
-		if (!jobRegistry.jobExcutors.isCurrentScheduledJobExecutor()) {
+		if (!jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()) {
 			return;
 		}
 		Transaction.ensureBegun();
@@ -187,8 +188,8 @@ public class JobScheduler {
 		queueNameSchedulableTasks.keySet().forEach(queueName -> {
 			Optional<? extends Job> pending = DomainDescriptorJob.get()
 					.getUnallocatedJobsForQueue(queueName).findFirst();
-			if (pending.isPresent()
-					&& pending.get().getRunAt().before(new Date())) {
+			if (pending.isPresent() && (pending.get().getRunAt() == null
+					|| pending.get().getRunAt().before(new Date()))) {
 				Job job = pending.get();
 				Schedule schedule = getSchedule(job.getTask().getClass(),
 						false);

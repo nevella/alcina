@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -27,12 +28,16 @@ public class JobContext {
 	static final String CONTEXT_CURRENT = JobContext.class.getName()
 			+ ".CONTEXT_CURRENT";
 
-	public static JobContext current() {
+	public static void checkCancelled() {
+		get().checkCancelled0();
+	}
+
+	public static JobContext get() {
 		return LooseContext.get(CONTEXT_CURRENT);
 	}
 
 	public static void info(String template, Object... args) {
-		current().getLogger().info(template, args);
+		get().getLogger().info(template, args);
 	}
 
 	private Job job;
@@ -107,6 +112,21 @@ public class JobContext {
 
 	public void setSubtasksCompleted(int subtasksCompleted) {
 		this.subtasksCompleted = subtasksCompleted;
+	}
+
+	protected void checkCancelled0() {
+		Job cursor = job;
+		while (true) {
+			if (cursor.provideIsComplete()) {
+				info("Job cancelled");
+				throw new CancelledException("Job cancelled");
+			}
+			if (cursor.provideParent().isPresent()) {
+				cursor = cursor.provideParent().get();
+			} else {
+				return;
+			}
+		}
 	}
 
 	protected void persistMetadata(boolean respectImmediate) {

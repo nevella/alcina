@@ -276,11 +276,17 @@ public class Transactions {
 					oldest.publishedLongRunningTxWarning = true;
 					Transaction.logger.warn(
 							"Long running mvcc transaction :: {}", oldest);
-					try {
-						SEUtilities
-								.getStacktraceSlice(oldest.originatingThread);
-					} catch (Exception e) {
-						e.printStackTrace();
+					if (oldest.originatingThread != null) {
+						try {
+							Transaction.logger
+									.info(SEUtilities.getStacktraceSlice(
+											oldest.originatingThread));
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					} else {
+						Transaction.logger.warn("No originating thread :: {}",
+								oldest);
 					}
 				}
 				if ((System.currentTimeMillis()
