@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.logic.reflection.registry;
 
-import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 
 public class RegistryKey {
 	private transient Class clazz;
@@ -21,6 +21,7 @@ public class RegistryKey {
 		this.name = name;
 	}
 
+	@Override
 	public boolean equals(Object anObject) {
 		if (anObject instanceof RegistryKey) {
 			return this.name.equals(((RegistryKey) anObject).name);
@@ -28,13 +29,14 @@ public class RegistryKey {
 		return false;
 	}
 
+	@Override
 	public int hashCode() {
 		return this.name.hashCode();
 	}
 
-	public Class clazz() {
+	Class clazz(ClassLookup classLookup) {
 		if (clazz == null) {
-			clazz = Reflections.classLookup().getClassForName(name);
+			clazz = classLookup.getClassForName(name);
 		}
 		return clazz;
 	}

@@ -234,7 +234,7 @@ public class Registry {
 
 	private RegistryKeys keys;
 
-	private ClassLookup classLookup;
+	ClassLookup classLookup;
 
 	// registrypoint/targetClass/impl/impl
 	protected UnsortedMultikeyMap<RegistryKey> registry;
@@ -361,7 +361,7 @@ public class Registry {
 				}
 			}
 		}
-		return matched.stream().map(RegistryKey::clazz)
+		return matched.stream().map(key -> key.clazz(classLookup))
 				.collect(Collectors.toList());
 	}
 
@@ -412,7 +412,7 @@ public class Registry {
 							CommonUtils.classSimpleName(registryPoint),
 							CommonUtils.classSimpleName(targetClass)));
 		}
-		return cachedKey.clazz();
+		return cachedKey.clazz(classLookup);
 	}
 
 	public void register(Class registeringClass, Class registryPoint) {
@@ -664,7 +664,7 @@ public class Registry {
 			return implementationType;
 		}
 		List<Class> superclassChain = getSuperclassChain(
-				targetClassKey.clazz());
+				targetClassKey.clazz(classLookup));
 		for (Class superclass : superclassChain) {
 			implementationType = implementationTypeMap.get(registryPointKey,
 					keys.get(superclass));
