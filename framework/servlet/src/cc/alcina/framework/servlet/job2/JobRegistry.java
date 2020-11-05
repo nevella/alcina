@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.job2;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,9 @@ import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobResult;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
@@ -109,8 +112,9 @@ public class JobRegistry extends WriterService {
 			Integer count) {
 		checkAnnotatedPermissions(action);
 		return DomainDescriptorJob.get().getJobsForTask(action)
+				.sorted(EntityComparator.REVERSED_INSTANCE)
 				.map(Job::asJobResult).map(JobResult::getActionLogItem)
-				.collect(Collectors.toList());
+				.limit(count).collect(Collectors.toList());
 	}
 
 	public List<PendingStat> getPendingQueueStats() {
@@ -186,14 +190,6 @@ public class JobRegistry extends WriterService {
 		if (jobQueue != null) {
 			jobQueue.awaitEmpty();
 		}
-	}
-
-	private void createJobRelation(Job from, Job to, JobRelationType type) {
-		JobRelation relation = AlcinaPersistentEntityImpl
-				.create(JobRelation.class);
-		relation.setFrom(from);
-		relation.setTo(to);
-		relation.setType(type);
 	}
 
 	private JobQueue createPerJobQueue(Job job) {
@@ -290,6 +286,14 @@ public class JobRegistry extends WriterService {
 		return job;
 	}
 
+	void createJobRelation(Job from, Job to, JobRelationType type) {
+		JobRelation relation = AlcinaPersistentEntityImpl
+				.create(JobRelation.class);
+		relation.setFrom(from);
+		relation.setTo(to);
+		relation.setType(type);
+	}
+
 	JobQueue ensureQueue(Schedule schedule) {
 		synchronized (activeQueues) {
 			if (activeQueues.containsKey(schedule.getQueueName())) {
@@ -325,8 +329,16 @@ public class JobRegistry extends WriterService {
 		}
 	}
 
+	public interface JobExecutors {
+		void allocationLock(String name, boolean clustered, boolean acquire);
+
+		List<ClientInstance> getActiveServers();
+
+		boolean isCurrentScheduledJobExecutor();
+	}
+
 	@RegistryLocation(registryPoint = JobExecutors.class, implementationType = ImplementationType.INSTANCE)
-	public static class JobExceutorsSingle implements JobExecutors {
+	public static class JobExecutorsSingle implements JobExecutors {
 		@Override
 		public void allocationLock(String name, boolean clustered,
 				boolean acquire) {
@@ -334,15 +346,15 @@ public class JobRegistry extends WriterService {
 		}
 
 		@Override
+		public List<ClientInstance> getActiveServers() {
+			return Arrays.asList(
+					EntityLayerObjects.get().getServerAsClientInstance());
+		}
+
+		@Override
 		public boolean isCurrentScheduledJobExecutor() {
 			return true;
 		}
-	}
-
-	public interface JobExecutors {
-		void allocationLock(String name, boolean clustered, boolean acquire);
-
-		boolean isCurrentScheduledJobExecutor();
 	}
 
 	public static class PendingStat {

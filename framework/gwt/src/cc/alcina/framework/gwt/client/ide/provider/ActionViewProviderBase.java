@@ -358,11 +358,21 @@ public abstract class ActionViewProviderBase
 				actionLog = "{no log}";
 			}
 			boolean customHtml = actionLog.contains("<div>");
-			this.html = new HTML(customHtml ? actionLog
+			String xhtmlMarker = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><html>";
+			boolean hasXhtml = false;
+			if (actionLog.contains(xhtmlMarker)) {
+				hasXhtml = true;
+				String bodyMarker = "<body>";
+				String endBodyMarker = "</body>";
+				actionLog = actionLog.substring(
+						actionLog.indexOf(bodyMarker) + bodyMarker.length(),
+						actionLog.indexOf(endBodyMarker));
+			}
+			this.html = new HTML(customHtml || hasXhtml ? actionLog
 					: "<pre>" + SafeHtmlUtils.htmlEscape(actionLog) + "</pre>",
 					true);
-			html.setVisible(first
-					&& (actionLog.length() < 2000 || alwaysExpandFirst()));
+			html.setVisible(first && (actionLog.length() < 2000 || hasXhtml
+					|| alwaysExpandFirst()));
 			if (!customHtml) {
 				html.setStyleName("logboxpre");
 			}

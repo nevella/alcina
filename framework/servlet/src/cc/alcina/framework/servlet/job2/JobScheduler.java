@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.job2;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -11,13 +12,19 @@ import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.job.JobRelation;
+import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
+import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -139,7 +146,39 @@ public class JobScheduler {
 	}
 
 	private void reassignOrphans() {
-		// TODO Auto-generated method stub
+		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
+				.getActiveServers();
+		Date cutoff = SEUtilities
+				.toOldDate(LocalDateTime.now().minusMinutes(1));
+		Stream<? extends Job> allocatedIncomplete = DomainDescriptorJob.get()
+				.getAllocatedIncompleteJobs()
+				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
+				.filter(job -> !activeInstances.contains(job.getPerformer()));
+		Stream<? extends Job> pendingNonClustered = DomainDescriptorJob.get()
+				.getPendingNonClusteredJobs()
+				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
+				.filter(job -> !activeInstances.contains(job.getCreator()));
+		Stream.concat(allocatedIncomplete, pendingNonClustered).forEach(job -> {
+			logger.warn("Aborting job {} (inactive client {})", job,
+					job.getPerformer());
+			job.setState(JobState.ABORTED);
+			job.setFinish(new Date());
+			job.setResultType(JobResultType.DID_NOT_COMPLETE);
+			if (job.isClustered()) {
+				Schedule schedule = getSchedule(job.getTask().getClass(),
+						false);
+				if (schedule != null) {
+					RetryPolicy retryPolicy = schedule.getRetryPolicy();
+					if (retryPolicy.shouldRetry(job)) {
+						Job retry = jobRegistry.createJob(job.getTask());
+						jobRegistry.createJobRelation(job, retry,
+								JobRelationType.retry);
+						logger.warn("Rescheduling job {} (retry) :: {} => {}",
+								job, retry);
+					}
+				}
+			}
+		});
 	}
 
 	private synchronized void scheduleJobs() {
@@ -250,6 +289,10 @@ public class JobScheduler {
 	}
 
 	public interface RetryPolicy {
+		static RetryPolicy retryNTimes(int nTimes) {
+			return new RetryNTimesPolicy(nTimes);
+		}
+
 		boolean shouldRetry(Job failedJob);
 	}
 
@@ -382,6 +425,32 @@ public class JobScheduler {
 	public interface ScheduleProvider {
 		public Schedule getSchedule(Class<? extends Task> taskClass,
 				boolean onAppplicationStart);
+	}
+
+	private static class RetryNTimesPolicy implements RetryPolicy {
+		private int nTimes;
+
+		public RetryNTimesPolicy(int nTimes) {
+			this.nTimes = nTimes;
+		}
+
+		@Override
+		public boolean shouldRetry(Job failedJob) {
+			int counter = 0;
+			Job cursor = failedJob;
+			while (true) {
+				counter++;
+				Optional<Job> precedingJob = failedJob.getToRelations().stream()
+						.filter(rel -> rel.getType() == JobRelationType.retry)
+						.findFirst().map(JobRelation::getFrom);
+				if (precedingJob.isPresent()) {
+					cursor = precedingJob.get();
+				} else {
+					break;
+				}
+			}
+			return counter <= nTimes;
+		}
 	}
 
 	static class CurrentThreadExecutorServiceProvider

@@ -2,7 +2,6 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Objects;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -16,28 +15,30 @@ public class DomainUpdate implements Serializable {
 	public DomainTransformCommitPosition commitPosition;
 
 	public static class DomainTransformCommitPosition implements Serializable {
-		private Long lastRequestId;
+		public Long commitTimestampMs;
 
-		public Long firstRequestId;
-
-		public int size;
+		public Long commitRequestId;
 
 		public DomainTransformCommitPosition() {
 		}
 
-		public DomainTransformCommitPosition(Long firstRequestId, int size,
-				Long lastRequestId) {
-			this.firstRequestId = firstRequestId;
-			this.size = size;
-			this.lastRequestId = lastRequestId;
+		public DomainTransformCommitPosition(Long commitTimestampMs,
+				Long commitRequestId) {
+			this.commitTimestampMs = commitTimestampMs;
+			this.commitRequestId = commitRequestId;
 		}
 
 		public boolean after(DomainTransformCommitPosition other) {
-			if (other.firstRequestId == null) {
-				return firstRequestId != null;
+			if (other.commitTimestampMs == null) {
+				return commitTimestampMs != null;
 			}
-			if (Objects.equals(other.firstRequestId, firstRequestId)) {
-				return size > other.size;
+			if (commitTimestampMs.longValue() < other.commitTimestampMs
+					.longValue()) {
+				return false;
+			} else if (commitTimestampMs.longValue() == other.commitTimestampMs
+					.longValue()) {
+				return commitRequestId.longValue() > other.commitTimestampMs
+						.longValue();
 			} else {
 				return true;
 			}
@@ -47,8 +48,9 @@ public class DomainUpdate implements Serializable {
 		public boolean equals(Object obj) {
 			if (obj instanceof DomainTransformCommitPosition) {
 				DomainTransformCommitPosition o = (DomainTransformCommitPosition) obj;
-				return CommonUtils.equals(firstRequestId, o.firstRequestId,
-						size, o.size);
+				return CommonUtils.equals(commitTimestampMs,
+						o.commitTimestampMs, commitRequestId,
+						o.commitRequestId);
 			} else {
 				return false;
 			}
@@ -56,8 +58,8 @@ public class DomainUpdate implements Serializable {
 
 		@Override
 		public String toString() {
-			return Ax.format("commit position: %s/%s/%s", firstRequestId, size,
-					lastRequestId);
+			return Ax.format("commit position: %s/%s", commitTimestampMs,
+					commitRequestId);
 		}
 	}
 

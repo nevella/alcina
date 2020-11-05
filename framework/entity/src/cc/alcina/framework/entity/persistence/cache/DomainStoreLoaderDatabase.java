@@ -389,6 +389,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		warmupExecutor = null;
 		warmupTransaction = null;
 		Transaction.current().toDomainCommitted();
+		store.getPersistenceEvents().getQueue().setHighestPublishedTimestamp(
+				highestVisibleTransactionTimestamp);
 		Transaction.endAndBeginNew();
 	}
 

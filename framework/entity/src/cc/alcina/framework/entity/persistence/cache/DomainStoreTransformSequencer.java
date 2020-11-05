@@ -22,6 +22,7 @@ import javax.persistence.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -82,6 +83,19 @@ public class DomainStoreTransformSequencer {
 		logger.debug("Unblocking post-local barrier: {}", requestId);
 		synchronized (postLocalFireEventsThreadBarrier) {
 			postLocalFireEventsThreadBarrier.get(requestId).countDown();
+		}
+	}
+
+	public long getRequestIdAtTimestamp(Timestamp timestamp) {
+		try {
+			Connection conn = getConnection();
+			try {
+				return getRequestIdAtTimestamp0(conn, timestamp);
+			} finally {
+				conn.commit();
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 
@@ -308,6 +322,29 @@ public class DomainStoreTransformSequencer {
 			}
 			conn.commit();
 			return transactionsData;
+		}
+	}
+
+	private long getRequestIdAtTimestamp0(Connection conn, Timestamp timestamp)
+			throws SQLException {
+		try (Statement statement = conn.createStatement()) {
+			Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
+					.getDomainTransformRequestPersistentClass();
+			String tableName = persistentClass.getAnnotation(Table.class)
+					.name();
+			try (PreparedStatement idStatement = conn.prepareStatement(Ax
+					.format("select id from %s where transactionCommitTime=? ",
+							tableName))) {
+				idStatement.setTimestamp(1, timestamp);
+				ResultSet idRs = idStatement.executeQuery();
+				if (idRs.next()) {
+					return idRs.getLong(1);
+				} else {
+					throw Ax.runtimeException(
+							"No id visible for request timestamp %s",
+							timestamp);
+				}
+			}
 		}
 	}
 

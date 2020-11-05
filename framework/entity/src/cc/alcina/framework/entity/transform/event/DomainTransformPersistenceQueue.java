@@ -93,6 +93,8 @@ public class DomainTransformPersistenceQueue {
 	// used to signal this event to a possibly waiting fire events thread
 	private Object persistentRequestCached = new Object();
 
+	private Timestamp highestPublishedTimestamp;
+
 	private Set<QueueWaiter> waiters = Collections
 			.synchronizedSet(new LinkedHashSet<>());
 
@@ -139,6 +141,10 @@ public class DomainTransformPersistenceQueue {
 		return this.firingThread;
 	}
 
+	public Timestamp getHighestPublishedTimestamp() {
+		return this.highestPublishedTimestamp;
+	}
+
 	public int getToFireQueueLength() {
 		synchronized (queueModificationLock) {
 			return toFire.size();
@@ -148,7 +154,9 @@ public class DomainTransformPersistenceQueue {
 	public DomainTransformCommitPosition getTransformLogPosition() {
 		synchronized (queueModificationLock) {
 			return new DomainTransformCommitPosition(
-					CommonUtils.first(lastFired), lastFired.size(), null);
+					Optional.<Timestamp> ofNullable(highestPublishedTimestamp)
+							.map(Timestamp::getTime).orElse(null),
+					CommonUtils.first(lastFired));
 		}
 	}
 
@@ -167,6 +175,11 @@ public class DomainTransformPersistenceQueue {
 				.put(entry.persistentRequestId, entry));
 		fireSequentialUnpublishedTransformRequests(unpublishedRequests.stream()
 				.map(e -> e.persistentRequestId).collect(Collectors.toList()));
+	}
+
+	public void
+			setHighestPublishedTimestamp(Timestamp highestPublishedTimestamp) {
+		this.highestPublishedTimestamp = highestPublishedTimestamp;
 	}
 
 	public void setMuteEventsOnOrBefore(
@@ -230,6 +243,11 @@ public class DomainTransformPersistenceQueue {
 	public void waitUntilRequestProcessed(long requestId, long timeoutMs) {
 		new QueueWaiter(timeoutMs, Optional.of(requestId))
 				.waitForProcessedRequests();
+	}
+
+	public void waitUntilRequestTimestampProcessed(Timestamp timestamp,
+			long timeoutMs) {
+		new QueueWaiter(timeoutMs, timestamp).waitForProcessedRequests();
 	}
 
 	private DomainTransformPersistenceEvent
@@ -444,7 +462,8 @@ public class DomainTransformPersistenceQueue {
 				// only the writable store can emit local events
 				DomainStoreTransformSequencer transformSequencer = DomainStore
 						.writableStore().getTransformSequencer();
-				transformSequencer.unblockPreLocalNonFireEventsThreadBarrier(id);
+				transformSequencer
+						.unblockPreLocalNonFireEventsThreadBarrier(id);
 				// transforming thread will now fire...
 				// following call may happen after transformingthread has
 				// removed the barrier, so check there
@@ -541,6 +560,10 @@ public class DomainTransformPersistenceQueue {
 						persistenceEvents
 								.fireDomainTransformPersistenceEvent(event);
 						loadedRequests.remove(id);
+						synchronized (queueModificationLock) {
+							highestPublishedTimestamp = transactionCommitTime;
+							queueModificationLock.notifyAll();
+						}
 					} else {
 						fireEventThreadLogger.warn(
 								"publishTransformEvent - missed (no transforms?) dtr {}",
@@ -561,8 +584,8 @@ public class DomainTransformPersistenceQueue {
 		private long timeoutMs;
 
 		QueueWaiter(long timeoutMs, Optional<Long> requestId) {
+			this.timeoutMs = timeoutMs;
 			synchronized (queueModificationLock) {
-				this.timeoutMs = timeoutMs;
 				if (requestId.isPresent()) {
 					waiting = Stream.of(requestId.get())
 							.collect(Collectors.toSet());
@@ -572,6 +595,26 @@ public class DomainTransformPersistenceQueue {
 					waiting.addAll(firingLocalToVm);
 				}
 				waiters.add(this);
+			}
+		}
+
+		QueueWaiter(long timeoutMs, Timestamp timestamp) {
+			this(timeoutMs, Optional.empty());
+			if (highestPublishedTimestamp != null
+					&& highestPublishedTimestamp.compareTo(timestamp) >= 0) {
+				/*
+				 * No need to wait, we've already passed the required epoch
+				 */
+				waiting.clear();
+			} else {
+				long requestId = persistenceEvents.domainStore
+						.getTransformSequencer()
+						.getRequestIdAtTimestamp(timestamp);
+				waiting.clear();
+				waiting.add(requestId);
+				synchronized (queueModificationLock) {
+					waiting.removeAll(appLifetimeEventsFired);
+				}
 			}
 		}
 

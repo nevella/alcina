@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.job;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,7 +22,7 @@ import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStoreP
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
-import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -39,7 +40,7 @@ import cc.alcina.framework.common.client.util.Ax;
 @Bean
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = Job.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
-public abstract class Job extends Entity<Job> implements HasIUser {
+public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	private Task task;
 
 	private String taskSerialized;
@@ -236,6 +237,10 @@ public abstract class Job extends Entity<Job> implements HasIUser {
 		return isClustered() || Objects.equals(getCreator(), clientInstance);
 	}
 
+	public Date provideCreationDateOrNow() {
+		return getCreationDate() == null ? new Date() : getCreationDate();
+	}
+
 	public boolean provideIsActive() {
 		return state == JobState.PROCESSING;
 	}
@@ -408,5 +413,24 @@ public abstract class Job extends Entity<Job> implements HasIUser {
 
 	public static abstract class ClientInstanceLoadOracle
 			extends DomainStorePropertyLoadOracle<Job> {
+	}
+
+	public static class RunAtComparator implements Comparator<Job> {
+		@Override
+		public int compare(Job o1, Job o2) {
+			Date runAt1 = o1.getRunAt();
+			Date runAt2 = o2.getRunAt();
+			if (runAt1 == null && runAt2 != null) {
+				return -1;
+			}
+			if (runAt1 != null && runAt2 == null) {
+				return 1;
+			}
+			int i = runAt1.compareTo(runAt2);
+			if (i != 0) {
+				return i;
+			}
+			return EntityComparator.INSTANCE.compare(o1, o2);
+		}
 	}
 }

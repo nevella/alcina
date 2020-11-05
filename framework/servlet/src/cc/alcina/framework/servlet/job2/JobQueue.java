@@ -123,7 +123,8 @@ public class JobQueue {
 			}
 			int activeJobs = DomainDescriptorJob.get().getActiveJobCount(name);
 			Optional<? extends Job> unallocated = DomainDescriptorJob.get()
-					.getUnallocatedJobsForQueue(name, true).findFirst();
+					.getUnallocatedJobsForQueue(name, true)
+					.sorted(new Job.RunAtComparator()).findFirst();
 			if (unallocated.isPresent()
 					&& unallocated.get().provideIsNotRunAtFutureDate()) {
 				jobRegistry.withJobMetadataLock(name, isClustered(), () -> {

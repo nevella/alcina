@@ -72,6 +72,14 @@ public class DomainDescriptorJob {
 				.filter("state", JobState.PROCESSING).stream().count();
 	}
 
+	public Stream<? extends Job> getAllocatedIncompleteJobs() {
+		// FIXME - mvcc.jobs - make a projection
+		Predicate<Job> allocatedIncompletePredicate = job -> job
+				.getPerformer() != null && !job.provideIsComplete();
+		return Domain.query(jobImplClass).filter(allocatedIncompletePredicate)
+				.stream();
+	}
+
 	public Job getJob(String id) {
 		Job job = Domain.query(jobImplClass).filter("key", id).find();
 		if (job == null) {
@@ -87,6 +95,15 @@ public class DomainDescriptorJob {
 	public Stream<? extends Job> getJobsForTask(RemoteAction action) {
 		return Domain.query(jobImplClass)
 				.filter("taskClassName", action.getClass().getName()).stream();
+	}
+
+	public Stream<? extends Job> getPendingNonClusteredJobs() {
+		// FIXME - mvcc.jobs - make a projection
+		Predicate<Job> pendingNonClusteredPredicate = job -> job
+				.getPerformer() == null && job.provideIsPending()
+				&& !job.isClustered();
+		return Domain.query(jobImplClass).filter(pendingNonClusteredPredicate)
+				.stream();
 	}
 
 	public Stream<? extends Job> getRecentlyCompletedJobs() {

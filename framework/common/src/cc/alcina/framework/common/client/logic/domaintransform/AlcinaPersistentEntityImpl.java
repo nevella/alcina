@@ -18,6 +18,10 @@ public interface AlcinaPersistentEntityImpl {
 		return Domain.create(getImplementation(clazz));
 	}
 
+	static <A extends Entity> A find(Class<A> clazz, Long id) {
+		return Domain.find(getImplementation(clazz), id);
+	}
+
 	static <A> Class<? extends A> getImplementation(Class<A> clazz) {
 		return Registry.get().lookupSingle(AlcinaPersistentEntityImpl.class,
 				clazz);
