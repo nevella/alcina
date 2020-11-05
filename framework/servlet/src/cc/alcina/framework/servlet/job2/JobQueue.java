@@ -269,7 +269,10 @@ public class JobQueue {
 				}
 				DomainStore.waitUntilCurrentRequestsProcessed();
 			} catch (Exception e) {
-				JobContext.get().onJobException(e);
+				if (JobContext.get() != null) {
+					JobContext.get().onJobException(e);
+				}
+				e.printStackTrace();
 				throw WrappedRuntimeException.wrapIfNotRuntime(e);
 			} finally {
 			}

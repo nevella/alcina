@@ -153,9 +153,7 @@ public class DomainTransformPersistenceQueue {
 
 	public DomainTransformCommitPosition getTransformLogPosition() {
 		synchronized (queueModificationLock) {
-			return new DomainTransformCommitPosition(
-					Optional.<Timestamp> ofNullable(highestPublishedTimestamp)
-							.map(Timestamp::getTime).orElse(null),
+			return new DomainTransformCommitPosition(highestPublishedTimestamp,
 					CommonUtils.first(lastFired));
 		}
 	}
