@@ -19,6 +19,11 @@ public class JobResult {
 		return (T) this.producedObject;
 	}
 
+	public String provideHtmlLog() {
+		String regex = "(?s)^INFO.{0,50}((?:<\\?xml|<html).*)";
+		return getActionLog().replaceFirst(regex, "$1");
+	}
+
 	public void setProducedObject(Object producedObject) {
 		this.producedObject = producedObject;
 	}

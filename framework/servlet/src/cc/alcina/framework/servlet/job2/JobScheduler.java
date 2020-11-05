@@ -2,11 +2,8 @@ package cc.alcina.framework.servlet.job2;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Timer;
@@ -23,12 +20,12 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.MethodContext;
 
 /**
@@ -44,7 +41,7 @@ import cc.alcina.framework.entity.util.MethodContext;
  *
  */
 public class JobScheduler {
-	Map<String, Class<? extends Task>> queueNameSchedulableTasks = new LinkedHashMap<>();
+	Multimap<String, List<Class<? extends Task>>> queueNameSchedulableTasks = new Multimap<>();
 
 	private JobRegistry jobRegistry;
 
@@ -73,16 +70,22 @@ public class JobScheduler {
 
 	public void stopService() {
 		timer.cancel();
+		finished.set(true);
+		synchronized (toFire) {
+			toFire.notify();
+		}
 	}
 
-	private void ensureScheduled(Class<? extends Task> clazz,
+	private void ensureScheduled(Schedule schedule, Class<? extends Task> clazz,
 			LocalDateTime nextRun) {
 		logger.info("Ensure schedule - {} - {}", clazz, nextRun);
-		Schedule schedule = getSchedule(clazz, false);
 		JobRegistry.get().withJobMetadataLock(schedule.getQueueName(),
 				schedule.isClustered(), () -> {
 					Optional<? extends Job> pending = DomainDescriptorJob.get()
-							.getUnallocatedJobsForQueue(schedule.getQueueName())
+							.getUnallocatedJobsForQueue(schedule.getQueueName(),
+									false)
+							.filter(job -> job.getTaskClassName()
+									.equals(clazz.getName()))
 							.findFirst();
 					if (pending.isPresent()) {
 						if (SEUtilities
@@ -98,6 +101,7 @@ public class JobScheduler {
 								.createJob(Reflections.newInstance(clazz));
 						job.setQueue(schedule.getQueueName());
 						job.setRunAt(SEUtilities.toOldDate(nextRun));
+						job.setClustered(schedule.isClustered());
 						logger.info("Scheduled job {} for {}", job, nextRun);
 					}
 				});
@@ -138,22 +142,28 @@ public class JobScheduler {
 		// TODO Auto-generated method stub
 	}
 
-	private void scheduleJobs() {
+	private synchronized void scheduleJobs() {
 		if (applicationStartup) {
 			ensureQueues();
 		}
-		if (!jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()) {
-			return;
-		}
 		Transaction.ensureBegun();
-		queueNameSchedulableTasks.values().forEach(clazz -> {
+		queueNameSchedulableTasks.allValues().forEach(clazz -> {
 			Schedule schedule = getSchedule(clazz, applicationStartup);
+			if (schedule == null) {
+				return;
+			}
+			if (schedule.isClustered() && !jobRegistry.jobExecutors
+					.isCurrentScheduledJobExecutor()) {
+				return;
+			}
 			LocalDateTime nextRun = schedule.getNext();
 			if (nextRun != null) {
-				ensureScheduled(clazz, nextRun);
+				ensureScheduled(schedule, clazz, nextRun);
 			}
 		});
-		reassignOrphans();
+		if (jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()) {
+			reassignOrphans();
+		}
 		Transaction.commit();
 		ensureActiveQueues();
 		applicationStartup = false;
@@ -167,7 +177,7 @@ public class JobScheduler {
 				.flatMap(Collection::stream).forEach(loc -> {
 					Class<? extends Task> taskClass = loc.targetClass();
 					Schedule schedule = getSchedule(taskClass, true);
-					queueNameSchedulableTasks.put(schedule.getQueueName(),
+					queueNameSchedulableTasks.add(schedule.getQueueName(),
 							taskClass);
 				});
 	}
@@ -187,19 +197,14 @@ public class JobScheduler {
 	void ensureActiveQueues() {
 		queueNameSchedulableTasks.keySet().forEach(queueName -> {
 			Optional<? extends Job> pending = DomainDescriptorJob.get()
-					.getUnallocatedJobsForQueue(queueName).findFirst();
-			if (pending.isPresent() && (pending.get().getRunAt() == null
-					|| pending.get().getRunAt().before(new Date()))) {
+					.getUnallocatedJobsForQueue(queueName, true).findFirst();
+			if (pending.isPresent()
+					&& pending.get().provideIsNotRunAtFutureDate()) {
 				Job job = pending.get();
 				Schedule schedule = getSchedule(job.getTask().getClass(),
 						false);
 				JobQueue queue = jobRegistry.ensureQueue(schedule);
-				if (!queue.allocating) {
-					// FIXME - move to soemwhere cleaner
-					queue.allocating = true;
-					AlcinaChildRunnable.runInTransactionNewThread(queueName,
-							queue::loopAllocations);
-				}
+				queue.ensureAllocating();
 				queue.onMetadataChanged();
 			}
 		});
@@ -218,11 +223,14 @@ public class JobScheduler {
 	}
 
 	List<Job> getScheduledJobs() {
-		return queueNameSchedulableTasks.values().stream().map(clazz -> {
+		return queueNameSchedulableTasks.allValues().stream().map(clazz -> {
 			Schedule schedule = getSchedule(clazz, false);
 			return DomainDescriptorJob.get()
-					.getUnallocatedJobsForQueue(schedule.getQueueName())
-					.findFirst().orElse(null);
+					.getUnallocatedJobsForQueue(schedule.getQueueName(), false)
+					.filter(job -> job.getTaskClassName()
+							.equals(clazz.getName()))
+					.filter(job -> job.getRunAt() != null).findFirst()
+					.orElse(null);
 		}).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
@@ -255,11 +263,14 @@ public class JobScheduler {
 
 		private LocalDateTime next;
 
-		private String queueName;
+		private String queueName = getClass().getSimpleName()
+				.replaceFirst("(.+)Schedule", "$1");
 
 		private RetryPolicy retryPolicy = new NoRetryPolicy();
 
 		private boolean clustered = true;
+
+		private boolean timewiseLimited;
 
 		public ExecutorServiceProvider getExcutorServiceProvider() {
 			return exexcutorServiceProvider;
@@ -283,6 +294,10 @@ public class JobScheduler {
 
 		public boolean isClustered() {
 			return clustered;
+		}
+
+		public boolean isTimewiseLimited() {
+			return timewiseLimited;
 		}
 
 		public Schedule withClustered(boolean clustered) {
@@ -313,6 +328,11 @@ public class JobScheduler {
 
 		public Schedule withRetryPolicy(RetryPolicy retryPolicy) {
 			this.retryPolicy = retryPolicy;
+			return this;
+		}
+
+		public Schedule withTimewiseLimited(boolean timewiseLimited) {
+			this.timewiseLimited = timewiseLimited;
 			return this;
 		}
 	}

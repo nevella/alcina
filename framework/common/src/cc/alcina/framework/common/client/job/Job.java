@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.job;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -130,6 +131,9 @@ public abstract class Job extends Entity<Job> implements HasIUser {
 		return this.completion;
 	}
 
+	@Transient
+	public abstract ClientInstance getCreator();
+
 	public Date getFinish() {
 		return this.finish;
 	}
@@ -228,12 +232,20 @@ public abstract class Job extends Entity<Job> implements HasIUser {
 		return this.stacktraceRequested;
 	}
 
+	public boolean provideCanBePerformedBy(ClientInstance clientInstance) {
+		return isClustered() || Objects.equals(getCreator(), clientInstance);
+	}
+
 	public boolean provideIsActive() {
 		return state == JobState.PROCESSING;
 	}
 
 	public boolean provideIsComplete() {
 		return state.isComplete();
+	}
+
+	public boolean provideIsNotRunAtFutureDate() {
+		return getRunAt() == null || getRunAt().compareTo(new Date()) <= 0;
 	}
 
 	public boolean provideIsPending() {
@@ -263,6 +275,8 @@ public abstract class Job extends Entity<Job> implements HasIUser {
 		propertyChangeSupport().firePropertyChange("completion", old_completion,
 				completion);
 	}
+
+	public abstract void setCreator(ClientInstance performer);
 
 	public void setFinish(Date finish) {
 		Date old_finish = this.finish;

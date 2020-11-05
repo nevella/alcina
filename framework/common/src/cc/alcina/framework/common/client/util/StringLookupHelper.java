@@ -43,7 +43,7 @@ public class StringLookupHelper {
 		Multimap<String, List<T>> l1 = generateLookup(o1, converter);
 		Multimap<String, List<T>> l2 = generateLookup(o2, converter);
 		l1.keySet().retainAll(l2.keySet());
-		return l1.allItems();
+		return l1.allValues();
 	}
 
 	public static String
@@ -57,6 +57,6 @@ public class StringLookupHelper {
 		Multimap<String, List<T>> l1 = generateLookup(o1, converter);
 		Multimap<String, List<T>> l2 = generateLookup(o2, converter);
 		l1.keySet().removeAll(l2.keySet());
-		return l1.allItems();
+		return l1.allValues();
 	}
 }

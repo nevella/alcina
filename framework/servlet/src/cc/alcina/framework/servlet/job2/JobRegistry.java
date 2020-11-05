@@ -39,12 +39,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
-import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.job.JobRegistry1;
 import cc.alcina.framework.servlet.job2.JobContext.PersistenceType;
@@ -118,8 +119,9 @@ public class JobRegistry extends WriterService {
 	}
 
 	public void onJobQueueTerminated(JobQueue jobQueue) {
-		// FIXME - mvcc.jobs - I can see a race with ensureQueue here...
-		activeQueues.remove(jobQueue.getName());
+		synchronized (activeQueues) {
+			activeQueues.remove(jobQueue.getName());
+		}
 		logger.info("Job queue terminated: {}", jobQueue.getName());
 	}
 
@@ -135,10 +137,11 @@ public class JobRegistry extends WriterService {
 	}
 
 	public JobQueue schedule(Task task, Schedule schedule) {
-		if (schedule == null || schedule.getQueueName() == null) {
+		if (schedule == null) {
 			return start(task);
 		} else {
 			Job job = createJob(task);
+			job.setRunAt(SEUtilities.toOldDate(schedule.getNext()));
 			JobQueue queue = ensureQueue(schedule);
 			job.setQueue(queue.getName());
 			return queue;
@@ -151,11 +154,14 @@ public class JobRegistry extends WriterService {
 
 	public JobQueue start(Task task) {
 		Job job = createJob(task);
+		JobContext creationContext = JobContext.get();
+		if (creationContext != null) {
+			createJobRelation(creationContext.getJob(), job,
+					JobRelationType.parent_child);
+		}
 		JobQueue queue = createPerJobQueue(job);
 		Transaction.commit();
-		queue.allocating = true;
-		AlcinaChildRunnable.runInTransactionNewThread(queue.getName(),
-				queue::loopAllocations);
+		queue.ensureAllocating();
 		return queue;
 	}
 
@@ -165,7 +171,13 @@ public class JobRegistry extends WriterService {
 
 	@Override
 	public void stopService() {
-		activeQueues.values().forEach(JobQueue::cancel);
+		activeQueues.values().forEach(queue -> {
+			try {
+				queue.cancel();
+			} catch (Exception e) {
+				//
+			}
+		});
 		scheduler.stopService();
 	}
 
@@ -274,21 +286,19 @@ public class JobRegistry extends WriterService {
 		job.setState(JobState.PENDING);
 		job.setTask(task);
 		job.setTaskClassName(task.getClass().getName());
-		JobContext creationContext = JobContext.get();
-		if (creationContext != null) {
-			createJobRelation(creationContext.getJob(), job,
-					JobRelationType.parent_child);
-		}
+		job.setCreator(EntityLayerObjects.get().getServerAsClientInstance());
 		return job;
 	}
 
-	synchronized JobQueue ensureQueue(Schedule schedule) {
-		if (activeQueues.containsKey(schedule.getQueueName())) {
-			return activeQueues.get(schedule.getQueueName());
+	JobQueue ensureQueue(Schedule schedule) {
+		synchronized (activeQueues) {
+			if (activeQueues.containsKey(schedule.getQueueName())) {
+				return activeQueues.get(schedule.getQueueName());
+			}
+			JobQueue queue = new JobQueue(schedule);
+			activeQueues.put(queue.getName(), queue);
+			return queue;
 		}
-		JobQueue queue = new JobQueue(schedule);
-		activeQueues.put(queue.getName(), queue);
-		return queue;
 	}
 
 	void performJob(Job job) {
@@ -352,8 +362,8 @@ public class JobRegistry extends WriterService {
 	@RegistryLocation(registryPoint = Task.Performer.class, implementationType = ImplementationType.SINGLETON)
 	public static class Performer implements Task.Performer {
 		@Override
-		public void perform(Task task) {
-			get().perform(task);
+		public JobResult perform(Task task) {
+			return get().perform(task);
 		}
 
 		@Override

@@ -5,16 +5,19 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ClientInstanceLoadOracle;
 import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobState;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.DomainStoreDescriptor;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
@@ -86,9 +89,23 @@ public class DomainDescriptorJob {
 				.filter("taskClassName", action.getClass().getName()).stream();
 	}
 
-	public Stream<? extends Job> getUnallocatedJobsForQueue(String queueName) {
-		return Domain.query(jobImplClass).filter("queue", queueName)
-				.filter("performer", null).stream();
+	public Stream<? extends Job> getRecentlyCompletedJobs() {
+		return Domain.stream(jobImplClass)
+				.sorted(EntityComparator.REVERSED_INSTANCE)
+				.filter(Job::provideIsComplete);
+	}
+
+	public Stream<? extends Job> getUnallocatedJobsForQueue(String queueName,
+			boolean performableByThisVm) {
+		Predicate<Job> pendingPredicate = Job::provideIsPending;
+		Predicate<Job> performerPredicate = job -> job.provideCanBePerformedBy(
+				EntityLayerObjects.get().getServerAsClientInstance());
+		DomainQuery<? extends Job> query = Domain.query(jobImplClass)
+				.filter("queue", queueName).filter(pendingPredicate);
+		if (performableByThisVm) {
+			query = query.filter(performerPredicate);
+		}
+		return query.filter("performer", null).stream();
 	}
 
 	public void onWarmupComplete(DomainStore domainStore) {

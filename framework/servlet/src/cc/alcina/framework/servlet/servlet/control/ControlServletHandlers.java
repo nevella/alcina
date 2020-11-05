@@ -78,6 +78,8 @@ public class ControlServletHandlers {
 		}
 	}
 
+	// FIXME - mvcc.4 - get rid of this. (and all 'writer service mode'). Also
+	// "writerservice" (just keep registrable service)
 	public static class ModeDeltaHandlerServiceMode
 			extends ModeDeltaHandler<WriterServiceMode> {
 		public ModeDeltaHandlerServiceMode(

@@ -174,6 +174,11 @@ public class JobContext {
 
 	void start() {
 		LooseContext.set(CONTEXT_CURRENT, this);
+		if (job.isClustered()) {
+			boolean currentScheduledJobExecutor = JobRegistry.get().jobExecutors
+					.isCurrentScheduledJobExecutor();
+			int debug = 3;
+		}
 		job.setStart(new Date());
 		job.setState(JobState.PROCESSING);
 		job.setPerformerVersionNumber(performer.getVersionNumber());

@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -231,6 +232,9 @@ public class TransformCommitLog {
 		public void checkCurrentPosition() {
 			checkCurrentPositionLatch = new CountDownLatch(1);
 			try {
+				if (consumer != null && currentOffset != -1) {
+					consumer.wakeup();
+				}
 				checkCurrentPositionLatch.await();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -334,7 +338,7 @@ public class TransformCommitLog {
 					}
 					performOperation(() -> consumer.commitSync());
 				} catch (Throwable e) {
-					if (e instanceof WakeupException) {
+					if (CommonUtils.hasCauseOfClass(e, WakeupException.class)) {
 					} else {
 						String message = "BKC transform consumer issue";
 						e.printStackTrace();
@@ -344,17 +348,13 @@ public class TransformCommitLog {
 									"KAFKA_EXCEPTION");
 						}
 					}
-					// restart consumer
-					try {
-						if (consumer != null) {
-							consumer.close();
-						}
-					} catch (Throwable e1) {
-						e1.printStackTrace();
-					}
 					if (e instanceof WakeupException) {
 					} else {
+						// restart consumer
 						try {
+							if (consumer != null) {
+								consumer.close();
+							}
 							Thread.sleep(1000);
 						} catch (InterruptedException e1) {
 							e1.printStackTrace();

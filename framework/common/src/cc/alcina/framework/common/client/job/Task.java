@@ -8,8 +8,8 @@ public interface Task {
 		return CommonUtils.deInfix(getClass().getSimpleName());
 	}
 
-	default void perform() {
-		Registry.impl(Performer.class).perform(this);
+	default JobResult perform() {
+		return Registry.impl(Performer.class).perform(this);
 	}
 
 	default String provideJobKey() {
@@ -25,7 +25,7 @@ public interface Task {
 	}
 
 	public static interface Performer {
-		void perform(Task task);
+		JobResult perform(Task task);
 
 		void schedule(Task task);
 	}

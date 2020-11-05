@@ -90,7 +90,7 @@ public class Multimap<K, V extends List>
 		}
 	}
 
-	public V allItems() {
+	public V allValues() {
 		List list = new ArrayList();
 		for (V v : values()) {
 			list.addAll(v);

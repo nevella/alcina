@@ -1,7 +1,6 @@
 package cc.alcina.framework.servlet.job2;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +21,7 @@ import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.servlet.job2.JobRegistry.QueueStat;
 import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
 
@@ -78,6 +78,17 @@ public class JobQueue {
 		this.maxConcurrentJobs = schedule.getQueueMaxConcurrentJobs();
 	}
 
+	public void ensureAllocating() {
+		synchronized (this) {
+			if (!allocating) {
+				finished = false;
+				allocating = true;
+				AlcinaChildRunnable.runInTransactionNewThread(name,
+						this::loopAllocations);
+			}
+		}
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -102,19 +113,19 @@ public class JobQueue {
 		active.removeIf(Job::provideIsComplete);
 		boolean scheduled = schedule != null;
 		/*
-		 * jobs (currently) are either max 1 (time-wise scheduled) or
+		 * jobs either time-wise scheduled (limited)
 		 * maxConcurrent/executor-limited. If time-wise scheduled, only the
 		 * cluster leader should perform
 		 */
-		if (scheduled && schedule.getQueueMaxConcurrentJobs() == 1) {
+		if (scheduled && schedule.isTimewiseLimited()) {
 			if (!jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()) {
 				return;
 			}
 			int activeJobs = DomainDescriptorJob.get().getActiveJobCount(name);
 			Optional<? extends Job> unallocated = DomainDescriptorJob.get()
-					.getUnallocatedJobsForQueue(name).findFirst();
-			if (unallocated.isPresent() && (unallocated.get().getRunAt() == null
-					|| unallocated.get().getRunAt().before(new Date()))) {
+					.getUnallocatedJobsForQueue(name, true).findFirst();
+			if (unallocated.isPresent()
+					&& unallocated.get().provideIsNotRunAtFutureDate()) {
 				jobRegistry.withJobMetadataLock(name, isClustered(), () -> {
 					Job job = unallocated.get();
 					job.setPerformer(EntityLayerObjects.get()
@@ -132,8 +143,9 @@ public class JobQueue {
 					+ calculateDesiredPendingSize();
 			if (limit > 0) {
 				jobRegistry.withJobMetadataLock(name, isClustered(), () -> {
-					DomainDescriptorJob.get().getUnallocatedJobsForQueue(name)
-							.limit(limit).forEach(job -> {
+					DomainDescriptorJob.get()
+							.getUnallocatedJobsForQueue(name, true).limit(limit)
+							.forEach(job -> {
 								job.setPerformer(EntityLayerObjects.get()
 										.getServerAsClientInstance());
 								pending.add(job);
@@ -153,6 +165,18 @@ public class JobQueue {
 	private int getMetadataChangedQueueLength() {
 		synchronized (metadataChanged) {
 			return metadataChanged.size();
+		}
+	}
+
+	private void onQueueFinished() {
+		synchronized (this) {
+			if (finished) {
+				return;
+			}
+			jobRegistry.onJobQueueTerminated(this);
+			finished = true;
+			finishedLatches.forEach(CountDownLatch::countDown);
+			allocating = false;
 		}
 	}
 
@@ -195,6 +219,7 @@ public class JobQueue {
 		cancelled = true;
 		active.forEach(Job::cancel);
 		onMetadataChanged();
+		onQueueFinished();
 	}
 
 	void loopAllocations() {
@@ -216,11 +241,7 @@ public class JobQueue {
 				//
 				if (active.isEmpty() && pending.isEmpty() && (schedule == null
 						|| schedule.getQueueMaxConcurrentJobs() != 1)) {
-					jobRegistry.onJobQueueTerminated(this);
-					synchronized (this) {
-						finished = true;
-						finishedLatches.forEach(CountDownLatch::countDown);
-					}
+					onQueueFinished();
 					return;
 				}
 				logger.debug("await metadatachanged");

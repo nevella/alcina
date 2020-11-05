@@ -1330,10 +1330,16 @@ public class SEUtilities {
 	}
 
 	public static Date toOldDate(LocalDate ld) {
+		if (ld == null) {
+			return null;
+		}
 		return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
 	}
 
 	public static Date toOldDate(LocalDateTime ldt) {
+		if (ldt == null) {
+			return null;
+		}
 		return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
 	}
 

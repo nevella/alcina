@@ -4,6 +4,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
+import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job2.JobRegistry;
 import cc.alcina.framework.servlet.job2.JobRegistry.PendingStat;
@@ -34,6 +35,20 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 			builder.row().cell("Name").cell("Run at").cell("Task");
 			pending.forEach(stat -> builder.row().cell(stat.name)
 					.cell(stat.runAt).cell(stat.taskName));
+		}
+		{
+			doc.html().body().builder().tag("h2").text("Recently completed")
+					.append();
+			DomNodeHtmlTableBuilder builder = doc.html().body().html()
+					.tableBuilder();
+			builder.row().cell("Id").cell("Name").cell("Started")
+					.cell("Finished");
+			DomainDescriptorJob.get().getRecentlyCompletedJobs().limit(10)
+					.forEach(job -> {
+						builder.row().cell(String.valueOf(job.getId()))
+								.cell(job.provideName()).cell(job.getStart())
+								.cell(job.getFinish());
+					});
 		}
 		slf4jLogger.info(doc.prettyToString());
 	}

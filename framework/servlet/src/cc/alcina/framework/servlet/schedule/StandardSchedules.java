@@ -15,15 +15,15 @@ import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
 public class StandardSchedules {
 	public static class AppStartupJobSchedule extends Schedule {
 		public AppStartupJobSchedule() {
-			withQueueName(getClass().getName()).withClustered(false)
-					.withQueueMaxConcurrentJobs(4).withExcutorServiceProvider(
+			withClustered(false).withQueueMaxConcurrentJobs(4)
+					.withExcutorServiceProvider(
 							RecurrentJobsExecutorServiceProvider.get());
 		}
 	}
 
 	public static class DailySchedule extends Schedule {
 		public DailySchedule() {
-			withQueueName(getClass().getName()).withClustered(true)
+			withClustered(true).withTimewiseLimited(true)
 					.withQueueMaxConcurrentJobs(1).withNext(LocalDateTime.now()
 							.truncatedTo(ChronoUnit.DAYS).plusDays(1));
 		}
@@ -31,7 +31,7 @@ public class StandardSchedules {
 
 	public static class HourlySchedule extends Schedule {
 		public HourlySchedule() {
-			withQueueName(getClass().getName()).withClustered(true)
+			withClustered(true).withTimewiseLimited(true)
 					.withQueueMaxConcurrentJobs(1).withNext(LocalDateTime.now()
 							.truncatedTo(ChronoUnit.HOURS).plusHours(1));
 		}
@@ -39,7 +39,7 @@ public class StandardSchedules {
 
 	public static class MinuteSchedule extends Schedule {
 		public MinuteSchedule() {
-			withQueueName(getClass().getName()).withClustered(true)
+			withClustered(true).withTimewiseLimited(true)
 					.withQueueMaxConcurrentJobs(1).withNext(LocalDateTime.now()
 							.truncatedTo(ChronoUnit.MINUTES).plusMinutes(1));
 		}
@@ -47,8 +47,8 @@ public class StandardSchedules {
 
 	public static class RecurrentJobsExecutorSchedule extends Schedule {
 		public RecurrentJobsExecutorSchedule() {
-			withQueueName(getClass().getName()).withClustered(false)
-					.withQueueMaxConcurrentJobs(4).withExcutorServiceProvider(
+			withClustered(false).withQueueMaxConcurrentJobs(4)
+					.withExcutorServiceProvider(
 							RecurrentJobsExecutorServiceProvider.get());
 		}
 	}
@@ -73,8 +73,7 @@ public class StandardSchedules {
 
 	public static class TenSecondsSchedule extends Schedule {
 		public TenSecondsSchedule() {
-			withQueueName(getClass().getName()).withClustered(true)
-					.withQueueMaxConcurrentJobs(1)
+			withClustered(true).withQueueMaxConcurrentJobs(1)
 					.withNext(LocalDateTime.now().plusSeconds(10));
 		}
 	}

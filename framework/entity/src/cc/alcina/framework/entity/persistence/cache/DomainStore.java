@@ -420,6 +420,8 @@ public class DomainStore implements IDomainStore {
 		MetricLogging.get().start("domainStore.warmup");
 		initialised = false;
 		initialising = true;
+		getPersistenceEvents().addDomainTransformPersistenceListener(
+				getPersistenceListener(), true);
 		transformManager = new SubgraphTransformManagerPostProcess();
 		lazyObjectLoader = loader.getLazyObjectLoader();
 		cache = (DomainStoreEntityCache) transformManager

@@ -537,6 +537,9 @@ public class Registry {
 					logger.debug("Shutting down registrable service: {}",
 							o.getClass().getName());
 					((RegistrableService) o).appShutdown();
+					if (o instanceof LifecycleService) {
+						((LifecycleService) o).stopService();
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
