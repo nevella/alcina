@@ -44,7 +44,7 @@ abstract class AbstractPatriciaTrie<K, V> extends AbstractTrie<K, V> {
 	/**
 	 * The root node of the {@link Trie}.
 	 */
-	TrieEntry<K, V> root = createTrieEntry(null, null, -1);
+	protected TrieEntry<K, V> root = createTrieEntry(null, null, -1);
 
 	/**
 	 * Each of these fields are initialized to contain an instance of the
