@@ -75,9 +75,9 @@ public class TrieProjection<K, E extends Entity>
 	public void remove(E o) {
 		keyMapper.apply(o).forEach(key -> {
 			key = normalise(key);
-			trie.remove(key, o);
+			trie.removeKeyItem(key, o);
 			List<K> subKeys = extractSubKeys(key);
-			subKeys.forEach(k -> trie.remove(k, o));
+			subKeys.forEach(k -> trie.removeKeyItem(k, o));
 		});
 	}
 
