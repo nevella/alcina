@@ -225,6 +225,9 @@ public abstract class Entity<T extends Entity> extends Bindable
 		}
 		String dn = Reflections.classLookup()
 				.displayNameForObject(domainIdentity());
+		if (dn != null && dn.equals("---")) {
+			dn = this.toLocator().toString();
+		}
 		dn = Ax.blankTo(dn, this::toStringEntity);
 		return dn.substring(0, dn.length());
 	}

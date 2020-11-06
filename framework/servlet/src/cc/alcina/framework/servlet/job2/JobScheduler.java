@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.InnerAccess;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -91,8 +92,7 @@ public class JobScheduler {
 					Optional<? extends Job> pending = DomainDescriptorJob.get()
 							.getUnallocatedJobsForQueue(schedule.getQueueName(),
 									false)
-							.filter(job -> job.getTaskClassName()
-									.equals(clazz.getName()))
+							.filter(job -> job.provideIsTaskClass(clazz))
 							.findFirst();
 					if (pending.isPresent()) {
 						if (SEUtilities
@@ -145,7 +145,7 @@ public class JobScheduler {
 		}
 	}
 
-	private void reassignOrphans() {
+	private void processOrphans() {
 		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
 				.getActiveServers();
 		Date cutoff = SEUtilities
@@ -158,27 +158,38 @@ public class JobScheduler {
 				.getPendingNonClusteredJobs()
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
 				.filter(job -> !activeInstances.contains(job.getCreator()));
-		Stream.concat(allocatedIncomplete, pendingNonClustered).forEach(job -> {
-			logger.warn("Aborting job {} (inactive client {})", job,
-					job.getPerformer());
-			job.setState(JobState.ABORTED);
-			job.setFinish(new Date());
-			job.setResultType(JobResultType.DID_NOT_COMPLETE);
-			if (job.isClustered()) {
-				Schedule schedule = getSchedule(job.getTask().getClass(),
-						false);
-				if (schedule != null) {
-					RetryPolicy retryPolicy = schedule.getRetryPolicy();
-					if (retryPolicy.shouldRetry(job)) {
-						Job retry = jobRegistry.createJob(job.getTask());
-						jobRegistry.createJobRelation(job, retry,
-								JobRelationType.retry);
-						logger.warn("Rescheduling job {} (retry) :: {} => {}",
-								job, retry);
+		InnerAccess<Boolean> metadataLockHeld = new InnerAccess<>();
+		metadataLockHeld.set(false);
+		List<Job> toAbortOrReassign = Stream
+				.concat(allocatedIncomplete, pendingNonClustered).distinct()
+				.collect(Collectors.toList());
+		Runnable runnable = toAbortOrReassign.isEmpty() ? null
+				: () -> toAbortOrReassign.forEach(job -> {
+					logger.warn(
+							"Aborting job {} (inactive client creator: {} - performer: {} - clustered: {})",
+							job, job.getCreator(), job.getPerformer(),
+							job.isClustered());
+					job.setState(JobState.ABORTED);
+					job.setFinish(new Date());
+					job.setResultType(JobResultType.DID_NOT_COMPLETE);
+					if (job.isClustered()) {
+						Schedule schedule = getSchedule(
+								job.getTask().getClass(), false);
+						if (schedule != null) {
+							RetryPolicy retryPolicy = schedule.getRetryPolicy();
+							if (retryPolicy.shouldRetry(job)) {
+								Job retry = jobRegistry
+										.createJob(job.getTask());
+								jobRegistry.createJobRelation(job, retry,
+										JobRelationType.retry);
+								logger.warn(
+										"Rescheduling job {} (retry) :: {} => {}",
+										job, retry);
+							}
+						}
 					}
-				}
-			}
-		});
+				});
+		jobRegistry.withJobMetadataLock(null, false, runnable);
 	}
 
 	private synchronized void scheduleJobs() {
@@ -191,8 +202,14 @@ public class JobScheduler {
 			if (schedule == null) {
 				return;
 			}
-			if (schedule.isClustered() && !jobRegistry.jobExecutors
-					.isCurrentScheduledJobExecutor()) {
+			/*
+			 * During app startup, allow all vms to schedule clustered jobs
+			 * (since code defining 'next' may have changed). That said, the
+			 * scheduled job executor jvm will be the one doing the running...
+			 */
+			if (schedule.isClustered()
+					&& !jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()
+					&& !applicationStartup) {
 				return;
 			}
 			LocalDateTime nextRun = schedule.getNext();
@@ -201,7 +218,7 @@ public class JobScheduler {
 			}
 		});
 		if (jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()) {
-			reassignOrphans();
+			processOrphans();
 		}
 		Transaction.commit();
 		ensureActiveQueues();
@@ -223,6 +240,10 @@ public class JobScheduler {
 
 	void enqueueInitialScheduleEvent() {
 		enqueueSchedule("app-startup");
+	}
+
+	void enqueueLeaderChangedEvent() {
+		enqueueSchedule("leader-changed");
 	}
 
 	void enqueueSchedule(String id) {
@@ -266,8 +287,7 @@ public class JobScheduler {
 			Schedule schedule = getSchedule(clazz, false);
 			return DomainDescriptorJob.get()
 					.getUnallocatedJobsForQueue(schedule.getQueueName(), false)
-					.filter(job -> job.getTaskClassName()
-							.equals(clazz.getName()))
+					.filter(job -> job.provideIsTaskClass(clazz))
 					.filter(job -> job.getRunAt() != null).findFirst()
 					.orElse(null);
 		}).filter(Objects::nonNull).collect(Collectors.toList());

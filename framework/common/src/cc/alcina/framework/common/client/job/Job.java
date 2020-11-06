@@ -257,6 +257,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return state == JobState.PENDING;
 	}
 
+	public boolean provideIsTaskClass(Class<? extends Task> taskClass) {
+		return Objects.equals(getTaskClassName(), taskClass.getName());
+	}
+
 	public String provideName() {
 		return getTask().getName();
 	}

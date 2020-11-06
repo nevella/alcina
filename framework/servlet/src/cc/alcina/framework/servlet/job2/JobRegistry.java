@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -101,6 +102,11 @@ public class JobRegistry extends WriterService {
 		DomainDescriptorJob.get().queueChanged.add(queueNotifier);
 		scheduler = new JobScheduler(this);
 		jobExecutors = Registry.impl(JobExecutors.class);
+		jobExecutors.addScheduledJobExecutorChangeConsumer(leader -> {
+			if (leader) {
+				scheduler.enqueueLeaderChangedEvent();
+			}
+		});
 	}
 
 	public List<QueueStat> getActiveQueueStats() {
@@ -146,6 +152,7 @@ public class JobRegistry extends WriterService {
 		} else {
 			Job job = createJob(task);
 			job.setRunAt(SEUtilities.toOldDate(schedule.getNext()));
+			job.setClustered(schedule.isClustered());
 			JobQueue queue = ensureQueue(schedule);
 			job.setQueue(queue.getName());
 			return queue;
@@ -189,6 +196,19 @@ public class JobRegistry extends WriterService {
 		JobQueue jobQueue = activeQueues.get(queueName);
 		if (jobQueue != null) {
 			jobQueue.awaitEmpty();
+		}
+	}
+
+	public void withJobMetadataLock(String queueName, boolean clustered,
+			Runnable runnable) {
+		if (runnable == null) {
+			return;
+		}
+		try {
+			jobExecutors.allocationLock(queueName, clustered, true);
+			runnable.run();
+		} finally {
+			jobExecutors.allocationLock(queueName, clustered, false);
 		}
 	}
 
@@ -310,16 +330,6 @@ public class JobRegistry extends WriterService {
 				.run(() -> performJob0(job));
 	}
 
-	void withJobMetadataLock(String queueName, boolean clustered,
-			Runnable runnable) {
-		try {
-			jobExecutors.allocationLock(queueName, clustered, true);
-			runnable.run();
-		} finally {
-			jobExecutors.allocationLock(queueName, clustered, false);
-		}
-	}
-
 	@RegistryLocation(registryPoint = ActionPerformerTrackMetrics.class, implementationType = ImplementationType.SINGLETON)
 	public static class ActionPerformerTrackMetrics
 			implements Supplier<Boolean> {
@@ -330,6 +340,9 @@ public class JobRegistry extends WriterService {
 	}
 
 	public interface JobExecutors {
+		void addScheduledJobExecutorChangeConsumer(
+				Consumer<Boolean> changeConsumer);
+
 		void allocationLock(String name, boolean clustered, boolean acquire);
 
 		List<ClientInstance> getActiveServers();
@@ -339,6 +352,11 @@ public class JobRegistry extends WriterService {
 
 	@RegistryLocation(registryPoint = JobExecutors.class, implementationType = ImplementationType.INSTANCE)
 	public static class JobExecutorsSingle implements JobExecutors {
+		@Override
+		public void addScheduledJobExecutorChangeConsumer(
+				Consumer<Boolean> consumer) {
+		}
+
 		@Override
 		public void allocationLock(String name, boolean clustered,
 				boolean acquire) {

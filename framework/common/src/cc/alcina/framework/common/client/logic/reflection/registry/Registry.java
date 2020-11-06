@@ -278,7 +278,8 @@ public class Registry {
 			throw new RuntimeException(
 					Ax.format("Unable to locate %s ", registryPoint));
 		}
-		return pointLookup.allValues().stream().map(RegistryKey::clazz)
+		return pointLookup.allValues().stream()
+				.map(key -> key.clazz(classLookup))
 				.collect(Collectors.toList());
 	}
 

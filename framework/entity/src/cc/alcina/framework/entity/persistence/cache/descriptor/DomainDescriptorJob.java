@@ -3,13 +3,13 @@ package cc.alcina.framework.entity.persistence.cache.descriptor;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ClientInstanceLoadOracle;
 import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobState;
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -92,7 +92,7 @@ public class DomainDescriptorJob {
 		return Domain.query(jobImplClass).filter("queue", queueName).stream();
 	}
 
-	public Stream<? extends Job> getJobsForTask(RemoteAction action) {
+	public Stream<? extends Job> getJobsForTask(Task action) {
 		return Domain.query(jobImplClass)
 				.filter("taskClassName", action.getClass().getName()).stream();
 	}

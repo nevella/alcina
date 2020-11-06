@@ -42,12 +42,16 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
 			builder.row().cell("Id").cell("Name").cell("Started")
-					.cell("Finished");
-			DomainDescriptorJob.get().getRecentlyCompletedJobs().limit(10)
+					.cell("Finished").cell("Performer");
+			DomainDescriptorJob.get().getRecentlyCompletedJobs().limit(30)
 					.forEach(job -> {
 						builder.row().cell(String.valueOf(job.getId()))
 								.cell(job.provideName()).cell(job.getStart())
-								.cell(job.getFinish());
+								.cell(job.getFinish())
+								.cell(job.getPerformer() == null ? "(null)"
+										: job.getPerformer()
+												.getAuthenticationSession()
+												.getUser().toIdNameString());
 					});
 		}
 		slf4jLogger.info(doc.prettyToString());

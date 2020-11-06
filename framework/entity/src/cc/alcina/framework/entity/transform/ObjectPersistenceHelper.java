@@ -255,6 +255,12 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	@Override
+	public boolean isReadOnly(Class objectClass, String propertyName) {
+		return (ThreadlocalTransformManager.cast()).isReadOnly(objectClass,
+				propertyName);
+	}
+
+	@Override
 	public <T> T newInstance(Class<T> clazz) {
 		try {
 			return clazz.newInstance();
@@ -267,12 +273,6 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		return (ThreadlocalTransformManager.cast()).newInstance(clazz, objectId,
 				localId);
-	}
-
-	@Override
-	public boolean isReadOnly(Class objectClass, String propertyName) {
-		return (ThreadlocalTransformManager.cast()).isReadOnly(objectClass,
-				propertyName);
 	}
 
 	@Override
