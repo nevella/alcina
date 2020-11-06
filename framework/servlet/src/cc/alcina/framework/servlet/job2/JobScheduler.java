@@ -183,7 +183,7 @@ public class JobScheduler {
 								jobRegistry.createJobRelation(job, retry,
 										JobRelationType.retry);
 								logger.warn(
-										"Rescheduling job {} (retry) :: {} => {}",
+										"Rescheduling job  (retry) :: {} => {}",
 										job, retry);
 							}
 						}
