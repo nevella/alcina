@@ -93,7 +93,13 @@ public class MultiTrie<K, V extends Set<? extends Entity>>
 		if (containsKey(key)) {
 			get(key).remove(item);
 			if (get(key).isEmpty()) {
-				remove(key);
+				// FIXME - this causes infinite trie loops (for transactional
+				// tries).
+				// mostly occurs during reindex cycles - leaving the trie entry
+				// in *seems* harmless
+				// remove(key);
+				//
+				// FIXME - mvcc.2021
 			}
 		}
 	}

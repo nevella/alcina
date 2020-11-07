@@ -50,7 +50,7 @@ public class RoCellTree<T> extends Composite {
 		initWidget(cellList);
 	}
 
-	private void makeDepthMap(T node, int depth) {
+	protected void makeDepthMap(T node, int depth) {
 		if (depth >= 0) {
 			depthMap.put(node, depth);
 		}
