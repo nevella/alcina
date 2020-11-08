@@ -7,7 +7,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 		implements MvccObject<TransactionalTrieEntry> {
 	MvccObjectVersions<TransactionalTrieEntry> __mvccObjectVersions__;
 
-	private Class<? extends Entity> entityClass;
+	Class<? extends Entity> entityClass;
 
 	protected TransactionalTrieEntry(K key, V value, int bitIndex,
 			Class<? extends Entity> entityClass) {
@@ -28,6 +28,10 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	public void __setMvccVersions__(
 			MvccObjectVersions<TransactionalTrieEntry> __mvccVersions__) {
 		this.__mvccObjectVersions__ = __mvccVersions__;
+	}
+
+	public Class<? extends Entity> entityClass() {
+		return this.entityClass;
 	}
 
 	@Override
@@ -126,10 +130,6 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 		} else {
 			return __instance__.isInternalNode();
 		}
-	}
-
-	public Class<? extends Entity> entityClass() {
-		return this.entityClass;
 	}
 
 	@Override

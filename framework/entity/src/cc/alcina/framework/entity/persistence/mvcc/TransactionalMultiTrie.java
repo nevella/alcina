@@ -15,6 +15,7 @@ public class TransactionalMultiTrie<K, E extends Entity, V extends Set<E>>
 			Class<E> entityClass) {
 		super(keyAnalyzer);
 		this.entityClass = entityClass;
+		((TransactionalTrieEntry) root).entityClass = entityClass;
 	}
 
 	@Override
