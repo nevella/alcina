@@ -57,7 +57,6 @@ import cc.alcina.framework.servlet.job2.JobScheduler.ScheduleProvider;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
 
-@RegistryLocation(registryPoint = JobRegistry.class, implementationType = ImplementationType.SINGLETON)
 /**
  * <h2>Overview</h2>
  * <p>
@@ -65,14 +64,56 @@ import cc.alcina.framework.servlet.servlet.control.WriterService;
  * clustered and non-clustered jobs.
  * </p>
  * <p>
- * A 'job' persistent object models execution of a Task object
+ * A 'job' persistent object models execution of a Task. Jobs are executed on
+ * JobQueues, which are uniquely defined by queue name - one-off queues for
+ * arbitrary jobs, and "schedule" queues for jobs which are constrained by a
+ * JobScheduler.Schedule. Note the difference between Job and Task - a Task and
+ * a Schedule cause the execution of a Job.
+ * </p>
+ * <p>
+ * Important properties related to the execution a job are 'creator' and
+ * 'performer' - the clientInstance of the server that created/is allocated the
+ * job respectively.
+ * </p>
+ * <p>
+ * JobScheduler.Schedule could well be named 'JobExecutionConstraints", but it's
+ * a bit wordy. Currently modelled constraints are:
+ * </p>
  * <ul>
+ * <li><b>exexcutorServiceProvider</b> - either 'current thread' for an ad-hoc
+ * task or an executor service. For example, default recurrent tasks run on the
+ * RecurrentJobsExecutorServiceProvider executorService, which is a 4-thread
+ * pool by default.
+ * <li><b>queueMaxConcurrentJobs</b> - a cluster-level constraint, either
+ * MAX_INT or 1 normally (1 results in 'execute in job id order' - for jobs that
+ * should logically never run simultaneously because modfiying some shared
+ * cluster state)
+ * <li><b>next</b> - for timewise limited schedules, return the next run time of
+ * the task.
+ * <li><b>queueName</b> - concurrent execution scope
+ * <li><b>retryPolicy</b> - may be renamed to 'reschedule' policy - handles
+ * re-running or -allocating of clustered jobs when the allocated clientInstance
+ * is terminated.
+ * <li><b>queueName</b> - concurrent execution scope
+ * <li><b>clustered</b> - is the schedule vm-local or clustered?
+ * <li><b>timewiseLimited</b> - as per JobQueue.allocateJobs (the primary queue
+ * loop): <blockquote><code>
+ * 
+		 * jobs either time-wise scheduled (limited)
+		 * maxConcurrent/executor-limited. If time-wise scheduled, only the
+		 * cluster leader should perform
+		 * </code></blockquote>
+ * 
  * 
  * </ul>
+ * 
+ * <h2>TODO (doc)</h2> Describe the logic in JobQueue.allocateJobs and
+ * JobScheduler a little more fully.
  * 
  * @author nick@alcina.cc
  *
  */
+@RegistryLocation(registryPoint = JobRegistry.class, implementationType = ImplementationType.SINGLETON)
 public class JobRegistry extends WriterService {
 	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_NO_ACTION_LOG";

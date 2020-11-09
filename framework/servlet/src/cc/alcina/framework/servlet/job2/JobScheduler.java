@@ -40,7 +40,6 @@ import cc.alcina.framework.entity.util.MethodContext;
  * <h2>TODO</h2>
  * <ul>
  * <li>Job reaping
- * <li>Orphan adoption
  * <li>Cancel/stacktrace
  * <li>UI
  * <ul>
