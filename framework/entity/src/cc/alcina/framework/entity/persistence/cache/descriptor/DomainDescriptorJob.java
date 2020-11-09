@@ -61,8 +61,7 @@ public class DomainDescriptorJob {
 
 	public void configureDescriptor(DomainStoreDescriptor descriptor) {
 		jobImplClass = AlcinaPersistentEntityImpl.getImplementation(Job.class);
-		descriptor.addClassDescriptor(jobImplClass, "key", "queue",
-				"taskClassName");
+		descriptor.addClassDescriptor(jobImplClass, "queue", "taskClassName");
 		descriptor.addClassDescriptor(AlcinaPersistentEntityImpl
 				.getImplementation(JobRelation.class));
 	}
@@ -81,11 +80,7 @@ public class DomainDescriptorJob {
 	}
 
 	public Job getJob(String id) {
-		Job job = Domain.query(jobImplClass).filter("key", id).find();
-		if (job == null) {
-			job = getMostRecentJobForQueue(id);
-		}
-		return job;
+		return getMostRecentJobForQueue(id);
 	}
 
 	public Stream<? extends Job> getJobsForQueue(String queueName) {

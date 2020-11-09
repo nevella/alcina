@@ -19,6 +19,6 @@ import cc.alcina.framework.common.client.job.Task;
  * 
  * @author Nick Reddel
  */
-public interface TaskAndPerformer<T extends Task>
+public interface SelfPerformer<T extends Task>
 		extends Task, TaskPerformer<T> {
 }

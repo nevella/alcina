@@ -340,10 +340,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return JobRegistry.get().perform(action).getActionLogItem()
 					.getShortDescription();
 		} else {
-			String name = JobRegistry.get().start(action).getName();
+			String queueName = JobRegistry.get().start(action).getQueue();
 			// make sure the job is available for log callers
 			Transaction.commit();
-			return name;
+			return queueName;
 		}
 	}
 

@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -99,7 +100,7 @@ public class DomainStoreTransformSequencer {
 		}
 	}
 
-	public synchronized List<TransformSequenceEntry>
+	public synchronized List<DomainTransformCommitPosition>
 			getSequentialUnpublishedRequests() {
 		try {
 			return getSequentialUnpublishedTransformIds0();
@@ -348,13 +349,18 @@ public class DomainStoreTransformSequencer {
 		}
 	}
 
-	private List<TransformSequenceEntry> getSequentialUnpublishedTransformIds0()
-			throws Exception {
+	/*
+	 * Probably over-pessimistically, this method does not assume that all
+	 * committed requests with an identical timestamp are visible at the same
+	 * time.
+	 */
+	private List<DomainTransformCommitPosition>
+			getSequentialUnpublishedTransformIds0() throws Exception {
 		if (highestVisibleTransactions == null) {
 			// not yet finished with marking - come back later please
 			return Collections.emptyList();
 		}
-		List<TransformSequenceEntry> unpublishedIds = new ArrayList<>();
+		List<DomainTransformCommitPosition> unpublishedIds = new ArrayList<>();
 		Connection conn = getConnection();
 		/*
 		 * normally, commit times are ensured just after the dtrp is committed
@@ -372,7 +378,7 @@ public class DomainStoreTransformSequencer {
 		String sql = Ax.format(
 				"select id, transactionCommitTime from %s where transactionCommitTime >=? "
 						+ "and transactionCommitTime is not null "
-						+ "order by transactionCommitTime ",
+						+ "order by transactionCommitTime,id ",
 				tableName);
 		try (PreparedStatement pStatement = conn.prepareStatement(sql)) {
 			HighestVisibleTransactions transactionsData = new HighestVisibleTransactions();
@@ -383,38 +389,38 @@ public class DomainStoreTransformSequencer {
 			}
 			pStatement.setTimestamp(1, fromTimestamp);
 			ResultSet rs = pStatement.executeQuery();
-			List<TransformSequenceEntry> txData = new ArrayList<>();
+			List<DomainTransformCommitPosition> txData = new ArrayList<>();
 			// normally it'll be one dtr per timestamp. If more than 99999,
 			// we're
 			// looking at an initial cleanup - ignore
 			int maxCurrent = 99999;
 			while (rs.next() && maxCurrent-- > 0) {
-				TransformSequenceEntry entry = new TransformSequenceEntry();
-				entry.persistentRequestId = rs.getLong("id");
-				entry.commitTimestamp = rs
+				DomainTransformCommitPosition position = new DomainTransformCommitPosition();
+				position.commitRequestId = rs.getLong("id");
+				position.commitTimestamp = rs
 						.getTimestamp("transactionCommitTime");
-				if (entry.commitTimestamp
+				if (position.commitTimestamp
 						.equals(highestVisibleTransactions.commitTimestamp)
 						&& highestVisibleTransactions.transformListIds
-								.contains(entry.persistentRequestId)) {
+								.contains(position.commitRequestId)) {
 					continue;// already submitted/published
 				}
-				txData.add(entry);
+				txData.add(position);
 			}
 			rs.close();
 			if (maxCurrent <= 0) {
 				txData.clear();
 			}
 			txData.forEach(unpublishedIds::add);
-			Map<Timestamp, List<TransformSequenceEntry>> collect = txData
+			Map<Timestamp, List<DomainTransformCommitPosition>> collect = txData
 					.stream().collect(AlcinaCollectors
 							.toKeyMultimap(txd -> txd.commitTimestamp));
 			if (collect.isEmpty()) {
 			} else {
-				Entry<Timestamp, List<TransformSequenceEntry>> last = CommonUtils
+				Entry<Timestamp, List<DomainTransformCommitPosition>> last = CommonUtils
 						.last(collect.entrySet().iterator());
 				List<Long> lastIds = last.getValue().stream()
-						.map(txd -> txd.persistentRequestId)
+						.map(txd -> txd.commitRequestId)
 						.collect(Collectors.toList());
 				if (last.getKey()
 						.equals(highestVisibleTransactions.commitTimestamp)) {
@@ -470,8 +476,11 @@ public class DomainStoreTransformSequencer {
 		conn.commit();
 	}
 
-	Timestamp getHighestVisibleTransactionTimestamp() {
-		return highestVisibleTransactions.commitTimestamp;
+	DomainTransformCommitPosition getHighestVisibleCommitPosition() {
+		return highestVisibleTransactions == null ? null
+				: new DomainTransformCommitPosition(
+						highestVisibleTransactions.commitTimestamp,
+						Ax.last(highestVisibleTransactions.transformListIds));
 	}
 
 	void markHighestVisibleTransformList(Connection conn) throws SQLException {
@@ -485,17 +494,6 @@ public class DomainStoreTransformSequencer {
 		} else {
 			logger.info("Marked highest visible transactions - {}",
 					highestVisibleTransactions);
-		}
-	}
-
-	public static class TransformSequenceEntry {
-		public long persistentRequestId;
-
-		public Timestamp commitTimestamp;
-
-		@Override
-		public String toString() {
-			return GraphProjection.fieldwiseToString(this);
 		}
 	}
 

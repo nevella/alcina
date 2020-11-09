@@ -12,10 +12,6 @@ public interface Task {
 		return Registry.impl(Performer.class).perform(this);
 	}
 
-	default String provideJobKey() {
-		return getClass().getName();
-	}
-
 	default boolean runAsRoot() {
 		return true;
 	}

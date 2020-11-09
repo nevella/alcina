@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.cluster.transform;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -10,6 +11,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -33,6 +35,7 @@ import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.servlet.Sx;
+import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.State;
 
 public class TransformCommitLog {
 	private Producer<Void, byte[]> producer;
@@ -127,10 +130,14 @@ public class TransformCommitLog {
 		currentConsumerThread.checkCurrentPosition();
 	}
 
-	public synchronized Future<RecordMetadata> sendTransformPublishedMessage(
-			DomainTransformRequestPersistent request) {
-		return producer().send(new ProducerRecord<Void, byte[]>(getTopic(),
-				null, serialize(request)));
+	public synchronized List<Future<RecordMetadata>>
+			sendTransformPublishedMessages(
+					DomainTransformRequestPersistent request, State state) {
+		List<byte[]> serialized = serialize(request, state);
+		return serialized.stream()
+				.map(packet -> producer().send(new ProducerRecord<Void, byte[]>(
+						getTopic(), null, packet)))
+				.collect(Collectors.toList());
 	}
 
 	public void shutdown() {
@@ -160,9 +167,10 @@ public class TransformCommitLog {
 		currentConsumerThread.start();
 	}
 
-	private byte[] serialize(DomainTransformRequestPersistent request) {
+	private List<byte[]> serialize(DomainTransformRequestPersistent request,
+			State state) {
 		return Registry.impl(ClusterTransformSerializer.class)
-				.serialize(request);
+				.serialize(request, state);
 	}
 
 	protected synchronized void checkPollTimeout() {
@@ -324,8 +332,15 @@ public class TransformCommitLog {
 							ClusterTransformRequest request = Registry
 									.impl(ClusterTransformSerializer.class)
 									.deserialize(record.value());
-							logAcceptRecord(request);
-							payloadConsumer.accept(request);
+							if (request == null) {
+								logger.info("Received partial packet - {}",
+										Registry.impl(
+												ClusterTransformSerializer.class)
+												.getLastPartialId());
+							} else {
+								logAcceptRecord(request);
+								payloadConsumer.accept(request);
+							}
 						} catch (Exception e) {
 							e.printStackTrace();
 						} finally {

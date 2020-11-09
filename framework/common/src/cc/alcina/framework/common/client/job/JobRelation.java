@@ -49,6 +49,6 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 
 	@ClientInstantiable
 	public static enum JobRelationType {
-		parent_child, cascade, retry
+		parent_child, sequence, retry
 	}
 }

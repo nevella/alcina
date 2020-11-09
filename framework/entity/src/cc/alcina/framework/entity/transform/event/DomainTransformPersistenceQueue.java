@@ -37,7 +37,6 @@ import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.DomainStoreTransformSequencer;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreTransformSequencer.TransformSequenceEntry;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
@@ -72,7 +71,7 @@ public class DomainTransformPersistenceQueue {
 
 	Set<Long> firedOrQueued = new LinkedHashSet<>();
 
-	LinkedList<Long> toFire = new LinkedList<>();
+	LinkedList<DomainTransformCommitPosition> toFire = new LinkedList<>();
 
 	Object queueModificationLock = new Object();
 
@@ -88,12 +87,12 @@ public class DomainTransformPersistenceQueue {
 
 	private Timestamp muteEventsOnOrBefore;
 
-	private Map<Long, TransformSequenceEntry> requestIdSequenceEntry = new ConcurrentHashMap<>();
+	private Map<Long, DomainTransformCommitPosition> requestIdSequenceEntry = new ConcurrentHashMap<>();
 
 	// used to signal this event to a possibly waiting fire events thread
 	private Object persistentRequestCached = new Object();
 
-	private Timestamp highestPublishedTimestamp;
+	private DomainTransformCommitPosition transformLogPosition;
 
 	private Set<QueueWaiter> waiters = Collections
 			.synchronizedSet(new LinkedHashSet<>());
@@ -141,10 +140,6 @@ public class DomainTransformPersistenceQueue {
 		return this.firingThread;
 	}
 
-	public Timestamp getHighestPublishedTimestamp() {
-		return this.highestPublishedTimestamp;
-	}
-
 	public int getToFireQueueLength() {
 		synchronized (queueModificationLock) {
 			return toFire.size();
@@ -152,10 +147,7 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public DomainTransformCommitPosition getTransformLogPosition() {
-		synchronized (queueModificationLock) {
-			return new DomainTransformCommitPosition(highestPublishedTimestamp,
-					CommonUtils.first(lastFired));
-		}
+		return this.transformLogPosition;
 	}
 
 	public void registerPersisting(DomainTransformRequestPersistent dtrp) {
@@ -165,24 +157,23 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public synchronized void sequencedTransformRequestPublished(Long id) {
-		List<TransformSequenceEntry> unpublishedRequests = persistenceEvents.domainStore
+		List<DomainTransformCommitPosition> unpublishedRequests = persistenceEvents.domainStore
 				.getTransformSequencer().getSequentialUnpublishedRequests();
 		logger.debug("Received dtr published: {} ==> sequenced: {} ", id,
 				unpublishedRequests);
 		unpublishedRequests.forEach(entry -> requestIdSequenceEntry
-				.put(entry.persistentRequestId, entry));
-		fireSequentialUnpublishedTransformRequests(unpublishedRequests.stream()
-				.map(e -> e.persistentRequestId).collect(Collectors.toList()));
-	}
-
-	public void
-			setHighestPublishedTimestamp(Timestamp highestPublishedTimestamp) {
-		this.highestPublishedTimestamp = highestPublishedTimestamp;
+				.put(entry.commitRequestId, entry));
+		fireSequentialUnpublishedTransformRequests(unpublishedRequests);
 	}
 
 	public void setMuteEventsOnOrBefore(
 			Timestamp highestVisibleTransactionTimestamp) {
 		this.muteEventsOnOrBefore = highestVisibleTransactionTimestamp;
+	}
+
+	public void setTransformLogPosition(
+			DomainTransformCommitPosition transformLogPosition) {
+		this.transformLogPosition = transformLogPosition;
 	}
 
 	public void startEventQueue() {
@@ -209,11 +200,17 @@ public class DomainTransformPersistenceQueue {
 		}
 	}
 
+	public void transformRequestAborted(long id) {
+		loadedRequests.remove(id);
+	}
+
 	public void transformRequestPublished(Long id) {
 		if (persistenceEvents.isUseTransformDbCommitSequencing()) {
 			sequencedTransformRequestPublished(id);
 		} else {
-			transformRequestPublishedSequential(id);
+			DomainTransformCommitPosition position = new DomainTransformCommitPosition(
+					new Timestamp(System.currentTimeMillis()), id);
+			transformRequestPublishedSequential(position);
 		}
 	}
 
@@ -228,7 +225,8 @@ public class DomainTransformPersistenceQueue {
 	public void waitUntilEventQueueIsEmpty() {
 		while (true) {
 			QueueWaiter queueWaiter = null;
-			Optional<Long> lastToFireId = getLastToFireId();
+			Optional<Long> lastToFireId = getLastToFireId()
+					.map(position -> position.commitRequestId);
 			if (!lastToFireId.isPresent()) {
 				return;
 			} else {
@@ -273,15 +271,16 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	private void fireSequentialUnpublishedTransformRequests(
-			List<Long> sequentialUnpublishedTransformIds) {
-		for (Long sequentialId : sequentialUnpublishedTransformIds) {
-			transformRequestPublishedSequential(sequentialId);
+			List<DomainTransformCommitPosition> unpublishedRequests) {
+		for (DomainTransformCommitPosition position : unpublishedRequests) {
+			transformRequestPublishedSequential(position);
 		}
 	}
 
-	private Optional<Long> getLastToFireId() {
+	private Optional<DomainTransformCommitPosition> getLastToFireId() {
 		synchronized (queueModificationLock) {
-			return Optional.<Long> ofNullable(CommonUtils.last(toFire));
+			return Optional.<DomainTransformCommitPosition> ofNullable(
+					CommonUtils.last(toFire));
 		}
 	}
 
@@ -320,16 +319,19 @@ public class DomainTransformPersistenceQueue {
 	// LooseContext.pop();
 	// }
 	// }
-	private void transformRequestPublishedSequential(long id) {
+	private void transformRequestPublishedSequential(
+			DomainTransformCommitPosition position) {
 		synchronized (queueModificationLock) {
-			if (firedOrQueued.contains(id)) {
-				logger.debug("Ignoring already fired/queued: {} ", id);
+			if (firedOrQueued.contains(position.commitRequestId)) {
+				logger.debug("Ignoring already fired/queued: {} ",
+						position.commitRequestId);
 				return;
 			} else {
-				firedOrQueued.add(id);
+				firedOrQueued.add(position.commitRequestId);
 				synchronized (toFire) {
-					logger.debug("Adding to toFire queue: {} ", id);
-					toFire.add(id);
+					logger.debug("Adding to toFire queue: {} ",
+							position.commitRequestId);
+					toFire.add(position);
 					toFire.notifyAll();
 				}
 			}
@@ -417,7 +419,7 @@ public class DomainTransformPersistenceQueue {
 					persistenceEvents.domainStore.name));
 			while (true) {
 				try {
-					Long id = null;
+					DomainTransformCommitPosition position = null;
 					if (getToFireQueueLength() == 0) {
 						synchronized (toFire) {
 							toFire.wait();
@@ -429,15 +431,16 @@ public class DomainTransformPersistenceQueue {
 					}
 					if (getToFireQueueLength() > 0) {
 						synchronized (queueModificationLock) {
-							id = toFire.removeFirst();
-							logger.debug("Removed id from toFire: {}", id);
+							position = toFire.removeFirst();
+							logger.debug("Removed id from toFire: {}",
+									position.commitRequestId);
 						}
 					}
-					if (id != null && !closed.get()) {
+					if (position != null && !closed.get()) {
 						try {
 							Transaction.ensureBegun();
 							ThreadedPermissionsManager.cast().pushSystemUser();
-							publishTransformEvent(id);
+							publishTransformEvent(position);
 						} finally {
 							Transaction.ensureBegun();
 							ThreadedPermissionsManager.cast().popSystemUser();
@@ -450,8 +453,10 @@ public class DomainTransformPersistenceQueue {
 			}
 		}
 
-		private void publishTransformEvent(long id) {
+		private void
+				publishTransformEvent(DomainTransformCommitPosition position) {
 			boolean local = false;
+			Long id = position.commitRequestId;
 			fireEventThreadLogger.info("publishTransformEvent - dtr {}", id);
 			synchronized (queueModificationLock) {
 				local = firingLocalToVm.contains(id);
@@ -559,7 +564,7 @@ public class DomainTransformPersistenceQueue {
 								.fireDomainTransformPersistenceEvent(event);
 						loadedRequests.remove(id);
 						synchronized (queueModificationLock) {
-							highestPublishedTimestamp = transactionCommitTime;
+							transformLogPosition = position;
 							queueModificationLock.notifyAll();
 						}
 					} else {
@@ -589,7 +594,8 @@ public class DomainTransformPersistenceQueue {
 							.collect(Collectors.toSet());
 					waiting.removeAll(appLifetimeEventsFired);
 				} else {
-					waiting = new LinkedHashSet<>(toFire);
+					waiting = toFire.stream().map(p -> p.commitRequestId)
+							.collect(Collectors.toSet());
 					waiting.addAll(firingLocalToVm);
 				}
 				waiters.add(this);
@@ -598,8 +604,9 @@ public class DomainTransformPersistenceQueue {
 
 		QueueWaiter(long timeoutMs, Timestamp timestamp) {
 			this(timeoutMs, Optional.empty());
-			if (highestPublishedTimestamp != null
-					&& highestPublishedTimestamp.compareTo(timestamp) >= 0) {
+			if (transformLogPosition != null
+					&& transformLogPosition.commitTimestamp
+							.compareTo(timestamp) >= 0) {
 				/*
 				 * No need to wait, we've already passed the required epoch
 				 */

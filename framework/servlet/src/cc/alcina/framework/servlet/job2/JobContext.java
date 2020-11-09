@@ -70,7 +70,7 @@ public class JobContext {
 		String log = Registry.impl(PerThreadLogging.class).endBuffer();
 		job.setLog(log);
 		job.setState(JobState.COMPLETED);
-		job.setFinish(new Date());
+		job.setEndTime(new Date());
 		job.setResultType(JobResultType.OK);
 		persistMetadata(true);
 		if (persistenceType == PersistenceType.None) {
@@ -174,7 +174,7 @@ public class JobContext {
 
 	void start() {
 		LooseContext.set(CONTEXT_CURRENT, this);
-		job.setStart(new Date());
+		job.setStartTime(new Date());
 		job.setState(JobState.PROCESSING);
 		job.setPerformerVersionNumber(performer.getVersionNumber());
 		persistMetadata(true);

@@ -61,7 +61,7 @@ public class JobQueue {
 
 	public JobQueue(Job initialJob, ExecutorService executorService,
 			int maxConcurrentJobs, boolean clustered) {
-		this.name = Ax.format("%s - %s/%s", initialJob.getKey(),
+		this.name = Ax.format("%s - %s/%s", initialJob.getTaskClassName(),
 				initialJob.getLocalId(),
 				EntityLayerObjects.get().getServerAsClientInstance().getId());
 		this.initialJob = initialJob;
@@ -124,9 +124,9 @@ public class JobQueue {
 			int activeJobs = DomainDescriptorJob.get().getActiveJobCount(name);
 			Optional<? extends Job> unallocated = DomainDescriptorJob.get()
 					.getUnallocatedJobsForQueue(name, true)
+					.filter(Job::provideIsAllocatable)
 					.sorted(new Job.RunAtComparator()).findFirst();
-			if (unallocated.isPresent()
-					&& unallocated.get().provideIsNotRunAtFutureDate()) {
+			if (unallocated.isPresent()) {
 				jobRegistry.withJobMetadataLock(name, isClustered(), () -> {
 					Job job = unallocated.get();
 					job.setPerformer(EntityLayerObjects.get()

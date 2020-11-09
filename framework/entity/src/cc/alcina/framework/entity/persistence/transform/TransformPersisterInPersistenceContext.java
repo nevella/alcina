@@ -29,12 +29,15 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -48,14 +51,15 @@ import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken.Pass;
-import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
+import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 
 /**
  * 
  * @author nick@alcina.cc
  *
  */
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class TransformPersisterInPersistenceContext {
 	public static final String CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM = TransformPersisterInPersistenceContext.class
 			.getName() + ".CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM";
@@ -71,6 +75,9 @@ public class TransformPersisterInPersistenceContext {
 
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS = 40
 			* 1000;
+
+	public static Topic<DomainTransformLayerWrapper> topicPreFinalCommit = Topic
+			.local();
 
 	private transient EntityManager entityManager;
 
@@ -413,7 +420,8 @@ public class TransformPersisterInPersistenceContext {
 						for (DomainTransformEvent event : eventsPersisted) {
 							DomainTransformEventPersistent propagationEvent = persistentEventClass
 									.newInstance();
-							if (propagationPolicy.shouldPersistEventRecord(event)) {
+							if (propagationPolicy
+									.shouldPersistEventRecord(event)) {
 								tltm.persist(propagationEvent);
 							}
 							propagationEvent.wrap(event);
@@ -484,6 +492,8 @@ public class TransformPersisterInPersistenceContext {
 				response.setRequestId(request.getRequestId());
 				response.setTransformsProcessed(transformCount);
 				wrapper.response = response;
+				// FIXME - mvcc.jobs - move to queue publishing (and add phase)
+				topicPreFinalCommit.publish(wrapper);
 				return;
 			case RETRY_WITH_IGNORES:
 				return;

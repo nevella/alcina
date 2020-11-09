@@ -170,7 +170,7 @@ public class JobScheduler {
 							job, job.getCreator(), job.getPerformer(),
 							job.isClustered());
 					job.setState(JobState.ABORTED);
-					job.setFinish(new Date());
+					job.setEndTime(new Date());
 					job.setResultType(JobResultType.DID_NOT_COMPLETE);
 					if (job.isClustered()) {
 						Schedule schedule = getSchedule(
@@ -180,7 +180,7 @@ public class JobScheduler {
 							if (retryPolicy.shouldRetry(job)) {
 								Job retry = jobRegistry
 										.createJob(job.getTask());
-								jobRegistry.createJobRelation(job, retry,
+								job.createRelation(retry,
 										JobRelationType.retry);
 								logger.warn(
 										"Rescheduling job  (retry) :: {} => {}",
@@ -257,9 +257,9 @@ public class JobScheduler {
 	void ensureActiveQueues() {
 		queueNameSchedulableTasks.keySet().forEach(queueName -> {
 			Optional<? extends Job> pending = DomainDescriptorJob.get()
-					.getUnallocatedJobsForQueue(queueName, true).findFirst();
-			if (pending.isPresent()
-					&& pending.get().provideIsNotRunAtFutureDate()) {
+					.getUnallocatedJobsForQueue(queueName, true)
+					.filter(Job::provideIsAllocatable).findFirst();
+			if (pending.isPresent()) {
 				Job job = pending.get();
 				Schedule schedule = getSchedule(job.getTask().getClass(),
 						false);

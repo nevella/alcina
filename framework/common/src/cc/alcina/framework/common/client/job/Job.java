@@ -2,14 +2,17 @@ package cc.alcina.framework.common.client.job;
 
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import javax.persistence.Column;
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
@@ -49,9 +52,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	private Date runAt;
 
-	private Date start;
+	private Date startTime;
 
-	private Date finish;
+	private Date endTime;
 
 	private JobState state;
 
@@ -64,8 +67,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	private double completion;
 
 	private JobResultType resultType;
-
-	private String key;
 
 	private String queue;
 
@@ -97,7 +98,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 								.getImplementation(ActionLogItem.class));
 				logItem.setActionClass((Class) getTask().getClass());
 				logItem.setActionClassName(getTaskClassName());
-				logItem.setActionDate(getFinish());
+				logItem.setActionDate(getEndTime());
 				logItem.setActionLog(getLog());
 				logItem.setShortDescription(getResultMessage());
 				return logItem;
@@ -111,20 +112,44 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		JobTrackerImpl tracker = new JobTrackerImpl();
 		tracker.setCancelled(state == JobState.CANCELLED);
 		tracker.setComplete(state.isComplete());
-		tracker.setEndTime(finish);
-		tracker.setId(key);
+		tracker.setEndTime(endTime);
+		tracker.setId(toLocator().toString());
 		tracker.setJobName(getTask().getName());
 		tracker.setJobResult(resultMessage);
 		tracker.setJobResultType(getResultType());
 		tracker.setLog(log);
 		tracker.setProgressMessage(statusMessage);
-		tracker.setStartTime(start);
+		tracker.setStartTime(startTime);
 		return tracker;
 	}
 
 	public void cancel() {
 		if (!getState().isComplete()) {
 			setState(JobState.CANCELLED);
+		}
+	}
+
+	public void createRelation(Job to, JobRelationType type) {
+		JobRelation relation = AlcinaPersistentEntityImpl
+				.create(JobRelation.class);
+		relation.setFrom(domainIdentity());
+		relation.setTo(to);
+		relation.setType(type);
+	}
+
+	/*
+	 * Creates a 'sequence' relation - execute the 'to' job after this (or the
+	 * end of its 'sequence' relation change)
+	 */
+	public void followWith(Job to) {
+		List<? extends JobRelation> fromRelations = getFromRelations().stream()
+				.filter(rel -> rel.getType() == JobRelationType.sequence)
+				.collect(Collectors.toList());
+		Preconditions.checkArgument(fromRelations.size() <= 1);
+		if (fromRelations.isEmpty()) {
+			createRelation(to, JobRelationType.sequence);
+		} else {
+			fromRelations.get(0).getTo().followWith(to);
 		}
 	}
 
@@ -135,17 +160,12 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@Transient
 	public abstract ClientInstance getCreator();
 
-	public Date getFinish() {
-		return this.finish;
+	public Date getEndTime() {
+		return this.endTime;
 	}
 
 	@Transient
 	public abstract Set<? extends JobRelation> getFromRelations();
-
-	@Column(name = "key_")
-	public String getKey() {
-		return this.key;
-	}
 
 	@Lob
 	@Transient
@@ -191,8 +211,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return this.stacktraceResponse;
 	}
 
-	public Date getStart() {
-		return this.start;
+	public Date getStartTime() {
+		return this.startTime;
 	}
 
 	public JobState getState() {
@@ -245,12 +265,20 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return state == JobState.PROCESSING;
 	}
 
-	public boolean provideIsComplete() {
-		return state.isComplete();
+	public boolean provideIsAllocatable() {
+		if (getRunAt() != null && getRunAt().after(new Date())) {
+			return false;
+		}
+		if (getToRelations().stream()
+				.anyMatch(rel -> rel.getType() == JobRelationType.sequence
+						&& !rel.getFrom().provideIsComplete())) {
+			return false;
+		}
+		return true;
 	}
 
-	public boolean provideIsNotRunAtFutureDate() {
-		return getRunAt() == null || getRunAt().compareTo(new Date()) <= 0;
+	public boolean provideIsComplete() {
+		return state.isComplete();
 	}
 
 	public boolean provideIsPending() {
@@ -287,22 +315,16 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public abstract void setCreator(ClientInstance performer);
 
-	public void setFinish(Date finish) {
-		Date old_finish = this.finish;
-		this.finish = finish;
-		propertyChangeSupport().firePropertyChange("finish", old_finish,
-				finish);
+	public void setEndTime(Date endTime) {
+		Date old_endTime = this.endTime;
+		this.endTime = endTime;
+		propertyChangeSupport().firePropertyChange("endTime", old_endTime,
+				endTime);
 	}
 
 	@Override
 	public void setId(long id) {
 		this.id = id;
-	}
-
-	public void setKey(String key) {
-		String old_key = this.key;
-		this.key = key;
-		propertyChangeSupport().firePropertyChange("key", old_key, key);
 	}
 
 	public void setLog(String log) {
@@ -371,10 +393,11 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				old_stacktraceResponse, stacktraceResponse);
 	}
 
-	public void setStart(Date start) {
-		Date old_start = this.start;
-		this.start = start;
-		propertyChangeSupport().firePropertyChange("start", old_start, start);
+	public void setStartTime(Date startTime) {
+		Date old_startTime = this.startTime;
+		this.startTime = startTime;
+		propertyChangeSupport().firePropertyChange("startTime", old_startTime,
+				startTime);
 	}
 
 	public void setState(JobState state) {

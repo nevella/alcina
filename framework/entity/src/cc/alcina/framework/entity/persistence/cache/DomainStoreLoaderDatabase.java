@@ -62,6 +62,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
@@ -278,12 +279,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			transformSequencer.markHighestVisibleTransformList(conn);
 			releaseConn(conn);
 		}
-		Timestamp highestVisibleTransactionTimestamp = transformSequencer
-				.getHighestVisibleTransactionTimestamp();
-		warmupTransaction.toDomainCommitting(highestVisibleTransactionTimestamp,
-				store, store.applyTxToGraphCounter.getAndIncrement(), 0L);
-		store.getPersistenceEvents().getQueue()
-				.setMuteEventsOnOrBefore(highestVisibleTransactionTimestamp);
+		DomainTransformCommitPosition highestVisibleCommitPosition = transformSequencer
+				.getHighestVisibleCommitPosition();
+		warmupTransaction.toDomainCommitting(
+				highestVisibleCommitPosition.commitTimestamp, store,
+				store.applyTxToGraphCounter.getAndIncrement(), 0L);
+		store.getPersistenceEvents().getQueue().setMuteEventsOnOrBefore(
+				highestVisibleCommitPosition.commitTimestamp);
 		// get non-many-many obj
 		// lazy tables, load a segment (for large db dev work)
 		if (domainDescriptor.getDomainSegmentLoader() != null) {
@@ -389,8 +391,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		warmupExecutor = null;
 		warmupTransaction = null;
 		Transaction.current().toDomainCommitted();
-		store.getPersistenceEvents().getQueue().setHighestPublishedTimestamp(
-				highestVisibleTransactionTimestamp);
+		store.getPersistenceEvents().getQueue()
+				.setTransformLogPosition(highestVisibleCommitPosition);
 		Transaction.endAndBeginNew();
 	}
 

@@ -22,7 +22,6 @@ import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.job.Job;
-import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobResult;
 import cc.alcina.framework.common.client.job.JobState;
@@ -54,6 +53,7 @@ import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.job.JobRegistry1;
 import cc.alcina.framework.servlet.job2.JobContext.PersistenceType;
 import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
+import cc.alcina.framework.servlet.job2.JobScheduler.ScheduleProvider;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
 
@@ -136,7 +136,8 @@ public class JobRegistry extends WriterService {
 	}
 
 	public JobResult perform(Task task) {
-		JobQueue queue = start(task);
+		Job job = start(task);
+		JobQueue queue = activeQueues.get(job.getQueue());
 		queue.awaitEmpty();
 		DomainStore.waitUntilCurrentRequestsProcessed();
 		return queue.initialJob.asJobResult();
@@ -146,7 +147,7 @@ public class JobRegistry extends WriterService {
 		schedule(task, scheduler.getSchedule(task.getClass(), false));
 	}
 
-	public JobQueue schedule(Task task, Schedule schedule) {
+	public Job schedule(Task task, Schedule schedule) {
 		if (schedule == null) {
 			return start(task);
 		} else {
@@ -155,7 +156,7 @@ public class JobRegistry extends WriterService {
 			job.setClustered(schedule.isClustered());
 			JobQueue queue = ensureQueue(schedule);
 			job.setQueue(queue.getName());
-			return queue;
+			return job;
 		}
 	}
 
@@ -163,17 +164,27 @@ public class JobRegistry extends WriterService {
 		scheduler.enqueueInitialScheduleEvent();
 	}
 
-	public JobQueue start(Task task) {
+	public Job start(Task task) {
 		Job job = createJob(task);
 		JobContext creationContext = JobContext.get();
 		if (creationContext != null) {
-			createJobRelation(creationContext.getJob(), job,
+			creationContext.getJob().createRelation(job,
 					JobRelationType.parent_child);
 		}
-		JobQueue queue = createPerJobQueue(job);
+		/*
+		 * (doc) - ensure that, if a schedule is defined for a task (which also
+		 * indicates that the task has no parameters), a one-off execution of
+		 * the task runs on that queue
+		 */
+		Optional<ScheduleProvider> scheduleProvider = Registry
+				.optional(ScheduleProvider.class, task.getClass());
+		Optional<Schedule> schedule = scheduleProvider
+				.map(sp -> sp.getSchedule(task.getClass(), false));
+		JobQueue queue = schedule.isPresent() ? ensureQueue(schedule.get())
+				: createPerJobQueue(job);
 		Transaction.commit();
 		queue.ensureAllocating();
-		return queue;
+		return job;
 	}
 
 	@Override
@@ -298,20 +309,11 @@ public class JobRegistry extends WriterService {
 		checkAnnotatedPermissions(task);
 		Job job = AlcinaPersistentEntityImpl.create(Job.class);
 		job.setUser(PermissionsManager.get().getUser());
-		job.setKey(task.provideJobKey());
 		job.setState(JobState.PENDING);
 		job.setTask(task);
 		job.setTaskClassName(task.getClass().getName());
 		job.setCreator(EntityLayerObjects.get().getServerAsClientInstance());
 		return job;
-	}
-
-	void createJobRelation(Job from, Job to, JobRelationType type) {
-		JobRelation relation = AlcinaPersistentEntityImpl
-				.create(JobRelation.class);
-		relation.setFrom(from);
-		relation.setTo(to);
-		relation.setType(type);
 	}
 
 	JobQueue ensureQueue(Schedule schedule) {

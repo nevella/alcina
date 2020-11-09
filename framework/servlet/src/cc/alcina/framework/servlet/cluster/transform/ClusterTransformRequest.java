@@ -6,4 +6,10 @@ public class ClusterTransformRequest {
 	public long id;
 
 	public DomainTransformRequestPersistent request;
+
+	public State state;
+
+	public enum State {
+		PRE_COMMIT, COMMIT, ABORTED;
+	}
 }

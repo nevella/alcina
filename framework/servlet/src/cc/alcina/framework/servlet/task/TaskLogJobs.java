@@ -46,8 +46,8 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 			DomainDescriptorJob.get().getRecentlyCompletedJobs().limit(30)
 					.forEach(job -> {
 						builder.row().cell(String.valueOf(job.getId()))
-								.cell(job.provideName()).cell(job.getStart())
-								.cell(job.getFinish())
+								.cell(job.provideName()).cell(job.getStartTime())
+								.cell(job.getEndTime())
 								.cell(job.getPerformer() == null ? "(null)"
 										: job.getPerformer()
 												.getAuthenticationSession()
