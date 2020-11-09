@@ -17,8 +17,12 @@ public class UrlBuilder {
 
 	public String build() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(host);
-		sb.append("/");
+		if (host != null) {
+			sb.append(host);
+		}
+		if (!path.startsWith("/")) {
+			sb.append("/");
+		}
 		// assume legal
 		sb.append(path);
 		if (qsParams.size() > 0) {

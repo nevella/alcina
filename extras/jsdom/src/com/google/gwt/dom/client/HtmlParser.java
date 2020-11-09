@@ -8,6 +8,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.util.DomUtils;
 
 public class HtmlParser {
 	public static boolean debugCursor = false;
@@ -86,7 +87,12 @@ public class HtmlParser {
 
 	public Element parse(String html, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
-		html = html.replace("\uFEFF", "");
+		if (html.contains("\uFEFF")) {
+			html = html.replace("\uFEFF", "");
+		}
+		if (html.contains("/>")) {
+			html = DomUtils.expandEmptyElements(html);
+		}
 		this.html = html;
 		this.replaceContents = replaceContents;
 		this.lineNumber = 1;

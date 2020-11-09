@@ -44,6 +44,10 @@ import cc.alcina.framework.common.client.util.Ax;
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = Job.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class Job extends VersionableEntity<Job> implements HasIUser {
+	public static Job byId(long id) {
+		return AlcinaPersistentEntityImpl.find(Job.class, id);
+	}
+
 	private Task task;
 
 	private String taskSerialized;
@@ -290,7 +294,12 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public String provideName() {
-		return getTask().getName();
+		try {
+			return getTask().getName();
+		} catch (Exception e) {
+			Ax.simpleExceptionOut(e);
+			return getTaskClassName();
+		}
 	}
 
 	public Optional<Job> provideParent() {

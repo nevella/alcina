@@ -373,7 +373,7 @@ public abstract class ActionViewProviderBase
 					true);
 			html.setVisible(first && (actionLog.length() < 2000 || hasXhtml
 					|| alwaysExpandFirst()));
-			if (!customHtml) {
+			if (!(customHtml || hasXhtml)) {
 				html.setStyleName("logboxpre");
 			}
 			vp.add(link);

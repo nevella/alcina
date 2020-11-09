@@ -2,13 +2,17 @@ package cc.alcina.framework.servlet.task;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.actions.ServerControlAction;
 import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
+import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job2.JobRegistry;
 import cc.alcina.framework.servlet.job2.JobRegistry.PendingStat;
 import cc.alcina.framework.servlet.job2.JobRegistry.QueueStat;
+import cc.alcina.framework.servlet.servlet.control.ControlServlet;
 
 public class TaskLogJobs extends AbstractTaskPerformer {
 	@Override
@@ -32,9 +36,20 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 					.append();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
-			builder.row().cell("Name").cell("Run at").cell("Task");
-			pending.forEach(stat -> builder.row().cell(stat.name)
-					.cell(stat.runAt).cell(stat.taskName));
+			builder.row().cell("Name").cell("Run at").cell("Task").cell("Id")
+					.cell("Link");
+			pending.forEach(stat -> {
+				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
+						.cell(stat.name).cell(stat.runAt).cell(stat.taskName)
+						.cell(stat.jobId);
+				DomNode td = cellBuilder.append();
+				ServerControlAction action = new ServerControlAction();
+				action.getParameters()
+						.setPropertyName(TaskCancelJob.class.getName());
+				action.getParameters().setPropertyValue(stat.jobId);
+				String href = ControlServlet.createActionUrl(action);
+				td.html().addLink("Cancel", href, "_blank");
+			});
 		}
 		{
 			doc.html().body().builder().tag("h2").text("Recently completed")
@@ -46,8 +61,8 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 			DomainDescriptorJob.get().getRecentlyCompletedJobs().limit(30)
 					.forEach(job -> {
 						builder.row().cell(String.valueOf(job.getId()))
-								.cell(job.provideName()).cell(job.getStartTime())
-								.cell(job.getEndTime())
+								.cell(job.provideName())
+								.cell(job.getStartTime()).cell(job.getEndTime())
 								.cell(job.getPerformer() == null ? "(null)"
 										: job.getPerformer()
 												.getAuthenticationSession()

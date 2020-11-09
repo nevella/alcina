@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.publication.request.ContentRequestBase.
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.UrlBuilder;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.ResourceUtilities.SimpleQuery;
 import cc.alcina.framework.entity.SEUtilities;
@@ -37,6 +38,19 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDeliveryEmail;
 import cc.alcina.framework.servlet.servlet.AlcinaServlet;
 
 public class ControlServlet extends AlcinaServlet {
+	public static String createActionUrl(RemoteAction action) {
+		StringMap queryParameters = new StringMap();
+		queryParameters.put("cmd", "perform-action");
+		queryParameters.put("apiKey", getApiKey());
+		queryParameters.put("actionClassName", action.getClass().getName());
+		queryParameters.put("actionJson",
+				JacksonUtils.serializeWithDefaultsAndTypes(action));
+		UrlBuilder urlBuilder = new UrlBuilder();
+		urlBuilder.path("/control.do");
+		queryParameters.forEach((k, v) -> urlBuilder.qsParam(k, v));
+		return urlBuilder.build();
+	}
+
 	public static String invokeRemoteAction(RemoteAction action, String url,
 			String apiKey) {
 		StringMap queryParameters = new StringMap();
@@ -51,6 +65,10 @@ public class ControlServlet extends AlcinaServlet {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	private static String getApiKey() {
+		return Registry.impl(AppLifecycleManager.class).getState().getApiKey();
 	}
 
 	Logger logger = LoggerFactory.getLogger(getClass());
@@ -224,10 +242,6 @@ public class ControlServlet extends AlcinaServlet {
 		String token = deliverer.deliver(new PublicationContext(), inputStream,
 				testContentRequest, null);
 		return emailAddress;
-	}
-
-	protected String getApiKey() {
-		return Registry.impl(AppLifecycleManager.class).getState().getApiKey();
 	}
 
 	@Override

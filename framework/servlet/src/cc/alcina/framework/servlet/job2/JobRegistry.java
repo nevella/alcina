@@ -59,7 +59,13 @@ import cc.alcina.framework.servlet.servlet.control.WriterService;
 
 @RegistryLocation(registryPoint = JobRegistry.class, implementationType = ImplementationType.SINGLETON)
 /**
- * <h2>TODO</h2>
+ * <h2>Overview</h2>
+ * <p>
+ * The alcina jobs system provides scheduling and execution control for
+ * clustered and non-clustered jobs.
+ * </p>
+ * <p>
+ * A 'job' persistent object models execution of a Task object
  * <ul>
  * 
  * </ul>
@@ -384,10 +390,13 @@ public class JobRegistry extends WriterService {
 
 		public String name;
 
+		public String jobId;
+
 		PendingStat(Job job) {
 			taskName = job.getTaskClassName();
 			runAt = job.getRunAt();
 			name = job.getQueue();
+			jobId = String.valueOf(job.getId());
 		}
 	}
 
