@@ -13,8 +13,8 @@ import com.google.api.services.sheets.v4.SheetsScopes;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
-import cc.alcina.framework.servlet.google.GoogleDriveAccessor.DriveAccess;
-import cc.alcina.framework.servlet.google.GoogleSheetAccessor.SheetAccess;
+import cc.alcina.framework.servlet.google.DriveAccessor.DriveAccess;
+import cc.alcina.framework.servlet.google.SheetAccessor.SheetAccess;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)

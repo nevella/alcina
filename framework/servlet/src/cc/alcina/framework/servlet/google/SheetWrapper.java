@@ -18,8 +18,8 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 
-public class GoogleSheetWrapper implements Iterable<GoogleSheetWrapper.Row>,
-		Iterator<GoogleSheetWrapper.Row> {
+public class SheetWrapper
+		implements Iterable<SheetWrapper.Row>, Iterator<SheetWrapper.Row> {
 	private List<RowData> rowData;
 
 	int rowIdx = 1;
@@ -45,7 +45,7 @@ public class GoogleSheetWrapper implements Iterable<GoogleSheetWrapper.Row>,
 
 	public BatchUpdateValuesRequest batchUpdateRequest;
 
-	public GoogleSheetWrapper(Sheet sheet) {
+	public SheetWrapper(Sheet sheet) {
 		this.sheet = sheet;
 		data = sheet.getData();
 		rowData = data.get(0).getRowData();
@@ -68,13 +68,17 @@ public class GoogleSheetWrapper implements Iterable<GoogleSheetWrapper.Row>,
 	}
 
 	@Override
-	public Iterator<GoogleSheetWrapper.Row> iterator() {
+	public Iterator<SheetWrapper.Row> iterator() {
 		return this;
 	}
 
 	@Override
 	public Row next() {
 		return new Row(rowIdx++);
+	}
+
+	public void reset() {
+		rowIdx = 1;
 	}
 
 	public void setDateValue(int rowCounter, String key, String formattedDate) {
