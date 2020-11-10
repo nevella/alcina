@@ -37,6 +37,13 @@ public class StandardSchedules {
 		}
 	}
 
+	public static class ImmediateLocalSchedule extends Schedule {
+		public ImmediateLocalSchedule() {
+			withClustered(false).withQueueMaxConcurrentJobs(1)
+					.withNext(LocalDateTime.now());
+		}
+	}
+
 	public static class MinuteSchedule extends Schedule {
 		public MinuteSchedule() {
 			withClustered(true).withTimewiseLimited(true)

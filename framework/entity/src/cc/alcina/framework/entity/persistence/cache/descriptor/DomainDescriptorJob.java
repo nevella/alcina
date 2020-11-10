@@ -1,6 +1,8 @@
 package cc.alcina.framework.entity.persistence.cache.descriptor;
 
+import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.domain.Domain;
@@ -54,6 +56,23 @@ public class DomainDescriptorJob {
 					}).stream().map(qr -> (Job) qr.getObject())
 							.map(Job::getQueue).distinct()
 							.forEach(queueChanged::publish);
+				}
+			} else if (event
+					.getPersistenceEventType() == DomainTransformPersistenceEventType.PRE_COMMIT) {
+				AdjunctTransformCollation collation = event
+						.getTransformPersistenceToken().getTransformCollation();
+				if (collation.has(jobImplClass)) {
+					collation.ensureApplied();
+					List<Job> invalidJobs = collation.query(jobImplClass)
+							.stream().map(qr -> (Job) qr.getObject())
+							.filter(job -> job.getQueue() == null
+									|| job.getTaskClassName() == null)
+							.distinct().collect(Collectors.toList());
+					if (invalidJobs.size() > 0) {
+						throw Ax.runtimeException(
+								"Persisting jobs with null queue/task",
+								invalidJobs);
+					}
 				}
 			}
 		}

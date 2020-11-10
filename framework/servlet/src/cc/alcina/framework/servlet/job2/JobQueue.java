@@ -95,6 +95,7 @@ public class JobQueue {
 
 	public void onMetadataChanged() {
 		synchronized (metadataChanged) {
+			ensureAllocating();
 			long event = metadataChangedCounter.get();
 			logger.debug("publish metadatachanged: {} {}", name, event);
 			metadataChanged.add(event);
