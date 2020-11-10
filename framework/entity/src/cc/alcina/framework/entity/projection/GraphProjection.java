@@ -160,7 +160,7 @@ public class GraphProjection {
 	}
 
 	public static String fieldwiseToString(Object obj) {
-		return fieldwiseToString(obj, true, false, 999);
+		return fieldwiseToString(obj, false, false, 999);
 	}
 
 	public static String fieldwiseToString(Object obj, boolean withTypes,

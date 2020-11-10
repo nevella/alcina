@@ -37,10 +37,10 @@ import com.google.api.services.sheets.v4.model.ValueRange;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
-public class GoogleSheetAccessor {
+public class SheetAccessor {
 	private JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
 
-	private SheetAccess sheetAccess;
+	SheetAccess sheetAccess;
 
 	private Sheets service;
 
@@ -48,7 +48,7 @@ public class GoogleSheetAccessor {
 
 	public void bold(GridRange range) throws IOException {
 		ensureSheets();
-		ensureSheet();
+		ensureSpreadsheet();
 		CellFormat cellFormat = new CellFormat();
 		TextFormat textFormat = new TextFormat();
 		textFormat.setBold(true);
@@ -68,7 +68,7 @@ public class GoogleSheetAccessor {
 		BatchUpdateSpreadsheetResponse response = update.execute();
 	}
 
-	public void ensureSheet() {
+	public void ensureSpreadsheet() {
 		if (spreadsheet != null) {
 			return;
 		}
@@ -82,14 +82,21 @@ public class GoogleSheetAccessor {
 	}
 
 	public List<RowData> getRowData(int sheetIdx) {
-		ensureSheet();
+		ensureSpreadsheet();
 		List<GridData> data = spreadsheet.getSheets().get(sheetIdx).getData();
 		return data.get(0).getRowData();
 	}
 
 	public Sheet getSheet(int sheetIdx) {
-		ensureSheet();
+		ensureSpreadsheet();
 		return spreadsheet.getSheets().get(sheetIdx);
+	}
+
+	public Sheet getSheet(String name) {
+		ensureSpreadsheet();
+		return spreadsheet.getSheets().stream()
+				.filter(sheet -> sheet.getProperties().getTitle().equals(name))
+				.findFirst().get();
 	}
 
 	public void update(BatchUpdateValuesRequest batchUpdate) {
@@ -111,7 +118,7 @@ public class GoogleSheetAccessor {
 				.setValueInputOption("RAW").execute();
 	}
 
-	public GoogleSheetAccessor withSheetAccess(SheetAccess sheetAccess) {
+	public SheetAccessor withSheetAccess(SheetAccess sheetAccess) {
 		this.sheetAccess = sheetAccess;
 		return this;
 	}
@@ -162,6 +169,12 @@ public class GoogleSheetAccessor {
 
 		private String credentialsStorageLocalPath;
 
+		private String sheetName;
+
+		public String getSheetName() {
+			return this.sheetName;
+		}
+
 		public SheetAccess withApplicationName(String applicationName) {
 			this.applicationName = applicationName;
 			return this;
@@ -180,6 +193,11 @@ public class GoogleSheetAccessor {
 
 		public SheetAccess withScopes(List<String> scopes) {
 			this.scopes = scopes;
+			return this;
+		}
+
+		public SheetAccess withSheetName(String sheetName) {
+			this.sheetName = sheetName;
 			return this;
 		}
 

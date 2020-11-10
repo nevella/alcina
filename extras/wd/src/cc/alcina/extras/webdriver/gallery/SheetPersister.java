@@ -21,8 +21,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.ShellWrapper;
-import cc.alcina.framework.servlet.google.GoogleDriveAccessor;
-import cc.alcina.framework.servlet.google.GoogleSheetAccessor;
+import cc.alcina.framework.servlet.google.DriveAccessor;
+import cc.alcina.framework.servlet.google.SheetAccessor;
 
 public class SheetPersister {
 	File base;
@@ -35,7 +35,7 @@ public class SheetPersister {
 
 	private String userAgentType;
 
-	private GoogleDriveAccessor driveAccessor;
+	private DriveAccessor driveAccessor;
 
 	private String dateStamp;
 
@@ -56,7 +56,7 @@ public class SheetPersister {
 	}
 
 	private void updateSheet() throws Exception {
-		GoogleSheetAccessor sheetAccessor = new GoogleSheetAccessor()
+		SheetAccessor sheetAccessor = new SheetAccessor()
 				.withSheetAccess(configuration.asSheetAccess());
 		String hashes = new ShellWrapper()
 				.runBashScript(configuration.repoHashesCommand).output;
@@ -119,7 +119,7 @@ public class SheetPersister {
 	}
 
 	void uploadImages() throws IOException {
-		driveAccessor = new GoogleDriveAccessor()
+		driveAccessor = new DriveAccessor()
 				.withDriveAccess(configuration.asDriveAccess());
 		String folderPath = Ax.format("%s/%s/%s", configuration.name,
 				userAgentType, dateStamp);

@@ -15,8 +15,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
-import cc.alcina.framework.servlet.google.GoogleSheetAccessor;
-import cc.alcina.framework.servlet.google.GoogleSheetAccessor.SheetAccess;
+import cc.alcina.framework.servlet.google.SheetAccessor;
+import cc.alcina.framework.servlet.google.SheetAccessor.SheetAccess;
 
 @SuppressWarnings("unused")
 public class Gallery {
@@ -75,9 +75,9 @@ public class Gallery {
 				this.galleryConfiguration = WrappedObjectHelper.xmlDeserialize(
 						GalleryConfiguration.class, configurationXml);
 				configuration = this.galleryConfiguration.find(appName);
-				new GoogleSheetAccessor()
+				new SheetAccessor()
 						.withSheetAccess(configuration.asSheetAccess())
-						.ensureSheet();
+						.ensureSpreadsheet();
 			} catch (Exception e) {
 				GalleryConfiguration.dumpSampleConfiguration();
 				throw new WrappedRuntimeException(e);
