@@ -10,6 +10,7 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -77,6 +78,14 @@ public class ShellWrapper {
 			throw new Exception(tuple.error);
 		} else {
 			return tuple;
+		}
+	}
+
+	public void runBashScriptNoThrow(String cmd, Object... args) {
+		try {
+			runBashScript(Ax.format(cmd, args));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 
