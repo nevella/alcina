@@ -15,7 +15,7 @@ public abstract class SheetPersistenceModel {
 		persistence.load();
 	}
 
-	public void save() {
-		persistence.save();
+	public void save(boolean dryRun) {
+		persistence.save(dryRun);
 	}
 }
