@@ -96,8 +96,10 @@ public class ClusterTransformListener
 					JobRegistry1.getLauncherName(), System.currentTimeMillis());
 			domainStore.getPersistenceEvents()
 					.addDomainTransformPersistenceListener(this);
-			TransformPersisterInPersistenceContext.topicPreFinalCommit
-					.add(preFinalCommitlistener);
+			if (domainStore == DomainStore.writableStore()) {
+				TransformPersisterInPersistenceContext.topicPreFinalCommit
+						.add(preFinalCommitlistener);
+			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -105,8 +107,10 @@ public class ClusterTransformListener
 
 	@Override
 	public void stopService() {
-		TransformPersisterInPersistenceContext.topicPreFinalCommit
-				.remove(preFinalCommitlistener);
+		if (domainStore == DomainStore.writableStore()) {
+			TransformPersisterInPersistenceContext.topicPreFinalCommit
+					.remove(preFinalCommitlistener);
+		}
 		domainStore.getPersistenceEvents()
 				.removeDomainTransformPersistenceListener(this);
 	}

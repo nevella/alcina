@@ -275,8 +275,7 @@ public class Registry {
 		MultikeyMap<RegistryKey> pointLookup = registry.asMapEnsure(false,
 				registryPointKey);
 		if (pointLookup == null) {
-			throw new RuntimeException(
-					Ax.format("Unable to locate %s ", registryPoint));
+			return Collections.emptyList();
 		}
 		return pointLookup.allValues().stream()
 				.map(key -> key.clazz(classLookup))
