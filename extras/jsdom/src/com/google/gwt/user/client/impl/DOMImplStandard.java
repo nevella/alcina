@@ -36,10 +36,11 @@ public abstract class DOMImplStandard extends DOMImpl {
 
 	private static EventMap captureEventDispatchers = getCaptureEventDispatchers();
 
-	@Deprecated // We no longer want any external JSNI dependencies
+	// @Deprecated commented beause still reffed by DOMImplMozilla
+	// @Deprecated // We no longer want any external JSNI dependencies
 	private static JavaScriptObject dispatchEvent;
 
-	@Deprecated // We no longer want any external JSNI dependencies
+	// @Deprecated // We no longer want any external JSNI dependencies
 	private static JavaScriptObject dispatchUnhandledEvent;
 
 	/**
