@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job2.JobRegistry;
@@ -57,16 +58,27 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
 			builder.row().cell("Id").cell("Name").cell("Started")
-					.cell("Finished").cell("Performer");
-			DomainDescriptorJob.get().getRecentlyCompletedJobs().limit(30)
-					.forEach(job -> {
-						builder.row().cell(String.valueOf(job.getId()))
+					.cell("Finished").cell("Performer").cell("Link");
+			DomainDescriptorJob.get().getRecentlyCompletedJobs()
+					.filter(job -> Ax.isBlank(value)
+							|| job.getTaskClassName().matches(value))
+					.limit(30).forEach(job -> {
+						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
+								.cell(String.valueOf(job.getId()))
 								.cell(job.provideName())
 								.cell(job.getStartTime()).cell(job.getEndTime())
 								.cell(job.getPerformer() == null ? "(null)"
 										: job.getPerformer()
 												.getAuthenticationSession()
 												.getUser().toIdNameString());
+						DomNode td = cellBuilder.append();
+						ServerControlAction action = new ServerControlAction();
+						action.getParameters().setPropertyName(
+								TaskLogJobDetails.class.getName());
+						action.getParameters()
+								.setPropertyValue(String.valueOf(job.getId()));
+						String href = ControlServlet.createActionUrl(action);
+						td.html().addLink("Details", href, "_blank");
 					});
 		}
 		slf4jLogger.info(doc.prettyToString());
