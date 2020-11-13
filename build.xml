@@ -210,12 +210,14 @@
 				<!-- put in server (servlet/war) jar due to GWT/RPC classloader issues -->
 				<exclude name="${framework.remote.interface.package}" />
 				<exclude name="com/google/gwt/dom/client/**/*.*" />
+				<exclude name="org/w3c/dom/**/*.*" />
 			</fileset>
 			<fileset dir="${framework.entity.build.dir}">
 				<include name="com/google/gwt/dom/client/DomState.class" />
 			</fileset>
 			<fileset dir="${framework.dir}/common/src">
 				<include name="**/*.java" />
+				<exclude name="org/w3c/dom/**/*.*" />
 			</fileset>
 			<fileset dir="${framework.dir}/gwt/src">
 				<include name="**/*.java" />
@@ -223,6 +225,7 @@
 			<fileset dir="${framework.entity.base.dir}/src">
 				<include name="**/*.java" />
 				<include name="**/*.properties" />
+				<exclude name="org/w3c/dom/**/*.*" />
 			</fileset>
 			<fileset dir="${framework.classmeta.build.dir}">
 				<include name="**/*.*" />
