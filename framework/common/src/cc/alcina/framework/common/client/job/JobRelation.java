@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.Ax;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
@@ -45,6 +46,21 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 		JobRelationType old_type = this.type;
 		this.type = type;
 		propertyChangeSupport().firePropertyChange("type", old_type, type);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format(" %s::%s => %s => %s::%s",
+				getFrom().toLocator().toIdPairString(),
+				getFrom().provideShortName(), type,
+				getTo().toLocator().toIdPairString(),
+				getTo().provideShortName());
+	}
+
+	public String toStringOther(Job job) {
+		Job other = job == getFrom() ? getTo() : getFrom();
+		return Ax.format("%s : %s : %s", getType(),
+				other.toLocator().toIdPairString(), other.provideName());
 	}
 
 	@ClientInstantiable

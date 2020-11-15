@@ -77,14 +77,14 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 						slf4jLogger.info("At now() - 1 days, exiting");
 						return;
 					}
+					TransformPropagationPolicy policy = Registry
+							.impl(TransformPropagationPolicy.class);
 					List<Long> toDeleteTransformIds = request.getEvents()
 							.stream().filter(event -> {
 								if (event.getObjectClass() == null) {
 									return true;
 								}
-								return !Registry
-										.impl(TransformPropagationPolicy.class)
-										.shouldPersistEventRecord(event);
+								return !policy.shouldPersistEventRecord(event);
 							}).map(e -> ((DomainTransformEventPersistent) e)
 									.getId())
 							.collect(Collectors.toList());
@@ -122,6 +122,6 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 	protected void run0() throws Exception {
 		// run as root, otherwise shouldPersistEventRecord will always return
 		// true
-		MethodContext.instance().withRootPermissions().run(this::reap);
+		MethodContext.instance().withRootPermissions(true).run(this::reap);
 	}
 }

@@ -13,6 +13,9 @@
  */
 package cc.alcina.framework.common.client.actions;
 
+import java.util.Collections;
+import java.util.List;
+
 import cc.alcina.framework.common.client.job.Task;
 
 /**
@@ -20,6 +23,10 @@ import cc.alcina.framework.common.client.job.Task;
  * @author Nick Reddel
  */
 public interface TaskPerformer<T extends Task> {
+	default List<Lockable> getLocks() {
+		return Collections.emptyList();
+	}
+
 	default int getVersionNumber() {
 		return 0;
 	}

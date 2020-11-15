@@ -9,11 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
-import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
-import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
@@ -37,24 +34,6 @@ public class ClusterTransformListener
 	private TransformCommitLogHost commitLogHost;
 
 	Logger logger = LoggerFactory.getLogger(getClass());
-
-	private TopicListener<DomainTransformLayerWrapper> preFinalCommitlistener = new TopicListener<DomainTransformLayerWrapper>() {
-		@Override
-		public void topicPublished(String key,
-				DomainTransformLayerWrapper message) {
-			ClassLoader contextClassLoader = Thread.currentThread()
-					.getContextClassLoader();
-			try {
-				Thread.currentThread()
-						.setContextClassLoader(ClassLoaderAwareRegistryProvider
-								.get().getServletLayerClassloader());
-				publishRequests(message.persistentRequests, State.PRE_COMMIT);
-			} finally {
-				Thread.currentThread()
-						.setContextClassLoader(contextClassLoader);
-			}
-		}
-	};
 
 	public ClusterTransformListener(TransformCommitLogHost commitLogHost,
 			TransformCommitLog transformCommitLog, DomainStore domainStore) {
@@ -82,6 +61,19 @@ public class ClusterTransformListener
 		case COMMIT_OK:
 			publishRequests(requests, ClusterTransformRequest.State.COMMIT);
 			break;
+		case PRE_FLUSH:
+			ClassLoader contextClassLoader = Thread.currentThread()
+					.getContextClassLoader();
+			try {
+				Thread.currentThread()
+						.setContextClassLoader(ClassLoaderAwareRegistryProvider
+								.get().getServletLayerClassloader());
+				publishRequests(event.getPersistedRequests(), State.PRE_COMMIT);
+			} finally {
+				Thread.currentThread()
+						.setContextClassLoader(contextClassLoader);
+			}
+			break;
 		case COMMIT_ERROR:
 			publishRequests(requests, ClusterTransformRequest.State.ABORTED);
 			break;
@@ -96,10 +88,6 @@ public class ClusterTransformListener
 					JobRegistry1.getLauncherName(), System.currentTimeMillis());
 			domainStore.getPersistenceEvents()
 					.addDomainTransformPersistenceListener(this);
-			if (domainStore == DomainStore.writableStore()) {
-				TransformPersisterInPersistenceContext.topicPreFinalCommit
-						.add(preFinalCommitlistener);
-			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -108,11 +96,9 @@ public class ClusterTransformListener
 	@Override
 	public void stopService() {
 		if (domainStore == DomainStore.writableStore()) {
-			TransformPersisterInPersistenceContext.topicPreFinalCommit
-					.remove(preFinalCommitlistener);
+			domainStore.getPersistenceEvents()
+					.removeDomainTransformPersistenceListener(this);
 		}
-		domainStore.getPersistenceEvents()
-				.removeDomainTransformPersistenceListener(this);
 	}
 
 	protected void publishRequests(

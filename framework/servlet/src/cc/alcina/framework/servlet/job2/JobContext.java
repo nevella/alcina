@@ -1,9 +1,16 @@
 package cc.alcina.framework.servlet.job2;
 
 import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
@@ -15,12 +22,16 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
+import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.RelatedJobCompletion;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.servlet.job2.JobRegistry.ActionPerformerTrackMetrics;
+import cc.alcina.framework.servlet.job2.JobRegistry.SequenceCompletionLatch;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 
@@ -40,6 +51,13 @@ public class JobContext {
 		get().getLogger().info(template, args);
 	}
 
+	public static void setResultMessage(String resultMessage) {
+		info(resultMessage);
+		get().getJob().setResultMessage(resultMessage);
+	}
+
+	private boolean schedulingSubTasks;
+
 	private Job job;
 
 	private TaskPerformer performer;
@@ -54,6 +72,23 @@ public class JobContext {
 
 	private int subtasksCompleted;
 
+	private LinkedList<RelatedJobCompletion> completionEvents = new LinkedList<>();
+
+	private TopicListener<RelatedJobCompletion> relatedJobCompletionNotifier = (
+			k, completion) -> {
+		if (completion.job == job) {
+			logger.debug(
+					"Related job completiong changed for job {} - {} complete",
+					job, completion.related.size());
+			synchronized (completionEvents) {
+				completionEvents.add(completion);
+				completionEvents.notifyAll();
+			}
+		}
+	};
+
+	Thread thread;
+
 	public JobContext(Job job, PersistenceType persistenceType,
 			TaskPerformer performer) {
 		this.job = job;
@@ -63,7 +98,56 @@ public class JobContext {
 		noHttpContext = AlcinaServletContext.httpContext() == null;
 	}
 
+	public synchronized void awaitChildCompletion() {
+		Set<Job> uncompletedChildren = new LinkedHashSet<>();
+		while (true) {
+			/*
+			 * Because jobs can be added to uncompleted children, only populate
+			 * in the synchronized block (so we don[t miss events)
+			 */
+			if (uncompletedChildren.isEmpty()) {
+				if (!job.provideUncompletedChildren().anyMatch(j -> true)) {
+					break;
+				}
+			}
+			Transaction.commit();
+			try {
+				DomainDescriptorJob.get().relatedJobCompletionChanged
+						.add(relatedJobCompletionNotifier);
+				RelatedJobCompletion event = null;
+				synchronized (completionEvents) {
+					if (uncompletedChildren.isEmpty()) {
+						uncompletedChildren = job.provideUncompletedChildren()
+								.collect(Collectors.toSet());
+					}
+					if (uncompletedChildren.size() > 0
+							&& completionEvents.isEmpty()) {
+						Transaction.ensureEnded();
+						try {
+							// FIXME - mvcc.jobs - remove timeout
+							completionEvents.wait(10000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						Transaction.begin();
+					}
+					if (completionEvents.size() > 0) {
+						event = completionEvents.removeFirst();
+					}
+				}
+				if (event != null) {
+					uncompletedChildren.removeAll(event.related);
+				}
+			} finally {
+				DomainDescriptorJob.get().relatedJobCompletionChanged
+						.remove(relatedJobCompletionNotifier);
+			}
+		}
+	}
+
 	public void end() {
+		Preconditions.checkState(
+				persistenceType != PersistenceType.SchedulingSubJobs);
 		if (noHttpContext) {
 			InternalMetrics.get().endTracker(performer);
 		}
@@ -78,6 +162,13 @@ public class JobContext {
 			// exit)
 		} else {
 			Transaction.endAndBeginNew();
+		}
+		SequenceCompletionLatch sequenceCompletionLatch = JobRegistry
+				.get().completionLatches.remove(job);
+		if (sequenceCompletionLatch != null) {
+			logger.warn("Fired child completion to sequence latch: {}", job);
+			sequenceCompletionLatch.context = this;
+			sequenceCompletionLatch.onChildJobsCompleted();
 		}
 	}
 
@@ -101,9 +192,23 @@ public class JobContext {
 		return this.subtasksCompleted;
 	}
 
+	public boolean isSchedulingSubTasks() {
+		return this.schedulingSubTasks;
+	}
+
 	public void onJobException(Exception e) {
 		job.setResultType(JobResultType.EXCEPTION);
 		logger.warn("Unexpected job exception", e);
+	}
+
+	public void setSchedulingSubTasks(boolean schedulingSubTasks) {
+		this.schedulingSubTasks = schedulingSubTasks;
+		if (schedulingSubTasks) {
+			persistenceType = PersistenceType.SchedulingSubJobs;
+		} else {
+			Transaction.commit();
+			persistenceType = PersistenceType.Immediate;
+		}
 	}
 
 	public void setSubtaskCount(int subtaskCount) {
@@ -121,8 +226,10 @@ public class JobContext {
 				info("Job cancelled");
 				throw new CancelledException("Job cancelled");
 			}
-			if (cursor.provideParent().isPresent()) {
-				cursor = cursor.provideParent().get();
+			Optional<Job> parent = cursor.provideFirstInSequence()
+					.provideParent();
+			if (parent.isPresent()) {
+				cursor = parent.get();
 			} else {
 				return;
 			}
@@ -133,11 +240,7 @@ public class JobContext {
 		switch (persistenceType) {
 		case Immediate: {
 			if (respectImmediate) {
-				// commit asap
 				Transaction.commit();
-				synchronized (job) {
-					job.notify();
-				}
 			} else {
 				TransformCommit.enqueueTransforms(
 						JobRegistry.TRANSFORM_QUEUE_NAME, Job.class,
@@ -156,6 +259,39 @@ public class JobContext {
 		case None:
 			TransformCommit.removeTransforms(Job.class, JobRelation.class);
 			break;
+		case SchedulingSubJobs:
+			break;
+		}
+	}
+
+	void awaitSequenceCompletion() {
+		while (true) {
+			if (job.provideUncompletedSequential().isEmpty()) {
+				return;
+			}
+			try {
+				DomainDescriptorJob.get().relatedJobCompletionChanged
+						.add(relatedJobCompletionNotifier);
+				RelatedJobCompletion event = null;
+				synchronized (completionEvents) {
+					if (completionEvents.isEmpty()) {
+						Transaction.ensureEnded();
+						try {
+							// FIXME - mvcc.jobs - timeout is for debugging
+							completionEvents.wait(10000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						Transaction.begin();
+					}
+					if (completionEvents.size() > 0) {
+						event = completionEvents.removeFirst();
+					}
+				}
+			} finally {
+				DomainDescriptorJob.get().relatedJobCompletionChanged
+						.remove(relatedJobCompletionNotifier);
+			}
 		}
 	}
 
@@ -174,6 +310,7 @@ public class JobContext {
 
 	void start() {
 		LooseContext.set(CONTEXT_CURRENT, this);
+		thread = Thread.currentThread();
 		job.setStartTime(new Date());
 		job.setState(JobState.PROCESSING);
 		job.setPerformerVersionNumber(performer.getVersionNumber());
@@ -190,6 +327,6 @@ public class JobContext {
 	}
 
 	enum PersistenceType {
-		None, Immediate, Queued
+		None, Immediate, Queued, SchedulingSubJobs
 	}
 }

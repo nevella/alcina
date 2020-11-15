@@ -20,5 +20,9 @@ import cc.alcina.framework.common.client.job.Task;
  * @author Nick Reddel
  */
 public interface SelfPerformer<T extends Task>
-		extends Task, TaskPerformer<T> {
+		extends Task, TaskPerformer<T>, Runnable {
+	@Override
+	default void run() {
+		perform();
+	}
 }

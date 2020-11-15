@@ -159,8 +159,9 @@ public class ControlServlet extends AlcinaServlet {
 		}
 		case PERFORM_ACTION: {
 			String message = performAction(req);
+			message = Ax.blankTo(message, "<No log>");
 			logger.info(message);
-			String regex = "(?s)^INFO.{0,50}(<\\?xml|<html).*";
+			String regex = "(?s).*(<\\?xml|<html.*)";
 			if (message.matches(regex)) {
 				response.setContentType("text/html");
 				response.getWriter().write(message.replaceFirst(regex, "$1"));

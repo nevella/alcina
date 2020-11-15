@@ -73,6 +73,7 @@ import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.RemoteTransformPersister;
@@ -81,6 +82,8 @@ import cc.alcina.framework.entity.transform.TransformConflicts;
 import cc.alcina.framework.entity.transform.TransformConflicts.TransformConflictsFromOfflineSupport;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
+import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
@@ -258,8 +261,11 @@ public class TransformCommit {
 							request.getPriorRequestsWithoutResponse()
 									.addAll(toCommit);
 						}
-						transformLayerWrapper = get().transform(request, true,
-								true, true);
+						transformLayerWrapper = MethodContext.instance()
+								.withContextTrue(
+										AdjunctTransformCollation.CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD)
+								.call(() -> get().transform(request, true, true,
+										true));
 						ThreadlocalTransformManager.cast().resetTltm(null);
 						if (logger != null) {
 							logger.info(Ax.format(
@@ -422,7 +428,12 @@ public class TransformCommit {
 						EntityLayerObjects.get().getServerAsClientInstance()
 								.getId(),
 						PermissionsManager.get().getUserId(), "0.0.0.0"));
-		if (pendingTransformCount > maxTransformChunkSize
+		long persistentTransformRecordCount = Registry
+				.impl(TransformPropagationPolicy.class)
+				.getProjectedPersistentCount(TransformManager.get()
+						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
+						.stream());
+		if (persistentTransformRecordCount > maxTransformChunkSize
 				&& !LooseContext.is(CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)) {
 			commitLocalTransformsInChunks(maxTransformChunkSize);
 			return new DomainTransformLayerWrapper(null);
@@ -512,6 +523,9 @@ public class TransformCommit {
 	private static int commitTransforms(boolean asRoot) {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
+		if (pendingTransformCount == 0) {
+			return 0;
+		}
 		if (AppPersistenceBase.isTest()
 				&& !TransformCommit.isTestTransformCascade()) {
 			if (!LooseContext
@@ -835,7 +849,9 @@ public class TransformCommit {
 			DomainStore.stores().writableStore().getPersistenceEvents()
 					.fireDomainTransformPersistenceEvent(
 							new DomainTransformPersistenceEvent(
-									persistenceToken, null, true));
+									persistenceToken, null,
+									DomainTransformPersistenceEventType.PRE_COMMIT,
+									true));
 			MetricLogging.get().start("transform-commit");
 			Transaction.current().toDbPersisting();
 			DomainTransformLayerWrapper wrapper = Registry
@@ -864,7 +880,9 @@ public class TransformCommit {
 			DomainStore.stores().writableStore().getPersistenceEvents()
 					.fireDomainTransformPersistenceEvent(
 							new DomainTransformPersistenceEvent(
-									persistenceToken, wrapper, true));
+									persistenceToken, wrapper,
+									wrapper.providePersistenceEventType(),
+									true));
 			unexpectedException = false;
 			if (wrapper.response
 					.getResult() == DomainTransformResponseResult.OK) {

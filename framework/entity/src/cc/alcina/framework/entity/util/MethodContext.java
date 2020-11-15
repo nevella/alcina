@@ -105,8 +105,8 @@ public class MethodContext {
 		return this;
 	}
 
-	public MethodContext withRootPermissions() {
-		this.rootPermissions = true;
+	public MethodContext withRootPermissions(boolean rootPermissions) {
+		this.rootPermissions = rootPermissions;
 		return this;
 	}
 

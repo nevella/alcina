@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.InnerAccess;
@@ -67,7 +68,7 @@ public class JobScheduler {
 	/*
 	 * all access locked on the field
 	 */
-	private LinkedList<String> toFire = new LinkedList<>();
+	private LinkedList<String> scheduleEvents = new LinkedList<>();
 
 	JobScheduler(JobRegistry jobRegistry) {
 		this.jobRegistry = jobRegistry;
@@ -78,14 +79,14 @@ public class JobScheduler {
 	public void stopService() {
 		timer.cancel();
 		finished.set(true);
-		synchronized (toFire) {
-			toFire.notify();
+		synchronized (scheduleEvents) {
+			scheduleEvents.notify();
 		}
 	}
 
 	private void ensureScheduled(Schedule schedule, Class<? extends Task> clazz,
 			LocalDateTime nextRun) {
-		logger.info("Ensure schedule - {} - {}", clazz, nextRun);
+		logger.debug("Ensure schedule - {} - {}", clazz, nextRun);
 		JobRegistry.get().withJobMetadataLock(schedule.getQueueName(),
 				schedule.isClustered(), () -> {
 					Optional<? extends Job> pending = DomainDescriptorJob.get()
@@ -93,7 +94,8 @@ public class JobScheduler {
 									false)
 							.filter(job -> job.provideIsTaskClass(clazz))
 							.findFirst();
-					if (pending.isPresent()) {
+					if (pending.isPresent()
+							&& pending.get().getRunAt() != null) {
 						if (SEUtilities
 								.toLocalDateTime(pending.get().getRunAt())
 								.isAfter(nextRun)) {
@@ -103,11 +105,9 @@ public class JobScheduler {
 									.setRunAt(SEUtilities.toOldDate(nextRun));
 						}
 					} else {
-						Job job = jobRegistry
-								.createJob(Reflections.newInstance(clazz));
-						job.setQueue(schedule.getQueueName());
+						Job job = jobRegistry.createJob(
+								Reflections.newInstance(clazz), schedule);
 						job.setRunAt(SEUtilities.toOldDate(nextRun));
-						job.setClustered(schedule.isClustered());
 						logger.info("Scheduled job {} for {}", job, nextRun);
 					}
 				});
@@ -130,7 +130,7 @@ public class JobScheduler {
 				String message = Ax.format("wakeup for %s - %s",
 						clazz.getSimpleName(), nextRun);
 				logger.info("Schedule {}", message);
-				MethodContext.instance().withRootPermissions()
+				MethodContext.instance().withRootPermissions(true)
 						.withWrappingTransaction().run(() -> {
 							enqueueSchedule(message);
 						});
@@ -138,9 +138,9 @@ public class JobScheduler {
 		}, delay + 1);
 	}
 
-	private int getToFireQueueLength() {
-		synchronized (toFire) {
-			return toFire.size();
+	private int getEventQueueLength() {
+		synchronized (scheduleEvents) {
+			return scheduleEvents.size();
 		}
 	}
 
@@ -171,14 +171,15 @@ public class JobScheduler {
 					job.setState(JobState.ABORTED);
 					job.setEndTime(new Date());
 					job.setResultType(JobResultType.DID_NOT_COMPLETE);
-					if (job.isClustered()) {
+					if (job.isClustered() && job.provideCanDeserializeTask()) {
 						Schedule schedule = getSchedule(
 								job.getTask().getClass(), false);
 						if (schedule != null) {
 							RetryPolicy retryPolicy = schedule.getRetryPolicy();
 							if (retryPolicy.shouldRetry(job)) {
-								Job retry = jobRegistry
-										.createJob(job.getTask());
+								Job retry = jobRegistry.createJob(job.getTask(),
+										schedule);
+								retry.setQueue(job.getQueue());
 								job.createRelation(retry,
 										JobRelationType.retry);
 								logger.warn(
@@ -232,8 +233,10 @@ public class JobScheduler {
 				.flatMap(Collection::stream).forEach(loc -> {
 					Class<? extends Task> taskClass = loc.targetClass();
 					Schedule schedule = getSchedule(taskClass, true);
-					queueNameSchedulableTasks.add(schedule.getQueueName(),
-							taskClass);
+					if (schedule != null) {
+						queueNameSchedulableTasks.add(schedule.getQueueName(),
+								taskClass);
+					}
 				});
 	}
 
@@ -246,10 +249,10 @@ public class JobScheduler {
 	}
 
 	void enqueueSchedule(String id) {
-		synchronized (toFire) {
+		synchronized (scheduleEvents) {
 			logger.debug("Enqueueing schedule event: {}", id);
-			toFire.add(id);
-			toFire.notifyAll();
+			scheduleEvents.add(id);
+			scheduleEvents.notifyAll();
 		}
 	}
 
@@ -258,7 +261,8 @@ public class JobScheduler {
 			Optional<? extends Job> pending = DomainDescriptorJob.get()
 					.getUnallocatedJobsForQueue(queueName, true)
 					.filter(Job::provideIsAllocatable).findFirst();
-			if (pending.isPresent()) {
+			if (pending.isPresent()
+					&& pending.get().provideCanDeserializeTask()) {
 				Job job = pending.get();
 				Schedule schedule = getSchedule(job.getTask().getClass(),
 						false);
@@ -318,6 +322,7 @@ public class JobScheduler {
 	public interface Schedulable {
 	}
 
+	@RegistryLocation(registryPoint = Schedule.class)
 	public static class Schedule {
 		private ExecutorServiceProvider exexcutorServiceProvider = new CurrentThreadExecutorServiceProvider();
 
@@ -402,19 +407,17 @@ public class JobScheduler {
 	public class ScheduleJobsThread extends Thread {
 		@Override
 		public void run() {
-			setName("Schedule-jobs-queue");
+			setName("Schedule-jobs-queue-" + hashCode());
 			while (!finished.get()) {
 				try {
 					String id = null;
-					if (getToFireQueueLength() == 0) {
-						synchronized (toFire) {
-							toFire.wait();
+					synchronized (scheduleEvents) {
+						if (getEventQueueLength() == 0) {
+							scheduleEvents.wait();
 							logger.debug("Woken from toFire queue wakeup");
 						}
-					}
-					if (getToFireQueueLength() > 0) {
-						synchronized (toFire) {
-							id = toFire.removeFirst();
+						if (getEventQueueLength() > 0) {
+							id = scheduleEvents.removeFirst();
 							logger.debug("Removed id from toFire: {}", id);
 						}
 					}
@@ -444,6 +447,13 @@ public class JobScheduler {
 	public interface ScheduleProvider {
 		public Schedule getSchedule(Class<? extends Task> taskClass,
 				boolean onAppplicationStart);
+
+		default Schedule getSchedule(Job job) {
+			/*
+			 * For distributed subjob schedule creation
+			 */
+			return null;
+		}
 	}
 
 	private static class RetryNTimesPolicy implements RetryPolicy {

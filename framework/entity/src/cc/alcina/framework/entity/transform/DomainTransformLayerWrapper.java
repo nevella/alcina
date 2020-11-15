@@ -26,9 +26,11 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 
 /**
  * 
@@ -130,5 +132,11 @@ public class DomainTransformLayerWrapper implements Serializable {
 		this.response = toMerge.response;
 		this.eventsByClass = toMerge.eventsByClass;
 		this.mergeCount = toMerge.mergeCount;
+	}
+
+	public DomainTransformPersistenceEventType providePersistenceEventType() {
+		return response.getResult() == DomainTransformResponseResult.OK
+				? DomainTransformPersistenceEventType.COMMIT_OK
+				: DomainTransformPersistenceEventType.COMMIT_ERROR;
 	}
 }

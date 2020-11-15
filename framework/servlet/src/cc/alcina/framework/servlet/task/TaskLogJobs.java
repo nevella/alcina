@@ -53,8 +53,39 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 			});
 		}
 		{
-			doc.html().body().builder().tag("h2").text("Recently completed")
-					.append();
+			doc.html().body().builder().tag("h2")
+					.text("Active and pending jobs").append();
+			DomNodeHtmlTableBuilder builder = doc.html().body().html()
+					.tableBuilder();
+			builder.row().cell("Id").cell("Name").cell("Queue").cell("Started")
+					.cell("Thread").cell("Performer").cell("Link");
+			DomainDescriptorJob.get().getNotCompletedJobs()
+					.filter(job -> Ax.isBlank(value)
+							|| job.getTaskClassName().matches(value))
+					.limit(30).forEach(job -> {
+						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
+								.cell(String.valueOf(job.getId()))
+								.cell(job.provideName()).cell(job.getQueue())
+								.cell(job.getStartTime())
+								.cell(JobRegistry.get()
+										.getPerformerThreadName(job))
+								.cell(job.getPerformer() == null ? "(null)"
+										: job.getPerformer()
+												.getAuthenticationSession()
+												.getUser().toIdNameString());
+						DomNode td = cellBuilder.append();
+						ServerControlAction action = new ServerControlAction();
+						action.getParameters().setPropertyName(
+								TaskLogJobDetails.class.getName());
+						action.getParameters()
+								.setPropertyValue(String.valueOf(job.getId()));
+						String href = ControlServlet.createActionUrl(action);
+						td.html().addLink("Details", href, "_blank");
+					});
+		}
+		{
+			doc.html().body().builder().tag("h2")
+					.text("Recently completed jobs").append();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
 			builder.row().cell("Id").cell("Name").cell("Started")

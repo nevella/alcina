@@ -37,7 +37,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -51,6 +50,8 @@ import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken.Pass;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 
@@ -75,9 +76,6 @@ public class TransformPersisterInPersistenceContext {
 
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS = 40
 			* 1000;
-
-	public static Topic<DomainTransformLayerWrapper> topicPreFinalCommit = Topic
-			.local();
 
 	private transient EntityManager entityManager;
 
@@ -492,8 +490,12 @@ public class TransformPersisterInPersistenceContext {
 				response.setRequestId(request.getRequestId());
 				response.setTransformsProcessed(transformCount);
 				wrapper.response = response;
-				// FIXME - mvcc.jobs - move to queue publishing (and add phase)
-				topicPreFinalCommit.publish(wrapper);
+				DomainStore.writableStore().getPersistenceEvents()
+						.fireDomainTransformPersistenceEvent(
+								new DomainTransformPersistenceEvent(token,
+										wrapper,
+										DomainTransformPersistenceEventType.PRE_FLUSH,
+										true));
 				return;
 			case RETRY_WITH_IGNORES:
 				return;

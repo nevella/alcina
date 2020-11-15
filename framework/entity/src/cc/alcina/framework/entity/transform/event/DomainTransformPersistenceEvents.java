@@ -49,15 +49,28 @@ public class DomainTransformPersistenceEvents {
 
 	public void fireDomainTransformPersistenceEvent(
 			DomainTransformPersistenceEvent event) {
-		boolean preProces = event.getDomainTransformLayerWrapper() == null;
-		if (preProces) {
+		switch (event.getPersistenceEventType()) {
+		case PRE_COMMIT: {
 			transformLocalIdSupport.runWithOffsetLocalIdCounter(
 					() -> fireDomainTransformPersistenceEvent0(event));
-		} else {
+			break;
+		}
+		case PRE_FLUSH: {
+			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
+					listenerList)) {
+				if (listener.isPreBarrierListener() && event.isLocalToVm()) {
+					listener.onDomainTransformRequestPersistence(event);
+				}
+			}
+			break;
+		}
+		default: {
 			event.getPersistedRequests().forEach(queue::cachePersistedRequest);
 			DomainStore.writableStore().onTransformsPersisted();
 			fireDomainTransformPersistenceEvent0(event);
 			event.getPostEventRunnables().forEach(Runnable::run);
+			break;
+		}
 		}
 	}
 

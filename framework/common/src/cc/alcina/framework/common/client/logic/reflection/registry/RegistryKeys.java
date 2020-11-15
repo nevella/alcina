@@ -13,35 +13,45 @@ public class RegistryKeys {
 	public RegistryKeys() {
 	}
 
+	public RegistryKey emptyLookupKey() {
+		return emptyLookupKey;
+	}
+
 	public RegistryKey get(Class<?> clazz) {
 		String name = clazz.getName();
 		RegistryKey key = keys.get(name);
 		if (key == null) {
-			key = new RegistryKey(clazz);
-			keys.put(name, key);
+			synchronized (keys) {
+				key = keys.get(name);
+				if (key == null) {
+					key = new RegistryKey(clazz);
+					keys.put(name, key);
+					key.ensureClazz(clazz);
+				}
+			}
 		}
-		key.ensureClazz(clazz);
 		return key;
 	}
 
 	public RegistryKey get(String name) {
 		RegistryKey key = keys.get(name);
 		if (key == null) {
-			key = new RegistryKey(name);
-			keys.put(name, key);
+			synchronized (keys) {
+				key = keys.get(name);
+				if (key == null) {
+					key = new RegistryKey(name);
+					keys.put(name, key);
+				}
+			}
 		}
 		return key;
 	}
 
-	public RegistryKey emptyLookupKey() {
-		return emptyLookupKey;
+	public boolean isUndefinedTargetKey(RegistryKey key) {
+		return key == undefinedTargetKey;
 	}
 
 	public RegistryKey undefinedTargetKey() {
 		return undefinedTargetKey;
-	}
-
-	public boolean isUndefinedTargetKey(RegistryKey key) {
-		return key == undefinedTargetKey;
 	}
 }

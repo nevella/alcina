@@ -9,9 +9,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 
 public class AdjunctTransformCollation extends TransformCollation {
+	public static final String CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD = AdjunctTransformCollation.class
+			.getName() + ".CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD";
+
 	private TransformPersistenceToken token;
 
 	private boolean applied;
@@ -32,7 +36,8 @@ public class AdjunctTransformCollation extends TransformCollation {
 		if (!applied) {
 			applied = true;
 			ensureLookups();
-			if (!token.isLocalToVm() || !token.isAsyncClient()) {
+			if (!token.isLocalToVm() || (!token.isAsyncClient()
+					&& !LooseContext.is(CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD))) {
 				return;
 			}
 			ThreadlocalTransformManager tltm = ThreadlocalTransformManager

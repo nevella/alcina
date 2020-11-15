@@ -79,7 +79,6 @@ public class TransformPersistenceToken implements Serializable {
 		this.transformExceptionPolicy = Registry
 				.impl(PersistenceLayerTransformExceptionPolicyFactory.class)
 				.getPolicy(this, forOfflineTransforms);
-		this.transformCollation = new AdjunctTransformCollation(this);
 		this.transformPropagationPolicy = Registry
 				.impl(TransformPropagationPolicy.class);
 	}
@@ -121,6 +120,9 @@ public class TransformPersistenceToken implements Serializable {
 	}
 
 	public AdjunctTransformCollation getTransformCollation() {
+		if (transformCollation == null) {
+			this.transformCollation = new AdjunctTransformCollation(this);
+		}
 		return this.transformCollation;
 	}
 

@@ -20,6 +20,10 @@ public interface Task {
 		Registry.impl(Performer.class).schedule(this);
 	}
 
+	public static interface HasClusteredRunParameter {
+		boolean provideIsRunClustered();
+	}
+
 	public static interface Performer {
 		JobResult perform(Task task);
 

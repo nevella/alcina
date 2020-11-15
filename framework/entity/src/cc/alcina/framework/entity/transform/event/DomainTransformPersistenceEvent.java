@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
@@ -26,16 +26,11 @@ public class DomainTransformPersistenceEvent {
 	public DomainTransformPersistenceEvent(
 			TransformPersistenceToken transformPersistenceToken,
 			DomainTransformLayerWrapper domainTransformLayerWrapper,
-			boolean localToVm) {
+			DomainTransformPersistenceEventType eventType, boolean localToVm) {
 		transformPersistenceToken.setLocalToVm(localToVm);
 		this.transformPersistenceToken = transformPersistenceToken;
 		this.domainTransformLayerWrapper = domainTransformLayerWrapper;
-		persistenceEventType = domainTransformLayerWrapper == null
-				? DomainTransformPersistenceEventType.PRE_COMMIT
-				: domainTransformLayerWrapper.response
-						.getResult() == DomainTransformResponseResult.OK
-								? DomainTransformPersistenceEventType.COMMIT_OK
-								: DomainTransformPersistenceEventType.COMMIT_ERROR;
+		this.persistenceEventType = eventType;
 	}
 
 	public void ensureTransformsValidForVm() {
@@ -81,5 +76,11 @@ public class DomainTransformPersistenceEvent {
 
 	public void setPostEventRunnables(List<Runnable> postEventRunnables) {
 		this.postEventRunnables = postEventRunnables;
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("DTPE: %s\n%s", getPersistenceEventType(),
+				getTransformPersistenceToken().getRequest());
 	}
 }

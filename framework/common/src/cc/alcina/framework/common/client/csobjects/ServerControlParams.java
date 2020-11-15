@@ -19,8 +19,7 @@ import cc.alcina.framework.gwt.client.logic.LogLevel;
 
 @Bean(displayNamePropertyName = "", allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))
-public class ServerControlParams extends Bindable
-		implements RemoteParameters {
+public class ServerControlParams extends Bindable implements RemoteParameters {
 	private String propertyValue;
 
 	private String propertyName;
@@ -61,7 +60,7 @@ public class ServerControlParams extends Bindable
 
 	@Custom(customiserClass = TextAreaCustomiser.class, parameters = {
 			@NamedParameter(name = TextAreaCustomiser.WIDTH, intValue = 400),
-			@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 3) })
+			@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 15) })
 	@Display(name = "App property value/Task param", orderingHint = 25, styleName = "wide-text")
 	public String getPropertyValue() {
 		return this.propertyValue;

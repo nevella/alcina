@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 
@@ -116,6 +117,8 @@ public class BackendTransformQueue {
 			}
 			try {
 				LooseContext.push();
+				LooseContext.setTrue(
+						AdjunctTransformCollation.CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD);
 				Transaction.commit();
 			} finally {
 				LooseContext.pop();

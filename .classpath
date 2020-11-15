@@ -3,13 +3,13 @@
 	<classpathentry kind="lib" path="lib/framework/entity/xalan-2.7.2.jar" sourcepath="/g/minor/xalan-j"/>
 	<classpathentry exported="true" kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/|de/benediktmeurer/gwt/slf4j/api/" kind="src" path="framework/common/src"/>
-	<classpathentry kind="src" path="framework/jscodeserver/src"/>
+	<classpathentry excluding="registry.properties" kind="src" path="framework/jscodeserver/src"/>
 	<classpathentry kind="src" path="framework/classmeta/src"/>
 	<classpathentry kind="src" path="extras/jsdom/src-regex"/>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/build" path="framework/clientreflectorjvm/src"/>
 	<classpathentry kind="src" output="framework/jvmclient/build" path="framework/jvmclient/src"/>
 	<classpathentry kind="src" path="extras/collections/src"/>
-	<classpathentry excluding="org/json/" kind="src" path="framework/entity/src"/>
+	<classpathentry excluding="org/json/|registry.properties" kind="src" path="framework/entity/src"/>
 	<classpathentry kind="src" path="framework/impl/jboss-hibernate/src"/>
 	<classpathentry excluding="com/google/gwt/user/client/impl/*|com/google/gwt/user/client/ui/PopupPanel.java|registry.properties" kind="src" path="framework/gwt/src"/>
 	<classpathentry kind="src" path="framework/servlet/src"/>

@@ -77,6 +77,9 @@ import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.publication.ContentDefinition;
+import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
+import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.remote.CommonRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.Ax;
@@ -340,7 +343,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return JobRegistry.get().perform(action).getActionLogItem()
 					.getShortDescription();
 		} else {
-			String queueName = JobRegistry.get().start(action).getQueue();
+			String queueName = JobRegistry.get().start(action, null).getQueue();
 			// make sure the job is available for log callers
 			Transaction.commit();
 			return queueName;
@@ -485,6 +488,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			alcinaServletContext.end();
 		}
 	}
+
+	public abstract PublicationResult
+			publish(ContentRequestBase<? extends ContentDefinition> cr)
+					throws WebException;
 
 	@Override
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {

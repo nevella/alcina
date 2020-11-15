@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.transform.policy;
 
+import java.util.stream.Stream;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
@@ -12,6 +14,17 @@ import cc.alcina.framework.entity.persistence.cache.DomainStore;
 
 @RegistryLocation(registryPoint = TransformPropagationPolicy.class, implementationType = ImplementationType.INSTANCE)
 public class TransformPropagationPolicy {
+	public long
+			getProjectedPersistentCount(Stream<DomainTransformEvent> events) {
+		return events.filter(event -> {
+			if (event.getObjectClass() == null) {
+				return true;
+			} else {
+				return shouldPersistEventRecord(event);
+			}
+		}).count();
+	}
+
 	public boolean handlesEvent(DomainTransformEvent event) {
 		return DomainStore.stores().storeFor(event.getObjectClass()) != null;
 	}

@@ -259,14 +259,16 @@ public class DomainTransformPersistenceQueue {
 		// cloning issue?
 		wrapper.persistentEvents = new ArrayList<>(events);
 		wrapper.persistentRequests = new ArrayList<>(Arrays.asList(dtrp));
-		DomainTransformResponse dtr = new DomainTransformResponse();
-		dtr.setRequestId(persistenceToken.getRequest().getRequestId());
-		dtr.setTransformsProcessed(events.size());
-		dtr.setResult(DomainTransformResponseResult.OK);
-		dtr.setRequest(persistenceToken.getRequest());
-		wrapper.response = dtr;
+		DomainTransformResponse domainTransformResponse = new DomainTransformResponse();
+		domainTransformResponse
+				.setRequestId(persistenceToken.getRequest().getRequestId());
+		domainTransformResponse.setTransformsProcessed(events.size());
+		domainTransformResponse.setResult(DomainTransformResponseResult.OK);
+		domainTransformResponse.setRequest(persistenceToken.getRequest());
+		wrapper.response = domainTransformResponse;
 		DomainTransformPersistenceEvent persistenceEvent = new DomainTransformPersistenceEvent(
-				persistenceToken, wrapper, false);
+				persistenceToken, wrapper,
+				wrapper.providePersistenceEventType(), false);
 		return persistenceEvent;
 	}
 

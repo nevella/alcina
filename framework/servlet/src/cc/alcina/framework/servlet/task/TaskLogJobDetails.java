@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtml
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
+import cc.alcina.framework.servlet.job2.JobContext;
 
 public class TaskLogJobDetails extends AbstractTaskPerformer {
 	@Override
@@ -16,7 +17,7 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 		long jobId = Long.parseLong(value);
 		Job job = Job.byId(jobId);
 		if (job == null) {
-			slf4jLogger.info("Job {} does not exist", jobId);
+			JobContext.info("Job {} does not exist", jobId);
 		} else {
 			DomDoc doc = DomDoc.basicHtmlDoc();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
@@ -30,7 +31,7 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 						.cell(pd.getReadMethod().invoke(job, new Object[0]))
 						.style("whitespace:pre-wrap");
 			}
-			slf4jLogger.info(doc.prettyToString());
+			JobContext.info(doc.prettyToString());
 		}
 	}
 }

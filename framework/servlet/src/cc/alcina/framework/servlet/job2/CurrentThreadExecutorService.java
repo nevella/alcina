@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/*
+ * ad-hoc jobs will schedule on their own thread
+ */
 class CurrentThreadExecutorService extends AbstractExecutorService {
 	@Override
 	public boolean awaitTermination(long timeout, TimeUnit unit)

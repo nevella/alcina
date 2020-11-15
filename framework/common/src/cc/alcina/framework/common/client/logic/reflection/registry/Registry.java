@@ -586,6 +586,39 @@ public class Registry {
 				keys.get(registeringClass));
 	}
 
+	private <V> V impl1(Class<V> registryPoint, Class targetClass,
+			ImplementationType type, boolean allowNull) {
+		Object impl = null;
+		if (allowNull) {
+			impl = instantiateSingleOrNull(registryPoint, targetClass);
+			if (impl == null) {
+				return null;
+			}
+		} else {
+			impl = instantiateSingle(registryPoint, targetClass);
+		}
+		type = type == null ? ImplementationType.MULTIPLE : type;
+		switch (type) {
+		case FACTORY: {
+			Object singleton = registerSingletonInLookups(registryPoint,
+					targetClass, impl, false);
+			return (V) ((RegistryFactory) singleton).create(registryPoint,
+					targetClass);
+		}
+		case SINGLETON: {
+			Object singleton = registerSingletonInLookups(registryPoint,
+					targetClass, impl, false);
+			return (V) singleton;
+		}
+		case INSTANCE:
+		case MULTIPLE:
+			// nothing fancy
+			return (V) impl;
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	private synchronized <T> T registerSingletonInLookups(
 			Class<?> registryPoint, Class<?> targetClass, T t,
 			boolean removeExisting) {
@@ -627,53 +660,53 @@ public class Registry {
 		return scChain;
 	}
 
+	/*
+	 * 
+	 */
 	protected <V> V impl0(Class<V> registryPoint, Class targetClass,
 			boolean allowNull) {
-		// optimisation
-		Object singleton = null;
 		RegistryKey registryPointKey = keys.get(registryPoint);
 		RegistryKey targetClassKey = keys.get(targetClass);
 		boolean voidTarget = keys.isUndefinedTargetKey(targetClassKey);
+		Object singleton = null;
 		if (voidTarget) {
 			singleton = voidPointSingletons.get(registryPointKey.name());
 		} else {
 			singleton = singletons.get(registryPointKey, targetClassKey);
 		}
-		if (singleton != null && !(singleton instanceof RegistryFactory)) {
-			return (V) singleton;
+		if (singleton != null) {
+			if (singleton instanceof RegistryFactory) {
+				return (V) ((RegistryFactory) singleton).create(registryPoint,
+						targetClass);
+			} else {
+				return (V) singleton;
+			}
 		}
 		ImplementationType type = resolveImplementationType(registryPointKey,
 				targetClassKey, allowNull);
-		Object obj = null;
-		if (singleton == null) {
-			if (allowNull) {
-				obj = instantiateSingleOrNull(registryPoint, targetClass);
-				if (obj == null) {
-					return null;
-				}
-			} else {
-				obj = instantiateSingle(registryPoint, targetClass);
-			}
+		if (type == null) {
+			// only here if allowNull==true
+			return null;
 		}
-		type = type == null ? ImplementationType.MULTIPLE : type;
 		switch (type) {
-		case FACTORY:
-			if (singleton == null) {
-				singleton = registerSingletonInLookups(registryPoint,
-						targetClass, obj, false);
-			}
-			return (V) ((RegistryFactory) singleton).create(registryPoint,
-					targetClass);
 		case SINGLETON:
-			if (singleton == null) {
-				singleton = registerSingletonInLookups(registryPoint,
-						targetClass, obj, false);
+		case FACTORY:
+			synchronized (registryPointKey) {
+				if (voidTarget) {
+					singleton = voidPointSingletons
+							.get(registryPointKey.name());
+				} else {
+					singleton = singletons.get(registryPointKey,
+							targetClassKey);
+				}
+				if (singleton != null) {
+					return (V) singleton;
+				}
+				return impl1(registryPoint, targetClass, type, allowNull);
 			}
-			return (V) singleton;
-		case INSTANCE:
-		case MULTIPLE:
+		default:
+			return impl1(registryPoint, targetClass, type, allowNull);
 		}
-		return (V) obj;
 	}
 
 	protected <V> List<V> impls0(Class<V> registryPoint, Class targetClass) {
