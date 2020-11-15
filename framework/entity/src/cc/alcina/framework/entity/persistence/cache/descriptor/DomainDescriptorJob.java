@@ -172,6 +172,10 @@ public class DomainDescriptorJob {
 		return getMostRecentJobForQueue(id);
 	}
 
+	public int getJobCountForQueue(String name) {
+		return (int) getJobsForQueue(name).count();
+	}
+
 	public Stream<? extends Job> getJobsForQueue(String queueName) {
 		return Domain.query(jobImplClass).filter("queue", queueName).stream();
 	}
@@ -187,19 +191,21 @@ public class DomainDescriptorJob {
 				.filter(Job::provideIsNotComplete);
 	}
 
-	public Stream<? extends Job> getPendingNonClusteredJobs() {
+	public Stream<? extends Job> getPendingJobs() {
 		// FIXME - mvcc.jobs - make a projection
-		Predicate<Job> pendingNonClusteredPredicate = job -> job
-				.getPerformer() == null && job.provideIsPending()
-				&& !job.isClustered();
-		return Domain.query(jobImplClass).filter(pendingNonClusteredPredicate)
-				.stream();
+		Predicate<Job> pendingPredicate = job -> job.getPerformer() == null
+				&& job.provideIsPending();
+		return Domain.query(jobImplClass).filter(pendingPredicate).stream();
 	}
 
 	public Stream<? extends Job> getRecentlyCompletedJobs() {
 		return Domain.stream(jobImplClass)
 				.sorted(EntityComparator.REVERSED_INSTANCE)
 				.filter(Job::provideIsComplete);
+	}
+
+	public int getUnallocatedJobCountForQueue(String name) {
+		return (int) getUnallocatedJobsForQueue(name, true).count();
 	}
 
 	public Stream<? extends Job> getUnallocatedJobsForQueue(String queueName,

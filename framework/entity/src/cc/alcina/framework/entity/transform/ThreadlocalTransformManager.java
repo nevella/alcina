@@ -1218,6 +1218,11 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 	}
 
+	@Override
+	protected Entity ensureEndpointWriteable(Entity targetObject) {
+		return Transactions.resolve(targetObject, true, false);
+	}
+
 	protected <T extends Entity> T ensureNonProxy(T entity) {
 		if (entity != null && entity.getId() != 0
 				&& getEntityManager() != null) {
@@ -1247,6 +1252,16 @@ public class ThreadlocalTransformManager extends TransformManager
 				|| (evt.getSource() instanceof WrappedObject
 						&& ((WrappedObject) evt.getSource())
 								.getObject() == ignorePropertyChangesTo);
+	}
+
+	@Override
+	protected boolean isPerformDirectAssociationUpdates(Entity entity) {
+		/*
+		 * if ==1, only the transform manager listens to property changes. So
+		 * synthesising collection updates will have equal effect to
+		 * clone/modify
+		 */
+		return entity.getPropertyChangeListeners().length == 1;
 	}
 
 	@Override

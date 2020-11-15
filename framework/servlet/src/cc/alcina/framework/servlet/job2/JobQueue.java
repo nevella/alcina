@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.InnerAccess;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -132,12 +134,19 @@ public class JobQueue {
 				return;
 			}
 			int activeJobs = DomainDescriptorJob.get().getActiveJobCount(name);
-			Optional<? extends Job> unallocated = DomainDescriptorJob.get()
+			boolean hasUnallocated = DomainDescriptorJob.get()
 					.getUnallocatedJobsForQueue(name, true)
-					.filter(Job::provideIsAllocatable)
-					.sorted(new Job.RunAtComparator()).findFirst();
-			if (unallocated.isPresent()) {
+					.anyMatch(Job::provideIsAllocatable);
+			if (hasUnallocated) {
 				jobRegistry.withJobMetadataLock(name, isClustered(), () -> {
+					/*
+					 * essentially double-checked locking (rather than getting
+					 * unallocated outside the lock)
+					 */
+					Optional<? extends Job> unallocated = DomainDescriptorJob
+							.get().getUnallocatedJobsForQueue(name, true)
+							.filter(Job::provideIsAllocatable)
+							.sorted(new Job.RunAtComparator()).findFirst();
 					Job job = unallocated.get();
 					job.setPerformer(EntityLayerObjects.get()
 							.getServerAsClientInstance());
@@ -150,30 +159,47 @@ public class JobQueue {
 				});
 			}
 		} else {
-			long limit = maxConcurrentJobs - (active.size() + pending.size())
-					+ calculateDesiredPendingSize();
-			if (limit > 0) {
+			// FIXME - mvcc.jobs - maxConcurrentJobs is a cluster property, not
+			// a per-vm
+			//
+			// At the moment, it's just 'largeish' (100) for bulk jobs so that
+			// all vms do some bursty allocation
+			//
+			// but it should really tail off towards the end of the bulk job
+			// (depdendent on #vms)
+			InnerAccess<Long> maxAllocated = InnerAccess
+					.of((long) (maxConcurrentJobs
+							- (active.size() + pending.size())));
+			if (schedule != null) {
+				long scheduleMaxAllocated = schedule.calculateMaxAllocated(this,
+						active.size() + pending.size(),
+						DomainDescriptorJob.get().getJobCountForQueue(name),
+						DomainDescriptorJob.get()
+								.getUnallocatedJobCountForQueue(name));
+				if (scheduleMaxAllocated != -1) {
+					maxAllocated.set(scheduleMaxAllocated);
+				}
+			}
+			if (maxAllocated.get() > 0) {
 				jobRegistry.withJobMetadataLock(name, isClustered(), () -> {
 					DomainDescriptorJob.get()
-							.getUnallocatedJobsForQueue(name, true).limit(limit)
-							.forEach(job -> {
+							.getUnallocatedJobsForQueue(name, true)
+							.limit(maxAllocated.get()).forEach(job -> {
 								job.setPerformer(EntityLayerObjects.get()
 										.getServerAsClientInstance());
 								pending.add(job);
-								logger.info("Queue: %s - allocated: %s", name,
+								logger.info("Queue: {}@{} - allocated: {}",
+										name, Integer.toHexString(hashCode()),
 										job.getId());
 							});
 					Transaction.commit();
 				});
-				// TODO - mvcc.jobs - possibly set queueMetadataPersistence here
+				// if >10, we're in the middle of a bulk run, so queue
+				// non-allocation persistence (watcher updates will be slower
+				// but *much* less load on the transform queues
+				// queueJobPersistence = maxAllocated.get() > 10;
 			}
 		}
-	}
-
-	// TODO - for large distributed jobs, get an adjustable chunk of 'pending'
-	// to reduce contention/db writes
-	private int calculateDesiredPendingSize() {
-		return 0;
 	}
 
 	private void onQueueFinished() {
@@ -201,8 +227,15 @@ public class JobQueue {
 		stat.name = name;
 		stat.active = active.size();
 		stat.pending = pending.size();
+		stat.queuedInExecutor = 0;
+		if (executorService instanceof ThreadPoolExecutor) {
+			stat.queuedInExecutor = ((ThreadPoolExecutor) executorService)
+					.getQueue().size();
+		}
 		stat.total = (int) DomainDescriptorJob.get().getJobsForQueue(name)
 				.count();
+		stat.completed = (int) DomainDescriptorJob.get().getJobsForQueue(name)
+				.filter(Job::provideIsComplete).count();
 		return stat;
 	}
 
@@ -254,6 +287,8 @@ public class JobQueue {
 							// FIXME - mvcc.jobs - *definitely* shouldn't
 							// occur,
 							// but there is something funny going on...
+							// probably fixed (wasn't respecting performer) -
+							// can remove after production testing
 							logger.warn(
 									"Double allocation:\n============\nFirst:\n{}\n============Second:\n{}\n",
 									existing, allocation);

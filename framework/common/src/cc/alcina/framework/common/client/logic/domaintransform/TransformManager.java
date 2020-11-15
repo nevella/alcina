@@ -1326,13 +1326,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		} else {
 			transforms.add(dte);
 		}
-		for (DomainTransformEvent transform : transforms) {
-			transform.setInImmediatePropertyChangeCommit(true);
-		}
-		addTransforms(transforms, true);
-		for (DomainTransformEvent transform : transforms) {
-			transform.setInImmediatePropertyChangeCommit(false);
-		}
+		addTransformsFromPropertyChange(transforms);
 		Entity entity = (Entity) event.getSource();
 		if (this.getDomainObjects() != null) {
 			if (!provisionalObjects.containsKey(entity)) {
@@ -1565,6 +1559,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return sb.toString();
 	}
 
+	protected void addTransformsFromPropertyChange(
+			List<DomainTransformEvent> transforms) {
+		for (DomainTransformEvent transform : transforms) {
+			transform.setInImmediatePropertyChangeCommit(true);
+		}
+		addTransforms(transforms, true);
+		for (DomainTransformEvent transform : transforms) {
+			transform.setInImmediatePropertyChangeCommit(false);
+		}
+	}
+
 	protected boolean allowUnregisteredEntityTargetObject() {
 		return false;
 	}
@@ -1634,6 +1639,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected Object ensureEndpointInTransformGraph(Object object) {
 		return object;
+	}
+
+	protected Entity ensureEndpointWriteable(Entity targetObject) {
+		return (Entity) ensureEndpointInTransformGraph(targetObject);
 	}
 
 	protected void fireCreateObjectEvent(Class clazz, long id, long localId) {
@@ -1757,6 +1766,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		provisionalObjects = new IdentityHashMap<>();
 	}
 
+	protected boolean isPerformDirectAssociationUpdates(Entity targetObject) {
+		return false;
+	}
+
 	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
 		return false;
 	}
@@ -1793,6 +1806,34 @@ public abstract class TransformManager implements PropertyChangeListener,
 			getDomainObjects().deregisterObject(entity);
 			maybeFireCollectionModificationEvent(entity.entityClass(), false);
 		}
+	}
+
+	protected void performDirectAssociationUpdate(Entity objectWithCollection,
+			String propertyName, Collection coll, Entity collectionMember,
+			boolean remove) {
+		boolean contains = coll.contains(collectionMember);
+		if (contains ^ remove) {
+			// NOOP
+			return;
+		}
+		if (remove) {
+			coll.remove(collectionMember);
+		} else {
+			coll.add(collectionMember);
+		}
+		DomainTransformEvent event = new DomainTransformEvent();
+		event.setSource(objectWithCollection);
+		event.setPropertyName(propertyName);
+		event.setObjectId(objectWithCollection.getId());
+		event.setObjectLocalId(objectWithCollection.getLocalId());
+		event.setObjectClass(objectWithCollection.entityClass());
+		event.setTransformType(remove ? TransformType.REMOVE_REF_FROM_COLLECTION
+				: TransformType.ADD_REF_TO_COLLECTION);
+		event.setValueId(collectionMember.getId());
+		event.setValueLocalId(collectionMember.getLocalId());
+		event.setValueClass(collectionMember.entityClass());
+		maybeAddVersionNumbers(event, objectWithCollection, collectionMember);
+		addTransformsFromPropertyChange(Collections.singletonList(event));
 	}
 
 	protected void promoteToDomain(Collection objects, boolean deregister) {
@@ -1886,20 +1927,20 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected void updateAssociation(DomainTransformEvent evt, Entity object,
 			Entity targetObject, boolean remove) {
-		Association assoc = object == null ? null
+		Association association = object == null ? null
 				: propertyAccessor().getAnnotationForProperty(
 						object.entityClass(), Association.class,
 						evt.getPropertyName());
-		if (targetObject == null || assoc == null
-				|| assoc.propertyName().length() == 0) {
+		if (targetObject == null || association == null
+				|| association.propertyName().length() == 0) {
 			return;
 		}
 		if (markedForDeletion.contains(targetObject)) {
 			return;
 		}
-		targetObject = (Entity) ensureEndpointInTransformGraph(targetObject);
+		targetObject = (Entity) ensureEndpointWriteable(targetObject);
 		Object associatedObject = propertyAccessor()
-				.getPropertyValue(targetObject, assoc.propertyName());
+				.getPropertyValue(targetObject, association.propertyName());
 		associatedObject = ensureEndpointInTransformGraph(associatedObject);
 		boolean assocObjIsCollection = associatedObject instanceof Collection;
 		TransformType tt = assocObjIsCollection
@@ -1913,24 +1954,31 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// No! Only should check one end of the relation for permissions
 		// checkPermissions(hTgt, evt, assoc.propertyName());
 		if (assocObjIsCollection) {
-			Collection c = (Collection) associatedObject;
-			try {
-				c = CommonUtils.shallowCollectionClone(c);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			if (remove) {
-				boolean wasContained = c.remove(object);
-				if (!wasContained) {
-					doubleCheckRemoval(c, object);
-				}
+			Collection coll = (Collection) associatedObject;
+			if (isPerformDirectAssociationUpdates(targetObject)) {
+				performDirectAssociationUpdate(targetObject,
+						association.propertyName(), coll, object, remove);
 			} else {
-				if (!c.contains(object)) {
-					doubleCheckAddition(c, object);
+				try {
+					coll = CommonUtils.shallowCollectionClone(coll);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
 				}
+				if (remove) {
+					boolean wasContained = coll.remove(object);
+					if (!wasContained) {
+						// FIXME - mvcc.4 - these are only for JPA contexts, and
+						// this method is only called ex-JPA - remove
+						doubleCheckRemoval(coll, object);
+					}
+				} else {
+					if (!coll.contains(object)) {
+						doubleCheckAddition(coll, object);
+					}
+				}
+				propertyAccessor().setPropertyValue(targetObject,
+						association.propertyName(), coll);
 			}
-			propertyAccessor().setPropertyValue(targetObject,
-					assoc.propertyName(), c);
 		} else {
 			/*
 			 * we can get in an ugly loop in the following case: x.parent=p1
@@ -1939,15 +1987,15 @@ public abstract class TransformManager implements PropertyChangeListener,
 			 * null if the assoc prop is the old value
 			 */
 			if (remove) {
-				Object current = propertyAccessor()
-						.getPropertyValue(targetObject, assoc.propertyName());
+				Object current = propertyAccessor().getPropertyValue(
+						targetObject, association.propertyName());
 				if (current == object) {
 					propertyAccessor().setPropertyValue(targetObject,
-							assoc.propertyName(), null);
+							association.propertyName(), null);
 				}
 			} else {
 				propertyAccessor().setPropertyValue(targetObject,
-						assoc.propertyName(), object);
+						association.propertyName(), object);
 			}
 			// shouldn't fire for collection props, probly. also, collection
 			// mods are very unlikely to collide in a nasty way (since

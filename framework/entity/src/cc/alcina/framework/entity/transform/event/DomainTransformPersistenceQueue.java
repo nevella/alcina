@@ -159,7 +159,7 @@ public class DomainTransformPersistenceQueue {
 	public synchronized void sequencedTransformRequestPublished(Long id) {
 		List<DomainTransformCommitPosition> unpublishedRequests = persistenceEvents.domainStore
 				.getTransformSequencer().getSequentialUnpublishedRequests();
-		logger.debug("Received dtr published: {} ==> sequenced: {} ", id,
+		logger.info("Received dtr published: {} ==> sequenced: {} ", id,
 				unpublishedRequests);
 		unpublishedRequests.forEach(entry -> requestIdSequenceEntry
 				.put(entry.commitRequestId, entry));
@@ -302,36 +302,17 @@ public class DomainTransformPersistenceQueue {
 		}
 	}
 
-	// private <T> T
-	// runWithDisabledObjectPermissions(ThrowingSupplier<T> supplier) {
-	// try {
-	// // this prevents a deadlock where we might have a waiting write
-	// // preventing us from getting the lock
-	// LooseContext.pushWithTrue(DomainStore.CONTEXT_NO_LOCKS);
-	// ThreadedPermissionsManager.cast().pushSystemUser();
-	// PermissibleFieldFilter
-	// .setDisabledPerThreadPerObjectPermissions(true);
-	// return supplier.get();
-	// } catch (Exception e) {
-	// throw new RuntimeException(e);
-	// } finally {
-	// PermissibleFieldFilter
-	// .setDisabledPerThreadPerObjectPermissions(false);
-	// ThreadedPermissionsManager.cast().popSystemUser();
-	// LooseContext.pop();
-	// }
-	// }
 	private void transformRequestPublishedSequential(
 			DomainTransformCommitPosition position) {
 		synchronized (queueModificationLock) {
 			if (firedOrQueued.contains(position.commitRequestId)) {
-				logger.debug("Ignoring already fired/queued: {} ",
+				logger.info("Ignoring already fired/queued: {} ",
 						position.commitRequestId);
 				return;
 			} else {
 				firedOrQueued.add(position.commitRequestId);
 				synchronized (toFire) {
-					logger.debug("Adding to toFire queue: {} ",
+					logger.info("Adding to toFire queue: {} ",
 							position.commitRequestId);
 					toFire.add(position);
 					toFire.notifyAll();
@@ -631,9 +612,10 @@ public class DomainTransformPersistenceQueue {
 
 		void waitForProcessedRequests() {
 			long startTime = System.currentTimeMillis();
+			long warnLongRunningTime = startTime + 1000;
 			while (true) {
-				long timeRemaining = -System.currentTimeMillis() + startTime
-						+ timeoutMs;
+				long now = System.currentTimeMillis();
+				long timeRemaining = -now + startTime + timeoutMs;
 				synchronized (queueModificationLock) {
 					try {
 						/*
@@ -643,6 +625,14 @@ public class DomainTransformPersistenceQueue {
 						if (waiting.isEmpty() || timeRemaining <= 0) {
 							waiters.remove(this);
 							return;
+						}
+						/*
+						 * debugging - why waiting so long
+						 */
+						if (now > warnLongRunningTime) {
+							logger.info(
+									"Long running wait for processed - {} - {} ms",
+									waiting, now - startTime);
 						}
 						queueModificationLock.wait(timeRemaining);
 					} catch (Exception e) {

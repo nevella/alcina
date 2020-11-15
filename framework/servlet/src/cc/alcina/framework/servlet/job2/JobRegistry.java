@@ -162,6 +162,13 @@ public class JobRegistry extends WriterService {
 						.optional(ScheduleProvider.class, clazz);
 				if (scheduleProvider.isPresent()) {
 					schedule = scheduleProvider.get().getSchedule(firstJob);
+					if (schedule != null) {
+						logger.warn(
+								"Created schedule from provider {} for job {}",
+								scheduleProvider.get().getClass()
+										.getSimpleName(),
+								firstJob);
+					}
 				}
 			}
 			if (schedule != null) {
@@ -573,6 +580,10 @@ public class JobRegistry extends WriterService {
 		public int total;
 
 		public String name;
+
+		public int queuedInExecutor;
+
+		public int completed;
 	}
 
 	static class MissingPerformerPerformer implements TaskPerformer {

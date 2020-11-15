@@ -153,14 +153,14 @@ public class JobScheduler {
 				.getAllocatedIncompleteJobs()
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
 				.filter(job -> !activeInstances.contains(job.getPerformer()));
-		Stream<? extends Job> pendingNonClustered = DomainDescriptorJob.get()
-				.getPendingNonClusteredJobs()
+		Stream<? extends Job> pendingInactiveCreator = DomainDescriptorJob.get()
+				.getPendingJobs()
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
 				.filter(job -> !activeInstances.contains(job.getCreator()));
 		InnerAccess<Boolean> metadataLockHeld = new InnerAccess<>();
 		metadataLockHeld.set(false);
 		List<Job> toAbortOrReassign = Stream
-				.concat(allocatedIncomplete, pendingNonClustered).distinct()
+				.concat(allocatedIncomplete, pendingInactiveCreator).distinct()
 				.collect(Collectors.toList());
 		Runnable runnable = toAbortOrReassign.isEmpty() ? null
 				: () -> toAbortOrReassign.forEach(job -> {
@@ -171,7 +171,10 @@ public class JobScheduler {
 					job.setState(JobState.ABORTED);
 					job.setEndTime(new Date());
 					job.setResultType(JobResultType.DID_NOT_COMPLETE);
-					if (job.isClustered() && job.provideCanDeserializeTask()) {
+					// FIXME - mvcc.jobs - current logic is 'cancel children' -
+					// may want to be finer-grained
+					if (job.isClustered() && job.provideCanDeserializeTask()
+							&& !job.provideParent().isPresent()) {
 						Schedule schedule = getSchedule(
 								job.getTask().getClass(), false);
 						if (schedule != null) {
@@ -339,6 +342,11 @@ public class JobScheduler {
 
 		private boolean timewiseLimited;
 
+		public long calculateMaxAllocated(JobQueue queue, int allocated,
+				int jobCountForQueue, int unallocatedJobCountForQueue) {
+			return -1;
+		}
+
 		public ExecutorServiceProvider getExcutorServiceProvider() {
 			return exexcutorServiceProvider;
 		}
@@ -365,6 +373,12 @@ public class JobScheduler {
 
 		public boolean isTimewiseLimited() {
 			return timewiseLimited;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Schedule %s - queue: %s; clustered: %s",
+					queueName, clustered);
 		}
 
 		public Schedule withClustered(boolean clustered) {
@@ -395,6 +409,12 @@ public class JobScheduler {
 
 		public Schedule withRetryPolicy(RetryPolicy retryPolicy) {
 			this.retryPolicy = retryPolicy;
+			return this;
+		}
+
+		public Schedule withSubJobQueueName(Job job) {
+			withQueueName(Ax.format("%s::%s::sub", job.getTaskClassName(),
+					job.toLocator().toString()));
 			return this;
 		}
 

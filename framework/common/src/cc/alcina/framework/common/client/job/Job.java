@@ -218,6 +218,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	@Lob
 	@Transient
+	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
 	public String getLargeResultSerialized() {
 		return this.largeResultSerialized;
 	}
@@ -251,6 +252,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return this.resultMessage;
 	}
 
+	@Transient
+	@Lob
 	public String getResultSerialized() {
 		return this.resultSerialized;
 	}
@@ -298,7 +301,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	@Lob
-	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
 	@Transient
 	public String getTaskSerialized() {
 		return this.taskSerialized;

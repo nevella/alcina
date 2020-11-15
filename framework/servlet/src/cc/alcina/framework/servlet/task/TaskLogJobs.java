@@ -26,9 +26,10 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
 			builder.row().cell("Name").cell("Active").cell("Pending")
-					.cell("Total");
+					.cell("Completed").cell("Total");
 			queues.forEach(queue -> builder.row().cell(queue.name)
-					.cell(queue.active).cell(queue.pending).cell(queue.total));
+					.cell(queue.active).cell(queue.pending)
+					.cell(queue.completed).cell(queue.total));
 		}
 		{
 			List<PendingStat> pending = JobRegistry.get()

@@ -83,7 +83,12 @@ public class DomainStoreTransformSequencer {
 		}
 		logger.debug("Unblocking post-local barrier: {}", requestId);
 		synchronized (postLocalFireEventsThreadBarrier) {
-			postLocalFireEventsThreadBarrier.get(requestId).countDown();
+			CountDownLatch latch = postLocalFireEventsThreadBarrier
+					.get(requestId);
+			if (latch != null) {
+				// will be null if timed-out
+				latch.countDown();
+			}
 		}
 	}
 
@@ -103,7 +108,7 @@ public class DomainStoreTransformSequencer {
 	public synchronized List<DomainTransformCommitPosition>
 			getSequentialUnpublishedRequests() {
 		try {
-			return getSequentialUnpublishedTransformIds0();
+			return getSequentialUnpublishedRequests0();
 		} catch (Exception e) {
 			// Wait for retry (which will be pushed from kafka)
 			logger.warn(
@@ -314,8 +319,7 @@ public class DomainStoreTransformSequencer {
 							transactionsData.commitTimestamp);
 					ResultSet idRs = idStatement.executeQuery();
 					while (idRs.next()) {
-						transactionsData.transformListIds
-								.add(idRs.getLong("id"));
+						transactionsData.transformIds.add(idRs.getLong("id"));
 					}
 					logger.debug("Got highestVisible request data : {}",
 							transactionsData);
@@ -355,12 +359,12 @@ public class DomainStoreTransformSequencer {
 	 * time.
 	 */
 	private List<DomainTransformCommitPosition>
-			getSequentialUnpublishedTransformIds0() throws Exception {
+			getSequentialUnpublishedRequests0() throws Exception {
 		if (highestVisibleTransactions == null) {
 			// not yet finished with marking - come back later please
 			return Collections.emptyList();
 		}
-		List<DomainTransformCommitPosition> unpublishedIds = new ArrayList<>();
+		List<DomainTransformCommitPosition> unpublishedPositions = new ArrayList<>();
 		Connection conn = getConnection();
 		/*
 		 * normally, commit times are ensured just after the dtrp is committed
@@ -401,7 +405,7 @@ public class DomainStoreTransformSequencer {
 						.getTimestamp("transactionCommitTime");
 				if (position.commitTimestamp
 						.equals(highestVisibleTransactions.commitTimestamp)
-						&& highestVisibleTransactions.transformListIds
+						&& highestVisibleTransactions.transformIds
 								.contains(position.commitRequestId)) {
 					continue;// already submitted/published
 				}
@@ -411,7 +415,7 @@ public class DomainStoreTransformSequencer {
 			if (maxCurrent <= 0) {
 				txData.clear();
 			}
-			txData.forEach(unpublishedIds::add);
+			txData.forEach(unpublishedPositions::add);
 			Map<Timestamp, List<DomainTransformCommitPosition>> collect = txData
 					.stream().collect(AlcinaCollectors
 							.toKeyMultimap(txd -> txd.commitTimestamp));
@@ -424,19 +428,22 @@ public class DomainStoreTransformSequencer {
 						.collect(Collectors.toList());
 				if (last.getKey()
 						.equals(highestVisibleTransactions.commitTimestamp)) {
-					lastIds.addAll(highestVisibleTransactions.transformListIds);
+					lastIds.addAll(highestVisibleTransactions.transformIds);
 				}
 				highestVisibleTransactions = new HighestVisibleTransactions();
 				highestVisibleTransactions.commitTimestamp = last.getKey();
-				highestVisibleTransactions.transformListIds = lastIds;
+				highestVisibleTransactions.transformIds = lastIds;
 			}
-			logger.debug(
-					"Added unpublished ids {} - fromTimestamp {} - new timestamp {}",
-					unpublishedIds, fromTimestamp,
-					highestVisibleTransactions.commitTimestamp);
+			if (unpublishedPositions.isEmpty()) {
+				logger.info(
+						"Empty unpublished positions in getSequentialUnpublishedRequests0");
+			} else {
+				logger.info("Added unpublished positions \n\t{} ",
+						CommonUtils.joinWithNewlineTab(unpublishedPositions));
+			}
 		}
 		conn.commit();
-		return unpublishedIds;
+		return unpublishedPositions;
 	}
 
 	void ensureTransactionCommitTimes() throws SQLException {
@@ -480,7 +487,7 @@ public class DomainStoreTransformSequencer {
 		return highestVisibleTransactions == null ? null
 				: new DomainTransformCommitPosition(
 						highestVisibleTransactions.commitTimestamp,
-						Ax.last(highestVisibleTransactions.transformListIds));
+						Ax.last(highestVisibleTransactions.transformIds));
 	}
 
 	void markHighestVisibleTransformList(Connection conn) throws SQLException {
@@ -498,7 +505,7 @@ public class DomainStoreTransformSequencer {
 	}
 
 	static class HighestVisibleTransactions {
-		List<Long> transformListIds = new ArrayList<>();
+		List<Long> transformIds = new ArrayList<>();
 
 		Timestamp commitTimestamp;
 

@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.RelatedJobCompletion;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
@@ -38,6 +39,8 @@ import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 public class JobContext {
 	static final String CONTEXT_CURRENT = JobContext.class.getName()
 			+ ".CONTEXT_CURRENT";
+
+	private static final long AWAIT_CHILDREN_TIMEOUT_MS = 60000;
 
 	public static void checkCancelled() {
 		get().checkCancelled0();
@@ -78,7 +81,7 @@ public class JobContext {
 			k, completion) -> {
 		if (completion.job == job) {
 			logger.debug(
-					"Related job completiong changed for job {} - {} complete",
+					"Related job completion changed for job {} - {} complete",
 					job, completion.related.size());
 			synchronized (completionEvents) {
 				completionEvents.add(completion);
@@ -100,6 +103,7 @@ public class JobContext {
 
 	public synchronized void awaitChildCompletion() {
 		Set<Job> uncompletedChildren = new LinkedHashSet<>();
+		long lastCompletionEventTime = System.currentTimeMillis();
 		while (true) {
 			/*
 			 * Because jobs can be added to uncompleted children, only populate
@@ -117,6 +121,7 @@ public class JobContext {
 				RelatedJobCompletion event = null;
 				synchronized (completionEvents) {
 					if (uncompletedChildren.isEmpty()) {
+						// double-check
 						uncompletedChildren = job.provideUncompletedChildren()
 								.collect(Collectors.toSet());
 					}
@@ -131,8 +136,18 @@ public class JobContext {
 						}
 						Transaction.begin();
 					}
+					long now = System.currentTimeMillis();
 					if (completionEvents.size() > 0) {
 						event = completionEvents.removeFirst();
+						lastCompletionEventTime = now;
+					} else {
+						if (now - lastCompletionEventTime > AWAIT_CHILDREN_TIMEOUT_MS) {
+							// FIXME - mvcc.jobs - cancel children? A policy?
+							logger.warn(
+									"Cancelling {} - timed out awaiting child completion");
+							job.cancel();
+							return;
+						}
 					}
 				}
 				if (event != null) {
@@ -153,7 +168,9 @@ public class JobContext {
 		}
 		String log = Registry.impl(PerThreadLogging.class).endBuffer();
 		job.setLog(log);
-		job.setState(JobState.COMPLETED);
+		if (!job.provideIsComplete()) {
+			job.setState(JobState.COMPLETED);
+		}
 		job.setEndTime(new Date());
 		job.setResultType(JobResultType.OK);
 		persistMetadata(true);
@@ -265,6 +282,7 @@ public class JobContext {
 	}
 
 	void awaitSequenceCompletion() {
+		Transaction.endAndBeginNew();
 		while (true) {
 			if (job.provideUncompletedSequential().isEmpty()) {
 				return;
@@ -275,14 +293,26 @@ public class JobContext {
 				RelatedJobCompletion event = null;
 				synchronized (completionEvents) {
 					if (completionEvents.isEmpty()) {
-						Transaction.ensureEnded();
-						try {
-							// FIXME - mvcc.jobs - timeout is for debugging
-							completionEvents.wait(10000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
+						/*
+						 * double-checked
+						 */
+						Set<Job> uncompletedSequential = job
+								.provideUncompletedSequential();
+						if (uncompletedSequential.size() > 0) {
+							Transaction.ensureEnded();
+							try {
+								// FIXME - mvcc.jobs - timeout is for debugging
+								completionEvents.wait(5000);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+							if (SEUtilities
+									.getFullStacktrace(Thread.currentThread())
+									.contains("ControlServlet.handle1")) {
+								int debug = 3;
+							}
+							Transaction.begin();
 						}
-						Transaction.begin();
 					}
 					if (completionEvents.size() > 0) {
 						event = completionEvents.removeFirst();
