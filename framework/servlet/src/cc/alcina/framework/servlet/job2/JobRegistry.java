@@ -191,6 +191,11 @@ public class JobRegistry extends WriterService {
 		});
 		schedulesByQueueName = Registry.impls(Schedule.class).stream()
 				.collect(AlcinaCollectors.toKeyMap(Schedule::getQueueName));
+		JobExecutors.topicRescheduleJobs.add((k, v) -> {
+			if (v) {
+				scheduleJobs(false);
+			}
+		});
 	}
 
 	public Job createJob(Task task, Schedule schedule) {
@@ -503,17 +508,6 @@ public class JobRegistry extends WriterService {
 		public Boolean get() {
 			return true;
 		}
-	}
-
-	public interface JobExecutors {
-		void addScheduledJobExecutorChangeConsumer(
-				Consumer<Boolean> changeConsumer);
-
-		void allocationLock(String name, boolean clustered, boolean acquire);
-
-		List<ClientInstance> getActiveServers();
-
-		boolean isCurrentScheduledJobExecutor();
 	}
 
 	@RegistryLocation(registryPoint = JobExecutors.class, implementationType = ImplementationType.INSTANCE)
