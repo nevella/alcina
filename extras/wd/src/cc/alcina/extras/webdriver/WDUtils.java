@@ -1,5 +1,6 @@
 package cc.alcina.extras.webdriver;
 
+import java.awt.Dimension;
 import java.awt.HeadlessException;
 import java.io.File;
 import java.text.DateFormat;
@@ -7,11 +8,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.MissingResourceException;
 import java.util.TimeZone;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.Dimension;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.InvalidSelectorException;
 import org.openqa.selenium.JavascriptExecutor;
@@ -302,30 +301,26 @@ public class WDUtils {
 			return;
 		}
 		try {
-			java.awt.Dimension screenSize;
-			Dimension dim;
-			try {
-				driver.manage().window().setPosition(new Point(0, 0));
-				screenSize = new java.awt.Dimension(
-						ResourceUtilities.getInteger(WDUtils.class, "width"),
-						ResourceUtilities.getInteger(WDUtils.class, "height"));
-				dim = new Dimension((int) screenSize.getWidth(),
-						(int) screenSize.getHeight());
-				driver.manage().window().setSize(dim);
-			} catch (MissingResourceException e1) {
+			driver.manage().window().setPosition(new Point(0, 0));
+			Dimension maximizeTo = null;
+			Dimension defaultSize = new Dimension(
+					ResourceUtilities.getInteger(WDUtils.class, "width"),
+					ResourceUtilities.getInteger(WDUtils.class, "height"));
+			maximizeTo = defaultSize;
+			if (ResourceUtilities.is("maximizeToScreenSize")) {
 				try {
-					screenSize = java.awt.Toolkit.getDefaultToolkit()
+					maximizeTo = java.awt.Toolkit.getDefaultToolkit()
 							.getScreenSize();
-					dim = new Dimension((int) screenSize.getWidth(),
-							(int) screenSize.getHeight());
-					driver.manage().window().setSize(dim);
-				} catch (Exception e2) {
-					if (e2 instanceof HeadlessException) {
+				} catch (Exception e) {
+					if (e instanceof HeadlessException) {
 					} else {
-						throw e2;
+						throw e;
 					}
 				}
 			}
+			org.openqa.selenium.Dimension dim = new org.openqa.selenium.Dimension(
+					(int) maximizeTo.getWidth(), (int) maximizeTo.getHeight());
+			driver.manage().window().setSize(dim);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
