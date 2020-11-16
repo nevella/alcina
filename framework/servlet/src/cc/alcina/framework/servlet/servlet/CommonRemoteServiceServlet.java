@@ -93,7 +93,7 @@ import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.ServerValidatorHandler;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
+import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -343,10 +343,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return JobRegistry.get().perform(action).getActionLogItem()
 					.getShortDescription();
 		} else {
-			String queueName = JobRegistry.get().start(action, null).getQueue();
-			// make sure the job is available for log callers
+			Job job = JobRegistry.get().start(action, null);
 			Transaction.commit();
-			return queueName;
+			DomainStore.waitUntilCurrentRequestsProcessed();
+			String idString = String.valueOf(job.getId());
+			return idString;
 		}
 	}
 
@@ -384,7 +385,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@Override
 	public JobTracker pollJobStatus(String id, boolean cancel) {
-		Job job = DomainDescriptorJob.get().getJob(id);
+		Job job = Job.byId(Long.parseLong(id));
 		if (job == null) {
 			return null;
 		}

@@ -4,6 +4,7 @@ import java.util.Date;
 
 import cc.alcina.framework.common.client.csobjects.OpStatus;
 import cc.alcina.framework.servlet.job.JobRegistry1;
+import cc.alcina.framework.servlet.job2.JobContext;
 
 public class KnownJob extends KnownNode {
 	public OpStatus status;
@@ -58,7 +59,6 @@ public class KnownJob extends KnownNode {
 	private void logProcessTime() {
 		end = new Date();
 		String path = path();
-		JobRegistry1.get()
-				.log(String.format("job %s - time %s", path, getTime()));
+		JobContext.info("job {} - time {}", path, getTime());
 	}
 }

@@ -108,8 +108,12 @@ public class DomainTransformPersistenceEvents {
 					listener.onDomainTransformRequestPersistence(event);
 				}
 			}
-			domainStore.getTransformSequencer()
-					.waitForPreLocalNonFireEventsThreadBarrier(firstRequestId);
+			if (event
+					.getPersistenceEventType() == DomainTransformPersistenceEventType.COMMIT_OK) {
+				domainStore.getTransformSequencer()
+						.waitForPreLocalNonFireEventsThreadBarrier(
+								firstRequestId);
+			}
 		}
 		synchronized (this) {
 			try {

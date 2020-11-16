@@ -154,7 +154,7 @@ public class JobScheduler {
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
 				.filter(job -> !activeInstances.contains(job.getPerformer()));
 		Stream<? extends Job> pendingInactiveCreator = DomainDescriptorJob.get()
-				.getPendingJobs()
+				.getPendingJobsWithInactiveCreator(activeInstances)
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
 				.filter(job -> !activeInstances.contains(job.getCreator()));
 		InnerAccess<Boolean> metadataLockHeld = new InnerAccess<>();

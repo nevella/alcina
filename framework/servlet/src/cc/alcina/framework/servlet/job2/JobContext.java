@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.job2;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -20,7 +21,9 @@ import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.SEUtilities;
@@ -51,12 +54,15 @@ public class JobContext {
 	}
 
 	public static void info(String template, Object... args) {
+		if (get() == null) {
+			Ax.out("Called JobContext.info() outside job - %s %s", template,
+					Arrays.asList(args));
+		}
 		get().getLogger().info(template, args);
 	}
 
-	public static void setResultMessage(String resultMessage) {
-		info(resultMessage);
-		get().getJob().setResultMessage(resultMessage);
+	public static void warn(String template, Exception ex) {
+		get().getLogger().warn(template, ex);
 	}
 
 	private boolean schedulingSubTasks;
@@ -104,6 +110,8 @@ public class JobContext {
 	public synchronized void awaitChildCompletion() {
 		Set<Job> uncompletedChildren = new LinkedHashSet<>();
 		long lastCompletionEventTime = System.currentTimeMillis();
+		double lastPublishedPercentComplete = 0.0;
+		long lastPublishedCompletionStatsTime = System.currentTimeMillis();
 		while (true) {
 			/*
 			 * Because jobs can be added to uncompleted children, only populate
@@ -119,6 +127,8 @@ public class JobContext {
 				DomainDescriptorJob.get().relatedJobCompletionChanged
 						.add(relatedJobCompletionNotifier);
 				RelatedJobCompletion event = null;
+				// must publish outside the synchronized block
+				String statusMessage = null;
 				synchronized (completionEvents) {
 					if (uncompletedChildren.isEmpty()) {
 						// double-check
@@ -127,6 +137,21 @@ public class JobContext {
 					}
 					if (uncompletedChildren.size() > 0
 							&& completionEvents.isEmpty()) {
+						int totalCount = job.getFromRelations().size();
+						int completedCount = totalCount
+								- uncompletedChildren.size();
+						double percentComplete = ((double) completedCount)
+								/ totalCount * 100.0;
+						long now = System.currentTimeMillis();
+						if (percentComplete - lastPublishedPercentComplete > 1
+								|| (now - lastPublishedCompletionStatsTime > 3000)) {
+							statusMessage = Ax.format(
+									"Await child completion - %s% - %s/%s",
+									(int) percentComplete, completedCount,
+									totalCount);
+							lastPublishedPercentComplete = percentComplete;
+							lastPublishedCompletionStatsTime = now;
+						}
 						Transaction.ensureEnded();
 						try {
 							// FIXME - mvcc.jobs - remove timeout
@@ -150,6 +175,10 @@ public class JobContext {
 						}
 					}
 				}
+				if (statusMessage != null) {
+					JobContext.get().setStatusMessage(statusMessage);
+					Transaction.commit();
+				}
 				if (event != null) {
 					uncompletedChildren.removeAll(event.related);
 				}
@@ -166,14 +195,16 @@ public class JobContext {
 		if (noHttpContext) {
 			InternalMetrics.get().endTracker(performer);
 		}
-		String log = Registry.impl(PerThreadLogging.class).endBuffer();
-		job.setLog(log);
-		if (!job.provideIsComplete()) {
-			job.setState(JobState.COMPLETED);
+		if (job.provideIsNotComplete()) {
+			String log = Registry.impl(PerThreadLogging.class).endBuffer();
+			job.setLog(log);
+			if (!job.provideIsComplete()) {
+				job.setState(JobState.COMPLETED);
+			}
+			job.setEndTime(new Date());
+			job.setResultType(JobResultType.OK);
+			persistMetadata(true);
 		}
-		job.setEndTime(new Date());
-		job.setResultType(JobResultType.OK);
-		persistMetadata(true);
 		if (persistenceType == PersistenceType.None) {
 			// don't end transaction (job metadata changes needed for queue
 			// exit)
@@ -213,9 +244,23 @@ public class JobContext {
 		return this.schedulingSubTasks;
 	}
 
+	public void jobOk(String resultMessage) {
+		job.setResultMessage(resultMessage);
+		job.setStatusMessage(resultMessage);
+		job.setResultType(JobResultType.OK);
+	}
+
 	public void onJobException(Exception e) {
 		job.setResultType(JobResultType.EXCEPTION);
+		String simpleExceptionMessage = CommonUtils.toSimpleExceptionMessage(e);
+		job.setStatusMessage(simpleExceptionMessage);
+		job.setResultMessage(simpleExceptionMessage);
 		logger.warn("Unexpected job exception", e);
+	}
+
+	public void setResultMessage(String resultMessage) {
+		info(resultMessage);
+		get().getJob().setResultMessage(resultMessage);
 	}
 
 	public void setSchedulingSubTasks(boolean schedulingSubTasks) {
@@ -226,6 +271,10 @@ public class JobContext {
 			Transaction.commit();
 			persistenceType = PersistenceType.Immediate;
 		}
+	}
+
+	public void setStatusMessage(String template, Object... args) {
+		getJob().setStatusMessage(Ax.format(template, args));
 	}
 
 	public void setSubtaskCount(int subtaskCount) {
@@ -341,10 +390,12 @@ public class JobContext {
 	void start() {
 		LooseContext.set(CONTEXT_CURRENT, this);
 		thread = Thread.currentThread();
-		job.setStartTime(new Date());
-		job.setState(JobState.PROCESSING);
-		job.setPerformerVersionNumber(performer.getVersionNumber());
-		persistMetadata(true);
+		if (job.provideIsNotComplete()) {
+			job.setStartTime(new Date());
+			job.setState(JobState.PROCESSING);
+			job.setPerformerVersionNumber(performer.getVersionNumber());
+			persistMetadata(true);
+		}
 		Registry.impl(PerThreadLogging.class).beginBuffer();
 		if (noHttpContext) {
 			ActionPerformerTrackMetrics filter = Registry

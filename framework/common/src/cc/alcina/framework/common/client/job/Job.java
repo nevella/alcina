@@ -40,6 +40,7 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
@@ -116,7 +117,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				logItem.setActionClass((Class) getTask().getClass());
 				logItem.setActionClassName(getTaskClassName());
 				logItem.setActionDate(getEndTime());
-				logItem.setActionLog(getLog());
+				logItem.setActionLog(
+						CommonUtils.trimToWsChars(getLog(), 200000, true));
 				logItem.setShortDescription(getResultMessage());
 				return logItem;
 			}
@@ -143,6 +145,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public void cancel() {
 		if (!getState().isComplete()) {
 			setState(JobState.CANCELLED);
+			getFromRelations().stream().map(JobRelation::getTo)
+					.forEach(Job::cancel);
 		}
 	}
 
@@ -372,7 +376,15 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public boolean provideIsComplete() {
-		return state.isComplete();
+		return state == null ? false : state.isComplete();
+	}
+
+	public boolean provideIsInCompletedQueue() {
+		Optional<Job> parent = provideFirstInSequence().provideParent();
+		if (parent.isPresent() && parent.get().provideIsNotComplete()) {
+			return false;
+		}
+		return provideIsComplete();
 	}
 
 	public boolean provideIsLastInSequence() {

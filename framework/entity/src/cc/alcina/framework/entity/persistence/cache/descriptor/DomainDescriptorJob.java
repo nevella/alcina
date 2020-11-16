@@ -1,9 +1,14 @@
 package cc.alcina.framework.entity.persistence.cache.descriptor;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -12,8 +17,10 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.domain.DomainQuery;
+import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
+import cc.alcina.framework.common.client.domain.StreamConcatenation;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ClientInstanceLoadOracle;
 import cc.alcina.framework.common.client.job.JobRelation;
@@ -21,11 +28,13 @@ import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -148,36 +157,45 @@ public class DomainDescriptorJob {
 		}
 	};
 
+	private JobDescriptor jobDescriptor;
+
 	public void configureDescriptor(DomainStoreDescriptor descriptor) {
 		jobImplClass = AlcinaPersistentEntityImpl.getImplementation(Job.class);
-		descriptor.addClassDescriptor(jobImplClass, "queue", "taskClassName");
+		jobDescriptor = new JobDescriptor();
+		descriptor.addClassDescriptor(jobDescriptor);
 		descriptor.addClassDescriptor(AlcinaPersistentEntityImpl
 				.getImplementation(JobRelation.class));
 	}
 
 	public int getActiveJobCount(String queueName) {
-		return (int) Domain.query(jobImplClass).filter("queue", queueName)
-				.filter("state", JobState.PROCESSING).stream().count();
+		return jobDescriptor.getJobsForQueue(queueName, JobState.PROCESSING)
+				.size();
 	}
 
 	public Stream<? extends Job> getAllocatedIncompleteJobs() {
-		// FIXME - mvcc.jobs - make a projection
-		Predicate<Job> allocatedIncompletePredicate = job -> job
-				.provideHasPerformer() && !job.provideIsComplete();
-		return Domain.query(jobImplClass).filter(allocatedIncompletePredicate)
-				.stream();
+		return jobDescriptor.getJobsForState(JobState.ALLOCATED);
 	}
 
-	public Job getJob(String id) {
-		return getMostRecentJobForQueue(id);
+	public int getCompletedJobCountForActiveQueue(String name) {
+		return Arrays.stream(JobState.values()).filter(JobState::isComplete)
+				.map(state -> jobDescriptor.getJobsForQueue(name, state).size())
+				.collect(Collectors.summingInt(i -> i));
 	}
 
-	public int getJobCountForQueue(String name) {
-		return (int) getJobsForQueue(name).count();
+	public int getIncompleteJobCountForActiveQueue(String name) {
+		return Arrays.stream(JobState.values()).filter(s -> !s.isComplete())
+				.map(state -> jobDescriptor.getJobsForQueue(name, state).size())
+				.collect(Collectors.summingInt(i -> i));
 	}
 
-	public Stream<? extends Job> getJobsForQueue(String queueName) {
-		return Domain.query(jobImplClass).filter("queue", queueName).stream();
+	public int getJobCountForActiveQueue(String name) {
+		return Arrays.stream(JobState.values())
+				.map(state -> jobDescriptor.getJobsForQueue(name, state).size())
+				.collect(Collectors.summingInt(i -> i));
+	}
+
+	public int getJobCountForActiveQueue(String name, JobState state) {
+		return jobDescriptor.getJobsForQueue(name, state).size();
 	}
 
 	public Stream<? extends Job> getJobsForTask(Task action) {
@@ -186,16 +204,14 @@ public class DomainDescriptorJob {
 	}
 
 	public Stream<? extends Job> getNotCompletedJobs() {
-		return Domain.stream(jobImplClass)
+		return jobDescriptor.getAllActiveJobs()
 				.sorted(EntityComparator.REVERSED_INSTANCE)
 				.filter(Job::provideIsNotComplete);
 	}
 
-	public Stream<? extends Job> getPendingJobs() {
-		// FIXME - mvcc.jobs - make a projection
-		Predicate<Job> pendingPredicate = job -> job.getPerformer() == null
-				&& job.provideIsPending();
-		return Domain.query(jobImplClass).filter(pendingPredicate).stream();
+	public Stream<? extends Job> getPendingJobsWithInactiveCreator(
+			List<ClientInstance> activeInstances) {
+		return jobDescriptor.getPendingJobsWithInactiveCreator(activeInstances);
 	}
 
 	public Stream<? extends Job> getRecentlyCompletedJobs() {
@@ -210,16 +226,15 @@ public class DomainDescriptorJob {
 
 	public Stream<? extends Job> getUnallocatedJobsForQueue(String queueName,
 			boolean performableByThisVm) {
-		Predicate<Job> pendingPredicate = Job::provideIsPending;
 		Predicate<Job> performerPredicate = job -> !job.provideHasPerformer()
 				&& job.provideCanBePerformedBy(
 						EntityLayerObjects.get().getServerAsClientInstance());
-		DomainQuery<? extends Job> query = Domain.query(jobImplClass)
-				.filter("queue", queueName).filter(pendingPredicate);
+		Stream<Job> stream = jobDescriptor
+				.getJobsForQueue(queueName, JobState.PENDING).stream();
 		if (performableByThisVm) {
-			query = query.filter(performerPredicate);
+			stream = stream.filter(performerPredicate);
 		}
-		return query.filter("performer", null).stream();
+		return stream;
 	}
 
 	public void onWarmupComplete(DomainStore domainStore) {
@@ -231,31 +246,11 @@ public class DomainDescriptorJob {
 		}
 	}
 
-	private Job getMostRecentJobForQueue(String id) {
-		{
-			Predicate<Job> predicate = Job::provideIsActive;
-			Job job = Domain.query(jobImplClass).filter("queue", id)
-					.filter(predicate).find();
-			if (job != null) {
-				return job;
-			}
-		}
-		{
-			Predicate<Job> predicate = Job::provideIsPending;
-			Job job = Domain.query(jobImplClass).filter("queue", id)
-					.filter(predicate).find();
-			if (job != null) {
-				return job;
-			}
-		}
-		{
-			Predicate<Job> predicate = Job::provideIsComplete;
-			Job job = Domain.query(jobImplClass).filter("queue", id)
-					.filter(predicate).stream().reduce(Ax.last()).orElse(null);
-			return job;
-		}
-	}
-
+	/*
+	 * Old completed jobs will have a wide spread of client instances - which we
+	 * don't need (only needed pre-completion for execution constraints). So
+	 * filter appropriately
+	 */
 	@RegistryLocation(registryPoint = ClientInstanceLoadOracle.class, implementationType = ImplementationType.SINGLETON)
 	public static class ClientInstanceLoadOracleImpl
 			extends ClientInstanceLoadOracle {
@@ -277,6 +272,124 @@ public class DomainDescriptorJob {
 		public RelatedJobCompletion(Job job, List<Job> related) {
 			this.job = job;
 			this.related = related;
+		}
+	}
+
+	class ActiveQueueProjection extends BaseProjection<Job> {
+		public ActiveQueueProjection() {
+			super(String.class, JobState.class, jobImplClass);
+		}
+
+		@Override
+		public Class<? extends Job> getListenedClass() {
+			return jobImplClass;
+		}
+
+		@Override
+		public void insert(Job t) {
+			if (t.provideIsComplete()) {
+				return;
+			}
+			super.insert(t);
+		}
+
+		@Override
+		protected int getDepth() {
+			return 3;
+		}
+
+		@Override
+		protected Object[] project(Job job) {
+			return new Object[] { job.getQueue(), job.getState(), job, job };
+		}
+	}
+
+	class ByCreatorIncompleteProjection extends BaseProjection<Job> {
+		public ByCreatorIncompleteProjection() {
+			super(ClientInstance.class, jobImplClass);
+		}
+
+		@Override
+		public Class<? extends Job> getListenedClass() {
+			return jobImplClass;
+		}
+
+		@Override
+		public void insert(Job t) {
+			if (t.provideIsComplete()) {
+				return;
+			}
+			super.insert(t);
+		}
+
+		@Override
+		protected int getDepth() {
+			return 2;
+		}
+
+		@Override
+		protected Object[] project(Job job) {
+			return new Object[] { job.getCreator(), job, job };
+		}
+	}
+
+	class JobDescriptor extends DomainClassDescriptor {
+		private ActiveQueueProjection activeQueueProjection;
+
+		private ByCreatorIncompleteProjection byCreatorIncompleteProjection;
+
+		public JobDescriptor() {
+			super(jobImplClass, "taskClassName");
+		}
+
+		public Stream<Job> getAllActiveJobs() {
+			return Arrays.stream(JobState.values()).filter(s -> !s.isComplete())
+					.flatMap(this::getJobsForState);
+		}
+
+		public Set<Job> getJobsForQueue(String queueName, JobState state) {
+			MultikeyMap map = activeQueueProjection.getLookup().asMap(queueName,
+					state);
+			if (map == null) {
+				return Collections.emptySet();
+			} else {
+				return map.keySet();
+			}
+		}
+
+		public Stream<Job> getJobsForState(JobState state) {
+			List<Stream<Job>> streamList = activeQueueProjection.getLookup()
+					.typedKeySet(String.class).stream()
+					.map(key -> activeQueueProjection.getLookup().asMap(key,
+							state))
+					.filter(Objects::nonNull)
+					.map(mkm -> (Set<Job>) mkm.typedKeySet(Job.class))
+					.map(Collection::stream).collect(Collectors.toList());
+			Stream<Job>[] streams = (Stream<Job>[]) streamList
+					.toArray(new Stream[streamList.size()]);
+			return StreamConcatenation.concat(streams);
+		}
+
+		public Stream<? extends Job> getPendingJobsWithInactiveCreator(
+				List<ClientInstance> activeCreators) {
+			MultikeyMap<Job> lookup = byCreatorIncompleteProjection.getLookup();
+			return lookup.typedKeySet(ClientInstance.class).stream()
+					.filter(ci -> !activeCreators.contains(ci))
+					.map(ci -> (Set<Job>) lookup.asMap(ci)
+							.typedKeySet(Job.class))
+					.flatMap(Collection::stream);
+		}
+
+		@Override
+		public void initialise() {
+			super.initialise();
+			activeQueueProjection = new ActiveQueueProjection();
+			this.byCreatorIncompleteProjection = new ByCreatorIncompleteProjection();
+			projections.add(activeQueueProjection);
+		}
+
+		ActiveQueueProjection getDisabledAtCourtRequestProjection() {
+			return activeQueueProjection;
 		}
 	}
 }

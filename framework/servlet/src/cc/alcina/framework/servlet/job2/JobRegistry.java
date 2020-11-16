@@ -155,8 +155,18 @@ public class JobRegistry extends WriterService {
 		 */
 		if (queue == null) {
 			Schedule schedule = schedulesByQueueName.get(name);
+			boolean ignore = false;
+			Job firstJob = e.getValue().get(0);
 			if (schedule == null) {
-				Job firstJob = e.getValue().get(0);
+				if (EntityLayerObjects.get()
+						.isForeignClientInstance(firstJob.getCreator())) {
+					if (!firstJob.isClustered()
+							|| !ResourceUtilities.is("joinClusteredJobs")) {
+						ignore = true;
+					}
+				}
+			}
+			if (!ignore) {
 				Class<? extends Task> clazz = firstJob.getTask().getClass();
 				Optional<ScheduleProvider> scheduleProvider = Registry
 						.optional(ScheduleProvider.class, clazz);
@@ -580,8 +590,6 @@ public class JobRegistry extends WriterService {
 		public int total;
 
 		public String name;
-
-		public int queuedInExecutor;
 
 		public int completed;
 	}

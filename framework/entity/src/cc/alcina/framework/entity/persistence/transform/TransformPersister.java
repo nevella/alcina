@@ -68,7 +68,14 @@ public class TransformPersister {
 						dtwe = (DeliberatelyThrownWrapperException) ex
 								.getCause();
 					} else {
-						throw ex;
+						// we used to throw - but we need to publish the
+						// exception to inform queues, listeners that the
+						// exception failed (an example issue is a JDBC issue)
+						//
+						// that said, we used to not arrive here because of
+						// flush() before the inPersistenceContext call exited
+						TransformPersisterInPersistenceContext
+								.putExceptionInWrapper(token, ex, wrapper);
 					}
 				} finally {
 					LooseContext.pop();

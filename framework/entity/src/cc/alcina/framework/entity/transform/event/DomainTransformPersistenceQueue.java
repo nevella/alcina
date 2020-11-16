@@ -364,11 +364,14 @@ public class DomainTransformPersistenceQueue {
 						CollectionFilters.max(persistedRequestIds)));
 	}
 
-	void transformRequestFinishedFiring(long id) {
+	void transformRequestFinishedFiring(long requestId) {
 		synchronized (queueModificationLock) {
-			firedOrQueued.add(id);
-			lastFired.add(id);
-			firingLocalToVm.remove(id);
+			firedOrQueued.add(requestId);
+			lastFired.add(requestId);
+			firingLocalToVm.remove(requestId);
+			for (QueueWaiter waiter : waiters) {
+				waiter.notifyFired(requestId);
+			}
 		}
 	}
 

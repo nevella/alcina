@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -153,6 +152,7 @@ public class JobQueue {
 					if (schedule.getQueueMaxConcurrentJobs() <= activeJobs) {
 						job.setState(JobState.SKIPPED);
 					} else {
+						job.setState(JobState.ALLOCATED);
 						pending.add(job);
 					}
 					Transaction.commit();
@@ -173,7 +173,8 @@ public class JobQueue {
 			if (schedule != null) {
 				long scheduleMaxAllocated = schedule.calculateMaxAllocated(this,
 						active.size() + pending.size(),
-						DomainDescriptorJob.get().getJobCountForQueue(name),
+						DomainDescriptorJob.get()
+								.getJobCountForActiveQueue(name),
 						DomainDescriptorJob.get()
 								.getUnallocatedJobCountForQueue(name));
 				if (scheduleMaxAllocated != -1) {
@@ -187,6 +188,7 @@ public class JobQueue {
 							.limit(maxAllocated.get()).forEach(job -> {
 								job.setPerformer(EntityLayerObjects.get()
 										.getServerAsClientInstance());
+								job.setState(JobState.ALLOCATED);
 								pending.add(job);
 								logger.info("Queue: {}@{} - allocated: {}",
 										name, Integer.toHexString(hashCode()),
@@ -225,17 +227,15 @@ public class JobQueue {
 	QueueStat asQueueStat() {
 		QueueStat stat = new QueueStat();
 		stat.name = name;
-		stat.active = active.size();
-		stat.pending = pending.size();
-		stat.queuedInExecutor = 0;
-		if (executorService instanceof ThreadPoolExecutor) {
-			stat.queuedInExecutor = ((ThreadPoolExecutor) executorService)
-					.getQueue().size();
-		}
-		stat.total = (int) DomainDescriptorJob.get().getJobsForQueue(name)
-				.count();
-		stat.completed = (int) DomainDescriptorJob.get().getJobsForQueue(name)
-				.filter(Job::provideIsComplete).count();
+		stat.active = DomainDescriptorJob.get().getJobCountForActiveQueue(name,
+				JobState.PROCESSING);
+		stat.pending = DomainDescriptorJob.get().getJobCountForActiveQueue(name,
+				JobState.PENDING)
+				+ DomainDescriptorJob.get().getJobCountForActiveQueue(name,
+						JobState.ALLOCATED);
+		stat.total = DomainDescriptorJob.get().getJobCountForActiveQueue(name);
+		stat.completed = stat.total - DomainDescriptorJob.get()
+				.getCompletedJobCountForActiveQueue(name);
 		return stat;
 	}
 

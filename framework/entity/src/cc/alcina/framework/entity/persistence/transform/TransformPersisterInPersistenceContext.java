@@ -77,6 +77,32 @@ public class TransformPersisterInPersistenceContext {
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS = 40
 			* 1000;
 
+	static void putExceptionInWrapper(TransformPersistenceToken token,
+			Exception e, DomainTransformLayerWrapper wrapper) {
+		if (e != null) {
+			DomainTransformException transformException;
+			if (e instanceof DomainTransformException) {
+				transformException = (DomainTransformException) e;
+			} else {
+				transformException = new DomainTransformException(e);
+				Registry.impl(JPAImplementation.class)
+						.interpretException(transformException);
+			}
+			if (!token.getTransformExceptions().contains(transformException)) {
+				token.getTransformExceptions().add(transformException);
+			}
+		}
+		DomainTransformResponse response = new DomainTransformResponse();
+		response.setResult(DomainTransformResponseResult.FAILURE);
+		DomainTransformRequest request = token.getRequest();
+		response.setRequest(request);
+		response.setRequestId(request.getRequestId());
+		response.getTransformExceptions().clear();
+		response.getTransformExceptions()
+				.addAll(token.getTransformExceptions());
+		wrapper.response = response;
+	}
+
 	private transient EntityManager entityManager;
 
 	Logger logger = LoggerFactory.getLogger(getClass());
@@ -557,32 +583,6 @@ public class TransformPersisterInPersistenceContext {
 				token.getTransformExceptions().add(addPos, silentSkip);
 			}
 		}
-	}
-
-	private void putExceptionInWrapper(TransformPersistenceToken token,
-			Exception e, DomainTransformLayerWrapper wrapper) {
-		if (e != null) {
-			DomainTransformException transformException;
-			if (e instanceof DomainTransformException) {
-				transformException = (DomainTransformException) e;
-			} else {
-				transformException = new DomainTransformException(e);
-				Registry.impl(JPAImplementation.class)
-						.interpretException(transformException);
-			}
-			if (!token.getTransformExceptions().contains(transformException)) {
-				token.getTransformExceptions().add(transformException);
-			}
-		}
-		DomainTransformResponse response = new DomainTransformResponse();
-		response.setResult(DomainTransformResponseResult.FAILURE);
-		DomainTransformRequest request = token.getRequest();
-		response.setRequest(request);
-		response.setRequestId(request.getRequestId());
-		response.getTransformExceptions().clear();
-		response.getTransformExceptions()
-				.addAll(token.getTransformExceptions());
-		wrapper.response = response;
 	}
 
 	static class DeliberatelyThrownWrapperException extends RuntimeException {

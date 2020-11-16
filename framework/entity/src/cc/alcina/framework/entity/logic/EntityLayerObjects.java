@@ -14,6 +14,7 @@
 package cc.alcina.framework.entity.logic;
 
 import java.io.File;
+import java.util.Objects;
 
 import org.apache.log4j.Logger;
 
@@ -86,6 +87,10 @@ public class EntityLayerObjects {
 
 	public Registry getServletLayerRegistry() {
 		return this.servletLayerRegistry;
+	}
+
+	public boolean isForeignClientInstance(ClientInstance clientInstance) {
+		return !Objects.equals(clientInstance, getServerAsClientInstance());
 	}
 
 	public void setDataFolder(File dataFolder) {
