@@ -117,7 +117,7 @@ public class DomainDescriptorJob {
 									return true;
 								}
 							}).stream().map(qr -> (Job) qr.getObject())
-							.collect(AlcinaCollectors
+							.filter(Objects::nonNull).collect(AlcinaCollectors
 									.toKeyMultimap(Job::getQueue));
 					perQueueJobs.entrySet().forEach(queueChanged::publish);
 					Multimap<Optional<Job>, List<Job>> byParent = collation

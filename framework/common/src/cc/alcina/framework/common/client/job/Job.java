@@ -158,6 +158,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 					rel -> rel.getType() == JobRelationType.parent_child)) {
 				invalidMessage = "Existing parent";
 			}
+			if (to.getRunAt() != null) {
+				invalidMessage = "Child with runAt";
+			}
 			break;
 		case retry:
 			if (to.getToRelations().stream()
@@ -169,6 +172,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			if (to.getToRelations().stream()
 					.anyMatch(rel -> rel.getType() == JobRelationType.retry)) {
 				invalidMessage = "Existing sequence";
+			}
+			if (to.getRunAt() != null) {
+				invalidMessage = "Sequential with runAt";
 			}
 			break;
 		}
