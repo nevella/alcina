@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.RelatedJobCompletion;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
@@ -88,9 +89,9 @@ public class JobContext {
 	private TopicListener<RelatedJobCompletion> relatedJobCompletionNotifier = (
 			k, completion) -> {
 		if (completion.job == job) {
-			logger.debug(
-					"Related job completion changed for job {} - {} complete",
-					job, completion.related.size());
+			logger.warn(
+					"Related job completion changed for job {} - {} complete - {}",
+					job, completion.related.size(), completion.related);
 			synchronized (completionEvents) {
 				completionEvents.add(completion);
 				completionEvents.notifyAll();
@@ -116,28 +117,40 @@ public class JobContext {
 		long lastCompletionEventTime = System.currentTimeMillis();
 		double lastPublishedPercentComplete = 0.0;
 		long lastPublishedCompletionStatsTime = System.currentTimeMillis();
-		while (!job.provideIsComplete()) {
-			/*
-			 * Because jobs can be added to uncompleted children, only populate
-			 * in the synchronized block (so we don[t miss events)
-			 */
-			if (uncompletedChildren.isEmpty()) {
-				if (!job.provideUncompletedChildren().anyMatch(j -> true)) {
-					break;
-				}
-			}
-			Transaction.commit();
-			try {
-				DomainDescriptorJob.get().relatedJobCompletionChanged
-						.add(relatedJobCompletionNotifier);
+		/*
+		 * early termination
+		 * 
+		 */
+		if (job.provideIsComplete()
+				|| job.provideUncompletedChildren().count() == 0) {
+			return;
+		}
+		try {
+			DomainDescriptorJob.get().relatedJobCompletionChanged
+					.add(relatedJobCompletionNotifier);
+			while (!job.provideIsComplete()) {
 				RelatedJobCompletion event = null;
-				// must publish outside the synchronized block
+				// must publish statusMessage changes outside the synchronized
+				// block
 				String statusMessage = null;
+				long now = 0L;
 				synchronized (completionEvents) {
+					/*
+					 * The on-demand creation and event-driven countdown of
+					 * uncompletedChildren (rather than checking
+					 * job.provideUncompletedChildren() directly) is for
+					 * performance reasons - specifically when the job has
+					 * 10,000s of children
+					 */
 					if (uncompletedChildren.isEmpty()) {
+						Transaction.commit();
+						DomainStore.waitUntilCurrentRequestsProcessed();
 						// double-check
 						uncompletedChildren = job.provideUncompletedChildren()
 								.collect(Collectors.toSet());
+						if (uncompletedChildren.isEmpty()) {
+							break;
+						}
 					}
 					if (uncompletedChildren.size() > 0
 							&& completionEvents.isEmpty()) {
@@ -146,7 +159,7 @@ public class JobContext {
 								- uncompletedChildren.size();
 						double percentComplete = ((double) completedCount)
 								/ totalCount * 100.0;
-						long now = System.currentTimeMillis();
+						now = System.currentTimeMillis();
 						if (percentComplete - lastPublishedPercentComplete > 1
 								|| (now - lastPublishedCompletionStatsTime > 3000)) {
 							statusMessage = Ax.format(
@@ -165,21 +178,20 @@ public class JobContext {
 						}
 						Transaction.begin();
 					}
-					long now = System.currentTimeMillis();
+					now = System.currentTimeMillis();
 					if (completionEvents.size() > 0) {
 						event = completionEvents.removeFirst();
 						lastCompletionEventTime = now;
-					} else {
-						if (now - lastCompletionEventTime > AWAIT_CHILDREN_DELTA_TIMEOUT_MS) {
-							// FIXME - mvcc.jobs - A policy?
-							logger.warn(
-									"Cancelling {} - timed out awaiting child completion",
-									job);
-							job.cancel();
-							Transaction.commit();
-							return;
-						}
 					}
+				}
+				if (now - lastCompletionEventTime > AWAIT_CHILDREN_DELTA_TIMEOUT_MS) {
+					// FIXME - mvcc.jobs - A policy?
+					logger.warn(
+							"Cancelling {} - timed out awaiting child completion",
+							job);
+					job.cancel();
+					Transaction.commit();
+					return;
 				}
 				if (statusMessage != null) {
 					JobContext.get().setStatusMessage(statusMessage);
@@ -188,10 +200,10 @@ public class JobContext {
 				if (event != null) {
 					uncompletedChildren.removeAll(event.related);
 				}
-			} finally {
-				DomainDescriptorJob.get().relatedJobCompletionChanged
-						.remove(relatedJobCompletionNotifier);
 			}
+		} finally {
+			DomainDescriptorJob.get().relatedJobCompletionChanged
+					.remove(relatedJobCompletionNotifier);
 		}
 	}
 
@@ -296,6 +308,11 @@ public class JobContext {
 
 	public void setSubtasksCompleted(int subtasksCompleted) {
 		this.subtasksCompleted = subtasksCompleted;
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("JobContext :: Thread - %s; Job - %s", thread, job);
 	}
 
 	protected void checkCancelled0() {
@@ -405,8 +422,8 @@ public class JobContext {
 		thread = Thread.currentThread();
 		threadStartName = thread.getName();
 		if (job.provideIsNotComplete()) {
-			thread.setName(threadStartName + "-"
-					+ job.getTask().getClass().getSimpleName());
+			thread.setName(job.getTask().getClass().getSimpleName() + "::"
+					+ threadStartName);
 			job.setStartTime(new Date());
 			job.setState(JobState.PROCESSING);
 			job.setPerformerVersionNumber(performer.getVersionNumber());

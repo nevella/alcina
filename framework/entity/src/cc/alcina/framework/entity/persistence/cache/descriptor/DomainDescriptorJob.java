@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.job.Job.ClientInstanceLoadOracle;
 import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -124,8 +125,6 @@ public class DomainDescriptorJob {
 							.query(jobImplClass).stream()
 							.map(qr -> (Job) qr.getObject())
 							.filter(Job::provideIsComplete)
-							.filter(Job::provideIsLastInSequence)
-							.map(Job::provideFirstInSequence)
 							// if job has no parent, observe its own cancelled
 							// state (hence parentOrSelf
 							.collect(AlcinaCollectors
@@ -281,9 +280,8 @@ public class DomainDescriptorJob {
 	}
 
 	/*
-	 * A trickier indexing example - elements are only 'complete' on insert
-	 * (with new values), so cascade removal there - less efficient (for
-	 * startup) but necessary
+	 * Certain parent changes cascade to the children (see
+	 * getDependentObjectsWithDerivedProjections)
 	 */
 	class ActiveQueueProjection extends BaseProjection<Job> {
 		public ActiveQueueProjection() {
@@ -297,25 +295,10 @@ public class DomainDescriptorJob {
 
 		@Override
 		public void insert(Job t) {
-			/*
-			 * cascade parent-child completion
-			 */
-			if (t.provideIsComplete() && warmupComplete) {
-				remove(t);
+			if (t.provideIsComplete()) {
 				return;
 			}
 			super.insert(t);
-		}
-
-		@Override
-		public void remove(Job t) {
-			super.remove(t);
-			/*
-			 * cascade parent-child completion
-			 */
-			if (t.provideIsComplete()) {
-				t.provideChildren().forEach(this::remove);
-			}
 		}
 
 		@Override
@@ -342,27 +325,10 @@ public class DomainDescriptorJob {
 
 		@Override
 		public void insert(Job t) {
-			/*
-			 * cascade parent-child completion
-			 */
-			if (t.provideIsComplete() && warmupComplete) {
-				remove(t);
+			if (t.provideIsComplete()) {
 				return;
 			}
 			super.insert(t);
-		}
-
-		@Override
-		public void remove(Job t) {
-			super.remove(t);
-			/*
-			 * cascade parent-child completion
-			 */
-			if (t.provideIsComplete()) {
-				if (t.provideChildren().count() > 0) {
-					t.provideChildren().forEach(this::remove);
-				}
-			}
 		}
 
 		@Override
@@ -376,18 +342,28 @@ public class DomainDescriptorJob {
 		}
 	}
 
-	class JobDescriptor extends DomainClassDescriptor {
+	class JobDescriptor extends DomainClassDescriptor<Job> {
 		private ActiveQueueProjection activeQueueProjection;
 
 		private ByCreatorIncompleteProjection byCreatorIncompleteProjection;
 
 		public JobDescriptor() {
-			super(jobImplClass, "taskClassName");
+			super((Class<Job>) jobImplClass, "taskClassName");
 		}
 
 		public Stream<Job> getAllActiveJobs() {
 			return Arrays.stream(JobState.values()).filter(s -> !s.isComplete())
 					.flatMap(this::getJobsForState);
+		}
+
+		@Override
+		public Stream<Job> getDependentObjectsWithDerivedProjections(Entity obj,
+				Set modifiedPropertyNames) {
+			if (modifiedPropertyNames.contains(Job.PROPERTY_STATE)) {
+				return ((Job) obj).provideDescendants();
+			} else {
+				return Stream.empty();
+			}
 		}
 
 		public Set<Job> getJobsForQueue(String queueName, JobState state) {

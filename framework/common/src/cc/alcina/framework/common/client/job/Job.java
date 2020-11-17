@@ -48,6 +48,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = Job.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class Job extends VersionableEntity<Job> implements HasIUser {
+	public static final transient String PROPERTY_STATE = "state";
+
 	public static Job byId(long id) {
 		return AlcinaPersistentEntityImpl.find(Job.class, id);
 	}
@@ -361,6 +363,14 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public Date provideCreationDateOrNow() {
 		return getCreationDate() == null ? new Date() : getCreationDate();
+	}
+
+	public Stream<Job> provideDescendants() {
+		if (getFromRelations().isEmpty()) {
+			return Stream.empty();
+		}
+		return Stream.concat(provideChildren(),
+				provideChildren().flatMap(Job::provideDescendants));
 	}
 
 	public Job provideFirstInSequence() {

@@ -1,13 +1,13 @@
 package cc.alcina.framework.common.client.domain;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,9 +94,9 @@ public class DomainClassDescriptor<T extends Entity>
 		return propertyPath;
 	}
 
-	public Collection<Entity>
-			getDependentObjectsWithDerivedProjections(Entity obj) {
-		return new ArrayList<>();
+	public Stream<? extends Entity> getDependentObjectsWithDerivedProjections(
+			Entity obj, Set<String> modifiedPropertyNames) {
+		return Stream.empty();
 	}
 
 	public DomainDescriptor getDomainDescriptor() {
@@ -158,8 +158,8 @@ public class DomainClassDescriptor<T extends Entity>
 		return lazy || getInitialLoadFilter().length() > 0;
 	}
 
-	public DomainStoreProperty resolveDomainStoreProperty(
-			AnnotationLocation propertyLocation) {
+	public DomainStoreProperty
+			resolveDomainStoreProperty(AnnotationLocation propertyLocation) {
 		DomainStorePropertyResolver resolver = new DomainStorePropertyResolver(
 				propertyLocation);
 		DomainStorePropertyResolver parent = domainDescriptor
@@ -191,6 +191,4 @@ public class DomainClassDescriptor<T extends Entity>
 		lookupDescriptors.add(lookup);
 		return this;
 	}
-
-	
 }

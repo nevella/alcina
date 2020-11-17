@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.domain;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -70,10 +71,8 @@ public class LocalDomain {
 		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
 				.get(clazz);
 		itemDescriptor.index(obj, add);
-		for (Entity dependentObject : itemDescriptor
-				.getDependentObjectsWithDerivedProjections(obj)) {
-			index(dependentObject, add);
-		}
+		itemDescriptor.getDependentObjectsWithDerivedProjections(obj,
+				Collections.emptySet()).forEach(e -> index(e, add));
 	}
 
 	public static class LocalDomainQuery<T> {

@@ -14,8 +14,10 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Set;
 
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
@@ -502,6 +504,11 @@ public class DomainTransformEvent
 
 	public EntityLocator toObjectLocator() {
 		return EntityLocator.objectLocator(this);
+	}
+
+	public Set<String> toPropertyNameFilterSet() {
+		return getPropertyName() == null ? Collections.emptySet()
+				: Collections.singleton(getPropertyName());
 	}
 
 	@Override

@@ -93,6 +93,8 @@ public class TransformCollation {
 
 		private List<DomainTransformEvent> transforms = new ArrayList<>();
 
+		private Set<String> transformedPropertyNames;
+
 		EntityCollation(EntityLocator locator) {
 			this.locator = locator;
 		}
@@ -116,6 +118,15 @@ public class TransformCollation {
 
 		public Class<? extends Entity> getObjectClass() {
 			return first().getObjectClass();
+		}
+
+		public Set<String> getTransformedPropertyNames() {
+			if (transformedPropertyNames == null) {
+				transformedPropertyNames = transforms.stream()
+						.map(DomainTransformEvent::getPropertyName)
+						.filter(Objects::nonNull).collect(Collectors.toSet());
+			}
+			return transformedPropertyNames;
 		}
 
 		public List<DomainTransformEvent> getTransforms() {

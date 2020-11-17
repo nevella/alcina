@@ -15,6 +15,7 @@ import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.Iterator;
@@ -712,7 +713,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			laterLookup.resolve();
 			if (!store.initialising && !keepDetached) {
 				for (Entity entity : loaded) {
-					store.index(entity, true);
+					store.index(entity, true, Collections.emptySet());
 				}
 			}
 		}
