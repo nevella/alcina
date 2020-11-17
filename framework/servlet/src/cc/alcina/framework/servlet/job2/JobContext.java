@@ -225,6 +225,10 @@ public class JobContext {
 		}
 	}
 
+	public void followCurrentJobWith(Task followingTask) {
+		getJob().followWith(JobRegistry.get().schedule(followingTask));
+	}
+
 	public Job getJob() {
 		return this.job;
 	}
