@@ -161,6 +161,8 @@ public class DomainDescriptorJob {
 
 	private JobDescriptor jobDescriptor;
 
+	boolean warmupComplete = false;
+
 	public void configureDescriptor(DomainStoreDescriptor descriptor) {
 		jobImplClass = AlcinaPersistentEntityImpl.getImplementation(Job.class);
 		jobDescriptor = new JobDescriptor();
@@ -246,6 +248,7 @@ public class DomainDescriptorJob {
 			domainStore.getPersistenceEvents()
 					.addDomainTransformPersistenceListener(jobLogger, false);
 		}
+		warmupComplete = true;
 	}
 
 	/*
@@ -277,6 +280,11 @@ public class DomainDescriptorJob {
 		}
 	}
 
+	/*
+	 * A trickier indexing example - elements are only 'complete' on insert
+	 * (with new values), so cascade removal there - less efficient (for
+	 * startup) but necessary
+	 */
 	class ActiveQueueProjection extends BaseProjection<Job> {
 		public ActiveQueueProjection() {
 			super(String.class, JobState.class, jobImplClass);
@@ -289,10 +297,25 @@ public class DomainDescriptorJob {
 
 		@Override
 		public void insert(Job t) {
-			if (t.provideIsComplete()) {
+			/*
+			 * cascade parent-child completion
+			 */
+			if (t.provideIsComplete() && warmupComplete) {
+				remove(t);
 				return;
 			}
 			super.insert(t);
+		}
+
+		@Override
+		public void remove(Job t) {
+			super.remove(t);
+			/*
+			 * cascade parent-child completion
+			 */
+			if (t.provideIsComplete()) {
+				t.provideChildren().forEach(this::remove);
+			}
 		}
 
 		@Override
@@ -319,10 +342,27 @@ public class DomainDescriptorJob {
 
 		@Override
 		public void insert(Job t) {
-			if (t.provideIsComplete()) {
+			/*
+			 * cascade parent-child completion
+			 */
+			if (t.provideIsComplete() && warmupComplete) {
+				remove(t);
 				return;
 			}
 			super.insert(t);
+		}
+
+		@Override
+		public void remove(Job t) {
+			super.remove(t);
+			/*
+			 * cascade parent-child completion
+			 */
+			if (t.provideIsComplete()) {
+				if (t.provideChildren().count() > 0) {
+					t.provideChildren().forEach(this::remove);
+				}
+			}
 		}
 
 		@Override

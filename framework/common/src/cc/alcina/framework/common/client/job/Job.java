@@ -177,9 +177,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		}
 		JobRelation relation = AlcinaPersistentEntityImpl
 				.create(JobRelation.class);
+		relation.setType(type);
 		relation.setFrom(domainIdentity());
 		relation.setTo(to);
-		relation.setType(type);
 	}
 
 	/*
@@ -342,6 +342,15 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			// Invalid class/serialized form
 			return false;
 		}
+	}
+
+	public Stream<Job> provideChildren() {
+		if (getFromRelations().isEmpty()) {
+			return Stream.empty();
+		}
+		return getFromRelations().stream()
+				.filter(rel -> rel.getType() == JobRelationType.parent_child)
+				.map(JobRelation::getTo);
 	}
 
 	public Date provideCreationDateOrNow() {
