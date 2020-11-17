@@ -151,6 +151,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public void createRelation(Job to, JobRelationType type) {
 		String invalidMessage = null;
+		Preconditions.checkArgument(to != domainIdentity());
 		switch (type) {
 		case parent_child:
 			if (to.getToRelations().stream().anyMatch(
@@ -193,7 +194,13 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		if (fromRelations.isEmpty()) {
 			createRelation(to, JobRelationType.sequence);
 		} else {
-			fromRelations.get(0).getTo().followWith(to);
+			Job sequenceTo = fromRelations.get(0).getTo();
+			// see JobRegistry.createJob - this relation may have been created
+			// automagically
+			if (sequenceTo == to) {
+			} else {
+				sequenceTo.followWith(to);
+			}
 		}
 	}
 
@@ -462,20 +469,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public JobState resolveState() {
-		if (this.state == null) {
-			return null;
-		}
-		if (this.state.isComplete()) {
-			return this.state;
-		}
-		Optional<Job> parent = provideParent();
-		if (parent.isPresent()) {
-			JobState parentState = parent.get().resolveState();
-			if (parentState != null && parentState.isComplete()) {
-				return parentState;
-			}
-		}
-		return this.state;
+		return resolveState0(0);
 	}
 
 	public void setClustered(boolean clustered) {
@@ -641,6 +635,26 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return Ax.format("%s - %s - %s from: %s to: %s", toLocator(),
 				provideName(), resolveState(), toString(getFromRelations()),
 				toString(getToRelations()));
+	}
+
+	private JobState resolveState0(int depth) {
+		if (depth > 10) {
+			int debug = 3;
+		}
+		if (this.state == null) {
+			return null;
+		}
+		if (this.state.isComplete()) {
+			return this.state;
+		}
+		Optional<Job> parent = provideParent();
+		if (parent.isPresent()) {
+			JobState parentState = parent.get().resolveState0(depth + 1);
+			if (parentState != null && parentState.isComplete()) {
+				return parentState;
+			}
+		}
+		return this.state;
 	}
 
 	private String toString(Set<? extends JobRelation> relations) {
