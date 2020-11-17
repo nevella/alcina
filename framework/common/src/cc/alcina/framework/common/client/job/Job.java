@@ -580,6 +580,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public void setRunAt(Date runAt) {
+		Preconditions.checkState(runAt == null || !provideParent().isPresent());
 		Date old_runAt = this.runAt;
 		this.runAt = runAt;
 		propertyChangeSupport().firePropertyChange("runAt", old_runAt, runAt);
