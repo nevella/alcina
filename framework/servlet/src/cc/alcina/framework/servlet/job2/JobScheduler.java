@@ -109,8 +109,8 @@ public class JobScheduler {
 						}
 					} else {
 						Job job = jobRegistry.createJob(
-								Reflections.newInstance(clazz), schedule);
-						job.setRunAt(SEUtilities.toOldDate(nextRun));
+								Reflections.newInstance(clazz), schedule,
+								SEUtilities.toOldDate(nextRun));
 						logger.info("Scheduled job {} for {}", job, nextRun);
 					}
 				});
@@ -194,8 +194,9 @@ public class JobScheduler {
 									perQueueTaskClass.put(
 											schedule.getQueueName(), taskClass,
 											true);
-									Job retry = jobRegistry
-											.createJob(job.getTask(), schedule);
+									Job retry = jobRegistry.createJob(
+											job.getTask(), schedule,
+											job.getRunAt());
 									retry.setQueue(job.getQueue());
 									job.createRelation(retry,
 											JobRelationType.retry);

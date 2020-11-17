@@ -215,7 +215,7 @@ public class JobRegistry extends WriterService {
 		});
 	}
 
-	public Job createJob(Task task, Schedule schedule) {
+	public Job createJob(Task task, Schedule schedule, Date runAt) {
 		checkAnnotatedPermissions(task);
 		Job job = AlcinaPersistentEntityImpl.create(Job.class);
 		job.setUser(PermissionsManager.get().getUser());
@@ -223,6 +223,7 @@ public class JobRegistry extends WriterService {
 		job.setTask(task);
 		job.setTaskClassName(task.getClass().getName());
 		job.setCreator(EntityLayerObjects.get().getServerAsClientInstance());
+		job.setRunAt(runAt);
 		if (schedule == null) {
 			if (task instanceof HasClusteredRunParameter) {
 				job.setClustered(((HasClusteredRunParameter) task)
@@ -233,7 +234,7 @@ public class JobRegistry extends WriterService {
 			job.setClustered(schedule.isClustered());
 		}
 		JobContext creationContext = JobContext.get();
-		if (creationContext != null) {
+		if (creationContext != null && runAt == null) {
 			Job creatingJob = creationContext.getJob();
 			/*
 			 * If scheduling from&to a job in a max-1 queue, sequential
@@ -319,8 +320,8 @@ public class JobRegistry extends WriterService {
 			if (schedule == null) {
 				return start(task, null);
 			} else {
-				Job job = createJob(task, schedule);
-				job.setRunAt(SEUtilities.toOldDate(schedule.getNext()));
+				Job job = createJob(task, schedule,
+						SEUtilities.toOldDate(schedule.getNext()));
 				job.setClustered(schedule.isClustered());
 				ensureQueue(schedule);
 				return job;
@@ -349,7 +350,7 @@ public class JobRegistry extends WriterService {
 				.optional(ScheduleProvider.class, task.getClass());
 		Schedule schedule = scheduleProvider
 				.map(sp -> sp.getSchedule(task.getClass(), false)).orElse(null);
-		Job job = createJob(task, schedule);
+		Job job = createJob(task, schedule, null);
 		if (latch != null) {
 			completionLatches.put(job, latch);
 		}
