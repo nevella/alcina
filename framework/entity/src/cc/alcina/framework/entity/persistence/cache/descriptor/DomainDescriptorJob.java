@@ -126,8 +126,10 @@ public class DomainDescriptorJob {
 							.filter(Job::provideIsComplete)
 							.filter(Job::provideIsLastInSequence)
 							.map(Job::provideFirstInSequence)
+							// if job has no parent, observe its own cancelled
+							// state (hence parentOrSelf
 							.collect(AlcinaCollectors
-									.toKeyMultimap(Job::provideParent));
+									.toKeyMultimap(Job::provideParentOrSelf));
 					byParent.entrySet().stream()
 							.filter(e -> e.getKey().isPresent()).forEach(e -> {
 								relatedJobCompletionChanged
@@ -300,7 +302,8 @@ public class DomainDescriptorJob {
 
 		@Override
 		protected Object[] project(Job job) {
-			return new Object[] { job.getQueue(), job.getState(), job, job };
+			return new Object[] { job.getQueue(), job.resolveState(), job,
+					job };
 		}
 	}
 
@@ -384,8 +387,9 @@ public class DomainDescriptorJob {
 		public void initialise() {
 			super.initialise();
 			activeQueueProjection = new ActiveQueueProjection();
-			this.byCreatorIncompleteProjection = new ByCreatorIncompleteProjection();
 			projections.add(activeQueueProjection);
+			byCreatorIncompleteProjection = new ByCreatorIncompleteProjection();
+			projections.add(byCreatorIncompleteProjection);
 		}
 
 		ActiveQueueProjection getDisabledAtCourtRequestProjection() {

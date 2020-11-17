@@ -129,8 +129,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public JobTracker asJobTracker() {
 		JobTrackerImpl tracker = new JobTrackerImpl();
-		tracker.setCancelled(state == JobState.CANCELLED);
-		tracker.setComplete(state.isComplete());
+		tracker.setCancelled(resolveState() == JobState.CANCELLED);
+		tracker.setComplete(resolveState().isComplete());
 		tracker.setEndTime(endTime);
 		tracker.setId(toLocator().toString());
 		tracker.setJobName(getTask().getName());
@@ -143,10 +143,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public void cancel() {
-		if (!getState().isComplete()) {
+		if (!resolveState().isComplete()) {
 			setState(JobState.CANCELLED);
-			getFromRelations().stream().map(JobRelation::getTo)
-					.forEach(Job::cancel);
+			// no need to set child state - completed states propagate down
 		}
 	}
 
@@ -284,6 +283,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return this.startTime;
 	}
 
+	/*
+	 * Normally use resolveState - some completed states inherit from the parent
+	 */
 	public JobState getState() {
 		return this.state;
 	}
@@ -360,7 +362,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public boolean provideIsActive() {
-		return state == JobState.PROCESSING;
+		return resolveState() == JobState.PROCESSING;
 	}
 
 	public boolean provideIsAllocatable() {
@@ -376,7 +378,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public boolean provideIsComplete() {
-		return state == null ? false : state.isComplete();
+		JobState resolvedState = resolveState();
+		return resolvedState == null ? false : resolvedState.isComplete();
 	}
 
 	public boolean provideIsInCompletedQueue() {
@@ -393,11 +396,11 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public boolean provideIsNotComplete() {
-		return !state.isComplete();
+		return !resolveState().isComplete();
 	}
 
 	public boolean provideIsPending() {
-		return state == JobState.PENDING;
+		return resolveState() == JobState.PENDING;
 	}
 
 	public boolean provideIsTaskClass(Class<? extends Task> taskClass) {
@@ -417,6 +420,11 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return getToRelations().stream()
 				.filter(rel -> rel.getType() == JobRelationType.parent_child)
 				.findFirst().map(JobRelation::getFrom);
+	}
+
+	public Optional<Job> provideParentOrSelf() {
+		Optional<Job> parent = provideParent();
+		return parent.isPresent() ? parent : Optional.of(domainIdentity());
 	}
 
 	public List<Job> provideRelatedSequential() {
@@ -451,6 +459,23 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public Set<Job> provideUncompletedSequential() {
 		return provideRelatedSequential().stream()
 				.filter(Job::provideIsNotComplete).collect(Collectors.toSet());
+	}
+
+	public JobState resolveState() {
+		if (this.state == null) {
+			return null;
+		}
+		if (this.state.isComplete()) {
+			return this.state;
+		}
+		Optional<Job> parent = provideParent();
+		if (parent.isPresent()) {
+			JobState parentState = parent.get().resolveState();
+			if (parentState != null && parentState.isComplete()) {
+				return parentState;
+			}
+		}
+		return this.state;
 	}
 
 	public void setClustered(boolean clustered) {
@@ -614,7 +639,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@Override
 	public String toString() {
 		return Ax.format("%s - %s - %s from: %s to: %s", toLocator(),
-				provideName(), state, toString(getFromRelations()),
+				provideName(), resolveState(), toString(getFromRelations()),
 				toString(getToRelations()));
 	}
 

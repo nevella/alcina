@@ -98,6 +98,8 @@ public class JobContext {
 
 	Thread thread;
 
+	String threadStartName = null;
+
 	public JobContext(Job job, PersistenceType persistenceType,
 			TaskPerformer performer) {
 		this.job = job;
@@ -112,7 +114,7 @@ public class JobContext {
 		long lastCompletionEventTime = System.currentTimeMillis();
 		double lastPublishedPercentComplete = 0.0;
 		long lastPublishedCompletionStatsTime = System.currentTimeMillis();
-		while (true) {
+		while (!job.provideIsComplete()) {
 			/*
 			 * Because jobs can be added to uncompleted children, only populate
 			 * in the synchronized block (so we don[t miss events)
@@ -204,6 +206,9 @@ public class JobContext {
 			job.setEndTime(new Date());
 			job.setResultType(JobResultType.OK);
 			persistMetadata(true);
+		}
+		if (threadStartName != null) {
+			thread.setName(threadStartName);
 		}
 		if (persistenceType == PersistenceType.None) {
 			// don't end transaction (job metadata changes needed for queue
@@ -390,7 +395,10 @@ public class JobContext {
 	void start() {
 		LooseContext.set(CONTEXT_CURRENT, this);
 		thread = Thread.currentThread();
+		threadStartName = thread.getName();
 		if (job.provideIsNotComplete()) {
+			thread.setName(threadStartName + "-"
+					+ job.getTask().getClass().getSimpleName());
 			job.setStartTime(new Date());
 			job.setState(JobState.PROCESSING);
 			job.setPerformerVersionNumber(performer.getVersionNumber());

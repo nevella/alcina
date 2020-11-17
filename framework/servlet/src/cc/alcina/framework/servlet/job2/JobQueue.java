@@ -185,6 +185,7 @@ public class JobQueue {
 				jobRegistry.withJobMetadataLock(name, isClustered(), () -> {
 					DomainDescriptorJob.get()
 							.getUnallocatedJobsForQueue(name, true)
+							.filter(Job::provideIsAllocatable)
 							.limit(maxAllocated.get()).forEach(job -> {
 								job.setPerformer(EntityLayerObjects.get()
 										.getServerAsClientInstance());

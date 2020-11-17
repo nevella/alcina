@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -29,9 +30,12 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.InnerAccess;
+import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -93,9 +97,8 @@ public class JobScheduler {
 							.getUnallocatedJobsForQueue(schedule.getQueueName(),
 									false)
 							.filter(job -> job.provideIsTaskClass(clazz))
-							.findFirst();
-					if (pending.isPresent()
-							&& pending.get().getRunAt() != null) {
+							.filter(job -> job.getRunAt() != null).findFirst();
+					if (pending.isPresent()) {
 						if (SEUtilities
 								.toLocalDateTime(pending.get().getRunAt())
 								.isAfter(nextRun)) {
@@ -162,6 +165,7 @@ public class JobScheduler {
 		List<Job> toAbortOrReassign = Stream
 				.concat(allocatedIncomplete, pendingInactiveCreator).distinct()
 				.collect(Collectors.toList());
+		MultikeyMap<Boolean> perQueueTaskClass = new UnsortedMultikeyMap<>(2);
 		Runnable runnable = toAbortOrReassign.isEmpty() ? null
 				: () -> toAbortOrReassign.forEach(job -> {
 					logger.warn(
@@ -175,19 +179,30 @@ public class JobScheduler {
 					// may want to be finer-grained
 					if (job.isClustered() && job.provideCanDeserializeTask()
 							&& !job.provideParent().isPresent()) {
-						Schedule schedule = getSchedule(
-								job.getTask().getClass(), false);
+						/*
+						 * Only retry max 1 combo of queue/taskclass
+						 */
+						Class<? extends Task> taskClass = job.getTask()
+								.getClass();
+						Schedule schedule = getSchedule(taskClass, false);
 						if (schedule != null) {
 							RetryPolicy retryPolicy = schedule.getRetryPolicy();
 							if (retryPolicy.shouldRetry(job)) {
-								Job retry = jobRegistry.createJob(job.getTask(),
-										schedule);
-								retry.setQueue(job.getQueue());
-								job.createRelation(retry,
-										JobRelationType.retry);
-								logger.warn(
-										"Rescheduling job  (retry) :: {} => {}",
-										job, retry);
+								Boolean retried = perQueueTaskClass.get(
+										schedule.getQueueName(), taskClass);
+								if (retried == null) {
+									perQueueTaskClass.put(
+											schedule.getQueueName(), taskClass,
+											true);
+									Job retry = jobRegistry
+											.createJob(job.getTask(), schedule);
+									retry.setQueue(job.getQueue());
+									job.createRelation(retry,
+											JobRelationType.retry);
+									logger.warn(
+											"Rescheduling job  (retry) :: {} => {}",
+											job, retry);
+								}
 							}
 						}
 					}
@@ -200,6 +215,13 @@ public class JobScheduler {
 			ensureQueues();
 		}
 		Transaction.ensureBegun();
+		/*
+		 * orphans before scheduling (since we may resubmit timewise-constrained
+		 * tasks)
+		 */
+		if (jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()) {
+			processOrphans();
+		}
 		queueNameSchedulableTasks.allValues().forEach(clazz -> {
 			Schedule schedule = getSchedule(clazz, applicationStartup);
 			if (schedule == null) {
@@ -220,9 +242,6 @@ public class JobScheduler {
 				ensureScheduled(schedule, clazz, nextRun);
 			}
 		});
-		if (jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()) {
-			processOrphans();
-		}
 		Transaction.commit();
 		ensureActiveQueues();
 		applicationStartup = false;
@@ -327,7 +346,20 @@ public class JobScheduler {
 
 	@RegistryLocation(registryPoint = Schedule.class)
 	public static class Schedule {
-		private ExecutorServiceProvider exexcutorServiceProvider = new CurrentThreadExecutorServiceProvider();
+		private ExecutorServiceProvider exexcutorServiceProvider = new ExecutorServiceProvider() {
+			@Override
+			public ExecutorService getService() {
+				return Executors.newSingleThreadExecutor(
+						new NamedThreadFactory("custom-name") {
+							@Override
+							public Thread newThread(Runnable r) {
+								Thread thread = super.newThread(r);
+								thread.setName(queueName + "-executor");
+								return thread;
+							}
+						});
+			}
+		};
 
 		private int queueMaxConcurrentJobs = Integer.MAX_VALUE;
 
@@ -489,7 +521,7 @@ public class JobScheduler {
 			Job cursor = failedJob;
 			while (true) {
 				counter++;
-				Optional<Job> precedingJob = failedJob.getToRelations().stream()
+				Optional<Job> precedingJob = cursor.getToRelations().stream()
 						.filter(rel -> rel.getType() == JobRelationType.retry)
 						.findFirst().map(JobRelation::getFrom);
 				if (precedingJob.isPresent()) {
