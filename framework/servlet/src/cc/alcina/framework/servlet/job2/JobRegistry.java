@@ -51,7 +51,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
@@ -302,6 +301,11 @@ public class JobRegistry extends WriterService {
 		return schedule(task, scheduler.getSchedule(task.getClass(), false));
 	}
 
+	/*
+	 * Does *not* use schedule.getNext() - it's called by various utility
+	 * methods so if you want a custom time, add it in code (JobScheduler will
+	 * add the future date if sequenced if it)
+	 */
 	public Job schedule(Task task, Schedule schedule) {
 		Schedule providerSchedule = scheduler.getSchedule(task.getClass(),
 				false);
@@ -320,8 +324,7 @@ public class JobRegistry extends WriterService {
 			if (schedule == null) {
 				return start(task, null);
 			} else {
-				Job job = createJob(task, schedule,
-						SEUtilities.toOldDate(schedule.getNext()));
+				Job job = createJob(task, schedule, null);
 				job.setClustered(schedule.isClustered());
 				ensureQueue(schedule);
 				return job;
