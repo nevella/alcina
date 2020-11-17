@@ -137,7 +137,7 @@ public class JobQueue {
 					.getUnallocatedJobsForQueue(name, true)
 					.anyMatch(Job::provideIsAllocatable);
 			if (hasUnallocated
-					&& schedule.getQueueMaxConcurrentJobs() <= activeJobs) {
+					&& schedule.getQueueMaxConcurrentJobs() > activeJobs) {
 				jobRegistry.withJobMetadataLock(name, isClustered(), () -> {
 					/*
 					 * essentially double-checked locking (rather than getting
@@ -242,7 +242,7 @@ public class JobQueue {
 				+ DomainDescriptorJob.get().getJobCountForActiveQueue(name,
 						JobState.ALLOCATED);
 		stat.total = DomainDescriptorJob.get().getJobCountForActiveQueue(name);
-		stat.completed = stat.total - DomainDescriptorJob.get()
+		stat.completed = DomainDescriptorJob.get()
 				.getCompletedJobCountForActiveQueue(name);
 		return stat;
 	}
