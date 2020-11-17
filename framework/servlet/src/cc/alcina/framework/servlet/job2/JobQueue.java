@@ -136,7 +136,8 @@ public class JobQueue {
 			boolean hasUnallocated = DomainDescriptorJob.get()
 					.getUnallocatedJobsForQueue(name, true)
 					.anyMatch(Job::provideIsAllocatable);
-			if (hasUnallocated) {
+			if (hasUnallocated
+					&& schedule.getQueueMaxConcurrentJobs() <= activeJobs) {
 				jobRegistry.withJobMetadataLock(name, isClustered(), () -> {
 					/*
 					 * essentially double-checked locking (rather than getting
@@ -150,7 +151,13 @@ public class JobQueue {
 					job.setPerformer(EntityLayerObjects.get()
 							.getServerAsClientInstance());
 					if (schedule.getQueueMaxConcurrentJobs() <= activeJobs) {
-						job.setState(JobState.SKIPPED);
+						// FIXME - mvcc.jobs - probably remove 'skipped'. The
+						// 'logic' around 'skipped' is problematic - it was
+						// intended to handle
+						// spammy scheduling of timewise-constrained tasks.
+						// But...the scheduler only has max-1 future per-class
+						// task, so it's not needed (and wrong)
+						// job.setState(JobState.SKIPPED);
 					} else {
 						job.setState(JobState.ALLOCATED);
 						pending.add(job);
