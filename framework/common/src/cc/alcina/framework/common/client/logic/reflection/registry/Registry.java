@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -278,7 +279,7 @@ public class Registry {
 			return Collections.emptyList();
 		}
 		return pointLookup.allValues().stream()
-				.map(key -> key.clazz(classLookup))
+				.map(key -> key.clazz(classLookup)).filter(Objects::nonNull)
 				.collect(Collectors.toList());
 	}
 
@@ -389,7 +390,7 @@ public class Registry {
 			}
 		}
 		return matched.stream().map(key -> key.clazz(classLookup))
-				.collect(Collectors.toList());
+				.filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
 	public List<Class> lookup(Class registryPoint) {

@@ -21,6 +21,10 @@ public class RegistryKey {
 		this.name = name;
 	}
 
+	public void ensureClazz(Class<?> clazz) {
+		this.clazz = clazz;
+	}
+
 	@Override
 	public boolean equals(Object anObject) {
 		if (anObject instanceof RegistryKey) {
@@ -34,13 +38,6 @@ public class RegistryKey {
 		return this.name.hashCode();
 	}
 
-	Class clazz(ClassLookup classLookup) {
-		if (clazz == null) {
-			clazz = classLookup.getClassForName(name);
-		}
-		return clazz;
-	}
-
 	public String name() {
 		return name;
 	}
@@ -52,12 +49,21 @@ public class RegistryKey {
 		return simpleName;
 	}
 
-	public void ensureClazz(Class<?> clazz) {
-		this.clazz = clazz;
-	}
-
 	@Override
 	public String toString() {
 		return name + " (rk)";
+	}
+
+	Class clazz(ClassLookup classLookup) {
+		if (clazz == null) {
+			try {
+				clazz = classLookup.getClassForName(name);
+			} catch (Exception e) {
+				// null will be filtered down-stream - FIXME mvcc.jobs.2 -
+				// caching issue
+				e.printStackTrace();
+			}
+		}
+		return clazz;
 	}
 }
