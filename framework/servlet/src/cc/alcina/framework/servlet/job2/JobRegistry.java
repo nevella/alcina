@@ -154,8 +154,8 @@ public class JobRegistry extends WriterService {
 		 */
 		if (queue == null) {
 			Schedule schedule = schedulesByQueueName.get(name);
-			boolean ignore = false;
 			Job firstJob = e.getValue().get(0);
+			boolean ignore = false;
 			if (schedule == null) {
 				if (EntityLayerObjects.get()
 						.isForeignClientInstance(firstJob.getCreator())) {

@@ -96,6 +96,7 @@ public class JobScheduler {
 					Optional<? extends Job> pending = DomainDescriptorJob.get()
 							.getUnallocatedJobsForQueue(schedule.getQueueName(),
 									false)
+							.filter(job -> job.getRunAt() != null)
 							.filter(job -> job.provideIsTaskClass(clazz))
 							.filter(job -> job.getRunAt() != null).findFirst();
 					if (pending.isPresent()) {
@@ -148,6 +149,7 @@ public class JobScheduler {
 	}
 
 	private void processOrphans() {
+		// FIXME - mvcc.jobs - remove (with prej) all non-deserializable tasks
 		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
 				.getActiveServers();
 		Date cutoff = SEUtilities
