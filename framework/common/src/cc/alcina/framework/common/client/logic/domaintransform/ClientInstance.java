@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.util.Ax;
 
 @MappedSuperclass
 /**
@@ -224,5 +225,13 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 		this.userAgent = userAgent;
 		propertyChangeSupport().firePropertyChange("userAgent", old_userAgent,
 				userAgent);
+	}
+
+	@Override
+	public String toString() {
+		String idString = super.toString();
+		return Ax.matches(getUserAgent(), "^(servlet|server).*")
+				? Ax.format("%s::%s", idString, getUserAgent())
+				: idString;
 	}
 }

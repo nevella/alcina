@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
@@ -43,7 +44,8 @@ public class JobContext {
 	static final String CONTEXT_CURRENT = JobContext.class.getName()
 			+ ".CONTEXT_CURRENT";
 
-	private static final long AWAIT_CHILDREN_TIMEOUT_MS = 60000;
+	private static final long AWAIT_CHILDREN_DELTA_TIMEOUT_MS = 30
+			* TimeConstants.ONE_MINUTE_MS;
 
 	public static void checkCancelled() {
 		get().checkCancelled0();
@@ -168,11 +170,13 @@ public class JobContext {
 						event = completionEvents.removeFirst();
 						lastCompletionEventTime = now;
 					} else {
-						if (now - lastCompletionEventTime > AWAIT_CHILDREN_TIMEOUT_MS) {
-							// FIXME - mvcc.jobs - cancel children? A policy?
+						if (now - lastCompletionEventTime > AWAIT_CHILDREN_DELTA_TIMEOUT_MS) {
+							// FIXME - mvcc.jobs - A policy?
 							logger.warn(
-									"Cancelling {} - timed out awaiting child completion");
+									"Cancelling {} - timed out awaiting child completion",
+									job);
 							job.cancel();
+							Transaction.commit();
 							return;
 						}
 					}
