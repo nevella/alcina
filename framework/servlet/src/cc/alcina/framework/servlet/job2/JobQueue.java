@@ -27,6 +27,7 @@ import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJ
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
+import cc.alcina.framework.servlet.job2.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job2.JobRegistry.QueueStat;
 import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
 
@@ -277,6 +278,10 @@ public class JobQueue {
 		onQueueFinished();
 	}
 
+	Schedule getSchedule() {
+		return this.schedule;
+	}
+
 	void loopAllocations() {
 		while (!cancelled) {
 			try {
@@ -301,8 +306,10 @@ public class JobQueue {
 									"Double allocation:\n============\nFirst:\n{}\n============Second:\n{}\n",
 									existing, allocation);
 						} else {
-							executorService.submit(() -> jobRegistry
-									.performJob(toSubmit, queueJobPersistence));
+							LauncherThreadState launcherThreadState = new LauncherThreadState();
+							executorService.submit(() -> jobRegistry.performJob(
+									toSubmit, queueJobPersistence,
+									launcherThreadState));
 						}
 					}
 				}

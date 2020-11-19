@@ -3,15 +3,14 @@ package cc.alcina.framework.servlet.job2;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
-import cc.alcina.framework.common.client.actions.Lockable;
+import cc.alcina.framework.common.client.actions.JobResource;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
@@ -40,6 +39,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentE
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -53,12 +53,12 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
-import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.job.JobRegistry1;
 import cc.alcina.framework.servlet.job2.JobContext.PersistenceType;
 import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
@@ -133,7 +133,9 @@ public class JobRegistry extends WriterService {
 		return Registry.impl(JobRegistry.class);
 	}
 
-	private Queue<JobContext> activeJobs = new ConcurrentLinkedQueue<>();
+	private Map<Job, JobContext> activeJobs = new ConcurrentHashMap<>();
+
+	private Map<Job, List<JobResource>> jobResources = new ConcurrentHashMap<>();
 
 	private Map<String, JobQueue> activeQueues = new ConcurrentHashMap<>();
 
@@ -214,6 +216,13 @@ public class JobRegistry extends WriterService {
 		});
 	}
 
+	// Directly acquire a resource (not via TaskPerformer.getResources)
+	public void acquireResource(Job forJob, JobResource resource) {
+		jobResources.computeIfAbsent(forJob, j -> new ArrayList<>())
+				.add(resource);
+		resource.acquire();
+	}
+
 	public Job createJob(Task task, Schedule schedule, Date runAt) {
 		checkAnnotatedPermissions(task);
 		Job job = AlcinaPersistentEntityImpl.create(Job.class);
@@ -243,9 +252,11 @@ public class JobRegistry extends WriterService {
 					&& Objects.equals(schedule.getQueueName(),
 							creatingJob.getQueue())
 					&& schedule.getQueueMaxConcurrentJobs() == 1;
-			creatingJob.createRelation(job,
-					scheduleSubsequent ? JobRelationType.sequence
-							: JobRelationType.parent_child);
+			if (scheduleSubsequent) {
+				creatingJob.followWith(job);
+			} else {
+				creatingJob.createRelation(job, JobRelationType.parent_child);
+			}
 		}
 		return job;
 	}
@@ -270,8 +281,18 @@ public class JobRegistry extends WriterService {
 	}
 
 	public String getPerformerThreadName(Job job) {
-		return activeJobs.stream().filter(c -> c.getJob() == job).findFirst()
-				.map(jc -> jc.thread).map(Thread::getName).orElse(null);
+		return Optional.ofNullable(activeJobs.get(job)).map(jc -> jc.thread)
+				.map(Thread::getName).orElse(null);
+	}
+
+	public Object getResourceOwner() {
+		return JobContext.has()
+				? JobContext.get().getJob().provideFirstInSequence()
+				: Thread.currentThread();
+	}
+
+	public Schedule getScheduleForQueue(String queueName) {
+		return activeQueues.get(queueName).getSchedule();
 	}
 
 	public void onJobQueueTerminated(JobQueue jobQueue) {
@@ -307,8 +328,7 @@ public class JobRegistry extends WriterService {
 	 * add the future date if sequenced if it)
 	 */
 	public Job schedule(Task task, Schedule schedule) {
-		Schedule providerSchedule = scheduler.getSchedule(task.getClass(),
-				false);
+		Schedule providerSchedule = scheduler.getSchedule(task);
 		// to ensure we respect non-timebased task execution constraints, use
 		// the provider
 		// schedule if it exists && different to incoming
@@ -351,8 +371,8 @@ public class JobRegistry extends WriterService {
 		 */
 		Optional<ScheduleProvider> scheduleProvider = Registry
 				.optional(ScheduleProvider.class, task.getClass());
-		Schedule schedule = scheduleProvider
-				.map(sp -> sp.getSchedule(task.getClass(), false)).orElse(null);
+		Schedule schedule = scheduleProvider.map(sp -> sp.getSchedule(task))
+				.orElse(null);
 		Job job = createJob(task, schedule, null);
 		if (latch != null) {
 			completionLatches.put(job, latch);
@@ -401,6 +421,25 @@ public class JobRegistry extends WriterService {
 		}
 	}
 
+	private void acquireResources(Job forJob, List<JobResource> resources) {
+		List<JobResource> acquired = new ArrayList<>();
+		for (JobResource resource : resources) {
+			/*
+			 * attempt to acquire from antecedent
+			 */
+			Optional<JobResource> antecedentAcquired = getAcquiredResource(
+					forJob, resource);
+			if (antecedentAcquired.isPresent()) {
+			} else {
+				resource.acquire();
+				acquired.add(resource);
+			}
+		}
+		if (acquired.size() > 0) {
+			jobResources.put(forJob, acquired);
+		}
+	}
+
 	private JobQueue createPerJobQueue(Job job) {
 		JobQueue queue = new JobQueue(job, Executors.newSingleThreadExecutor(
 				new NamedThreadFactory("ad-hoc-jobs-pool")), 1, false);
@@ -410,7 +449,8 @@ public class JobRegistry extends WriterService {
 	}
 
 	private <T extends Task> void performJob0(Job job,
-			boolean queueJobPersistence) {
+			boolean queueJobPersistence,
+			LauncherThreadState launcherThreadState) {
 		TaskPerformer<T> performer = getTaskPerformer(job);
 		PersistenceType persistenceType = PersistenceType.Immediate;
 		if (queueJobPersistence) {
@@ -421,19 +461,16 @@ public class JobRegistry extends WriterService {
 			persistenceType = PersistenceType.None;
 		}
 		JobContext context = new JobContext(job, persistenceType, performer);
-		activeJobs.add(context);
+		activeJobs.put(job, context);
 		boolean taskEnabled = !ResourceUtilities
 				.isDefined(Ax.format("%s.disabled", job.getTaskClassName()))
 				&& !ResourceUtilities.is("allJobsDisabled");
-		List<Lockable> acquiredLocks = new ArrayList<>();
+		List<JobResource> acquiredLocks = new ArrayList<>();
 		try {
 			LooseContext.push();
 			context.start();
 			if (taskEnabled) {
-				for (Lockable lock : performer.getLocks()) {
-					lock.lock();
-					acquiredLocks.add(lock);
-				}
+				acquireResources(job, performer.getResources());
 				performer.performAction((T) job.getTask());
 			} else {
 				logger.info("Not performing {} (disabled)", job);
@@ -451,10 +488,39 @@ public class JobRegistry extends WriterService {
 			}
 			throw WrappedRuntimeException.wrapIfNotRuntime(e);
 		} finally {
-			acquiredLocks.forEach(Lockable::unlock);
+			releaseResources(job, false);
 			context.end();
 			LooseContext.pop();
-			activeJobs.remove(context);
+			activeJobs.remove(job);
+		}
+	}
+
+	private void releaseResources(Job job, boolean inSequenceRelease) {
+		List<JobResource> resources = jobResources.get(job);
+		if (resources == null) {
+			return;
+		}
+		Iterator<JobResource> itr = resources.iterator();
+		while (itr.hasNext()) {
+			JobResource resource = itr.next();
+			boolean release = true;
+			if (job.provideHasIncompleteSubsequent()
+					&& resource.isSharedWithSubsequents()) {
+				release = false;
+			}
+			if (release) {
+				resource.release();
+				itr.remove();
+			}
+		}
+		if (resources.isEmpty()) {
+			jobResources.remove(job);
+		}
+		if (!inSequenceRelease) {
+			List<Job> relatedSequential = job.provideRelatedSequential();
+			for (Job related : relatedSequential) {
+				releaseResources(job, true);
+			}
 		}
 	}
 
@@ -498,18 +564,54 @@ public class JobRegistry extends WriterService {
 		}
 	}
 
-	void performJob(Job job, boolean queueJobPersistence) {
+	<JR extends JobResource> Optional<JR> getAcquiredResource(Job forJob,
+			JR resource) {
+		return forJob.provideAntecedents()
+				.map(j -> getResource(j, resource, forJob))
+				.filter(Objects::nonNull).findFirst();
+	}
+
+	<JR extends JobResource> JR getResource(Job acquiredByJob, JR matching,
+			Job forJob) {
+		List<JobResource> resources = jobResources.get(acquiredByJob);
+		if (resources != null) {
+			Optional<JR> resource = resources.stream()
+					.filter(r -> r.equals(matching)).map(r -> (JR) r)
+					.findFirst();
+			if (resource.isPresent()) {
+				if (acquiredByJob.provideIsSibling(forJob)
+						&& resource.get().isSharedWithSubsequents()) {
+					return resource.get();
+				}
+				if (resource.get().isSharedWithChildren()) {
+					return resource.get();
+				}
+			}
+		}
+		return null;
+	}
+
+	/*
+	 * Jobs are always run in new (or job-only) threads
+	 */
+	void performJob(Job job, boolean queueJobPersistence,
+			LauncherThreadState launcherThreadState) {
+		boolean runAsRoot = false;
 		try {
-			/*
-			 * nested methodContext because root permissions check requires
-			 * wrapping transaction
-			 */
-			MethodContext.instance().withWrappingTransaction()
-					.run(() -> MethodContext.instance()
-							.withRootPermissions(job.getTask().runAsRoot())
-							.run(() -> {
-								performJob0(job, queueJobPersistence);
-							}));
+			LooseContext.push();
+			Thread.currentThread().setContextClassLoader(
+					launcherThreadState.contextClassLoader);
+			launcherThreadState.copyContext
+					.forEach((k, v) -> LooseContext.set(k, v));
+			Transaction.begin();
+			runAsRoot = job.getTask().runAsRoot();
+			if (runAsRoot) {
+				ThreadedPermissionsManager.cast().pushSystemUser();
+			} else {
+				launcherThreadState.permissionsManagerState
+						.copyTo(PermissionsManager.get());
+			}
+			performJob0(job, queueJobPersistence, launcherThreadState);
 		} catch (RuntimeException e) {
 			if (stopped) {
 				// app shutdown - various services will not be available -
@@ -519,6 +621,13 @@ public class JobRegistry extends WriterService {
 				// if there's logging higher
 				logger.warn("DEVEX::3 - JobRegistry.performJob", e);
 			}
+		} finally {
+			if (runAsRoot) {
+				ThreadedPermissionsManager.cast().popSystemUser();
+			}
+			Transaction.end();
+			LooseContext.pop();
+			LooseContext.confirmDepth(0);
 		}
 	}
 
@@ -596,6 +705,20 @@ public class JobRegistry extends WriterService {
 		public String name;
 
 		public int completed;
+	}
+
+	static class LauncherThreadState {
+		PermissionsManagerState permissionsManagerState;
+
+		ClassLoader contextClassLoader;
+
+		Map<String, Object> copyContext = new LinkedHashMap<>();
+
+		public LauncherThreadState() {
+			permissionsManagerState = PermissionsManager.get().snapshotState();
+			copyContext.putAll(LooseContext.getContext().properties);
+			contextClassLoader = Thread.currentThread().getContextClassLoader();
+		}
 	}
 
 	static class MissingPerformerPerformer implements TaskPerformer {

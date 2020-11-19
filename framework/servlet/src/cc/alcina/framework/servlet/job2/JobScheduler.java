@@ -289,8 +289,7 @@ public class JobScheduler {
 			if (pending.isPresent()
 					&& pending.get().provideCanDeserializeTask()) {
 				Job job = pending.get();
-				Schedule schedule = getSchedule(job.getTask().getClass(),
-						false);
+				Schedule schedule = getSchedule(job.getTask());
 				JobQueue queue = jobRegistry.ensureQueue(schedule);
 				queue.ensureAllocating();
 				queue.onMetadataChanged();
@@ -307,6 +306,16 @@ public class JobScheduler {
 		}
 		Schedule schedule = scheduleProvider.get().getSchedule(clazz,
 				applicationStartup);
+		return schedule;
+	}
+
+	Schedule getSchedule(Task task) {
+		Optional<ScheduleProvider> scheduleProvider = Registry
+				.optional(ScheduleProvider.class, task.getClass());
+		if (!scheduleProvider.isPresent()) {
+			return null;
+		}
+		Schedule schedule = scheduleProvider.get().getSchedule(task);
 		return schedule;
 	}
 
@@ -412,7 +421,8 @@ public class JobScheduler {
 
 		@Override
 		public String toString() {
-			return Ax.format("Schedule %s - queue: %s; clustered: %s",
+			return Ax.format("Schedule %s::%s - queue: %s; clustered: %s",
+					getClass().getSimpleName(), Integer.toHexString(hashCode()),
 					queueName, clustered);
 		}
 
@@ -508,6 +518,10 @@ public class JobScheduler {
 			 * For distributed subjob schedule creation
 			 */
 			return null;
+		}
+
+		default Schedule getSchedule(Task task) {
+			return getSchedule(task.getClass(), false);
 		}
 	}
 

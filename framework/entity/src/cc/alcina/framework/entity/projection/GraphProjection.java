@@ -78,8 +78,8 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -653,7 +653,8 @@ public class GraphProjection {
 		Class sourceClass = source.getClass();
 		boolean checkReachable = false;
 		if (!easysChecked) {
-			if (sourceClass == Timestamp.class && replaceTimestampsWithDates) {
+			if (sourceClass == Timestamp.class && replaceTimestampsWithDates
+					&& context.field.getType() == Date.class) {
 				// actually breaks the (T) contract here - naughty
 				// this is because the arithmetic involved in reconstructing
 				// timestamps in a gwt js client
@@ -763,7 +764,8 @@ public class GraphProjection {
 			} else {
 				// the 10 or so lines are manual unwrapping trial
 				Class fc = field.getType();
-				if (fc == Timestamp.class && replaceTimestampsWithDates) {
+				if (fc == Timestamp.class && replaceTimestampsWithDates
+						&& context.field.getType() == Date.class) {
 					// actually breaks the (T) contract here - naughty
 					// this is because the arithmetic involved in reconstructing
 					// timestamps in a gwt js client

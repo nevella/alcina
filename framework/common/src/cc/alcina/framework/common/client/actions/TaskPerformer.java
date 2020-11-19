@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.job.Task;
  * @author Nick Reddel
  */
 public interface TaskPerformer<T extends Task> {
-	default List<Lockable> getLocks() {
+	default List<JobResource> getResources() {
 		return Collections.emptyList();
 	}
 

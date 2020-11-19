@@ -65,6 +65,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		if (inNewThread) {
 			Preconditions.checkArgument(!throwExceptions,
 					"Can't throw exceptions in a new thread");
+			wrappingRunnable.withContextSnapshot();
 			wrappingRunnable.startInNewThread();
 		} else {
 			try {

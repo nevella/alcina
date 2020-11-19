@@ -338,6 +338,26 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return this.stacktraceRequested;
 	}
 
+	public Stream<Job> provideAntecedents() {
+		Job cursor = domainIdentity();
+		List<Job> previousSiblings = new ArrayList<>();
+		while (true) {
+			Optional<? extends JobRelation> relation = cursor.getToRelations()
+					.stream()
+					.filter(rel -> rel.getType() == JobRelationType.sequence)
+					.findFirst();
+			if (relation.isPresent()) {
+				cursor = relation.get().getFrom();
+				previousSiblings.add(cursor);
+			} else {
+				break;
+			}
+		}
+		Optional<Job> parent = provideParent();
+		return Stream.concat(previousSiblings.stream(),
+				parent.map(Stream::of).orElse(Stream.empty()));
+	}
+
 	public boolean provideCanBePerformedBy(ClientInstance clientInstance) {
 		return isClustered() || Objects.equals(getCreator(), clientInstance);
 	}
@@ -389,6 +409,12 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return cursor;
 	}
 
+	public boolean provideHasIncompleteSubsequent() {
+		return getFromRelations().stream()
+				.filter(rel -> rel.getTo().provideIsNotComplete())
+				.anyMatch(rel -> rel.getType() == JobRelationType.sequence);
+	}
+
 	public boolean provideHasPerformer() {
 		return getPerformer() != null;
 	}
@@ -433,6 +459,11 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public boolean provideIsPending() {
 		return resolveState() == JobState.PENDING;
+	}
+
+	public boolean provideIsSibling(Job job) {
+		// TODO Auto-generated method stub
+		return false;
 	}
 
 	public boolean provideIsTaskClass(Class<? extends Task> taskClass) {
@@ -568,6 +599,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public void setResultMessage(String resultMessage) {
+		resultMessage = CommonUtils.trimToWsChars(resultMessage, 200, true);
 		String old_resultMessage = this.resultMessage;
 		this.resultMessage = resultMessage;
 		propertyChangeSupport().firePropertyChange("resultMessage",
@@ -630,6 +662,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public void setStatusMessage(String statusMessage) {
+		statusMessage = CommonUtils.trimToWsChars(statusMessage, 200, true);
 		String old_statusMessage = this.statusMessage;
 		this.statusMessage = statusMessage;
 		propertyChangeSupport().firePropertyChange("statusMessage",

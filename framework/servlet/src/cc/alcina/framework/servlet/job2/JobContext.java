@@ -1,11 +1,14 @@
 package cc.alcina.framework.servlet.job2;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -13,6 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.actions.JobResource;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.job.Job;
@@ -45,8 +50,33 @@ public class JobContext {
 	static final String CONTEXT_CURRENT = JobContext.class.getName()
 			+ ".CONTEXT_CURRENT";
 
+	private static final String CONTEXT_EX_JOB_RESOURCES = JobContext.class
+			.getName() + ".CONTEXT_EX_JOB_RESOURCES";
+
 	private static final long AWAIT_CHILDREN_DELTA_TIMEOUT_MS = 30
 			* TimeConstants.ONE_MINUTE_MS;
+
+	public static void acquireResource(JobResource resource) {
+		if (has()) {
+			JobRegistry.get().acquireResource(get().getJob(), resource);
+		} else {
+			resource.acquire();
+			LooseContext.ensure(CONTEXT_EX_JOB_RESOURCES,
+					() -> new ArrayList<JobResource>()).add(resource);
+		}
+	}
+
+	public static <T> T callWithResource(JobResource resource,
+			Callable<T> callable) {
+		try {
+			acquireResource(resource);
+			return callable.call();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		} finally {
+			releaseResourceIfExContext(resource);
+		}
+	}
 
 	public static void checkCancelled() {
 		get().checkCancelled0();
@@ -56,12 +86,44 @@ public class JobContext {
 		return LooseContext.get(CONTEXT_CURRENT);
 	}
 
+	public static <JR extends JobResource> Optional<JR>
+			getAcquiredResource(JR match) {
+		if (has()) {
+			return JobRegistry.get().getAcquiredResource(get().getJob(), match);
+		} else {
+			Optional<JR> result = Optional.empty();
+			List<JobResource> resources = LooseContext
+					.get(CONTEXT_EX_JOB_RESOURCES);
+			if (resources != null) {
+				result = resources.stream().filter(r -> r.equals(match))
+						.map(r -> (JR) r).findFirst();
+			}
+			return result;
+		}
+	}
+
+	public static boolean has() {
+		return get() != null;
+	}
+
 	public static void info(String template, Object... args) {
 		if (get() == null) {
 			Ax.out("Called JobContext.info() outside job - %s %s", template,
 					Arrays.asList(args));
 		}
 		get().getLogger().info(template, args);
+	}
+
+	public static void releaseResourceIfExContext(JobResource match) {
+		if (has()) {
+		} else {
+			List<JobResource> resources = LooseContext
+					.get(CONTEXT_EX_JOB_RESOURCES);
+			JobResource jobResource = resources.stream()
+					.filter(r -> r.equals(match)).findFirst().get();
+			jobResource.release();
+			resources.remove(jobResource);
+		}
 	}
 
 	public static void warn(String template, Exception ex) {
