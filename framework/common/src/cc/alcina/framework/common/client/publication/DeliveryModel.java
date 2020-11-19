@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.publication;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -29,7 +30,7 @@ public interface DeliveryModel {
 	public String getEmailSubject();
 
 	public String getEmailSubjectForRequestor();
-
+	public Map<String, String> getProperties() ;
 	/**
 	 * The mime type of the content
 	 */

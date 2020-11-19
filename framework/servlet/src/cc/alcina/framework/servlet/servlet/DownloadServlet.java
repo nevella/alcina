@@ -95,6 +95,10 @@ public class DownloadServlet extends HttpServlet {
 		}
 		return null;
 	}
+	
+	public DownloadItem getItem(String id) {
+		return items.get(id);
+	}
 
 	public static class DownloadItem {
 		private final String mimeType;
