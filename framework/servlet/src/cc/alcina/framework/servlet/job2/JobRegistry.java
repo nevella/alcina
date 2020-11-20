@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.job2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -218,9 +220,7 @@ public class JobRegistry extends WriterService {
 
 	// Directly acquire a resource (not via TaskPerformer.getResources)
 	public void acquireResource(Job forJob, JobResource resource) {
-		jobResources.computeIfAbsent(forJob, j -> new ArrayList<>())
-				.add(resource);
-		resource.acquire();
+		acquireResources(forJob, Collections.singletonList(resource));
 	}
 
 	public Job createJob(Task task, Schedule schedule, Date runAt) {
@@ -422,7 +422,8 @@ public class JobRegistry extends WriterService {
 	}
 
 	private void acquireResources(Job forJob, List<JobResource> resources) {
-		List<JobResource> acquired = new ArrayList<>();
+		List<JobResource> acquired = jobResources.getOrDefault(forJob,
+				new ArrayList<>());
 		for (JobResource resource : resources) {
 			/*
 			 * attempt to acquire from antecedent
@@ -465,7 +466,6 @@ public class JobRegistry extends WriterService {
 		boolean taskEnabled = !ResourceUtilities
 				.isDefined(Ax.format("%s.disabled", job.getTaskClassName()))
 				&& !ResourceUtilities.is("allJobsDisabled");
-		List<JobResource> acquiredLocks = new ArrayList<>();
 		try {
 			LooseContext.push();
 			context.start();
@@ -566,7 +566,7 @@ public class JobRegistry extends WriterService {
 
 	<JR extends JobResource> Optional<JR> getAcquiredResource(Job forJob,
 			JR resource) {
-		return forJob.provideAntecedents()
+		return Stream.concat(forJob.provideAntecedents(), Stream.of(forJob))
 				.map(j -> getResource(j, resource, forJob))
 				.filter(Objects::nonNull).findFirst();
 	}

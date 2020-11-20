@@ -278,7 +278,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 6;
+		private static final transient int VERSION = 7;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.local();
@@ -900,6 +900,8 @@ class ClassTransformer {
 							.getCtClass(void.class.getName());
 					CtClass classCtClass = transformer.classPool
 							.getCtClass(Class.class.getName());
+					CtClass entityCtClass = transformer.classPool
+							.getCtClass(Entity.class.getName());
 					/*
 					 * implement mvccobject
 					 */
@@ -946,9 +948,10 @@ class ClassTransformer {
 								ctClass.getName());
 						String body = bodyBuilder.toString();
 						CtMethod newMethod = CtNewMethod.make(Modifier.PUBLIC,
-								ctClass, "domainIdentity", new CtClass[0],
+								entityCtClass, "domainIdentity", new CtClass[0],
 								new CtClass[0], body, ctClass);
 						ctClass.addMethod(newMethod);
+						int debug = 3;
 					});
 					/*
 					 * add default constructor
@@ -984,6 +987,9 @@ class ClassTransformer {
 							continue;
 						}
 						if (method.getName().matches("entityClass")) {
+							continue;
+						}
+						if (method.getName().matches("domainIdentity")) {
 							continue;
 						}
 						/*

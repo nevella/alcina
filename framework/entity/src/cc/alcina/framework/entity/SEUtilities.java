@@ -765,6 +765,7 @@ public class SEUtilities {
 
 	public static String getFullExceptionMessage(Throwable t) {
 		StringWriter sw = new StringWriter();
+		sw.write(t.getClass().getName() + "\n");
 		sw.write(t.getMessage() + "\n");
 		t.printStackTrace(new PrintWriter(sw));
 		return sw.toString();

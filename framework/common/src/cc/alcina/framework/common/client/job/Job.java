@@ -201,6 +201,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		Preconditions.checkArgument(fromRelations.size() <= 1);
 		if (fromRelations.isEmpty()) {
 			createRelation(to, JobRelationType.sequence);
+			Optional<Job> parent = provideParent();
+			if (parent.isPresent()) {
+				parent.get().createRelation(to, JobRelationType.parent_child);
+			}
 		} else {
 			Job sequenceTo = fromRelations.get(0).getTo();
 			// see JobRegistry.createJob - this relation may have been created

@@ -69,6 +69,10 @@ public class TransformCollation {
 		return new Query(clazz);
 	}
 
+	public <E extends Entity> Query query(E entity) {
+		return new Query(entity);
+	}
+
 	protected void ensureLookups() {
 		if (perLocator == null) {
 			perClass = new UnsortedMultikeyMap<>(2);
@@ -171,6 +175,11 @@ public class TransformCollation {
 			this.clazz = clazz;
 		}
 
+		public Query(Entity entity) {
+			this(entity.entityClass());
+			withFilter(e -> e.toObjectLocator().equals(entity.toLocator()));
+		}
+
 		public Stream<QueryResult> stream() {
 			ensureLookups();
 			if (!perClass.containsKey(clazz)) {
@@ -181,7 +190,11 @@ public class TransformCollation {
 		}
 
 		public Query withFilter(Predicate<DomainTransformEvent> predicate) {
-			this.predicate = predicate;
+			if (this.predicate != null) {
+				this.predicate = this.predicate.and(predicate);
+			} else {
+				this.predicate = predicate;
+			}
 			return this;
 		}
 
