@@ -465,6 +465,10 @@ public class JobRegistry extends WriterService {
 			persistenceType = PersistenceType.None;
 		}
 		JobContext context = new JobContext(job, persistenceType, performer);
+		SequenceCompletionLatch completionLatch = completionLatches.get(job);
+		if (completionLatch != null) {
+			completionLatch.context = context;
+		}
 		activeJobs.put(job, context);
 		boolean taskEnabled = !ResourceUtilities
 				.isDefined(Ax.format("%s.disabled", job.getTaskClassName()))
@@ -747,6 +751,9 @@ public class JobRegistry extends WriterService {
 				while (true) {
 					if (latch.await(10, TimeUnit.SECONDS)) {
 						break;
+					}
+					if (context != null) {
+						context.checkCancelled0();
 					}
 					int debug = 3;
 				}

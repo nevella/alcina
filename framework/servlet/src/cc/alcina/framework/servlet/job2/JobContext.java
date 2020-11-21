@@ -309,7 +309,6 @@ public class JobContext {
 			if (sequenceCompletionLatch != null) {
 				logger.warn("Fired child completion to sequence latch: {}",
 						job);
-				sequenceCompletionLatch.context = this;
 				sequenceCompletionLatch.onChildJobsCompleted();
 			}
 		}
@@ -389,23 +388,6 @@ public class JobContext {
 		return Ax.format("JobContext :: Thread - %s; Job - %s", thread, job);
 	}
 
-	protected void checkCancelled0() {
-		Job cursor = job;
-		while (true) {
-			if (cursor.provideIsComplete()) {
-				info("Job cancelled");
-				throw new CancelledException("Job cancelled");
-			}
-			Optional<Job> parent = cursor.provideFirstInSequence()
-					.provideParent();
-			if (parent.isPresent()) {
-				cursor = parent.get();
-			} else {
-				return;
-			}
-		}
-	}
-
 	protected void persistMetadata(boolean respectImmediate) {
 		switch (persistenceType) {
 		case Immediate: {
@@ -469,6 +451,23 @@ public class JobContext {
 		} finally {
 			DomainDescriptorJob.get().relatedJobCompletionChanged
 					.remove(relatedJobCompletionNotifier);
+		}
+	}
+
+	void checkCancelled0() {
+		Job cursor = job;
+		while (true) {
+			if (cursor.provideIsComplete()) {
+				info("Job cancelled");
+				throw new CancelledException("Job cancelled");
+			}
+			Optional<Job> parent = cursor.provideFirstInSequence()
+					.provideParent();
+			if (parent.isPresent()) {
+				cursor = parent.get();
+			} else {
+				return;
+			}
 		}
 	}
 
