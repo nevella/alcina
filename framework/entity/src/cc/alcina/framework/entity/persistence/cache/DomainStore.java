@@ -716,7 +716,8 @@ public class DomainStore implements IDomainStore {
 			Map<Long, Entity> createdLocalsSnapshot = persistenceEvent
 					.isLocalToVm()
 					&& !persistenceEvent.getTransformPersistenceToken()
-							.isRequestorExternalToThisJvm() ? cache.getCreatedLocals()
+							.isRequestorExternalToThisJvm()
+									? cache.getCreatedLocals()
 									: Collections.emptyMap();
 			transformManager.setLocalReplacementCreationObjectResolver(
 					localId -> createdLocalsSnapshot.get(localId));
@@ -972,6 +973,10 @@ public class DomainStore implements IDomainStore {
 
 		public AtomicInteger getDomainStoreExceptionCount() {
 			return this.domainStoreExceptionCount;
+		}
+
+		public long getLastSequenceBarrierTimeout() {
+			return getTransformSequencer().getLastBarrierTimeout();
 		}
 
 		public long getMvccOldestTx() {

@@ -69,6 +69,8 @@ public class DomainStoreTransformSequencer {
 	// all access syncrhonized on this map
 	Map<Long, CountDownLatch> postLocalFireEventsThreadBarrier = new LinkedHashMap<>();
 
+	private long lastBarrierTimeout = 0;
+
 	DomainStoreTransformSequencer(DomainStoreLoaderDatabase loaderDatabase) {
 		this.loaderDatabase = loaderDatabase;
 	}
@@ -90,6 +92,10 @@ public class DomainStoreTransformSequencer {
 				latch.countDown();
 			}
 		}
+	}
+
+	public long getLastBarrierTimeout() {
+		return this.lastBarrierTimeout;
 	}
 
 	public long getRequestIdAtTimestamp(Timestamp timestamp) {
@@ -193,6 +199,7 @@ public class DomainStoreTransformSequencer {
 				logger.warn(
 						"Timedout waiting for post local barrier/local vm transform - {} - \n{}\nBlocking thread:\n{}",
 						requestId, debugString(), blockingThreadStacktrace);
+				lastBarrierTimeout = System.currentTimeMillis();
 				// FIXME - mvcc.4 - may need to fire a domainstoreexception here
 				// -
 				// probable issue with pg/kafka. On the other hand, our
@@ -240,6 +247,7 @@ public class DomainStoreTransformSequencer {
 					logger.warn(
 							"Timedout waiting for barrier - {} - \n{} - \nBlocking thread:\n{}",
 							requestId, debugString(), blockingThreadStacktrace);
+					lastBarrierTimeout = System.currentTimeMillis();
 				} else {
 					logger.debug("Wait for pre-local barrier complete: {}",
 							requestId);
