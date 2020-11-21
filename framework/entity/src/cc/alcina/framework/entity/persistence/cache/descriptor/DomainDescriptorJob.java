@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.Predicate;
@@ -35,6 +34,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
@@ -91,10 +91,11 @@ public class DomainDescriptorJob {
 				break;
 			case PRE_FLUSH:
 				inFlightTransformRequests.put(currentThread, new Exception());
+				Set<Long> ids = collation.query(jobImplClass).stream()
+						.map(qr -> qr.entityCollation.getId())
+						.collect(Collectors.toSet());
 				logger.info("Flushing job transform - ids: {}",
-						collation.query(jobImplClass).stream()
-								.map(qr -> qr.entityCollation.getId())
-								.collect(Collectors.toSet()));
+						CommonUtils.toLimitedCollectionString(ids, 50));
 				break;
 			}
 		}
@@ -121,7 +122,7 @@ public class DomainDescriptorJob {
 							.filter(Objects::nonNull).collect(AlcinaCollectors
 									.toKeyMultimap(Job::getQueue));
 					perQueueJobs.entrySet().forEach(queueChanged::publish);
-					Multimap<Optional<Job>, List<Job>> byParent = collation
+					Multimap<Job, List<Job>> byParentOrSelf = collation
 							.query(jobImplClass).stream()
 							.map(qr -> (Job) qr.getObject())
 							.filter(Job::provideIsComplete)
@@ -129,13 +130,24 @@ public class DomainDescriptorJob {
 							// state (hence parentOrSelf
 							.collect(AlcinaCollectors
 									.toKeyMultimap(Job::provideParentOrSelf));
-					byParent.entrySet().stream()
-							.filter(e -> e.getKey().isPresent()).forEach(e -> {
-								relatedJobCompletionChanged
-										.publish(new RelatedJobCompletion(
-												e.getKey().get(),
-												e.getValue()));
-							});
+					Multimap<Job, List<Job>> byFirstInSequence = collation
+							.query(jobImplClass).stream()
+							.map(qr -> (Job) qr.getObject())
+							.filter(Job::provideIsComplete)
+							.filter(job -> job.provideFirstInSequence() != job)
+							.collect(AlcinaCollectors.toKeyMultimap(
+									Job::provideFirstInSequence));
+					byParentOrSelf.forEach((k, v) -> {
+						relatedJobCompletionChanged
+								.publish(new RelatedJobCompletion(k, v));
+					});
+					// if an job schedules subsequent jobs, it (the first and
+					// sequence) will be waiting for subsequent job completion
+					// notifications
+					byFirstInSequence.forEach((k, v) -> {
+						relatedJobCompletionChanged
+								.publish(new RelatedJobCompletion(k, v));
+					});
 				}
 			} else if (event
 					.getPersistenceEventType() == DomainTransformPersistenceEventType.PRE_COMMIT) {

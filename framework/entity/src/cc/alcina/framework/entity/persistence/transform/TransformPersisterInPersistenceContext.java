@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -124,10 +125,9 @@ public class TransformPersisterInPersistenceContext {
 		List<DomainTransformEventPersistent> persistentEvents = wrapper.persistentEvents;
 		List<DomainTransformRequestPersistent> dtrps = wrapper.persistentRequests;
 		wrapper.locatorMap = locatorMap;
+		ObjectPersistenceHelper.get();
+		ThreadlocalTransformManager tltm = ThreadlocalTransformManager.cast();
 		try {
-			ObjectPersistenceHelper.get();
-			ThreadlocalTransformManager tltm = ThreadlocalTransformManager
-					.cast();
 			// We know this is thread-local, so we can clear the tm transforms
 			// add the entity version checker now
 			tltm.resetTltm(locatorMap, token.getTransformExceptionPolicy(),
@@ -161,6 +161,7 @@ public class TransformPersisterInPersistenceContext {
 				}
 			}
 			tltm.setClientInstance(persistentClientInstance);
+			tltm.setUseCreatedLocals(false);
 			List<DomainTransformRequest> transformRequests = new ArrayList<DomainTransformRequest>();
 			transformRequests.addAll(request.getPriorRequestsWithoutResponse());
 			transformRequests.add(request);
@@ -191,7 +192,7 @@ public class TransformPersisterInPersistenceContext {
 				return;
 			}
 			Integer highestPersistedRequestId = null;
-			if (token.isAsyncClient()) {
+			if (token.isRequestorExternalToThisJvm()) {
 				highestPersistedRequestId = commonPersistenceBase
 						.getHighestPersistedRequestIdForClientInstance(
 								request.getClientInstance().getId());
@@ -445,7 +446,9 @@ public class TransformPersisterInPersistenceContext {
 							DomainTransformEventPersistent propagationEvent = persistentEventClass
 									.newInstance();
 							if (propagationPolicy
-									.shouldPersistEventRecord(event)) {
+									.shouldPersistEventRecord(event)
+									|| ResourceUtilities
+											.is("persistAllTransforms")) {
 								tltm.persist(propagationEvent);
 							}
 							propagationEvent.wrap(event);
@@ -561,6 +564,8 @@ public class TransformPersisterInPersistenceContext {
 			putExceptionInWrapper(token, e, wrapper);
 			// necessary -- rollback
 			throw new DeliberatelyThrownWrapperException();
+		} finally {
+			tltm.setUseCreatedLocals(true);
 		}
 	}
 

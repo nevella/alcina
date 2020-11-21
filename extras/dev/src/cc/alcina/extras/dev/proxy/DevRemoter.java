@@ -122,6 +122,9 @@ public class DevRemoter {
 			}
 			customiseResult(object);
 			return object;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw e;
 		} finally {
 			LooseContext.pop();
 		}

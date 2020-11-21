@@ -1,12 +1,14 @@
 package cc.alcina.framework.servlet.task;
 
 import java.beans.PropertyDescriptor;
+import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableRowBuilder;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job2.JobContext;
@@ -27,8 +29,17 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 					.getPropertyDescriptorsSortedByField(job.entityClass());
 			for (PropertyDescriptor pd : pds) {
 				DomNodeHtmlTableRowBuilder row = builder.row();
-				row.cell(pd.getName())
-						.cell(pd.getReadMethod().invoke(job, new Object[0]))
+				Object fieldValue = pd.getReadMethod().invoke(job,
+						new Object[0]);
+				String fieldText = null;
+				if (fieldValue == null) {
+				} else if (fieldValue instanceof Collection) {
+					fieldText = CommonUtils.toLimitedCollectionString(
+							(Collection<?>) fieldValue, 50);
+				} else {
+					fieldText = fieldValue.toString();
+				}
+				row.cell(pd.getName()).cell(fieldText)
 						.style("whitespace:pre-wrap");
 			}
 			JobContext.info(doc.prettyToString());

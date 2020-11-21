@@ -233,7 +233,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public static int replaceWithCreatedLocalObjectHash(Entity entity,
 			int hash) {
-		if (createdLocalAndPromoted == null) {
+		if (createdLocalAndPromoted == null || !get().isUseCreatedLocals()) {
 			return hash;
 		}
 		List<Entity> promotedEntities = createdLocalAndPromoted.get(hash);
@@ -293,6 +293,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		return deserializer.apply(serialized);
 	}
+
+	private boolean useCreatedLocals = true;
 
 	private ObjectStore domainObjects;
 
@@ -1048,6 +1050,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return this.replayingRemoteEvent;
 	}
 
+	public boolean isUseCreatedLocals() {
+		return this.useCreatedLocals;
+	}
+
 	public void modifyCollectionProperty(Object objectWithCollection,
 			String collectionPropertyName, Object delta,
 			CollectionModificationType modificationType) {
@@ -1546,6 +1552,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public void setupClientListeners() {
 		addDomainTransformListener(new RecordTransformListener());
 		addDomainTransformListener(new CommitToLocalDomainTransformListener());
+	}
+
+	public void setUseCreatedLocals(boolean useCreatedLocals) {
+		this.useCreatedLocals = useCreatedLocals;
 	}
 
 	public String toIdList(Collection<? extends Entity> entities) {

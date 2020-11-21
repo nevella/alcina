@@ -32,7 +32,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.RelatedJobCompletion;
@@ -151,7 +150,7 @@ public class JobContext {
 	private TopicListener<RelatedJobCompletion> relatedJobCompletionNotifier = (
 			k, completion) -> {
 		if (completion.job == job) {
-			logger.warn(
+			logger.debug(
 					"Related job completion changed for job {} - {} complete - {}",
 					job, completion.related.size(), completion.related);
 			synchronized (completionEvents) {
@@ -196,17 +195,24 @@ public class JobContext {
 				// block
 				String statusMessage = null;
 				long now = 0L;
+				/*
+				 * The on-demand creation and event-driven countdown of
+				 * uncompletedChildren (rather than checking
+				 * job.provideUncompletedChildren() directly) is for performance
+				 * reasons - specifically when the job has 10,000s of children.
+				 * 
+				 * Do our waits outside the synchronized block (to avoid
+				 * transform.commit() listener deadlocks) - but get the
+				 * uncompleted children _inside_ (to ensure consistency of
+				 * completion events vs uncompleted children - i.e. this loop
+				 * will receive completion events _after_ the collection get)
+				 */
+				if (uncompletedChildren.isEmpty()) {
+					Transaction.commit();
+					DomainStore.waitUntilCurrentRequestsProcessed();
+				}
 				synchronized (completionEvents) {
-					/*
-					 * The on-demand creation and event-driven countdown of
-					 * uncompletedChildren (rather than checking
-					 * job.provideUncompletedChildren() directly) is for
-					 * performance reasons - specifically when the job has
-					 * 10,000s of children
-					 */
 					if (uncompletedChildren.isEmpty()) {
-						Transaction.commit();
-						DomainStore.waitUntilCurrentRequestsProcessed();
 						// double-check
 						uncompletedChildren = job.provideUncompletedChildren()
 								.collect(Collectors.toSet());
@@ -424,45 +430,39 @@ public class JobContext {
 
 	void awaitSequenceCompletion() {
 		Transaction.endAndBeginNew();
-		while (true) {
-			if (job.provideUncompletedSequential().isEmpty()) {
-				return;
-			}
-			try {
-				DomainDescriptorJob.get().relatedJobCompletionChanged
-						.add(relatedJobCompletionNotifier);
+		if (job.provideUncompletedSequential().isEmpty()) {
+			return;
+		}
+		try {
+			DomainDescriptorJob.get().relatedJobCompletionChanged
+					.add(relatedJobCompletionNotifier);
+			while (true) {
+				DomainStore.waitUntilCurrentRequestsProcessed();
 				RelatedJobCompletion event = null;
 				synchronized (completionEvents) {
 					if (completionEvents.isEmpty()) {
-						/*
-						 * double-checked
-						 */
 						Set<Job> uncompletedSequential = job
 								.provideUncompletedSequential();
-						if (uncompletedSequential.size() > 0) {
-							Transaction.ensureEnded();
-							try {
-								// FIXME - mvcc.jobs - timeout is for debugging
-								completionEvents.wait(5000);
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-							if (SEUtilities
-									.getFullStacktrace(Thread.currentThread())
-									.contains("ControlServlet.handle1")) {
-								int debug = 3;
-							}
-							Transaction.begin();
+						if (uncompletedSequential.size() == 0) {
+							break;
 						}
+						Transaction.ensureEnded();
+						try {
+							// FIXME - mvcc.jobs - timeout is for debugging
+							completionEvents.wait(5000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+						Transaction.begin();
 					}
 					if (completionEvents.size() > 0) {
 						event = completionEvents.removeFirst();
 					}
 				}
-			} finally {
-				DomainDescriptorJob.get().relatedJobCompletionChanged
-						.remove(relatedJobCompletionNotifier);
 			}
+		} finally {
+			DomainDescriptorJob.get().relatedJobCompletionChanged
+					.remove(relatedJobCompletionNotifier);
 		}
 	}
 

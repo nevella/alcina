@@ -171,8 +171,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			}
 			break;
 		case sequence:
-			if (to.getToRelations().stream()
-					.anyMatch(rel -> rel.getType() == JobRelationType.retry)) {
+			if (to.getToRelations().stream().anyMatch(
+					rel -> rel.getType() == JobRelationType.sequence)) {
 				invalidMessage = "Existing sequence";
 			}
 			if (to.getRunAt() != null) {
@@ -489,9 +489,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				.findFirst().map(JobRelation::getFrom);
 	}
 
-	public Optional<Job> provideParentOrSelf() {
+	public Job provideParentOrSelf() {
 		Optional<Job> parent = provideParent();
-		return parent.isPresent() ? parent : Optional.of(domainIdentity());
+		return parent.isPresent() ? parent.get() : domainIdentity();
 	}
 
 	public List<Job> provideRelatedSequential() {
@@ -502,7 +502,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			result.add(cursor);
 			Optional<? extends JobRelation> relation = cursor.getFromRelations()
 					.stream()
-					.filter(rel -> rel.getType() == JobRelationType.sequence)
+					.filter(rel -> rel.getType() == JobRelationType.sequence
+							&& rel.getTo() != null)
 					.findFirst();
 			if (relation.isPresent()) {
 				cursor = relation.get().getTo();

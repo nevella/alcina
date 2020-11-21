@@ -6,11 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
@@ -51,8 +54,13 @@ public class DomainTransformPersistenceEvents {
 			DomainTransformPersistenceEvent event) {
 		switch (event.getPersistenceEventType()) {
 		case PRE_COMMIT: {
-			transformLocalIdSupport.runWithOffsetLocalIdCounter(
-					() -> fireDomainTransformPersistenceEvent0(event));
+			if (event.getTransformPersistenceToken()
+					.isRequestorExternalToThisJvm()) {
+				transformLocalIdSupport.runWithOffsetLocalIdCounter(
+						() -> fireDomainTransformPersistenceEvent0(event));
+			} else {
+				fireDomainTransformPersistenceEvent0(event);
+			}
 			break;
 		}
 		case PRE_FLUSH: {
@@ -176,6 +184,8 @@ public class DomainTransformPersistenceEvents {
 	// cluster-level counter (allowing for proxy swap etc)
 	//
 	// cluster-level will need reaper and reconstituter
+	//
+	// FIXME - should look at the TR to check it's an async client
 	static class CascadedTransformLocalIdSupport {
 		Map<Long, AtomicLong> perClientInstanceLocalIdCounter = new LinkedHashMap<>();
 
@@ -185,8 +195,13 @@ public class DomainTransformPersistenceEvents {
 			ClientInstance threadInstance = PermissionsManager.get()
 					.getClientInstance();
 			// hack - Jumail's config? threadInstance should never be null
+			// mvcc.jobs.2 - this branch should never be reached
 			if (threadInstance == null || serverAsClientInstance
 					.getId() == threadInstance.getId()) {
+				LoggerFactory.getLogger(getClass()).warn(
+						"CascadedTransformLocalIdSupport - threadInstance: {}\n{}",
+						threadInstance,
+						SEUtilities.getFullStacktrace(Thread.currentThread()));
 				runnable.run();
 				return;
 			} else {

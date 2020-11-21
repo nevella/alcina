@@ -33,7 +33,7 @@ public class TransformPersistenceToken implements Serializable {
 
 	public int ignored = 0;
 
-	private final boolean asyncClient;
+	private final boolean requestorExternalToThisJvm;
 
 	private Pass pass = Pass.TRY_COMMIT;
 
@@ -66,12 +66,12 @@ public class TransformPersistenceToken implements Serializable {
 	private TransformPropagationPolicy transformPropagationPolicy;
 
 	public TransformPersistenceToken(DomainTransformRequest request,
-			EntityLocatorMap locatorMap, boolean asyncClient,
+			EntityLocatorMap locatorMap, boolean requestorExternalToThisJvm,
 			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
 			Logger logger, boolean blockUntilAllListenersNotified) {
 		this.request = request;
 		this.locatorMap = locatorMap;
-		this.asyncClient = asyncClient;
+		this.requestorExternalToThisJvm = requestorExternalToThisJvm;
 		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
 		this.forOfflineTransforms = forOfflineTransforms;
 		this.logger = logger;
@@ -143,8 +143,8 @@ public class TransformPersistenceToken implements Serializable {
 		return this.transformResult;
 	}
 
-	public boolean isAsyncClient() {
-		return this.asyncClient;
+	public boolean isRequestorExternalToThisJvm() {
+		return this.requestorExternalToThisJvm;
 	}
 
 	public boolean isBlockUntilAllListenersNotified() {
@@ -260,7 +260,7 @@ public class TransformPersistenceToken implements Serializable {
 						perStorePriorRequest.setTag(priorRequest.getTag());
 					}
 					TransformPersistenceToken token = new TransformPersistenceToken(
-							request, locatorMap, asyncClient,
+							request, locatorMap, requestorExternalToThisJvm,
 							ignoreClientAuthMismatch, forOfflineTransforms,
 							logger, blockUntilAllListenersNotified);
 					token.targetStore = store;

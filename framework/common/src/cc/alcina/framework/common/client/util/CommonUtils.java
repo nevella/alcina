@@ -874,6 +874,16 @@ public class CommonUtils {
 		}
 	}
 
+	public static boolean hasSuperClass(Class clazz, Class superClass) {
+		while (clazz != null && clazz != Object.class) {
+			if (clazz == superClass) {
+				return true;
+			}
+			clazz = clazz.getSuperclass();
+		}
+		return false;
+	}
+
 	public static String highlightForLog(String template, Object... args) {
 		String inner = format(template, args);
 		String star = padStringLeft("", 40, "*");
@@ -1372,6 +1382,11 @@ public class CommonUtils {
 		}
 	}
 
+	public static String restId(String string) {
+		return deInfix(string).replaceFirst("^ ", "").replace(" ", "-")
+				.toLowerCase();
+	}
+
 	public static <T> Collection<T> reverse(Collection<T> collection) {
 		List list = new ArrayList<>(collection);
 		Collections.reverse(list);
@@ -1631,6 +1646,16 @@ public class CommonUtils {
 			year -= 1;
 		}
 		return format("FY%s%s", year, year + 1);
+	}
+
+	public static String toLimitedCollectionString(Collection<?> collection,
+			int maxLength) {
+		if (collection.size() <= maxLength) {
+			return collection.toString();
+		}
+		return Ax.format("(%s) [%s]...", collection.size(),
+				collection.stream().limit(maxLength).map(Object::toString)
+						.collect(Collectors.joining(",")));
 	}
 
 	public static String toSimpleExceptionMessage(Throwable caught) {
@@ -1957,19 +1982,5 @@ public class CommonUtils {
 			return format("First: %s\nBoth: %s\nSecond: %s", firstOnly,
 					intersection, secondOnly);
 		}
-	}
-
-	public static boolean hasSuperClass(Class clazz, Class superClass) {
-		while(clazz!=null&&clazz!=Object.class) {
-			if(clazz==superClass) {
-				return true;
-			}
-			clazz=clazz.getSuperclass();
-		}
-		return false;
-	}
-
-	public static String restId(String string) {
-		return deInfix(string).replaceFirst("^ ", "").replace(" ", "-").toLowerCase();
 	}
 }

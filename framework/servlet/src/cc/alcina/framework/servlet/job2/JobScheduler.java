@@ -386,6 +386,8 @@ public class JobScheduler {
 
 		private boolean timewiseLimited;
 
+		private boolean runSameQueueScheduledAsSubsequent;
+
 		public long calculateMaxAllocated(JobQueue queue, int allocated,
 				int jobCountForQueue, int unallocatedJobCountForQueue) {
 			return -1;
@@ -413,6 +415,10 @@ public class JobScheduler {
 
 		public boolean isClustered() {
 			return clustered;
+		}
+
+		public boolean isRunSameQueueScheduledAsSubsequent() {
+			return this.runSameQueueScheduledAsSubsequent;
 		}
 
 		public boolean isTimewiseLimited() {
@@ -454,6 +460,12 @@ public class JobScheduler {
 
 		public Schedule withRetryPolicy(RetryPolicy retryPolicy) {
 			this.retryPolicy = retryPolicy;
+			return this;
+		}
+
+		public Schedule withRunSameQueueScheduledAsSubsequent(
+				boolean runSameQueueScheduledAsSubsequent) {
+			this.runSameQueueScheduledAsSubsequent = runSameQueueScheduledAsSubsequent;
 			return this;
 		}
 

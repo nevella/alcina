@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformCollatio
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 
 public class AdjunctTransformCollation extends TransformCollation {
@@ -24,7 +25,6 @@ public class AdjunctTransformCollation extends TransformCollation {
 			TransformPersistenceToken transformPersistenceToken) {
 		super(transformPersistenceToken.getRequest().allTransforms());
 		this.token = transformPersistenceToken;
-		this.applied = transformPersistenceToken.isLocalToVm();
 	}
 
 	// this works because of transactions -
@@ -33,11 +33,16 @@ public class AdjunctTransformCollation extends TransformCollation {
 	 * but that's harmless, as long as we drop the creation events
 	 */
 	public void ensureApplied() {
+		// should only be called by local pre-commit listeners
+		Preconditions.checkState(
+				Transaction.current().isPreCommit() && token.isLocalToVm());
 		if (!applied) {
 			applied = true;
 			ensureLookups();
-			if (!token.isLocalToVm() || (!token.isAsyncClient()
-					&& !LooseContext.is(CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD))) {
+			if (!token.isRequestorExternalToThisJvm()
+					&& !LooseContext.is(CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD)) {
+				// on a normal server-thread pre-commit - these transforms have
+				// already been applied to the TLTM
 				return;
 			}
 			ThreadlocalTransformManager tltm = ThreadlocalTransformManager

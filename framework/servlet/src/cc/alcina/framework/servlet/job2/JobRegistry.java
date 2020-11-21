@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobResult;
 import cc.alcina.framework.common.client.job.JobState;
+import cc.alcina.framework.common.client.job.NonRootTask;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.job.Task.HasClusteredRunParameter;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
@@ -41,7 +42,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentE
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -61,6 +62,7 @@ import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.job.JobRegistry1;
 import cc.alcina.framework.servlet.job2.JobContext.PersistenceType;
 import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
@@ -251,7 +253,8 @@ public class JobRegistry extends WriterService {
 			boolean scheduleSubsequent = schedule != null
 					&& Objects.equals(schedule.getQueueName(),
 							creatingJob.getQueue())
-					&& schedule.getQueueMaxConcurrentJobs() == 1;
+					&& (schedule.getQueueMaxConcurrentJobs() == 1
+							|| schedule.isRunSameQueueScheduledAsSubsequent());
 			if (scheduleSubsequent) {
 				creatingJob.followWith(job);
 			} else {
@@ -596,20 +599,23 @@ public class JobRegistry extends WriterService {
 	 */
 	void performJob(Job job, boolean queueJobPersistence,
 			LauncherThreadState launcherThreadState) {
-		boolean runAsRoot = false;
 		try {
 			LooseContext.push();
+			LooseContext.set(
+					ThreadedPmClientInstanceResolverImpl.CONTEXT_CLIENT_INSTANCE,
+					EntityLayerObjects.get().getServerAsClientInstance());
 			Thread.currentThread().setContextClassLoader(
 					launcherThreadState.contextClassLoader);
 			launcherThreadState.copyContext
 					.forEach((k, v) -> LooseContext.set(k, v));
 			Transaction.begin();
-			runAsRoot = job.getTask().runAsRoot();
-			if (runAsRoot) {
-				ThreadedPermissionsManager.cast().pushSystemUser();
+			Task task = job.getTask();
+			if (task instanceof NonRootTask) {
+				ThreadedPermissionsManager.cast().pushUser(
+						((NonRootTask) task).provideIUser(),
+						LoginState.LOGGED_IN);
 			} else {
-				launcherThreadState.permissionsManagerState
-						.copyTo(PermissionsManager.get());
+				ThreadedPermissionsManager.cast().pushSystemUser();
 			}
 			performJob0(job, queueJobPersistence, launcherThreadState);
 		} catch (RuntimeException e) {
@@ -622,9 +628,7 @@ public class JobRegistry extends WriterService {
 				logger.warn("DEVEX::3 - JobRegistry.performJob", e);
 			}
 		} finally {
-			if (runAsRoot) {
-				ThreadedPermissionsManager.cast().popSystemUser();
-			}
+			PermissionsManager.get().popUser();
 			Transaction.end();
 			LooseContext.pop();
 			LooseContext.confirmDepth(0);
@@ -708,14 +712,17 @@ public class JobRegistry extends WriterService {
 	}
 
 	static class LauncherThreadState {
-		PermissionsManagerState permissionsManagerState;
-
 		ClassLoader contextClassLoader;
 
 		Map<String, Object> copyContext = new LinkedHashMap<>();
 
 		public LauncherThreadState() {
-			permissionsManagerState = PermissionsManager.get().snapshotState();
+			// we don't copy permissions manager/user - since often the launcher
+			// will be triggered by a system user context (because triggered by
+			// a transaction event)
+			//
+			// instead, all tasks for which runAsRoot returns false must
+			// implement iuser
 			copyContext.putAll(LooseContext.getContext().properties);
 			contextClassLoader = Thread.currentThread().getContextClassLoader();
 		}

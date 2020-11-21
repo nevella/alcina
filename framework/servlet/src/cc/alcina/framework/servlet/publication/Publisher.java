@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.PublicationContent;
+import cc.alcina.framework.common.client.publication.request.NonRootPublicationRequest;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -124,6 +125,12 @@ public class Publisher {
 	private PublicationResult publish0(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original)
 			throws Exception {
+		if (deliveryModel instanceof NonRootPublicationRequest
+				&& PermissionsManager.get().isRoot()) {
+			throw Ax.runtimeException(
+					"Publication %s cannot be published as root",
+					deliveryModel);
+		}
 		ContentModelHandler cmh = (ContentModelHandler) Registry.get()
 				.instantiateSingle(ContentModelHandler.class,
 						contentDefinition.getClass());

@@ -716,7 +716,7 @@ public class DomainStore implements IDomainStore {
 			Map<Long, Entity> createdLocalsSnapshot = persistenceEvent
 					.isLocalToVm()
 					&& !persistenceEvent.getTransformPersistenceToken()
-							.isAsyncClient() ? cache.getCreatedLocals()
+							.isRequestorExternalToThisJvm() ? cache.getCreatedLocals()
 									: Collections.emptyMap();
 			transformManager.setLocalReplacementCreationObjectResolver(
 					localId -> createdLocalsSnapshot.get(localId));
