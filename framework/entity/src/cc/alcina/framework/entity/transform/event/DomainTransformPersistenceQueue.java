@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
@@ -524,45 +525,45 @@ public class DomainTransformPersistenceQueue {
 							}
 						}
 					}
-					if (request != null) {
-						if (Ax.isTest() && request.getClientInstance() != null
-								&& request.getClientInstance()
-										.getId() == PermissionsManager.get()
-												.getClientInstanceId()) {
-							// local persisted via server
-							DomainStoreTransformSequencer transformSequencer = DomainStore
-									.writableStore().getTransformSequencer();
-							transformSequencer
-									.unblockPreLocalNonFireEventsThreadBarrier(
-											id);
-							transformSequencer
-									.waitForPostLocalFireEventsThreadBarrier(
-											id);
-							return;
-						}
-						Timestamp transactionCommitTime = getTransactionCommitTime(
-								request);
-						if (transactionCommitTime.before(muteEventsOnOrBefore)
-								|| transactionCommitTime
-										.equals(muteEventsOnOrBefore)) {
-							loadedRequests.remove(id);
-							return;
-						}
-						Transaction.current().toNoActiveTransaction();
-						DomainTransformPersistenceEvent event = createPersistenceEventFromPersistedRequest(
-								request);
-						event.ensureTransformsValidForVm();
-						persistenceEvents
-								.fireDomainTransformPersistenceEvent(event);
-						loadedRequests.remove(id);
-						synchronized (queueModificationLock) {
-							transformLogPosition = position;
-							queueModificationLock.notifyAll();
-						}
-					} else {
+					if (request == null) {
+						request = AlcinaPersistentEntityImpl
+								.getNewImplementationInstance(
+										DomainTransformRequestPersistent.class);
+						request.setId(id);
 						fireEventThreadLogger.warn(
-								"publishTransformEvent - missed (no transforms?) dtr {}",
+								"publishTransformEvent - firing emtpy event (no transforms?) dtr {}",
 								id);
+					}
+					if (Ax.isTest() && request.getClientInstance() != null
+							&& request.getClientInstance()
+									.getId() == PermissionsManager.get()
+											.getClientInstanceId()) {
+						// local persisted via server
+						DomainStoreTransformSequencer transformSequencer = DomainStore
+								.writableStore().getTransformSequencer();
+						transformSequencer
+								.unblockPreLocalNonFireEventsThreadBarrier(id);
+						transformSequencer
+								.waitForPostLocalFireEventsThreadBarrier(id);
+						return;
+					}
+					Timestamp transactionCommitTime = getTransactionCommitTime(
+							request);
+					if (transactionCommitTime.before(muteEventsOnOrBefore)
+							|| transactionCommitTime
+									.equals(muteEventsOnOrBefore)) {
+						request.setEvents(new ArrayList<>());
+					}
+					Transaction.current().toNoActiveTransaction();
+					DomainTransformPersistenceEvent event = createPersistenceEventFromPersistedRequest(
+							request);
+					event.ensureTransformsValidForVm();
+					persistenceEvents
+							.fireDomainTransformPersistenceEvent(event);
+					loadedRequests.remove(id);
+					synchronized (queueModificationLock) {
+						transformLogPosition = position;
+						queueModificationLock.notifyAll();
 					}
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);

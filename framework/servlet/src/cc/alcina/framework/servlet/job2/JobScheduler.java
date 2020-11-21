@@ -153,6 +153,7 @@ public class JobScheduler {
 		// FIXME - mvcc.jobs - remove (with prej) all non-deserializable tasks
 		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
 				.getActiveServers();
+		logger.info("Process orphans - visible instances: {}", activeInstances);
 		String visibleInstanceRegex = ResourceUtilities
 				.get("visibleInstanceRegex");
 		Date cutoff = SEUtilities
@@ -162,12 +163,14 @@ public class JobScheduler {
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
 				.filter(job -> job.getPerformer().toString()
 						.matches(visibleInstanceRegex))
+				.filter(job -> !job.provideParent().isPresent())
 				.filter(job -> !activeInstances.contains(job.getPerformer()));
 		Stream<? extends Job> pendingInactiveCreator = DomainDescriptorJob.get()
 				.getPendingJobsWithInactiveCreator(activeInstances)
 				.filter(job -> job.getCreator().toString()
 						.matches(visibleInstanceRegex))
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
+				.filter(job -> !job.provideParent().isPresent())
 				.filter(job -> !activeInstances.contains(job.getCreator()));
 		InnerAccess<Boolean> metadataLockHeld = new InnerAccess<>();
 		metadataLockHeld.set(false);
@@ -181,6 +184,10 @@ public class JobScheduler {
 							"Aborting job {} (inactive client creator: {} - performer: {} - clustered: {})",
 							job, job.getCreator(), job.getPerformer(),
 							job.isClustered());
+					if (ResourceUtilities.is("abortDisabled")) {
+						logger.warn("Abort job");
+						return;
+					}
 					job.setState(JobState.ABORTED);
 					job.setEndTime(new Date());
 					job.setResultType(JobResultType.DID_NOT_COMPLETE);
