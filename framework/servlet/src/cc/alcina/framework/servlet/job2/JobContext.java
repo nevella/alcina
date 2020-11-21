@@ -78,7 +78,9 @@ public class JobContext {
 	}
 
 	public static void checkCancelled() {
-		get().checkCancelled0();
+		if (has()) {
+			get().checkCancelled0();
+		}
 	}
 
 	public static JobContext get() {

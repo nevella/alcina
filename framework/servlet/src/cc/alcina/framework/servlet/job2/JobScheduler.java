@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.util.InnerAccess;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
@@ -152,14 +153,20 @@ public class JobScheduler {
 		// FIXME - mvcc.jobs - remove (with prej) all non-deserializable tasks
 		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
 				.getActiveServers();
+		String visibleInstanceRegex = ResourceUtilities
+				.get("visibleInstanceRegex");
 		Date cutoff = SEUtilities
 				.toOldDate(LocalDateTime.now().minusMinutes(1));
 		Stream<? extends Job> allocatedIncomplete = DomainDescriptorJob.get()
 				.getAllocatedIncompleteJobs()
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
+				.filter(job -> job.getPerformer().toString()
+						.matches(visibleInstanceRegex))
 				.filter(job -> !activeInstances.contains(job.getPerformer()));
 		Stream<? extends Job> pendingInactiveCreator = DomainDescriptorJob.get()
 				.getPendingJobsWithInactiveCreator(activeInstances)
+				.filter(job -> job.getCreator().toString()
+						.matches(visibleInstanceRegex))
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
 				.filter(job -> !activeInstances.contains(job.getCreator()));
 		InnerAccess<Boolean> metadataLockHeld = new InnerAccess<>();
