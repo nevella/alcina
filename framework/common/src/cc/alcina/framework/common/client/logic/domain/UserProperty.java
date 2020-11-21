@@ -18,10 +18,10 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 @MappedSuperclass
-@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
+@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER), delete = @Permission(access = AccessLevel.ROOT))
 @DomainTransformPersistable
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = UserProperty.class)
-@DomainTransformPropagation(PropagationType.NON_PERSISTENT)
+@DomainTransformPropagation(PropagationType.PERSISTENT)
 /*
  * Similar to the (jvm-only) KeyValuePersistentBase
  */
