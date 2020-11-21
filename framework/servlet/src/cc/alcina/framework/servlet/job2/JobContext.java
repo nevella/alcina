@@ -276,36 +276,40 @@ public class JobContext {
 	}
 
 	public void end() {
-		Preconditions.checkState(
-				persistenceType != PersistenceType.SchedulingSubJobs);
-		if (noHttpContext) {
-			InternalMetrics.get().endTracker(performer);
-		}
-		if (job.provideIsNotComplete()) {
-			String log = Registry.impl(PerThreadLogging.class).endBuffer();
-			job.setLog(log);
-			if (!job.provideIsComplete()) {
-				job.setState(JobState.COMPLETED);
+		try {
+			Preconditions.checkState(
+					persistenceType != PersistenceType.SchedulingSubJobs);
+			if (noHttpContext) {
+				InternalMetrics.get().endTracker(performer);
 			}
-			job.setEndTime(new Date());
-			job.setResultType(JobResultType.OK);
-			persistMetadata(true);
-		}
-		if (threadStartName != null) {
-			thread.setName(threadStartName);
-		}
-		if (persistenceType == PersistenceType.None) {
-			// don't end transaction (job metadata changes needed for queue
-			// exit)
-		} else {
-			Transaction.endAndBeginNew();
-		}
-		SequenceCompletionLatch sequenceCompletionLatch = JobRegistry
-				.get().completionLatches.remove(job);
-		if (sequenceCompletionLatch != null) {
-			logger.warn("Fired child completion to sequence latch: {}", job);
-			sequenceCompletionLatch.context = this;
-			sequenceCompletionLatch.onChildJobsCompleted();
+			if (job.provideIsNotComplete()) {
+				String log = Registry.impl(PerThreadLogging.class).endBuffer();
+				job.setLog(log);
+				if (!job.provideIsComplete()) {
+					job.setState(JobState.COMPLETED);
+				}
+				job.setEndTime(new Date());
+				job.setResultType(JobResultType.OK);
+				persistMetadata(true);
+			}
+			if (threadStartName != null) {
+				thread.setName(threadStartName);
+			}
+			if (persistenceType == PersistenceType.None) {
+				// don't end transaction (job metadata changes needed for queue
+				// exit)
+			} else {
+				Transaction.endAndBeginNew();
+			}
+		} finally {
+			SequenceCompletionLatch sequenceCompletionLatch = JobRegistry
+					.get().completionLatches.remove(job);
+			if (sequenceCompletionLatch != null) {
+				logger.warn("Fired child completion to sequence latch: {}",
+						job);
+				sequenceCompletionLatch.context = this;
+				sequenceCompletionLatch.onChildJobsCompleted();
+			}
 		}
 	}
 
