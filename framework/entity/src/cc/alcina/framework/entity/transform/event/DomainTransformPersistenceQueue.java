@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
@@ -482,6 +483,11 @@ public class DomainTransformPersistenceQueue {
 						// Wait a maximum of 10 seconds
 						long endWaitLoop = System.currentTimeMillis()
 								+ 10 * TimeConstants.ONE_SECOND_MS;
+						if (ResourceUtilities.is(
+								DomainTransformPersistenceQueue.class,
+								"noDbRequestWait")) {
+							endWaitLoop = 0;
+						}
 						while (true) {
 							request = loadedRequests.get(id);
 							if (request != null) {
