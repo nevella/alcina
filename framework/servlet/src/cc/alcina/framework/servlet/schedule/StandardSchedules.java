@@ -9,6 +9,7 @@ import java.util.concurrent.Executors;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.servlet.job2.JobScheduler.ExecutorServiceProvider;
 import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
@@ -44,6 +45,18 @@ public class StandardSchedules {
 			withClustered(true).withTimewiseLimited(true)
 					.withQueueMaxConcurrentJobs(1).withNext(LocalDateTime.now()
 							.truncatedTo(ChronoUnit.DAYS).plusDays(1));
+		}
+	}
+
+	// FIXME - mvcc.1a - JobScheduler schould schedule these for all vms, not
+	// just leader
+	public static class HourlyLocalSchedule extends Schedule {
+		public HourlyLocalSchedule() {
+			withClustered(false).withTimewiseLimited(true)
+					.withQueueName(
+							"hourly-" + EntityLayerUtils.getLocalHostName())
+					.withQueueMaxConcurrentJobs(1).withNext(LocalDateTime.now()
+							.truncatedTo(ChronoUnit.HOURS).plusHours(1));
 		}
 	}
 
