@@ -183,8 +183,13 @@ public class DomainDescriptorJob {
 	}
 
 	public int getActiveJobCount(String queueName) {
-		return jobDescriptor.getJobsForQueue(queueName, JobState.PROCESSING)
-				.size();
+		// FIXME - mvcc.jobs.1a - there still seem to be issues with state
+		// propagation in JobDescriptor
+		return (int) jobDescriptor
+				.getJobsForQueue(queueName, JobState.PROCESSING).stream()
+				.filter(Job::provideIsNotComplete).count();
+		// return jobDescriptor.getJobsForQueue(queueName, JobState.PROCESSING)
+		// .size();
 	}
 
 	public Stream<? extends Job> getAllocatedIncompleteJobs() {

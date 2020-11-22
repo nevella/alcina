@@ -254,6 +254,17 @@ public class JobContext {
 						lastCompletionEventTime = now;
 					}
 				}
+				if (now - lastCompletionEventTime > 30
+						* TimeConstants.ONE_SECOND_MS) {
+					// FIXME - mvcc.jobs.1a - checking our propagation is OK
+					if (job.provideUncompletedChildren()
+							.collect(Collectors.toSet())
+							.size() != uncompletedChildren.size()) {
+						logger.warn(
+								"Differing child counts for uncompleted children");
+						uncompletedChildren.clear();
+					}
+				}
 				if (now - lastCompletionEventTime > AWAIT_CHILDREN_DELTA_TIMEOUT_MS) {
 					// FIXME - mvcc.jobs - A policy?
 					logger.warn(
