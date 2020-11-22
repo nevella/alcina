@@ -317,8 +317,7 @@ public class JobQueue {
 						"allocation status metadatachanged: {} - active {} - pending {}",
 						name, active, pending.size());
 				//
-				if (active.isEmpty() && pending.isEmpty() && (schedule == null
-						|| schedule.getQueueMaxConcurrentJobs() != 1)) {
+				if (active.isEmpty() && pending.isEmpty()) {
 					onQueueFinished();
 					return;
 				}

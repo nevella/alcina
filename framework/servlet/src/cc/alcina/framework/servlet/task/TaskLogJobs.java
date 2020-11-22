@@ -38,10 +38,7 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 								.cell(job.getStartTime())
 								.cell(JobRegistry.get()
 										.getPerformerThreadName(job))
-								.cell(job.getPerformer() == null ? "(null)"
-										: job.getPerformer()
-												.getAuthenticationSession()
-												.getUser().toIdNameString());
+								.cell(job.getPerformer());
 						DomNode td = cellBuilder.append();
 						{
 							ServerControlAction action = new ServerControlAction();
@@ -88,10 +85,7 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 								.cell(String.valueOf(job.getId()))
 								.cell(job.provideName())
 								.cell(job.getStartTime()).cell(job.getEndTime())
-								.cell(job.getPerformer() == null ? "(null)"
-										: job.getPerformer()
-												.getAuthenticationSession()
-												.getUser().toIdNameString());
+								.cell(job.getPerformer());
 						DomNode td = cellBuilder.append();
 						ServerControlAction action = new ServerControlAction();
 						action.getParameters().setPropertyName(
