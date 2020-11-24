@@ -60,6 +60,8 @@ public class BackendTransformQueue {
 
 	private Timer timer = new Timer("Backend-transform-queue");
 
+	private Object persistTransformsMonitor = new Object();
+
 	public void enqueue(List<DomainTransformEvent> transforms,
 			String queueName) {
 		synchronized (this) {
@@ -115,13 +117,18 @@ public class BackendTransformQueue {
 				zeroDelayTaskScheduled = false;
 				queueFirstEvent.clear();
 			}
-			try {
-				LooseContext.push();
-				LooseContext.setTrue(
-						AdjunctTransformCollation.CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD);
-				Transaction.commit();
-			} finally {
-				LooseContext.pop();
+			/*
+			 * Initial attempt to avoid conflicts with different queue times
+			 */
+			synchronized (persistTransformsMonitor) {
+				try {
+					LooseContext.push();
+					LooseContext.setTrue(
+							AdjunctTransformCollation.CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD);
+					Transaction.commit();
+				} finally {
+					LooseContext.pop();
+				}
 			}
 			synchronized (this) {
 				if (getCommitDelay().orElse(Long.MAX_VALUE) == 0L) {
