@@ -43,6 +43,8 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.servlet.job.JobRegistry.ActionPerformerTrackMetrics;
 import cc.alcina.framework.servlet.job.JobRegistry.SequenceCompletionLatch;
+import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
+import cc.alcina.framework.servlet.job.JobScheduler.ScheduleProvider;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 
@@ -282,6 +284,22 @@ public class JobContext {
 					if (completionEvents.size() > 0) {
 						event = completionEvents.removeFirst();
 						lastCompletionEventTime = now;
+					} else {
+						// FIXME - mvcc.jobs - scheduling logic - may be
+						// shutting down too early?
+						if (uncompletedChildren.size() > 0) {
+							Job child = uncompletedChildren.iterator().next();
+							Task task = child.getTask();
+							Optional<ScheduleProvider> scheduleProvider = Registry
+									.optional(ScheduleProvider.class,
+											task.getClass());
+							if (scheduleProvider.isPresent()) {
+								Schedule schedule = scheduleProvider
+										.map(sp -> sp.getSchedule(task))
+										.orElse(null);
+								JobRegistry.get().ensureQueue(schedule);
+							}
+						}
 					}
 				}
 				if (now - lastCompletionEventTime > 30
