@@ -48,7 +48,6 @@ import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -67,6 +66,7 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.job.JobContext.PersistenceType;
 import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
+import cc.alcina.framework.servlet.job.JobScheduler.ScheduleEvent;
 import cc.alcina.framework.servlet.job.JobScheduler.ScheduleProvider;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
@@ -146,8 +146,6 @@ public class JobRegistry extends WriterService {
 
 	Map<Job, SequenceCompletionLatch> completionLatches = new ConcurrentHashMap<>();
 
-	Map<String, Schedule> schedulesByQueueName = new LinkedHashMap<>();
-
 	private JobScheduler scheduler;
 
 	Logger logger = LoggerFactory.getLogger(getClass());
@@ -159,44 +157,22 @@ public class JobRegistry extends WriterService {
 		/*
 		 * When scheduling subjobs on a different queue, this...? (lost comment)
 		 */
+		Job firstJob = e.getValue().get(0);
+		if (!firstJob.provideCanDeserializeTask()) {
+			return;
+		}
 		if (queue == null) {
-			Schedule schedule = schedulesByQueueName.get(name);
-			Job firstJob = e.getValue().get(0);
-			if (firstJob.provideCanDeserializeTask()) {
-				boolean ignore = false;
-				if (schedule == null) {
-					if (EntityLayerObjects.get()
-							.isForeignClientInstance(firstJob.getCreator())) {
-						if (!firstJob.isClustered()
-								|| !ResourceUtilities.is("joinClusteredJobs")) {
-							ignore = true;
-						}
-					}
-				}
-				if (!ignore) {
-					Class<? extends Task> clazz = firstJob.getTask().getClass();
-					Optional<ScheduleProvider> scheduleProvider = Registry
-							.optional(ScheduleProvider.class, clazz);
-					if (scheduleProvider.isPresent()) {
-						schedule = scheduleProvider.get().getSchedule(firstJob);
-						if (schedule != null) {
-							logger.warn(
-									"Created schedule from provider {} for job {}",
-									scheduleProvider.get().getClass()
-											.getSimpleName(),
-									firstJob);
-						}
-					}
-				}
-				if (schedule != null) {
-					queue = ensureQueue(schedule);
-				}
+			// FIXME - mvcc.jobs.1a - there's some doubling up here with
+			Schedule schedule = scheduler.getScheduleForQueueEventAndOrJob(name,
+					firstJob);
+			if (schedule != null) {
+				queue = ensureQueue(schedule);
 			}
 		}
 		if (queue != null) {
 			queue.onMetadataChanged();
 		}
-		scheduler.onQueueChanged(name);
+		scheduler.onScheduleEvent(new ScheduleEvent(name, firstJob));
 	};
 
 	JobExecutors jobExecutors;
@@ -216,8 +192,6 @@ public class JobRegistry extends WriterService {
 				scheduler.enqueueLeaderChangedEvent();
 			}
 		});
-		schedulesByQueueName = Registry.impls(Schedule.class).stream()
-				.collect(AlcinaCollectors.toKeyMap(Schedule::getQueueName));
 		JobExecutors.topicRescheduleJobs.add((k, v) -> {
 			if (v) {
 				scheduleJobs(false);
@@ -768,12 +742,12 @@ public class JobRegistry extends WriterService {
 						if (latch.await(10, TimeUnit.SECONDS)) {
 							break;
 						}
-						if (context != null) {
-							context.checkCancelled0();
-						}
 						int debug = 3;
 					} finally {
 						Transaction.begin();
+						if (context != null) {
+							context.checkCancelled0();
+						}
 					}
 				}
 				context.awaitSequenceCompletion();

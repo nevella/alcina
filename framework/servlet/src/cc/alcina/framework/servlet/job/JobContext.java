@@ -531,6 +531,10 @@ public class JobContext {
 					}
 					if (completionEvents.size() > 0) {
 						event = completionEvents.removeFirst();
+						// we don't process the completion event details, so ok
+						// to clear (it's just a "wake up and check" notifier by
+						// this point)
+						completionEvents.clear();
 					}
 				}
 			}

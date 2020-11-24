@@ -4,8 +4,10 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Timer;
@@ -29,6 +31,7 @@ import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.InnerAccess;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -36,11 +39,13 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.Sx;
 
@@ -75,12 +80,16 @@ public class JobScheduler {
 	/*
 	 * all access locked on the field
 	 */
-	private LinkedList<String> scheduleEvents = new LinkedList<>();
+	private LinkedList<ScheduleEvent> scheduleEvents = new LinkedList<>();
+
+	Map<String, Schedule> schedulesByQueueName = new LinkedHashMap<>();
 
 	JobScheduler(JobRegistry jobRegistry) {
 		this.jobRegistry = jobRegistry;
 		scheduleJobsQueueProcessor = new ScheduleJobsThread();
 		scheduleJobsQueueProcessor.start();
+		schedulesByQueueName = Registry.impls(Schedule.class).stream()
+				.collect(AlcinaCollectors.toKeyMap(Schedule::getQueueName));
 	}
 
 	public void stopService() {
@@ -89,6 +98,40 @@ public class JobScheduler {
 		synchronized (scheduleEvents) {
 			scheduleEvents.notify();
 		}
+	}
+
+	private boolean canAllocateClustered(Job job) {
+		Optional<ScheduleProvider> scheduleProvider = Registry
+				.optional(ScheduleProvider.class, job.getTask().getClass());
+		// FIXME - mvcc.jobs.2 - (validation) all clustered jobs must have a
+		// scheduleprovider
+		if (scheduleProvider.isPresent()) {
+			Schedule schedule = scheduleProvider.get()
+					.getSchedule(job.getTask());
+			if (schedule == null) {
+				return false;
+			}
+			return jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()
+					|| schedule.isOnlyPerformOnLeader();
+		} else {
+			return false;
+		}
+	}
+
+	private void ensureQueueNames() {
+		List<Class> scheduleProviders = Registry.get()
+				.allImplementations(ScheduleProvider.class).stream()
+				.filter(ResourceUtilities::notDisabled).distinct()
+				.collect(Collectors.toList());
+		scheduleProviders.stream().map(Registry.get()::getLocations)
+				.flatMap(Collection::stream).forEach(loc -> {
+					Class<? extends Task> taskClass = loc.targetClass();
+					Schedule schedule = getSchedule(taskClass, true);
+					if (schedule != null) {
+						queueNameSchedulableTasks.add(schedule.getQueueName(),
+								taskClass);
+					}
+				});
 	}
 
 	private void ensureScheduled(Schedule schedule, Class<? extends Task> clazz,
@@ -139,7 +182,8 @@ public class JobScheduler {
 				logger.info("Schedule {}", message);
 				MethodContext.instance().withRootPermissions(true)
 						.withWrappingTransaction().run(() -> {
-							enqueueSchedule(message);
+							enqueueScheduleEvent(
+									new ScheduleEvent(message, null));
 						});
 			}
 		}, delay + 1);
@@ -229,11 +273,14 @@ public class JobScheduler {
 		jobRegistry.withJobMetadataLock(null, false, runnable);
 	}
 
-	private synchronized void scheduleJobs() {
-		if (applicationStartup) {
-			ensureQueues();
-		}
+	private synchronized void scheduleJobs(List<ScheduleEvent> events) {
+		Stream<? extends Job> jobs = events.stream().map(e -> e.job)
+				.filter(Objects::nonNull);
 		Transaction.ensureBegun();
+		if (applicationStartup) {
+			ensureQueueNames();
+			jobs = DomainDescriptorJob.get().getNotCompletedJobs();
+		}
 		/*
 		 * orphans before scheduling (since we may resubmit timewise-constrained
 		 * tasks)
@@ -268,44 +315,34 @@ public class JobScheduler {
 			}
 		});
 		Transaction.commit();
-		ensureActiveQueues();
+		ensureActiveQueues(jobs);
 		applicationStartup = false;
 	}
 
-	protected void ensureQueues() {
-		List<Class> scheduleProviders = Registry.get()
-				.allImplementations(ScheduleProvider.class).stream()
-				.filter(ResourceUtilities::notDisabled).distinct()
-				.collect(Collectors.toList());
-		scheduleProviders.stream().map(Registry.get()::getLocations)
-				.flatMap(Collection::stream).forEach(loc -> {
-					Class<? extends Task> taskClass = loc.targetClass();
-					Schedule schedule = getSchedule(taskClass, true);
-					if (schedule != null) {
-						queueNameSchedulableTasks.add(schedule.getQueueName(),
-								taskClass);
-					}
-				});
-	}
-
 	void enqueueInitialScheduleEvent() {
-		enqueueSchedule("app-startup");
+		enqueueScheduleEvent(new ScheduleEvent("app-startup", null));
 	}
 
 	void enqueueLeaderChangedEvent() {
-		enqueueSchedule("leader-changed");
+		enqueueScheduleEvent(new ScheduleEvent("leader-changed", null));
 	}
 
-	void enqueueSchedule(String id) {
+	void enqueueScheduleEvent(ScheduleEvent event) {
 		synchronized (scheduleEvents) {
-			logger.debug("Enqueueing schedule event: {}", id);
-			scheduleEvents.add(id);
+			logger.debug("Enqueueing schedule event: {}", event);
+			scheduleEvents.add(event);
 			scheduleEvents.notifyAll();
 		}
 	}
 
-	void ensureActiveQueues() {
-		queueNameSchedulableTasks.keySet().forEach(queueName -> {
+	void ensureActiveQueues(Stream<? extends Job> jobs) {
+		Stream<String> queueNames = Stream.concat(
+				queueNameSchedulableTasks.keySet().stream(),
+				jobs.filter(Job::isClustered)
+						.filter(job -> job.getState() == JobState.PENDING)
+						.filter(this::canAllocateClustered).map(Job::getQueue))
+				.filter(Objects::nonNull).distinct();
+		queueNames.forEach(queueName -> {
 			Optional<? extends Job> pending = DomainDescriptorJob.get()
 					.getUnallocatedJobsForQueue(queueName, true)
 					.filter(Job::provideIsAllocatable).findFirst();
@@ -353,8 +390,37 @@ public class JobScheduler {
 		}).filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
-	void onQueueChanged(String name) {
-		enqueueSchedule(name);
+	Schedule getScheduleForQueueEventAndOrJob(String name, Job job) {
+		Schedule schedule = name == null ? null
+				: schedulesByQueueName.get(name);
+		boolean ignore = false;
+		if (schedule == null) {
+			if (EntityLayerObjects.get()
+					.isForeignClientInstance(job.getCreator())) {
+				if (!job.isClustered() || !ResourceUtilities
+						.is(JobRegistry.class, "joinClusteredJobs")) {
+					ignore = true;
+				}
+			}
+		}
+		if (!ignore) {
+			Class<? extends Task> clazz = job.getTask().getClass();
+			Optional<ScheduleProvider> scheduleProvider = Registry
+					.optional(ScheduleProvider.class, clazz);
+			if (scheduleProvider.isPresent()) {
+				schedule = scheduleProvider.get().getSchedule(job);
+				if (schedule != null) {
+					logger.warn("Creating queue from provider {} for job {}",
+							scheduleProvider.get().getClass().getSimpleName(),
+							job);
+				}
+			}
+		}
+		return schedule;
+	}
+
+	void onScheduleEvent(ScheduleEvent event) {
+		enqueueScheduleEvent(event);
 	}
 
 	public interface ExecutorServiceProvider {
@@ -432,6 +498,8 @@ public class JobScheduler {
 
 		private boolean runSameQueueScheduledAsSubsequent;
 
+		private boolean onlyPerformOnLeader;
+
 		public long calculateMaxAllocated(JobQueue queue, int allocated,
 				int jobCountForQueue, int unallocatedJobCountForQueue) {
 			return -1;
@@ -459,6 +527,10 @@ public class JobScheduler {
 
 		public boolean isClustered() {
 			return clustered;
+		}
+
+		public boolean isOnlyPerformOnLeader() {
+			return onlyPerformOnLeader;
 		}
 
 		public boolean isRunSameQueueScheduledAsSubsequent() {
@@ -489,6 +561,11 @@ public class JobScheduler {
 
 		public Schedule withNext(LocalDateTime next) {
 			this.next = next;
+			return this;
+		}
+
+		public Schedule withOnlyPerformOnLeader(boolean onlyPerformOnLeader) {
+			this.onlyPerformOnLeader = onlyPerformOnLeader;
 			return this;
 		}
 
@@ -531,23 +608,27 @@ public class JobScheduler {
 			setName("Schedule-jobs-queue-" + hashCode());
 			while (!finished.get()) {
 				try {
-					String id = null;
+					List<ScheduleEvent> events = null;
 					synchronized (scheduleEvents) {
 						if (getEventQueueLength() == 0) {
 							scheduleEvents.wait();
 							logger.debug("Woken from toFire queue wakeup");
 						}
 						if (getEventQueueLength() > 0) {
-							id = scheduleEvents.removeFirst();
-							logger.debug("Removed id from toFire: {}", id);
+							events = scheduleEvents.stream()
+									.collect(Collectors.toList());
+							scheduleEvents.clear();
+							logger.debug(
+									"Removed {} events from toFire (and cleared): {}",
+									scheduleEvents.size());
 						}
 					}
-					if (id != null && !finished.get()) {
+					if (events != null && !finished.get()) {
 						try {
 							Transaction.ensureBegun();
 							ThreadedPermissionsManager.cast().pushSystemUser();
 							DomainStore.waitUntilCurrentRequestsProcessed();
-							publishScheduleEvent(id);
+							scheduleJobs(events);
 						} finally {
 							Transaction.ensureBegun();
 							ThreadedPermissionsManager.cast().popSystemUser();
@@ -558,10 +639,6 @@ public class JobScheduler {
 					e.printStackTrace();
 				}
 			}
-		}
-
-		private void publishScheduleEvent(String id) {
-			scheduleJobs();
 		}
 	}
 
@@ -628,6 +705,25 @@ public class JobScheduler {
 		@Override
 		public ExecutorService getService() {
 			return new CurrentThreadExecutorService();
+		}
+	}
+
+	static class ScheduleEvent {
+		String queueName;
+
+		Job job;
+
+		public ScheduleEvent() {
+		}
+
+		public ScheduleEvent(String queueName, Job job) {
+			this.queueName = queueName;
+			this.job = job;
+		}
+
+		@Override
+		public String toString() {
+			return GraphProjection.fieldwiseToStringOneLine(this);
 		}
 	}
 }
