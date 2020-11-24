@@ -25,7 +25,7 @@ import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
-import cc.alcina.framework.servlet.job.JobRegistry1;
+import cc.alcina.framework.servlet.job.JobContext;
 
 public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 	private static final int SLICE_SIZE = 1000;
@@ -107,7 +107,7 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 						false);
 				Transaction.commit();
 				Transaction.endAndBeginNew();
-				JobRegistry1.get().checkCancelled();
+				JobContext.checkCancelled();
 				if (lastId > maxId) {
 					System.out.println("\n=====Hit transform - ending\n\n");
 					break;

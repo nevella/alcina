@@ -11,16 +11,15 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
-import cc.alcina.framework.servlet.job2.JobScheduler.ExecutorServiceProvider;
-import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
+import cc.alcina.framework.servlet.job.JobScheduler.ExecutorServiceProvider;
+import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
 
 public class StandardSchedules {
 	@RegistryLocation(registryPoint = AdHocJobsExecutorServiceProvider.class, implementationType = ImplementationType.SINGLETON)
 	public static class AdHocJobsExecutorServiceProvider
 			implements ExecutorServiceProvider {
-		public static StandardSchedules.AdHocJobsExecutorServiceProvider get() {
-			return Registry.impl(
-					StandardSchedules.AdHocJobsExecutorServiceProvider.class);
+		public static AdHocJobsExecutorServiceProvider get() {
+			return Registry.impl(AdHocJobsExecutorServiceProvider.class);
 		}
 
 		private ExecutorService service = Executors.newFixedThreadPool(4,
@@ -66,6 +65,16 @@ public class StandardSchedules {
 					.withQueueMaxConcurrentJobs(1).withNext(LocalDateTime.now()
 							.truncatedTo(ChronoUnit.HOURS).plusHours(1));
 		}
+
+		public HourlySchedule withOffsetMinutes(int offsetMinutes) {
+			LocalDateTime next = LocalDateTime.now()
+					.truncatedTo(ChronoUnit.HOURS).plusMinutes(offsetMinutes);
+			if (LocalDateTime.now().isAfter(next)) {
+				next = next.plusHours(1);
+			}
+			withNext(next);
+			return this;
+		}
 	}
 
 	public static class ImmediateLocalSchedule extends Schedule {
@@ -103,10 +112,8 @@ public class StandardSchedules {
 	@RegistryLocation(registryPoint = RecurrentJobsExecutorServiceProvider.class, implementationType = ImplementationType.SINGLETON)
 	public static class RecurrentJobsExecutorServiceProvider
 			implements ExecutorServiceProvider {
-		public static StandardSchedules.RecurrentJobsExecutorServiceProvider
-				get() {
-			return Registry.impl(
-					StandardSchedules.RecurrentJobsExecutorServiceProvider.class);
+		public static RecurrentJobsExecutorServiceProvider get() {
+			return Registry.impl(RecurrentJobsExecutorServiceProvider.class);
 		}
 
 		private ExecutorService service = Executors.newFixedThreadPool(4,

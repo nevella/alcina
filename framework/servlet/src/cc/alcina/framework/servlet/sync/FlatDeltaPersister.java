@@ -9,7 +9,6 @@ import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.servlet.job.JobRegistry1;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersisterResult.FlatDeltaPersisterResultType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
 
@@ -93,8 +92,8 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 				perClassResult.update(resultType);
 			}
 			classDeltasPersisted();
-			JobRegistry1.get().log("Flat delta persister/apply: %s - %s",
-					clazz.getSimpleName(), perClassResult);
+			Ax.out("Flat delta persister/apply: %s - %s", clazz.getSimpleName(),
+					perClassResult);
 		}
 		return result;
 	}

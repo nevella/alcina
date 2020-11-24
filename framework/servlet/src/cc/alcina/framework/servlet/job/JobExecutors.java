@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.job2;
+package cc.alcina.framework.servlet.job;
 
 import java.util.List;
 import java.util.function.Consumer;

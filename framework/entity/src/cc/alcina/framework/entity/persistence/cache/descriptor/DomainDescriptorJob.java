@@ -193,7 +193,8 @@ public class DomainDescriptorJob {
 	}
 
 	public Stream<? extends Job> getAllocatedIncompleteJobs() {
-		return jobDescriptor.getJobsForState(JobState.ALLOCATED);
+		return Stream.concat(jobDescriptor.getJobsForState(JobState.ALLOCATED),
+				jobDescriptor.getJobsForState(JobState.PROCESSING));
 	}
 
 	public int getCompletedJobCountForActiveQueue(String name) {
@@ -206,6 +207,19 @@ public class DomainDescriptorJob {
 		return Arrays.stream(JobState.values()).filter(s -> !s.isComplete())
 				.map(state -> jobDescriptor.getJobsForQueue(name, state).size())
 				.collect(Collectors.summingInt(i -> i));
+	}
+
+	public Stream<? extends Job> getIncompleteJobsForQueue(String queueName) {
+		// FIXME - mvcc.1a
+		Predicate<Job> doubleCheckPredicate = Job::provideIsNotComplete;
+		Stream<Job> stream = StreamConcatenation.concat(new Stream[] {
+				jobDescriptor.getJobsForQueue(queueName, JobState.PENDING)
+						.stream(),
+				jobDescriptor.getJobsForQueue(queueName, JobState.ALLOCATED)
+						.stream(),
+				jobDescriptor.getJobsForQueue(queueName, JobState.PROCESSING)
+						.stream() });
+		return stream.filter(doubleCheckPredicate);
 	}
 
 	public int getJobCountForActiveQueue(String name) {

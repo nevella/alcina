@@ -3,8 +3,8 @@ package cc.alcina.framework.entity.transform.policy;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
-import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 
 public class IgnoreMissingPersistenceLayerTransformExceptionPolicy
 		extends AbstractPersistenceLayerTransformExceptionPolicy {

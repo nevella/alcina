@@ -23,11 +23,11 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  *
  * @author Nick Reddel
  */
-public class StringHasLengthValidator implements Validator {
+public class NotBlankValidator implements Validator {
 	public Object validate(Object value) throws ValidationException {
-		if ((value == null) || (value.toString().length() < 1)) {
+		if ((value == null) || (value.toString().isEmpty())) {
 			throw new ValidationException("Value must be non-empty string",
-					StringHasLengthValidator.class);
+					NotBlankValidator.class);
 		}
 		return value;
 	}

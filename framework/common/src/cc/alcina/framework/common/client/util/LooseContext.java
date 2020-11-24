@@ -176,6 +176,10 @@ public abstract class LooseContext {
 		}
 	}
 
+	public interface HasContextProperties {
+		public StringMap provideContextProperties();
+	}
+
 	public static class LooseContextStackException extends RuntimeException {
 	}
 }

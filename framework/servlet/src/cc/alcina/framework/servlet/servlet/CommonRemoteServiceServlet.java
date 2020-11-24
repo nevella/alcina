@@ -109,8 +109,7 @@ import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
-import cc.alcina.framework.servlet.job.JobRegistry1;
-import cc.alcina.framework.servlet.job2.JobRegistry;
+import cc.alcina.framework.servlet.job.JobRegistry;
 
 /**
  *
@@ -226,7 +225,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@WebMethod(readonlyPermitted = true)
 	// FIXME - mvcc.jobs - remove
 	public List<String> listRunningJobs() {
-		return JobRegistry1.get().getRunningJobs();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -369,14 +368,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted) throws WebException {
-		TransformCommit.commitBulkTransforms(uncommitted, logger, true, false);
-	}
-
-	public int persistOfflineTransforms(
-			List<DeltaApplicationRecord> uncommitted, Logger logger)
-			throws WebException {
-		return TransformCommit.commitBulkTransforms(uncommitted, logger, null,
-				false);
+		TransformCommit.commitBulkTransforms(uncommitted, true, false);
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.job2;
+package cc.alcina.framework.servlet.job;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -41,6 +41,7 @@ import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.util.MethodContext;
+import cc.alcina.framework.servlet.Sx;
 
 /**
  * <h2>TODO</h2>
@@ -112,7 +113,7 @@ public class JobScheduler {
 					} else {
 						Job job = jobRegistry.createJob(
 								Reflections.newInstance(clazz), schedule,
-								SEUtilities.toOldDate(nextRun));
+								SEUtilities.toOldDate(nextRun), false);
 						logger.info("Scheduled job {} for {}", job, nextRun);
 					}
 				});
@@ -212,7 +213,7 @@ public class JobScheduler {
 											true);
 									Job retry = jobRegistry.createJob(
 											job.getTask(), schedule,
-											job.getRunAt());
+											job.getRunAt(), false);
 									retry.setQueue(job.getQueue());
 									job.createRelation(retry,
 											JobRelationType.retry);
@@ -254,6 +255,12 @@ public class JobScheduler {
 					&& !applicationStartup) {
 				return;
 			}
+			if (Sx.isTestServer() || Sx.isTest()) {
+				if (ResourceUtilities.not(JobScheduler.class,
+						"testSchedules")) {
+					return;
+				}
+			}
 			LocalDateTime nextRun = schedule.getNext();
 			if (nextRun != null) {
 				ensureScheduled(schedule, clazz, nextRun);
@@ -266,7 +273,8 @@ public class JobScheduler {
 
 	protected void ensureQueues() {
 		List<Class> scheduleProviders = Registry.get()
-				.allImplementations(ScheduleProvider.class).stream().distinct()
+				.allImplementations(ScheduleProvider.class).stream()
+				.filter(ResourceUtilities::notDisabled).distinct()
 				.collect(Collectors.toList());
 		scheduleProviders.stream().map(Registry.get()::getLocations)
 				.flatMap(Collection::stream).forEach(loc -> {
@@ -535,9 +543,25 @@ public class JobScheduler {
 		}
 	}
 
-	public interface ScheduleProvider {
-		public Schedule getSchedule(Class<? extends Task> taskClass,
-				boolean onAppplicationStart);
+	public interface ScheduleProvider<T extends Task> {
+		default boolean checkForUnallocatedOrIncomplete(String queueName) {
+			if (DomainDescriptorJob.get()
+					.getUnallocatedJobsForQueue(queueName, false).count() > 0) {
+				JobContext.info("{} - already scheduled", queueName);
+				return false;
+			}
+			if (DomainDescriptorJob.get()
+					.getIncompleteJobCountForActiveQueue(queueName) > 0) {
+				JobContext.info("{} - already running", queueName);
+				return false;
+			}
+			return true;
+		}
+
+		default Schedule getSchedule(Class<? extends T> taskClass,
+				boolean onAppplicationStart) {
+			return null;
+		}
 
 		default Schedule getSchedule(Job job) {
 			/*
@@ -546,8 +570,8 @@ public class JobScheduler {
 			return null;
 		}
 
-		default Schedule getSchedule(Task task) {
-			return getSchedule(task.getClass(), false);
+		default Schedule getSchedule(T task) {
+			return getSchedule((Class<T>) task.getClass(), false);
 		}
 	}
 

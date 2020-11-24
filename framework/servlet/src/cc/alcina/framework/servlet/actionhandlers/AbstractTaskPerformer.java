@@ -36,8 +36,6 @@ public abstract class AbstractTaskPerformer
 	}
 
 	public AbstractTaskPerformer asSubTask(BaseRemoteActionPerformer parent) {
-		actionLogger = parent.getLogger();
-		jobTracker = parent.getJobTracker();
 		return this;
 	}
 

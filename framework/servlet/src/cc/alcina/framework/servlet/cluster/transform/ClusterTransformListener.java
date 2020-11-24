@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
@@ -17,7 +18,6 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.transform.event.ExternalTransformPersistenceListener;
 import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.State;
-import cc.alcina.framework.servlet.job.JobRegistry1;
 
 /**
  * Each server publishes the current max rq id to a node with its hostname
@@ -85,7 +85,8 @@ public class ClusterTransformListener
 		try {
 			transformCommitLog.consumer(commitLogHost,
 					this::handleClusterTransformRequest,
-					JobRegistry1.getLauncherName(), System.currentTimeMillis());
+					EntityLayerUtils.getLocalHostName(),
+					System.currentTimeMillis());
 			domainStore.getPersistenceEvents()
 					.addDomainTransformPersistenceListener(this);
 		} catch (Exception e) {

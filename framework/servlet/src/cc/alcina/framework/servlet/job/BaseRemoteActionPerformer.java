@@ -1,51 +1,35 @@
 package cc.alcina.framework.servlet.job;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
-import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.entity.SEUtilities;
 
 public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 		implements TaskPerformer<R> {
-	// FIXME - mvcc.jobs - switch to slf4j. Also - logstash logging - put a
-	// counter in the log record?
-	protected Logger logger;
-
-	protected org.slf4j.Logger slf4jLogger = LoggerFactory
-			.getLogger(getClass());
-
-	protected JobTracker jobTracker;
-
 	boolean started;
 
-	public JobTracker getJobTracker() {
-		return jobTracker;
-	}
-
-	public Logger getLogger() {
-		return this.logger;
-	}
+	protected Logger logger = LoggerFactory.getLogger(getClass());
 
 	public synchronized void updateJob(String message) {
 		updateJob(message, 1);
 	}
 
 	public void updateJob(String message, int completedDelta) {
-		JobRegistry1.get().updateJob(message, completedDelta);
+		JobContext.get().updateJob(message, completedDelta);
 	}
 
 	protected void finishJob() {
 	}
 
 	protected void jobError(Exception exception) {
-		JobRegistry1.get().jobError(exception);
+		JobContext.get().onJobException(exception);
 	}
 
 	protected void jobError(String message) {
-		JobRegistry1.get().jobError(message);
+		JobContext.get().onJobException(new Exception(message));
 	}
 
 	protected String jobName() {
@@ -53,15 +37,6 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 	}
 
 	protected void jobOk(String message) {
-		JobRegistry1.get().jobOk(message);
-	}
-
-	protected void jobStarted() {
-		if (started) {
-			throw new RuntimeException("Already started");
-		}
-		started = true;
-		jobTracker = JobRegistry1.get().startJob(getClass(), jobName(), null);
-		logger = JobRegistry1.get().getContextLogger();
+		JobContext.get().setResultMessage(message);
 	}
 }

@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
+import cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator;
 import cc.alcina.framework.common.client.gwittir.validator.RegexValidator;
-import cc.alcina.framework.common.client.gwittir.validator.StringHasLengthValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Display;
@@ -29,7 +29,7 @@ public class LoginPage2FAModel extends IntermediateBindable {
 
 	@Display(name = "Authentication code", focus = true)
 	@Validators(validators = {
-			@Validator(validator = StringHasLengthValidator.class, parameters = {
+			@Validator(validator = NotBlankValidator.class, parameters = {
 					@NamedParameter(name = Validator.FEEDBACK_MESSAGE, stringValue = "Two factor code is required") }),
 			@Validator(validator = RegexValidator.class, parameters = {
 					@NamedParameter(name = Validator.FEEDBACK_MESSAGE, stringValue = "Authenticator code is 6 digits, no spaces"),

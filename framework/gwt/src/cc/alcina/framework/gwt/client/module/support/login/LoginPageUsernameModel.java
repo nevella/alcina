@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
 import cc.alcina.framework.common.client.gwittir.validator.EmailAddressValidator;
-import cc.alcina.framework.common.client.gwittir.validator.StringHasLengthValidator;
+import cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Display;
@@ -29,7 +29,7 @@ public class LoginPageUsernameModel extends IntermediateBindable {
 
 	@Display(name = "Email", autocompleteName = "email", focus = true)
 	@Validators(validators = {
-			@Validator(validator = StringHasLengthValidator.class, parameters = {
+			@Validator(validator = NotBlankValidator.class, parameters = {
 					@NamedParameter(name = Validator.FEEDBACK_MESSAGE, stringValue = "An email is required") }),
 			@Validator(validator = EmailAddressValidator.class, parameters = {
 					@NamedParameter(name = EmailAddressValidator.PARAM_IGNORE_EMPTIES, booleanValue = true) }) })

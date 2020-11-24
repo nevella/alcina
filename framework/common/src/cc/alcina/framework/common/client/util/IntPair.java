@@ -6,13 +6,15 @@ package cc.alcina.framework.common.client.util;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.IntStream;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class IntPair implements Comparable<IntPair>, Serializable {
+public class IntPair
+		implements Comparable<IntPair>, Serializable, Iterable<Integer> {
 	static final transient long serialVersionUID = -1L;
 
 	public static List<IntPair> asRangeList(List<Integer> ints) {
@@ -253,6 +255,11 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 
 	public boolean isZero() {
 		return i1 == 0 && i2 == 0;
+	}
+
+	@Override
+	public Iterator<Integer> iterator() {
+		return IntStream.rangeClosed(i1, i2).iterator();
 	}
 
 	public int length() {

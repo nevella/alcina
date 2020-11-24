@@ -2,8 +2,8 @@ package cc.alcina.framework.servlet.schedule;
 
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.servlet.job2.JobContext;
-import cc.alcina.framework.servlet.job2.JobRegistry;
+import cc.alcina.framework.servlet.job.JobContext;
+import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.schedule.StandardSchedules.RecurrentJobsExecutorSchedule;
 
 /*

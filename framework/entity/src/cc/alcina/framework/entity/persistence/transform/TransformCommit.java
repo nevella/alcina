@@ -15,7 +15,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -27,7 +26,6 @@ import com.google.gwt.event.shared.UmbrellaException;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -121,8 +119,8 @@ public class TransformCommit {
 			.getName() + ".CONTEXT_DISABLED";
 
 	public static int commitBulkTransforms(List<DeltaApplicationRecord> records,
-			Logger logger, Boolean useWrapperUser,
-			boolean throwPersistenceExceptions) throws WebException {
+			Boolean useWrapperUser, boolean throwPersistenceExceptions)
+			throws WebException {
 		CommonPersistenceLocal cp = Registry
 				.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		boolean persistAsOneTransaction = ResourceUtilities.is(
@@ -148,7 +146,7 @@ public class TransformCommit {
 					ResourceUtilities.write(recordSerializer.write(record),
 							out);
 				}
-				logger.info("Wrote {} offline/bulk records to {}",
+				get().logger.info("Wrote {} offline/bulk records to {}",
 						records.size(), saveDir);
 			}
 			Class<? extends ClientInstance> clientInstanceClass = AlcinaPersistentEntityImpl
@@ -175,10 +173,9 @@ public class TransformCommit {
 								"clientInstance.id", clientInstanceId,
 								"requestId", requestId);
 				if (alreadyWritten != null) {
-					if (logger != null) {
-						logger.warn(Ax.format("Request [%s/%s] already written",
-								requestId, clientInstanceId));
-					}
+					get().logger
+							.warn(Ax.format("Request [{}/{}] already written",
+									requestId, clientInstanceId));
 					continue;
 				}
 				DomainTransformRequest request = DomainTransformRequest
@@ -267,14 +264,12 @@ public class TransformCommit {
 								.call(() -> get().transform(request, true, true,
 										true));
 						ThreadlocalTransformManager.cast().resetTltm(null);
-						if (logger != null) {
-							logger.info(Ax.format(
-									"Request [%s::%s] : %s transforms written, %s ignored",
-									requestId, clientInstanceId,
-									transformLayerWrapper.response
-											.getTransformsProcessed(),
-									transformLayerWrapper.ignored));
-						}
+						get().logger.info(
+								"Request [{}::{}] : {} transforms written, {} ignored",
+								requestId, clientInstanceId,
+								transformLayerWrapper.response
+										.getTransformsProcessed(),
+								transformLayerWrapper.ignored);
 						if (throwPersistenceExceptions
 								&& !transformLayerWrapper.response
 										.getTransformExceptions().isEmpty()) {
@@ -302,16 +297,14 @@ public class TransformCommit {
 
 	// Note that this must be called with a new client instance - since we're
 	// incrementing the request id counter
-	public static void commitDeltaApplicationRecord(
-			TransformCommit.CommitContext commitContext,
-			DeltaApplicationRecord dar, int chunkSize) throws Exception {
+	public static void commitDeltaApplicationRecord(DeltaApplicationRecord dar,
+			int chunkSize) throws Exception {
 		DomainTransformRequest fullRequest = DomainTransformRequest
 				.fromString(dar.getText(), dar.getChunkUuidString());
 		int size = fullRequest.getEvents().size();
 		boolean commitAsWrapperUser = ResourceUtilities
 				.is("commitAsWrapperUser");
 		if (size > chunkSize && dar.getChunkUuidString() != null) {
-			commitContext.setItemCount(size / chunkSize + 1);
 			int rqIdCounter = dar.getRequestId();
 			for (int idx = 0; idx < size;) {
 				IntPair range = null;
@@ -360,18 +353,17 @@ public class TransformCommit {
 				chunk.setText(chunkRequest.toString());
 				commitBulkTransforms(
 						Arrays.asList(new DeltaApplicationRecord[] { chunk }),
-						commitContext.slf4jLogger, commitAsWrapperUser, true);
+						commitAsWrapperUser, true);
 				String message = String.format(
 						"written chunk - writing chunk %s of %s", range, size);
 				System.out.println(message);
-				commitContext.updateJob(message);
 				idx = range.i2;
 			}
 		} else {
 			dar.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
 			commitBulkTransforms(
 					Arrays.asList(new DeltaApplicationRecord[] { dar }),
-					commitContext.slf4jLogger, commitAsWrapperUser, true);
+					commitAsWrapperUser, true);
 		}
 	}
 
@@ -723,9 +715,7 @@ public class TransformCommit {
 		request.setEvents(transforms);
 		DeltaApplicationRecord dar = new DeltaApplicationRecord(request,
 				DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED, false);
-		TransformCommit.CommitContext commitContext = new TransformCommit.CommitContext(
-				get().logger, null, null);
-		commitDeltaApplicationRecord(commitContext, dar, maxTransformChunkSize);
+		commitDeltaApplicationRecord(dar, maxTransformChunkSize);
 	}
 
 	private void logTransformException(DomainTransformResponse response) {
@@ -903,33 +893,6 @@ public class TransformCommit {
 				}
 			}
 			LooseContext.getContext().pop();
-		}
-	}
-
-	public static class CommitContext {
-		public Logger slf4jLogger;
-
-		public JobTracker jobTracker;
-
-		private Consumer<String> jobLogger;
-
-		public CommitContext(Logger slf4jLogger, JobTracker jobTracker,
-				Consumer<String> jobLogger) {
-			this.slf4jLogger = slf4jLogger;
-			this.jobTracker = jobTracker;
-			this.jobLogger = jobLogger;
-		}
-
-		public void setItemCount(int count) {
-			if (jobTracker != null) {
-				jobTracker.setItemCount(count);
-			}
-		}
-
-		public void updateJob(String message) {
-			if (jobLogger != null) {
-				jobLogger.accept(message);
-			}
 		}
 	}
 

@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.job2;
+package cc.alcina.framework.servlet.job;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -56,6 +57,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
@@ -63,10 +65,9 @@ import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJ
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
-import cc.alcina.framework.servlet.job.JobRegistry1;
-import cc.alcina.framework.servlet.job2.JobContext.PersistenceType;
-import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
-import cc.alcina.framework.servlet.job2.JobScheduler.ScheduleProvider;
+import cc.alcina.framework.servlet.job.JobContext.PersistenceType;
+import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
+import cc.alcina.framework.servlet.job.JobScheduler.ScheduleProvider;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
 
@@ -200,6 +201,8 @@ public class JobRegistry extends WriterService {
 
 	private boolean stopped;
 
+	private AtomicInteger extJobSystemIdCounter = new AtomicInteger();
+
 	public JobRegistry() {
 		TransformCommit.get()
 				.setBackendTransformQueueMaxDelay(TRANSFORM_QUEUE_NAME, 1000);
@@ -225,7 +228,8 @@ public class JobRegistry extends WriterService {
 		acquireResources(forJob, Collections.singletonList(resource));
 	}
 
-	public Job createJob(Task task, Schedule schedule, Date runAt) {
+	public Job createJob(Task task, Schedule schedule, Date runAt,
+			boolean ignoreCreationContext) {
 		checkAnnotatedPermissions(task);
 		Job job = AlcinaPersistentEntityImpl.create(Job.class);
 		job.setUser(PermissionsManager.get().getUser());
@@ -244,7 +248,8 @@ public class JobRegistry extends WriterService {
 			job.setClustered(schedule.isClustered());
 		}
 		JobContext creationContext = JobContext.get();
-		if (creationContext != null && runAt == null) {
+		if (creationContext != null && runAt == null
+				&& !ignoreCreationContext) {
 			Job creatingJob = creationContext.getJob();
 			/*
 			 * If scheduling from&to a job in a max-1 queue, sequential
@@ -267,6 +272,13 @@ public class JobRegistry extends WriterService {
 	public List<QueueStat> getActiveQueueStats() {
 		return activeQueues.values().stream().map(JobQueue::asQueueStat)
 				.collect(Collectors.toList());
+	}
+
+	public String getExJobSystemNextJobId(Class<?> clazz) {
+		return Ax.format("%s::%s::%s::%s", clazz.getName(),
+				EntityLayerUtils.getLocalHostName(),
+				EntityLayerObjects.get().getServerAsClientInstance().getId(),
+				extJobSystemIdCounter.incrementAndGet());
 	}
 
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
@@ -347,7 +359,7 @@ public class JobRegistry extends WriterService {
 			if (schedule == null) {
 				return start(task, null);
 			} else {
-				Job job = createJob(task, schedule, null);
+				Job job = createJob(task, schedule, null, false);
 				job.setClustered(schedule.isClustered());
 				ensureQueue(schedule);
 				return job;
@@ -376,7 +388,7 @@ public class JobRegistry extends WriterService {
 				.optional(ScheduleProvider.class, task.getClass());
 		Schedule schedule = scheduleProvider.map(sp -> sp.getSchedule(task))
 				.orElse(null);
-		Job job = createJob(task, schedule, null);
+		Job job = createJob(task, schedule, null, false);
 		if (latch != null) {
 			completionLatches.put(job, latch);
 		}
@@ -460,8 +472,7 @@ public class JobRegistry extends WriterService {
 		if (queueJobPersistence) {
 			persistenceType = PersistenceType.Queued;
 		}
-		if (LooseContext.is(JobRegistry1.CONTEXT_NON_PERSISTENT) || (Ax.isTest()
-				&& !ResourceUtilities.is("persistConsoleJobs"))) {
+		if ((Ax.isTest() && !ResourceUtilities.is("persistConsoleJobs"))) {
 			persistenceType = PersistenceType.None;
 		}
 		JobContext context = new JobContext(job, persistenceType, performer);
@@ -749,13 +760,18 @@ public class JobRegistry extends WriterService {
 			try {
 				// FIXME - mvcc.jobs - remove timeout
 				while (true) {
-					if (latch.await(10, TimeUnit.SECONDS)) {
-						break;
+					try {
+						Transaction.ensureEnded();
+						if (latch.await(10, TimeUnit.SECONDS)) {
+							break;
+						}
+						if (context != null) {
+							context.checkCancelled0();
+						}
+						int debug = 3;
+					} finally {
+						Transaction.begin();
 					}
-					if (context != null) {
-						context.checkCancelled0();
-					}
-					int debug = 3;
 				}
 				context.awaitSequenceCompletion();
 			} catch (InterruptedException e) {

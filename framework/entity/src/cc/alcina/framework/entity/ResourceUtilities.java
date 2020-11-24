@@ -510,6 +510,10 @@ public class ResourceUtilities {
 		return !is(clazz, key);
 	}
 
+	public static boolean notDisabled(Class clazz) {
+		return !isDefined(clazz.getName() + ".disabled");
+	}
+
 	public static String objectOrPrimitiveToString(Object object) {
 		if (object == null) {
 			return null;

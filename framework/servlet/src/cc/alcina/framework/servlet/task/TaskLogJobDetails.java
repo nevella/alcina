@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
-import cc.alcina.framework.servlet.job2.JobContext;
+import cc.alcina.framework.servlet.job.JobContext;
 
 public class TaskLogJobDetails extends AbstractTaskPerformer {
 	@Override

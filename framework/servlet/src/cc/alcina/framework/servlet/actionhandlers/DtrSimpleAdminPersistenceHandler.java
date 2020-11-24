@@ -18,14 +18,9 @@ public class DtrSimpleAdminPersistenceHandler
 
 	public void commit(DeltaApplicationRecord dar) {
 		try {
-			jobStarted();
 			int chunkSize = ResourceUtilities.getInteger(
 					DtrSimpleAdminPersistenceHandler.class, "chunkSize", 5000);
-			TransformCommit.CommitContext commitContext = new TransformCommit.CommitContext(
-					slf4jLogger, getJobTracker(),
-					message -> updateJob(message));
-			TransformCommit.commitDeltaApplicationRecord(commitContext, dar,
-					chunkSize);
+			TransformCommit.commitDeltaApplicationRecord(dar, chunkSize);
 			jobOk("OK");
 		} catch (Exception ex) {
 			jobError(ex);

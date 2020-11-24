@@ -12,9 +12,9 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
-import cc.alcina.framework.servlet.job2.JobRegistry;
-import cc.alcina.framework.servlet.job2.JobRegistry.PendingStat;
-import cc.alcina.framework.servlet.job2.JobRegistry.QueueStat;
+import cc.alcina.framework.servlet.job.JobRegistry;
+import cc.alcina.framework.servlet.job.JobRegistry.PendingStat;
+import cc.alcina.framework.servlet.job.JobRegistry.QueueStat;
 import cc.alcina.framework.servlet.servlet.control.ControlServlet;
 
 public class TaskLogJobs extends AbstractTaskPerformer {

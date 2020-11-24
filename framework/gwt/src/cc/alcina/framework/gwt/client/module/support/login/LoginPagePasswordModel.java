@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
-import cc.alcina.framework.common.client.gwittir.validator.StringHasLengthValidator;
+import cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
@@ -31,7 +31,7 @@ public class LoginPagePasswordModel extends IntermediateBindable {
 	@Display(name = "Password", autocompleteName = "password", focus = true)
 	@Custom(customiserClass = PasswordCustomiser.class)
 	@Validators(validators = {
-			@Validator(validator = StringHasLengthValidator.class, parameters = {
+			@Validator(validator = NotBlankValidator.class, parameters = {
 					@NamedParameter(name = Validator.FEEDBACK_MESSAGE, stringValue = "Password is required") }), })
 	public String getPassword() {
 		return LoginPagePasswordModelBinding.password.get(this);

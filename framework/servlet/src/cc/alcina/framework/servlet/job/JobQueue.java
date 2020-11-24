@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.job2;
+package cc.alcina.framework.servlet.job;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -27,9 +27,9 @@ import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJ
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
-import cc.alcina.framework.servlet.job2.JobRegistry.LauncherThreadState;
-import cc.alcina.framework.servlet.job2.JobRegistry.QueueStat;
-import cc.alcina.framework.servlet.job2.JobScheduler.Schedule;
+import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
+import cc.alcina.framework.servlet.job.JobRegistry.QueueStat;
+import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
 
 /*
  * Threading - all access is from the launching job thread, except access to the fields metadataChanged/finished/finishedLatches (synchronized)  

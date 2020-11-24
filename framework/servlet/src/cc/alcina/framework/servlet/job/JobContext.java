@@ -1,5 +1,6 @@
-package cc.alcina.framework.servlet.job2;
+package cc.alcina.framework.servlet.job;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -40,8 +41,8 @@ import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMet
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
-import cc.alcina.framework.servlet.job2.JobRegistry.ActionPerformerTrackMetrics;
-import cc.alcina.framework.servlet.job2.JobRegistry.SequenceCompletionLatch;
+import cc.alcina.framework.servlet.job.JobRegistry.ActionPerformerTrackMetrics;
+import cc.alcina.framework.servlet.job.JobRegistry.SequenceCompletionLatch;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 
@@ -83,6 +84,15 @@ public class JobContext {
 		}
 	}
 
+	public static void debug(String template, Object... args) {
+		if (get() == null) {
+			Ax.out("Called JobContext.debug() outside job - %s %s", template,
+					Arrays.asList(args));
+		} else {
+			get().getLogger().debug(template, args);
+		}
+	}
+
 	public static JobContext get() {
 		return LooseContext.get(CONTEXT_CURRENT);
 	}
@@ -111,8 +121,13 @@ public class JobContext {
 		if (get() == null) {
 			Ax.out("Called JobContext.info() outside job - %s %s", template,
 					Arrays.asList(args));
+		} else {
+			get().getLogger().info(template, args);
 		}
-		get().getLogger().info(template, args);
+	}
+
+	public static ProgressBuilder progressBuilder() {
+		return get().createProgressBuilder();
 	}
 
 	public static void releaseResourceIfExContext(JobResource match) {
@@ -131,6 +146,15 @@ public class JobContext {
 		get().getLogger().warn(template, ex);
 	}
 
+	public static void warn(String template, Object... args) {
+		if (get() == null) {
+			Ax.err("Called JobContext.warn() outside job - %s %s", template,
+					Arrays.asList(args));
+		} else {
+			get().getLogger().warn(template, args);
+		}
+	}
+
 	private boolean schedulingSubTasks;
 
 	private Job job;
@@ -146,6 +170,10 @@ public class JobContext {
 	private int subtaskCount;
 
 	private int subtasksCompleted;
+
+	private int itemCount;
+
+	private int itemsCompleted;
 
 	private LinkedList<RelatedJobCompletion> completionEvents = new LinkedList<>();
 
@@ -165,6 +193,8 @@ public class JobContext {
 	Thread thread;
 
 	String threadStartName = null;
+
+	private String log;
 
 	public JobContext(Job job, PersistenceType persistenceType,
 			TaskPerformer performer) {
@@ -296,7 +326,7 @@ public class JobContext {
 				InternalMetrics.get().endTracker(performer);
 			}
 			if (job.provideIsNotComplete()) {
-				String log = Registry.impl(PerThreadLogging.class).endBuffer();
+				log = Registry.impl(PerThreadLogging.class).endBuffer();
 				job.setLog(log);
 				if (!job.provideIsComplete()) {
 					job.setState(JobState.COMPLETED);
@@ -329,8 +359,20 @@ public class JobContext {
 		getJob().followWith(JobRegistry.get().schedule(followingTask));
 	}
 
+	public int getItemCount() {
+		return this.itemCount;
+	}
+
+	public int getItemsCompleted() {
+		return this.itemsCompleted;
+	}
+
 	public Job getJob() {
 		return this.job;
+	}
+
+	public String getLog() {
+		return this.log;
 	}
 
 	public Logger getLogger() {
@@ -349,6 +391,10 @@ public class JobContext {
 		return this.subtasksCompleted;
 	}
 
+	public void incrementItemCount(int delta) {
+		itemCount += delta;
+	}
+
 	public boolean isSchedulingSubTasks() {
 		return this.schedulingSubTasks;
 	}
@@ -359,12 +405,25 @@ public class JobContext {
 		job.setResultType(JobResultType.OK);
 	}
 
+	public void jobProgress(String message, double completion) {
+		setStatusMessage(message);
+		getJob().setCompletion(completion);
+	}
+
 	public void onJobException(Exception e) {
 		job.setResultType(JobResultType.EXCEPTION);
 		String simpleExceptionMessage = CommonUtils.toSimpleExceptionMessage(e);
 		job.setStatusMessage(simpleExceptionMessage);
 		job.setResultMessage(simpleExceptionMessage);
 		logger.warn("Unexpected job exception", e);
+	}
+
+	public void setItemCount(int itemCount) {
+		this.itemCount = itemCount;
+	}
+
+	public void setItemsCompleted(int itemsCompleted) {
+		this.itemsCompleted = itemsCompleted;
 	}
 
 	public void setResultMessage(String resultMessage) {
@@ -394,9 +453,23 @@ public class JobContext {
 		this.subtasksCompleted = subtasksCompleted;
 	}
 
+	public File snapshotLog() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	@Override
 	public String toString() {
 		return Ax.format("JobContext :: Thread - %s; Job - %s", thread, job);
+	}
+
+	public void updateJob(String message, int delta) {
+		itemsCompleted += delta;
+		setStatusMessage("%s (%s/%s)", message, itemsCompleted, itemCount);
+	}
+
+	private ProgressBuilder createProgressBuilder() {
+		return new ProgressBuilder();
 	}
 
 	protected void persistMetadata(boolean respectImmediate) {
@@ -515,6 +588,34 @@ public class JobContext {
 					() -> describeTask(job.getTask(), ""),
 					InternalMetricTypeAlcina.service,
 					performer.getClass().getSimpleName(), filter);
+		}
+	}
+
+	public class ProgressBuilder {
+		private String message;
+
+		private int delta;
+
+		private int total = 1;
+
+		public void publish() {
+			setItemCount(total);
+			updateJob(message, delta);
+		}
+
+		public ProgressBuilder withDelta(int delta) {
+			this.delta = delta;
+			return this;
+		}
+
+		public ProgressBuilder withMessage(String template, Object... args) {
+			this.message = Ax.format(template, args);
+			return this;
+		}
+
+		public ProgressBuilder withTotal(int total) {
+			this.total = total;
+			return this;
 		}
 	}
 

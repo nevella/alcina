@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.domain;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.Spliterator;
@@ -27,6 +28,13 @@ import java.util.stream.StreamSupport;
  *         https://github.com/TechEmpower/misc/blob/master/concat/src/main/java/rnd/StreamConcatenation.java)
  */
 public final class StreamConcatenation {
+	public static <T> Stream<T>
+			concat(Collection<Stream<? extends T>> streams) {
+		Stream<? extends T>[] array = (Stream<? extends T>[]) streams
+				.toArray(new Stream[streams.size()]);
+		return concat(array);
+	}
+
 	/**
 	 * Creates a lazily concatenated stream whose elements are the elements of
 	 * each of the input streams. In other words, the returned stream contains
