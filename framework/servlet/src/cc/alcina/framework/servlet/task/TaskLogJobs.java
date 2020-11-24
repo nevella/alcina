@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
@@ -109,9 +110,10 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 					.tableBuilder();
 			builder.row().cell("Name").cell("Active").cell("Pending")
 					.cell("Completed").cell("Total");
-			queues.forEach(queue -> builder.row().cell(queue.name)
-					.cell(queue.active).cell(queue.pending)
-					.cell(queue.completed).cell(queue.total));
+			queues.stream().filter(q -> q.active != 0)
+					.forEach(queue -> builder.row().cell(queue.name)
+							.cell(queue.active).cell(queue.pending)
+							.cell(queue.completed).cell(queue.total));
 		}
 		{
 			List<PendingStat> pending = JobRegistry.get()
@@ -135,8 +137,14 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 				td.html().addLink("Cancel", href, "_blank");
 			});
 		}
-		addActiveAndPending(doc, "top-level",
-				job -> !job.provideParent().isPresent(), 20);
+		addActiveAndPending(doc, "top-level - active",
+				job -> !job.provideParent().isPresent()
+						&& job.getState() == JobState.PROCESSING,
+				20);
+		addActiveAndPending(doc, "top-level - pending",
+				job -> !job.provideParent().isPresent()
+						&& job.getState() != JobState.PROCESSING,
+				20);
 		addActiveAndPending(doc, "child",
 				job -> job.provideParent().isPresent(), 20);
 		addCompleted(doc, "top-level", job -> !job.provideParent().isPresent(),

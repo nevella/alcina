@@ -746,7 +746,7 @@ public class JobRegistry extends WriterService {
 					} finally {
 						Transaction.begin();
 						if (context != null) {
-							context.checkCancelled0();
+							context.checkCancelled0(true);
 						}
 					}
 				}

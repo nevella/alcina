@@ -80,7 +80,7 @@ public class JobContext {
 
 	public static void checkCancelled() {
 		if (has()) {
-			get().checkCancelled0();
+			get().checkCancelled0(false);
 		}
 	}
 
@@ -544,8 +544,17 @@ public class JobContext {
 		}
 	}
 
-	void checkCancelled0() {
+	void checkCancelled0(boolean ignoreSelf) {
 		Job cursor = job;
+		if (ignoreSelf) {
+			Optional<Job> parent = cursor.provideFirstInSequence()
+					.provideParent();
+			if (parent.isPresent()) {
+				cursor = parent.get();
+			} else {
+				return;
+			}
+		}
 		while (true) {
 			if (cursor.provideIsComplete()) {
 				info("Job cancelled");
