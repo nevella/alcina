@@ -32,7 +32,7 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 			DomainDescriptorJob.get().getNotCompletedJobs()
 					.filter(job -> Ax.isBlank(value)
 							|| job.getTaskClassName().matches(value))
-					.filter(sectionFilter).limit(30).forEach(job -> {
+					.filter(sectionFilter).limit(limit).forEach(job -> {
 						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 								.cell(String.valueOf(job.getId()))
 								.cell(job.provideName()).cell(job.getQueue())
@@ -140,13 +140,19 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 		addActiveAndPending(doc, "top-level - active",
 				job -> !job.provideParent().isPresent()
 						&& job.getState() == JobState.PROCESSING,
-				20);
+				999);
 		addActiveAndPending(doc, "top-level - pending",
 				job -> !job.provideParent().isPresent()
 						&& job.getState() != JobState.PROCESSING,
 				20);
-		addActiveAndPending(doc, "child",
-				job -> job.provideParent().isPresent(), 20);
+		addActiveAndPending(doc, "child - active",
+				job -> job.provideParent().isPresent()
+						&& job.getState() == JobState.PROCESSING,
+				999);
+		addActiveAndPending(doc, "child - pending",
+				job -> job.provideParent().isPresent()
+						&& job.getState() != JobState.PROCESSING,
+				20);
 		addCompleted(doc, "top-level", job -> !job.provideParent().isPresent(),
 				20);
 		addCompleted(doc, "child", job -> job.provideParent().isPresent(), 20);
