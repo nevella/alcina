@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.job;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
@@ -367,15 +368,36 @@ public class JobScheduler {
 		}
 	}
 
+	@RegistryLocation(registryPoint = RetentionPolicy.class)
+	public static class RetentionPolicy {
+		public boolean retain(Job job) {
+			if (job.provideIsNotComplete()) {
+				return true;
+			}
+			Date date = job.resolveCompletionDate();
+			if (date == null) {
+				// invalid job, clear
+				return false;
+			}
+			LocalDateTime end = SEUtilities.toLocalDateTime(date);
+			long days = ChronoUnit.DAYS.between(end, LocalDateTime.now());
+			long minutes = ChronoUnit.MINUTES.between(end, LocalDateTime.now());
+			if (job.resolveState() == JobState.ABORTED) {
+				return minutes < 5;
+			}
+			if (job.resolveState() == JobState.CANCELLED) {
+				return days == 0;
+			}
+			return days < 7;
+		}
+	}
+
 	public interface RetryPolicy {
 		static RetryPolicy retryNTimes(int nTimes) {
 			return new RetryNTimesPolicy(nTimes);
 		}
 
 		boolean shouldRetry(Job failedJob);
-	}
-
-	public interface Schedulable {
 	}
 
 	@RegistryLocation(registryPoint = Schedule.class)

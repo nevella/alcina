@@ -157,38 +157,40 @@ public class JobRegistry extends WriterService {
 		logger.debug("Metadata changed on queue {}", name);
 		JobQueue queue = activeQueues.get(name);
 		/*
-		 * When scheduling subjobs on a different queue, this
+		 * When scheduling subjobs on a different queue, this...? (lost comment)
 		 */
 		if (queue == null) {
 			Schedule schedule = schedulesByQueueName.get(name);
 			Job firstJob = e.getValue().get(0);
-			boolean ignore = false;
-			if (schedule == null) {
-				if (EntityLayerObjects.get()
-						.isForeignClientInstance(firstJob.getCreator())) {
-					if (!firstJob.isClustered()
-							|| !ResourceUtilities.is("joinClusteredJobs")) {
-						ignore = true;
+			if (firstJob.provideCanDeserializeTask()) {
+				boolean ignore = false;
+				if (schedule == null) {
+					if (EntityLayerObjects.get()
+							.isForeignClientInstance(firstJob.getCreator())) {
+						if (!firstJob.isClustered()
+								|| !ResourceUtilities.is("joinClusteredJobs")) {
+							ignore = true;
+						}
 					}
 				}
-			}
-			if (!ignore) {
-				Class<? extends Task> clazz = firstJob.getTask().getClass();
-				Optional<ScheduleProvider> scheduleProvider = Registry
-						.optional(ScheduleProvider.class, clazz);
-				if (scheduleProvider.isPresent()) {
-					schedule = scheduleProvider.get().getSchedule(firstJob);
-					if (schedule != null) {
-						logger.warn(
-								"Created schedule from provider {} for job {}",
-								scheduleProvider.get().getClass()
-										.getSimpleName(),
-								firstJob);
+				if (!ignore) {
+					Class<? extends Task> clazz = firstJob.getTask().getClass();
+					Optional<ScheduleProvider> scheduleProvider = Registry
+							.optional(ScheduleProvider.class, clazz);
+					if (scheduleProvider.isPresent()) {
+						schedule = scheduleProvider.get().getSchedule(firstJob);
+						if (schedule != null) {
+							logger.warn(
+									"Created schedule from provider {} for job {}",
+									scheduleProvider.get().getClass()
+											.getSimpleName(),
+									firstJob);
+						}
 					}
 				}
-			}
-			if (schedule != null) {
-				queue = ensureQueue(schedule);
+				if (schedule != null) {
+					queue = ensureQueue(schedule);
+				}
 			}
 		}
 		if (queue != null) {

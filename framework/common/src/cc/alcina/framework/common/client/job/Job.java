@@ -147,6 +147,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public void cancel() {
 		if (!resolveState().isComplete()) {
 			setState(JobState.CANCELLED);
+			setEndTime(new Date());
 			// no need to set child state - completed states propagate down
 		}
 	}
@@ -534,6 +535,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				.filter(Job::provideIsNotComplete).collect(Collectors.toSet());
 	}
 
+	public Date resolveCompletionDate() {
+		return resolveCompletionDate0(0);
+	}
+
 	public JobState resolveState() {
 		return resolveState0(0);
 	}
@@ -706,9 +711,26 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				toString(getToRelations()));
 	}
 
+	private Date resolveCompletionDate0(int depth) {
+		if (depth > 10) {
+			throw new RuntimeException("Invalid job depth - maybe a loop?");
+		}
+		if (this.state == null) {
+			return null;
+		}
+		if (this.state.isComplete()) {
+			return this.endTime;
+		}
+		Optional<Job> parent = provideParent();
+		if (parent.isPresent()) {
+			return parent.get().resolveCompletionDate0(depth + 1);
+		}
+		return null;
+	}
+
 	private JobState resolveState0(int depth) {
 		if (depth > 10) {
-			int debug = 3;
+			throw new RuntimeException("Invalid job depth - maybe a loop?");
 		}
 		if (this.state == null) {
 			return null;

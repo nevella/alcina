@@ -202,6 +202,7 @@ public class ExpandableLabel extends AbstractBoundWidget {
 						: new InlineLabel(fullText);
 				fp.add(label);
 			} else {
+				vis = vis.replace("<br>", "");
 				label = isShowNewlinesAsBreaks() ? new InlineHTML(vis)
 						: new InlineLabel(vis);
 				fp.add(label);

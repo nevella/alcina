@@ -125,6 +125,7 @@ public class DomainDescriptorJob {
 					Multimap<Job, List<Job>> byParentOrSelf = collation
 							.query(jobImplClass).stream()
 							.map(qr -> (Job) qr.getObject())
+							.filter(Objects::nonNull)
 							.filter(Job::provideIsComplete)
 							// if job has no parent, observe its own cancelled
 							// state (hence parentOrSelf
@@ -133,6 +134,7 @@ public class DomainDescriptorJob {
 					Multimap<Job, List<Job>> byFirstInSequence = collation
 							.query(jobImplClass).stream()
 							.map(qr -> (Job) qr.getObject())
+							.filter(Objects::nonNull)
 							.filter(Job::provideIsComplete)
 							.filter(job -> job.provideFirstInSequence() != job)
 							.collect(AlcinaCollectors.toKeyMultimap(
@@ -157,6 +159,8 @@ public class DomainDescriptorJob {
 					collation.ensureApplied();
 					List<Job> invalidJobs = collation.query(jobImplClass)
 							.stream().map(qr -> (Job) qr.getObject())
+							// may be a deletion
+							.filter(Objects::nonNull)
 							.filter(job -> job.getQueue() == null
 									|| job.getTaskClassName() == null)
 							.distinct().collect(Collectors.toList());
@@ -190,6 +194,10 @@ public class DomainDescriptorJob {
 				.filter(Job::provideIsNotComplete).count();
 		// return jobDescriptor.getJobsForQueue(queueName, JobState.PROCESSING)
 		// .size();
+	}
+
+	public Stream<? extends Job> getAllJobs() {
+		return Domain.stream(jobImplClass);
 	}
 
 	public Stream<? extends Job> getAllocatedIncompleteJobs() {

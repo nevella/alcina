@@ -34,13 +34,13 @@ public @interface Association {
 
 	/**
 	 * The type name of the implementation class (component type for a
-	 * collection, implementation type for an interface) of <i>this end</i> of
-	 * this association - e.g. for:<br>
+	 * collection, implementation type for an interface) of the concrete type at
+	 * <i>the other end</i> of this association - e.g. for:<br>
 	 * <blockquote> <code>Bookstore Book.getBookstore() and<br>
 	 * Set&lt;Book&gt; Bookstore.getBooks()
 	 * </code> </blockquote> the <code>getBookstore()</code> method would have
 	 * association with implementationClass "Bookstore" and the
-	 * <code>getBookss()</code> method would have association with
+	 * <code>getBooks()</code> method would have association with
 	 * implementationClass "Book"
 	 */
 	Class implementationClass() default void.class;
@@ -48,8 +48,7 @@ public @interface Association {
 	/**
 	 * The property name of the <i>other end</i> of this association - e.g. for:
 	 * <br>
-	 * <blockquote> <code>Bookstore Book.getBookstore() and<br>
-	 * Set&lt;Book&gt; Bookstore.getBooks()
+	 * <blockquote> <code>Bookstore Book.getBookstore() 
 	 * </code> </blockquote> the getBookstore method would have association with
 	 * propertyName "books"
 	 */

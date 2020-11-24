@@ -332,7 +332,9 @@ public class JobContext {
 					job.setState(JobState.COMPLETED);
 				}
 				job.setEndTime(new Date());
-				job.setResultType(JobResultType.OK);
+				if (job.getResultType() == null) {
+					job.setResultType(JobResultType.OK);
+				}
 				persistMetadata(true);
 			}
 			if (threadStartName != null) {

@@ -12,6 +12,28 @@ import cc.alcina.framework.entity.ResourceUtilities;
 public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 	static final transient long serialVersionUID = -1L;
 
+	public static boolean USE_MD5_CHANGE_CHECK;
+
+	public static ClassMetadata fromRelativeSourcePath(String relativeClassPath,
+			URL url, InputStream inputStream, long modificationDate) {
+		String cName = relativeClassPath
+				.substring(0, relativeClassPath.length() - 6).replace('/', '.');
+		if (cName.startsWith(".")) {
+			cName = cName.substring(1);
+		}
+		ClassMetadata item = new ClassMetadata();
+		item.className = cName;
+		item.date = new Date(modificationDate);
+		if (url != null) {
+			item.url = url;
+			item.urlString = url.toString();
+		} else {
+			// ignore straight jars
+			// item.evalMd5(inputStream);
+		}
+		return item;
+	}
+
 	public Date date;
 
 	public String md5;
@@ -55,12 +77,33 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 		return md5;
 	}
 
+	public void evalMd5(InputStream stream) {
+		try {
+			byte[] bytes = ResourceUtilities.readStreamToByteArray(stream);
+			md5 = EncryptionUtils.MD5(bytes);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public CM fromUrl(ClassMetadata found) {
 		this.date = found.date;
 		this.md5 = found.md5;
 		this.url = found.url;
 		this.urlString = found.urlString;
 		return (CM) this;
+	}
+
+	public boolean isUnchangedFrom(ClassMetadata found,
+			CachingScanner scanner) {
+		if (date.getTime() >= found.date.getTime()) {
+			return true;
+		}
+		if (USE_MD5_CHANGE_CHECK && md5 != null
+				&& md5.equals(found.ensureMd5(scanner))) {
+			return true;
+		}
+		return false;
 	}
 
 	public URL url() {
@@ -72,45 +115,5 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 			}
 		}
 		return url;
-	}
-
-	public void evalMd5(InputStream stream) {
-		try {
-			byte[] bytes = ResourceUtilities.readStreamToByteArray(stream);
-			md5 = EncryptionUtils.MD5(bytes);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public boolean isUnchangedFrom(ClassMetadata found,
-			CachingScanner scanner) {
-		if (date.getTime() >= found.date.getTime()) {
-			return true;
-		}
-		if (md5 != null && md5.equals(found.ensureMd5(scanner))) {
-			return true;
-		}
-		return false;
-	}
-
-	public static ClassMetadata fromRelativeSourcePath(String relativeClassPath,
-			URL url, InputStream inputStream, long modificationDate) {
-		String cName = relativeClassPath
-				.substring(0, relativeClassPath.length() - 6).replace('/', '.');
-		if (cName.startsWith(".")) {
-			cName = cName.substring(1);
-		}
-		ClassMetadata item = new ClassMetadata();
-		item.className = cName;
-		item.date = new Date(modificationDate);
-		if (url != null) {
-			item.url = url;
-			item.urlString = url.toString();
-		} else {
-			// ignore straight jars
-			// item.evalMd5(inputStream);
-		}
-		return item;
 	}
 }

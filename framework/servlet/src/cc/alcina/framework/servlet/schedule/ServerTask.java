@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.actions.SelfPerformer;
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.knowns.KnownJob;
 
@@ -35,8 +34,6 @@ public abstract class ServerTask<T extends Task> implements SelfPerformer<T> {
 				getKnownJob().jobError(e);
 			}
 			throw e;
-		} finally {
-			LooseContext.pop();
 		}
 	}
 

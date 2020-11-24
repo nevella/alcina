@@ -63,6 +63,7 @@ import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
@@ -275,6 +276,7 @@ public abstract class DevHelper {
 		registerNames(config);
 		initDataFolder();
 		Registry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
+		ClassMetadata.USE_MD5_CHANGE_CHECK = true;
 		scanRegistry();
 		initClientReflector();
 		initDummyServices();
@@ -381,6 +383,7 @@ public abstract class DevHelper {
 			classes = new CachingClasspathScanner("*", true, true, null,
 					Registry.MARKER_RESOURCE, Arrays.asList(new String[] {}))
 							.getClasses();
+			// FIXME - devconsort - no classmeta call?
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					Registry.get(), "dev-helper");
 			long t2 = System.currentTimeMillis();
