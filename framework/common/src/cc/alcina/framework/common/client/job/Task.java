@@ -10,6 +10,10 @@ public interface Task extends Serializable {
 		return CommonUtils.deInfix(getClass().getSimpleName());
 	}
 
+	default void onJobCreate(Job job) {
+		// noop
+	}
+
 	default JobResult perform() {
 		return Registry.impl(Performer.class).perform(this);
 	}

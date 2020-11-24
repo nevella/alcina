@@ -238,6 +238,7 @@ public class JobRegistry extends WriterService {
 		job.setTaskClassName(task.getClass().getName());
 		job.setCreator(EntityLayerObjects.get().getServerAsClientInstance());
 		job.setRunAt(runAt);
+		task.onJobCreate(job);
 		if (schedule == null) {
 			if (task instanceof HasClusteredRunParameter) {
 				job.setClustered(((HasClusteredRunParameter) task)
