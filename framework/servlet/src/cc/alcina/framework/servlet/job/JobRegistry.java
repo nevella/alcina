@@ -213,8 +213,6 @@ public class JobRegistry extends WriterService {
 		job.setTask(task);
 		job.setTaskClassName(task.getClass().getName());
 		job.setCreator(EntityLayerObjects.get().getServerAsClientInstance());
-		job.setRunAt(runAt);
-		task.onJobCreate(job);
 		if (schedule == null) {
 			if (task instanceof HasClusteredRunParameter) {
 				job.setClustered(((HasClusteredRunParameter) task)
@@ -243,6 +241,8 @@ public class JobRegistry extends WriterService {
 				creatingJob.createRelation(job, JobRelationType.parent_child);
 			}
 		}
+		job.setRunAt(runAt);
+		task.onJobCreate(job);
 		return job;
 	}
 
