@@ -251,9 +251,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	@Override
-	public void onTransformsPersisted() {
+	public void onTransformRequestsPersisted(List<Long> ids) {
 		try {
-			transformSequencer.ensureTransactionCommitTimes();
+			transformSequencer.ensureTransactionCommitTimes(ids);
 		} catch (SQLException e) {
 			logger.warn("Exception in ensureTransactionCommitTimes ", e);
 		}
@@ -272,7 +272,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		oneToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		domainStoreColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
-		transformSequencer.ensureTransactionCommitTimes();
+		transformSequencer
+				.ensureTransactionCommitTimes(Collections.emptyList());
 		warmupTransaction = Transaction.current();
 		createWarmupConnections();
 		{

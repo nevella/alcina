@@ -74,7 +74,8 @@ public class DomainTransformPersistenceEvents {
 		}
 		default: {
 			event.getPersistedRequests().forEach(queue::cachePersistedRequest);
-			DomainStore.writableStore().onTransformsPersisted();
+			DomainStore.writableStore().onTransformRequestsPersisted(
+					event.getPersistedRequestIds());
 			fireDomainTransformPersistenceEvent0(event);
 			event.getPostEventRunnables().forEach(Runnable::run);
 			break;

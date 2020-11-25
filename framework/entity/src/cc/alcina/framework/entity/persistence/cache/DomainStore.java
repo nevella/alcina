@@ -361,8 +361,8 @@ public class DomainStore implements IDomainStore {
 		cache.put(newInstance);
 	}
 
-	public void onTransformsPersisted() {
-		loader.onTransformsPersisted();
+	public void onTransformRequestsPersisted(List<Long> ids) {
+		loader.onTransformRequestsPersisted(ids);
 	}
 
 	public void putExternalLocal(Entity instance) {
