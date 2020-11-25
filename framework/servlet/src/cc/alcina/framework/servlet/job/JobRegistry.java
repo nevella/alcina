@@ -587,6 +587,10 @@ public class JobRegistry extends WriterService {
 		return null;
 	}
 
+	boolean isActiveQueueExists(Schedule schedule) {
+		return activeQueues.containsKey(schedule.getQueueName());
+	}
+
 	/*
 	 * Jobs are always run in new (or job-only) threads
 	 */

@@ -216,11 +216,21 @@ public class JobContext {
 			Optional<Schedule> schedule = scheduleProvider
 					.map(sp -> sp.getSchedule(child));
 			if (schedule.isPresent()) {
-				JobRegistry.get().ensureQueue(schedule.get());
+				if (!JobRegistry.get().isActiveQueueExists(schedule.get())) {
+					logger.warn("Ensuring queue for child/subsequent job {}",
+							child);
+					JobRegistry.get().ensureQueue(schedule.get());
+				}
 			} else {
 				schedule = scheduleProvider.map(sp -> sp.getSchedule(task));
 				if (schedule.isPresent()) {
-					JobRegistry.get().ensureQueue(schedule.get());
+					if (!JobRegistry.get()
+							.isActiveQueueExists(schedule.get())) {
+						logger.warn(
+								"Ensuring queue for child/subsequent task {}",
+								task);
+						JobRegistry.get().ensureQueue(schedule.get());
+					}
 				}
 			}
 		}

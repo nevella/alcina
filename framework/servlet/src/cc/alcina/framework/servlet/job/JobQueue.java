@@ -286,31 +286,31 @@ public class JobQueue {
 		while (!cancelled) {
 			try {
 				allocateJobs();
-				if (active.size() < maxConcurrentJobs) {
-					if (pending.size() > 0) {
-						Job toSubmit = pending.remove(0);
-						active.add(toSubmit);
-						Allocation existing = null;
-						Allocation allocation = new Allocation();
-						logger.info("Submitting job: {}", toSubmit);
-						synchronized (submittedJobs) {
-							existing = submittedJobs.put(toSubmit, allocation);
-						}
-						if (existing != null) {
-							// FIXME - mvcc.jobs - *definitely* shouldn't
-							// occur,
-							// but there is something funny going on...
-							// probably fixed (wasn't respecting performer) -
-							// can remove after production testing
-							logger.warn(
-									"Double allocation:\n============\nFirst:\n{}\n============Second:\n{}\n",
-									existing, allocation);
-						} else {
-							LauncherThreadState launcherThreadState = new LauncherThreadState();
-							executorService.submit(() -> jobRegistry.performJob(
-									toSubmit, queueJobPersistence,
-									launcherThreadState));
-						}
+				while (active.size() < maxConcurrentJobs
+						&& pending.size() > 0) {
+					Job toSubmit = pending.remove(0);
+					active.add(toSubmit);
+					Allocation existing = null;
+					Allocation allocation = new Allocation();
+					logger.info("Submitting job: {}", toSubmit);
+					synchronized (submittedJobs) {
+						existing = submittedJobs.put(toSubmit, allocation);
+					}
+					if (existing != null) {
+						// FIXME - mvcc.jobs - *definitely* shouldn't
+						// occur,
+						// but there is something funny going on...
+						// probably fixed (wasn't respecting performer) -
+						// can remove after production testing
+						logger.warn(
+								"Double allocation:\n============\nFirst:\n{}\n============Second:\n{}\n",
+								existing, allocation);
+					} else {
+						LauncherThreadState launcherThreadState = new LauncherThreadState();
+						executorService
+								.submit(() -> jobRegistry.performJob(toSubmit,
+										queueJobPersistence,
+										launcherThreadState));
 					}
 				}
 				logger.debug(
