@@ -687,8 +687,8 @@ public class JobRegistry extends WriterService {
 		}
 
 		@Override
-		public void schedule(Task task) {
-			get().schedule(task);
+		public Job schedule(Task task) {
+			return get().schedule(task);
 		}
 	}
 

@@ -294,10 +294,12 @@ public class JobContext {
 									.optional(ScheduleProvider.class,
 											task.getClass());
 							if (scheduleProvider.isPresent()) {
-								Schedule schedule = scheduleProvider
-										.map(sp -> sp.getSchedule(task))
-										.orElse(null);
-								JobRegistry.get().ensureQueue(schedule);
+								Optional<Schedule> schedule = scheduleProvider
+										.map(sp -> sp.getSchedule(child));
+								if (schedule.isPresent()) {
+									JobRegistry.get()
+											.ensureQueue(schedule.get());
+								}
 							}
 						}
 					}
@@ -344,6 +346,13 @@ public class JobContext {
 				InternalMetrics.get().endTracker(performer);
 			}
 			if (job.provideIsNotComplete()) {
+				if (Ax.matches(job.getStatusMessage(),
+						"Await child completion.+")) {
+					job.setStatusMessage(
+							Ax.format("All children complete - (%s/%s)",
+									job.provideChildren().count(),
+									job.provideChildren().count()));
+				}
 				log = Registry.impl(PerThreadLogging.class).endBuffer();
 				job.setLog(log);
 				if (!job.provideIsComplete()) {

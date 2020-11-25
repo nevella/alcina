@@ -18,8 +18,8 @@ public interface Task extends Serializable {
 		return Registry.impl(Performer.class).perform(this);
 	}
 
-	default void schedule() {
-		Registry.impl(Performer.class).schedule(this);
+	default Job schedule() {
+		return Registry.impl(Performer.class).schedule(this);
 	}
 
 	public static interface HasClusteredRunParameter {
@@ -29,6 +29,6 @@ public interface Task extends Serializable {
 	public static interface Performer {
 		JobResult perform(Task task);
 
-		void schedule(Task task);
+		Job schedule(Task task);
 	}
 }
