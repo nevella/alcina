@@ -784,4 +784,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			return EntityComparator.INSTANCE.compare(o1, o2);
 		}
 	}
+
+	public Optional<Exception> provideException() {
+		return getResultType()==JobResultType.EXCEPTION?Optional.of(new Exception(getResultMessage())):Optional.empty();
+	}
 }

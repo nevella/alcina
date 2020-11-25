@@ -644,7 +644,7 @@ class ClassTransformer {
 						if (innerNonStatic) {
 							// not allowed, must be annotated with
 							// @MvccAccessCorrect - see
-							// cc.alcina.framework.entity.entityaccess.mvcc.MvccTestEntity.valid_InnerConstructor()
+							// cc.alcina.framework.entity.persistence.mvcc.MvccTestEntity.valid_InnerConstructor()
 							addProblematicAccess(
 									MvccCorrectnessIssueType.InnerClassConstructor);
 						}

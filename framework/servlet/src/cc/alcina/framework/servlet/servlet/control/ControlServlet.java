@@ -31,6 +31,7 @@ import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.JacksonUtils;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
@@ -219,12 +220,11 @@ public class ControlServlet extends AlcinaServlet {
 		}
 		String actionClassName = req.getParameter("actionClassName");
 		String actionJson = req.getParameter("actionJson");
-		return ThreadedPermissionsManager.cast()
-				.callWithPushedSystemUserIfNeededNoThrow(() -> {
+		return MethodContext.instance().withRootPermissions(true).call(() -> {
 					RemoteAction action = (RemoteAction) JacksonUtils
 							.deserialize(actionJson,
 									Class.forName(actionClassName));
-					return JobRegistry.get().perform(action).getActionLog();
+					return JobRegistry.get().perform(action).getLog();
 				});
 	}
 

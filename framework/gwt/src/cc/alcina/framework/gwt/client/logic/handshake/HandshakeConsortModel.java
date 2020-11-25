@@ -153,8 +153,8 @@ public class HandshakeConsortModel {
 	public void prepareInitialPlaySequence() {
 		persistableApplicationRecords = new ArrayList<DeltaApplicationRecord>();
 		// nuclear - if we're here, these should have been cleared
-		CommitToStorageTransformListener.get().getPriorRequestsWithoutResponse()
-				.clear();
+		CommitToStorageTransformListener.get().clearPriorRequestsWithoutResponse()
+				;
 		if (deltasToApply != null) {
 			// do nothing, iterator set up when local delta applications
 			// retrieved

@@ -297,13 +297,13 @@ public class JobRegistry extends WriterService {
 	/*
 	 * Awaits completion of the task and any sequential (cascaded) tasks
 	 */
-	public JobResult perform(Task task) {
+	public Job perform(Task task) {
 		try {
 			SequenceCompletionLatch completionLatch = new SequenceCompletionLatch();
 			Job job = start(task, completionLatch);
 			completionLatch.await();
 			DomainStore.waitUntilCurrentRequestsProcessed();
-			return job.asJobResult();
+			return job;
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw WrappedRuntimeException.wrapIfNotRuntime(e);
@@ -686,7 +686,7 @@ public class JobRegistry extends WriterService {
 	@RegistryLocation(registryPoint = Task.Performer.class, implementationType = ImplementationType.SINGLETON)
 	public static class Performer implements Task.Performer {
 		@Override
-		public JobResult perform(Task task) {
+		public Job perform(Task task) {
 			return get().perform(task);
 		}
 

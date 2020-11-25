@@ -14,7 +14,7 @@ public interface Task extends Serializable {
 		// noop
 	}
 
-	default JobResult perform() {
+	default Job perform() {
 		return Registry.impl(Performer.class).perform(this);
 	}
 
@@ -27,7 +27,7 @@ public interface Task extends Serializable {
 	}
 
 	public static interface Performer {
-		JobResult perform(Task task);
+		Job perform(Task task);
 
 		Job schedule(Task task);
 	}

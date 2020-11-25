@@ -3180,11 +3180,11 @@ function ShortDateValidator(){
 defineClass(411, 1, {}, ShortDateValidator);
 var INSTANCE_0;
 var Lcc_alcina_framework_common_client_gwittir_validator_ShortDateValidator_2_classLit = createForClass('cc.alcina.framework.common.client.gwittir.validator', 'ShortDateValidator', 411, Ljava_lang_Object_2_classLit);
-function StringHasLengthValidator(){
+function NotBlankValidator(){
 }
 
-defineClass(852, 1, {}, StringHasLengthValidator);
-var Lcc_alcina_framework_common_client_gwittir_validator_StringHasLengthValidator_2_classLit = createForClass('cc.alcina.framework.common.client.gwittir.validator', 'StringHasLengthValidator', 852, Ljava_lang_Object_2_classLit);
+defineClass(852, 1, {}, NotBlankValidator);
+var Lcc_alcina_framework_common_client_gwittir_validator_NotBlankValidator_2_classLit = createForClass('cc.alcina.framework.common.client.gwittir.validator', 'NotBlankValidator', 852, Ljava_lang_Object_2_classLit);
 function UniqueInLocalDomainValidator(){
 }
 
@@ -6837,7 +6837,7 @@ function $init_1(this$static){
   this$static.forNameMap.put_0('cc.alcina.framework.common.client.gwittir.validator.RegexValidator', Lcc_alcina_framework_common_client_gwittir_validator_RegexValidator_2_classLit);
   this$static.forNameMap.put_0('cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator', Lcc_alcina_framework_common_client_gwittir_validator_ServerUniquenessValidator_2_classLit);
   this$static.forNameMap.put_0('cc.alcina.framework.common.client.gwittir.validator.ShortDateValidator', Lcc_alcina_framework_common_client_gwittir_validator_ShortDateValidator_2_classLit);
-  this$static.forNameMap.put_0('cc.alcina.framework.common.client.gwittir.validator.StringHasLengthValidator', Lcc_alcina_framework_common_client_gwittir_validator_StringHasLengthValidator_2_classLit);
+  this$static.forNameMap.put_0('cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator', Lcc_alcina_framework_common_client_gwittir_validator_NotBlankValidator_2_classLit);
   this$static.forNameMap.put_0('cc.alcina.framework.common.client.gwittir.validator.UniqueInLocalDomainValidator', Lcc_alcina_framework_common_client_gwittir_validator_UniqueInLocalDomainValidator_2_classLit);
   this$static.forNameMap.put_0('cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord', Lcc_alcina_framework_common_client_logic_domaintransform_DeltaApplicationRecord_2_classLit);
   this$static.forNameMap.put_0('cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata', Lcc_alcina_framework_common_client_logic_domaintransform_DomainModelDeltaMetadata_2_classLit);
@@ -9682,7 +9682,7 @@ _.createInstance4 = function createInstance4(){
 }
 ;
 _.createInstance40 = function createInstance40(){
-  return new StringHasLengthValidator;
+  return new NotBlankValidator;
 }
 ;
 _.createInstance41 = function createInstance41(){
@@ -10712,8 +10712,8 @@ _.initialiseNewInstance = function initialiseNewInstance(clazz){
     case 'cc.alcina.framework.common.client.gwittir.validator.ShortDateValidator':
       $registerNewInstanceFunction39(this, Lcc_alcina_framework_common_client_gwittir_validator_ShortDateValidator_2_classLit);
       break;
-    case 'cc.alcina.framework.common.client.gwittir.validator.StringHasLengthValidator':
-      $registerNewInstanceFunction40(this, Lcc_alcina_framework_common_client_gwittir_validator_StringHasLengthValidator_2_classLit);
+    case 'cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator':
+      $registerNewInstanceFunction40(this, Lcc_alcina_framework_common_client_gwittir_validator_NotBlankValidator_2_classLit);
       break;
     case 'cc.alcina.framework.common.client.gwittir.validator.UniqueInLocalDomainValidator':
       $registerNewInstanceFunction41(this, Lcc_alcina_framework_common_client_gwittir_validator_UniqueInLocalDomainValidator_2_classLit);

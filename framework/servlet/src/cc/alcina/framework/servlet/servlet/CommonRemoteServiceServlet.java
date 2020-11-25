@@ -339,8 +339,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public String performAction(RemoteAction action) {
 		if (action instanceof SynchronousAction) {
-			return JobRegistry.get().perform(action).getActionLogItem()
-					.getShortDescription();
+			return JobRegistry.get().perform(action).getResultMessage();
 		} else {
 			Job job = JobRegistry.get().start(action, null);
 			Transaction.commit();

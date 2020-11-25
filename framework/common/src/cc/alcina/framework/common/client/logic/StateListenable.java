@@ -14,13 +14,15 @@
 package cc.alcina.framework.common.client.logic;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
  * @author Nick Reddel
  */
 public abstract class StateListenable {
-	ArrayList<StateChangeListener> listeners;
+	private List<StateChangeListener> listeners;
 
 	public StateListenable() {
 		super();
@@ -28,20 +30,28 @@ public abstract class StateListenable {
 	}
 
 	public void addStateChangeListener(StateChangeListener l) {
-		listeners.add(l);
+		synchronized (listeners) {
+			listeners.add(l);
+		}
 	}
 
 	public void clearListeners() {
-		listeners.clear();
+		synchronized (listeners) {
+			listeners.clear();
+		}
 	}
 
 	public void removeStateChangeListener(StateChangeListener l) {
-		listeners.remove(l);
+		synchronized (listeners) {
+			listeners.remove(l);
+		}
 	}
 
 	protected void fireStateChanged(String newState) {
-		ArrayList<StateChangeListener> listenersCopy = (ArrayList<StateChangeListener>) listeners
-				.clone();
+		List<StateChangeListener> listenersCopy = new ArrayList<>();
+		synchronized (listeners) {
+			listenersCopy.addAll(listeners);
+		}
 		for (StateChangeListener l : listenersCopy) {
 			l.stateChanged(this, newState);
 		}
