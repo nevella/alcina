@@ -207,6 +207,25 @@ public class JobContext {
 		noHttpContext = AlcinaServletContext.httpContext() == null;
 	}
 
+	public void attemptEnsureQueue(Set<Job> uncompletedChildren) {
+		Job child = uncompletedChildren.iterator().next();
+		Task task = child.getTask();
+		Optional<ScheduleProvider> scheduleProvider = Registry
+				.optional(ScheduleProvider.class, task.getClass());
+		if (scheduleProvider.isPresent()) {
+			Optional<Schedule> schedule = scheduleProvider
+					.map(sp -> sp.getSchedule(child));
+			if (schedule.isPresent()) {
+				JobRegistry.get().ensureQueue(schedule.get());
+			} else {
+				schedule = scheduleProvider.map(sp -> sp.getSchedule(task));
+				if (schedule.isPresent()) {
+					JobRegistry.get().ensureQueue(schedule.get());
+				}
+			}
+		}
+	}
+
 	public synchronized void awaitChildCompletion() {
 		Set<Job> uncompletedChildren = new LinkedHashSet<>();
 		long lastCompletionEventTime = System.currentTimeMillis();
@@ -263,7 +282,7 @@ public class JobContext {
 								/ totalCount * 100.0;
 						now = System.currentTimeMillis();
 						if (percentComplete - lastPublishedPercentComplete > 1
-								|| (now - lastPublishedCompletionStatsTime > 3000)) {
+								|| (now - lastPublishedCompletionStatsTime > 2000)) {
 							statusMessage = Ax.format(
 									"Await child completion - %s% - %s/%s",
 									(int) percentComplete, completedCount,
@@ -274,7 +293,7 @@ public class JobContext {
 						Transaction.ensureEnded();
 						try {
 							// FIXME - mvcc.jobs - remove timeout
-							completionEvents.wait(10000);
+							completionEvents.wait(1000);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
@@ -287,20 +306,10 @@ public class JobContext {
 					} else {
 						// FIXME - mvcc.jobs - scheduling logic - may be
 						// shutting down too early?
+						//
+						// going away with JobAllocator
 						if (uncompletedChildren.size() > 0) {
-							Job child = uncompletedChildren.iterator().next();
-							Task task = child.getTask();
-							Optional<ScheduleProvider> scheduleProvider = Registry
-									.optional(ScheduleProvider.class,
-											task.getClass());
-							if (scheduleProvider.isPresent()) {
-								Optional<Schedule> schedule = scheduleProvider
-										.map(sp -> sp.getSchedule(child));
-								if (schedule.isPresent()) {
-									JobRegistry.get()
-											.ensureQueue(schedule.get());
-								}
-							}
+							attemptEnsureQueue(uncompletedChildren);
 						}
 					}
 				}
@@ -552,13 +561,13 @@ public class JobContext {
 						Transaction.ensureEnded();
 						try {
 							// FIXME - mvcc.jobs - timeout is for debugging
-							completionEvents.wait(5000);
+							completionEvents.wait(1000);
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
 						Transaction.begin();
-					}
-					if (completionEvents.size() > 0) {
+						attemptEnsureQueue(uncompletedSequential);
+					} else {
 						event = completionEvents.removeFirst();
 						// we don't process the completion event details, so ok
 						// to clear (it's just a "wake up and check" notifier by
