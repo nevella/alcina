@@ -14,4 +14,6 @@ public interface FastIdLookup {
 	public abstract void remove(long id, boolean local);
 
 	public abstract Collection<Entity> values();
+
+	public abstract void changeMapping(Entity obj, long id, long localId);
 }

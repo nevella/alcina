@@ -38,14 +38,9 @@ public abstract class MapObjectLookup implements ObjectStore {
 	public void changeMapping(Entity obj, long id, long localId) {
 		Class<? extends Entity> clazz = obj.getClass();
 		FastIdLookup lookup = ensureLookup(clazz);
-		lookup.remove(id, false);
-		lookup.remove(localId, true);
-		// see discussion in Entity - nuffink's perfect
-		// collnMap.get(clazz).remove(obj);
-		// if (obj instanceof Entity) {
-		// Entity adb = (Entity) obj;
-		// adb.clearHash();
-		// }
+		//FIXME - mvcc.adjunct - this goes away (probably all moved to detachedentitycache)
+		lookup.changeMapping(obj,id,localId);
+		
 		mapObject(obj);
 	}
 
