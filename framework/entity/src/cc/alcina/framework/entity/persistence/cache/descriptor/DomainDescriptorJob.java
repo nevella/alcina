@@ -399,7 +399,9 @@ public class DomainDescriptorJob {
 		public Stream<Job> getDependentObjectsWithDerivedProjections(Entity obj,
 				Set modifiedPropertyNames) {
 			if (modifiedPropertyNames.contains(Job.PROPERTY_STATE)) {
-				return ((Job) obj).provideDescendants();
+				// ahh...unclear why this is returning null. FIXME mvcc.jobs.2
+				return ((Job) obj).provideDescendants()
+						.filter(Objects::nonNull);
 			} else {
 				return Stream.empty();
 			}

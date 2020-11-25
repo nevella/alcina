@@ -381,9 +381,12 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		if (getFromRelations().isEmpty()) {
 			return Stream.empty();
 		}
+		/*
+		 * requires the final filter for indexing during a deletion cycle
+		 */
 		return getFromRelations().stream()
 				.filter(rel -> rel.getType() == JobRelationType.parent_child)
-				.map(JobRelation::getTo);
+				.map(JobRelation::getTo).filter(Objects::nonNull);
 	}
 
 	public Date provideCreationDateOrNow() {

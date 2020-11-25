@@ -50,6 +50,9 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 
 	@Override
 	public String toString() {
+		if (getFrom() == null || getTo() == null) {
+			return Ax.format("%s - missing endpoints", getId());
+		}
 		return Ax.format(" %s::%s => %s => %s::%s",
 				getFrom().toLocator().toIdPairString(),
 				getFrom().provideShortName(), type,
@@ -59,6 +62,9 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 
 	public String toStringOther(Job job) {
 		Job other = job == getFrom() ? getTo() : getFrom();
+		if (other == null) {
+			return Ax.format("%s - missing endpoint", getId());
+		}
 		return Ax.format("%s : %s : %s", getType(),
 				other.toLocator().toIdPairString(), other.provideName());
 	}
