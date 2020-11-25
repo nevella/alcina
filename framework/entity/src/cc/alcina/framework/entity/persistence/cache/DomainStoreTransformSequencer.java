@@ -24,6 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -295,6 +298,91 @@ public class DomainStoreTransformSequencer {
 						.toDebugString());
 	}
 
+	private void ensureTransactionCommitTimes0(List<Long> ids)
+			throws SQLException {
+		if (!loaderDatabase.domainDescriptor
+				.isUseTransformDbCommitSequencing()) {
+			return;
+		}
+		SequencerLock lock = null;
+		/* postgres specific */
+		Connection conn = getConnection();
+		try (Statement statement = conn.createStatement()) {
+			Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
+					.getDomainTransformRequestPersistentClass();
+			String tableName = persistentClass.getAnnotation(Table.class)
+					.name();
+			String sql = Ax.format(
+					"select id,startPersistTime, pg_xact_commit_timestamp(xmin) as commit_timestamp "
+							+ "from %s where transactionCommitTime is null order by pg_xact_commit_timestamp(xmin)",
+					tableName);
+			for (EnsurePhase phase : EnsurePhase.values()) {
+				ResultSet rs = statement.executeQuery(sql);
+				Map<Long, Timestamp> queryResults = new LinkedHashMap<>();
+				while (rs.next()) {
+					long id = rs.getLong("id");
+					Timestamp commit_timestamp = rs
+							.getTimestamp("commit_timestamp");
+					queryResults.put(id, commit_timestamp);
+				}
+				if (queryResults.isEmpty()) {
+					return;
+				}
+				boolean commit = true;
+				/*
+				 * in this phase (non-locked), only update if ids match the
+				 * beginning of the sequence of requests without commit times.
+				 * 
+				 * otherwise commit all
+				 */
+				if (phase == EnsurePhase.SUPPLIED_IDS) {
+					int matched = 0;
+					for (Long queryId : queryResults.keySet()) {
+						if (ids.contains(queryId)) {
+							matched++;
+						} else {
+							break;
+						}
+					}
+					commit = ids.size() == queryResults.size();
+				}
+				if (commit) {
+					try (PreparedStatement updateStatement = conn
+							.prepareStatement(Ax.format(
+									"update %s set transactionCommitTime=? where id=?",
+									tableName))) {
+						queryResults.forEach((id, commit_timestamp) -> {
+							try {
+								updateStatement.setTimestamp(1,
+										commit_timestamp);
+								updateStatement.setLong(2, id);
+								updateStatement.executeUpdate();
+								logger.debug(
+										"Updated transactionCommitTime for request {}",
+										id);
+							} catch (Exception e) {
+								throw new WrappedRuntimeException(e);
+							}
+						});
+						updateStatement.close();
+					}
+					break;
+				} else {
+					lock = Registry.impl(SequencerLockProvider.class).getLock();
+					lock.acquire();
+				}
+			}
+		} finally {
+			try {
+				conn.commit();
+			} finally {
+				if (lock != null) {
+					lock.release();
+				}
+			}
+		}
+	}
+
 	private Connection getConnection() throws SQLException {
 		if (connection == null) {
 			connection = loaderDatabase.dataSource.getConnection();
@@ -454,41 +542,26 @@ public class DomainStoreTransformSequencer {
 		return unpublishedPositions;
 	}
 
-	void ensureTransactionCommitTimes() throws SQLException {
-		if (!loaderDatabase.domainDescriptor
-				.isUseTransformDbCommitSequencing()) {
-			return;
-		}
-		/* postgres specific */
-		Connection conn = getConnection();
-		try (Statement statement = conn.createStatement()) {
-			Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
-					.getDomainTransformRequestPersistentClass();
-			String tableName = persistentClass.getAnnotation(Table.class)
-					.name();
-			String sql = Ax.format(
-					"select id,startPersistTime, pg_xact_commit_timestamp(xmin) as commit_timestamp "
-							+ "from %s where transactionCommitTime is null order by pg_xact_commit_timestamp(xmin)",
-					tableName);
-			ResultSet rs = statement.executeQuery(sql);
-			while (rs.next()) {
-				try (PreparedStatement updateStatement = conn
-						.prepareStatement(Ax.format(
-								"update %s set transactionCommitTime=? where id=?",
-								tableName))) {
-					long id = rs.getLong("id");
-					Timestamp commit_timestamp = rs
-							.getTimestamp("commit_timestamp");
-					updateStatement.setTimestamp(1, commit_timestamp);
-					updateStatement.setLong(2, id);
-					updateStatement.executeUpdate();
-					updateStatement.close();
-					logger.debug("Updated transactionCommitTime for request {}",
-							id);
+	/*
+	 * only allow one concurrent call per-jvm -
+	 * 
+	 * if there are ids outside the supplied set
+	 */
+	synchronized void ensureTransactionCommitTimes(List<Long> ids)
+			throws SQLException {
+		// random backoff
+		for (int idx = 0; idx < 5; idx++) {
+			try {
+				ensureTransactionCommitTimes0(ids);
+				return;
+			} catch (Exception e) {
+				logger.warn("Exception in ensure times", e);
+				try {
+					Thread.sleep((long) (Math.random() * 100.0));
+				} catch (InterruptedException e1) {
 				}
 			}
 		}
-		conn.commit();
 	}
 
 	DomainTransformCommitPosition getHighestVisibleCommitPosition() {
@@ -510,6 +583,28 @@ public class DomainStoreTransformSequencer {
 			logger.info("Marked highest visible transactions - {}",
 					highestVisibleTransactions);
 		}
+	}
+
+	public static class NoopSequencerLock implements SequencerLock {
+	}
+
+	public interface SequencerLock {
+		default void acquire() {
+		}
+
+		default void release() {
+		}
+	}
+
+	@RegistryLocation(registryPoint = SequencerLockProvider.class, implementationType = ImplementationType.SINGLETON)
+	public static class SequencerLockProvider {
+		public SequencerLock getLock() {
+			return new NoopSequencerLock();
+		}
+	}
+
+	enum EnsurePhase {
+		SUPPLIED_IDS, ALL_IDS
 	}
 
 	static class HighestVisibleTransactions {
