@@ -354,6 +354,8 @@ public class JobContext {
 					job.setResultType(JobResultType.OK);
 				}
 				persistMetadata(true);
+			} else {
+				Transaction.commit();
 			}
 			if (threadStartName != null) {
 				thread.setName(threadStartName);

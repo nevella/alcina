@@ -501,7 +501,8 @@ public class JobRegistry extends WriterService {
 			boolean release = true;
 			if (job.provideHasIncompleteSubsequent()
 					&& resource.isSharedWithSubsequents()) {
-				release = false;
+				// FIXME - mvcc.1 - tmp remove
+				// release = false;
 			}
 			if (release) {
 				resource.release();
