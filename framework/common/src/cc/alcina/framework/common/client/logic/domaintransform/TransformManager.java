@@ -35,6 +35,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -67,6 +68,7 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -1250,8 +1252,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 				|| UNSPECIFIC_PROPERTY_CHANGE.equals(event.getPropertyName())) {
 			return;
 		}
-		if (handleCascadedSerializationChange(event)) {
-			return;
+		try {
+			if (handleCascadedSerializationChange(event)) {
+				return;
+			}
+		} catch (RuntimeException e) {
+			if (GWT.isClient()) {
+				AlcinaTopics.transformManagerCascadeException.publish(e);
+			} else {
+				throw e;
+			}
 		}
 		List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>();
 		DomainTransformEvent dte = createTransformFromPropertyChange(event);

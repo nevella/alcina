@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.util;
 
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
 public class AlcinaTopics {
@@ -42,6 +43,9 @@ public class AlcinaTopics {
 	public static final String LOG_CATEGORY_COMMENT = "comment";
 
 	public static final String LOG_CATEGORY_CONTAINER = "container";
+
+	public static Topic<Exception> transformManagerCascadeException = Topic
+			.local();
 
 	public static void jobComplete(JobTracker info) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_COMPLETE, info);
