@@ -200,6 +200,19 @@ public class JobScheduler {
 		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
 				.getActiveServers();
 		logger.info("Process orphans - visible instances: {}", activeInstances);
+		/*
+		 * handle flaky health/instances
+		 */
+		int minimumVisibleInstancesForOrphanProcessing = ResourceUtilities
+				.getInteger(JobScheduler.class,
+						"minimumVisibleInstancesForOrphanProcessing");
+		if (activeInstances
+				.size() < minimumVisibleInstancesForOrphanProcessing) {
+			logger.info(
+					"Not processing orphans - visible instances size: {}, minimum size: {}",
+					activeInstances.size(),
+					minimumVisibleInstancesForOrphanProcessing);
+		}
 		String visibleInstanceRegex = ResourceUtilities
 				.get("visibleInstanceRegex");
 		Date cutoff = SEUtilities

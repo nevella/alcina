@@ -18,6 +18,7 @@ import java.util.Date;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 
 /**
@@ -44,6 +45,8 @@ public class VersioningEntityListener {
 				iv.setCreationDate(now);
 			}
 			iv.setLastModificationDate(now);
+		}
+		if (obj instanceof IUser) {
 		}
 	}
 }

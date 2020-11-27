@@ -16,6 +16,7 @@ package cc.alcina.framework.entity.persistence;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +35,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -55,6 +57,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.PublicationCounter;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
@@ -62,6 +65,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.Wrapper;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.Publication;
@@ -102,6 +106,7 @@ import cc.alcina.framework.entity.util.MethodContext;
  * 
  *         FIXME - mvcc.4 - de-generify; remove getitemby methods
  */
+@RegistryLocation(registryPoint = CommonPersistenceBase.class, implementationType = ImplementationType.INSTANCE)
 public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	// note - this'll be a function of the stack depth of the eql ast processor
 	private static final int PRECACHE_RQ_SIZE = 500;
@@ -123,6 +128,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 
 	Map<Long, EntityLocatorMap> locatorMaps = Collections
 			.synchronizedMap(new LinkedHashMap<>());
+
+	Logger logger = LoggerFactory.getLogger(CommonPersistenceBase.class);
 
 	public CommonPersistenceBase() {
 		ObjectPersistenceHelper.get();
@@ -266,6 +273,35 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		}
 		return (T) getEntityManager()
 				.find(Mvcc.resolveEntityClass(obj.getClass()), obj.getId());
+	}
+
+	@Override
+	public void ensurePublicationCounters() {
+		try {
+			getEntityManager().createQuery(
+					"create index publicationcounter_user_id on publicationcounter using btree(user_id)")
+					.executeUpdate();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		List<Object[]> objects = getEntityManager().createQuery(Ax.format(
+				"select max(userPublicationId), user.id from %s j group by user.id",
+				getImplementationSimpleClassName(Publication.class)))
+				.getResultList();
+		for (Object[] array : objects) {
+			long max = (long) array[0];
+			long userId = (long) array[1];
+			Class<? extends PublicationCounter> clazz = AlcinaPersistentEntityImpl
+					.getImplementation(PublicationCounter.class);
+			Class<? extends IUser> iUserClass = AlcinaPersistentEntityImpl
+					.getImplementation(IUser.class);
+			PublicationCounter counter = Reflections.newInstance(clazz);
+			getEntityManager().persist(counter);
+			IUser user = getEntityManager().find(iUserClass, userId);
+			counter.setUser(user);
+			counter.setCounter(max);
+		}
+		logger.info("Ensured {} publication counters", objects.size());
 	}
 
 	@Override
@@ -423,18 +459,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	public long getMaxPublicationIdForUser(IUser user) {
-		List<Long> longs = getEntityManager()
-				.createQuery(Ax.format(
-						"select userPublicationId from %s j where user = ?"
-								+ " order by id desc",
-						getImplementationSimpleClassName(Publication.class)))
-				.setParameter(1, user).setMaxResults(1).getResultList();
-		long maxId = longs.isEmpty() ? 0 : longs.get(0);
-		return maxId;
-	}
-
-	@Override
 	public LongPair getMinMaxIdRange(Class clazz) {
 		Class implClass = getImplementation(clazz);
 		clazz = implClass == null ? clazz : implClass;
@@ -455,6 +479,25 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				clientInstanceImpl.getSimpleName())).setParameter(1, o.getId())
 				.setMaxResults(1).getResultList();
 		return CommonUtils.first(resultList);
+	}
+
+	@Override
+	/*
+	 * We use transform trigger logic to ensure that these exist on user
+	 * creation
+	 */
+	public long getNextPublicationIdForUser(IUser user) {
+		Query query = getEntityManager().createNativeQuery(
+				"SELECT  id, counter from publicationCounter where user_id=?1 FOR UPDATE")
+				.setParameter(1, user.getId());
+		List<Object[]> resultList = query.getResultList();
+		long id = ((BigInteger) resultList.get(0)[0]).longValue();
+		long counter = ((BigInteger) resultList.get(0)[1]).longValue();
+		getEntityManager()
+				.createNativeQuery(
+						"update publicationCounter set counter=?1  where id=?2")
+				.setParameter(1, ++counter).setParameter(2, id).executeUpdate();
+		return counter;
 	}
 
 	@Override

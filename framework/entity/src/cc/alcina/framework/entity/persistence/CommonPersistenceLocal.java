@@ -157,10 +157,12 @@ public interface CommonPersistenceLocal {
 
 	void changeJdbcConnectionUrl(String newUrl);
 
+	void ensurePublicationCounters();
+
 	Integer getHighestPersistedRequestIdForClientInstance(
 			long clientInstanceId);
 
-	long getMaxPublicationIdForUser(IUser user);
+	long getNextPublicationIdForUser(IUser user);
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
 }
