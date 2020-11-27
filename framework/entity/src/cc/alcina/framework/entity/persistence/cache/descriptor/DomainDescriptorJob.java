@@ -289,6 +289,49 @@ public class DomainDescriptorJob {
 		warmupComplete = true;
 	}
 
+	public class AllocationQueue {
+		public Job job;
+
+		public SubqueueType provideAllocationKey(Job job) {
+			if (job == this.job) {
+				return SubqueueType.Self;
+			}
+			if (job.provideFirstInSequence() == this.job) {
+				return SubqueueType.Sequence;
+			}
+			if (job.provideParentOrSelf() == this.job) {
+				return SubqueueType.Child;
+			}
+			throw new UnsupportedOperationException();
+		}
+
+		/*
+		 * not registered - insert/remove handled by AllocationQueueProjection
+		 * 
+		 */
+		class SubqueueProjection extends BaseProjection<Job> {
+			public SubqueueProjection() {
+				super(SubqueueType.class, JobState.class, jobImplClass);
+			}
+
+			@Override
+			public Class<? extends Job> getListenedClass() {
+				return jobImplClass;
+			}
+
+			@Override
+			protected int getDepth() {
+				return 3;
+			}
+
+			@Override
+			protected Object[] project(Job job) {
+				return new Object[] { provideAllocationKey(job),
+						job.resolveState(), job, job };
+			}
+		}
+	}
+
 	/*
 	 * Old completed jobs will have a wide spread of client instances - which we
 	 * don't need (only needed pre-completion for execution constraints). So
@@ -318,12 +361,46 @@ public class DomainDescriptorJob {
 		}
 	}
 
+	public static enum SubqueueType {
+		Self, Child, Sequence;
+	}
+
 	/*
 	 * Certain parent changes cascade to the children (see
 	 * getDependentObjectsWithDerivedProjections)
 	 */
 	class ActiveQueueProjection extends BaseProjection<Job> {
 		public ActiveQueueProjection() {
+			super(String.class, JobState.class, jobImplClass);
+		}
+
+		@Override
+		public Class<? extends Job> getListenedClass() {
+			return jobImplClass;
+		}
+
+		@Override
+		public void insert(Job t) {
+			if (t.provideIsComplete()) {
+				return;
+			}
+			super.insert(t);
+		}
+
+		@Override
+		protected int getDepth() {
+			return 3;
+		}
+
+		@Override
+		protected Object[] project(Job job) {
+			return new Object[] { job.getQueue(), job.resolveState(), job,
+					job };
+		}
+	}
+
+	class AllocationQueueProjection extends BaseProjection<Job> {
+		public AllocationQueueProjection() {
 			super(String.class, JobState.class, jobImplClass);
 		}
 
@@ -382,7 +459,7 @@ public class DomainDescriptorJob {
 	}
 
 	class JobDescriptor extends DomainClassDescriptor<Job> {
-		private ActiveQueueProjection activeQueueProjection;
+		private AllocationQueueProjection activeQueueProjection;
 
 		private ByCreatorIncompleteProjection byCreatorIncompleteProjection;
 
@@ -443,13 +520,13 @@ public class DomainDescriptorJob {
 		@Override
 		public void initialise() {
 			super.initialise();
-			activeQueueProjection = new ActiveQueueProjection();
+			activeQueueProjection = new AllocationQueueProjection();
 			projections.add(activeQueueProjection);
 			byCreatorIncompleteProjection = new ByCreatorIncompleteProjection();
 			projections.add(byCreatorIncompleteProjection);
 		}
 
-		ActiveQueueProjection getDisabledAtCourtRequestProjection() {
+		AllocationQueueProjection getDisabledAtCourtRequestProjection() {
 			return activeQueueProjection;
 		}
 	}
