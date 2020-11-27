@@ -18,6 +18,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.sql.Connection;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -277,10 +278,12 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 
 	@Override
 	public void ensurePublicationCounters() {
-		try {
-			getEntityManager().createQuery(
-					"create index publicationcounter_user_id on publicationcounter using btree(user_id)")
-					.executeUpdate();
+		try (Connection conn = Registry
+				.impl(CommonPersistenceConnectionProvider.class)
+				.getConnection()) {
+			Statement statement = conn.createStatement();
+			statement.execute(
+					"create index publicationcounter_user_id on publicationcounter using btree(user_id)");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
