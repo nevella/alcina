@@ -508,10 +508,70 @@ public class DomainDescriptorJob {
 
 		@Override
 		public void insert(Job job) {
-			if (!job.provideCanDeserializeTask()) {
-				undeserializableJobs.add(job);
-				return;
+			/*
+			 * avoid deserializing if possible - hence the try/catch
+			 */
+			try {
+				insert0(job);
+			} catch (RuntimeException e) {
+				if (!job.provideCanDeserializeTask()) {
+					undeserializableJobs.add(job);
+					return;
+				} else {
+					throw e;
+				}
 			}
+		}
+
+		@Override
+		public boolean isCommitOnly() {
+			return true;
+		}
+
+		@Override
+		public boolean isEnabled() {
+			return true;
+		}
+
+		@Override
+		public void remove(Job job) {
+			/*
+			 * avoid deserializing if possible - hence the try/catch
+			 */
+			try {
+				remove0(job);
+			} catch (RuntimeException e) {
+				if (!job.provideCanDeserializeTask()) {
+					undeserializableJobs.add(job);
+					return;
+				} else {
+					throw e;
+				}
+			}
+		}
+
+		@Override
+		public void setEnabled(boolean enabled) {
+		}
+
+		private AllocationQueue ensureQueue(Job job, AllocationQueue queue) {
+			if (queue != null) {
+				return queue;
+			} else {
+				// rather than compute-if-absent - put before event
+				synchronized (queues) {
+					if (queues.containsKey(job)) {
+						return queues.get(job);
+					}
+					queue = new AllocationQueue(job);
+					queues.put(job, queue);
+					queue.publish(EventType.CREATED);
+				}
+				return queue;
+			}
+		}
+
+		private void insert0(Job job) {
 			AllocationQueue queue = queues.get(job);
 			if (job.provideIsFuture()) {
 				futuresByTask.add(job.provideTaskClass(), job);
@@ -543,22 +603,7 @@ public class DomainDescriptorJob {
 			queue.insert(job);
 		}
 
-		@Override
-		public boolean isCommitOnly() {
-			return true;
-		}
-
-		@Override
-		public boolean isEnabled() {
-			return true;
-		}
-
-		@Override
-		public void remove(Job job) {
-			if (!job.provideCanDeserializeTask()) {
-				undeserializableJobs.remove(job);
-				return;
-			}
+		private void remove0(Job job) {
 			AllocationQueue queue = queues.get(job);
 			if (job.provideIsFuture()) {
 				futuresByTask.remove(job.provideTaskClass(), job);
@@ -589,27 +634,6 @@ public class DomainDescriptorJob {
 			}
 			queue = ensureQueue(relatedQueueOwner, queue);
 			queue.remove(job);
-		}
-
-		@Override
-		public void setEnabled(boolean enabled) {
-		}
-
-		private AllocationQueue ensureQueue(Job job, AllocationQueue queue) {
-			if (queue != null) {
-				return queue;
-			} else {
-				// rather than compute-if-absent - put before event
-				synchronized (queues) {
-					if (queues.containsKey(job)) {
-						return queues.get(job);
-					}
-					queue = new AllocationQueue(job);
-					queues.put(job, queue);
-					queue.publish(EventType.CREATED);
-				}
-				return queue;
-			}
 		}
 	}
 

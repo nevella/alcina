@@ -224,6 +224,7 @@ public class JobScheduler {
 						&& !activeInstances.contains(job.getCreator()))
 						|| (job.getPerformer() != null && !activeInstances
 								.contains(job.getPerformer())));
+		// FIXME - mvcc.jobs.1a - handle descendants
 		List<Job> toAbortOrReassign = incompleteAndInactiveInstance
 				.collect(Collectors.toList());
 		MultikeyMap<Boolean> perQueueTaskClass = new UnsortedMultikeyMap<>(2);
