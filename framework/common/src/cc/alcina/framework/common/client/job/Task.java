@@ -22,10 +22,6 @@ public interface Task extends Serializable {
 		return Registry.impl(Performer.class).schedule(this);
 	}
 
-	public static interface HasClusteredRunParameter {
-		boolean provideIsRunClustered();
-	}
-
 	public static interface Performer {
 		Job perform(Task task);
 

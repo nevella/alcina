@@ -1,15 +1,15 @@
 package cc.alcina.framework.entity.persistence.cache.descriptor;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.function.Predicate;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,32 +19,29 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
-import cc.alcina.framework.common.client.domain.StreamConcatenation;
+import cc.alcina.framework.common.client.domain.DomainProjection;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ClientInstanceLoadOracle;
 import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.MultikeyMap;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.DomainStoreDescriptor;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.mvcc.TransactionalMultiset;
+import cc.alcina.framework.entity.persistence.mvcc.TransactionalSet;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
-import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
 
 @RegistryLocation(registryPoint = DomainDescriptorJob.class, implementationType = ImplementationType.SINGLETON)
@@ -52,11 +49,6 @@ public class DomainDescriptorJob {
 	public static DomainDescriptorJob get() {
 		return Registry.impl(DomainDescriptorJob.class);
 	}
-
-	public Topic<Entry<String, List<Job>>> queueChanged = Topic.local();
-
-	public Topic<RelatedJobCompletion> relatedJobCompletionChanged = Topic
-			.local();
 
 	private Class<? extends Job> jobImplClass;
 
@@ -101,82 +93,19 @@ public class DomainDescriptorJob {
 		}
 	};
 
-	private DomainTransformPersistenceListener queueNotifier = new DomainTransformPersistenceListener() {
-		@Override
-		public void onDomainTransformRequestPersistence(
-				DomainTransformPersistenceEvent event) {
-			if (event
-					.getPersistenceEventType() == DomainTransformPersistenceEventType.COMMIT_OK) {
-				AdjunctTransformCollation collation = event
-						.getTransformPersistenceToken().getTransformCollation();
-				if (collation.has(jobImplClass)) {
-					Multimap<String, List<Job>> perQueueJobs = collation
-							.query(jobImplClass).withFilter(transform -> {
-								if ("statusMessage"
-										.equals(transform.getPropertyName())) {
-									return false;
-								} else {
-									return true;
-								}
-							}).stream().map(qr -> (Job) qr.getObject())
-							.filter(Objects::nonNull).collect(AlcinaCollectors
-									.toKeyMultimap(Job::getQueue));
-					perQueueJobs.entrySet().forEach(queueChanged::publish);
-					Multimap<Job, List<Job>> byParentOrSelf = collation
-							.query(jobImplClass).stream()
-							.map(qr -> (Job) qr.getObject())
-							.filter(Objects::nonNull)
-							.filter(Job::provideIsComplete)
-							// if job has no parent, observe its own cancelled
-							// state (hence parentOrSelf
-							.collect(AlcinaCollectors
-									.toKeyMultimap(Job::provideParentOrSelf));
-					Multimap<Job, List<Job>> byFirstInSequence = collation
-							.query(jobImplClass).stream()
-							.map(qr -> (Job) qr.getObject())
-							.filter(Objects::nonNull)
-							.filter(Job::provideIsComplete)
-							.filter(job -> job.provideFirstInSequence() != job)
-							.collect(AlcinaCollectors.toKeyMultimap(
-									Job::provideFirstInSequence));
-					byParentOrSelf.forEach((k, v) -> {
-						relatedJobCompletionChanged
-								.publish(new RelatedJobCompletion(k, v));
-					});
-					// if an job schedules subsequent jobs, it (the first and
-					// sequence) will be waiting for subsequent job completion
-					// notifications
-					byFirstInSequence.forEach((k, v) -> {
-						relatedJobCompletionChanged
-								.publish(new RelatedJobCompletion(k, v));
-					});
-				}
-			} else if (event
-					.getPersistenceEventType() == DomainTransformPersistenceEventType.PRE_COMMIT) {
-				AdjunctTransformCollation collation = event
-						.getTransformPersistenceToken().getTransformCollation();
-				if (collation.has(jobImplClass)) {
-					collation.ensureApplied();
-					List<Job> invalidJobs = collation.query(jobImplClass)
-							.stream().map(qr -> (Job) qr.getObject())
-							// may be a deletion
-							.filter(Objects::nonNull)
-							.filter(job -> job.getQueue() == null
-									|| job.getTaskClassName() == null)
-							.distinct().collect(Collectors.toList());
-					if (invalidJobs.size() > 0) {
-						throw Ax.runtimeException(
-								"Persisting jobs with null queue/task",
-								invalidJobs);
-					}
-				}
-			}
-		}
-	};
-
 	private JobDescriptor jobDescriptor;
 
 	boolean warmupComplete = false;
+
+	/*
+	 * *Not* a transactional map - we want the same queue for all tx phases.
+	 * 
+	 * The queue subfields are essentially immutable or tx-safe - exception is
+	 * phase, but that's modified by the single-threaded allocator
+	 */
+	private Map<Job, AllocationQueue> queues = new ConcurrentHashMap<>();
+
+	public Topic<AllocationQueue.Event> queueEvents = Topic.local();
 
 	public void configureDescriptor(DomainStoreDescriptor descriptor) {
 		jobImplClass = AlcinaPersistentEntityImpl.getImplementation(Job.class);
@@ -186,74 +115,41 @@ public class DomainDescriptorJob {
 				.getImplementation(JobRelation.class));
 	}
 
-	public int getActiveJobCount(String queueName) {
-		// FIXME - mvcc.jobs.1a - there still seem to be issues with state
-		// propagation in JobDescriptor
-		return (int) jobDescriptor
-				.getJobsForQueue(queueName, JobState.PROCESSING).stream()
-				.filter(Job::provideIsNotComplete).count();
-		// return jobDescriptor.getJobsForQueue(queueName, JobState.PROCESSING)
-		// .size();
+	public Optional<Job> earliestFuture(Class<? extends Task> key,
+			boolean createdBySelf) {
+		return jobDescriptor.allocationQueueProjection.earliestFuture(key,
+				createdBySelf);
+	}
+
+	public void fireInitialAllocatorQueueCreationEvents() {
+		queues.values().forEach(AllocationQueue::fireInitialCreationEvents);
+	}
+
+	public Stream<? extends Job> getActiveJobs() {
+		return queues.values().stream().flatMap(AllocationQueue::getActiveJobs);
+	}
+
+	public Stream<Job> getAllFutureJobs() {
+		return jobDescriptor.allocationQueueProjection.futuresByTask.allItems()
+				.stream();
 	}
 
 	public Stream<? extends Job> getAllJobs() {
 		return Domain.stream(jobImplClass);
 	}
 
-	public Stream<? extends Job> getAllocatedIncompleteJobs() {
-		return Stream.concat(jobDescriptor.getJobsForState(JobState.ALLOCATED),
-				jobDescriptor.getJobsForState(JobState.PROCESSING));
+	public Stream<AllocationQueue> getAllocationQueues() {
+		return queues.values().stream();
 	}
 
-	public int getCompletedJobCountForActiveQueue(String name) {
-		return Arrays.stream(JobState.values()).filter(JobState::isComplete)
-				.map(state -> jobDescriptor.getJobsForQueue(name, state).size())
-				.collect(Collectors.summingInt(i -> i));
-	}
-
-	public int getIncompleteJobCountForActiveQueue(String name) {
-		return Arrays.stream(JobState.values()).filter(s -> !s.isComplete())
-				.map(state -> jobDescriptor.getJobsForQueue(name, state).size())
-				.collect(Collectors.summingInt(i -> i));
-	}
-
-	public Stream<? extends Job> getIncompleteJobsForQueue(String queueName) {
-		// FIXME - mvcc.1a
-		Predicate<Job> doubleCheckPredicate = Job::provideIsNotComplete;
-		Stream<Job> stream = StreamConcatenation.concat(new Stream[] {
-				jobDescriptor.getJobsForQueue(queueName, JobState.PENDING)
-						.stream(),
-				jobDescriptor.getJobsForQueue(queueName, JobState.ALLOCATED)
-						.stream(),
-				jobDescriptor.getJobsForQueue(queueName, JobState.PROCESSING)
-						.stream() });
-		return stream.filter(doubleCheckPredicate);
-	}
-
-	public int getJobCountForActiveQueue(String name) {
-		return Arrays.stream(JobState.values())
-				.map(state -> jobDescriptor.getJobsForQueue(name, state).size())
-				.collect(Collectors.summingInt(i -> i));
-	}
-
-	public int getJobCountForActiveQueue(String name, JobState state) {
-		return jobDescriptor.getJobsForQueue(name, state).size();
+	public Stream<Job> getIncompleteJobs() {
+		return queues.values().stream()
+				.flatMap(AllocationQueue::getIncompleteJobs);
 	}
 
 	public Stream<? extends Job> getJobsForTask(Task action) {
 		return Domain.query(jobImplClass)
 				.filter("taskClassName", action.getClass().getName()).stream();
-	}
-
-	public Stream<? extends Job> getNotCompletedJobs() {
-		return jobDescriptor.getAllActiveJobs()
-				.sorted(EntityComparator.REVERSED_INSTANCE)
-				.filter(Job::provideIsNotComplete);
-	}
-
-	public Stream<? extends Job> getPendingJobsWithInactiveCreator(
-			List<ClientInstance> activeInstances) {
-		return jobDescriptor.getPendingJobsWithInactiveCreator(activeInstances);
 	}
 
 	public Stream<? extends Job> getRecentlyCompletedJobs() {
@@ -262,26 +158,12 @@ public class DomainDescriptorJob {
 				.filter(Job::provideIsComplete);
 	}
 
-	public int getUnallocatedJobCountForQueue(String name) {
-		return (int) getUnallocatedJobsForQueue(name, true).count();
-	}
-
-	public Stream<? extends Job> getUnallocatedJobsForQueue(String queueName,
-			boolean performableByThisVm) {
-		Predicate<Job> performerPredicate = job -> !job.provideHasPerformer()
-				&& job.provideCanBePerformedBy(
-						EntityLayerObjects.get().getServerAsClientInstance());
-		Stream<Job> stream = jobDescriptor
-				.getJobsForQueue(queueName, JobState.PENDING).stream();
-		if (performableByThisVm) {
-			stream = stream.filter(performerPredicate);
-		}
-		return stream;
+	public Stream<Job> getUndeserializableJobs() {
+		return jobDescriptor.allocationQueueProjection.undeserializableJobs
+				.stream();
 	}
 
 	public void onWarmupComplete(DomainStore domainStore) {
-		domainStore.getPersistenceEvents()
-				.addDomainTransformPersistenceListener(queueNotifier, true);
 		if (ResourceUtilities.is("logTransforms")) {
 			domainStore.getPersistenceEvents()
 					.addDomainTransformPersistenceListener(jobLogger, false);
@@ -292,17 +174,233 @@ public class DomainDescriptorJob {
 	public class AllocationQueue {
 		public Job job;
 
-		public SubqueueType provideAllocationKey(Job job) {
+		public Topic<Event> events = Topic.local();
+
+		SubqueueProjection subqueues = new SubqueueProjection();
+
+		public SubqueuePhase phase = SubqueuePhase.Self;
+
+		List<JobState> incompleteAllocatableStates = Arrays.asList(
+				JobState.PENDING, JobState.ALLOCATED, JobState.PROCESSING);
+
+		List<JobState> incompleteAllocatableStatesChild = Arrays.asList(
+				JobState.PENDING, JobState.ALLOCATED, JobState.PROCESSING,
+				JobState.COMPLETED);
+
+		private boolean firedToProcessing;
+
+		public AllocationQueue(Job job) {
+			this.job = job;
+		}
+
+		public QueueStat asQueueStat() {
+			QueueStat stat = new QueueStat();
+			stat.active = (int) perStateJobs(JobState.PROCESSING).count();
+			stat.completed = (int) (perStateJobs(JobState.COMPLETED).count()
+					+ perStateJobs(JobState.SEQUENCE_COMPLETE).count());
+			stat.pending = (int) (perStateJobs(JobState.PENDING).count()
+					+ perStateJobs(JobState.ALLOCATED).count());
+			stat.total = stat.active + stat.pending + stat.completed;
+			stat.name = job.provideName();
+			return stat;
+		}
+
+		public void checkComplete() {
+			if (isComplete()) {
+				queues.remove(job);
+				publish(EventType.DELETED);
+				phase = SubqueuePhase.Complete;
+			}
+		}
+
+		public Stream<Job> getActiveJobs() {
+			return perStateJobs(JobState.PROCESSING);
+		}
+
+		public long getCompletedJobCount() {
+			return perStateJobs(JobState.COMPLETED).count()
+					+ perStateJobs(JobState.SEQUENCE_COMPLETE).count();
+		}
+
+		public long getIncompleteAllocatedJobCountForCurrentPhase() {
+			return getIncompleteJobCountForCurrentPhase()
+					- perPhaseJobs(Collections.singletonList(JobState.PENDING))
+							.count();
+		}
+
+		public long getIncompleteJobCountForCurrentPhase() {
+			return perPhaseJobs(incompleteStates(phase)).count();
+		}
+
+		public Stream<Job> getIncompleteJobs() {
+			return perStateJobs(incompleteAllocatableStatesChild);
+		}
+
+		public long getTotalJobCount() {
+			return perStateJobs(JobState.values()).count();
+		}
+
+		public Stream<Job> getUnallocatedJobs() {
+			return (Stream) perPhaseJobs(
+					Collections.singletonList(JobState.PENDING));
+		}
+
+		public void incrementPhase() {
+			phase = SubqueuePhase.values()[phase.ordinal() + 1];
+		}
+
+		public void insert(Job job) {
+			subqueues.insert(job);
+			publish(EventType.RELATED_MODIFICATION);
+			checkFireToProcessing(job);
+		}
+
+		public boolean isNoPendingJobsInPhase() {
+			if (getIncompleteJobCountForCurrentPhase() == 0) {
+				// double-check ? for the moment should be no need since
+				// persisting (on performer) before reaching here
+				return true;
+			}
+			return false;
+		}
+
+		public SubqueuePhase provideAllocationKey(Job job) {
 			if (job == this.job) {
-				return SubqueueType.Self;
+				return SubqueuePhase.Self;
 			}
 			if (job.provideFirstInSequence() == this.job) {
-				return SubqueueType.Sequence;
+				return SubqueuePhase.Sequence;
 			}
 			if (job.provideParentOrSelf() == this.job) {
-				return SubqueueType.Child;
+				return SubqueuePhase.Child;
 			}
 			throw new UnsupportedOperationException();
+		}
+
+		public void publish(EventType type) {
+			Event event = new Event(type);
+			events.publish(event);
+			if (type.isPublishToGlobalQueue()) {
+				queueEvents.publish(event);
+			}
+		}
+
+		public void remove(Job job) {
+			subqueues.remove(job);
+		}
+
+		public String toDisplayName() {
+			return job == null ? "<no-job>" : job.toDisplayName();
+		}
+
+		@Override
+		public String toString() {
+			List<String> phaseStates = new ArrayList<>();
+			for (SubqueuePhase type : SubqueuePhase.values()) {
+				phaseStates.add(Ax.format("%s - (%s)", type,
+						incompleteAllocatableStatesChild.stream()
+								.map(state -> subQueueJobs(type, state).size())
+								.map(String::valueOf)
+								.collect(Collectors.joining("/"))));
+			}
+			return Ax.format("Allocation Queue - %s - %s\n\t%s", job, phase,
+					CommonUtils.joinWithNewlineTab(phaseStates));
+		}
+
+		private void checkFireToProcessing(Job job) {
+			if (job == this.job && !firedToProcessing) {
+				switch (job.resolveState()) {
+				case PROCESSING:
+				case COMPLETED:
+					firedToProcessing = true;
+					publish(EventType.TO_PROCESSING);
+					break;
+				}
+			}
+		}
+
+		/*
+		 * Child completion must wait for any sequential jobs triggered by the
+		 * child
+		 */
+		private List<JobState> incompleteStates(SubqueuePhase phase) {
+			switch (phase) {
+			case Child:
+				return incompleteAllocatableStatesChild;
+			default:
+				return incompleteAllocatableStates;
+			}
+		}
+
+		private boolean isComplete() {
+			for (SubqueuePhase type : SubqueuePhase.values()) {
+				for (JobState state : incompleteStates(type)) {
+					if (subQueueJobs(type, state).size() > 0) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+
+		private Stream<Job> perPhaseJobs(List<JobState> list) {
+			return (Stream) Stream.of(phase)
+					.flatMap(type -> list.stream()
+							.map(state -> subQueueJobs(type, state))
+							.flatMap(Collection::stream));
+		}
+
+		private Stream<Job> perStateJobs(JobState... states) {
+			return perStateJobs(Arrays.asList(states));
+		}
+
+		private Stream<Job> perStateJobs(List<JobState> states) {
+			return (Stream) Arrays.stream(SubqueuePhase.values())
+					.flatMap(type -> states.stream()
+							.map(state -> subQueueJobs(type, state))
+							.flatMap(Collection::stream));
+		}
+
+		private Set<? extends Job> subQueueJobs(SubqueuePhase type,
+				JobState state) {
+			return subqueues.getLookup().asMapEnsure(true, type, state)
+					.typedKeySet(Job.class);
+		}
+
+		void fireInitialCreationEvents() {
+			publish(EventType.CREATED);
+			checkFireToProcessing(job);
+		}
+
+		public class Event {
+			public AllocationQueue queue;
+
+			public EventType type;
+
+			public Transaction transaction;
+
+			public Event(EventType type) {
+				this.type = type;
+				this.queue = AllocationQueue.this;
+				this.transaction = Transaction.current();
+			}
+
+			@Override
+			public String toString() {
+				return type.toString();
+			}
+		}
+
+		public class QueueStat {
+			public int active;
+
+			public int pending;
+
+			public int total;
+
+			public String name;
+
+			public int completed;
 		}
 
 		/*
@@ -311,7 +409,7 @@ public class DomainDescriptorJob {
 		 */
 		class SubqueueProjection extends BaseProjection<Job> {
 			public SubqueueProjection() {
-				super(SubqueueType.class, JobState.class, jobImplClass);
+				super(SubqueuePhase.class, JobState.class, jobImplClass);
 			}
 
 			@Override
@@ -350,6 +448,20 @@ public class DomainDescriptorJob {
 		}
 	}
 
+	public enum EventType {
+		CREATED, DELETED, RELATED_MODIFICATION, WAKEUP, TO_AWAITING_CHILDREN,
+		TO_PROCESSING;
+		public boolean isPublishToGlobalQueue() {
+			switch (this) {
+			case CREATED:
+			case DELETED:
+				return true;
+			default:
+				return false;
+			}
+		}
+	}
+
 	public static class RelatedJobCompletion {
 		public Job job;
 
@@ -361,47 +473,32 @@ public class DomainDescriptorJob {
 		}
 	}
 
-	public static enum SubqueueType {
-		Self, Child, Sequence;
+	public static enum SubqueuePhase {
+		Self, Child, Sequence, Complete;
 	}
 
-	/*
-	 * Certain parent changes cascade to the children (see
-	 * getDependentObjectsWithDerivedProjections)
-	 */
-	class ActiveQueueProjection extends BaseProjection<Job> {
-		public ActiveQueueProjection() {
-			super(String.class, JobState.class, jobImplClass);
-		}
+	class AllocationQueueProjection implements DomainProjection<Job> {
+		private TransactionalMultiset<Class, Job> futuresByTask = new TransactionalMultiset(
+				Class.class,
+				AlcinaPersistentEntityImpl.getImplementation(Job.class));
 
-		@Override
-		public Class<? extends Job> getListenedClass() {
-			return jobImplClass;
-		}
+		private TransactionalMultiset<Class, Job> incompleteTopLevelByTask = new TransactionalMultiset(
+				Class.class,
+				AlcinaPersistentEntityImpl.getImplementation(Job.class));
 
-		@Override
-		public void insert(Job t) {
-			if (t.provideIsComplete()) {
-				return;
-			}
-			super.insert(t);
-		}
+		private TransactionalSet<Job> undeserializableJobs = new TransactionalSet(
+				AlcinaPersistentEntityImpl.getImplementation(Job.class));
 
-		@Override
-		protected int getDepth() {
-			return 3;
-		}
-
-		@Override
-		protected Object[] project(Job job) {
-			return new Object[] { job.getQueue(), job.resolveState(), job,
-					job };
-		}
-	}
-
-	class AllocationQueueProjection extends BaseProjection<Job> {
 		public AllocationQueueProjection() {
-			super(String.class, JobState.class, jobImplClass);
+		}
+
+		public Optional<Job> earliestFuture(Class<? extends Task> key,
+				boolean createdBySelf) {
+			return futuresByTask.getAndEnsure(key).stream()
+					.filter(j -> j.getRunAt() != null)
+					.filter(j -> !createdBySelf
+							|| j.getCreator() == ClientInstance.self())
+					.sorted(new Job.RunAtComparator()).findFirst();
 		}
 
 		@Override
@@ -410,124 +507,124 @@ public class DomainDescriptorJob {
 		}
 
 		@Override
-		public void insert(Job t) {
-			if (t.provideIsComplete()) {
+		public void insert(Job job) {
+			if (!job.provideCanDeserializeTask()) {
+				undeserializableJobs.add(job);
 				return;
 			}
-			super.insert(t);
-		}
-
-		@Override
-		protected int getDepth() {
-			return 3;
-		}
-
-		@Override
-		protected Object[] project(Job job) {
-			return new Object[] { job.getQueue(), job.resolveState(), job,
-					job };
-		}
-	}
-
-	class ByCreatorIncompleteProjection extends BaseProjection<Job> {
-		public ByCreatorIncompleteProjection() {
-			super(ClientInstance.class, jobImplClass);
-		}
-
-		@Override
-		public Class<? extends Job> getListenedClass() {
-			return jobImplClass;
-		}
-
-		@Override
-		public void insert(Job t) {
-			if (t.provideIsComplete()) {
+			AllocationQueue queue = queues.get(job);
+			if (job.provideIsFuture()) {
+				futuresByTask.add(job.provideTaskClass(), job);
+			} else if (job.provideIsComplete()) {
+				if (queue != null) {
+					queue.insert(job);
+					queue.checkComplete();
+				} else {
+				}
+			} else {
+				queue = ensureQueue(job, queue);
+				queue.insert(job);
+				if (job.provideIsTopLevel()) {
+					incompleteTopLevelByTask.add(job.provideTaskClass(), job);
+				}
+			}
+			Job relatedQueueOwner = job.provideRelatedSubqueueOwner();
+			if (relatedQueueOwner == job) {
 				return;
 			}
-			super.insert(t);
+			queue = queues.get(relatedQueueOwner);
+			/*
+			 * 
+			 */
+			if (relatedQueueOwner.provideIsComplete() && queue == null) {
+				return;
+			}
+			queue = ensureQueue(relatedQueueOwner, queue);
+			queue.insert(job);
 		}
 
 		@Override
-		protected int getDepth() {
-			return 2;
+		public boolean isCommitOnly() {
+			return true;
 		}
 
 		@Override
-		protected Object[] project(Job job) {
-			return new Object[] { job.getCreator(), job, job };
+		public boolean isEnabled() {
+			return true;
+		}
+
+		@Override
+		public void remove(Job job) {
+			if (!job.provideCanDeserializeTask()) {
+				undeserializableJobs.remove(job);
+				return;
+			}
+			AllocationQueue queue = queues.get(job);
+			if (job.provideIsFuture()) {
+				futuresByTask.remove(job.provideTaskClass(), job);
+			} else if (job.provideIsComplete()) {
+				if (queue != null) {
+					queue.remove(job);
+				} else {
+				}
+			} else {
+				if (queue != null) {
+					queue.remove(job);
+				}
+				if (job.provideIsTopLevel()) {
+					incompleteTopLevelByTask.remove(job.provideTaskClass(),
+							job);
+				}
+			}
+			Job relatedQueueOwner = job.provideRelatedSubqueueOwner();
+			if (relatedQueueOwner == job) {
+				return;
+			}
+			queue = queues.get(relatedQueueOwner);
+			/*
+			 * 
+			 */
+			if (relatedQueueOwner.provideIsComplete() && queue == null) {
+				return;
+			}
+			queue = ensureQueue(relatedQueueOwner, queue);
+			queue.remove(job);
+		}
+
+		@Override
+		public void setEnabled(boolean enabled) {
+		}
+
+		private AllocationQueue ensureQueue(Job job, AllocationQueue queue) {
+			if (queue != null) {
+				return queue;
+			} else {
+				// rather than compute-if-absent - put before event
+				synchronized (queues) {
+					if (queues.containsKey(job)) {
+						return queues.get(job);
+					}
+					queue = new AllocationQueue(job);
+					queues.put(job, queue);
+					queue.publish(EventType.CREATED);
+				}
+				return queue;
+			}
 		}
 	}
 
 	class JobDescriptor extends DomainClassDescriptor<Job> {
-		private AllocationQueueProjection activeQueueProjection;
-
-		private ByCreatorIncompleteProjection byCreatorIncompleteProjection;
+		private AllocationQueueProjection allocationQueueProjection;
 
 		public JobDescriptor() {
 			super((Class<Job>) jobImplClass, "taskClassName");
 		}
 
-		public Stream<Job> getAllActiveJobs() {
-			return Arrays.stream(JobState.values()).filter(s -> !s.isComplete())
-					.flatMap(this::getJobsForState);
-		}
-
-		@Override
-		public Stream<Job> getDependentObjectsWithDerivedProjections(Entity obj,
-				Set modifiedPropertyNames) {
-			if (modifiedPropertyNames.contains(Job.PROPERTY_STATE)) {
-				// ahh...unclear why this is returning null. FIXME mvcc.jobs.2
-				return ((Job) obj).provideDescendants()
-						.filter(Objects::nonNull);
-			} else {
-				return Stream.empty();
-			}
-		}
-
-		public Set<Job> getJobsForQueue(String queueName, JobState state) {
-			MultikeyMap map = activeQueueProjection.getLookup().asMap(queueName,
-					state);
-			if (map == null) {
-				return Collections.emptySet();
-			} else {
-				return map.keySet();
-			}
-		}
-
-		public Stream<Job> getJobsForState(JobState state) {
-			List<Stream<Job>> streamList = activeQueueProjection.getLookup()
-					.typedKeySet(String.class).stream()
-					.map(key -> activeQueueProjection.getLookup().asMap(key,
-							state))
-					.filter(Objects::nonNull)
-					.map(mkm -> (Set<Job>) mkm.typedKeySet(Job.class))
-					.map(Collection::stream).collect(Collectors.toList());
-			Stream<Job>[] streams = (Stream<Job>[]) streamList
-					.toArray(new Stream[streamList.size()]);
-			return StreamConcatenation.concat(streams);
-		}
-
-		public Stream<? extends Job> getPendingJobsWithInactiveCreator(
-				List<ClientInstance> activeCreators) {
-			MultikeyMap<Job> lookup = byCreatorIncompleteProjection.getLookup();
-			return lookup.typedKeySet(ClientInstance.class).stream()
-					.filter(ci -> !activeCreators.contains(ci))
-					.map(ci -> (Set<Job>) lookup.asMap(ci)
-							.typedKeySet(Job.class))
-					.flatMap(Collection::stream);
-		}
-
 		@Override
 		public void initialise() {
 			super.initialise();
-			activeQueueProjection = new AllocationQueueProjection();
-			projections.add(activeQueueProjection);
-			byCreatorIncompleteProjection = new ByCreatorIncompleteProjection();
-			projections.add(byCreatorIncompleteProjection);
-		}
-
-		AllocationQueueProjection getDisabledAtCourtRequestProjection() {
-			return activeQueueProjection;
+			allocationQueueProjection = new AllocationQueueProjection();
+			projections.add(allocationQueueProjection);
 		}
 	}
 }

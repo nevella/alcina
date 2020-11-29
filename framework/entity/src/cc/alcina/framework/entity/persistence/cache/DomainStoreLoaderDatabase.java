@@ -52,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
 import cc.alcina.framework.common.client.domain.DomainProjection;
@@ -62,6 +63,7 @@ import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStoreP
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -84,6 +86,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.cache.DomainSegmentLoader.DomainSegmentLoaderPhase;
@@ -319,6 +322,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("xrefs");
+		serverClientInstanceToDomainStoreVersion();
 		warmupLaterLookups.clear();
 		// lazy tables, load a segment (for large db dev work)
 		if (domainDescriptor.getDomainSegmentLoader() != null) {
@@ -714,7 +718,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			laterLookup.resolve();
 			if (!store.initialising && !keepDetached) {
 				for (Entity entity : loaded) {
-					store.index(entity, true, Collections.emptySet());
+					store.index(entity, true, Collections.emptySet(), true);
 				}
 			}
 		}
@@ -944,17 +948,17 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 			Method rm = pd.getReadMethod();
 			boolean ignore = classDescriptor.isIgnoreColumn(pd.getName());
-			DomainStoreProperty domaStoreProperty = store.domainStoreProperties
+			DomainStoreProperty domainStoreProperty = store.domainStoreProperties
 					.get(clazz, pd.getName());
 			if ((rm.getAnnotation(Transient.class) != null
 					&& rm.getAnnotation(DomainStoreDbColumn.class) == null)
-					|| domaStoreProperty != null) {
+					|| domainStoreProperty != null) {
 				ignore = true;
-				if (domaStoreProperty != null) {
+				if (domainStoreProperty != null) {
 					Field field = store.getField(clazz, pd.getName());
 					field.setAccessible(true);
 					domainStorePropertyFields.put(clazz, field, field);
-					ignore = domaStoreProperty
+					ignore = domainStoreProperty
 							.loadType() == DomainStorePropertyLoadType.TRANSIENT;
 				}
 			}
@@ -1048,6 +1052,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			domainDescriptor.preProvideTasks
 					.add(new LazyPropertyLoadTask<>(clazz, store));
 		}
+	}
+
+	private void serverClientInstanceToDomainStoreVersion() {
+		ClientInstance instance = EntityLayerObjects.get()
+				.getServerAsClientInstance();
+		EntityLayerObjects.get()
+				.setServerAsClientInstance(Domain.find(instance));
 	}
 
 	private void setupInitialJoinTableCalls(List<Callable> calls) {

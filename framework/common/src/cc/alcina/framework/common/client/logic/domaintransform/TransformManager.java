@@ -1106,7 +1106,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public List<DomainTransformEvent> objectsToDtes(Collection objects,
-			Class clazz, boolean asObjectSpec) throws Exception {
+			Class clazz, boolean asObjectSpec) {
 		ClassLookup classLookup = classLookup();
 		List<PropertyInfo> pds = classLookup.getWritableProperties(clazz);
 		Object templateInstance = classLookup.getTemplateInstance(clazz);
@@ -1173,10 +1173,36 @@ public abstract class TransformManager implements PropertyChangeListener,
 					throw new UnsupportedOperationException();
 				}
 				if (value instanceof Set) {
+					Iterator itr = ((Set) value).iterator();
+					for (; itr.hasNext();) {
+						Object o2 = itr.next();
+						dte = new DomainTransformEvent();
+						dte.setUtcDate(new Date(0L));
+						dte.setObjectId(id);
+						dte.setObjectLocalId(localId);
+						dte.setObjectClass(clazz);
+						dte.setPropertyName(propertyName);
+						dte.setTransformType(
+								TransformType.ADD_REF_TO_COLLECTION);
+						if (o2 instanceof Entity) {
+							Entity h2 = (Entity) o2;
+							dte.setNewValue(null);
+							dte.setValueId(h2.getId());
+							dte.setValueLocalId(h2.getLocalId());
+							dte.setValueClass(h2.getClass());
+						} else if (o2 instanceof Enum) {
+							Enum e = (Enum) o2;
+							dte.setNewValue(null);
+							dte.setNewStringValue(e.name());
+							dte.setValueClass(e.getDeclaringClass());
+						}
+						dtes.add(dte);
+					}
+				} else {
 					dte = new DomainTransformEvent();
 					dte.setUtcDate(new Date(0L));
-					dte.setObjectClass(clazz);
 					dte.setObjectId(id);
+					dte.setObjectClass(clazz);
 					dte.setObjectLocalId(localId);
 					if (value instanceof Timestamp) {
 						value = new Date(((Timestamp) value).getTime());

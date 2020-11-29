@@ -78,15 +78,11 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	private JobResultType resultType;
 
-	private String queue;
-
 	private boolean stacktraceRequested;
 
 	private int retryCount;
 
 	private String stacktraceResponse;
-
-	private boolean clustered;
 
 	private int performerVersionNumber;
 
@@ -155,31 +151,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public void createRelation(Job to, JobRelationType type) {
 		String invalidMessage = null;
 		Preconditions.checkArgument(to != domainIdentity());
-		switch (type) {
-		case parent_child:
-			if (to.getToRelations().stream().anyMatch(
-					rel -> rel.getType() == JobRelationType.parent_child)) {
-				invalidMessage = "Existing parent";
-			}
-			if (to.getRunAt() != null) {
-				invalidMessage = "Child with runAt";
-			}
-			break;
-		case retry:
-			if (to.getToRelations().stream()
-					.anyMatch(rel -> rel.getType() == JobRelationType.retry)) {
-				invalidMessage = "Existing retry";
-			}
-			break;
-		case sequence:
-			if (to.getToRelations().stream().anyMatch(
-					rel -> rel.getType() == JobRelationType.sequence)) {
-				invalidMessage = "Existing sequence";
-			}
-			if (to.getRunAt() != null) {
-				invalidMessage = "Sequential with runAt";
-			}
-			break;
+		if (to.getToRelations().size() > 0) {
+			invalidMessage = "to To existing incoming relation";
 		}
 		if (invalidMessage != null) {
 			throw new IllegalStateException(invalidMessage);
@@ -189,32 +162,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		relation.setType(type);
 		relation.setFrom(domainIdentity());
 		relation.setTo(to);
-	}
-
-	/*
-	 * Creates a 'sequence' relation - execute the 'to' job after this (or the
-	 * end of its 'sequence' relation change)
-	 */
-	public void followWith(Job to) {
-		List<? extends JobRelation> fromRelations = getFromRelations().stream()
-				.filter(rel -> rel.getType() == JobRelationType.sequence)
-				.collect(Collectors.toList());
-		Preconditions.checkArgument(fromRelations.size() <= 1);
-		if (fromRelations.isEmpty()) {
-			createRelation(to, JobRelationType.sequence);
-			Optional<Job> parent = provideParent();
-			if (parent.isPresent() && !to.provideParent().isPresent()) {
-				parent.get().createRelation(to, JobRelationType.parent_child);
-			}
-		} else {
-			Job sequenceTo = fromRelations.get(0).getTo();
-			// see JobRegistry.createJob - this relation may have been created
-			// automagically
-			if (sequenceTo == to) {
-			} else {
-				sequenceTo.followWith(to);
-			}
-		}
 	}
 
 	public double getCompletion() {
@@ -248,6 +195,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	@Lob
 	@Transient
+	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
 	public String getLog() {
 		return this.log;
 	}
@@ -257,10 +205,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public int getPerformerVersionNumber() {
 		return this.performerVersionNumber;
-	}
-
-	public String getQueue() {
-		return this.queue;
 	}
 
 	@Transient
@@ -335,10 +279,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@Transient
 	public abstract Set<? extends JobRelation> getToRelations();
 
-	public boolean isClustered() {
-		return this.clustered;
-	}
-
 	public boolean isStacktraceRequested() {
 		return this.stacktraceRequested;
 	}
@@ -349,7 +289,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		while (true) {
 			Optional<? extends JobRelation> relation = cursor.getToRelations()
 					.stream()
-					.filter(rel -> rel.getType() == JobRelationType.sequence)
+					.filter(rel -> rel.getType() == JobRelationType.SEQUENCE)
 					.findFirst();
 			if (relation.isPresent()) {
 				cursor = relation.get().getFrom();
@@ -361,10 +301,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		Optional<Job> parent = provideParent();
 		return Stream.concat(previousSiblings.stream(),
 				parent.map(Stream::of).orElse(Stream.empty()));
-	}
-
-	public boolean provideCanBePerformedBy(ClientInstance clientInstance) {
-		return isClustered() || Objects.equals(getCreator(), clientInstance);
 	}
 
 	public boolean provideCanDeserializeTask() {
@@ -385,7 +321,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		 * requires the final filter for indexing during a deletion cycle
 		 */
 		return getFromRelations().stream()
-				.filter(rel -> rel.getType() == JobRelationType.parent_child)
+				.filter(rel -> rel.getType() == JobRelationType.PARENT_CHILD)
 				.map(JobRelation::getTo).filter(Objects::nonNull);
 	}
 
@@ -401,12 +337,18 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				provideChildren().flatMap(Job::provideDescendants));
 	}
 
+	public Optional<Exception> provideException() {
+		return getResultType() == JobResultType.EXCEPTION
+				? Optional.of(new Exception(getResultMessage()))
+				: Optional.empty();
+	}
+
 	public Job provideFirstInSequence() {
 		Job cursor = domainIdentity();
 		while (true) {
 			Optional<? extends JobRelation> relation = cursor.getToRelations()
 					.stream()
-					.filter(rel -> rel.getType() == JobRelationType.sequence)
+					.filter(rel -> rel.getType() == JobRelationType.SEQUENCE)
 					.findFirst();
 			if (relation.isPresent()) {
 				cursor = relation.get().getFrom();
@@ -417,10 +359,18 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return cursor;
 	}
 
+	public boolean provideHasCompletePredecesorOrNone() {
+		Optional<? extends JobRelation> predecessor = getToRelations().stream()
+				.filter(rel -> rel.getType() == JobRelationType.SEQUENCE)
+				.findFirst();
+		return !predecessor.isPresent()
+				|| predecessor.get().getFrom().provideIsComplete();
+	}
+
 	public boolean provideHasIncompleteSubsequent() {
 		return getFromRelations().stream()
 				.filter(rel -> rel.getTo().provideIsNotComplete())
-				.anyMatch(rel -> rel.getType() == JobRelationType.sequence);
+				.anyMatch(rel -> rel.getType() == JobRelationType.SEQUENCE);
 	}
 
 	public boolean provideHasPerformer() {
@@ -441,7 +391,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			return false;
 		}
 		if (getToRelations().stream()
-				.anyMatch(rel -> rel.getType() == JobRelationType.sequence
+				.anyMatch(rel -> rel.getType() == JobRelationType.SEQUENCE
 						&& !rel.getFrom().provideIsComplete())) {
 			return false;
 		}
@@ -451,6 +401,14 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public boolean provideIsComplete() {
 		JobState resolvedState = resolveState();
 		return resolvedState == null ? false : resolvedState.isComplete();
+	}
+
+	public boolean provideIsFirstInSequence() {
+		return provideFirstInSequence() == domainIdentity();
+	}
+
+	public boolean provideIsFuture() {
+		return resolveState() == JobState.FUTURE;
 	}
 
 	public boolean provideIsInCompletedQueue() {
@@ -463,15 +421,23 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public boolean provideIsLastInSequence() {
 		return getFromRelations().stream()
-				.noneMatch(rel -> rel.getType() == JobRelationType.sequence);
+				.noneMatch(rel -> rel.getType() == JobRelationType.SEQUENCE);
 	}
 
 	public boolean provideIsNotComplete() {
 		return !resolveState().isComplete();
 	}
 
+	public boolean provideIsNotTopLevel() {
+		return provideParent().isPresent();
+	}
+
 	public boolean provideIsPending() {
 		return resolveState() == JobState.PENDING;
+	}
+
+	public boolean provideIsSelfStarter() {
+		return provideIsTopLevel() && provideIsFirstInSequence();
 	}
 
 	public boolean provideIsSibling(Job job) {
@@ -481,6 +447,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public boolean provideIsTaskClass(Class<? extends Task> taskClass) {
 		return Objects.equals(getTaskClassName(), taskClass.getName());
+	}
+
+	public boolean provideIsTopLevel() {
+		return !provideParent().isPresent();
 	}
 
 	public String provideName() {
@@ -493,14 +463,21 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public Optional<Job> provideParent() {
-		return getToRelations().stream()
-				.filter(rel -> rel.getType() == JobRelationType.parent_child)
+		return provideFirstInSequence().getToRelations().stream()
+				.filter(rel -> rel.getType() == JobRelationType.PARENT_CHILD)
 				.findFirst().map(JobRelation::getFrom);
 	}
 
 	public Job provideParentOrSelf() {
 		Optional<Job> parent = provideParent();
 		return parent.isPresent() ? parent.get() : domainIdentity();
+	}
+
+	public Job providePreviousOrSelfInSequence() {
+		Optional<? extends JobRelation> previous = getToRelations().stream()
+				.filter(jr -> jr.getType() == JobRelationType.SEQUENCE)
+				.findFirst();
+		return previous.map(JobRelation::getFrom).orElse(domainIdentity());
 	}
 
 	public List<Job> provideRelatedSequential() {
@@ -511,7 +488,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			result.add(cursor);
 			Optional<? extends JobRelation> relation = cursor.getFromRelations()
 					.stream()
-					.filter(rel -> rel.getType() == JobRelationType.sequence
+					.filter(rel -> rel.getType() == JobRelationType.SEQUENCE
 							&& rel.getTo() != null)
 					.findFirst();
 			if (relation.isPresent()) {
@@ -523,14 +500,28 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return result;
 	}
 
+	public Job provideRelatedSubqueueOwner() {
+		Job first = provideFirstInSequence();
+		if (first != domainIdentity()) {
+			return first;
+		}
+		return provideParentOrSelf();
+	}
+
 	public String provideShortName() {
 		return provideName().replaceFirst(".+\\.", "");
 	}
 
+	public Class<? extends Task> provideTaskClass() {
+		if (provideCanDeserializeTask()) {
+			return getTask().getClass();
+		} else {
+			return null;
+		}
+	}
+
 	public Stream<Job> provideUncompletedChildren() {
-		return getFromRelations().stream()
-				.filter(r -> r.getType() == JobRelationType.parent_child)
-				.map(JobRelation::getTo).filter(Job::provideIsNotComplete);
+		return provideChildren().filter(Job::provideIsNotComplete);
 	}
 
 	public Set<Job> provideUncompletedSequential() {
@@ -544,13 +535,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public JobState resolveState() {
 		return resolveState0(0);
-	}
-
-	public void setClustered(boolean clustered) {
-		boolean old_clustered = this.clustered;
-		this.clustered = clustered;
-		propertyChangeSupport().firePropertyChange("clustered", old_clustered,
-				clustered);
 	}
 
 	public void setCompletion(double completion) {
@@ -601,12 +585,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		this.performerVersionNumber = performerVersionNumber;
 		propertyChangeSupport().firePropertyChange("performerVersionNumber",
 				old_performerVersionNumber, performerVersionNumber);
-	}
-
-	public void setQueue(String queue) {
-		String old_queue = this.queue;
-		this.queue = queue;
-		propertyChangeSupport().firePropertyChange("queue", old_queue, queue);
 	}
 
 	public void setResult(Object result) {
@@ -707,8 +685,18 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				old_taskSerialized, taskSerialized);
 	}
 
+	public String toDisplayName() {
+		return Ax.format("%s::%s",
+				getTaskClassName().replaceFirst(".+\\.(.+)", "$1"),
+				toLocator().toRecoverableNumericString());
+	}
+
 	@Override
 	public String toString() {
+		return toDisplayName() + " - " + resolveState();
+	}
+
+	public String toStringFull() {
 		return Ax.format("%s - %s - %s from: %s to: %s", toLocator(),
 				provideName(), resolveState(), toString(getFromRelations()),
 				toString(getToRelations()));
@@ -783,9 +771,5 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			}
 			return EntityComparator.INSTANCE.compare(o1, o2);
 		}
-	}
-
-	public Optional<Exception> provideException() {
-		return getResultType()==JobResultType.EXCEPTION?Optional.of(new Exception(getResultMessage())):Optional.empty();
 	}
 }

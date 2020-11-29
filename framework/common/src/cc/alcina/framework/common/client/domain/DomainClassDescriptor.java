@@ -111,7 +111,7 @@ public class DomainClassDescriptor<T extends Entity>
 		return false;
 	}
 
-	public void index(Entity obj, boolean add) {
+	public void index(Entity obj, boolean add, boolean committed) {
 		for (DomainStoreLookupDescriptor lookupDescriptor : lookupDescriptors) {
 			DomainLookup lookup = lookupDescriptor.getLookup();
 			if (add) {
@@ -121,6 +121,9 @@ public class DomainClassDescriptor<T extends Entity>
 			}
 		}
 		for (DomainProjection projection : projections) {
+			if (!committed && projection.isCommitOnly()) {
+				continue;
+			}
 			try {
 				if (add) {
 					projection.insert(obj);

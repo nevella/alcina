@@ -341,7 +341,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		if (action instanceof SynchronousAction) {
 			return JobRegistry.get().perform(action).getResultMessage();
 		} else {
-			Job job = JobRegistry.get().start(action, null);
+			Job job = JobRegistry.createBuilder().withTask(action).create();
 			Transaction.commit();
 			DomainStore.waitUntilCurrentRequestsProcessed();
 			String idString = String.valueOf(job.getId());

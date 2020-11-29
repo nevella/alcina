@@ -6,7 +6,6 @@ import java.util.Set;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.IDomainStore;
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -34,32 +33,6 @@ public class CollectionCreatorsMvcc {
 				return new Multiset<>();
 			} else {
 				return new TransactionalMultiset<>(keyClass, valueClass);
-			}
-		}
-
-		private final static class TransactionalMultiset<K, V>
-				extends Multiset<K, Set<V>> {
-			@SuppressWarnings("unused")
-			private Class<K> keyClass;
-
-			private Class<V> valueClass;
-
-			public TransactionalMultiset(Class<K> keyClass,
-					Class<V> valueClass) {
-				this.keyClass = keyClass;
-				this.valueClass = valueClass;
-				map = new TransactionalMap(keyClass, Set.class);
-			}
-
-			@Override
-			protected Set<V> createSet() {
-				Class<? extends Entity> entityClass = (Class<? extends Entity>) valueClass;
-				return new TransactionalSet(entityClass);
-			}
-
-			@Override
-			protected void createTopMap() {
-				// do it in *our* init (not the superclasses')
 			}
 		}
 	}

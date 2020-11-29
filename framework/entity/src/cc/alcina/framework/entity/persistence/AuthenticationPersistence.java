@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.persistence;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentE
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.Iid;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
@@ -27,9 +30,13 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
+import cc.alcina.framework.entity.util.MethodContext;
 
 @RegistryLocation(registryPoint = AuthenticationPersistence.class, implementationType = ImplementationType.SINGLETON)
 public class AuthenticationPersistence {
@@ -69,12 +76,28 @@ public class AuthenticationPersistence {
 		return session;
 	}
 
-	public ClientInstance createBootstrapClientInstance() {
-		ClientInstance persistent = callWithEntityManager(
+	public void createBootstrapClientInstance() {
+		BootstrapCreationResult bootstrapInstanceResult = callWithEntityManager(
 				new BootstrapInstanceCreator());
-		Domain.find(persistent.getAuthenticationSession().getIid());
-		Domain.find(persistent.getAuthenticationSession());
-		return Domain.find(persistent);
+		ClientInstance persistent = bootstrapInstanceResult.clientInstance;
+		EntityLayerObjects.get().setServerAsClientInstance(persistent);
+		ClientInstance preCommit = Domain.find(persistent);
+		EntityLayerObjects.get().setServerAsClientInstance(preCommit);
+		// publish as transforms (repeating the direct ejb create) to (a)
+		// force consistency in local domain and (b) allow for replay
+		bootstrapInstanceResult.createdDetached.stream()
+				.forEach(e -> TransformManager.get()
+						.objectsToDtes(
+								Collections.singletonList(Domain.find(e)),
+								e.entityClass(), false)
+						.forEach(TransformManager.get()::addTransform));
+		Transactions.getEnqueuedLazyLoads().clear();
+		MethodContext.instance().withContextTrue(
+				TransformPersisterInPersistenceContext.CONTEXT_REPLAYING_FOR_LOGS)
+				.run(() -> Transaction.commit());
+		ClientInstance domainVersion = Domain.find(persistent);
+		// ensure this instance is the only one ever created in the domain
+		EntityLayerObjects.get().setServerAsClientInstance(domainVersion);
 	}
 
 	public ClientInstance createClientInstance(AuthenticationSession session,
@@ -193,10 +216,13 @@ public class AuthenticationPersistence {
 				.callWithEntityManager(function);
 	}
 
-	private ClientInstance createBootstrapClientInstance(EntityManager em) {
+	private BootstrapCreationResult
+			createBootstrapClientInstance(EntityManager em) {
+		BootstrapCreationResult result = new BootstrapCreationResult();
 		String hostName = EntityLayerUtils.getLocalHostName();
 		String authenticationSessionUid = Ax.format("servlet:%s", hostName);
 		String iidUid = authenticationSessionUid;
+		List<Entity> createdObjects = new ArrayList<>();
 		Iid iid = (Iid) Ax.first(em.createQuery(Ax.format(
 				"select iid from %s iid where instanceId = '%s'",
 				AlcinaPersistentEntityImpl
@@ -207,6 +233,7 @@ public class AuthenticationPersistence {
 					.getNewImplementationInstance(Iid.class);
 			iid.setInstanceId(iidUid);
 			em.persist(iid);
+			createdObjects.add(iid);
 		}
 		AuthenticationSession authenticationSession = (AuthenticationSession) Ax
 				.first(em.createQuery(Ax.format(
@@ -224,6 +251,7 @@ public class AuthenticationPersistence {
 					(Entity) PermissionsManager.get().getUser()));
 			authenticationSession.setAuthenticationType("server-instance");
 			em.persist(authenticationSession);
+			createdObjects.add(authenticationSession);
 		}
 		ClientInstance clientInstance = AlcinaPersistentEntityImpl
 				.getNewImplementationInstance(ClientInstance.class);
@@ -237,15 +265,23 @@ public class AuthenticationPersistence {
 		Iid detachedIid = AlcinaPersistentEntityImpl
 				.getNewImplementationInstance(Iid.class);
 		detachedIid.setId(iid.getId());
+		if (createdObjects.contains(iid)) {
+			result.createdDetached.add(detachedIid);
+		}
 		AuthenticationSession detachedSession = AlcinaPersistentEntityImpl
 				.getNewImplementationInstance(AuthenticationSession.class);
 		detachedSession.setId(authenticationSession.getId());
 		detachedSession.setIid(detachedIid);
+		if (createdObjects.contains(authenticationSession)) {
+			result.createdDetached.add(detachedSession);
+		}
 		ClientInstance detachedInstance = AlcinaPersistentEntityImpl
 				.getNewImplementationInstance(ClientInstance.class);
 		detachedInstance.setId(clientInstance.getId());
 		detachedInstance.setAuthenticationSession(detachedSession);
-		return detachedInstance;
+		result.createdDetached.add(detachedInstance);
+		result.clientInstance = detachedInstance;
+		return result;
 	}
 
 	private <V extends Entity> V domainImpl(Class<V> clazz,
@@ -260,11 +296,17 @@ public class AuthenticationPersistence {
 	}
 
 	public static class BootstrapInstanceCreator
-			implements Function<EntityManager, ClientInstance> {
+			implements Function<EntityManager, BootstrapCreationResult> {
 		@Override
-		public ClientInstance apply(EntityManager em) {
+		public BootstrapCreationResult apply(EntityManager em) {
 			return AuthenticationPersistence.get()
 					.createBootstrapClientInstance(em);
 		}
+	}
+
+	static class BootstrapCreationResult {
+		ClientInstance clientInstance;
+
+		List<Entity> createdDetached = new ArrayList<>();
 	}
 }

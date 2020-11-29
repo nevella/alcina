@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.job;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -8,12 +9,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -24,6 +23,8 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
@@ -31,13 +32,13 @@ import cc.alcina.framework.common.client.actions.JobResource;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobResult;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.NonRootTask;
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.common.client.job.Task.HasClusteredRunParameter;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -52,22 +53,20 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
+import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
+import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.QueueStat;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.job.JobContext.PersistenceType;
-import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
-import cc.alcina.framework.servlet.job.JobScheduler.ScheduleEvent;
-import cc.alcina.framework.servlet.job.JobScheduler.ScheduleProvider;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
 
@@ -134,46 +133,36 @@ public class JobRegistry extends WriterService {
 
 	static final String TRANSFORM_QUEUE_NAME = JobRegistry.class.getName();
 
+	public static Builder createBuilder() {
+		return new Builder();
+	}
+
 	public static JobRegistry get() {
 		return Registry.impl(JobRegistry.class);
+	}
+
+	private static void checkAnnotatedPermissions(Object o) {
+		WebMethod annotation = o.getClass().getAnnotation(WebMethod.class);
+		if (annotation != null) {
+			if (!PermissionsManager.get().isPermissible(
+					new AnnotatedPermissible(annotation.customPermission()))) {
+				WrappedRuntimeException e = new WrappedRuntimeException(
+						"Permission denied for action " + o,
+						SuggestedAction.NOTIFY_WARNING);
+				EntityLayerLogging.log(LogMessageType.TRANSFORM_EXCEPTION,
+						"Domain transform permissions exception", e);
+				throw e;
+			}
+		}
 	}
 
 	private Map<Job, JobContext> activeJobs = new ConcurrentHashMap<>();
 
 	private Map<Job, List<JobResource>> jobResources = new ConcurrentHashMap<>();
 
-	private Map<String, JobQueue> activeQueues = new ConcurrentHashMap<>();
-
-	Map<Job, SequenceCompletionLatch> completionLatches = new ConcurrentHashMap<>();
-
-	private JobScheduler scheduler;
+	JobScheduler scheduler;
 
 	Logger logger = LoggerFactory.getLogger(getClass());
-
-	private TopicListener<Entry<String, List<Job>>> queueNotifier = (k, e) -> {
-		String name = e.getKey();
-		logger.debug("Metadata changed on queue {}", name);
-		JobQueue queue = activeQueues.get(name);
-		/*
-		 * When scheduling subjobs on a different queue, this...? (lost comment)
-		 */
-		Job firstJob = e.getValue().get(0);
-		if (!firstJob.provideCanDeserializeTask()) {
-			return;
-		}
-		if (queue == null) {
-			// FIXME - mvcc.jobs.1a - there's some doubling up here with
-			Schedule schedule = scheduler.getScheduleForQueueEventAndOrJob(name,
-					firstJob);
-			if (schedule != null) {
-				queue = ensureQueue(schedule);
-			}
-		}
-		if (queue != null) {
-			queue.onMetadataChanged();
-		}
-		scheduler.onScheduleEvent(new ScheduleEvent(name, firstJob));
-	};
 
 	JobExecutors jobExecutors;
 
@@ -181,22 +170,18 @@ public class JobRegistry extends WriterService {
 
 	private AtomicInteger extJobSystemIdCounter = new AtomicInteger();
 
+	Map<Job, CountDownLatch> allocatorAwaiters = new ConcurrentHashMap<>();
+
 	public JobRegistry() {
 		TransformCommit.get()
 				.setBackendTransformQueueMaxDelay(TRANSFORM_QUEUE_NAME, 1000);
-		DomainDescriptorJob.get().queueChanged.add(queueNotifier);
-		scheduler = new JobScheduler(this);
 		jobExecutors = Registry.impl(JobExecutors.class);
 		jobExecutors.addScheduledJobExecutorChangeConsumer(leader -> {
 			if (leader) {
 				scheduler.enqueueLeaderChangedEvent();
 			}
 		});
-		JobExecutors.topicRescheduleJobs.add((k, v) -> {
-			if (v) {
-				scheduleJobs(false);
-			}
-		});
+		scheduler = new JobScheduler(this);
 	}
 
 	// Directly acquire a resource (not via TaskPerformer.getResources)
@@ -204,51 +189,9 @@ public class JobRegistry extends WriterService {
 		acquireResources(forJob, Collections.singletonList(resource));
 	}
 
-	public Job createJob(Task task, Schedule schedule, Date runAt,
-			boolean ignoreCreationContext) {
-		checkAnnotatedPermissions(task);
-		Job job = AlcinaPersistentEntityImpl.create(Job.class);
-		job.setUser(PermissionsManager.get().getUser());
-		job.setState(JobState.PENDING);
-		job.setTask(task);
-		job.setTaskClassName(task.getClass().getName());
-		job.setCreator(EntityLayerObjects.get().getServerAsClientInstance());
-		if (schedule == null) {
-			if (task instanceof HasClusteredRunParameter) {
-				job.setClustered(((HasClusteredRunParameter) task)
-						.provideIsRunClustered());
-			}
-		} else {
-			job.setQueue(schedule.getQueueName());
-			job.setClustered(schedule.isClustered());
-		}
-		JobContext creationContext = JobContext.get();
-		if (creationContext != null && runAt == null
-				&& !ignoreCreationContext) {
-			Job creatingJob = creationContext.getJob();
-			/*
-			 * If scheduling from&to a job in a max-1 queue, sequential
-			 * execution is required
-			 */
-			boolean scheduleSubsequent = schedule != null
-					&& Objects.equals(schedule.getQueueName(),
-							creatingJob.getQueue())
-					&& (schedule.getQueueMaxConcurrentJobs() == 1
-							|| schedule.isRunSameQueueScheduledAsSubsequent());
-			if (scheduleSubsequent) {
-				creatingJob.followWith(job);
-			} else {
-				creatingJob.createRelation(job, JobRelationType.parent_child);
-			}
-		}
-		job.setRunAt(runAt);
-		task.onJobCreate(job);
-		return job;
-	}
-
-	public List<QueueStat> getActiveQueueStats() {
-		return activeQueues.values().stream().map(JobQueue::asQueueStat)
-				.collect(Collectors.toList());
+	public Stream<QueueStat> getActiveQueueStats() {
+		return DomainDescriptorJob.get().getAllocationQueues()
+				.map(AllocationQueue::asQueueStat);
 	}
 
 	public String getExJobSystemNextJobId(Class<?> clazz) {
@@ -258,6 +201,11 @@ public class JobRegistry extends WriterService {
 				extJobSystemIdCounter.incrementAndGet());
 	}
 
+	public Stream<FutureStat> getFutureQueueStats() {
+		return DomainDescriptorJob.get().getAllFutureJobs()
+				.map(FutureStat::new);
+	}
+
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
 		checkAnnotatedPermissions(action);
@@ -265,11 +213,6 @@ public class JobRegistry extends WriterService {
 				.sorted(EntityComparator.REVERSED_INSTANCE)
 				.map(Job::asJobResult).map(JobResult::getActionLogItem)
 				.limit(count).collect(Collectors.toList());
-	}
-
-	public List<PendingStat> getPendingQueueStats() {
-		return scheduler.getScheduledJobs().stream().map(PendingStat::new)
-				.collect(Collectors.toList());
 	}
 
 	public String getPerformerThreadName(Job job) {
@@ -283,97 +226,27 @@ public class JobRegistry extends WriterService {
 				: Thread.currentThread();
 	}
 
-	public Schedule getScheduleForQueue(String queueName) {
-		return activeQueues.get(queueName).getSchedule();
-	}
-
-	public void onJobQueueTerminated(JobQueue jobQueue) {
-		synchronized (activeQueues) {
-			activeQueues.remove(jobQueue.getName());
-		}
-		logger.info("Job queue terminated: {}", jobQueue.getName());
-	}
-
 	/*
 	 * Awaits completion of the task and any sequential (cascaded) tasks
 	 */
 	public Job perform(Task task) {
 		try {
-			SequenceCompletionLatch completionLatch = new SequenceCompletionLatch();
-			Job job = start(task, completionLatch);
-			completionLatch.await();
+			Job job = createBuilder().withTask(task).create();
+			CountDownLatch latch = new CountDownLatch(1);
+			allocatorAwaiters.put(job, latch);
+			Transaction.commit();
+			latch.await();
+			JobContext jobContext = activeJobs.get(job);
+			allocatorAwaiters.remove(job);
+			jobContext.awaitSequenceCompletion();
 			DomainStore.waitUntilCurrentRequestsProcessed();
-			return job;
+			// FIXME - mvcc.jobs.1a - *really* make these lazy, mr annotation
+			// you
+			return Domain.find(job);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw WrappedRuntimeException.wrapIfNotRuntime(e);
 		}
-	}
-
-	public Job schedule(Task task) {
-		return schedule(task, scheduler.getSchedule(task.getClass(), false));
-	}
-
-	/*
-	 * Does *not* use schedule.getNext() - it's called by various utility
-	 * methods so if you want a custom time, add it in code (JobScheduler will
-	 * add the future date if sequenced if it)
-	 */
-	public Job schedule(Task task, Schedule schedule) {
-		Schedule providerSchedule = scheduler.getSchedule(task);
-		// to ensure we respect non-timebased task execution constraints, use
-		// the provider
-		// schedule if it exists && different to incoming
-		// schedule queue
-		if (providerSchedule != null) {
-			if (schedule == null
-					|| !Objects.equals(providerSchedule.getQueueName(),
-							schedule.getQueueName())) {
-				schedule = providerSchedule;
-			}
-		}
-		try {
-			if (schedule == null) {
-				return start(task, null);
-			} else {
-				Job job = createJob(task, schedule, null, false);
-				job.setClustered(schedule.isClustered());
-				ensureQueue(schedule);
-				return job;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw WrappedRuntimeException.wrapIfNotRuntime(e);
-		}
-	}
-
-	public void scheduleJobs(boolean applicationStartup) {
-		scheduler.enqueueInitialScheduleEvent();
-	}
-
-	/*
-	 * start job immediately. Uses non-time-based constraints from schedule
-	 * (e.g. queue) if the task has one, but not time (i.e. runAt)
-	 */
-	public Job start(Task task, SequenceCompletionLatch latch) {
-		/*
-		 * (doc) - ensure that, if a schedule is defined for a task (which also
-		 * indicates that the task has no parameters), a one-off execution of
-		 * the task runs on that queue
-		 */
-		Optional<ScheduleProvider> scheduleProvider = Registry
-				.optional(ScheduleProvider.class, task.getClass());
-		Schedule schedule = scheduleProvider.map(sp -> sp.getSchedule(task))
-				.orElse(null);
-		Job job = createJob(task, schedule, null, false);
-		if (latch != null) {
-			completionLatches.put(job, latch);
-		}
-		JobQueue queue = schedule != null ? ensureQueue(schedule)
-				: createPerJobQueue(job);
-		job.setQueue(queue.getName());
-		Transaction.commit();
-		return job;
 	}
 
 	@Override
@@ -383,33 +256,18 @@ public class JobRegistry extends WriterService {
 	@Override
 	public void stopService() {
 		stopped = true;
-		activeQueues.values().forEach(queue -> {
-			try {
-				queue.cancel();
-			} catch (Exception e) {
-				//
-			}
-		});
 		scheduler.stopService();
 	}
 
-	public void waitForQueue(String queueName) {
-		JobQueue jobQueue = activeQueues.get(queueName);
-		if (jobQueue != null) {
-			jobQueue.awaitEmpty();
-		}
-	}
-
-	public void withJobMetadataLock(String queueName, boolean clustered,
-			Runnable runnable) {
+	public void withJobMetadataLock(Job job, Runnable runnable) {
 		if (runnable == null) {
 			return;
 		}
 		try {
-			jobExecutors.allocationLock(queueName, clustered, true);
+			jobExecutors.allocationLock(job, true);
 			runnable.run();
 		} finally {
-			jobExecutors.allocationLock(queueName, clustered, false);
+			jobExecutors.allocationLock(job, false);
 		}
 	}
 
@@ -433,14 +291,6 @@ public class JobRegistry extends WriterService {
 		}
 	}
 
-	private JobQueue createPerJobQueue(Job job) {
-		JobQueue queue = new JobQueue(job, Executors.newSingleThreadExecutor(
-				new NamedThreadFactory("ad-hoc-jobs-pool")), 1, false);
-		queue.shutdownExecutorOnExit = true;
-		activeQueues.put(queue.getName(), queue);
-		return queue;
-	}
-
 	private <T extends Task> void performJob0(Job job,
 			boolean queueJobPersistence,
 			LauncherThreadState launcherThreadState) {
@@ -453,11 +303,10 @@ public class JobRegistry extends WriterService {
 			persistenceType = PersistenceType.None;
 		}
 		JobContext context = new JobContext(job, persistenceType, performer);
-		SequenceCompletionLatch completionLatch = completionLatches.get(job);
-		if (completionLatch != null) {
-			completionLatch.context = context;
-		}
 		activeJobs.put(job, context);
+		if (allocatorAwaiters.containsKey(job)) {
+			allocatorAwaiters.get(job).countDown();
+		}
 		boolean taskEnabled = !ResourceUtilities
 				.isDefined(Ax.format("%s.disabled", job.getTaskClassName()))
 				&& !ResourceUtilities.is("allJobsDisabled");
@@ -470,7 +319,11 @@ public class JobRegistry extends WriterService {
 			} else {
 				logger.info("Not performing {} (disabled)", job);
 			}
+			context.persistMetadata(false);
+			Transaction.commit();
+			context.toAwaitingChildren();
 			context.awaitChildCompletion();
+			performer.onChildCompletion();
 		} catch (Throwable t) {
 			Exception e = (Exception) ((t instanceof Exception) ? t
 					: new WrappedRuntimeException(t));
@@ -520,21 +373,6 @@ public class JobRegistry extends WriterService {
 		}
 	}
 
-	protected void checkAnnotatedPermissions(Object o) {
-		WebMethod annotation = o.getClass().getAnnotation(WebMethod.class);
-		if (annotation != null) {
-			if (!PermissionsManager.get().isPermissible(
-					new AnnotatedPermissible(annotation.customPermission()))) {
-				WrappedRuntimeException e = new WrappedRuntimeException(
-						"Permission denied for action " + o,
-						SuggestedAction.NOTIFY_WARNING);
-				EntityLayerLogging.log(LogMessageType.TRANSFORM_EXCEPTION,
-						"Domain transform permissions exception", e);
-				throw e;
-			}
-		}
-	}
-
 	protected TaskPerformer getTaskPerformer(Job job) {
 		Task task = job.getTask();
 		if (task instanceof TaskPerformer) {
@@ -546,17 +384,6 @@ public class JobRegistry extends WriterService {
 			return performer.get();
 		} else {
 			return new MissingPerformerPerformer();
-		}
-	}
-
-	JobQueue ensureQueue(Schedule schedule) {
-		synchronized (activeQueues) {
-			if (activeQueues.containsKey(schedule.getQueueName())) {
-				return activeQueues.get(schedule.getQueueName());
-			}
-			JobQueue queue = new JobQueue(schedule);
-			activeQueues.put(queue.getName(), queue);
-			return queue;
 		}
 	}
 
@@ -585,10 +412,6 @@ public class JobRegistry extends WriterService {
 			}
 		}
 		return null;
-	}
-
-	boolean isActiveQueueExists(Schedule schedule) {
-		return activeQueues.containsKey(schedule.getQueueName());
 	}
 
 	/*
@@ -641,6 +464,114 @@ public class JobRegistry extends WriterService {
 		}
 	}
 
+	public static class Builder {
+		private Task task;
+
+		private LocalDateTime runAt;
+
+		private Job related;
+
+		private JobRelationType relationType;
+
+		private JobState initialState = JobState.PENDING;
+
+		private Job lastCreated = null;
+
+		public void addSibling(Task task) {
+			this.task = task;
+			withContextParent();
+			create();
+		}
+
+		public Job create() {
+			checkAnnotatedPermissions(task);
+			Job job = AlcinaPersistentEntityImpl.create(Job.class);
+			job.setUser(PermissionsManager.get().getUser());
+			job.setState(initialState);
+			job.setTask(task);
+			job.setTaskClassName(task.getClass().getName());
+			job.setCreator(
+					EntityLayerObjects.get().getServerAsClientInstance());
+			if (runAt != null) {
+				Preconditions.checkArgument(initialState == JobState.FUTURE);
+			}
+			job.setRunAt(SEUtilities.toOldDate(runAt));
+			if (related != null) {
+				related.createRelation(job, relationType);
+			}
+			task.onJobCreate(job);
+			lastCreated = job;
+			return job;
+		}
+
+		public Builder createReturnBuilder() {
+			create();
+			return this;
+		}
+
+		public void followWith(Task task) {
+			this.task = task;
+			relationType = JobRelationType.SEQUENCE;
+			Preconditions.checkArgument(lastCreated != null);
+			related = lastCreated;
+			create();
+		}
+
+		public Builder withContextParent() {
+			this.related = JobContext.get().getJob();
+			Preconditions.checkNotNull(related);
+			this.relationType = JobRelationType.PARENT_CHILD;
+			return this;
+		}
+
+		public Builder withContextPrevious() {
+			this.related = JobContext.get().getJob();
+			Preconditions.checkNotNull(related);
+			this.relationType = JobRelationType.SEQUENCE;
+			return this;
+		}
+
+		public Builder withInitialState(JobState initialState) {
+			this.initialState = initialState;
+			return this;
+		}
+
+		public Builder withRelated(Job related) {
+			this.related = related;
+			return this;
+		}
+
+		public Builder withRelationType(JobRelationType relationType) {
+			this.relationType = relationType;
+			return this;
+		}
+
+		public Builder withRunAt(LocalDateTime runAt) {
+			this.runAt = runAt;
+			this.initialState = JobState.FUTURE;
+			return this;
+		}
+
+		public Builder withTask(Task task) {
+			this.task = task;
+			return this;
+		}
+	}
+
+	public static class FutureStat {
+		public String taskName;
+
+		public Date runAt;
+
+		public String jobId;
+
+		FutureStat(Job job) {
+			taskName = job.getTaskClassName();
+			runAt = job.getRunAt();
+			jobId = String.valueOf(job.getId());
+		}
+	}
+
 	@RegistryLocation(registryPoint = JobExecutors.class, implementationType = ImplementationType.INSTANCE)
 	public static class JobExecutorsSingle implements JobExecutors {
 		@Override
@@ -649,9 +580,7 @@ public class JobRegistry extends WriterService {
 		}
 
 		@Override
-		public void allocationLock(String name, boolean clustered,
-				boolean acquire) {
-			// Preconditions.checkState(!clustered);
+		public void allocationLock(Job job, boolean acquire) {
 		}
 
 		@Override
@@ -664,22 +593,10 @@ public class JobRegistry extends WriterService {
 		public boolean isCurrentScheduledJobExecutor() {
 			return true;
 		}
-	}
 
-	public static class PendingStat {
-		public String taskName;
-
-		public Date runAt;
-
-		public String name;
-
-		public String jobId;
-
-		PendingStat(Job job) {
-			taskName = job.getTaskClassName();
-			runAt = job.getRunAt();
-			name = job.getQueue();
-			jobId = String.valueOf(job.getId());
+		@Override
+		public boolean isHighestBuildNumberInCluster() {
+			return false;
 		}
 	}
 
@@ -692,20 +609,8 @@ public class JobRegistry extends WriterService {
 
 		@Override
 		public Job schedule(Task task) {
-			return get().schedule(task);
+			return createBuilder().withTask(task).create();
 		}
-	}
-
-	public static class QueueStat {
-		public int active;
-
-		public int pending;
-
-		public int total;
-
-		public String name;
-
-		public int completed;
 	}
 
 	static class LauncherThreadState {

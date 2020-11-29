@@ -1,21 +1,15 @@
 package cc.alcina.framework.servlet.job;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
+import java.util.concurrent.CountDownLatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.JobResource;
@@ -31,20 +25,12 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.RelatedJobCompletion;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.servlet.job.JobRegistry.ActionPerformerTrackMetrics;
-import cc.alcina.framework.servlet.job.JobRegistry.SequenceCompletionLatch;
-import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
-import cc.alcina.framework.servlet.job.JobScheduler.ScheduleProvider;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 
@@ -54,9 +40,6 @@ public class JobContext {
 
 	private static final String CONTEXT_EX_JOB_RESOURCES = JobContext.class
 			.getName() + ".CONTEXT_EX_JOB_RESOURCES";
-
-	private static final long AWAIT_CHILDREN_DELTA_TIMEOUT_MS = 30
-			* TimeConstants.ONE_MINUTE_MS;
 
 	public static void acquireResource(JobResource resource) {
 		if (has()) {
@@ -157,10 +140,6 @@ public class JobContext {
 		}
 	}
 
-	private boolean schedulingSubTasks;
-
-	private Job job;
-
 	private TaskPerformer performer;
 
 	private Logger logger;
@@ -169,34 +148,21 @@ public class JobContext {
 
 	private PersistenceType persistenceType;
 
-	private int subtaskCount;
+	Thread thread;
 
-	private int subtasksCompleted;
+	private String log;
+
+	private JobAllocator allocator;
+
+	private Job job;
 
 	private int itemCount;
 
 	private int itemsCompleted;
 
-	private LinkedList<RelatedJobCompletion> completionEvents = new LinkedList<>();
+	private String threadStartName;
 
-	private TopicListener<RelatedJobCompletion> relatedJobCompletionNotifier = (
-			k, completion) -> {
-		if (completion.job == job) {
-			logger.debug(
-					"Related job completion changed for job {} - {} complete - {}",
-					job, completion.related.size(), completion.related);
-			synchronized (completionEvents) {
-				completionEvents.add(completion);
-				completionEvents.notifyAll();
-			}
-		}
-	};
-
-	Thread thread;
-
-	String threadStartName = null;
-
-	private String log;
+	private CountDownLatch endedLatch = new CountDownLatch(1);
 
 	public JobContext(Job job, PersistenceType persistenceType,
 			TaskPerformer performer) {
@@ -205,216 +171,43 @@ public class JobContext {
 		this.performer = performer;
 		this.logger = LoggerFactory.getLogger(performer.getClass());
 		noHttpContext = AlcinaServletContext.httpContext() == null;
-	}
-
-	public void attemptEnsureQueue(Set<Job> uncompletedChildren) {
-		Job child = uncompletedChildren.iterator().next();
-		Task task = child.getTask();
-		Optional<ScheduleProvider> scheduleProvider = Registry
-				.optional(ScheduleProvider.class, task.getClass());
-		if (scheduleProvider.isPresent()) {
-			Optional<Schedule> schedule = scheduleProvider
-					.map(sp -> sp.getSchedule(child));
-			if (schedule.isPresent()) {
-				if (!JobRegistry.get().isActiveQueueExists(schedule.get())) {
-					logger.warn("Ensuring queue for child/subsequent job {}",
-							child);
-					JobRegistry.get().ensureQueue(schedule.get());
-				}
-			} else {
-				schedule = scheduleProvider.map(sp -> sp.getSchedule(task));
-				if (schedule.isPresent()) {
-					if (!JobRegistry.get()
-							.isActiveQueueExists(schedule.get())) {
-						logger.warn(
-								"Ensuring queue for child/subsequent task {}",
-								task);
-						JobRegistry.get().ensureQueue(schedule.get());
-					}
-				}
-			}
-		}
-	}
-
-	public synchronized void awaitChildCompletion() {
-		Set<Job> uncompletedChildren = new LinkedHashSet<>();
-		long lastCompletionEventTime = System.currentTimeMillis();
-		double lastPublishedPercentComplete = 0.0;
-		long lastPublishedCompletionStatsTime = System.currentTimeMillis();
-		/*
-		 * early termination
-		 * 
-		 */
-		if (job.provideIsComplete()
-				|| job.provideUncompletedChildren().count() == 0) {
-			return;
-		}
-		try {
-			DomainDescriptorJob.get().relatedJobCompletionChanged
-					.add(relatedJobCompletionNotifier);
-			while (!job.provideIsComplete()) {
-				RelatedJobCompletion event = null;
-				// must publish statusMessage changes outside the synchronized
-				// block
-				String statusMessage = null;
-				long now = 0L;
-				/*
-				 * The on-demand creation and event-driven countdown of
-				 * uncompletedChildren (rather than checking
-				 * job.provideUncompletedChildren() directly) is for performance
-				 * reasons - specifically when the job has 10,000s of children.
-				 * 
-				 * Do our waits outside the synchronized block (to avoid
-				 * transform.commit() listener deadlocks) - but get the
-				 * uncompleted children _inside_ (to ensure consistency of
-				 * completion events vs uncompleted children - i.e. this loop
-				 * will receive completion events _after_ the collection get)
-				 */
-				if (uncompletedChildren.isEmpty()) {
-					Transaction.commit();
-					DomainStore.waitUntilCurrentRequestsProcessed();
-				}
-				synchronized (completionEvents) {
-					if (uncompletedChildren.isEmpty()) {
-						// double-check
-						uncompletedChildren = job.provideUncompletedChildren()
-								.collect(Collectors.toSet());
-						if (uncompletedChildren.isEmpty()) {
-							break;
-						}
-					}
-					if (uncompletedChildren.size() > 0
-							&& completionEvents.isEmpty()) {
-						int totalCount = job.getFromRelations().size();
-						int completedCount = totalCount
-								- uncompletedChildren.size();
-						double percentComplete = ((double) completedCount)
-								/ totalCount * 100.0;
-						now = System.currentTimeMillis();
-						if (percentComplete - lastPublishedPercentComplete > 1
-								|| (now - lastPublishedCompletionStatsTime > 2000)) {
-							statusMessage = Ax.format(
-									"Await child completion - %s% - %s/%s",
-									(int) percentComplete, completedCount,
-									totalCount);
-							lastPublishedPercentComplete = percentComplete;
-							lastPublishedCompletionStatsTime = now;
-						}
-						Transaction.ensureEnded();
-						try {
-							// FIXME - mvcc.jobs - remove timeout
-							completionEvents.wait(1000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						Transaction.begin();
-					}
-					now = System.currentTimeMillis();
-					if (completionEvents.size() > 0) {
-						event = completionEvents.removeFirst();
-						lastCompletionEventTime = now;
-					} else {
-						// FIXME - mvcc.jobs - scheduling logic - may be
-						// shutting down too early?
-						//
-						// going away with JobAllocator
-						if (uncompletedChildren.size() > 0) {
-							attemptEnsureQueue(uncompletedChildren);
-						}
-					}
-				}
-				if (now - lastCompletionEventTime > 30
-						* TimeConstants.ONE_SECOND_MS) {
-					// FIXME - mvcc.jobs.1a - checking our propagation is OK
-					if (job.provideUncompletedChildren()
-							.collect(Collectors.toSet())
-							.size() != uncompletedChildren.size()) {
-						logger.warn(
-								"Differing child counts for uncompleted children");
-						uncompletedChildren.clear();
-					}
-				}
-				if (now - lastCompletionEventTime > AWAIT_CHILDREN_DELTA_TIMEOUT_MS) {
-					// FIXME - mvcc.jobs - A policy?
-					logger.warn(
-							"Cancelling {} - timed out awaiting child completion",
-							job);
-					job.cancel();
-					Transaction.commit();
-					return;
-				}
-				if (statusMessage != null) {
-					JobContext.get().setStatusMessage(statusMessage);
-					Transaction.commit();
-				}
-				if (event != null) {
-					uncompletedChildren.removeAll(event.related);
-				}
-			}
-		} finally {
-			DomainDescriptorJob.get().relatedJobCompletionChanged
-					.remove(relatedJobCompletionNotifier);
-		}
+		allocator = JobRegistry.get().scheduler.allocators.get(job);
 	}
 
 	public void end() {
-		try {
-			Preconditions.checkState(
-					persistenceType != PersistenceType.SchedulingSubJobs);
-			if (noHttpContext) {
-				InternalMetrics.get().endTracker(performer);
-			}
-			if (job.provideIsNotComplete()) {
-				if (Ax.matches(job.getStatusMessage(),
-						"Await child completion.+")) {
-					job.setStatusMessage(
-							Ax.format("All children complete - (%s/%s)",
-									job.provideChildren().count(),
-									job.provideChildren().count()));
-				}
-				log = Registry.impl(PerThreadLogging.class).endBuffer();
-				job.setLog(log);
-				if (!job.provideIsComplete()) {
-					job.setState(JobState.COMPLETED);
-				}
-				job.setEndTime(new Date());
-				if (job.getResultType() == null) {
-					job.setResultType(JobResultType.OK);
-				}
-				persistMetadata(true);
-			} else {
-				Transaction.commit();
-			}
-			if (threadStartName != null) {
-				thread.setName(threadStartName);
-			}
-			if (persistenceType == PersistenceType.None) {
-				// don't end transaction (job metadata changes needed for queue
-				// exit)
-			} else {
-				Transaction.endAndBeginNew();
-			}
-		} finally {
-			SequenceCompletionLatch sequenceCompletionLatch = JobRegistry
-					.get().completionLatches.remove(job);
-			if (sequenceCompletionLatch != null) {
-				logger.warn("Fired child completion to sequence latch: {}",
-						job);
-				sequenceCompletionLatch.onChildJobsCompleted();
-			}
+		if (noHttpContext) {
+			InternalMetrics.get().endTracker(performer);
 		}
-	}
-
-	public void followCurrentJobWith(Task followingTask) {
-		getJob().followWith(JobRegistry.get().schedule(followingTask));
-	}
-
-	public int getItemCount() {
-		return this.itemCount;
-	}
-
-	public int getItemsCompleted() {
-		return this.itemsCompleted;
+		if (job.provideIsNotComplete()) {
+			log = Registry.impl(PerThreadLogging.class).endBuffer();
+			job.setLog(log);
+			if (!job.provideIsComplete()) {
+				if (job.provideRelatedSequential().stream()
+						.filter(j -> j != job)
+						.anyMatch(Job::provideIsNotComplete)) {
+					job.setState(JobState.COMPLETED);
+				} else {
+					job.setState(JobState.SEQUENCE_COMPLETE);
+				}
+			}
+			job.setEndTime(new Date());
+			if (job.getResultType() == null) {
+				job.setResultType(JobResultType.OK);
+			}
+			persistMetadata(true);
+		} else {
+			Transaction.commit();
+		}
+		if (threadStartName != null) {
+			Thread.currentThread().setName(threadStartName);
+		}
+		if (persistenceType == PersistenceType.None) {
+			// don't end transaction (job metadata changes needed for queue
+			// exit)
+		} else {
+			Transaction.endAndBeginNew();
+		}
+		endedLatch.countDown();
 	}
 
 	public Job getJob() {
@@ -433,20 +226,8 @@ public class JobContext {
 		return this.performer;
 	}
 
-	public int getSubtaskCount() {
-		return this.subtaskCount;
-	}
-
-	public int getSubtasksCompleted() {
-		return this.subtasksCompleted;
-	}
-
 	public void incrementItemCount(int delta) {
 		itemCount += delta;
-	}
-
-	public boolean isSchedulingSubTasks() {
-		return this.schedulingSubTasks;
 	}
 
 	public void jobOk(String resultMessage) {
@@ -481,31 +262,13 @@ public class JobContext {
 		get().getJob().setResultMessage(resultMessage);
 	}
 
-	public void setSchedulingSubTasks(boolean schedulingSubTasks) {
-		this.schedulingSubTasks = schedulingSubTasks;
-		if (schedulingSubTasks) {
-			persistenceType = PersistenceType.SchedulingSubJobs;
-		} else {
-			Transaction.commit();
-			persistenceType = PersistenceType.Immediate;
-		}
-	}
-
 	public void setStatusMessage(String template, Object... args) {
 		getJob().setStatusMessage(Ax.format(template, args));
 	}
 
-	public void setSubtaskCount(int subtaskCount) {
-		this.subtaskCount = subtaskCount;
-	}
-
-	public void setSubtasksCompleted(int subtasksCompleted) {
-		this.subtasksCompleted = subtasksCompleted;
-	}
-
-	public File snapshotLog() {
-		// TODO Auto-generated method stub
-		return null;
+	public void toAwaitingChildren() {
+		Transaction.commit();
+		allocator.toAwaitingChildren();
 	}
 
 	@Override
@@ -523,6 +286,8 @@ public class JobContext {
 	}
 
 	protected void persistMetadata(boolean respectImmediate) {
+		// FIXME - get more formal about when it's OK to defer persistence
+		respectImmediate = true;
 		switch (persistenceType) {
 		case Immediate: {
 			if (respectImmediate) {
@@ -545,51 +310,24 @@ public class JobContext {
 		case None:
 			TransformCommit.removeTransforms(Job.class, JobRelation.class);
 			break;
-		case SchedulingSubJobs:
-			break;
 		}
 	}
 
+	void awaitChildCompletion() {
+		Transaction.ensureEnded();
+		allocator.awaitChildCompletion();
+		Transaction.begin();
+	}
+
 	void awaitSequenceCompletion() {
-		Transaction.endAndBeginNew();
-		if (job.provideUncompletedSequential().isEmpty()) {
-			return;
-		}
+		Transaction.ensureEnded();
 		try {
-			DomainDescriptorJob.get().relatedJobCompletionChanged
-					.add(relatedJobCompletionNotifier);
-			while (true) {
-				DomainStore.waitUntilCurrentRequestsProcessed();
-				RelatedJobCompletion event = null;
-				synchronized (completionEvents) {
-					if (completionEvents.isEmpty()) {
-						Set<Job> uncompletedSequential = job
-								.provideUncompletedSequential();
-						if (uncompletedSequential.size() == 0) {
-							break;
-						}
-						Transaction.ensureEnded();
-						try {
-							// FIXME - mvcc.jobs - timeout is for debugging
-							completionEvents.wait(1000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						Transaction.begin();
-						attemptEnsureQueue(uncompletedSequential);
-					} else {
-						event = completionEvents.removeFirst();
-						// we don't process the completion event details, so ok
-						// to clear (it's just a "wake up and check" notifier by
-						// this point)
-						completionEvents.clear();
-					}
-				}
-			}
-		} finally {
-			DomainDescriptorJob.get().relatedJobCompletionChanged
-					.remove(relatedJobCompletionNotifier);
+			endedLatch.await();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
+		allocator.awaitSequenceCompletion();
+		Transaction.begin();
 	}
 
 	void checkCancelled0(boolean ignoreSelf) {
@@ -683,6 +421,6 @@ public class JobContext {
 	}
 
 	enum PersistenceType {
-		None, Immediate, Queued, SchedulingSubJobs
+		None, Immediate, Queued;
 	}
 }

@@ -184,6 +184,14 @@ public class EntityLocator implements Serializable {
 		return Ax.format("%s/%s/%s", id, localId, clazz.getName());
 	}
 
+	public String toRecoverableNumericString() {
+		if (id != 0) {
+			return String.valueOf(id);
+		}
+		return Ax.format("%s/%s",
+				PermissionsManager.get().getClientInstanceId(), localId);
+	}
+
 	public String toRecoverableString(long clientInstanceId) {
 		if (id != 0) {
 			return toString();

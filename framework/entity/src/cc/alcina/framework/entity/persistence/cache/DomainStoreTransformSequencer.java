@@ -531,8 +531,9 @@ public class DomainStoreTransformSequencer {
 				highestVisibleTransactions.transformIds = lastIds;
 			}
 			if (unpublishedPositions.isEmpty()) {
-				logger.info(
-						"Empty unpublished positions in getSequentialUnpublishedRequests0");
+				// logger.info(
+				// "Empty unpublished positions in
+				// getSequentialUnpublishedRequests0");
 			} else {
 				logger.info("Added unpublished positions \n\t{} ",
 						CommonUtils.joinWithNewlineTab(unpublishedPositions));

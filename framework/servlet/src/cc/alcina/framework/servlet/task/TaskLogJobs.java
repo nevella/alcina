@@ -1,7 +1,7 @@
 package cc.alcina.framework.servlet.task;
 
-import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.actions.ServerControlAction;
 import cc.alcina.framework.common.client.dom.DomDoc;
@@ -9,33 +9,32 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.job.Job;
-import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
+import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.QueueStat;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job.JobRegistry;
-import cc.alcina.framework.servlet.job.JobRegistry.PendingStat;
-import cc.alcina.framework.servlet.job.JobRegistry.QueueStat;
+import cc.alcina.framework.servlet.job.JobRegistry.FutureStat;
 import cc.alcina.framework.servlet.servlet.control.ControlServlet;
 
 public class TaskLogJobs extends AbstractTaskPerformer {
-	protected void addActiveAndPending(DomDoc doc, String sectionFilterName,
-			Predicate<Job> sectionFilter, int limit) {
+	protected void addActive(DomDoc doc, String sectionFilterName,
+			Predicate<Job> sectionFilter) {
 		{
 			doc.html().body().builder().tag("h2")
 					.text("Active and pending jobs (%s)", sectionFilterName)
 					.append();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
-			builder.row().cell("Id").cell("Name").cell("Queue").cell("Started")
-					.cell("Thread").cell("Performer").cell("Links");
-			DomainDescriptorJob.get().getNotCompletedJobs()
+			builder.row().cell("Id").cell("Name").cell("Started").cell("Thread")
+					.cell("Performer").cell("Links");
+			DomainDescriptorJob.get().getActiveJobs()
 					.filter(job -> Ax.isBlank(value)
 							|| job.getTaskClassName().matches(value))
-					.filter(sectionFilter).limit(limit).forEach(job -> {
+					.filter(sectionFilter).forEach(job -> {
 						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 								.cell(String.valueOf(job.getId()))
-								.cell(job.provideName()).cell(job.getQueue())
+								.cell(job.provideName())
 								.cell(job.getStartTime())
 								.cell(JobRegistry.get()
 										.getPerformerThreadName(job))
@@ -103,31 +102,29 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 	protected void run0() throws Exception {
 		DomDoc doc = DomDoc.basicHtmlDoc();
 		{
-			List<QueueStat> queues = JobRegistry.get().getActiveQueueStats();
-			doc.html().body().builder().tag("h2").text("Active queues")
-					.append();
+			Stream<QueueStat> queues = JobRegistry.get().getActiveQueueStats();
+			doc.html().body().builder().tag("h2")
+					.text("Active allocation queues").append();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
 			builder.row().cell("Name").cell("Active").cell("Pending")
 					.cell("Completed").cell("Total");
-			queues.stream().filter(q -> q.active != 0)
+			queues.filter(q -> q.active != 0)
 					.forEach(queue -> builder.row().cell(queue.name)
 							.cell(queue.active).cell(queue.pending)
 							.cell(queue.completed).cell(queue.total));
 		}
 		{
-			List<PendingStat> pending = JobRegistry.get()
-					.getPendingQueueStats();
+			Stream<FutureStat> pending = JobRegistry.get()
+					.getFutureQueueStats();
 			doc.html().body().builder().tag("h2").text("Pending queues")
 					.append();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
-			builder.row().cell("Name").cell("Run at").cell("Task").cell("Id")
-					.cell("Link");
+			builder.row().cell("Task").cell("Run at").cell("Id").cell("Link");
 			pending.forEach(stat -> {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-						.cell(stat.name).cell(stat.runAt).cell(stat.taskName)
-						.cell(stat.jobId);
+						.cell(stat.taskName).cell(stat.runAt).cell(stat.jobId);
 				DomNode td = cellBuilder.append();
 				ServerControlAction action = new ServerControlAction();
 				action.getParameters()
@@ -137,25 +134,10 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 				td.html().addLink("Cancel", href, "_blank");
 			});
 		}
-		addActiveAndPending(doc, "top-level - active",
-				job -> !job.provideParent().isPresent()
-						&& job.getState() == JobState.PROCESSING,
-				999);
-		addActiveAndPending(doc, "top-level - pending",
-				job -> !job.provideParent().isPresent()
-						&& job.getState() != JobState.PROCESSING,
-				20);
-		addActiveAndPending(doc, "child - active",
-				job -> job.provideParent().isPresent()
-						&& job.getState() == JobState.PROCESSING,
-				999);
-		addActiveAndPending(doc, "child - pending",
-				job -> job.provideParent().isPresent()
-						&& job.getState() != JobState.PROCESSING,
-				20);
-		addCompleted(doc, "top-level", job -> !job.provideParent().isPresent(),
-				20);
-		addCompleted(doc, "child", job -> job.provideParent().isPresent(), 20);
+		addActive(doc, "top-level - active", Job::provideIsTopLevel);
+		addActive(doc, "child - active", Job::provideIsNotTopLevel);
+		addCompleted(doc, "top-level", Job::provideIsTopLevel, 20);
+		addCompleted(doc, "child", Job::provideIsNotTopLevel, 20);
 		slf4jLogger.info(doc.prettyToString());
 	}
 }

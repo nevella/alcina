@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -41,6 +42,10 @@ import cc.alcina.framework.common.client.util.Ax;
  */
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
+	public static ClientInstance self() {
+		return PermissionsManager.get().getClientInstance();
+	}
+
 	private Date helloDate;
 
 	private Integer auth;

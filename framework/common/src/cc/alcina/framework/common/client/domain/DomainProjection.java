@@ -22,6 +22,10 @@ public interface DomainProjection<T extends Entity>
 		return self;
 	}
 
+	default boolean isCommitOnly() {
+		return false;
+	}
+
 	default boolean isDerived() {
 		return false;
 	}

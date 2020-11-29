@@ -29,6 +29,9 @@ import java.lang.annotation.Target;
  *
  * @author Nick Reddel
  */
+// FIXME - dirndl.1 - refactor to Registration/impl -
+// implementation=producedClass;
+// registryFactory->ImplProvider,registryFactory.create(x,y)->implProvider.impl()
 public @interface RegistryLocation {
 	public static final int DEFAULT_PRIORITY = 10;
 

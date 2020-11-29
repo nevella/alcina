@@ -2,24 +2,26 @@ package cc.alcina.framework.servlet.job;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
 import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
@@ -28,26 +30,30 @@ import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
-import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.InnerAccess;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 import cc.alcina.framework.common.client.util.MultikeyMap;
-import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
+import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
+import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.Event;
+import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.SubqueuePhase;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.MethodContext;
-import cc.alcina.framework.servlet.Sx;
+import cc.alcina.framework.servlet.job.JobScheduler.ScheduleEvent.Type;
 
 /**
  * <h2>TODO</h2>
@@ -61,142 +67,133 @@ import cc.alcina.framework.servlet.Sx;
  *
  */
 public class JobScheduler {
-	Multimap<String, List<Class<? extends Task>>> queueNameSchedulableTasks = new Multimap<>();
-
 	private JobRegistry jobRegistry;
 
 	private Timer timer = new Timer();
 
-	private LocalDateTime nextScheduled = null;
+	private LocalDateTime nextScheduledWakeup = null;
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	private boolean applicationStartup = true;
+	private boolean finished;
 
-	private AtomicBoolean finished = new AtomicBoolean();
+	private ScheduleJobsThread thread;
 
-	private ScheduleJobsThread scheduleJobsQueueProcessor;
+	private BlockingQueue<ScheduleEvent> events = new LinkedBlockingQueue<>();
 
-	/*
-	 * all access locked on the field
-	 */
-	private LinkedList<ScheduleEvent> scheduleEvents = new LinkedList<>();
+	private TopicListener<Event> queueEventListener = (k, v) -> events
+			.add(new ScheduleEvent(v));
 
-	Map<String, Schedule> schedulesByQueueName = new LinkedHashMap<>();
+	Map<Job, JobAllocator> allocators = new ConcurrentHashMap<>();
+
+	private ExecutorService allocatorService = Executors.newCachedThreadPool();
 
 	JobScheduler(JobRegistry jobRegistry) {
 		this.jobRegistry = jobRegistry;
-		scheduleJobsQueueProcessor = new ScheduleJobsThread();
-		scheduleJobsQueueProcessor.start();
-		schedulesByQueueName = Registry.impls(Schedule.class).stream()
-				.collect(AlcinaCollectors.toKeyMap(Schedule::getQueueName));
+		DomainDescriptorJob.get().queueEvents.add(queueEventListener);
+		DomainDescriptorJob.get().fireInitialAllocatorQueueCreationEvents();
+		thread = new ScheduleJobsThread();
+		thread.start();
+		// FIXME - mvcc.jobs.1a - this should instead listen on cluster change
+		// events
+		timer.scheduleAtFixedRate(new TimerTask() {
+			@Override
+			public void run() {
+				MethodContext.instance().withWrappingTransaction()
+						.run(() -> events.add(new ScheduleEvent(Type.WAKEUP)));
+			}
+		}, 0L, 5 * TimeConstants.ONE_MINUTE_MS);
+	}
+
+	public Predicate<Job> canModify(boolean scheduleClusterJobs,
+			boolean scheduleVmLocalJobs) {
+		Predicate<Job> canModify = job -> {
+			if (Schedule.forTaskClass(job.provideTaskClass()).isVmLocal()) {
+				return scheduleVmLocalJobs
+						&& job.getCreator() == ClientInstance.self();
+			} else {
+				return scheduleClusterJobs;
+			}
+		};
+		return canModify;
 	}
 
 	public void stopService() {
-		timer.cancel();
-		finished.set(true);
-		synchronized (scheduleEvents) {
-			scheduleEvents.notify();
-		}
+		events.add(new ScheduleEvent(Type.SHUTDOWN));
 	}
 
-	private boolean canAllocateClustered(Job job) {
-		Optional<ScheduleProvider> scheduleProvider = Registry
-				.optional(ScheduleProvider.class, job.getTask().getClass());
-		// FIXME - mvcc.jobs.2 - (validation) all clustered jobs must have a
-		// scheduleprovider
-		if (scheduleProvider.isPresent()) {
-			Schedule schedule = scheduleProvider.get()
-					.getSchedule(job.getTask());
-			if (schedule == null) {
-				return false;
-			}
-			return jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()
-					|| schedule.isOnlyPerformOnLeader();
-		} else {
-			return false;
-		}
-	}
-
-	private void ensureQueueNames() {
-		List<Class> scheduleProviders = Registry.get()
-				.allImplementations(ScheduleProvider.class).stream()
-				.filter(ResourceUtilities::notDisabled).distinct()
-				.collect(Collectors.toList());
-		scheduleProviders.stream().map(Registry.get()::getLocations)
-				.flatMap(Collection::stream).forEach(loc -> {
-					Class<? extends Task> taskClass = loc.targetClass();
-					Schedule schedule = getSchedule(taskClass, true);
-					if (schedule != null) {
-						queueNameSchedulableTasks.add(schedule.getQueueName(),
-								taskClass);
-					}
+	private void futuresToPending() {
+		DomainDescriptorJob.get().getAllFutureJobs()
+				.filter(job -> job.getRunAt().compareTo(new Date()) <= 0)
+				.filter(SchedulingPermissions::canModifyFuture).forEach(job -> {
+					job.setPerformer(ClientInstance.self());
+					job.setState(JobState.PENDING);
+					logger.info("Job scheduler - future-to-pending - {}", job);
 				});
 	}
 
-	private void ensureScheduled(Schedule schedule, Class<? extends Task> clazz,
-			LocalDateTime nextRun) {
-		logger.debug("Ensure schedule - {} - {}", clazz, nextRun);
-		JobRegistry.get().withJobMetadataLock(schedule.getQueueName(),
-				schedule.isClustered(), () -> {
-					Optional<? extends Job> pending = DomainDescriptorJob.get()
-							.getUnallocatedJobsForQueue(schedule.getQueueName(),
-									false)
-							.filter(job -> job.getRunAt() != null)
-							.filter(job -> job.provideIsTaskClass(clazz))
-							.filter(job -> job.getRunAt() != null).findFirst();
-					if (pending.isPresent()) {
-						if (SEUtilities
-								.toLocalDateTime(pending.get().getRunAt())
-								.isAfter(nextRun)) {
-							logger.info("Changed next run of {} to {}", pending,
-									nextRun);
-							pending.get()
-									.setRunAt(SEUtilities.toOldDate(nextRun));
-						}
-					} else {
-						Job job = jobRegistry.createJob(
-								Reflections.newInstance(clazz), schedule,
-								SEUtilities.toOldDate(nextRun), false);
-						logger.info("Scheduled job {} for {}", job, nextRun);
-					}
-				});
-		if (nextScheduled == null || nextScheduled.isAfter(nextRun)) {
-			nextScheduled = nextRun;
-			ensureWakeup(clazz, nextRun);
-		}
+	private void processEvent(ScheduleEvent event) {
+		MethodContext.instance().withWrappingTransaction()
+				.withRootPermissions(true).run(() -> processEvent0(event));
 	}
 
-	private synchronized void ensureWakeup(Class<? extends Task> clazz,
-			LocalDateTime nextRun) {
-		long delay = SEUtilities.toOldDate(nextRun).getTime()
-				- System.currentTimeMillis();
-		if (delay <= 0) {
-			delay = 0;
-		}
-		timer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				String message = Ax.format("wakeup for %s - %s",
-						clazz.getSimpleName(), nextRun);
-				logger.info("Schedule {}", message);
-				MethodContext.instance().withRootPermissions(true)
-						.withWrappingTransaction().run(() -> {
-							enqueueScheduleEvent(
-									new ScheduleEvent(message, null));
-						});
+	private void processEvent0(ScheduleEvent event) {
+		if (event.type.isRefreshFuturesEvent()) {
+			/*
+			 * orphans before scheduling (since we may resubmit
+			 * timewise-constrained tasks)
+			 */
+			if (SchedulingPermissions.canProcessOrphans()) {
+				processOrphans();
+				Transaction.commit();
 			}
-		}, delay + 1);
-	}
-
-	private int getEventQueueLength() {
-		synchronized (scheduleEvents) {
-			return scheduleEvents.size();
+			jobRegistry.withJobMetadataLock(null, () -> {
+				futuresToPending();
+				refreshFutures(event);
+				Transaction.commit();
+			});
+		}
+		if (event.type == Type.SHUTDOWN) {
+			// FIXME - mvcc.jobs.1a - shutdown all fixed pools
+			allocators.values()
+					.forEach(allocator -> allocator.fireDeletedEvent());
+			timer.cancel();
+			allocatorService.shutdown();
+			finished = true;
+		}
+		if (event.type == Type.ALLOCATION_EVENT) {
+			AllocationQueue queue = event.queueEvent.queue;
+			boolean canAllocate = SchedulingPermissions.canAllocate(queue);
+			if (canAllocate) {
+				switch (event.queueEvent.type) {
+				case CREATED: {
+					JobAllocator allocator = new JobAllocator(queue,
+							allocatorService);
+					allocators.put(queue.job, allocator);
+					allocator.enqueueEvent(event.queueEvent);
+				}
+					break;
+				case DELETED: {
+					JobAllocator allocator = allocators.remove(queue.job);
+					if (allocator != null) {
+						allocator.enqueueEvent(event.queueEvent);
+					}
+				}
+					break;
+				default:
+					// all other events are specific to the allocator, and
+					// handled by the JobAllocator queue listener
+					throw new UnsupportedOperationException();
+				}
+			}
 		}
 	}
 
 	private void processOrphans() {
-		// FIXME - mvcc.jobs - remove (with prej) all non-deserializable tasks
+		if (jobRegistry.jobExecutors.isHighestBuildNumberInCluster()) {
+			DomainDescriptorJob.get().getUndeserializableJobs()
+					.forEach(Job::delete);
+		}
 		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
 				.getActiveServers();
 		logger.info("Process orphans - visible instances: {}", activeInstances);
@@ -217,34 +214,26 @@ public class JobScheduler {
 				.get("visibleInstanceRegex");
 		Date cutoff = SEUtilities
 				.toOldDate(LocalDateTime.now().minusMinutes(1));
-		Stream<? extends Job> allocatedIncomplete = DomainDescriptorJob.get()
-				.getAllocatedIncompleteJobs()
+		Stream<? extends Job> incompleteAndInactiveInstance = DomainDescriptorJob
+				.get().getIncompleteJobs()
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
-				.filter(job -> job.getPerformer().toString()
-						.matches(visibleInstanceRegex))
-				.filter(job -> !job.provideParent().isPresent())
-				.filter(job -> !activeInstances.contains(job.getPerformer()));
-		Stream<? extends Job> pendingInactiveCreator = DomainDescriptorJob.get()
-				.getPendingJobsWithInactiveCreator(activeInstances)
 				.filter(job -> job.getCreator().toString()
 						.matches(visibleInstanceRegex))
-				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
-				.filter(job -> !job.provideParent().isPresent())
-				.filter(job -> !activeInstances.contains(job.getCreator()));
-		InnerAccess<Boolean> metadataLockHeld = new InnerAccess<>();
-		metadataLockHeld.set(false);
-		List<Job> toAbortOrReassign = Stream
-				.concat(allocatedIncomplete, pendingInactiveCreator).distinct()
+				.filter(Job::provideIsTopLevel)
+				.filter(job -> (job.getPerformer() == null
+						&& !activeInstances.contains(job.getCreator()))
+						|| (job.getPerformer() != null && !activeInstances
+								.contains(job.getPerformer())));
+		List<Job> toAbortOrReassign = incompleteAndInactiveInstance
 				.collect(Collectors.toList());
 		MultikeyMap<Boolean> perQueueTaskClass = new UnsortedMultikeyMap<>(2);
 		Runnable runnable = toAbortOrReassign.isEmpty() ? null
 				: () -> toAbortOrReassign.forEach(job -> {
 					logger.warn(
-							"Aborting job {} (inactive client creator: {} - performer: {} - clustered: {})",
-							job, job.getCreator(), job.getPerformer(),
-							job.isClustered());
+							"Aborting job {} (inactive client creator: {} - performer: {})",
+							job, job.getCreator(), job.getPerformer());
 					if (ResourceUtilities.is("abortDisabled")) {
-						logger.warn("Abort job");
+						logger.warn("(Would abort job - but abortDisabled)");
 						return;
 					}
 					job.setState(JobState.ABORTED);
@@ -252,199 +241,210 @@ public class JobScheduler {
 					job.setResultType(JobResultType.DID_NOT_COMPLETE);
 					// FIXME - mvcc.jobs - current logic is 'cancel children' -
 					// may want to be finer-grained
-					if (job.isClustered() && job.provideCanDeserializeTask()
-							&& !job.provideParent().isPresent()) {
-						/*
-						 * Only retry max 1 combo of queue/taskclass
-						 */
-						Class<? extends Task> taskClass = job.getTask()
-								.getClass();
-						Schedule schedule = getSchedule(taskClass, false);
-						if (schedule != null) {
-							RetryPolicy retryPolicy = schedule.getRetryPolicy();
-							if (retryPolicy.shouldRetry(job)) {
-								Boolean retried = perQueueTaskClass.get(
-										schedule.getQueueName(), taskClass);
-								if (retried == null) {
-									perQueueTaskClass.put(
-											schedule.getQueueName(), taskClass,
-											true);
-									Job retry = jobRegistry.createJob(
-											job.getTask(), schedule,
-											job.getRunAt(), false);
-									retry.setQueue(job.getQueue());
-									job.createRelation(retry,
-											JobRelationType.retry);
-									logger.warn(
-											"Rescheduling job  (retry) :: {} => {}",
-											job, retry);
-								}
-							}
-						}
+					ResubmitPolicy policy = ResubmitPolicy.forJob(job);
+					if (policy.shouldRetry(job)) {
+						// FIXME - mvcc.jobs.1a - want to retry sequences as
+						// related...
+						Job resubmit = JobRegistry.createBuilder()
+								.withTask(job.getTask()).withRelated(job)
+								.withRelationType(JobRelationType.RESUBMIT)
+								.withRunAt(SEUtilities
+										.toLocalDateTime(job.getRunAt()))
+								.create();
+						logger.warn("Resubmit job :: {} -> {})", job, resubmit);
 					}
 				});
-		jobRegistry.withJobMetadataLock(null, false, runnable);
+		jobRegistry.withJobMetadataLock(null, runnable);
 	}
 
-	private synchronized void scheduleJobs(List<ScheduleEvent> events) {
-		Stream<? extends Job> jobs = events.stream().map(e -> e.job)
-				.filter(Objects::nonNull);
-		Transaction.ensureBegun();
-		if (applicationStartup) {
-			ensureQueueNames();
-			jobs = DomainDescriptorJob.get().getNotCompletedJobs();
-		}
-		/*
-		 * orphans before scheduling (since we may resubmit timewise-constrained
-		 * tasks)
-		 */
-		if (jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()) {
-			processOrphans();
-		}
-		queueNameSchedulableTasks.allValues().forEach(clazz -> {
-			Schedule schedule = getSchedule(clazz, applicationStartup);
-			if (schedule == null) {
-				return;
+	private void refreshFutures(ScheduleEvent event) {
+		List<Class<? extends Task>> scheduleTaskClasses = (List) Registry.get()
+				.allImplementationKeys(Schedule.class);
+		LocalDateTime wakeup = LocalDateTime.now().plusYears(1);
+		for (Class<? extends Task> key : scheduleTaskClasses) {
+			Schedule schedule = Schedule.forTaskClass(key);
+			LocalDateTime next = schedule
+					.getNext(event.type == Type.APPLICATION_STARTUP);
+			if (next == null) {
+				continue;
 			}
-			/*
-			 * During app startup, allow all vms to schedule clustered jobs
-			 * (since code defining 'next' may have changed). That said, the
-			 * scheduled job executor jvm will be the one doing the running...
-			 */
-			if (schedule.isClustered()
-					&& !jobRegistry.jobExecutors.isCurrentScheduledJobExecutor()
-					&& !applicationStartup) {
-				return;
-			}
-			if (Sx.isTestServer() || Sx.isTest()) {
-				if (ResourceUtilities.not(JobScheduler.class,
-						"testSchedules")) {
-					return;
+			Optional<Job> earliestFuture = DomainDescriptorJob.get()
+					.earliestFuture(key, schedule.isVmLocal());
+			if (earliestFuture.isPresent()) {
+				Date nextDate = SEUtilities.toOldDate(next);
+				if (earliestFuture.get().getRunAt().after(nextDate)) {
+					if (SchedulingPermissions
+							.canModifyFuture(earliestFuture.get())) {
+						logger.info("Changed next run of {} to {}",
+								earliestFuture.get(), next);
+						earliestFuture.get().setRunAt(nextDate);
+					}
+					wakeup = next;
+				} else {
+					wakeup = SEUtilities
+							.toLocalDateTime(earliestFuture.get().getRunAt());
+				}
+			} else {
+				Job test = AlcinaPersistentEntityImpl
+						.getNewImplementationInstance(Job.class);
+				test.setTask(Reflections.newInstance(key));
+				if (SchedulingPermissions.canCreateFuture(schedule)) {
+					Job job = JobRegistry.createBuilder()
+							.withTask(Reflections.newInstance(key))
+							.withRunAt(next).create();
+					logger.info("Schedule new future job - {} to {}", job,
+							next);
 				}
 			}
-			LocalDateTime nextRun = schedule.getNext();
-			if (nextRun != null) {
-				ensureScheduled(schedule, clazz, nextRun);
+			if (next.isBefore(wakeup)) {
+				wakeup = next;
 			}
-		});
-		Transaction.commit();
-		ensureActiveQueues(jobs);
-		applicationStartup = false;
-	}
-
-	void enqueueInitialScheduleEvent() {
-		enqueueScheduleEvent(new ScheduleEvent("app-startup", null));
+		}
+		if (nextScheduledWakeup == null
+				|| wakeup.isBefore(nextScheduledWakeup)) {
+			if (wakeup.isBefore(LocalDateTime.now())) {
+				events.add(new ScheduleEvent(Type.WAKEUP));
+			} else {
+				timer.schedule(new TimerTask() {
+					@Override
+					public void run() {
+						MethodContext.instance().withWrappingTransaction()
+								.run(() -> events
+										.add(new ScheduleEvent(Type.WAKEUP)));
+					}
+				}, SEUtilities.toOldDate(wakeup));
+			}
+			nextScheduledWakeup = wakeup;
+		}
 	}
 
 	void enqueueLeaderChangedEvent() {
-		enqueueScheduleEvent(new ScheduleEvent("leader-changed", null));
+		MethodContext.instance().withWrappingTransaction()
+				.call(() -> events.add(new ScheduleEvent(Type.LEADER_CHANGED)));
 	}
 
-	void enqueueScheduleEvent(ScheduleEvent event) {
-		synchronized (scheduleEvents) {
-			logger.debug("Enqueueing schedule event: {}", event);
-			scheduleEvents.add(event);
-			scheduleEvents.notifyAll();
+	@RegistryLocation(registryPoint = ExecutionConstraints.class, implementationType = ImplementationType.FACTORY)
+	public static class DefaultExecutionConstraintsProvider
+			implements RegistryFactory<ExecutionConstraints> {
+		@Override
+		public ExecutionConstraints impl() {
+			return new ExecutionConstraints();
 		}
 	}
 
-	void ensureActiveQueues(Stream<? extends Job> jobs) {
-		Stream<String> queueNames = Stream.concat(
-				queueNameSchedulableTasks.keySet().stream(),
-				jobs.filter(Job::isClustered)
-						.filter(job -> job.getState() == JobState.PENDING)
-						.filter(this::canAllocateClustered).map(Job::getQueue))
-				.filter(Objects::nonNull).distinct();
-		queueNames.forEach(queueName -> {
-			Optional<? extends Job> pending = DomainDescriptorJob.get()
-					.getUnallocatedJobsForQueue(queueName, true)
-					.filter(Job::provideIsAllocatable).findFirst();
-			if (pending.isPresent()
-					&& pending.get().provideCanDeserializeTask()) {
-				Job job = pending.get();
-				Schedule schedule = getSchedule(job.getTask());
-				JobQueue queue = jobRegistry.ensureQueue(schedule);
-				queue.ensureAllocating();
-				queue.onMetadataChanged();
+	@RegistryLocation(registryPoint = ResubmitPolicy.class, implementationType = ImplementationType.FACTORY)
+	public static class DefaultRetryPolicyProvider
+			implements RegistryFactory<ResubmitPolicy> {
+		@Override
+		public ResubmitPolicy impl() {
+			return new NoRetryPolicy();
+		}
+	}
+
+	@RegistryLocation(registryPoint = Schedule.class, implementationType = ImplementationType.FACTORY)
+	public static class DefaultScheduleProvider
+			implements RegistryFactory<Schedule> {
+		@Override
+		public Schedule impl() {
+			return new Schedule();
+		}
+	}
+
+	public static class ExecutionConstraints<T extends Task> {
+		private static AdHocExecutorServiceProvider AD_HOC_INSTANCE = new AdHocExecutorServiceProvider();
+
+		public static ExecutionConstraints forQueue(AllocationQueue queue) {
+			return Registry.impl(ExecutionConstraints.class,
+					queue.job.provideTaskClass()).withQueue(queue);
+		}
+
+		protected AllocationQueue queue;
+
+		private ExecutorServiceProvider executorServiceProvider = AD_HOC_INSTANCE;
+
+		private ExecutorServiceProvider descendantExecutorServiceProvider = AD_HOC_INSTANCE;
+
+		public long calculateMaxAllocatable() {
+			return Integer.MAX_VALUE;
+		}
+
+		public ExecutorServiceProvider getDescendantExcutorServiceProvider() {
+			return descendantExecutorServiceProvider;
+		}
+
+		public ExecutorServiceProvider getExecutorServiceProvider() {
+			if (queue.phase == SubqueuePhase.Child) {
+				return getDescendantExcutorServiceProvider();
 			}
-		});
-	}
-
-	Schedule getSchedule(Class<? extends Task> clazz,
-			boolean applicationStartup) {
-		Optional<ScheduleProvider> scheduleProvider = Registry
-				.optional(ScheduleProvider.class, clazz);
-		if (!scheduleProvider.isPresent()) {
-			return null;
+			return executorServiceProvider;
 		}
-		Schedule schedule = scheduleProvider.get().getSchedule(clazz,
-				applicationStartup);
-		return schedule;
-	}
 
-	Schedule getSchedule(Task task) {
-		Optional<ScheduleProvider> scheduleProvider = Registry
-				.optional(ScheduleProvider.class, task.getClass());
-		if (!scheduleProvider.isPresent()) {
-			return null;
+		public boolean isClusteredChildAllocation() {
+			return false;
 		}
-		Schedule schedule = scheduleProvider.get().getSchedule(task);
-		return schedule;
-	}
 
-	List<Job> getScheduledJobs() {
-		return queueNameSchedulableTasks.allValues().stream().map(clazz -> {
-			Schedule schedule = getSchedule(clazz, false);
-			return DomainDescriptorJob.get()
-					.getUnallocatedJobsForQueue(schedule.getQueueName(), false)
-					.filter(job -> job.provideIsTaskClass(clazz))
-					.filter(job -> job.getRunAt() != null).findFirst()
-					.orElse(null);
-		}).filter(Objects::nonNull).collect(Collectors.toList());
-	}
+		public ExecutionConstraints withDescendantExecutorServiceProvider(
+				ExecutorServiceProvider descendantExcutorServiceProvider) {
+			this.descendantExecutorServiceProvider = descendantExcutorServiceProvider;
+			return this;
+		}
 
-	Schedule getScheduleForQueueEventAndOrJob(String name, Job job) {
-		Schedule schedule = name == null ? null
-				: schedulesByQueueName.get(name);
-		boolean ignore = false;
-		if (schedule == null) {
-			if (EntityLayerObjects.get()
-					.isForeignClientInstance(job.getCreator())) {
-				if (!job.isClustered() || !ResourceUtilities
-						.is(JobRegistry.class, "joinClusteredJobs")) {
-					ignore = true;
-				}
+		public ExecutionConstraints withExecutorServiceProvider(
+				ExecutorServiceProvider executorServiceProvider) {
+			this.executorServiceProvider = executorServiceProvider;
+			return this;
+		}
+
+		private ExecutionConstraints withQueue(AllocationQueue queue) {
+			this.queue = queue;
+			return this;
+		}
+
+		protected T provideTask() {
+			return (T) queue.job.getTask();
+		}
+
+		private static class AdHocExecutorServiceProvider
+				implements ExecutorServiceProvider {
+			private AtomicInteger counter = new AtomicInteger();
+
+			@Override
+			public ExecutorService getService(AllocationQueue queue) {
+				return Executors.newSingleThreadExecutor(
+						new NamedThreadFactory("custom-name") {
+							@Override
+							public Thread newThread(Runnable r) {
+								Thread thread = super.newThread(r);
+								thread.setName("adhoc-executor-"
+										+ counter.incrementAndGet());
+								return thread;
+							}
+						});
 			}
 		}
-		if (!ignore) {
-			Class<? extends Task> clazz = job.getTask().getClass();
-			Optional<ScheduleProvider> scheduleProvider = Registry
-					.optional(ScheduleProvider.class, clazz);
-			if (scheduleProvider.isPresent()) {
-				schedule = scheduleProvider.get().getSchedule(job);
-				if (schedule != null) {
-					logger.warn("Creating queue from provider {} for job {}",
-							scheduleProvider.get().getClass().getSimpleName(),
-							job);
-				}
-			}
-		}
-		return schedule;
-	}
-
-	void onScheduleEvent(ScheduleEvent event) {
-		enqueueScheduleEvent(event);
 	}
 
 	public interface ExecutorServiceProvider {
-		ExecutorService getService();
+		ExecutorService getService(AllocationQueue queue);
 	}
 
-	public static class NoRetryPolicy implements RetryPolicy {
+	public static class NoRetryPolicy implements ResubmitPolicy {
 		@Override
 		public boolean shouldRetry(Job failedJob) {
 			return false;
 		}
+	}
+
+	public interface ResubmitPolicy {
+		static ResubmitPolicy forJob(Job job) {
+			return Registry.impl(ResubmitPolicy.class, job.provideTaskClass());
+		}
+
+		static ResubmitPolicy retryNTimes(int nTimes) {
+			return new ResubmitNTimesPolicy(nTimes);
+		}
+
+		boolean shouldRetry(Job failedJob);
 	}
 
 	@RegistryLocation(registryPoint = RetentionPolicy.class)
@@ -471,104 +471,32 @@ public class JobScheduler {
 		}
 	}
 
-	public interface RetryPolicy {
-		static RetryPolicy retryNTimes(int nTimes) {
-			return new RetryNTimesPolicy(nTimes);
-		}
-
-		boolean shouldRetry(Job failedJob);
-	}
-
 	@RegistryLocation(registryPoint = Schedule.class)
 	public static class Schedule {
-		private ExecutorServiceProvider exexcutorServiceProvider = new ExecutorServiceProvider() {
-			@Override
-			public ExecutorService getService() {
-				return Executors.newSingleThreadExecutor(
-						new NamedThreadFactory("custom-name") {
-							@Override
-							public Thread newThread(Runnable r) {
-								Thread thread = super.newThread(r);
-								thread.setName(queueName + "-executor");
-								return thread;
-							}
-						});
-			}
-		};
-
-		private int queueMaxConcurrentJobs = Integer.MAX_VALUE;
+		public static Schedule forTaskClass(Class<? extends Task> clazz) {
+			return Registry.impl(Schedule.class, clazz);
+		}
 
 		private LocalDateTime next;
 
-		private String queueName = getClass().getSimpleName()
-				.replaceFirst("(.+)Schedule", "$1");
+		private boolean fireOnApplicationStartup;
 
-		private RetryPolicy retryPolicy = new NoRetryPolicy();
+		private boolean vmLocal;
 
-		private boolean clustered = true;
-
-		private boolean timewiseLimited;
-
-		private boolean runSameQueueScheduledAsSubsequent;
-
-		private boolean onlyPerformOnLeader;
-
-		public long calculateMaxAllocated(JobQueue queue, int allocated,
-				int jobCountForQueue, int unallocatedJobCountForQueue) {
-			return -1;
-		}
-
-		public ExecutorServiceProvider getExcutorServiceProvider() {
-			return exexcutorServiceProvider;
-		}
-
-		public LocalDateTime getNext() {
+		public LocalDateTime getNext(boolean applicationStartup) {
+			if (fireOnApplicationStartup && applicationStartup) {
+				return LocalDateTime.now();
+			}
 			return next;
 		}
 
-		public int getQueueMaxConcurrentJobs() {
-			return queueMaxConcurrentJobs;
+		public boolean isVmLocal() {
+			return this.vmLocal;
 		}
 
-		public String getQueueName() {
-			return queueName;
-		}
-
-		public RetryPolicy getRetryPolicy() {
-			return retryPolicy;
-		}
-
-		public boolean isClustered() {
-			return clustered;
-		}
-
-		public boolean isOnlyPerformOnLeader() {
-			return onlyPerformOnLeader;
-		}
-
-		public boolean isRunSameQueueScheduledAsSubsequent() {
-			return this.runSameQueueScheduledAsSubsequent;
-		}
-
-		public boolean isTimewiseLimited() {
-			return timewiseLimited;
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("Schedule %s::%s - queue: %s; clustered: %s",
-					getClass().getSimpleName(), Integer.toHexString(hashCode()),
-					queueName, clustered);
-		}
-
-		public Schedule withClustered(boolean clustered) {
-			this.clustered = clustered;
-			return this;
-		}
-
-		public Schedule withExcutorServiceProvider(
-				ExecutorServiceProvider exexcutorServiceProvider) {
-			this.exexcutorServiceProvider = exexcutorServiceProvider;
+		public Schedule
+				withFireOnApplicationStartup(boolean fireOnApplicationStartup) {
+			this.fireOnApplicationStartup = fireOnApplicationStartup;
 			return this;
 		}
 
@@ -577,40 +505,8 @@ public class JobScheduler {
 			return this;
 		}
 
-		public Schedule withOnlyPerformOnLeader(boolean onlyPerformOnLeader) {
-			this.onlyPerformOnLeader = onlyPerformOnLeader;
-			return this;
-		}
-
-		public Schedule withQueueMaxConcurrentJobs(int queueMaxConcurrentJobs) {
-			this.queueMaxConcurrentJobs = queueMaxConcurrentJobs;
-			return this;
-		}
-
-		public Schedule withQueueName(String queueName) {
-			this.queueName = queueName;
-			return this;
-		}
-
-		public Schedule withRetryPolicy(RetryPolicy retryPolicy) {
-			this.retryPolicy = retryPolicy;
-			return this;
-		}
-
-		public Schedule withRunSameQueueScheduledAsSubsequent(
-				boolean runSameQueueScheduledAsSubsequent) {
-			this.runSameQueueScheduledAsSubsequent = runSameQueueScheduledAsSubsequent;
-			return this;
-		}
-
-		public Schedule withSubJobQueueName(Job job) {
-			withQueueName(Ax.format("%s::%s::sub", job.getTaskClassName(),
-					job.toLocator().toString()));
-			return this;
-		}
-
-		public Schedule withTimewiseLimited(boolean timewiseLimited) {
-			this.timewiseLimited = timewiseLimited;
+		public Schedule withVmLocal(boolean vmLocal) {
+			this.vmLocal = vmLocal;
 			return this;
 		}
 	}
@@ -618,90 +514,42 @@ public class JobScheduler {
 	public class ScheduleJobsThread extends Thread {
 		@Override
 		public void run() {
-			setName("Schedule-jobs-queue-" + hashCode());
-			while (!finished.get()) {
+			setName("Schedule-jobs-queue-"
+					+ EntityLayerUtils.getLocalHostName());
+			while (!finished) {
 				try {
-					List<ScheduleEvent> events = null;
-					synchronized (scheduleEvents) {
-						if (getEventQueueLength() == 0) {
-							scheduleEvents.wait();
-							logger.debug("Woken from toFire queue wakeup");
-						}
-						if (getEventQueueLength() > 0) {
-							events = scheduleEvents.stream()
-									.collect(Collectors.toList());
-							scheduleEvents.clear();
-							logger.debug(
-									"Removed {} events from toFire (and cleared): {}",
-									scheduleEvents.size());
-						}
-					}
-					if (events != null && !finished.get()) {
-						try {
-							Transaction.ensureBegun();
-							ThreadedPermissionsManager.cast().pushSystemUser();
-							DomainStore.waitUntilCurrentRequestsProcessed();
-							scheduleJobs(events);
-						} finally {
-							Transaction.ensureBegun();
-							ThreadedPermissionsManager.cast().popSystemUser();
-							Transaction.ensureEnded();
-						}
-					}
-				} catch (Exception e) {
+					ScheduleEvent event = events.take();
+					Transaction.begin();
+					DomainStore.waitUntilCurrentRequestsProcessed();
+					processEvent(event);
+				} catch (Throwable e) {
 					e.printStackTrace();
+				} finally {
+					Transaction.end();
 				}
 			}
 		}
 	}
 
-	public interface ScheduleProvider<T extends Task> {
-		default boolean checkForUnallocatedOrIncomplete(String queueName) {
-			if (DomainDescriptorJob.get()
-					.getUnallocatedJobsForQueue(queueName, false).count() > 0) {
-				JobContext.info("{} - already scheduled", queueName);
-				return false;
-			}
-			if (DomainDescriptorJob.get()
-					.getIncompleteJobCountForActiveQueue(queueName) > 0) {
-				JobContext.info("{} - already running", queueName);
-				return false;
-			}
-			return true;
-		}
-
-		default Schedule getSchedule(Class<? extends T> taskClass,
-				boolean onAppplicationStart) {
-			return null;
-		}
-
-		default Schedule getSchedule(Job job) {
-			/*
-			 * For distributed subjob schedule creation
-			 */
-			return null;
-		}
-
-		default Schedule getSchedule(T task) {
-			return getSchedule((Class<T>) task.getClass(), false);
-		}
-	}
-
-	private static class RetryNTimesPolicy implements RetryPolicy {
+	private static class ResubmitNTimesPolicy implements ResubmitPolicy {
 		private int nTimes;
 
-		public RetryNTimesPolicy(int nTimes) {
+		public ResubmitNTimesPolicy(int nTimes) {
 			this.nTimes = nTimes;
 		}
 
 		@Override
 		public boolean shouldRetry(Job failedJob) {
+			if (failedJob.getUser() != UserlandProvider.get().getSystemUser()) {
+				return false;
+			}
 			int counter = 0;
 			Job cursor = failedJob;
 			while (true) {
 				counter++;
 				Optional<Job> precedingJob = cursor.getToRelations().stream()
-						.filter(rel -> rel.getType() == JobRelationType.retry)
+						.filter(rel -> rel
+								.getType() == JobRelationType.RESUBMIT)
 						.findFirst().map(JobRelation::getFrom);
 				if (precedingJob.isPresent()) {
 					cursor = precedingJob.get();
@@ -716,27 +564,56 @@ public class JobScheduler {
 	static class CurrentThreadExecutorServiceProvider
 			implements ExecutorServiceProvider {
 		@Override
-		public ExecutorService getService() {
+		public ExecutorService getService(AllocationQueue queue) {
 			return new CurrentThreadExecutorService();
 		}
 	}
 
 	static class ScheduleEvent {
-		String queueName;
+		AllocationQueue.Event queueEvent;
 
-		Job job;
+		Type type;
 
-		public ScheduleEvent() {
+		Transaction transaction;
+
+		ScheduleEvent(AllocationQueue.Event queueEvent) {
+			this.transaction = Transaction.current();
+			Preconditions.checkNotNull(this.transaction);
+			this.queueEvent = queueEvent;
+			this.type = Type.ALLOCATION_EVENT;
 		}
 
-		public ScheduleEvent(String queueName, Job job) {
-			this.queueName = queueName;
-			this.job = job;
+		ScheduleEvent(Type type) {
+			if (type != Type.SHUTDOWN) {
+				this.transaction = Transaction.current();
+				Preconditions.checkNotNull(this.transaction);
+			}
+			this.type = type;
+		}
+
+		public boolean isSameAllocationQueueAs(ScheduleEvent event) {
+			return event.queueEvent != null && queueEvent != null
+					&& event.queueEvent.queue == queueEvent.queue
+					&& event.transaction == transaction;
 		}
 
 		@Override
 		public String toString() {
 			return GraphProjection.fieldwiseToStringOneLine(this);
+		}
+
+		enum Type {
+			APPLICATION_STARTUP, WAKEUP, ALLOCATION_EVENT, SHUTDOWN,
+			LEADER_CHANGED;
+			public boolean isRefreshFuturesEvent() {
+				switch (this) {
+				case APPLICATION_STARTUP:
+				case WAKEUP:
+				case LEADER_CHANGED:
+					return true;
+				}
+				return false;
+			}
 		}
 	}
 }

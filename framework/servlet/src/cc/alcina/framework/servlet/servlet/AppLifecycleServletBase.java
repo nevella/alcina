@@ -37,7 +37,6 @@ import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -209,10 +208,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		try {
 			Transaction.begin();
 			ThreadedPermissionsManager.cast().pushSystemUser();
-			ClientInstance serverAsClientInstance = AuthenticationPersistence
-					.get().createBootstrapClientInstance();
-			EntityLayerObjects.get()
-					.setServerAsClientInstance(serverAsClientInstance);
+			AuthenticationPersistence.get().createBootstrapClientInstance();
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
 			Transaction.end();
@@ -445,7 +441,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void scheduleJobs() {
-		JobRegistry.get().scheduleJobs(true);
+		Transaction.begin();
+		JobRegistry.get();
+		Transaction.end();
 	}
 
 	private static class PerThreadLoggingWrapper implements PerThreadLogging {

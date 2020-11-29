@@ -41,7 +41,7 @@ public class DomainTransformLayerWrapper implements Serializable {
 
 	public DomainTransformResponse response;
 
-	public EntityLocatorMap locatorMap;
+	public transient EntityLocatorMap locatorMap;
 
 	public int ignored;
 

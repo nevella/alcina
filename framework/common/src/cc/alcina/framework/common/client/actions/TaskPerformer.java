@@ -31,5 +31,8 @@ public interface TaskPerformer<T extends Task> {
 		return 0;
 	}
 
+	default void onChildCompletion() {
+	}
+
 	void performAction(T task) throws Exception;
 }

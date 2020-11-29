@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.Ax;
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = JobRelation.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
-	private JobRelationType type = JobRelationType.parent_child;
+	private JobRelationType type;
 
 	@Transient
 	public abstract Job getFrom();
@@ -71,6 +71,6 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 
 	@ClientInstantiable
 	public static enum JobRelationType {
-		parent_child, sequence, retry
+		PARENT_CHILD, SEQUENCE, RESUBMIT
 	}
 }

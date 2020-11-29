@@ -271,15 +271,16 @@ public class Registry {
 		implClassesRegistered = new LinkedHashMap<>();
 	}
 
-	public List<Class> allImplementations(Class registryPoint) {
+	public List<Class> allImplementationKeys(Class registryPoint) {
 		RegistryKey registryPointKey = keys.get(registryPoint);
 		MultikeyMap<RegistryKey> pointLookup = registry.asMapEnsure(false,
 				registryPointKey);
 		if (pointLookup == null) {
 			return Collections.emptyList();
 		}
-		return pointLookup.allValues().stream()
+		return pointLookup.typedKeySet(RegistryKey.class).stream()
 				.map(key -> key.clazz(classLookup)).filter(Objects::nonNull)
+				.filter(clazz -> clazz != void.class)
 				.collect(Collectors.toList());
 	}
 
@@ -603,8 +604,7 @@ public class Registry {
 		case FACTORY: {
 			Object singleton = registerSingletonInLookups(registryPoint,
 					targetClass, impl, false);
-			return (V) ((RegistryFactory) singleton).create(registryPoint,
-					targetClass);
+			return ((RegistryFactory<V>) singleton).impl();
 		}
 		case SINGLETON: {
 			Object singleton = registerSingletonInLookups(registryPoint,
@@ -677,8 +677,7 @@ public class Registry {
 		}
 		if (singleton != null) {
 			if (singleton instanceof RegistryFactory) {
-				return (V) ((RegistryFactory) singleton).create(registryPoint,
-						targetClass);
+				return ((RegistryFactory<V>) singleton).impl();
 			} else {
 				return (V) singleton;
 			}
@@ -807,7 +806,7 @@ public class Registry {
 	}
 
 	public interface RegistryFactory<V> {
-		public V create(Class<? extends V> registryPoint, Class targetClass);
+		public V impl();
 	}
 
 	public static interface RegistryProvider {

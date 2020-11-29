@@ -9,8 +9,6 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
-import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
-import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.state.LoopingPlayer;
@@ -221,9 +219,8 @@ public class RemoteLogPersister {
 					onSuccess(null);
 					return;
 				} else {
-					CommonRemoteServiceAsync async = ((RemoteServiceProvider<? extends CommonRemoteServiceAsync>) Registry
-							.impl(CommonRemoteServiceAsyncProvider.class))
-									.getServiceInstance();
+					CommonRemoteServiceAsync async = Registry
+							.impl(CommonRemoteServiceAsync.class);
 					rqRun = true;
 					AlcinaTopics.muteStatisticsLogging(true);
 					async.ping(this);
@@ -298,9 +295,8 @@ public class RemoteLogPersister {
 					rqRun = false;
 					onSuccess(null);
 				} else {
-					CommonRemoteServiceAsync async = ((RemoteServiceProvider<? extends CommonRemoteServiceAsync>) Registry
-							.impl(CommonRemoteServiceAsyncProvider.class))
-									.getServiceInstance();
+					CommonRemoteServiceAsync async = Registry
+							.impl(CommonRemoteServiceAsync.class);
 					rqRun = true;
 					AlcinaTopics.muteStatisticsLogging(true);
 					async.logClientRecords(buffer.toString(), this);

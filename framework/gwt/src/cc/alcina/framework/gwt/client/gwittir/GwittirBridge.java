@@ -368,17 +368,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		return bd;
 	}
 
-	@Override
-	public BeanDescriptor getDescriptorOrNull(Object o) {
-		Class c = o.getClass();
-		BeanDescriptor bd = descriptorClassLookup.get(c);
-		if (bd == null) {
-			bd = Introspector.INSTANCE.getDescriptorOrNull(o);
-			descriptorClassLookup.put(c, bd);
-		}
-		return bd;
-	}
-
 	public BeanDescriptor getDescriptorForClass(Class c) {
 		return getDescriptorForClass(c, true);
 	}
@@ -402,31 +391,47 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		}
 	}
 
+	@Override
+	public BeanDescriptor getDescriptorOrNull(Object o) {
+		Class c = o.getClass();
+		BeanDescriptor bd = descriptorClassLookup.get(c);
+		if (bd == null) {
+			bd = Introspector.INSTANCE.getDescriptorOrNull(o);
+			descriptorClassLookup.put(c, bd);
+		}
+		return bd;
+	}
+
 	public Field getField(Class c, String propertyName, boolean editableWidgets,
 			boolean multiple) {
 		return getField(c, propertyName, editableWidgets, multiple,
 				SIMPLE_FACTORY, null);
 	}
 
-	public Field getField(Class clazz, String propertyName, boolean editableWidgets,
-			boolean multiple, BoundWidgetTypeFactory factory, Object obj) {
+	public Field getField(Class clazz, String propertyName,
+			boolean editableWidgets, boolean multiple,
+			BoundWidgetTypeFactory factory, Object obj) {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(clazz);
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
 		Bean beanInfo = bi.getAnnotation(Bean.class);
 		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
-		obj = obj != null ? obj : ClientReflector.get().getTemplateInstance(clazz);
+		obj = obj != null ? obj
+				: ClientReflector.get().getTemplateInstance(clazz);
 		ClientPropertyReflector propertyReflector = bi.getPropertyReflectors()
 				.get(propertyName);
 		Property p = getProperty(obj, propertyReflector.getPropertyName());
-		BoundWidgetProvider bwp = factory.getWidgetProvider(p.getType(),clazz,beanInfo,propertyReflector);
+		BoundWidgetProvider bwp = factory.getWidgetProvider(p.getType(), clazz,
+				beanInfo, propertyReflector);
 		int position = multiple ? RelativePopupValidationFeedback.BOTTOM
 				: RelativePopupValidationFeedback.RIGHT;
-		if (propertyReflector != null && propertyReflector.getDisplayInfo() != null) {
+		if (propertyReflector != null
+				&& propertyReflector.getDisplayInfo() != null) {
 			PropertyPermissions pp = propertyReflector
 					.getAnnotation(PropertyPermissions.class);
 			Display display = propertyReflector.getDisplayInfo();
-			Association association = propertyReflector.getAnnotation(Association.class);
+			Association association = propertyReflector
+					.getAnnotation(Association.class);
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, obj, true)
 					&& display != null
@@ -484,7 +489,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					}
 				}
 			}
-			Custom customiserInfo = propertyReflector.getAnnotation(Custom.class);
+			Custom customiserInfo = propertyReflector
+					.getAnnotation(Custom.class);
 			if (customiserInfo != null) {
 				Customiser customiser = (Customiser) ClientReflector.get()
 						.newInstance(customiserInfo.customiserClass(), 0, 0);
@@ -508,11 +514,13 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 								.apply(propertyReflector.getPropertyName());
 					}
 					validator = getValidator(domainType, obj,
-							propertyReflector.getPropertyName(), validationFeedback);
+							propertyReflector.getPropertyName(),
+							validationFeedback);
 				}
 				Field field = new Field(propertyReflector.getPropertyName(),
-						TextProvider.get().getLabelText(clazz, propertyReflector), bwp, validator,
-						validationFeedback,
+						TextProvider.get().getLabelText(clazz,
+								propertyReflector),
+						bwp, validator, validationFeedback,
 						getDefaultConverter(bwp, p.getType()));
 				if (!display.styleName().isEmpty()) {
 					field.setStyleName(display.styleName());
@@ -565,8 +573,10 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				}
 			}
 			return new Field(propertyReflector.getPropertyName(),
-					TextProvider.get().getLabelText(clazz, propertyReflector), bwp,
-					getValidator(p.getType(), obj, propertyReflector.getPropertyName(), vf),
+					TextProvider.get().getLabelText(clazz, propertyReflector),
+					bwp,
+					getValidator(p.getType(), obj,
+							propertyReflector.getPropertyName(), vf),
 					vf, getDefaultConverter(bwp, p.getType()));
 		}
 		return null;
@@ -610,6 +620,11 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			}
 
 			@Override
+			public Class getDefiningType() {
+				return clazz;
+			}
+
+			@Override
 			public String getPropertyName() {
 				return property.getName();
 			}
@@ -647,23 +662,12 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					throw new WrappedRuntimeException(e);
 				}
 			}
-
-			@Override
-			public Class getDefiningType() {
-				return clazz;
-			}
 		};
 	}
 
 	@Override
 	public Class getPropertyType(Class objectClass, String propertyName) {
 		return ClientReflector.get().getPropertyType(objectClass, propertyName);
-	}
-
-	@Override
-	public boolean isReadOnly(Class objectClass, String propertyName) {
-		return getDescriptorForClass(objectClass).getProperty(propertyName)
-				.getMutatorMethod() == null;
 	}
 
 	@Override
@@ -788,6 +792,12 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		return false;
 	}
 
+	@Override
+	public boolean isReadOnly(Class objectClass, String propertyName) {
+		return getDescriptorForClass(objectClass).getProperty(propertyName)
+				.getMutatorMethod() == null;
+	}
+
 	public void setDateRendererProvider(
 			GwittirDateRendererProvider dateRendererProvider) {
 		this.dateRendererProvider = dateRendererProvider;
@@ -861,9 +871,10 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	@RegistryLocation(registryPoint = BeanDescriptorProvider.class, implementationType = ImplementationType.FACTORY)
 	@ClientInstantiable
-	public static class GwittirBridgeBdpFactory implements RegistryFactory {
+	public static class GwittirBridgeBdpFactory
+			implements RegistryFactory<BeanDescriptorProvider> {
 		@Override
-		public Object create(Class registryPoint, Class targetObjectClass) {
+		public BeanDescriptorProvider impl() {
 			return GwittirBridge.get();
 		}
 	}

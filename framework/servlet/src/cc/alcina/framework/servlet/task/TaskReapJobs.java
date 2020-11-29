@@ -1,7 +1,5 @@
 package cc.alcina.framework.servlet.task;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -14,18 +12,10 @@ import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJ
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobScheduler.RetentionPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
-import cc.alcina.framework.servlet.job.JobScheduler.ScheduleProvider;
 import cc.alcina.framework.servlet.schedule.ServerTask;
+import cc.alcina.framework.servlet.schedule.StandardSchedules.HourlyScheduleFactory;
 
-@RegistryLocation(registryPoint = ScheduleProvider.class, targetClass = TaskReapJobs.class, implementationType = ImplementationType.INSTANCE)
-public class TaskReapJobs extends ServerTask<TaskReapJobs>
-		implements ScheduleProvider<TaskReapJobs> {
-	@Override
-	public Schedule getSchedule(Class<? extends TaskReapJobs> taskClass,
-			boolean onAppplicationStart) {
-		return new JobSchedule();
-	}
-
+public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 	@Override
 	protected void performAction0(TaskReapJobs task) throws Exception {
 		Stream<? extends Job> jobs = DomainDescriptorJob.get().getAllJobs();
@@ -46,11 +36,7 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs>
 		logger.info("Reaped {} jobs", reap.size());
 	}
 
-	public static class JobSchedule extends Schedule {
-		public JobSchedule() {
-			withClustered(true).withTimewiseLimited(true)
-					.withQueueMaxConcurrentJobs(1).withNext(LocalDateTime.now()
-							.truncatedTo(ChronoUnit.HOURS).plusHours(1));
-		}
+	@RegistryLocation(registryPoint = Schedule.class, targetClass = TaskReapJobs.class, implementationType = ImplementationType.FACTORY)
+	public static class ScheduleFactory extends HourlyScheduleFactory {
 	}
 }

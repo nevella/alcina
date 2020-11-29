@@ -672,16 +672,18 @@ public class DomainStore implements IDomainStore {
 		return new DetachedCacheObjectStore(new DomainStoreEntityCache());
 	}
 
-	void index(Entity obj, boolean add, Set<String> modifiedPropertyNames) {
+	void index(Entity obj, boolean add, Set<String> modifiedPropertyNames,
+			boolean committed) {
 		Class<? extends Entity> clazz = obj.entityClass();
 		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
 				.get(clazz);
 		if (itemDescriptor != null) {
-			itemDescriptor.index(obj, add);
+			itemDescriptor.index(obj, add, committed);
 			itemDescriptor
 					.getDependentObjectsWithDerivedProjections(obj,
 							modifiedPropertyNames)
-					.forEach(e -> index(e, add, modifiedPropertyNames));
+					.forEach(e -> index(e, add, modifiedPropertyNames,
+							committed));
 		}
 	}
 
@@ -767,7 +769,8 @@ public class DomainStore implements IDomainStore {
 						&& first == transform) {
 					if (entity != null) {
 						index(entity, false,
-								entityCollation.getTransformedPropertyNames());
+								entityCollation.getTransformedPropertyNames(),
+								true);
 					} else {
 						logger.warn("Null entity for index - {}",
 								transform.toObjectLocator());
@@ -803,7 +806,8 @@ public class DomainStore implements IDomainStore {
 									entity.toStringId());
 						}
 						index(entity, true,
-								entityCollation.getTransformedPropertyNames());
+								entityCollation.getTransformedPropertyNames(),
+								true);
 					} else {
 						logger.warn("Null entity for index - {}",
 								transform.toObjectLocator());
@@ -1463,7 +1467,7 @@ public class DomainStore implements IDomainStore {
 						Reflections.propertyAccessor().setPropertyValue(entity,
 								event.getPropertyName(), event.getOldValue());
 						store.index(entity, false,
-								event.toPropertyNameFilterSet());
+								event.toPropertyNameFilterSet(), false);
 						/*
 						 * redo
 						 */
@@ -1475,11 +1479,13 @@ public class DomainStore implements IDomainStore {
 					break;
 				}
 				default:
-					store.index(entity, false, event.toPropertyNameFilterSet());
+					store.index(entity, false, event.toPropertyNameFilterSet(),
+							false);
 				}
 			}
 			if (event.getTransformType() != TransformType.DELETE_OBJECT) {
-				store.index(entity, true, event.toPropertyNameFilterSet());
+				store.index(entity, true, event.toPropertyNameFilterSet(),
+						false);
 			}
 		}
 	}

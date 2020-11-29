@@ -29,8 +29,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
-import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
-import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -46,11 +44,6 @@ public abstract class ClientBase
 	public static CommonRemoteServiceAsync
 			getCommonRemoteServiceAsyncInstance() {
 		return Registry.impl(CommonRemoteServiceAsync.class);
-	}
-
-	public static RemoteServiceProvider<? extends CommonRemoteServiceAsync>
-			getCommonRemoteServiceAsyncProvider() {
-		return Registry.impl(CommonRemoteServiceAsyncProvider.class);
 	}
 
 	public static GeneralProperties getGeneralProperties() {
@@ -82,10 +75,12 @@ public abstract class ClientBase
 		return this.windowClosing;
 	}
 
+	@Override
 	public void onClose(CloseEvent<Window> event) {
 		GWT.log("closed");
 	}
 
+	@Override
 	public void onWindowClosing(ClosingEvent event) {
 		windowClosing = true;
 		GWT.log("closing");
