@@ -88,6 +88,8 @@ public class ActionProgress extends Composite
 
 	private boolean stopped;
 
+	private boolean initialTimerCall;
+
 	public ActionProgress(final String id) {
 		this(id, null);
 	}
@@ -104,6 +106,7 @@ public class ActionProgress extends Composite
 		jobNCancel.add(jobName);
 		jobName.setStyleName("pad-right-5");
 		this.cancelLink = new Link("(Cancel)", new ClickHandler() {
+			@Override
 			public void onClick(ClickEvent event) {
 				Widget sender = (Widget) event.getSource();
 				cancelJob();
@@ -135,7 +138,9 @@ public class ActionProgress extends Composite
 			@Override
 			public void run() {
 				AsyncCallback<JobTracker> callback = new AsyncCallback<JobTracker>() {
+					@Override
 					public void onFailure(Throwable caught) {
+						onReturned();
 						checking = false;
 						if (maxConnectionFailure-- <= 0) {
 							stopTimer();
@@ -147,8 +152,9 @@ public class ActionProgress extends Composite
 						}
 					}
 
+					@Override
 					public void onSuccess(JobTracker info) {
-						checking = false;
+						onReturned();
 						if (info == null) {
 							info = new JobTrackerImpl();
 							info.setJobName("Unknown job");
@@ -165,6 +171,13 @@ public class ActionProgress extends Composite
 						setJobInfo(info);
 						fireUnspecifiedPropertyChange("Updated");
 					}
+
+					private void onReturned() {
+						checking = false;
+						if (initialTimerCall) {
+							timer.scheduleRepeating(2000);
+						}
+					}
 				};
 				if (!checking) {
 					ClientBase.getCommonRemoteServiceAsyncInstance()
@@ -175,10 +188,12 @@ public class ActionProgress extends Composite
 		};
 	}
 
+	@Override
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
 		this.propertyChangeSupport.addPropertyChangeListener(listener);
 	}
 
+	@Override
 	public void addPropertyChangeListener(String propertyName,
 			PropertyChangeListener listener) {
 		this.propertyChangeSupport.addPropertyChangeListener(propertyName,
@@ -189,10 +204,6 @@ public class ActionProgress extends Composite
 		if (timer != null && stopped) {
 			startTimer();
 		}
-	}
-
-	public void fireUnspecifiedPropertyChange(String name) {
-		this.propertyChangeSupport.fireUnspecifiedPropertyChange(name);
 	}
 
 	public void firePropertyChange(PropertyChangeEvent evt) {
@@ -217,6 +228,10 @@ public class ActionProgress extends Composite
 				newValue);
 	}
 
+	public void fireUnspecifiedPropertyChange(String name) {
+		this.propertyChangeSupport.fireUnspecifiedPropertyChange(name);
+	}
+
 	public String getId() {
 		return this.id;
 	}
@@ -229,6 +244,7 @@ public class ActionProgress extends Composite
 		return this.maxConnectionFailure;
 	}
 
+	@Override
 	@Transient
 	public PropertyChangeListener[] getPropertyChangeListeners() {
 		return this.propertyChangeSupport.getPropertyChangeListeners();
@@ -243,10 +259,12 @@ public class ActionProgress extends Composite
 		fp.addStyleName("minimal");
 	}
 
+	@Override
 	public void removePropertyChangeListener(PropertyChangeListener listener) {
 		this.propertyChangeSupport.removePropertyChangeListener(listener);
 	}
 
+	@Override
 	public void removePropertyChangeListener(String propertyName,
 			PropertyChangeListener listener) {
 		this.propertyChangeSupport.removePropertyChangeListener(propertyName,
@@ -284,11 +302,13 @@ public class ActionProgress extends Composite
 		cancellingStatusMessage.setVisible(true);
 		ClientBase.getCommonRemoteServiceAsyncInstance().pollJobStatus(getId(),
 				true, new AsyncCallback<JobTracker>() {
+					@Override
 					public void onFailure(Throwable e) {
 						cancellingStatusMessage.setText(" - Error cancelling");
 						throw new WrappedRuntimeException(e);
 					}
 
+					@Override
 					public void onSuccess(JobTracker result) {
 						cancellingStatusMessage.setText(CANCELLED);
 					}
@@ -298,7 +318,9 @@ public class ActionProgress extends Composite
 
 	private void startTimer() {
 		stopped = false;
-		timer.scheduleRepeating(REFRESH_DELAY_MS);
+		initialTimerCall = true;
+		// do a quick initial call, then repeat
+		timer.schedule(200);
 	}
 
 	private void stopTimer() {

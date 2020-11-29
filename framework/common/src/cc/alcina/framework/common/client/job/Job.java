@@ -152,7 +152,21 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		String invalidMessage = null;
 		Preconditions.checkArgument(to != domainIdentity());
 		if (to.getToRelations().size() > 0) {
-			invalidMessage = "to To existing incoming relation";
+			invalidMessage = "to has existing incoming relation";
+		}
+		Job from = domainIdentity();
+		if (type == JobRelationType.SEQUENCE) {
+			Optional<? extends JobRelation> next = null;
+			while ((next = from.getFromRelations().stream()
+					.filter(r -> r.getType() == JobRelationType.SEQUENCE)
+					.findFirst()).isPresent()) {
+				from = next.get().getTo();
+			}
+		}
+		if (type != JobRelationType.PARENT_CHILD && from.getFromRelations()
+				.stream().anyMatch(r -> r.getType() == type)) {
+			invalidMessage = Ax.format(
+					"from has existing outgoing relation of type %s", type);
 		}
 		if (invalidMessage != null) {
 			throw new IllegalStateException(invalidMessage);
@@ -160,7 +174,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		JobRelation relation = AlcinaPersistentEntityImpl
 				.create(JobRelation.class);
 		relation.setType(type);
-		relation.setFrom(domainIdentity());
+		relation.setFrom(from);
 		relation.setTo(to);
 	}
 

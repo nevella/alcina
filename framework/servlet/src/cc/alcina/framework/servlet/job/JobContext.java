@@ -249,6 +249,10 @@ public class JobContext {
 		logger.warn("Unexpected job exception", e);
 	}
 
+	public void remove() {
+		LooseContext.remove(CONTEXT_CURRENT);
+	}
+
 	public void setItemCount(int itemCount) {
 		this.itemCount = itemCount;
 	}

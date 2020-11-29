@@ -170,7 +170,7 @@ public class JobRegistry extends WriterService {
 
 	private AtomicInteger extJobSystemIdCounter = new AtomicInteger();
 
-	Map<Job, CountDownLatch> allocatorAwaiters = new ConcurrentHashMap<>();
+	Map<Job, ContextAwaiter> contextAwaiters = new ConcurrentHashMap<>();
 
 	public JobRegistry() {
 		TransformCommit.get()
@@ -187,6 +187,19 @@ public class JobRegistry extends WriterService {
 	// Directly acquire a resource (not via TaskPerformer.getResources)
 	public void acquireResource(Job forJob, JobResource resource) {
 		acquireResources(forJob, Collections.singletonList(resource));
+	}
+
+	public Job await(Job job) throws InterruptedException {
+		ContextAwaiter awaiter = contextAwaiters.get(job);
+		Transaction.commit();
+		awaiter.await();
+		JobContext jobContext = activeJobs.get(job);
+		contextAwaiters.remove(job);
+		jobContext.awaitSequenceCompletion();
+		DomainStore.waitUntilCurrentRequestsProcessed();
+		// FIXME - mvcc.jobs.1a - *really* make these lazy, mr annotation
+		// you
+		return Domain.find(job);
 	}
 
 	public Stream<QueueStat> getActiveQueueStats() {
@@ -231,18 +244,8 @@ public class JobRegistry extends WriterService {
 	 */
 	public Job perform(Task task) {
 		try {
-			Job job = createBuilder().withTask(task).create();
-			CountDownLatch latch = new CountDownLatch(1);
-			allocatorAwaiters.put(job, latch);
-			Transaction.commit();
-			latch.await();
-			JobContext jobContext = activeJobs.get(job);
-			allocatorAwaiters.remove(job);
-			jobContext.awaitSequenceCompletion();
-			DomainStore.waitUntilCurrentRequestsProcessed();
-			// FIXME - mvcc.jobs.1a - *really* make these lazy, mr annotation
-			// you
-			return Domain.find(job);
+			Job job = createBuilder().withTask(task).withAwaiter().create();
+			return await(job);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw WrappedRuntimeException.wrapIfNotRuntime(e);
@@ -304,8 +307,11 @@ public class JobRegistry extends WriterService {
 		}
 		JobContext context = new JobContext(job, persistenceType, performer);
 		activeJobs.put(job, context);
-		if (allocatorAwaiters.containsKey(job)) {
-			allocatorAwaiters.get(job).countDown();
+		if (contextAwaiters.containsKey(job)) {
+			ContextAwaiter contextAwaiter = contextAwaiters.get(job);
+			contextAwaiter.copyContext
+					.forEach((k, v) -> LooseContext.set(k, v));
+			contextAwaiter.latch.countDown();
 		}
 		boolean taskEnabled = !ResourceUtilities
 				.isDefined(Ax.format("%s.disabled", job.getTaskClassName()))
@@ -338,8 +344,10 @@ public class JobRegistry extends WriterService {
 		} finally {
 			releaseResources(job, false);
 			context.end();
+			performer.onEnded();
 			LooseContext.pop();
 			activeJobs.remove(job);
+			context.remove();
 		}
 	}
 
@@ -416,6 +424,8 @@ public class JobRegistry extends WriterService {
 
 	/*
 	 * Jobs are always run in new (or job-only) threads
+	 * 
+	 * FIXME - mvcc.jobs.1a - launcherthreadstate should go away
 	 */
 	void performJob(Job job, boolean queueJobPersistence,
 			LauncherThreadState launcherThreadState) {
@@ -477,6 +487,8 @@ public class JobRegistry extends WriterService {
 
 		private Job lastCreated = null;
 
+		private boolean awaiter;
+
 		public void addSibling(Task task) {
 			this.task = task;
 			withContextParent();
@@ -499,6 +511,10 @@ public class JobRegistry extends WriterService {
 			if (related != null) {
 				related.createRelation(job, relationType);
 			}
+			if (awaiter) {
+				JobRegistry.get().contextAwaiters.put(job,
+						new ContextAwaiter());
+			}
 			task.onJobCreate(job);
 			lastCreated = job;
 			return job;
@@ -515,6 +531,11 @@ public class JobRegistry extends WriterService {
 			Preconditions.checkArgument(lastCreated != null);
 			related = lastCreated;
 			create();
+		}
+
+		public Builder withAwaiter() {
+			awaiter = true;
+			return this;
 		}
 
 		public Builder withContextParent() {
@@ -610,6 +631,30 @@ public class JobRegistry extends WriterService {
 		@Override
 		public Job schedule(Task task) {
 			return createBuilder().withTask(task).create();
+		}
+	}
+
+	static class ContextAwaiter {
+		CountDownLatch latch = new CountDownLatch(1);
+
+		Map<String, Object> copyContext = new LinkedHashMap<>();
+
+		public ContextAwaiter() {
+			// we don't copy permissions manager/user - since often the launcher
+			// will be triggered by a system user context (because triggered by
+			// a transaction event)
+			//
+			// instead, all tasks for which runAsRoot returns false must
+			// implement iuser
+			copyContext.putAll(LooseContext.getContext().properties);
+		}
+
+		public void await() {
+			try {
+				latch.await();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
