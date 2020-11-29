@@ -139,10 +139,12 @@ public class DomainDescriptorJob {
 	}
 
 	public Stream<AllocationQueue> getAllocationQueues() {
+		cleanupQueues();
 		return queues.values().stream();
 	}
 
 	public Stream<Job> getIncompleteJobs() {
+		cleanupQueues();
 		return queues.values().stream()
 				.flatMap(AllocationQueue::getIncompleteJobs);
 	}
@@ -169,6 +171,12 @@ public class DomainDescriptorJob {
 					.addDomainTransformPersistenceListener(jobLogger, false);
 		}
 		warmupComplete = true;
+	}
+
+	private void cleanupQueues() {
+		queues.entrySet().removeIf(e -> e.getValue().job
+				.resolveState() == JobState.ABORTED
+				|| e.getValue().job.resolveState() == JobState.CANCELLED);
 	}
 
 	public class AllocationQueue {
