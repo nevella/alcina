@@ -126,7 +126,9 @@ public class DomainDescriptorJob {
 	}
 
 	public Stream<? extends Job> getActiveJobs() {
-		return queues.values().stream().flatMap(AllocationQueue::getActiveJobs);
+		// subjobs are reachable from two allocationqueues, hence 'distinct'
+		return queues.values().stream().flatMap(AllocationQueue::getActiveJobs)
+				.distinct();
 	}
 
 	public Stream<Job> getAllFutureJobs() {
