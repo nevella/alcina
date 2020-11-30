@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
@@ -379,8 +380,10 @@ public class DomainDescriptorJob {
 
 		private Set<? extends Job> subQueueJobs(SubqueuePhase type,
 				JobState state) {
-			return subqueues.getLookup().asMapEnsure(true, type, state)
-					.typedKeySet(Job.class);
+			MultikeyMap<Job> map = subqueues.getLookup().asMapEnsure(false,
+					type, state);
+			return map == null ? Collections.emptySet()
+					: map.typedKeySet(Job.class);
 		}
 
 		void fireInitialCreationEvents() {
