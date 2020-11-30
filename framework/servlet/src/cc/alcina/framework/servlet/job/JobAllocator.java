@@ -199,24 +199,22 @@ class JobAllocator {
 			while (!finished) {
 				try {
 					Event event = eventQueue.poll(2, TimeUnit.SECONDS);
-					if (event == null) {
-						Transaction.begin();
-						// tx for debugging
-						int debug = 3;
-						Transaction.end();
-						continue;
-					}
 					try {
-						DomainStore.waitUntilCurrentRequestsProcessed();
-						processEvent(event);
-						Transaction firstEventTransaction = event.transaction;
-						while ((event = eventQueue.peek()) != null
-								&& event.transaction == firstEventTransaction) {
-							eventQueue.poll();
+						if (event == null) {
+							int debug = 3;
+						} else {
+							Transaction.begin();
+							DomainStore.waitUntilCurrentRequestsProcessed();
 							processEvent(event);
+							Transaction firstEventTransaction = event.transaction;
+							while ((event = eventQueue.peek()) != null
+									&& event.transaction == firstEventTransaction) {
+								eventQueue.poll();
+								processEvent(event);
+							}
 						}
 					} finally {
-						Transaction.end();
+						Transaction.ensureEnded();
 					}
 				} catch (Exception e) {
 					e.printStackTrace();

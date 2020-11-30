@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
@@ -29,6 +30,9 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class Transaction {
+	public static final String CONTEXT_RETAIN_TRANSACTION_TRACES = Transaction.class
+			.getName() + ".CONTEXT_RETAIN_TRANSACTION_TRACES";
+
 	private static ThreadLocal<Transaction> threadLocalInstance = new ThreadLocal() {
 	};
 
@@ -140,6 +144,11 @@ public class Transaction {
 		transaction.threadCount.decrementAndGet();
 	}
 
+	private static boolean retainStartEndTraces() {
+		return ResourceUtilities.is("retainTraces")
+				|| LooseContext.is(CONTEXT_RETAIN_TRANSACTION_TRACES);
+	}
+
 	static void begin(TransactionPhase initialPhase) {
 		if (!Transactions.isInitialised()) {
 			return;
@@ -164,7 +173,7 @@ public class Transaction {
 		threadLocalInstance.set(transaction);
 		transaction.originatingThreadName = Thread.currentThread().getName();
 		transaction.threadCount.incrementAndGet();
-		if (ResourceUtilities.is("retainTransactionStartTrace")) {
+		if (retainStartEndTraces()) {
 			transaction.transactionStartTrace = SEUtilities
 					.getCurrentThreadStacktraceSlice();
 		}
@@ -422,7 +431,7 @@ public class Transaction {
 		// during the transaction
 		// the transaction
 		ThreadlocalTransformManager.cast().resetTltm(null);
-		if (ResourceUtilities.is("retainTransactionStartTrace")) {
+		if (ResourceUtilities.is("retainTransactionTraces")) {
 			transactionEndTrace = SEUtilities.getCurrentThreadStacktraceSlice();
 		}
 		logger.debug("Ended tx: {}", this);
