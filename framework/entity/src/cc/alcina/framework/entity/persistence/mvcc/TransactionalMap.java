@@ -74,6 +74,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	private boolean immutableValues;
 
+	private int hash = 0;
+
 	public TransactionalMap(Class<K> keyClass, Class<V> valueClass) {
 		Preconditions.checkNotNull(keyClass);
 		Preconditions.checkNotNull(valueClass);
@@ -134,7 +136,13 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	 * outrageous for large maps)
 	 */
 	public int hashCode() {
-		return System.identityHashCode(this);
+		if (hash == 0) {
+			hash = System.identityHashCode(this);
+			if (hash == 0) {
+				hash = -1;
+			}
+		}
+		return hash;
 	}
 
 	/*
