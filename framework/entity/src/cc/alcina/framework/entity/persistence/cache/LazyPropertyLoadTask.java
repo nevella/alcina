@@ -47,6 +47,10 @@ public class LazyPropertyLoadTask<T extends Entity>
 		if (LooseContext.is(CONTEXT_IN_LAZY_PROPERTY_LOAD)) {
 			return;
 		}
+		if (LooseContext
+				.is(DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)) {
+			return;
+		}
 		try {
 			LooseContext.pushWithTrue(
 					DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);

@@ -101,6 +101,7 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
@@ -376,14 +377,18 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@Override
 	public JobTracker pollJobStatus(String id, boolean cancel) {
-		Job job = Job.byId(Long.parseLong(id));
-		if (job == null) {
-			return null;
-		}
-		if (cancel) {
-			job.cancel();
-		}
-		return job.asJobTracker();
+		return MethodContext.instance().withContextTrue(
+				DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)
+				.call(() -> {
+					Job job = Job.byId(Long.parseLong(id));
+					if (job == null) {
+						return null;
+					}
+					if (cancel) {
+						job.cancel();
+					}
+					return job.asJobTracker();
+				});
 	}
 
 	@Override

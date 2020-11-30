@@ -63,6 +63,8 @@ import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.QueueStat;
+import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
+import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
@@ -297,6 +299,11 @@ public class JobRegistry extends WriterService {
 	private <T extends Task> void performJob0(Job job,
 			boolean queueJobPersistence,
 			LauncherThreadState launcherThreadState) {
+		if (trackInternalMetrics()) {
+			InternalMetrics.get().startTracker(job,
+					() -> job.getTaskSerialized(), InternalMetricTypeAlcina.job,
+					job.toDisplayName(), () -> true);
+		}
 		TaskPerformer<T> performer = getTaskPerformer(job);
 		PersistenceType persistenceType = PersistenceType.Immediate;
 		if (queueJobPersistence) {
@@ -348,6 +355,9 @@ public class JobRegistry extends WriterService {
 			LooseContext.pop();
 			activeJobs.remove(job);
 			context.remove();
+			if (trackInternalMetrics()) {
+				InternalMetrics.get().endTracker(job);
+			}
 		}
 	}
 
@@ -393,6 +403,10 @@ public class JobRegistry extends WriterService {
 		} else {
 			return new MissingPerformerPerformer();
 		}
+	}
+
+	protected boolean trackInternalMetrics() {
+		return ResourceUtilities.is("trackInternalMetrics");
 	}
 
 	<JR extends JobResource> Optional<JR> getAcquiredResource(Job forJob,

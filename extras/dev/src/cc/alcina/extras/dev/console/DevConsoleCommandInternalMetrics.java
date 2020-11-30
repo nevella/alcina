@@ -103,7 +103,7 @@ public class DevConsoleCommandInternalMetrics {
 
 		@Override
 		public String getUsage() {
-			return "ims filters:{host|args|call|threadName|age|nearDate} modifiers:{tz|format|ignoreables|}";
+			return "ims filters:{host|args|call|threadName|age|nearDate|duration} modifiers:{tz|format|ignoreables}";
 		}
 
 		@Override

@@ -150,6 +150,9 @@ public class DomainStore implements IDomainStore {
 	public static final String CONTEXT_NO_LOCKS = DomainStore.class.getName()
 			+ ".CONTEXT_NO_LOCKS";
 
+	public static final String CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES = DomainStore.class
+			.getName() + ".CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES";
+
 	public static final Logger LOGGER_WRAPPED_OBJECT_REF_INTEGRITY = AlcinaLogUtils
 			.getTaggedLogger(DomainStore.class, "wrapped_object_ref_integrity");
 	static {

@@ -397,6 +397,6 @@ public class InternalMetrics {
 	}
 
 	public enum InternalMetricTypeAlcina implements InternalMetricType {
-		client, service, health, api, servlet;
+		client, service, health, api, servlet, job;
 	}
 }
