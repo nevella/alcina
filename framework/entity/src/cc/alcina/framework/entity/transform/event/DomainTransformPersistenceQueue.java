@@ -110,7 +110,7 @@ public class DomainTransformPersistenceQueue {
 		synchronized (queueModificationLock) {
 			queueModificationLock.notifyAll();
 		}
-		persistedEvents.add(null);
+		persistedEvents.add(new DomainTransformCommitPosition());
 	}
 
 	public void
