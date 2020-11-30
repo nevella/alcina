@@ -350,10 +350,10 @@ public class JobRegistry extends WriterService {
 			if (CommonUtils.extractCauseOfClass(e,
 					CancelledException.class) != null) {
 			} else {
+				logger.warn(Ax.format("Job exception in job %s", job), t);
 				EntityLayerLogging.persistentLog(LogMessageType.TASK_EXCEPTION,
 						e);
 			}
-			throw WrappedRuntimeException.wrapIfNotRuntime(e);
 		} finally {
 			releaseResources(job, false);
 			context.end();
@@ -468,6 +468,7 @@ public class JobRegistry extends WriterService {
 				ThreadedPermissionsManager.cast().pushSystemUser();
 			}
 			performJob0(job, queueJobPersistence, launcherThreadState);
+			logger.info("Job complete - {}", job);
 		} catch (RuntimeException e) {
 			if (stopped) {
 				// app shutdown - various services will not be available -
@@ -475,7 +476,8 @@ public class JobRegistry extends WriterService {
 			} else {
 				// will generally be close to the top of a thread - so log, even
 				// if there's logging higher
-				logger.warn("DEVEX::3 - JobRegistry.performJob", e);
+				logger.warn(Ax.format("DEVEX::3 - JobRegistry.performJob - %s",
+						job), e);
 			}
 		} finally {
 			PermissionsManager.get().popUser();
