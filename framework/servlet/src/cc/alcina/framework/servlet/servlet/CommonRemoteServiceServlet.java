@@ -386,6 +386,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					}
 					if (cancel) {
 						job.cancel();
+						Transaction.commit();
 					}
 					return job.asJobTracker();
 				});
