@@ -28,12 +28,13 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 					.text("Active allocation queues").append();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
-			builder.row().cell("Name").cell("Active").cell("Pending")
-					.cell("Completed").cell("Total");
+			builder.row().cell("Name").cell("Started").cell("Active")
+					.cell("Pending").cell("Completed").cell("Total");
 			queues.filter(q -> q.active != 0)
 					.forEach(queue -> builder.row().cell(queue.name)
-							.cell(queue.active).cell(queue.pending)
-							.cell(queue.completed).cell(queue.total));
+							.cell(queue.startTime).cell(queue.active)
+							.cell(queue.pending).cell(queue.completed)
+							.cell(queue.total));
 		}
 		{
 			Stream<FutureStat> pending = JobRegistry.get()

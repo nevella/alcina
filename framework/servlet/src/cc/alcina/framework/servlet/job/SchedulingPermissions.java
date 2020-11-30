@@ -52,7 +52,8 @@ class SchedulingPermissions {
 	}
 
 	static boolean canProcessOrphans() {
-		return isCurrentScheduledJobExecutor();
+		return isCurrentScheduledJobExecutor() || ResourceUtilities
+				.is(JobScheduler.class, "forceProcessOrphans");
 	}
 
 	static boolean isCurrentScheduledJobExecutor() {

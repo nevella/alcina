@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,7 +27,6 @@ import cc.alcina.framework.common.client.job.Job.ClientInstanceLoadOracle;
 import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -128,7 +129,8 @@ public class DomainDescriptorJob {
 	public Stream<? extends Job> getActiveJobs() {
 		// subjobs are reachable from two allocationqueues, hence 'distinct'
 		return queues.values().stream().flatMap(AllocationQueue::getActiveJobs)
-				.distinct();
+				.distinct()
+				.sorted(Comparator.comparing(Job::getStartTime).reversed());
 	}
 
 	public Stream<Job> getAllFutureJobs() {
@@ -158,7 +160,9 @@ public class DomainDescriptorJob {
 
 	public Stream<? extends Job> getRecentlyCompletedJobs() {
 		return Domain.stream(jobImplClass)
-				.sorted(EntityComparator.REVERSED_INSTANCE)
+				.sorted(Comparator.comparing(
+						Job::resolveCompletionDateOrLastModificationDate)
+						.reversed())
 				.filter(Job::provideIsComplete);
 	}
 
@@ -211,7 +215,9 @@ public class DomainDescriptorJob {
 			stat.pending = (int) (perStateJobs(JobState.PENDING).count()
 					+ perStateJobs(JobState.ALLOCATED).count());
 			stat.total = stat.active + stat.pending + stat.completed;
-			stat.name = job.provideName();
+			stat.name = job.toDisplayName();
+			stat.startTime = job.getStartTime() != null ? job.getStartTime()
+					: job.getCreationDate();
 			return stat;
 		}
 
@@ -409,6 +415,8 @@ public class DomainDescriptorJob {
 			public int total;
 
 			public String name;
+
+			public Date startTime;
 
 			public int completed;
 		}

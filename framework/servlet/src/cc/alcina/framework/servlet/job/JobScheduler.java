@@ -99,8 +99,7 @@ public class JobScheduler {
 		timer.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
-				MethodContext.instance().withWrappingTransaction()
-						.run(() -> events.add(new ScheduleEvent(Type.WAKEUP)));
+				fireWakeup();
 			}
 		}, 0L, 5 * TimeConstants.ONE_MINUTE_MS);
 	}
@@ -309,9 +308,7 @@ public class JobScheduler {
 				timer.schedule(new TimerTask() {
 					@Override
 					public void run() {
-						MethodContext.instance().withWrappingTransaction()
-								.run(() -> events
-										.add(new ScheduleEvent(Type.WAKEUP)));
+						fireWakeup();
 					}
 				}, SEUtilities.toOldDate(wakeup));
 			}
@@ -322,6 +319,11 @@ public class JobScheduler {
 	void enqueueLeaderChangedEvent() {
 		MethodContext.instance().withWrappingTransaction()
 				.call(() -> events.add(new ScheduleEvent(Type.LEADER_CHANGED)));
+	}
+
+	void fireWakeup() {
+		MethodContext.instance().withWrappingTransaction()
+				.run(() -> events.add(new ScheduleEvent(Type.WAKEUP)));
 	}
 
 	@RegistryLocation(registryPoint = ExecutionConstraints.class, implementationType = ImplementationType.FACTORY)

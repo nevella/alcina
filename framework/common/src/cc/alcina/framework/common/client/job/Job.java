@@ -547,6 +547,17 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return resolveCompletionDate0(0);
 	}
 
+	public Date resolveCompletionDateOrLastModificationDate() {
+		Date completionDate = resolveCompletionDate();
+		if (completionDate != null) {
+			return completionDate;
+		}
+		if (getLastModificationDate() != null) {
+			return getLastModificationDate();
+		}
+		return getCreationDate();
+	}
+
 	public JobState resolveState() {
 		return resolveState0(0);
 	}

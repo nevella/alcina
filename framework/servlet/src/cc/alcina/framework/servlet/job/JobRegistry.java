@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -206,7 +207,8 @@ public class JobRegistry extends WriterService {
 
 	public Stream<QueueStat> getActiveQueueStats() {
 		return DomainDescriptorJob.get().getAllocationQueues()
-				.map(AllocationQueue::asQueueStat);
+				.map(AllocationQueue::asQueueStat)
+				.sorted(Comparator.comparing(stat -> stat.startTime));
 	}
 
 	public String getExJobSystemNextJobId(Class<?> clazz) {
@@ -262,6 +264,10 @@ public class JobRegistry extends WriterService {
 	public void stopService() {
 		stopped = true;
 		scheduler.stopService();
+	}
+
+	public void wakeupScheduler() {
+		scheduler.fireWakeup();
 	}
 
 	public void withJobMetadataLock(Job job, Runnable runnable) {

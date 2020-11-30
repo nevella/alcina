@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.schedule;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -10,6 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
@@ -49,6 +51,30 @@ public class StandardSchedules {
 		@Override
 		public Schedule impl() {
 			return new StandardSchedules.DailySchedule();
+		}
+	}
+
+	public static class FortnightlySchedule extends Schedule {
+		public FortnightlySchedule() {
+			LocalDateTime nextWeek = LocalDateTime.now()
+					.truncatedTo(ChronoUnit.DAYS).with(DayOfWeek.SUNDAY)
+					.plusWeeks(1);
+			LocalDateTime base = SEUtilities.toLocalDateTime(new Date(0))
+					.truncatedTo(ChronoUnit.DAYS).with(DayOfWeek.SUNDAY)
+					.plusWeeks(1);
+			long between = ChronoUnit.WEEKS.between(base, nextWeek);
+			LocalDateTime nextFortnight = between % 2 == 1
+					? nextWeek.plusWeeks(1)
+					: nextWeek;
+			withNext(nextFortnight);
+		}
+	}
+
+	public static class FortnightlyScheduleFactory
+			implements RegistryFactory<Schedule> {
+		@Override
+		public Schedule impl() {
+			return new StandardSchedules.FortnightlySchedule();
 		}
 	}
 
