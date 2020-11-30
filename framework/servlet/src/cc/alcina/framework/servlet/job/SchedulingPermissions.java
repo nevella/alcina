@@ -56,6 +56,8 @@ class SchedulingPermissions {
 	}
 
 	static boolean isCurrentScheduledJobExecutor() {
-		return JobRegistry.get().jobExecutors.isCurrentScheduledJobExecutor();
+		return JobRegistry.get().jobExecutors.isCurrentScheduledJobExecutor()
+				&& ResourceUtilities.is(JobScheduler.class,
+						"scheduleClusterJobs");
 	}
 }
