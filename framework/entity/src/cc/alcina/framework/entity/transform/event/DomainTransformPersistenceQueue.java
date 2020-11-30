@@ -632,6 +632,10 @@ public class DomainTransformPersistenceQueue {
 						 * requestId, if defined, may have been fired before we
 						 * got here -
 						 */
+						boolean override = false;
+						if (override) {
+							waiting.clear();
+						}
 						if (waiting.isEmpty() || timeRemaining <= 0) {
 							waiters.remove(this);
 							return;
@@ -644,7 +648,8 @@ public class DomainTransformPersistenceQueue {
 									"Long running wait for processed - {} - {} ms",
 									waiting, now - startTime);
 						}
-						queueModificationLock.wait(timeRemaining);
+						queueModificationLock
+								.wait(10 * TimeConstants.ONE_SECOND_MS);
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
 					}
