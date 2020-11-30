@@ -5,12 +5,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,7 +32,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -73,7 +74,7 @@ public class DomainTransformPersistenceQueue {
 
 	Set<Long> firedOrQueued = new LinkedHashSet<>();
 
-	LinkedList<DomainTransformCommitPosition> toFire = new LinkedList<>();
+	BlockingDeque<DomainTransformCommitPosition> persistedEvents = new LinkedBlockingDeque<>();
 
 	Object queueModificationLock = new Object();
 
@@ -109,9 +110,7 @@ public class DomainTransformPersistenceQueue {
 		synchronized (queueModificationLock) {
 			queueModificationLock.notifyAll();
 		}
-		synchronized (toFire) {
-			toFire.notifyAll();
-		}
+		persistedEvents.add(null);
 	}
 
 	public void
@@ -140,12 +139,6 @@ public class DomainTransformPersistenceQueue {
 
 	public Thread getFiringThread() {
 		return this.firingThread;
-	}
-
-	public int getToFireQueueLength() {
-		synchronized (queueModificationLock) {
-			return toFire.size();
-		}
 	}
 
 	public DomainTransformCommitPosition getTransformLogPosition() {
@@ -284,7 +277,7 @@ public class DomainTransformPersistenceQueue {
 	private Optional<DomainTransformCommitPosition> getLastToFireId() {
 		synchronized (queueModificationLock) {
 			return Optional.<DomainTransformCommitPosition> ofNullable(
-					CommonUtils.last(toFire));
+					persistedEvents.peekLast());
 		}
 	}
 
@@ -313,12 +306,9 @@ public class DomainTransformPersistenceQueue {
 				return;
 			} else {
 				firedOrQueued.add(position.commitRequestId);
-				synchronized (toFire) {
-					logger.info("Adding to toFire queue: {} ",
-							position.commitRequestId);
-					toFire.add(position);
-					toFire.notifyAll();
-				}
+				logger.info("Adding to toFire queue: {} ",
+						position.commitRequestId);
+				persistedEvents.add(position);
 			}
 		}
 	}
@@ -407,33 +397,24 @@ public class DomainTransformPersistenceQueue {
 					persistenceEvents.domainStore.name));
 			while (true) {
 				try {
-					DomainTransformCommitPosition position = null;
-					if (getToFireQueueLength() == 0) {
-						synchronized (toFire) {
-							toFire.wait();
-							logger.debug("Woken from toFire queue wakeup");
-							if (closed.get()) {
-								return;
-							}
-						}
+					DomainTransformCommitPosition position = persistedEvents
+							.poll(5, TimeUnit.SECONDS);
+					if (closed.get()) {
+						return;
 					}
-					if (getToFireQueueLength() > 0) {
-						synchronized (queueModificationLock) {
-							position = toFire.removeFirst();
-							logger.debug("Removed id from toFire: {}",
-									position.commitRequestId);
-						}
+					if (position == null) {
+						continue;
 					}
-					if (position != null && !closed.get()) {
-						try {
-							Transaction.ensureBegun();
-							ThreadedPermissionsManager.cast().pushSystemUser();
-							publishTransformEvent(position);
-						} finally {
-							Transaction.ensureBegun();
-							ThreadedPermissionsManager.cast().popSystemUser();
-							Transaction.ensureEnded();
-						}
+					logger.debug("Removed id from toFire: {}",
+							position.commitRequestId);
+					try {
+						Transaction.ensureBegun();
+						ThreadedPermissionsManager.cast().pushSystemUser();
+						publishTransformEvent(position);
+					} finally {
+						Transaction.ensureBegun();
+						ThreadedPermissionsManager.cast().popSystemUser();
+						Transaction.ensureEnded();
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -587,7 +568,8 @@ public class DomainTransformPersistenceQueue {
 							.collect(Collectors.toSet());
 					waiting.removeAll(appLifetimeEventsFired);
 				} else {
-					waiting = toFire.stream().map(p -> p.commitRequestId)
+					waiting = persistedEvents.stream()
+							.map(p -> p.commitRequestId)
 							.collect(Collectors.toSet());
 					waiting.addAll(firingLocalToVm);
 				}
