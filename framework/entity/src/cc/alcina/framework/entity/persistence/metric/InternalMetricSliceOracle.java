@@ -9,6 +9,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -73,7 +74,12 @@ public class InternalMetricSliceOracle {
 			return true;
 		} else if (imd.type == InternalMetricTypeAlcina.api) {
 			return true;
+		} else if (imd.type == InternalMetricTypeAlcina.api) {
+			return true;
+		} else if (imd.type == InternalMetricTypeAlcina.job) {
+			return true;
 		} else {
+			Ax.err("Internal metric type not supported");
 			throw new UnsupportedOperationException();
 		}
 	}

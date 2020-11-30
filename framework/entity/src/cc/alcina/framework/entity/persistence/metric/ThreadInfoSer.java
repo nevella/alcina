@@ -58,7 +58,7 @@ public class ThreadInfoSer {
 		this.suspended = info.isSuspended();
 		this.threadState = info.getThreadState();
 		if (info.getStackTrace() != null) {
-			stackTrace.addAll(Arrays.asList(info.getStackTrace()));
+			Arrays.asList(info.getStackTrace()).forEach(stackTrace::add);
 		}
 		if (info.getLockedMonitors() != null) {
 			Arrays.stream(info.getLockedMonitors()).map(MonitorInfoSer::new)

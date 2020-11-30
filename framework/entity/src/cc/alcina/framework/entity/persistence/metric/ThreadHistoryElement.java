@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.persistence.metric;
 
 import java.util.Date;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.entity.persistence.cache.DomainStoreLockState;
 import cc.alcina.framework.entity.persistence.cache.DomainStoreWaitStats;
@@ -26,7 +27,8 @@ public class ThreadHistoryElement {
 			if (size > 10000) {
 				int debug = 3;
 			}
-			threadInfo.stackTrace = threadInfo.stackTrace.subList(0, maxFrames);
+			threadInfo.stackTrace = threadInfo.stackTrace.stream()
+					.limit(maxFrames).collect(Collectors.toList());
 			this.elidedStacktraceFrameCount += size - maxFrames;
 		}
 	}

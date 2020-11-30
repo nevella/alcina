@@ -38,7 +38,8 @@ public class ThreadHistory {
 		element.elideIfMoreLinesThan(maxStackLines);
 		int size = elements.size();
 		if (size > maxFrames) {
-			elements = elements.subList(0, maxFrames);
+			elements = elements.stream().limit(maxFrames)
+					.collect(Collectors.toList());
 			this.elidedElementCount += size - maxFrames;
 		}
 		elementCount = elements.size();

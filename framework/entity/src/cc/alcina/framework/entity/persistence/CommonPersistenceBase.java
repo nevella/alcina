@@ -19,6 +19,7 @@ import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -494,6 +495,26 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				"SELECT  id, counter from publicationCounter where user_id=?1 FOR UPDATE")
 				.setParameter(1, user.getId());
 		List<Object[]> resultList = query.getResultList();
+		if (resultList.isEmpty()) {
+			logger.warn("No publication counter for user {} - creating... ",
+					user.toIdNameString());
+			getEntityManager()
+					.createNativeQuery("LOCK TABLE publicationCounter")
+					.executeUpdate();
+			List<BigInteger> resultList2 = getEntityManager()
+					.createNativeQuery(
+							"SELECT nextval('publicationCounter_id_seq');")
+					.getResultList();
+			getEntityManager().createNativeQuery(
+					"INSERT INTO publicationcounter (id,optlock,creationdate,lastmodificationdate,counter,user_id) VALUES (?1,?2,?3,?4,?5,?6);")
+					.setParameter(1, resultList2.get(0).longValue())
+					.setParameter(2, 1)
+					.setParameter(3, new Timestamp(System.currentTimeMillis()))
+					.setParameter(4, new Timestamp(System.currentTimeMillis()))
+					.setParameter(5, 0).setParameter(6, user.getId())
+					.executeUpdate();
+			resultList = query.getResultList();
+		}
 		long id = ((BigInteger) resultList.get(0)[0]).longValue();
 		long counter = ((BigInteger) resultList.get(0)[1]).longValue();
 		getEntityManager()

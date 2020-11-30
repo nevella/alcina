@@ -116,56 +116,69 @@ public class InternalMetrics {
 		timer.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
-				if (sliceExecutor.getActiveCount() == 0) {
-					sliceExecutor.submit(() -> {
-						if (sliceSkipCount < 50) {
-							sliceSkipCount = 0;
-						}
-						try {
-							slice();
-						} catch (Throwable e) {
-							try {
-								ResourceUtilities.is("enabled");
-							} catch (Exception e1) {
-								// webapp finished
-								timer.cancel();
-								return;
+				try {
+					if (sliceExecutor.getActiveCount() == 0) {
+						sliceExecutor.submit(() -> {
+							if (sliceSkipCount < 50) {
+								sliceSkipCount = 0;
 							}
-							e.printStackTrace();
+							try {
+								slice();
+							} catch (Throwable e) {
+								try {
+									ResourceUtilities.is(InternalMetrics.class,
+											"enabled");
+								} catch (Exception e1) {
+									// webapp finished
+									timer.cancel();
+									return;
+								}
+								e.printStackTrace();
+							}
+						});
+					} else {
+						logger.info(
+								"internal metrics :: sliceExecutor :: skip");
+						if (sliceSkipCount++ == 50) {
+							long[] allThreadIds = threadMxBean
+									.getAllThreadIds();
+							ThreadInfo[] threadInfos = threadMxBean
+									.getThreadInfo(allThreadIds, true, true);
+							Ax.sysLogHigh("High skip count: ");
+							logger.warn(Arrays.asList(threadInfos).toString());
 						}
-					});
-				} else {
-					logger.info("internal metrics :: sliceExecutor :: skip");
-					if (sliceSkipCount++ == 50) {
-						long[] allThreadIds = threadMxBean.getAllThreadIds();
-						ThreadInfo[] threadInfos = threadMxBean
-								.getThreadInfo(allThreadIds, true, true);
-						Ax.sysLogHigh("High skip count: ");
-						logger.warn(Arrays.asList(threadInfos).toString());
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		}, SLICE_PERIOD, SLICE_PERIOD);
 		timer.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
-				if (persistExecutor.getActiveCount() == 0) {
-					persistExecutor.submit(() -> {
-						try {
-							persist();
-						} catch (Throwable e) {
+				try {
+					if (persistExecutor.getActiveCount() == 0) {
+						persistExecutor.submit(() -> {
 							try {
-								ResourceUtilities.is("enabled");
-							} catch (Exception e1) {
-								// webapp finished
-								timer.cancel();
-								return;
+								persist();
+							} catch (Throwable e) {
+								try {
+									ResourceUtilities.is(InternalMetrics.class,
+											"enabled");
+								} catch (Exception e1) {
+									// webapp finished
+									timer.cancel();
+									return;
+								}
+								e.printStackTrace();
 							}
-							e.printStackTrace();
-						}
-					});
-				} else {
-					logger.info("internal metrics :: persistExecutor :: skip");
+						});
+					} else {
+						logger.info(
+								"internal metrics :: persistExecutor :: skip");
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		}, PERSIST_PERIOD, PERSIST_PERIOD);

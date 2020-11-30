@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
@@ -14,6 +15,14 @@ public class KeyValuePersistentCache<T> implements PersistentObjectCache<T> {
 	protected String base;
 
 	protected Class<T> clazz;
+
+	protected boolean createIfNonExistent;
+
+	@Override
+	public SingletonCache<T> asSingletonCache() {
+		createIfNonExistent = true;
+		return new SingletonCache<>(this);
+	}
 
 	@Override
 	public void clear() {
@@ -33,6 +42,11 @@ public class KeyValuePersistentCache<T> implements PersistentObjectCache<T> {
 		if (kvp.isPresent()) {
 			return (T) kvp.get().deserializeObject(clazz);
 		} else {
+			if (createIfNonExistent) {
+				T instance = Reflections.newInstance(clazz);
+				persist(path, instance);
+				return instance;
+			}
 			return null;
 		}
 	}
@@ -73,7 +87,7 @@ public class KeyValuePersistentCache<T> implements PersistentObjectCache<T> {
 	@Override
 	public PersistentObjectCache<T>
 			withCreateIfNonExistent(boolean createIfNonExistent) {
-		// don't specify
+		// don't specify (overridden by singleton cache)
 		throw new UnsupportedOperationException();
 	}
 
