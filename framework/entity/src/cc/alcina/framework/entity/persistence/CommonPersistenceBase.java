@@ -487,8 +487,9 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 
 	@Override
 	/*
-	 * We use transform trigger logic to ensure that these exist on user
-	 * creation
+	 * Normally, transform trigger logic in DomainDescriptorPublication ensures
+	 * that these are created on user creation - the fallback lock-and-create is
+	 * for legacy systems.
 	 */
 	public long getNextPublicationIdForUser(IUser user) {
 		Query query = getEntityManager().createNativeQuery(
@@ -501,18 +502,26 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			getEntityManager()
 					.createNativeQuery("LOCK TABLE publicationCounter")
 					.executeUpdate();
-			List<BigInteger> resultList2 = getEntityManager()
-					.createNativeQuery(
-							"SELECT nextval('publicationCounter_id_seq');")
-					.getResultList();
-			getEntityManager().createNativeQuery(
-					"INSERT INTO publicationcounter (id,optlock,creationdate,lastmodificationdate,counter,user_id) VALUES (?1,?2,?3,?4,?5,?6);")
-					.setParameter(1, resultList2.get(0).longValue())
-					.setParameter(2, 1)
-					.setParameter(3, new Timestamp(System.currentTimeMillis()))
-					.setParameter(4, new Timestamp(System.currentTimeMillis()))
-					.setParameter(5, 0).setParameter(6, user.getId())
-					.executeUpdate();
+			resultList = query.getResultList();
+			/*
+			 * double-checked locking
+			 */
+			if (resultList.isEmpty()) {
+				List<BigInteger> resultList2 = getEntityManager()
+						.createNativeQuery(
+								"SELECT nextval('publicationCounter_id_seq');")
+						.getResultList();
+				getEntityManager().createNativeQuery(
+						"INSERT INTO publicationcounter (id,optlock,creationdate,lastmodificationdate,counter,user_id) VALUES (?1,?2,?3,?4,?5,?6);")
+						.setParameter(1, resultList2.get(0).longValue())
+						.setParameter(2, 1)
+						.setParameter(3,
+								new Timestamp(System.currentTimeMillis()))
+						.setParameter(4,
+								new Timestamp(System.currentTimeMillis()))
+						.setParameter(5, 0).setParameter(6, user.getId())
+						.executeUpdate();
+			}
 			resultList = query.getResultList();
 		}
 		long id = ((BigInteger) resultList.get(0)[0]).longValue();
