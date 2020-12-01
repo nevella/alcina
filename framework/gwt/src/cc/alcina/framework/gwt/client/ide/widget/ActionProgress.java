@@ -88,7 +88,7 @@ public class ActionProgress extends Composite
 
 	private boolean stopped;
 
-	private boolean initialTimerCall;
+	private int timerCallCount = 0;
 
 	public ActionProgress(final String id) {
 		this(id, null);
@@ -174,9 +174,7 @@ public class ActionProgress extends Composite
 
 					private void onReturned() {
 						checking = false;
-						if (initialTimerCall) {
-							timer.scheduleRepeating(2000);
-						}
+						scheduleNext();
 					}
 				};
 				if (!checking) {
@@ -316,15 +314,28 @@ public class ActionProgress extends Composite
 		return;
 	}
 
+	private void scheduleNext() {
+		if (stopped) {
+			return;
+		}
+		timerCallCount++;
+		if (timerCallCount <= 2) {
+			// do 2 quick initial calls, then slower repeat
+			timer.schedule(200);
+		} else {
+			timer.schedule(2000);
+		}
+	}
+
 	private void startTimer() {
 		stopped = false;
-		initialTimerCall = true;
-		// do a quick initial call, then repeat
-		timer.schedule(200);
+		timerCallCount = 0;
+		scheduleNext();
 	}
 
 	private void stopTimer() {
 		stopped = true;
+		timerCallCount = 0;
 		timer.cancel();
 	}
 
