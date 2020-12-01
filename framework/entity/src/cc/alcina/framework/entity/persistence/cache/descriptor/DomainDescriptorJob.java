@@ -244,13 +244,12 @@ public class DomainDescriptorJob {
 		}
 
 		public long getIncompleteAllocatedJobCountForCurrentPhase() {
-			return getIncompleteJobCountForCurrentPhase()
-					- perPhaseJobs(Collections.singletonList(JobState.PENDING))
-							.count();
+			return getIncompleteJobCountForCurrentPhase() - perPhaseJobCount(
+					Collections.singletonList(JobState.PENDING));
 		}
 
 		public long getIncompleteJobCountForCurrentPhase() {
-			return perPhaseJobs(incompleteStates(phase)).count();
+			return perPhaseJobCount(incompleteStates(phase));
 		}
 
 		public Stream<Job> getIncompleteJobs() {
@@ -261,7 +260,7 @@ public class DomainDescriptorJob {
 			return perStateJobs(JobState.values()).count();
 		}
 
-		public int getUnallocatedJobCount() {
+		public long getUnallocatedJobCount() {
 			return perPhaseJobCount(
 					Collections.singletonList(JobState.PENDING));
 		}
@@ -369,7 +368,7 @@ public class DomainDescriptorJob {
 			return true;
 		}
 
-		private int perPhaseJobCount(List<JobState> states) {
+		private long perPhaseJobCount(List<JobState> states) {
 			return Stream.of(phase)
 					.flatMap(type -> states.stream()
 							.map(state -> subQueueJobs(type, state)))
