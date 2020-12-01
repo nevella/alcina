@@ -10,9 +10,7 @@ public interface ObjectStore extends ObjectLookup {
 
 	public abstract boolean contains(Entity obj);
 
-	public abstract void deregisterObject(Entity entity);
-
-	public abstract void deregisterObjects(Collection<Entity> objects);
+	public abstract void deregister(Entity entity);
 
 	public abstract <T> Collection<T> getCollection(Class<T> clazz);
 

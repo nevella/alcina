@@ -38,9 +38,9 @@ public abstract class MapObjectLookup implements ObjectStore {
 	public void changeMapping(Entity obj, long id, long localId) {
 		Class<? extends Entity> clazz = obj.getClass();
 		FastIdLookup lookup = ensureLookup(clazz);
-		//FIXME - mvcc.adjunct - this goes away (probably all moved to detachedentitycache)
-		lookup.changeMapping(obj,id,localId);
-		
+		// FIXME - mvcc.adjunct - this goes away (probably all moved to
+		// detachedentitycache)
+		lookup.changeMapping(obj, id, localId);
 		mapObject(obj);
 	}
 
@@ -60,7 +60,7 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	@Override
-	public void deregisterObject(Entity entity) {
+	public void deregister(Entity entity) {
 		if (entity == null) {
 			return;
 		}
@@ -71,16 +71,6 @@ public abstract class MapObjectLookup implements ObjectStore {
 		if (entity instanceof SourcesPropertyChangeEvents) {
 			SourcesPropertyChangeEvents sb = (SourcesPropertyChangeEvents) entity;
 			sb.removePropertyChangeListener(listener);
-		}
-	}
-
-	@Override
-	public void deregisterObjects(Collection<Entity> objects) {
-		if (objects == null) {
-			return;
-		}
-		for (Entity entity : objects) {
-			deregisterObject(entity);
 		}
 	}
 

@@ -323,15 +323,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public void deregisterDomainObjects(Collection<Entity> entities) {
-		for (Entity entity : entities) {
-			listeningTo.remove(entity);
-			entity.removePropertyChangeListener(this);
-		}
-		super.deregisterDomainObjects(entities);
-	}
-
-	@Override
 	public String displayNameForObject(Object o) {
 		return ObjectPersistenceHelper.get().displayNameForObject(o);
 	}

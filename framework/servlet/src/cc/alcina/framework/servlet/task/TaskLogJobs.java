@@ -122,10 +122,12 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 					.cell("Finished").cell("Performer").cell("Link");
 			Predicate<Job> nameFilter = job -> Ax.isBlank(value)
 					|| job.getTaskClassName().matches(value);
-			DomainDescriptorJob.get().getRecentlyCompletedJobs()
-					.filter(job -> Ax.isBlank(value)
+			Predicate<Job> filter = nameFilter
+					.and(job -> Ax.isBlank(value)
 							|| job.getTaskClassName().matches(value))
-					.filter(sectionFilter).limit(limit).forEach(job -> {
+					.and(sectionFilter);
+			DomainDescriptorJob.get().getRecentlyCompletedJobs(filter, limit)
+					.forEach(job -> {
 						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 								.cell(String.valueOf(job.getId()))
 								.cell(job.provideName())

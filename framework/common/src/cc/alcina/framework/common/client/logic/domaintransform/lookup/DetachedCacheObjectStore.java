@@ -31,22 +31,12 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
-	public void deregisterObject(Entity entity) {
+	public void deregister(Entity entity) {
 		// just remove
 		if (entity == null) {
 			return;
 		}
 		cache.remove(entity);
-	}
-
-	@Override
-	public void deregisterObjects(Collection<Entity> objects) {
-		if (objects == null) {
-			return;
-		}
-		for (Entity entity : objects) {
-			deregisterObject(entity);
-		}
 	}
 
 	public DetachedEntityCache getCache() {

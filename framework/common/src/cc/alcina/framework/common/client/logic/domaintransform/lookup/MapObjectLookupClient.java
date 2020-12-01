@@ -65,8 +65,8 @@ public class MapObjectLookupClient extends MapObjectLookup {
 	}
 
 	@Override
-	public synchronized void deregisterObject(Entity entity) {
-		super.deregisterObject(entity);
+	public synchronized void deregister(Entity entity) {
+		super.deregister(entity);
 	}
 
 	@Override

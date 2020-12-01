@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -159,12 +160,13 @@ public class DomainDescriptorJob {
 				.filter("taskClassName", action.getClass().getName()).stream();
 	}
 
-	public Stream<? extends Job> getRecentlyCompletedJobs() {
-		return Domain.stream(jobImplClass)
+	public Stream<? extends Job>
+			getRecentlyCompletedJobs(Predicate<Job> predicate, int limit) {
+		return Domain.stream(jobImplClass).filter(Job::provideIsComplete)
+				.filter(predicate).limit(limit)
 				.sorted(Comparator.comparing(
 						Job::resolveCompletionDateOrLastModificationDate)
-						.reversed())
-				.filter(Job::provideIsComplete);
+						.reversed());
 	}
 
 	public Stream<Job> getUndeserializableJobs() {

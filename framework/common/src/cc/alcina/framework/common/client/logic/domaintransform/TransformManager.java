@@ -732,13 +732,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public void deregisterDomainObject(Entity entity) {
-		deregisterDomainObjects(CommonUtils.wrapInCollection(entity));
+		if (getDomainObjects() != null) {
+			getDomainObjects().deregister(entity);
+		}
 	}
 
 	public void deregisterDomainObjects(Collection<Entity> entities) {
-		if (getDomainObjects() != null) {
-			getDomainObjects().deregisterObjects(entities);
-		}
+		entities.forEach(this::deregisterDomainObject);
 	}
 
 	public void deregisterProvisionalObject(Object o) {
@@ -1388,7 +1388,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			if (entity.getId() == 0) {
 				Entity createdObject = getDomainObjects().getObject(entity);
 				if (createdObject != null) {
-					getDomainObjects().deregisterObject(createdObject);
+					getDomainObjects().deregister(createdObject);
 				}
 			}
 			getDomainObjects().mapObject(entity);
@@ -1849,7 +1849,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected void performDeleteObject(Entity entity) {
 		if (getDomainObjects() != null) {
-			getDomainObjects().deregisterObject(entity);
+			getDomainObjects().deregister(entity);
 			maybeFireCollectionModificationEvent(entity.entityClass(), false);
 		}
 	}
