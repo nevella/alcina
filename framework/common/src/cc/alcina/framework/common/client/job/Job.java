@@ -319,7 +319,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public boolean provideCanDeserializeTask() {
 		try {
-			getTask();
+			Objects.requireNonNull(getTask());
 			return true;
 		} catch (Exception e) {
 			// Invalid class/serialized form
