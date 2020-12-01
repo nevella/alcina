@@ -893,7 +893,7 @@ public class DomainStore implements IDomainStore {
 			metricLogger.debug("Query metrics:\n========\n{}\n{}", query,
 					debugMetricBuilder.toString());
 		}
-		Stream stream = token.ensureStream();
+		Stream stream = token.applyEndOfStreamOperators();
 		List<PreProvideTask<T>> preProvideTasks = domainDescriptor
 				.getPreProvideTasks(clazz);
 		for (PreProvideTask<T> preProvideTask : preProvideTasks) {
@@ -1569,6 +1569,17 @@ public class DomainStore implements IDomainStore {
 			stream = ensureStream().filter(predicate);
 		}
 
+		public Stream applyEndOfStreamOperators() {
+			ensureStream();
+			if (query.getComparator() != null) {
+				stream = stream.sorted(query.getComparator());
+			}
+			if (query.getLimit() != -1) {
+				stream = stream.limit(query.getLimit());
+			}
+			return stream;
+		}
+
 		public Stream<E> ensureStream() {
 			if (stream == null) {
 				if (query.getSourceStream().isPresent()) {
@@ -1579,12 +1590,6 @@ public class DomainStore implements IDomainStore {
 				if (LooseContext.has(DomainQuery.CONTEXT_DEBUG_CONSUMER)) {
 					stream = stream.peek(LooseContext
 							.get(DomainQuery.CONTEXT_DEBUG_CONSUMER));
-				}
-				if (query.getLimit() != -1) {
-					stream = stream.limit(query.getLimit());
-				}
-				if (query.getComparator() != null) {
-					stream = stream.sorted(query.getComparator());
 				}
 			}
 			return stream;

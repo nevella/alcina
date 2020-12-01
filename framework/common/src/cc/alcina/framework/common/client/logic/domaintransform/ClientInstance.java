@@ -236,7 +236,7 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 	public String toString() {
 		String idString = super.toString();
 		return Ax.matches(getUserAgent(), "^(servlet|server).*")
-				? Ax.format("%s::%s", idString, getUserAgent())
+				? Ax.format("%s::%s", getId(), getUserAgent())
 				: idString;
 	}
 }

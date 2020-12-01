@@ -3,11 +3,10 @@ package cc.alcina.framework.common.client.job;
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
 
 public interface Task extends Serializable {
 	default String getName() {
-		return CommonUtils.deInfix(getClass().getSimpleName());
+		return getClass().getSimpleName();
 	}
 
 	default void onJobCreate(Job job) {

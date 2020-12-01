@@ -711,9 +711,14 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public String toDisplayName() {
-		return Ax.format("%s::%s",
-				getTaskClassName().replaceFirst(".+\\.(.+)", "$1"),
-				toLocator().toRecoverableNumericString());
+		if (provideCanDeserializeTask()) {
+			return Ax.format("%s::%s", task.getName(),
+					toLocator().toRecoverableNumericString());
+		} else {
+			return Ax.format("%s::%s",
+					getTaskClassName().replaceFirst(".+\\.(.+)", "$1"),
+					toLocator().toRecoverableNumericString());
+		}
 	}
 
 	@Override
