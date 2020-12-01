@@ -834,7 +834,9 @@ public class TransformCommit {
 					throws DomainTransformRequestException {
 		boolean unexpectedException = true;
 		try {
-			LooseContext.getContext().push();
+			LooseContext.push();
+			LooseContext.remove(
+					ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
 			AppPersistenceBase.checkNotReadOnly();
 			DomainStore.stores().writableStore().getPersistenceEvents()
 					.fireDomainTransformPersistenceEvent(

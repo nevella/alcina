@@ -6,8 +6,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -20,12 +22,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.util.AlcinaChildRunnable;
+import cc.alcina.framework.entity.util.MethodContext;
 
 /*
  * FIXME - mvcc.4 - the threading is overly complex - or could be abstracted out maybe? With a task queue?
@@ -37,39 +39,35 @@ import cc.alcina.framework.entity.util.AlcinaChildRunnable;
  * FIXME - mvcc.5 - backup (fs?) persistence of transforms? (get em via scp on fail) (why aren't the runnables run on the originating thread?)
  * 
  * synchronization - all access to internal collections synchronized on this
+ * 
+ * ...yes, definitely an event queue...FIXME - mvcc.jobs.2 - see note re AtEndOfEventSeriesTimer and local persistence
  */
 @RegistryLocation(registryPoint = BackendTransformQueue.class, implementationType = ImplementationType.SINGLETON)
 public class BackendTransformQueue {
+	private static final String DEFAULT_QUEUE_NAME = "default-queue";
+
 	public static BackendTransformQueue get() {
 		return Registry.impl(BackendTransformQueue.class);
 	}
 
+	private BlockingQueue<Event> events = new LinkedBlockingQueue<>();
+
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	private Map<String, Long> queueMaxDelay = new LinkedHashMap<>();
+	private Map<String, Long> queueMaxDelay = new ConcurrentHashMap<>();
 
 	private Map<String, Long> queueFirstEvent = new LinkedHashMap<>();
 
-	private List<DomainTransformEvent> transforms = new ArrayList<>();
+	volatile boolean finished = false;
 
-	private TimerTask scheduledTask = null;
+	private EventThread eventThread;
 
-	private boolean persisting = false;
-
-	private boolean zeroDelayTaskScheduled = false;
-
-	private Timer timer = new Timer("Backend-transform-queue");
-
-	private Object persistTransformsMonitor = new Object();
+	private List<DomainTransformEvent> pendingTransforms = new ArrayList<>();
 
 	public void enqueue(List<DomainTransformEvent> transforms,
 			String queueName) {
-		synchronized (this) {
-			this.transforms.addAll(transforms);
-			long now = System.currentTimeMillis();
-			queueFirstEvent.putIfAbsent(queueName, now);
-			maybeEnqueueTask();
-		}
+		long now = System.currentTimeMillis();
+		events.add(new Event(transforms, normaliseQueueName(queueName), now));
 	}
 
 	public void enqueue(Runnable runnable, String queueName) {
@@ -90,54 +88,38 @@ public class BackendTransformQueue {
 	public void setBackendTransformQueueMaxDelay(String queueName,
 			long delayMs) {
 		synchronized (this) {
-			queueMaxDelay.put(queueName, delayMs);
+			queueMaxDelay.put(normaliseQueueName(queueName), delayMs);
 		}
 	}
 
 	public void start() {
 		int loopDelay = ResourceUtilities
 				.getInteger(BackendTransformQueue.class, "loopDelay");
-		queueMaxDelay.put(null, (long) loopDelay);
+		setBackendTransformQueueMaxDelay(DEFAULT_QUEUE_NAME, loopDelay);
+		eventThread = new EventThread();
+		eventThread.start();
 	}
 
 	public void stop() {
-		timer.cancel();
+		finished = true;
+		eventThread.interrupt();
 	}
 
-	private void persistQueue0() {
-		while (true) {
-			synchronized (this) {
-				logger.info("(Backend queue)  - committing {} transforms",
-						transforms.size());
-				Transaction.endAndBeginNew();
-				ThreadlocalTransformManager.get().addTransforms(transforms,
-						false);
-				transforms.clear();
-				persisting = true;
-				zeroDelayTaskScheduled = false;
-				queueFirstEvent.clear();
-			}
-			/*
-			 * Initial attempt to avoid conflicts with different queue times
-			 */
-			synchronized (persistTransformsMonitor) {
-				try {
-					LooseContext.push();
-					LooseContext.setTrue(
-							AdjunctTransformCollation.CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD);
-					Transaction.commit();
-				} finally {
-					LooseContext.pop();
-				}
-			}
-			synchronized (this) {
-				if (getCommitDelay().orElse(Long.MAX_VALUE) == 0L) {
-				} else {
-					persisting = false;
-					break;
-				}
-			}
-		}
+	private void commit() {
+		logger.info("(Backend queue)  - committing {} transforms",
+				pendingTransforms.size());
+		Transaction.endAndBeginNew();
+		ThreadlocalTransformManager.get().addTransforms(pendingTransforms,
+				false);
+		pendingTransforms.clear();
+		queueFirstEvent.clear();
+		MethodContext.instance().withContextTrue(
+				AdjunctTransformCollation.CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD)
+				.run(() -> Transaction.commit());
+	}
+
+	private String normaliseQueueName(String queueName) {
+		return Ax.blankTo(queueName, DEFAULT_QUEUE_NAME);
 	}
 
 	protected Optional<Long> getCommitDelay() {
@@ -153,31 +135,15 @@ public class BackendTransformQueue {
 		return commitDelay;
 	}
 
-	/**
-	 * return true if a zero-delay persistence task should run
-	 */
-	protected boolean maybeEnqueueTask() {
-		Optional<Long> commitDelay = getCommitDelay();
-		if (persisting || (zeroDelayTaskScheduled
-				&& commitDelay.get().longValue() == 0)) {
-			// no need to change the current task
-		} else {
-			if (scheduledTask != null) {
-				scheduledTask.cancel();
-			}
-			// commitDelay will be < Long.MAX_VALUE
-			scheduledTask = new TimerTask() {
-				@Override
-				public void run() {
-					AlcinaChildRunnable.runInTransaction(
-							"backend-transform-persist", () -> persistQueue0(),
-							true, false);
-				}
-			};
-			timer.schedule(scheduledTask, commitDelay.get());
-			zeroDelayTaskScheduled = commitDelay.get() == 0;
-		}
-		return false;
+	long computeDelay() {
+		long now = System.currentTimeMillis();
+		return queueFirstEvent.entrySet().stream().map(e -> {
+			String queueName = e.getKey();
+			long firstEventTime = e.getValue();
+			long commitDelay = firstEventTime + queueMaxDelay.get(queueName)
+					- now;
+			return commitDelay;
+		}).min(Comparator.naturalOrder()).orElse(Long.MAX_VALUE);
 	}
 
 	private static class CollectingListener implements DomainTransformListener {
@@ -187,6 +153,50 @@ public class BackendTransformQueue {
 		public void domainTransform(DomainTransformEvent evt)
 				throws DomainTransformException {
 			transforms.add(evt);
+		}
+	}
+
+	private class EventThread extends Thread {
+		public EventThread() {
+			super("BackendTransformQueue-events");
+		}
+
+		@Override
+		public void run() {
+			while (!finished) {
+				try {
+					long delay = computeDelay();
+					if (delay <= 0) {
+						commit();
+						delay = computeDelay();
+					}
+					Event event = events.poll(delay, TimeUnit.MILLISECONDS);
+					if (event != null) {
+						event.transforms.forEach(pendingTransforms::add);
+						queueFirstEvent.putIfAbsent(event.queueName,
+								event.time);
+					}
+				} catch (InterruptedException interrupted) {
+					// will exit
+				} catch (Exception e) {
+					logger.warn("Event thread issue", e);
+				}
+			}
+		};
+	}
+
+	static class Event {
+		List<DomainTransformEvent> transforms;
+
+		String queueName;
+
+		long time;
+
+		Event(List<DomainTransformEvent> transforms, String queueName,
+				long time) {
+			this.transforms = transforms;
+			this.queueName = queueName;
+			this.time = time;
 		}
 	}
 }
