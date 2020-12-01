@@ -170,32 +170,11 @@ public class JobContext {
 	}
 
 	public void end() {
-		if (noHttpContext) {
-			InternalMetrics.get().endTracker(performer);
+		if (performer.endInLockedSection()) {
+			JobRegistry.get().withJobMetadataLock(getJob(), this::end0);
+		} else {
+			end0();
 		}
-		if (job.provideIsNotComplete()) {
-			log = Registry.impl(PerThreadLogging.class).endBuffer();
-			job.setLog(log);
-			if (!job.provideIsComplete()) {
-				if (job.provideRelatedSequential().stream()
-						.filter(j -> j != job)
-						.anyMatch(Job::provideIsNotComplete)) {
-					job.setState(JobState.COMPLETED);
-					allocator.ensureStarted();
-				} else {
-					job.setState(JobState.SEQUENCE_COMPLETE);
-				}
-			}
-			job.setEndTime(new Date());
-			if (job.getResultType() == null) {
-				job.setResultType(JobResultType.OK);
-			}
-		}
-		persistMetadata();
-		if (threadStartName != null) {
-			Thread.currentThread().setName(threadStartName);
-		}
-		endedLatch.countDown();
 	}
 
 	public Job getJob() {
@@ -275,6 +254,35 @@ public class JobContext {
 
 	private ProgressBuilder createProgressBuilder() {
 		return new ProgressBuilder();
+	}
+
+	private void end0() {
+		if (noHttpContext) {
+			InternalMetrics.get().endTracker(performer);
+		}
+		if (job.provideIsNotComplete()) {
+			log = Registry.impl(PerThreadLogging.class).endBuffer();
+			job.setLog(log);
+			if (!job.provideIsComplete()) {
+				if (job.provideRelatedSequential().stream()
+						.filter(j -> j != job)
+						.anyMatch(Job::provideIsNotComplete)) {
+					job.setState(JobState.COMPLETED);
+					allocator.ensureStarted();
+				} else {
+					job.setState(JobState.SEQUENCE_COMPLETE);
+				}
+			}
+			job.setEndTime(new Date());
+			if (job.getResultType() == null) {
+				job.setResultType(JobResultType.OK);
+			}
+		}
+		persistMetadata();
+		if (threadStartName != null) {
+			Thread.currentThread().setName(threadStartName);
+		}
+		endedLatch.countDown();
 	}
 
 	protected void persistMetadata() {

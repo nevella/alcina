@@ -28,6 +28,10 @@ public interface TaskPerformer<T extends Task> {
 		return false;
 	}
 
+	default boolean endInLockedSection() {
+		return false;
+	}
+
 	default List<JobResource> getResources() {
 		return Collections.emptyList();
 	}

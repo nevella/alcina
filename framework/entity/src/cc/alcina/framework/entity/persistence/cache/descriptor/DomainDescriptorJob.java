@@ -155,9 +155,9 @@ public class DomainDescriptorJob {
 				.flatMap(AllocationQueue::getIncompleteJobs);
 	}
 
-	public Stream<? extends Job> getJobsForTask(Task action) {
+	public Stream<? extends Job> getJobsForTask(Task task) {
 		return Domain.query(jobImplClass)
-				.filter("taskClassName", action.getClass().getName()).stream();
+				.filter("taskClassName", task.getClass().getName()).stream();
 	}
 
 	public Stream<? extends Job>
