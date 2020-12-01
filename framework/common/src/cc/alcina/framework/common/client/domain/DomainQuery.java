@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.domain;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -24,6 +25,10 @@ public abstract class DomainQuery<E extends Entity> {
 	protected Class<E> entityClass;
 
 	private Optional<Stream<E>> sourceStream = Optional.empty();
+
+	private int limit = -1;
+
+	private Comparator<E> comparator;
 
 	public DomainQuery(Class<E> entityClass) {
 		this.entityClass = entityClass;
@@ -73,6 +78,10 @@ public abstract class DomainQuery<E extends Entity> {
 		return optional().orElse(null);
 	}
 
+	public Comparator<E> getComparator() {
+		return this.comparator;
+	}
+
 	public Class<E> getEntityClass() {
 		return this.entityClass;
 	}
@@ -81,14 +90,28 @@ public abstract class DomainQuery<E extends Entity> {
 		return this.filters;
 	}
 
+	public int getLimit() {
+		return this.limit;
+	}
+
 	public Optional<Stream<E>> getSourceStream() {
 		return this.sourceStream;
+	}
+
+	public DomainQuery<E> limit(int limit) {
+		this.limit = limit;
+		return this;
 	}
 
 	public abstract List<E> list();
 
 	public Optional<E> optional() {
 		return stream().findFirst();
+	}
+
+	public DomainQuery<E> sorted(Comparator<?> comparator) {
+		this.comparator = (Comparator<E>) comparator;
+		return this;
 	}
 
 	public void sourceStream(Optional<Stream<E>> sourceStream) {

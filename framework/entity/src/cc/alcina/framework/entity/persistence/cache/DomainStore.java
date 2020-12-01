@@ -1580,6 +1580,12 @@ public class DomainStore implements IDomainStore {
 					stream = stream.peek(LooseContext
 							.get(DomainQuery.CONTEXT_DEBUG_CONSUMER));
 				}
+				if (query.getLimit() != -1) {
+					stream = stream.limit(query.getLimit());
+				}
+				if (query.getComparator() != null) {
+					stream = stream.sorted(query.getComparator());
+				}
 			}
 			return stream;
 		}

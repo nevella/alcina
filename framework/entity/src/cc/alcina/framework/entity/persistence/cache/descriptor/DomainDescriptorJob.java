@@ -162,11 +162,13 @@ public class DomainDescriptorJob {
 
 	public Stream<? extends Job>
 			getRecentlyCompletedJobs(Predicate<Job> predicate, int limit) {
-		return Domain.stream(jobImplClass).filter(Job::provideIsComplete)
-				.filter(predicate).limit(limit)
+		Predicate<Job> complete = Job::provideIsComplete;
+		return Domain.query(jobImplClass).filter(complete).filter(predicate)
+				.limit(limit)
 				.sorted(Comparator.comparing(
 						Job::resolveCompletionDateOrLastModificationDate)
-						.reversed());
+						.reversed())
+				.stream();
 	}
 
 	public Stream<Job> getUndeserializableJobs() {

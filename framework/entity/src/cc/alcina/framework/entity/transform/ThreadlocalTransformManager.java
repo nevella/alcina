@@ -122,6 +122,9 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static final String CONTEXT_ALLOW_MODIFICATION_OF_DETACHED_OBJECTS = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_ALLOW_MODIFICATION_OF_DETACHED_OBJECTS";
 
+	public static final String CONTEXT_THROW_ON_RESET_TLTM = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_THROW_ON_RESET_TLTM";
+
 	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
 			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
 
@@ -130,7 +133,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		protected synchronized Object initialValue() {
 			ThreadlocalTransformManager tm = ThreadlocalTransformManager
 					.ttmInstance();
-			tm.resetTltm(null);
+			tm.resetTltm(null, null, false, true);
 			return tm;
 		}
 	};
@@ -838,57 +841,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	public void resetTltm(EntityLocatorMap locatorMap,
 			PersistenceLayerTransformExceptionPolicy exceptionPolicy,
 			boolean keepExplicitlyPermittedAndFlushAfterTransforms) {
-		setEntityManager(null);
-		setDetachedEntityCache(null);
-		this.exceptionPolicy = exceptionPolicy;
-		if (this.userSessionEntityMap != null) {
-			DomainStore.stores().stream()
-					.forEach(store -> this.postTransactionEntityResolvers
-							.get(store).merge(userSessionEntityMap));
-		}
-		this.userSessionEntityMap = locatorMap;
-		localIdToEntityMap = new HashMap<Long, Entity>();
-		modifiedObjects = new HashSet<Entity>();
-		modificationEvents = new ArrayList<DomainTransformEvent>();
-		transformListenerSupport.clear();
-		markedForDeletion = new LinkedHashSet<>();
-		createdObjectLocators.clear();
-		if (!keepExplicitlyPermittedAndFlushAfterTransforms) {
-			explicitlyPermittedTransforms.clear();
-			flushAfterTransforms.clear();
-		}
-		this.lastTransform = null;
-		for (Entity entity : listeningTo.keySet()) {
-			if (entity != null) {
-				try {
-					entity.removePropertyChangeListener(this);
-				} catch (Exception e) {
-					// FIXME - mvcc.4 - devex
-					logger.warn("Exception  removing listener: {} ",
-							entity.toStringEntity(), e);
-				}
-			}
-		}
-		listeningTo = new IdentityHashMap<>();
-		Set<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(
-				CommitType.TO_LOCAL_BEAN);
-		if (!pendingTransforms.isEmpty() && !AppPersistenceBase.isTest()) {
-			System.out.println(
-					"**WARNING ** TLTM - cleared (but still pending) transforms:\n "
-							+ pendingTransforms);
-			Thread.dumpStack();
-			AlcinaTopics.notifyDevWarning(new UncomittedTransformsException());
-		}
-		clearTransforms();
-		addDomainTransformListener(new ServerTransformListener());
-		for (DomainTransformListener listener : threadLocalListeners) {
-			addDomainTransformListener(listener);
-		}
-		if (initialised) {
-			topicTransformManagerWasReset().publish(Thread.currentThread());
-		} else {
-			initialised = true;
-		}
+		resetTltm(locatorMap, exceptionPolicy,
+				keepExplicitlyPermittedAndFlushAfterTransforms, false);
 	}
 
 	public <V extends Entity> EntityLocator
@@ -1143,6 +1097,66 @@ public class ThreadlocalTransformManager extends TransformManager
 		if (!listeningTo.containsKey(entity)) {
 			listeningTo.put(entity, entity);
 			entity.addPropertyChangeListener(this);
+		}
+	}
+
+	private void resetTltm(EntityLocatorMap locatorMap,
+			PersistenceLayerTransformExceptionPolicy exceptionPolicy,
+			boolean keepExplicitlyPermittedAndFlushAfterTransforms,
+			boolean initialising) {
+		if (LooseContext.is(CONTEXT_THROW_ON_RESET_TLTM) && !initialising) {
+			throw new RuntimeException("Invalid reset");
+		}
+		setEntityManager(null);
+		setDetachedEntityCache(null);
+		this.exceptionPolicy = exceptionPolicy;
+		if (this.userSessionEntityMap != null) {
+			DomainStore.stores().stream()
+					.forEach(store -> this.postTransactionEntityResolvers
+							.get(store).merge(userSessionEntityMap));
+		}
+		this.userSessionEntityMap = locatorMap;
+		localIdToEntityMap = new HashMap<Long, Entity>();
+		modifiedObjects = new HashSet<Entity>();
+		modificationEvents = new ArrayList<DomainTransformEvent>();
+		transformListenerSupport.clear();
+		markedForDeletion = new LinkedHashSet<>();
+		createdObjectLocators.clear();
+		if (!keepExplicitlyPermittedAndFlushAfterTransforms) {
+			explicitlyPermittedTransforms.clear();
+			flushAfterTransforms.clear();
+		}
+		this.lastTransform = null;
+		for (Entity entity : listeningTo.keySet()) {
+			if (entity != null) {
+				try {
+					entity.removePropertyChangeListener(this);
+				} catch (Exception e) {
+					// FIXME - mvcc.4 - devex
+					logger.warn("Exception  removing listener: {} ",
+							entity.toStringEntity(), e);
+				}
+			}
+		}
+		listeningTo = new IdentityHashMap<>();
+		Set<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(
+				CommitType.TO_LOCAL_BEAN);
+		if (!pendingTransforms.isEmpty() && !AppPersistenceBase.isTest()) {
+			System.out.println(
+					"**WARNING ** TLTM - cleared (but still pending) transforms:\n "
+							+ pendingTransforms);
+			Thread.dumpStack();
+			AlcinaTopics.notifyDevWarning(new UncomittedTransformsException());
+		}
+		clearTransforms();
+		addDomainTransformListener(new ServerTransformListener());
+		for (DomainTransformListener listener : threadLocalListeners) {
+			addDomainTransformListener(listener);
+		}
+		if (initialised) {
+			topicTransformManagerWasReset().publish(Thread.currentThread());
+		} else {
+			initialised = true;
 		}
 	}
 

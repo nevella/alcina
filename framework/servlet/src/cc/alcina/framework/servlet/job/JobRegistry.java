@@ -68,6 +68,7 @@ import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
@@ -323,6 +324,10 @@ public class JobRegistry extends WriterService {
 				&& !ResourceUtilities.is("allJobsDisabled");
 		try {
 			LooseContext.push();
+			if (performer.deferMetadataPersistence(job)) {
+				LooseContext.setTrue(
+						ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
+			}
 			context.start();
 			if (taskEnabled) {
 				acquireResources(job, performer.getResources());
@@ -347,6 +352,8 @@ public class JobRegistry extends WriterService {
 			}
 		} finally {
 			releaseResources(job, false);
+			LooseContext.remove(
+					ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
 			context.end();
 			performer.onEnded();
 			LooseContext.pop();
