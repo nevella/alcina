@@ -261,6 +261,11 @@ public class DomainDescriptorJob {
 			return perStateJobs(JobState.values()).count();
 		}
 
+		public int getUnallocatedJobCount() {
+			return perPhaseJobCount(
+					Collections.singletonList(JobState.PENDING));
+		}
+
 		public Stream<Job> getUnallocatedJobs() {
 			return (Stream) perPhaseJobs(
 					Collections.singletonList(JobState.PENDING));
@@ -364,9 +369,16 @@ public class DomainDescriptorJob {
 			return true;
 		}
 
-		private Stream<Job> perPhaseJobs(List<JobState> list) {
+		private int perPhaseJobCount(List<JobState> states) {
+			return Stream.of(phase)
+					.flatMap(type -> states.stream()
+							.map(state -> subQueueJobs(type, state)))
+					.collect(Collectors.summingInt(Collection::size));
+		}
+
+		private Stream<Job> perPhaseJobs(List<JobState> states) {
 			return (Stream) Stream.of(phase)
-					.flatMap(type -> list.stream()
+					.flatMap(type -> states.stream()
 							.map(state -> subQueueJobs(type, state))
 							.flatMap(Collection::stream));
 		}
