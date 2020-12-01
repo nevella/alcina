@@ -501,8 +501,8 @@ public class TransformCommit {
 		}).collect(Collectors.toSet());
 		return TransformManager.get().getTransforms().stream()
 				.collect(Collectors.toList()).stream()
-				.filter(transform -> toRemove
-						.contains(transform.getObjectClass()))
+				.filter(transform -> toRemove.isEmpty()
+						|| toRemove.contains(transform.getObjectClass()))
 				.map(TransformManager.get()::removeTransform)
 				.collect(Collectors.toList());
 	}

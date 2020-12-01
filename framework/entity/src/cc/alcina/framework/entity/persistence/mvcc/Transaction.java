@@ -431,7 +431,7 @@ public class Transaction {
 		// during the transaction
 		// the transaction
 		ThreadlocalTransformManager.cast().resetTltm(null);
-		if (ResourceUtilities.is("retainTransactionTraces")) {
+		if (retainStartEndTraces()) {
 			transactionEndTrace = SEUtilities.getCurrentThreadStacktraceSlice();
 		}
 		logger.debug("Ended tx: {}", this);

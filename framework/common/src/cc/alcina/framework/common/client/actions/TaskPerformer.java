@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.actions;
 import java.util.Collections;
 import java.util.List;
 
+import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
 
 /**
@@ -23,6 +24,10 @@ import cc.alcina.framework.common.client.job.Task;
  * @author Nick Reddel
  */
 public interface TaskPerformer<T extends Task> {
+	default boolean deferMetadataPersistence(Job job) {
+		return false;
+	}
+
 	default List<JobResource> getResources() {
 		return Collections.emptyList();
 	}

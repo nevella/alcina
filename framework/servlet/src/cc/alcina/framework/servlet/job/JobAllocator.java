@@ -47,27 +47,20 @@ class JobAllocator {
 
 	private ExecutorService allocatorService;
 
+	private volatile boolean finished = false;
+
 	JobAllocator(AllocationQueue queue, ExecutorService allocatorService) {
 		this.queue = queue;
 		this.allocatorService = allocatorService;
 		queue.events.add((k, e) -> enqueueEvent(e));
 		lastStatus = new StatusMessage();
 		if (queue.job.provideIsSelfStarter()) {
-			start();
-		}
-	}
-
-	public void awaitChildCompletion() {
-		try {
-			while (!childCompletionLatch.await(2, TimeUnit.SECONDS)) {
-				int debug = 3;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
+			ensureStarted();
 		}
 	}
 
 	public void awaitSequenceCompletion() {
+		ensureStarted();
 		try {
 			while (!sequenceCompletionLatch.await(2, TimeUnit.SECONDS)) {
 				int debug = 3;
@@ -79,10 +72,6 @@ class JobAllocator {
 
 	public void enqueueEvent(Event queueEvent) {
 		eventQueue.add(queueEvent);
-		if (allocationTask == null
-				&& queueEvent.type == EventType.TO_PROCESSING) {
-			start();
-		}
 	}
 
 	public void fireDeletedEvent() {
@@ -94,9 +83,36 @@ class JobAllocator {
 		return queue.toString();
 	}
 
-	void start() {
-		allocationTask = new AllocationTask();
-		allocatorService.execute(allocationTask);
+	/*
+	 * Called only from the performer thread (so job.provideChildren is live)
+	 */
+	void awaitChildCompletion() {
+		try {
+			if (queue.job.provideChildren().noneMatch(j -> true)) {
+				return;
+			}
+			Transaction.ensureEnded();
+			ensureStarted();
+			while (!childCompletionLatch.await(2, TimeUnit.SECONDS)) {
+				int debug = 3;
+			}
+			Transaction.begin();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	void ensureStarted() {
+		if (allocationTask == null) {
+			allocationTask = new AllocationTask();
+			allocatorService.execute(allocationTask);
+		}
+	}
+
+	void onFinished() {
+		childCompletionLatch.countDown();
+		sequenceCompletionLatch.countDown();
+		finished = true;
 	}
 
 	void toAwaitingChildren() {
@@ -107,8 +123,6 @@ class JobAllocator {
 
 	private class AllocationTask implements Runnable {
 		boolean firstEvent = true;
-
-		boolean finished = false;
 
 		public void processEvent(Event event) {
 			if (finished) {
@@ -136,8 +150,7 @@ class JobAllocator {
 						Transaction.commit();
 					}
 				}
-				sequenceCompletionLatch.countDown();
-				finished = true;
+				onFinished();
 				return;
 			}
 			logger.info("Allocation thread - job {} - event {}",
@@ -147,8 +160,11 @@ class JobAllocator {
 				case Child:
 				case Sequence:
 				case Complete:
-					logger.info("Releasing child completion latch -  job {}",
-							job.toDisplayName());
+					if (childCompletionLatch.getCount() > 0) {
+						logger.info(
+								"Releasing child completion latch -  job {}",
+								job.toDisplayName());
+					}
 					childCompletionLatch.countDown();
 					break;
 				}

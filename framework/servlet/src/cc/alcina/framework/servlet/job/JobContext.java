@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.actions.JobResource;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.job.Job;
-import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -146,8 +145,6 @@ public class JobContext {
 
 	private boolean noHttpContext;
 
-	private PersistenceType persistenceType;
-
 	Thread thread;
 
 	private String log;
@@ -164,10 +161,8 @@ public class JobContext {
 
 	private CountDownLatch endedLatch = new CountDownLatch(1);
 
-	public JobContext(Job job, PersistenceType persistenceType,
-			TaskPerformer performer) {
+	public JobContext(Job job, TaskPerformer performer) {
 		this.job = job;
-		this.persistenceType = persistenceType;
 		this.performer = performer;
 		this.logger = LoggerFactory.getLogger(performer.getClass());
 		noHttpContext = AlcinaServletContext.httpContext() == null;
@@ -186,6 +181,7 @@ public class JobContext {
 						.filter(j -> j != job)
 						.anyMatch(Job::provideIsNotComplete)) {
 					job.setState(JobState.COMPLETED);
+					allocator.ensureStarted();
 				} else {
 					job.setState(JobState.SEQUENCE_COMPLETE);
 				}
@@ -194,18 +190,10 @@ public class JobContext {
 			if (job.getResultType() == null) {
 				job.setResultType(JobResultType.OK);
 			}
-			persistMetadata(true);
-		} else {
-			Transaction.commit();
 		}
+		persistMetadata();
 		if (threadStartName != null) {
 			Thread.currentThread().setName(threadStartName);
-		}
-		if (persistenceType == PersistenceType.None) {
-			// don't end transaction (job metadata changes needed for queue
-			// exit)
-		} else {
-			Transaction.endAndBeginNew();
 		}
 		endedLatch.countDown();
 	}
@@ -289,38 +277,16 @@ public class JobContext {
 		return new ProgressBuilder();
 	}
 
-	protected void persistMetadata(boolean respectImmediate) {
-		// FIXME - get more formal about when it's OK to defer persistence
-		respectImmediate = true;
-		switch (persistenceType) {
-		case Immediate: {
-			if (respectImmediate) {
-				Transaction.commit();
-			} else {
-				TransformCommit.enqueueTransforms(
-						JobRegistry.TRANSFORM_QUEUE_NAME, Job.class,
-						JobRelation.class);
-			}
-			break;
-		}
-		case Queued: {
-			TransformCommit.enqueueTransforms(JobRegistry.TRANSFORM_QUEUE_NAME,
-					Job.class, JobRelation.class);
-			break;
-		}
-		/*
-		 * very limited support (no scheduled jobs e.g.)
-		 */
-		case None:
-			TransformCommit.removeTransforms(Job.class, JobRelation.class);
-			break;
+	protected void persistMetadata() {
+		if (performer.deferMetadataPersistence(job)) {
+			TransformCommit.enqueueTransforms(JobRegistry.TRANSFORM_QUEUE_NAME);
+		} else {
+			Transaction.commit();
 		}
 	}
 
 	void awaitChildCompletion() {
-		Transaction.ensureEnded();
 		allocator.awaitChildCompletion();
-		Transaction.begin();
 	}
 
 	void awaitSequenceCompletion() {
@@ -383,7 +349,7 @@ public class JobContext {
 			job.setStartTime(new Date());
 			job.setState(JobState.PROCESSING);
 			job.setPerformerVersionNumber(performer.getVersionNumber());
-			persistMetadata(true);
+			persistMetadata();
 		}
 		Registry.impl(PerThreadLogging.class).beginBuffer();
 		if (noHttpContext) {
@@ -422,9 +388,5 @@ public class JobContext {
 			this.total = total;
 			return this;
 		}
-	}
-
-	enum PersistenceType {
-		None, Immediate, Queued;
 	}
 }

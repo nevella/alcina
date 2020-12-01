@@ -69,7 +69,6 @@ import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMet
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
-import cc.alcina.framework.servlet.job.JobContext.PersistenceType;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
 
@@ -311,14 +310,7 @@ public class JobRegistry extends WriterService {
 					job.toDisplayName(), () -> true);
 		}
 		TaskPerformer<T> performer = getTaskPerformer(job);
-		PersistenceType persistenceType = PersistenceType.Immediate;
-		if (queueJobPersistence) {
-			persistenceType = PersistenceType.Queued;
-		}
-		if ((Ax.isTest() && !ResourceUtilities.is("persistConsoleJobs"))) {
-			persistenceType = PersistenceType.None;
-		}
-		JobContext context = new JobContext(job, persistenceType, performer);
+		JobContext context = new JobContext(job, performer);
 		activeJobs.put(job, context);
 		if (contextAwaiters.containsKey(job)) {
 			ContextAwaiter contextAwaiter = contextAwaiters.get(job);
@@ -338,8 +330,7 @@ public class JobRegistry extends WriterService {
 			} else {
 				logger.info("Not performing {} (disabled)", job);
 			}
-			context.persistMetadata(false);
-			Transaction.commit();
+			context.persistMetadata();
 			context.toAwaitingChildren();
 			context.awaitChildCompletion();
 			performer.onChildCompletion();
