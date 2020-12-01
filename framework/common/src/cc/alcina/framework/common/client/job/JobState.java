@@ -18,4 +18,15 @@ public enum JobState {
 			return false;
 		}
 	}
+
+	public boolean isResubmittable() {
+		switch (this) {
+		case PENDING:
+		case ALLOCATED:
+		case PROCESSING:
+			return true;
+		default:
+			return false;
+		}
+	}
 }

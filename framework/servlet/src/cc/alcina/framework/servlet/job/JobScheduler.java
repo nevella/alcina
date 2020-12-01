@@ -218,12 +218,10 @@ public class JobScheduler {
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
 				.filter(job -> job.getCreator().toString()
 						.matches(visibleInstanceRegex))
-				.filter(Job::provideIsTopLevel)
 				.filter(job -> (job.getPerformer() == null
 						&& !activeInstances.contains(job.getCreator()))
 						|| (job.getPerformer() != null && !activeInstances
 								.contains(job.getPerformer())));
-		// FIXME - mvcc.jobs.1a - handle descendants
 		List<Job> toAbortOrReassign = incompleteAndInactiveInstance
 				.collect(Collectors.toList());
 		MultikeyMap<Boolean> perQueueTaskClass = new UnsortedMultikeyMap<>(2);
@@ -236,23 +234,12 @@ public class JobScheduler {
 						logger.warn("(Would abort job - but abortDisabled)");
 						return;
 					}
+					/* resubmit, then abort */
+					ResubmitPolicy policy = ResubmitPolicy.forJob(job);
+					policy.visit(job);
 					job.setState(JobState.ABORTED);
 					job.setEndTime(new Date());
 					job.setResultType(JobResultType.DID_NOT_COMPLETE);
-					// FIXME - mvcc.jobs - current logic is 'cancel children' -
-					// may want to be finer-grained
-					ResubmitPolicy policy = ResubmitPolicy.forJob(job);
-					if (policy.shouldRetry(job)) {
-						// FIXME - mvcc.jobs.1a - want to retry sequences as
-						// related...
-						Job resubmit = JobRegistry.createBuilder()
-								.withTask(job.getTask()).withRelated(job)
-								.withRelationType(JobRelationType.RESUBMIT)
-								.withRunAt(SEUtilities
-										.toLocalDateTime(job.getRunAt()))
-								.create();
-						logger.warn("Resubmit job :: {} -> {})", job, resubmit);
-					}
 				});
 		jobRegistry.withJobMetadataLock(null, runnable);
 	}
@@ -431,23 +418,49 @@ public class JobScheduler {
 		ExecutorService getService(AllocationQueue queue);
 	}
 
-	public static class NoRetryPolicy implements ResubmitPolicy {
+	public static class NoRetryPolicy extends ResubmitPolicy {
 		@Override
-		public boolean shouldRetry(Job failedJob) {
+		public boolean shouldResubmit(Job job) {
 			return false;
 		}
 	}
 
-	public interface ResubmitPolicy {
-		static ResubmitPolicy forJob(Job job) {
+	public abstract static class ResubmitPolicy<T extends Task> {
+		public static ResubmitPolicy forJob(Job job) {
 			return Registry.impl(ResubmitPolicy.class, job.provideTaskClass());
 		}
 
-		static ResubmitPolicy retryNTimes(int nTimes) {
+		public static ResubmitPolicy retryNTimes(int nTimes) {
 			return new ResubmitNTimesPolicy(nTimes);
 		}
 
-		boolean shouldRetry(Job failedJob);
+		public void visit(Job job) {
+			if (shouldResubmit(job)) {
+				resubmit(job);
+			}
+		}
+
+		protected Logger logger() {
+			return LoggerFactory.getLogger(getClass());
+		}
+
+		protected T provideTask(Job job) {
+			return (T) job.getTask();
+		}
+
+		protected Job resubmit(Job job) {
+			Job resubmit = JobRegistry.createBuilder().withTask(job.getTask())
+					.withRelated(job).withRelationType(JobRelationType.RESUBMIT)
+					.withRunAt(SEUtilities.toLocalDateTime(job.getRunAt()))
+					.create();
+			logger().warn("Resubmit job :: {} -> {})", job, resubmit);
+			return resubmit;
+		}
+
+		protected boolean shouldResubmit(Job job) {
+			return job.provideIsTopLevel() && job.getRunAt() != null
+					&& job.getState().isResubmittable();
+		}
 	}
 
 	@RegistryLocation(registryPoint = RetentionPolicy.class)
@@ -534,7 +547,7 @@ public class JobScheduler {
 		}
 	}
 
-	private static class ResubmitNTimesPolicy implements ResubmitPolicy {
+	private static class ResubmitNTimesPolicy extends ResubmitPolicy {
 		private int nTimes;
 
 		public ResubmitNTimesPolicy(int nTimes) {
@@ -542,7 +555,7 @@ public class JobScheduler {
 		}
 
 		@Override
-		public boolean shouldRetry(Job failedJob) {
+		public boolean shouldResubmit(Job failedJob) {
 			if (failedJob.getUser() != UserlandProvider.get().getSystemUser()) {
 				return false;
 			}

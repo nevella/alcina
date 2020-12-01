@@ -476,6 +476,12 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		}
 	}
 
+	public Optional<Job> provideNextInSequence() {
+		return getFromRelations().stream()
+				.filter(r -> r.getType() == JobRelationType.SEQUENCE)
+				.map(JobRelation::getTo).findFirst();
+	}
+
 	public Optional<Job> provideParent() {
 		return provideFirstInSequence().getToRelations().stream()
 				.filter(rel -> rel.getType() == JobRelationType.PARENT_CHILD)
@@ -485,6 +491,12 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public Job provideParentOrSelf() {
 		Optional<Job> parent = provideParent();
 		return parent.isPresent() ? parent.get() : domainIdentity();
+	}
+
+	public Optional<Job> providePrevious() {
+		return getToRelations().stream()
+				.filter(r -> r.getType() == JobRelationType.SEQUENCE)
+				.map(JobRelation::getFrom).findFirst();
 	}
 
 	public Job providePreviousOrSelfInSequence() {
