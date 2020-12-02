@@ -54,6 +54,7 @@ public class MvccEntityDeletionPropagationTest<IU extends Entity & IUser, IG ext
 							createdGroup.containsUser(createdUser),
 							"pre-delete: referenced group does not contain user");
 					createdUser.delete();
+					Domain.stream(userClass).count();
 					Preconditions.checkState(
 							Domain.stream(userClass).count() == initialSize - 1,
 							"non-committed-tx1: userClass.count()!=initialSize-1");

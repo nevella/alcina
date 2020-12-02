@@ -182,7 +182,6 @@ class JobAllocator {
 				// FIXME - mvcc.jobs.1a - allocate in batches (i.e.
 				// 30...let drain to 10...again)
 				if (maxAllocatable > 0) {
-					Transaction.endAndBeginNew();
 					if (queue.getUnallocatedJobs()
 							.anyMatch(this::isAllocatable)) {
 						ExecutorService executorService = ExecutionConstraints
@@ -190,7 +189,8 @@ class JobAllocator {
 								.getService(queue);
 						List<Job> allocated = new ArrayList<>();
 						JobRegistry.get().withJobMetadataLock(job, () -> {
-							Transaction.endAndBeginNew();
+							// FIXME - mvcc.jobs.1a - check this doesn't
+							// traverse more than it needs to
 							queue.getUnallocatedJobs()
 									.filter(this::isAllocatable)
 									.limit(maxAllocatable)

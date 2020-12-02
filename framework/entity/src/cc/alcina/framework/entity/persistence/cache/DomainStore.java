@@ -1656,6 +1656,11 @@ public class DomainStore implements IDomainStore {
 			Entity localReplacement = localReplacementCreationObjectResolver
 					.apply(event.getObjectLocalId());
 			if (localReplacement != null) {
+				/*
+				 * will *not* create a new version (yet) - so still in base.
+				 * This means that id and localid are invariant for all versions
+				 * of the object
+				 */
 				localReplacement.setId(event.getObjectId());
 				// this has to be done, and has to happen after setId, since the
 				// very act of setId will put the

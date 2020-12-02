@@ -29,6 +29,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 /*
  * 
@@ -599,86 +600,19 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
+		/*
+		 * FIXME - mvcc.jobs.1a - in fact overly complex
+		 * 
+		 * Instead, traverse from the top down, retaining a collection of
+		 * visited/removed - except for the bottom layer
+		 * 
+		 * Because the final (bottom) layer is almost sure to be >> the size of
+		 * the others, memory effects will be limited and won't require multiple
+		 * traversals per iteration
+		 */
 		public Iterator<Entry<K, V>> iterator() {
-			List<Iterator<Entry<K, V>>> iterators = visibleLayers.stream()
-					.map(Layer::modifiedEntrySetIterator)
-					.collect(Collectors.toList());
-			Iterator<Entry<K, V>>[] iteratorArray = (Iterator<Entry<K, V>>[]) iterators
-					.toArray(new Iterator[iterators.size()]);
-			MultiIterator<Entry<K, V>> layerIterator = new MultiIterator<Entry<K, V>>(
-					false,
-					comparator == null ? null : new Comparator<Entry<K, V>>() {
-						@Override
-						public int compare(Entry<K, V> o1, Entry<K, V> o2) {
-							return comparator.compare(o1.getKey(), o2.getKey());
-						}
-					}, iteratorArray);
-			Predicate<Entry<K, V>> filter = e -> {
-				int idx = layerIterator.getCurrentIteratorIndex();
-				if (visibleLayers.get(idx).wasRemoved(e.getKey())) {
-					return false;
-				}
-				idx++;// check if modified in any subsequent layers
-				for (; idx < visibleLayers.size(); idx++) {
-					if (visibleLayers.get(idx)
-							.wasModifiedOrRemoved(e.getKey())) {
-						// will be returned (or not, if removed in a subsequent
-						// layer) by the subsequent layer iterator
-						return false;
-					}
-				}
-				return true;
-			};
-			FilteringIterator<Entry<K, V>> filteringIterator = new FilteringIterator<Entry<K, V>>(
-					layerIterator, filter) {
-				@Override
-				public Entry<K, V> next() {
-					Entry<K, V> next2 = super.next();
-					if (transaction.isEnded()) {
-						// this case is generally a long-running job traversing
-						// the
-						// graph. use the current tx state of the map to filter
-						// (less optimal but see the bit about 'long running')
-						// we're guaranteed to not see spurious entities -
-						// although
-						// of course we'll miss those in the later txs
-						// note that this only works for idMaps where we're
-						// guaranteed unchanging value objects - other maps
-						// (projections/lookups) shouldn't be accessed across tx
-						// boundaries
-						//
-						// Because changing the size of the iterator causes
-						// problems (e.g. in stream iteration), instead return
-						// null -- calling code must be prepared to filter
-						// nulls.
-						if (!immutableValues) {
-							throw new MvccException(
-									"Accessing non-immutable value iterator across tx boundary");
-						}
-						if (!TransactionalMap.this
-								.containsKey(next2.getKey())) {
-							return new Entry<K, V>() {
-								@Override
-								public K getKey() {
-									return next2.getKey();
-								}
-
-								@Override
-								public V getValue() {
-									return null;
-								}
-
-								@Override
-								public V setValue(V value) {
-									throw new UnsupportedOperationException();
-								}
-							};
-						}
-					}
-					return next2;
-				}
-			};
-			return filteringIterator;
+			return comparator == null ? new CrossTxItr(new LayerIterator())
+					: comparatorIterator();
 		}
 
 		@Override
@@ -694,6 +628,149 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return visibleLayers.stream()
 					.collect(Collectors.summingInt(layer -> layer.added
 							- (layer.hasRemoved() ? layer.removed.size() : 0)));
+		}
+
+		Iterator<Entry<K, V>> comparatorIterator() {
+			List<Iterator<Entry<K, V>>> iterators = visibleLayers.stream()
+					.map(Layer::modifiedEntrySetIterator)
+					.collect(Collectors.toList());
+			Iterator<Entry<K, V>>[] iteratorArray = (Iterator<Entry<K, V>>[]) iterators
+					.toArray(new Iterator[iterators.size()]);
+			MultiIterator<Entry<K, V>> layerIterator = new MultiIterator<Entry<K, V>>(
+					false,
+					comparator == null ? null : new Comparator<Entry<K, V>>() {
+						@Override
+						public int compare(Entry<K, V> o1, Entry<K, V> o2) {
+							return comparator.compare(o1.getKey(), o2.getKey());
+						}
+					}, iteratorArray);
+			Predicate<Entry<K, V>> notVisibleFilter = e -> {
+				int idx = layerIterator.getCurrentIteratorIndex();
+				if (visibleLayers.get(idx).wasRemoved(e.getKey())) {
+					return false;
+				}
+				idx++;// check if modified in any subsequent layers
+				for (; idx < visibleLayers.size(); idx++) {
+					if (visibleLayers.get(idx)
+							.wasModifiedOrRemoved(e.getKey())) {
+						// will be returned (or not, if removed in a subsequent
+						// layer) by the subsequent layer iterator
+						return false;
+					}
+				}
+				return true;
+			};
+			return new CrossTxItr(
+					new FilteringIterator<>(layerIterator, notVisibleFilter));
+		}
+
+		private class CrossTxItr implements Iterator<Entry<K, V>> {
+			private Iterator<Entry<K, V>> delegate;
+
+			public CrossTxItr(Iterator<Entry<K, V>> delegate) {
+				this.delegate = delegate;
+			}
+
+			@Override
+			public boolean hasNext() {
+				return delegate.hasNext();
+			}
+
+			@Override
+			public Entry<K, V> next() {
+				Entry<K, V> next = delegate.next();
+				if (transaction.isEnded()) {
+					// this case is generally a long-running job traversing
+					// the
+					// graph. use the current tx state of the map to filter
+					// (less optimal but see the bit about 'long running')
+					// we're guaranteed to not see spurious entities -
+					// although
+					// of course we'll miss those in the later txs
+					// note that this only works for idMaps where we're
+					// guaranteed unchanging value objects - other maps
+					// (projections/lookups) shouldn't be accessed across tx
+					// boundaries
+					//
+					// Because changing the size of the iterator causes
+					// problems (e.g. in stream iteration), instead return
+					// null -- calling code must be prepared to filter
+					// nulls.
+					if (!immutableValues) {
+						throw new MvccException(
+								"Accessing non-immutable value iterator across tx boundary");
+					}
+					if (!TransactionalMap.this.containsKey(next.getKey())) {
+						return new Entry<K, V>() {
+							@Override
+							public K getKey() {
+								return next.getKey();
+							}
+
+							@Override
+							public V getValue() {
+								return null;
+							}
+
+							@Override
+							public V setValue(V value) {
+								throw new UnsupportedOperationException();
+							}
+						};
+					}
+				}
+				return next;
+			}
+		}
+
+		private class LayerIterator implements Iterator<Entry<K, V>> {
+			Set<K> visitedOrRemoved = new ObjectOpenHashSet<>();
+
+			private FilteringIterator<Entry<K, V>> filteringIterator;
+
+			public LayerIterator() {
+				List<Iterator<Entry<K, V>>> iterators = visibleLayers.stream()
+						.map(Layer::modifiedEntrySetIterator)
+						.collect(Collectors.toList());
+				Collections.reverse(iterators);
+				Iterator<Entry<K, V>>[] iteratorArray = (Iterator<Entry<K, V>>[]) iterators
+						.toArray(new Iterator[iterators.size()]);
+				MultiIterator<Entry<K, V>> layerIterator = new MultiIterator<Entry<K, V>>(
+						false, null, iteratorArray) {
+					@Override
+					protected void onBeforeIteratorIndexChange(
+							int currentIteratorIndex) {
+						// our iterators are reversed, so reverse index access
+						// to visibleLayers
+						int visibleLayerIndex = iterators.size()
+								- currentIteratorIndex - 1;
+						visitedOrRemoved.addAll(
+								visibleLayers.get(visibleLayerIndex).modified
+										.keySet());
+						if (visibleLayers
+								.get(visibleLayerIndex).removed != null) {
+							visitedOrRemoved.addAll(
+									visibleLayers.get(visibleLayerIndex).removed
+											.keySet());
+						}
+					}
+				};
+				Predicate<Entry<K, V>> notVisitedOrRemovedFilter = e -> {
+					return !visitedOrRemoved.contains(e.getKey());
+				};
+				filteringIterator = new FilteringIterator<>(layerIterator,
+						notVisitedOrRemovedFilter);
+			}
+
+			@Override
+			public boolean hasNext() {
+				return filteringIterator.hasNext();
+			}
+
+			@Override
+			public Entry<K, V> next() {
+				return filteringIterator.next();
+			}
 		}
 	}
 }

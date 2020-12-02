@@ -826,7 +826,6 @@ class ClassTransformer {
 				return innerNonStatic;
 			}
 
-			@SuppressWarnings("unused")
 			private boolean isInStaticNonEntityInnerClass(Expression expr) {
 				TypeDeclaration containingDeclaration = getContainingDeclaration(
 						expr);
@@ -1005,6 +1004,15 @@ class ClassTransformer {
 							continue;
 						}
 						if (method.getName().matches("hashCode")) {
+							continue;
+						}
+						/*
+						 * id is only set on the base version - ditto localId
+						 */
+						if (method.getName().matches("id")) {
+							continue;
+						}
+						if (method.getName().matches("localId")) {
 							continue;
 						}
 						FormatBuilder bodyBuilder = new FormatBuilder();

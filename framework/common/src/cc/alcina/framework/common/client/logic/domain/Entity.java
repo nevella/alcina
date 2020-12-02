@@ -101,18 +101,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 			if (domainIdentity == otherIdentity) {
 				return true;
 			} else {
-				// use field values to avoid tx resolution
-				if (domainIdentity.entityClass() != otherIdentity
-						.entityClass()) {
-					return false;
-				}
-				if (domainIdentity.id == 0 && domainIdentity.localId == 0) {
-					return false;
-				}
-				if (domainIdentity.id != 0 || otherIdentity.id != 0) {
-					return domainIdentity.id == otherIdentity.id;
-				}
-				return domainIdentity.localId == otherIdentity.localId;
+				return EntityHelper.equals(domainIdentity, otherIdentity);
 			}
 		} else {
 			return false;

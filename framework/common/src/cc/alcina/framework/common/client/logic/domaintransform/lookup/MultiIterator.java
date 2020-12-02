@@ -50,6 +50,7 @@ public class MultiIterator<E> extends FilteringIterator<E> {
 				next = filteringIterator.next();
 				return;
 			}
+			onBeforeIteratorIndexChange(currentIteratorIndex);
 			currentIteratorIndex++;
 		}
 		finished = true;
@@ -75,6 +76,10 @@ public class MultiIterator<E> extends FilteringIterator<E> {
 		}
 		finished = currentIteratorIndex == -1;
 		next = min;
+	}
+
+	protected void onBeforeIteratorIndexChange(int currentIteratorIndex) {
+		// For subclasses
 	}
 
 	@Override
