@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -93,7 +94,7 @@ public abstract class AlcinaServlet extends HttpServlet {
 		}
 	}
 
-	protected boolean trackInternalMetrics() {
+	protected boolean trackMetrics() {
 		return false;
 	}
 
@@ -103,7 +104,8 @@ public abstract class AlcinaServlet extends HttpServlet {
 			String threadName = Ax.format("task-%s:%s",
 					getClass().getSimpleName(), callCounter.incrementAndGet());
 			alcinaContext.begin(request, response, threadName);
-			if (trackInternalMetrics()) {
+			if (trackMetrics()) {
+				MetricLogging.get().start(getClass().getSimpleName());
 				InternalMetrics.get().startTracker(request,
 						() -> Ax.format("Alcina servlet %s",
 								getClass().getSimpleName()),
@@ -117,10 +119,16 @@ public abstract class AlcinaServlet extends HttpServlet {
 					PermissionsManager.get().getUser().toIdNameString(),
 					request.getRequestURI());
 			EntityLayerLogging.persistentLog(LogMessageType.RPC_EXCEPTION, t);
-			throw new ServletException(t);
+			try {
+				writeTextResponse(response, "Sorry, that's a 500");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			return;
 		} finally {
-			if (trackInternalMetrics()) {
+			if (trackMetrics()) {
 				InternalMetrics.get().endTracker(request);
+				MetricLogging.get().end(getClass().getSimpleName());
 			}
 			alcinaContext.end();
 		}

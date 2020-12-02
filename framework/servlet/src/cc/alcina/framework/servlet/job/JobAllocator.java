@@ -49,6 +49,10 @@ class JobAllocator {
 
 	private volatile boolean finished = false;
 
+	private JobContext jobContext;
+
+	private String enqueuedStatusMessage;
+
 	JobAllocator(AllocationQueue queue, ExecutorService allocatorService) {
 		this.queue = queue;
 		this.allocatorService = allocatorService;
@@ -86,7 +90,8 @@ class JobAllocator {
 	/*
 	 * Called only from the performer thread (so job.provideChildren is live)
 	 */
-	void awaitChildCompletion() {
+	void awaitChildCompletion(JobContext jobContext) {
+		this.jobContext = jobContext;
 		try {
 			if (queue.job.provideChildren().noneMatch(j -> true)) {
 				return;
@@ -94,7 +99,10 @@ class JobAllocator {
 			Transaction.ensureEnded();
 			ensureStarted();
 			while (!childCompletionLatch.await(2, TimeUnit.SECONDS)) {
-				int debug = 3;
+				if (enqueuedStatusMessage != null) {
+					jobContext.publishStatusMessage(enqueuedStatusMessage);
+					enqueuedStatusMessage = null;
+				}
 			}
 			Transaction.begin();
 		} catch (Exception e) {
@@ -113,6 +121,7 @@ class JobAllocator {
 		childCompletionLatch.countDown();
 		sequenceCompletionLatch.countDown();
 		finished = true;
+		new StatusMessage().publish();
 	}
 
 	void toAwaitingChildren() {
@@ -175,6 +184,7 @@ class JobAllocator {
 						job.toDisplayName(), priorPhase, queue.phase);
 				// resubmit until event does not cause phase change
 				// (or complete)
+				new StatusMessage().publish();
 				enqueueEvent(event);
 			} else {
 				Transaction.endAndBeginNew();
@@ -211,7 +221,6 @@ class JobAllocator {
 						StatusMessage currentStatus = new StatusMessage();
 						if (currentStatus.shouldPublish()) {
 							currentStatus.publish();
-							Transaction.commit();
 						}
 					}
 				}
@@ -343,15 +352,17 @@ class JobAllocator {
 		}
 
 		public void publish() {
+			if (jobContext == null) {
+				return;
+			}
 			lastStatus = this;
 			String message = Ax.format("%s - %s% (%s/%s)", Ax.friendly(phase),
 					percentComplete, completedCount, totalCount);
-			queue.job.setStatusMessage(message);
+			enqueuedStatusMessage = message;
 		}
 
 		public boolean shouldPublish() {
-			if (phase == SubqueuePhase.Self
-					|| phase == SubqueuePhase.Complete) {
+			if (phase == SubqueuePhase.Self) {
 				return false;
 			}
 			if (phase != lastStatus.phase) {

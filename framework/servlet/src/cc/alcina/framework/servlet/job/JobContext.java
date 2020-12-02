@@ -216,6 +216,11 @@ public class JobContext {
 		logger.warn("Unexpected job exception", e);
 	}
 
+	public void publishStatusMessage(String enqueuedStatusMessage) {
+		job.setStatusMessage(enqueuedStatusMessage);
+		persistMetadata();
+	}
+
 	public void remove() {
 		LooseContext.remove(CONTEXT_CURRENT);
 	}
@@ -294,7 +299,7 @@ public class JobContext {
 	}
 
 	void awaitChildCompletion() {
-		allocator.awaitChildCompletion();
+		allocator.awaitChildCompletion(this);
 	}
 
 	void awaitSequenceCompletion() {

@@ -141,6 +141,10 @@ public class DomainTransformPersistenceQueue {
 		return this.firingThread;
 	}
 
+	public DomainTransformCommitPosition getTransformCommitPosition() {
+		return getTransformLogPosition();
+	}
+
 	public DomainTransformCommitPosition getTransformLogPosition() {
 		return this.transformLogPosition;
 	}
