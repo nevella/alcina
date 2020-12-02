@@ -177,6 +177,7 @@ class JobAllocator {
 				// (or complete)
 				enqueueEvent(event);
 			} else {
+				Transaction.endAndBeginNew();
 				long maxAllocatable = ExecutionConstraints.forQueue(queue)
 						.calculateMaxAllocatable();
 				// FIXME - mvcc.jobs.1a - allocate in batches (i.e.
