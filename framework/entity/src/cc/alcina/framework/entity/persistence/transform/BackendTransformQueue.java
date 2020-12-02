@@ -116,6 +116,7 @@ public class BackendTransformQueue {
 		MethodContext.instance().withContextTrue(
 				AdjunctTransformCollation.CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD)
 				.run(() -> Transaction.commit());
+		Transaction.end();
 	}
 
 	private String normaliseQueueName(String queueName) {

@@ -86,9 +86,37 @@ public abstract class Entity<T extends Entity> extends Bindable
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		return obj instanceof Entity
-				&& EntityHelper.equals(domainIdentity(), (Entity) obj);
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
+	public boolean equals(Object other) {
+		/*
+		 * Optimise for mvcc equality
+		 */
+		if (other == this) {
+			return true;
+		}
+		if (other instanceof Entity) {
+			Entity otherEntity = (Entity) other;
+			Entity domainIdentity = domainIdentity();
+			Entity otherIdentity = otherEntity.domainIdentity();
+			if (domainIdentity == otherIdentity) {
+				return true;
+			} else {
+				// use field values to avoid tx resolution
+				if (domainIdentity.entityClass() != otherIdentity
+						.entityClass()) {
+					return false;
+				}
+				if (domainIdentity.id == 0 && domainIdentity.localId == 0) {
+					return false;
+				}
+				if (domainIdentity.id != 0 || otherIdentity.id != 0) {
+					return domainIdentity.id == otherIdentity.id;
+				}
+				return domainIdentity.localId == otherIdentity.localId;
+			}
+		} else {
+			return false;
+		}
 	}
 
 	@Override

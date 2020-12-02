@@ -128,6 +128,7 @@ class JobAllocator {
 			if (finished) {
 				return;
 			}
+			Transaction.ensureBegun();
 			Job job = queue.job;
 			if (firstEvent) {
 				firstEvent = false;
@@ -180,34 +181,41 @@ class JobAllocator {
 						.calculateMaxAllocatable();
 				// FIXME - mvcc.jobs.1a - allocate in batches (i.e.
 				// 30...let drain to 10...again)
-				if (maxAllocatable > 0 && queue.getUnallocatedJobs()
-						.anyMatch(this::isAllocatable)) {
-					ExecutorService executorService = ExecutionConstraints
-							.forQueue(queue).getExecutorServiceProvider()
-							.getService(queue);
-					List<Job> allocated = new ArrayList<>();
-					JobRegistry.get().withJobMetadataLock(job, () -> {
-						queue.getUnallocatedJobs().filter(this::isAllocatable)
-								.limit(maxAllocatable).forEach(allocated::add);
-						allocated.forEach(j -> {
-							j.setState(JobState.ALLOCATED);
-							j.setPerformer(ClientInstance.self());
-							logger.info("Allocated job {}", j);
+				if (maxAllocatable > 0) {
+					Transaction.endAndBeginNew();
+					if (queue.getUnallocatedJobs()
+							.anyMatch(this::isAllocatable)) {
+						ExecutorService executorService = ExecutionConstraints
+								.forQueue(queue).getExecutorServiceProvider()
+								.getService(queue);
+						List<Job> allocated = new ArrayList<>();
+						JobRegistry.get().withJobMetadataLock(job, () -> {
+							Transaction.endAndBeginNew();
+							queue.getUnallocatedJobs()
+									.filter(this::isAllocatable)
+									.limit(maxAllocatable)
+									.forEach(allocated::add);
+							allocated.forEach(j -> {
+								j.setState(JobState.ALLOCATED);
+								j.setPerformer(ClientInstance.self());
+								logger.info("Allocated job {}", j);
+							});
+							Transaction.commit();
 						});
-						Transaction.commit();
-					});
-					allocated.forEach(j -> {
-						LauncherThreadState launcherThreadState = new LauncherThreadState();
-						executorService.submit(() -> JobRegistry.get()
-								.performJob(j, false, launcherThreadState));
-					});
-					StatusMessage currentStatus = new StatusMessage();
-					if (currentStatus.shouldPublish()) {
-						currentStatus.publish();
-						Transaction.commit();
+						allocated.forEach(j -> {
+							LauncherThreadState launcherThreadState = new LauncherThreadState();
+							executorService.submit(() -> JobRegistry.get()
+									.performJob(j, false, launcherThreadState));
+						});
+						StatusMessage currentStatus = new StatusMessage();
+						if (currentStatus.shouldPublish()) {
+							currentStatus.publish();
+							Transaction.commit();
+						}
 					}
 				}
 			}
+			Transaction.ensureEnded();
 		}
 
 		@Override
