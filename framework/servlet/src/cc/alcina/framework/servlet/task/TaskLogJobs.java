@@ -3,13 +3,13 @@ package cc.alcina.framework.servlet.task;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.common.client.actions.ServerControlAction;
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.QueueStat;
@@ -20,6 +20,28 @@ import cc.alcina.framework.servlet.job.JobRegistry.FutureStat;
 import cc.alcina.framework.servlet.servlet.control.ControlServlet;
 
 public class TaskLogJobs extends AbstractTaskPerformer {
+	private String filter;
+
+	private boolean useDefaultFilter;
+
+	private transient String defaultFilterValue;
+
+	public String getFilter() {
+		return this.filter;
+	}
+
+	public boolean isUseDefaultFilter() {
+		return this.useDefaultFilter;
+	}
+
+	public void setFilter(String filter) {
+		this.filter = filter;
+	}
+
+	public void setUseDefaultFilter(boolean useDefaultFilter) {
+		this.useDefaultFilter = useDefaultFilter;
+	}
+
 	private void run1() throws Exception {
 		DomDoc doc = DomDoc.basicHtmlDoc();
 		{
@@ -48,11 +70,8 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(stat.taskName).cell(stat.runAt).cell(stat.jobId);
 				DomNode td = cellBuilder.append();
-				ServerControlAction action = new ServerControlAction();
-				action.getParameters()
-						.setPropertyName(TaskCancelJob.class.getName());
-				action.getParameters().setPropertyValue(stat.jobId);
-				String href = ControlServlet.createActionUrl(action);
+				String href = ControlServlet.createTaskUrl(
+						new TaskCancelJob().withValue(stat.jobId));
 				td.html().addLink("Cancel", href, "_blank");
 			});
 		}
@@ -85,24 +104,16 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 								.cell(job.getPerformer());
 						DomNode td = cellBuilder.append();
 						{
-							ServerControlAction action = new ServerControlAction();
-							action.getParameters().setPropertyName(
-									TaskLogJobDetails.class.getName());
-							action.getParameters().setPropertyValue(
-									String.valueOf(job.getId()));
-							String href = ControlServlet
-									.createActionUrl(action);
+							String href = ControlServlet.createTaskUrl(
+									new TaskLogJobDetails().withValue(
+											String.valueOf(job.getId())));
 							td.html().addLink("Details", href, "_blank");
 						}
 						td.builder().text(" - ").tag("span").append();
 						{
-							ServerControlAction action = new ServerControlAction();
-							action.getParameters().setPropertyName(
-									TaskCancelJob.class.getName());
-							action.getParameters().setPropertyValue(
-									String.valueOf(job.getId()));
-							String href = ControlServlet
-									.createActionUrl(action);
+							String href = ControlServlet.createTaskUrl(
+									new TaskCancelJob().withValue(
+											String.valueOf(job.getId())));
 							td.html().addLink("Cancel", href, "_blank");
 						}
 					});
@@ -132,12 +143,9 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 								.cell(job.getStartTime()).cell(job.getEndTime())
 								.cell(job.getPerformer());
 						DomNode td = cellBuilder.append();
-						ServerControlAction action = new ServerControlAction();
-						action.getParameters().setPropertyName(
-								TaskLogJobDetails.class.getName());
-						action.getParameters()
-								.setPropertyValue(String.valueOf(job.getId()));
-						String href = ControlServlet.createActionUrl(action);
+						String href = ControlServlet.createTaskUrl(
+								new TaskLogJobDetails().withValue(
+										String.valueOf(job.getId())));
 						td.html().addLink("Details", href, "_blank");
 					});
 		}
@@ -151,6 +159,12 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 	}
 
 	boolean filter(String test) {
-		return value == null || test.matches(value);
+		if (defaultFilterValue == null) {
+			defaultFilterValue = ResourceUtilities.get("defaultFilter");
+		}
+		if (useDefaultFilter && !Ax.matches(test, defaultFilterValue)) {
+			return false;
+		}
+		return filter == null || Ax.matches(test, filter);
 	}
 }

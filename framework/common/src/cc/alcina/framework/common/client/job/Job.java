@@ -360,12 +360,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public Job provideFirstInSequence() {
 		Job cursor = domainIdentity();
 		while (true) {
-			Optional<? extends JobRelation> relation = cursor.getToRelations()
-					.stream()
-					.filter(rel -> rel.getType() == JobRelationType.SEQUENCE)
-					.findFirst();
-			if (relation.isPresent()) {
-				cursor = relation.get().getFrom();
+			Optional<Job> previous = cursor.providePrevious();
+			if (previous.isPresent()) {
+				cursor = previous.get();
 			} else {
 				break;
 			}
@@ -477,33 +474,32 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public Optional<Job> provideNextInSequence() {
+		if (getFromRelations().isEmpty()) {
+			return Optional.empty();
+		}
 		return getFromRelations().stream()
 				.filter(r -> r.getType() == JobRelationType.SEQUENCE)
 				.map(JobRelation::getTo).findFirst();
 	}
 
 	public Optional<Job> provideParent() {
-		return provideFirstInSequence().getToRelations().stream()
+		return provideToRelation()
 				.filter(rel -> rel.getType() == JobRelationType.PARENT_CHILD)
-				.findFirst().map(JobRelation::getFrom);
+				.map(JobRelation::getFrom);
 	}
 
 	public Job provideParentOrSelf() {
-		Optional<Job> parent = provideParent();
-		return parent.isPresent() ? parent.get() : domainIdentity();
+		return provideParent().orElse(domainIdentity());
 	}
 
 	public Optional<Job> providePrevious() {
-		return getToRelations().stream()
-				.filter(r -> r.getType() == JobRelationType.SEQUENCE)
-				.map(JobRelation::getFrom).findFirst();
+		return provideToRelation()
+				.filter(rel -> rel.getType() == JobRelationType.SEQUENCE)
+				.map(JobRelation::getFrom);
 	}
 
 	public Job providePreviousOrSelfInSequence() {
-		Optional<? extends JobRelation> previous = getToRelations().stream()
-				.filter(jr -> jr.getType() == JobRelationType.SEQUENCE)
-				.findFirst();
-		return previous.map(JobRelation::getFrom).orElse(domainIdentity());
+		return providePrevious().orElse(domainIdentity());
 	}
 
 	public List<Job> provideRelatedSequential() {
@@ -512,13 +508,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		List<Job> result = new ArrayList<>();
 		while (true) {
 			result.add(cursor);
-			Optional<? extends JobRelation> relation = cursor.getFromRelations()
-					.stream()
-					.filter(rel -> rel.getType() == JobRelationType.SEQUENCE
-							&& rel.getTo() != null)
-					.findFirst();
-			if (relation.isPresent()) {
-				cursor = relation.get().getTo();
+			Optional<Job> next = provideNextInSequence();
+			if (next.isPresent()) {
+				cursor = next.get();
 			} else {
 				break;
 			}
@@ -746,6 +738,15 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return Ax.format("%s - %s - %s from: %s to: %s", toLocator(),
 				provideName(), resolveState(), toString(getFromRelations()),
 				toString(getToRelations()));
+	}
+
+	private Optional<JobRelation> provideToRelation() {
+		Set<? extends JobRelation> toRelations = getToRelations();
+		if (toRelations.size() == 0) {
+			return Optional.empty();
+		} else {
+			return Optional.of(toRelations.iterator().next());
+		}
 	}
 
 	private Date resolveCompletionDate0(int depth) {

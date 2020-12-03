@@ -13,8 +13,9 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.actions.RemoteAction;
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_EMAIL;
@@ -28,7 +29,6 @@ import cc.alcina.framework.entity.ResourceUtilities.SimpleQuery;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.control.ClusterStateProvider;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -39,27 +39,26 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDeliveryEmail;
 import cc.alcina.framework.servlet.servlet.AlcinaServlet;
 
 public class ControlServlet extends AlcinaServlet {
-	public static String createActionUrl(RemoteAction action) {
+	public static String createTaskUrl(Task task) {
 		StringMap queryParameters = new StringMap();
-		queryParameters.put("cmd", "perform-action");
+		queryParameters.put("cmd", "perform-task");
 		queryParameters.put("apiKey", getApiKey());
-		queryParameters.put("actionClassName", action.getClass().getName());
-		queryParameters.put("actionJson",
-				JacksonUtils.serializeWithDefaultsAndTypes(action));
+		queryParameters.put("taskClassName", task.getClass().getName());
+		queryParameters.put("taskJson",
+				JacksonUtils.serializeWithDefaultsAndTypes(task));
 		UrlBuilder urlBuilder = new UrlBuilder();
 		urlBuilder.path("/control.do");
 		queryParameters.forEach((k, v) -> urlBuilder.qsParam(k, v));
 		return urlBuilder.build();
 	}
 
-	public static String invokeRemoteAction(RemoteAction action, String url,
-			String apiKey) {
+	public static String invokeTask(Task task, String url, String apiKey) {
 		StringMap queryParameters = new StringMap();
-		queryParameters.put("cmd", "perform-action");
+		queryParameters.put("cmd", "perform-task");
 		queryParameters.put("apiKey", apiKey);
-		queryParameters.put("actionClassName", action.getClass().getName());
-		queryParameters.put("actionJson",
-				JacksonUtils.serializeWithDefaultsAndTypes(action));
+		queryParameters.put("taskClassName", task.getClass().getName());
+		queryParameters.put("taskJson",
+				JacksonUtils.serializeWithDefaultsAndTypes(task));
 		try {
 			return new SimpleQuery(url)
 					.withQueryStringParameters(queryParameters).asString();
@@ -158,8 +157,8 @@ public class ControlServlet extends AlcinaServlet {
 			writeAndClose(message, response);
 			break;
 		}
-		case PERFORM_ACTION: {
-			String message = performAction(req);
+		case PERFORM_TASK: {
+			String message = performTask(req);
 			message = Ax.blankTo(message, "<No log>");
 			logger.info(message);
 			String regex = "(?s).*(<\\?xml|<html.*)";
@@ -204,8 +203,8 @@ public class ControlServlet extends AlcinaServlet {
 		} else if (cmd.equals("test-sendmail")) {
 			csr.setCommand(ControlServletRequestCommand.TEST_SENDMAIL);
 			return csr;
-		} else if (cmd.equals("perform-action")) {
-			csr.setCommand(ControlServletRequestCommand.PERFORM_ACTION);
+		} else if (cmd.equals("perform-task")) {
+			csr.setCommand(ControlServletRequestCommand.PERFORM_TASK);
 			return csr;
 		}
 		writeAndClose("Usage:\n" + "control.do?apiKey=xxx&"
@@ -214,18 +213,23 @@ public class ControlServlet extends AlcinaServlet {
 		return null;
 	}
 
-	private String performAction(HttpServletRequest req) {
+	private String performTask(HttpServletRequest req) {
 		if (Ax.notBlank(req.getHeader("X-Forwarded-Server"))) {
 			throw new RuntimeException("Internal/non-proxied access only");
 		}
-		String actionClassName = req.getParameter("actionClassName");
-		String actionJson = req.getParameter("actionJson");
+		String taskClassName = req.getParameter("taskClassName");
+		String taskJson = req.getParameter("taskJson");
 		return MethodContext.instance().withRootPermissions(true).call(() -> {
-					RemoteAction action = (RemoteAction) JacksonUtils
-							.deserialize(actionJson,
-									Class.forName(actionClassName));
-					return JobRegistry.get().perform(action).getLog();
-				});
+			Task task = null;
+			if (taskJson == null) {
+				task = (Task) Reflections
+						.newInstance(Class.forName(taskClassName));
+			} else {
+				task = (Task) JacksonUtils.deserialize(taskJson,
+						Class.forName(taskClassName));
+			}
+			return JobRegistry.get().perform(task).getLog();
+		});
 	}
 
 	private String testSendmail() throws Exception {
@@ -256,10 +260,6 @@ public class ControlServlet extends AlcinaServlet {
 			}
 			throw new ServletException(e);
 		}
-	}
-
-	public static interface ControlServletActionPerformer {
-		String performAction(String actionClassName, String actionParameters);
 	}
 
 	public class InformException extends Exception {

@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.servlet.servlet;
 
+import java.util.Objects;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -40,7 +42,11 @@ public class JobServlet extends AlcinaServlet {
 		Job job = null;
 		switch (action) {
 		case list:
-			job = new TaskLogJobs().withValue(filter).perform();
+			TaskLogJobs logJobs = new TaskLogJobs();
+			logJobs.setFilter(filter);
+			logJobs.setUseDefaultFilter(!Objects.equals("false",
+					request.getParameter("useDefaultFilter")));
+			job = logJobs.perform();
 			break;
 		case detail:
 			job = new TaskLogJobDetails().withValue(id).perform();

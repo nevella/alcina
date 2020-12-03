@@ -24,8 +24,11 @@ public class LazyPropertyLoadTask<T extends Entity>
 
 	@Override
 	public Stream<T> wrap(Stream<T> stream) {
-		// return stream.peek(t -> lazyLoad(Collections.singletonList(t)));
 		if (LooseContext.is(LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)) {
+			return stream;
+		}
+		if (LooseContext
+				.is(DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)) {
 			return stream;
 		}
 		return super.wrap(stream);
