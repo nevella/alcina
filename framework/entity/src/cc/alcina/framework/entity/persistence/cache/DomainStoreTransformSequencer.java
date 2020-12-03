@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
@@ -242,6 +243,10 @@ public class DomainStoreTransformSequencer
 		}
 		positions.sort(Comparator.naturalOrder());
 		unpublishedPositions.addAll(positions);
+		if (positions.size() > 0) {
+			logger.info("Added unpublished positions: {}",
+					CommonUtils.joinWithNewlines(positions));
+		}
 		if (positions.size() > 0) {
 			highestVisiblePosition = Ax.last(unpublishedPositions);
 		}
