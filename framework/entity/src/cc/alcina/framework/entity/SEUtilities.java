@@ -1322,12 +1322,14 @@ public class SEUtilities {
 	}
 
 	public static LocalDate toLocalDate(Date date) {
-		return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		return date == null ? null
+				: date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 	}
 
 	public static LocalDateTime toLocalDateTime(Date date) {
-		return date.toInstant().atZone(ZoneId.systemDefault())
-				.toLocalDateTime();
+		return date == null ? null
+				: date.toInstant().atZone(ZoneId.systemDefault())
+						.toLocalDateTime();
 	}
 
 	public static Date toOldDate(LocalDate ld) {
