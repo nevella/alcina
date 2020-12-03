@@ -36,6 +36,9 @@ import cc.alcina.framework.entity.util.AlcinaChildRunnable;
  * hwuh
  *
  * @author nick@alcina.cc
+ * 
+ *         2020 - Wherever possible, use jobs instead of this (it has no
+ *         guarantees of successful completion)
  *
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)

@@ -73,7 +73,6 @@ public class DomainTransformPersistenceEvents {
 						.forEach(queue::onTransformRequestCommitted);
 			}
 			fireDomainTransformPersistenceEvent0(event);
-			event.getPostEventRunnables().forEach(Runnable::run);
 			break;
 		}
 		}

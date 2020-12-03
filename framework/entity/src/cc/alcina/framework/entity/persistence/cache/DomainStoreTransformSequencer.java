@@ -92,12 +92,12 @@ public class DomainStoreTransformSequencer
 
 	@Override
 	public void onPersistedRequestCommitted(long requestId) {
-		refreshPositions(true, requestId);
+		refreshPositions(requestId);
 	}
 
 	@Override
 	public void refresh() {
-		refreshPositions(true, -1);
+		refreshPositions(-1);
 	}
 
 	public void setServerCount(int serverCount) {
@@ -177,26 +177,39 @@ public class DomainStoreTransformSequencer
 		}
 	}
 
-	private void refreshPositions(boolean publishToQueue,
-			long ignoreIfSeenRequestId) {
-		runWithConnection("refresh-positions", conn -> refreshPositions0(conn,
-				publishToQueue, ignoreIfSeenRequestId));
+	private void refreshPositions(long ignoreIfSeenRequestId) {
+		runWithConnection("refresh-positions",
+				conn -> refreshPositions0(conn, false, ignoreIfSeenRequestId));
 	}
 
-	private synchronized int refreshPositions0(Connection conn,
-			boolean publishToQueue, long ignoreIfSeenRequestId)
-			throws SQLException {
+	private synchronized int refreshPositions0(Connection conn, boolean initial,
+			long ignoreIfSeenRequestId) throws SQLException {
 		if (publishedIds.containsKey(ignoreIfSeenRequestId)) {
 			return 0;
 		}
-		Timestamp since = highestVisiblePosition.commitTimestamp;
+		boolean publishToQueue = !initial;
 		String tableName = tableName();
+		if (initial) {
+			String querySql = Ax.format(
+					"select max(transactionCommitTime)  "
+							+ "from %s where transactionCommitTime is not null",
+					tableName);
+			try (PreparedStatement pStatement = conn
+					.prepareStatement(querySql)) {
+				ResultSet rs = pStatement.executeQuery();
+				if (rs.next()) {
+					highestVisiblePosition = new DomainTransformCommitPosition(
+							0L, rs.getTimestamp(1));
+				}
+			}
+		}
+		Timestamp since = highestVisiblePosition.commitTimestamp;
 		String querySql = Ax.format(
 				"select id, pg_xact_commit_timestamp(xmin) as commit_timestamp "
 						+ "from %s where transactionCommitTime is null OR"
 						+ " transactionCommitTime>?",
 				tableName);
-		if (!publishToQueue) {
+		if (!initial) {
 			querySql += " order by pg_xact_commit_timestamp(xmin) desc limit 1";
 		}
 		List<DomainTransformCommitPosition> positions = new ArrayList<>();
@@ -213,7 +226,6 @@ public class DomainStoreTransformSequencer
 					positions.add(position);
 				}
 			}
-			rs.close();
 		}
 		positions.sort(Comparator.naturalOrder());
 		unpublishedPositions.addAll(positions);

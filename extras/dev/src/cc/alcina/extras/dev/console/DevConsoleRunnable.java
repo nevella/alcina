@@ -18,14 +18,13 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 	public static final String CONTEXT_ACTION_RESULT = CmdExecRunnable.class
 			.getName() + ".CONTEXT_ACTION_RESULT";
 
-	public DevConsole console;
+	public static DevConsole console;
 
 	public CmdExecRunnable command;
 
 	public String[] argv;
 
 	public DevConsoleRunnable asSubTask(DevConsoleRunnable parentRunnable) {
-		console = parentRunnable.console;
 		command = parentRunnable.command;
 		argv = new String[0];// don't pass through - this is all devvy
 		return (DevConsoleRunnable) super.asSubTask(parentRunnable);
@@ -49,14 +48,12 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 	}
 
 	public void runAsSubtask(DevConsoleRunnable parentRunnable) {
-		console = parentRunnable.console;
 		command = parentRunnable.command;
 		argv = new String[0];// don't pass through - this is all devvy
 		super.asSubTask(parentRunnable).run();
 	}
 
 	public void runFromCommand(DevConsoleCommand command, String[] argv) {
-		console = command.console;
 		this.argv = argv;
 		actionLogger = command.logger;
 		run();

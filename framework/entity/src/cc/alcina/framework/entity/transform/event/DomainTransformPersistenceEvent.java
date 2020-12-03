@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.transform.event;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,8 +20,6 @@ public class DomainTransformPersistenceEvent {
 	private final DomainTransformLayerWrapper domainTransformLayerWrapper;
 
 	private final DomainTransformPersistenceEventType persistenceEventType;
-
-	private List<Runnable> postEventRunnables = new ArrayList<>();
 
 	private boolean firingFromQueue;
 
@@ -71,10 +68,6 @@ public class DomainTransformPersistenceEvent {
 		return position;
 	}
 
-	public List<Runnable> getPostEventRunnables() {
-		return this.postEventRunnables;
-	}
-
 	public TransformPersistenceToken getTransformPersistenceToken() {
 		return this.transformPersistenceToken;
 	}
@@ -93,10 +86,6 @@ public class DomainTransformPersistenceEvent {
 
 	public void setPosition(DomainTransformCommitPosition position) {
 		this.position = position;
-	}
-
-	public void setPostEventRunnables(List<Runnable> postEventRunnables) {
-		this.postEventRunnables = postEventRunnables;
 	}
 
 	@Override
