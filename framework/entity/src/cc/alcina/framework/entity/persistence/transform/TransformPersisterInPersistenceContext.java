@@ -417,7 +417,7 @@ public class TransformPersisterInPersistenceContext {
 								CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM)) {
 							DomainStore.stores().writableStore()
 									.getPersistenceEvents().getQueue()
-									.registerPersisting(persistentRequest);
+									.onPersistingVmLocalRequest(persistentRequest);
 						}
 						subRequest.setEvents(null);
 						persistentRequest.wrap(subRequest);

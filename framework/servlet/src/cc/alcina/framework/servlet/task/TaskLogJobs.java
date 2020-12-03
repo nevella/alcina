@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet.task;
 
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -9,10 +8,8 @@ import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
-import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.QueueStat;
@@ -33,15 +30,15 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 					.tableBuilder();
 			builder.row().cell("Name").cell("Started").cell("Active")
 					.cell("Pending").cell("Completed").cell("Total");
-			queues.filter(q -> q.active != 0)
+			queues.filter(q -> q.active != 0).filter(q -> filter(q.name))
 					.forEach(queue -> builder.row().cell(queue.name)
 							.cell(queue.startTime).cell(queue.active)
 							.cell(queue.pending).cell(queue.completed)
 							.cell(queue.total));
 		}
 		{
-			Stream<FutureStat> pending = JobRegistry.get()
-					.getFutureQueueStats();
+			Stream<FutureStat> pending = JobRegistry.get().getFutureQueueStats()
+					.filter(s -> filter(s.taskName));
 			doc.html().body().builder().tag("h2").text("Pending queues")
 					.append();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
@@ -76,9 +73,8 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 					.tableBuilder();
 			builder.row().cell("Id").cell("Name").cell("Started").cell("Thread")
 					.cell("Performer").cell("Links");
-			DomainDescriptorJob.get().getActiveJobs()
-					.filter(job -> Ax.isBlank(value)
-							|| job.getTaskClassName().matches(value))
+			Predicate<Job> nameFilter = job -> filter(job.getTaskClassName());
+			DomainDescriptorJob.get().getActiveJobs().filter(nameFilter)
 					.filter(sectionFilter).forEach(job -> {
 						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 								.cell(String.valueOf(job.getId()))
@@ -123,8 +119,7 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 					.tableBuilder();
 			builder.row().cell("Id").cell("Name").cell("Started")
 					.cell("Finished").cell("Performer").cell("Link");
-			Predicate<Job> nameFilter = job -> Ax.isBlank(value)
-					|| job.getTaskClassName().matches(value);
+			Predicate<Job> nameFilter = job -> filter(job.getTaskClassName());
 			Predicate<Job> filter = nameFilter
 					.and(job -> Ax.isBlank(value)
 							|| job.getTaskClassName().matches(value))
@@ -153,5 +148,9 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 		MethodContext.instance().withContextTrue(
 				DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)
 				.run(this::run1);
+	}
+
+	boolean filter(String test) {
+		return value == null || test.matches(value);
 	}
 }

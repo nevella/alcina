@@ -351,6 +351,10 @@ public class JobRegistry extends WriterService {
 						e);
 			}
 		} finally {
+			/*
+			 * key - handle tx timeouts/aborts
+			 */
+			Transaction.ensureBegun();
 			releaseResources(job, false);
 			LooseContext.remove(
 					ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);

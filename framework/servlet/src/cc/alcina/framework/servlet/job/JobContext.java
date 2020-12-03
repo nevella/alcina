@@ -169,14 +169,6 @@ public class JobContext {
 		allocator = JobRegistry.get().scheduler.allocators.get(job);
 	}
 
-	public void end() {
-		if (performer.endInLockedSection()) {
-			JobRegistry.get().withJobMetadataLock(getJob(), this::end0);
-		} else {
-			end0();
-		}
-	}
-
 	public Job getJob() {
 		return this.job;
 	}
@@ -217,8 +209,9 @@ public class JobContext {
 	}
 
 	public void publishStatusMessage(String enqueuedStatusMessage) {
+		Transaction.ensureBegun();
 		job.setStatusMessage(enqueuedStatusMessage);
-		persistMetadata();
+		Transaction.commit();
 	}
 
 	public void remove() {
@@ -350,6 +343,14 @@ public class JobContext {
 			e.printStackTrace();
 		}
 		return msg;
+	}
+
+	void end() {
+		if (performer.endInLockedSection()) {
+			JobRegistry.get().withJobMetadataLock(getJob(), this::end0);
+		} else {
+			end0();
+		}
 	}
 
 	void start() {

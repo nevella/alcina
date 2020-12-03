@@ -4,6 +4,10 @@ public interface DomainTransformPersistenceListener {
 	public void onDomainTransformRequestPersistence(
 			DomainTransformPersistenceEvent event);
 
+	default boolean isAllVmEventsListener() {
+		return false;
+	}
+
 	/*
 	 * Fire this local event outside of the sequential barrier. Ensures that it
 	 * is not blocked (e.g. cache propagation)

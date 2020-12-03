@@ -186,6 +186,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	public static void waitUntilCurrentRequestsProcessed() {
+		Transaction.ensureBegun();
 		writableStore().getPersistenceEvents().getQueue()
 				.waitUntilCurrentRequestsProcessed();
 		Transaction.endAndBeginNew();
@@ -364,10 +365,6 @@ public class DomainStore implements IDomainStore {
 		cache.put(newInstance);
 	}
 
-	public void onTransformRequestsPersisted(List<Long> ids) {
-		loader.onTransformRequestsPersisted(ids);
-	}
-
 	public void putExternalLocal(Entity instance) {
 		cache.putExternalLocal(instance);
 	}
@@ -424,7 +421,7 @@ public class DomainStore implements IDomainStore {
 		initialised = false;
 		initialising = true;
 		getPersistenceEvents().addDomainTransformPersistenceListener(
-				getPersistenceListener(), true);
+				getPersistenceListener());
 		transformManager = new SubgraphTransformManagerPostProcess();
 		lazyObjectLoader = loader.getLazyObjectLoader();
 		cache = (DomainStoreEntityCache) transformManager
@@ -976,6 +973,8 @@ public class DomainStore implements IDomainStore {
 
 		public long domainStorePostProcessStartTime;
 
+		private long lastSequenceBarrierTimeout;
+
 		AtomicInteger domainStoreExceptionCount = new AtomicInteger();
 
 		public AtomicInteger getDomainStoreExceptionCount() {
@@ -983,7 +982,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		public long getLastSequenceBarrierTimeout() {
-			return getTransformSequencer().getLastBarrierTimeout();
+			return lastSequenceBarrierTimeout;
 		}
 
 		public long getMvccOldestTx() {
@@ -1022,6 +1021,11 @@ public class DomainStore implements IDomainStore {
 								LONG_POST_PROCESS_TRACE_LENGTH, 0));
 			}
 			return time;
+		}
+
+		public void
+				setLastSequenceBarrierTimeout(long lastSequenceBarrierTimeout) {
+			this.lastSequenceBarrierTimeout = lastSequenceBarrierTimeout;
 		}
 	}
 
@@ -1416,6 +1420,11 @@ public class DomainStore implements IDomainStore {
 
 	class DomainStorePersistenceListener
 			implements DomainTransformPersistenceListener {
+		@Override
+		public boolean isAllVmEventsListener() {
+			return true;
+		}
+
 		@Override
 		public void onDomainTransformRequestPersistence(
 				DomainTransformPersistenceEvent evt) {

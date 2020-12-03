@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -55,8 +54,6 @@ public class DomainDescriptorJob {
 
 	private Class<? extends Job> jobImplClass;
 
-	private Map<Thread, Exception> inFlightTransformRequests = new WeakHashMap<>();
-
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	private DomainTransformPersistenceListener jobLogger = new DomainTransformPersistenceListener() {
@@ -76,16 +73,12 @@ public class DomainDescriptorJob {
 			Thread currentThread = Thread.currentThread();
 			switch (event.getPersistenceEventType()) {
 			case COMMIT_OK:
-				inFlightTransformRequests.remove(currentThread);
 				break;
 			case COMMIT_ERROR:
-				Exception ex = inFlightTransformRequests.remove(currentThread);
-				logger.warn("Issue with job transform commit", ex);
 				logger.info("Issue with job transform details:\n{}",
 						event.getTransformPersistenceToken().getRequest());
 				break;
 			case PRE_FLUSH:
-				inFlightTransformRequests.put(currentThread, new Exception());
 				Set<Long> ids = collation.query(jobImplClass).stream()
 						.map(qr -> qr.entityCollation.getId())
 						.collect(Collectors.toSet());
@@ -179,7 +172,7 @@ public class DomainDescriptorJob {
 	public void onWarmupComplete(DomainStore domainStore) {
 		if (ResourceUtilities.is("logTransforms")) {
 			domainStore.getPersistenceEvents()
-					.addDomainTransformPersistenceListener(jobLogger, false);
+					.addDomainTransformPersistenceListener(jobLogger);
 		}
 		warmupComplete = true;
 	}

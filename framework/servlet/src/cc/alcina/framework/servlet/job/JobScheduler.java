@@ -535,7 +535,12 @@ public class JobScheduler {
 			while (!finished) {
 				try {
 					ScheduleEvent event = events.take();
-					Transaction.begin();
+					/*
+					 * We'll reach this point because a schedule event was fired
+					 * during transform request processing. Wait until that
+					 * event is completely processed (and visible to this
+					 * thread/tx).
+					 */
 					DomainStore.waitUntilCurrentRequestsProcessed();
 					processEvent(event);
 				} catch (Throwable e) {

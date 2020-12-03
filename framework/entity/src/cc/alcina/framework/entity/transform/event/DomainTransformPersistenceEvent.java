@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
@@ -22,6 +23,10 @@ public class DomainTransformPersistenceEvent {
 	private final DomainTransformPersistenceEventType persistenceEventType;
 
 	private List<Runnable> postEventRunnables = new ArrayList<>();
+
+	private boolean firingFromQueue;
+
+	private DomainTransformCommitPosition position;
 
 	public DomainTransformPersistenceEvent(
 			TransformPersistenceToken transformPersistenceToken,
@@ -62,6 +67,10 @@ public class DomainTransformPersistenceEvent {
 		return this.persistenceEventType;
 	}
 
+	public DomainTransformCommitPosition getPosition() {
+		return position;
+	}
+
 	public List<Runnable> getPostEventRunnables() {
 		return this.postEventRunnables;
 	}
@@ -70,8 +79,20 @@ public class DomainTransformPersistenceEvent {
 		return this.transformPersistenceToken;
 	}
 
+	public boolean isFiringFromQueue() {
+		return this.firingFromQueue;
+	}
+
 	public boolean isLocalToVm() {
 		return transformPersistenceToken.isLocalToVm();
+	}
+
+	public void setFiringFromQueue(boolean firingFromQueue) {
+		this.firingFromQueue = firingFromQueue;
+	}
+
+	public void setPosition(DomainTransformCommitPosition position) {
+		this.position = position;
 	}
 
 	public void setPostEventRunnables(List<Runnable> postEventRunnables) {

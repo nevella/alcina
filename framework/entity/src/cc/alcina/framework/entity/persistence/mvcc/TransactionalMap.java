@@ -744,6 +744,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 						// to visibleLayers
 						int visibleLayerIndex = iterators.size()
 								- currentIteratorIndex - 1;
+						if (visibleLayerIndex == 0) {
+							// the lowest layer, no need to mark
+							return;
+						}
 						visitedOrRemoved.addAll(
 								visibleLayers.get(visibleLayerIndex).modified
 										.keySet());

@@ -15,7 +15,8 @@ public class DomainUpdate implements Serializable {
 
 	public DomainTransformCommitPosition commitPosition;
 
-	public static class DomainTransformCommitPosition implements Serializable {
+	public static class DomainTransformCommitPosition
+			implements Serializable, Comparable<DomainTransformCommitPosition> {
 		public Timestamp commitTimestamp;
 
 		public Long commitRequestId;
@@ -23,25 +24,22 @@ public class DomainUpdate implements Serializable {
 		public DomainTransformCommitPosition() {
 		}
 
-		public DomainTransformCommitPosition(Timestamp commitTimestamp,
-				Long commitRequestId) {
+		public DomainTransformCommitPosition(long commitRequestId,
+				Timestamp commitTimestamp) {
 			this.commitTimestamp = commitTimestamp;
 			this.commitRequestId = commitRequestId;
 		}
 
-		public boolean after(DomainTransformCommitPosition other) {
-			if (other.commitTimestamp == null) {
-				return commitTimestamp != null;
-			}
+		@Override
+		public int compareTo(DomainTransformCommitPosition o) {
 			if (commitTimestamp == null) {
-				return false;
+				return o.commitTimestamp == null ? 0 : -1;
 			}
-			int i = commitTimestamp.compareTo(other.commitTimestamp);
+			int i = commitTimestamp.compareTo(o.commitTimestamp);
 			if (i != 0) {
-				return i > 0 ? true : false;
+				return i;
 			}
-			return commitRequestId.longValue() > other.commitRequestId
-					.longValue();
+			return CommonUtils.compareLongs(commitRequestId, o.commitRequestId);
 		}
 
 		@Override

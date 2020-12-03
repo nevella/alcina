@@ -130,13 +130,13 @@ public class ClusterTransformListener
 				.getPersistenceEvents().getQueue();
 		switch (request.state) {
 		case PRE_COMMIT:
-			queue.cachePersistedRequest(request.request);
+			queue.onRequestDataReceived(request.request);
 			break;
 		case COMMIT:
-			queue.transformRequestPublished(request.id);
+			queue.onTransformRequestCommitted(request.id);
 			break;
 		case ABORTED:
-			queue.transformRequestAborted(request.id);
+			queue.onTransformRequestAborted(request.id);
 			break;
 		}
 	}

@@ -369,6 +369,7 @@ public class Transactions {
 			transaction.setId(transactionId);
 			transaction.committedTransactions = new Object2ObjectLinkedOpenHashMap<>(
 					committedTransactions);
+			transaction.startTime = System.currentTimeMillis();
 			activeTransactions.put(transactionId, transaction);
 		}
 	}

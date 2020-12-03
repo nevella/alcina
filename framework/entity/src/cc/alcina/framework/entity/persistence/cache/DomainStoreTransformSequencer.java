@@ -6,34 +6,28 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Table;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.common.client.util.ThrowingFunction;
+import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 
 /**
  * dtrp - start persist time (set in persister), committime
@@ -57,330 +51,101 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
  * @author nick@alcina.cc
  *
  */
-public class DomainStoreTransformSequencer {
+public class DomainStoreTransformSequencer
+		implements DomainTransformPersistenceQueue.Sequencer {
 	private DomainStoreLoaderDatabase loaderDatabase;
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
-	private HighestVisibleTransactions highestVisibleTransactions;
-
 	private Connection connection;
 
-	// all access syncrhonized on this map
-	Map<Long, CountDownLatch> preLocalNonFireEventsThreadBarrier = new LinkedHashMap<>();
+	private Map<Long, Boolean> publishedIds = new ConcurrentHashMap<>();
 
-	// all access syncrhonized on this map
-	Map<Long, CountDownLatch> postLocalFireEventsThreadBarrier = new LinkedHashMap<>();
+	DomainTransformCommitPosition highestVisiblePosition = new DomainTransformCommitPosition(
+			0, new Timestamp(0));
 
-	private long lastBarrierTimeout = 0;
+	List<DomainTransformCommitPosition> unpublishedPositions = new ArrayList<>();
+
+	LocalDateTime lastEnsure = null;
+
+	private int serverCount = 1;
+
+	private int serverOffset = 0;
 
 	DomainStoreTransformSequencer(DomainStoreLoaderDatabase loaderDatabase) {
 		this.loaderDatabase = loaderDatabase;
 	}
 
-	public synchronized void finishedFiringLocalEvent(long requestId) {
-		if (!loaderDatabase.domainDescriptor
-				.isUseTransformDbCommitSequencing()) {
-			return;
-		}
-		synchronized (preLocalNonFireEventsThreadBarrier) {
-			preLocalNonFireEventsThreadBarrier.remove(requestId);
-		}
-		logger.debug("Unblocking post-local barrier: {}", requestId);
-		synchronized (postLocalFireEventsThreadBarrier) {
-			CountDownLatch latch = postLocalFireEventsThreadBarrier
-					.get(requestId);
-			if (latch != null) {
-				// will be null if timed-out
-				latch.countDown();
-			}
-		}
+	@Override
+	public Long getLastRequestIdAtTimestamp(Timestamp timestamp) {
+		return runWithConnection("getLastRequestId",
+				conn -> getRequestIdAtTimestamp0(conn, timestamp));
 	}
 
-	public long getLastBarrierTimeout() {
-		return this.lastBarrierTimeout;
+	public int getServerCount() {
+		return this.serverCount;
 	}
 
-	public long getRequestIdAtTimestamp(Timestamp timestamp) {
-		try {
-			Connection conn = getConnection();
-			try {
-				return getRequestIdAtTimestamp0(conn, timestamp);
-			} finally {
-				conn.commit();
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+	public int getServerOffset() {
+		return this.serverOffset;
 	}
 
-	public synchronized List<DomainTransformCommitPosition>
-			getSequentialUnpublishedRequests() {
-		try {
-			return getSequentialUnpublishedRequests0();
-		} catch (Exception e) {
-			// Wait for retry (which will be pushed from kafka)
-			logger.warn(
-					"Issue with getSequentialUnpublishedTransformIds - will retry on next queue event",
-					e);
-			e.printStackTrace();
-			try {
-				if (connection != null) {
-					connection.close();
-				}
-			} catch (Exception e2) {
-				e2.printStackTrace();
-			}
-			connection = null;
-			return new ArrayList<>();
-		}
+	@Override
+	public void onPersistedRequestCommitted(long requestId) {
+		refreshPositions(true, requestId);
 	}
 
-	public void unblockPreLocalNonFireEventsThreadBarrier(long requestId) {
-		logger.debug("Unblock local barrier: {}", requestId);
-		try {
-			CountDownLatch barrier = null;
-			long abnormalExitTime = System.currentTimeMillis()
-					+ 10 * TimeConstants.ONE_SECOND_MS;
-			while (System.currentTimeMillis() < abnormalExitTime) {
-				synchronized (preLocalNonFireEventsThreadBarrier) {
-					barrier = preLocalNonFireEventsThreadBarrier.get(requestId);
-					if (barrier == null) {
-						preLocalNonFireEventsThreadBarrier.wait(100);
-					} else {
-						break;
-					}
-				}
-			}
-			if (barrier == null) {
-				logger.warn("Timed out waiting for preLocal barrier  {}",
-						requestId);
-				return;
-			} else {
-				barrier.countDown();
-			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+	@Override
+	public void refresh() {
+		refreshPositions(true, -1);
 	}
 
-	// called by the main firing sequence thread, since the local vm transforms
-	// are fired on the transforming thread
-	//
-	// there's a chance this will be called earlier than
-	// waitForPreLocalNonFireEventsThreadBarrier for the same requestId
-	public void waitForPostLocalFireEventsThreadBarrier(long requestId) {
-		try {
-			CountDownLatch barrier = null;
-			long abnormalExitTime = System.currentTimeMillis()
-					+ 10 * TimeConstants.ONE_SECOND_MS;
-			while (System.currentTimeMillis() < abnormalExitTime) {
-				synchronized (postLocalFireEventsThreadBarrier) {
-					barrier = postLocalFireEventsThreadBarrier.get(requestId);
-					if (barrier == null) {
-						postLocalFireEventsThreadBarrier.wait(100);
-					} else {
-						break;
-					}
-				}
-			}
-			if (barrier == null) {
-				logger.warn("Timed out waiting for postLocal barrier  {}",
-						requestId);
-				return;
-			}
-			// wait longer - local transforms are more important to fire in
-			// order. if this is blocking, that be a prob...but why?
-			logger.debug("Wait for post-local barrier: {}", requestId);
-			boolean normalExit = barrier.await(20, TimeUnit.SECONDS);
-			if (!normalExit) {
-				Thread blockingThread = loaderDatabase.getStore()
-						.getPersistenceEvents().getQueue().getFiringThread();
-				String blockingThreadStacktrace = blockingThread == null
-						? "(No firing thread)"
-						: SEUtilities.getFullStacktrace(blockingThread);
-				logger.warn(
-						"Timedout waiting for post local barrier/local vm transform - {} - \n{}\nBlocking thread:\n{}",
-						requestId, debugString(), blockingThreadStacktrace);
-				lastBarrierTimeout = System.currentTimeMillis();
-				// FIXME - mvcc.4 - may need to fire a domainstoreexception here
-				// -
-				// probable issue with pg/kafka. On the other hand, our
-				// sequencer logic might be simpler now...(or after
-				// mvcc.3/postprocess optimisations)
-			} else {
-				logger.debug("Wait for post-local barrier complete: {}",
-						requestId);
-			}
-			synchronized (postLocalFireEventsThreadBarrier) {
-				postLocalFireEventsThreadBarrier.remove(requestId);
-			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+	public void setServerCount(int serverCount) {
+		this.serverCount = serverCount;
 	}
 
-	// called by the transforming thread, to ensure post-fire events are fired
-	// in db order
-	public void waitForPreLocalNonFireEventsThreadBarrier(long requestId) {
-		if (!loaderDatabase.domainDescriptor
-				.isUseTransformDbCommitSequencing()) {
-			return;
-		} else {
-			createPostLocalFireEventsThreadBarrier(requestId);
-			CountDownLatch preLocalBarrier = createPreLocalNonFireEventsThreadBarrier(
-					requestId);
-			loaderDatabase.getStore().getPersistenceEvents().getQueue()
-					.sequencedTransformRequestPublished(requestId);
-			try {
-				logger.debug("Wait for pre-local barrier: {}", requestId);
-				// this wait is > than the queue restart time -- *really* don't
-				// want to commit out of order, but it's better than blocking
-				// forever
-				int wait = 15;
-				boolean normalExit = preLocalBarrier.await(wait,
-						TimeUnit.SECONDS);
-				if (!normalExit) {
-					Thread blockingThread = loaderDatabase.getStore()
-							.getPersistenceEvents().getQueue()
-							.getFireEventsThread();
-					String blockingThreadStacktrace = blockingThread == null
-							? "<no blocking thread>"
-							: SEUtilities.getFullStacktrace(blockingThread);
-					logger.warn(
-							"Timedout waiting for barrier - {} - \n{} - \nBlocking thread:\n{}",
-							requestId, debugString(), blockingThreadStacktrace);
-					lastBarrierTimeout = System.currentTimeMillis();
-				} else {
-					logger.debug("Wait for pre-local barrier complete: {}",
-							requestId);
-				}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+	public void setServerOffset(int serverOffset) {
+		this.serverOffset = serverOffset;
 	}
 
-	private CountDownLatch
-			createPostLocalFireEventsThreadBarrier(long requestId) {
-		logger.debug("Created wait for post-local barrier: {}", requestId);
-		synchronized (postLocalFireEventsThreadBarrier) {
-			CountDownLatch barrier = postLocalFireEventsThreadBarrier
-					.get(requestId);
-			if (barrier == null) {
-				barrier = new CountDownLatch(1);
-				postLocalFireEventsThreadBarrier.put(requestId, barrier);
-				postLocalFireEventsThreadBarrier.notifyAll();
-			}
-			return barrier;
-		}
+	private int ensureTimestamps() throws SQLException {
+		return runWithConnection("ensureTimestamps", this::ensureTimestamps0);
 	}
 
-	private CountDownLatch
-			createPreLocalNonFireEventsThreadBarrier(long requestId) {
-		logger.debug("Created wait for pre-local barrier: {}", requestId);
-		synchronized (preLocalNonFireEventsThreadBarrier) {
-			CountDownLatch barrier = preLocalNonFireEventsThreadBarrier
-					.get(requestId);
-			if (barrier == null) {
-				barrier = new CountDownLatch(1);
-				preLocalNonFireEventsThreadBarrier.put(requestId, barrier);
-				preLocalNonFireEventsThreadBarrier.notifyAll();
+	private int ensureTimestamps0(Connection conn) throws SQLException {
+		String tableName = tableName();
+		String querySql = Ax.format(
+				"select id, pg_xact_commit_timestamp(xmin) as commit_timestamp "
+						+ "from %s where transactionCommitTime is null FOR UPDATE",
+				tableName);
+		Map<Long, Timestamp> toUpdate = new LinkedHashMap<>();
+		try (PreparedStatement pStatement = conn.prepareStatement(querySql)) {
+			pStatement.setFetchSize(1000);
+			ResultSet rs = pStatement.executeQuery();
+			while (rs.next()) {
+				long id = rs.getLong(1);
+				Timestamp timestamp = rs.getTimestamp(2);
+				toUpdate.put(id, timestamp);
 			}
-			return barrier;
+			rs.close();
 		}
-	}
-
-	private synchronized String debugString() {
-		return Ax.format("Sequencer:\n===========\n%s\n\nQueue:\n=========\n%s",
-				GraphProjection.fieldwiseToString(this),
-				loaderDatabase.getStore().getPersistenceEvents().getQueue()
-						.toDebugString());
-	}
-
-	private void ensureTransactionCommitTimes0(List<Long> ids)
-			throws SQLException {
-		if (!loaderDatabase.domainDescriptor
-				.isUseTransformDbCommitSequencing()) {
-			return;
-		}
-		SequencerLock lock = null;
-		/* postgres specific */
-		Connection conn = getConnection();
-		try (Statement statement = conn.createStatement()) {
-			Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
-					.getDomainTransformRequestPersistentClass();
-			String tableName = persistentClass.getAnnotation(Table.class)
-					.name();
-			String sql = Ax.format(
-					"select id,startPersistTime, pg_xact_commit_timestamp(xmin) as commit_timestamp "
-							+ "from %s where transactionCommitTime is null order by pg_xact_commit_timestamp(xmin)",
-					tableName);
-			for (EnsurePhase phase : EnsurePhase.values()) {
-				ResultSet rs = statement.executeQuery(sql);
-				Map<Long, Timestamp> queryResults = new LinkedHashMap<>();
-				while (rs.next()) {
-					long id = rs.getLong("id");
-					Timestamp commit_timestamp = rs
-							.getTimestamp("commit_timestamp");
-					queryResults.put(id, commit_timestamp);
-				}
-				if (queryResults.isEmpty()) {
-					return;
-				}
-				boolean commit = true;
-				/*
-				 * in this phase (non-locked), only update if ids match the
-				 * beginning of the sequence of requests without commit times.
-				 * 
-				 * otherwise commit all
-				 */
-				if (phase == EnsurePhase.SUPPLIED_IDS) {
-					int matched = 0;
-					for (Long queryId : queryResults.keySet()) {
-						if (ids.contains(queryId)) {
-							matched++;
-						} else {
-							break;
-						}
-					}
-					commit = ids.size() == queryResults.size();
-				}
-				if (commit) {
-					try (PreparedStatement updateStatement = conn
-							.prepareStatement(Ax.format(
-									"update %s set transactionCommitTime=? where id=?",
-									tableName))) {
-						queryResults.forEach((id, commit_timestamp) -> {
-							try {
-								updateStatement.setTimestamp(1,
-										commit_timestamp);
-								updateStatement.setLong(2, id);
-								updateStatement.executeUpdate();
-								logger.debug(
-										"Updated transactionCommitTime for request {}",
-										id);
-							} catch (Exception e) {
-								throw new WrappedRuntimeException(e);
-							}
-						});
-						updateStatement.close();
-					}
-					break;
-				} else {
-					lock = Registry.impl(SequencerLockProvider.class).getLock();
-					lock.acquire();
-				}
+		String updateSql = Ax.format(
+				"update %s set transactionCommitTime=? where id=?", tableName);
+		try (PreparedStatement preparedStatement = conn
+				.prepareStatement(updateSql)) {
+			Set<Entry<Long, Timestamp>> entrySet = toUpdate.entrySet();
+			for (Entry<Long, Timestamp> entry : toUpdate.entrySet()) {
+				long id = entry.getKey();
+				Timestamp timestamp = entry.getValue();
+				preparedStatement.setTimestamp(1, timestamp);
+				preparedStatement.setLong(2, id);
+				preparedStatement.addBatch();
 			}
-		} finally {
-			try {
-				conn.commit();
-			} finally {
-				if (lock != null) {
-					lock.release();
-				}
-			}
+			int[] affectedRecords = preparedStatement.executeBatch();
+			logger.info("Updated {} timestamps", toUpdate.size());
 		}
+		lastEnsure = LocalDateTime.now();
+		return toUpdate.size();
 	}
 
 	private Connection getConnection() throws SQLException {
@@ -391,42 +156,7 @@ public class DomainStoreTransformSequencer {
 		return connection;
 	}
 
-	private HighestVisibleTransactions getHighestVisibleTransformRequest(
-			Connection conn) throws SQLException {
-		try (Statement statement = conn.createStatement()) {
-			Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
-					.getDomainTransformRequestPersistentClass();
-			String tableName = persistentClass.getAnnotation(Table.class)
-					.name();
-			String sql = Ax.format(
-					"select id, transactionCommitTime from %s where transactionCommitTime is not null order by transactionCommitTime desc limit 1",
-					tableName);
-			HighestVisibleTransactions transactionsData = new HighestVisibleTransactions();
-			ResultSet rs = statement.executeQuery(sql);
-			transactionsData.commitTimestamp = new Timestamp(0);
-			if (rs.next()) {
-				transactionsData.commitTimestamp = rs
-						.getTimestamp("transactionCommitTime");
-				rs.close();
-				try (PreparedStatement idStatement = conn.prepareStatement(Ax
-						.format("select id from %s where transactionCommitTime=? ",
-								tableName))) {
-					idStatement.setTimestamp(1,
-							transactionsData.commitTimestamp);
-					ResultSet idRs = idStatement.executeQuery();
-					while (idRs.next()) {
-						transactionsData.transformIds.add(idRs.getLong("id"));
-					}
-					logger.debug("Got highestVisible request data : {}",
-							transactionsData);
-				}
-			}
-			conn.commit();
-			return transactionsData;
-		}
-	}
-
-	private long getRequestIdAtTimestamp0(Connection conn, Timestamp timestamp)
+	private Long getRequestIdAtTimestamp0(Connection conn, Timestamp timestamp)
 			throws SQLException {
 		try (Statement statement = conn.createStatement()) {
 			Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
@@ -434,188 +164,130 @@ public class DomainStoreTransformSequencer {
 			String tableName = persistentClass.getAnnotation(Table.class)
 					.name();
 			try (PreparedStatement idStatement = conn.prepareStatement(Ax
-					.format("select id from %s where transactionCommitTime=? ",
+					.format("select id from %s where transactionCommitTime=? order by id desc limit 1",
 							tableName))) {
 				idStatement.setTimestamp(1, timestamp);
 				ResultSet idRs = idStatement.executeQuery();
 				if (idRs.next()) {
 					return idRs.getLong(1);
 				} else {
-					throw Ax.runtimeException(
-							"No id visible for request timestamp %s",
-							timestamp);
+					return null;
 				}
 			}
 		}
 	}
 
-	/*
-	 * Probably over-pessimistically, this method does not assume that all
-	 * committed requests with an identical timestamp are visible at the same
-	 * time.
-	 */
-	private List<DomainTransformCommitPosition>
-			getSequentialUnpublishedRequests0() throws Exception {
-		if (highestVisibleTransactions == null) {
-			// not yet finished with marking - come back later please
-			return Collections.emptyList();
+	private void refreshPositions(boolean publishToQueue,
+			long ignoreIfSeenRequestId) {
+		runWithConnection("refresh-positions", conn -> refreshPositions0(conn,
+				publishToQueue, ignoreIfSeenRequestId));
+	}
+
+	private synchronized int refreshPositions0(Connection conn,
+			boolean publishToQueue, long ignoreIfSeenRequestId)
+			throws SQLException {
+		if (publishedIds.containsKey(ignoreIfSeenRequestId)) {
+			return 0;
 		}
-		List<DomainTransformCommitPosition> unpublishedPositions = new ArrayList<>();
-		Connection conn = getConnection();
+		Timestamp since = highestVisiblePosition.commitTimestamp;
+		String tableName = tableName();
+		String querySql = Ax.format(
+				"select id, pg_xact_commit_timestamp(xmin) as commit_timestamp "
+						+ "from %s where transactionCommitTime is null OR"
+						+ " transactionCommitTime>?",
+				tableName);
+		if (!publishToQueue) {
+			querySql += " order by pg_xact_commit_timestamp(xmin) desc limit 1";
+		}
+		List<DomainTransformCommitPosition> positions = new ArrayList<>();
+		try (PreparedStatement pStatement = conn.prepareStatement(querySql)) {
+			pStatement.setFetchSize(100);
+			pStatement.setTimestamp(1, since);
+			ResultSet rs = pStatement.executeQuery();
+			while (rs.next()) {
+				long id = rs.getLong(1);
+				Timestamp timestamp = rs.getTimestamp(2);
+				if (timestamp.after(since)) {
+					DomainTransformCommitPosition position = new DomainTransformCommitPosition(
+							id, timestamp);
+					positions.add(position);
+				}
+			}
+			rs.close();
+		}
+		positions.sort(Comparator.naturalOrder());
+		unpublishedPositions.addAll(positions);
+		if (positions.size() > 0) {
+			highestVisiblePosition = Ax.last(unpublishedPositions);
+		}
+		if (publishToQueue) {
+			loaderDatabase.getStore().getPersistenceEvents().getQueue()
+					.onSequencedCommitPositions(unpublishedPositions);
+			unpublishedPositions
+					.forEach(p -> publishedIds.put(p.commitRequestId, true));
+			unpublishedPositions.clear();
+			if (shouldEnsure()) {
+				conn.commit();
+				ensureTimestamps();
+			}
+		}
+		return positions.size();
+	}
+
+	private <T> T runWithConnection(String metricName,
+			ThrowingFunction<Connection, T> connectionProcessor) {
+		Connection conn = null;
+		String key = Ax.format("dts-%s", metricName);
+		try {
+			MetricLogging.get().start(key);
+			conn = getConnection();
+			return connectionProcessor.apply(conn);
+		} catch (Exception e) {
+			logger.warn("Exception in connection processor", e);
+			return null;
+		} finally {
+			try {
+				conn.commit();
+			} catch (SQLException e) {
+				e.printStackTrace();
+				try {
+					conn.close();
+				} catch (SQLException e2) {
+					e2.printStackTrace();
+				} finally {
+					conn = null;
+				}
+			} finally {
+				MetricLogging.get().end(key);
+			}
+		}
+	}
+
+	private boolean shouldEnsure() {
+		if (ChronoUnit.SECONDS.between(lastEnsure, LocalDateTime.now()) < 1) {
+			return false;
+		}
 		/*
-		 * normally, commit times are ensured just after the dtrp is committed
-		 * in TransformPersister
-		 * 
-		 * if the vm crashes between dtrp commit and update, any subsequent
-		 * commits will catch that missed transactionCommitTime update
-		 * 
-		 * so no need to ensure here
+		 * round-robin, based on server count
 		 */
-		// ensureTransactionCommitTimes();
+		return LocalDateTime.now().getSecond() % serverCount == serverOffset;
+	}
+
+	private String tableName() {
 		Class<? extends DomainTransformRequestPersistent> persistentClass = loaderDatabase.domainDescriptor
 				.getDomainTransformRequestPersistentClass();
 		String tableName = persistentClass.getAnnotation(Table.class).name();
-		String sql = Ax.format(
-				"select id, transactionCommitTime from %s where transactionCommitTime >=? "
-						+ "and transactionCommitTime is not null "
-						+ "order by transactionCommitTime,id ",
-				tableName);
-		try (PreparedStatement pStatement = conn.prepareStatement(sql)) {
-			HighestVisibleTransactions transactionsData = new HighestVisibleTransactions();
-			Timestamp fromTimestamp = highestVisibleTransactions.commitTimestamp;
-			if (CommonUtils.getYear(new Date(fromTimestamp.getTime())) < 1972) {
-				fromTimestamp = new Timestamp(fromTimestamp.getTime() + 1);
-				logger.debug("Bumping timestamp - {}", fromTimestamp.getTime());
-			}
-			pStatement.setTimestamp(1, fromTimestamp);
-			ResultSet rs = pStatement.executeQuery();
-			List<DomainTransformCommitPosition> txData = new ArrayList<>();
-			// normally it'll be one dtr per timestamp. If more than 99999,
-			// we're
-			// looking at an initial cleanup - ignore
-			int maxCurrent = 99999;
-			while (rs.next() && maxCurrent-- > 0) {
-				DomainTransformCommitPosition position = new DomainTransformCommitPosition();
-				position.commitRequestId = rs.getLong("id");
-				position.commitTimestamp = rs
-						.getTimestamp("transactionCommitTime");
-				if (position.commitTimestamp
-						.equals(highestVisibleTransactions.commitTimestamp)
-						&& highestVisibleTransactions.transformIds
-								.contains(position.commitRequestId)) {
-					continue;// already submitted/published
-				}
-				txData.add(position);
-			}
-			rs.close();
-			if (maxCurrent <= 0) {
-				txData.clear();
-			}
-			txData.forEach(unpublishedPositions::add);
-			Map<Timestamp, List<DomainTransformCommitPosition>> collect = txData
-					.stream().collect(AlcinaCollectors
-							.toKeyMultimap(txd -> txd.commitTimestamp));
-			if (collect.isEmpty()) {
-			} else {
-				Entry<Timestamp, List<DomainTransformCommitPosition>> last = CommonUtils
-						.last(collect.entrySet().iterator());
-				List<Long> lastIds = last.getValue().stream()
-						.map(txd -> txd.commitRequestId)
-						.collect(Collectors.toList());
-				if (last.getKey()
-						.equals(highestVisibleTransactions.commitTimestamp)) {
-					lastIds.addAll(highestVisibleTransactions.transformIds);
-				}
-				highestVisibleTransactions = new HighestVisibleTransactions();
-				highestVisibleTransactions.commitTimestamp = last.getKey();
-				highestVisibleTransactions.transformIds = lastIds;
-			}
-			if (unpublishedPositions.isEmpty()) {
-				// logger.info(
-				// "Empty unpublished positions in
-				// getSequentialUnpublishedRequests0");
-			} else {
-				logger.info("Added unpublished positions \n\t{} ",
-						CommonUtils.joinWithNewlineTab(unpublishedPositions));
-			}
-		}
-		conn.commit();
-		return unpublishedPositions;
+		return tableName;
 	}
 
-	/*
-	 * only allow one concurrent call per-jvm -
-	 * 
-	 * if there are ids outside the supplied set
-	 */
-	synchronized void ensureTransactionCommitTimes(List<Long> ids)
-			throws SQLException {
-		// random backoff
-		for (int idx = 0; idx < 5; idx++) {
-			try {
-				ensureTransactionCommitTimes0(ids);
-				return;
-			} catch (Exception e) {
-				logger.warn("Exception in ensure times", e);
-				try {
-					Thread.sleep((long) (Math.random() * 100.0));
-				} catch (InterruptedException e1) {
-				}
-			}
-		}
-	}
-
-	DomainTransformCommitPosition getHighestVisibleCommitPosition() {
-		return highestVisibleTransactions == null ? null
-				: new DomainTransformCommitPosition(
-						highestVisibleTransactions.commitTimestamp,
-						Ax.last(highestVisibleTransactions.transformIds));
+	void initialEnsureTimestamps() throws SQLException {
+		ensureTimestamps();
 	}
 
 	void markHighestVisibleTransformList(Connection conn) throws SQLException {
-		if (!loaderDatabase.domainDescriptor
-				.isUseTransformDbCommitSequencing()) {
-			return;
-		}
-		highestVisibleTransactions = getHighestVisibleTransformRequest(conn);
-		if (highestVisibleTransactions == null) {
-			throw new RuntimeException("Null h.v.t");
-		} else {
-			logger.info("Marked highest visible transactions - {}",
-					highestVisibleTransactions);
-		}
-	}
-
-	public static class NoopSequencerLock implements SequencerLock {
-	}
-
-	public interface SequencerLock {
-		default void acquire() {
-		}
-
-		default void release() {
-		}
-	}
-
-	@RegistryLocation(registryPoint = SequencerLockProvider.class, implementationType = ImplementationType.SINGLETON)
-	public static class SequencerLockProvider {
-		public SequencerLock getLock() {
-			return new NoopSequencerLock();
-		}
-	}
-
-	enum EnsurePhase {
-		SUPPLIED_IDS, ALL_IDS
-	}
-
-	static class HighestVisibleTransactions {
-		List<Long> transformIds = new ArrayList<>();
-
-		Timestamp commitTimestamp;
-
-		@Override
-		public String toString() {
-			return GraphProjection.fieldwiseToString(this);
-		}
+		refreshPositions0(conn, false, -1);
+		logger.info("Marked highest visible position - {}",
+				highestVisiblePosition);
+		unpublishedPositions.clear();
 	}
 }

@@ -167,8 +167,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private Object loadTransformRequestLock = new Object();
 
-	DomainStoreTransformSequencer transformSequencer = new DomainStoreTransformSequencer(
-			this);
+	DomainStoreTransformSequencer transformSequencer;
 
 	ThreadPoolExecutor iLoaderExecutor = (ThreadPoolExecutor) Executors
 			.newFixedThreadPool(8,
@@ -184,6 +183,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		this.store = store;
 		this.dataSource = dataSource;
 		this.warmupExecutor = warmupExecutor;
+		transformSequencer = new DomainStoreTransformSequencer(this);
+		store.getPersistenceEvents().getQueue()
+				.setSequencer(transformSequencer);
 	}
 
 	@Override
@@ -253,15 +255,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	@Override
-	public void onTransformRequestsPersisted(List<Long> ids) {
-		try {
-			transformSequencer.ensureTransactionCommitTimes(ids);
-		} catch (SQLException e) {
-			logger.warn("Exception in ensureTransactionCommitTimes ", e);
-		}
-	}
-
 	public void setConnectionUrl(String newUrl) {
 		dataSource.setConnectionUrl(newUrl);
 	}
@@ -275,17 +268,16 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		oneToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		domainStoreColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
-		transformSequencer
-				.ensureTransactionCommitTimes(Collections.emptyList());
 		warmupTransaction = Transaction.current();
+		transformSequencer.initialEnsureTimestamps();
+		// FIXME - mvcc.jobs.1a - use postgres-specifc tx isolation
 		createWarmupConnections();
 		{
 			Connection conn = getConnection();
 			transformSequencer.markHighestVisibleTransformList(conn);
 			releaseConn(conn);
 		}
-		DomainTransformCommitPosition highestVisibleCommitPosition = transformSequencer
-				.getHighestVisibleCommitPosition();
+		DomainTransformCommitPosition highestVisibleCommitPosition = transformSequencer.highestVisiblePosition;
 		warmupTransaction.toDomainCommitting(
 				highestVisibleCommitPosition.commitTimestamp, store,
 				store.applyTxToGraphCounter.getAndIncrement(), 0L);

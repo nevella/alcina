@@ -17,8 +17,8 @@ public class TransformCollector {
 				.writableStore().getPersistenceEvents().getQueue();
 		while (System.currentTimeMillis() < maxTime) {
 			DomainTransformCommitPosition server = queue
-					.getTransformLogPosition();
-			if (server.after(client)) {
+					.getTransformCommitPosition();
+			if (server.compareTo(client) > 0) {
 				break;
 			}
 			synchronized (queue) {

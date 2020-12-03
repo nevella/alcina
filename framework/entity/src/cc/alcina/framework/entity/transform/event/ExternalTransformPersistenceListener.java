@@ -13,4 +13,9 @@ public interface ExternalTransformPersistenceListener
 
 	@Override
 	public void stopService();
+
+	@Override
+	default boolean isAllVmEventsListener() {
+		return true;
+	}
 }

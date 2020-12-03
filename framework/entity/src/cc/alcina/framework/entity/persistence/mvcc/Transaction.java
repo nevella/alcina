@@ -215,7 +215,6 @@ public class Transaction {
 				.put(store, new StoreTransaction(store)));
 		this.phase = initialPhase;
 		Transactions.get().initialiseTransaction(this);
-		startTime = System.currentTimeMillis();
 		logger.debug("Created tx: {}", this);
 	}
 

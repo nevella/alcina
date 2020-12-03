@@ -125,7 +125,7 @@ public class CommonSearchSupport {
 			searchContext.modelSearchResults.recordCount = rows.size();
 			searchContext.modelSearchResults.transformLogPosition = DomainStore
 					.stores().writableStore().getPersistenceEvents().getQueue()
-					.getTransformLogPosition();
+					.getTransformCommitPosition();
 			return searchContext.modelSearchResults;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

@@ -80,10 +80,6 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		throw new UnsupportedOperationException();
 	}
 
-	public boolean isUseTransformDbCommitSequencing() {
-		return true;
-	}
-
 	public void onWarmupComplete(DomainStore domainStore) {
 	}
 
