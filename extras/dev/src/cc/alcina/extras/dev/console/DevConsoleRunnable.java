@@ -24,12 +24,6 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 
 	public String[] argv;
 
-	public DevConsoleRunnable asSubTask(DevConsoleRunnable parentRunnable) {
-		command = parentRunnable.command;
-		argv = new String[0];// don't pass through - this is all devvy
-		return (DevConsoleRunnable) super.asSubTask(parentRunnable);
-	}
-
 	public boolean canUseProductionConn() {
 		return false;
 	}
@@ -47,10 +41,10 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		}
 	}
 
-	public void runAsSubtask(DevConsoleRunnable parentRunnable) {
+	public void runAsSubcommand(DevConsoleRunnable parentRunnable) {
 		command = parentRunnable.command;
 		argv = new String[0];// don't pass through - this is all devvy
-		super.asSubTask(parentRunnable).run();
+		run();
 	}
 
 	public void runFromCommand(DevConsoleCommand command, String[] argv) {

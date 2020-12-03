@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
@@ -218,7 +219,8 @@ public class DomainTransformPersistenceQueue {
 		DomainTransformPersistenceEvent event = new DomainTransformPersistenceEvent(
 				persistenceToken, wrapper,
 				wrapper.providePersistenceEventType(),
-				dtrp.getClientInstance().equals(ClientInstance.self()));
+				dtrp.getClientInstance() != null && Objects.equals(
+						dtrp.getClientInstance(), ClientInstance.self()));
 		event.setFiringFromQueue(true);
 		event.setPosition(position);
 		return event;

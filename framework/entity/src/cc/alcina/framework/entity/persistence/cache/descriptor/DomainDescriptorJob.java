@@ -601,6 +601,9 @@ public class DomainDescriptorJob {
 		}
 
 		private void insert0(Job job) {
+			if (!job.provideCanDeserializeTask()) {
+				return;
+			}
 			AllocationQueue queue = queues.get(job);
 			if (job.provideIsFuture()) {
 				futuresByTask.add(job.provideTaskClass(), job);
@@ -633,6 +636,9 @@ public class DomainDescriptorJob {
 		}
 
 		private void remove0(Job job) {
+			if (!job.provideCanDeserializeTask()) {
+				return;
+			}
 			AllocationQueue queue = queues.get(job);
 			if (job.provideIsFuture()) {
 				futuresByTask.remove(job.provideTaskClass(), job);
