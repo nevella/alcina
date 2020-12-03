@@ -215,7 +215,7 @@ public class DomainStoreTransformSequencer
 		}
 		Timestamp since = highestVisiblePosition.commitTimestamp;
 		String querySql = Ax.format(
-				"select id, pg_xact_commit_timestamp(xmin) as commit_timestamp "
+				"select id, transactionCommitTime,pg_xact_commit_timestamp(xmin) as commit_timestamp "
 						+ "from %s where transactionCommitTime is null OR"
 						+ " transactionCommitTime>?",
 				tableName);
@@ -229,7 +229,10 @@ public class DomainStoreTransformSequencer
 			ResultSet rs = pStatement.executeQuery();
 			while (rs.next()) {
 				long id = rs.getLong(1);
-				Timestamp timestamp = rs.getTimestamp(2);
+				Timestamp storedTimestamp = rs.getTimestamp(2);
+				Timestamp xminTimestamp = rs.getTimestamp(3);
+				Timestamp timestamp = storedTimestamp != null ? storedTimestamp
+						: xminTimestamp;
 				if (timestamp.after(since)) {
 					DomainTransformCommitPosition position = new DomainTransformCommitPosition(
 							id, timestamp);

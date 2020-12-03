@@ -72,8 +72,15 @@ public class DomainDescriptorJob {
 			}
 			Thread currentThread = Thread.currentThread();
 			switch (event.getPersistenceEventType()) {
-			case COMMIT_OK:
+			case COMMIT_OK: {
+				Set<Long> ids = collation.query(jobImplClass).stream()
+						.map(qr -> qr.entityCollation.getId())
+						.collect(Collectors.toSet());
+				logger.info("Post-process job transform - rq: {}, ids: {}",
+						event.getPersistedRequestIds(),
+						CommonUtils.toLimitedCollectionString(ids, 50));
 				break;
+			}
 			case COMMIT_ERROR:
 				logger.info("Issue with job transform details:\n{}",
 						event.getTransformPersistenceToken().getRequest());
@@ -82,7 +89,8 @@ public class DomainDescriptorJob {
 				Set<Long> ids = collation.query(jobImplClass).stream()
 						.map(qr -> qr.entityCollation.getId())
 						.collect(Collectors.toSet());
-				logger.info("Flushing job transform - ids: {}",
+				logger.info("Flushing job transform - rq: {}, ids: {}",
+						event.getPersistedRequestIds(),
 						CommonUtils.toLimitedCollectionString(ids, 50));
 				break;
 			}
