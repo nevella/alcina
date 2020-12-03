@@ -61,8 +61,7 @@ public class DomainStoreTransformSequencer
 
 	private Map<Long, Boolean> publishedIds = new ConcurrentHashMap<>();
 
-	DomainTransformCommitPosition highestVisiblePosition = new DomainTransformCommitPosition(
-			0, new Timestamp(0));
+	DomainTransformCommitPosition highestVisiblePosition;
 
 	List<DomainTransformCommitPosition> unpublishedPositions = new ArrayList<>();
 
@@ -200,7 +199,18 @@ public class DomainStoreTransformSequencer
 				if (rs.next()) {
 					highestVisiblePosition = new DomainTransformCommitPosition(
 							0L, rs.getTimestamp(1));
+				} else {
+					highestVisiblePosition = new DomainTransformCommitPosition(
+							0, new Timestamp(0));
+					logger.warn(
+							"initialising timestamps for store {} - {}/transactionCommitTime",
+							loaderDatabase.getStore().name, tableName,
+							highestVisiblePosition);
 				}
+				logger.info(
+						"initialised timestamps for store {} - {}/transactionCommitTime",
+						loaderDatabase.getStore().name, tableName,
+						highestVisiblePosition);
 			}
 		}
 		Timestamp since = highestVisiblePosition.commitTimestamp;
@@ -297,7 +307,7 @@ public class DomainStoreTransformSequencer
 	}
 
 	void markHighestVisibleTransformList(Connection conn) throws SQLException {
-		refreshPositions0(conn, false, -1);
+		refreshPositions0(conn, true, -1);
 		logger.info("Marked highest visible position - {}",
 				highestVisiblePosition);
 		unpublishedPositions.clear();
