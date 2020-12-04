@@ -208,12 +208,6 @@ public class JobContext {
 		logger.warn("Unexpected job exception", e);
 	}
 
-	public void publishStatusMessage(String enqueuedStatusMessage) {
-		Transaction.ensureBegun();
-		job.setStatusMessage(enqueuedStatusMessage);
-		Transaction.commit();
-	}
-
 	public void remove() {
 		LooseContext.remove(CONTEXT_CURRENT);
 	}

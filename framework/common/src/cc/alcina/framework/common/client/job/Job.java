@@ -135,6 +135,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		tracker.setJobResult(resultMessage);
 		tracker.setJobResultType(getResultType());
 		tracker.setLog(log);
+		tracker.setPercentComplete(completion);
 		tracker.setProgressMessage(statusMessage);
 		tracker.setStartTime(startTime);
 		return tracker;
@@ -427,13 +428,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return resolveState() == JobState.PENDING;
 	}
 
-	public boolean provideIsSelfStarter() {
-		return provideIsTopLevel() && provideIsFirstInSequence();
-	}
-
 	public boolean provideIsSibling(Job job) {
-		// TODO Auto-generated method stub
-		return false;
+		return provideRelatedSequential().stream().anyMatch(j -> j == job);
 	}
 
 	public boolean provideIsTaskClass(Class<? extends Task> taskClass) {

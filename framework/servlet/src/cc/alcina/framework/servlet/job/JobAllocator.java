@@ -52,16 +52,39 @@ class JobAllocator {
 
 	private JobContext jobContext;
 
-	private String enqueuedStatusMessage;
+	private StatusMessage enqueuedStatusMessage;
 
 	JobAllocator(AllocationQueue queue, ExecutorService allocatorService) {
 		this.queue = queue;
 		this.allocatorService = allocatorService;
 		queue.events.add((k, e) -> enqueueEvent(e));
 		lastStatus = new StatusMessage();
-		if (queue.job.provideIsSelfStarter()) {
+		/*
+		 * Allocator threads are started for top-level jobs iff:
+		 * 
+		 * -
+		 */
+		Job job = queue.job;
+		boolean topLevelQueue = job.provideIsTopLevel()
+				&& job.provideIsFirstInSequence();
+		boolean visible = job.getCreator() == ClientInstance.self()
+				|| (ExecutionConstraints.forQueue(queue)
+						.isClusteredChildAllocation()
+						&& JobRegistry.isActiveInstance(job.getCreator()));
+		if (topLevelQueue && visible) {
 			ensureStarted();
 		}
+	}
+
+	public void applyStatusMessage() {
+		if (enqueuedStatusMessage == null) {
+			return;
+		}
+		Transaction.ensureBegun();
+		queue.job.setStatusMessage(enqueuedStatusMessage.message);
+		queue.job.setCompletion(enqueuedStatusMessage.percentComplete / 100.0);
+		Transaction.commit();
+		enqueuedStatusMessage = null;
 	}
 
 	public void awaitSequenceCompletion() {
@@ -101,11 +124,13 @@ class JobAllocator {
 			ensureStarted();
 			while (!childCompletionLatch.await(2, TimeUnit.SECONDS)) {
 				if (enqueuedStatusMessage != null) {
-					jobContext.publishStatusMessage(enqueuedStatusMessage);
-					enqueuedStatusMessage = null;
+					applyStatusMessage();
 				}
 			}
-			Transaction.begin();
+			Transaction.endAndBeginNew();
+			new StatusMessage().publish();
+			applyStatusMessage();
+			Transaction.ensureBegun();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -119,10 +144,10 @@ class JobAllocator {
 	}
 
 	void onFinished() {
-		childCompletionLatch.countDown();
-		sequenceCompletionLatch.countDown();
 		finished = true;
 		new StatusMessage().publish();
+		childCompletionLatch.countDown();
+		sequenceCompletionLatch.countDown();
 	}
 
 	void toAwaitingChildren() {
@@ -139,6 +164,7 @@ class JobAllocator {
 				return;
 			}
 			Transaction.ensureBegun();
+			new StatusMessage().checkPublish();
 			Job job = queue.job;
 			if (firstEvent) {
 				firstEvent = false;
@@ -152,7 +178,6 @@ class JobAllocator {
 					|| job.resolveState() == JobState.ABORTED) {
 				logger.info("Allocation thread ended -  job {}",
 						job.toDisplayName());
-				childCompletionLatch.countDown();
 				if (queue.phase == SubqueuePhase.Complete) {
 					if (job.getState() == JobState.COMPLETED
 							&& job.getPerformer() == ClientInstance.self()
@@ -167,17 +192,17 @@ class JobAllocator {
 			logger.info("Allocation thread - job {} - event {}",
 					job.toDisplayName(), event);
 			if (isPhaseComplete(event)) {
-				switch (queue.phase) {
-				case Child:
-				case Sequence:
-				case Complete:
-					if (childCompletionLatch.getCount() > 0) {
+				if (queue.phase == SubqueuePhase.Child) {
+					/*
+					 * only countdown the child latch if we'll be waiting on
+					 * sequence
+					 */
+					if (queue.job.provideNextInSequence().isPresent()) {
 						logger.info(
 								"Releasing child completion latch -  job {}",
 								job.toDisplayName());
+						childCompletionLatch.countDown();
 					}
-					childCompletionLatch.countDown();
-					break;
 				}
 				SubqueuePhase priorPhase = queue.phase;
 				queue.incrementPhase();
@@ -219,10 +244,6 @@ class JobAllocator {
 							executorService.submit(() -> JobRegistry.get()
 									.performJob(j, false, launcherThreadState));
 						});
-						StatusMessage currentStatus = new StatusMessage();
-						if (currentStatus.shouldPublish()) {
-							currentStatus.publish();
-						}
 					}
 				}
 			}
@@ -359,7 +380,7 @@ class JobAllocator {
 		}
 	}
 
-	private class StatusMessage {
+	class StatusMessage {
 		long publishTime;
 
 		int percentComplete;
@@ -368,15 +389,28 @@ class JobAllocator {
 
 		long totalCount;
 
+		String message;
+
 		SubqueuePhase phase;
 
 		public StatusMessage() {
 			phase = queue.phase;
 			completedCount = queue.getCompletedJobCount();
+			if (!queue.job.provideNextInSequence().isPresent()
+					&& queue.job.getState() == JobState.PROCESSING
+					&& finished) {
+				completedCount++;
+			}
 			totalCount = queue.getTotalJobCount();
 			percentComplete = (int) (((double) completedCount) / totalCount
 					* 100.0);
 			publishTime = System.currentTimeMillis();
+		}
+
+		public void checkPublish() {
+			if (shouldPublish()) {
+				publish();
+			}
 		}
 
 		public void publish() {
@@ -384,9 +418,15 @@ class JobAllocator {
 				return;
 			}
 			lastStatus = this;
-			String message = Ax.format("%s - %s% (%s/%s)", Ax.friendly(phase),
+			message = Ax.format("%s - %s% (%s/%s)", Ax.friendly(phase),
 					percentComplete, completedCount, totalCount);
-			enqueuedStatusMessage = message;
+			enqueuedStatusMessage = this;
+			if (queue.phase == SubqueuePhase.Sequence
+					&& queue.job.getPerformer() == ClientInstance.self()
+					&& jobContext == null) {
+				applyStatusMessage();
+				Transaction.commit();
+			}
 		}
 
 		public boolean shouldPublish() {

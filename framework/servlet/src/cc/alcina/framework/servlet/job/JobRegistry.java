@@ -144,6 +144,10 @@ public class JobRegistry extends WriterService {
 		return Registry.impl(JobRegistry.class);
 	}
 
+	public static boolean isActiveInstance(ClientInstance instance) {
+		return get().jobExecutors.getActiveServers().contains(instance);
+	}
+
 	private static void checkAnnotatedPermissions(Object o) {
 		WebMethod annotation = o.getClass().getAnnotation(WebMethod.class);
 		if (annotation != null) {
@@ -358,8 +362,8 @@ public class JobRegistry extends WriterService {
 			releaseResources(job, false);
 			LooseContext.remove(
 					ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
-			context.end();
 			performer.onEnded();
+			context.end();
 			LooseContext.pop();
 			activeJobs.remove(job);
 			context.remove();
