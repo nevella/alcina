@@ -51,6 +51,10 @@ public class KeyValuePersistentCache<T> implements PersistentObjectCache<T> {
 		}
 	}
 
+	public String getBase() {
+		return this.base;
+	}
+
 	@Override
 	public Class<T> getPersistedClass() {
 		return clazz;
@@ -72,6 +76,10 @@ public class KeyValuePersistentCache<T> implements PersistentObjectCache<T> {
 	@Override
 	public void remove(String path) {
 		KeyValuePersistent.remove(joinPath(path));
+	}
+
+	public void setBase(String base) {
+		this.base = base;
 	}
 
 	public KeyValuePersistentCache<T> withBase(String base) {

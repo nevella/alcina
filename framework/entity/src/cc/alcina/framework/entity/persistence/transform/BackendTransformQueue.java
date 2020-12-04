@@ -5,12 +5,10 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,19 +119,6 @@ public class BackendTransformQueue {
 
 	private String normaliseQueueName(String queueName) {
 		return Ax.blankTo(queueName, DEFAULT_QUEUE_NAME);
-	}
-
-	protected Optional<Long> getCommitDelay() {
-		long now = System.currentTimeMillis();
-		Optional<Long> commitDelay = queueFirstEvent.entrySet().stream()
-				.map(e -> {
-					String queueName = e.getKey();
-					Long maxDelay = queueMaxDelay.get(queueName);
-					Long firstEventTime = e.getValue();
-					long queueDelay = firstEventTime + maxDelay - now;
-					return Math.max(queueDelay, 0L);
-				}).collect(Collectors.minBy(Comparator.naturalOrder()));
-		return commitDelay;
 	}
 
 	long computeDelay() {

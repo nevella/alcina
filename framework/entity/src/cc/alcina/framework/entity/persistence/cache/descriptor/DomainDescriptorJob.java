@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -236,8 +237,17 @@ public class DomainDescriptorJob {
 		}
 
 		public void clearIncompleteAllocatedJobs() {
-			subQueueJobs(phase, JobState.ALLOCATED).clear();
-			subQueueJobs(phase, JobState.PROCESSING).clear();
+			Stream.of(JobState.ALLOCATED, JobState.PROCESSING)
+					.forEach(state -> {
+						Set<? extends Job> jobs = subQueueJobs(phase, state);
+						Iterator<? extends Job> itr = jobs.iterator();
+						while (itr.hasNext()) {
+							Job next = itr.next();
+							logger.info("Removing from subQueue {}/{} - {}",
+									phase, state, next);
+							itr.remove();
+						}
+					});
 		}
 
 		public Stream<Job> getActiveJobs() {
@@ -281,6 +291,8 @@ public class DomainDescriptorJob {
 		}
 
 		public void insert(Job job) {
+			logger.info("subqueue/insert - {} - {} - {}",
+					this.job.toStringEntity(), subqueues.project(job), job);
 			subqueues.insert(job);
 			publish(EventType.RELATED_MODIFICATION);
 			checkFireToProcessing(job);
@@ -317,6 +329,8 @@ public class DomainDescriptorJob {
 		}
 
 		public void remove(Job job) {
+			logger.info("subqueue/remove - {} - {} - {}",
+					this.job.toStringEntity(), subqueues.project(job), job);
 			subqueues.remove(job);
 		}
 
