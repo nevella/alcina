@@ -16,6 +16,8 @@ package cc.alcina.framework.common.client.actions;
 import java.util.Collections;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
 
@@ -32,6 +34,7 @@ public interface TaskPerformer<T extends Task> {
 		return false;
 	}
 
+	@JsonIgnore
 	default List<JobResource> getResources() {
 		return Collections.emptyList();
 	}

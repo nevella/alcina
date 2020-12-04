@@ -118,6 +118,7 @@ public abstract class AlcinaServlet extends HttpServlet {
 			logger.warn("Alcina servlet request issue - user {} - url {}",
 					PermissionsManager.get().getUser().toIdNameString(),
 					request.getRequestURI());
+			logger.warn("Exception detail:", t);
 			EntityLayerLogging.persistentLog(LogMessageType.RPC_EXCEPTION, t);
 			try {
 				writeTextResponse(response, "Sorry, that's a 500");
