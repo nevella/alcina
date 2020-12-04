@@ -767,7 +767,7 @@ public class TransformCommit {
 							"Servlet layer - waiting for cascading transforms");
 					synchronized (cascadingTransformSupport) {
 						if (cascadingTransformSupport.hasChildren()) {
-							cascadingTransformSupport.wait();
+							cascadingTransformSupport.wait(1000);
 						}
 					}
 				}
@@ -869,12 +869,12 @@ public class TransformCommit {
 			MetricLogging.get().end("transform-commit");
 			handleWrapperTransforms();
 			wrapper.ignored = persistenceToken.ignored;
+			DomainTransformPersistenceEvent event = new DomainTransformPersistenceEvent(
+					persistenceToken, wrapper,
+					wrapper.providePersistenceEventType(), true);
+			CascadingTransformSupport.register(event);
 			DomainStore.stores().writableStore().getPersistenceEvents()
-					.fireDomainTransformPersistenceEvent(
-							new DomainTransformPersistenceEvent(
-									persistenceToken, wrapper,
-									wrapper.providePersistenceEventType(),
-									true));
+					.fireDomainTransformPersistenceEvent(event);
 			unexpectedException = false;
 			if (wrapper.response
 					.getResult() == DomainTransformResponseResult.OK) {

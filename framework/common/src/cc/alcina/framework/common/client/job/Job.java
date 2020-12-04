@@ -46,7 +46,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @Bean
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = Job.class)
-@DomainTransformPropagation(PropagationType.NON_PERSISTENT)
+@DomainTransformPropagation(PropagationType.PERSISTENT)
 public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public static final transient String PROPERTY_STATE = "state";
 
@@ -297,26 +297,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return this.stacktraceRequested;
 	}
 
-	public Stream<Job> provideAntecedents() {
-		Job cursor = domainIdentity();
-		List<Job> previousSiblings = new ArrayList<>();
-		while (true) {
-			Optional<? extends JobRelation> relation = cursor.getToRelations()
-					.stream()
-					.filter(rel -> rel.getType() == JobRelationType.SEQUENCE)
-					.findFirst();
-			if (relation.isPresent()) {
-				cursor = relation.get().getFrom();
-				previousSiblings.add(cursor);
-			} else {
-				break;
-			}
-		}
-		Optional<Job> parent = provideParent();
-		return Stream.concat(previousSiblings.stream(),
-				parent.map(Stream::of).orElse(Stream.empty()));
-	}
-
 	public boolean provideCanDeserializeTask() {
 		try {
 			Objects.requireNonNull(getTask());
@@ -508,7 +488,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		List<Job> result = new ArrayList<>();
 		while (true) {
 			result.add(cursor);
-			Optional<Job> next = provideNextInSequence();
+			Optional<Job> next = cursor.provideNextInSequence();
 			if (next.isPresent()) {
 				cursor = next.get();
 			} else {
@@ -524,6 +504,26 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			return first;
 		}
 		return provideParentOrSelf();
+	}
+
+	/*
+	 * self, previous in stream, and, if present, repeat from parent
+	 */
+	public Stream<Job> provideSelfAndAntecedents() {
+		Job cursor = domainIdentity();
+		List<Job> selfAndPreviousSiblings = new ArrayList<>();
+		while (true) {
+			selfAndPreviousSiblings.add(cursor);
+			Optional<Job> previous = cursor.providePrevious();
+			if (previous.isPresent()) {
+				cursor = previous.get();
+			} else {
+				break;
+			}
+		}
+		Optional<Job> parent = cursor.provideParent();
+		return Stream.concat(selfAndPreviousSiblings.stream(), parent
+				.map(Job::provideSelfAndAntecedents).orElse(Stream.empty()));
 	}
 
 	public String provideShortName() {

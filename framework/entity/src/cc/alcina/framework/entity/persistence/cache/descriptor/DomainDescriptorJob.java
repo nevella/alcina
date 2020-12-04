@@ -235,6 +235,11 @@ public class DomainDescriptorJob {
 			}
 		}
 
+		public void clearIncompleteAllocatedJobs() {
+			subQueueJobs(phase, JobState.ALLOCATED).clear();
+			subQueueJobs(phase, JobState.PROCESSING).clear();
+		}
+
 		public Stream<Job> getActiveJobs() {
 			return perStateJobs(JobState.PROCESSING);
 		}
@@ -609,11 +614,14 @@ public class DomainDescriptorJob {
 		}
 
 		private void insert0(Job job) {
-			if (!job.provideCanDeserializeTask()) {
+			if (job.getTaskClassName() == null) {
 				return;
 			}
 			AllocationQueue queue = queues.get(job);
 			if (job.provideIsFuture()) {
+				if (!job.provideCanDeserializeTask()) {
+					return;
+				}
 				futuresByTask.add(job.provideTaskClass(), job);
 			} else if (job.provideIsComplete()) {
 				if (queue != null) {
@@ -622,6 +630,9 @@ public class DomainDescriptorJob {
 				} else {
 				}
 			} else {
+				if (!job.provideCanDeserializeTask()) {
+					return;
+				}
 				queue = ensureQueue(job, queue);
 				queue.insert(job);
 				if (job.provideIsTopLevel()) {
@@ -639,16 +650,22 @@ public class DomainDescriptorJob {
 			if (relatedQueueOwner.provideIsComplete() && queue == null) {
 				return;
 			}
+			if (!job.provideCanDeserializeTask()) {
+				return;
+			}
 			queue = ensureQueue(relatedQueueOwner, queue);
 			queue.insert(job);
 		}
 
 		private void remove0(Job job) {
-			if (!job.provideCanDeserializeTask()) {
+			if (job.getTaskClassName() == null) {
 				return;
 			}
 			AllocationQueue queue = queues.get(job);
 			if (job.provideIsFuture()) {
+				if (!job.provideCanDeserializeTask()) {
+					return;
+				}
 				futuresByTask.remove(job.provideTaskClass(), job);
 			} else if (job.provideIsComplete()) {
 				if (queue != null) {
@@ -658,6 +675,9 @@ public class DomainDescriptorJob {
 			} else {
 				if (queue != null) {
 					queue.remove(job);
+				}
+				if (!job.provideCanDeserializeTask()) {
+					return;
 				}
 				if (job.provideIsTopLevel()) {
 					incompleteTopLevelByTask.remove(job.provideTaskClass(),
@@ -673,6 +693,9 @@ public class DomainDescriptorJob {
 			 * 
 			 */
 			if (relatedQueueOwner.provideIsComplete() && queue == null) {
+				return;
+			}
+			if (!job.provideCanDeserializeTask()) {
 				return;
 			}
 			queue = ensureQueue(relatedQueueOwner, queue);

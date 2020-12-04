@@ -419,7 +419,7 @@ public class JobRegistry extends WriterService {
 
 	<JR extends JobResource> Optional<JR> getAcquiredResource(Job forJob,
 			JR resource) {
-		return Stream.concat(forJob.provideAntecedents(), Stream.of(forJob))
+		return forJob.provideSelfAndAntecedents()
 				.map(j -> getResource(j, resource, forJob))
 				.filter(Objects::nonNull).findFirst();
 	}
@@ -593,7 +593,9 @@ public class JobRegistry extends WriterService {
 
 		public Builder withRunAt(LocalDateTime runAt) {
 			this.runAt = runAt;
-			this.initialState = JobState.FUTURE;
+			if (runAt != null) {
+				this.initialState = JobState.FUTURE;
+			}
 			return this;
 		}
 

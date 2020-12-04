@@ -21,6 +21,7 @@ import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.transform.CascadingTransformSupport;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 
 public class DomainTransformPersistenceEvents {
@@ -72,7 +73,16 @@ public class DomainTransformPersistenceEvents {
 				event.getPersistedRequestIds()
 						.forEach(queue::onTransformRequestCommitted);
 			}
-			fireDomainTransformPersistenceEvent0(event);
+			try {
+				if (event.isFiringFromQueue()) {
+					CascadingTransformSupport.registerFiring(event);
+				}
+				fireDomainTransformPersistenceEvent0(event);
+			} finally {
+				if (event.isFiringFromQueue()) {
+					CascadingTransformSupport.finishedFiring(event);
+				}
+			}
 			break;
 		}
 		}

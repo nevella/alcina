@@ -1,16 +1,23 @@
 package cc.alcina.framework.entity.persistence.transform;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gwt.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 
 /**
@@ -52,8 +59,45 @@ public class CascadingTransformSupport {
 
 	private static ConcurrentHashMap<Thread, Object> cascadeThreads = new ConcurrentHashMap<>();
 
+	private static Map<Long, CascadingTransformSupport> crossThread = new ConcurrentHashMap<>();
+
+	private static Map<Thread, CascadingTransformSupport> crossThreadFiring = new ConcurrentHashMap<>();
+
+	static Logger logger = LoggerFactory
+			.getLogger(CascadingTransformSupport.class);
+
+	public static void finishedFiring(DomainTransformPersistenceEvent event) {
+		crossThread.remove(event.getMaxPersistedRequestId());
+		crossThreadFiring.remove(Thread.currentThread());
+		LooseContext.pop();
+	}
+
 	public static CascadingTransformSupport get() {
-		return supports.get();
+		CascadingTransformSupport adopted = crossThreadFiring
+				.get(Thread.currentThread());
+		if (adopted != null) {
+			return adopted;
+		} else {
+			return supports.get();
+		}
+	}
+
+	public static void register(DomainTransformPersistenceEvent event) {
+		CascadingTransformSupport support = CascadingTransformSupport.get();
+		crossThread.put(event.getMaxPersistedRequestId(), support);
+		support.copyContext.putAll(LooseContext.getContext().properties);
+	}
+
+	public static void registerFiring(DomainTransformPersistenceEvent event) {
+		LooseContext.push();
+		CascadingTransformSupport blockingThreadSupport = crossThread
+				.get(event.getMaxPersistedRequestId());
+		if (blockingThreadSupport != null) {
+			crossThreadFiring.put(Thread.currentThread(),
+					blockingThreadSupport);
+			blockingThreadSupport.copyContext
+					.forEach((k, v) -> LooseContext.set(k, v));
+		}
 	}
 
 	private List<Thread> waitFor = new ArrayList<Thread>();
@@ -61,6 +105,8 @@ public class CascadingTransformSupport {
 	private Set<Throwable> throwables = new LinkedHashSet<Throwable>();
 
 	private Thread launchingThread;
+
+	Map<String, Object> copyContext = new LinkedHashMap<>();
 
 	public void afterTransform() {
 		launchingThread = null;

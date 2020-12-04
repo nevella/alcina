@@ -269,6 +269,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		domainStoreColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
 		warmupTransaction = Transaction.current();
+		transformSequencer.setInitialised(true);
 		transformSequencer.initialEnsureTimestamps();
 		// FIXME - mvcc.jobs.1a - use postgres-specifc tx isolation
 		createWarmupConnections();

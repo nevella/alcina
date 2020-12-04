@@ -143,10 +143,6 @@ public class TransformPersistenceToken implements Serializable {
 		return this.transformResult;
 	}
 
-	public boolean isRequestorExternalToThisJvm() {
-		return this.requestorExternalToThisJvm;
-	}
-
 	public boolean isBlockUntilAllListenersNotified() {
 		return this.blockUntilAllListenersNotified;
 	}
@@ -161,6 +157,10 @@ public class TransformPersistenceToken implements Serializable {
 
 	public boolean isLocalToVm() {
 		return this.localToVm;
+	}
+
+	public boolean isRequestorExternalToThisJvm() {
+		return this.requestorExternalToThisJvm;
 	}
 
 	public boolean provideTargetsWritableStore() {

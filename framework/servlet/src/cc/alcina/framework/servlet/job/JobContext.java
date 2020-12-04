@@ -275,6 +275,7 @@ public class JobContext {
 			if (job.getResultType() == null) {
 				job.setResultType(JobResultType.OK);
 			}
+			logger.info("Job complete - {} - {}", job, job.getEndTime());
 		}
 		persistMetadata();
 		if (threadStartName != null) {

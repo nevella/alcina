@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -232,12 +233,34 @@ class JobAllocator {
 		public void run() {
 			while (!finished) {
 				try {
-					Event event = eventQueue.poll(2, TimeUnit.SECONDS);
+					Event event = eventQueue.poll(1, TimeUnit.SECONDS);
 					try {
+						Transaction.begin();
 						if (event == null) {
 							int debug = 3;
+							/*
+							 * FIXME - mvcc.jobs.1a - up the timeout n catch
+							 * these suckers
+							 */
+							long incompleteCount = queue
+									.getIncompleteAllocatedJobCountForCurrentPhase();
+							ExecutorService executorService = ExecutionConstraints
+									.forQueue(queue)
+									.getExecutorServiceProvider()
+									.getService(queue);
+							if (executorService instanceof ThreadPoolExecutor) {
+								ThreadPoolExecutor tpex = (ThreadPoolExecutor) executorService;
+								if (tpex.getActiveCount() == 0
+										&& incompleteCount > 0) {
+									logger.warn(
+											"Removing {} incomplete jobs as allocated/processing",
+											incompleteCount);
+									queue.clearIncompleteAllocatedJobs();
+								}
+							}
+							// missed event?
+							queue.publish(EventType.WAKEUP);
 						} else {
-							Transaction.begin();
 							DomainStore.waitUntilCurrentRequestsProcessed();
 							processEvent(event);
 							Transaction firstEventTransaction = event.transaction;

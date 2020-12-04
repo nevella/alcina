@@ -404,10 +404,12 @@ public class DomainTransformPersistenceQueue {
 						"publishTransformEvent - firing empty event (no transforms?) dtr {}",
 						requestId);
 			}
-			Timestamp transactionCommitTime = event.commitPosition.commitTimestamp;
-			if (transactionCommitTime.before(muteEventsOnOrBefore)
-					|| transactionCommitTime.equals(muteEventsOnOrBefore)) {
-				request.setEvents(new ArrayList<>());
+			if (event.commitPosition != null) {
+				Timestamp transactionCommitTime = event.commitPosition.commitTimestamp;
+				if (transactionCommitTime.before(muteEventsOnOrBefore)
+						|| transactionCommitTime.equals(muteEventsOnOrBefore)) {
+					request.setEvents(new ArrayList<>());
+				}
 			}
 			Transaction.current().toNoActiveTransaction();
 			DomainTransformPersistenceEvent persistenceEvent = createPersistenceEventFromPersistedRequest(

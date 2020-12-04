@@ -66,11 +66,15 @@ public class DomainStoreTransformSequencer
 
 	List<DomainTransformCommitPosition> unpublishedPositions = new ArrayList<>();
 
+	Map<Long, DomainTransformCommitPosition> visiblePositions = new LinkedHashMap<>();
+
 	LocalDateTime lastEnsure = null;
 
 	private int serverCount = 1;
 
 	private int serverOffset = 0;
+
+	private volatile boolean initialised = false;
 
 	DomainStoreTransformSequencer(DomainStoreLoaderDatabase loaderDatabase) {
 		this.loaderDatabase = loaderDatabase;
@@ -90,6 +94,10 @@ public class DomainStoreTransformSequencer
 		return this.serverOffset;
 	}
 
+	public boolean isInitialised() {
+		return this.initialised;
+	}
+
 	@Override
 	public void onPersistedRequestCommitted(long requestId) {
 		refreshPositions(requestId);
@@ -98,6 +106,10 @@ public class DomainStoreTransformSequencer
 	@Override
 	public void refresh() {
 		refreshPositions(-1);
+	}
+
+	public void setInitialised(boolean initialised) {
+		this.initialised = initialised;
 	}
 
 	public void setServerCount(int serverCount) {
@@ -178,6 +190,9 @@ public class DomainStoreTransformSequencer
 	}
 
 	private void refreshPositions(long ignoreIfSeenRequestId) {
+		if (!initialised) {
+			return;
+		}
 		runWithConnection("refresh-positions",
 				conn -> refreshPositions0(conn, false, ignoreIfSeenRequestId));
 	}
@@ -214,14 +229,20 @@ public class DomainStoreTransformSequencer
 						highestVisiblePosition);
 			}
 		}
-		Timestamp since = highestVisiblePosition.commitTimestamp;
+		Timestamp highestVisible = highestVisiblePosition.commitTimestamp;
+		/*
+		 * Go back a little, to handle concurrent writes to
+		 * transactionCommitTime
+		 */
+		Timestamp since = new Timestamp(highestVisible.getTime() - 1000);
+		since.setNanos(highestVisible.getNanos());
 		String querySql = Ax.format(
 				"select id, transactionCommitTime,pg_xact_commit_timestamp(xmin) as commit_timestamp "
 						+ "from %s where transactionCommitTime is null OR"
-						+ " transactionCommitTime>?",
+						+ " transactionCommitTime>=?",
 				tableName);
 		if (!initial) {
-			querySql += " order by pg_xact_commit_timestamp(xmin) desc limit 1";
+			querySql += " order by pg_xact_commit_timestamp(xmin) desc limit 100";
 		}
 		List<DomainTransformCommitPosition> positions = new ArrayList<>();
 		try (PreparedStatement pStatement = conn.prepareStatement(querySql)) {
@@ -234,10 +255,22 @@ public class DomainStoreTransformSequencer
 				Timestamp xminTimestamp = rs.getTimestamp(3);
 				Timestamp timestamp = storedTimestamp != null ? storedTimestamp
 						: xminTimestamp;
-				if (timestamp.after(since)) {
+				if (timestamp.compareTo(since) >= 0) {
 					DomainTransformCommitPosition position = new DomainTransformCommitPosition(
 							id, timestamp);
-					positions.add(position);
+					DomainTransformCommitPosition existing = visiblePositions
+							.get(position.commitRequestId);
+					if (existing != null) {
+						if (!existing.commitTimestamp.equals(timestamp)) {
+							logger.warn(
+									"Different timestamps for positions:\nDB: {}\nExisting: {}",
+									timestamp, existing);
+						}
+					} else {
+						positions.add(position);
+						visiblePositions.put(position.commitRequestId,
+								position);
+					}
 				}
 			}
 		}
@@ -281,6 +314,7 @@ public class DomainStoreTransformSequencer
 			} catch (SQLException e) {
 				e.printStackTrace();
 				try {
+					logger.warn("Closing connection", e);
 					conn.close();
 				} catch (SQLException e2) {
 					e2.printStackTrace();
@@ -295,6 +329,9 @@ public class DomainStoreTransformSequencer
 
 	private boolean shouldEnsure() {
 		if (ChronoUnit.SECONDS.between(lastEnsure, LocalDateTime.now()) < 1) {
+			return false;
+		}
+		if (loaderDatabase.getStore() != DomainStore.writableStore()) {
 			return false;
 		}
 		/*

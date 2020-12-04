@@ -72,6 +72,9 @@ public class TransformPersisterInPersistenceContext {
 	public static final String CONTEXT_LOG_TO_STDOUT = TransformPersisterInPersistenceContext.class
 			.getName() + ".CONTEXT_LOG_TO_STDOUT";
 
+	public static final String CONTEXT_DO_NOT_PERSIST_TRANSFORMS = TransformPersisterInPersistenceContext.class
+			.getName() + ".CONTEXT_DO_NOT_PERSIST_TRANSFORMS";
+
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS = 20
 			* 1000;
 
@@ -417,7 +420,8 @@ public class TransformPersisterInPersistenceContext {
 								CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM)) {
 							DomainStore.stores().writableStore()
 									.getPersistenceEvents().getQueue()
-									.onPersistingVmLocalRequest(persistentRequest);
+									.onPersistingVmLocalRequest(
+											persistentRequest);
 						}
 						subRequest.setEvents(null);
 						persistentRequest.wrap(subRequest);
@@ -449,7 +453,10 @@ public class TransformPersisterInPersistenceContext {
 									.shouldPersistEventRecord(event)
 									|| ResourceUtilities
 											.is("persistAllTransforms")) {
-								tltm.persist(propagationEvent);
+								if (!LooseContext.is(
+										CONTEXT_DO_NOT_PERSIST_TRANSFORMS)) {
+									tltm.persist(propagationEvent);
+								}
 							}
 							propagationEvent.wrap(event);
 							/*
