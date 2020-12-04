@@ -237,6 +237,13 @@ public class DomainDescriptorJob {
 		}
 
 		public void clearIncompleteAllocatedJobs() {
+			/*
+			 * Deliberately throws an exception (because the sets have no
+			 * itr.remove) - this is a response to an upstream problem
+			 * 
+			 * FIXME - mvcc.jobs.2 - review no calls; remove
+			 * 
+			 */
 			Stream.of(JobState.ALLOCATED, JobState.PROCESSING)
 					.forEach(state -> {
 						Set<? extends Job> jobs = subQueueJobs(phase, state);

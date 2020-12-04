@@ -98,6 +98,13 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@GwtTransient
 	private String largeResultSerialized;
 
+	public Job() {
+	}
+
+	public Job(long id) {
+		setId(id);
+	}
+
 	// FIXME - mvcc.jobs - get rid'o'me
 	public JobResult asJobResult() {
 		JobResult result = new JobResult() {

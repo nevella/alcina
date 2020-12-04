@@ -29,6 +29,11 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
+/*
+ * DOCUMENT - there are some slight differences between 'ensure ended' and 'ensure begun' - particularly around state TO_DB_ABORTED.
+ * 
+ *  This behavioural difference serves to make ABORT (transform commit error) handling more intentional - a simple 'ensureBegun' won't be enough - see e.e. JobRegistry.performJob0
+ */
 public class Transaction {
 	public static final String CONTEXT_RETAIN_TRANSACTION_TRACES = Transaction.class
 			.getName() + ".CONTEXT_RETAIN_TRANSACTION_TRACES";

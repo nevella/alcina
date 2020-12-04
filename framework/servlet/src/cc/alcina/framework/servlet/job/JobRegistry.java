@@ -347,6 +347,11 @@ public class JobRegistry extends WriterService {
 		} catch (Throwable t) {
 			Exception e = (Exception) ((t instanceof Exception) ? t
 					: new WrappedRuntimeException(t));
+			/*
+			 * May have arrived here as a result of a failed transform commit
+			 */
+			Transaction.ensureEnded();
+			Transaction.begin();
 			context.onJobException(e);
 			if (CommonUtils.extractCauseOfClass(e,
 					CancelledException.class) != null) {
@@ -462,8 +467,12 @@ public class JobRegistry extends WriterService {
 						"DEVEX::4 - JobRegistry.performJob - begin with open transaction "
 								+ " - {}\nuncommitted transforms:\n{}",
 						job), TransformManager.get().getTransforms());
-				Transaction.commit();
-				Transaction.end();
+				try {
+					Transaction.commit();
+				} catch (Exception e) {
+					logger.warn("DEVEX::4 - JobRegistry.performJob", e);
+				}
+				Transaction.ensureEnded();
 			}
 			LooseContext.push();
 			LooseContext.set(

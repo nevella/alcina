@@ -48,6 +48,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -186,8 +187,13 @@ public class TransformCommit {
 				clientInstance.setAuth(deltaRecord.getClientInstanceAuth());
 				clientInstance.setId(deltaRecord.getClientInstanceId());
 				request.setClientInstance(clientInstance);
+				boolean committingUserIsAdministrator = UserlandProvider.get()
+						.getGroupByName(
+								PermissionsManager.ADMINISTRATORS_GROUP_NAME)
+						.containsUserOrMemberGroupContainsUser(UserlandProvider
+								.get().getUserById(deltaRecord.getUserId()));
 				if (useWrapperUser == null) {
-					useWrapperUser = PermissionsManager.get().isAdmin()
+					useWrapperUser = committingUserIsAdministrator
 							&& LooseContext.getContext().getBoolean(
 									TransformCommit.CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS)
 							&& deltaRecord.getUserId() != PermissionsManager

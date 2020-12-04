@@ -201,6 +201,8 @@ public class JobContext {
 	}
 
 	public void onJobException(Exception e) {
+		Transaction.ensureEnded();
+		Transaction.begin();
 		job.setResultType(JobResultType.EXCEPTION);
 		String simpleExceptionMessage = CommonUtils.toSimpleExceptionMessage(e);
 		job.setStatusMessage(simpleExceptionMessage);
