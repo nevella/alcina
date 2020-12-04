@@ -298,8 +298,8 @@ public class DomainDescriptorJob {
 		}
 
 		public void insert(Job job) {
-			logger.info("subqueue/insert - {} - {} - {}",
-					this.job.toStringEntity(), subqueues.project(job), job);
+			// logger.info("subqueue/insert - {} - {} - {}",
+			// this.job.toStringEntity(), subqueues.project(job), job);
 			subqueues.insert(job);
 			publish(EventType.RELATED_MODIFICATION);
 			checkFireToProcessing(job);
@@ -336,8 +336,8 @@ public class DomainDescriptorJob {
 		}
 
 		public void remove(Job job) {
-			logger.info("subqueue/remove - {} - {} - {}",
-					this.job.toStringEntity(), subqueues.project(job), job);
+			// logger.info("subqueue/remove - {} - {} - {}",
+			// this.job.toStringEntity(), subqueues.project(job), job);
 			subqueues.remove(job);
 		}
 
