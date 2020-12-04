@@ -223,9 +223,8 @@ public class JobScheduler {
 				.get("visibleInstanceRegex");
 		Date cutoff = SEUtilities
 				.toOldDate(LocalDateTime.now().minusMinutes(1));
-		Stream<? extends Job> incompleteAndInactiveInstance = getToAbortOrReassign(
-				activeInstances, visibleInstanceRegex, cutoff);
-		while (incompleteAndInactiveInstance.anyMatch(j -> true)) {
+		while (getToAbortOrReassign(activeInstances, visibleInstanceRegex,
+				cutoff).anyMatch(j -> true)) {
 			jobRegistry.withJobMetadataLock(null, () -> {
 				Stream<Job> doubleChecked = getToAbortOrReassign(
 						activeInstances, visibleInstanceRegex, cutoff)
