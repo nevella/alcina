@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
@@ -456,6 +457,14 @@ public class JobRegistry extends WriterService {
 	void performJob(Job job, boolean queueJobPersistence,
 			LauncherThreadState launcherThreadState) {
 		try {
+			if (Transaction.isInTransaction()) {
+				logger.warn(Ax.format(
+						"DEVEX::4 - JobRegistry.performJob - begin with open transaction "
+								+ " - {}\nuncommitted transforms:\n{}",
+						job), TransformManager.get().getTransforms());
+				Transaction.commit();
+				Transaction.end();
+			}
 			LooseContext.push();
 			LooseContext.set(
 					ThreadedPmClientInstanceResolverImpl.CONTEXT_CLIENT_INSTANCE,
@@ -482,7 +491,7 @@ public class JobRegistry extends WriterService {
 			} else {
 				// will generally be close to the top of a thread - so log, even
 				// if there's logging higher
-				logger.warn(Ax.format("DEVEX::3 - JobRegistry.performJob - %s",
+				logger.warn(Ax.format("DEVEX::3 - JobRegistry.performJob - {}",
 						job), e);
 			}
 		} finally {
