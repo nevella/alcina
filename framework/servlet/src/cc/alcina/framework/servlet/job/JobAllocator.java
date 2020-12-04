@@ -244,11 +244,16 @@ class JobAllocator {
 							 */
 							long incompleteCount = queue
 									.getIncompleteAllocatedJobCountForCurrentPhase();
-							ExecutorService executorService = ExecutionConstraints
-									.forQueue(queue)
+							ExecutionConstraints constraints = ExecutionConstraints
+									.forQueue(queue);
+							ExecutorService executorService = constraints
 									.getExecutorServiceProvider()
 									.getService(queue);
-							if (executorService instanceof ThreadPoolExecutor) {
+							if (executorService instanceof ThreadPoolExecutor
+									&& !constraints.isClusteredChildAllocation()
+									&& queue.job.getCreator() == ClientInstance
+											.self()
+									&& queue.phase == SubqueuePhase.Child) {
 								ThreadPoolExecutor tpex = (ThreadPoolExecutor) executorService;
 								if (tpex.getActiveCount() == 0
 										&& incompleteCount > 0) {

@@ -310,6 +310,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
+		public void clear() {
+			entrySet.clear();
+		}
+
+		@Override
 		public boolean contains(Object o) {
 			return entrySet.contains(o);
 		}
@@ -592,6 +597,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				throw new MvccException(
 						"Creating tx entry set outside of a transaction");
 			}
+		}
+
+		@Override
+		public void clear() {
+			super.clear();
 		}
 
 		@Override
