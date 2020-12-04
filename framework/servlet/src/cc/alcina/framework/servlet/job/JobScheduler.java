@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -37,10 +36,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
-import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
@@ -115,6 +112,19 @@ public class JobScheduler {
 			}
 		};
 		return canModify;
+	}
+
+	public Stream<Job> getToAbortOrReassign(
+			List<ClientInstance> activeInstances, String visibleInstanceRegex,
+			Date cutoff) {
+		return DomainDescriptorJob.get().getIncompleteJobs()
+				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
+				.filter(job -> job.getCreator().toString()
+						.matches(visibleInstanceRegex))
+				.filter(job -> (job.getPerformer() == null
+						&& !activeInstances.contains(job.getCreator()))
+						|| (job.getPerformer() != null && !activeInstances
+								.contains(job.getPerformer())));
 	}
 
 	public void stopService() {
@@ -213,20 +223,14 @@ public class JobScheduler {
 				.get("visibleInstanceRegex");
 		Date cutoff = SEUtilities
 				.toOldDate(LocalDateTime.now().minusMinutes(1));
-		Stream<? extends Job> incompleteAndInactiveInstance = DomainDescriptorJob
-				.get().getIncompleteJobs()
-				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
-				.filter(job -> job.getCreator().toString()
-						.matches(visibleInstanceRegex))
-				.filter(job -> (job.getPerformer() == null
-						&& !activeInstances.contains(job.getCreator()))
-						|| (job.getPerformer() != null && !activeInstances
-								.contains(job.getPerformer())));
-		List<Job> toAbortOrReassign = incompleteAndInactiveInstance
-				.collect(Collectors.toList());
-		MultikeyMap<Boolean> perQueueTaskClass = new UnsortedMultikeyMap<>(2);
-		Runnable runnable = toAbortOrReassign.isEmpty() ? null
-				: () -> toAbortOrReassign.forEach(job -> {
+		Stream<? extends Job> incompleteAndInactiveInstance = getToAbortOrReassign(
+				activeInstances, visibleInstanceRegex, cutoff);
+		while (incompleteAndInactiveInstance.anyMatch(j -> true)) {
+			jobRegistry.withJobMetadataLock(null, () -> {
+				Stream<Job> doubleChecked = getToAbortOrReassign(
+						activeInstances, visibleInstanceRegex, cutoff)
+								.limit(1000);
+				doubleChecked.forEach(job -> {
 					logger.warn(
 							"Aborting job {} (inactive client creator: {} - performer: {})",
 							job, job.getCreator(), job.getPerformer());
@@ -241,7 +245,10 @@ public class JobScheduler {
 					job.setEndTime(new Date());
 					job.setResultType(JobResultType.DID_NOT_COMPLETE);
 				});
-		jobRegistry.withJobMetadataLock(null, runnable);
+				logger.warn("Aborting jobs - committing transforms");
+				Transaction.commit();
+			});
+		}
 	}
 
 	private void refreshFutures(ScheduleEvent event) {
