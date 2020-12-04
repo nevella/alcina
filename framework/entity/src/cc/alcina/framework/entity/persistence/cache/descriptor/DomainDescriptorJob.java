@@ -255,8 +255,8 @@ public class DomainDescriptorJob {
 		}
 
 		public long getCompletedJobCount() {
-			return perStateJobs(JobState.COMPLETED).count()
-					+ perStateJobs(JobState.SEQUENCE_COMPLETE).count();
+			return perPhaseJobCount(JobState.COMPLETED,
+					JobState.SEQUENCE_COMPLETE);
 		}
 
 		public long getIncompleteAllocatedJobCountForCurrentPhase() {
@@ -273,7 +273,7 @@ public class DomainDescriptorJob {
 		}
 
 		public long getTotalJobCount() {
-			return perStateJobs(JobState.values()).count();
+			return perPhaseJobCount(JobState.values());
 		}
 
 		public long getUnallocatedJobCount() {
@@ -386,6 +386,10 @@ public class DomainDescriptorJob {
 				}
 			}
 			return true;
+		}
+
+		private long perPhaseJobCount(JobState... states) {
+			return perPhaseJobCount(Arrays.asList(states));
 		}
 
 		private long perPhaseJobCount(List<JobState> states) {

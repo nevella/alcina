@@ -289,11 +289,17 @@ class JobAllocator {
 						} else {
 							DomainStore.waitUntilCurrentRequestsProcessed();
 							processEvent(event);
-							Transaction firstEventTransaction = event.transaction;
-							while ((event = eventQueue.peek()) != null
-									&& event.transaction == firstEventTransaction) {
-								eventQueue.poll();
-								processEvent(event);
+							/*
+							 * Only need to process the first
+							 * RELATED_MODIFICATION
+							 */
+							if (event.type == EventType.RELATED_MODIFICATION) {
+								Event peekEvent = null;
+								while ((peekEvent = eventQueue.peek()) != null
+										&& peekEvent.transaction == event.transaction
+										&& peekEvent.type == EventType.RELATED_MODIFICATION) {
+									eventQueue.poll();
+								}
 							}
 						}
 					} finally {
