@@ -218,6 +218,10 @@ public class DomainDescriptorJob {
 			stat.name = job.toDisplayName();
 			stat.startTime = job.getStartTime() != null ? job.getStartTime()
 					: job.getCreationDate();
+			if (stat.startTime == null) {
+				// not yet committed
+				stat.startTime = new Date();
+			}
 			return stat;
 		}
 

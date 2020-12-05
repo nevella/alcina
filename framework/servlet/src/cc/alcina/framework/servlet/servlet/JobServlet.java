@@ -55,7 +55,11 @@ public class JobServlet extends AlcinaServlet {
 			job = new TaskCancelJob().withValue(id).perform();
 			break;
 		}
-		writeHtmlResponse(response, job.getLog());
+		if (job.getResultType().isFail()) {
+			writeTextResponse(response, job.getLog());
+		} else {
+			writeHtmlResponse(response, job.getLog());
+		}
 	}
 
 	@Override

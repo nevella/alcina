@@ -240,12 +240,16 @@ class JobAllocator {
 							});
 							Transaction.commit();
 						};
-						if (executionConstraints.isClusteredChildAllocation()) {
-							JobRegistry.get().withJobMetadataLock(job,
-									allocateJobs);
-						} else {
-							allocateJobs.run();
-						}
+						// FIXME - mvcc.jobs.1a - getting splurgey allocation?
+						JobRegistry.get().withJobMetadataLock(job,
+								allocateJobs);
+						// if
+						// (executionConstraints.isClusteredChildAllocation()) {
+						// JobRegistry.get().withJobMetadataLock(job,
+						// allocateJobs);
+						// } else {
+						// allocateJobs.run();
+						// }
 						allocated.forEach(j -> {
 							LauncherThreadState launcherThreadState = new LauncherThreadState();
 							executorService.submit(() -> JobRegistry.get()

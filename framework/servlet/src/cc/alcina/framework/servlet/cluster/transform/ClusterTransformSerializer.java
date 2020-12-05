@@ -108,12 +108,14 @@ public class ClusterTransformSerializer {
 					.withMaxLength(Integer.MAX_VALUE).serialize(clusterRequest);
 			unzipped = json.getBytes(StandardCharsets.UTF_8);
 			zipped = ResourceUtilities.gzipBytes(unzipped);
-			if (zipped == null || zipped.length > 100000
-					|| request.getEvents().size() > 1000) {
-				logger.info(
-						"Large serialized request :: {} :: {} events :: {} bytes unzipped :: {} bytes zipped",
-						request.getId(), request.getEvents().size(),
-						unzipped.length, zipped.length);
+			if (state == State.PRE_COMMIT) {
+				if (zipped == null || zipped.length > 100000
+						|| request.getEvents().size() > 1000) {
+					logger.info(
+							"Large serialized request :: {} :: {} events :: {} bytes unzipped :: {} bytes zipped",
+							request.getId(), request.getEvents().size(),
+							unzipped.length, zipped.length);
+				}
 			}
 			/*
 			 * Need one chunk for messages with zero-length bytes
