@@ -3,7 +3,6 @@ package cc.alcina.framework.servlet.job;
 import java.util.List;
 import java.util.function.Consumer;
 
-import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -14,7 +13,7 @@ public interface JobExecutors {
 	void addScheduledJobExecutorChangeConsumer(
 			Consumer<Boolean> changeConsumer);
 
-	void allocationLock(Job job, boolean acquire);
+	void allocationLock(String path, boolean acquire);
 
 	List<ClientInstance> getActiveServers();
 

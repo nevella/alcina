@@ -344,7 +344,11 @@ public class JobContext {
 
 	void end() {
 		if (performer.endInLockedSection()) {
-			JobRegistry.get().withJobMetadataLock(getJob(), this::end0);
+			/*
+			 * per task class lock
+			 */
+			JobRegistry.get().withJobMetadataLock(job.getTaskClassName(),
+					this::end0);
 		} else {
 			end0();
 		}

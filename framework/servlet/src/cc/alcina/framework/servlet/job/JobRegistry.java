@@ -276,14 +276,19 @@ public class JobRegistry extends WriterService {
 	}
 
 	public void withJobMetadataLock(Job job, Runnable runnable) {
+		withJobMetadataLock(job.toLocator().toRecoverableNumericString(),
+				runnable);
+	}
+
+	public void withJobMetadataLock(String path, Runnable runnable) {
 		if (runnable == null) {
 			return;
 		}
 		try {
-			jobExecutors.allocationLock(job, true);
+			jobExecutors.allocationLock(path, true);
 			runnable.run();
 		} finally {
-			jobExecutors.allocationLock(job, false);
+			jobExecutors.allocationLock(path, false);
 		}
 	}
 
@@ -649,7 +654,8 @@ public class JobRegistry extends WriterService {
 		}
 
 		@Override
-		public void allocationLock(Job job, boolean acquire) {
+		public void allocationLock(String path, boolean acquire) {
+			// noop
 		}
 
 		@Override

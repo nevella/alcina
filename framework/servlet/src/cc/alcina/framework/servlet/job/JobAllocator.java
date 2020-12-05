@@ -214,18 +214,19 @@ class JobAllocator {
 				enqueueEvent(event);
 			} else {
 				Transaction.endAndBeginNew();
-				long maxAllocatable = ExecutionConstraints.forQueue(queue)
+				ExecutionConstraints executionConstraints = ExecutionConstraints
+						.forQueue(queue);
+				long maxAllocatable = executionConstraints
 						.calculateMaxAllocatable();
 				// FIXME - mvcc.jobs.1a - allocate in batches (i.e.
 				// 30...let drain to 10...again)
 				if (maxAllocatable > 0) {
 					if (queue.getUnallocatedJobs()
 							.anyMatch(this::isAllocatable)) {
-						ExecutorService executorService = ExecutionConstraints
-								.forQueue(queue).getExecutorServiceProvider()
-								.getService(queue);
+						ExecutorService executorService = executionConstraints
+								.getExecutorServiceProvider().getService(queue);
 						List<Job> allocated = new ArrayList<>();
-						JobRegistry.get().withJobMetadataLock(job, () -> {
+						Runnable allocateJobs = () -> {
 							// FIXME - mvcc.jobs.1a - check this doesn't
 							// traverse more than it needs to
 							queue.getUnallocatedJobs()
@@ -238,7 +239,13 @@ class JobAllocator {
 								logger.info("Allocated job {}", j);
 							});
 							Transaction.commit();
-						});
+						};
+						if (executionConstraints.isClusteredChildAllocation()) {
+							JobRegistry.get().withJobMetadataLock(job,
+									allocateJobs);
+						} else {
+							allocateJobs.run();
+						}
 						allocated.forEach(j -> {
 							LauncherThreadState launcherThreadState = new LauncherThreadState();
 							executorService.submit(() -> JobRegistry.get()

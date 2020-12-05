@@ -157,11 +157,12 @@ public class JobScheduler {
 				processOrphans();
 				Transaction.commit();
 			}
-			jobRegistry.withJobMetadataLock(null, () -> {
-				futuresToPending();
-				refreshFutures(event);
-				Transaction.commit();
-			});
+			jobRegistry.withJobMetadataLock(
+					getClass().getName() + "::futuresToPending", () -> {
+						futuresToPending();
+						refreshFutures(event);
+						Transaction.commit();
+					});
 		}
 		if (event.type == Type.SHUTDOWN) {
 			// FIXME - mvcc.jobs.1a - shutdown all fixed pools
@@ -227,31 +228,33 @@ public class JobScheduler {
 		AtomicBoolean zeroChanges = new AtomicBoolean(false);
 		while (!zeroChanges.get() && getToAbortOrReassign(activeInstances,
 				visibleInstanceRegex, cutoff).anyMatch(j -> true)) {
-			jobRegistry.withJobMetadataLock(null, () -> {
-				Stream<Job> doubleChecked = getToAbortOrReassign(
-						activeInstances, visibleInstanceRegex, cutoff)
-								.limit(1000);
-				doubleChecked.forEach(job -> {
-					logger.warn(
-							"Aborting job {} (inactive client creator: {} - performer: {})",
-							job, job.getCreator(), job.getPerformer());
-					if (ResourceUtilities.is("abortDisabled")) {
-						logger.warn("(Would abort job - but abortDisabled)");
-						return;
-					}
-					/* resubmit, then abort */
-					ResubmitPolicy policy = ResubmitPolicy.forJob(job);
-					policy.visit(job);
-					job.setState(JobState.ABORTED);
-					job.setEndTime(new Date());
-					job.setResultType(JobResultType.DID_NOT_COMPLETE);
-				});
-				logger.warn("Aborting jobs - committing transforms");
-				int committed = Transaction.commit();
-				if (committed == 0) {
-					zeroChanges.set(true);
-				}
-			});
+			jobRegistry.withJobMetadataLock(
+					getClass().getName() + "::processOrphans", () -> {
+						Stream<Job> doubleChecked = getToAbortOrReassign(
+								activeInstances, visibleInstanceRegex, cutoff)
+										.limit(1000);
+						doubleChecked.forEach(job -> {
+							logger.warn(
+									"Aborting job {} (inactive client creator: {} - performer: {})",
+									job, job.getCreator(), job.getPerformer());
+							if (ResourceUtilities.is("abortDisabled")) {
+								logger.warn(
+										"(Would abort job - but abortDisabled)");
+								return;
+							}
+							/* resubmit, then abort */
+							ResubmitPolicy policy = ResubmitPolicy.forJob(job);
+							policy.visit(job);
+							job.setState(JobState.ABORTED);
+							job.setEndTime(new Date());
+							job.setResultType(JobResultType.DID_NOT_COMPLETE);
+						});
+						logger.warn("Aborting jobs - committing transforms");
+						int committed = Transaction.commit();
+						if (committed == 0) {
+							zeroChanges.set(true);
+						}
+					});
 		}
 	}
 
