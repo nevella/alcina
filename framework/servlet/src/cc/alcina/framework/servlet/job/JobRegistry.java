@@ -373,8 +373,10 @@ public class JobRegistry extends WriterService {
 			releaseResources(job, false);
 			LooseContext.remove(
 					ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
-			performer.onEnded();
+			performer.onBeforeEnd();
 			context.end();
+			performer.onAfterEnd();
+			context.persistMetadata();
 			LooseContext.pop();
 			activeJobs.remove(job);
 			context.remove();
