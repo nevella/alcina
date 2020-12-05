@@ -679,6 +679,9 @@ public class DomainDescriptorJob {
 				return;
 			}
 			queue = ensureQueue(relatedQueueOwner, queue);
+			if (job.provideIsComplete()) {
+				int debug = 3;
+			}
 			queue.insert(job);
 		}
 

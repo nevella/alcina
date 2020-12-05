@@ -278,7 +278,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 7;
+		private static final transient int VERSION = 8;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.local();
@@ -1009,10 +1009,8 @@ class ClassTransformer {
 						/*
 						 * id is only set on the base version - ditto localId
 						 */
-						if (method.getName().matches("id")) {
-							continue;
-						}
-						if (method.getName().matches("localId")) {
+						if (method.getName()
+								.matches("getId|setId|getLocalId|setLocalId")) {
 							continue;
 						}
 						FormatBuilder bodyBuilder = new FormatBuilder();

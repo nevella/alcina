@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -223,8 +224,9 @@ public class JobScheduler {
 				.get("visibleInstanceRegex");
 		Date cutoff = SEUtilities
 				.toOldDate(LocalDateTime.now().minusMinutes(1));
-		while (getToAbortOrReassign(activeInstances, visibleInstanceRegex,
-				cutoff).anyMatch(j -> true)) {
+		AtomicBoolean zeroChanges = new AtomicBoolean(false);
+		while (!zeroChanges.get() && getToAbortOrReassign(activeInstances,
+				visibleInstanceRegex, cutoff).anyMatch(j -> true)) {
 			jobRegistry.withJobMetadataLock(null, () -> {
 				Stream<Job> doubleChecked = getToAbortOrReassign(
 						activeInstances, visibleInstanceRegex, cutoff)
@@ -245,7 +247,10 @@ public class JobScheduler {
 					job.setResultType(JobResultType.DID_NOT_COMPLETE);
 				});
 				logger.warn("Aborting jobs - committing transforms");
-				Transaction.commit();
+				int committed = Transaction.commit();
+				if (committed == 0) {
+					zeroChanges.set(true);
+				}
 			});
 		}
 	}
