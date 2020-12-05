@@ -9,6 +9,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +22,11 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.util.MethodContext;
 
 /*
  * FIXME - mvcc.4 - the threading is overly complex - or could be abstracted out maybe? With a task queue?
@@ -61,6 +62,8 @@ public class BackendTransformQueue {
 	private EventThread eventThread;
 
 	private List<DomainTransformEvent> pendingTransforms = new ArrayList<>();
+
+	AtomicLong idCounter = new AtomicLong(0);
 
 	public void enqueue(List<DomainTransformEvent> transforms,
 			String queueName) {
@@ -111,9 +114,15 @@ public class BackendTransformQueue {
 				false);
 		pendingTransforms.clear();
 		queueFirstEvent.clear();
-		MethodContext.instance().withContextTrue(
-				AdjunctTransformCollation.CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD)
-				.run(() -> Transaction.commit());
+		try {
+			LooseContext.pushWithTrue(
+					AdjunctTransformCollation.CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD);
+			LooseContext.pushWithTrue(
+					TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
+			Transaction.commit();
+		} finally {
+			LooseContext.pop();
+		}
 		Transaction.end();
 	}
 
@@ -158,6 +167,9 @@ public class BackendTransformQueue {
 					}
 					Event event = events.poll(delay, TimeUnit.MILLISECONDS);
 					if (event != null) {
+						logger.info(
+								"Backend transform queue - adding event:\n{}",
+								event);
 						event.transforms.forEach(pendingTransforms::add);
 						queueFirstEvent.putIfAbsent(event.queueName,
 								event.time);
@@ -171,18 +183,27 @@ public class BackendTransformQueue {
 		};
 	}
 
-	static class Event {
+	class Event {
 		List<DomainTransformEvent> transforms;
 
 		String queueName;
 
 		long time;
 
+		long id;
+
 		Event(List<DomainTransformEvent> transforms, String queueName,
 				long time) {
+			this.id = idCounter.incrementAndGet();
 			this.transforms = transforms;
 			this.queueName = queueName;
 			this.time = time;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s :: %s :: %s :: %s transforms", id, queueName,
+					time, transforms.size());
 		}
 	}
 }

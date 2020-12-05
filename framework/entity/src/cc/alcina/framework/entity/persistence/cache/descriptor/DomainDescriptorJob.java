@@ -221,6 +221,25 @@ public class DomainDescriptorJob {
 			return stat;
 		}
 
+		public void cancelIncompleteAllocatedJobs() {
+			/*
+			 * Possible issue with backendtransformqueue
+			 * 
+			 */
+			Stream.of(JobState.ALLOCATED, JobState.PROCESSING)
+					.forEach(state -> {
+						Set<? extends Job> jobs = subQueueJobs(phase, state);
+						Iterator<? extends Job> itr = jobs.iterator();
+						while (itr.hasNext()) {
+							Job next = itr.next();
+							logger.info("Cancelling from subQueue {}/{} - {}",
+									phase, state, next);
+							next.cancel();
+						}
+					});
+			Transaction.commit();
+		}
+
 		public void checkComplete() {
 			if (isComplete()) {
 				queues.remove(job);

@@ -225,7 +225,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		this.versionNumber = versionNumber;
 	}
 
-	public EntityLocator toLocator() {
+	public final EntityLocator toLocator() {
 		return EntityLocator.instanceLocator(domainIdentity());
 	}
 
@@ -249,7 +249,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		return dn.substring(0, dn.length());
 	}
 
-	public String toStringEntity() {
+	public final String toStringEntity() {
 		return toLocator().toString();
 	}
 

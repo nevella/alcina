@@ -182,10 +182,15 @@ public class TransformCommit {
 				DomainTransformRequest request = DomainTransformRequest
 						.fromString(deltaRecord.getText(),
 								deltaRecord.getChunkUuidString());
-				ClientInstance clientInstance = clientInstanceClass
-						.newInstance();
-				clientInstance.setAuth(deltaRecord.getClientInstanceAuth());
-				clientInstance.setId(deltaRecord.getClientInstanceId());
+				ClientInstance clientInstance = null;
+				if (deltaRecord.getClientInstanceId() == ClientInstance.self()
+						.getId()) {
+					clientInstance = ClientInstance.self();
+				} else {
+					clientInstance = clientInstanceClass.newInstance();
+					clientInstance.setAuth(deltaRecord.getClientInstanceAuth());
+					clientInstance.setId(deltaRecord.getClientInstanceId());
+				}
 				request.setClientInstance(clientInstance);
 				boolean committingUserIsAdministrator = UserlandProvider.get()
 						.getGroupByName(
@@ -245,8 +250,10 @@ public class TransformCommit {
 							// admin persistence
 							wrapperUser = PermissionsManager.get().getUser();
 						}
+						boolean asRoot = wrapperUser == UserlandProvider.get()
+								.getSystemUser();
 						PermissionsManager.get().pushUser(wrapperUser,
-								LoginState.LOGGED_IN);
+								LoginState.LOGGED_IN, asRoot);
 					} else {
 						if (!Objects.equals(
 								Domain.find(request.getClientInstance())
@@ -310,6 +317,8 @@ public class TransformCommit {
 		int size = fullRequest.getEvents().size();
 		boolean commitAsWrapperUser = ResourceUtilities
 				.is("commitAsWrapperUser");
+		boolean committingVmLocalRecord = dar
+				.getClientInstanceId() == ClientInstance.self().getId();
 		if (size > chunkSize && dar.getChunkUuidString() != null) {
 			int rqIdCounter = dar.getRequestId();
 			for (int idx = 0; idx < size;) {
@@ -344,9 +353,12 @@ public class TransformCommit {
 				DomainTransformRequest chunkRequest = DomainTransformRequest
 						.createSubRequest(fullRequest, range);
 				// null UUID, we'll set it in a bit
+				int nextRequestId = committingVmLocalRecord
+						? get().nextTransformRequestId()
+						: rqIdCounter++;
 				DeltaApplicationRecord chunk = new DeltaApplicationRecord(0, "",
 						dar.getTimestamp(), dar.getUserId(),
-						dar.getClientInstanceId(), rqIdCounter++,
+						dar.getClientInstanceId(), nextRequestId,
 						dar.getClientInstanceAuth(),
 						DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
 						dar.getProtocolVersion(), dar.getTag(),
@@ -416,8 +428,8 @@ public class TransformCommit {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			return new DomainTransformLayerWrapper(null);
 		}
-		int maxTransformChunkSize = ResourceUtilities.getInteger(
-				TransformCommit.class, "maxTransformChunkSize", 10000);
+		int maxTransformChunkSize = ResourceUtilities
+				.getInteger(TransformCommit.class, "maxTransformChunkSize");
 		/*
 		 * If context not set (by http request), it's from the server
 		 */
@@ -629,8 +641,9 @@ public class TransformCommit {
 		EntityLocatorMap locatorMap = getLocatorMapForClient(request);
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, locatorMap, true, ignoreClientAuthMismatch,
-					forOfflineTransforms, logger,
+					request, locatorMap,
+					request.getClientInstance() != ClientInstance.self(),
+					ignoreClientAuthMismatch, forOfflineTransforms, logger,
 					blockUntilAllListenersNotified);
 			return submitAndHandleTransforms(persistenceToken);
 		}
@@ -701,17 +714,31 @@ public class TransformCommit {
 		 * (new) client instance, rq id #1, will be committed as several chunks
 		 * (#2, #3 etc) - and we need to keep the localId->(persisted)id
 		 * correspondence constant for all those chunks, hence the disposable
-		 * clientinstance
+		 * clientinstance (if the committing user is not the app's
+		 * ClientInstance.self())
+		 * 
+		 * And the reason we need to commit as a new instance (if not self) is
+		 * because DomainTransformRequest.requestId must be unique
 		 */
-		final ClientInstance commitInstance = AuthenticationPersistence.get()
-				.createClientInstance(fromInstance.getAuthenticationSession(),
-						uaString,
-						commitClientInstanceContext.committerIpAddress, null,
-						null);
-		MethodContext.instance()
-				.withContextTrue(CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)
-				.run(() -> Transaction.commit());
-		int requestId = 1;
+		ClientInstance commitInstance = null;
+		int requestId = -1;
+		if (fromInstance == ClientInstance.self()) {
+			// this jvm controls the requestId counter, so just pass the next
+			// local request id and the local client instance
+			commitInstance = ClientInstance.self();
+			requestId = nextTransformRequestId();
+		} else {
+			// create our temporary instance and requestId series
+			commitInstance = AuthenticationPersistence.get()
+					.createClientInstance(
+							fromInstance.getAuthenticationSession(), uaString,
+							commitClientInstanceContext.committerIpAddress,
+							null, null);
+			MethodContext.instance()
+					.withContextTrue(CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)
+					.run(() -> Transaction.commit());
+			requestId = 1;
+		}
 		DomainTransformRequest request = DomainTransformRequest
 				.createPersistableRequest(requestId, commitInstance.getId());
 		request.setProtocolVersion(

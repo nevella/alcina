@@ -288,7 +288,8 @@ class JobAllocator {
 									logger.warn(
 											"Removing {} incomplete jobs as allocated/processing",
 											incompleteCount);
-									queue.clearIncompleteAllocatedJobs();
+									// queue.clearIncompleteAllocatedJobs();
+									queue.cancelIncompleteAllocatedJobs();
 								}
 							}
 							// missed event?

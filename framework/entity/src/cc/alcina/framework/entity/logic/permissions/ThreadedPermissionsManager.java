@@ -112,11 +112,11 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 
 	public <IU extends IUser> IU
 			provideNonSystemUserInStackOrThrow(boolean throwIfNotFound) {
-		int idx = userStack.size() - 1;
+		int idx = stateStack.size() - 1;
 		while (idx >= 0) {
-			Boolean isRoot = rootStack.get(idx);
+			Boolean isRoot = stateStack.get(idx).asRoot;
 			if (!isRoot) {
-				return (IU) userStack.get(idx);
+				return (IU) stateStack.get(idx).user;
 			}
 			idx--;
 		}
@@ -138,9 +138,7 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 	// This should never be necessary, if the code always surrounds user
 	// push/pop in try/finally...but...
 	public void reset() {
-		userStack.clear();
 		stateStack.clear();
-		rootStack.clear();
 		setRoot(false);
 	}
 

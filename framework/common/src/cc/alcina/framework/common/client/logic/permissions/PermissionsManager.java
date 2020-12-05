@@ -282,11 +282,7 @@ public class PermissionsManager implements DomainTransformListener {
 		}
 	};
 
-	protected Stack<IUser> userStack = new Stack<IUser>();
-
-	protected Stack<LoginState> stateStack = new Stack<LoginState>();
-
-	protected Stack<Boolean> rootStack = new Stack<Boolean>();
+	protected Stack<PermissionsState> stateStack = new Stack<>();
 
 	private Long authenticatedClientInstanceId;
 
@@ -609,17 +605,17 @@ public class PermissionsManager implements DomainTransformListener {
 	}
 
 	public IUser popUser() {
-		stackDebug.maybeDebugStack(userStack, false);
-		if (userStack.size() == 0) {
+		stackDebug.maybeDebugStack(stateStack, false);
+		if (stateStack.size() == 0) {
 			setLoginState(LoginState.NOT_LOGGED_IN);
 			setRoot(false);
 			return null;
 		}
-		setLoginState(stateStack.pop());
-		IUser poppedUser = userStack.pop();
 		IUser currentUser = getUser();
-		setUser(poppedUser);
-		setRoot(rootStack.pop());
+		PermissionsState state = stateStack.pop();
+		setLoginState(state.loginState);
+		setUser(state.user);
+		setRoot(state.asRoot);
 		return currentUser;
 	}
 
@@ -638,11 +634,11 @@ public class PermissionsManager implements DomainTransformListener {
 	}
 
 	public void pushUser(IUser user, LoginState loginState, boolean asRoot) {
-		stackDebug.maybeDebugStack(userStack, true);
+		stackDebug.maybeDebugStack(stateStack, true);
 		if (getUser() != null) {
-			userStack.push(getUser());
-			stateStack.push(getLoginState());
-			rootStack.push(isRoot());
+			PermissionsState state = new PermissionsState(getUser(),
+					getLoginState(), isRoot());
+			stateStack.push(state);
 		}
 		setLoginState(loginState);
 		setUser(user);
@@ -801,6 +797,21 @@ public class PermissionsManager implements DomainTransformListener {
 			pm.userId = userId;
 			pm.onlineState = onlineState;
 			pm.root = root;
+		}
+	}
+
+	public static class PermissionsState {
+		public IUser user;
+
+		public LoginState loginState;
+
+		public boolean asRoot;
+
+		public PermissionsState(IUser user, LoginState loginState,
+				boolean asRoot) {
+			this.user = user;
+			this.loginState = loginState;
+			this.asRoot = asRoot;
 		}
 	}
 
