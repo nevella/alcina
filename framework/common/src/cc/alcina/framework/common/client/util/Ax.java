@@ -96,6 +96,9 @@ public class Ax {
 		if (test == null || regex == null) {
 			return false;
 		}
+		if (regex.equals(".*")) {
+			return true;
+		}
 		return test.matches(regex);
 	}
 

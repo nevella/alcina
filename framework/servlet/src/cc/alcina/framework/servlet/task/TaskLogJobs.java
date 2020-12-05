@@ -77,8 +77,8 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 		}
 		addActive(doc, "top-level - active", Job::provideIsTopLevel);
 		addActive(doc, "child - active", Job::provideIsNotTopLevel);
-		addCompleted(doc, "top-level", Job::provideIsTopLevel, 20);
-		addCompleted(doc, "child", Job::provideIsNotTopLevel, 20);
+		addCompleted(doc, "top-level", true, 20);
+		addCompleted(doc, "child", false, 20);
 		slf4jLogger.info(doc.prettyToString());
 	}
 
@@ -121,7 +121,7 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 	}
 
 	protected void addCompleted(DomDoc doc, String sectionFilterName,
-			Predicate<Job> sectionFilter, int limit) {
+			boolean topLevel, int limit) {
 		{
 			doc.html().body().builder().tag("h2")
 					.text("Recently completed jobs %s", sectionFilterName)
@@ -131,12 +131,8 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 			builder.row().cell("Id").cell("Name").cell("Started")
 					.cell("Finished").cell("Performer").cell("Link");
 			Predicate<Job> nameFilter = job -> filter(job.getTaskClassName());
-			Predicate<Job> filter = nameFilter
-					.and(job -> Ax.isBlank(value)
-							|| job.getTaskClassName().matches(value))
-					.and(sectionFilter);
-			DomainDescriptorJob.get().getRecentlyCompletedJobs(filter, limit)
-					.forEach(job -> {
+			DomainDescriptorJob.get().getRecentlyCompletedJobs(topLevel)
+					.filter(nameFilter).limit(limit).forEach(job -> {
 						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 								.cell(String.valueOf(job.getId()))
 								.cell(job.provideName())

@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,6 +22,7 @@ import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainProjection;
+import cc.alcina.framework.common.client.domain.ReverseDateProjection;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ClientInstanceLoadOracle;
 import cc.alcina.framework.common.client.job.JobRelation;
@@ -162,15 +162,8 @@ public class DomainDescriptorJob {
 				.filter("taskClassName", task.getClass().getName()).stream();
 	}
 
-	public Stream<? extends Job>
-			getRecentlyCompletedJobs(Predicate<Job> predicate, int limit) {
-		Predicate<Job> complete = Job::provideIsComplete;
-		return Domain.query(jobImplClass).filter(complete).filter(predicate)
-				.limit(limit)
-				.sorted(Comparator.comparing(
-						Job::resolveCompletionDateOrLastModificationDate)
-						.reversed())
-				.stream();
+	public Stream<? extends Job> getRecentlyCompletedJobs(boolean topLevel) {
+		return jobDescriptor.getReverseCompletedJobs(topLevel);
 	}
 
 	public Stream<Job> getUndeserializableJobs() {
@@ -734,8 +727,20 @@ public class DomainDescriptorJob {
 	class JobDescriptor extends DomainClassDescriptor<Job> {
 		private AllocationQueueProjection allocationQueueProjection;
 
+		private CompletedReverseDateProjection reverseDateCompletedTopLevelProjection;
+
+		private CompletedReverseDateProjection reverseDateCompletedChildProjection;
+
 		public JobDescriptor() {
 			super((Class<Job>) jobImplClass, "taskClassName");
+		}
+
+		public Stream<Job> getReverseCompletedJobs(boolean topLevel) {
+			CompletedReverseDateProjection projection = topLevel
+					? reverseDateCompletedTopLevelProjection
+					: reverseDateCompletedChildProjection;
+			return (Stream<Job>) projection.getLookup().delegate().values()
+					.stream();
 		}
 
 		@Override
@@ -743,6 +748,46 @@ public class DomainDescriptorJob {
 			super.initialise();
 			allocationQueueProjection = new AllocationQueueProjection();
 			projections.add(allocationQueueProjection);
+			reverseDateCompletedTopLevelProjection = new CompletedReverseDateProjection(
+					true);
+			projections.add(reverseDateCompletedTopLevelProjection);
+			reverseDateCompletedChildProjection = new CompletedReverseDateProjection(
+					false);
+			projections.add(reverseDateCompletedChildProjection);
+		}
+
+		private class CompletedReverseDateProjection
+				extends ReverseDateProjection<Job> {
+			private boolean topLevel;
+
+			private CompletedReverseDateProjection(boolean topLevel) {
+				super(Date.class, new Class[] { (Class<Job>) jobImplClass });
+				this.topLevel = topLevel;
+			}
+
+			@Override
+			public Class<? extends Job> getListenedClass() {
+				return jobImplClass;
+			}
+
+			@Override
+			public void insert(Job t) {
+				if (!t.provideIsComplete()) {
+					return;
+				}
+				if (t.provideIsTopLevel() ^ topLevel) {
+					return;
+				}
+				if (t.getEndTime() == null) {
+					return;
+				}
+				super.insert(t);
+			}
+
+			@Override
+			protected Date getDate(Job job) {
+				return job.getEndTime();
+			}
 		}
 	}
 }
