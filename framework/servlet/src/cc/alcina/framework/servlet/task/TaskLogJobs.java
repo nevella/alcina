@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.task;
 
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.dom.DomDoc;
@@ -25,6 +26,8 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 	private boolean useDefaultFilter;
 
 	private transient String defaultFilterValue;
+
+	private Pattern filterPattern;
 
 	public String getFilter() {
 		return this.filter;
@@ -161,6 +164,15 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 		if (useDefaultFilter && !Ax.matches(test, defaultFilterValue)) {
 			return false;
 		}
-		return filter == null || Ax.matches(test, filter);
+		if (filter == null) {
+			return true;
+		}
+		if (test == null) {
+			return false;
+		}
+		if (filterPattern == null) {
+			filterPattern = Pattern.compile(filter);
+		}
+		return filterPattern.matcher(test).matches();
 	}
 }

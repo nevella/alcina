@@ -98,6 +98,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@GwtTransient
 	private String largeResultSerialized;
 
+	private transient String cachedDisplayName;
+
 	public Job() {
 	}
 
@@ -718,18 +720,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public String toDisplayName() {
-		if (getTaskClassName() == null) {
-			return Ax.format("%s - <null task>",
-					toLocator().toRecoverableNumericString());
+		if (cachedDisplayName == null) {
+			cachedDisplayName = toDisplayName0();
 		}
-		if (provideCanDeserializeTask()) {
-			return Ax.format("%s::%s", task.getName(),
-					toLocator().toRecoverableNumericString());
-		} else {
-			return Ax.format("%s::%s",
-					getTaskClassName().replaceFirst(".+\\.(.+)", "$1"),
-					toLocator().toRecoverableNumericString());
-		}
+		return cachedDisplayName;
 	}
 
 	@Override
@@ -787,6 +781,21 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			}
 		}
 		return this.state;
+	}
+
+	private String toDisplayName0() {
+		if (getTaskClassName() == null) {
+			return Ax.format("%s - <null task>",
+					toLocator().toRecoverableNumericString());
+		}
+		if (provideCanDeserializeTask()) {
+			return Ax.format("%s::%s", task.getName(),
+					toLocator().toRecoverableNumericString());
+		} else {
+			return Ax.format("%s::%s",
+					getTaskClassName().replaceFirst(".+\\.(.+)", "$1"),
+					toLocator().toRecoverableNumericString());
+		}
 	}
 
 	private String toString(Set<? extends JobRelation> relations) {

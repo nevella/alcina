@@ -112,12 +112,19 @@ public class DomainDescriptorJob {
 
 	public Topic<AllocationQueue.Event> queueEvents = Topic.local();
 
+	private Class<? extends JobRelation> jobRelationImplClass;
+
 	public void configureDescriptor(DomainStoreDescriptor descriptor) {
 		jobImplClass = AlcinaPersistentEntityImpl.getImplementation(Job.class);
 		jobDescriptor = new JobDescriptor();
 		descriptor.addClassDescriptor(jobDescriptor);
-		descriptor.addClassDescriptor(AlcinaPersistentEntityImpl
-				.getImplementation(JobRelation.class));
+		jobRelationImplClass = AlcinaPersistentEntityImpl
+				.getImplementation(JobRelation.class);
+		descriptor.addClassDescriptor(jobRelationImplClass);
+		if (ResourceUtilities.is("lazy")) {
+			descriptor.perClass.get(jobImplClass).lazy = true;
+			descriptor.perClass.get(jobRelationImplClass).lazy = true;
+		}
 	}
 
 	public Optional<Job> earliestFuture(Class<? extends Task> key,
