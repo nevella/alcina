@@ -128,7 +128,7 @@ public class DomainStoreTransformSequencer
 		String tableName = tableName();
 		String querySql = Ax.format(
 				"select id, pg_xact_commit_timestamp(xmin) as commit_timestamp "
-						+ "from %s where transactionCommitTime is null FOR UPDATE",
+						+ "from %s where transactionCommitTime is null FOR UPDATE SKIP LOCKED",
 				tableName);
 		Map<Long, Timestamp> toUpdate = new LinkedHashMap<>();
 		try (PreparedStatement pStatement = conn.prepareStatement(querySql)) {

@@ -150,8 +150,13 @@ public abstract class AlcinaServlet extends HttpServlet {
 		if (response == null) {
 			System.out.println(CommonUtils.trimToWsChars(string, 1000));
 		} else {
-			response.setContentType("text/plain");
-			response.getWriter().write(string);
+			try {
+				response.setContentType("text/plain");
+				response.getWriter().write(string);
+			} catch (Exception e) {
+				Ax.out("Writing text response: ", string);
+				e.printStackTrace();
+			}
 		}
 	}
 }
