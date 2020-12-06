@@ -159,6 +159,7 @@ public class JobScheduler {
 	}
 
 	private void processEvent0(ScheduleEvent event) {
+		logger.info("Received event {}", event);
 		if (event.type == Type.WAKEUP) {
 			if (nextScheduledWakeup != null && nextScheduledWakeup
 					.compareTo(LocalDateTime.now()) <= 0) {
