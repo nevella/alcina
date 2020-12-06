@@ -82,6 +82,12 @@ public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
 			tag("td");
 		}
 
+		public DomNodeHtmlTableCellBuilder
+				accept(Consumer<DomNodeHtmlTableCellBuilder> consumer) {
+			consumer.accept(this);
+			return this;
+		}
+
 		public DomNodeHtmlTableCellBuilder blank() {
 			text("\u00A0");
 			return this;
@@ -135,6 +141,10 @@ public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
 
 		public DomNodeHtmlTableCellBuilder numeric() {
 			return className("numeric");
+		}
+
+		public DomNode previousElement() {
+			return getRelativeTo().relative().lastDescendantElement();
 		}
 
 		public DomNodeHtmlTableRowBuilder row() {

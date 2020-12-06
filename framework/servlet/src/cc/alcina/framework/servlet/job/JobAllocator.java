@@ -1,7 +1,9 @@
 package cc.alcina.framework.servlet.job;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -227,6 +229,10 @@ class JobAllocator {
 								.getExecutorServiceProvider().getService(queue);
 						List<Job> allocated = new ArrayList<>();
 						Runnable allocateJobs = () -> {
+							/*
+							 * Double-checking
+							 */
+							Set<Job> invalidAllocated = new LinkedHashSet<>();
 							// FIXME - mvcc.jobs.1a - check this doesn't
 							// traverse more than it needs to
 							queue.getUnallocatedJobs()
@@ -234,11 +240,37 @@ class JobAllocator {
 									.limit(maxAllocatable)
 									.forEach(allocated::add);
 							allocated.forEach(j -> {
-								j.setState(JobState.ALLOCATED);
-								j.setPerformer(ClientInstance.self());
-								logger.info("Allocated job {}", j);
+								if (j.getState() != JobState.PENDING) {
+									logger.warn(
+											"jobAllocator-invalid-state - not allocating job {}",
+											j);
+									invalidAllocated.add(j);
+								} else {
+									j.setState(JobState.ALLOCATED);
+									j.setPerformer(ClientInstance.self());
+									logger.info("Allocated job {}", j);
+								}
 							});
 							Transaction.commit();
+							allocated.stream()
+									.filter(j -> !invalidAllocated.contains(j))
+									.forEach(j -> {
+										JobContext existingContext = JobRegistry
+												.get().getContext(j);
+										if (existingContext != null) {
+											logger.warn(
+													"jobAllocator-invalid-state - not allocating job {} - existing context; launcher was {}",
+													j,
+													existingContext.launcherThreadState);
+										} else {
+											LauncherThreadState launcherThreadState = new LauncherThreadState();
+											executorService
+													.submit(() -> JobRegistry
+															.get().performJob(j,
+																	false,
+																	launcherThreadState));
+										}
+									});
 						};
 						// FIXME - mvcc.jobs.1a - getting splurgey allocation?
 						JobRegistry.get().withJobMetadataLock(job,
@@ -250,11 +282,6 @@ class JobAllocator {
 						// } else {
 						// allocateJobs.run();
 						// }
-						allocated.forEach(j -> {
-							LauncherThreadState launcherThreadState = new LauncherThreadState();
-							executorService.submit(() -> JobRegistry.get()
-									.performJob(j, false, launcherThreadState));
-						});
 					}
 				}
 			}

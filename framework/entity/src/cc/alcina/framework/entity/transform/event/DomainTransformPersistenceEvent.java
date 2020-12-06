@@ -93,4 +93,13 @@ public class DomainTransformPersistenceEvent {
 		return Ax.format("DTPE: %s\n%s", getPersistenceEventType(),
 				getTransformPersistenceToken().getRequest());
 	}
+
+	public String toStringId() {
+		String idString = getMaxPersistedRequestId() == 0 ? Ax.format("%s/%s",
+				getTransformPersistenceToken().getRequest().getClientInstance()
+						.getId(),
+				getTransformPersistenceToken().getRequest().getRequestId())
+				: String.valueOf(getMaxPersistedRequestId());
+		return Ax.format("DTPE: %s - %s", getPersistenceEventType(), idString);
+	}
 }

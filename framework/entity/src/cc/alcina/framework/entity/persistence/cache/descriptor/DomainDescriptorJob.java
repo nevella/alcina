@@ -223,6 +223,7 @@ public class DomainDescriptorJob {
 					+ perStateJobs(JobState.ALLOCATED).count());
 			stat.total = stat.active + stat.pending + stat.completed;
 			stat.name = job.toDisplayName();
+			stat.jobId = String.valueOf(job.getId());
 			stat.startTime = job.getStartTime() != null ? job.getStartTime()
 					: job.getCreationDate();
 			if (stat.startTime == null) {
@@ -491,6 +492,8 @@ public class DomainDescriptorJob {
 			public Date startTime;
 
 			public int completed;
+
+			public String jobId;
 		}
 
 		/*

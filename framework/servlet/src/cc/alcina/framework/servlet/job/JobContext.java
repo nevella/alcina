@@ -30,6 +30,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.servlet.job.JobRegistry.ActionPerformerTrackMetrics;
+import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 
@@ -161,9 +162,13 @@ public class JobContext {
 
 	private CountDownLatch endedLatch = new CountDownLatch(1);
 
-	public JobContext(Job job, TaskPerformer performer) {
+	LauncherThreadState launcherThreadState;
+
+	public JobContext(Job job, TaskPerformer performer,
+			LauncherThreadState launcherThreadState) {
 		this.job = job;
 		this.performer = performer;
+		this.launcherThreadState = launcherThreadState;
 		this.logger = LoggerFactory.getLogger(performer.getClass());
 		noHttpContext = AlcinaServletContext.httpContext() == null;
 		allocator = JobRegistry.get().scheduler.allocators.get(job);

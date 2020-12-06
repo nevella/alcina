@@ -955,6 +955,18 @@ public class DomNode {
 			return null;
 		}
 
+		public DomNode lastDescendantElement() {
+			DomNode cursor = DomNode.this;
+			while (cursor != null) {
+				DomNode last = cursor.children.lastElementNode();
+				if (last == null) {
+					return cursor;
+				}
+				cursor = last;
+			}
+			return null;
+		}
+
 		public DomNode nextLogicalNode() {
 			if (hasNextSibling()) {
 				return nextSibling();

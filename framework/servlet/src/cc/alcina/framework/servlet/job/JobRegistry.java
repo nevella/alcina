@@ -69,6 +69,7 @@ import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
@@ -322,7 +323,8 @@ public class JobRegistry extends WriterService {
 					job.toDisplayName(), () -> true);
 		}
 		TaskPerformer<T> performer = getTaskPerformer(job);
-		JobContext context = new JobContext(job, performer);
+		JobContext context = new JobContext(job, performer,
+				launcherThreadState);
 		activeJobs.put(job, context);
 		if (contextAwaiters.containsKey(job)) {
 			ContextAwaiter contextAwaiter = contextAwaiters.get(job);
@@ -440,6 +442,10 @@ public class JobRegistry extends WriterService {
 		return forJob.provideSelfAndAntecedents()
 				.map(j -> getResource(j, resource, forJob))
 				.filter(Objects::nonNull).findFirst();
+	}
+
+	JobContext getContext(Job job) {
+		return activeJobs.get(job);
 	}
 
 	<JR extends JobResource> JR getResource(Job acquiredByJob, JR matching,
@@ -720,6 +726,10 @@ public class JobRegistry extends WriterService {
 
 		Map<String, Object> copyContext = new LinkedHashMap<>();
 
+		String launchingThreadName;
+
+		long launchingThreadId;
+
 		public LauncherThreadState() {
 			// we don't copy permissions manager/user - since often the launcher
 			// will be triggered by a system user context (because triggered by
@@ -727,8 +737,16 @@ public class JobRegistry extends WriterService {
 			//
 			// instead, all tasks for which runAsRoot returns false must
 			// implement iuser
+			Thread currentThread = Thread.currentThread();
+			launchingThreadId = currentThread.getId();
+			launchingThreadName = currentThread.getName();
 			copyContext.putAll(LooseContext.getContext().properties);
-			contextClassLoader = Thread.currentThread().getContextClassLoader();
+			contextClassLoader = currentThread.getContextClassLoader();
+		}
+
+		@Override
+		public String toString() {
+			return GraphProjection.fieldwiseToStringOneLine(this);
 		}
 	}
 

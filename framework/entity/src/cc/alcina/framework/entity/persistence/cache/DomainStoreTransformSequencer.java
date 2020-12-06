@@ -319,7 +319,7 @@ public class DomainStoreTransformSequencer
 				} catch (SQLException e2) {
 					e2.printStackTrace();
 				} finally {
-					conn = null;
+					connection = null;
 				}
 			} finally {
 				MetricLogging.get().end(key);

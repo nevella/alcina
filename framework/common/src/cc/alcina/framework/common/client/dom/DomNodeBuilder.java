@@ -39,14 +39,6 @@ public class DomNodeBuilder {
 		return appendTo(relativeTo);
 	}
 
-	public DomNode insertAsFirstChild() {
-		DomNode node = build();
-		relativeTo.node.insertBefore(node.node,
-				relativeTo.node.getFirstChild());
-		relativeTo.children.invalidate();
-		return node;
-	}
-
 	public DomNodeBuilder attr(String key, String value) {
 		attrs(key, value);
 		return this;
@@ -107,9 +99,21 @@ public class DomNodeBuilder {
 		return this;
 	}
 
+	public DomNode getRelativeTo() {
+		return this.relativeTo;
+	}
+
 	public DomNode insertAfter() {
 		DomNode node = build();
 		relativeTo.relative().insertAfterThis(node);
+		return node;
+	}
+
+	public DomNode insertAsFirstChild() {
+		DomNode node = build();
+		relativeTo.node.insertBefore(node.node,
+				relativeTo.node.getFirstChild());
+		relativeTo.children.invalidate();
 		return node;
 	}
 

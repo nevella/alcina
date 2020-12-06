@@ -13,20 +13,21 @@
  */
 package cc.alcina.framework.servlet.servlet;
 
-import java.util.Objects;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.UrlBuilder;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.task.TaskCancelJob;
+import cc.alcina.framework.servlet.task.TaskListJobs;
 import cc.alcina.framework.servlet.task.TaskLogJobDetails;
-import cc.alcina.framework.servlet.task.TaskLogJobs;
 import cc.alcina.framework.servlet.task.TaskWakeupJobScheduler;
 
 /**
@@ -34,6 +35,24 @@ import cc.alcina.framework.servlet.task.TaskWakeupJobScheduler;
  * @author Nick Reddel
  */
 public class JobServlet extends AlcinaServlet {
+	public static String createTaskUrl(Task task) {
+		StringMap queryParameters = new StringMap();
+		if (task instanceof TaskLogJobDetails) {
+			queryParameters.put("action", "detail");
+			queryParameters.put("id", ((TaskLogJobDetails) task).value);
+		} else if (task instanceof TaskCancelJob) {
+			queryParameters.put("action", "cancel");
+			queryParameters.put("id", ((TaskCancelJob) task).value);
+		} else {
+			queryParameters.put("action", "task");
+			queryParameters.put("task", task.getClass().getName());
+		}
+		UrlBuilder urlBuilder = new UrlBuilder();
+		urlBuilder.path("/job.do");
+		queryParameters.forEach((k, v) -> urlBuilder.qsParam(k, v));
+		return urlBuilder.build();
+	}
+
 	@Override
 	protected void handleRequest(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
@@ -48,10 +67,8 @@ public class JobServlet extends AlcinaServlet {
 		Job job = null;
 		switch (action) {
 		case list:
-			TaskLogJobs logJobs = new TaskLogJobs();
+			TaskListJobs logJobs = new TaskListJobs();
 			logJobs.setFilter(filter);
-			logJobs.setUseDefaultFilter(!Objects.equals("false",
-					request.getParameter("useDefaultFilter")));
 			job = logJobs.perform();
 			break;
 		case detail:
@@ -69,10 +86,11 @@ public class JobServlet extends AlcinaServlet {
 			job = JobRegistry.get().perform(task);
 			break;
 		}
-		if (job.getResultType().isFail()) {
+		job = Domain.find(job);
+		if (job.getResultType().isFail() || job.getLargeResult() == null) {
 			writeTextResponse(response, job.getLog());
 		} else {
-			writeHtmlResponse(response, job.getLog());
+			writeHtmlResponse(response, job.getLargeResult().toString());
 		}
 	}
 

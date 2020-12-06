@@ -1,0 +1,48 @@
+body {
+	font-family: 'serif';
+}
+
+tr:first-child td {
+	font-weight: bold;
+}
+table{
+	border-collapse:collapse;
+}
+
+tr:hover,tr:hover td {
+	background-color:hsl(207deg 47% 96%);
+}
+td {
+	padding: 2px 8px;
+}
+
+td.numeric {
+	max-width: 100px;
+	min-width: 100px;
+}
+
+td.date, td.links {
+	max-width: 150px;
+	min-width: 150px;
+}
+
+td.instance {
+	max-width: 250px;
+	min-width: 250px;
+}
+
+td.trim-large {
+	min-width: 200px;
+	max-width: 500px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+td.trim-medium {
+	min-width: 200px;
+	max-width: 300px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}

@@ -319,7 +319,8 @@ public abstract class Entity<T extends Entity> extends Bindable
 		/*
 		 * Basically server-side, connected version from a DomainStore
 		 * 
-		 * //FIXME - mvcc.4 - remove
+		 * //FIXME - mvcc.4 - remove...ahhh...but this populatees lazy fields.
+		 * Maybe not, eh?
 		 */
 		public T domainVersion() {
 			return (T) Domain.find(Entity.this);
