@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.entity.registry;
 
+import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetadata;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
@@ -46,6 +48,9 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 		String cachePath = Ax.format("%s/%s-registry-cache.ser",
 				getHomeDir().getPath(), registryName);
 		this.toRegistry = toRegistry;
+		if (!ResourceUtilities.is("useCache")) {
+			new File(cachePath).delete();
+		}
 		scan(classDataCache, cachePath);
 		commit();
 	}

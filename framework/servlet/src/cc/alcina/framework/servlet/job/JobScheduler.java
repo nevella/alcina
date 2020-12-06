@@ -16,6 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -92,14 +93,18 @@ public class JobScheduler {
 		DomainDescriptorJob.get().fireInitialAllocatorQueueCreationEvents();
 		thread = new ScheduleJobsThread();
 		thread.start();
-		// FIXME - mvcc.jobs.1a - this should instead listen on cluster change
-		// events
+		/*
+		 * backup hourly timer, FIXME - mvcc.jobs.1a - remove?
+		 */
+		LocalDateTime now = LocalDateTime.now();
+		long untilNextHourMillis = ChronoUnit.MILLIS.between(now,
+				now.truncatedTo(ChronoUnit.HOURS).plusHours(1));
 		timer.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
 				fireWakeup();
 			}
-		}, 0L, 5 * TimeConstants.ONE_MINUTE_MS);
+		}, untilNextHourMillis, 60 * TimeConstants.ONE_MINUTE_MS);
 	}
 
 	public Predicate<Job> canModify(boolean scheduleClusterJobs,
@@ -136,6 +141,9 @@ public class JobScheduler {
 		if (!SchedulingPermissions.canFutureToPending()) {
 			return;
 		}
+		logger.info("futures to pending :: visible futures :: \n{}",
+				DomainDescriptorJob.get().getAllFutureJobs()
+						.collect(Collectors.toList()));
 		DomainDescriptorJob.get().getAllFutureJobs()
 				.filter(job -> job.getRunAt().compareTo(new Date()) <= 0)
 				.filter(SchedulingPermissions::canModifyFuture).forEach(job -> {
@@ -151,6 +159,12 @@ public class JobScheduler {
 	}
 
 	private void processEvent0(ScheduleEvent event) {
+		if (event.type == Type.WAKEUP) {
+			if (nextScheduledWakeup != null && nextScheduledWakeup
+					.compareTo(LocalDateTime.now()) <= 0) {
+				nextScheduledWakeup = null;
+			}
+		}
 		if (event.type.isRefreshFuturesEvent()) {
 			/*
 			 * orphans before scheduling (since we may resubmit
@@ -267,26 +281,25 @@ public class JobScheduler {
 		LocalDateTime wakeup = LocalDateTime.now().plusYears(1);
 		for (Class<? extends Task> key : scheduleTaskClasses) {
 			Schedule schedule = Schedule.forTaskClass(key);
-			LocalDateTime next = schedule
+			LocalDateTime nextForTaskClass = schedule
 					.getNext(event.type == Type.APPLICATION_STARTUP);
-			if (next == null) {
+			if (nextForTaskClass == null) {
 				continue;
 			}
 			Optional<Job> earliestFuture = DomainDescriptorJob.get()
 					.earliestFuture(key, schedule.isVmLocal());
 			if (earliestFuture.isPresent()) {
-				Date nextDate = SEUtilities.toOldDate(next);
+				Date nextDate = SEUtilities.toOldDate(nextForTaskClass);
 				if (earliestFuture.get().getRunAt().after(nextDate)) {
 					if (SchedulingPermissions
 							.canModifyFuture(earliestFuture.get())) {
 						logger.info("Changed next run of {} to {}",
-								earliestFuture.get(), next);
+								earliestFuture.get(), nextForTaskClass);
 						earliestFuture.get().setRunAt(nextDate);
 					}
-					wakeup = next;
 				} else {
 					if (SchedulingPermissions.canFutureToPending()) {
-						wakeup = SEUtilities.toLocalDateTime(
+						nextForTaskClass = SEUtilities.toLocalDateTime(
 								earliestFuture.get().getRunAt());
 					}
 				}
@@ -297,18 +310,20 @@ public class JobScheduler {
 				if (SchedulingPermissions.canCreateFuture(schedule)) {
 					Job job = JobRegistry.createBuilder()
 							.withTask(Reflections.newInstance(key))
-							.withRunAt(next).create();
+							.withRunAt(nextForTaskClass).create();
 					logger.info("Schedule new future job - {} to {}", job,
-							next);
+							nextForTaskClass);
 				}
 			}
-			if (next.isBefore(wakeup)) {
-				wakeup = next;
+			if (nextForTaskClass.isBefore(wakeup)) {
+				wakeup = nextForTaskClass;
 			}
 		}
 		if (nextScheduledWakeup == null
 				|| wakeup.isBefore(nextScheduledWakeup)) {
 			if (wakeup.isBefore(LocalDateTime.now())) {
+				logger.info("Firing wakeup - wakeup time {} is before now",
+						wakeup);
 				events.add(new ScheduleEvent(Type.WAKEUP));
 			} else {
 				timer.schedule(new TimerTask() {
@@ -317,6 +332,7 @@ public class JobScheduler {
 						fireWakeup();
 					}
 				}, SEUtilities.toOldDate(wakeup));
+				logger.info("Scheduled wakeup for {}", wakeup);
 			}
 			nextScheduledWakeup = wakeup;
 		}
@@ -488,6 +504,12 @@ public class JobScheduler {
 
 	@RegistryLocation(registryPoint = RetentionPolicy.class)
 	public static class RetentionPolicy {
+		public void delete(Job job) {
+			logger().info("RetentionPolicy {} - deleting job {}",
+					getClass().getSimpleName(), job);
+			job.delete();
+		}
+
 		public boolean retain(Job job) {
 			if (job.provideIsNotComplete()) {
 				return true;
@@ -507,6 +529,10 @@ public class JobScheduler {
 				return days == 0;
 			}
 			return days < 7;
+		}
+
+		protected Logger logger() {
+			return LoggerFactory.getLogger(getClass());
 		}
 	}
 
