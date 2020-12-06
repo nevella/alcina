@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -21,8 +22,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
@@ -107,8 +110,13 @@ public class BackendTransformQueue {
 	}
 
 	private void commit() {
-		logger.info("(Backend queue)  - committing {} transforms",
-				pendingTransforms.size());
+		Multiset<String, Set<Long>> locators = pendingTransforms.stream()
+				.collect(AlcinaCollectors.toMultiset(
+						t -> t.getObjectClass().getSimpleName(),
+						t -> t.getObjectId()));
+		logger.info(
+				"(Backend queue)  - committing {} transforms - locators: {}",
+				pendingTransforms.size(), locators);
 		Transaction.endAndBeginNew();
 		ThreadlocalTransformManager.get().addTransforms(pendingTransforms,
 				false);

@@ -59,11 +59,6 @@ public class DomainDescriptorJob {
 
 	private DomainTransformPersistenceListener jobLogger = new DomainTransformPersistenceListener() {
 		@Override
-		public boolean isPreBarrierListener() {
-			return true;
-		}
-
-		@Override
 		public void onDomainTransformRequestPersistence(
 				DomainTransformPersistenceEvent event) {
 			AdjunctTransformCollation collation = event

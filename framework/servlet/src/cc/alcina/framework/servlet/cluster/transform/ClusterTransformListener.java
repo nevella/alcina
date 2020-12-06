@@ -53,6 +53,9 @@ public class ClusterTransformListener
 	@Override
 	public void onDomainTransformRequestPersistence(
 			DomainTransformPersistenceEvent event) {
+		if (event.isFiringFromQueue()) {
+			return;
+		}
 		TransformPersistenceToken persistenceToken = event
 				.getTransformPersistenceToken();
 		List<DomainTransformRequestPersistent> requests = event

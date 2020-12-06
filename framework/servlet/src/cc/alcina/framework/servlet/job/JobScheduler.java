@@ -94,17 +94,18 @@ public class JobScheduler {
 		thread = new ScheduleJobsThread();
 		thread.start();
 		/*
-		 * backup hourly timer, FIXME - mvcc.jobs.1a - remove?
+		 * backup every-5-minute timer, FIXME - mvcc.jobs.1a - remove?
 		 */
 		LocalDateTime now = LocalDateTime.now();
-		long untilNextHourMillis = ChronoUnit.MILLIS.between(now,
-				now.truncatedTo(ChronoUnit.HOURS).plusHours(1));
+		long untilNext5MinutesMillis = ChronoUnit.MILLIS.between(now,
+				now.truncatedTo(ChronoUnit.MINUTES)
+						.plusMinutes(5 - now.getMinute() % 5));
 		timer.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
 				fireWakeup();
 			}
-		}, untilNextHourMillis, 60 * TimeConstants.ONE_MINUTE_MS);
+		}, untilNext5MinutesMillis, 5 * TimeConstants.ONE_MINUTE_MS);
 	}
 
 	public Predicate<Job> canModify(boolean scheduleClusterJobs,
@@ -172,8 +173,12 @@ public class JobScheduler {
 			 * timewise-constrained tasks)
 			 */
 			if (SchedulingPermissions.canProcessOrphans()) {
-				processOrphans();
-				Transaction.commit();
+				try {
+					processOrphans();
+					Transaction.commit();
+				} catch (Exception e) {
+					logger.warn("DEVEX::7 - processOrphans", e);
+				}
 			}
 			jobRegistry.withJobMetadataLock(
 					getClass().getName() + "::futuresToPending", () -> {
