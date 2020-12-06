@@ -133,6 +133,9 @@ public class JobScheduler {
 	}
 
 	private void futuresToPending() {
+		if (!SchedulingPermissions.canFutureToPending()) {
+			return;
+		}
 		DomainDescriptorJob.get().getAllFutureJobs()
 				.filter(job -> job.getRunAt().compareTo(new Date()) <= 0)
 				.filter(SchedulingPermissions::canModifyFuture).forEach(job -> {
@@ -282,8 +285,10 @@ public class JobScheduler {
 					}
 					wakeup = next;
 				} else {
-					wakeup = SEUtilities
-							.toLocalDateTime(earliestFuture.get().getRunAt());
+					if (SchedulingPermissions.canFutureToPending()) {
+						wakeup = SEUtilities.toLocalDateTime(
+								earliestFuture.get().getRunAt());
+					}
 				}
 			} else {
 				Job test = AlcinaPersistentEntityImpl

@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobScheduler.RetentionPolicy;
@@ -19,6 +20,9 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 	@Override
 	protected void performAction0(TaskReapJobs task) throws Exception {
 		Stream<? extends Job> jobs = DomainDescriptorJob.get().getAllJobs();
+		if (Ax.notBlank(value)) {
+			jobs = Stream.of(Job.byId(Long.valueOf(value)));
+		}
 		List<? extends Job> reap = jobs.filter(job -> {
 			if (!job.provideCanDeserializeTask()) {
 				return true;

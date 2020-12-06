@@ -34,13 +34,18 @@ class SchedulingPermissions {
 	}
 
 	static boolean canCreateFuture(Schedule schedule) {
-		boolean production = !(Sx.isTestServer() || Sx.isTest());
+		boolean production = Sx.isProduction();
 		boolean scheduleClusterJobs = production
 				|| ResourceUtilities.is(JobScheduler.class, "testSchedules");
 		boolean scheduleVmLocalJobs = production || ResourceUtilities
 				.is(JobScheduler.class, "testVmLocalSchedules");
 		return (schedule.isVmLocal() && scheduleVmLocalJobs)
 				|| (isCurrentScheduledJobExecutor() && scheduleClusterJobs);
+	}
+
+	static boolean canFutureToPending() {
+		return !Sx.isTestOrTestServer() || ResourceUtilities
+				.is(JobScheduler.class, "testFuturesToPending");
 	}
 
 	static boolean canModifyFuture(Job job) {

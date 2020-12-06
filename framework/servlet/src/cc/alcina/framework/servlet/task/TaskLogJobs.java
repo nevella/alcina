@@ -73,9 +73,17 @@ public class TaskLogJobs extends AbstractTaskPerformer {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(stat.taskName).cell(stat.runAt).cell(stat.jobId);
 				DomNode td = cellBuilder.append();
-				String href = ControlServlet.createTaskUrl(
-						new TaskCancelJob().withValue(stat.jobId));
-				td.html().addLink("Cancel", href, "_blank");
+				{
+					String href = ControlServlet.createTaskUrl(
+							new TaskCancelJob().withValue(stat.jobId));
+					td.html().addLink("Cancel", href, "_blank");
+				}
+				td.builder().text(" - ").tag("span").append();
+				{
+					String href = ControlServlet.createTaskUrl(
+							new TaskRunJob().withValue(stat.jobId));
+					td.html().addLink("Run", href, "_blank");
+				}
 			});
 		}
 		addActive(doc, "top-level - active", Job::provideIsTopLevel);

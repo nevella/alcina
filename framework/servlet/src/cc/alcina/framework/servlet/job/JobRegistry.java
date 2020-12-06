@@ -212,8 +212,9 @@ public class JobRegistry extends WriterService {
 
 	public Stream<QueueStat> getActiveQueueStats() {
 		return DomainDescriptorJob.get().getAllocationQueues()
-				.map(AllocationQueue::asQueueStat)
-				.sorted(Comparator.comparing(stat -> stat.startTime));
+				.map(AllocationQueue::asQueueStat).sorted(Comparator
+						// aka reversed date order
+						.comparing(stat -> -stat.startTime.getTime()));
 	}
 
 	public String getExJobSystemNextJobId(Class<?> clazz) {

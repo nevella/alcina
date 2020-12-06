@@ -18,11 +18,16 @@ import java.util.Objects;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.task.TaskCancelJob;
 import cc.alcina.framework.servlet.task.TaskLogJobDetails;
 import cc.alcina.framework.servlet.task.TaskLogJobs;
+import cc.alcina.framework.servlet.task.TaskWakeupJobScheduler;
 
 /**
  *
@@ -36,7 +41,8 @@ public class JobServlet extends AlcinaServlet {
 			writeTextResponse(response, "Not authorised");
 			return;
 		}
-		Action action = Action.valueOf(request.getParameter("action"));
+		Action action = Action
+				.valueOf(Ax.blankTo(request.getParameter("action"), "list"));
 		String id = request.getParameter("id");
 		String filter = request.getParameter("filter");
 		Job job = null;
@@ -54,6 +60,14 @@ public class JobServlet extends AlcinaServlet {
 		case cancel:
 			job = new TaskCancelJob().withValue(id).perform();
 			break;
+		case wakeup:
+			job = new TaskWakeupJobScheduler().withValue(id).perform();
+			break;
+		case run:
+			Task task = (Task) Reflections
+					.newInstance(Class.forName(request.getParameter("task")));
+			job = JobRegistry.get().perform(task);
+			break;
 		}
 		if (job.getResultType().isFail()) {
 			writeTextResponse(response, job.getLog());
@@ -68,6 +82,6 @@ public class JobServlet extends AlcinaServlet {
 	}
 
 	enum Action {
-		list, cancel, detail
+		list, cancel, detail, wakeup, run
 	}
 }
