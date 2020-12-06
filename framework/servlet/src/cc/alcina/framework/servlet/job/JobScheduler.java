@@ -350,6 +350,10 @@ public class JobScheduler {
 		}
 	}
 
+	@RegistryLocation(registryPoint = Schedule.class, implementationType = ImplementationType.INSTANCE)
+	public static class DefaultSchedule extends Schedule {
+	}
+
 	@RegistryLocation(registryPoint = Schedule.class, implementationType = ImplementationType.FACTORY)
 	public static class DefaultScheduleProvider
 			implements RegistryFactory<Schedule> {
@@ -506,7 +510,10 @@ public class JobScheduler {
 		}
 	}
 
-	@RegistryLocation(registryPoint = Schedule.class)
+	/*
+	 * Default schedule for scheduled classes. Note specifically that schedules
+	 * are by default clustered, not vmLocal
+	 */
 	public static class Schedule {
 		public static Schedule forTaskClass(Class<? extends Task> clazz) {
 			return Registry.impl(Schedule.class, clazz);

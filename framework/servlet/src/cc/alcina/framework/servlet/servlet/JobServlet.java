@@ -63,7 +63,7 @@ public class JobServlet extends AlcinaServlet {
 		case wakeup:
 			job = new TaskWakeupJobScheduler().withValue(id).perform();
 			break;
-		case run:
+		case task:
 			Task task = (Task) Reflections
 					.newInstance(Class.forName(request.getParameter("task")));
 			job = JobRegistry.get().perform(task);
@@ -82,6 +82,6 @@ public class JobServlet extends AlcinaServlet {
 	}
 
 	enum Action {
-		list, cancel, detail, wakeup, run
+		list, cancel, detail, wakeup, task
 	}
 }
