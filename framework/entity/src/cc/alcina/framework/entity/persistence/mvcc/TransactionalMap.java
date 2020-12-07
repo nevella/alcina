@@ -233,6 +233,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			}
 		} while (modified);
 		synchronized (this) {
+			// FIXME - mvcc.jobs.1 - this is linear in the number of layers. Can
+			// we use a bitset passed by a vacuum context to optimise?
 			mergedReplaceLayers.nonMergedTransactionLayers
 					.putAll(layers.nonMergedTransactionLayers);
 			mergedReplaceLayers.nonMergedTransactionLayers.remove(transaction);
