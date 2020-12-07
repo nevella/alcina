@@ -42,7 +42,8 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 				row.cell(pd.getName()).cell(fieldText)
 						.style("whitespace:pre-wrap");
 			}
-			JobContext.info(doc.prettyToString());
+			JobContext.get().getJob().setLargeResult(doc.prettyToString());
+			slf4jLogger.info("Details output to job.largeResult");
 		}
 	}
 }

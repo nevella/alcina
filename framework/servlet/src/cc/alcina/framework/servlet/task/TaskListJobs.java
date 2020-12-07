@@ -111,6 +111,12 @@ public class TaskListJobs extends AbstractTaskPerformer {
 							new TaskRunJob().withValue(stat.jobId));
 					td.html().addLink("Run", href, "_blank");
 				}
+				td.builder().text(" - ").tag("span").append();
+				{
+					String href = JobServlet.createTaskUrl(
+							new TaskLogJobDetails().withValue(stat.jobId));
+					td.html().addLink("Details", href, "_blank");
+				}
 			});
 		}
 		addActive(doc, "top-level - active", Job::provideIsTopLevel);

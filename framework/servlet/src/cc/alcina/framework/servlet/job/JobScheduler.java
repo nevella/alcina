@@ -253,6 +253,9 @@ public class JobScheduler {
 				visibleInstanceRegex, cutoff).anyMatch(j -> true)) {
 			jobRegistry.withJobMetadataLock(
 					getClass().getName() + "::processOrphans", () -> {
+						logger.info("Orphans remaining: {}",
+								getToAbortOrReassign(activeInstances,
+										visibleInstanceRegex, cutoff).count());
 						Stream<Job> doubleChecked = getToAbortOrReassign(
 								activeInstances, visibleInstanceRegex, cutoff)
 										.limit(1000);

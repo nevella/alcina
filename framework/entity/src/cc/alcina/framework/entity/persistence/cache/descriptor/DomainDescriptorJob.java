@@ -73,8 +73,8 @@ public class DomainDescriptorJob {
 						.map(qr -> qr.entityCollation.getId())
 						.collect(Collectors.toSet());
 				logger.info("Post-process job transform - rq: {}, ids: {}",
-						event.getPersistedRequestIds(),
-						CommonUtils.toLimitedCollectionString(ids, 50));
+						event.getPersistedRequestIds(), ids);
+				// CommonUtils.toLimitedCollectionString(ids, 50));
 				break;
 			}
 			case COMMIT_ERROR:
@@ -86,8 +86,8 @@ public class DomainDescriptorJob {
 						.map(qr -> qr.entityCollation.getId())
 						.collect(Collectors.toSet());
 				logger.info("Flushing job transform - rq: {}, ids: {}",
-						event.getPersistedRequestIds(),
-						CommonUtils.toLimitedCollectionString(ids, 50));
+						event.getPersistedRequestIds(), ids);
+				// CommonUtils.toLimitedCollectionString(ids, 50));
 				break;
 			}
 		}

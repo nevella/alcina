@@ -44,8 +44,13 @@ class SchedulingPermissions {
 	}
 
 	static boolean canFutureToPending() {
-		return !Sx.isTestOrTestServer() || ResourceUtilities
-				.is(JobScheduler.class, "testFuturesToPending");
+		if (Sx.isProduction()) {
+			return ResourceUtilities.is(JobScheduler.class,
+					"canFuturesToPending");
+		} else {
+			return ResourceUtilities.is(JobScheduler.class,
+					"testFuturesToPending");
+		}
 	}
 
 	static boolean canModifyFuture(Job job) {

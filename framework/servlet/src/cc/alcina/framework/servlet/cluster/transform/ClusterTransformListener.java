@@ -123,12 +123,16 @@ public class ClusterTransformListener
 							request.getId());
 					e.printStackTrace();
 				}
+			} else {
+				logger.info("Published transform message: {} {}",
+						request.getId(), state);
 			}
 		});
 	}
 
 	void handleClusterTransformRequest(ClusterTransformRequest request) {
-		logger.info("Received transform message: {}", request.id);
+		logger.info("Received transform message: {} {}", request.id,
+				request.state);
 		DomainTransformPersistenceQueue queue = domainStore
 				.getPersistenceEvents().getQueue();
 		switch (request.state) {

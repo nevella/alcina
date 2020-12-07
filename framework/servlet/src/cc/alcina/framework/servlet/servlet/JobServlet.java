@@ -28,6 +28,7 @@ import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.task.TaskCancelJob;
 import cc.alcina.framework.servlet.task.TaskListJobs;
 import cc.alcina.framework.servlet.task.TaskLogJobDetails;
+import cc.alcina.framework.servlet.task.TaskRunJob;
 import cc.alcina.framework.servlet.task.TaskWakeupJobScheduler;
 
 /**
@@ -43,6 +44,9 @@ public class JobServlet extends AlcinaServlet {
 		} else if (task instanceof TaskCancelJob) {
 			queryParameters.put("action", "cancel");
 			queryParameters.put("id", ((TaskCancelJob) task).value);
+		} else if (task instanceof TaskRunJob) {
+			queryParameters.put("action", "run");
+			queryParameters.put("id", ((TaskRunJob) task).value);
 		} else {
 			queryParameters.put("action", "task");
 			queryParameters.put("task", task.getClass().getName());
@@ -77,8 +81,11 @@ public class JobServlet extends AlcinaServlet {
 		case cancel:
 			job = new TaskCancelJob().withValue(id).perform();
 			break;
+		case run:
+			job = new TaskRunJob().withValue(id).perform();
+			break;
 		case wakeup:
-			job = new TaskWakeupJobScheduler().withValue(id).perform();
+			job = new TaskWakeupJobScheduler().perform();
 			break;
 		case task:
 			Task task = (Task) Reflections
@@ -100,6 +107,6 @@ public class JobServlet extends AlcinaServlet {
 	}
 
 	enum Action {
-		list, cancel, detail, wakeup, task
+		list, cancel, detail, wakeup, task, run
 	}
 }

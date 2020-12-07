@@ -41,7 +41,12 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 						+ "|RequestController.waitForQueue"
 						+ "|org.hornetq.core.).*");
 		if (matches) {
-			return true;
+			boolean notMatches = SEUtilities.normalizeWhitespace(joined)
+					.matches("(?is).*(cc.alcina).*");
+			matches &= !notMatches;
+			if (matches) {
+				return true;
+			}
 		}
 		List<String> lineList = Arrays.asList(joined.split("\n")).stream()
 				.filter(line -> !line.matches(".*waiting on.*"))
@@ -223,14 +228,16 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 
 		boolean ignoreable() {
 			String joined = lines.stream().collect(Collectors.joining("\n"));
-			return ignoreableStackTrace(joined);
+			return ignoreableStackTrace(joined) || name
+					.matches(ResourceUtilities.get(CmdAnalyseStackTrace.class,
+							"ignoreableThreadNamePattern"));
 		}
 
 		String toStringForDump() {
 			return lines.isEmpty() ? ""
-					: CommonUtils.tabify(
+					: Ax.format("Thread: %s\n%s", name, CommonUtils.tabify(
 							lines.stream().collect(Collectors.joining("\n")),
-							200, 1);
+							200, 1));
 		}
 	}
 }

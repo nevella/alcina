@@ -48,7 +48,7 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 		String cachePath = Ax.format("%s/%s-registry-cache.ser",
 				getHomeDir().getPath(), registryName);
 		this.toRegistry = toRegistry;
-		if (!ResourceUtilities.is("useCache")) {
+		if (!ResourceUtilities.is("useCache") && !Ax.isTest()) {
 			new File(cachePath).delete();
 		}
 		scan(classDataCache, cachePath);
