@@ -212,7 +212,7 @@ public class DomainStoreTransformSequencer
 			try (PreparedStatement pStatement = conn
 					.prepareStatement(querySql)) {
 				ResultSet rs = pStatement.executeQuery();
-				if (rs.next()) {
+				if (rs.next() && rs.getTimestamp(1) != null) {
 					highestVisiblePosition = new DomainTransformCommitPosition(
 							0L, rs.getTimestamp(1));
 				} else {
