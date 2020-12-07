@@ -112,6 +112,10 @@ public class Transactions {
 		}
 	}
 
+	public static void shutdown() {
+		get().vacuum.shutdown();
+	}
+
 	public static TransactionsStats stats() {
 		return get().createStats();
 	}
@@ -223,7 +227,7 @@ public class Transactions {
 				break;
 			}
 			if (transaction.phase != TransactionPhase.VACUUM_ENDED) {
-				vacuum.enqueueVacuum();
+				vacuum.onTransactionEnd(transaction);
 			}
 		}
 	}

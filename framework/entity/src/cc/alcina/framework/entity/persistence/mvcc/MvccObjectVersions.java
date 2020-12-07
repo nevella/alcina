@@ -1,8 +1,12 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.lang.reflect.Field;
-import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +15,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
+import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
 
 /**
  * Note that like a TransactionalMap, the owning MvccObject will not be
@@ -67,7 +71,14 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		return versions;
 	}
 
-	private volatile ConcurrentHashMap<Transaction, ObjectVersion<T>> versions = new ConcurrentHashMap<>();
+	/*
+	 * the most-recent-to-oldest order is important in vacuum
+	 */
+	private volatile ConcurrentSkipListMap<Transaction, ObjectVersion<T>> domainVersions = new ConcurrentSkipListMap<>(
+			Collections.reverseOrder());
+
+	private volatile ConcurrentSkipListMap<Transaction, ObjectVersion<T>> nonDomainVersions = new ConcurrentSkipListMap<>(
+			Collections.reverseOrder());
 
 	// object pointed to by this field never changes (for a given class/id or
 	// class/clientinstance/localid
@@ -140,9 +151,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			T object = baseObject;
 			Transaction transaction = null;
 			synchronized (baseObject) {
-				Iterator<ObjectVersion<T>> itr = versions.values().iterator();
-				if (itr.hasNext()) {
-					ObjectVersion<T> firstVersion = itr.next();
+				Optional<ObjectVersion<T>> first = allVersions().findFirst();
+				if (first.isPresent()) {
+					ObjectVersion<T> firstVersion = first.get();
 					object = firstVersion.object;
 					transaction = firstVersion.transaction;
 				}
@@ -158,12 +169,12 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				Object id = idField.get(object);
 				return Ax.format(
 						"versions: %s : base: %s/%s/%s : initial-tx: %s",
-						versions.size(), object.getClass(), id,
+						allVersions().count(), object.getClass(), id,
 						System.identityHashCode(object),
 						transaction == null ? transaction : "base");
 			} else {
 				return Ax.format("versions: %s : base: %s/%s : initial-tx: %s",
-						versions.size(), object.getClass(),
+						allVersions().count(), object.getClass(),
 						System.identityHashCode(object),
 						transaction == null ? transaction : "base");
 			}
@@ -178,23 +189,31 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 * operations are threadsafe
 	 * 
 	 */
-	public void vacuum(Transaction transaction) {
-		ObjectVersion<T> version = versions.get(transaction);
+	public void vacuum(VacuumableTransactions vacuumableTransactions) {
+		if (vacuumableTransactions.completedNonDomainTransactions.size() > 0) {
+			nonDomainVersions.keySet().removeAll(
+					vacuumableTransactions.completedNonDomainTransactions);
+		}
+		Optional<Transaction> mostRecentCommonDomainTransaction = vacuumableTransactions
+				.mostRecentCommonDomainTransaction(domainVersions.keySet());
 		/*
 		 * Must change the base before removing transaction (otherwise there's a
 		 * narrow window where we'd return an older version)
 		 */
-		if (transaction.getPhase() == TransactionPhase.TO_DOMAIN_COMMITTED) {
+		if (mostRecentCommonDomainTransaction.isPresent()) {
+			ObjectVersion<T> version = domainVersions
+					.get(mostRecentCommonDomainTransaction.get());
 			// baseObject fields will not be reachable here to app code (all
 			// active txs will be
 			// looking at version.object fields)
 			copyObjectFields(version.object, baseObject);
 		}
 		// Transactions.debugRemoveVersion(baseObject, version);
-		versions.remove(transaction);
-		if (versions.isEmpty()) {
+		domainVersions.keySet()
+				.removeAll(vacuumableTransactions.completedDomainTransactions);
+		if (domainVersions.isEmpty() && nonDomainVersions.isEmpty()) {
 			synchronized (baseObject) {
-				if (versions.isEmpty()) {
+				if (domainVersions.isEmpty() && nonDomainVersions.isEmpty()) {
 					logger.trace("removed mvcc versions: {} : {}", baseObject,
 							System.identityHashCode(baseObject));
 					((MvccObject) baseObject).__setMvccVersions__(null);
@@ -203,7 +222,17 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
+	/*
+	 * For debugging
+	 */
+	private Stream<ObjectVersion<T>> allVersions() {
+		return Stream.concat(domainVersions.values().stream(),
+				nonDomainVersions.values().stream());
+	}
+
 	private void putVersion(ObjectVersion<T> version) {
+		Map<Transaction, ObjectVersion<T>> versions = versionsFor(
+				version.transaction);
 		versions.put(version.transaction, version);
 		Transactions.get().onAddedVacuumable(this);
 	}
@@ -219,6 +248,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (write && transaction.isReadonly()) {
 			throw new MvccException("Writing within a readonly transaction");
 		}
+		Map<Transaction, ObjectVersion<T>> versions = versionsFor(transaction);
 		ObjectVersion<T> version = versions.get(transaction);
 		if (version != null && version.isCorrectWriteableState(write)) {
 			return version.object;
@@ -227,16 +257,14 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			return baseObject;
 		}
 		Class<? extends Entity> entityClass = entityClass();
-		Transaction mostRecentTransaction = transaction
-				.mostRecentPriorTransaction(versions.keys(),
-						DomainStore.stores().storeFor(entityClass));
+		Entry<Transaction, ObjectVersion<T>> firstEntry = domainVersions
+				.firstEntry();
 		T mostRecentObject = null;
 		/*
 		 * mostRecentVersion will be null if just created
 		 */
-		ObjectVersion<T> mostRecentVersion = mostRecentTransaction == null
-				? null
-				: versions.get(mostRecentTransaction);
+		ObjectVersion<T> mostRecentVersion = firstEntry == null ? null
+				: firstEntry.getValue();
 		if (mostRecentVersion != null) {
 			mostRecentObject = mostRecentVersion.object;
 		} else {
@@ -259,6 +287,13 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			 */
 			return mostRecentObject;
 		}
+	}
+
+	private Map<Transaction, ObjectVersion<T>>
+			versionsFor(Transaction transaction) {
+		return transaction.phase == TransactionPhase.TO_DOMAIN_COMMITTED
+				? domainVersions
+				: nonDomainVersions;
 	}
 
 	protected abstract boolean accessibleFromOtherTransactions(T t);

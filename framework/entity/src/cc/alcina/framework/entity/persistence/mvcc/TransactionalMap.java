@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction.TransactionComparator;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
+import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
@@ -198,17 +199,23 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	}
 
 	@Override
-	public void vacuum(Transaction transaction) {
-		if (transaction.getPhase() != TransactionPhase.TO_DOMAIN_COMMITTED) {
+	public void vacuum(VacuumableTransactions vacuumableTransactions) {
+		layers.nonMergedTransactionLayers.keySet().removeAll(
+				vacuumableTransactions.completedNonDomainTransactions);
+		if (vacuumableTransactions.completedDomainTransactions.isEmpty()) {
 			// will not affect visible layers to any current transactionm no
 			// sync needed
-			layers.nonMergedTransactionLayers.remove(transaction);
 			return;
 		}
 		Layers mergedReplaceLayers = new Layers();
 		List<Layer> mergedReplace = mergedReplaceLayers.mergedLayerList;
 		mergedReplace.addAll(layers.mergedLayerList);
-		mergedReplace.add(layers.nonMergedTransactionLayers.get(transaction));
+		if ("".isEmpty()) {
+			throw new UnsupportedOperationException(
+					"as per mvccobjectversions; split layers into committed and non committed maps - will simplify a fair bunch of the logic");
+		}
+		// vacuumableTransactions.vacuumableLayers(layers
+		// mergedReplace.add(layers.nonMergedTransactionLayers.get(transaction));
 		/*
 		 * now compact - this is a 'levelled' strategy a la cassandra, chrome
 		 * etc - layer iteration cost is ~ log10(n) and copy cost is ~
@@ -237,7 +244,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			// we use a bitset passed by a vacuum context to optimise?
 			mergedReplaceLayers.nonMergedTransactionLayers
 					.putAll(layers.nonMergedTransactionLayers);
-			mergedReplaceLayers.nonMergedTransactionLayers.remove(transaction);
+			// mergedReplaceLayers.nonMergedTransactionLayers.remove(transaction);
 			this.layers = mergedReplaceLayers;
 		}
 	}

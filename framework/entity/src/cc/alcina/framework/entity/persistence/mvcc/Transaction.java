@@ -3,7 +3,6 @@ package cc.alcina.framework.entity.persistence.mvcc;
 import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -391,14 +390,6 @@ public class Transaction {
 		}
 	}
 
-	private boolean hasHigherCommitIdThan(Transaction otherTransaction,
-			DomainStore store) {
-		long thisStoreTxId = storeTransactions.get(store).committingSequenceId;
-		long otherStoreTxId = otherTransaction.storeTransactions
-				.get(store).committingSequenceId;
-		return thisStoreTxId > otherStoreTxId;
-	}
-
 	void endTransaction() {
 		originatingThread = null;
 		ended = true;
@@ -458,24 +449,6 @@ public class Transaction {
 		return threadCount.get() != 1;
 	}
 
-	Transaction mostRecentPriorTransaction(Enumeration<Transaction> keys,
-			DomainStore store) {
-		Transaction result = null;
-		while (keys.hasMoreElements()) {
-			Transaction element = keys.nextElement();
-			if (element.phase == TransactionPhase.TO_DOMAIN_COMMITTED) {
-				if (committedTransactions.containsKey(element.id)
-						|| element.isBaseTransaction()) {
-					if (result == null
-							|| element.hasHigherCommitIdThan(result, store)) {
-						result = element;
-					}
-				}
-			}
-		}
-		return result;
-	}
-
 	void setId(TransactionId id) {
 		this.id = id;
 	}
@@ -498,6 +471,8 @@ public class Transaction {
 	/*
 	 * Domain-committed transactions are 'before' non-committed - this ordering
 	 * only makes sense for visible transactions
+	 * 
+	 * FIXME - mvcc.jobs.1a - split into domain/nondomain
 	 */
 	static class TransactionComparator implements Comparator<Transaction> {
 		@Override

@@ -728,6 +728,8 @@ public class DomainStore implements IDomainStore {
 			Date transactionCommitTime = persistenceEvent
 					.getDomainTransformLayerWrapper().persistentRequests.get(0)
 							.getTransactionCommitTime();
+			// FIXME - mvcc.jobs.1 - applyTxToGraphCounter is unnecessary since
+			// these are created in sequenceorder anyway (so just tx id is fine)
 			Transaction.current().toDomainCommitting(
 					testSensitiveTimestamp(transactionCommitTime), this,
 					applyTxToGraphCounter.getAndIncrement(),
