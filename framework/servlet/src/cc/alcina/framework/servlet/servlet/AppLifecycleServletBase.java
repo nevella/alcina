@@ -441,9 +441,15 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void scheduleJobs() {
-		Transaction.begin();
-		JobRegistry.get();
-		Transaction.end();
+		if (usesJobs()) {
+			Transaction.begin();
+			JobRegistry.get();
+			Transaction.end();
+		}
+	}
+
+	protected boolean usesJobs() {
+		return true;
 	}
 
 	private static class PerThreadLoggingWrapper implements PerThreadLogging {
