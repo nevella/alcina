@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.FromObjectKeyValueMapper;
 import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
-import cc.alcina.framework.entity.util.MethodContext;
 
 public interface HasEquivalence<T> {
 	public boolean equivalentTo(T other);
@@ -156,10 +155,12 @@ public interface HasEquivalence<T> {
 			}
 			if (o1.size() == o2.size()) {
 				if (debugInequivalence) {
-					return MethodContext.instance()
-							.withContextTrue(CONTEXT_IGNORE_FOR_DEBUGGING)
-							.call(() -> intersection(o1, o2).size() == o1
-									.size());
+					try {
+						LooseContext.pushWithTrue(CONTEXT_IGNORE_FOR_DEBUGGING);
+						return intersection(o1, o2).size() == o1.size();
+					} finally {
+						LooseContext.pop();
+					}
 				} else {
 					return intersection(o1, o2).size() == o1.size();
 				}
