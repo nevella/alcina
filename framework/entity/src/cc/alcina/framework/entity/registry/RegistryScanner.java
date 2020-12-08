@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
@@ -48,7 +50,7 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 		String cachePath = Ax.format("%s/%s-registry-cache.ser",
 				getHomeDir().getPath(), registryName);
 		this.toRegistry = toRegistry;
-		if (!ResourceUtilities.is("useCache") && !Ax.isTest()) {
+		if (!ResourceUtilities.is("useCache") && !Ax.isTest()&&!Boolean.getBoolean("RegistryScanner.useCache")&&!GWT.isClient()) {
 			new File(cachePath).delete();
 		}
 		scan(classDataCache, cachePath);
