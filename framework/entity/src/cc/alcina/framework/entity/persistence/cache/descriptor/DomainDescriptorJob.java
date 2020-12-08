@@ -597,7 +597,7 @@ public class DomainDescriptorJob {
 
 		public Optional<Job> earliestIncomplete(Class<? extends Task> key,
 				boolean createdBySelf) {
-			return futuresByTask.getAndEnsure(key).stream()
+			return incompleteTopLevelByTask.getAndEnsure(key).stream()
 					.filter(j -> j.getRunAt() != null)
 					.filter(j -> !createdBySelf
 							|| j.getCreator() == ClientInstance.self())
