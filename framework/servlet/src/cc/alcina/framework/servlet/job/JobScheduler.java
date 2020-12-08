@@ -138,7 +138,7 @@ public class JobScheduler {
 		events.add(new ScheduleEvent(Type.SHUTDOWN));
 	}
 
-	private void futuresToPending() {
+	private void futuresToPending(ScheduleEvent event) {
 		if (!SchedulingPermissions.canFutureToPending()) {
 			return;
 		}
@@ -148,9 +148,24 @@ public class JobScheduler {
 		DomainDescriptorJob.get().getAllFutureJobs()
 				.filter(job -> job.getRunAt().compareTo(new Date()) <= 0)
 				.filter(SchedulingPermissions::canModifyFuture).forEach(job -> {
-					job.setPerformer(ClientInstance.self());
-					job.setState(JobState.PENDING);
-					logger.info("Job scheduler - future-to-pending - {}", job);
+					Class<? extends Task> key = job.provideTaskClass();
+					Schedule schedule = Schedule.forTaskClass(key);
+					Optional<Job> earliestIncompleteScheduled = DomainDescriptorJob
+							.get().getEarliestIncompleteScheduled(key,
+									schedule.isVmLocal());
+					if (schedule != null
+							&& earliestIncompleteScheduled.isPresent()
+							&& schedule.isCancelIfExistingIncomplete()) {
+						job.setState(JobState.PENDING);
+						logger.info(
+								"Job scheduler - future-to-pending - CANCEL - {} - existingIncomplete - {}",
+								job, earliestIncompleteScheduled.get());
+					} else {
+						job.setPerformer(ClientInstance.self());
+						job.setState(JobState.PENDING);
+						logger.info("Job scheduler - future-to-pending - {}",
+								job);
+					}
 				});
 	}
 
@@ -160,7 +175,7 @@ public class JobScheduler {
 	}
 
 	private void processEvent0(ScheduleEvent event) {
-		logger.info("Received event {}", event);
+		logger.info("Received event {} {}", event, event.hashCode());
 		if (event.type == Type.WAKEUP) {
 			if (nextScheduledWakeup != null && nextScheduledWakeup
 					.compareTo(LocalDateTime.now()) <= 0) {
@@ -182,7 +197,7 @@ public class JobScheduler {
 			}
 			jobRegistry.withJobMetadataLock(
 					getClass().getName() + "::futuresToPending", () -> {
-						futuresToPending();
+						futuresToPending(event);
 						refreshFutures(event);
 						Transaction.commit();
 					});
@@ -295,8 +310,11 @@ public class JobScheduler {
 			if (nextForTaskClass == null) {
 				continue;
 			}
+			Optional<Job> earliestIncompleteScheduled = DomainDescriptorJob
+					.get()
+					.getEarliestIncompleteScheduled(key, schedule.isVmLocal());
 			Optional<Job> earliestFuture = DomainDescriptorJob.get()
-					.earliestFuture(key, schedule.isVmLocal());
+					.getEarliestFuture(key, schedule.isVmLocal());
 			if (earliestFuture.isPresent()) {
 				Date nextDate = SEUtilities.toOldDate(nextForTaskClass);
 				if (earliestFuture.get().getRunAt().after(nextDate)) {
@@ -570,6 +588,10 @@ public class JobScheduler {
 				return LocalDateTime.now();
 			}
 			return next;
+		}
+
+		public boolean isCancelIfExistingIncomplete() {
+			return true;
 		}
 
 		public boolean isVmLocal() {

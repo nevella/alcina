@@ -122,12 +122,6 @@ public class DomainDescriptorJob {
 		}
 	}
 
-	public Optional<Job> earliestFuture(Class<? extends Task> key,
-			boolean createdBySelf) {
-		return jobDescriptor.allocationQueueProjection.earliestFuture(key,
-				createdBySelf);
-	}
-
 	public void fireInitialAllocatorQueueCreationEvents() {
 		queues.values().forEach(AllocationQueue::fireInitialCreationEvents);
 	}
@@ -151,6 +145,18 @@ public class DomainDescriptorJob {
 	public Stream<AllocationQueue> getAllocationQueues() {
 		cleanupQueues();
 		return queues.values().stream();
+	}
+
+	public Optional<Job> getEarliestFuture(Class<? extends Task> key,
+			boolean createdBySelf) {
+		return jobDescriptor.allocationQueueProjection.earliestFuture(key,
+				createdBySelf);
+	}
+
+	public Optional<Job> getEarliestIncompleteScheduled(
+			Class<? extends Task> key, boolean createdBySelf) {
+		return jobDescriptor.allocationQueueProjection.earliestIncomplete(key,
+				createdBySelf);
 	}
 
 	public Stream<Job> getIncompleteJobs() {
@@ -581,6 +587,15 @@ public class DomainDescriptorJob {
 		}
 
 		public Optional<Job> earliestFuture(Class<? extends Task> key,
+				boolean createdBySelf) {
+			return futuresByTask.getAndEnsure(key).stream()
+					.filter(j -> j.getRunAt() != null)
+					.filter(j -> !createdBySelf
+							|| j.getCreator() == ClientInstance.self())
+					.sorted(new Job.RunAtComparator()).findFirst();
+		}
+
+		public Optional<Job> earliestIncomplete(Class<? extends Task> key,
 				boolean createdBySelf) {
 			return futuresByTask.getAndEnsure(key).stream()
 					.filter(j -> j.getRunAt() != null)

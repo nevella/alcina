@@ -96,6 +96,7 @@ import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.metric.StartupStats;
 import cc.alcina.framework.entity.persistence.metric.StartupStats.KeyedStat;
 import cc.alcina.framework.entity.persistence.metric.StartupStats.LogProvider;
+import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.transform.ClassrefScanner;
@@ -703,23 +704,23 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	 * Clipboard's contents.
 	 */
 	public void setClipboardContents(String aString) {
-//		try {
-//			StringSelection stringSelection = new StringSelection(aString);
-//			Clipboard clipboard = Toolkit.getDefaultToolkit()
-//					.getSystemClipboard();
-//			clipboard.setContents(stringSelection, this);
-//		} catch (HeadlessException e) {
-			if (isOsX()) {
-				try {
-					String path = "/tmp/pbcopy.txt";
-					ResourceUtilities.write(aString, path);
-					new ShellWrapper()
-							.runBashScript(Ax.format("pbcopy < %s", path));
-				} catch (Exception e2) {
-					throw new WrappedRuntimeException(e2);
-				}
+		// try {
+		// StringSelection stringSelection = new StringSelection(aString);
+		// Clipboard clipboard = Toolkit.getDefaultToolkit()
+		// .getSystemClipboard();
+		// clipboard.setContents(stringSelection, this);
+		// } catch (HeadlessException e) {
+		if (isOsX()) {
+			try {
+				String path = "/tmp/pbcopy.txt";
+				ResourceUtilities.write(aString, path);
+				new ShellWrapper()
+						.runBashScript(Ax.format("pbcopy < %s", path));
+			} catch (Exception e2) {
+				throw new WrappedRuntimeException(e2);
 			}
-//		}
+		}
+		// }
 	}
 
 	public void setCommandLineText(String text) {
@@ -904,6 +905,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		new StatCategory_InitJaxbServices().emit(statEndInitJaxbServices);
 		new StatCategory_InitConsole().emit(System.currentTimeMillis());
 		devHelper.initPostObjectServices();
+		// FIXME - to consort
+		BackendTransformQueue.get().start();
 		new StatCategory_InitPostObjectServices()
 				.emit(System.currentTimeMillis());
 		if (!props.lastCommand.matches("|q|re|restart")) {
