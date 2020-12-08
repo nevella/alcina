@@ -241,6 +241,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	public DevConsole() {
 		shells.push(DevConsoleCommand.class);
+		DevConsoleRunnable.console = this;
 	}
 
 	public String breakAndPad(int tabCount, int width, String text,
