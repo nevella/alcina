@@ -154,7 +154,7 @@ public class JobRegistry extends WriterService {
 	private static void checkAnnotatedPermissions(Object o) {
 		WebMethod annotation = o.getClass().getAnnotation(WebMethod.class);
 		if (annotation != null) {
-			if (!PermissionsManager.get().isPermissible(
+			if (!PermissionsManager.get().isPermissible(o,
 					new AnnotatedPermissible(annotation.customPermission()))) {
 				WrappedRuntimeException e = new WrappedRuntimeException(
 						"Permission denied for action " + o,
