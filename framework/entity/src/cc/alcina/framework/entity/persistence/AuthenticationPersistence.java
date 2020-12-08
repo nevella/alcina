@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.Iid;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -85,12 +86,20 @@ public class AuthenticationPersistence {
 		EntityLayerObjects.get().setServerAsClientInstance(preCommit);
 		// publish as transforms (repeating the direct ejb create) to (a)
 		// force consistency in local domain and (b) allow for replay
+		List<DomainTransformEvent> events = new ArrayList<>();
 		bootstrapInstanceResult.createdDetached.stream()
 				.forEach(e -> TransformManager.get()
 						.objectsToDtes(
 								Collections.singletonList(Domain.find(e)),
 								e.entityClass(), false)
-						.forEach(TransformManager.get()::addTransform));
+						.forEach(events::add));
+		/*
+		 * 
+		 */
+		events.stream().filter(DomainTransformEvent::provideIsCreationTransform)
+				.forEach(TransformManager.get()::addTransform);
+		events.stream().filter(event -> !event.provideIsCreationTransform())
+				.forEach(TransformManager.get()::addTransform);
 		Transactions.getEnqueuedLazyLoads().clear();
 		MethodContext.instance().withContextTrue(
 				TransformPersisterInPersistenceContext.CONTEXT_REPLAYING_FOR_LOGS)

@@ -80,8 +80,8 @@ public class JobScheduler {
 
 	private BlockingQueue<ScheduleEvent> events = new LinkedBlockingQueue<>();
 
-	private TopicListener<Event> queueEventListener = (k, v) -> events
-			.add(new ScheduleEvent(v));
+	private TopicListener<Event> queueEventListener = (k,
+			v) -> enqueueEvent(new ScheduleEvent(v));
 
 	Map<Job, JobAllocator> allocators = new ConcurrentHashMap<>();
 
@@ -347,14 +347,19 @@ public class JobScheduler {
 		}
 	}
 
+	ScheduleEvent enqueueEvent(ScheduleEvent event) {
+		events.add(event);
+		return event;
+	}
+
 	void enqueueLeaderChangedEvent() {
-		MethodContext.instance().withWrappingTransaction()
-				.call(() -> events.add(new ScheduleEvent(Type.LEADER_CHANGED)));
+		MethodContext.instance().withWrappingTransaction().call(
+				() -> enqueueEvent(new ScheduleEvent(Type.LEADER_CHANGED)));
 	}
 
 	void fireWakeup() {
 		MethodContext.instance().withWrappingTransaction()
-				.run(() -> events.add(new ScheduleEvent(Type.WAKEUP)));
+				.run(() -> enqueueEvent(new ScheduleEvent(Type.WAKEUP)));
 	}
 
 	@RegistryLocation(registryPoint = ExecutionConstraints.class, implementationType = ImplementationType.FACTORY)

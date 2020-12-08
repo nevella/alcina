@@ -136,7 +136,8 @@ public class JobRegistry extends WriterService {
 	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_NO_ACTION_LOG";
 
-	static final String TRANSFORM_QUEUE_NAME = JobRegistry.class.getName();
+	public static final String TRANSFORM_QUEUE_NAME = JobRegistry.class
+			.getName();
 
 	public static Builder createBuilder() {
 		return new Builder();

@@ -1189,7 +1189,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 							dte.setNewValue(null);
 							dte.setValueId(h2.getId());
 							dte.setValueLocalId(h2.getLocalId());
-							dte.setValueClass(h2.getClass());
+							dte.setValueClass(h2.entityClass());
 						} else if (o2 instanceof Enum) {
 							Enum e = (Enum) o2;
 							dte.setNewValue(null);

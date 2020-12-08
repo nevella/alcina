@@ -31,6 +31,7 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.servlet.job.JobRegistry.ActionPerformerTrackMetrics;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
+import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 
@@ -172,6 +173,10 @@ public class JobContext {
 		this.logger = LoggerFactory.getLogger(performer.getClass());
 		noHttpContext = AlcinaServletContext.httpContext() == null;
 		allocator = JobRegistry.get().scheduler.allocators.get(job);
+	}
+
+	public ExecutionConstraints getExecutionConstraints() {
+		return allocator.getExecutionConstraints();
 	}
 
 	public Job getJob() {

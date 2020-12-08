@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.FromObjectKeyValueMapper;
 import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
+import cc.alcina.framework.entity.util.MethodContext;
 
 public interface HasEquivalence<T> {
 	public boolean equivalentTo(T other);
@@ -83,6 +84,11 @@ public interface HasEquivalence<T> {
 	}
 
 	public static class HasEquivalenceHelper {
+		public static final String CONTEXT_IGNORE_FOR_DEBUGGING = HasEquivalenceHelper.class
+				.getName() + ".CONTEXT_IGNORE_FOR_DEBUGGING";
+
+		public static boolean debugInequivalence;
+
 		public static <T, V extends HasEquivalenceAdapter<T, ?>> boolean
 				allEquivalent(Collection<T> o1, Function<T, V> mapper) {
 			if (o1.isEmpty()) {
@@ -148,8 +154,18 @@ public interface HasEquivalence<T> {
 			if (o1 == null || o2 == null) {
 				return o1 == o2;
 			}
-			return o1.size() == o2.size()
-					&& intersection(o1, o2).size() == o1.size();
+			if (o1.size() == o2.size()) {
+				if (debugInequivalence) {
+					return MethodContext.instance()
+							.withContextTrue(CONTEXT_IGNORE_FOR_DEBUGGING)
+							.call(() -> intersection(o1, o2).size() == o1
+									.size());
+				} else {
+					return intersection(o1, o2).size() == o1.size();
+				}
+			} else {
+				return false;
+			}
 		}
 
 		public static <T extends HasEquivalence> T

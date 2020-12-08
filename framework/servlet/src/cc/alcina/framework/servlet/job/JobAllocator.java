@@ -145,6 +145,10 @@ class JobAllocator {
 		}
 	}
 
+	ExecutionConstraints getExecutionConstraints() {
+		return ExecutionConstraints.forQueue(queue);
+	}
+
 	void onFinished() {
 		finished = true;
 		new StatusMessage().publish();
