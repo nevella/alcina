@@ -1133,8 +1133,9 @@ public class ThreadlocalTransformManager extends TransformManager
 					entity.removePropertyChangeListener(this);
 				} catch (Exception e) {
 					// FIXME - mvcc.4 - devex
-					logger.warn("DEVEX:5 - Exception  removing listener: {} ",
-							entity.toStringEntity(), e);
+					logger.warn("DEVEX:5 - Exception removing listener: {} ",
+							entity.toStringEntity());
+					logger.warn("DEVEX:5 - Exception removing listener ", e);
 				}
 			}
 		}
