@@ -56,6 +56,7 @@ public class KnownJob extends KnownNode {
 	public void startJob() {
 		start = new Date();
 		status = OpStatus.IN_PROGRESS;
+		log = "";
 		persist();
 	}
 
