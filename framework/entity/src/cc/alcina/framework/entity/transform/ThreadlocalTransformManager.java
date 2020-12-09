@@ -1147,7 +1147,12 @@ public class ThreadlocalTransformManager extends TransformManager
 					"**WARNING ** TLTM - cleared (but still pending) transforms:\n "
 							+ pendingTransforms);
 			Thread.dumpStack();
-			AlcinaTopics.notifyDevWarning(new UncomittedTransformsException());
+			try {
+				AlcinaTopics
+						.notifyDevWarning(new UncomittedTransformsException());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		clearTransforms();
 		addDomainTransformListener(new ServerTransformListener());
@@ -1155,7 +1160,11 @@ public class ThreadlocalTransformManager extends TransformManager
 			addDomainTransformListener(listener);
 		}
 		if (initialised) {
-			topicTransformManagerWasReset().publish(Thread.currentThread());
+			try {
+				topicTransformManagerWasReset().publish(Thread.currentThread());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		} else {
 			initialised = true;
 		}
