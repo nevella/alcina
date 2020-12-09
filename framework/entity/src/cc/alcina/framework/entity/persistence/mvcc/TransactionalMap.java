@@ -23,8 +23,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIte
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.entity.persistence.mvcc.Transaction.TransactionComparator;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
+import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
@@ -198,17 +198,23 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	}
 
 	@Override
-	public void vacuum(Transaction transaction) {
-		if (transaction.getPhase() != TransactionPhase.TO_DOMAIN_COMMITTED) {
+	public void vacuum(VacuumableTransactions vacuumableTransactions) {
+		layers.nonMergedTransactionLayers.keySet().removeAll(
+				vacuumableTransactions.completedNonDomainTransactions);
+		List<Transaction> commonVisible = TransactionVersions.commonVisible(
+				vacuumableTransactions.completedDomainTransactions,
+				layers.nonMergedTransactionLayers.keySet());
+		if (commonVisible.isEmpty()) {
 			// will not affect visible layers to any current transactionm no
 			// sync needed
-			layers.nonMergedTransactionLayers.remove(transaction);
 			return;
 		}
+		Collections.reverse(commonVisible);
 		Layers mergedReplaceLayers = new Layers();
 		List<Layer> mergedReplace = mergedReplaceLayers.mergedLayerList;
 		mergedReplace.addAll(layers.mergedLayerList);
-		mergedReplace.add(layers.nonMergedTransactionLayers.get(transaction));
+		commonVisible.stream().map(layers.nonMergedTransactionLayers::get)
+				.forEach(mergedReplace::add);
 		/*
 		 * now compact - this is a 'levelled' strategy a la cassandra, chrome
 		 * etc - layer iteration cost is ~ log10(n) and copy cost is ~
@@ -233,11 +239,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			}
 		} while (modified);
 		synchronized (this) {
-			// FIXME - mvcc.jobs.1 - this is linear in the number of layers. Can
-			// we use a bitset passed by a vacuum context to optimise?
 			mergedReplaceLayers.nonMergedTransactionLayers
 					.putAll(layers.nonMergedTransactionLayers);
-			mergedReplaceLayers.nonMergedTransactionLayers.remove(transaction);
+			mergedReplaceLayers.nonMergedTransactionLayers.keySet()
+					.removeAll(commonVisible);
 			this.layers = mergedReplaceLayers;
 		}
 	}
@@ -267,7 +272,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				}
 				layers.nonMergedTransactionLayers.put(transaction,
 						new Layer(transaction));
-				Transactions.get().onAddedVacuumable(this);
+				Transactions.get().onAddedVacuumable(transaction, this);
 			}
 		}
 		return layers.nonMergedTransactionLayers.get(transaction);
@@ -334,11 +339,12 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	}
 
 	private class Layers {
-		Map<Transaction, Layer> nonMergedTransactionLayers = new ConcurrentSkipListMap<>(
-				new TransactionComparator());
+		ConcurrentSkipListMap<Transaction, Layer> nonMergedTransactionLayers = new ConcurrentSkipListMap<>(
+				Collections.reverseOrder());
 
 		/*
-		 * Not changed for the lifetime of this Layers instance
+		 * Not changed for the lifetime of this Layers instance (vacuum computes
+		 * a new layers object and swaps TransactionalMap.layers)
 		 */
 		List<Layer> mergedLayerList = new ArrayList<>();
 
@@ -346,29 +352,30 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return nonMergedTransactionLayers.size() + mergedLayerList.size();
 		}
 
+		// FIXME - possibly cache this?
 		public List<Layer> visibleToCurrentTx() {
 			Transaction current = Transaction.current();
 			// currentLayer will only be non-null if this TxMap has been
 			// modified by the current tx
 			Layer currentLayer = nonMergedTransactionLayers.get(current);
+			// best case - no changes in this tx, and no visible unvacuumed txs
 			if (current.committedTransactions.isEmpty()
 					&& currentLayer == null) {
 				return mergedLayerList;
 			}
-			List<Layer> visibleNonMerged = new ArrayList<>();
-			for (Entry<Transaction, Layer> entry : nonMergedTransactionLayers
-					.entrySet()) {
-				if (current.committedTransactions
-						.containsKey(entry.getKey().getId())) {
-					visibleNonMerged.add(entry.getValue());
-				}
-			}
-			if (visibleNonMerged.isEmpty() && currentLayer == null) {
+			List<Transaction> visibleCommittedTransactions = current
+					.visibleCommittedTransactions(
+							nonMergedTransactionLayers.keySet());
+			if (visibleCommittedTransactions.isEmpty()
+					&& currentLayer == null) {
 				return mergedLayerList;
 			}
 			List<Layer> visibleLayers = new ArrayList<>();
 			visibleLayers.addAll(mergedLayerList);
-			visibleLayers.addAll(visibleNonMerged);
+			Collections.reverse(visibleCommittedTransactions);
+			visibleCommittedTransactions.stream()
+					.map(nonMergedTransactionLayers::get)
+					.forEach(visibleLayers::add);
 			if (currentLayer != null) {
 				visibleLayers.add(currentLayer);
 			}

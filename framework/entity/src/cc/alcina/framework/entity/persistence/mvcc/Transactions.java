@@ -19,6 +19,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 
 public class Transactions {
 	private static Transactions instance;
@@ -51,6 +52,10 @@ public class Transactions {
 		get().vacuum.paused = paused;
 	}
 
+	/*
+	 * The 'base' parameter is used by ClassTransformer rewritten classes (to
+	 * get domainIdentity())
+	 */
 	public static <T extends Entity> T resolve(T t, boolean write,
 			boolean base) {
 		if (t instanceof MvccObject) {
@@ -60,6 +65,12 @@ public class Transactions {
 				// no transactional versions, return base
 				return t;
 			} else {
+				// if returning 'base', no need to synchronize (it's being
+				// returned as domainIdentity(), not for fields - and the
+				// identity itself is immutable)
+				if (base) {
+					return versions.getBaseObject();
+				}
 				Transaction transaction = Transaction.current();
 				// TODO - possibly optimise (app level 'in warmup')
 				// although - doesn't warmup write fields, not via setters? In
@@ -67,15 +78,11 @@ public class Transactions {
 				if (transaction.isBaseTransaction()) {
 					return t;
 				} else {
-					//
 					synchronized (t) {
 						versions = mvccObject.__getMvccVersions__();
 						if (versions == null) {
 							versions = MvccObjectVersions.ensureEntity(t,
 									transaction, false);
-						}
-						if (base) {
-							return versions.getBaseObject();
 						}
 						return versions.resolve(write);
 					}
@@ -321,6 +328,10 @@ public class Transactions {
 	 * This code relies on the commit ordering of
 	 * Transactions.committedTransactions and Transaction.committedTransactions.
 	 * 
+	 * TODO - maybe 'reference' counting would be more optimal?
+	 * 
+	 * also - just remove txid (since txs are sorted)(albeit in reverse)
+	 * 
 	 */
 	List<Transaction> getVacuumableCommittedTransactions() {
 		synchronized (transactionMetadataLock) {
@@ -330,8 +341,8 @@ public class Transactions {
 			}
 			TransactionId highestVacuumableId = committedTransactions.lastKey();
 			for (Transaction activeTransaction : activeTransactions.values()) {
-				if (activeTransaction.committedTransactions
-						.containsKey(highestVacuumableId)) {
+				if (activeTransaction.committedTransactions.contains(
+						committedTransactions.get(highestVacuumableId))) {
 					// 'highest vacuumable' commit was visible to this
 					// transaction,
 					// so ... good, continue
@@ -341,7 +352,7 @@ public class Transactions {
 					highestVacuumableId = activeTransaction.committedTransactions
 							.isEmpty() ? null
 									: activeTransaction.committedTransactions
-											.lastKey();
+											.first().getId();
 					if (highestVacuumableId == null) {
 						return result;
 					}
@@ -367,15 +378,15 @@ public class Transactions {
 			TransactionId transactionId = new TransactionId(
 					this.transactionIdCounter.getAndIncrement());
 			transaction.setId(transactionId);
-			transaction.committedTransactions = new Object2ObjectLinkedOpenHashMap<>(
-					committedTransactions);
+			transaction.committedTransactions = new ObjectAVLTreeSet<>(
+					committedTransactions.values());
 			transaction.startTime = System.currentTimeMillis();
 			activeTransactions.put(transactionId, transaction);
 		}
 	}
 
-	void onAddedVacuumable(Vacuumable vacuumable) {
-		vacuum.addVacuumable(vacuumable);
+	void onAddedVacuumable(Transaction transaction, Vacuumable vacuumable) {
+		vacuum.addVacuumable(transaction, vacuumable);
 	}
 
 	void vacuumComplete(List<Transaction> vacuumableTransactions) {

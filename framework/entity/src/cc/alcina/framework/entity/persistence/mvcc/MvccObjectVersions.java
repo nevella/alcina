@@ -1,8 +1,9 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,8 +12,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
+import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
 
 /**
  * Note that like a TransactionalMap, the owning MvccObject will not be
@@ -67,7 +68,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		return versions;
 	}
 
-	private volatile ConcurrentHashMap<Transaction, ObjectVersion<T>> versions = new ConcurrentHashMap<>();
+	private volatile ConcurrentSkipListMap<Transaction, ObjectVersion<T>> versions = new ConcurrentSkipListMap<>(
+			Collections.reverseOrder());
 
 	// object pointed to by this field never changes (for a given class/id or
 	// class/clientinstance/localid
@@ -121,6 +123,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			 * tx
 			 */
 			{
+				if (initialTransaction.phase == TransactionPhase.TO_DOMAIN_COMMITTING) {
+					// really not sure about this. Document our cases pliz -
+					// aligned via phase
+					throw new UnsupportedOperationException();
+				}
 				ObjectVersion<T> version = new ObjectVersion<>();
 				version.transaction = initialTransaction;
 				version.object = t;
@@ -172,26 +179,32 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
-	@Override
 	/*
 	 * only synchronize at the "possibly remove from base" phase - all other
 	 * operations are threadsafe
 	 * 
 	 */
-	public void vacuum(Transaction transaction) {
-		ObjectVersion<T> version = versions.get(transaction);
+	@Override
+	public void vacuum(VacuumableTransactions vacuumableTransactions) {
+		Transaction mostRecentCommonVisible = TransactionVersions
+				.mostRecentCommonVisible(versions.keySet(),
+						vacuumableTransactions.completedDomainTransactions);
 		/*
 		 * Must change the base before removing transaction (otherwise there's a
 		 * narrow window where we'd return an older version)
 		 */
-		if (transaction.getPhase() == TransactionPhase.TO_DOMAIN_COMMITTED) {
+		if (mostRecentCommonVisible != null) {
+			ObjectVersion<T> version = versions.get(mostRecentCommonVisible);
 			// baseObject fields will not be reachable here to app code (all
 			// active txs will be
 			// looking at version.object fields)
 			copyObjectFields(version.object, baseObject);
 		}
 		// Transactions.debugRemoveVersion(baseObject, version);
-		versions.remove(transaction);
+		versions.keySet()
+				.removeAll(vacuumableTransactions.completedDomainTransactions);
+		versions.keySet().removeAll(
+				vacuumableTransactions.completedNonDomainTransactions);
 		if (versions.isEmpty()) {
 			synchronized (baseObject) {
 				if (versions.isEmpty()) {
@@ -205,7 +218,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	private void putVersion(ObjectVersion<T> version) {
 		versions.put(version.transaction, version);
-		Transactions.get().onAddedVacuumable(this);
+		Transactions.get().onAddedVacuumable(version.transaction, this);
 	}
 
 	/*
@@ -228,8 +241,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 		Class<? extends Entity> entityClass = entityClass();
 		Transaction mostRecentTransaction = transaction
-				.mostRecentPriorTransaction(versions.keys(),
-						DomainStore.stores().storeFor(entityClass));
+				.mostRecentVisibleCommittedTransaction(versions.keySet());
 		T mostRecentObject = null;
 		/*
 		 * mostRecentVersion will be null if just created

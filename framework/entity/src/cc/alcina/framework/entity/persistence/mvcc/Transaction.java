@@ -1,12 +1,13 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.NavigableSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -27,14 +28,16 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
-import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 
 /*
  * DOCUMENT - there are some slight differences between 'ensure ended' and 'ensure begun' - particularly around state TO_DB_ABORTED.
  * 
  *  This behavioural difference serves to make ABORT (transform commit error) handling more intentional - a simple 'ensureBegun' won't be enough - see e.e. JobRegistry.performJob0
+ *  
+ *  Note that ordering is only meaningful for committed transactions (all uses of tx ordering must respect that).
  */
-public class Transaction {
+public class Transaction implements Comparable<Transaction> {
 	public static final String CONTEXT_RETAIN_TRANSACTION_TRACES = Transaction.class
 			.getName() + ".CONTEXT_RETAIN_TRANSACTION_TRACES";
 
@@ -203,7 +206,8 @@ public class Transaction {
 	private boolean baseTransaction;
 
 	// field type is the actual type because we call lastKey()
-	Object2ObjectLinkedOpenHashMap<TransactionId, Transaction> committedTransactions = new Object2ObjectLinkedOpenHashMap<>();
+	ObjectAVLTreeSet<Transaction> committedTransactions = new ObjectAVLTreeSet<>(
+			Collections.reverseOrder());
 
 	private TransactionId id;
 
@@ -221,6 +225,11 @@ public class Transaction {
 		this.phase = initialPhase;
 		Transactions.get().initialiseTransaction(this);
 		logger.debug("Created tx: {}", this);
+	}
+
+	@Override
+	public int compareTo(Transaction o) {
+		return id.compareTo(o.id);
 	}
 
 	public <T extends Entity> T create(Class<T> clazz, DomainStore store) {
@@ -246,7 +255,7 @@ public class Transaction {
 	public boolean equals(Object obj) {
 		if (obj instanceof Transaction) {
 			Transaction other = (Transaction) obj;
-			return Objects.equals(this.id, other.id);
+			return this.id == other.id;
 		} else {
 			return super.equals(obj);
 		}
@@ -391,14 +400,6 @@ public class Transaction {
 		}
 	}
 
-	private boolean hasHigherCommitIdThan(Transaction otherTransaction,
-			DomainStore store) {
-		long thisStoreTxId = storeTransactions.get(store).committingSequenceId;
-		long otherStoreTxId = otherTransaction.storeTransactions
-				.get(store).committingSequenceId;
-		return thisStoreTxId > otherStoreTxId;
-	}
-
 	void endTransaction() {
 		originatingThread = null;
 		ended = true;
@@ -461,19 +462,25 @@ public class Transaction {
 	Transaction mostRecentPriorTransaction(Enumeration<Transaction> keys,
 			DomainStore store) {
 		Transaction result = null;
-		while (keys.hasMoreElements()) {
-			Transaction element = keys.nextElement();
-			if (element.phase == TransactionPhase.TO_DOMAIN_COMMITTED) {
-				if (committedTransactions.containsKey(element.id)
-						|| element.isBaseTransaction()) {
-					if (result == null
-							|| element.hasHigherCommitIdThan(result, store)) {
-						result = element;
-					}
-				}
-			}
-		}
+		// while (keys.hasMoreElements()) {
+		// Transaction element = keys.nextElement();
+		// if (element.phase == TransactionPhase.TO_DOMAIN_COMMITTED) {
+		// if (committedTransactions.containsKey(element.id)
+		// || element.isBaseTransaction()) {
+		// if (result == null
+		// || element.hasHigherCommitIdThan(result, store)) {
+		// result = element;
+		// }
+		// }
+		// }
+		// }
 		return result;
+	}
+
+	Transaction mostRecentVisibleCommittedTransaction(
+			NavigableSet<Transaction> otherCommittedTransactionsSet) {
+		return TransactionVersions.mostRecentCommonVisible(
+				committedTransactions, otherCommittedTransactionsSet);
 	}
 
 	void setId(TransactionId id) {
@@ -493,6 +500,15 @@ public class Transaction {
 		Preconditions.checkState(getPhase() == TransactionPhase.VACUUM_BEGIN);
 		Transactions.get().vacuumComplete(vacuumableTransactions);
 		setPhase(TransactionPhase.VACUUM_ENDED);
+	}
+
+	/*
+	 * will be sorted, most recent to now
+	 */
+	List<Transaction> visibleCommittedTransactions(
+			NavigableSet<Transaction> otherCommittedTransactionsSet) {
+		return TransactionVersions.commonVisible(committedTransactions,
+				otherCommittedTransactionsSet);
 	}
 
 	/*
