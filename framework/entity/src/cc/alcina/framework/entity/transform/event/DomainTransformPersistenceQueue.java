@@ -219,7 +219,10 @@ public class DomainTransformPersistenceQueue {
 					DomainTransformCommitPosition position) {
 		// create an "event" to publish in the queue
 		TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-				dtrp, null, false, false, false, null, true);
+				dtrp, null, dtrp.getClientInstance().getId() == ClientInstance
+						.self().getId(),
+				false, false, null, true);
+		persistenceToken.setLocalToVm(state.isLocalToVm(dtrp));
 		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper(
 				persistenceToken);
 		List<DomainTransformEventPersistent> events = new ArrayList<DomainTransformEventPersistent>(
@@ -639,6 +642,11 @@ public class DomainTransformPersistenceQueue {
 
 		synchronized boolean hasFired(long requestId) {
 			return appLifetimeEventsFired.contains(requestId);
+		}
+
+		synchronized boolean
+				isLocalToVm(DomainTransformRequestPersistent dtrp) {
+			return appLifetimeEventsFired.contains(dtrp.getId());
 		}
 
 		synchronized void onEventFiringCompleted(
