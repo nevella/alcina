@@ -290,7 +290,7 @@ public class FastROBoundTable extends BoundTableExt {
 			Property p = GwittirBridge.get().getProperty(target,
 					col.getPropertyName());
 			BoundWidgetProvider wp = this.factory
-					.getWidgetProvider(col.getPropertyName(), p.getType());
+					.getWidgetProvider( p.getType());
 			pMap.put(col.getPropertyName(), p);
 			wpMap.put(col.getPropertyName(), wp);
 		}

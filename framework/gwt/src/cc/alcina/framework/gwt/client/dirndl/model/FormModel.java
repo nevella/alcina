@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.place.shared.Place;
@@ -20,6 +19,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
@@ -28,6 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandl
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.BlankModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.NotRenderedNodeRenderer;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
@@ -117,9 +118,8 @@ public class FormModel extends Model {
 		new FormValidation().validate(onValid, getState().formBinding);
 	}
 
-	@ClientInstantiable
-	public static class EntityTransformer implements
-			Function<DirectedEntityActivity<? extends EntityPlace, ? extends Entity>, FormModel> {
+	public static class EntityTransformer extends AbstractContextSensitiveModelTransform
+			<DirectedEntityActivity<? extends EntityPlace, ? extends Entity>, FormModel> {
 		@Override
 		public FormModel apply(
 				DirectedEntityActivity<? extends EntityPlace, ? extends Entity> activity) {
@@ -132,13 +132,13 @@ public class FormModel extends Model {
 			state.model = entity;
 			state.adjunct = state.editable
 					&& ClientTransformManager.cast().isProvisionalEditing();
-			return new FormModelTransformer().apply(state);
+			return new FormModelTransformer().withContextNode(node).apply(state);
 		}
 	}
 
 	@ClientInstantiable
 	public static class PermissibleActionFormTransformer
-			implements Function<PermissibleAction, FormModel> {
+	extends AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
 		@Override
 		public FormModel apply(PermissibleAction action) {
 			FormModelState state = new FormModelState();
@@ -153,7 +153,7 @@ public class FormModel extends Model {
 			}else if (action instanceof LocalActionWithParameters) {
 				state.model = new BlankModel();
 			}
-			return new FormModelTransformer().apply(state);
+			return new FormModelTransformer().withContextNode(node).apply(state);
 		}
 	}
 
@@ -174,7 +174,7 @@ public class FormModel extends Model {
 
 	@ClientInstantiable
 	public static class FormModelTransformer
-			implements Function<FormModelState, FormModel> {
+	extends AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
 		@Override
 		public FormModel apply(FormModelState args) {
 			FormModel model = new FormModel();
@@ -183,9 +183,10 @@ public class FormModel extends Model {
 				return model;
 			}
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
+			node.pushResolver(ModalResolver.single(!args.editable));
 			List<Field> fields = GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-							args.model, factory, args.editable, args.adjunct);
+							args.model, factory, args.editable, args.adjunct,node.getResolver());
 			fields.stream().map(field -> new FormElement(field, args.model))
 					.forEach(model.elements::add);
 			if (args.adjunct) {

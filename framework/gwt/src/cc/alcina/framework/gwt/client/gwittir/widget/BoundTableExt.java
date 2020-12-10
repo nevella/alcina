@@ -1940,7 +1940,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				final Property p = GwittirBridge.get().getProperty(target,
 						col.getPropertyName());
 				widget = (BoundWidget) this.factory
-						.getWidgetProvider(col.getPropertyName(), p.getType())
+						.getWidgetProvider( p.getType())
 						.get();
 				// TODO Figure out some way to make this read only.
 			}

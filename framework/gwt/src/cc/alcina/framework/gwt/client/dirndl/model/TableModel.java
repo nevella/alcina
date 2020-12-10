@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -20,7 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedBindableSearchActi
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedCategoriesActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.NotRenderedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -107,7 +108,7 @@ public class TableModel extends Model {
 	}
 
 	public static class DirectedEntitySearchActivityTransformer extends
-			AbstractModelTransform<DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable>, TableModel> {
+			AbstractContextSensitiveModelTransform<DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable>, TableModel> {
 		@Override
 		public TableModel apply(
 				DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable> activity) {
@@ -117,13 +118,14 @@ public class TableModel extends Model {
 			if (activity.getSearchResults() == null) {
 				return model;
 			}
+			node.pushResolver(ModalResolver.multiple(true));
 			Class<? extends Bindable> resultClass = activity.getSearchResults()
 					.resultClass();
 			GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-							Reflections.classLookup().getTemplateInstance(
-									resultClass),
-							factory, false, true)
+							Reflections.classLookup()
+									.getTemplateInstance(resultClass),
+							factory, false, true, node.getResolver())
 					.stream().map(TableColumn::new)
 					.forEach(model.header.columns::add);
 			activity.getSearchResults().queriedResultObjects.stream()
@@ -134,21 +136,25 @@ public class TableModel extends Model {
 		}
 	}
 
+	
+
+
 	public static class DirectedCategoriesActivityTransformer extends
-			AbstractModelTransform<DirectedCategoriesActivity<?>, TableModel> {
+			AbstractContextSensitiveModelTransform<DirectedCategoriesActivity<?>, TableModel> {
 		@Override
 		public TableModel apply(DirectedCategoriesActivity<?> activity) {
 			TableModel model = new TableModel();
 			BoundWidgetTypeFactory factory = Registry
 					.impl(TableTypeFactory.class);
+			node.pushResolver(ModalResolver.multiple(true));
 			List<CategoryNamePlace> places = activity.getPlace()
 					.getNamedPlaces();
 			Class<? extends Bindable> resultClass = CategoryNamePlaceTableAdapter.class;
 			GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-							Reflections.classLookup().getTemplateInstance(
-									resultClass),
-							factory, false, true)
+							Reflections.classLookup()
+									.getTemplateInstance(resultClass),
+							factory, false, true, node.getResolver())
 					.stream().map(TableColumn::new)
 					.forEach(model.header.columns::add);
 			places.stream().map(CategoryNamePlaceTableAdapter::new)

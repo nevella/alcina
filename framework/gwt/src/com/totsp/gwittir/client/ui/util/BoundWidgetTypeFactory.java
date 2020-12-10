@@ -84,24 +84,10 @@ public class BoundWidgetTypeFactory {
 		registry.put(type, provider);
 	}
 
-	public void add(String propertyName, BoundWidgetProvider<?> provider) {
-		registry.put(propertyName, provider);
-	}
 
 	public BoundWidgetProvider<?> getWidgetProvider(Class<?> type) {
 		return registry.get(type);
 	}
 
-	public BoundWidgetProvider<?> getWidgetProvider(String propertyName,
-			Class<?> type) {
-		BoundWidgetProvider<?> val = registry.containsKey(propertyName)
-				? registry.get(propertyName)
-				: registry.get(type);
-		return val;
-	}
 
-	public BoundWidgetProvider getWidgetProvider(Class propertyType, Class modelType, Bean beanInfo,
-			ClientPropertyReflector propertyReflector) {
-		return getWidgetProvider(propertyType);
-	}
 }

@@ -633,6 +633,7 @@ public class GraphProjection {
 								traversalCount, creationCount);
 					}
 				}
+
 			}
 		}
 	}
@@ -950,7 +951,7 @@ public class GraphProjection {
 		}
 	}
 
-	private List<Field> getNonPrimitiveOrDataFieldsForClass(Class clazz)
+	public List<Field> getNonPrimitiveOrDataFieldsForClass(Class clazz)
 			throws Exception {
 		List<Field> result = projectableNonPrimitiveOrDataFields.get(clazz);
 		if (result == null) {

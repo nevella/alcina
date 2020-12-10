@@ -55,9 +55,6 @@ public class OneToManyMultipleSummaryCustomiser
 
 		@Override
 		public String render(OneToManyMultipleSummary o) {
-			if (o.getSize() == 0) {
-				return "";
-			}
 			String template = "<a href='#%s'>%s</a>";
 			String token = o.getPlace().toTokenString();
 			return Ax.format(template, token,

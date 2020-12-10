@@ -237,6 +237,8 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 						&& propertyType != Map.class) {
 					// this seems to vary (unnecessary on 1.5, necessary on
 					// 1.6)-propertydescriptor change probly
+					
+					//FIXME - mvcc.jobs.2 - use Alcinapersistenentityimpl if at all
 					Class implementation = Registry
 							.impl(ImplementationLookup.class)
 							.getImplementation(propertyType);

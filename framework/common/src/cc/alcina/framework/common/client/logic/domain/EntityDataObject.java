@@ -85,6 +85,26 @@ public interface EntityDataObject {
 			return this.size;
 		}
 
+		private transient String collectionAccessorMethodName;
+		private transient Class<? extends Entity> entityClass;
+
+		public Class<? extends Entity> getEntityClass() {
+			return this.entityClass;
+		}
+
+
+		public OneToManyMultipleSummary(String collectionAccessorMethodName,
+				Class<? extends Entity> entityClass) {
+			this.collectionAccessorMethodName = collectionAccessorMethodName;
+			this.entityClass = entityClass;
+		}
+
+
+		public String getCollectionAccessorMethodName() {
+			return this.collectionAccessorMethodName;
+		}
+
+
 		public void setSize(int size) {
 			this.size = size;
 		}
@@ -103,17 +123,15 @@ public interface EntityDataObject {
 		}
 
 		public OneToManyMultipleSummary(Entity source,
-				Collection<? extends Entity> collection) {
+				Collection<? extends Entity> collection, Class<? extends Entity> entityClass) {
+			this.entityClass = entityClass;
 			size = collection.size();
-			if (size > 0) {
-				place = (EntityPlace) RegistryHistoryMapper.get()
-						.getPlaceByModelClass(
-								collection.iterator().next().entityClass());
-				TruncatedObjectCriterion objectCriterion = Registry.impl(
-						TruncatedObjectCriterion.class, source.entityClass());
-				objectCriterion.withObject(source);
-				place.def.addCriterionToSoleCriteriaGroup(objectCriterion);
-			}
+			place = (EntityPlace) RegistryHistoryMapper.get()
+					.getPlaceByModelClass(entityClass);
+			TruncatedObjectCriterion objectCriterion = Registry
+					.impl(TruncatedObjectCriterion.class, source.entityClass());
+			objectCriterion.withObject(source);
+			place.def.addCriterionToSoleCriteriaGroup(objectCriterion);
 		}
 	}
 }
