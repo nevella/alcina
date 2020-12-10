@@ -403,21 +403,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	private void createWarmupConnections() throws Exception {
-		for (int i = 0; i < warmupExecutor.getMaximumPoolSize(); i++) {
-			Connection conn = dataSource.getConnection();
-			conn.setAutoCommit(false);
-			conn.setReadOnly(true);
-			originalTransactionIsolation = conn.getTransactionIsolation();
-			if (ResourceUtilities.is(DomainStore.class, "warmStandbyDb")) {
-				conn.setTransactionIsolation(
-						Connection.TRANSACTION_REPEATABLE_READ);
-			} else {
-				conn.setTransactionIsolation(
-						Connection.TRANSACTION_SERIALIZABLE);
-			}
-			logger.debug("Opening new warmup connection {}", conn);
-			warmupConnections.put(conn, 0);
-		}
+		new WarmupConnectionCreatorPg().create();
 	}
 
 	private synchronized PdOperator ensurePdOperator(PropertyDescriptor pd,
@@ -2174,5 +2160,56 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				}
 			}
 		}
+	}
+
+	class WarmupConnectionCreator {
+		void create() throws SQLException {
+			for (int i = 0; i < warmupExecutor.getMaximumPoolSize(); i++) {
+				Connection conn = dataSource.getConnection();
+				conn.setAutoCommit(false);
+				conn.setReadOnly(true);
+				originalTransactionIsolation = conn.getTransactionIsolation();
+				conn.setTransactionIsolation(
+						Connection.TRANSACTION_REPEATABLE_READ);
+				logger.debug("Opening new warmup connection {}", conn);
+				warmupConnections.put(conn, 0);
+			}
+		}
+	}
+
+	class WarmupConnectionCreatorPg {
+		void create() throws SQLException {
+			Connection conn1 = dataSource.getConnection();
+			conn1.setAutoCommit(false);
+			originalTransactionIsolation = conn1.getTransactionIsolation();
+			String snapshotId = null;
+			String isolationLevel = "SERIALIZABLE";
+			if (ResourceUtilities.is(DomainStore.class, "warmStandbyDb")) {
+				isolationLevel = "REPEATABLE_READ";
+			}
+			try (Statement stmt = conn1.createStatement()) {
+				stmt.execute(Ax.format(
+						"BEGIN TRANSACTION ISOLATION LEVEL %s DEFERRABLE;",
+						isolationLevel));
+				ResultSet rs = stmt
+						.executeQuery("SELECT pg_export_snapshot();");
+				rs.next();
+				snapshotId = rs.getString(1);
+			}
+			warmupConnections.put(conn1, 0);
+			for (int i = 1; i < warmupExecutor.getMaximumPoolSize(); i++) {
+				Connection conn = dataSource.getConnection();
+				conn.setAutoCommit(false);
+				try (Statement stmt = conn.createStatement()) {
+					stmt.execute(Ax.format(
+							"BEGIN TRANSACTION ISOLATION LEVEL %s DEFERRABLE;",
+							isolationLevel));
+					stmt.execute(Ax.format("SET TRANSACTION SNAPSHOT '%s';",
+							snapshotId));
+				}
+				warmupConnections.put(conn, 0);
+			}
+		}
+		//
 	}
 }

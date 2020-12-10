@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -196,7 +197,7 @@ public class Transactions {
 	private AtomicLong transactionIdCounter = new AtomicLong();
 
 	// these will be in reverse commit order
-	private ObjectAVLTreeSet<Transaction> committedTransactions = new ObjectAVLTreeSet<>(
+	private ConcurrentSkipListSet<Transaction> committedTransactions = new ConcurrentSkipListSet<>(
 			Collections.reverseOrder());
 
 	private List<Transaction> completedNonDomainCommittedTransactions = new ArrayList<>();

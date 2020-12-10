@@ -204,7 +204,6 @@ public class Transaction implements Comparable<Transaction> {
 
 	private boolean baseTransaction;
 
-	// field type is the actual type because we call lastKey()
 	SortedSet<Transaction> committedTransactions;
 
 	private TransactionId id;
