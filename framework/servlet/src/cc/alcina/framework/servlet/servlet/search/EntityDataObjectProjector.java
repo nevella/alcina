@@ -48,7 +48,7 @@ public class EntityDataObjectProjector {
 				EntityMultipleDataObjectDecorator multipleDataObjectDecorator = Registry
 						.implOrNull(EntityMultipleDataObjectDecorator.class,
 								(first).entityClass());
-				if (multipleDataObjectDecorator != null) {
+				if (multipleDataObjectDecorator != null&&"---".isEmpty()) {
 					object = (T) collection.stream()
 							.map(multipleDataObjectDecorator)
 							.collect(Collectors.toList());
@@ -95,7 +95,7 @@ public class EntityDataObjectProjector {
 					EntitySingleDataObjectDecorator singleDataObjectDecorator = Registry
 							.implOrNull(EntitySingleDataObjectDecorator.class,
 									((Entity) original).entityClass());
-					if (singleDataObjectDecorator != null) {
+					if (singleDataObjectDecorator != null&&"---".isEmpty()) {
 						projected = (T) singleDataObjectDecorator.apply(
 								(VersionableEntity) original, contextProjector);
 						return graphProjection.project(original, projected,
@@ -123,7 +123,7 @@ public class EntityDataObjectProjector {
 	public Class<? extends Bindable>
 			getProjectedClass(ModelSearchResults modelSearchResults) {
 		Class<VersionableEntity> clazz = null;
-		if (modelSearchResults.def != null) {
+		if (modelSearchResults.def != null&&"---".isEmpty()) {
 			clazz = ((EntitySearchDefinition) modelSearchResults.def)
 					.queriedEntityClass();
 			EntityMultipleDataObjectDecorator multipleDataObjectDecorator = Registry
@@ -131,7 +131,7 @@ public class EntityDataObjectProjector {
 			if (multipleDataObjectDecorator != null) {
 				return multipleDataObjectDecorator.getProjectedClass();
 			}
-		} else if (modelSearchResults.rawEntity != null) {
+		} else if (modelSearchResults.rawEntity != null&&"---".isEmpty()) {
 			clazz = modelSearchResults.rawEntity.entityClass();
 			EntitySingleDataObjectDecorator singleDataObjectDecorator = Registry
 					.implOrNull(EntitySingleDataObjectDecorator.class, clazz);

@@ -47,7 +47,11 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 		if (node.model == null && !args.transformsNull()) {
 			return null;
 		}
-		return Reflections.newInstance(args.value()).apply(node.model);
+		ModelTransform transform = Reflections.newInstance(args.value());
+		if(transform instanceof ContextSensitiveTransform) {
+			((ContextSensitiveTransform) transform).withContextNode(node);
+		}
+		return transform.apply(node.model);
 	}
 
 	@ClientVisible
@@ -62,11 +66,25 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 	public interface ModelTransform<A, B extends Bindable>
 			extends Function<A, B> {
 	}
+	public interface ContextSensitiveTransform<A, B extends Bindable>
+	extends ModelTransform<A, B> {
+		public ContextSensitiveTransform<A, B > withContextNode(DirectedLayout.Node node);
+}
 
 	@ClientInstantiable
 	public abstract static class AbstractModelTransform<A, B extends Bindable>
 			implements ModelTransform<A, B> {
 	}
+	public abstract static class AbstractContextSensitiveModelTransform<A, B extends Bindable>
+	extends AbstractModelTransform<A, B> implements ContextSensitiveTransform<A,B>{
+		protected Node node;
+
+		@Override
+		public AbstractContextSensitiveModelTransform<A,B> withContextNode(Node node) {
+			this.node = node;
+			return this;
+		}
+}
 
 	public static class PlaceholderModelTransform
 			extends AbstractModelTransform<Object, Bindable> {

@@ -14,6 +14,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstanceExpiredException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet_CustomFieldSerializer;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -28,6 +32,7 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	public static final String REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY = "X-ALCINA-CLIENT-INSTANCE-AUTH";
 
 	public static final String RESPONSE_HEADER_CLIENT_INSTANCE_EXPIRED = "X-ALCINA-CLIENT-INSTANCE-EXPIRED";
+	
 
 	public static AlcinaRpcRequestBuilderCreationOneOffReplayableListener
 			addOneoffReplayableCreationListener() {
@@ -55,19 +60,28 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 		addAlcinaHeaders(rb, true);
 	}
 
-	public void addAlcinaHeaders(RequestBuilder rb, boolean noCache) {
+	public void addAlcinaHeaders(RequestBuilder requestBuilder, boolean noCache) {
 		// iOS 6
 		if (noCache) {
-			rb.setHeader("Cache-Control", "no-cache");
+			requestBuilder.setHeader("Cache-Control", "no-cache");
 		}
 		ClientInstance clientInstance = PermissionsManager.get()
 				.getClientInstance();
 		if (clientInstance != null) {
-			rb.setHeader(REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY,
+			requestBuilder.setHeader(REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY,
 					String.valueOf(clientInstance.getId()));
-			rb.setHeader(REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY,
+			requestBuilder.setHeader(REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY,
 					clientInstance.getAuth().toString());
 		}
+		Registry.impl(ApplicationHeaders.class).addHeaders(requestBuilder);
+	}
+	@RegistryLocation(registryPoint = ApplicationHeaders.class,implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class ApplicationHeaders{
+		public void addHeaders(RequestBuilder requestBuilder) {
+			
+		}
+		
 	}
 
 	public String getRpcResult() {

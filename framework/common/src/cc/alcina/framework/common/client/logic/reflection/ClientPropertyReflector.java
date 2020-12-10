@@ -28,6 +28,8 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCre
 /**
  * 
  * @author Nick Reddel
+ * 
+ * FIXME - dirndl.1 - remove most API except annotations (and minimise non-resolved calls to annotations in client code) 
  */
 public class ClientPropertyReflector
 		implements Comparable<ClientPropertyReflector>, PropertyReflector {

@@ -13,17 +13,22 @@
  */
 package cc.alcina.framework.common.client.provider;
 
+import java.util.function.Function;
+
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
 /**
@@ -72,7 +77,14 @@ public class TextProvider {
 	}
 
 	public String getLabelText(Class c, ClientPropertyReflector pr) {
+		
 		return pr.getDisplayName();
+	}
+	public String getLabelText(Class c, AnnotationLocation location) {
+		Display display = location.getAnnotation(Display.class);
+		String rawName = display == null ? location.propertyReflector.getPropertyName()
+				: display.name();
+		return rawName;
 	}
 
 	public Object getLabelText(Class c, String propertyName) {

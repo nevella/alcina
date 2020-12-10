@@ -31,12 +31,17 @@ public class MethodContext {
 
 	private ClassLoader entryClassLoader;
 
+	private boolean executeOutsideTransaction;
+
 	public <T> T call(Callable<T> callable) {
 		entryClassLoader = Thread.currentThread().getContextClassLoader();
 		boolean inTransaction = Transaction.isInTransaction();
 		try {
 			if (wrappingTransaction && !inTransaction) {
 				Transaction.begin();
+			}
+			if (executeOutsideTransaction && inTransaction) {
+				Transaction.end();
 			}
 			if (!context.isEmpty()) {
 				LooseContext.push();
@@ -74,6 +79,9 @@ public class MethodContext {
 			if (wrappingTransaction && !inTransaction) {
 				Transaction.end();
 			}
+			if (executeOutsideTransaction && inTransaction) {
+				Transaction.begin();
+			}
 		}
 	}
 
@@ -97,6 +105,11 @@ public class MethodContext {
 
 	public MethodContext withContextValue(String key, Object value) {
 		context.put(key, value);
+		return this;
+	}
+
+	public MethodContext withExecuteOutsideTransaction() {
+		this.executeOutsideTransaction = true;
 		return this;
 	}
 

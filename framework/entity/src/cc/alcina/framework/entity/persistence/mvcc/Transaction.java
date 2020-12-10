@@ -153,7 +153,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	private static boolean retainStartEndTraces() {
-		return ResourceUtilities.is("retainTraces")
+		return ResourceUtilities.is(Transaction.class, "retainTraces")
 				|| LooseContext.is(CONTEXT_RETAIN_TRANSACTION_TRACES);
 	}
 
@@ -488,7 +488,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	void setPhase(TransactionPhase phase) {
-		if (ResourceUtilities.is("debugSetPhase")) {
+		if (ResourceUtilities.is(Transaction.class, "debugSetPhase")) {
 			logger.info("{}->{} ::\n{}", this.phase, phase,
 					SEUtilities.getCurrentThreadStacktraceSlice());
 		}

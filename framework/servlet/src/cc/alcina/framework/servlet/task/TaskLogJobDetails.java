@@ -43,7 +43,7 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 						.style("whitespace:pre-wrap");
 			}
 			JobContext.get().getJob().setLargeResult(doc.prettyToString());
-			slf4jLogger.info("Details output to job.largeResult");
+			logger.info("Details output to job.largeResult");
 		}
 	}
 }

@@ -58,6 +58,9 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.DefaultResolver;
+import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
@@ -202,7 +205,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			final Property p = Introspector.INSTANCE.getDescriptor(target)
 					.getProperty(field.getPropertyName());
 			widget = SIMPLE_FACTORY
-					.getWidgetProvider(field.getPropertyName(), p.getType())
+					.getWidgetProvider( p.getType())
 					.get();
 		}
 		binding = new Binding(widget, "value", field.getValidator(),
@@ -282,13 +285,13 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			BoundWidgetTypeFactory factory, boolean editableWidgets,
 			boolean multiple) {
 		return fieldsForReflectedObjectAndSetupWidgetFactory(obj, factory,
-				editableWidgets, multiple, null, null);
+				editableWidgets, multiple, null, null,new DefaultResolver());
 	}
 
 	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
 			BoundWidgetTypeFactory factory, boolean editableWidgets,
 			boolean multiple, String propertyName,
-			Predicate<String> editableFieldNameFilter) {
+			Predicate<String> editableFieldNameFilter, Resolver resolver) {
 		factory.add(Date.class, new DateBoxProvider());
 		List<Field> fields = new ArrayList<Field>();
 		ClientBeanReflector bi = ClientReflector.get()
@@ -311,7 +314,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					&& !editableFieldNameFilter.test(pn)) {
 				editableField = false;
 			}
-			Field f = getField(c, pn, editableField, multiple, factory, obj);
+			Field f = getField(c, pn, editableField, multiple, factory, obj,resolver);
 			if (f != null) {
 				fields.add(f);
 			}
@@ -320,12 +323,15 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		return (Field[]) fields.toArray(new Field[fields.size()]);
 	}
 
+	/*
+	 * FIXME - dirndl.1 - in general, pass around clazz instead of obj
+	 */
 	public List<Field> fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 			Object obj, BoundWidgetTypeFactory factory, boolean editableWidgets,
-			boolean multiple) {
+			boolean multiple,AnnotationLocation.Resolver resolver) {
 		return new ArrayList<Field>(
 				Arrays.asList(fieldsForReflectedObjectAndSetupWidgetFactory(obj,
-						factory, editableWidgets, multiple)));
+						factory, editableWidgets, multiple,null,null,resolver)));
 	}
 
 	public Object findObjectWithPropertyInCollection(Collection c,
@@ -407,30 +413,31 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		return getField(c, propertyName, editableWidgets, multiple,
 				SIMPLE_FACTORY, null);
 	}
-
 	public Field getField(Class clazz, String propertyName,
 			boolean editableWidgets, boolean multiple,
 			BoundWidgetTypeFactory factory, Object obj) {
-		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(clazz);
-		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
-				.values();
-		Bean beanInfo = bi.getAnnotation(Bean.class);
-		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
+		return getField(clazz, propertyName, editableWidgets, multiple, factory, obj, new AnnotationLocation.DefaultResolver());
+	}
+	public Field getField(Class clazz, String propertyName,
+			boolean editableWidgets, boolean multiple,
+			BoundWidgetTypeFactory factory, Object obj,AnnotationLocation.Resolver resolver) {
+		List<PropertyReflector> propertyReflectors = Reflections.classLookup().getPropertyReflectors(clazz);
+		AnnotationLocation clazzLocation = new AnnotationLocation(clazz, null,resolver);
+		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
+		ObjectPermissions op = clazzLocation.getAnnotation(ObjectPermissions.class);
 		obj = obj != null ? obj
 				: ClientReflector.get().getTemplateInstance(clazz);
-		ClientPropertyReflector propertyReflector = bi.getPropertyReflectors()
-				.get(propertyName);
-		Property p = getProperty(obj, propertyReflector.getPropertyName());
-		BoundWidgetProvider bwp = factory.getWidgetProvider(p.getType(), clazz,
-				beanInfo, propertyReflector);
+		PropertyReflector propertyReflector = Reflections.classLookup().getPropertyReflector(clazz, propertyName);
+		AnnotationLocation propertyLocation = new AnnotationLocation(clazz, propertyReflector,resolver);
+		Property p = getProperty(obj, propertyName);
+		BoundWidgetProvider bwp = factory.getWidgetProvider(p.getType());
 		int position = multiple ? RelativePopupValidationFeedback.BOTTOM
 				: RelativePopupValidationFeedback.RIGHT;
-		if (propertyReflector != null
-				&& propertyReflector.getDisplayInfo() != null) {
-			PropertyPermissions pp = propertyReflector
+		Display display = propertyLocation.getAnnotation(Display.class);
+		if (display != null) {
+			PropertyPermissions pp = propertyLocation
 					.getAnnotation(PropertyPermissions.class);
-			Display display = propertyReflector.getDisplayInfo();
-			Association association = propertyReflector
+			Association association = propertyLocation
 					.getAnnotation(Association.class);
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, obj, true)
@@ -489,11 +496,11 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					}
 				}
 			}
-			Custom customiserInfo = propertyReflector
+			Custom customiserInfo = propertyLocation
 					.getAnnotation(Custom.class);
 			if (customiserInfo != null) {
-				Customiser customiser = (Customiser) ClientReflector.get()
-						.newInstance(customiserInfo.customiserClass(), 0, 0);
+				Customiser customiser = Reflections
+						.newInstance(customiserInfo.customiserClass());
 				bwp = customiser.getProvider(fieldEditable, domainType,
 						multiple, customiserInfo);
 			}
@@ -518,8 +525,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 							validationFeedback);
 				}
 				Field field = new Field(propertyReflector.getPropertyName(),
+						//FIXME - dirndl.2
 						TextProvider.get().getLabelText(clazz,
-								propertyReflector),
+						        propertyLocation),
 						bwp, validator, validationFeedback,
 						getDefaultConverter(bwp, p.getType()));
 				if (!display.styleName().isEmpty()) {
@@ -573,7 +581,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				}
 			}
 			return new Field(propertyReflector.getPropertyName(),
-					TextProvider.get().getLabelText(clazz, propertyReflector),
+					TextProvider.get().getLabelText(clazz, propertyLocation),
 					bwp,
 					getValidator(p.getType(), obj,
 							propertyReflector.getPropertyName(), vf),

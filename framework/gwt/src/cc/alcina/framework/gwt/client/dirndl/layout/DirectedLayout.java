@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -63,13 +64,49 @@ public class DirectedLayout {
 	}
 
 	@ClientInstantiable
-	public static class ContextResolver {
+	public static class ContextResolver implements AnnotationLocation.Resolver {
+		public ContextResolver() {
+		}
+
 		public Object resolveModel(Object model) {
 			return model;
 		}
 
 		public <T> T resolveRenderContextProperty(String key) {
 			return null;
+		}
+
+		@Override
+		public <A extends Annotation> A getAnnotation(Class<A> annotationClass,
+				AnnotationLocation location) {
+			return AnnotationLocation.Resolver.super.getAnnotation(
+					annotationClass, location);
+		}
+	}
+
+	private static class DelegatingContextResolver extends ContextResolver {
+		private ContextResolver parent = null;
+
+		private Resolver locationResolver;
+
+		public DelegatingContextResolver(ContextResolver parent,
+				Resolver locationResolver) {
+			this.parent = parent;
+			this.locationResolver = locationResolver;
+		}
+
+		public Object resolveModel(Object model) {
+			return parent.resolveModel(model);
+		}
+
+		public <T> T resolveRenderContextProperty(String key) {
+			return parent.resolveRenderContextProperty(key);
+		}
+
+		@Override
+		public <A extends Annotation> A getAnnotation(Class<A> annotationClass,
+				AnnotationLocation location) {
+			return locationResolver.getAnnotation(annotationClass, location);
 		}
 	}
 
@@ -93,6 +130,10 @@ public class DirectedLayout {
 	 */
 	public static class Node {
 		private ContextResolver resolver;
+
+		public ContextResolver getResolver() {
+			return this.resolver;
+		}
 
 		final Object model;
 
@@ -139,16 +180,18 @@ public class DirectedLayout {
 		}
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
-			// TODO - dirndl - do we resolve? I think...not - just directed
-			// (hardcode there)
-			A annotation = new AnnotationLocation(
-					model == null ? null : model.getClass(), propertyReflector)
-							.getAnnotation(clazz);
-			if (annotation == null && parent != null
+			AnnotationLocation location = new AnnotationLocation(
+					model == null ? null : model.getClass(), propertyReflector);
+			A annotation = resolver.getAnnotation(clazz, location);
+			if (annotation != null) {
+				return annotation;
+			}
+			if (parent != null
 					&& parent.renderer instanceof CollectionNodeRenderer) {
 				return parent.annotation(clazz);
+			} else {
+				return null;
 			}
-			return annotation;
 		}
 
 		public Node childBefore(Node child) {
@@ -592,6 +635,15 @@ public class DirectedLayout {
 					bindEvent(true);
 				}
 			}
+		}
+
+		public AnnotationLocation.Resolver contextResolver() {
+			return resolver;
+		}
+
+		public void pushResolver(AnnotationLocation.Resolver locationResolver) {
+			resolver = new DelegatingContextResolver(resolver,
+					locationResolver);
 		}
 	}
 

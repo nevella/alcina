@@ -1,22 +1,18 @@
 package cc.alcina.framework.servlet.actionhandlers;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.knowns.KnownJob;
 
 public abstract class AbstractTaskPerformer
 		implements Runnable, Task, TaskPerformer {
-	public transient Logger actionLogger;
-
-	protected transient org.slf4j.Logger slf4jLogger = LoggerFactory
-			.getLogger(getClass());
+	protected transient Logger logger = LoggerFactory.getLogger(getClass());
 
 	public String value;
 
@@ -56,30 +52,12 @@ public abstract class AbstractTaskPerformer
 		return null;
 	}
 
-	protected void logDebug(String template, Object... args) {
-		actionLogger.debug(Ax.format(template, args));
-	}
-
-	protected void logInfo(String template, Object... args) {
-		actionLogger.info(Ax.format(template, args));
-	}
-
-	protected void logWarn(String template, Object... args) {
-		actionLogger.warn(Ax.format(template, args));
-	}
-
 	protected void run(boolean throwExceptions) {
 		KnownJob knownJob = getKnownJob();
 		try {
 			LooseContext.push();
 			if (knownJob != null) {
 				knownJob.startJob();
-			}
-			String message = Ax.format("Started job: %s", getClass().getName());
-			if (actionLogger != null) {
-				actionLogger.info(message);
-			} else {
-				Ax.out(message);
 			}
 			run0();
 			if (knownJob != null) {
@@ -106,7 +84,7 @@ public abstract class AbstractTaskPerformer
 			return JacksonUtils.deserialize(value, clazz);
 		} catch (Exception e) {
 			try {
-				slf4jLogger.warn(
+				logger.warn(
 						"Typed value invalid - class {}. \nValid sample:\n{}",
 						clazz.getName(),
 						JacksonUtils.serializeWithDefaultsAndTypes(

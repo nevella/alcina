@@ -52,7 +52,7 @@ public abstract class AbstractTableWidget<T> extends AbstractBoundWidget<T> {
 			final Property p = Introspector.INSTANCE.getDescriptor(target)
 					.getProperty(field.getPropertyName());
 			widget = this.factory
-					.getWidgetProvider(field.getPropertyName(), p.getType())
+					.getWidgetProvider( p.getType())
 					.get();
 			// TODO Figure out some way to make this read only.
 		}

@@ -76,6 +76,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.Display;
@@ -331,7 +332,7 @@ public class ContentViewFactory {
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 		List<Field> fieldList = new ArrayList<>(Arrays.asList(GwittirBridge
 				.get().fieldsForReflectedObjectAndSetupWidgetFactory(bean,
-						factory, editable, false, null, editableFieldFilter)));
+						factory, editable, false, null, editableFieldFilter,new AnnotationLocation.DefaultResolver())));
 		if (fieldFilter != null) {
 			fieldList.removeIf(f -> !fieldFilter.test(f));
 		}
@@ -846,7 +847,7 @@ public class ContentViewFactory {
 				}
 				BoundWidgetProvider provider = field.getCellProvider() != null
 						? field.getCellProvider()
-						: factory.getWidgetProvider(field.getPropertyName(),
+						: factory.getWidgetProvider(
 								null);
 				if (provider instanceof HasMaxWidth) {
 					HasMaxWidth hmw = (HasMaxWidth) provider;

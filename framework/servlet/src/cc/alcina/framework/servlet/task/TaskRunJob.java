@@ -12,14 +12,14 @@ public class TaskRunJob extends AbstractTaskPerformer {
 		long jobId = Long.parseLong(value);
 		Job job = Job.byId(jobId);
 		if (job == null) {
-			slf4jLogger.info("Job {} does not exist", jobId);
+			logger.info("Job {} does not exist", jobId);
 		} else if (job.provideIsComplete()) {
-			slf4jLogger.info("Job {} already completed", jobId);
+			logger.info("Job {} already completed", jobId);
 		} else {
 			job.setRunAt(null);
 			job.setPerformer(ClientInstance.self());
 			job.setState(JobState.PENDING);
-			slf4jLogger.info("TaskRunJob - future-to-pending - {}", job);
+			logger.info("TaskRunJob - future-to-pending - {}", job);
 			Transaction.commit();
 		}
 	}

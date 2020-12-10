@@ -98,6 +98,18 @@ public class DomainTransformPersistenceQueue {
 		return eventQueue;
 	}
 
+	public long getLength() {
+		return events.size();
+	}
+
+	public long getOldestTx() {
+		Event peek = events.peek();
+		if (peek == null) {
+			return 0;
+		}
+		return peek.submitTime;
+	}
+
 	public DomainTransformCommitPosition getTransformCommitPosition() {
 		return state.transformCommitPosition;
 	}
@@ -449,6 +461,12 @@ public class DomainTransformPersistenceQueue {
 		long requestId;
 
 		DomainTransformCommitPosition commitPosition;
+
+		long submitTime;
+
+		private Event() {
+			submitTime = System.currentTimeMillis();
+		}
 
 		@Override
 		public String toString() {

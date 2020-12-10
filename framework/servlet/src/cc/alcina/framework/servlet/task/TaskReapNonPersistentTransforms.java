@@ -56,7 +56,7 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 			ResultSet rs = executeQuery("select max(id) from %s", dtrTableName);
 			rs.next();
 			long maxId = rs.getLong(1);
-			slf4jLogger.info("Requests to check: {}",
+			logger.info("Requests to check: {}",
 					new LongPair(lastId, maxId));
 			while (true) {
 				String rSql = String.format(
@@ -74,7 +74,7 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 					if (System.currentTimeMillis()
 							- request.getTransactionCommitTime()
 									.getTime() < TimeConstants.ONE_DAY_MS) {
-						slf4jLogger.info("At now() - 1 days, exiting");
+						logger.info("At now() - 1 days, exiting");
 						return;
 					}
 					TransformPropagationPolicy policy = Registry
@@ -89,14 +89,14 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 									.getId())
 							.collect(Collectors.toList());
 					if (toDeleteTransformIds.size() > 0) {
-						slf4jLogger.info(
+						logger.info(
 								"dtr: {} :: initial transforms :: {} :: will delete :: {}",
 								id, request.getEvents().size(),
 								toDeleteTransformIds.size());
 						stmt.execute(Ax.format("delete from %s where id in %s",
 								dteTableName, EntityPersistenceHelper
 										.toInClause(toDeleteTransformIds)));
-						slf4jLogger.info("deleted :: {}",
+						logger.info("deleted :: {}",
 								toDeleteTransformIds.size());
 					}
 				}

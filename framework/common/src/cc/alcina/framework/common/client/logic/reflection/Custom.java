@@ -20,6 +20,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
+
 /**
  * To be applied at the class or field level
  * 
@@ -32,7 +34,7 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD, ElementType.FIELD })
 @ClientVisible
 public @interface Custom {
-	Class customiserClass();
+	Class<? extends Customiser> customiserClass();
 
 	NamedParameter[] parameters() default {};
 }

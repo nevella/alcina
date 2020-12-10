@@ -10,13 +10,13 @@ public class TaskCancelJob extends AbstractTaskPerformer {
 		long jobId = Long.parseLong(value);
 		Job job = Job.byId(jobId);
 		if (job == null) {
-			slf4jLogger.info("Job {} does not exist", jobId);
+			logger.info("Job {} does not exist", jobId);
 		} else if (job.provideIsComplete()) {
-			slf4jLogger.info("Job {} already completed", jobId);
+			logger.info("Job {} already completed", jobId);
 		} else {
 			job.cancel();
 			Transaction.commit();
-			slf4jLogger.info("Job {} cancelled", jobId);
+			logger.info("Job {} cancelled", jobId);
 		}
 	}
 }
