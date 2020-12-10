@@ -155,10 +155,11 @@ public class JobScheduler {
 									schedule.isVmLocal());
 					if (schedule != null
 							&& earliestIncompleteScheduled.isPresent()
+							&& earliestIncompleteScheduled.get()!=job
 							&& schedule.isCancelIfExistingIncomplete()) {
-						job.setState(JobState.PENDING);
+						job.setState(JobState.ABORTED);
 						logger.info(
-								"Job scheduler - future-to-pending - CANCEL - {} - existingIncomplete - {}",
+								"Job scheduler - future-to-pending - ABORTED - {} - existingIncomplete - {}",
 								job, earliestIncompleteScheduled.get());
 					} else {
 						job.setPerformer(ClientInstance.self());
