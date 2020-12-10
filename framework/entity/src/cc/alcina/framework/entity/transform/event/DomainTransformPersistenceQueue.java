@@ -218,10 +218,15 @@ public class DomainTransformPersistenceQueue {
 					DomainTransformRequestPersistent dtrp,
 					DomainTransformCommitPosition position) {
 		// create an "event" to publish in the queue
+		/*
+		 * note that on warmup ClientInstance.self() will be null, so guard for
+		 * that
+		 */
+		long selfId = ClientInstance.self() == null ? -1
+				: ClientInstance.self().getId();
 		TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-				dtrp, null, dtrp.getClientInstance().getId() != ClientInstance
-						.self().getId(),
-				false, false, null, true);
+				dtrp, null, dtrp.getClientInstance().getId() != selfId, false,
+				false, null, true);
 		persistenceToken.setLocalToVm(state.isLocalToVm(dtrp));
 		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper(
 				persistenceToken);
