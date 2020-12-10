@@ -1,13 +1,13 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.sql.Timestamp;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
+import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -28,7 +28,6 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
-import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 
 /*
  * DOCUMENT - there are some slight differences between 'ensure ended' and 'ensure begun' - particularly around state TO_DB_ABORTED.
@@ -206,8 +205,7 @@ public class Transaction implements Comparable<Transaction> {
 	private boolean baseTransaction;
 
 	// field type is the actual type because we call lastKey()
-	ObjectAVLTreeSet<Transaction> committedTransactions = new ObjectAVLTreeSet<>(
-			Collections.reverseOrder());
+	SortedSet<Transaction> committedTransactions;
 
 	private TransactionId id;
 
@@ -243,6 +241,10 @@ public class Transaction implements Comparable<Transaction> {
 				throw new WrappedRuntimeException(e);
 			}
 		}
+		/*
+		 * If creating outside the base transaction, we'll immediately want a
+		 * writable version - so create it now
+		 */
 		if (!isBaseTransaction()) {
 			MvccObjectVersions<T> versions = MvccObjectVersions.ensureEntity(t,
 					this, true);

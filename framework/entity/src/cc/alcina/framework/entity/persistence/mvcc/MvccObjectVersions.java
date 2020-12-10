@@ -120,14 +120,14 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		} else {
 			/*
 			 * transforms from another vm - or domain commit - or created this
-			 * tx
+			 * tx. initialObjectIsWriteable will only be true on object creation
+			 * (so it's the correct value, the object won't be visible outside
+			 * the tx until the tx is finished).
+			 * 
+			 * if initialObjectIsWriteable==false; the incoming object won't be
+			 * modified (so may well be the base or a previous tx version)
 			 */
 			{
-				if (initialTransaction.phase == TransactionPhase.TO_DOMAIN_COMMITTING) {
-					// really not sure about this. Document our cases pliz -
-					// aligned via phase
-					throw new UnsupportedOperationException();
-				}
 				ObjectVersion<T> version = new ObjectVersion<>();
 				version.transaction = initialTransaction;
 				version.object = t;

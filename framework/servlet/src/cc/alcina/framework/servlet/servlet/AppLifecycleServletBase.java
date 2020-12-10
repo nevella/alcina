@@ -57,6 +57,7 @@ import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.DbAppender;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
@@ -130,10 +131,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	public void destroy() {
 		try {
 			getStatusNotifier().destroyed();
+			Transactions.shutdown();
+			Registry.appShutdown();
+			BackendTransformQueue.get().stop();
 			SEUtilities.appShutdown();
 			ResourceUtilities.appShutdown();
-			BackendTransformQueue.get().stop();
-			Registry.appShutdown();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

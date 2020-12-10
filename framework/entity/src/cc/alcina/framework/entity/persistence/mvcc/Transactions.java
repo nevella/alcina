@@ -2,11 +2,10 @@ package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -18,7 +17,6 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
-import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 
 public class Transactions {
@@ -37,6 +35,7 @@ public class Transactions {
 	public static synchronized void ensureInitialised() {
 		if (instance == null) {
 			instance = new Transactions();
+			instance.vacuum.start();
 		}
 	}
 
@@ -119,6 +118,10 @@ public class Transactions {
 		}
 	}
 
+	public static void shutdown() {
+		get().vacuum.shutdown();
+	}
+
 	public static TransactionsStats stats() {
 		return get().createStats();
 	}
@@ -192,8 +195,9 @@ public class Transactions {
 
 	private AtomicLong transactionIdCounter = new AtomicLong();
 
-	// these will be in commit order
-	private Object2ObjectLinkedOpenHashMap<TransactionId, Transaction> committedTransactions = new Object2ObjectLinkedOpenHashMap<>();
+	// these will be in reverse commit order
+	private ObjectAVLTreeSet<Transaction> committedTransactions = new ObjectAVLTreeSet<>(
+			Collections.reverseOrder());
 
 	private List<Transaction> completedNonDomainCommittedTransactions = new ArrayList<>();
 
@@ -214,7 +218,7 @@ public class Transactions {
 
 	public void onDomainTransactionCommited(Transaction transaction) {
 		synchronized (transactionMetadataLock) {
-			committedTransactions.put(transaction.getId(), transaction);
+			committedTransactions.add(transaction);
 		}
 	}
 
@@ -230,7 +234,7 @@ public class Transactions {
 				break;
 			}
 			if (transaction.phase != TransactionPhase.VACUUM_ENDED) {
-				vacuum.enqueueVacuum();
+				vacuum.enqueueVacuum(transaction);
 			}
 		}
 	}
@@ -339,36 +343,27 @@ public class Transactions {
 			if (committedTransactions.isEmpty()) {
 				return result;
 			}
-			TransactionId highestVacuumableId = committedTransactions.lastKey();
+			Transaction highestVacuumable = committedTransactions.first();
 			for (Transaction activeTransaction : activeTransactions.values()) {
-				if (activeTransaction.committedTransactions.contains(
-						committedTransactions.get(highestVacuumableId))) {
+				if (activeTransaction.committedTransactions
+						.contains(highestVacuumable)) {
 					// 'highest vacuumable' commit was visible to this
 					// transaction,
 					// so ... good, continue
 					continue;
 				} else {
 					// lower our sights
-					highestVacuumableId = activeTransaction.committedTransactions
+					highestVacuumable = activeTransaction.committedTransactions
 							.isEmpty() ? null
 									: activeTransaction.committedTransactions
-											.first().getId();
-					if (highestVacuumableId == null) {
+											.first();
+					if (highestVacuumable == null) {
 						return result;
 					}
 				}
 			}
-			Iterator<Entry<TransactionId, Transaction>> itr = committedTransactions
-					.entrySet().iterator();
-			while (itr.hasNext()) {
-				Entry<TransactionId, Transaction> next = itr.next();
-				result.add(next.getValue());
-				// itr.remove();
-				// nope! remove after vacuum completes
-				if (next.getKey().equals(highestVacuumableId)) {
-					break;
-				}
-			}
+			committedTransactions.tailSet(highestVacuumable)
+					.forEach(result::add);
 			return result;
 		}
 	}
@@ -378,8 +373,16 @@ public class Transactions {
 			TransactionId transactionId = new TransactionId(
 					this.transactionIdCounter.getAndIncrement());
 			transaction.setId(transactionId);
-			transaction.committedTransactions = new ObjectAVLTreeSet<>(
-					committedTransactions.values());
+			/*
+			 * Oooh, a cunning optimisation. This 'subset view' of committed
+			 * transactions will be valid for the lifetime of the transaction,
+			 * since it's exactly the set that's preventing those transactions
+			 * from being vacuumed
+			 */
+			transaction.committedTransactions = committedTransactions.isEmpty()
+					? new ObjectAVLTreeSet<>()
+					: committedTransactions
+							.tailSet(committedTransactions.first());
 			transaction.startTime = System.currentTimeMillis();
 			activeTransactions.put(transactionId, transaction);
 		}
@@ -391,8 +394,7 @@ public class Transactions {
 
 	void vacuumComplete(List<Transaction> vacuumableTransactions) {
 		synchronized (transactionMetadataLock) {
-			vacuumableTransactions
-					.forEach(tx -> committedTransactions.remove(tx.getId()));
+			committedTransactions.removeAll(vacuumableTransactions);
 		}
 	}
 
@@ -412,7 +414,7 @@ public class Transactions {
 						committedTransactions.size());
 				fb.line("===========================");
 				fb.indent(2);
-				committedTransactions.values()
+				committedTransactions
 						.forEach(tx -> fb.line(tx.toDebugString()));
 				fb.line("");
 				fb.indent(0);
@@ -429,8 +431,7 @@ public class Transactions {
 		public long getOldestTxStartTime() {
 			synchronized (transactionMetadataLock) {
 				return committedTransactions.isEmpty() ? 0L
-						: committedTransactions.values().iterator()
-								.next().startTime;
+						: committedTransactions.last().startTime;
 			}
 		}
 

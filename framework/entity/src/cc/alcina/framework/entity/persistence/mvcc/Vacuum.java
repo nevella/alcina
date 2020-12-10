@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -9,18 +10,13 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.logic.EntityLayerLogging;
-import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
@@ -30,12 +26,6 @@ class Vacuum {
 	 * transaction thread
 	 */
 	ConcurrentHashMap<Transaction, ReferenceOpenHashSet<Vacuumable>> vacuumables = new ConcurrentHashMap<>();
-
-	Object queueCreationMonitor = new Object();
-
-	ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors
-			.newFixedThreadPool(1,
-					new NamedThreadFactory("domainstore-mvcc-vacuum"));
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -54,22 +44,8 @@ class Vacuum {
 				"domainstore-mvcc-vacuum");
 	}
 
-	public void enqueueVacuum() {
-		/*
-		 * really, there will only ever be one truly 'active' (because of the
-		 * synchronized block), but this lets us keep calling
-		 */
-		if (executor.getActiveCount() > 2) {
-			return;
-		}
-		executor.execute(() -> {
-			try {
-				vacuum();
-			} catch (Throwable t) {
-				EntityLayerLogging.log(LogMessageType.WORKER_THREAD_EXCEPTION,
-						"Vacuum exception", t);
-			}
-		});
+	public void enqueueVacuum(Transaction transaction) {
+		events.add(transaction);
 	}
 
 	/*
@@ -99,8 +75,10 @@ class Vacuum {
 					.getVacuumableCommittedTransactions();
 			vacuumableTransactionList.addAll(
 					Transactions.get().getCompletedNonDomainTransactions());
-			vacuumableTransactionList.retainAll(vacuumables.keySet());
-			for (Transaction transaction : vacuumableTransactionList) {
+			List<Transaction> withVacuumableObjectsList = new ArrayList<>(
+					vacuumableTransactionList);
+			withVacuumableObjectsList.retainAll(vacuumables.keySet());
+			for (Transaction transaction : withVacuumableObjectsList) {
 				String dtrIdClause = transaction.getTransformRequestId() == 0
 						? ""
 						: Ax.format("- %s ",
@@ -110,7 +88,7 @@ class Vacuum {
 						vacuumables.get(transaction).size());
 			}
 			ReferenceOpenHashSet<Vacuumable> toVacuum = new ReferenceOpenHashSet<>();
-			vacuumableTransactionList.stream().map(vacuumables::get)
+			withVacuumableObjectsList.stream().map(vacuumables::get)
 					.flatMap(Collection::stream).forEach(toVacuum::add);
 			VacuumableTransactions vacuumableTransactions = new VacuumableTransactions(
 					vacuumableTransactionList);
@@ -153,6 +131,10 @@ class Vacuum {
 		Transaction.ensureBegun();
 		// will trigger an event, which will terminate the thread
 		Transaction.end();
+	}
+
+	void start() {
+		vacuumThread.start();
 	}
 
 	class EventHandler implements Runnable {

@@ -83,6 +83,8 @@ public class DomainTransformPersistenceQueue {
 
 	private ConcurrentLinkedQueue<QueueWaiter> queueWaiters = new ConcurrentLinkedQueue<>();
 
+	private Event firingEvent;
+
 	public DomainTransformPersistenceQueue(
 			DomainTransformPersistenceEvents persistenceEvents) {
 		this.persistenceEvents = persistenceEvents;
@@ -99,15 +101,19 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public long getLength() {
-		return events.size();
+		Event event = this.firingEvent;
+		return events.size() + (event == null ? 0 : 1);
 	}
 
 	public long getOldestTx() {
-		Event peek = events.peek();
-		if (peek == null) {
+		Event event = this.firingEvent;
+		if (event == null) {
+			event = events.peek();
+		}
+		if (event == null) {
 			return 0;
 		}
-		return peek.submitTime;
+		return event.submitTime;
 	}
 
 	public DomainTransformCommitPosition getTransformCommitPosition() {
@@ -300,18 +306,18 @@ public class DomainTransformPersistenceQueue {
 					persistenceEvents.domainStore.name));
 			while (true) {
 				try {
-					Event event = events.poll(5, TimeUnit.SECONDS);
+					firingEvent = events.poll(5, TimeUnit.SECONDS);
 					if (closed.get()) {
 						return;
 					}
-					if (event == null) {
+					if (firingEvent == null) {
 						continue;
 					}
-					logger.debug("Polled event from queue: {}", event);
+					logger.debug("Polled event from queue: {}", firingEvent);
 					try {
 						Transaction.ensureBegun();
 						ThreadedPermissionsManager.cast().pushSystemUser();
-						publishTransformEvent(event);
+						publishTransformEvent(firingEvent);
 					} finally {
 						Transaction.ensureBegun();
 						ThreadedPermissionsManager.cast().popSystemUser();
@@ -319,6 +325,8 @@ public class DomainTransformPersistenceQueue {
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
+				} finally {
+					firingEvent = null;
 				}
 			}
 		}
