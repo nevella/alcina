@@ -219,7 +219,7 @@ public class DomainTransformPersistenceQueue {
 					DomainTransformCommitPosition position) {
 		// create an "event" to publish in the queue
 		TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-				dtrp, null, dtrp.getClientInstance().getId() == ClientInstance
+				dtrp, null, dtrp.getClientInstance().getId() != ClientInstance
 						.self().getId(),
 				false, false, null, true);
 		persistenceToken.setLocalToVm(state.isLocalToVm(dtrp));
