@@ -11,7 +11,7 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 		implements TaskPerformer<R> {
 	boolean started;
 
-	protected Logger logger = LoggerFactory.getLogger(getClass());
+	protected transient Logger logger = LoggerFactory.getLogger(getClass());
 
 	public synchronized void updateJob(String message) {
 		updateJob(message, 1);

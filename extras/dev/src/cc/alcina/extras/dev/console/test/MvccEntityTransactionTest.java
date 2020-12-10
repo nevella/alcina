@@ -22,12 +22,7 @@ public abstract class MvccEntityTransactionTest extends AbstractTaskPerformer {
 			LooseContext.push();
 			Transaction.ensureEnded();
 			Transaction.begin();
-			String message = Ax.format("Started job: %s", getClass().getName());
-			if (actionLogger != null) {
-				actionLogger.info(message);
-			} else {
-				Ax.out(message);
-			}
+			logger.info("Started job: {}", getClass().getName());
 			run0();
 			if (lastThreadException != null) {
 				throw lastThreadException;

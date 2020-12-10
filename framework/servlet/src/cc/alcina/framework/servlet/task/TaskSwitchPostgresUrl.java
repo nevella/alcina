@@ -15,7 +15,7 @@ public class TaskSwitchPostgresUrl extends AbstractTaskPerformer {
 			CommonPersistenceProvider.get().getCommonPersistence()
 					.changeJdbcConnectionUrl(spec.newUrl);
 		}
-		slf4jLogger.info("Connection url changed to: {}", spec.newUrl);
+		logger.info("Connection url changed to: {}", spec.newUrl);
 	}
 
 	public static class Spec {

@@ -973,16 +973,10 @@ public class DomainStore implements IDomainStore {
 
 		public long domainStorePostProcessStartTime;
 
-		private long lastSequenceBarrierTimeout;
-
 		AtomicInteger domainStoreExceptionCount = new AtomicInteger();
 
 		public AtomicInteger getDomainStoreExceptionCount() {
 			return this.domainStoreExceptionCount;
-		}
-
-		public long getLastSequenceBarrierTimeout() {
-			return lastSequenceBarrierTimeout;
 		}
 
 		public long getMvccOldestTx() {
@@ -1023,9 +1017,12 @@ public class DomainStore implements IDomainStore {
 			return time;
 		}
 
-		public void
-				setLastSequenceBarrierTimeout(long lastSequenceBarrierTimeout) {
-			this.lastSequenceBarrierTimeout = lastSequenceBarrierTimeout;
+		public long getTransformEventQueueLength() {
+			return getPersistenceEvents().getQueue().getLength();
+		}
+
+		public long getTransformEventQueueOldestTx() {
+			return getPersistenceEvents().getQueue().getOldestTx();
 		}
 	}
 

@@ -49,7 +49,6 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 
 	public void runFromCommand(DevConsoleCommand command, String[] argv) {
 		this.argv = argv;
-		actionLogger = command.logger;
 		run();
 	}
 

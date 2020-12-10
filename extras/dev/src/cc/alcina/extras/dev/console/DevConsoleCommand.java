@@ -467,7 +467,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					runnable = (DevConsoleRunnable) clazz.newInstance();
 					runnable.command = this;
 					runnable.value = argv.length == 1 ? null : argv[1];
-					runnable.actionLogger = console.devHelper.getActionLogger();
 					runnable.argv = argv;
 					boolean runSuccess = false;
 					try {

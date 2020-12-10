@@ -124,7 +124,7 @@ public class TaskListJobs extends AbstractTaskPerformer {
 		addCompleted(doc, "top-level", true, 20);
 		addCompleted(doc, "child", false, 20);
 		JobContext.get().getJob().setLargeResult(doc.prettyToString());
-		slf4jLogger.info("Log output to job.largeResult");
+		logger.info("Log output to job.largeResult");
 	}
 
 	protected void addActive(DomDoc doc, String sectionFilterName,

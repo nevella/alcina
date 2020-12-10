@@ -96,8 +96,9 @@ public class ResourceUtilities {
 
 	private static boolean clientWithJvmProperties;
 
+	private static ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
+
 	public static void appShutdown() {
-		customProperties.clear();
 	}
 
 	public static StringMap classPathStringExistenceMap(Class clazz,
@@ -343,6 +344,14 @@ public class ResourceUtilities {
 	}
 
 	public static synchronized String getBundledString(Class clazz,
+			String propertyName) {
+		String namespacedKey = (clazz == null) ? propertyName
+				: GraphProjection.classSimpleName(clazz) + "." + propertyName;
+		return cache.computeIfAbsent(namespacedKey,
+				k -> ResourceUtilities.getBundledString0(clazz, propertyName));
+	}
+
+	public static synchronized String getBundledString0(Class clazz,
 			String propertyName) {
 		String namespacedKey = (clazz == null) ? propertyName
 				: GraphProjection.classSimpleName(clazz) + "." + propertyName;
@@ -763,6 +772,7 @@ public class ResourceUtilities {
 				continue;
 			}
 			customProperties.put((String) key, (String) value);
+			cache.clear();
 		}
 	}
 
@@ -827,6 +837,7 @@ public class ResourceUtilities {
 
 	public static synchronized void set(String key, String value) {
 		customProperties.put(key, value);
+		cache.clear();
 	}
 
 	public static void
