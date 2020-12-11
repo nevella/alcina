@@ -253,10 +253,6 @@ public abstract class Entity<T extends Entity> extends Bindable
 		return toLocator().toString();
 	}
 
-	public T writeable() {
-		return domainIdentity();
-	}
-
 	protected int _compareTo(Entity o) {
 		o = Domain.resolve(o);
 		String s1 = comparisonString();
