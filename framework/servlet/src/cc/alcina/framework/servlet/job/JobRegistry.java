@@ -374,7 +374,12 @@ public class JobRegistry extends WriterService {
 			 * key - handle tx timeouts/aborts
 			 */
 			Transaction.ensureBegun();
-			releaseResources(job, false);
+			try {
+				releaseResources(job, false);
+			} catch (Exception e) {
+				e.printStackTrace();
+				logger.warn("DEVEX::7 - JobRegistry.releaseResources", e);
+			}
 			LooseContext.remove(
 					ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
 			performer.onBeforeEnd();
