@@ -1,9 +1,12 @@
 package cc.alcina.framework.servlet.google;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,12 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.api.client.util.Objects;
-import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.servlet.google.SheetAccessor.SheetAccess;
 
 public class SheetPersistence {
@@ -43,11 +47,20 @@ public class SheetPersistence {
 	public SheetPersistence(Object persistent, SheetAccess sheetAccess) {
 		this.persistent = persistent;
 		this.sheetAccess = sheetAccess;
-		Preconditions.checkArgument(
-				persistent.getClass().getDeclaredFields().length == 1);
 	}
 
-	public void load() {
+	public void load(boolean useLocalCached) {
+		if (useLocalCached) {
+			File file = getPersistentFile();
+			if (file.exists()) {
+				try {
+					list = KryoUtils.deserializeFromFile(file, ArrayList.class);
+					return;
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		try {
 			logger.info("Loading {}", persistent.getClass().getSimpleName());
 			ensureFields();
@@ -59,7 +72,13 @@ public class SheetPersistence {
 					String value = row.getValue(translateFieldName(f));
 					if (value != null) {
 						hadValue = true;
-						f.set(v, value);
+						if (f.getType() == int.class) {
+							f.set(v, Integer.parseInt(value.toString()));
+						} else if (f.getType() == String.class) {
+							f.set(v, value);
+						} else {
+							throw new IllegalArgumentException();
+						}
 					}
 				}
 				if (hadValue) {
@@ -80,17 +99,32 @@ public class SheetPersistence {
 
 	public void save(boolean dryRun) {
 		try {
+			KryoUtils.serializeToFile(list, getPersistentFile());
 			logger.info("Saving {} - dry run: {}",
 					persistent.getClass().getSimpleName(), dryRun);
 			ensureFields();
 			int rowIdx = 0;
 			SheetWrapper sheetWrapper = sheetWrapper();
 			boolean hadUpdate = false;
+			if (list.size() > 0 && list.iterator().next() instanceof Comparable
+					&& isSortBeforeSave()) {
+				list.sort(Comparator.naturalOrder());
+			}
 			for (SheetWrapper.Row row : sheetWrapper) {
 				boolean hadValue = false;
 				Object v = list.get(rowIdx++);
 				for (Field f : valueTypeFields) {
-					String value = (String) f.get(v);
+					String value = null;
+					Object fValue = f.get(v);
+					if (fValue != null) {
+						if (f.getType() == int.class) {
+							value = String.valueOf(fValue);
+						} else if (f.getType() == String.class) {
+							value = fValue.toString();
+						} else {
+							throw new IllegalArgumentException();
+						}
+					}
 					String existing = row.getValue(translateFieldName(f));
 					if (Objects.equal(value, existing)) {
 						continue;
@@ -138,6 +172,16 @@ public class SheetPersistence {
 					.collect(Collectors.toList());
 			list = (List) listField.get(persistent);
 		}
+	}
+
+	private File getPersistentFile() {
+		DataFolderProvider.get().getSubFolder("sheetPersistence").mkdirs();
+		return DataFolderProvider.get().getChildFile(Ax
+				.format("sheetPersistence/%s.dat", getClass().getSimpleName()));
+	}
+
+	protected boolean isSortBeforeSave() {
+		return true;
 	}
 
 	protected String translateFieldName(Field f) {

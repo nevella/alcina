@@ -12,7 +12,11 @@ public abstract class SheetPersistenceModel {
 	public abstract SheetAccess getAccess();
 
 	public void load() {
-		persistence.load();
+		load(false);
+	}
+
+	public void load(boolean useLocalCached) {
+		persistence.load(useLocalCached);
 	}
 
 	public void save(boolean dryRun) {

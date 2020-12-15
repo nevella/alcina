@@ -36,7 +36,7 @@ public class SheetWrapper
 			if (effectiveValue == null) {
 				continue;
 			}
-			if (effectiveValue.getStringValue().equals(key)) {
+			if (effectiveValue.getStringValue().equalsIgnoreCase(key)) {
 				return idx;
 			}
 		}
