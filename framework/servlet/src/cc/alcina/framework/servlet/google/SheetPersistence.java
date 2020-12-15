@@ -50,20 +50,22 @@ public class SheetPersistence {
 	}
 
 	public void load(boolean useLocalCached) {
-		if (useLocalCached) {
-			File file = getPersistentFile();
-			if (file.exists()) {
-				try {
-					list = KryoUtils.deserializeFromFile(file, ArrayList.class);
-					return;
-				} catch (Exception e) {
-					e.printStackTrace();
+		try {
+			ensureFields();
+			if (useLocalCached) {
+				File file = getPersistentFile();
+				if (file.exists()) {
+					try {
+						list = KryoUtils.deserializeFromFile(file,
+								ArrayList.class);
+						listField.set(persistent, list);
+						return;
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
 			}
-		}
-		try {
 			logger.info("Loading {}", persistent.getClass().getSimpleName());
-			ensureFields();
 			list.clear();
 			for (SheetWrapper.Row row : sheetWrapper()) {
 				boolean hadValue = false;
@@ -92,6 +94,7 @@ public class SheetPersistence {
 				}
 			}
 			listField.set(persistent, list);
+			KryoUtils.serializeToFile(list, getPersistentFile());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -103,16 +106,17 @@ public class SheetPersistence {
 			logger.info("Saving {} - dry run: {}",
 					persistent.getClass().getSimpleName(), dryRun);
 			ensureFields();
-			int rowIdx = 0;
 			SheetWrapper sheetWrapper = sheetWrapper();
 			boolean hadUpdate = false;
 			if (list.size() > 0 && list.iterator().next() instanceof Comparable
 					&& isSortBeforeSave()) {
 				list.sort(Comparator.naturalOrder());
 			}
-			for (SheetWrapper.Row row : sheetWrapper) {
+			int rowIdx = 0;
+			for (; rowIdx < list.size(); rowIdx++) {
+				SheetWrapper.Row row = sheetWrapper.getRow(rowIdx);
 				boolean hadValue = false;
-				Object v = list.get(rowIdx++);
+				Object v = list.get(rowIdx);
 				for (Field f : valueTypeFields) {
 					String value = null;
 					Object fValue = f.get(v);
@@ -139,9 +143,25 @@ public class SheetPersistence {
 								row);
 					}
 				}
-				if (rowIdx == list.size()) {
-					// blank rows at end of range
-					break;
+			}
+			for (; rowIdx < sheetWrapper.rowSize(); rowIdx++) {
+				SheetWrapper.Row row = sheetWrapper.getRow(rowIdx);
+				boolean hadValue = false;
+				Object value = null;
+				for (Field f : valueTypeFields) {
+					String existing = row.getValue(translateFieldName(f));
+					if (Objects.equal(value, existing)) {
+						continue;
+					}
+					hadUpdate = true;
+					Ax.out("\tUpdate %s::%s :: %s => %s",
+							sheetAccess.getSheetName(), rowIdx + 1, existing,
+							value);
+					if (dryRun) {
+					} else {
+						sheetWrapper.addUpdate(translateFieldName(f), value,
+								row);
+					}
 				}
 			}
 			if (!dryRun && hadUpdate) {
@@ -176,8 +196,9 @@ public class SheetPersistence {
 
 	private File getPersistentFile() {
 		DataFolderProvider.get().getSubFolder("sheetPersistence").mkdirs();
-		return DataFolderProvider.get().getChildFile(Ax
-				.format("sheetPersistence/%s.dat", getClass().getSimpleName()));
+		return DataFolderProvider.get()
+				.getChildFile(Ax.format("sheetPersistence/%s.dat",
+						persistent.getClass().getSimpleName()));
 	}
 
 	protected boolean isSortBeforeSave() {

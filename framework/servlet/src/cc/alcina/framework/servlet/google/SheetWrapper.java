@@ -62,6 +62,10 @@ public class SheetWrapper
 		}
 	}
 
+	public Row getRow(int rowIdx) {
+		return new Row(rowIdx + 1);
+	}
+
 	@Override
 	public boolean hasNext() {
 		return rowData.size() > rowIdx;
@@ -79,6 +83,10 @@ public class SheetWrapper
 
 	public void reset() {
 		rowIdx = 1;
+	}
+
+	public int rowSize() {
+		return rowData.size();
 	}
 
 	public void setDateValue(int rowCounter, String key, String formattedDate) {

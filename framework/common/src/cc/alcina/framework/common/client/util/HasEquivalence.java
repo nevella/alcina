@@ -78,6 +78,14 @@ public interface HasEquivalence<T> {
 		}
 	}
 
+	public abstract static class HasEquivalenceAdapterString<T, E extends HasEquivalenceAdapterString>
+			extends HasEquivalenceAdapter<T, E>
+			implements HasEquivalenceString<E> {
+		public HasEquivalenceAdapterString(T referent) {
+			super(referent);
+		}
+	}
+
 	public static interface HasEquivalenceHash<T> extends HasEquivalence<T> {
 		public int equivalenceHash();
 	}
