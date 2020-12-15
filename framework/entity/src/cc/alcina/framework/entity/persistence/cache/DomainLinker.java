@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.Association;
@@ -75,7 +76,6 @@ public class DomainLinker<E extends Entity> {
 
 	private List<Field> fields;
 
-
 	public DomainLinker(EntityManager em, Class<E> clazz, String alias,
 			LinkerFilter fieldFilter) {
 		this(em, clazz, alias, fieldFilter, null);
@@ -118,8 +118,8 @@ public class DomainLinker<E extends Entity> {
 			clause = ", " + clause;
 		} else {
 			if (parent != null) {
-				//add a dummy col
-				return Ax.format(", %s.id",alias);
+				// add a dummy col
+				return Ax.format(", %s.id", alias);
 			} else {
 				throw new RuntimeException("No outgoing object refs");
 			}
@@ -127,38 +127,14 @@ public class DomainLinker<E extends Entity> {
 		return clause;
 	}
 
-	public List<E> linkAndDetach(List<Object[]> objs) {
-		if (objs.isEmpty()) {
-			return Collections.emptyList();
+	public List<E> linkAndDetach(EntityManager em, String eql) {
+		MethodContext methodContext = MethodContext.instance();
+		if (TransformManager.get().getTransforms().isEmpty()) {
+			methodContext.withExecuteOutsideTransaction();
 		}
-		mappingOffset = (int) (objs.get(0).length
-				- mappings.stream().filter(m -> !m.isOneToMany()).count());
-		/*
-		 * Construct our detached copies and put them in the graph first, so
-		 * that subLinkers can find them
-		 */
-		List<E> result = new ArrayList<>();
-		List<String> ignorePropertyNames = fields.stream()
-				.filter(f -> Set.class.isAssignableFrom(f.getType()))
-				.map(Field::getName).collect(Collectors.toList());
-		for (Object[] array : objs) {
-			E attached = (E) array[0];
-			E detached = Reflections.classLookup().newInstance(clazz);
-			result.add(detached);
-			ResourceUtilities.copyBeanProperties(attached, detached, null, true,
-					ignorePropertyNames);
-			cache().put(detached);
-			// only needed for top-level
-			queried().add(clazz, detached.getId());
-			for (Mapping mapping : mappings) {
-				mapping.apply(array, detached);
-			}
-		}
-		mappings.forEach(Mapping::resolve);
-		if (parent == null) {
-			resolveTasks.forEach(Runnable::run);
-		}
-		return result;
+		List<Object[]> objs = methodContext
+				.call(() -> em.createQuery(eql).getResultList());
+		return linkAndDetach(objs);
 	}
 
 	private DetachedEntityCache cache() {
@@ -196,6 +172,40 @@ public class DomainLinker<E extends Entity> {
 		linkAndDetach(resultList);
 	}
 
+	private List<E> linkAndDetach(List<Object[]> objs) {
+		if (objs.isEmpty()) {
+			return Collections.emptyList();
+		}
+		mappingOffset = (int) (objs.get(0).length
+				- mappings.stream().filter(m -> !m.isOneToMany()).count());
+		/*
+		 * Construct our detached copies and put them in the graph first, so
+		 * that subLinkers can find them
+		 */
+		List<E> result = new ArrayList<>();
+		List<String> ignorePropertyNames = fields.stream()
+				.filter(f -> Set.class.isAssignableFrom(f.getType()))
+				.map(Field::getName).collect(Collectors.toList());
+		for (Object[] array : objs) {
+			E attached = (E) array[0];
+			E detached = Reflections.classLookup().newInstance(clazz);
+			result.add(detached);
+			ResourceUtilities.copyBeanProperties(attached, detached, null, true,
+					ignorePropertyNames);
+			cache().put(detached);
+			// only needed for top-level
+			queried().add(clazz, detached.getId());
+			for (Mapping mapping : mappings) {
+				mapping.apply(array, detached);
+			}
+		}
+		mappings.forEach(Mapping::resolve);
+		if (parent == null) {
+			resolveTasks.forEach(Runnable::run);
+		}
+		return result;
+	}
+
 	private String metricKey() {
 		String prefix = parent == null ? "" : parent.metricKey() + ".";
 		return prefix + clazz.getSimpleName();
@@ -211,8 +221,8 @@ public class DomainLinker<E extends Entity> {
 
 	public static abstract class LinkerFilter implements Predicate<Field> {
 	}
-	public static abstract class LinkerFilterEntity extends LinkerFilter {
 
+	public static abstract class LinkerFilterEntity extends LinkerFilter {
 		@Override
 		public boolean test(Field t) {
 			if (Entity.class.isAssignableFrom(t.getType())) {
