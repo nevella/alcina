@@ -515,7 +515,8 @@ public class JobRegistry extends WriterService {
 			} else {
 				// will generally be close to the top of a thread - so log, even
 				// if there's logging higher
-				logger.warn(Ax.format("DEVEX::3 - JobRegistry.performJob - {}",
+				e.printStackTrace();
+				logger.warn(Ax.format("DEVEX::3 - JobRegistry.performJob - %s",
 						job), e);
 			}
 		} finally {
