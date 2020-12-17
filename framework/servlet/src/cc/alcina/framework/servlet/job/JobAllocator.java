@@ -14,8 +14,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -421,8 +419,9 @@ class JobAllocator {
 				 */
 				return true;
 			case Sequence:
-				Preconditions.checkArgument(
-						job.providePreviousOrSelfInSequence() != job);
+				if (job.providePreviousOrSelfInSequence() == job) {
+					return false;
+				}
 				return job.providePreviousOrSelfInSequence().provideIsComplete()
 						&& job.providePreviousOrSelfInSequence()
 								.getCreator() == ClientInstance.self();
