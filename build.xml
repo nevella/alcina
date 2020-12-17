@@ -333,12 +333,6 @@
 			<fileset dir="${framework.servlet.build.dir}">
 				<include name="cc/alcina/framework/servlet/logging/*.*" />
 			</fileset>
-			<fileset dir="${framework.servlet.base.dir}/src">
-				<include name="cc/alcina/framework/servlet/logging/*.*" />
-
-				<include name="**/*.java" />
-				<exclude name="**/*.class" />
-			</fileset>
 		</jar>
 		<delete file="${framework.dist.dir}/${ant.project.name}-servlet.jar" if:true="${alcina.delete-before-jars}" />
 

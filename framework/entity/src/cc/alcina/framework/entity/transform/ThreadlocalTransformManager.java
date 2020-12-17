@@ -795,6 +795,9 @@ public class ThreadlocalTransformManager extends TransformManager
 	 * 
 	 * userSessionEntityMap/localIdToEntityMap are not modified (they're for
 	 * in-em access)
+	 * 
+	 * FIXME - mvcc.jobs.2 - remove most calls to this (since framework
+	 * registers)
 	 *
 	 */
 	public <T extends Entity> T registerDomainObject(T entity) {
@@ -834,6 +837,11 @@ public class ThreadlocalTransformManager extends TransformManager
 		tlIdGenerator.reset(counter);
 	}
 
+	/**
+	 * WARNING!! Do not call in normal client code - instead, call
+	 * Transaction.endAndBeginNew (since all listeners will be dropped,
+	 * subsequent transforms in this tx will not be picked up)
+	 */
 	public void resetTltm(EntityLocatorMap locatorMap) {
 		resetTltm(locatorMap, null, false);
 	}

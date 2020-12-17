@@ -241,6 +241,10 @@ public class DomainDescriptorJob {
 		stateMessageEventThread.start();
 	}
 
+	public void removeAllocationQueue(Job job) {
+		queues.remove(job);
+	}
+
 	private void cleanupQueues() {
 		queues.entrySet().removeIf(e -> e.getValue().job
 				.resolveState() == JobState.ABORTED

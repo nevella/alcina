@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.Event;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.EventType;
@@ -151,7 +152,12 @@ class JobAllocator {
 
 	void onFinished() {
 		finished = true;
-		new StatusMessage().publish();
+		try {
+			new StatusMessage().publish();
+		} catch (Exception e) {
+			// to handle the job-deleted case
+			e.printStackTrace();
+		}
 		childCompletionLatch.countDown();
 		sequenceCompletionLatch.countDown();
 	}
@@ -181,7 +187,11 @@ class JobAllocator {
 			}
 			if (queue.phase == SubqueuePhase.Complete
 					|| job.resolveState() == JobState.CANCELLED
-					|| job.resolveState() == JobState.ABORTED) {
+					|| job.resolveState() == JobState.ABORTED
+					/*
+					 * sneaky deletion - FIXME - mvcc.jobs.2
+					 */
+					|| job.domain().domainVersion() == null) {
 				logger.info("Allocation thread ended -  job {}",
 						job.toDisplayName());
 				if (queue.phase == SubqueuePhase.Complete) {
@@ -192,6 +202,7 @@ class JobAllocator {
 						Transaction.commit();
 					}
 				}
+				DomainDescriptorJob.get().removeAllocationQueue(job);
 				onFinished();
 				return;
 			}
@@ -420,6 +431,10 @@ class JobAllocator {
 				return true;
 			case Sequence:
 				if (job.providePreviousOrSelfInSequence() == job) {
+					/*
+					 * A bug - this question shouldn't be aksed of
+					 * first-in-sequence - probable issue with ddj/remove
+					 */
 					return false;
 				}
 				return job.providePreviousOrSelfInSequence().provideIsComplete()

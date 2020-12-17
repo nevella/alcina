@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.job;
 
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -111,6 +112,11 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public Job(long id) {
 		setId(id);
+	}
+
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		this.propertyChangeSupport().addPropertyChangeListener(listener);
 	}
 
 	// FIXME - mvcc.jobs - get rid'o'me

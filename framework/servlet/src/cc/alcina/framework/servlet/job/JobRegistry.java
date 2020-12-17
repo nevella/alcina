@@ -327,6 +327,8 @@ public class JobRegistry extends WriterService {
 			if (antecedentAcquired.isPresent()) {
 				record.setAcquired(true);
 				record.setAcquiredFromAncestor(true);
+				forJob.persistProcessState();
+				Transaction.commit();
 			} else {
 				forJob.persistProcessState();
 				Transaction.commit();

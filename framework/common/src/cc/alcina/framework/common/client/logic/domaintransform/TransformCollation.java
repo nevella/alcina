@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
+//FIXME - mvcc.jobs.2 - make query/queryresult typed?
 public class TransformCollation {
 	// class/locator/collation
 	private MultikeyMap<EntityCollation> perClass;
