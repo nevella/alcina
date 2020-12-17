@@ -141,6 +141,11 @@ public abstract class SearchDefinition extends WrapperPersistable
 				.findFirst().orElse(null);
 	}
 
+	public <CG extends CriteriaGroup> CG ensureCriteriaGroup(Class<CG> clazz) {
+		CG existing = criteriaGroup(clazz);
+		return existing == null ? Reflections.newInstance(clazz) : existing;
+	}
+
 	public void ensureCriteriaGroups(CriteriaGroup... criteriaGroups) {
 		for (CriteriaGroup cg : criteriaGroups) {
 			CriteriaGroup existing = criteriaGroup(cg.getClass());
