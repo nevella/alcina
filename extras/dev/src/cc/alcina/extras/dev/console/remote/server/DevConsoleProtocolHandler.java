@@ -153,8 +153,9 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
 						text = text.replaceAll(
 								"(?:^|\\s)(/(?:tmp|Users|~).+?)(?:\n|\t|$)",
 								"<a href='/serve-local.do?$1' target='_blank'>$1</a>");
-						String escaped = text.contains("<a href=") ? text
-								: StringEscapeUtils.escapeHtml(text);
+						String escaped = text.contains("<a href=")
+								&& !text.contains("\"<") ? text
+										: StringEscapeUtils.escapeHtml(text);
 						String span = Ax.format("<span class='%s'>%s</span>",
 								consoleRecord.style.toString().toLowerCase(),
 								escaped);

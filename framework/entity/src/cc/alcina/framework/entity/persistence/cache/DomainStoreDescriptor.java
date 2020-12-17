@@ -80,6 +80,9 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		throw new UnsupportedOperationException();
 	}
 
+	public void onAppShutdown() {
+	}
+
 	public void onWarmupComplete(DomainStore domainStore) {
 	}
 

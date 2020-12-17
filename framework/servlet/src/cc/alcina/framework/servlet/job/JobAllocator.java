@@ -56,6 +56,8 @@ class JobAllocator {
 
 	private StatusMessage enqueuedStatusMessage;
 
+	Thread thread;
+
 	JobAllocator(AllocationQueue queue, ExecutorService allocatorService) {
 		this.queue = queue;
 		this.allocatorService = allocatorService;
@@ -294,6 +296,7 @@ class JobAllocator {
 
 		@Override
 		public void run() {
+			thread = Thread.currentThread();
 			while (!finished) {
 				try {
 					Event event = eventQueue.poll(1, TimeUnit.SECONDS);

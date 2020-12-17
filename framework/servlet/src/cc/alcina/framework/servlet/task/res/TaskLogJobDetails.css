@@ -1,0 +1,19 @@
+body {
+	font-family: 'serif';
+}
+td {
+	padding: 2px 8px;
+	vertical-align: top;
+	max-height: 6em;
+	overflow:scroll;
+	white-space: pre-wrap;
+}
+
+.allocation-queue,.stack-trace{
+	margin-bottom:1em;
+	white-space: pre;
+	font-family:Courier,fixed-width;
+	font-size: 14px;
+    font-weight: 100;
+    -webkit-font-smoothing: none;
+}

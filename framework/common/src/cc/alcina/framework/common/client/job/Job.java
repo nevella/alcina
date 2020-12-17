@@ -19,6 +19,7 @@ import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
+import cc.alcina.framework.common.client.actions.JobResource;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
@@ -41,6 +42,9 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
+import cc.alcina.framework.common.client.util.HasEquivalenceString;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
@@ -82,8 +86,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	private int retryCount;
 
-	private String stacktraceResponse;
-
 	private int performerVersionNumber;
 
 	@GwtTransient
@@ -97,6 +99,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	@GwtTransient
 	private String largeResultSerialized;
+
+	private String processStateSerialized;
+
+	private ProcessState processState;
 
 	private transient String cachedDisplayName;
 
@@ -188,6 +194,13 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		relation.setTo(to);
 	}
 
+	public ProcessState ensureProcessState() {
+		if (getProcessState() == null) {
+			setProcessState(new ProcessState());
+		}
+		return getProcessState();
+	}
+
 	public double getCompletion() {
 		return this.completion;
 	}
@@ -205,7 +218,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@Transient
 	@DomainProperty(serialize = true)
 	public Object getLargeResult() {
-		largeResult = TransformManager.resolveMaybeDeserialize(result,
+		largeResult = TransformManager.resolveMaybeDeserialize(largeResult,
 				this.largeResultSerialized, null);
 		return this.largeResult;
 	}
@@ -229,6 +242,21 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public int getPerformerVersionNumber() {
 		return this.performerVersionNumber;
+	}
+
+	@Transient
+	@DomainProperty(serialize = true)
+	public ProcessState getProcessState() {
+		processState = TransformManager.resolveMaybeDeserialize(processState,
+				this.processStateSerialized, null);
+		return this.processState;
+	}
+
+	@Lob
+	@Transient
+	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
+	public String getProcessStateSerialized() {
+		return this.processStateSerialized;
 	}
 
 	@Transient
@@ -261,12 +289,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return this.runAt;
 	}
 
-	@Lob
-	@Transient
-	public String getStacktraceResponse() {
-		return this.stacktraceResponse;
-	}
-
 	public Date getStartTime() {
 		return this.startTime;
 	}
@@ -277,6 +299,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public JobState getState() {
 		return this.state;
 	}
+
+	@Transient
+	public abstract Set<? extends JobStateMessage> getStateMessages();
 
 	public String getStatusMessage() {
 		return this.statusMessage;
@@ -303,8 +328,14 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@Transient
 	public abstract Set<? extends JobRelation> getToRelations();
 
+	// not used, replaced by jobstatemessage - FIXME mvcc.jobs.2 - remove
 	public boolean isStacktraceRequested() {
 		return this.stacktraceRequested;
+	}
+
+	public void persistProcessState() {
+		ProcessState state = ensureProcessState();
+		setProcessStateSerialized(TransformManager.serialize(state));
 	}
 
 	public boolean provideCanDeserializeTask() {
@@ -621,6 +652,20 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				old_performerVersionNumber, performerVersionNumber);
 	}
 
+	public void setProcessState(ProcessState processState) {
+		ProcessState old_processState = this.processState;
+		this.processState = processState;
+		propertyChangeSupport().firePropertyChange("processState",
+				old_processState, processState);
+	}
+
+	public void setProcessStateSerialized(String processStateSerialized) {
+		String old_processStateSerialized = this.processStateSerialized;
+		this.processStateSerialized = processStateSerialized;
+		propertyChangeSupport().firePropertyChange("processStateSerialized",
+				old_processStateSerialized, processStateSerialized);
+	}
+
 	public void setResult(Object result) {
 		Object old_result = this.result;
 		this.result = result;
@@ -669,13 +714,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		this.stacktraceRequested = stacktraceRequested;
 		propertyChangeSupport().firePropertyChange("stacktraceRequested",
 				old_stacktraceRequested, stacktraceRequested);
-	}
-
-	public void setStacktraceResponse(String stacktraceResponse) {
-		String old_stacktraceResponse = this.stacktraceResponse;
-		this.stacktraceResponse = stacktraceResponse;
-		propertyChangeSupport().firePropertyChange("stacktraceResponse",
-				old_stacktraceResponse, stacktraceResponse);
 	}
 
 	public void setStartTime(Date startTime) {
@@ -809,6 +847,127 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public static abstract class ClientInstanceLoadOracle
 			extends DomainStorePropertyLoadOracle<Job> {
+	}
+
+	@Bean
+	public static class ProcessState extends Model {
+		private List<ResourceRecord> resources = new ArrayList<>();
+
+		private String threadName;
+
+		private String allocatorThreadName;
+
+		private String stackTrace;
+
+		private String trimmedStackTrace;
+
+		public ResourceRecord addResourceRecord(JobResource resource) {
+			ResourceRecord record = new ResourceRecord();
+			record.className = resource.getClass().getName();
+			record.path = resource.getPath();
+			resources.add(record);
+			return record;
+		}
+
+		public String getAllocatorThreadName() {
+			return this.allocatorThreadName;
+		}
+
+		public List<ResourceRecord> getResources() {
+			return this.resources;
+		}
+
+		public String getStackTrace() {
+			return this.stackTrace;
+		}
+
+		public String getThreadName() {
+			return this.threadName;
+		}
+
+		public String getTrimmedStackTrace() {
+			return this.trimmedStackTrace;
+		}
+
+		public ResourceRecord provideRecord(ResourceRecord record) {
+			return HasEquivalenceHelper.getEquivalent(getResources(), record);
+		}
+
+		public void setAllocatorThreadName(String allocatorThreadName) {
+			this.allocatorThreadName = allocatorThreadName;
+		}
+
+		public void setResources(List<ResourceRecord> resources) {
+			this.resources = resources;
+		}
+
+		public void setStackTrace(String stackTrace) {
+			this.stackTrace = stackTrace;
+		}
+
+		public void setThreadName(String threadName) {
+			this.threadName = threadName;
+		}
+
+		public void setTrimmedStackTrace(String trimmedStackTrace) {
+			this.trimmedStackTrace = trimmedStackTrace;
+		}
+	}
+
+	@Bean
+	public static class ResourceRecord extends Model
+			implements HasEquivalenceString<ResourceRecord> {
+		private boolean acquiredFromAncestor;
+
+		private boolean acquired;
+
+		private String className;
+
+		private String path;
+
+		@Override
+		public String equivalenceString() {
+			return Ax.format("%s::%s", getClassName(), getPath());
+		}
+
+		public String getClassName() {
+			return this.className;
+		}
+
+		public String getPath() {
+			return this.path;
+		}
+
+		public boolean isAcquired() {
+			return this.acquired;
+		}
+
+		public boolean isAcquiredFromAncestor() {
+			return this.acquiredFromAncestor;
+		}
+
+		public void setAcquired(boolean acquired) {
+			this.acquired = acquired;
+		}
+
+		public void setAcquiredFromAncestor(boolean acquiredFromAncestor) {
+			this.acquiredFromAncestor = acquiredFromAncestor;
+		}
+
+		public void setClassName(String className) {
+			this.className = className;
+		}
+
+		public void setPath(String path) {
+			this.path = path;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s::%s - Acquired: %s - Ancestor: %s",
+					getClassName().replaceFirst("(.+)(\\..+)", "$2"), getPath(),
+					isAcquired(), isAcquiredFromAncestor());
+		}
 	}
 
 	public static class RunAtComparator implements Comparator<Job> {

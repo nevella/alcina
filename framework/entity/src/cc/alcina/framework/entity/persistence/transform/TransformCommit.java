@@ -119,6 +119,8 @@ public class TransformCommit {
 	public static final transient String CONTEXT_DISABLED = TransformCommit.class
 			.getName() + ".CONTEXT_DISABLED";
 
+	static Logger logger = LoggerFactory.getLogger(TransformCommit.class);
+
 	public static int commitBulkTransforms(List<DeltaApplicationRecord> records,
 			Boolean useWrapperUser, boolean throwPersistenceExceptions)
 			throws WebException {
@@ -483,6 +485,30 @@ public class TransformCommit {
 		return commitTransforms(true);
 	}
 
+	public static void commitWithBackoff() {
+		commitWithBackoff(10, 3, 10, 2.0);
+	}
+
+	public static void commitWithBackoff(int initialDelayMs, int retries,
+			double delayMs, double retryMultiplier) {
+		try {
+			Thread.sleep(initialDelayMs);
+			while (retries-- > 0) {
+				try {
+					commitTransformsAsRoot();
+					break;
+				} catch (Exception e) {
+					Ax.simpleExceptionOut(e);
+					logger.warn("Exception in commitWithBackoff, retrying");
+					Thread.sleep((long) delayMs);
+					delayMs *= retryMultiplier;
+				}
+			}
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void enqueueTransforms(String transformQueueName,
 			Class<? extends Entity>... entityClassNames) {
 		List<DomainTransformEvent> transforms = removeTransforms(
@@ -547,8 +573,6 @@ public class TransformCommit {
 		commitTransforms(null, asRoot, true);
 		return pendingTransformCount;
 	}
-
-	protected Logger logger = LoggerFactory.getLogger(getClass());
 
 	private Map<Long, EntityLocatorMap> clientInstanceLocatorMap = new ConcurrentHashMap<>();
 

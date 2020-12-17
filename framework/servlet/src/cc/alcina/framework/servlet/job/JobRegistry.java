@@ -35,9 +35,12 @@ import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.job.Job.ProcessState;
+import cc.alcina.framework.common.client.job.Job.ResourceRecord;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobResult;
 import cc.alcina.framework.common.client.job.JobState;
+import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.job.NonRootTask;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
@@ -55,6 +58,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -192,6 +196,14 @@ public class JobRegistry extends WriterService {
 			}
 		});
 		scheduler = new JobScheduler(this);
+		DomainDescriptorJob.get().stateMessageEvents.add((k, messages) -> {
+			for (JobStateMessage message : messages) {
+				if (message.getProcessState() == null
+						&& activeJobs.containsKey(message.getJob())) {
+					updateThreadData(message);
+				}
+			}
+		});
 	}
 
 	// Directly acquire a resource (not via TaskPerformer.getResources)
@@ -251,6 +263,12 @@ public class JobRegistry extends WriterService {
 				: Thread.currentThread();
 	}
 
+	public List<Job> getThreadData(Job job) {
+		ThreadDataWaiter threadDataWaiter = new ThreadDataWaiter(job);
+		threadDataWaiter.await();
+		return threadDataWaiter.queriedJobs;
+	}
+
 	/*
 	 * Awaits completion of the task and any sequential (cascaded) tasks
 	 */
@@ -304,9 +322,19 @@ public class JobRegistry extends WriterService {
 			 */
 			Optional<JobResource> antecedentAcquired = getAcquiredResource(
 					forJob, resource);
+			ProcessState processState = forJob.ensureProcessState();
+			ResourceRecord record = processState.addResourceRecord(resource);
 			if (antecedentAcquired.isPresent()) {
+				record.setAcquired(true);
+				record.setAcquiredFromAncestor(true);
 			} else {
+				forJob.persistProcessState();
+				Transaction.commit();
 				resource.acquire();
+				forJob.ensureProcessState().provideRecord(record)
+						.setAcquired(true);
+				forJob.persistProcessState();
+				Transaction.commit();
 				acquired.add(resource);
 			}
 		}
@@ -422,6 +450,15 @@ public class JobRegistry extends WriterService {
 			for (Job related : relatedSequential) {
 				releaseResources(job, true);
 			}
+		}
+	}
+
+	private void updateThreadData(JobStateMessage message) {
+		JobContext context = activeJobs.get(message.getJob());
+		if (context != null) {
+			ProcessState processState = message.ensureProcessState();
+			context.updateProcessState(processState);
+			message.persistProcessState();
 		}
 	}
 
@@ -795,6 +832,53 @@ public class JobRegistry extends WriterService {
 
 		void onChildJobsCompleted() {
 			latch.countDown();
+		}
+	}
+
+	class ThreadDataWaiter {
+		List<Job> queriedJobs = new ArrayList<>();
+
+		private Job job;
+
+		private CountDownLatch latch;
+
+		private TopicListener<List<JobStateMessage>> listener = (k,
+				messages) -> {
+			for (JobStateMessage message : messages) {
+				if (message.getProcessState() != null
+						&& queriedJobs.contains(message.getJob())) {
+					latch.countDown();
+				}
+			}
+		};
+
+		public ThreadDataWaiter(Job job) {
+			this.job = job;
+		}
+
+		public void await() {
+			Stream.concat(Stream.of(job), job.provideDescendants())
+					.filter(j -> j.getState() == JobState.PROCESSING)
+					.forEach(job -> {
+						queriedJobs.add(job);
+						JobStateMessage stateMessage = AlcinaPersistentEntityImpl
+								.create(JobStateMessage.class);
+						stateMessage.setJob(job);
+					});
+			try {
+				DomainDescriptorJob.get().stateMessageEvents.add(listener);
+				latch = new CountDownLatch(queriedJobs.size());
+				Transaction.commit();
+				latch.await(1, TimeUnit.SECONDS);
+				// FIXME - mvcc.jobs.2 - this is because all the population
+				// threads will be ... elsewhere
+				Thread.sleep(100);
+				DomainStore.waitUntilCurrentRequestsProcessed();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} finally {
+				DomainDescriptorJob.get().stateMessageEvents.remove(listener);
+			}
 		}
 	}
 }

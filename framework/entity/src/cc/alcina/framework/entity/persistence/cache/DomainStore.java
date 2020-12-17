@@ -272,6 +272,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	public void appShutdown() {
+		domainDescriptor.onAppShutdown();
 		loader.appShutdown();
 		persistenceEvents.getQueue().appShutdown();
 	}

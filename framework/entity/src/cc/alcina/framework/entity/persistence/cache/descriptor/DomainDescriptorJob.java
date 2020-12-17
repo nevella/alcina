@@ -11,7 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -27,6 +29,7 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ClientInstanceLoadOracle;
 import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobState;
+import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -45,6 +48,7 @@ import cc.alcina.framework.entity.persistence.mvcc.TransactionalMultiset;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalSet;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
 
 @RegistryLocation(registryPoint = DomainDescriptorJob.class, implementationType = ImplementationType.SINGLETON)
@@ -107,7 +111,39 @@ public class DomainDescriptorJob {
 
 	public Topic<AllocationQueue.Event> queueEvents = Topic.local();
 
+	public Topic<List<JobStateMessage>> stateMessageEvents = Topic.local();
+
 	private Class<? extends JobRelation> jobRelationImplClass;
+
+	private Class<? extends JobStateMessage> jobStateMessageImplClass;
+
+	private DomainTransformPersistenceListener stacktraceRequestListener = new DomainTransformPersistenceListener() {
+		@Override
+		public void onDomainTransformRequestPersistence(
+				DomainTransformPersistenceEvent event) {
+			AdjunctTransformCollation collation = event
+					.getTransformPersistenceToken().getTransformCollation();
+			if (!collation.has(jobStateMessageImplClass) || event
+					.getPersistenceEventType() != DomainTransformPersistenceEventType.COMMIT_OK) {
+				return;
+			}
+			List<JobStateMessage> stateMessageEvents = collation
+					.query(jobStateMessageImplClass).stream()
+					.map(qr -> (JobStateMessage) qr.entityCollation.getObject())
+					.collect(Collectors.toList());
+			if (stateMessageEvents.size() > 0) {
+				/*
+				 * Fire off-thread (the handlers will want to commit()
+				 * transforms)
+				 */
+				stateMessageEventQueue.add(stateMessageEvents);
+			}
+		}
+	};
+
+	private StateMessageEventHandler stateMessageEventHandler = new StateMessageEventHandler();
+
+	BlockingQueue<List<JobStateMessage>> stateMessageEventQueue = new LinkedBlockingQueue<>();
 
 	public void configureDescriptor(DomainStoreDescriptor descriptor) {
 		jobImplClass = AlcinaPersistentEntityImpl.getImplementation(Job.class);
@@ -116,9 +152,13 @@ public class DomainDescriptorJob {
 		jobRelationImplClass = AlcinaPersistentEntityImpl
 				.getImplementation(JobRelation.class);
 		descriptor.addClassDescriptor(jobRelationImplClass);
+		jobStateMessageImplClass = AlcinaPersistentEntityImpl
+				.getImplementation(JobStateMessage.class);
+		descriptor.addClassDescriptor(jobStateMessageImplClass);
 		if (ResourceUtilities.is("lazy")) {
 			descriptor.perClass.get(jobImplClass).lazy = true;
 			descriptor.perClass.get(jobRelationImplClass).lazy = true;
+			descriptor.perClass.get(jobStateMessageImplClass).lazy = true;
 		}
 	}
 
@@ -140,6 +180,10 @@ public class DomainDescriptorJob {
 
 	public Stream<? extends Job> getAllJobs() {
 		return Domain.stream(jobImplClass);
+	}
+
+	public AllocationQueue getAllocationQueue(Job job) {
+		return queues.get(job);
 	}
 
 	public Stream<AllocationQueue> getAllocationQueues() {
@@ -179,12 +223,22 @@ public class DomainDescriptorJob {
 				.stream();
 	}
 
+	public void onAppShutdown() {
+		stateMessageEventHandler.finished = true;
+		stateMessageEventQueue.add(new ArrayList<>());
+	}
+
 	public void onWarmupComplete(DomainStore domainStore) {
 		if (ResourceUtilities.is("logTransforms")) {
 			domainStore.getPersistenceEvents()
 					.addDomainTransformPersistenceListener(jobLogger);
 		}
+		domainStore.getPersistenceEvents()
+				.addDomainTransformPersistenceListener(
+						stacktraceRequestListener);
 		warmupComplete = true;
+		Thread stateMessageEventThread = new Thread(stateMessageEventHandler);
+		stateMessageEventThread.start();
 	}
 
 	private void cleanupQueues() {
@@ -545,6 +599,7 @@ public class DomainDescriptorJob {
 	public enum EventType {
 		CREATED, DELETED, RELATED_MODIFICATION, WAKEUP, TO_AWAITING_CHILDREN,
 		TO_PROCESSING;
+
 		public boolean isPublishToGlobalQueue() {
 			switch (this) {
 			case CREATED:
@@ -569,6 +624,29 @@ public class DomainDescriptorJob {
 
 	public static enum SubqueuePhase {
 		Self, Child, Sequence, Complete;
+	}
+
+	private final class StateMessageEventHandler implements Runnable {
+		volatile boolean finished = false;
+
+		@Override
+		public void run() {
+			while (!finished) {
+				try {
+					List<JobStateMessage> messages = stateMessageEventQueue
+							.take();
+					if (!messages.isEmpty()) {
+						Transaction.ensureBegun();
+						stateMessageEvents.publish(messages);
+						Transaction.commit();
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} finally {
+					Transaction.ensureEnded();
+				}
+			}
+		}
 	}
 
 	class AllocationQueueProjection implements DomainProjection<Job> {

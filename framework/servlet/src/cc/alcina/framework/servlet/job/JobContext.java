@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.actions.JobResource;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -24,6 +25,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -254,6 +256,16 @@ public class JobContext {
 	public void updateJob(String message, int delta) {
 		itemsCompleted += delta;
 		setStatusMessage("%s (%s/%s)", message, itemsCompleted, itemCount);
+	}
+
+	public void updateProcessState(ProcessState processState) {
+		if (allocator.thread != null) {
+			processState.setAllocatorThreadName(allocator.thread.getName());
+		}
+		if (thread != null) {
+			processState.setThreadName(thread.getName());
+			processState.setStackTrace(SEUtilities.getFullStacktrace(thread));
+		}
 	}
 
 	private ProgressBuilder createProgressBuilder() {

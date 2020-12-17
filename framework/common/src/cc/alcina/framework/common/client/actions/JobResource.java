@@ -10,6 +10,10 @@ public interface JobResource {
 		return Collections.singletonList(this);
 	}
 
+	default String getPath() {
+		return "";
+	}
+
 	default boolean isSharedWithChildren() {
 		return false;
 	}
