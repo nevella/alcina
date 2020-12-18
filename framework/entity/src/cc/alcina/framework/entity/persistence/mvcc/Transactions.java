@@ -93,32 +93,6 @@ public class Transactions {
 		}
 	}
 
-	public static <E extends Entity> TransactionalSet<E>
-			resolveTransactionalSet(TransactionalSet<E> t, boolean write) {
-		MvccObject mvccObject = (MvccObject) t;
-		MvccObjectVersions<TransactionalSet> versions = mvccObject
-				.__getMvccVersions__();
-		if (versions == null && !write) {
-			// no transactional versions, return base
-			return t;
-		} else {
-			Transaction transaction = Transaction.current();
-			if (transaction.isBaseTransaction()) {
-				return t;
-			} else {
-				//
-				synchronized (t) {
-					versions = mvccObject.__getMvccVersions__();
-					if (versions == null) {
-						versions = MvccObjectVersions.ensureTransactionalSet(t,
-								transaction, false);
-					}
-					return versions.resolve(write);
-				}
-			}
-		}
-	}
-
 	public static void shutdown() {
 		get().vacuum.shutdown();
 	}

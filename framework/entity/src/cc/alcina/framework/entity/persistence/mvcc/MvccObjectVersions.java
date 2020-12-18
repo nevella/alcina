@@ -45,17 +45,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		return versions;
 	}
 
-	static MvccObjectVersions<TransactionalSet> ensureTransactionalSet(
-			TransactionalSet baseObject, Transaction transaction,
-			boolean initialObjectIsWriteable) {
-		MvccObject mvccObject = (MvccObject) baseObject;
-		MvccObjectVersions<TransactionalSet> versions = null;
-		versions = new MvccObjectVersionsTransactionalSet(baseObject,
-				transaction, initialObjectIsWriteable);
-		mvccObject.__setMvccVersions__(versions);
-		return versions;
-	}
-
 	// called in a synchronized block (synchronized on baseObject)
 	static MvccObjectVersions<TransactionalTrieEntry> ensureTrieEntry(
 			TransactionalTrieEntry baseObject, Transaction transaction,

@@ -1,23 +1,23 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
+import java.util.AbstractSet;
 import java.util.Iterator;
-import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.MostlySingleValuedSet;
 
 /*
  * 
  * 
  */
-public class TransactionalSet<E extends Entity> extends MostlySingleValuedSet<E>
-		implements MvccObject<TransactionalSet>, TransactionalCollection {
+public class TransactionalSet<E extends Entity> extends AbstractSet<E>
+		implements TransactionalCollection {
 	private Class<E> entityClass;
 
-	MvccObjectVersions<TransactionalSet> __mvccObjectVersions__;
+	private TransactionalMap<E, Boolean> map;
 
 	public TransactionalSet(Class<E> entityClass) {
 		this.entityClass = entityClass;
+		this.map = new TransactionalMap<>(entityClass, Boolean.class);
 	}
 
 	// for copying
@@ -25,67 +25,13 @@ public class TransactionalSet<E extends Entity> extends MostlySingleValuedSet<E>
 	}
 
 	@Override
-	public MvccObjectVersions<TransactionalSet> __getMvccVersions__() {
-		return __mvccObjectVersions__;
-	}
-
-	@Override
-	public void __setMvccVersions__(
-			MvccObjectVersions<TransactionalSet> __mvccVersions__) {
-		this.__mvccObjectVersions__ = __mvccVersions__;
-	}
-
-	@Override
 	public boolean add(E o) {
-		TransactionalSet<E> __instance__ = Transactions
-				.resolveTransactionalSet(this, true);
-		if (__instance__ == this) {
-			return super.add(o);
-		} else {
-			return __instance__.add(o);
-		}
-	}
-
-	@Override
-	public Object clone() {
-		if (__mvccObjectVersions__ == null) {
-			return super.clone();
-		}
-		TransactionalSet<E> __instance__ = Transactions
-				.resolveTransactionalSet(this, false);
-		if (__instance__ == this) {
-			return super.clone();
-		} else {
-			return __instance__.clone();
-		}
+		return map.put(o, Boolean.TRUE) == null;
 	}
 
 	@Override
 	public boolean contains(Object o) {
-		if (__mvccObjectVersions__ == null) {
-			return super.contains(o);
-		}
-		TransactionalSet<E> __instance__ = Transactions
-				.resolveTransactionalSet(this, false);
-		if (__instance__ == this) {
-			return super.contains(o);
-		} else {
-			return __instance__.contains(o);
-		}
-	}
-
-	@Override
-	public Iterator<E> iterator() {
-		if (__mvccObjectVersions__ == null) {
-			return super.iterator();
-		}
-		TransactionalSet<E> __instance__ = Transactions
-				.resolveTransactionalSet(this, false);
-		if (__instance__ == this) {
-			return super.iterator();
-		} else {
-			return __instance__.iterator();
-		}
+		return map.containsKey(o);
 	}
 
 	public Class<E> entityClass() {
@@ -93,32 +39,17 @@ public class TransactionalSet<E extends Entity> extends MostlySingleValuedSet<E>
 	}
 
 	@Override
+	public Iterator<E> iterator() {
+		return map.keySet().iterator();
+	}
+
+	@Override
 	public boolean remove(Object o) {
-		TransactionalSet<E> __instance__ = Transactions
-				.resolveTransactionalSet(this, true);
-		if (__instance__ == this) {
-			return super.remove(o);
-		} else {
-			return __instance__.remove(o);
-		}
+		return map.remove(o) != null;
 	}
 
 	@Override
 	public int size() {
-		if (__mvccObjectVersions__ == null) {
-			return super.size();
-		}
-		TransactionalSet<E> __instance__ = Transactions
-				.resolveTransactionalSet(this, false);
-		if (__instance__ == this) {
-			return super.size();
-		} else {
-			return __instance__.size();
-		}
-	}
-
-	@Override
-	protected Map<E, Boolean> createDegenerateMap() {
-		return new TransactionalMap<>(entityClass, Boolean.class);
+		return map.size();
 	}
 }

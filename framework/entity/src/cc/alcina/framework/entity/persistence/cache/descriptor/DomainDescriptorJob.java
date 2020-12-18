@@ -802,9 +802,13 @@ public class DomainDescriptorJob {
 			AllocationQueue queue = queues.get(job);
 			if (job.provideIsFuture()) {
 				if (!job.provideCanDeserializeTask()) {
+					logger.warn("Cannot deserialize future task: {}", job);
 					return;
+				} else {
+					logger.info("Adding future: {} {}",
+							job.provideTaskClass().getSimpleName(), job);
+					futuresByTask.add(job.provideTaskClass(), job);
 				}
-				futuresByTask.add(job.provideTaskClass(), job);
 			} else if (job.provideIsComplete()) {
 				if (queue != null) {
 					queue.insert(job);
