@@ -76,15 +76,22 @@ public class TextProvider {
 		return new InlineLabel(text);
 	}
 
-	public String getLabelText(Class c, ClientPropertyReflector pr) {
-		
-		return pr.getDisplayName();
-	}
 	public String getLabelText(Class c, AnnotationLocation location) {
 		Display display = location.getAnnotation(Display.class);
-		String rawName = display == null ? location.propertyReflector.getPropertyName()
+		String rawName = display == null
+				? location.propertyReflector.getPropertyName()
 				: display.name();
+		if (LooseContext.has(ClientPropertyReflector.CONTEXT_NAME_TRANSLATOR)) {
+			rawName = ((Function<String, String>) LooseContext
+					.get(ClientPropertyReflector.CONTEXT_NAME_TRANSLATOR))
+							.apply(location.propertyReflector
+									.getPropertyName());
+		}
 		return rawName;
+	}
+
+	public String getLabelText(Class c, ClientPropertyReflector pr) {
+		return pr.getDisplayName();
 	}
 
 	public Object getLabelText(Class c, String propertyName) {

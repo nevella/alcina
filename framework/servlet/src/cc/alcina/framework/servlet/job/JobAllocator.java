@@ -401,6 +401,8 @@ class JobAllocator {
 				}
 			case Sequence:
 				return queue.isNoPendingJobsInPhase();
+			case Complete:
+				return false;
 			default:
 				throw new UnsupportedOperationException();
 			}

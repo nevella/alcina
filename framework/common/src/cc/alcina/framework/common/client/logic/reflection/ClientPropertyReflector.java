@@ -29,10 +29,13 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCre
  * 
  * @author Nick Reddel
  * 
- * FIXME - dirndl.1 - remove most API except annotations (and minimise non-resolved calls to annotations in client code) 
+ *         FIXME - dirndl.1 - remove most API except annotations (and minimise
+ *         non-resolved calls to annotations in client code)
  */
 public class ClientPropertyReflector
 		implements Comparable<ClientPropertyReflector>, PropertyReflector {
+	// @Deprecated
+	// FIXME - 2021
 	public static final String CONTEXT_NAME_TRANSLATOR = ClientPropertyReflector.class
 			.getName() + ".CONTEXT_NAME_TRANSLATOR";
 
@@ -50,11 +53,6 @@ public class ClientPropertyReflector
 	private Class propertyType;
 
 	private Class definingType;
-
-	@Override
-	public Class getDefiningType() {
-		return this.definingType;
-	}
 
 	public ClientPropertyReflector(Class definingType, String propertyName,
 			Class propertyType, Annotation[] anns) {
@@ -90,6 +88,11 @@ public class ClientPropertyReflector
 				: Reflections.classLookup().newInstance(clazz));
 	}
 
+	@Override
+	public Class getDefiningType() {
+		return this.definingType;
+	}
+
 	public Display getDisplayInfo() {
 		return (Display) annotations.get(Display.class);
 	}
@@ -120,15 +123,15 @@ public class ClientPropertyReflector
 	}
 
 	@Override
-	public boolean isReadOnly() {
-		return Reflections.propertyAccessor().isReadOnly(getDefiningType(),
-				getPropertyName());
-	}
-
-	@Override
 	public Object getPropertyValue(Object bean) {
 		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
 		return propertyAccessor.getPropertyValue(bean, getPropertyName());
+	}
+
+	@Override
+	public boolean isReadOnly() {
+		return Reflections.propertyAccessor().isReadOnly(getDefiningType(),
+				getPropertyName());
 	}
 
 	@Override

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -137,13 +138,19 @@ public abstract class SearchDefinition extends WrapperPersistable
 	}
 
 	public <C extends CriteriaGroup> C criteriaGroup(Class<C> clazz) {
-		return (C) criteriaGroups.stream().filter(cg -> cg.getClass() == clazz)
-				.findFirst().orElse(null);
+		return (C) criteriaGroups.stream().filter(Objects::nonNull)
+				.filter(cg -> cg.getClass() == clazz).findFirst().orElse(null);
 	}
 
 	public <CG extends CriteriaGroup> CG ensureCriteriaGroup(Class<CG> clazz) {
 		CG existing = criteriaGroup(clazz);
-		return existing == null ? Reflections.newInstance(clazz) : existing;
+		if (existing == null) {
+			CG newInstance = Reflections.newInstance(clazz);
+			getCriteriaGroups().add(newInstance);
+			return newInstance;
+		} else {
+			return existing;
+		}
 	}
 
 	public void ensureCriteriaGroups(CriteriaGroup... criteriaGroups) {
