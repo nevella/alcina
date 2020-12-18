@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -97,6 +98,21 @@ public class DomainDescriptorJob {
 		}
 	};
 
+	private DomainTransformPersistenceListener bufferedEventFiringListener = new DomainTransformPersistenceListener() {
+		@Override
+		public void onDomainTransformRequestPersistence(
+				DomainTransformPersistenceEvent event) {
+			switch (event.getPersistenceEventType()) {
+			case COMMIT_OK: {
+				for (AllocationQueue queue : queuesWithBufferedEvents) {
+					queue.flushBufferedEvents();
+				}
+				queuesWithBufferedEvents.clear();
+			}
+			}
+		}
+	};
+
 	private JobDescriptor jobDescriptor;
 
 	boolean warmupComplete = false;
@@ -144,6 +160,8 @@ public class DomainDescriptorJob {
 	private StateMessageEventHandler stateMessageEventHandler = new StateMessageEventHandler();
 
 	BlockingQueue<List<JobStateMessage>> stateMessageEventQueue = new LinkedBlockingQueue<>();
+
+	private Set<AllocationQueue> queuesWithBufferedEvents = new LinkedHashSet<>();
 
 	public void configureDescriptor(DomainStoreDescriptor descriptor) {
 		jobImplClass = AlcinaPersistentEntityImpl.getImplementation(Job.class);
@@ -236,6 +254,9 @@ public class DomainDescriptorJob {
 		domainStore.getPersistenceEvents()
 				.addDomainTransformPersistenceListener(
 						stacktraceRequestListener);
+		domainStore.getPersistenceEvents()
+				.addDomainTransformPersistenceListener(
+						bufferedEventFiringListener);
 		warmupComplete = true;
 		Thread stateMessageEventThread = new Thread(stateMessageEventHandler);
 		stateMessageEventThread.start();
@@ -268,6 +289,8 @@ public class DomainDescriptorJob {
 				JobState.COMPLETED);
 
 		private boolean firedToProcessing;
+
+		List<Event> bufferedEvents = new ArrayList<>();
 
 		public AllocationQueue(Job job) {
 			this.job = job;
@@ -340,6 +363,11 @@ public class DomainDescriptorJob {
 					});
 		}
 
+		public void flushBufferedEvents() {
+			bufferedEvents.forEach(this::publish0);
+			bufferedEvents.clear();
+		}
+
 		public Stream<Job> getActiveJobs() {
 			return perStateJobs(JobState.PROCESSING);
 		}
@@ -410,11 +438,15 @@ public class DomainDescriptorJob {
 			throw new UnsupportedOperationException();
 		}
 
+		/// ahhhhhh....we need to buffer events if in "todomaincommitting",
+		/// otherwise we may hit the allocators before the commit is finished
 		public void publish(EventType type) {
 			Event event = new Event(type);
-			events.publish(event);
-			if (type.isPublishToGlobalQueue()) {
-				queueEvents.publish(event);
+			if (Transaction.current().isToDomainCommitting()) {
+				bufferedEvents.add(event);
+				queuesWithBufferedEvents.add(this);
+			} else {
+				publish0(event);
 			}
 		}
 
@@ -518,6 +550,13 @@ public class DomainDescriptorJob {
 		void fireInitialCreationEvents() {
 			publish(EventType.CREATED);
 			checkFireToProcessing(job);
+		}
+
+		void publish0(Event event) {
+			events.publish(event);
+			if (event.type.isPublishToGlobalQueue()) {
+				queueEvents.publish(event);
+			}
 		}
 
 		public class Event {
