@@ -309,6 +309,14 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		createBaseLayer();
 	}
 
+	/*
+	 * Allow single-valued txsets to degenerate to txmaps
+	 */
+	void putInBaseLayer(Transaction baseTransaction, K key, V value) {
+		base.transaction = baseTransaction;
+		base.put(key, value, false);
+	}
+
 	private class KeySet extends AbstractSet<K> {
 		private Set<Entry<K, V>> entrySet;
 

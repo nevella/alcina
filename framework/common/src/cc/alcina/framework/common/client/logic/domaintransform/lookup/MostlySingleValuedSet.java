@@ -34,6 +34,7 @@ public class MostlySingleValuedSet<E> extends AbstractSet<E>
 
 	@Override
 	public boolean add(E value) {
+		checkMustDegenerate();
 		if (map != null) {
 			return map.put(value, true) == null;
 		}
@@ -44,20 +45,12 @@ public class MostlySingleValuedSet<E> extends AbstractSet<E>
 			return true;
 		} else {
 			if (!Objects.equals(value, soleValue)) {
-				map = createDegenerateMap();
-				map.put(soleValue, true);
-				map.put(value, true);
-				soleValue = null;
-				return true;
+				toDegenerateMap();
+				return add(value);
 			} else {
 				return false;
 			}
 		}
-	}
-
-	@Override
-	public Object clone() {
-		return new MostlySingleValuedSet<E>(this);
 	}
 
 	@Override
@@ -85,6 +78,7 @@ public class MostlySingleValuedSet<E> extends AbstractSet<E>
 
 	@Override
 	public boolean remove(Object o) {
+		checkMustDegenerate();
 		if (map != null) {
 			return map.remove(o) != null;
 		}
@@ -108,7 +102,27 @@ public class MostlySingleValuedSet<E> extends AbstractSet<E>
 		return size;
 	}
 
-	protected Map<E, Boolean> createDegenerateMap() {
-		return new LinkedHashMap<>();
+	private void checkMustDegenerate() {
+		if (map == null && mustDegenerate()) {
+			toDegenerateMap();
+		}
+	}
+
+	protected Map<E, Boolean> createDegenerateMap(E soleValue,
+			boolean nonEmpty) {
+		LinkedHashMap<E, Boolean> map = new LinkedHashMap<>();
+		if (nonEmpty) {
+			map.put(soleValue, true);
+		}
+		return map;
+	}
+
+	protected boolean mustDegenerate() {
+		return false;
+	}
+
+	protected void toDegenerateMap() {
+		map = createDegenerateMap(soleValue, size == 1);
+		soleValue = null;
 	}
 }

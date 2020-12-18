@@ -1,23 +1,22 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
-import java.util.AbstractSet;
-import java.util.Iterator;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.MostlySingleValuedSet;
 
 /*
  * 
  * 
  */
-public class TransactionalSet<E extends Entity> extends AbstractSet<E>
+public class TransactionalSet<E extends Entity> extends MostlySingleValuedSet<E>
 		implements TransactionalCollection {
 	private Class<E> entityClass;
 
-	private TransactionalMap<E, Boolean> map;
+	private Transaction baseTransaction;
 
 	public TransactionalSet(Class<E> entityClass) {
 		this.entityClass = entityClass;
-		this.map = new TransactionalMap<>(entityClass, Boolean.class);
 	}
 
 	// for copying
@@ -25,31 +24,28 @@ public class TransactionalSet<E extends Entity> extends AbstractSet<E>
 	}
 
 	@Override
-	public boolean add(E o) {
-		return map.put(o, Boolean.TRUE) == null;
+	protected Map<E, Boolean> createDegenerateMap(E soleValue,
+			boolean nonEmpty) {
+		TransactionalMap<E, Boolean> map = new TransactionalMap<>(entityClass,
+				Boolean.class);
+		if (nonEmpty) {
+			if (baseTransaction != null) {
+				map.putInBaseLayer(baseTransaction, soleValue, Boolean.TRUE);
+			} else {
+				map.put(soleValue, Boolean.TRUE);
+			}
+		}
+		return map;
 	}
 
 	@Override
-	public boolean contains(Object o) {
-		return map.containsKey(o);
-	}
-
-	public Class<E> entityClass() {
-		return entityClass;
-	}
-
-	@Override
-	public Iterator<E> iterator() {
-		return map.keySet().iterator();
-	}
-
-	@Override
-	public boolean remove(Object o) {
-		return map.remove(o) != null;
-	}
-
-	@Override
-	public int size() {
-		return map.size();
+	protected boolean mustDegenerate() {
+		Transaction current = Transaction.current();
+		if (current.isBaseTransaction()) {
+			this.baseTransaction = current;
+			return false;
+		} else {
+			return true;
+		}
 	}
 }
