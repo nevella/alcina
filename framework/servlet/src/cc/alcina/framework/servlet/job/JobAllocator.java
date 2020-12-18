@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -184,6 +185,15 @@ class JobAllocator {
 						Ax.format("job-allocator::%s", queue.toDisplayName()));
 				logger.info("Allocation thread started -  job {}",
 						job.toDisplayName());
+			}
+			if (job.domain().domainVersion() == null) {
+				try {
+					// production issue -- revisit
+					Thread.sleep(1000);
+					DomainStore.waitUntilCurrentRequestsProcessed();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
 			}
 			if (queue.phase == SubqueuePhase.Complete
 					|| job.resolveState() == JobState.CANCELLED
