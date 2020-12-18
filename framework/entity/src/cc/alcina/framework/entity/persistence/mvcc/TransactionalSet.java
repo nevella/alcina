@@ -3,13 +3,13 @@ package cc.alcina.framework.entity.persistence.mvcc;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.MostlySingleValuedSet;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.MostlySingleElementSet;
 
 /*
  * 
  * 
  */
-public class TransactionalSet<E extends Entity> extends MostlySingleValuedSet<E>
+public class TransactionalSet<E extends Entity> extends MostlySingleElementSet<E>
 		implements TransactionalCollection {
 	private Class<E> entityClass;
 

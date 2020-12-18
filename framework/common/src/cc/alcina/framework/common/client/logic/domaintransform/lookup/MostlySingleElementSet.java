@@ -15,20 +15,19 @@ import java.util.Objects;
  * 
  * @param <E>
  */
-public class MostlySingleValuedSet<E> extends AbstractSet<E>
+public class MostlySingleElementSet<E> extends AbstractSet<E>
 		implements Cloneable, Serializable {
 	private int size = 0;
 
-	private int modCount = 0;
 
 	private Map<E, Boolean> map;
 
-	private E soleValue;
+	private E element;
 
-	public MostlySingleValuedSet() {
+	public MostlySingleElementSet() {
 	}
 
-	public MostlySingleValuedSet(Collection<? extends E> c) {
+	public MostlySingleElementSet(Collection<? extends E> c) {
 		addAll(c);
 	}
 
@@ -39,12 +38,11 @@ public class MostlySingleValuedSet<E> extends AbstractSet<E>
 			return map.put(value, true) == null;
 		}
 		if (isEmpty()) {
-			soleValue = value;
-			modCount++;
+			element = value;
 			size++;
 			return true;
 		} else {
-			if (!Objects.equals(value, soleValue)) {
+			if (!Objects.equals(value, element)) {
 				toDegenerateMap();
 				return add(value);
 			} else {
@@ -61,7 +59,7 @@ public class MostlySingleValuedSet<E> extends AbstractSet<E>
 		if (isEmpty()) {
 			return false;
 		}
-		return Objects.equals(soleValue, o);
+		return Objects.equals(element, o);
 	}
 
 	@Override
@@ -72,7 +70,7 @@ public class MostlySingleValuedSet<E> extends AbstractSet<E>
 		if (isEmpty()) {
 			return Collections.EMPTY_SET.iterator();
 		} else {
-			return Collections.singleton(soleValue).iterator();
+			return Collections.singleton(element).iterator();
 		}
 	}
 
@@ -85,12 +83,11 @@ public class MostlySingleValuedSet<E> extends AbstractSet<E>
 		if (isEmpty()) {
 			return false;
 		}
-		if (!Objects.equals(o, soleValue)) {
+		if (!Objects.equals(o, element)) {
 			return false;
 		}
 		size--;
-		modCount++;
-		soleValue = null;
+		element = null;
 		return true;
 	}
 
@@ -122,7 +119,11 @@ public class MostlySingleValuedSet<E> extends AbstractSet<E>
 	}
 
 	protected void toDegenerateMap() {
-		map = createDegenerateMap(soleValue, size == 1);
-		soleValue = null;
+		synchronized (this) {
+			if (map == null) {
+				map = createDegenerateMap(element, size == 1);
+				element = null;
+			}
+		}
 	}
 }
