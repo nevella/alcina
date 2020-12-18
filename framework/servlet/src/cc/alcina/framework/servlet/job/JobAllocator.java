@@ -177,7 +177,6 @@ class JobAllocator {
 				return;
 			}
 			Transaction.ensureBegun();
-			new StatusMessage().checkPublish();
 			Job job = queue.job;
 			if (firstEvent) {
 				firstEvent = false;
@@ -186,14 +185,28 @@ class JobAllocator {
 				logger.info("Allocation thread started -  job {}",
 						job.toDisplayName());
 			}
+			boolean deleted = false;
 			if (job.domain().domainVersion() == null) {
 				try {
 					// production issue -- revisit
 					Thread.sleep(1000);
 					DomainStore.waitUntilCurrentRequestsProcessed();
+					if (job.domain().domainVersion() != null) {
+						logger.info(
+								"DEVEX-12 ::  event with incomplete domain tx -  job {}",
+								job.toDisplayName());
+					} else {
+						deleted = true;
+						// was deleted - FIXME - mvcc.jobs.2 - remove this -
+						// improve upstream
+						// (AllocationQueue insert/remove)
+					}
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
+			}
+			if (!deleted) {
+				new StatusMessage().checkPublish();
 			}
 			if (queue.phase == SubqueuePhase.Complete
 					|| job.resolveState() == JobState.CANCELLED
@@ -201,13 +214,14 @@ class JobAllocator {
 					/*
 					 * sneaky deletion - FIXME - mvcc.jobs.2
 					 */
-					|| job.domain().domainVersion() == null) {
+					|| deleted) {
 				logger.info("Allocation thread ended -  job {}",
 						job.toDisplayName());
 				if (queue.phase == SubqueuePhase.Complete) {
 					if (job.getState() == JobState.COMPLETED
 							&& job.getPerformer() == ClientInstance.self()
-							&& job.provideRelatedSequential().size() > 1) {
+							&& job.provideRelatedSequential().size() > 1
+							&& !deleted) {
 						job.setState(JobState.SEQUENCE_COMPLETE);
 						Transaction.commit();
 					}
