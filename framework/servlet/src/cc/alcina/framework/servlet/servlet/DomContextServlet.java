@@ -3,6 +3,8 @@ package cc.alcina.framework.servlet.servlet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -17,6 +19,8 @@ import cc.alcina.framework.gwt.client.util.DomContext;
 public class DomContextServlet extends DomContext {
 	public static final String CONTEXT_DOCS = DomContextServlet.class.getName()
 			+ ".CONTEXT_DOCS";
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	@Override
 	protected void clearReferences0() {
@@ -55,7 +59,13 @@ public class DomContextServlet extends DomContext {
 
 	@Override
 	protected void putXmlDoc0(DomDoc doc) {
-		xmlDocs().put(doc.domDoc(), doc);
+		/*
+		 * critical - otherwise very leak-possible
+		 */
+		if (!xmlDocs().containsKey(doc.domDoc())) {
+			xmlDocs().clear();
+			xmlDocs().put(doc.domDoc(), doc);
+		}
 	}
 
 	@Override
