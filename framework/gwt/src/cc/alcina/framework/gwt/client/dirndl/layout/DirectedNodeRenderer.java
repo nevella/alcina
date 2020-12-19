@@ -32,10 +32,6 @@ public abstract class DirectedNodeRenderer {
 			if (node.directed.cssClass().length() > 0) {
 				widget.addStyleName(node.directed.cssClass());
 			}
-			
 		}
-	
 	}
-
-	
 }

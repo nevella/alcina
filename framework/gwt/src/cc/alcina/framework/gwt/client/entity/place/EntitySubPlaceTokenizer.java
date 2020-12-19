@@ -30,6 +30,10 @@ public abstract class EntitySubPlaceTokenizer<E extends Enum, ENT extends Entity
 					&& parts.length > 3 + offset) {
 				place.fromId = Long.parseLong(parts[3 + offset]);
 			}
+			if (listAction == EntityAction.CREATE
+					&& parts.length > 4 + offset) {
+				place.fromClass = parts[4 + offset];
+			}
 		} else {
 			if (detail.matches("[\\-0-9]+")) {
 				place.id = Long.parseLong(detail);
@@ -61,6 +65,9 @@ public abstract class EntitySubPlaceTokenizer<E extends Enum, ENT extends Entity
 		}
 		if (place.fromId != 0) {
 			addTokenPart(place.fromId);
+		}
+		if (place.fromClass!=null) {
+			addTokenPart(place.fromClass);
 		}
 	}
 }

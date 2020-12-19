@@ -74,13 +74,13 @@ public class OneToManySummaryCustomiser
 				String template = "<a href='#%s'>%s</a>";
 				String token = searchPlace.toTokenString();
 				return Ax.format(template, token,
-						instancePlace.provideCategoryString(o.getSize()));
+						instancePlace.provideCategoryString(o.getSize(),true));
 			} else {
 				String template = "<a href='#%s'>%s</a> - most recent: %s";
 				instancePlace.withEntity(mostRecent);
 				String token = searchPlace.toTokenString();
 				return Ax.format(template, token,
-						instancePlace.provideCategoryString(o.getSize()),
+						instancePlace.provideCategoryString(o.getSize(),true),
 						mostRecent.toString());
 			}
 		}

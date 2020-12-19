@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -10,6 +11,7 @@ import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
@@ -18,6 +20,7 @@ import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
 import cc.alcina.framework.common.client.util.Ax;
@@ -142,6 +145,7 @@ public class FormModel extends Model {
 			FormModelState state = new FormModelState();
 			state.editable = true;
 			state.adjunct = true;
+			state.expectsModel = true;
 			if (action instanceof PermissibleEntityAction) {
 				Entity entity = ((PermissibleEntityAction) action).getEntity();
 				entity = ClientTransformManager.cast().ensureEditable(entity);
@@ -151,6 +155,7 @@ public class FormModel extends Model {
 						.getParameters();
 			} else if (action instanceof LocalActionWithParameters) {
 				state.model = null;
+				state.expectsModel = false;
 			}
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
@@ -158,6 +163,8 @@ public class FormModel extends Model {
 	}
 
 	public static class FormModelState {
+		public boolean expectsModel;
+
 		public boolean editable;
 
 		private boolean adjunct;
@@ -179,23 +186,35 @@ public class FormModel extends Model {
 		public FormModel apply(FormModelState args) {
 			FormModel model = new FormModel();
 			model.state = args;
-			if (args.model == null) {
+			if (args.model == null && args.expectsModel) {
 				return model;
 			}
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			node.pushResolver(ModalResolver.single(!args.editable));
-			List<Field> fields = GwittirBridge.get()
-					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-							args.model, factory, args.editable, args.adjunct,
-							node.getResolver());
-			fields.stream().map(field -> new FormElement(field, args.model))
-					.forEach(model.elements::add);
+			if (args.model != null) {
+				List<Field> fields = GwittirBridge.get()
+						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
+								args.model, factory, args.editable,
+								args.adjunct, node.getResolver());
+				fields.stream().map(field -> new FormElement(field, args.model))
+						.forEach(model.elements::add);
+			}
 			if (args.adjunct) {
 				model.actions.add(new LinkModel()
 						.withPlace(new ActionRefPlace(SubmitRef.class))
 						.withPrimaryAction(true));
 				model.actions.add(new LinkModel()
 						.withPlace(new ActionRefPlace(CancelRef.class)));
+			}else {
+				if(args.model!=null) {
+					Bean bean = Reflections.classLookup().getAnnotationForClass(args.model.getClass(), Bean.class);
+					if(bean!=null) {
+						Arrays.stream(bean.actions().value()).forEach(action->{
+							
+						});
+					}
+				}
+				
 			}
 			return model;
 		}

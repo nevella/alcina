@@ -108,5 +108,9 @@ public abstract class DomainDescriptor {
 		}
 
 		Stream<T> wrap(Stream<T> stream);
+
+		default boolean filter(T t) {
+			return true;
+		}
 	}
 }

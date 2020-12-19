@@ -58,5 +58,9 @@ public @interface DomainProperty {
 	 */
 	boolean serialize() default false;
 	
-	boolean parent() default false;
+	/*
+	 * 
+	 * Can be multiple - but signifies 'populate this field if created from Entity x'
+	 */
+	boolean owner() default false;
 }

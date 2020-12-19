@@ -162,7 +162,9 @@ public class CommonSearchSupport {
 				modelSearchResults.rawEntity = first;
 				modelSearchResults.resultClassName = Optional.ofNullable(first)
 						.map(e -> e.entityClass().getName()).orElse(null);
-				untyped.add(project(first, modelSearchResults, true));
+				if (first != null) {
+					untyped.add(project(first, modelSearchResults, true));
+				}
 			} else {
 				queried = project(queried, modelSearchResults,
 						def.isReturnSingleDataObjectImplementations());

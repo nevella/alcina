@@ -644,6 +644,10 @@ public class DomainStore implements IDomainStore {
 			for (PreProvideTask task : domainDescriptor
 					.getPreProvideTasks(clazz)) {
 				try {
+					if(!task.filter(t)) {
+						return null;
+						
+					}
 					task.run(clazz, Collections.singletonList(t), true);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);

@@ -11,6 +11,8 @@ import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
 public abstract class BindablePlace<SD extends BindableSearchDefinition>
 		extends BasePlace implements PlaceWithSearchDefinition<SD> {
 	public long fromId;
+	
+	public String fromClass;
 
 	public long id;
 

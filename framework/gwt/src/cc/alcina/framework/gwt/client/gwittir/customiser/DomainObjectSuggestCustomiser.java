@@ -104,6 +104,8 @@ public class DomainObjectSuggestCustomiser
 		boolean showOnFocus() default false;
 
 		String cssClassName() default "";
+		
+		
 	}
 
 	@Override
@@ -131,7 +133,7 @@ public class DomainObjectSuggestCustomiser
 			boolean multiple, Custom custom,
 			AnnotationLocation propertyLocation) {
 		classValue = NamedParameter.Support
-				.getParameter(custom.parameters(), TARGET_CLASS).classValue();
+				.classValue(custom.parameters(), TARGET_CLASS,void.class);
 		rendererClassValue = NamedParameter.Support.classValue(
 				custom.parameters(), RENDERER_CLASS,
 				BoundSuggestOracleResponseTypeRenderer.class);

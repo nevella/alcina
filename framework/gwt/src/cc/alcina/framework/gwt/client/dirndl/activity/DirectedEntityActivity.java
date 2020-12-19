@@ -10,21 +10,33 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @RegistryLocation(registryPoint = DirectedEntityActivity.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
 public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 		extends DirectedActivity<EP> {
 	private E entity;
+
+	private boolean entityNotFound;
+
+	public boolean isEntityNotFound() {
+		return this.entityNotFound;
+	}
+
+	public void setEntityNotFound(boolean entityNotFound) {
+		boolean old_entityNotFound = this.entityNotFound;
+		this.entityNotFound = entityNotFound;
+		propertyChangeSupport().firePropertyChange("entityNotFound",
+				old_entityNotFound, entityNotFound);
+	}
 
 	public E getEntity() {
 		return this.entity;
@@ -42,6 +54,9 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 		Domain.async(provideDomainClass(), place.id, provideIsCreate(), e -> {
 			Runnable postCreate = () -> {
 				setEntity((E) e);
+				if (e == null) {
+					setEntityNotFound(true);
+				}
 				fireUpdated();
 			};
 			if (provideIsCreate()) {
@@ -54,21 +69,18 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 	}
 
 	private void onCreate(Entity e, Runnable postCreate) {
-		if (place.fromId != 0) {
-			Optional<PropertyReflector> parentReflector = 	ClientReflector.get()
-			.beanInfoForClass(e.entityClass()).getParentReflector();
-			
-			if (parentReflector.isPresent()) {
-				Class implementationClass = parentReflector.get().getAnnotation(Association.class)
-						.implementationClass();
-				Domain.async(
-						implementationClass,
-						place.fromId, false, parent -> {
-							parentReflector.get().setPropertyValue(e, parent);
-								postCreate.run();
-						});
-				return;
-			}
+		if (place.fromId != 0 && place.fromClass != null) {
+			EntityPlace fromPlace = (EntityPlace) RegistryHistoryMapper.get().getPlace(place.fromClass);
+			Class implementationClass = fromPlace.provideEntityClass();
+			Optional<PropertyReflector> ownerReflector = ClientReflector
+			.get().beanInfoForClass(e.entityClass())
+			.getOwnerReflectors().filter(r->r.getAnnotation(Association.class).implementationClass()==implementationClass)
+			.filter(Objects::nonNull).findFirst();
+			Domain.async(implementationClass, place.fromId, false, parent -> {
+				ownerReflector.get().setPropertyValue(e, parent);
+				postCreate.run();
+			});
+			return;
 		}
 		postCreate.run();
 	}

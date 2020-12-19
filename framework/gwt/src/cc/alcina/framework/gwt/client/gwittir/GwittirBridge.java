@@ -84,6 +84,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
+import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceValueCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.FriendlyEnumLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxCollectionProvider;
@@ -205,9 +206,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		} else {
 			final Property p = Introspector.INSTANCE.getDescriptor(target)
 					.getProperty(field.getPropertyName());
-			widget = SIMPLE_FACTORY
-					.getWidgetProvider( p.getType())
-					.get();
+			widget = SIMPLE_FACTORY.getWidgetProvider(p.getType()).get();
 		}
 		binding = new Binding(widget, "value", field.getValidator(),
 				field.getFeedback(), target, field.getPropertyName(), null,
@@ -286,7 +285,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			BoundWidgetTypeFactory factory, boolean editableWidgets,
 			boolean multiple) {
 		return fieldsForReflectedObjectAndSetupWidgetFactory(obj, factory,
-				editableWidgets, multiple, null, null,new DefaultResolver());
+				editableWidgets, multiple, null, null, new DefaultResolver());
 	}
 
 	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
@@ -315,7 +314,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					&& !editableFieldNameFilter.test(pn)) {
 				editableField = false;
 			}
-			Field f = getField(c, pn, editableField, multiple, factory, obj,resolver);
+			Field f = getField(c, pn, editableField, multiple, factory, obj,
+					resolver);
 			if (f != null) {
 				fields.add(f);
 			}
@@ -329,10 +329,10 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	 */
 	public List<Field> fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 			Object obj, BoundWidgetTypeFactory factory, boolean editableWidgets,
-			boolean multiple,AnnotationLocation.Resolver resolver) {
-		return new ArrayList<Field>(
-				Arrays.asList(fieldsForReflectedObjectAndSetupWidgetFactory(obj,
-						factory, editableWidgets, multiple,null,null,resolver)));
+			boolean multiple, AnnotationLocation.Resolver resolver) {
+		return new ArrayList<Field>(Arrays.asList(
+				fieldsForReflectedObjectAndSetupWidgetFactory(obj, factory,
+						editableWidgets, multiple, null, null, resolver)));
 	}
 
 	public Object findObjectWithPropertyInCollection(Collection c,
@@ -414,32 +414,44 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		return getField(c, propertyName, editableWidgets, multiple,
 				SIMPLE_FACTORY, null);
 	}
+
 	public Field getField(Class clazz, String propertyName,
 			boolean editableWidgets, boolean multiple,
 			BoundWidgetTypeFactory factory, Object obj) {
-		return getField(clazz, propertyName, editableWidgets, multiple, factory, obj, new AnnotationLocation.DefaultResolver());
+		return getField(clazz, propertyName, editableWidgets, multiple, factory,
+				obj, new AnnotationLocation.DefaultResolver());
 	}
-	@RegistryLocation(registryPoint = DomainListProvider.class,implementationType = ImplementationType.SINGLETON)
+
+	@RegistryLocation(registryPoint = DomainListProvider.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
-	public static class DomainListProvider{
-		
-		public BoundWidgetProvider getProvider(Class<? extends Entity> domainType,boolean propertyIsCollection) {
+	public static class DomainListProvider {
+		public BoundWidgetProvider getProvider(
+				Class<? extends Entity> domainType,
+				boolean propertyIsCollection) {
 			return new ListBoxCollectionProvider(domainType,
 					propertyIsCollection);
 		}
 	}
-	//FIXME - dirndl.1 - clean this up - probably one code path and a bunch of reflection/registry
+
+	// FIXME - dirndl.1 - clean this up - probably one code path and a bunch of
+	// reflection/registry
 	public Field getField(Class clazz, String propertyName,
 			boolean editableWidgets, boolean multiple,
-			BoundWidgetTypeFactory factory, Object obj,AnnotationLocation.Resolver resolver) {
-		List<PropertyReflector> propertyReflectors = Reflections.classLookup().getPropertyReflectors(clazz);
-		AnnotationLocation clazzLocation = new AnnotationLocation(clazz, null,resolver);
+			BoundWidgetTypeFactory factory, Object obj,
+			AnnotationLocation.Resolver resolver) {
+		List<PropertyReflector> propertyReflectors = Reflections.classLookup()
+				.getPropertyReflectors(clazz);
+		AnnotationLocation clazzLocation = new AnnotationLocation(clazz, null,
+				resolver);
 		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
-		ObjectPermissions op = clazzLocation.getAnnotation(ObjectPermissions.class);
+		ObjectPermissions op = clazzLocation
+				.getAnnotation(ObjectPermissions.class);
 		obj = obj != null ? obj
 				: ClientReflector.get().getTemplateInstance(clazz);
-		PropertyReflector propertyReflector = Reflections.classLookup().getPropertyReflector(clazz, propertyName);
-		AnnotationLocation propertyLocation = new AnnotationLocation(clazz, propertyReflector,resolver);
+		PropertyReflector propertyReflector = Reflections.classLookup()
+				.getPropertyReflector(clazz, propertyName);
+		AnnotationLocation propertyLocation = new AnnotationLocation(clazz,
+				propertyReflector, resolver);
 		Property p = getProperty(obj, propertyName);
 		BoundWidgetProvider bwp = factory.getWidgetProvider(p.getType());
 		int position = multiple ? RelativePopupValidationFeedback.BOTTOM
@@ -476,15 +488,21 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 							: association.implementationClass();
 			boolean isDomainClass = GwittirBridge.get()
 					.hasDescriptor(domainType);
-			if (bwp == null && isDomainClass ) {
-				if(fieldEditable) {
-				bwp = Registry.impl(DomainListProvider.class).getProvider(domainType,
-						propertyIsCollection);
-				}else {
-					bwp = propertyIsCollection
-							? new ExpandableDomainNodeCollectionLabelProvider(
-									MAX_EXPANDABLE_LABEL_LENGTH, true)
-							: DN_LABEL_PROVIDER;
+			if (bwp == null && isDomainClass) {
+				if (fieldEditable) {
+					bwp = Registry.impl(DomainListProvider.class)
+							.getProvider(domainType, propertyIsCollection);
+				} else {
+					if (propertyIsCollection) {
+						bwp = new ExpandableDomainNodeCollectionLabelProvider(
+								MAX_EXPANDABLE_LABEL_LENGTH, true);
+					} else {
+						if (multiple) {
+							bwp = DN_LABEL_PROVIDER;
+						} else {
+							bwp = new ModelPlaceValueCustomiser();
+						}
+					}
 				}
 			}
 			boolean isEnum = domainType.isEnum();
@@ -520,7 +538,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				Customiser customiser = Reflections
 						.newInstance(customiserInfo.customiserClass());
 				bwp = customiser.getProvider(fieldEditable, domainType,
-						multiple, customiserInfo,propertyLocation);
+						multiple, customiserInfo, propertyLocation);
 			}
 			if (bwp != null) {
 				ValidationFeedback validationFeedback = null;
@@ -543,9 +561,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 							validationFeedback);
 				}
 				Field field = new Field(propertyReflector.getPropertyName(),
-						//FIXME - dirndl.2
+						// FIXME - dirndl.2
 						TextProvider.get().getLabelText(clazz,
-						        propertyLocation),
+								propertyLocation),
 						bwp, validator, validationFeedback,
 						getDefaultConverter(bwp, p.getType()));
 				if (!display.styleName().isEmpty()) {

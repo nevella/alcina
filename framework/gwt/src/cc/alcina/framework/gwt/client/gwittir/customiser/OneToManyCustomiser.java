@@ -99,7 +99,7 @@ public class OneToManyCustomiser implements Customiser, BoundWidgetProvider {
 			String template = "<a href='#%s'>%s</a>";
 			String token = searchPlace.toTokenString();
 			return Ax.format(template, token,
-					searchPlace.provideCategoryString(o.size()));
+					searchPlace.provideCategoryString(o.size(),true));
 		}
 	}
 }

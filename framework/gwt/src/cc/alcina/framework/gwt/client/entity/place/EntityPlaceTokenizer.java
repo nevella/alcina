@@ -37,6 +37,10 @@ public abstract class EntityPlaceTokenizer<E extends Entity, SD extends EntitySe
 					&& parts.length > 3 + offset) {
 				place.fromId = Long.parseLong(parts[3 + offset]);
 			}
+			if (listAction == EntityAction.CREATE
+					&& parts.length > 4 + offset) {
+				place.fromClass = parts[4 + offset];
+			}
 		} else {
 			if (detail.matches("[\\-0-9]+")) {
 				place.id = Long.parseLong(detail);
@@ -68,6 +72,9 @@ public abstract class EntityPlaceTokenizer<E extends Entity, SD extends EntitySe
 		}
 		if (place.fromId != 0) {
 			addTokenPart(place.fromId);
+		}
+		if (place.fromClass!=null) {
+			addTokenPart(place.fromClass);
 		}
 	}
 }

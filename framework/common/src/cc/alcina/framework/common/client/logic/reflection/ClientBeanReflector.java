@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -122,14 +122,14 @@ public class ClientBeanReflector {
 				TextProvider.DISPLAY_NAME, tn);
 	}
 
-	public Optional<PropertyReflector> getParentReflector() {
+	public Stream<PropertyReflector> getOwnerReflectors() {
 		return Reflections
 				.classLookup().getPropertyReflectors(beanClass)
 				.stream()
 				.filter(pr -> pr
 						.getAnnotation(DomainProperty.class) != null)
 				.filter(Objects::nonNull).filter(pr -> pr
-						.getAnnotation(DomainProperty.class).parent())
-				.findFirst();
+						.getAnnotation(DomainProperty.class).owner());
+				
 	}
 }

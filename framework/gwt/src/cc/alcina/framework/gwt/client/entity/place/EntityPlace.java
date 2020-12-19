@@ -23,6 +23,8 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 
 	public EntityAction action = EntityAction.VIEW;
 
+	
+
 	public <EP extends EntityPlace> EP withAction(EntityAction action) {
 		this.action = action;
 		return (EP) this;
@@ -113,9 +115,9 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 				false);
 	}
 
-	public String provideCategoryString(int size) {
+	public String provideCategoryString(int size, boolean withCount) {
 		return CommonUtils.pluralise(provideEntityClass().getSimpleName(), size,
-				true);
+				withCount);
 	}
 
 	public EntityPlace withEntity(Entity entity) {

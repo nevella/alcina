@@ -13,52 +13,69 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
-import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManyMultipleSummary;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.HasDisplayName;
+import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
+import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
+import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @ClientInstantiable
 /**
  *
  * @author Nick Reddel
  */
-public class OneToManyMultipleSummaryCustomiser
+public class ModelPlaceValueCustomiser
 		implements Customiser, BoundWidgetProvider {
-	@Override
-	public BoundWidget get() {
-		RenderingHtml html = new RenderingHtml();
-		html.setRenderer(new OneToManyMultipleSummaryToHtmlRenderer(html));
-		html.setStyleName("");
-		return html;
-	}
-
 	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		return this;
 	}
 
-	private static class OneToManyMultipleSummaryToHtmlRenderer
-			implements Renderer<OneToManyMultipleSummary, String> {
-		@SuppressWarnings("unused")
-		private RenderingHtml html;
+	@Override
+	public BoundWidget get() {
+		RenderingHtml html = new RenderingHtml();
+		html.setRenderer(new ModelPlaceValueRenderer());
+		html.setStyleName("");
+		return html;
+	}
 
-		public OneToManyMultipleSummaryToHtmlRenderer(RenderingHtml html) {
-			this.html = html;
+	private static class ModelPlaceValueRenderer
+			implements Renderer<Entity, String> {
+		public ModelPlaceValueRenderer() {
 		}
 
 		@Override
-		public String render(OneToManyMultipleSummary o) {
+		public String render(Entity entity) {
+			if (entity == null) {
+				return "(Undefined)";
+			}
+			String name = null;
+			BasePlace place = null;
+			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
+					.get().getPlaceByModelClass(entity.entityClass());
+			if (instancePlace == null) {
+				return DisplayNameRenderer.INSTANCE.render(entity);
+			} else {
+				instancePlace.withEntity(entity);
+				place = instancePlace;
+				name = place.toNameString();
+			}
 			String template = "<a href='#%s'>%s</a>";
-			String token = o.getPlace().toTokenString();
+			String token = place.toTokenString();
+			name = Ax.blankTo(name, "(Blank)");
 			return Ax.format(template, token,
-					o.getPlace().provideCategoryString(o.getSize(),true));
+					SafeHtmlUtils.htmlEscape(name));
 		}
 	}
 }
