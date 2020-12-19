@@ -155,7 +155,7 @@ public class JobScheduler {
 									schedule.isVmLocal());
 					if (schedule != null
 							&& earliestIncompleteScheduled.isPresent()
-							&& earliestIncompleteScheduled.get()!=job
+							&& earliestIncompleteScheduled.get() != job
 							&& schedule.isCancelIfExistingIncomplete()) {
 						job.setState(JobState.ABORTED);
 						logger.info(
@@ -395,7 +395,7 @@ public class JobScheduler {
 			implements RegistryFactory<ResubmitPolicy> {
 		@Override
 		public ResubmitPolicy impl() {
-			return new NoRetryPolicy();
+			return new NoResubmitPolicy();
 		}
 	}
 
@@ -490,10 +490,41 @@ public class JobScheduler {
 		ExecutorService getService(AllocationQueue queue);
 	}
 
-	public static class NoRetryPolicy extends ResubmitPolicy {
+	public static class NoResubmitPolicy extends ResubmitPolicy {
 		@Override
 		public boolean shouldResubmit(Job job) {
 			return false;
+		}
+	}
+
+	public static class ResubmitNTimesPolicy extends ResubmitPolicy {
+		private int nTimes;
+
+		public ResubmitNTimesPolicy(int nTimes) {
+			this.nTimes = nTimes;
+		}
+
+		@Override
+		public boolean shouldResubmit(Job orphanedJob) {
+			if (orphanedJob.getUser() != UserlandProvider.get()
+					.getSystemUser()) {
+				return false;
+			}
+			int counter = 0;
+			Job cursor = orphanedJob;
+			while (true) {
+				counter++;
+				Optional<Job> precedingJob = cursor.getToRelations().stream()
+						.filter(rel -> rel
+								.getType() == JobRelationType.RESUBMIT)
+						.findFirst().map(JobRelation::getFrom);
+				if (precedingJob.isPresent()) {
+					cursor = precedingJob.get();
+				} else {
+					break;
+				}
+			}
+			return counter <= nTimes;
 		}
 	}
 
@@ -641,36 +672,6 @@ public class JobScheduler {
 		}
 	}
 
-	private static class ResubmitNTimesPolicy extends ResubmitPolicy {
-		private int nTimes;
-
-		public ResubmitNTimesPolicy(int nTimes) {
-			this.nTimes = nTimes;
-		}
-
-		@Override
-		public boolean shouldResubmit(Job failedJob) {
-			if (failedJob.getUser() != UserlandProvider.get().getSystemUser()) {
-				return false;
-			}
-			int counter = 0;
-			Job cursor = failedJob;
-			while (true) {
-				counter++;
-				Optional<Job> precedingJob = cursor.getToRelations().stream()
-						.filter(rel -> rel
-								.getType() == JobRelationType.RESUBMIT)
-						.findFirst().map(JobRelation::getFrom);
-				if (precedingJob.isPresent()) {
-					cursor = precedingJob.get();
-				} else {
-					break;
-				}
-			}
-			return counter <= nTimes;
-		}
-	}
-
 	static class CurrentThreadExecutorServiceProvider
 			implements ExecutorServiceProvider {
 		@Override
@@ -715,6 +716,7 @@ public class JobScheduler {
 		enum Type {
 			APPLICATION_STARTUP, WAKEUP, ALLOCATION_EVENT, SHUTDOWN,
 			LEADER_CHANGED;
+
 			public boolean isRefreshFuturesEvent() {
 				switch (this) {
 				case APPLICATION_STARTUP:

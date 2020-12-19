@@ -170,6 +170,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		}
 	}
 
+	public <T extends Task> T castTask() {
+		return (T) getTask();
+	}
+
 	public void createRelation(Job to, JobRelationType type) {
 		String invalidMessage = null;
 		Preconditions.checkArgument(to != domainIdentity());

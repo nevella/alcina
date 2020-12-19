@@ -803,6 +803,12 @@ public class DomainDescriptorJob {
 			if (job.provideIsFuture()) {
 				if (!job.provideCanDeserializeTask()) {
 					logger.warn("Cannot deserialize future task: {}", job);
+					logger.info("Task data: {}", job.getTaskSerialized());
+					try {
+						job.getTask();
+					} catch (Exception e) {
+						logger.error("Issue", e);
+					}
 					return;
 				} else {
 					logger.info("Adding future: {} {}",
