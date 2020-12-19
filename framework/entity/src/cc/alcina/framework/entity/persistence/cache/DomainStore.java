@@ -1466,7 +1466,7 @@ public class DomainStore implements IDomainStore {
 							.propertyAccessor().getAnnotationForProperty(
 									entity.entityClass(), DomainProperty.class,
 									event.getPropertyName());
-					if (domainProperty != null && !domainProperty.index()) {
+					if (domainProperty != null && !domainProperty.reindexOnChange()) {
 						return;
 					}
 					try {

@@ -20,6 +20,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
+
+
 /**
  * To be applied at the class level Also functions as an GwtClientInstantiable
  * annotation
@@ -37,11 +40,12 @@ public @interface Bean {
 
 	boolean allPropertiesVisualisable() default false;
 
-	Class customizerClass() default void.class;
-
 	String description() default "";
 
 	Display displayInfo() default @Display(name = "");
 
 	String displayNamePropertyName() default "";
+
+	
+	
 }

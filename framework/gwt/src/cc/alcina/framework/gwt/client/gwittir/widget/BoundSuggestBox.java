@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.SuggestBox;
@@ -131,6 +132,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 
 	public void suggestOracle(BoundSuggestOracle suggestOracle) {
 		this.suggestOracle = suggestOracle;
+		FlowPanel div = new FlowPanel();
 		base = new SuggestBox(suggestOracle);
 		((DefaultSuggestionDisplay) base.getSuggestionDisplay())
 				.setPopupStyleName("bound-suggest-box-popup");
@@ -176,7 +178,8 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 				}
 			}
 		});
-		super.initWidget(base);
+		div.add(base);
+		super.initWidget(div);
 	}
 
 	public static class BoundSuggestOracle extends SuggestOracle {
@@ -274,5 +277,9 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 	@Override
 	public void setTabIndex(int index) {
 		base.getValueBox().setTabIndex(index);
+	}
+
+	public void setSuggestBoxStyleName(String suggestBoxCssClassName) {
+		base.getValueBox().setStyleName(suggestBoxCssClassName);
 	}
 }

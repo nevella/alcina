@@ -1,11 +1,14 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+
 public class StandardModels {
 	public static class HeaderContentModel extends Model {
 		private Object headerModel;
 
 		private Object contentModel;
 
+		@Directed
 		public Object getHeaderModel() {
 			return this.headerModel;
 		}
@@ -17,6 +20,7 @@ public class StandardModels {
 					old_headerModel, headerModel);
 		}
 
+		@Directed
 		public Object getContentModel() {
 			return this.contentModel;
 		}

@@ -8,13 +8,14 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
 /*
  * Contains either a standard layout model (such as HeaderContent) (for normal UI) or a model which is essentially a modal in-page
  * 
- * Should render by delegating to the model field
+ * Renders by delegating to the model field
  */
 @Directed(renderer = DelegatingNodeRenderer.class)
 @Bean
 public class TopModel extends Bindable {
     private Object model;
 
+    @Directed
     public Object getModel() {
         return this.model;
     }

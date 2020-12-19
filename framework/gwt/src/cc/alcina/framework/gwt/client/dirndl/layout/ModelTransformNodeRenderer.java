@@ -108,16 +108,5 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 		}
 	}
 
-	public static class BlankModelTransform
-			extends AbstractModelTransform<Object, Bindable> {
-		@Override
-		public Bindable apply(Object t) {
-			BlankModel model = new BlankModel();
-			return model;
-		}
-	}
-
-	@Directed(renderer = NotRenderedNodeRenderer.class)
-	public static class BlankModel extends Model {
-	}
+	
 }

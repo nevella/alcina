@@ -885,4 +885,18 @@ public class PermissionsManager implements DomainTransformListener {
 			extensionMapForRule.put(ext.getRuleName(), ext);
 		}
 	}
+
+	public static ObjectPermissions
+			getObjectPermissions(Class domainClass) {
+		ObjectPermissions objectPermissions = Reflections.classLookup()
+		.getAnnotationForClass(domainClass,
+				ObjectPermissions.class);
+return objectPermissions == null
+		? get().getDefaultObjectPermissions()
+		: objectPermissions;
+	}
+
+	public boolean isPermissible(Permission create) {
+		return isPermissible(new AnnotatedPermissible(create));
+	}
 }

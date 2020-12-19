@@ -29,8 +29,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.BlankModel;
-import cc.alcina.framework.gwt.client.dirndl.layout.NotRenderedNodeRenderer;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -45,7 +43,6 @@ public class FormModel extends Model {
 
 	private FormModelState state;
 
-	@Directed(renderer = NotRenderedNodeRenderer.class)
 	public FormModelState getState() {
 		return this.state;
 	}
@@ -118,8 +115,8 @@ public class FormModel extends Model {
 		new FormValidation().validate(onValid, getState().formBinding);
 	}
 
-	public static class EntityTransformer extends AbstractContextSensitiveModelTransform
-			<DirectedEntityActivity<? extends EntityPlace, ? extends Entity>, FormModel> {
+	public static class EntityTransformer extends
+			AbstractContextSensitiveModelTransform<DirectedEntityActivity<? extends EntityPlace, ? extends Entity>, FormModel> {
 		@Override
 		public FormModel apply(
 				DirectedEntityActivity<? extends EntityPlace, ? extends Entity> activity) {
@@ -132,28 +129,31 @@ public class FormModel extends Model {
 			state.model = entity;
 			state.adjunct = state.editable
 					&& ClientTransformManager.cast().isProvisionalEditing();
-			return new FormModelTransformer().withContextNode(node).apply(state);
+			return new FormModelTransformer().withContextNode(node)
+					.apply(state);
 		}
 	}
 
 	@ClientInstantiable
-	public static class PermissibleActionFormTransformer
-	extends AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
+	public static class PermissibleActionFormTransformer extends
+			AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
 		@Override
 		public FormModel apply(PermissibleAction action) {
 			FormModelState state = new FormModelState();
-			state.editable=true;
-			state.adjunct=true;
-			if(action instanceof PermissibleEntityAction) {
-				Entity entity =((PermissibleEntityAction) action).getEntity();
+			state.editable = true;
+			state.adjunct = true;
+			if (action instanceof PermissibleEntityAction) {
+				Entity entity = ((PermissibleEntityAction) action).getEntity();
 				entity = ClientTransformManager.cast().ensureEditable(entity);
 				state.model = entity;
-			}else if(action instanceof RemoteActionWithParameters) {
-				state.model=(Bindable) ((RemoteActionWithParameters) action).getParameters();
-			}else if (action instanceof LocalActionWithParameters) {
-				state.model = new BlankModel();
+			} else if (action instanceof RemoteActionWithParameters) {
+				state.model = (Bindable) ((RemoteActionWithParameters) action)
+						.getParameters();
+			} else if (action instanceof LocalActionWithParameters) {
+				state.model = null;
 			}
-			return new FormModelTransformer().withContextNode(node).apply(state);
+			return new FormModelTransformer().withContextNode(node)
+					.apply(state);
 		}
 	}
 
@@ -173,8 +173,8 @@ public class FormModel extends Model {
 	}
 
 	@ClientInstantiable
-	public static class FormModelTransformer
-	extends AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
+	public static class FormModelTransformer extends
+			AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
 		@Override
 		public FormModel apply(FormModelState args) {
 			FormModel model = new FormModel();
@@ -186,7 +186,8 @@ public class FormModel extends Model {
 			node.pushResolver(ModalResolver.single(!args.editable));
 			List<Field> fields = GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-							args.model, factory, args.editable, args.adjunct,node.getResolver());
+							args.model, factory, args.editable, args.adjunct,
+							node.getResolver());
 			fields.stream().map(field -> new FormElement(field, args.model))
 					.forEach(model.elements::add);
 			if (args.adjunct) {
@@ -203,7 +204,6 @@ public class FormModel extends Model {
 	public static class LabelModel extends Model {
 		protected FormElement formElement;
 
-		@Directed(renderer = NotRenderedNodeRenderer.class)
 		public FormElement getFormElement() {
 			return this.formElement;
 		}
@@ -234,7 +234,6 @@ public class FormModel extends Model {
 		public FormValueModel() {
 		}
 
-		@Directed(renderer = NotRenderedNodeRenderer.class)
 		public FormElement getFormElement() {
 			return this.formElement;
 		}
@@ -248,13 +247,11 @@ public class FormModel extends Model {
 			return formElement.field;
 		}
 
-		@Directed(renderer = NotRenderedNodeRenderer.class)
 		@Override
 		public String getValueId() {
 			return formElement.provideId();
 		}
 
-		@Directed(renderer = NotRenderedNodeRenderer.class)
 		@Override
 		public Bindable getBindable() {
 			return formElement.bindable;
@@ -289,10 +286,12 @@ public class FormModel extends Model {
 			this.value = new FormValueModel(this);
 		}
 
+		@Directed
 		public LabelModel getLabel() {
 			return this.label;
 		}
 
+		@Directed
 		public FormValueModel getValue() {
 			return this.value;
 		}

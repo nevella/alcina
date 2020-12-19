@@ -76,6 +76,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.Validators;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Ax;
@@ -418,6 +419,16 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			BoundWidgetTypeFactory factory, Object obj) {
 		return getField(clazz, propertyName, editableWidgets, multiple, factory, obj, new AnnotationLocation.DefaultResolver());
 	}
+	@RegistryLocation(registryPoint = DomainListProvider.class,implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class DomainListProvider{
+		
+		public BoundWidgetProvider getProvider(Class<? extends Entity> domainType,boolean propertyIsCollection) {
+			return new ListBoxCollectionProvider(domainType,
+					propertyIsCollection);
+		}
+	}
+	//FIXME - dirndl.1 - clean this up - probably one code path and a bunch of reflection/registry
 	public Field getField(Class clazz, String propertyName,
 			boolean editableWidgets, boolean multiple,
 			BoundWidgetTypeFactory factory, Object obj,AnnotationLocation.Resolver resolver) {
@@ -465,9 +476,16 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 							: association.implementationClass();
 			boolean isDomainClass = GwittirBridge.get()
 					.hasDescriptor(domainType);
-			if (bwp == null && isDomainClass) {
-				bwp = new ListBoxCollectionProvider(domainType,
+			if (bwp == null && isDomainClass ) {
+				if(fieldEditable) {
+				bwp = Registry.impl(DomainListProvider.class).getProvider(domainType,
 						propertyIsCollection);
+				}else {
+					bwp = propertyIsCollection
+							? new ExpandableDomainNodeCollectionLabelProvider(
+									MAX_EXPANDABLE_LABEL_LENGTH, true)
+							: DN_LABEL_PROVIDER;
+				}
 			}
 			boolean isEnum = domainType.isEnum();
 			boolean displayWrap = (display.displayMask()
@@ -502,7 +520,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				Customiser customiser = Reflections
 						.newInstance(customiserInfo.customiserClass());
 				bwp = customiser.getProvider(fieldEditable, domainType,
-						multiple, customiserInfo);
+						multiple, customiserInfo,propertyLocation);
 			}
 			if (bwp != null) {
 				ValidationFeedback validationFeedback = null;

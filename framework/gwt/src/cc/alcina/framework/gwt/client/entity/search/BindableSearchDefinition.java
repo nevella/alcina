@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.domain.search.SearchOrders.SpecificIdOr
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.search.TxtCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -135,5 +136,15 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		BindablePlace place = BindablePlace.forClass(queriedBindableClass());
 		place.def = this;
 		return place;
+	}
+
+	public Optional<TruncatedObjectCriterion>
+			provideTruncatedObjectCriterion(Class clazz) {
+		return allCriteria().stream()
+				.filter(sc -> sc instanceof TruncatedObjectCriterion)
+				.map(sc -> (TruncatedObjectCriterion) sc)
+				.filter(toc -> toc.getId() != 0
+						&& toc.getObjectClass() == clazz)
+				.findFirst();
 	}
 }

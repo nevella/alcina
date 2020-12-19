@@ -14,6 +14,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
@@ -55,6 +56,11 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 		@Override
 		public Behaviour[] behaviours() {
 			return new Behaviour[0];
+		}
+
+		@Override
+		public Binding[] bindings() {
+			return new Binding[0];
 		}
 	}
 

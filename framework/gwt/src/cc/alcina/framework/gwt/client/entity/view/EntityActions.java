@@ -1,8 +1,15 @@
 package cc.alcina.framework.gwt.client.entity.view;
 
+import java.util.Optional;
+
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.reflection.Association;
+import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
@@ -49,9 +56,8 @@ public class EntityActions {
 			EntityPlace entityPlace = ((EntityPlace) ClientFactory
 					.currentPlace()).copy();
 			if (Window.confirm(
-					Ax.format(
-							"Are you sure you want to delete the selected %s",
-					entityPlace.provideCategoryString()))) {
+					Ax.format("Are you sure you want to delete the selected %s",
+							entityPlace.provideCategoryString()))) {
 				entityPlace.provideEntity().delete();
 			}
 		}
@@ -61,17 +67,32 @@ public class EntityActions {
 	@ActionRefHandler(CreateHandler.class)
 	public static class CreateRef extends ActionRef {
 	}
+
 	public static class CreateHandler extends ActionHandler {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			EntityPlace entityPlace = ((EntityPlace) ClientFactory
-					.currentPlace()).copy();
+			EntityPlace currentPlace = (EntityPlace) ClientFactory
+							.currentPlace();
+			EntityPlace entityPlace = Reflections.newInstance(currentPlace.getClass());
+			Optional<PropertyReflector> parentReflector = ClientReflector.get()
+					.beanInfoForClass(entityPlace.provideEntityClass())
+					.getParentReflector();
+			if (parentReflector.isPresent()) {
+				Optional<TruncatedObjectCriterion> parentCriterion = currentPlace.def
+						.provideTruncatedObjectCriterion(parentReflector.get()
+								.getAnnotation(Association.class)
+								.implementationClass());
+				if(parentCriterion.isPresent()) {
+					entityPlace.fromId=parentCriterion.get().getId();
+				}
+			}
 			entityPlace.action = EntityAction.CREATE;
 			entityPlace.withId(0);
 			ClientFactory.goTo(entityPlace);
 		}
 	}
+
 	public static class ViewHandler extends ActionHandler {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
@@ -82,6 +103,7 @@ public class EntityActions {
 			ClientFactory.goTo(entityPlace);
 		}
 	}
+
 	@Ref("view")
 	@ActionRefHandler(ViewHandler.class)
 	public static class ViewRef extends ActionRef {

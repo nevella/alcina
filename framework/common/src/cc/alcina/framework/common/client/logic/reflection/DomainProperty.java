@@ -37,7 +37,7 @@ public @interface DomainProperty {
 
 	boolean ignoreForDeletionChecking() default false;
 
-	boolean index() default true;
+	boolean reindexOnChange() default true;
 
 	boolean registerChildren() default false;
 
@@ -57,4 +57,6 @@ public @interface DomainProperty {
 	 * this.xxxString, new XXX);
 	 */
 	boolean serialize() default false;
+	
+	boolean parent() default false;
 }

@@ -8,11 +8,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.Resolver;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -57,11 +60,15 @@ public @interface ModalDisplay {
 			}
 		}
 
+		public boolean isMultiple() {
+			return !isSingle();
+			
+		}
 		private boolean isSameArity(Mode other) {
 			return this.isSingle() ^ !other.isSingle();
 		}
 
-		private boolean isSingle() {
+		public boolean isSingle() {
 			switch (this) {
 			case SINGLE_ANY:
 			case SINGLE_READ:
@@ -81,12 +88,21 @@ public @interface ModalDisplay {
 			}
 		}
 	}
+	@RegistryLocation(registryPoint = ModeTransformer.class,implementationType = ImplementationType.INSTANCE)
+	@ClientInstantiable
+	public static class ModeTransformer implements Function<Mode,Mode> {
 
+		@Override
+		public Mode apply(Mode mode) {
+			return mode;
+		}
+		
+	}
 	public static class ModalResolver implements Resolver {
 		private final Mode mode;
 
 		private ModalResolver(Mode mode) {
-			this.mode = mode;
+			this.mode = Registry.impl(ModeTransformer.class).apply(mode);
 		}
 
 		@Override

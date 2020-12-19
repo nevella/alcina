@@ -66,5 +66,8 @@ public abstract class EntityPlaceTokenizer<E extends Entity, SD extends EntitySe
 		if (place.action != null && place.action != EntityAction.VIEW) {
 			addTokenPart(place.action.toString().toLowerCase());
 		}
+		if (place.fromId != 0) {
+			addTokenPart(place.fromId);
+		}
 	}
 }

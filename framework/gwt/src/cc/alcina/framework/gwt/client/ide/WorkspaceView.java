@@ -452,12 +452,9 @@ public class WorkspaceView extends Composite implements HasName,
 				}
 			}
 			if (domainClass != null) {
-				ObjectPermissions op = Reflections.classLookup()
-						.getAnnotationForClass(domainClass,
-								ObjectPermissions.class);
-				op = op == null
-						? PermissionsManager.get().getDefaultObjectPermissions()
-						: op;
+				ObjectPermissions op = 
+						
+						PermissionsManager.getObjectPermissions(domainClass);
 				try {
 					LooseContext.pushWithKey(
 							PermissionsManager.CONTEXT_CREATION_PARENT,

@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.VoidNodeRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -26,9 +26,12 @@ public @interface Directed {
 
 	public String tag() default "";
 
-	public Class<? extends DirectedNodeRenderer> renderer() default VoidNodeRenderer.class;
+	public Class<? extends DirectedNodeRenderer> renderer() default ModelClassNodeRenderer.class;
 
 	public Behaviour[] behaviours() default {};
+	public Binding[] bindings() default {};
+	
+	
 
 	@RegistryLocation(registryPoint = DirectedResolver.class, implementationType = ImplementationType.INSTANCE)
 	@ClientInstantiable
@@ -39,12 +42,7 @@ public @interface Directed {
 			resolver = createResolver(childResolver.resolver);
 		}
 
-		public DirectedResolver(AnnotationLocation propertyLocation) {
-			// Hmmm?
-			resolver = createResolver(new TreeResolver<Directed>(
-					propertyLocation, propertyLocation.propertyReflector
-							.getAnnotation(Directed.class)));
-		}
+		
 
 		public DirectedResolver() {
 		}
@@ -64,7 +62,7 @@ public @interface Directed {
 		public Class<? extends DirectedNodeRenderer> renderer() {
 			Function<Directed, Class<? extends DirectedNodeRenderer>> function = Directed::renderer;
 			return resolver.resolve(function, "renderer",
-					VoidNodeRenderer.class);
+					ModelClassNodeRenderer.class);
 		}
 
 		protected TreeResolver<Directed>
@@ -89,6 +87,11 @@ public @interface Directed {
 		public Behaviour[] behaviours() {
 			Function<Directed, Behaviour[]> function = Directed::behaviours;
 			return resolver.resolve(function, "behaviours", new Behaviour[0]);
+		}
+		@Override
+		public Binding[] bindings() {
+			Function<Directed, Binding[]> function = Directed::bindings;
+			return resolver.resolve(function, "bindings", new Binding[0]);
 		}
 	}
 }

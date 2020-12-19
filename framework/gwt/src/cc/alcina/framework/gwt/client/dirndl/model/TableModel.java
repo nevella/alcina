@@ -22,7 +22,6 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedCategoriesActivity
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.layout.NotRenderedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -72,7 +71,6 @@ public class TableModel extends Model {
 	public static class TableColumn extends Model {
 		private Field field;
 
-		@Directed(renderer = NotRenderedNodeRenderer.class)
 		public Field getField() {
 			return this.field;
 		}
@@ -101,7 +99,7 @@ public class TableModel extends Model {
 
 		public TableHeader() {
 		}
-
+@Directed
 		public List<TableColumn> getColumns() {
 			return this.columns;
 		}
@@ -230,7 +228,6 @@ public class TableModel extends Model {
 			this.cell = formElement;
 		}
 
-		@Directed(renderer = NotRenderedNodeRenderer.class)
 		@Override
 		public Bindable getBindable() {
 			return cell.row.bindable;
@@ -241,7 +238,6 @@ public class TableModel extends Model {
 			return cell.column.field;
 		}
 
-		@Directed(renderer = NotRenderedNodeRenderer.class)
 		public TableCell getFormElement() {
 			return this.cell;
 		}

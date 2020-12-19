@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Panel;
@@ -34,6 +35,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
@@ -232,26 +234,45 @@ public class DirectedLayout {
 
 		public DirectedNodeRenderer resolveRenderer() {
 			DirectedNodeRenderer renderer = null;
-			if (model == null && (propertyReflector == null || propertyReflector
-					.getAnnotation(Directed.class) == null)) {
-				return new NullNodeRenderer();
-			}
 			if (directed == null) {
 				// FIXME - dirndl.0 - no, resolver is from the node tree, not
 				// the class
 				Class clazz = model == null ? void.class : model.getClass();
+				/*
+				 * if the property has a simple @Directed annotation, and the
+				 * class has a non-simple @Directed, use the class
+				 */
 				directed = Registry.impl(DirectedResolver.class, clazz);
-				((DirectedResolver) directed).setLocation(
-						new AnnotationLocation(clazz, propertyReflector));
+				AnnotationLocation annotationLocation = new AnnotationLocation(
+						clazz, propertyReflector);
+				if (propertyReflector != null
+						&& propertyReflector
+								.getAnnotation(Directed.class) != null
+						&& isDefault(
+								propertyReflector.getAnnotation(Directed.class))
+						&& clazz != null
+						&& Reflections.classLookup().getAnnotationForClass(
+								clazz, Directed.class) != null) {
+					annotationLocation = new AnnotationLocation(clazz, null);
+				}
+				((DirectedResolver) directed).setLocation(annotationLocation);
 			}
 			Class<? extends DirectedNodeRenderer> rendererClass = directed
 					.renderer();
-			if (rendererClass == VoidNodeRenderer.class) {
+			if (rendererClass == ModelClassNodeRenderer.class) {
 				rendererClass = Registry.get().lookupSingle(
 						DirectedNodeRenderer.class, model.getClass());
 			}
 			renderer = Reflections.classLookup().newInstance(rendererClass);
 			return renderer;
+		}
+
+		private boolean isDefault(Directed annotation) {
+			return annotation.renderer() == ModelClassNodeRenderer.class
+					&& annotation.cssClass().isEmpty()
+					&& annotation.tag().isEmpty()
+					&& annotation.behaviours().length == 0
+					&& annotation.bindings().length == 0;
 		}
 
 		public Widget resolveWidget(String path) {
@@ -301,15 +322,23 @@ public class DirectedLayout {
 			rendered.behaviours.forEach(BehaviourBinding::bind);
 		}
 
+		private void bindProperties() {
+			if (directed == null || directed.bindings().length == 0) {
+				return;
+			}
+			/*
+			 * TODO - can probably relax this (just apply to outermost widget)
+			 */
+			Preconditions.checkState(rendered.widgets.size() == 1);
+			rendered.bindings = Arrays.stream(directed.bindings())
+					.map(PropertyBinding::new).collect(Collectors.toList());
+		}
+
 		private void populateWidgets(boolean intermediateChild) {
 			this.descriptor = model == null ? null
 					: Reflections.beanDescriptorProvider()
 							.getDescriptorOrNull(model);
 			renderer = resolveRenderer();
-			if (renderer instanceof NotRenderedNodeRenderer) {
-				// to avoid adding model children
-				return;
-			}
 			/*
 			 * allow insertion of multiple nodes for one model object - loop
 			 * without adding model children until the final Directed
@@ -363,14 +392,21 @@ public class DirectedLayout {
 						.getPropertyReflectors((model.getClass()));
 				if (propertyReflectors != null) {
 					for (PropertyReflector propertyReflector : propertyReflectors) {
-						Object childModel = propertyReflector
-								.getPropertyValue(model);
-						Node child = addChild(childModel, propertyReflector,
-								propertyReflector);
+						if (propertyReflector
+								.getAnnotation(Directed.class) != null) {
+							Object childModel = propertyReflector
+									.getPropertyValue(model);
+							if (childModel != null && childModel.getClass()
+									.getName().contains("GlobalHeader")) {
+								int debug = 3;
+							}
+							Node child = addChild(childModel, propertyReflector,
+									propertyReflector);
+						}
 					}
 				}
 			}
-			current = this;// after leaving child travers
+			current = this;// after leaving child traverse
 			rendered.widgets = renderer.renderWithDefaults(this);
 			return;
 		}
@@ -394,6 +430,7 @@ public class DirectedLayout {
 			}
 			populateWidgets(intermediateChild);
 			bindBehaviours();
+			bindProperties();
 			current = null;
 		}
 
@@ -426,6 +463,9 @@ public class DirectedLayout {
 			}
 			children.forEach(Node::unbind);
 			listeners.forEach(RemovablePropertyChangeListener::unbind);
+			if (rendered.bindings != null) {
+				rendered.bindings.forEach(PropertyBinding::unbind);
+			}
 		}
 
 		Node addChild(Object childModel, PropertyReflector definingReflector,
@@ -480,6 +520,8 @@ public class DirectedLayout {
 			List<Widget> widgets = new ArrayList<>();
 
 			public List<BehaviourBinding> behaviours;
+
+			public List<PropertyBinding> bindings;
 
 			public int getChildIndex(Widget childWidget) {
 				FlowPanel panel = verifyContainer();
@@ -568,6 +610,54 @@ public class DirectedLayout {
 				this.child = newChild;
 				// unbind();
 				// no need to unbind - removeChild will have done this
+			}
+		}
+
+		/*
+		 * Similar to Gwittir Binding - but simpler
+		 */
+		class PropertyBinding {
+			Binding binding;
+
+			private RemovablePropertyChangeListener listener;
+
+			PropertyBinding(Binding binding) {
+				this.binding = binding;
+				/*
+				 * exactly one of from() and value() must be non-empty
+				 */
+				Preconditions.checkArgument(binding.from().length() > 0
+						^ binding.value().length() > 0);
+				if (binding.from().length() > 0) {
+					this.listener = new RemovablePropertyChangeListener(
+							(Bindable) model, binding.from(), evt -> set());
+				}
+				set();
+			}
+
+			void set() {
+				String value = binding.from().length() > 0
+						? (String) Reflections.propertyAccessor()
+								.getPropertyValue(model, binding.from())
+						: binding.value();
+				Element element = rendered.widgets.get(0).getElement();
+				switch (binding.type()) {
+				case INNER_HTML:
+					element.setInnerHTML(value);
+					break;
+				case INNER_TEXT:
+					element.setInnerText(value);
+					break;
+				case PROPERTY:
+					element.setAttribute(binding.to(), value);
+					break;
+				}
+			}
+
+			void unbind() {
+				if (listener != null) {
+					listener.unbind();
+				}
 			}
 		}
 

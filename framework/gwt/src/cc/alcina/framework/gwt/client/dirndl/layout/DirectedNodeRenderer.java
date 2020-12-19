@@ -14,6 +14,7 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 @ClientInstantiable
@@ -27,26 +28,14 @@ public abstract class DirectedNodeRenderer {
 	}
 
 	protected void renderDefaults(Node node, Widget widget) {
-		if (node.directed != null && node.directed.cssClass().length() > 0) {
-			widget.addStyleName(node.directed.cssClass());
+		if (node.directed != null) {
+			if (node.directed.cssClass().length() > 0) {
+				widget.addStyleName(node.directed.cssClass());
+			}
+			
 		}
-		TitleProvider titleProvider = node.annotation(TitleProvider.class);
-		if (titleProvider != null) {
-			widget.setTitle((String) Reflections
-					.newInstance(titleProvider.value()).apply(node.model));
-		}
+	
 	}
 
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface TitleProvider {
-		Class<? extends TitleFunction> value();
-	}
-
-	@ClientInstantiable
-	public static abstract class TitleFunction<A>
-			implements Function<A, String> {
-	}
+	
 }
