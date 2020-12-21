@@ -129,6 +129,7 @@ class JobAllocator {
 			while (!childCompletionLatch.await(2, TimeUnit.SECONDS)) {
 				if (enqueuedStatusMessage != null) {
 					applyStatusMessage();
+					Transaction.end();
 				}
 			}
 			Transaction.endAndBeginNew();

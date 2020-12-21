@@ -53,13 +53,15 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		AlcinaBeanSerializerS.useContextClassloader = useContextClassloader;
 	}
 
-	private ClassLoader cl;
+	private ClassLoader classLoader;
 
 	private boolean pretty;
 
 	IdentityHashMap seenOut = new IdentityHashMap();
 
 	Map seenIn = new LinkedHashMap();
+
+	protected Map<String, Class> resolvedClassLookup = new LinkedHashMap<>();
 
 	public AlcinaBeanSerializerS() {
 		propertyFieldName = PROPERTIES;
@@ -71,9 +73,9 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			JSONObject obj = new JSONObject(jsonString);
 			if (GWT.isClient() && !useContextClassloader) {
 				// devmode
-				cl = getClass().getClassLoader().getParent();
+				classLoader = getClass().getClassLoader().getParent();
 			} else {
-				cl = Thread.currentThread().getContextClassLoader();
+				classLoader = Thread.currentThread().getContextClassLoader();
 			}
 			return (T) deserializeObject(obj);
 		} catch (Exception e) {
@@ -122,7 +124,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			return ((Boolean) o).booleanValue();
 		}
 		if (type == Class.class) {
-			return cl.loadClass(o.toString());
+			return getClassMaybeAbbreviated(o.toString());
 		}
 		if (type.isArray() && type.getComponentType() == byte.class) {
 			return Base64.decode(o.toString());
@@ -384,13 +386,24 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 	@Override
 	protected Class getClassMaybeAbbreviated(String cns) {
 		try {
-			Class clazz;
+			Class clazz = null;
 			if (abbrevLookup.containsKey(cns)) {
-				clazz = abbrevLookup.get(cns);
+				return abbrevLookup.get(cns);
 			} else {
-				clazz = cl.loadClass(cns);
+				Class resolved = resolvedClassLookup.get(cns);
+				if (resolved == null) {
+					try {
+						clazz = classLoader.loadClass(cns);
+					} catch (Exception e) {
+						Ax.simpleExceptionOut(e);
+						clazz = Reflections.classLookup().getClassForName(cns);
+					}
+					resolvedClassLookup.put(cns, clazz);
+					return clazz;
+				} else {
+					return resolved;
+				}
 			}
-			return clazz;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

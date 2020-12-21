@@ -273,6 +273,7 @@ public class JobContext {
 	}
 
 	private void end0() {
+		Transaction.ensureBegun();
 		if (noHttpContext) {
 			InternalMetrics.get().endTracker(performer);
 		}

@@ -40,6 +40,9 @@ public class Transaction implements Comparable<Transaction> {
 	public static final String CONTEXT_RETAIN_TRANSACTION_TRACES = Transaction.class
 			.getName() + ".CONTEXT_RETAIN_TRANSACTION_TRACES";
 
+	public static final String CONTEXT_ALLOW_ABORTED_TX_ACCESS = Transaction.class
+			.getName() + ".CONTEXT_ALLOW_ABORTED_TX_ACCESS";
+
 	private static ThreadLocal<Transaction> threadLocalInstance = new ThreadLocal() {
 	};
 
@@ -69,7 +72,8 @@ public class Transaction implements Comparable<Transaction> {
 	public static Transaction current() {
 		Transaction transaction = threadLocalInstance.get();
 		if (transaction == null
-				|| transaction.getPhase() == TransactionPhase.TO_DB_ABORTED) {
+				|| (transaction.getPhase() == TransactionPhase.TO_DB_ABORTED
+						&& !LooseContext.is(CONTEXT_ALLOW_ABORTED_TX_ACCESS))) {
 			throw new MvccException("No current transaction");
 		} else {
 			return transaction;
@@ -404,7 +408,8 @@ public class Transaction implements Comparable<Transaction> {
 	void endTransaction() {
 		originatingThread = null;
 		ended = true;
-		switch (getPhase()) {
+		TransactionPhase endPhase = getPhase();
+		switch (endPhase) {
 		case TO_DB_PERSISTED:
 		case TO_DB_ABORTED:
 		case TO_DOMAIN_COMMITTED:
@@ -420,23 +425,29 @@ public class Transaction implements Comparable<Transaction> {
 			// postProcess()
 			if (AppPersistenceBase.isTestServer()) {
 				throw new MvccException(Ax.format(
-						"Ending on invalid phase: %s %s transforms", getPhase(),
+						"Ending on invalid phase: %s %s transforms", endPhase,
 						TransformManager.get().getTransforms().size()));
 			} else {
 				logger.warn("Ending transaction on invalid phase: {}",
-						getPhase());
+						endPhase);
 			}
 		}
 		if (TransformManager.get().getTransforms().size() == 0) {
 		} else {
 			// FIXME - mvcc.4 - mvcc exception
 			logger.warn("Ending transaction with uncommitted transforms: {} {}",
-					getPhase(), TransformManager.get().getTransforms().size());
+					endPhase, TransformManager.get().getTransforms().size());
 		}
 		// need to do this even if transforms == 0 - to clear listeners setup
 		// during the transaction
 		// the transaction
-		ThreadlocalTransformManager.cast().resetTltm(null);
+		//
+		try {
+			LooseContext.pushWithTrue(CONTEXT_ALLOW_ABORTED_TX_ACCESS);
+			ThreadlocalTransformManager.cast().resetTltm(null);
+		} finally {
+			LooseContext.pop();
+		}
 		if (retainStartEndTraces()) {
 			transactionEndTrace = SEUtilities.getCurrentThreadStacktraceSlice();
 		}
