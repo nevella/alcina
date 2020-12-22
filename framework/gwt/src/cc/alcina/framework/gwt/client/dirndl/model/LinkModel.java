@@ -11,6 +11,8 @@ import java.util.Optional;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
+import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -20,9 +22,12 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafNodeRenderer;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
+import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
+import cc.alcina.framework.gwt.client.entity.view.ClientFactory;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
-//FIXME - ert.dirndl.1 - baseplace should implement a  'link provider' interface
+//FIXME - ert.dirndl.2 - baseplace should implement a  'link provider' interface
+// and various subtypes should be subclasses...
 @Bean
 public class LinkModel {
 	private BasePlace place;
@@ -31,15 +36,29 @@ public class LinkModel {
 
 	private boolean primaryAction;
 
+	private NonstandardObjectAction objectAction;
+
+	public NonstandardObjectAction getObjectAction() {
+		return this.objectAction;
+	}
+
 	public LinkModel withPrimaryAction(boolean primaryAction) {
 		this.primaryAction = primaryAction;
 		return this;
 	}
+
 	public LinkModel withActionRef(Class<? extends ActionRef> clazz) {
 		return withPlace(new ActionRefPlace(clazz));
 	}
+
 	public LinkModel withPlace(BasePlace place) {
 		this.place = place;
+		return this;
+	}
+
+	public LinkModel
+			withNonstandardObjectAction(NonstandardObjectAction objectAction) {
+		this.objectAction = objectAction;
 		return this;
 	}
 
@@ -60,9 +79,19 @@ public class LinkModel {
 	public static class LinkModelRenderer extends LeafNodeRenderer {
 		@Override
 		public Widget render(Node node) {
-			LinkModel model = (LinkModel) node.getModel();
+			LinkModel model = model(node);
 			Widget rendered = super.render(node);
 			rendered.getElement().setInnerText(getText(node));
+			NonstandardObjectAction objectAction = model(node).getObjectAction();
+			if (objectAction != null) {
+				EntityPlace currentPlace = (EntityPlace) ClientFactory.currentPlace();
+				rendered.getElement().setAttribute("href", "#");
+				rendered.addDomHandler(
+						e -> DefaultPermissibleActionHandler.handleAction(
+								(Widget)e.getSource(), objectAction, currentPlace.provideEntity()),
+						ClickEvent.getType());
+				return rendered;
+			}
 			BasePlace place = model.getPlace();
 			rendered.getElement().setAttribute("href", place.toHrefString());
 			if (place instanceof ActionRefPlace) {
@@ -86,16 +115,24 @@ public class LinkModel {
 			return rendered;
 		}
 
+		private LinkModel model(Node node) {
+			return (LinkModel) node.getModel();
+		}
+
 		private BasePlace getPlace(Node node) {
-			return ((LinkModel) node.getModel()).getPlace();
+			return model(node).getPlace();
 		}
 
 		@Override
 		protected String getTag(Node node) {
-			return ((LinkModel) node.getModel()).isWithoutLink() ? "span" : "a";
+			return model(node).isWithoutLink() ? "span" : "a";
 		}
 
 		protected String getText(Node node) {
+			NonstandardObjectAction objectAction = model(node).getObjectAction();
+			if (objectAction != null) {
+				return objectAction.getDisplayName();
+			}
 			return getPlace(node) == null ? "<null text>"
 					: getPlace(node).toNameString();
 		}
@@ -112,6 +149,7 @@ public class LinkModel {
 	public boolean isPrimaryAction() {
 		return this.primaryAction;
 	}
+
 	public void addTo(List<LinkModel> actions) {
 		actions.add(this);
 	}

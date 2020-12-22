@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
 import cc.alcina.framework.common.client.actions.PermissibleEntityAction;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
+import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
@@ -205,16 +206,23 @@ public class FormModel extends Model {
 						.withPrimaryAction(true));
 				model.actions.add(new LinkModel()
 						.withPlace(new ActionRefPlace(CancelRef.class)));
-			}else {
-				if(args.model!=null) {
-					Bean bean = Reflections.classLookup().getAnnotationForClass(args.model.getClass(), Bean.class);
-					if(bean!=null) {
-						Arrays.stream(bean.actions().value()).forEach(action->{
-							
-						});
+			} else {
+				if (args.model != null) {
+					Bean bean = Reflections.classLookup().getAnnotationForClass(
+							args.model.getClass(), Bean.class);
+					if (bean != null) {
+						Arrays.stream(bean.actions().value())
+								.map(a ->  Reflections
+										.newInstance(a.actionClass()))
+								.filter(a->a instanceof NonstandardObjectAction)
+								.map(a->(NonstandardObjectAction)a)
+								.forEach(action -> {
+									model.actions.add(new LinkModel()
+											.withNonstandardObjectAction(
+													action));
+								});
 					}
 				}
-				
 			}
 			return model;
 		}
