@@ -395,7 +395,6 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 					try {
 						clazz = classLoader.loadClass(cns);
 					} catch (Exception e) {
-						Ax.simpleExceptionOut(e);
 						clazz = Reflections.classLookup().getClassForName(cns);
 					}
 					resolvedClassLookup.put(cns, clazz);
@@ -405,6 +404,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 				}
 			}
 		} catch (Exception e) {
+			Ax.simpleExceptionOut(e);
 			throw new WrappedRuntimeException(e);
 		}
 	}

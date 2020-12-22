@@ -1,4 +1,4 @@
-package cc.alcina.extras.dev.proxy;
+package cc.alcina.framework.servlet.servlet.remote;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -6,8 +6,7 @@ import java.lang.reflect.Proxy;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 
-import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
-import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams.DevRemoterApi;
+import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationParameters.Api;
 
 public abstract class ProxyRemoteService<I extends RemoteService>
 		implements InvocationHandler {
@@ -23,12 +22,12 @@ public abstract class ProxyRemoteService<I extends RemoteService>
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args)
 			throws Throwable {
-		DevRemoter remoter = new DevRemoter();
+		RemoteInvocation remoter = new RemoteInvocation();
 		if (remoter.tryInterception(proxy, method, args)) {
 			return remoter.getInterceptionResult();
 		}
-		DevRemoterParams params = new DevRemoterParams();
-		params.api = DevRemoterApi.GWT_REMOTE_SERVICE_IMPL;
-		return new DevRemoter().invoke(method.getName(), args, params);
+		RemoteInvocationParameters params = new RemoteInvocationParameters();
+		params.api = Api.GWT_REMOTE_SERVICE_IMPL;
+		return new RemoteInvocation().invoke(method.getName(), args, params);
 	}
 }

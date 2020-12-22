@@ -1,4 +1,4 @@
-package cc.alcina.extras.dev.proxy;
+package cc.alcina.framework.servlet.servlet.remote;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +20,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 
-import cc.alcina.extras.dev.proxy.DevProxySupport.DevProxyInterceptor;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -32,15 +31,14 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager.PostTransactionEntityResolver;
-import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
-import cc.alcina.framework.servlet.servlet.dev.DevRemoterServlet;
+import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationProxy.RemoteInvocationProxyInterceptor;
 
 /**
  * org.apache.http.client is in gwt-dev - so we don't require it in eclipse
  */
 @SuppressWarnings("deprecation")
-@RegistryLocation(registryPoint = DevRemoter.class, implementationType = ImplementationType.INSTANCE)
-public class DevRemoter {
+@RegistryLocation(registryPoint = RemoteInvocation.class, implementationType = ImplementationType.INSTANCE)
+public class RemoteInvocation {
 	private Object interceptionResult;
 
 	public PostAndClient getHttpPost(URI uri) throws Exception {
@@ -60,17 +58,17 @@ public class DevRemoter {
 	}
 
 	public void hookParams(String methodName, Object[] args,
-			DevRemoterParams params) {
-		for (DevProxyInterceptor interceptor : Registry
-				.impls(DevProxyInterceptor.class)) {
+			RemoteInvocationParameters params) {
+		for (RemoteInvocationProxyInterceptor interceptor : Registry
+				.impls(RemoteInvocationProxyInterceptor.class)) {
 			interceptor.hookParams(methodName, args, params);
 		}
 	}
 
 	public Object invoke(String methodName, Object[] args,
-			DevRemoterParams params) throws Exception, URISyntaxException,
-			IOException, UnsupportedEncodingException, ClientProtocolException,
-			ClassNotFoundException {
+			RemoteInvocationParameters params) throws Exception,
+			URISyntaxException, IOException, UnsupportedEncodingException,
+			ClientProtocolException, ClassNotFoundException {
 		try {
 			LooseContext.pushWithBoolean(
 					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER, false);
@@ -78,11 +76,10 @@ public class DevRemoter {
 					true);
 			hookParams(methodName, args, params);
 			String address = ResourceUtilities
-					.getBundledString(DevRemoter.class, "address");
+					.getBundledString(RemoteInvocation.class, "address");
 			PostAndClient png = getHttpPost(new URI(address));
 			// params.username = ResourceUtilities
 			// .getBundledString(DevRemoter.class, "username");
-			params.username = PermissionsManager.get().getUserName();
 			params.asRoot = PermissionsManager.get().isRoot();
 			ClientInstance clientInstance = PermissionsManager.get()
 					.getClientInstance();
@@ -92,13 +89,14 @@ public class DevRemoter {
 							.getServerAsClientInstance();
 				}
 				params.clientInstanceId = clientInstance.getId();
+				params.clientInstanceAuth = clientInstance.getAuth();
 			}
 			params.methodName = methodName;
 			params.args = args == null ? new Object[0] : args;
 			List<NameValuePair> qparams = new ArrayList<NameValuePair>();
-			qparams.add(
-					new BasicNameValuePair(DevRemoterServlet.DEV_REMOTER_PARAMS,
-							KryoUtils.serializeToBase64(params)));
+			qparams.add(new BasicNameValuePair(
+					RemoteInvocationServlet.REMOTE_INVOCATION_PARAMETERS,
+					KryoUtils.serializeToBase64(params)));
 			UrlEncodedFormEntity entity = new UrlEncodedFormEntity(qparams);
 			png.post.setEntity(entity);
 			HttpParams httpParams = png.client.getParams();
@@ -132,8 +130,8 @@ public class DevRemoter {
 
 	public boolean tryInterception(Object proxy, Method method, Object[] args)
 			throws Throwable {
-		for (DevProxyInterceptor interceptor : Registry
-				.impls(DevProxyInterceptor.class)) {
+		for (RemoteInvocationProxyInterceptor interceptor : Registry
+				.impls(RemoteInvocationProxyInterceptor.class)) {
 			if (interceptor.handles(proxy, method, args)) {
 				interceptionResult = interceptor.invoke(proxy, method, args);
 				return true;

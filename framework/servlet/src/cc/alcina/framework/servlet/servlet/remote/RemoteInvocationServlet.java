@@ -1,11 +1,9 @@
-package cc.alcina.framework.servlet.servlet.dev;
+package cc.alcina.framework.servlet.servlet.remote;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,13 +12,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
-import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
-import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
@@ -37,8 +36,8 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 
-public abstract class DevRemoterServlet extends HttpServlet {
-	public static final String DEV_REMOTER_PARAMS = "devRemoterParams";
+public abstract class RemoteInvocationServlet extends HttpServlet {
+	public static final String REMOTE_INVOCATION_PARAMETERS = "remoteInvocationParameters";
 
 	private Class normaliseClass(Class c1) {
 		if (c1.isPrimitive()) {
@@ -70,24 +69,10 @@ public abstract class DevRemoterServlet extends HttpServlet {
 			Transaction.current().toNoActiveTransaction();
 			LooseContext
 					.setTrue(TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
-			if (!ResourceUtilities.getBoolean(DevRemoterServlet.class,
-					"enabled")) {
-				throw new Exception("DevRemoterServlet disabled");
-			}
-			if (ResourceUtilities.getBoolean(DevRemoterServlet.class,
-					"restrictToLocalhost")) {
-				String host = req.getRemoteAddr();
-				NetworkInterface intf = NetworkInterface
-						.getByInetAddress(InetAddress.getByName(host));
-				if (intf == null) {
-					throw new Exception(
-							"DevRemoterServlet only enabled for local callers");
-				}
-			}
 			doPost0(req, res);
 		} catch (Exception e) {
 			System.out.println(
-					String.format("DevRemoterServlet info: user:%s - url: %s",
+					String.format("RemoteInvocationServlet: user:%s - url: %s",
 							PermissionsManager.get().getUserName(),
 							req.getRequestURI()));
 			if (e instanceof ServletException) {
@@ -104,14 +89,31 @@ public abstract class DevRemoterServlet extends HttpServlet {
 
 	protected void doPost0(HttpServletRequest req, HttpServletResponse res)
 			throws Exception {
-		String encodedParams = req.getParameter(DEV_REMOTER_PARAMS);
-		DevRemoterParams params = KryoUtils.deserializeFromBase64(encodedParams,
-				DevRemoterParams.class);
-		IUser user = UserlandProvider.get().getUserByName(params.username);
+		String encodedParams = req.getParameter(REMOTE_INVOCATION_PARAMETERS);
+		RemoteInvocationParameters params = KryoUtils.deserializeFromBase64(
+				encodedParams, RemoteInvocationParameters.class);
+		String remoteAddress = req.getRemoteAddr();
+		String permittedAddressPattern = ResourceUtilities.get(
+				RemoteInvocationServlet.class,
+				Ax.format("%s.permittedAddresses", params.api));
+		if (!remoteAddress.matches(permittedAddressPattern)) {
+			throw Ax.runtimeException(
+					"Remote invocation access: address %s does not match permitted %s for API %s",
+					remoteAddress, permittedAddressPattern, params.api);
+		}
 		try {
-			PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
 			ClientInstance clientInstance = AuthenticationPersistence.get()
 					.getClientInstance(params.clientInstanceId);
+			if (clientInstance == null
+					&& params.api.isAllowWithoutClientInstance()) {
+				clientInstance = ClientInstance.self();
+			} else {
+				Preconditions.checkArgument(
+						clientInstance.getAuth() == params.clientInstanceAuth);
+			}
+			PermissionsManager.get().pushUser(
+					clientInstance.getAuthenticationSession().getUser(),
+					LoginState.LOGGED_IN);
 			PermissionsManager.get().setClientInstance(clientInstance);
 			Object api = null;
 			api = getApi(params, api);
@@ -156,17 +158,13 @@ public abstract class DevRemoterServlet extends HttpServlet {
 							CommonUtils.iv(highestPersistedRequestId) + 1);
 					ThreadedPermissionsManager tpm = ThreadedPermissionsManager
 							.cast();
-					if (params.asRoot) {
+					if (params.asRoot && params.api.isAllowAsRoot()) {
 						tpm.pushSystemUser();
 						token.setIgnoreClientAuthMismatch(true);
 					} else {
 						tpm.pushUser(clientInstance.provideUser(),
 								LoginState.LOGGED_IN);
 					}
-					params.cleanEntities = true;
-				}
-				if (getUserByNameMethod) {
-					params.cleanEntities = true;
 				}
 				for (int idx = 0; idx < params.args.length; idx++) {
 					Object arg = params.args[idx];
@@ -199,9 +197,6 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				}
 			}
 			Object result = out;
-			if (params.cleanEntities) {
-				out = DomainLinker.linkToDomain(out);
-			}
 			ArrayList resultHolder = new ArrayList();
 			resultHolder.add(out);
 			if (transformMethod) {
@@ -209,6 +204,9 @@ public abstract class DevRemoterServlet extends HttpServlet {
 				resultHolder.add(ThreadlocalTransformManager.get()
 						.getPostTransactionEntityResolver(
 								DomainStore.writableStore()));
+			}
+			if (params.api.isLinkToDomain()) {
+				resultHolder = DomainLinker.linkToDomain(resultHolder);
 			}
 			byte[] outBytes = KryoUtils.serializeToByteArray(resultHolder);
 			ResourceUtilities.writeStreamToStream(
@@ -221,8 +219,8 @@ public abstract class DevRemoterServlet extends HttpServlet {
 		}
 	}
 
-	protected abstract Object getApi(DevRemoterParams params, Object api)
-			throws ClassNotFoundException, IllegalAccessException,
+	protected abstract Object getApi(RemoteInvocationParameters params,
+			Object api) throws ClassNotFoundException, IllegalAccessException,
 			InvocationTargetException;
 
 	protected boolean isAssignableRelaxed(Class c1, Class c2) {

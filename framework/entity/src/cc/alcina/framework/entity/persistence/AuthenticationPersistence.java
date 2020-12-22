@@ -304,6 +304,12 @@ public class AuthenticationPersistence {
 		return (V) em.find(v.entityClass(), v.getId());
 	}
 
+	public static class BootstrapCreationResult {
+		ClientInstance clientInstance;
+
+		List<Entity> createdDetached = new ArrayList<>();
+	}
+
 	public static class BootstrapInstanceCreator
 			implements Function<EntityManager, BootstrapCreationResult> {
 		@Override
@@ -311,11 +317,5 @@ public class AuthenticationPersistence {
 			return AuthenticationPersistence.get()
 					.createBootstrapClientInstance(em);
 		}
-	}
-
-	static class BootstrapCreationResult {
-		ClientInstance clientInstance;
-
-		List<Entity> createdDetached = new ArrayList<>();
 	}
 }

@@ -1,14 +1,15 @@
-package cc.alcina.extras.dev.proxy;
+package cc.alcina.framework.servlet.servlet.remote;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams;
-import cc.alcina.framework.servlet.servlet.dev.DevRemoterParams.DevRemoterApi;
+import com.google.gwt.user.client.rpc.RemoteService;
 
-public class DevProxySupport implements InvocationHandler {
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationParameters.Api;
+
+public class RemoteInvocationProxy implements InvocationHandler {
 	public <T> T createProxy(Class<T> clazz) {
 		Object proxy = Proxy.newProxyInstance(
 				Thread.currentThread().getContextClassLoader(),
@@ -19,23 +20,25 @@ public class DevProxySupport implements InvocationHandler {
 	@Override
 	public Object invoke(Object proxy, Method method, Object[] args)
 			throws Throwable {
-		DevRemoter remoter = Registry.impl(DevRemoter.class);
+		RemoteInvocation remoter = Registry.impl(RemoteInvocation.class);
 		if (remoter.tryInterception(proxy, method, args)) {
 			Object result = remoter.getInterceptionResult();
 			return result;
 		}
 		Class<?> clazz = proxy.getClass().getInterfaces()[0];
-		DevRemoterParams params = new DevRemoterParams();
+		RemoteInvocationParameters params = new RemoteInvocationParameters();
 		params.interfaceClassName = clazz.getName();
-		params.api = DevRemoterApi.EJB_BEAN_PROVIDER;
+		params.api = 
+				RemoteService.class.isAssignableFrom(proxy.getClass())?Api.GWT_REMOTE_SERVICE_IMPL:
+				Api.EJB_BEAN_PROVIDER;
 		return remoter.invoke(method.getName(), args, params);
 	}
 
-	public interface DevProxyInterceptor {
+	public interface RemoteInvocationProxyInterceptor {
 		public boolean handles(Object proxy, Method method, Object[] args);
 
 		public void hookParams(String methodName, Object[] args,
-				DevRemoterParams params);
+				RemoteInvocationParameters params);
 
 		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable;
