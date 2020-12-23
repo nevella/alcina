@@ -24,6 +24,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 @Bean
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = JobStateMessage.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
+// TODO - possibly add a 'cancel' message to further ensure only owner thread
+// modifies job
 public abstract class JobStateMessage<T extends JobStateMessage>
 		extends Entity<T> {
 	private String processStateSerialized;

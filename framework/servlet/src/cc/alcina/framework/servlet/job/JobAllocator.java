@@ -71,7 +71,11 @@ class JobAllocator {
 		Job job = queue.job;
 		boolean topLevelQueue = job.provideIsTopLevel()
 				&& job.provideIsFirstInSequence();
-		boolean visible = job.getCreator() == ClientInstance.self()
+		/*
+		 * Top-level jobs will always have a performer set at this point -
+		 * either on creation or via future-to-pending
+		 */
+		boolean visible = job.getPerformer() == ClientInstance.self()
 				|| (ExecutionConstraints.forQueue(queue)
 						.isClusteredChildAllocation()
 						&& JobRegistry.isActiveInstance(job.getCreator()));

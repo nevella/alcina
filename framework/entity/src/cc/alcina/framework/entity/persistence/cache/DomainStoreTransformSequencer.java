@@ -100,6 +100,9 @@ public class DomainStoreTransformSequencer
 
 	@Override
 	public void onPersistedRequestCommitted(long requestId) {
+		if (highestVisiblePosition == null) {
+			return;
+		}
 		refreshPositions(requestId);
 	}
 

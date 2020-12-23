@@ -189,6 +189,9 @@ public class TransformCommitLog {
 				// can be caused by big gc pauses - but better safe than
 				// sorry...
 				long seek = currentConsumerThread.currentOffset;
+				if (seek == -1) {
+					seek = currentConsumerThread.previousConsumerCompletedOffset;
+				}
 				logger.warn(
 						"Restarting {} consumer - poll timeout: {} - max {} - ordinal {} - seekTo {}",
 						getClass().getSimpleName(), pollWait, pollTimeout,

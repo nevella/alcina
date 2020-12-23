@@ -271,7 +271,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		warmupTransaction = Transaction.current();
 		transformSequencer.setInitialised(true);
 		transformSequencer.initialEnsureTimestamps();
-		// FIXME - mvcc.jobs.1a - use postgres-specifc tx isolation
 		createWarmupConnections();
 		{
 			Connection conn = getConnection();

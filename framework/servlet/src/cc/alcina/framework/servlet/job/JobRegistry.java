@@ -608,14 +608,20 @@ public class JobRegistry extends WriterService {
 			job.setState(initialState);
 			job.setTask(task);
 			job.setTaskClassName(task.getClass().getName());
-			job.setCreator(
-					EntityLayerObjects.get().getServerAsClientInstance());
+			job.setCreator(ClientInstance.self());
 			if (runAt != null) {
 				Preconditions.checkArgument(initialState == JobState.FUTURE);
 			}
 			job.setRunAt(SEUtilities.toOldDate(runAt));
 			if (related != null) {
 				related.createRelation(job, relationType);
+			}
+			/*
+			 * To elaborate - but essentially a top-level job *must* have its
+			 * performer defined early if it's not a FUTURE
+			 */
+			if (initialState == JobState.PENDING && related == null) {
+				job.setPerformer(ClientInstance.self());
 			}
 			if (awaiter) {
 				JobRegistry.get().contextAwaiters.put(job,

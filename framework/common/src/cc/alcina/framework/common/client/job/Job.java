@@ -415,10 +415,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				.anyMatch(rel -> rel.getType() == JobRelationType.SEQUENCE);
 	}
 
-	public boolean provideHasPerformer() {
-		return getPerformer() != null;
-	}
-
 	public boolean provideIsActive() {
 		return resolveState() == JobState.PROCESSING;
 	}
