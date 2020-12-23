@@ -51,7 +51,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @Bean
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = Job.class)
-@DomainTransformPropagation(PropagationType.NON_PERSISTENT)
+@DomainTransformPropagation(PropagationType.PERSISTENT)
 public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public static final transient String PROPERTY_STATE = "state";
 
