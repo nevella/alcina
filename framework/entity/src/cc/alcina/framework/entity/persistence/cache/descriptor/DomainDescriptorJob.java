@@ -258,7 +258,8 @@ public class DomainDescriptorJob {
 				.addDomainTransformPersistenceListener(
 						bufferedEventFiringListener);
 		warmupComplete = true;
-		Thread stateMessageEventThread = new Thread(stateMessageEventHandler);
+		Thread stateMessageEventThread = new Thread(stateMessageEventHandler,
+				"DomainDescriptorJob-stateMessageEventHandler");
 		stateMessageEventThread.start();
 	}
 
@@ -687,8 +688,8 @@ public class DomainDescriptorJob {
 						stateMessageEvents.publish(messages);
 						Transaction.commit();
 					}
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+				} catch (Throwable t) {
+					t.printStackTrace();
 				} finally {
 					Transaction.ensureEnded();
 				}
