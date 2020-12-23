@@ -644,9 +644,8 @@ public class DomainStore implements IDomainStore {
 			for (PreProvideTask task : domainDescriptor
 					.getPreProvideTasks(clazz)) {
 				try {
-					if(!task.filter(t)) {
+					if (!task.filter(t)) {
 						return null;
-						
 					}
 					task.run(clazz, Collections.singletonList(t), true);
 				} catch (Exception e) {
@@ -853,6 +852,8 @@ public class DomainStore implements IDomainStore {
 								updateException);
 					} else {
 						health.domainStoreExceptionCount.incrementAndGet();
+						logger.warn("Update exception persistence event :: {}",
+								persistenceEvent);
 						logger.warn(
 								"Update exception transform request queue data :: {}",
 								persistenceEvents.getQueue().toDebugString());
@@ -1470,7 +1471,8 @@ public class DomainStore implements IDomainStore {
 							.propertyAccessor().getAnnotationForProperty(
 									entity.entityClass(), DomainProperty.class,
 									event.getPropertyName());
-					if (domainProperty != null && !domainProperty.reindexOnChange()) {
+					if (domainProperty != null
+							&& !domainProperty.reindexOnChange()) {
 						return;
 					}
 					try {
