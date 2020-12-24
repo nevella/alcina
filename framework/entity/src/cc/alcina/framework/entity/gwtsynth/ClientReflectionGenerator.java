@@ -737,8 +737,7 @@ public class ClientReflectionGenerator extends Generator {
 		}
 		sb.append(String.format("new %s()", implSimpleName));
 		for (Method m : declaredMethods) {
-			if ("hashCode|toString|equals|annotationType"
-					.contains(m.getName())) {
+			if (m.getName().matches("hashCode|toString|equals|annotationType")) {
 				continue;
 			}
 			Object annotationValue = m.invoke(a,
