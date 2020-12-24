@@ -282,8 +282,10 @@ public class TransformPersistenceToken implements Serializable {
 
 	@Override
 	public String toString() {
-		return Ax.format("TransformPersistenceToken - %s requests\n%s",
-				getRequest().allRequests().size(), getRequest());
+		return Ax.format(
+				"TransformPersistenceToken - requests: %s; localToVm: %s; requestorExternalToThisJvm: %s; \nrequests:\n%s",
+				getRequest().allRequests().size(), localToVm,
+				requestorExternalToThisJvm, getRequest());
 	}
 
 	public enum Pass {

@@ -608,7 +608,8 @@ public class JobRegistry extends WriterService {
 			job.setState(initialState);
 			job.setTask(task);
 			job.setTaskClassName(task.getClass().getName());
-			job.setCreator(ClientInstance.self());
+			job.setCreator(
+					EntityLayerObjects.get().getServerAsClientInstance());
 			if (runAt != null) {
 				Preconditions.checkArgument(initialState == JobState.FUTURE);
 			}
@@ -621,7 +622,8 @@ public class JobRegistry extends WriterService {
 			 * performer defined early if it's not a FUTURE
 			 */
 			if (initialState == JobState.PENDING && related == null) {
-				job.setPerformer(ClientInstance.self());
+				job.setPerformer(
+						EntityLayerObjects.get().getServerAsClientInstance());
 			}
 			if (awaiter) {
 				JobRegistry.get().contextAwaiters.put(job,

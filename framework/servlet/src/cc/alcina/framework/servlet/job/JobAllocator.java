@@ -400,7 +400,7 @@ class JobAllocator {
 			if (event.type == EventType.DELETED) {
 				return true;
 			}
-			boolean selfPerformer = queue.job.getCreator() == ClientInstance
+			boolean selfPerformer = queue.job.getPerformer() == ClientInstance
 					.self();
 			switch (queue.phase) {
 			case Self:
