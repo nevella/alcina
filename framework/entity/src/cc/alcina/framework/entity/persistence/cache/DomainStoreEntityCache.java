@@ -24,7 +24,6 @@ class DomainStoreEntityCache extends DetachedEntityCache {
 	protected Map<Long, Entity> createIdEntityMap(Class clazz) {
 		TransactionalMap transactionalMap = new TransactionalMap(Long.class,
 				clazz);
-		transactionalMap.setImmutableValues(true);
 		return transactionalMap;
 	}
 

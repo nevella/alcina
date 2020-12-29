@@ -1,8 +1,8 @@
 package cc.alcina.framework.common.client.util;
 
-public class InnerAccess<T> {
-	public static <T> InnerAccess<T> of(T t) {
-		InnerAccess<T> innerAccess = new InnerAccess<>();
+public class ObjectWrapper<T> {
+	public static <T> ObjectWrapper<T> of(T t) {
+		ObjectWrapper<T> innerAccess = new ObjectWrapper<>();
 		innerAccess.set(t);
 		return innerAccess;
 	}
@@ -19,6 +19,6 @@ public class InnerAccess<T> {
 
 	@Override
 	public String toString() {
-		return Ax.format("Inner Access: [%s]", t);
+		return Ax.format("Object Wrapper: [%s]", t);
 	}
 }

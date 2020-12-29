@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 import java.util.SortedMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import it.unimi.dsi.fastutil.longs.Long2BooleanAVLTreeMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectAVLTreeMap;
@@ -14,9 +15,7 @@ public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 		implements NavigableMap<K, V> {
 	public TransactionalTreeMap(Class<K> keyClass, Class<V> valueClass,
 			Comparator<K> comparator) {
-		super(keyClass, valueClass);
-		this.comparator = comparator;
-		createBaseLayer();
+		super(keyClass, valueClass, comparator);
 	}
 
 	@Override
@@ -31,7 +30,7 @@ public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 
 	@Override
 	public Comparator<? super K> comparator() {
-		return comparator;
+		return keyComparator;
 	}
 
 	@Override
@@ -146,23 +145,22 @@ public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 	}
 
 	@Override
-	protected <V1> Map<K, V1> createNonSynchronizedMap(Class<V1> valueClass) {
-		if (keyClass == Long.class) {
-			if (valueClass == Boolean.class) {
-				return (Map<K, V1>) new Long2BooleanAVLTreeMap(
-						(Comparator<? super Long>) comparator);
-			} else {
-				return (Map<K, V1>) new Long2ObjectAVLTreeMap<>(
-						(Comparator<? super Long>) comparator);
-			}
-		} else {
-			return (Map<K, V1>) new Object2ObjectAVLTreeMap<>(comparator);
-		}
+	protected Map createConcurrentMap() {
+		return new ConcurrentSkipListMap(keyComparator);
 	}
 
 	@Override
-	protected void init() {
-		// super.init();
-		// noop - need to set comparator in constructor first
+	protected Map<K, V> createNonConcurrentMap() {
+		if (keyClass == Long.class) {
+			if (valueClass == Boolean.class) {
+				return (Map<K, V>) new Long2BooleanAVLTreeMap(
+						(Comparator<? super Long>) keyComparator);
+			} else {
+				return (Map<K, V>) new Long2ObjectAVLTreeMap<>(
+						(Comparator<? super Long>) keyComparator);
+			}
+		} else {
+			return (Map<K, V>) new Object2ObjectAVLTreeMap<>(keyComparator);
+		}
 	}
 }

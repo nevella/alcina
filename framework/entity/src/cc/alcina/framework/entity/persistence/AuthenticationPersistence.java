@@ -164,7 +164,8 @@ public class AuthenticationPersistence {
 	}
 
 	public ClientInstance getClientInstance(long clientInstanceId) {
-		return domainImpl(ClientInstance.class, clientInstanceId);
+		return AlcinaPersistentEntityImpl.find(ClientInstance.class,
+				clientInstanceId);
 	}
 
 	public Iid getIid(String instanceId) {
@@ -226,9 +227,8 @@ public class AuthenticationPersistence {
 	}
 
 	private BootstrapCreationResult
-			createBootstrapClientInstance(EntityManager em) {
+			createBootstrapClientInstance(EntityManager em, String hostName) {
 		BootstrapCreationResult result = new BootstrapCreationResult();
-		String hostName = EntityLayerUtils.getLocalHostName();
 		String authenticationSessionUid = Ax.format("servlet:%s", hostName);
 		String iidUid = authenticationSessionUid;
 		List<Entity> createdObjects = new ArrayList<>();
@@ -259,6 +259,7 @@ public class AuthenticationPersistence {
 			authenticationSession.setUser((IUser) persistentImpl(em,
 					(Entity) PermissionsManager.get().getUser()));
 			authenticationSession.setAuthenticationType("server-instance");
+			authenticationSession.setIid(iid);
 			em.persist(authenticationSession);
 			createdObjects.add(authenticationSession);
 		}
@@ -293,13 +294,6 @@ public class AuthenticationPersistence {
 		return result;
 	}
 
-	private <V extends Entity> V domainImpl(Class<V> clazz,
-			long clientInstanceId) {
-		long id = clientInstanceId;
-		return Domain.find(AlcinaPersistentEntityImpl.getImplementation(clazz),
-				id);
-	}
-
 	private <V extends Entity> V persistentImpl(EntityManager em, V v) {
 		return (V) em.find(v.entityClass(), v.getId());
 	}
@@ -312,10 +306,16 @@ public class AuthenticationPersistence {
 
 	public static class BootstrapInstanceCreator
 			implements Function<EntityManager, BootstrapCreationResult> {
+		private String hostName;
+
+		public BootstrapInstanceCreator() {
+			hostName = EntityLayerUtils.getLocalHostName();
+		}
+
 		@Override
 		public BootstrapCreationResult apply(EntityManager em) {
 			return AuthenticationPersistence.get()
-					.createBootstrapClientInstance(em);
+					.createBootstrapClientInstance(em, hostName);
 		}
 	}
 }

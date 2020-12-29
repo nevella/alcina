@@ -1,6 +1,8 @@
 package cc.alcina.framework.servlet.servlet.remote;
 
 import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class RemoteInvocationParameters implements Serializable {
 	public String interfaceClassName;
@@ -16,6 +18,8 @@ public class RemoteInvocationParameters implements Serializable {
 	public int clientInstanceAuth;
 
 	public boolean asRoot;
+
+	public Map<String, Object> context = new LinkedHashMap<>();
 
 	public enum Api {
 		EJB_BEAN_PROVIDER, GWT_REMOTE_SERVICE_IMPL;
@@ -38,10 +42,15 @@ public class RemoteInvocationParameters implements Serializable {
 			}
 		}
 
-		boolean isLinkToDomain() {
+		boolean isLinkToDomain(String methodName) {
 			switch (this) {
 			case EJB_BEAN_PROVIDER:
-				return true;
+				switch (methodName) {
+				case "callWithEntityManager":
+					return false;
+				default:
+					return true;
+				}
 			default:
 				return false;
 			}

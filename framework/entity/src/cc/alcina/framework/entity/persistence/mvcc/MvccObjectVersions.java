@@ -65,6 +65,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	// tuple) - it is the 'domain identity'. Its fields can be updated by vacuum
 	// if not accessible from any
 	// active transaction
+	//
+	// TODO - above is true for mvccobjectversionsentity, but not for other
+	// variants (where baseObject may in fact be changed by vacuum)...in
+	// fact...maybe the above para is true (since we use copyobjectfields)
 	private volatile T baseObject;
 
 	/*
@@ -75,6 +79,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	@SuppressWarnings("unused")
 	private T __mostRecentWritable;
+
+	private TransactionId firstCommittedTransactionId;
 
 	/*
 	 * synchronization - either a newly created object t for this domainstore
@@ -95,6 +101,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		 * against an object in our graph? Doesn't that also need the defensive
 		 * copy?
 		 * 
+		 * 20201228 - this may be the root of many evils (the 'optimisation') -
+		 * it's the old 'domain identity // defensive copy' thang
 		 */
 		baseObject = t;
 		if (initialTransaction.phase == TransactionPhase.TO_DB_PREPARING
@@ -102,7 +110,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			{
 				ObjectVersion<T> version = new ObjectVersion<>();
 				version.transaction = initialTransaction;
-				version.object = (T) Transactions.copyObject((MvccObject) t);
+				version.object = copyObject(t);
 				((MvccObject) version.object).__setMvccVersions__(this);
 				putVersion(version);
 			}
@@ -187,7 +195,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			// baseObject fields will not be reachable here to app code (all
 			// active txs will be
 			// looking at version.object fields)
-			copyObjectFields(version.object, baseObject);
+			copyObject(version.object, baseObject);
+			if (firstCommittedTransactionId == null) {
+				firstCommittedTransactionId = vacuumableTransactions.completedDomainTransactions
+						.last().getId();
+			}
 		}
 		// Transactions.debugRemoveVersion(baseObject, version);
 		versions.keySet()
@@ -196,7 +208,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				vacuumableTransactions.completedNonDomainTransactions);
 		if (versions.isEmpty()) {
 			synchronized (baseObject) {
-				if (versions.isEmpty()) {
+				if (versions.isEmpty() && baseObject instanceof MvccObject) {
 					logger.trace("removed mvcc versions: {} : {}", baseObject,
 							System.identityHashCode(baseObject));
 					((MvccObject) baseObject).__setMvccVersions__(null);
@@ -226,11 +238,26 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			return version.object;
 		}
 		if (versions.isEmpty() && !write) {
-			return baseObject;
+			if (thisMayBeVisibleToPriorTransactions()
+					&& !transaction.isVisible(firstCommittedTransactionId)) {
+				return null;
+			} else {
+				return baseObject;
+			}
 		}
 		Class<? extends Entity> entityClass = entityClass();
 		Transaction mostRecentTransaction = transaction
 				.mostRecentVisibleCommittedTransaction(versions.keySet());
+		if (mostRecentTransaction == null && !write) {
+			/*
+			 * Object not visible to the current tx - note that if this is an
+			 * instance of MvccObjectVersionsEntity or
+			 */
+			if (thisMayBeVisibleToPriorTransactions()
+					&& !transaction.isVisible(firstCommittedTransactionId)) {
+				return null;
+			}
+		}
 		T mostRecentObject = null;
 		/*
 		 * mostRecentVersion will be null if just created
@@ -246,12 +273,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (write) {
 			version = new ObjectVersion<>();
 			version.transaction = transaction;
-			version.object = (T) Transactions
-					.copyObject((MvccObject) mostRecentObject);
+			version.object = copyObject(mostRecentObject);
 			version.writeable = true;
 			// put before register (which will call resolve());
 			putVersion(version);
-			register(version.object);
+			onVersionCreation(version.object);
 			return version.object;
 		} else {
 			/*
@@ -264,11 +290,17 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected abstract boolean accessibleFromOtherTransactions(T t);
 
-	protected abstract void copyObjectFields(T fromObject, T toObject);
+	protected T copyObject(T mostRecentObject) {
+		return (T) Transactions.copyObject((MvccObject) mostRecentObject);
+	}
+
+	protected abstract void copyObject(T fromObject, T baseObject);
 
 	protected abstract <E extends Entity> Class<E> entityClass();
 
-	protected abstract void register(T object);
+	protected abstract void onVersionCreation(T object);
+
+	protected abstract boolean thisMayBeVisibleToPriorTransactions();
 
 	void debugResolvedVersion() {
 		try {

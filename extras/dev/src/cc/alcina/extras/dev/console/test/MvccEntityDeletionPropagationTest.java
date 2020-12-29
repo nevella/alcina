@@ -104,9 +104,7 @@ public class MvccEntityDeletionPropagationTest<IU extends Entity & IUser, IG ext
 					Preconditions.checkState(
 							createdGroup.containsUser(createdUser),
 							"non=committed pre-delete (tx2): referenced group does not contain user");
-					Preconditions.checkState(
-							Domain.stream(userClass).count() == initialSize,
-							"non-committed-tx2: userClass.count()!=initialSize");
+					test();
 					tx2Latch1.countDown();
 					tx1Latch2.await();
 					Preconditions.checkState(
@@ -130,6 +128,13 @@ public class MvccEntityDeletionPropagationTest<IU extends Entity & IUser, IG ext
 					txLatch.countDown();
 				}
 			}
+
+			protected void test() {
+				boolean check = Domain.stream(userClass).count() == initialSize;
+				Preconditions.checkState(
+						Domain.stream(userClass).count() == initialSize,
+						"non-committed-tx2: userClass.count()!=initialSize");
+			}
 		}.start();
 	}
 
@@ -145,7 +150,7 @@ public class MvccEntityDeletionPropagationTest<IU extends Entity & IUser, IG ext
 		createdUser = Domain.create(userClass);
 		createdGroup.setGroupName("testgroup-" + suffix);
 		createdUser.setUserName(username);
-		createdGroup.domain().addToProperty("memberUsers", createdUser);
+		createdGroup.addMemberUser(createdUser);
 		Transaction.commit();
 		// HashSetExtension.debugInstance = (HashSetExtension) createdGroup
 		// .getMemberUsers();

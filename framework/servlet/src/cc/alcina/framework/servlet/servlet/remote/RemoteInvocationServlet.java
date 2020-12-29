@@ -143,7 +143,6 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				System.out.format("DevRemoter - %s.%s\n",
 						api.getClass().getSimpleName(), method.getName());
 				if (transformMethod) {
-					// assume as root
 					TransformPersistenceToken token = (TransformPersistenceToken) params.args[1];
 					Integer highestPersistedRequestId = CommonPersistenceProvider
 							.get().getCommonPersistence()
@@ -180,6 +179,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					LooseContext.set(
 							ThreadedPmClientInstanceResolverImpl.CONTEXT_CLIENT_INSTANCE,
 							clientInstance);
+					params.context.forEach((k, v) -> LooseContext.set(k, v));
 					out = method.invoke(api, params.args);
 				} finally {
 					LooseContext.pop();
@@ -205,7 +205,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 						.getPostTransactionEntityResolver(
 								DomainStore.writableStore()));
 			}
-			if (params.api.isLinkToDomain()) {
+			if (params.api.isLinkToDomain(method.getName())) {
 				resultHolder = DomainLinker.linkToDomain(resultHolder);
 			}
 			byte[] outBytes = KryoUtils.serializeToByteArray(resultHolder);

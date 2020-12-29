@@ -183,6 +183,8 @@ public class Transactions {
 
 	private List<EntityLocator> enqueuedLazyLoads = new ArrayList<>();
 
+	private TransactionId highestVisibleCommittedTransactionId;
+
 	public List<Transaction> getCompletedNonDomainTransactions() {
 		synchronized (transactionMetadataLock) {
 			List<Transaction> result = completedNonDomainCommittedTransactions;
@@ -194,6 +196,7 @@ public class Transactions {
 	public void onDomainTransactionCommited(Transaction transaction) {
 		synchronized (transactionMetadataLock) {
 			committedTransactions.add(transaction);
+			highestVisibleCommittedTransactionId = transaction.getId();
 		}
 	}
 
@@ -359,6 +362,7 @@ public class Transactions {
 					: committedTransactions
 							.tailSet(committedTransactions.first());
 			transaction.startTime = System.currentTimeMillis();
+			transaction.highestVisibleCommittedTransactionId = highestVisibleCommittedTransactionId;
 			activeTransactions.put(transactionId, transaction);
 		}
 	}

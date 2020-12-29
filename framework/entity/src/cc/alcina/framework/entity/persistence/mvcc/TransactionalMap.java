@@ -3,17 +3,16 @@ package cc.alcina.framework.entity.persistence.mvcc;
 import java.util.AbstractCollection;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.Spliterator;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
@@ -22,90 +21,79 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringI
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
-import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
-import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.common.client.util.ObjectWrapper;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 /*
  * 
  * This class is intended for transaction-aware indices and lookups. 
- * A 'layer' records deltas to the map state by recording modifications and removals in separate, non-locked submaps.
  * 
- * The map is composed of a base layer, a list of visible-to-all-transactions merged layers 
- * and a list of current transaction layers whose visibility is transaction-dependent.
+* It replaces TransactionalMapOld - the layer-based implementation did not scale during long-running txs 
+ * ***(v2)
  * 
- * The merged layers are generated during vacuum, and are 
- *  intended to avoid runaway map layers for heavily written maps by using the levelled compaction algorithm 
- *   similar to that used in Cassandra and Chromium leveldb compactions.
- *  
- *  
- *  Note that vacuum is probably the most interesting part of this class - it's like sliding plates
- *   (B=merged A1, A2) under other plates (A1, A2) - it would be nice 
- *   to formally prove that the combination (B,A2) === (B) === (B,A1,A2) (in layer order)
- * 
- *   
- *   Operations are resolved to return the most recent value
- *   for the combined sequence of layers, from (per-transaction) youngest-to-oldest
- *   
- *   This class allows null keys and values
- *   
- *   Synchronization:
- * 
- * 'this' acts as a lock on creation addition/removal of a layer (after base transaction)  
- * 
- * FIXME - mvcc.4 - _possibly_ optimise with getLong(long l) - putLong(long l) which will lower wrapping/unwrapping overhead
+ * transitions through 1-1 :-> baseLayer :-> transactional
  *   
  */
 public class TransactionalMap<K, V> extends AbstractMap<K, V>
-		implements Vacuumable, TransactionalCollection {
-	private Layer base;
+		implements TransactionalCollection {
+	private static transient final Object NULL_KEY_MARKER = new Object();
 
-	private Layers layers;
+	private static transient final Object REMOVED_VALUE_MARKER = new Object();
 
 	protected Class<K> keyClass;
 
-	private Class<V> valueClass;
+	protected Class<V> valueClass;
 
-	Comparator<K> comparator;
-
-	private boolean immutableValues;
+	Comparator<K> keyComparator;
 
 	private int hash = 0;
 
+	/*
+	 * Stores mappings in the base layer
+	 */
+	private Map<K, V> nonConcurrent;
+
+	private SizeMetadata sizeMetadata;
+
+	/*
+	 * Non-generic because we use the NULL_KEY_MARKER - other than that; Map<K,
+	 * Key<V>>
+	 */
+	private Map concurrent;
+
 	public TransactionalMap(Class<K> keyClass, Class<V> valueClass) {
+		this(keyClass, valueClass, null);
+	}
+
+	protected TransactionalMap(Class<K> keyClass, Class<V> valueClass,
+			Comparator<K> keyComparator) {
 		Preconditions.checkNotNull(keyClass);
 		Preconditions.checkNotNull(valueClass);
 		this.keyClass = keyClass;
 		this.valueClass = valueClass;
-		init();
+		if (keyComparator != null) {
+			this.keyComparator = new UnwrappingComparator(keyComparator);
+		}
+		nonConcurrent = createNonConcurrentMap();
 	}
 
 	@Override
 	public boolean containsKey(Object key) {
-		if (layers == null) {
-			return base.wasRemoved(key) ? false : base.wasModified(key);
-		}
-		List<Layer> visibleLayers = visibleLayers();
-		for (int idx = visibleLayers.size() - 1; idx >= 0; idx--) {
-			Layer layer = visibleLayers.get(idx);
-			if (layer.wasRemoved(key)) {
-				return false;
-			}
-			if (layer.wasModified(key)) {
-				return true;
+		if (concurrent != null) {
+			TransactionalValue transactionalValue = (TransactionalValue) concurrent
+					.get(wrapTransactionalKey(key));
+			if (transactionalValue != null) {
+				return transactionalValue.isNotRemoved();
 			}
 		}
-		return false;
+		return nonConcurrent.containsKey(key);
 	}
 
 	@Override
 	public Set<Entry<K, V>> entrySet() {
-		return new TransactionalEntrySet();
+		return new EntrySetView();
 	}
 
 	@Override
@@ -115,20 +103,18 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	@Override
 	public V get(Object key) {
-		if (layers == null) {
-			return base.wasRemoved(key) ? null : base.get(key);
-		}
-		List<Layer> visibleLayers = visibleLayers();
-		for (int idx = visibleLayers.size() - 1; idx >= 0; idx--) {
-			Layer layer = visibleLayers.get(idx);
-			if (layer.wasRemoved(key)) {
-				return null;
-			}
-			if (layer.wasModified(key)) {
-				return layer.get(key);
+		if (concurrent != null) {
+			TransactionalValue transactionalValue = (TransactionalValue) concurrent
+					.get(wrapTransactionalKey(key));
+			if (transactionalValue != null) {
+				if (transactionalValue.isNotRemoved()) {
+					return transactionalValue.getValue();
+				} else {
+					return null;
+				}
 			}
 		}
-		return null;
+		return nonConcurrent.get(key);
 	}
 
 	@Override
@@ -144,14 +130,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 		return hash;
-	}
-
-	/*
-	 * Signifies that the value, once set, will never be changed. This is not
-	 * checked explicitly
-	 */
-	public boolean isImmutableValues() {
-		return this.immutableValues;
 	}
 
 	public boolean isSorted() {
@@ -170,8 +148,22 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		Preconditions.checkArgument(value == null || valueClass == Object.class
 				|| valueClass.isAssignableFrom(value.getClass()));
 		V existing = get(key);
-		Layer layer = ensureLayer();
-		layer.put(key, value, containsKey(key));
+		Transaction currentTransaction = Transaction.current();
+		if (currentTransaction.isBaseTransaction()) {
+			nonConcurrent.put(key, value);
+		} else {
+			boolean hasExisting = containsKey(key);
+			ensureTransactional(currentTransaction);
+			concurrent.computeIfAbsent(wrapTransactionalKey(key),
+					k -> new TransactionalValue(key, ObjectWrapper.of(value),
+							currentTransaction, true));
+			TransactionalValue transactionalValue = (TransactionalValue) concurrent
+					.get(wrapTransactionalKey(key));
+			transactionalValue.put(value);
+			if (!hasExisting) {
+				sizeMetadata.delta(1);
+			}
+		}
 		return existing;
 	}
 
@@ -181,70 +173,34 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return null;
 		}
 		V existing = get(key);
-		Layer layer = ensureLayer();
-		layer.remove((K) key);
+		Transaction currentTransaction = Transaction.current();
+		if (currentTransaction.isBaseTransaction()) {
+			nonConcurrent.remove(key);
+		} else {
+			ensureTransactional(currentTransaction);
+			concurrent.computeIfAbsent(wrapTransactionalKey(key),
+					k -> new TransactionalValue((K) key, null,
+							currentTransaction, true));
+			TransactionalValue transactionalValue = (TransactionalValue) concurrent
+					.get(wrapTransactionalKey(key));
+			transactionalValue.remove();
+			sizeMetadata.delta(-1);
+		}
 		return existing;
 	}
 
-	public void setImmutableValues(boolean immutableValues) {
-		this.immutableValues = immutableValues;
+	@Override
+	public int size() {
+		return sizeMetadata == null ? nonConcurrent.size()
+				: sizeMetadata.resolve(false).get();
 	}
 
 	@Override
 	public String toString() {
-		return Ax.format("tx.map: %s=>%s : %s layers : %s objects in this tx",
+		return Ax.format(
+				"tx.map: %s=>%s : %s non-tx keys; %s tx keys : %s objects in this tx",
 				keyClass.getSimpleName(), valueClass.getSimpleName(),
-				layers == null ? 1 : layers.size(), entrySet().size());
-	}
-
-	@Override
-	public void vacuum(VacuumableTransactions vacuumableTransactions) {
-		layers.nonMergedTransactionLayers.keySet().removeAll(
-				vacuumableTransactions.completedNonDomainTransactions);
-		List<Transaction> commonVisible = TransactionVersions.commonVisible(
-				vacuumableTransactions.completedDomainTransactions,
-				layers.nonMergedTransactionLayers.keySet());
-		if (commonVisible.isEmpty()) {
-			// will not affect visible layers to any current transactionm no
-			// sync needed
-			return;
-		}
-		Collections.reverse(commonVisible);
-		Layers mergedReplaceLayers = new Layers();
-		List<Layer> mergedReplace = mergedReplaceLayers.mergedLayerList;
-		mergedReplace.addAll(layers.mergedLayerList);
-		commonVisible.stream().map(layers.nonMergedTransactionLayers::get)
-				.forEach(mergedReplace::add);
-		/*
-		 * now compact - this is a 'levelled' strategy a la cassandra, chrome
-		 * etc - layer iteration cost is ~ log10(n) and copy cost is ~
-		 * n.log10(n) for n = total delta size
-		 */
-		boolean modified = false;
-		do {
-			modified = false;
-			for (int idx = 0; idx < mergedReplace.size() - 1; idx++) {
-				Layer layer0 = mergedReplace.get(idx);
-				Layer layer1 = mergedReplace.get(idx + 1);
-				if (layer1.combinedMapSize() * 10 > layer0.combinedMapSize()) {
-					Layer merged = layer0.merge(layer1, mergedReplace, idx - 1);
-					mergedReplace.remove(idx);
-					// not idx+1 - we've just removed idx (but essentially
-					// removing both old layers)
-					mergedReplace.remove(idx);
-					mergedReplace.add(idx, merged);
-					modified = true;
-					break;
-				}
-			}
-		} while (modified);
-		synchronized (this) {
-			mergedReplaceLayers.nonMergedTransactionLayers
-					.putAll(layers.nonMergedTransactionLayers);
-			mergedReplaceLayers.nonMergedTransactionLayers.keySet()
-					.removeAll(commonVisible);
-			this.layers = mergedReplaceLayers;
-		}
+				nonConcurrent.size(), concurrent.size(), entrySet().size());
 	}
 
 	@Override
@@ -256,65 +212,48 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	private TransactionalMap<K, V>.Layer ensureLayer() {
-		Transaction transaction = Transaction.current();
-		if (transaction.isBaseTransaction()) {
-			return base;
-		}
-		if (layers == null || !layers.nonMergedTransactionLayers
-				.containsKey(transaction)) {
-			// synchronize both to avoid double-initial-layers creation and
-			// conflict with vacuum swapping of the layers object
-			synchronized (this) {
-				if (layers == null) {
-					layers = new Layers();
-					layers.mergedLayerList.add(base);
-				}
-				layers.nonMergedTransactionLayers.put(transaction,
-						new Layer(transaction));
-				Transactions.get().onAddedVacuumable(transaction, this);
-			}
-		}
-		return layers.nonMergedTransactionLayers.get(transaction);
+	private K unwrapTransactionalKey(Object key) {
+		return key == NULL_KEY_MARKER ? null : (K) key;
 	}
 
-	/*
-	 */
-	private List<Layer> visibleLayers() {
-		if (layers == null) {
-			return Collections.singletonList(base);
-		} else {
-			return layers.visibleToCurrentTx();
-		}
+	private Object wrapTransactionalKey(Object key) {
+		return key == null ? NULL_KEY_MARKER : key;
 	}
 
-	protected void createBaseLayer() {
-		Preconditions.checkState(base == null);
-		base = new Layer(Transaction.current());
+	protected Map createConcurrentMap() {
+		return new ConcurrentHashMap<>();
 	}
 
-	protected <V1> Map<K, V1> createNonSynchronizedMap(Class<V1> valueClass) {
+	protected Map<K, V> createNonConcurrentMap() {
 		if (keyClass == Long.class) {
 			if (valueClass == Boolean.class) {
-				return (Map<K, V1>) new Long2BooleanLinkedOpenHashMap();
+				return (Map<K, V>) new Long2BooleanLinkedOpenHashMap();
 			} else {
-				return (Map<K, V1>) new Long2ObjectLinkedOpenHashMap<>();
+				return (Map<K, V>) new Long2ObjectLinkedOpenHashMap<>();
 			}
 		} else {
-			return (Map<K, V1>) new Object2ObjectLinkedOpenHashMap<>();
+			return (Map<K, V>) new Object2ObjectLinkedOpenHashMap<>();
 		}
 	}
 
-	protected void init() {
-		createBaseLayer();
+	void ensureTransactional(Transaction currentTransaction) {
+		if (concurrent == null) {
+			synchronized (this) {
+				if (concurrent == null) {
+					concurrent = createConcurrentMap();
+					sizeMetadata = new SizeMetadata(
+							new AtomicInteger(nonConcurrent.size()),
+							currentTransaction, true);
+				}
+			}
+		}
 	}
 
 	/*
 	 * Allow single-valued txsets to degenerate to txmaps
 	 */
 	void putInBaseLayer(Transaction baseTransaction, K key, V value) {
-		base.transaction = baseTransaction;
-		base.put(key, value, false);
+		nonConcurrent.put(key, value);
 	}
 
 	private class KeySet extends AbstractSet<K> {
@@ -344,53 +283,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		public int size() {
 			return entrySet.size();
 		}
-	}
 
-	private class Layers {
-		ConcurrentSkipListMap<Transaction, Layer> nonMergedTransactionLayers = new ConcurrentSkipListMap<>(
-				Collections.reverseOrder());
-
-		/*
-		 * Not changed for the lifetime of this Layers instance (vacuum computes
-		 * a new layers object and swaps TransactionalMap.layers)
-		 */
-		List<Layer> mergedLayerList = new ArrayList<>();
-
-		public int size() {
-			return nonMergedTransactionLayers.size() + mergedLayerList.size();
-		}
-
-		// FIXME - possibly cache this?
-		public List<Layer> visibleToCurrentTx() {
-			Transaction current = Transaction.current();
-			// currentLayer will only be non-null if this TxMap has been
-			// modified by the current tx
-			Layer currentLayer = nonMergedTransactionLayers.get(current);
-			// best case - no changes in this tx, and no visible unvacuumed txs
-			if (current.committedTransactions.isEmpty()
-					&& currentLayer == null) {
-				return mergedLayerList;
-			}
-			List<Transaction> visibleCommittedTransactions = current
-					.visibleCommittedTransactions(
-							nonMergedTransactionLayers.keySet());
-			if (visibleCommittedTransactions.isEmpty()
-					&& currentLayer == null) {
-				return mergedLayerList;
-			}
-			List<Layer> visibleLayers = new ArrayList<>();
-			visibleLayers.addAll(mergedLayerList);
-			Collections.reverse(visibleCommittedTransactions);
-			visibleCommittedTransactions.stream()
-					.map(nonMergedTransactionLayers::get)
-					.forEach(visibleLayers::add);
-			if (currentLayer != null) {
-				visibleLayers.add(currentLayer);
-			}
-			/*
-			 * et voila!
-			 */
-			return visibleLayers;
+		@Override
+		public Spliterator<K> spliterator() {
+			return new UnsplittableIteratorSpliterator<>(iterator(), size());
 		}
 	}
 
@@ -411,6 +307,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		public int size() {
 			return entrySet.size();
 		}
+
+		@Override
+		public Spliterator<V> spliterator() {
+			return new UnsplittableIteratorSpliterator<>(iterator(), size());
+		}
 	}
 
 	private class ValuesSet extends AbstractSet<V> {
@@ -430,185 +331,19 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		public int size() {
 			return entrySet.size();
 		}
-	}
-
-	/*
-	 * // trickiest thing about this class is actually keeping track of size a
-	 * la delta in this layer
-	 * 
-	 * delta is size("key in modified, not in containsKey() of older layers") -
-	 * size(wasRemoved)
-	 * 
-	 * if key is in modified,
-	 * 
-	 */
-	class Layer {
-		private int added;
-
-		private Map<K, Boolean> removed;
-
-		private Map<K, V> modified = createNonSynchronizedMap(valueClass);
-
-		private Transaction transaction;
-
-		public Layer(Transaction transaction) {
-			this.transaction = transaction;
-		}
-
-		public V get(Object key) {
-			return modified.get(key);
-		}
-
-		/*
-		 * returns a new non-live-transaction layer containing the union of
-		 * these two
-		 * 
-		 * note that some variants of fastutil maps don't support
-		 * keySet().remove(), hence fancy remove loops
-		 */
-		public Layer merge(Layer newerLayer, List<Layer> olderLayers,
-				int newestOlderLayerIndex) {
-			Layer merged = new Layer(null);
-			if (hasRemoved()) {
-				merged.ensureRemoved().putAll(ensureRemoved());
-				newerLayer.modified.keySet()
-						.forEach(k -> merged.ensureRemoved().remove(k));
-			}
-			if (newerLayer.hasRemoved()) {
-				merged.ensureRemoved().putAll(newerLayer.ensureRemoved());
-			}
-			merged.modified.putAll(modified);
-			merged.modified.putAll(newerLayer.modified);
-			if (merged.hasRemoved()) {
-				merged.ensureRemoved().keySet()
-						.forEach(merged.modified::remove);
-			}
-			/*
-			 * now ... how many of merged.modified were in fact added?
-			 * 
-			 * Other way to do this would be to have three (lazy) maps - added,
-			 * modified, removed - per layer
-			 * 
-			 * We also clean up removed - if not contained in older layers, just
-			 * remove it
-			 */
-			for (K key : merged.modified.keySet()) {
-				boolean added = true;
-				for (int idx = newestOlderLayerIndex; idx >= 0; idx--) {
-					Layer layer = olderLayers.get(idx);
-					if (layer.wasRemoved(key)) {
-						break;// yep, added
-					}
-					if (layer.wasModified(key)) {
-						added = false;
-						break;// nope
-					}
-				}
-				if (added) {
-					merged.added++;
-				}
-			}
-			if (merged.hasRemoved()) {
-				for (Iterator<K> itr = merged.removed.keySet().iterator(); itr
-						.hasNext();) {
-					K key = itr.next();
-					boolean drop = true;
-					for (int idx = newestOlderLayerIndex; idx >= 0; idx--) {
-						Layer layer = olderLayers.get(idx);
-						if (layer.wasRemoved(key)) {
-							break;// will have no effect on combined operations;
-									// drop
-						}
-						if (layer.wasModified(key)) {
-							drop = false;
-							break;// will have an effect on combined operations
-						}
-					}
-					if (drop) {
-						itr.remove();
-					}
-				}
-			}
-			return merged;
-		}
-
-		public void put(K key, V value, boolean existing) {
-			modified.put(key, value);
-			if (!existing) {
-				Boolean wasInRemoved = null;
-				if (hasRemoved()) {
-					wasInRemoved = ensureRemoved().remove(key);
-				}
-				if (wasInRemoved == null) {
-					added++;
-				} else {
-					// effective size will increment because removed from
-					// removed...
-				}
-			}
-		}
-
-		public void remove(K key) {
-			ensureRemoved().put(key, Boolean.TRUE);
-			modified.remove(key);
-		}
 
 		@Override
-		public String toString() {
-			FormatBuilder fb = new FormatBuilder();
-			fb.line("tx:%s", transaction);
-			fb.line("%s", GraphProjection.fieldwiseToString(this, false, false,
-					999, "transaction", "this$0"));
-			return fb.toString();
-		}
-
-		public boolean wasModified(Object key) {
-			return modified.containsKey(key);
-		}
-
-		public boolean wasModifiedOrRemoved(Object key) {
-			return (removed != null && removed.containsKey(key))
-					|| modified.containsKey(key);
-		}
-
-		public boolean wasRemoved(Object key) {
-			return removed != null && removed.containsKey(key);
-		}
-
-		private Map<K, Boolean> ensureRemoved() {
-			if (removed == null) {
-				removed = createNonSynchronizedMap(Boolean.class);
-			}
-			return removed;
-		}
-
-		private boolean hasRemoved() {
-			return removed != null;
-		}
-
-		int combinedMapSize() {
-			return (removed == null ? 0 : removed.size()) + modified.size();
-		}
-
-		Iterator<Entry<K, V>> modifiedEntrySetIterator() {
-			Iterator<Entry<K, V>> iterator = modified.entrySet().iterator();
-			return iterator;
+		public Spliterator<V> spliterator() {
+			return new UnsplittableIteratorSpliterator<>(iterator(), size());
 		}
 	}
 
-	/*
-	 * Does not allow modification of any layers _visible to this tx_ during
-	 * iteration.
-	 */
-	class TransactionalEntrySet extends AbstractSet<Entry<K, V>> {
-		private List<Layer> visibleLayers;
-
+	class EntrySetView extends AbstractSet<Entry<K, V>> {
 		private int size = -1;
 
 		private Transaction transaction;
 
-		public TransactionalEntrySet() {
-			visibleLayers = visibleLayers();
+		public EntrySetView() {
 			transaction = Transaction.current();
 			if (transaction.isEnded()) {
 				throw new MvccException(
@@ -627,181 +362,272 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		/*
-		 * FIXME - mvcc.jobs.1a - in fact overly complex
-		 * 
-		 * Instead, traverse from the top down, retaining a collection of
-		 * visited/removed - except for the bottom layer
-		 * 
-		 * Because the final (bottom) layer is almost sure to be >> the size of
-		 * the others, memory effects will be limited and won't require multiple
-		 * traversals per iteration
-		 */
 		public Iterator<Entry<K, V>> iterator() {
-			return comparator == null ? new CrossTxItr(new LayerIterator())
-					: comparatorIterator();
+			if (concurrent == null) {
+				return nonConcurrent.entrySet().iterator();
+			}
+			Iterator<Entry<K, V>>[] iteratorArray = new Iterator[] {
+					nonConcurrent.entrySet().iterator(),
+					new TransactionalIterator() };
+			MultiIterator<Entry<K, V>> layerIterator = new MultiIterator<Entry<K, V>>(
+					false, keyComparator == null ? null
+							: new Comparator<Entry<K, V>>() {
+								@Override
+								public int compare(Entry<K, V> o1,
+										Entry<K, V> o2) {
+									return keyComparator.compare(o1.getKey(),
+											o2.getKey());
+								}
+							},
+					iteratorArray);
+			Predicate<Entry<K, V>> notVisibleFilter = e -> {
+				Object key = wrapTransactionalKey(e.getKey());
+				TransactionalValue transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
+						.get(key);
+				if (transactionalValue != null) {
+					return transactionalValue.isNotRemoved();
+				}
+				return true;
+			};
+			return new FilteringIterator<>(layerIterator, notVisibleFilter);
 		}
 
 		@Override
 		//
 		public int size() {
 			if (size == -1) {
-				size = calculateSize();
+				size = estimateSize();
 			}
 			return size;
 		}
 
-		private int calculateSize() {
-			return visibleLayers.stream()
-					.collect(Collectors.summingInt(layer -> layer.added
-							- (layer.hasRemoved() ? layer.removed.size() : 0)));
+		@Override
+		public Spliterator<Entry<K, V>> spliterator() {
+			return new UnsplittableIteratorSpliterator<>(iterator(),
+					estimateSize());
 		}
 
-		Iterator<Entry<K, V>> comparatorIterator() {
-			List<Iterator<Entry<K, V>>> iterators = visibleLayers.stream()
-					.map(Layer::modifiedEntrySetIterator)
-					.collect(Collectors.toList());
-			Iterator<Entry<K, V>>[] iteratorArray = (Iterator<Entry<K, V>>[]) iterators
-					.toArray(new Iterator[iterators.size()]);
-			MultiIterator<Entry<K, V>> layerIterator = new MultiIterator<Entry<K, V>>(
-					false,
-					comparator == null ? null : new Comparator<Entry<K, V>>() {
-						@Override
-						public int compare(Entry<K, V> o1, Entry<K, V> o2) {
-							return comparator.compare(o1.getKey(), o2.getKey());
-						}
-					}, iteratorArray);
-			Predicate<Entry<K, V>> notVisibleFilter = e -> {
-				int idx = layerIterator.getCurrentIteratorIndex();
-				if (visibleLayers.get(idx).wasRemoved(e.getKey())) {
-					return false;
-				}
-				idx++;// check if modified in any subsequent layers
-				for (; idx < visibleLayers.size(); idx++) {
-					if (visibleLayers.get(idx)
-							.wasModifiedOrRemoved(e.getKey())) {
-						// will be returned (or not, if removed in a subsequent
-						// layer) by the subsequent layer iterator
-						return false;
-					}
-				}
+		private int estimateSize() {
+			return TransactionalMap.this.size();
+		}
+
+		class TransactionalEntrySetEntry implements Entry<K, V> {
+			public Entry entry;
+
+			@Override
+			public K getKey() {
+				return unwrapTransactionalKey(entry.getKey());
+			}
+
+			@Override
+			public V getValue() {
+				return ((TransactionalValue) entry.getValue()).getValue();
+			}
+
+			@Override
+			public V setValue(V value) {
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		class TransactionalIterator implements Iterator<Entry<K, V>> {
+			private Iterator<Entry> itr;
+
+			private TransactionalEntrySetEntry entry;
+
+			public TransactionalIterator() {
+				itr = concurrent.entrySet().iterator();
+				entry = new TransactionalEntrySetEntry();
+			}
+
+			@Override
+			public boolean hasNext() {
+				return itr.hasNext();
+			}
+
+			@Override
+			public Entry<K, V> next() {
+				entry.entry = itr.next();
+				return entry;
+			}
+		}
+	}
+
+	class SizeMetadata extends MvccObjectVersions<AtomicInteger> {
+		SizeMetadata(AtomicInteger t, Transaction initialTransaction,
+				boolean initialObjectIsWriteable) {
+			super(t, initialTransaction, initialObjectIsWriteable);
+		}
+
+		public void delta(int delta) {
+			resolve(true).addAndGet(delta);
+		}
+
+		@Override
+		protected boolean accessibleFromOtherTransactions(AtomicInteger t) {
+			return false;
+		}
+
+		@Override
+		protected AtomicInteger copyObject(AtomicInteger mostRecentObject) {
+			return new AtomicInteger(mostRecentObject.get());
+		}
+
+		@Override
+		protected void copyObject(AtomicInteger fromObject,
+				AtomicInteger baseObject) {
+			baseObject.set(fromObject.get());
+		}
+
+		@Override
+		protected <E extends Entity> Class<E> entityClass() {
+			return null;
+		}
+
+		@Override
+		protected void onVersionCreation(AtomicInteger object) {
+			// NOOP
+		}
+
+		@Override
+		// TODO - strictly speaking, it possibly is - but the sizes returned are
+		// only estimates
+		protected boolean thisMayBeVisibleToPriorTransactions() {
+			return false;
+		}
+	}
+
+	class TransactionalValue extends MvccObjectVersions<ObjectWrapper> {
+		private K key;
+
+		TransactionalValue(K key, ObjectWrapper t,
+				Transaction initialTransaction,
+				boolean initialObjectIsWriteable) {
+			super(t, initialTransaction, initialObjectIsWriteable);
+			this.key = key;
+		}
+
+		public V getValue() {
+			ObjectWrapper o = resolve(false);
+			if (o == null) {
+				/*
+				 * No visible transaction
+				 */
+				return nonConcurrent.get(key);
+			}
+			Object value = o.get();
+			if (value == REMOVED_VALUE_MARKER) {
+				throw new UnsupportedOperationException();
+			}
+			return (V) o.get();
+		}
+
+		public boolean isNotRemoved() {
+			ObjectWrapper o = resolve(false);
+			if (o == null) {
+				/*
+				 * No visible transaction
+				 */
+				return nonConcurrent.containsKey(key);
+			}
+			Object value = o.get();
+			if (value == REMOVED_VALUE_MARKER) {
+				return false;
+			}
+			return true;
+		}
+
+		public void put(V value) {
+			resolve(true).set(value);
+		}
+
+		public void remove() {
+			resolve(true).set(REMOVED_VALUE_MARKER);
+		}
+
+		@Override
+		protected boolean accessibleFromOtherTransactions(ObjectWrapper t) {
+			return false;
+		}
+
+		@Override
+		protected ObjectWrapper copyObject(ObjectWrapper mostRecentObject) {
+			return ObjectWrapper.of(mostRecentObject.get());
+		}
+
+		@Override
+		protected void copyObject(ObjectWrapper fromObject,
+				ObjectWrapper baseObject) {
+			baseObject.set(fromObject.get());
+		}
+
+		@Override
+		protected <E extends Entity> Class<E> entityClass() {
+			return null;
+		}
+
+		@Override
+		protected void onVersionCreation(ObjectWrapper object) {
+		}
+
+		@Override
+		protected boolean thisMayBeVisibleToPriorTransactions() {
+			return true;
+		}
+	}
+
+	static class UnsplittableIteratorSpliterator<E> implements Spliterator<E> {
+		private Iterator<E> itr;
+
+		private int size;
+
+		UnsplittableIteratorSpliterator(Iterator<E> itr, int size) {
+			this.itr = itr;
+			this.size = size;
+		}
+
+		@Override
+		public int characteristics() {
+			return Spliterator.CONCURRENT;
+		}
+
+		@Override
+		public long estimateSize() {
+			return size;
+		}
+
+		@Override
+		public boolean tryAdvance(Consumer<? super E> action) {
+			if (itr.hasNext()) {
+				action.accept(itr.next());
 				return true;
-			};
-			return new CrossTxItr(
-					new FilteringIterator<>(layerIterator, notVisibleFilter));
-		}
-
-		private class CrossTxItr implements Iterator<Entry<K, V>> {
-			private Iterator<Entry<K, V>> delegate;
-
-			public CrossTxItr(Iterator<Entry<K, V>> delegate) {
-				this.delegate = delegate;
-			}
-
-			@Override
-			public boolean hasNext() {
-				return delegate.hasNext();
-			}
-
-			@Override
-			public Entry<K, V> next() {
-				Entry<K, V> next = delegate.next();
-				if (transaction.isEnded()) {
-					// this case is generally a long-running job traversing
-					// the
-					// graph. use the current tx state of the map to filter
-					// (less optimal but see the bit about 'long running')
-					// we're guaranteed to not see spurious entities -
-					// although
-					// of course we'll miss those in the later txs
-					// note that this only works for idMaps where we're
-					// guaranteed unchanging value objects - other maps
-					// (projections/lookups) shouldn't be accessed across tx
-					// boundaries
-					//
-					// Because changing the size of the iterator causes
-					// problems (e.g. in stream iteration), instead return
-					// null -- calling code must be prepared to filter
-					// nulls.
-					if (!immutableValues) {
-						throw new MvccException(
-								"Accessing non-immutable value iterator across tx boundary");
-					}
-					if (!TransactionalMap.this.containsKey(next.getKey())) {
-						return new Entry<K, V>() {
-							@Override
-							public K getKey() {
-								return next.getKey();
-							}
-
-							@Override
-							public V getValue() {
-								return null;
-							}
-
-							@Override
-							public V setValue(V value) {
-								throw new UnsupportedOperationException();
-							}
-						};
-					}
-				}
-				return next;
+			} else {
+				return false;
 			}
 		}
 
-		private class LayerIterator implements Iterator<Entry<K, V>> {
-			Set<K> visitedOrRemoved = new ObjectOpenHashSet<>();
+		@Override
+		public Spliterator<E> trySplit() {
+			return null;
+		}
+	}
 
-			private FilteringIterator<Entry<K, V>> filteringIterator;
+	class UnwrappingComparator implements Comparator {
+		private Comparator<K> comparator;
 
-			public LayerIterator() {
-				List<Iterator<Entry<K, V>>> iterators = visibleLayers.stream()
-						.map(Layer::modifiedEntrySetIterator)
-						.collect(Collectors.toList());
-				Collections.reverse(iterators);
-				Iterator<Entry<K, V>>[] iteratorArray = (Iterator<Entry<K, V>>[]) iterators
-						.toArray(new Iterator[iterators.size()]);
-				MultiIterator<Entry<K, V>> layerIterator = new MultiIterator<Entry<K, V>>(
-						false, null, iteratorArray) {
-					@Override
-					protected void onBeforeIteratorIndexChange(
-							int currentIteratorIndex) {
-						// our iterators are reversed, so reverse index access
-						// to visibleLayers
-						int visibleLayerIndex = iterators.size()
-								- currentIteratorIndex - 1;
-						if (visibleLayerIndex == 0) {
-							// the lowest layer, no need to mark
-							return;
-						}
-						visitedOrRemoved.addAll(
-								visibleLayers.get(visibleLayerIndex).modified
-										.keySet());
-						if (visibleLayers
-								.get(visibleLayerIndex).removed != null) {
-							visitedOrRemoved.addAll(
-									visibleLayers.get(visibleLayerIndex).removed
-											.keySet());
-						}
-					}
-				};
-				Predicate<Entry<K, V>> notVisitedOrRemovedFilter = e -> {
-					return !visitedOrRemoved.contains(e.getKey());
-				};
-				filteringIterator = new FilteringIterator<>(layerIterator,
-						notVisitedOrRemovedFilter);
+		public UnwrappingComparator(Comparator<K> keyComparator) {
+			this.comparator = keyComparator;
+		}
+
+		@Override
+		public int compare(Object o1, Object o2) {
+			if (o1 == NULL_KEY_MARKER) {
+				o1 = null;
 			}
-
-			@Override
-			public boolean hasNext() {
-				return filteringIterator.hasNext();
+			if (o2 == NULL_KEY_MARKER) {
+				o2 = null;
 			}
-
-			@Override
-			public Entry<K, V> next() {
-				return filteringIterator.next();
-			}
+			return comparator.compare((K) o1, (K) o2);
 		}
 	}
 }

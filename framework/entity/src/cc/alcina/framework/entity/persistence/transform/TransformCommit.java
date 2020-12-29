@@ -149,7 +149,7 @@ public class TransformCommit {
 					ResourceUtilities.write(recordSerializer.write(record),
 							out);
 				}
-				get().logger.info("Wrote {} offline/bulk records to {}",
+				logger.info("Wrote {} offline/bulk records to {}",
 						records.size(), saveDir);
 			}
 			Class<? extends ClientInstance> clientInstanceClass = AlcinaPersistentEntityImpl
@@ -176,9 +176,8 @@ public class TransformCommit {
 								"clientInstance.id", clientInstanceId,
 								"requestId", requestId);
 				if (alreadyWritten != null) {
-					get().logger
-							.warn(Ax.format("Request [{}/{}] already written",
-									requestId, clientInstanceId));
+					logger.warn(Ax.format("Request [{}/{}] already written",
+							requestId, clientInstanceId));
 					continue;
 				}
 				DomainTransformRequest request = DomainTransformRequest
@@ -279,7 +278,7 @@ public class TransformCommit {
 								.call(() -> get().transform(request, true, true,
 										true));
 						ThreadlocalTransformManager.cast().resetTltm(null);
-						get().logger.info(
+						logger.info(
 								"Request [{}::{}] : {} transforms written, {} ignored",
 								requestId, clientInstanceId,
 								transformLayerWrapper.response
@@ -408,8 +407,7 @@ public class TransformCommit {
 		}
 		int cleared = TransformManager.get().removeCreateDeleteTransforms();
 		if (cleared != 0) {
-			get().logger.trace("Cleared {} created/deleted transforms",
-					cleared);
+			logger.trace("Cleared {} created/deleted transforms", cleared);
 		}
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();

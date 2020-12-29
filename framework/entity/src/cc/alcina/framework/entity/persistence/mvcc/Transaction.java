@@ -3,7 +3,6 @@ package cc.alcina.framework.entity.persistence.mvcc;
 import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
@@ -220,6 +219,8 @@ public class Transaction implements Comparable<Transaction> {
 
 	boolean publishedLongRunningTxWarning;
 
+	TransactionId highestVisibleCommittedTransactionId;
+
 	public Transaction(TransactionPhase initialPhase) {
 		DomainStore.stores().stream().forEach(store -> storeTransactions
 				.put(store, new StoreTransaction(store)));
@@ -285,6 +286,10 @@ public class Transaction implements Comparable<Transaction> {
 
 	public boolean isToDomainCommitting() {
 		return phase == TransactionPhase.TO_DOMAIN_COMMITTING;
+	}
+
+	public boolean isVisible(TransactionId committedTransactionId) {
+		return committedTransactionId!=null&&committedTransactionId.id <= highestVisibleCommittedTransactionId.id;
 	}
 
 	public long provideAge() {
@@ -471,22 +476,8 @@ public class Transaction implements Comparable<Transaction> {
 		return threadCount.get() != 1;
 	}
 
-	Transaction mostRecentPriorTransaction(Enumeration<Transaction> keys,
-			DomainStore store) {
-		Transaction result = null;
-		// while (keys.hasMoreElements()) {
-		// Transaction element = keys.nextElement();
-		// if (element.phase == TransactionPhase.TO_DOMAIN_COMMITTED) {
-		// if (committedTransactions.containsKey(element.id)
-		// || element.isBaseTransaction()) {
-		// if (result == null
-		// || element.hasHigherCommitIdThan(result, store)) {
-		// result = element;
-		// }
-		// }
-		// }
-		// }
-		return result;
+	boolean isToDomainCommitted() {
+		return phase == TransactionPhase.TO_DOMAIN_COMMITTED;
 	}
 
 	Transaction mostRecentVisibleCommittedTransaction(

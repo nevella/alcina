@@ -17,9 +17,9 @@ public class MvccObjectVersionsTrieEntry
 	}
 
 	@Override
-	protected void copyObjectFields(TransactionalTrieEntry fromObject,
-			TransactionalTrieEntry toObject) {
-		Transactions.copyObjectFields(fromObject, toObject);
+	protected void copyObject(TransactionalTrieEntry fromObject,
+			TransactionalTrieEntry baseObject) {
+		Transactions.copyObjectFields(fromObject, baseObject);
 	}
 
 	@Override
@@ -28,7 +28,12 @@ public class MvccObjectVersionsTrieEntry
 	}
 
 	@Override
-	protected void register(TransactionalTrieEntry object) {
+	protected void onVersionCreation(TransactionalTrieEntry object) {
 		// noop
+	}
+
+	@Override
+	protected boolean thisMayBeVisibleToPriorTransactions() {
+		return false;
 	}
 }

@@ -104,8 +104,7 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 				try {
 					Transaction.begin();
 					tx1Latch1.await();
-					Preconditions.checkState(getUsersSize() == initialCount,
-							"non-committed-tx2: entities visible from tx2");
+					stack();
 					tx2Latch1.countDown();
 					tx1Latch2.await();
 					Transaction.endAndBeginNew();
@@ -120,6 +119,14 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 					Transaction.ensureEnded();
 					txLatch.countDown();
 				}
+			}
+
+			protected void stack() throws InterruptedException {
+				Thread.sleep(30);
+				List<Entity> collect = Domain.stream(getUserClass())
+						.collect(Collectors.toList());
+				Preconditions.checkState(getUsersSize() == initialCount,
+						"non-committed-tx2: entities visible from tx2");
 			}
 		}.start();
 	}

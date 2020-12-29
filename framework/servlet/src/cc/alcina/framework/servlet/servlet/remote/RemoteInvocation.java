@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
@@ -29,8 +30,11 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager.PostTransactionEntityResolver;
+import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationProxy.RemoteInvocationProxyInterceptor;
 
 /**
@@ -81,8 +85,22 @@ public class RemoteInvocation {
 			// params.username = ResourceUtilities
 			// .getBundledString(DevRemoter.class, "username");
 			params.asRoot = PermissionsManager.get().isRoot();
+			params.methodName = methodName;
+			boolean transformMethod = methodName
+					.equals("transformInPersistenceContext");
 			ClientInstance clientInstance = PermissionsManager.get()
 					.getClientInstance();
+			if (transformMethod) {
+				TransformPersistenceToken token = (TransformPersistenceToken) args[1];
+				if (LooseContext.is(
+						TransformPersisterInPersistenceContext.CONTEXT_REPLAYING_FOR_LOGS)) {
+					// force usage of the remote client instance (and remove all
+					// refs to the clientInstance - assuming that this is
+					// bootstrapping a devconsole)
+					clientInstance = null;
+					token.getRequest().setClientInstance(null);
+				}
+			}
 			if (clientInstance != null) {
 				if (clientInstance.getId() == 0) {
 					clientInstance = EntityLayerObjects.get()
@@ -91,8 +109,14 @@ public class RemoteInvocation {
 				params.clientInstanceId = clientInstance.getId();
 				params.clientInstanceAuth = clientInstance.getAuth();
 			}
-			params.methodName = methodName;
 			params.args = args == null ? new Object[0] : args;
+			params.context = new LinkedHashMap<>();
+			LooseContext.getContext().properties.forEach((k, v) -> {
+				if (v == null || GraphProjection
+						.isPrimitiveOrDataClass(v.getClass())) {
+					params.context.put(k, v);
+				}
+			});
 			List<NameValuePair> qparams = new ArrayList<NameValuePair>();
 			qparams.add(new BasicNameValuePair(
 					RemoteInvocationServlet.REMOTE_INVOCATION_PARAMETERS,
@@ -112,7 +136,7 @@ public class RemoteInvocation {
 				((Exception) object).printStackTrace();
 				throw new Exception("Remote exception");
 			}
-			if (methodName.equals("transformInPersistenceContext")) {
+			if (transformMethod) {
 				ThreadlocalTransformManager.get()
 						.setPostTransactionEntityResolver(
 								(PostTransactionEntityResolver) container

@@ -16,8 +16,8 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
-	protected void copyObjectFields(T fromObject, T toObject) {
-		Transactions.copyObjectFields(fromObject, toObject);
+	protected void copyObject(T fromObject, T baseObject) {
+		Transactions.copyObjectFields(fromObject, baseObject);
 	}
 
 	@Override
@@ -26,7 +26,12 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
-	protected void register(T object) {
+	protected void onVersionCreation(T object) {
 		Domain.register(object);
+	}
+
+	@Override
+	protected boolean thisMayBeVisibleToPriorTransactions() {
+		return false;
 	}
 }

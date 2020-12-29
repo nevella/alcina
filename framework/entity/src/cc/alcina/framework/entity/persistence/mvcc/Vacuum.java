@@ -31,7 +31,7 @@ class Vacuum {
 
 	BlockingQueue<Transaction> events = new LinkedBlockingQueue<>();
 
-	boolean paused;
+	boolean paused = false;
 
 	private long vacuumStarted = 0;
 

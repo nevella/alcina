@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.persistence.mvcc;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.trie.TrieEntry;
 
+//FIXME - mvcc.jobs.1a - make sure that all refs (left/right/parent) refer to the 'domain identity)
 public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 		implements MvccObject<TransactionalTrieEntry> {
 	MvccObjectVersions<TransactionalTrieEntry> __mvccObjectVersions__;
@@ -28,6 +29,13 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	public void __setMvccVersions__(
 			MvccObjectVersions<TransactionalTrieEntry> __mvccVersions__) {
 		this.__mvccObjectVersions__ = __mvccVersions__;
+	}
+
+	public TransactionalTrieEntry<K, V> domainIdentity() {
+		if (__mvccObjectVersions__ == null) {
+			return this;
+		}
+		return __mvccObjectVersions__.getBaseObject();
 	}
 
 	public Class<? extends Entity> entityClass() {

@@ -235,8 +235,11 @@ class JobAllocator {
 				onFinished();
 				return;
 			}
-			logger.info("Allocation thread - job {} - event {}",
-					job.toDisplayName(), event);
+			if (event.type == EventType.WAKEUP) {
+			} else {
+				logger.info("Allocation thread - job {} - event {}",
+						job.toDisplayName(), event);
+			}
 			if (isPhaseComplete(event)) {
 				if (queue.phase == SubqueuePhase.Child) {
 					/*
@@ -341,6 +344,12 @@ class JobAllocator {
 					try {
 						Transaction.begin();
 						if (event == null) {
+							/*
+							 * TODO - probably remove this - it tends to only
+							 * get hit while awaiting child jobs which are
+							 * themselves awaiting sequence completion - which
+							 * means it does nothing
+							 */
 							int debug = 3;
 							/*
 							 * FIXME - mvcc.jobs.1a - up the timeout n catch

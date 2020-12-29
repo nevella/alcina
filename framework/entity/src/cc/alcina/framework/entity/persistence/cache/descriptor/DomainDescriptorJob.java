@@ -442,10 +442,6 @@ public class DomainDescriptorJob {
 		/// ahhhhhh....we need to buffer events if in "todomaincommitting",
 		/// otherwise we may hit the allocators before the commit is finished
 		public void publish(EventType type) {
-			if (type == EventType.DELETED) {
-				// debugging
-				new Exception().printStackTrace();
-			}
 			Event event = new Event(type);
 			if (Transaction.current().isToDomainCommitting()) {
 				bufferedEvents.add(event);
