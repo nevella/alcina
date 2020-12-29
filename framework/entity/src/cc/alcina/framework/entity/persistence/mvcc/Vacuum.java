@@ -101,6 +101,7 @@ class Vacuum {
 				logger.debug("vacuum: end");
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			logger.warn("Vacuum exception", new MvccException(e));
 		} finally {
 			Transaction.end();
