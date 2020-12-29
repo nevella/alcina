@@ -36,34 +36,6 @@ public class TaskListJobs extends AbstractTaskPerformer {
 		this.filter = filter;
 	}
 
-	private DomNodeHtmlTableCellBuilder
-			date(DomNodeHtmlTableCellBuilder builder) {
-		DomNode lastNode = builder.previousElement();
-		lastNode.setClassName("date");
-		return builder;
-	}
-
-	private DomNodeHtmlTableCellBuilder
-			instance(DomNodeHtmlTableCellBuilder builder) {
-		DomNode lastNode = builder.previousElement();
-		lastNode.setClassName("instance");
-		return builder;
-	}
-
-	private DomNodeHtmlTableCellBuilder
-			links(DomNodeHtmlTableCellBuilder builder) {
-		DomNode lastNode = builder.previousElement();
-		lastNode.setClassName("links");
-		return builder;
-	}
-
-	private DomNodeHtmlTableCellBuilder
-			numeric(DomNodeHtmlTableCellBuilder builder) {
-		DomNode lastNode = builder.previousElement();
-		lastNode.setClassName("numeric");
-		return builder;
-	}
-
 	private void run1() throws Exception {
 		DomDoc doc = DomDoc.basicHtmlDoc();
 		String css = ResourceUtilities.readClazzp("res/TaskListJobs.css");
@@ -74,14 +46,15 @@ public class TaskListJobs extends AbstractTaskPerformer {
 					.text("Active allocation queues").append();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
-			builder.row().cell("Id").accept(this::numeric).cell("Name")
-					.accept(this::large).cell("Started").accept(this::date)
-					.cell("Active").accept(this::date).cell("Pending")
-					.accept(this::numeric).cell("Completed")
-					.accept(this::numeric).cell("Total").accept(this::numeric);
+			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
+					.accept(Utils::large).cell("Started").accept(Utils::date)
+					.cell("Active").accept(Utils::date).cell("Pending")
+					.accept(Utils::numeric).cell("Completed")
+					.accept(Utils::numeric).cell("Total")
+					.accept(Utils::numeric);
 			queues.filter(q -> q.active != 0).filter(q -> filter(q.name))
 					.forEach(queue -> builder.row().cell(queue.jobId)
-							.cell(queue.name).accept(this::large)
+							.cell(queue.name).accept(Utils::large)
 							.cell(timestamp(queue.startTime)).cell(queue.active)
 							.cell(queue.pending).cell(queue.completed)
 							.cell(queue.total));
@@ -93,12 +66,12 @@ public class TaskListJobs extends AbstractTaskPerformer {
 					.append();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
-			builder.row().cell("Id").accept(this::numeric).cell("Task")
-					.cell("Run at").cell("Link").accept(this::links);
+			builder.row().cell("Id").accept(Utils::numeric).cell("Task")
+					.cell("Run at").cell("Link").accept(Utils::links);
 			pending.forEach(stat -> {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(stat.jobId).cell(stat.taskName)
-						.accept(this::large).cell(timestamp(stat.runAt));
+						.accept(Utils::large).cell(timestamp(stat.runAt));
 				DomNode td = cellBuilder.append();
 				{
 					String href = JobServlet.createTaskUrl(
@@ -135,21 +108,21 @@ public class TaskListJobs extends AbstractTaskPerformer {
 					.append();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
-			builder.row().cell("Id").accept(this::numeric).cell("Name")
-					.accept(this::large).cell("Started").accept(this::date)
-					.cell("Thread").accept(this::medium).cell("Performer")
-					.accept(this::instance).cell("Links").accept(this::links);
+			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
+					.accept(Utils::large).cell("Started").accept(Utils::date)
+					.cell("Thread").accept(Utils::medium).cell("Performer")
+					.accept(Utils::instance).cell("Links").accept(Utils::links);
 			Predicate<Job> nameFilter = job -> filter(job.getTaskClassName());
 			DomainDescriptorJob.get().getActiveJobs().filter(nameFilter)
 					.filter(sectionFilter).forEach(job -> {
 						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 								.cell(String.valueOf(job.getId()))
-								.cell(job.provideName()).accept(this::large)
+								.cell(job.provideName()).accept(Utils::large)
 								.cell(timestamp(job.getStartTime()))
 								.cell(JobRegistry.get()
 										.getPerformerThreadName(job))
-								.accept(this::medium).cell(job.getPerformer())
-								.accept(this::instance);
+								.accept(Utils::medium).cell(job.getPerformer())
+								.accept(Utils::instance);
 						DomNode td = cellBuilder.append();
 						{
 							String href = JobServlet.createTaskUrl(
@@ -176,20 +149,20 @@ public class TaskListJobs extends AbstractTaskPerformer {
 					.append();
 			DomNodeHtmlTableBuilder builder = doc.html().body().html()
 					.tableBuilder();
-			builder.row().cell("Id").accept(this::numeric).cell("Name")
-					.accept(this::large).cell("Started").accept(this::date)
-					.cell("Finished").accept(this::date).cell("Performer")
-					.accept(this::instance).cell("Link").accept(this::links);
+			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
+					.accept(Utils::large).cell("Started").accept(Utils::date)
+					.cell("Finished").accept(Utils::date).cell("Performer")
+					.accept(Utils::instance).cell("Link").accept(Utils::links);
 			Predicate<Job> nameFilter = job -> filter(job.getTaskClassName());
 			DomainDescriptorJob.get().getRecentlyCompletedJobs(topLevel)
 					.filter(nameFilter).limit(limit).forEach(job -> {
 						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 								.cell(String.valueOf(job.getId()))
-								.cell(job.provideName()).accept(this::large)
+								.cell(job.provideName()).accept(Utils::large)
 								.cell(timestamp(job.getStartTime()))
 								.cell(timestamp(job.getEndTime()))
 								.cell(job.getPerformer())
-								.accept(this::instance);
+								.accept(Utils::instance);
 						DomNode td = cellBuilder.append();
 						String href = JobServlet.createTaskUrl(
 								new TaskLogJobDetails().withValue(
@@ -217,20 +190,6 @@ public class TaskListJobs extends AbstractTaskPerformer {
 			filterPattern = Pattern.compile(filter);
 		}
 		return filterPattern.matcher(test).matches();
-	}
-
-	DomNodeHtmlTableCellBuilder large(DomNodeHtmlTableCellBuilder builder) {
-		DomNode lastNode = builder.previousElement();
-		lastNode.setClassName("trim-large");
-		lastNode.setAttr("title", lastNode.textContent());
-		return builder;
-	}
-
-	DomNodeHtmlTableCellBuilder medium(DomNodeHtmlTableCellBuilder builder) {
-		DomNode lastNode = builder.previousElement();
-		lastNode.setClassName("trim-medium");
-		lastNode.setAttr("title", lastNode.textContent());
-		return builder;
 	}
 
 	String timestamp(Date date) {

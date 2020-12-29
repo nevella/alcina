@@ -873,7 +873,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					loadConfig();
 					return null;
 				});
-		initJaxb();
+		// initJaxb();
+		// triggered by first publication
 		long statEndInitJaxbServices = System.currentTimeMillis();
 		initState();
 		devHelper.loadJbossConfig(null);
@@ -930,21 +931,20 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 		classrefScanner.scan(cache);
 	}
-
-	protected void initJaxb() {
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					// init full jaxb
-					WrappedObjectHelper
-							.xmlSerialize(new DevConsoleProperties());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			};
-		}.start();
-	}
+	// protected void initJaxb() {
+	// new Thread() {
+	// @Override
+	// public void run() {
+	// try {
+	// // init full jaxb
+	// WrappedObjectHelper
+	// .xmlSerialize(new DevConsoleProperties());
+	// } catch (Exception e) {
+	// e.printStackTrace();
+	// }
+	// };
+	// }.start();
+	// }
 
 	protected abstract void initState();
 
