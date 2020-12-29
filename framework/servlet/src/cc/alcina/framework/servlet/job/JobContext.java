@@ -220,6 +220,7 @@ public class JobContext {
 		job.setStatusMessage(simpleExceptionMessage);
 		job.setResultMessage(simpleExceptionMessage);
 		logger.warn("Unexpected job exception", e);
+		e.printStackTrace();
 	}
 
 	public void remove() {

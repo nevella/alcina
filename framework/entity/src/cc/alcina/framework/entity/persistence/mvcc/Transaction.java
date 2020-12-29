@@ -289,7 +289,8 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public boolean isVisible(TransactionId committedTransactionId) {
-		return committedTransactionId!=null&&committedTransactionId.id <= highestVisibleCommittedTransactionId.id;
+		return committedTransactionId != null
+				&& committedTransactionId.id <= highestVisibleCommittedTransactionId.id;
 	}
 
 	public long provideAge() {
@@ -483,7 +484,7 @@ public class Transaction implements Comparable<Transaction> {
 	Transaction mostRecentVisibleCommittedTransaction(
 			NavigableSet<Transaction> otherCommittedTransactionsSet) {
 		return TransactionVersions.mostRecentCommonVisible(
-				committedTransactions, otherCommittedTransactionsSet);
+				otherCommittedTransactionsSet, committedTransactions);
 	}
 
 	void setId(TransactionId id) {
