@@ -179,7 +179,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		} else {
 			ensureTransactional(currentTransaction);
 			concurrent.computeIfAbsent(wrapTransactionalKey(key),
-					k -> new TransactionalValue((K) key, null,
+					k -> new TransactionalValue((K) key,
+							ObjectWrapper.of(REMOVED_VALUE_MARKER),
 							currentTransaction, true));
 			TransactionalValue transactionalValue = (TransactionalValue) concurrent
 					.get(wrapTransactionalKey(key));
