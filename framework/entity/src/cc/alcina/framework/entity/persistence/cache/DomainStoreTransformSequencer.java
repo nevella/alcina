@@ -245,7 +245,7 @@ public class DomainStoreTransformSequencer
 						+ " transactionCommitTime>=?",
 				tableName);
 		if (!initial) {
-			querySql += " order by pg_xact_commit_timestamp(xmin) desc limit 100";
+			querySql += " order by pg_xact_commit_timestamp(xmin) desc ";
 		}
 		List<DomainTransformCommitPosition> positions = new ArrayList<>();
 		try (PreparedStatement pStatement = conn.prepareStatement(querySql)) {
