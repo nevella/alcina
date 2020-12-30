@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
-public class TransactionVersions {
+class TransactionVersions {
 	/*
 	 * Only called by txmap old
 	 */
@@ -33,28 +33,30 @@ public class TransactionVersions {
 	}
 
 	/*
-	 * Preferably have the smaller set in set1. We *really* don't want to have
-	 * to get the size of a concurrent sortedsubset (since this involves
-	 * traversal)
+	 * Preferably have the smaller set in set1. Avoids the use of size() on the
+	 * (concurrent) sets, since that won't be a constant-time op.
+	 * 
+	 * Strategy: try the first 10 of the (presumed smaller) set1, then switch to
+	 * iterating over both sets
 	 */
 	public static Transaction mostRecentCommonVisible(
 			SortedSet<Transaction> set1, SortedSet<Transaction> set2) {
 		Transaction tx = null;
-		Set<Transaction> larger = set2;
-		Set<Transaction> smaller = set1;
-		int set1size = set1.size();
-		if (set1size > 20 && set1size > set2.size()) {
-			larger = set1;
-			smaller = set2;
-		}
-		Iterator<Transaction> itr = smaller.iterator();
-		while (itr.hasNext()) {
-			Transaction test = itr.next();
-			if (larger.contains(test)) {
-				tx = test;
-				break;
+		Iterator<Transaction> itr1 = set1.iterator();
+		Iterator<Transaction> itr2 = set2.iterator();
+		int preferSet1 = 0;
+		while (itr1.hasNext() && itr2.hasNext()) {
+			tx = itr1.next();
+			if (set2.contains(tx)) {
+				return tx;
+			}
+			if (preferSet1++ > 10) {
+				tx = itr2.next();
+				if (set1.contains(tx)) {
+					return tx;
+				}
 			}
 		}
-		return tx;
+		return null;
 	}
 }

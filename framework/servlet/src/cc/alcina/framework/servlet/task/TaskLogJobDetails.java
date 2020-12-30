@@ -42,16 +42,16 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 		return builder;
 	}
 
-	protected void childJobs(Job top, DomNode body) {
-		body.builder().tag("h2").text("Child jobs").append();
+	protected void descendantAndSubsequentJobs(Job top, DomNode body) {
+		body.builder().tag("h2").text("Child/Subsequent jobs").append();
 		DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
 		builder.row().cell("Id").accept(this::numeric).cell("Name")
 				.accept(Utils::large).cell("State").cell("Result")
 				.cell("Started").accept(this::date).cell("Finished")
 				.accept(this::date).cell("Performer").accept(Utils::instance)
 				.cell("Link").accept(Utils::links);
-		top.provideDescendants().limit(50).sorted(EntityComparator.INSTANCE)
-				.forEach(job -> {
+		top.provideDescendantsAndSubsequents().limit(50)
+				.sorted(EntityComparator.INSTANCE).forEach(job -> {
 					DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 							.cell(String.valueOf(job.getId()))
 							.cell(job.provideName()).accept(Utils::large)
@@ -159,7 +159,7 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 			}
 			queueDiv.append();
 			processData(threadData, body);
-			childJobs(job, body);
+			descendantAndSubsequentJobs(job, body);
 			fields(job, body);
 			JobContext.get().getJob().setLargeResult(doc.fullToString());
 			logger.info("Details output to job.largeResult");

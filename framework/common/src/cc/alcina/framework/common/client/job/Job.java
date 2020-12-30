@@ -177,8 +177,14 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public void createRelation(Job to, JobRelationType type) {
 		String invalidMessage = null;
 		Preconditions.checkArgument(to != domainIdentity());
-		if (to.getToRelations().size() > 0) {
-			invalidMessage = "to has existing incoming relation";
+		if (type == JobRelationType.RESUBMIT) {
+			if (to.provideToResubmitRelation().isPresent()) {
+				invalidMessage = "to has existing incoming resubmit relation";
+			}
+		} else {
+			if (to.provideToAntecedentRelation().isPresent()) {
+				invalidMessage = "to has existing incoming antecedent relation";
+			}
 		}
 		Job from = domainIdentity();
 		if (type == JobRelationType.SEQUENCE) {
@@ -382,6 +388,17 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				provideChildren().flatMap(Job::provideDescendants));
 	}
 
+	public Stream<Job> provideDescendantsAndSubsequents() {
+		if (getFromRelations().isEmpty()) {
+			return Stream.empty();
+		}
+		Stream s1 = Stream.concat(provideChildren(), provideChildren()
+				.flatMap(Job::provideDescendantsAndSubsequents));
+		Stream s2 = Stream.concat(provideSubsequents(), provideSubsequents()
+				.flatMap(Job::provideDescendantsAndSubsequents));
+		return Stream.concat(s1, s2);
+	}
+
 	public Optional<Exception> provideException() {
 		return getResultType() == JobResultType.EXCEPTION
 				? Optional.of(new Exception(getResultMessage()))
@@ -505,7 +522,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public Optional<Job> provideParent() {
-		return provideToRelation()
+		return provideToAntecedentRelation()
 				.filter(rel -> rel.getType() == JobRelationType.PARENT_CHILD)
 				.map(JobRelation::getFrom);
 	}
@@ -515,7 +532,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public Optional<Job> providePrevious() {
-		return provideToRelation()
+		return provideToAntecedentRelation()
 				.filter(rel -> rel.getType() == JobRelationType.SEQUENCE)
 				.map(JobRelation::getFrom);
 	}
@@ -570,6 +587,18 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public String provideShortName() {
 		return provideName().replaceFirst(".+\\.", "");
+	}
+
+	public Stream<Job> provideSubsequents() {
+		if (getFromRelations().isEmpty()) {
+			return Stream.empty();
+		}
+		/*
+		 * requires the final filter for indexing during a deletion cycle
+		 */
+		return getFromRelations().stream()
+				.filter(rel -> rel.getType() == JobRelationType.SEQUENCE)
+				.map(JobRelation::getTo).filter(Objects::nonNull);
 	}
 
 	public Class<? extends Task> provideTaskClass() {
@@ -781,13 +810,22 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				toString(getToRelations()));
 	}
 
-	private Optional<JobRelation> provideToRelation() {
-		Set<? extends JobRelation> toRelations = getToRelations();
-		if (toRelations.size() == 0) {
+	private Optional<? extends JobRelation> provideToAntecedentRelation() {
+		if (getToRelations().isEmpty()) {
 			return Optional.empty();
-		} else {
-			return Optional.of(toRelations.iterator().next());
 		}
+		return getToRelations().stream()
+				.filter(rel -> rel.getType() != JobRelationType.RESUBMIT)
+				.findFirst();
+	}
+
+	private Optional<? extends JobRelation> provideToResubmitRelation() {
+		if (getToRelations().isEmpty()) {
+			return Optional.empty();
+		}
+		return getToRelations().stream()
+				.filter(rel -> rel.getType() == JobRelationType.RESUBMIT)
+				.findFirst();
 	}
 
 	private Date resolveCompletionDate0(int depth) {

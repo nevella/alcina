@@ -108,6 +108,23 @@ public class JobScheduler {
 		}, untilNext5MinutesMillis, 5 * TimeConstants.ONE_MINUTE_MS);
 	}
 
+	public JobAllocator awaitAllocator(Job job) {
+		while (true) {
+			JobAllocator allocator = allocators.get(job);
+			if (allocator != null) {
+				return allocator;
+			}
+			try {
+				allocators.wait(1000);
+			} catch (InterruptedException e) {
+				/*
+				 * Only on app termination
+				 */
+				throw new RuntimeException(e);
+			}
+		}
+	}
+
 	public Predicate<Job> canModify(boolean scheduleClusterJobs,
 			boolean scheduleVmLocalJobs) {
 		Predicate<Job> canModify = job -> {
@@ -221,6 +238,9 @@ public class JobScheduler {
 							allocatorService);
 					allocators.put(queue.job, allocator);
 					allocator.enqueueEvent(event.queueEvent);
+					synchronized (allocators) {
+						allocators.notifyAll();
+					}
 				}
 					break;
 				case DELETED: {

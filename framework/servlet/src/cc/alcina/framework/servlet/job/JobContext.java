@@ -168,13 +168,13 @@ public class JobContext {
 	LauncherThreadState launcherThreadState;
 
 	public JobContext(Job job, TaskPerformer performer,
-			LauncherThreadState launcherThreadState) {
+			LauncherThreadState launcherThreadState, JobAllocator allocator) {
 		this.job = job;
 		this.performer = performer;
 		this.launcherThreadState = launcherThreadState;
+		this.allocator = allocator;
 		this.logger = LoggerFactory.getLogger(performer.getClass());
 		noHttpContext = AlcinaServletContext.httpContext() == null;
-		allocator = JobRegistry.get().scheduler.allocators.get(job);
 	}
 
 	public ExecutionConstraints getExecutionConstraints() {

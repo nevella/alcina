@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
+import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 
 /**
  * Note that like a TransactionalMap, the owning MvccObject will not be
@@ -80,6 +81,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	@SuppressWarnings("unused")
 	private T __mostRecentWritable;
 
+	/*
+	 * Only used to determine if a txmap key is not visible to a given
+	 * transaction (post vacuum)
+	 */
 	private TransactionId firstCommittedTransactionId;
 
 	/*
@@ -183,27 +188,43 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 */
 	@Override
 	public void vacuum(VacuumableTransactions vacuumableTransactions) {
-		Transaction mostRecentCommonVisible = TransactionVersions
-				.mostRecentCommonVisible(versions.keySet(),
-						vacuumableTransactions.completedDomainTransactions);
 		/*
-		 * Must change the base before removing transaction (otherwise there's a
-		 * narrow window where we'd return an older version)
+		 * completedDomainTransactions ordered by most-recent to oldest
 		 */
-		if (mostRecentCommonVisible != null) {
-			ObjectVersion<T> version = versions.get(mostRecentCommonVisible);
-			// baseObject fields will not be reachable here to app code (all
-			// active txs will be
-			// looking at version.object fields)
-			copyObject(version.object, baseObject);
-			if (firstCommittedTransactionId == null) {
-				firstCommittedTransactionId = vacuumableTransactions.completedDomainTransactions
-						.last().getId();
+		Transaction oldestVacuumableDomainTransaction = vacuumableTransactions.completedDomainTransactions
+				.iterator().hasNext()
+						? vacuumableTransactions.completedDomainTransactions
+								.last()
+						: null;
+		if (oldestVacuumableDomainTransaction != null) {
+			Transaction mostRecentCommonVisible = TransactionVersions
+					.mostRecentCommonVisible(versions.keySet(),
+							vacuumableTransactions.completedDomainTransactions);
+			/*
+			 * Must change the base before removing transaction (otherwise
+			 * there's a narrow window where we'd return an older version)
+			 */
+			if (mostRecentCommonVisible != null) {
+				ObjectVersion<T> version = versions
+						.get(mostRecentCommonVisible);
+				// baseObject fields will not be reachable here to app code (all
+				// active txs will be
+				// looking at version.object fields)
+				copyObject(version.object, baseObject);
+				if (firstCommittedTransactionId == null) {
+					firstCommittedTransactionId = oldestVacuumableDomainTransaction
+							.getId();
+				}
+			}
+			// Transactions.debugRemoveVersion(baseObject, version);
+			ObjectBidirectionalIterator<Transaction> bidiItr = vacuumableTransactions.completedDomainTransactions
+					.iterator(oldestVacuumableDomainTransaction);
+			// remove from oldest to most recent, otherwise there's a chance of
+			// accessing incorrect versions
+			while (bidiItr.hasPrevious()) {
+				versions.keySet().remove(bidiItr.previous());
 			}
 		}
-		// Transactions.debugRemoveVersion(baseObject, version);
-		versions.keySet()
-				.removeAll(vacuumableTransactions.completedDomainTransactions);
 		versions.keySet().removeAll(
 				vacuumableTransactions.completedNonDomainTransactions);
 		if (versions.isEmpty()) {
@@ -225,8 +246,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	/*
 	 * Try and return a cached version if possible (if cached version is not
 	 * 'writeable' and we're writing, we need to replace it for this tx with a
-	 * writeable version). Note that all this is not hit unless the domain
-	 * object is modified during the jvm lifetime -
+	 * writeable version). Note that all this is not hit unless the mvcc object
+	 * is modified during the jvm lifetime -
 	 */
 	private T resolve0(boolean write) {
 		Transaction transaction = Transaction.current();
@@ -251,7 +272,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (mostRecentTransaction == null && !write) {
 			/*
 			 * Object not visible to the current tx - note that if this is an
-			 * instance of MvccObjectVersionsEntity or
+			 * instance of MvccObjectVersionsEntity this will never be true
 			 */
 			if (thisMayBeVisibleToPriorTransactions()
 					&& !transaction.isVisible(firstCommittedTransactionId)) {

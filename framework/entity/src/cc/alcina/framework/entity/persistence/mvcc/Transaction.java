@@ -1,7 +1,6 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.sql.Timestamp;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -513,27 +512,5 @@ public class Transaction implements Comparable<Transaction> {
 			NavigableSet<Transaction> otherCommittedTransactionsSet) {
 		return TransactionVersions.commonVisible(committedTransactions,
 				otherCommittedTransactionsSet);
-	}
-
-	/*
-	 * Domain-committed transactions are 'before' non-committed - this ordering
-	 * only makes sense for visible transactions
-	 */
-	static class TransactionComparator implements Comparator<Transaction> {
-		@Override
-		public int compare(Transaction o1, Transaction o2) {
-			if (o1.phase.isDomain() && o2.phase.isDomain()) {
-				return CommonUtils.compareLongs(
-						o1.databaseCommitTimestamp.getTime(),
-						o2.databaseCommitTimestamp.getTime());
-			}
-			if (o1.phase.isDomain()) {
-				return -1;
-			}
-			if (o2.phase.isDomain()) {
-				return 1;
-			}
-			return CommonUtils.compareLongs(o1.id.id, o2.id.id);
-		}
 	}
 }

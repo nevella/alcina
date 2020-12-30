@@ -354,8 +354,8 @@ public class JobRegistry extends WriterService {
 					job.toDisplayName(), () -> true);
 		}
 		TaskPerformer<T> performer = getTaskPerformer(job);
-		JobContext context = new JobContext(job, performer,
-				launcherThreadState);
+		JobContext context = new JobContext(job, performer, launcherThreadState,
+				scheduler.awaitAllocator(job));
 		activeJobs.put(job, context);
 		if (contextAwaiters.containsKey(job)) {
 			ContextAwaiter contextAwaiter = contextAwaiters.get(job);
