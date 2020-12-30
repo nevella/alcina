@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -49,7 +50,13 @@ public class JobServlet extends AlcinaServlet {
 			queryParameters.put("id", ((TaskRunJob) task).value);
 		} else {
 			queryParameters.put("action", "task");
-			queryParameters.put("task", task.getClass().getName());
+			String serialized = TransformManager.serialize(task);
+			String defaultSerialized = TransformManager
+					.serialize(Reflections.newInstance(task.getClass()));
+			queryParameters.put("task",
+					defaultSerialized.equals(serialized)
+							? task.getClass().getName()
+							: serialized);
 		}
 		UrlBuilder urlBuilder = new UrlBuilder();
 		urlBuilder.path("/job.do");
@@ -88,8 +95,15 @@ public class JobServlet extends AlcinaServlet {
 			job = new TaskWakeupJobScheduler().perform();
 			break;
 		case task:
-			Task task = (Task) Reflections
-					.newInstance(Class.forName(request.getParameter("task")));
+			String serialized = request.getParameter("task");
+			Task task = null;
+			try {
+				task = (Task) Reflections.newInstance(
+						Class.forName(request.getParameter("task")));
+			} catch (Exception e) {
+				task = TransformManager.resolveMaybeDeserialize(null,
+						serialized, null);
+			}
 			job = JobRegistry.get().perform(task);
 			break;
 		}
