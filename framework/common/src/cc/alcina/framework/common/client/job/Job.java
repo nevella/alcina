@@ -484,7 +484,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public boolean provideIsNotTopLevel() {
-		return provideParent().isPresent();
+		return !provideIsTopLevel();
 	}
 
 	public boolean provideIsPending() {
@@ -500,7 +500,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public boolean provideIsTopLevel() {
-		return !provideParent().isPresent();
+		return !provideFirstInSequence().provideParent().isPresent();
 	}
 
 	public String provideName() {
@@ -521,6 +521,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				.map(JobRelation::getTo).findFirst();
 	}
 
+	/*
+	 * Often will want to call provideFirstInSequence().provideParent()
+	 */
 	public Optional<Job> provideParent() {
 		return provideToAntecedentRelation()
 				.filter(rel -> rel.getType() == JobRelationType.PARENT_CHILD)
@@ -738,7 +741,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public void setRunAt(Date runAt) {
-		Preconditions.checkState(runAt == null || !provideParent().isPresent());
+		Preconditions.checkState(runAt == null
+				|| !provideFirstInSequence().provideParent().isPresent());
 		Date old_runAt = this.runAt;
 		this.runAt = runAt;
 		propertyChangeSupport().firePropertyChange("runAt", old_runAt, runAt);
@@ -838,7 +842,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		if (this.state.isComplete()) {
 			return this.endTime;
 		}
-		Optional<Job> parent = provideParent();
+		Optional<Job> parent = provideFirstInSequence().provideParent();
 		if (parent.isPresent()) {
 			return parent.get().resolveCompletionDate0(depth + 1);
 		}
@@ -855,7 +859,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		if (this.state.isComplete()) {
 			return this.state;
 		}
-		Optional<Job> parent = provideParent();
+		Optional<Job> parent = provideFirstInSequence().provideParent();
 		if (parent.isPresent()) {
 			JobState parentState = parent.get().resolveState0(depth + 1);
 			if (parentState != null && parentState.isComplete()) {

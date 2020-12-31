@@ -201,7 +201,9 @@ public class Transaction implements Comparable<Transaction> {
 	private String originatingThreadName;
 
 	boolean ended;
+	// for debugging
 
+	@SuppressWarnings("unused")
 	private Timestamp databaseCommitTimestamp;
 
 	private boolean baseTransaction;

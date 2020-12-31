@@ -64,9 +64,7 @@ class JobAllocator {
 		queue.events.add((k, e) -> enqueueEvent(e));
 		lastStatus = new StatusMessage();
 		/*
-		 * Allocator threads are started for top-level jobs iff:
-		 * 
-		 * -
+		 * Allocator threads are started for top-level jobs iff visible:
 		 */
 		Job job = queue.job;
 		boolean topLevelQueue = job.provideIsTopLevel()
@@ -263,8 +261,16 @@ class JobAllocator {
 				enqueueEvent(event);
 			} else {
 				Transaction.endAndBeginNew();
+				AllocationQueue constraintQueue = queue;
+				if (queue.phase == SubqueuePhase.Sequence
+						&& queue.job.provideParent().isPresent()) {
+					/*
+					 * use the parent constraints
+					 */
+					constraintQueue = queue.ensureParentQueue();
+				}
 				ExecutionConstraints executionConstraints = ExecutionConstraints
-						.forQueue(queue);
+						.forQueue(constraintQueue);
 				long maxAllocatable = executionConstraints
 						.calculateMaxAllocatable();
 				// FIXME - mvcc.jobs.1a - allocate in batches (i.e.
@@ -273,7 +279,8 @@ class JobAllocator {
 					if (queue.getUnallocatedJobs()
 							.anyMatch(this::isAllocatable)) {
 						ExecutorService executorService = executionConstraints
-								.getExecutorServiceProvider().getService(queue);
+								.getExecutorServiceProvider()
+								.getService(constraintQueue);
 						List<Job> allocated = new ArrayList<>();
 						Runnable allocateJobs = () -> {
 							/*
@@ -502,12 +509,20 @@ class JobAllocator {
 		public StatusMessage() {
 			phase = queue.phase;
 			completedCount = queue.getCompletedJobCount();
-			if (!queue.job.provideNextInSequence().isPresent()
-					&& queue.job.getState() == JobState.PROCESSING
-					&& finished) {
-				completedCount++;
-			}
 			totalCount = queue.getTotalJobCount();
+			if (finished && !queue.job.provideNextInSequence().isPresent()
+					&& queue.job.getState() == JobState.PROCESSING) {
+				long childCount = queue.job.provideChildren().count();
+				if (childCount > 0) {
+					completedCount = childCount;
+					totalCount = childCount;
+				} else {
+					completedCount++;
+					if (totalCount == 0) {
+						totalCount = 1;
+					}
+				}
+			}
 			percentComplete = (int) (((double) completedCount) / totalCount
 					* 100.0);
 			publishTime = System.currentTimeMillis();

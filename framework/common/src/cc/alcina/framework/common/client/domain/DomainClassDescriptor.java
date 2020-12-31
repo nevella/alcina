@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyResolver;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.util.Ax;
@@ -111,7 +112,8 @@ public class DomainClassDescriptor<T extends Entity>
 		return false;
 	}
 
-	public void index(Entity obj, boolean add, boolean committed) {
+	public void index(Entity obj, boolean add, boolean committed,
+			EntityCollation entityCollation) {
 		for (DomainStoreLookupDescriptor lookupDescriptor : lookupDescriptors) {
 			DomainLookup lookup = lookupDescriptor.getLookup();
 			if (add) {
@@ -122,6 +124,9 @@ public class DomainClassDescriptor<T extends Entity>
 		}
 		for (DomainProjection projection : projections) {
 			if (!committed && projection.isCommitOnly()) {
+				continue;
+			}
+			if (projection.isIgnoreForIndexing(entityCollation)) {
 				continue;
 			}
 			try {

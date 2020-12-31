@@ -676,18 +676,19 @@ public class DomainStore implements IDomainStore {
 		return new DetachedCacheObjectStore(new DomainStoreEntityCache());
 	}
 
-	void index(Entity obj, boolean add, Set<String> modifiedPropertyNames,
+	void index(Entity obj, boolean add, EntityCollation entityCollation,
 			boolean committed) {
 		Class<? extends Entity> clazz = obj.entityClass();
 		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
 				.get(clazz);
 		if (itemDescriptor != null) {
-			itemDescriptor.index(obj, add, committed);
+			itemDescriptor.index(obj, add, committed, entityCollation);
 			itemDescriptor
 					.getDependentObjectsWithDerivedProjections(obj,
-							modifiedPropertyNames)
-					.forEach(e -> index(e, add, modifiedPropertyNames,
-							committed));
+							entityCollation == null ? null
+									: entityCollation
+											.getTransformedPropertyNames())
+					.forEach(e -> index(e, add, entityCollation, committed));
 		}
 	}
 
@@ -699,9 +700,18 @@ public class DomainStore implements IDomainStore {
 		return existing == v;
 	}
 
-	// we only have one thread allowed here - but that doesn't block any
+	// We only have one thread allowed here - but that doesn't block any
 	// non-to-domain transactions
-	// FIXME - mvcc.4 - optimise!
+	// FIXME - mvcc.4 - review optimiseation
+	/*
+	 * Main remaining optimisation would be to remove unneccessary index() calls
+	 * - where the before-and-after states are identical.
+	 * 
+	 * That, however, is possibly better left to application-level code (at
+	 * least to the DomainClassDescriptor instance) - see
+	 * cc.alcina.framework.common.client.domain.DomainProjection.
+	 * isIgnoreForIndexing(EntityCollation)
+	 */
 	synchronized void
 			postProcess(DomainTransformPersistenceEvent persistenceEvent) {
 		if (persistenceEvent.getDomainTransformLayerWrapper().persistentRequests
@@ -772,9 +782,7 @@ public class DomainStore implements IDomainStore {
 				if (transform.getTransformType() != TransformType.CREATE_OBJECT
 						&& first == transform) {
 					if (entity != null) {
-						index(entity, false,
-								entityCollation.getTransformedPropertyNames(),
-								true);
+						index(entity, false, entityCollation, true);
 					} else {
 						logger.warn("Null entity for index - {}",
 								transform.toObjectLocator());
@@ -809,9 +817,7 @@ public class DomainStore implements IDomainStore {
 							logger.warn("No db metadata for {}",
 									entity.toStringId());
 						}
-						index(entity, true,
-								entityCollation.getTransformedPropertyNames(),
-								true);
+						index(entity, true, entityCollation, true);
 					} else {
 						logger.warn("Null entity for index - {}",
 								transform.toObjectLocator());
@@ -1482,8 +1488,7 @@ public class DomainStore implements IDomainStore {
 						 */
 						Reflections.propertyAccessor().setPropertyValue(entity,
 								event.getPropertyName(), event.getOldValue());
-						store.index(entity, false,
-								event.toPropertyNameFilterSet(), false);
+						store.index(entity, false, null, false);
 						/*
 						 * redo
 						 */
@@ -1495,13 +1500,11 @@ public class DomainStore implements IDomainStore {
 					break;
 				}
 				default:
-					store.index(entity, false, event.toPropertyNameFilterSet(),
-							false);
+					store.index(entity, false, null, false);
 				}
 			}
 			if (event.getTransformType() != TransformType.DELETE_OBJECT) {
-				store.index(entity, true, event.toPropertyNameFilterSet(),
-						false);
+				store.index(entity, true, null, false);
 			}
 		}
 	}

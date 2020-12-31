@@ -281,15 +281,12 @@ public class JobContext {
 		if (job.provideIsNotComplete()) {
 			log = Registry.impl(PerThreadLogging.class).endBuffer();
 			job.setLog(log);
-			if (!job.provideIsComplete()) {
-				if (job.provideRelatedSequential().stream()
-						.filter(j -> j != job)
-						.anyMatch(Job::provideIsNotComplete)) {
-					job.setState(JobState.COMPLETED);
-					allocator.ensureStarted();
-				} else {
-					job.setState(JobState.SEQUENCE_COMPLETE);
-				}
+			if (job.provideRelatedSequential().stream().filter(j -> j != job)
+					.anyMatch(Job::provideIsNotComplete)) {
+				job.setState(JobState.COMPLETED);
+				allocator.ensureStarted();
+			} else {
+				job.setState(JobState.SEQUENCE_COMPLETE);
 			}
 			job.setEndTime(new Date());
 			if (job.getResultType() == null) {

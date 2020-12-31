@@ -70,7 +70,7 @@ public class LocalDomain {
 		Class<? extends Entity> clazz = obj.entityClass();
 		DomainClassDescriptor<?> itemDescriptor = domainDescriptor.perClass
 				.get(clazz);
-		itemDescriptor.index(obj, add, true);
+		itemDescriptor.index(obj, add, true, null);
 		itemDescriptor.getDependentObjectsWithDerivedProjections(obj,
 				Collections.emptySet()).forEach(e -> index(e, add));
 	}

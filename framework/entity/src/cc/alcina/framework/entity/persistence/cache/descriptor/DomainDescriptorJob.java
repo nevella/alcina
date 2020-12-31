@@ -293,6 +293,8 @@ public class DomainDescriptorJob {
 
 		List<Event> bufferedEvents = new ArrayList<>();
 
+		private AllocationQueue parentQueue;
+
 		public AllocationQueue(Job job) {
 			this.job = job;
 		}
@@ -364,6 +366,13 @@ public class DomainDescriptorJob {
 					});
 		}
 
+		public AllocationQueue ensureParentQueue() {
+			if (parentQueue == null) {
+				parentQueue = queues.get(job.provideParent().get());
+			}
+			return parentQueue;
+		}
+
 		public void flushBufferedEvents() {
 			bufferedEvents.forEach(this::publish0);
 			bufferedEvents.clear();
@@ -374,8 +383,7 @@ public class DomainDescriptorJob {
 		}
 
 		public long getCompletedJobCount() {
-			return perPhaseJobCount(JobState.COMPLETED,
-					JobState.SEQUENCE_COMPLETE);
+			return perPhaseJobCount(JobState.SEQUENCE_COMPLETE);
 		}
 
 		public long getIncompleteAllocatedJobCountForCurrentPhase() {

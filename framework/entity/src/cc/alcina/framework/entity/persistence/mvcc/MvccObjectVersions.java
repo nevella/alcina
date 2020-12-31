@@ -188,6 +188,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 */
 	@Override
 	public void vacuum(VacuumableTransactions vacuumableTransactions) {
+		versions.keySet().removeAll(
+				vacuumableTransactions.completedNonDomainTransactions);
 		/*
 		 * completedDomainTransactions ordered by most-recent to oldest
 		 */
@@ -225,8 +227,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				versions.keySet().remove(bidiItr.previous());
 			}
 		}
-		versions.keySet().removeAll(
-				vacuumableTransactions.completedNonDomainTransactions);
 		if (versions.isEmpty()) {
 			synchronized (baseObject) {
 				if (versions.isEmpty() && baseObject instanceof MvccObject) {

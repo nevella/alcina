@@ -26,7 +26,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.Doma
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
-import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 
@@ -305,7 +304,7 @@ public class DomainStoreTransformSequencer
 		Connection conn = null;
 		String key = Ax.format("dts-%s", metricName);
 		try {
-			MetricLogging.get().start(key);
+			// MetricLogging.get().start(key);
 			conn = getConnection();
 			return connectionProcessor.apply(conn);
 		} catch (Exception e) {
@@ -325,7 +324,7 @@ public class DomainStoreTransformSequencer
 					connection = null;
 				}
 			} finally {
-				MetricLogging.get().end(key);
+				// MetricLogging.get().end(key);
 			}
 		}
 	}

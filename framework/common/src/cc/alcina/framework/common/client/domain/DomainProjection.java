@@ -2,10 +2,9 @@ package cc.alcina.framework.common.client.domain;
 
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 
 /**
- * Domain projections do not project when returning results - detached cloning
- * responsibility of calling code
  * 
  * @author nick@alcina.cc
  * 
@@ -27,6 +26,14 @@ public interface DomainProjection<T extends Entity>
 	}
 
 	default boolean isDerived() {
+		return false;
+	}
+
+	/*
+	 * entityCollation will be null unless in a post-process index - so should
+	 * only used for implementations where isCommitOnly() returns true
+	 */
+	default boolean isIgnoreForIndexing(EntityCollation entityCollation) {
 		return false;
 	}
 }
