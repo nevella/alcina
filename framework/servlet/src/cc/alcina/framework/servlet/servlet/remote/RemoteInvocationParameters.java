@@ -21,6 +21,8 @@ public class RemoteInvocationParameters implements Serializable {
 
 	public Map<String, Object> context = new LinkedHashMap<>();
 
+	public boolean mayLinkToDomain = true;
+
 	public enum Api {
 		EJB_BEAN_PROVIDER, GWT_REMOTE_SERVICE_IMPL;
 

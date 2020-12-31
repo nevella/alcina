@@ -78,6 +78,8 @@ import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
@@ -107,6 +109,7 @@ import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 
+@RegistryLocation(registryPoint = DevConsole.class, implementationType = ImplementationType.SINGLETON)
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
 		implements ClipboardOwner {
 	private static BiPrintStream out;
@@ -846,6 +849,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	protected void init() throws Exception {
 		instance = this;
+		Registry.registerSingleton(DevConsole.class, this);
 		long statStartInit = System.currentTimeMillis();
 		MetricLogging.get().start("init-console");
 		// osx =>

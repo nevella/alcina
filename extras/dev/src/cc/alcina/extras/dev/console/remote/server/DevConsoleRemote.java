@@ -141,14 +141,19 @@ public class DevConsoleRemote {
 					"/remote-console.do");
 			protocolHandler.setAllowNullPathInfo(true);
 			protocolHandler.setHandler(new DevConsoleProtocolHandler(this));
-			handlers.addHandler(protocolHandler);
+		}
+		{
+			ContextHandler protocolHandler = new ContextHandler(handlers,
+					"/rpc-request-router.do");
+			protocolHandler.setAllowNullPathInfo(true);
+			protocolHandler
+					.setHandler(new DevConsoleRpcRequestRouterHandler(this));
 		}
 		{
 			ContextHandler serveLocalHandler = new ContextHandler(handlers,
 					"/serve-local.do");
 			serveLocalHandler.setAllowNullPathInfo(true);
 			serveLocalHandler.setHandler(new DevConsoleServeLocalHandler(this));
-			handlers.addHandler(serveLocalHandler);
 		}
 		{
 			ServletContextHandler jsCodeServerHandler = new ServletContextHandler(
@@ -156,8 +161,6 @@ public class DevConsoleRemote {
 			jsCodeServerHandler.addServlet(
 					new ServletHolder(new JsCodeServerServlet()), "/*");
 			jsCodeServerHandler.setAllowNullPathInfo(true);
-			handlers.addHandler(jsCodeServerHandler);
-			handlers.addHandler(jsCodeServerHandler);
 		}
 		{
 			ServletContextHandler resourceHandler = new ServletContextHandler(

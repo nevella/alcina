@@ -1722,4 +1722,54 @@ public class SEUtilities {
 			return 0;
 		}
 	}
+
+	public static class MethodFinder {
+		public Method findMethod(Class<? extends Object> targetClass,
+				Object[] args, String methodName) {
+			Method method = null;
+			for (Method m : targetClass.getMethods()) {
+				if (m.getName().equals(methodName)
+						&& args.length == m.getParameterTypes().length) {
+					boolean matched = true;
+					for (int i = 0; i < m.getParameterTypes().length; i++) {
+						Class c1 = m.getParameterTypes()[i];
+						Class c2 = args[i] == null ? void.class
+								: args[i].getClass();
+						if (!isAssignableRelaxed(c1, c2)) {
+							matched = false;
+							break;
+						}
+					}
+					if (matched) {
+						method = m;
+						break;
+					}
+				}
+			}
+			return method;
+		}
+	
+		private boolean isAssignableRelaxed(Class c1, Class c2) {
+			Class nc1 = normaliseClass(c1);
+			Class nc2 = normaliseClass(c2);
+			return nc1.isAssignableFrom(nc2)
+					|| (nc2 == Void.class && !c1.isPrimitive());
+		}
+	
+		private Class normaliseClass(Class c1) {
+			if (c1.isPrimitive()) {
+				if (c1 == void.class) {
+					return Void.class;
+				}
+				if (c1 == boolean.class) {
+					return Boolean.class;
+				}
+				return Number.class;
+			}
+			if (Number.class.isAssignableFrom(c1)) {
+				return Number.class;
+			}
+			return c1;
+		}
+	}
 }

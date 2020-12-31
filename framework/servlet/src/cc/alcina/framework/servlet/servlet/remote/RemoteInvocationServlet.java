@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -23,7 +22,9 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
+import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
@@ -39,22 +40,6 @@ import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 public abstract class RemoteInvocationServlet extends HttpServlet {
 	public static final String REMOTE_INVOCATION_PARAMETERS = "remoteInvocationParameters";
 
-	private Class normaliseClass(Class c1) {
-		if (c1.isPrimitive()) {
-			if (c1 == void.class) {
-				return Void.class;
-			}
-			if (c1 == boolean.class) {
-				return Boolean.class;
-			}
-			return Number.class;
-		}
-		if (Number.class.isAssignableFrom(c1)) {
-			return Number.class;
-		}
-		return c1;
-	}
-
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException, IOException {
@@ -66,7 +51,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			LooseContext.setTrue(
 					TransformPersisterInPersistenceContext.CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM);
 			Transaction.begin();
-			Transaction.current().toNoActiveTransaction();
+			maybeToNoActiveTransaction();
 			LooseContext
 					.setTrue(TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
 			doPost0(req, res);
@@ -81,7 +66,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			throw new ServletException(e);
 		} finally {
 			ThreadlocalTransformManager.get().resetTltm(null);
-			Transaction.current().toNoActiveTransaction();
+			maybeToNoActiveTransaction();
 			Transaction.end();
 			LooseContext.pop();
 		}
@@ -115,35 +100,24 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					clientInstance.getAuthenticationSession().getUser(),
 					LoginState.LOGGED_IN);
 			PermissionsManager.get().setClientInstance(clientInstance);
-			Object api = null;
-			api = getApi(params, api);
-			List<Class> argTypes = new ArrayList<Class>();
-			Method method = null;
-			methodLoop: for (Method m : api.getClass().getMethods()) {
-				if (m.getName().equals(params.methodName)
-						&& params.args.length == m.getParameterTypes().length) {
-					for (int i = 0; i < m.getParameterTypes().length; i++) {
-						Class c1 = m.getParameterTypes()[i];
-						Class c2 = params.args[i] == null ? void.class
-								: params.args[i].getClass();
-						if (!isAssignableRelaxed(c1, c2)) {
-							continue methodLoop;
-						}
-					}
-					method = m;
-					break;
-				}
-			}
+			Object invocationTarget = getInvocationTarget(params);
+			Class<? extends Object> targetClass = invocationTarget.getClass();
+			Object[] args = params.args;
+			String methodName = params.methodName;
+			Method method = new SEUtilities.MethodFinder()
+					.findMethod(targetClass, args, methodName);
 			Object out = null;
 			boolean transformMethod = method.getName()
 					.equals("transformInPersistenceContext");
 			boolean getUserByNameMethod = method.getName()
 					.equals("getUserByName");
+			String key = Ax.format("RemoteInvocation::%s::%s.%s",
+					clientInstance.getId(), targetClass.getSimpleName(),
+					methodName);
 			try {
-				System.out.format("DevRemoter - %s.%s\n",
-						api.getClass().getSimpleName(), method.getName());
+				MetricLogging.get().start(key);
 				if (transformMethod) {
-					TransformPersistenceToken token = (TransformPersistenceToken) params.args[1];
+					TransformPersistenceToken token = (TransformPersistenceToken) args[1];
 					Integer highestPersistedRequestId = CommonPersistenceProvider
 							.get().getCommonPersistence()
 							.getHighestPersistedRequestIdForClientInstance(
@@ -165,11 +139,11 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 								LoginState.LOGGED_IN);
 					}
 				}
-				for (int idx = 0; idx < params.args.length; idx++) {
-					Object arg = params.args[idx];
+				for (int idx = 0; idx < args.length; idx++) {
+					Object arg = args[idx];
 					if (arg != null && arg.getClass().getName()
 							.equals("org.slf4j.impl.Log4jLoggerAdapter")) {
-						params.args[idx] = null;
+						args[idx] = null;
 					}
 				}
 				try {
@@ -180,7 +154,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 							ThreadedPmClientInstanceResolverImpl.CONTEXT_CLIENT_INSTANCE,
 							clientInstance);
 					params.context.forEach((k, v) -> LooseContext.set(k, v));
-					out = method.invoke(api, params.args);
+					out = method.invoke(invocationTarget, args);
 				} finally {
 					LooseContext.pop();
 				}
@@ -195,6 +169,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				if (transformMethod) {
 					PermissionsManager.get().popUser();
 				}
+				MetricLogging.get().end(key);
 			}
 			Object result = out;
 			ArrayList resultHolder = new ArrayList();
@@ -205,7 +180,8 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 						.getPostTransactionEntityResolver(
 								DomainStore.writableStore()));
 			}
-			if (params.api.isLinkToDomain(method.getName())) {
+			if (params.api.isLinkToDomain(method.getName())
+					&& params.mayLinkToDomain) {
 				resultHolder = DomainLinker.linkToDomain(resultHolder);
 			}
 			byte[] outBytes = KryoUtils.serializeToByteArray(resultHolder);
@@ -219,14 +195,11 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 		}
 	}
 
-	protected abstract Object getApi(RemoteInvocationParameters params,
-			Object api) throws ClassNotFoundException, IllegalAccessException,
-			InvocationTargetException;
+	protected abstract Object getInvocationTarget(
+			RemoteInvocationParameters params) throws Exception;
 
-	protected boolean isAssignableRelaxed(Class c1, Class c2) {
-		Class nc1 = normaliseClass(c1);
-		Class nc2 = normaliseClass(c2);
-		return nc1.isAssignableFrom(nc2)
-				|| (nc2 == Void.class && !c1.isPrimitive());
+	protected void maybeToNoActiveTransaction() {
+		// FIXME - (only for EJB API and even then...)
+		Transaction.current().toNoActiveTransaction();
 	}
 }

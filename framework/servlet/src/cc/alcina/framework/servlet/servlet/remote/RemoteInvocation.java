@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -45,6 +46,8 @@ import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationProxy.RemoteIn
 public class RemoteInvocation {
 	private Object interceptionResult;
 
+	private String remoteAddress;
+
 	public PostAndClient getHttpPost(URI uri) throws Exception {
 		int timeoutSecs = 120;
 		PostAndClient postAndClient = new PostAndClient();
@@ -59,6 +62,10 @@ public class RemoteInvocation {
 
 	public Object getInterceptionResult() {
 		return interceptionResult;
+	}
+
+	public String getRemoteAddress() {
+		return this.remoteAddress;
 	}
 
 	public void hookParams(String methodName, Object[] args,
@@ -79,8 +86,8 @@ public class RemoteInvocation {
 			LooseContext.set(KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER,
 					true);
 			hookParams(methodName, args, params);
-			String address = ResourceUtilities
-					.getBundledString(RemoteInvocation.class, "address");
+			String address = Ax.blankTo(getRemoteAddress(), ResourceUtilities
+					.getBundledString(RemoteInvocation.class, "address"));
 			PostAndClient png = getHttpPost(new URI(address));
 			// params.username = ResourceUtilities
 			// .getBundledString(DevRemoter.class, "username");
@@ -150,6 +157,10 @@ public class RemoteInvocation {
 		} finally {
 			LooseContext.pop();
 		}
+	}
+
+	public void setRemoteAddress(String remoteAddress) {
+		this.remoteAddress = remoteAddress;
 	}
 
 	public boolean tryInterception(Object proxy, Method method, Object[] args)

@@ -724,9 +724,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	protected String invokeAndEncodeResponse(RPCRequest rpcRequest)
 			throws SerializationException {
-		return RPC.invokeAndEncodeResponse(this, rpcRequest.getMethod(),
-				rpcRequest.getParameters(),
-				rpcRequest.getSerializationPolicy());
+		return RpcRequestRouter.get().invokeAndEncodeResponse(this, rpcRequest);
 	}
 
 	protected boolean isPersistOfflineTransforms() {
