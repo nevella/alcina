@@ -182,6 +182,7 @@ public class ClusterTransformSerializer {
 		result.setId(request.getId());
 		result.setEvents(
 				request.getEvents().stream().collect(Collectors.toList()));
+		result.setChunkUuidString(request.getChunkUuidString());
 		ClientInstance originalClientInstance = request.getClientInstance();
 		ClientInstance clientInstance = (ClientInstance) Reflections
 				.newInstance(originalClientInstance.entityClass());

@@ -61,6 +61,11 @@ public class ClusterTransformListener
 		List<DomainTransformRequestPersistent> requests = event
 				.getPersistedRequests();
 		switch (event.getPersistenceEventType()) {
+		case PRE_COMMIT:
+			persistenceToken.getRequest().allRequests()
+					.forEach(rq -> domainStore.getPersistenceEvents().getQueue()
+							.onPreparingVmLocalRequest(rq));
+			break;
 		case COMMIT_OK:
 			publishRequests(requests, ClusterTransformRequest.State.COMMIT);
 			break;

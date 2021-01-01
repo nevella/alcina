@@ -272,7 +272,7 @@ class JobAllocator {
 				ExecutionConstraints executionConstraints = ExecutionConstraints
 						.forQueue(constraintQueue);
 				long maxAllocatable = executionConstraints
-						.calculateMaxAllocatable();
+						.calculateMaxAllocatable(queue);
 				// FIXME - mvcc.jobs.1a - allocate in batches (i.e.
 				// 30...let drain to 10...again)
 				if (maxAllocatable > 0) {
@@ -293,6 +293,7 @@ class JobAllocator {
 									.filter(this::isAllocatable)
 									.limit(maxAllocatable)
 									.forEach(allocated::add);
+							int debug = 3;
 							allocated.forEach(j -> {
 								if (j.getState() != JobState.PENDING) {
 									logger.warn(

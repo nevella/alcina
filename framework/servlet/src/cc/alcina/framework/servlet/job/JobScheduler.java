@@ -446,7 +446,7 @@ public class JobScheduler {
 
 		private ExecutorServiceProvider descendantExecutorServiceProvider = AD_HOC_INSTANCE;
 
-		public long calculateMaxAllocatable() {
+		public long calculateMaxAllocatable(AllocationQueue allocationQueue) {
 			return Integer.MAX_VALUE;
 		}
 

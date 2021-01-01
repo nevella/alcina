@@ -122,7 +122,14 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 							.get().getCommonPersistence()
 							.getHighestPersistedRequestIdForClientInstance(
 									clientInstance.getId());
-					token.getRequest().setClientInstance(clientInstance);
+					/*
+					 * no...at least, for consle -> webapp, this crushes
+					 * console/root transforms
+					 */
+					// token.getRequest().setClientInstance(clientInstance);
+					if (token.getRequest().getClientInstance() == null) {
+						token.getRequest().setClientInstance(clientInstance);
+					}
 					EntityLocatorMap locatorMap = Registry
 							.impl(TransformCommit.class)
 							.getLocatorMapForClient(token.getRequest());

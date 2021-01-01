@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +21,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
@@ -122,7 +122,12 @@ public class DomainTransformPersistenceQueue {
 
 	public void
 			onPersistingVmLocalRequest(DomainTransformRequestPersistent dtrp) {
-		// noop
+		state.onPersistingVmLocalRequest(dtrp);
+	}
+
+	public synchronized void
+			onPreparingVmLocalRequest(DomainTransformRequest dtr) {
+		state.onPreparingVmLocalRequest(dtr);
 	}
 
 	public void
@@ -247,8 +252,7 @@ public class DomainTransformPersistenceQueue {
 		DomainTransformPersistenceEvent event = new DomainTransformPersistenceEvent(
 				persistenceToken, wrapper,
 				wrapper.providePersistenceEventType(),
-				dtrp.getClientInstance() != null && Objects.equals(
-						dtrp.getClientInstance(), ClientInstance.self()));
+				persistenceToken.isLocalToVm());
 		event.setFiringFromQueue(true);
 		event.setPosition(position);
 		return event;
@@ -616,6 +620,10 @@ public class DomainTransformPersistenceQueue {
 		// REVISIT - remove?
 		private Set<Long> lastFired = new LinkedHashSet<>();
 
+		private Set<String> appLifetimeEventUuidsThisVm = new LinkedHashSet<>();
+
+		private Set<Long> appLifetimeEventIdsThisVm = new LinkedHashSet<>();
+
 		private Set<Long> appLifetimeEventsFired = new LinkedHashSet<>();
 
 		private DomainTransformCommitPosition transformCommitPosition;
@@ -653,7 +661,11 @@ public class DomainTransformPersistenceQueue {
 
 		synchronized boolean
 				isLocalToVm(DomainTransformRequestPersistent dtrp) {
-			return appLifetimeEventsFired.contains(dtrp.getId());
+			if (appLifetimeEventIdsThisVm.contains(dtrp.getId())) {
+				return true;
+			}
+			return appLifetimeEventUuidsThisVm
+					.contains(dtrp.getChunkUuidString());
 		}
 
 		synchronized void onEventFiringCompleted(
@@ -665,6 +677,17 @@ public class DomainTransformPersistenceQueue {
 				transformCommitPosition = event.commitPosition;
 			}
 			notifyAll();
+		}
+
+		synchronized void onPersistingVmLocalRequest(
+				DomainTransformRequestPersistent dtrp) {
+			appLifetimeEventIdsThisVm.add(dtrp.getId());
+			appLifetimeEventUuidsThisVm.add(dtrp.getChunkUuidString());
+		}
+
+		synchronized void
+				onPreparingVmLocalRequest(DomainTransformRequest dtr) {
+			appLifetimeEventUuidsThisVm.add(dtr.getChunkUuidString());
 		}
 	}
 }

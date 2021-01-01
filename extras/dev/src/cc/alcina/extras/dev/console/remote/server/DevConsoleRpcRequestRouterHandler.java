@@ -11,6 +11,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationParameters;
@@ -35,7 +36,8 @@ public class DevConsoleRpcRequestRouterHandler extends AbstractHandler {
 			Registry.impl(DevConsole.class).ensureDomainStore();
 			new RemoteInvocationServlet_DevConsole().doPost(request, response);
 		} catch (Exception e) {
-			throw new ServletException(e);
+			e.printStackTrace();
+			response.getWriter().write(CommonUtils.toSimpleExceptionMessage(e));
 		} finally {
 			LooseContext.pop();
 		}

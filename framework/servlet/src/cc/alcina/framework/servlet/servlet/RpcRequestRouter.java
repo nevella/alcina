@@ -60,7 +60,8 @@ public class RpcRequestRouter {
 	}
 
 	protected boolean forceServerHandler(RPCRequest rpcRequest) {
-		if (rpcRequest.getMethod().getName().equals("performAction")) {
+		if (rpcRequest.getMethod().getName()
+				.matches("performAction|performAdminAction")) {
 			RemoteAction action = (RemoteAction) rpcRequest.getParameters()[0];
 			if (action.getClass() == ServerControlAction.class) {
 				return true;

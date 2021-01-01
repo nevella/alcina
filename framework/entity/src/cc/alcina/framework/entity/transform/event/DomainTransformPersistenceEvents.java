@@ -103,25 +103,19 @@ public class DomainTransformPersistenceEvents {
 
 	private void fireDomainTransformPersistenceEvent0(
 			DomainTransformPersistenceEvent event) {
-		boolean hasRequests = event.getPersistedRequestIds() != null
+		boolean hasPersistentRequests = event.getPersistedRequestIds() != null
 				&& event.getPersistedRequestIds().size() > 0;
-		long firstRequestId = hasRequests
+		long firstRequestId = hasPersistentRequests
 				? event.getPersistedRequestIds().get(0)
 				: 0;
-		if (hasRequests && event.isLocalToVm()) {
-			if (Ax.isTest()) {
-				// won't know that the companion dev server is persisting this
-				// persistent rq id (and is logically "local") until now
-				event.getDomainTransformLayerWrapper().persistentRequests
-						.forEach(queue::onPersistingVmLocalRequest);
-			}
+		if (event.isLocalToVm()) {
 			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
 					listenerList)) {
 				if (listener.isPreBarrierListener()) {
 					listener.onDomainTransformRequestPersistence(event);
 				}
 			}
-			if (!event.isFiringFromQueue()) {
+			if (hasPersistentRequests && !event.isFiringFromQueue()) {
 				switch (event.getPersistenceEventType()) {
 				// REVISIT - check this is fired;
 				case COMMIT_ERROR:
