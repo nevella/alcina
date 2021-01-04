@@ -227,6 +227,13 @@ public class DomainDescriptorJob {
 				.flatMap(AllocationQueue::getIncompleteJobs);
 	}
 
+	public Optional<AllocationQueue> getIncompleteQueueContaining(Job job) {
+		cleanupQueues();
+		return queues.values().stream()
+				.filter(q -> q.getIncompleteJobs().anyMatch(j -> j == job))
+				.findFirst();
+	}
+
 	public Stream<? extends Job> getJobsForTask(Task task) {
 		return Domain.query(jobImplClass)
 				.filter("taskClassName", task.getClass().getName()).stream();

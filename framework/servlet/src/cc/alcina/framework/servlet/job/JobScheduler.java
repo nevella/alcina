@@ -285,6 +285,7 @@ public class JobScheduler {
 		Date cutoff = SEUtilities
 				.toOldDate(LocalDateTime.now().minusMinutes(1));
 		AtomicBoolean zeroChanges = new AtomicBoolean(false);
+		Date abortTime = new Date();
 		while (!zeroChanges.get() && getToAbortOrReassign(activeInstances,
 				visibleInstanceRegex, cutoff).anyMatch(j -> true)) {
 			jobRegistry.withJobMetadataLock(
@@ -296,6 +297,19 @@ public class JobScheduler {
 								activeInstances, visibleInstanceRegex, cutoff)
 										.limit(1000);
 						doubleChecked.forEach(job -> {
+							if (job.provideIsComplete()) {
+								logger.warn(
+										"Not aborting job {} - already complete",
+										job);
+								Optional<AllocationQueue> queue = DomainDescriptorJob
+										.get()
+										.getIncompleteQueueContaining(job);
+								if (queue.isPresent()) {
+									logger.warn("Not aborting job - queue {}",
+											queue);
+								}
+								return;
+							}
 							logger.warn(
 									"Aborting job {} (inactive client creator: {} - performer: {})",
 									job, job.getCreator(), job.getPerformer());
@@ -308,7 +322,7 @@ public class JobScheduler {
 							ResubmitPolicy policy = ResubmitPolicy.forJob(job);
 							policy.visit(job);
 							job.setState(JobState.ABORTED);
-							job.setEndTime(new Date());
+							job.setEndTime(abortTime);
 							job.setResultType(JobResultType.DID_NOT_COMPLETE);
 						});
 						logger.warn("Aborting jobs - committing transforms");
@@ -363,7 +377,12 @@ public class JobScheduler {
 							nextForTaskClass);
 				}
 			}
-			if (nextForTaskClass.isBefore(wakeup)) {
+			/*
+			 * If there's an incomplete job of this task class, don't schedule a
+			 * wakeup (otherwise we'll end up in a nasty perpetual-wakup loop)
+			 */
+			if (nextForTaskClass.isBefore(wakeup)
+					&& !earliestIncompleteScheduled.isPresent()) {
 				wakeup = nextForTaskClass;
 			}
 		}
