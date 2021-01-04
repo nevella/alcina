@@ -191,7 +191,7 @@ public class DomainStoreTransformSequencer
 		}
 	}
 
-	private void refreshPositions(long ignoreIfSeenRequestId) {
+	private synchronized void refreshPositions(long ignoreIfSeenRequestId) {
 		if (!initialised) {
 			return;
 		}
@@ -248,7 +248,7 @@ public class DomainStoreTransformSequencer
 		}
 		List<DomainTransformCommitPosition> positions = new ArrayList<>();
 		try (PreparedStatement pStatement = conn.prepareStatement(querySql)) {
-			pStatement.setFetchSize(100);
+			pStatement.setFetchSize(10000);
 			pStatement.setTimestamp(1, since);
 			ResultSet rs = pStatement.executeQuery();
 			while (rs.next()) {
@@ -270,16 +270,19 @@ public class DomainStoreTransformSequencer
 						}
 					} else {
 						positions.add(position);
-						visiblePositions.put(position.commitRequestId,
-								position);
 					}
 				}
 			}
+		} catch (SQLException sqlex) {
+			logger.warn("Issue in query: since: {}", since);
+			throw sqlex;
 		}
+		positions.forEach(position -> visiblePositions
+				.put(position.commitRequestId, position));
 		positions.sort(Comparator.naturalOrder());
 		unpublishedPositions.addAll(positions);
 		if (positions.size() > 0) {
-			logger.info("Added unpublished positions: {}",
+			logger.info("Added unpublished positions: - since: {} - {}", since,
 					CommonUtils.joinWithNewlines(positions));
 		}
 		if (positions.size() > 0) {
