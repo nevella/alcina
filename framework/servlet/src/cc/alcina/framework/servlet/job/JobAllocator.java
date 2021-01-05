@@ -307,6 +307,9 @@ class JobAllocator {
 								}
 							});
 							Transaction.commit();
+							allocated.forEach(j -> logger.info(
+									"Sending to executor service - {} - {}",
+									j.getId(), j));
 							allocated.stream()
 									.filter(j -> !invalidAllocated.contains(j))
 									.forEach(j -> {
@@ -319,6 +322,9 @@ class JobAllocator {
 													existingContext.launcherThreadState);
 										} else {
 											LauncherThreadState launcherThreadState = new LauncherThreadState();
+											logger.info(
+													"Sending to executor service (2) - {} - {}",
+													j.getId(), j);
 											executorService
 													.submit(() -> JobRegistry
 															.get().performJob(j,

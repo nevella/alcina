@@ -114,13 +114,15 @@ public class JobScheduler {
 			if (allocator != null) {
 				return allocator;
 			}
-			try {
-				allocators.wait(1000);
-			} catch (InterruptedException e) {
-				/*
-				 * Only on app termination
-				 */
-				throw new RuntimeException(e);
+			synchronized (allocators) {
+				try {
+					allocators.wait(1000);
+				} catch (InterruptedException e) {
+					/*
+					 * Only on app termination
+					 */
+					throw new RuntimeException(e);
+				}
 			}
 		}
 	}
