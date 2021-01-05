@@ -4,6 +4,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -30,6 +31,20 @@ public class StringPair implements Serializable {
 	public StringPair(String s1, String s2) {
 		this.s1 = s1;
 		this.s2 = s2;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof StringPair) {
+			StringPair o = (StringPair) obj;
+			return Objects.equals(s1, o.s1) && Objects.equals(s2, o.s2);
+		}
+		return super.equals(obj);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(s1, s2);
 	}
 
 	@Override

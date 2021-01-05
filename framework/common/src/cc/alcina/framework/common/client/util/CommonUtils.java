@@ -748,8 +748,9 @@ public class CommonUtils {
 		return getEnumValueOrNull(enumClass, value, false, null);
 	}
 
-	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass,
-			String value, boolean withFriendlyNames, E defaultValue) {
+	public static synchronized <E extends Enum> E getEnumValueOrNull(
+			Class<E> enumClass, String value, boolean withFriendlyNames,
+			E defaultValue) {
 		if (!enumValueLookup.containsKey(enumClass)) {
 			for (E ev : enumClass.getEnumConstants()) {
 				enumValueLookup.put(enumClass, ev.toString(), ev);
@@ -1904,6 +1905,7 @@ public class CommonUtils {
 
 	public enum ComparatorResult {
 		BOTH_NON_NULL, BOTH_NULL, FIRST_NULL, SECOND_NULL;
+
 		public int direction() {
 			switch (this) {
 			case FIRST_NULL:

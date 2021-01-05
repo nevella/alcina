@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNode;
@@ -15,6 +16,7 @@ import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtml
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
+import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -50,21 +52,26 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 				.cell("Started").accept(this::date).cell("Finished")
 				.accept(this::date).cell("Performer").accept(Utils::instance)
 				.cell("Link").accept(Utils::links);
-		top.provideDescendantsAndSubsequents().limit(50)
-				.sorted(EntityComparator.INSTANCE).forEach(job -> {
-					DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-							.cell(String.valueOf(job.getId()))
-							.cell(job.provideName()).accept(Utils::large)
-							.cell(job.getState()).cell(job.getResultType())
-							.cell(timestamp(job.getStartTime()))
-							.cell(timestamp(job.getEndTime()))
-							.cell(job.getPerformer()).accept(Utils::instance);
-					DomNode td = cellBuilder.append();
-					String href = JobServlet
-							.createTaskUrl(new TaskLogJobDetails()
-									.withValue(String.valueOf(job.getId())));
-					td.html().addLink("Details", href, "_blank");
-				});
+		Stream<Job> relatedProcessing = top.provideDescendantsAndSubsequents()
+				.filter(j -> j.getState() == JobState.PROCESSING)
+				.sorted(EntityComparator.INSTANCE).limit(50);
+		Stream<Job> relatedNonProcessing = top
+				.provideDescendantsAndSubsequents()
+				.filter(j -> j.getState() != JobState.PROCESSING)
+				.sorted(EntityComparator.INSTANCE).limit(50);
+		Stream.concat(relatedProcessing, relatedProcessing).forEach(job -> {
+			DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
+					.cell(String.valueOf(job.getId())).cell(job.provideName())
+					.accept(Utils::large).cell(job.getState())
+					.cell(job.getResultType())
+					.cell(timestamp(job.getStartTime()))
+					.cell(timestamp(job.getEndTime())).cell(job.getPerformer())
+					.accept(Utils::instance);
+			DomNode td = cellBuilder.append();
+			String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
+					.withValue(String.valueOf(job.getId())));
+			td.html().addLink("Details", href, "_blank");
+		});
 		body.builder().tag("hr").append();
 	}
 
