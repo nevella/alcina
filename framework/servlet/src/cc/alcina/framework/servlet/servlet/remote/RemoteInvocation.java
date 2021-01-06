@@ -136,8 +136,7 @@ public class RemoteInvocation {
 			httpParams.setParameter("http.connection.timeout", timeoutMs);
 			HttpResponse response = png.client.execute(png.post);
 			InputStream content = response.getEntity().getContent();
-			ArrayList container = KryoUtils.deserializeFromStream(content,
-					ArrayList.class);
+			ArrayList container = deserializeResult(content);
 			Object object = container.get(0);
 			if (object instanceof Exception) {
 				((Exception) object).printStackTrace();
@@ -157,6 +156,11 @@ public class RemoteInvocation {
 		} finally {
 			LooseContext.pop();
 		}
+	}
+
+	protected ArrayList deserializeResult(InputStream content) {
+		return KryoUtils.deserializeFromStream(content,
+				ArrayList.class);
 	}
 
 	public void setRemoteAddress(String remoteAddress) {

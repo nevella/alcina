@@ -43,7 +43,8 @@ public class RpcRequestRouter {
 
 	private Object wrapProxy(Object invocationTarget, RPCRequest rpcRequest) {
 		for (Class clazz : invocationTarget.getClass().getInterfaces()) {
-			if (RemoteService.class.isAssignableFrom(clazz)) {
+			if (RemoteService.class.isAssignableFrom(clazz) && rpcRequest
+					.getMethod().getDeclaringClass().isAssignableFrom(clazz)) {
 				Object[] args = rpcRequest.getParameters();
 				String methodName = rpcRequest.getMethod().getName();
 				Method method = new SEUtilities.MethodFinder().findMethod(clazz,
