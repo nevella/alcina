@@ -234,9 +234,10 @@ public class DomainDescriptorJob {
 				.findFirst();
 	}
 
-	public Stream<? extends Job> getJobsForTask(Task task) {
+	public Stream<? extends Job>
+			getJobsForTask(Class<? extends Task> taskClass) {
 		return Domain.query(jobImplClass)
-				.filter("taskClassName", task.getClass().getName()).stream();
+				.filter("taskClassName", taskClass.getName()).stream();
 	}
 
 	public Stream<? extends Job> getRecentlyCompletedJobs(boolean topLevel) {

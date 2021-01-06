@@ -59,7 +59,7 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 				.provideDescendantsAndSubsequents()
 				.filter(j -> j.getState() != JobState.PROCESSING)
 				.sorted(EntityComparator.INSTANCE).limit(50);
-		Stream.concat(relatedProcessing, relatedProcessing).forEach(job -> {
+		Stream.concat(relatedProcessing, relatedNonProcessing).forEach(job -> {
 			DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 					.cell(String.valueOf(job.getId())).cell(job.provideName())
 					.accept(Utils::large).cell(job.getState())

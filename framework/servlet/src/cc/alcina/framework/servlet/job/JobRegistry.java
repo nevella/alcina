@@ -246,7 +246,7 @@ public class JobRegistry extends WriterService {
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
 		checkAnnotatedPermissions(action);
-		return DomainDescriptorJob.get().getJobsForTask(action)
+		return DomainDescriptorJob.get().getJobsForTask(action.getClass())
 				.sorted(EntityComparator.REVERSED_INSTANCE)
 				.map(Job::asJobResult).map(JobResult::getActionLogItem)
 				.limit(count).collect(Collectors.toList());
