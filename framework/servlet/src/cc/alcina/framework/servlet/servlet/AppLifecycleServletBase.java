@@ -454,6 +454,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		return true;
 	}
 
+	/*
+	 * perthreadlogger - add loggername/pri (metadata in the log message) (also
+	 * filter crud in job logs) FIXME - mvcc.jobs.2
+	 */
 	private static class PerThreadLoggingWrapper implements PerThreadLogging {
 		private Object handler;
 

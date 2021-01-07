@@ -18,7 +18,11 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 	}
 
 	public void updateJob(String message, int completedDelta) {
-		JobContext.get().updateJob(message, completedDelta);
+		if (JobContext.has()) {
+			JobContext.get().updateJob(message, completedDelta);
+		} else {
+			logger.info("Update job: {} {}", message, completedDelta);
+		}
 	}
 
 	protected void finishJob() {
@@ -37,6 +41,10 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 	}
 
 	protected void jobOk(String message) {
-		JobContext.get().setResultMessage(message);
+		if (JobContext.has()) {
+			JobContext.get().setResultMessage(message);
+		} else {
+			logger.info("Job OK: {} {}", message);
+		}
 	}
 }

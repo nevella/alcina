@@ -85,6 +85,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCre
  *         }
  *         </pre>
  * 
+ *         FIXME - dirndl.1a - the registrylocation->registration/keys (and dox)
  * 
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)

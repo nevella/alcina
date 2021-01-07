@@ -175,6 +175,21 @@ public class XmlUtils {
 		return nodeListToElementList(node.getChildNodes());
 	}
 
+	public static void cleanNamespacedAttributes(Document doc) {
+		DomDoc.from(doc).children.flat().filter(DomNode::isElement)
+				.forEach(n -> {
+					if (n.domElement().hasAttributes()) {
+						n.attributes().keySet().stream()
+								.collect(Collectors.toList())
+								.forEach(attrName -> {
+									if (attrName.contains(":")) {
+										n.removeAttribute(attrName);
+									}
+								});
+					}
+				});
+	}
+
 	public static String cleanXmlHeaders(String xml) {
 		xml = xml.replaceAll("<\\?xml.+?\\?>", "");
 		String regex = "<!DOCTYPE .+?>";

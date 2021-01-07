@@ -11,6 +11,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 public class SessionProvider {
 	public HttpSession getSession(HttpServletRequest request,
 			HttpServletResponse response) {
-		return request.getSession();
+		return request == null ? null : request.getSession();
 	}
 }
