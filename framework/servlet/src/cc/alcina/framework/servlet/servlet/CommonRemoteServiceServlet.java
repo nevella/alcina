@@ -339,15 +339,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 */
 	@Override
 	public String performAction(RemoteAction action) {
+		Job job = null;
 		if (action instanceof SynchronousAction) {
-			return JobRegistry.get().perform(action).getResultMessage();
+			job = JobRegistry.get().perform(action);
 		} else {
-			Job job = JobRegistry.createBuilder().withTask(action).create();
-			Transaction.commit();
-			DomainStore.waitUntilCurrentRequestsProcessed();
-			String idString = String.valueOf(job.getId());
-			return idString;
+			job = JobRegistry.createBuilder().withTask(action).create();
 		}
+		Transaction.commit();
+		DomainStore.waitUntilCurrentRequestsProcessed();
+		String idString = String.valueOf(job.getId());
+		return idString;
 	}
 
 	@Override

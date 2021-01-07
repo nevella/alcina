@@ -18,6 +18,7 @@ import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -44,6 +45,7 @@ import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.RemoteAction;
+import cc.alcina.framework.common.client.actions.SynchronousAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.HasParameters;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -144,12 +146,12 @@ public abstract class ActionViewProviderBase
 			}
 		};
 
-		private LooseActionHandler handler;
+		private LooseActionHandler synchronousActionClientHandler;
 
 		int logItemCount = 5;
 
 		public ActionLogPanel() {
-			this.handler = LooseActionRegistry.get()
+			this.synchronousActionClientHandler = LooseActionRegistry.get()
 					.getHandler(action.getClass().getName());
 			this.hasChildHandlersSupport = new HasChildHandlersSupport();
 			HTML description = new HTML(
@@ -179,10 +181,13 @@ public abstract class ActionViewProviderBase
 			this.progressHolder = new FlowPanel();
 			progressHolder.setVisible(false);
 			add(progressHolder);
-			if (handler == null) {
+			if (synchronousActionClientHandler == null) {
 				add(new HTML(Ax.format(
 						"<br /><hr /><div class='recent'>Last %s action logs</div><br />",
 						logItemCount)));
+			} else {
+				Preconditions
+						.checkArgument(action instanceof SynchronousAction);
 			}
 			add(fp);
 			setWidth("80%");
@@ -237,20 +242,9 @@ public abstract class ActionViewProviderBase
 					progressHolder.setVisible(true);
 					redraw();
 					running(id != null);
-				}
-			};
-			AsyncCallback<ActionLogItem> syncCallback = new AsyncCallback<ActionLogItem>() {
-				@Override
-				public void onFailure(Throwable caught) {
-					redraw();
-					throw new WrappedRuntimeException(caught);
-				}
-
-				@Override
-				public void onSuccess(ActionLogItem ali) {
-					if (handler != null) {
+					if (synchronousActionClientHandler != null) {
 						// actually a combined client-server action
-						handler.performAction();
+						synchronousActionClientHandler.performAction();
 						return;
 					}
 				}
@@ -318,7 +312,7 @@ public abstract class ActionViewProviderBase
 			}
 			running(false);
 			button.setEnabled(true);
-			if (handler == null) {
+			if (synchronousActionClientHandler == null) {
 				getActionLogs(outerCallback, logItemCount);
 			}
 			maxButton.getToggleButton().setDown(true);
