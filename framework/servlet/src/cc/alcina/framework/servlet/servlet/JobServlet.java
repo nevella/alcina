@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.actions.ServerControlAction;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
@@ -94,6 +95,12 @@ public class JobServlet extends AlcinaServlet {
 		case wakeup:
 			job = new TaskWakeupJobScheduler().perform();
 			break;
+		case control:
+			ServerControlAction serverControlAction = new ServerControlAction();
+			serverControlAction.getParameters()
+					.setPropertyName(request.getParameter("value"));
+			job = serverControlAction.perform();
+			break;
 		case task:
 			String serialized = request.getParameter("task");
 			Task task = null;
@@ -121,6 +128,6 @@ public class JobServlet extends AlcinaServlet {
 	}
 
 	enum Action {
-		list, cancel, detail, wakeup, task, run
+		list, cancel, detail, wakeup, task, run, control
 	}
 }
