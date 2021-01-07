@@ -50,6 +50,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -85,9 +86,11 @@ import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
+import cc.alcina.framework.common.client.util.CommonUtils.YearResolver;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.gwt.client.util.TextUtils;
@@ -1566,6 +1569,56 @@ public class SEUtilities {
 		}
 	}
 
+	public static class MethodFinder {
+		public Method findMethod(Class<? extends Object> targetClass,
+				Object[] args, String methodName) {
+			Method method = null;
+			for (Method m : targetClass.getMethods()) {
+				if (m.getName().equals(methodName)
+						&& args.length == m.getParameterTypes().length) {
+					boolean matched = true;
+					for (int i = 0; i < m.getParameterTypes().length; i++) {
+						Class c1 = m.getParameterTypes()[i];
+						Class c2 = args[i] == null ? void.class
+								: args[i].getClass();
+						if (!isAssignableRelaxed(c1, c2)) {
+							matched = false;
+							break;
+						}
+					}
+					if (matched) {
+						method = m;
+						break;
+					}
+				}
+			}
+			return method;
+		}
+
+		private boolean isAssignableRelaxed(Class c1, Class c2) {
+			Class nc1 = normaliseClass(c1);
+			Class nc2 = normaliseClass(c2);
+			return nc1.isAssignableFrom(nc2)
+					|| (nc2 == Void.class && !c1.isPrimitive());
+		}
+
+		private Class normaliseClass(Class c1) {
+			if (c1.isPrimitive()) {
+				if (c1 == void.class) {
+					return Void.class;
+				}
+				if (c1 == boolean.class) {
+					return Boolean.class;
+				}
+				return Number.class;
+			}
+			if (Number.class.isAssignableFrom(c1)) {
+				return Number.class;
+			}
+			return c1;
+		}
+	}
+
 	public static class NormalisedNumericOrdering
 			implements Comparable<NormalisedNumericOrdering> {
 		private String[] parts;
@@ -1672,6 +1725,17 @@ public class SEUtilities {
 		}
 	}
 
+	@RegistryLocation(registryPoint = YearResolver.class, implementationType = ImplementationType.SINGLETON)
+	public static class YearResolverImpl implements YearResolver {
+		private Calendar calendar = new GregorianCalendar();
+
+		@Override
+		public synchronized int getYear(Date d) {
+			calendar.setTime(d);
+			return calendar.get(Calendar.YEAR);
+		}
+	}
+
 	static class ComparatorDebug {
 		public <T> void debug(List<T> list, Comparator<T> comparator) {
 			int rndSize = 100000;
@@ -1720,56 +1784,6 @@ public class SEUtilities {
 				return -1;
 			}
 			return 0;
-		}
-	}
-
-	public static class MethodFinder {
-		public Method findMethod(Class<? extends Object> targetClass,
-				Object[] args, String methodName) {
-			Method method = null;
-			for (Method m : targetClass.getMethods()) {
-				if (m.getName().equals(methodName)
-						&& args.length == m.getParameterTypes().length) {
-					boolean matched = true;
-					for (int i = 0; i < m.getParameterTypes().length; i++) {
-						Class c1 = m.getParameterTypes()[i];
-						Class c2 = args[i] == null ? void.class
-								: args[i].getClass();
-						if (!isAssignableRelaxed(c1, c2)) {
-							matched = false;
-							break;
-						}
-					}
-					if (matched) {
-						method = m;
-						break;
-					}
-				}
-			}
-			return method;
-		}
-	
-		private boolean isAssignableRelaxed(Class c1, Class c2) {
-			Class nc1 = normaliseClass(c1);
-			Class nc2 = normaliseClass(c2);
-			return nc1.isAssignableFrom(nc2)
-					|| (nc2 == Void.class && !c1.isPrimitive());
-		}
-	
-		private Class normaliseClass(Class c1) {
-			if (c1.isPrimitive()) {
-				if (c1 == void.class) {
-					return Void.class;
-				}
-				if (c1 == boolean.class) {
-					return Boolean.class;
-				}
-				return Number.class;
-			}
-			if (Number.class.isAssignableFrom(c1)) {
-				return Number.class;
-			}
-			return c1;
 		}
 	}
 }

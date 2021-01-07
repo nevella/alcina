@@ -46,6 +46,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
  *
@@ -834,7 +835,11 @@ public class CommonUtils {
 
 	@SuppressWarnings("deprecation")
 	public static int getYear(Date d) {
-		return d.getYear() + 1900;
+		if (GWT.isClient()) {
+			return d.getYear() + 1900;
+		} else {
+			return Registry.impl(YearResolver.class).getYear(d);
+		}
 	}
 
 	public static String hangingIndent(String text, boolean noTabsFirstLine,
@@ -1984,5 +1989,9 @@ public class CommonUtils {
 			return format("First: %s\nBoth: %s\nSecond: %s", firstOnly,
 					intersection, secondOnly);
 		}
+	}
+
+	public static interface YearResolver {
+		int getYear(Date d);
 	}
 }
