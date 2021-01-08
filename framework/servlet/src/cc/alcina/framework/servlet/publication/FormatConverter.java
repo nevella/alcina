@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.publication;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.List;
@@ -28,5 +29,11 @@ public interface FormatConverter {
 		public Object custom;
 
 		public List rows;
+		
+		public InputStream stream;
+
+		public  InputStream provideByteStream() {
+			return stream!=null?stream:new ByteArrayInputStream(bytes);
+		}
 	}
 }
