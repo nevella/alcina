@@ -13,10 +13,14 @@
  */
 package cc.alcina.framework.entity.util;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -64,10 +68,7 @@ public class ZipUtil {
 			s.putNextEntry(entry);
 			if (!f.isDirectory()) {
 				FileInputStream fs = new FileInputStream(f);
-				byte[] buffer = new byte[(int) f.length()];
-				fs.read(buffer, 0, buffer.length);
-				s.write(buffer, 0, buffer.length);
-				fs.close();
+				writeStreamToStream(fs, s, true);
 			}
 		}
 		s.finish();
@@ -114,5 +115,21 @@ public class ZipUtil {
 			}
 		}
 		s.close();
+	}
+	private static void writeStreamToStream(InputStream in, OutputStream os,
+			boolean keepOutputOpen) throws IOException {
+		OutputStream bos = os instanceof ByteArrayOutputStream ? os
+				: new BufferedOutputStream(os);
+		int bufLength = in.available() <= 1024 ? 1024 * 64 : Math.min(1024*1024, in.available());
+		byte[] buffer = new byte[bufLength];
+		int result;
+		while ((result = in.read(buffer)) != -1) {
+			bos.write(buffer, 0, result);
+		}
+		bos.flush();
+		if (!keepOutputOpen) {
+			bos.close();
+		}
+		in.close();
 	}
 }
