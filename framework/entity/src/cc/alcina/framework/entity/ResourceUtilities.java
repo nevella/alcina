@@ -913,7 +913,7 @@ public class ResourceUtilities {
 			boolean keepOutputOpen) throws IOException {
 		OutputStream bos = os instanceof ByteArrayOutputStream ? os
 				: new BufferedOutputStream(os);
-		int bufLength = in.available() <= 1024 ? 1024 * 64 : in.available();
+		int bufLength = in.available() <= 1024 ? 1024 * 64 : Math.min(1024*1024, in.available());
 		byte[] buffer = new byte[bufLength];
 		int result;
 		while ((result = in.read(buffer)) != -1) {
