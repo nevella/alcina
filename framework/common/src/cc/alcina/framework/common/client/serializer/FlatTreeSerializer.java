@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.serializer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -48,11 +47,10 @@ import cc.alcina.framework.common.client.util.StringMap;
  *
  */
 public class FlatTreeSerializer {
-	private static Map<Class, State> defaultValues = Collections
-			.synchronizedMap(new LinkedHashMap<>());
+	// FIXME - synchronized
+	private static Map<Class, State> defaultValues = new LinkedHashMap<>();
 
-	private static Map<Class, List<Property>> serializationProperties = Collections
-			.synchronizedMap(new LinkedHashMap<>());
+	private static Map<Class, List<Property>> serializationProperties = new LinkedHashMap<>();
 
 	public static <T> T deserialize(Class<T> clazz, String value) {
 		if (value == null) {
