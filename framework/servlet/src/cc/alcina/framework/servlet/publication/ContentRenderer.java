@@ -129,6 +129,8 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
         public boolean persist;
 
         public boolean htmlContentDescriptionUnescaped;
+        
+        public InputStream stream;
     }
 
     @XmlRootElement

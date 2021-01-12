@@ -99,6 +99,8 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 
     public Object custom;
 
+    public InputStream stream;
+
     public Long getUserPublicationId() {
         return wrapper.footerModel.publicationLongId;
     }

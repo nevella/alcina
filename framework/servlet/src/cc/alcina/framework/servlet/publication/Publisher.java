@@ -193,6 +193,7 @@ public class Publisher {
 		fcm.html = cw.wrappedContent;
 		fcm.footer = cw.wrappedFooter;
 		fcm.bytes = cw.wrappedBytes;
+		fcm.stream = cw.stream;
 		fcm.rows = cw.wrapper.gridRows;
 		fcm.custom = cw.custom;
 		ctx.formatConversionModel = fcm;
