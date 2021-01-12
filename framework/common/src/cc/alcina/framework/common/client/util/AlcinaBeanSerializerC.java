@@ -272,7 +272,8 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		}
 		GwittirBridge gb = GwittirBridge.get();
 		Object template = Reflections.classLookup().getTemplateInstance(clazz);
-		BeanDescriptor descriptor = gb.getDescriptor(object);
+		BeanDescriptor descriptor = Reflections.beanDescriptorProvider()
+				.getDescriptor(object);
 		Property[] propertyArray = descriptor.getProperties();
 		List<Property> properties = Arrays.asList(propertyArray).stream()
 				.sorted(Comparator.comparing(Property::getName))
