@@ -15,7 +15,6 @@ package cc.alcina.framework.common.client.search;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,6 +36,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -47,7 +47,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 //FIXME - mvcc.4 - this shouldn't extend entity
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 public abstract class SearchDefinition extends WrapperPersistable
-		implements Serializable, TreeRenderable, ContentDefinition,
+		implements TreeSerializable, TreeRenderable, ContentDefinition,
 		HasPermissionsValidation, HasReflectiveEquivalence<SearchDefinition>,
 		ReflectCloneable<SearchDefinition> {
 	static final transient long serialVersionUID = -1L;

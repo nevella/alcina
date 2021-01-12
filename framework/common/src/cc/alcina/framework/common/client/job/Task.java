@@ -1,10 +1,9 @@
 package cc.alcina.framework.common.client.job;
 
-import java.io.Serializable;
-
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 
-public interface Task extends Serializable {
+public interface Task extends TreeSerializable {
 	default String getName() {
 		return getClass().getSimpleName();
 	}

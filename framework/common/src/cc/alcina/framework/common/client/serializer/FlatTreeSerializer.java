@@ -6,9 +6,10 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
@@ -20,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.StringPair;
 
 /**
  * <p>
@@ -28,7 +30,8 @@ import cc.alcina.framework.common.client.util.StringMap;
  * human-friendly) the key names. The notional algorithm is:
  * </p>
  * <ul>
- * <li>Generate the non-compressed list, producing a list of jsonptr/value pairs
+ * <li>Generate the non-compressed list, producing a list of path (parallel with
+ * variations to jsonptr)/value pairs
  * <li>Remove where identical to default
  * <li>Compress using class/field annotations:
  * <ul>
@@ -74,7 +77,7 @@ public class FlatTreeSerializer {
 		State state = new State();
 		state.clazz = object.getClass();
 		state.withRootMetadata = withRootMetadata;
-		state.paths.push(new Path(null, object));
+		state.pending.add(new VisitedPath(null, object));
 		new FlatTreeSerializer(state).serialize();
 		return state.keyValues.toPropertyString();
 	}
@@ -93,16 +96,17 @@ public class FlatTreeSerializer {
 			State state = new State();
 			state.clazz = clazz;
 			state.withRootMetadata = true;
-			state.paths.push(new Path(null, Reflections.newInstance(clazz)));
+			state.pending
+					.add(new VisitedPath(null, Reflections.newInstance(clazz)));
 			new FlatTreeSerializer(state).serializeState();
 			return state;
 		});
 	}
 
-	private List<Property> getProperties(Class forClass) {
-		return serializationProperties.computeIfAbsent(forClass, clazz -> {
+	private List<Property> getProperties(Object value) {
+		return serializationProperties.computeIfAbsent(value.getClass(), v -> {
 			BeanDescriptor descriptor = Reflections.beanDescriptorProvider()
-					.getDescriptor(clazz);
+					.getDescriptor(value);
 			Property[] propertyArray = descriptor.getProperties();
 			return Arrays.stream(propertyArray)
 					.sorted(Comparator.comparing(Property::getName))
@@ -115,7 +119,7 @@ public class FlatTreeSerializer {
 						}
 						String name = property.getName();
 						if (Reflections.propertyAccessor()
-								.getAnnotationForProperty(clazz,
+								.getAnnotationForProperty(v.getClass(),
 										AlcinaTransient.class, name) != null) {
 							return false;
 						}
@@ -134,12 +138,16 @@ public class FlatTreeSerializer {
 
 	private void serialize() {
 		serializeState();
-		getDefault(state.clazz);
+		State defaultState = getDefault(state.clazz);
+		state.populateMap(defaultState);
 	}
 
 	private void serializeState() {
-		while (!state.paths.isEmpty()) {
-			Path path = state.paths.pop();
+		while (!state.pending.isEmpty()) {
+			/*
+			 * FIFO
+			 */
+			VisitedPath path = state.pending.remove(0);
 			state.visitedPaths.add(path);
 			Object value = path.value;
 			if (value == null) {
@@ -152,7 +160,7 @@ public class FlatTreeSerializer {
 			if (clazz.isEnum() || CommonUtils.isEnumSubclass(clazz)) {
 				return;
 			}
-			Path existingPath = state.visitedObjects.put(value, path);
+			Path existingPath = state.visitedObjects.put(value, path.path);
 			if (existingPath != null) {
 				throw new IllegalStateException(Ax.format(
 						"Object %s - multiple references: \n\t%s\n\t%s ", value,
@@ -161,21 +169,55 @@ public class FlatTreeSerializer {
 			if (value instanceof Collection) {
 				Counter counter = new Counter();
 				((Collection) value).forEach(childValue -> {
-					Path childPath = new Path(path, childValue);
-					childPath.index = counter.getAndIncrement();
-					state.paths.push(childPath);
+					VisitedPath childPath = new VisitedPath(path, childValue);
+					childPath.path.index = counter.getAndIncrement();
+					state.pending.add(childPath);
 				});
 			} else if (value instanceof TreeSerializable) {
-				getProperties(clazz).forEach(property -> {
+				getProperties(value).forEach(property -> {
 					Object childValue = getValue(property, value);
-					Path childPath = new Path(path, childValue);
-					childPath.name = property.getName();
-					state.paths.push(childPath);
+					VisitedPath childPath = new VisitedPath(path, childValue);
+					childPath.path.property = property;
+					state.pending.add(childPath);
 				});
 			} else {
 				throw new UnsupportedOperationException();
 			}
 		}
+	}
+
+	public static abstract class StateCombiner<A, B, C> {
+		protected A lastValue;
+
+		protected B intermediateState;
+
+		public List<C> out = new ArrayList<>();
+
+		public void add(A value) {
+			if (lastValue == null || !canCombine(value)) {
+				flush();
+				newIntermediateState();
+				lastValue = value;
+			}
+			addToIntermediate(value);
+		}
+
+		public void flush() {
+			if (intermediateState != null) {
+				C toOut = intermediateToOut();
+				if (toOut != null) {
+					out.add(toOut);
+				}
+			}
+		}
+
+		protected abstract void addToIntermediate(A value);
+
+		protected abstract boolean canCombine(A value);
+
+		protected abstract C intermediateToOut();
+
+		protected abstract void newIntermediateState();
 	}
 
 	private static class Counter {
@@ -187,17 +229,33 @@ public class FlatTreeSerializer {
 	}
 
 	static class Path {
-		public String name;
+		public Property property;
 
 		Path parent;
 
 		int index;
 
-		Object value;
+		private transient String path;
 
-		Path(Path parent, Object value) {
+		public Class type;
+
+		Path(Path parent) {
 			this.parent = parent;
-			this.value = value;
+		}
+
+		@Override
+		public synchronized String toString() {
+			if (path == null) {
+				String prefix = parent == null ? "" : parent.toString() + ".";
+				String suffix = null;
+				if (property == null) {
+					suffix = String.valueOf(index);
+				} else {
+					suffix = property.getName();
+				}
+				path = prefix + suffix;
+			}
+			return path;
 		}
 	}
 
@@ -212,10 +270,75 @@ public class FlatTreeSerializer {
 
 		IdentityHashMap<Object, Path> visitedObjects = new IdentityHashMap();
 
-		List<Path> visitedPaths = new ArrayList<>();
+		List<VisitedPath> visitedPaths = new ArrayList<>();
 
 		Object value;
 
-		Stack<Path> paths = new Stack<>();
+		List<VisitedPath> pending = new LinkedList<>();
+
+		public void populateMap(State defaultState) {
+			StateCombiner<VisitedPath, List<String>, StringPair> combiner = new StateCombiner<VisitedPath, List<String>, StringPair>() {
+				@Override
+				protected void addToIntermediate(VisitedPath value) {
+					intermediateState
+							.add(String.valueOf(value.value.toString()));
+				}
+
+				@Override
+				protected boolean canCombine(VisitedPath value) {
+					return Objects.equals(lastValue.combinerStringPath(),
+							value.combinerStringPath());
+				}
+
+				@Override
+				protected StringPair intermediateToOut() {
+					if (intermediateState.isEmpty()) {
+						return null;
+					}
+					return new StringPair(lastValue.combinerStringPath(),
+							intermediateState.stream()
+									.collect(Collectors.joining(";")));
+				}
+
+				@Override
+				protected void newIntermediateState() {
+					intermediateState = new ArrayList<>();
+				}
+			};
+			if (withRootMetadata) {
+				keyValues.put("class",
+						visitedPaths.get(0).value.getClass().getName());
+				// FIXME - mvcc.flat - application.hash
+				keyValues.put("time",
+						String.valueOf(System.currentTimeMillis()));
+			}
+			visitedPaths.stream().skip(1).forEach(combiner::add);
+			combiner.flush();
+			combiner.out.forEach(p -> keyValues.put(p.s1, p.s2));
+		}
+	}
+
+	static class VisitedPath {
+		Path path;
+
+		Object value;
+
+		VisitedPath parent;
+
+		public VisitedPath(VisitedPath parent, Object value) {
+			this.parent = parent;
+			this.path = new Path(parent == null ? null : parent.path);
+			this.path.type = value == null ? null : value.getClass();
+			this.value = value;
+		}
+
+		public String combinerStringPath() {
+			return path.toString();
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s=%s", path, value);
+		}
 	}
 }

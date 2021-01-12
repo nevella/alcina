@@ -25,9 +25,6 @@ import com.totsp.gwittir.client.ui.Checkbox;
 import com.totsp.gwittir.client.ui.Label;
 import com.totsp.gwittir.client.ui.TextBox;
 
-import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-
 /**
  * DOCUMENT ME!
  * 
@@ -35,25 +32,28 @@ import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflecto
  *         Cooper</a>
  */
 public class BoundWidgetTypeFactory {
-	public static final BoundWidgetProvider<Checkbox> CHECKBOX_PROVIDER = new BoundWidgetProvider<Checkbox>() {
+	public static final BoundWidgetProvider CHECKBOX_PROVIDER = new BoundWidgetProvider() {
+		@Override
 		public Checkbox get() {
 			return new Checkbox();
 		}
 	};
 
-	public static final BoundWidgetProvider<TextBox> TEXTBOX_PROVIDER = new BoundWidgetProvider<TextBox>() {
+	public static final BoundWidgetProvider TEXTBOX_PROVIDER = new BoundWidgetProvider() {
+		@Override
 		public TextBox get() {
 			return new TextBox();
 		}
 	};
 
-	public static final BoundWidgetProvider<Label> LABEL_PROVIDER = new BoundWidgetProvider<Label>() {
+	public static final BoundWidgetProvider LABEL_PROVIDER = new BoundWidgetProvider() {
+		@Override
 		public Label get() {
 			return new Label();
 		}
 	};
 
-	HashMap<Object, BoundWidgetProvider<?>> registry = new HashMap<Object, BoundWidgetProvider<?>>();
+	HashMap<Object, BoundWidgetProvider> registry = new HashMap<Object, BoundWidgetProvider>();
 
 	/** Creates a new instance of BoundWidgetTypeFactory */
 	public BoundWidgetTypeFactory() {
@@ -80,14 +80,11 @@ public class BoundWidgetTypeFactory {
 		}
 	}
 
-	public void add(Class<?> type, BoundWidgetProvider<?> provider) {
+	public void add(Class<?> type, BoundWidgetProvider provider) {
 		registry.put(type, provider);
 	}
 
-
-	public BoundWidgetProvider<?> getWidgetProvider(Class<?> type) {
+	public BoundWidgetProvider getWidgetProvider(Class<?> type) {
 		return registry.get(type);
 	}
-
-
 }

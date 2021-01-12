@@ -31,14 +31,16 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * 
  * @author Nick Reddel
  */
-public abstract class ContentRequestBase<CD extends ContentDefinition> extends
-		WrapperPersistable implements GwtMultiplePersistable, DeliveryModel {
+public abstract class ContentRequestBase<CD extends ContentDefinition>
+		extends WrapperPersistable
+		implements GwtMultiplePersistable, DeliveryModel, TreeSerializable {
 	static final long serialVersionUID = -1L;
 
 	private String outputFormat = FormatConversionTarget.HTML.serializedForm();
@@ -188,6 +190,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return permalinkQuery;
 	}
 
+	@Override
 	public Map<String, String> getProperties() {
 		return this.properties;
 	}

@@ -53,6 +53,8 @@ public class DateBox extends AbstractBoundWidget<Date>
 
 	private Date value;
 
+	private BidiConverter<Date, Date> dateTranslator = new BidiIdentityConverter<Date>();
+
 	public DateBox() {
 		this(DateTimeFormat.getFormat("dd/MM/yyyy"));
 	}
@@ -69,14 +71,8 @@ public class DateBox extends AbstractBoundWidget<Date>
 		initWidget(base);
 	}
 
-	private BidiConverter<Date, Date> dateTranslator = new BidiIdentityConverter<Date>();
-
 	public BidiConverter<Date, Date> getDateTranslator() {
 		return this.dateTranslator;
-	}
-
-	public void setDateTranslator(BidiConverter<Date, Date> dateTranslator) {
-		this.dateTranslator = dateTranslator;
 	}
 
 	@Override
@@ -97,6 +93,10 @@ public class DateBox extends AbstractBoundWidget<Date>
 	@Override
 	public void setAccessKey(char key) {
 		getTextBox().setAccessKey(key);
+	}
+
+	public void setDateTranslator(BidiConverter<Date, Date> dateTranslator) {
+		this.dateTranslator = dateTranslator;
 	}
 
 	@Override
@@ -141,8 +141,7 @@ public class DateBox extends AbstractBoundWidget<Date>
 		return dateTimeFormat;
 	}
 
-	public static class DateBoxProvider
-			implements BoundWidgetProvider<DateBox> {
+	public static class DateBoxProvider implements BoundWidgetProvider {
 		@Override
 		public DateBox get() {
 			return new DateBox();

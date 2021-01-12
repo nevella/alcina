@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -34,7 +35,8 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 public abstract class SearchCriterion extends Bindable
-		implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion> {
+		implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion>,
+		TreeSerializable {
 	public static final transient String CONTEXT_ENSURE_DISPLAY_NAME = SearchCriterion.class
 			+ ".CONTEXT_ENSURE_DISPLAY_NAME";
 
@@ -100,6 +102,10 @@ public abstract class SearchCriterion extends Bindable
 		return targetPropertyName;
 	}
 
+	public String provideValueAsRenderableText() {
+		return toString();
+	}
+
 	public void setDirection(Direction direction) {
 		Direction old_direction = this.direction;
 		this.direction = direction;
@@ -153,9 +159,5 @@ public abstract class SearchCriterion extends Bindable
 	 */
 	public enum Direction {
 		ASCENDING, DESCENDING
-	}
-
-	public String provideValueAsRenderableText() {
-		return toString();
 	}
 }

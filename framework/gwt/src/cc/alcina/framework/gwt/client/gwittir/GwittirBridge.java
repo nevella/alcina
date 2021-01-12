@@ -422,17 +422,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				obj, new AnnotationLocation.DefaultResolver());
 	}
 
-	@RegistryLocation(registryPoint = DomainListProvider.class, implementationType = ImplementationType.SINGLETON)
-	@ClientInstantiable
-	public static class DomainListProvider {
-		public BoundWidgetProvider getProvider(
-				Class<? extends Entity> domainType,
-				boolean propertyIsCollection) {
-			return new ListBoxCollectionProvider(domainType,
-					propertyIsCollection);
-		}
-	}
-
 	// FIXME - dirndl.1 - clean this up - probably one code path and a bunch of
 	// reflection/registry
 	public Field getField(Class clazz, String propertyName,
@@ -874,7 +863,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	}
 
 	public static class BoundWidgetProviderTextBox
-			implements BoundWidgetProvider<TextBox> {
+			implements BoundWidgetProvider {
 		@Override
 		public TextBox get() {
 			return new TextBox();
@@ -910,6 +899,17 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				return new ListBoxEnumProvider(type, withNull);
 			}
 			return super.getWidgetProvider(type);
+		}
+	}
+
+	@RegistryLocation(registryPoint = DomainListProvider.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class DomainListProvider {
+		public BoundWidgetProvider getProvider(
+				Class<? extends Entity> domainType,
+				boolean propertyIsCollection) {
+			return new ListBoxCollectionProvider(domainType,
+					propertyIsCollection);
 		}
 	}
 

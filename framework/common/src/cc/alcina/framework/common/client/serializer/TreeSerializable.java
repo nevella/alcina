@@ -1,4 +1,6 @@
 package cc.alcina.framework.common.client.serializer;
 
-public interface TreeSerializable {
+import java.io.Serializable;
+
+public interface TreeSerializable extends Serializable {
 }

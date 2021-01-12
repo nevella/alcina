@@ -25,8 +25,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundHTML;
  *
  * @author Nick Reddel
  */
-public class BoundHtmlCustomiser
-		implements Customiser, BoundWidgetProvider<BoundHTML> {
+public class BoundHtmlCustomiser implements Customiser, BoundWidgetProvider {
 	public static final String WIDGET_CSS_CLASS = "WIDGET_CSS_CLASS";
 
 	private String widgetCssClass;
@@ -40,6 +39,7 @@ public class BoundHtmlCustomiser
 		return w;
 	}
 
+	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		widgetCssClass = NamedParameter.Support.stringValue(info.parameters(),

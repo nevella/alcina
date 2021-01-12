@@ -16,11 +16,13 @@ package cc.alcina.framework.common.client.publication;
 import java.util.List;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
+
 /**
  *
  * @author Nick Reddel
  */
-public interface DeliveryModel {
+public interface DeliveryModel extends TreeSerializable {
 	public String getAttachmentMessage();
 
 	public String getAttachmentMessageForRequestor();
@@ -30,7 +32,7 @@ public interface DeliveryModel {
 	public String getEmailSubject();
 
 	public String getEmailSubjectForRequestor();
-	public Map<String, String> getProperties() ;
+
 	/**
 	 * The mime type of the content
 	 */
@@ -42,6 +44,8 @@ public interface DeliveryModel {
 	 * first field is always the type.
 	 */
 	public String getPermalinkQuery();
+
+	public Map<String, String> getProperties();
 
 	public String getSuggestedFileName();
 
@@ -59,30 +63,32 @@ public interface DeliveryModel {
 
 	public boolean isTest();
 
+	public List<MailAttachment> provideAttachments();
+
 	public ContentDeliveryType provideContentDeliveryType();
 
 	public List<MailInlineImage> provideImages();
 
-	public List<MailAttachment> provideAttachments();
+	public FormatConversionTarget provideTargetFormat();
 
 	default void addAttachment(MailAttachment attachment) {
 		provideAttachments().add(attachment);
 	}
 
-	public FormatConversionTarget provideTargetFormat();
-
 	default String getPublicationUid() {
 		return null;
 	}
 
-	public static class MailInlineImage {
-		public String uid;
+	default boolean hasProperty(String keyS) {
+		throw new UnsupportedOperationException();
+	}
 
-		public String contentType;
+	default String providePropertyValue(String key) {
+		throw new UnsupportedOperationException();
+	}
 
-		public byte[] requestBytes;
-
-		public String dataSourceMimeType;
+	default void removeAttachment(MailAttachment attachment) {
+		provideAttachments().remove(attachment);
 	}
 
 	public static class MailAttachment {
@@ -97,15 +103,13 @@ public interface DeliveryModel {
 		public String suggestedFileName;
 	}
 
-	default boolean hasProperty(String keyS) {
-		throw new UnsupportedOperationException();
-	}
+	public static class MailInlineImage {
+		public String uid;
 
-	default String providePropertyValue(String key) {
-		throw new UnsupportedOperationException();
-	}
+		public String contentType;
 
-	default void removeAttachment(MailAttachment attachment) {
-		provideAttachments().remove(attachment);
+		public byte[] requestBytes;
+
+		public String dataSourceMimeType;
 	}
 }

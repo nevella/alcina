@@ -13,13 +13,15 @@
  */
 package cc.alcina.framework.common.client.publication;
 
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
+
 /**
  * Marker interface for publication content
  * 
  * @author nick@alcina.cc
  *
  */
-public interface ContentDefinition {
+public interface ContentDefinition extends TreeSerializable {
 	public String getPublicationType();
 
 	@Override

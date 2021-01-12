@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
@@ -43,7 +44,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		implements TreeRenderable, Permissible, HasPermissionsValidation,
-		HasReflectiveEquivalence<CriteriaGroup> {
+		HasReflectiveEquivalence<CriteriaGroup>, TreeSerializable {
 	static final transient long serialVersionUID = -1L;
 
 	private FilterCombinator combinator = FilterCombinator.AND;
