@@ -12,7 +12,7 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 public class FormatConverterZip implements FormatConverter {
 	public InputStream convert(PublicationContext ctx,
 			FormatConversionModel fcm) throws Exception {
-		return new ByteArrayInputStream(fcm.bytes);
+		 return fcm.provideByteStream();
 	}
 
 	public String getFileExtension() {

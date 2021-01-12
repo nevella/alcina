@@ -98,6 +98,8 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
     protected String xslPath;
 
     public Object custom;
+    
+    public InputStream stream;
 
     public Long getUserPublicationId() {
         return wrapper.footerModel.publicationLongId;
