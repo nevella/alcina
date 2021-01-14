@@ -191,7 +191,7 @@ public class JobRegistry extends WriterService {
 				.setBackendTransformQueueMaxDelay(TRANSFORM_QUEUE_NAME, 1000);
 		jobExecutors = Registry.impl(JobExecutors.class);
 		jobExecutors.addScheduledJobExecutorChangeConsumer(leader -> {
-			if (leader) {
+			if (leader && scheduler != null) {
 				scheduler.enqueueLeaderChangedEvent();
 			}
 		});

@@ -437,8 +437,10 @@ public class TransformPersisterInPersistenceContext {
 						new PersistentEventPopulator().populate(
 								persistentEvents, tltm, eventsPersisted,
 								propagationPolicy, persistentEventClass,
-								persistentRequest, missingClassRefWarned, LooseContext.is(
-														TransformPersisterInPersistenceContext.CONTEXT_DO_NOT_PERSIST_TRANSFORMS));
+								persistentRequest, missingClassRefWarned,
+								LooseContext.is(
+										TransformPersisterInPersistenceContext.CONTEXT_DO_NOT_PERSIST_TRANSFORMS),
+								false);
 						if (++requestCount % 100 == 0) {
 							System.out.format(
 									"Large rq count transform - %s/%s\n",

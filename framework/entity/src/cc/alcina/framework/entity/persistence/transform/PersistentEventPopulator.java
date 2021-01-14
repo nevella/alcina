@@ -22,7 +22,7 @@ class PersistentEventPopulator {
 			Class<? extends DomainTransformEventPersistent> persistentEventClass,
 			DomainTransformRequestPersistent persistentRequest,
 			AtomicBoolean missingClassRefWarned,
-			boolean persistTransformsDisabled) {
+			boolean persistTransformsDisabled, boolean forcePropagation) {
 		TransformCollation collation = new TransformCollation(eventsPersisted);
 		for (DomainTransformEvent event : eventsPersisted) {
 			DomainTransformEventPersistent propagationEvent = Reflections
@@ -71,7 +71,8 @@ class PersistentEventPopulator {
 								.getId());
 			}
 			propagationEvent.setServerCommitDate(new Date());
-			if (propagationPolicy.shouldPropagate(propagationEvent)) {
+			if (propagationPolicy.shouldPropagate(propagationEvent)
+					|| forcePropagation) {
 				// note that this won't persist the 'persistent'
 				// event if propgationType=NON_PERSISTENT
 				propagationEvent
