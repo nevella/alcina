@@ -24,6 +24,10 @@ public abstract class AbstractTaskPerformer
 		this.cancelled = true;
 	}
 
+	public String getValue() {
+		return this.value;
+	}
+
 	@Override
 	public void performAction(Task task) throws Exception {
 		run();
@@ -32,6 +36,10 @@ public abstract class AbstractTaskPerformer
 	@Override
 	public void run() {
 		run(true);
+	}
+
+	public void setValue(String value) {
+		this.value = value;
 	}
 
 	/*
