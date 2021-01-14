@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl;
+import cc.alcina.framework.gwt.client.ClientState;
 import cc.alcina.framework.gwt.client.LayoutManagerBase;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -42,6 +43,7 @@ public class InitLayoutPlayer extends RunnablePlayer {
 			ClientNotificationsImpl nImpl = (ClientNotificationsImpl) notifications;
 			nImpl.setLogToSysOut(false);
 		}
+		ClientState.get().setUiInitialised(true);
 		LayoutEvents.get().fireRequiresGlobalRelayout();
 		LayoutEvents.get().fireDeferredGlobalRelayout();
 	}

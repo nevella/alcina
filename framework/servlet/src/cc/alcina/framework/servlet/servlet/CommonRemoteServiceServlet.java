@@ -69,6 +69,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
@@ -76,6 +77,8 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
@@ -86,6 +89,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
@@ -106,11 +110,15 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSugges
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
+import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
+import cc.alcina.framework.gwt.client.rpc.OutOfBandMessage;
+import cc.alcina.framework.gwt.client.rpc.OutOfBandMessage.ExceptionMessage;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 import cc.alcina.framework.servlet.job.JobRegistry;
+import cc.alcina.framework.servlet.misc.ReadonlySupportServlet;
 
 /**
  *
@@ -453,7 +461,17 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						return RPC.encodeResponseForFailure(null, wex);
 					}
 					if (!webMethod.readonlyPermitted()) {
-						AppPersistenceBase.checkNotReadOnly();
+						try {
+							AppPersistenceBase.checkNotReadOnly();
+						} catch (ReadOnlyException e) {
+							ExceptionMessage exceptionMessage = new OutOfBandMessage.ExceptionMessage();
+							exceptionMessage
+									.setMessageHtml(ReadonlySupportServlet.get()
+											.getNotPerformedBecauseReadonlyMessage());
+							OutOfBandMessages.get()
+									.addMessage(exceptionMessage);
+							throw e;
+						}
 					}
 				}
 			} catch (SecurityException ex) {
@@ -477,6 +495,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logRpcException(rex);
 			throw rex;
 		} finally {
+			OutOfBandMessages.get().addToResponse(getThreadLocalResponse());
 			/*
 			 * save the username for metric logging - the user will be cleared
 			 * before the metrics are output
@@ -512,6 +531,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
+	@WebMethod(readonlyPermitted = false)
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformRequestException {
 		try {
@@ -630,7 +650,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		if (e instanceof ReadOnlyException) {
 			try {
 				HttpServletResponse response = getThreadLocalResponse();
-				response.reset();
+				/*
+				 * don't reset - want to emit headers (and there's nothing salty
+				 * in the response)
+				 */
+				// response.reset();
 				ServletContext servletContext = getServletContext();
 				response.setContentType("text/plain");
 				response.setStatus(
@@ -786,6 +810,51 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 		protected boolean offerNullSuggestion() {
 			return true;
+		}
+	}
+
+	@RegistryLocation(registryPoint = OutOfBandMessages.class, implementationType = ImplementationType.SINGLETON)
+	public static class OutOfBandMessages {
+		public static final String ATTR = OutOfBandMessages.class.getName()
+				+ ".ATTR";
+
+		public static Topic<List<OutOfBandMessage>> topicAppendMessages = Topic
+				.local();
+
+		public static CommonRemoteServiceServlet.OutOfBandMessages get() {
+			return Registry
+					.impl(CommonRemoteServiceServlet.OutOfBandMessages.class);
+		}
+
+		protected Logger logger = LoggerFactory.getLogger(getClass());
+
+		public void addMessage(OutOfBandMessage message) {
+			HttpServletRequest threadLocalRequest = getContextThreadLocalRequest();
+			if (threadLocalRequest == null) {
+				logger.info("No request - not publishing {}", message);
+				return;
+			}
+			ensureMessageList().add(message);
+		}
+
+		public void addToResponse(HttpServletResponse threadLocalResponse) {
+			List<OutOfBandMessage> messageList = ensureMessageList();
+			topicAppendMessages.publish(messageList);
+			if (messageList.size() > 0) {
+				threadLocalResponse.setHeader(
+						AlcinaRpcRequestBuilder.RESPONSE_HEADER_OUT_OF_BAND_MESSAGES,
+						TransformManager.serialize(messageList));
+			}
+		}
+
+		private List<OutOfBandMessage> ensureMessageList() {
+			List<OutOfBandMessage> result = (List<OutOfBandMessage>) getContextThreadLocalRequest()
+					.getAttribute(ATTR);
+			if (result == null) {
+				result = new ArrayList<>();
+				getContextThreadLocalRequest().setAttribute(ATTR, result);
+			}
+			return result;
 		}
 	}
 }

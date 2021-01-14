@@ -71,6 +71,7 @@ import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
+import cc.alcina.framework.servlet.misc.ReadonlySupportServlet;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
@@ -164,6 +165,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initServletConfig = servletConfig;
 			// push to registry
 			Registry.setProvider(new ClassLoaderAwareRegistryProvider());
+			AppPersistenceBase.setInstanceReadOnly(false);
 			initBootstrapRegistry();
 			initNames();
 			loadCustomProperties();
@@ -177,7 +179,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			BackendTransformQueue.get().start();
 			initCustom();
 			ServletLayerUtils.setAppServletInitialised(true);
-			scheduleJobs();
+			onAppServletInitialised();
 			launchPostInitTasks();
 		} catch (Throwable e) {
 			Ax.out("Exception in lifecycle servlet init");
@@ -442,7 +444,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 	}
 
-	protected void scheduleJobs() {
+	protected void onAppServletInitialised() {
+		ReadonlySupportServlet.get();
 		if (usesJobs()) {
 			Transaction.begin();
 			JobRegistry.get();

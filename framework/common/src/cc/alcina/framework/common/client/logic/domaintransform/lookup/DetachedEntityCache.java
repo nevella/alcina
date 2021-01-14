@@ -103,6 +103,10 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		}
 	}
 
+	public void debugNotFound(EntityLocator objectLocator) {
+		throw new UnsupportedOperationException();
+	}
+
 	public Set<Entry<Class, Map<Long, Entity>>> domainClassEntries() {
 		return domain.entrySet();
 	}

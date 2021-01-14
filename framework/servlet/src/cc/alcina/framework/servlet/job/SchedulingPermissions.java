@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.job;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
 import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
@@ -34,6 +35,9 @@ class SchedulingPermissions {
 	}
 
 	static boolean canCreateFuture(Schedule schedule) {
+		if (AppPersistenceBase.isInstanceReadOnly()) {
+			return false;
+		}
 		boolean production = Sx.isProduction();
 		boolean scheduleClusterJobs = production
 				|| ResourceUtilities.is(JobScheduler.class, "testSchedules");
@@ -44,6 +48,9 @@ class SchedulingPermissions {
 	}
 
 	static boolean canFutureToPending() {
+		if (AppPersistenceBase.isInstanceReadOnly()) {
+			return false;
+		}
 		if (Sx.isProduction()) {
 			return ResourceUtilities.is(JobScheduler.class,
 					"canFuturesToPending");
@@ -54,6 +61,9 @@ class SchedulingPermissions {
 	}
 
 	static boolean canModifyFuture(Job job) {
+		if (AppPersistenceBase.isInstanceReadOnly()) {
+			return false;
+		}
 		if (Schedule.forTaskClass(job.provideTaskClass()).isVmLocal()) {
 			return job.getCreator() == ClientInstance.self();
 		} else {
@@ -62,6 +72,9 @@ class SchedulingPermissions {
 	}
 
 	static boolean canProcessOrphans() {
+		if (AppPersistenceBase.isInstanceReadOnly()) {
+			return false;
+		}
 		return isCurrentScheduledJobExecutor() || ResourceUtilities
 				.is(JobScheduler.class, "forceProcessOrphans");
 	}
@@ -69,6 +82,7 @@ class SchedulingPermissions {
 	static boolean isCurrentScheduledJobExecutor() {
 		return JobRegistry.get().jobExecutors.isCurrentScheduledJobExecutor()
 				&& ResourceUtilities.is(JobScheduler.class,
-						"scheduleClusterJobs");
+						"scheduleClusterJobs")
+				&& !AppPersistenceBase.isInstanceReadOnly();
 	}
 }

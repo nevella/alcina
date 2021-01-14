@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 public class SequentialIdGenerator {
-	public static long id;
+	private long id;
 
 	private long maxValue = Long.MAX_VALUE;
 

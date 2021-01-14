@@ -1,0 +1,84 @@
+package cc.alcina.framework.entity.persistence.transform;
+
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
+import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
+
+class PersistentEventPopulator {
+	void populate(List<DomainTransformEventPersistent> persistentEvents,
+			ThreadlocalTransformManager tltm,
+			List<DomainTransformEvent> eventsPersisted,
+			TransformPropagationPolicy propagationPolicy,
+			Class<? extends DomainTransformEventPersistent> persistentEventClass,
+			DomainTransformRequestPersistent persistentRequest,
+			AtomicBoolean missingClassRefWarned,
+			boolean persistTransformsDisabled) {
+		TransformCollation collation = new TransformCollation(eventsPersisted);
+		for (DomainTransformEvent event : eventsPersisted) {
+			DomainTransformEventPersistent propagationEvent = Reflections
+					.newInstance(persistentEventClass);
+			if (propagationPolicy.shouldPersistEventRecord(event)
+					|| ResourceUtilities.is(
+							TransformPersisterInPersistenceContext.class,
+							"persistAllTransforms")) {
+				if (!persistTransformsDisabled) {
+					tltm.persist(propagationEvent);
+				}
+			}
+			propagationEvent.wrap(event);
+			/*
+			 * Remove all non-propagatable refs (they'll be confusing for local
+			 * commits)
+			 */
+			propagationEvent.setSource(null);
+			propagationEvent.setNewValue(null);
+			propagationEvent.setOldValue(null);
+			if (collation.forLocator(event.toObjectLocator()).last() == event
+					&& event.getTransformType() != TransformType.DELETE_OBJECT
+					&& propagationPolicy.handlesEvent(event)) {
+				propagationEvent.populateDbMetadata(event);
+			}
+			if (propagationEvent.getObjectClassRef() == null
+					&& !missingClassRefWarned.get()) {
+				missingClassRefWarned.set(true);
+				System.out.println(
+						"Warning - persisting transform without a classRef - "
+								+ propagationEvent);
+			}
+			if (propagationEvent.getObjectId() == 0) {
+				propagationEvent
+						.setObjectId(tltm
+								.getObject(propagationEvent.getObjectClass(), 0,
+										propagationEvent.getObjectLocalId())
+								.getId());
+			}
+			if (propagationEvent.getValueId() == 0
+					&& propagationEvent.getValueLocalId() != 0) {
+				propagationEvent
+						.setValueId(tltm
+								.getObject(propagationEvent.getValueClass(), 0,
+										propagationEvent.getValueLocalId())
+								.getId());
+			}
+			propagationEvent.setServerCommitDate(new Date());
+			if (propagationPolicy.shouldPropagate(propagationEvent)) {
+				// note that this won't persist the 'persistent'
+				// event if propgationType=NON_PERSISTENT
+				propagationEvent
+						.setDomainTransformRequestPersistent(persistentRequest);
+				persistentRequest.getEvents().add(propagationEvent);
+				persistentEvents.add(propagationEvent);
+			}
+		}
+	}
+}

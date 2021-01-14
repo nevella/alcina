@@ -1284,7 +1284,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 		} catch (RuntimeException e) {
 			if (GWT.isClient()) {
-				AlcinaTopics.transformManagerCascadeException.publish(e);
+				AlcinaTopics.TOPIC_TRANSFORM_CASCADE_EXCEPTION.publish(e);
 			} else {
 				throw e;
 			}

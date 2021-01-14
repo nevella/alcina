@@ -1,12 +1,11 @@
 package cc.alcina.framework.entity.persistence.transform;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -26,8 +25,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -37,7 +34,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -409,13 +405,7 @@ public class TransformPersisterInPersistenceContext {
 						DomainTransformRequestPersistent persistentRequest = persistentRequestClass
 								.newInstance();
 						tltm.persist(persistentRequest);
-						Calendar defaultCalendar = Calendar.getInstance();
-						int offset = defaultCalendar.getTimeZone()
-								.getOffset(startPersistTime.getTime());
-						Timestamp utcStartPersistTime = new Timestamp(
-								startPersistTime.getTime() - offset);
-						persistentRequest
-								.setStartPersistTime(utcStartPersistTime);
+						persistentRequest.setStartPersistTime(startPersistTime);
 						if (!LooseContext.is(
 								CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM)) {
 							DomainStore.stores().writableStore()
@@ -433,7 +423,7 @@ public class TransformPersisterInPersistenceContext {
 						persistentRequest.setOriginatingUserId(
 								token.getOriginatingUserId());
 						dtrps.add(persistentRequest);
-						boolean missingClassRefWarned = false;
+						AtomicBoolean missingClassRefWarned = new AtomicBoolean();
 						/*
 						 * Make sure collation and locator refs match up
 						 */
@@ -444,68 +434,11 @@ public class TransformPersisterInPersistenceContext {
 										.getId());
 							}
 						});
-						TransformCollation collation = new TransformCollation(
-								eventsPersisted);
-						for (DomainTransformEvent event : eventsPersisted) {
-							DomainTransformEventPersistent propagationEvent = persistentEventClass
-									.newInstance();
-							if (propagationPolicy
-									.shouldPersistEventRecord(event)
-									|| ResourceUtilities
-											.is("persistAllTransforms")) {
-								if (!LooseContext.is(
-										CONTEXT_DO_NOT_PERSIST_TRANSFORMS)) {
-									tltm.persist(propagationEvent);
-								}
-							}
-							propagationEvent.wrap(event);
-							/*
-							 * Remove all non-propagatable refs (they'll be
-							 * confusing for local commits)
-							 */
-							propagationEvent.setSource(null);
-							propagationEvent.setNewValue(null);
-							propagationEvent.setOldValue(null);
-							if (collation.forLocator(event.toObjectLocator())
-									.last() == event
-									&& event.getTransformType() != TransformType.DELETE_OBJECT
-									&& propagationPolicy.handlesEvent(event)) {
-								propagationEvent.populateDbMetadata(event);
-							}
-							if (propagationEvent.getObjectClassRef() == null
-									&& !missingClassRefWarned) {
-								missingClassRefWarned = true;
-								System.out.println(
-										"Warning - persisting transform without a classRef - "
-												+ propagationEvent);
-							}
-							if (propagationEvent.getObjectId() == 0) {
-								propagationEvent.setObjectId(tltm.getObject(
-										propagationEvent.getObjectClass(), 0,
-										propagationEvent.getObjectLocalId())
-										.getId());
-							}
-							if (propagationEvent.getValueId() == 0
-									&& propagationEvent
-											.getValueLocalId() != 0) {
-								propagationEvent.setValueId(tltm.getObject(
-										propagationEvent.getValueClass(), 0,
-										propagationEvent.getValueLocalId())
-										.getId());
-							}
-							propagationEvent.setServerCommitDate(new Date());
-							if (propagationPolicy
-									.shouldPropagate(propagationEvent)) {
-								// note that this won't persist the 'persistent'
-								// event if propgationType=NON_PERSISTENT
-								propagationEvent
-										.setDomainTransformRequestPersistent(
-												persistentRequest);
-								persistentRequest.getEvents()
-										.add(propagationEvent);
-								persistentEvents.add(propagationEvent);
-							}
-						}
+						new PersistentEventPopulator().populate(
+								persistentEvents, tltm, eventsPersisted,
+								propagationPolicy, persistentEventClass,
+								persistentRequest, missingClassRefWarned, LooseContext.is(
+														TransformPersisterInPersistenceContext.CONTEXT_DO_NOT_PERSIST_TRANSFORMS));
 						if (++requestCount % 100 == 0) {
 							System.out.format(
 									"Large rq count transform - %s/%s\n",

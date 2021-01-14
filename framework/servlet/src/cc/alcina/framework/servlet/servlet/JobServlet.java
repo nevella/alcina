@@ -116,7 +116,8 @@ public class JobServlet extends AlcinaServlet {
 		}
 		job = Domain.find(job);
 		if (job.getResultType().isFail() || job.getLargeResult() == null) {
-			writeTextResponse(response, job.getLog());
+			writeTextResponse(response, Ax.blankTo(job.getLog(),
+					Ax.format("Job %s - complete", job)));
 		} else {
 			writeHtmlResponse(response, job.getLargeResult().toString());
 		}

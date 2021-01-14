@@ -44,8 +44,10 @@ public class AlcinaTopics {
 
 	public static final String LOG_CATEGORY_CONTAINER = "container";
 
-	public static Topic<Exception> transformManagerCascadeException = Topic
+	public static final Topic<Exception> TOPIC_TRANSFORM_CASCADE_EXCEPTION = Topic
 			.local();
+
+	public static Topic<Boolean> TOPIC_APP_READONLY = Topic.local();
 
 	public static void jobComplete(JobTracker info) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_COMPLETE, info);

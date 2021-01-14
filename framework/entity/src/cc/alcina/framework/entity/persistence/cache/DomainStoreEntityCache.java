@@ -5,10 +5,18 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalMap;
 
 class DomainStoreEntityCache extends DetachedEntityCache {
+	@Override
+	public void debugNotFound(EntityLocator objectLocator) {
+		TransactionalMap txMap = (TransactionalMap) domain
+				.get(objectLocator.getClazz());
+		txMap.debugNotFound(objectLocator.getId());
+	}
+
 	@Override
 	public void invalidate(Class clazz) {
 		throw new UnsupportedOperationException();

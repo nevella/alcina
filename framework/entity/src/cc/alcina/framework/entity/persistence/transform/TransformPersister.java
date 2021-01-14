@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext.DeliberatelyThrownWrapperException;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
@@ -55,10 +56,16 @@ public class TransformPersister {
 							Ax.out(token.getRequest());
 						}
 					}
-					wrapper = Registry.impl(CommonPersistenceProvider.class)
-							.getCommonPersistence()
-							.transformInPersistenceContext(persisterToken,
-									token, wrapper);
+					if (AppPersistenceBase.isInstanceReadOnly()) {
+						wrapper = new ReadonlyInMemoryPersister()
+								.commitInMemoryTransforms(persisterToken, token,
+										wrapper);
+					} else {
+						wrapper = Registry.impl(CommonPersistenceProvider.class)
+								.getCommonPersistence()
+								.transformInPersistenceContext(persisterToken,
+										token, wrapper);
+					}
 				} catch (RuntimeException ex) {
 					DeliberatelyThrownWrapperException dtwe = null;
 					if (ex instanceof DeliberatelyThrownWrapperException) {

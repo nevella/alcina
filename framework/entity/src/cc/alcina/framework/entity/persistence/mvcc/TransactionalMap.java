@@ -14,6 +14,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -59,7 +62,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	/*
 	 * Non-generic because we use the NULL_KEY_MARKER - other than that; Map<K,
-	 * Key<V>>
+	 * TransactionalValue<V>>
 	 */
 	private Map concurrent;
 
@@ -89,6 +92,30 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 		return nonConcurrent.containsKey(key);
+	}
+
+	public void debugNotFound(long id) {
+		Logger logger = LoggerFactory.getLogger(getClass());
+		V v = get(id);
+		logger.info("debugNotFound - get - value {} - null: {}", v, v == null);
+		v = nonConcurrent.get(id);
+		logger.info("debugNotFound - nonConcurrent - value {} - null: {}", v,
+				v == null);
+		if (concurrent != null) {
+			Object o = concurrent.get(id);
+			logger.info("debugNotFound - concurrent - value {} - null: {}", o,
+					o == null);
+			logger.info(
+					"debugNotFound - concurrent - value {} - nullMarker: {}", o,
+					o == NULL_KEY_MARKER);
+			if (o != null && o != NULL_KEY_MARKER) {
+				TransactionalValue value = (TransactionalValue) o;
+				logger.info("debugNotFound - concurrent - txValue {} ", value);
+				ObjectWrapper resolve = value.resolve(false);
+				logger.info("debugNotFound - concurrent - txValue.resolve {} ",
+						resolve);
+			}
+		}
 	}
 
 	@Override

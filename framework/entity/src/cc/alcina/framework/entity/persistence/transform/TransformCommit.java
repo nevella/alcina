@@ -892,7 +892,9 @@ public class TransformCommit {
 			LooseContext.push();
 			LooseContext.remove(
 					ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
-			AppPersistenceBase.checkNotReadOnly();
+			if (!PermissionsManager.get().isRoot()) {
+				AppPersistenceBase.checkNotReadOnly();
+			}
 			DomainStore.stores().writableStore().getPersistenceEvents()
 					.fireDomainTransformPersistenceEvent(
 							new DomainTransformPersistenceEvent(
@@ -927,6 +929,7 @@ public class TransformCommit {
 			DomainTransformPersistenceEvent event = new DomainTransformPersistenceEvent(
 					persistenceToken, wrapper,
 					wrapper.providePersistenceEventType(), true);
+			event.setFiringFromQueue(wrapper.fireAsQueueEvent);
 			CascadingTransformSupport.register(event);
 			DomainStore.stores().writableStore().getPersistenceEvents()
 					.fireDomainTransformPersistenceEvent(event);

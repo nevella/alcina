@@ -13,16 +13,20 @@
  */
 package cc.alcina.framework.gwt.client;
 
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Button;
@@ -78,6 +82,8 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	Map<String, String> localisedMessages;
 
+	private Set<String> enqueuedOncePerInstanceNotificationBodies = new LinkedHashSet<>();
+
 	private TopicListener<String> logListener = new TopicListener<String>() {
 		@Override
 		public void topicPublished(String key, String message) {
@@ -85,6 +91,10 @@ public class ClientNotificationsImpl implements ClientNotifications {
 			System.out.println(message);
 		}
 	};
+
+	private List<Notification> notificationQueue = new ArrayList<>();
+
+	private PropertyChangeListener uiStateListener = null;
 
 	NonCancellableRemoteDialog notifier = null;
 
@@ -103,6 +113,17 @@ public class ClientNotificationsImpl implements ClientNotifications {
 						}
 					}
 				}).show();
+	}
+
+	@Override
+	public void enqueue(Notification notification) {
+		if (notification.isOncePerClientInstance()
+				&& !enqueuedOncePerInstanceNotificationBodies
+						.add(notification.getBody())) {
+			return;
+		}
+		notificationQueue.add(notification);
+		flushNotifications();
 	}
 
 	public void ensureLocalisedMessages() {
@@ -310,10 +331,6 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		Scheduler.get().scheduleDeferred(() -> closeButton.setFocus(true));
 	}
 
-	protected boolean isViewDetail() {
-		return true;
-	}
-
 	@Override
 	public void showError(String msg, Throwable throwable) {
 		log("error: " + msg.replace("<br>", "\n") + "\n"
@@ -365,36 +382,36 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	}
 
 	public native String statsString() /*-{
-										if (!($wnd.__stats)) {
-										return "";
-										}
-										var result = "";
-										var lastEvtGroup = -1;
-										var lastMillis = 0;
-										for ( var k in $wnd.__stats) {
-										var stat = $wnd.__stats[k];
-										var deltaStr = '';
-										for ( var j in stat) {
-										var v = stat[j];
-										result += j + ": " + v + "  ";
-										
-										}
-										
-										var v = stat.evtGroup;
-										if (lastEvtGroup == v) {
-										if (lastMillis != 0) {
-										result += "\ndelta - " + v + " - " + stat.type + ' - '
-										+ (stat.millis - lastMillis) + 'ms\n';
-										}
-										lastMillis = stat.millis;
-										} else {
-										lastMillis = 0;
-										lastEvtGroup = v;
-										}
-										result += "\n\n";
-										}
-										return result;
-										}-*/;
+    if (!($wnd.__stats)) {
+      return "";
+    }
+    var result = "";
+    var lastEvtGroup = -1;
+    var lastMillis = 0;
+    for ( var k in $wnd.__stats) {
+      var stat = $wnd.__stats[k];
+      var deltaStr = '';
+      for ( var j in stat) {
+        var v = stat[j];
+        result += j + ": " + v + "  ";
+
+      }
+
+      var v = stat.evtGroup;
+      if (lastEvtGroup == v) {
+        if (lastMillis != 0) {
+          result += "\ndelta - " + v + " - " + stat.type + ' - '
+              + (stat.millis - lastMillis) + 'ms\n';
+        }
+        lastMillis = stat.millis;
+      } else {
+        lastMillis = 0;
+        lastEvtGroup = v;
+      }
+      result += "\n\n";
+    }
+    return result;
+	}-*/;
 
 	private void ensureImages() {
 		if (images == null) {
@@ -402,13 +419,39 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		}
 	}
 
+	private void flushNotifications() {
+		if (!ClientState.get().isUiInitialised() && uiStateListener == null) {
+			uiStateListener = evt -> flushNotifications();
+			ClientState.get().addPropertyChangeListener("uiInitialised",
+					uiStateListener);
+			return;
+		}
+		notificationQueue.stream()
+				.filter(notification -> ClientState.get().isUiInitialised()
+						|| notification.isShowBeforeUiInitComplete())
+				.findFirst().ifPresent(notification -> {
+					notificationQueue.remove(notification);
+					showDialog(notification.getCaption(), null,
+							notification.getBody(),
+							MessageType.fromNotificationLevel(
+									notification.getLevel()),
+							null);
+					new Timer() {
+						@Override
+						public void run() {
+							flushNotifications();
+						}
+					}.schedule(2000);
+				});
+	}
+
 	protected native void consoleLog(String s) /*-{
-												try {
-												$wnd.console.log(s);
-												} catch (e) {
-												
-												}
-												}-*/;
+    try {
+      $wnd.console.log(s);
+    } catch (e) {
+
+    }
+	}-*/;
 
 	protected String getStandardErrorText() {
 		return "Sorry for the inconvenience, and we'll fix this problem as soon as possible."
@@ -416,7 +459,29 @@ public class ClientNotificationsImpl implements ClientNotifications {
 				+ " If the problem recurs, please try refreshing your browser";
 	}
 
+	protected boolean isViewDetail() {
+		return true;
+	}
+
 	public enum MessageType {
-		INFO, WARN, ERROR
+		INFO, WARN, ERROR;
+
+		static MessageType fromNotificationLevel(Level level) {
+			if (level == null) {
+				return INFO;
+			}
+			switch (level) {
+			case LOG:
+				throw new UnsupportedOperationException();
+			case INFO:
+				return INFO;
+			case EXCEPTION:
+				return ERROR;
+			case WARNING:
+				return WARN;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 }

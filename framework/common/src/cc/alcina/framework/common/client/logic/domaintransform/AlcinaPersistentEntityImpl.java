@@ -27,6 +27,11 @@ public interface AlcinaPersistentEntityImpl {
 				clazz);
 	}
 
+	static Class getImplementationNonGeneric(Class clazz) {
+		return Registry.get().lookupSingle(AlcinaPersistentEntityImpl.class,
+				clazz);
+	}
+
 	static String getImplementationSimpleClassName(Class<?> clazz) {
 		return getImplementation(clazz).getSimpleName();
 	}

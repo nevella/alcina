@@ -53,6 +53,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.ClientState;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolverAction;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
@@ -87,8 +88,6 @@ public class CommitToStorageTransformListener extends StateListenable
 	public static final String OFFLINE = "OFFLINE";
 
 	public static final String RELOAD = "RELOAD";
-
-	protected Object collectionsMonitor = new Object();
 
 	public static final transient String CONTEXT_REPLAYING_SYNTHESISED_EVENTS = CommitToStorageTransformListener.class
 			.getName() + ".CONTEXT_REPLAYING_SYNTHESISED_EVENTS";
@@ -143,6 +142,8 @@ public class CommitToStorageTransformListener extends StateListenable
 				message);
 	}
 
+	protected Object collectionsMonitor = new Object();
+
 	private EntityLocator lastCreatedObjectLocator;
 
 	private EntityLocator firstCreatedObjectLocator;
@@ -178,6 +179,12 @@ public class CommitToStorageTransformListener extends StateListenable
 	private Object commitMonitor = new Object();
 
 	public CommitToStorageTransformListener() {
+	}
+
+	public void clearPriorRequestsWithoutResponse() {
+		synchronized (collectionsMonitor) {
+			priorRequestsWithoutResponse.clear();
+		}
 	}
 
 	@Override
@@ -314,28 +321,6 @@ public class CommitToStorageTransformListener extends StateListenable
 		this.suppressErrors = suppressErrors;
 	}
 
-	protected boolean canTransitionToOnline() {
-		return true;
-	}
-
-	public void clearPriorRequestsWithoutResponse() {
-		synchronized (collectionsMonitor) {
-			priorRequestsWithoutResponse.clear();
-		}
-	}
-
-	protected void commit() {
-		synchronized (collectionsMonitor) {
-			if ((priorRequestsWithoutResponse.size() == 0
-					&& transformQueue.size() == 0) || isPaused()) {
-				return;
-			}
-		}
-		synchronized (commitMonitor) {
-			commit0();
-		}
-	}
-
 	private synchronized void commit0() {
 		if (queueingFinishedTimer != null) {
 			queueingFinishedTimer.cancel();
@@ -407,6 +392,22 @@ public class CommitToStorageTransformListener extends StateListenable
 		}
 	}
 
+	protected boolean canTransitionToOnline() {
+		return true;
+	}
+
+	protected void commit() {
+		synchronized (collectionsMonitor) {
+			if ((priorRequestsWithoutResponse.size() == 0
+					&& transformQueue.size() == 0) || isPaused()) {
+				return;
+			}
+		}
+		synchronized (commitMonitor) {
+			commit0();
+		}
+	}
+
 	protected void commitRemote(DomainTransformRequest request,
 			AsyncCallback<DomainTransformResponse> callback) {
 		ClientBase.getCommonRemoteServiceAsyncInstance().transform(request,
@@ -440,6 +441,13 @@ public class CommitToStorageTransformListener extends StateListenable
 	 * accelerate change conflict checking
 	 */
 	void updateTransformQueueVersions() {
+	}
+
+	public static class UnknownTransformFailedException
+			extends WrappedRuntimeException {
+		public UnknownTransformFailedException(Throwable cause) {
+			super(cause);
+		}
 	}
 
 	private class ResponseCallback
@@ -478,7 +486,9 @@ public class CommitToStorageTransformListener extends StateListenable
 						}
 					};
 					setPaused(true);
-					getTransformExceptionResolver().resolve(dtre, callback);
+					if (!ClientState.get().isAppReadOnly()) {
+						getTransformExceptionResolver().resolve(dtre, callback);
+					}
 					return;
 				}
 				if (ClientUtils.maybeOffline(caught)) {
@@ -627,13 +637,6 @@ public class CommitToStorageTransformListener extends StateListenable
 					}
 				}
 			}
-		}
-	}
-
-	public static class UnknownTransformFailedException
-			extends WrappedRuntimeException {
-		public UnknownTransformFailedException(Throwable cause) {
-			super(cause);
 		}
 	}
 

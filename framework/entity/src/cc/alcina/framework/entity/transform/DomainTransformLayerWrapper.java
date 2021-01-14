@@ -55,6 +55,8 @@ public class DomainTransformLayerWrapper implements Serializable {
 
 	int mergeCount = 0;
 
+	public boolean fireAsQueueEvent;
+
 	public DomainTransformLayerWrapper() {
 		// for serialization
 	}
