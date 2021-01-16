@@ -40,12 +40,20 @@ import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 public abstract class RemoteInvocationServlet extends HttpServlet {
 	public static final String REMOTE_INVOCATION_PARAMETERS = "remoteInvocationParameters";
 
+	private static final String CONTEXT_IN = RemoteInvocationServlet.class
+			.getName() + ".CONTEXT_IN";
+
+	public static boolean in() {
+		return LooseContext.is(CONTEXT_IN);
+	}
+
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException, IOException {
 		try {
 			LooseContext.pushWithBoolean(
 					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER, false);
+			LooseContext.setTrue(CONTEXT_IN);
 			LooseContext.set(KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER,
 					true);
 			LooseContext.setTrue(

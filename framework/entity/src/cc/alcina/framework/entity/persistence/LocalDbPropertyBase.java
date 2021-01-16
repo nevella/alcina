@@ -5,6 +5,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
@@ -14,11 +15,18 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @DomainTransformPersistable
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
+/*
+ * Legacy - use KeyValuePersistent by preference
+ * 
+ * Retains non-transform persistence to support db updates pre domainstore
+ */
 public abstract class LocalDbPropertyBase extends Entity {
 	public static final transient String KEY_FIELD_NAME = "propertyKey";
 
@@ -34,7 +42,6 @@ public abstract class LocalDbPropertyBase extends Entity {
 		return getOrSetLocalDbProperty(key, null, true);
 	}
 
-	// FIXME - mvcc.4 - this should always be in the domainstore
 	public static LocalDbPropertyBase getLocalDbPropertyObject(String key) {
 		CommonPersistenceLocal cpl = Registry
 				.impl(CommonPersistenceProvider.class).getCommonPersistence();
@@ -47,6 +54,32 @@ public abstract class LocalDbPropertyBase extends Entity {
 
 	public static String getOrSetLocalDbProperty(String key, String value,
 			boolean get) {
+		if (DomainStore.stores().hasInitialisedDatabaseStore()) {
+			return getOrSetLocalDbPropertyDomainStore(key, value, get);
+		} else {
+			return getOrSetLocalDbPropertyPreDomainStore(key, value, get);
+		}
+	}
+
+	public static String setLocalDbProperty(String key, String value) {
+		return getOrSetLocalDbProperty(key, value, false);
+	}
+
+	private static String getOrSetLocalDbPropertyDomainStore(String key,
+			String value, boolean get) {
+		if (get) {
+			return Domain.optionalByProperty(impl(), KEY_FIELD_NAME, key)
+					.map(LocalDbPropertyBase::getPropertyValue).orElse(null);
+		} else {
+			Domain.findOrCreate(impl(), KEY_FIELD_NAME, key, true)
+					.setPropertyValue(value);
+			Transaction.commit();
+			return null;
+		}
+	}
+
+	private static String getOrSetLocalDbPropertyPreDomainStore(String key,
+			String value, boolean get) {
 		LocalDbPropertyBase dbPropertyObject = getLocalDbPropertyObject(key);
 		if (get) {
 			return dbPropertyObject.getPropertyValue();
@@ -66,8 +99,9 @@ public abstract class LocalDbPropertyBase extends Entity {
 		}
 	}
 
-	public static String setLocalDbProperty(String key, String value) {
-		return getOrSetLocalDbProperty(key, value, false);
+	private static Class<? extends LocalDbPropertyBase> impl() {
+		return AlcinaPersistentEntityImpl
+				.getImplementation(LocalDbPropertyBase.class);
 	}
 
 	private String propertyKey;

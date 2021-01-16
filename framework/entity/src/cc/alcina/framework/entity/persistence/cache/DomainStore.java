@@ -175,7 +175,6 @@ public class DomainStore implements IDomainStore {
 		synchronized (DomainStores.class) {
 			if (domainStores == null) {
 				domainStores = new DomainStores();
-				Registry.registerSingleton(DomainStore.class, domainStores);
 			}
 		}
 		return domainStores;
