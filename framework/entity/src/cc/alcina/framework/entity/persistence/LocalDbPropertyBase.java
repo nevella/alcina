@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
@@ -26,6 +27,9 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
  * Legacy - use KeyValuePersistent by preference
  * 
  * Retains non-transform persistence to support db updates pre domainstore
+ * 
+ * FIXME - mvcc.4 - revert to non-domain, use only for pre-store
+ * (db_update_version) kvs
  */
 public abstract class LocalDbPropertyBase extends Entity {
 	public static final transient String KEY_FIELD_NAME = "propertyKey";
@@ -37,6 +41,9 @@ public abstract class LocalDbPropertyBase extends Entity {
 	public static final transient String DB_ENTITIES_VERSION = "DB_ENTITIES_VERSION";
 
 	public static final transient String SERLVET_UPDATE_VERSION = "SERVLET_LAYER_UPDATE_VERSION";
+
+	public static final transient String CONTEXT_USE_DB_PERSISTENCE = LocalDbPropertyBase.class
+			.getName() + ".CONTEXT_USE_DB_PERSISTENCE";
 
 	public static String getLocalDbProperty(String key) {
 		return getOrSetLocalDbProperty(key, null, true);
@@ -54,7 +61,8 @@ public abstract class LocalDbPropertyBase extends Entity {
 
 	public static String getOrSetLocalDbProperty(String key, String value,
 			boolean get) {
-		if (DomainStore.stores().hasInitialisedDatabaseStore()) {
+		if (DomainStore.stores().hasInitialisedDatabaseStore()
+				&& !LooseContext.is(CONTEXT_USE_DB_PERSISTENCE)) {
 			return getOrSetLocalDbPropertyDomainStore(key, value, get);
 		} else {
 			return getOrSetLocalDbPropertyPreDomainStore(key, value, get);

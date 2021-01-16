@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
-import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
@@ -32,7 +32,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = KeyValuePersistent.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class KeyValuePersistent<T extends KeyValuePersistent>
-		extends Entity<T> {
+		extends VersionableEntity<T> {
 	public static final transient String CONTEXT_NO_COMMIT = KeyValuePersistent.class
 			.getName() + ".CONTEXT_NO_COMMIT";
 
@@ -60,18 +60,16 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 	}
 
 	public static void persist(String key, String value) {
-		KeyValuePersistent writeable = (KeyValuePersistent) Domain
-				.findOrCreate(implementation(), "key", keyMapper.apply(key),
-						true);
+		KeyValuePersistent writeable = (KeyValuePersistent) Domain.findOrCreate(
+				implementation(), "key", keyMapper.apply(key), true);
 		writeable.setParentKey(SEUtilities.getParentPath(key));
 		writeable.setValue(value);
 		persist();
 	}
 
 	public static void persistObject(String key, Object value) {
-		KeyValuePersistent writeable = (KeyValuePersistent) Domain
-				.findOrCreate(implementation(), "key", keyMapper.apply(key),
-						true);
+		KeyValuePersistent writeable = (KeyValuePersistent) Domain.findOrCreate(
+				implementation(), "key", keyMapper.apply(key), true);
 		writeable.setParentKey(SEUtilities.getParentPath(key));
 		writeable.serializeObject(value);
 		persist();
