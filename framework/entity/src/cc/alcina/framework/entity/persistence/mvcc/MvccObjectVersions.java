@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,11 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  * graph (unless the object is created within that transaction).
  * 
  * synchronization - resolution of version is synchronized on the baseobject, as
- * is vacuum.
+ * is vacuum/removal of this from base object.
+ * 
+ * vacuum map swap is synchronized on (this)
+ * 
+ * 
  * 
  * @author nick@alcina.cc
  * 
@@ -32,8 +37,6 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  */
 public abstract class MvccObjectVersions<T> implements Vacuumable {
 	static Logger logger = LoggerFactory.getLogger(MvccObjectVersions.class);
-
-	public static int debugRemoval = 0;
 
 	// called in a synchronized block (synchronized on baseObject)
 	static <E extends Entity> MvccObjectVersions<E> ensureEntity(E baseObject,
@@ -86,6 +89,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 * transaction (post vacuum)
 	 */
 	private TransactionId firstCommittedTransactionId;
+
+	private AtomicInteger size = new AtomicInteger();
 
 	/*
 	 * synchronization - either a newly created object t for this domainstore
@@ -148,7 +153,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		try {
 			T object = baseObject;
 			Transaction transaction = null;
-			synchronized (baseObject) {
+			synchronized (this) {
 				Iterator<ObjectVersion<T>> itr = versions.values().iterator();
 				if (itr.hasNext()) {
 					ObjectVersion<T> firstVersion = itr.next();
@@ -185,20 +190,61 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 * only synchronize at the "possibly remove from base" phase - all other
 	 * operations are threadsafe
 	 * 
+	 * the two bulk removal operations effectively use the same 'iterate across
+	 * the smallest set' optimisation of AbstractSet, tailored to avoid
+	 * CSLM.size()
+	 * 
 	 */
 	@Override
 	public void vacuum(VacuumableTransactions vacuumableTransactions) {
-		versions.keySet().removeAll(
-				vacuumableTransactions.completedNonDomainTransactions);
+		int maxToRemove = vacuumableTransactions.completedDomainTransactions
+				.size()
+				+ vacuumableTransactions.completedNonDomainTransactions.size();
+		if (size.get() == 0) {
+			return;
+		}
+		// /*
+		// * swap or modify live map, depending on size of delta
+		// */
+		// if (maxToRemove * 4 > size) {
+		// ConcurrentSkipListMap<Transaction, ObjectVersion<T>> swap = new
+		// ConcurrentSkipListMap<>(
+		// Collections.reverseOrder());
+		// versions.entrySet().stream().filter(
+		// e -> !vacuumableTransactions.completedDomainTransactions
+		// .contains(e.getKey()))
+		// .filter(e -> !vacuumableTransactions.completedNonDomainTransactions
+		// .contains(e.getKey()));
+		// } else {
 		/*
-		 * completedDomainTransactions ordered by most-recent to oldest
+		 * Don't use removeAll (because it calls CSLM.size() - OK with Java9,
+		 * not with Java8
 		 */
-		Transaction oldestVacuumableDomainTransaction = vacuumableTransactions.completedDomainTransactions
-				.iterator().hasNext()
-						? vacuumableTransactions.completedDomainTransactions
-								.last()
-						: null;
-		if (oldestVacuumableDomainTransaction != null) {
+		boolean debugVacuumSizes = size.get() > 5
+				|| vacuumableTransactions.completedNonDomainTransactions
+						.size() > 5
+				|| vacuumableTransactions.completedDomainTransactions
+						.size() > 5;
+		long start = System.currentTimeMillis();
+		if (debugVacuumSizes) {
+			logger.info(
+					"debug vacuum sizes 1 - versions: {}, completedNonDomainTransactions {}, completedDomainTransactions {}",
+					size,
+					vacuumableTransactions.completedNonDomainTransactions
+							.size(),
+					vacuumableTransactions.completedDomainTransactions.size());
+		}
+		if (size.get() > vacuumableTransactions.completedNonDomainTransactions
+				.size()) {
+			vacuumableTransactions.completedNonDomainTransactions
+					.forEach(this::removeWithSize);
+		} else {
+			versions.keySet().stream().filter(
+					tx -> vacuumableTransactions.completedNonDomainTransactions
+							.contains(tx))
+					.forEach(this::removeWithSize);
+		}
+		if (vacuumableTransactions.oldestVacuumableDomainTransaction != null) {
 			Transaction mostRecentCommonVisible = TransactionVersions
 					.mostRecentCommonVisible(versions.keySet(),
 							vacuumableTransactions.completedDomainTransactions);
@@ -209,24 +255,35 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			if (mostRecentCommonVisible != null) {
 				ObjectVersion<T> version = versions
 						.get(mostRecentCommonVisible);
-				// baseObject fields will not be reachable here to app code (all
-				// active txs will be
-				// looking at version.object fields)
+				// baseObject fields will not be reachable here to app code
+				// (all active txs will be looking at version.object fields)
 				copyObject(version.object, baseObject);
 				if (firstCommittedTransactionId == null) {
-					firstCommittedTransactionId = oldestVacuumableDomainTransaction
+					firstCommittedTransactionId = vacuumableTransactions.oldestVacuumableDomainTransaction
 							.getId();
 				}
 			}
-			// Transactions.debugRemoveVersion(baseObject, version);
-			ObjectBidirectionalIterator<Transaction> bidiItr = vacuumableTransactions.completedDomainTransactions
-					.iterator(oldestVacuumableDomainTransaction);
-			// remove from oldest to most recent, otherwise there's a chance of
-			// accessing incorrect versions
-			while (bidiItr.hasPrevious()) {
-				versions.keySet().remove(bidiItr.previous());
+			// remove from oldest to most recent, otherwise there's a chance
+			// of accessing incorrect versions
+			if (size.get() > vacuumableTransactions.completedDomainTransactions
+					.size()) {
+				// Transactions.debugRemoveVersion(baseObject, version);
+				ObjectBidirectionalIterator<Transaction> bidiItr = vacuumableTransactions.completedDomainTransactions
+						.iterator(
+								vacuumableTransactions.oldestVacuumableDomainTransaction);
+				while (bidiItr.hasPrevious()) {
+					removeWithSize(bidiItr.previous());
+				}
+			} else {
+				versions.descendingKeySet().tailSet(
+						vacuumableTransactions.oldestVacuumableDomainTransaction)
+						.stream()
+						.filter(tx -> vacuumableTransactions.completedDomainTransactions
+								.contains(tx))
+						.forEach(this::removeWithSize);
 			}
 		}
+		// }
 		if (versions.isEmpty()) {
 			synchronized (baseObject) {
 				if (versions.isEmpty() && baseObject instanceof MvccObject) {
@@ -236,10 +293,23 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				}
 			}
 		}
+		if (debugVacuumSizes) {
+			logger.info(
+					"debug vacuum sizes 2 - versions: {}, completedNonDomainTransactions {}, completedDomainTransactions {} - time {}ms",
+					size,
+					vacuumableTransactions.completedNonDomainTransactions
+							.size(),
+					vacuumableTransactions.completedDomainTransactions.size(),
+					(System.currentTimeMillis() - start));
+		}
 	}
 
+	/*
+	 * Guaranteed that version.transaction does not exist
+	 */
 	private void putVersion(ObjectVersion<T> version) {
 		versions.put(version.transaction, version);
+		size.incrementAndGet();
 		Transactions.get().onAddedVacuumable(version.transaction, this);
 	}
 
@@ -320,6 +390,12 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	protected abstract <E extends Entity> Class<E> entityClass();
 
 	protected abstract void onVersionCreation(T object);
+
+	protected void removeWithSize(Transaction tx) {
+		if (versions.keySet().remove(tx)) {
+			size.decrementAndGet();
+		}
+	}
 
 	protected abstract boolean thisMayBeVisibleToPriorTransactions();
 

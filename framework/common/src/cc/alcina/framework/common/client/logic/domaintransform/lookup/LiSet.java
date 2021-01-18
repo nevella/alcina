@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -28,8 +29,9 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
  */
 public class LiSet<H extends Entity> extends AbstractSet<H>
 		implements Cloneable, Serializable {
-
 	static final transient int DEGENERATE_THRESHOLD = 30;
+
+	public static Supplier<Set> degenerateCreator = LinkedHashSet::new;
 
 	public static <H extends Entity> LiSet<H> of(H h) {
 		LiSet<H> result = new LiSet<>();
@@ -37,15 +39,6 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		return result;
 	}
 
-	
-	public void reHash() {
-		List<H> entities = stream().collect(Collectors.toList());
-		degenerate=null;
-		elementData=null;
-		size=0;
-		modCount=0;
-		entities.stream().peek(Entity::reHash).forEach(this::add);
-	}
 	private transient Entity[] elementData;
 
 	transient int size = 0;
@@ -143,6 +136,15 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 			return degenerate.iterator();
 		}
 		return new LiSetIterator();
+	}
+
+	public void reHash() {
+		List<H> entities = stream().collect(Collectors.toList());
+		degenerate = null;
+		elementData = null;
+		size = 0;
+		modCount = 0;
+		entities.stream().peek(Entity::reHash).forEach(this::add);
 	}
 
 	@Override
@@ -259,7 +261,7 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 	}
 
 	protected void toDegenerate() {
-		LinkedHashSet degenerate = new LinkedHashSet<H>();
+		Set degenerate = degenerateCreator.get();
 		degenerate.addAll(this);
 		this.degenerate = degenerate;
 		elementData = null;

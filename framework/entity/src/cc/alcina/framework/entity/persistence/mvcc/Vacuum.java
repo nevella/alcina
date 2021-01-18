@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
 class Vacuum {
@@ -159,10 +160,16 @@ class Vacuum {
 	}
 
 	static class VacuumableTransactions {
-		Set<Transaction> completedNonDomainTransactions = new ReferenceOpenHashSet<>();
+		/*
+		 * Not a ReferenceOpenHashSet due to System.identityHashCode performance
+		 * issues
+		 */
+		ObjectOpenHashSet<Transaction> completedNonDomainTransactions = new ObjectOpenHashSet<>();
 
 		ObjectAVLTreeSet<Transaction> completedDomainTransactions = new ObjectAVLTreeSet<>(
 				Collections.reverseOrder());
+
+		Transaction oldestVacuumableDomainTransaction;
 
 		public VacuumableTransactions(
 				List<Transaction> vacuumableTransactionList) {
@@ -173,6 +180,12 @@ class Vacuum {
 					completedNonDomainTransactions.add(t);
 				}
 			});
+			/*
+			 * completedDomainTransactions ordered by most-recent to oldest
+			 */
+			oldestVacuumableDomainTransaction = completedDomainTransactions
+					.iterator().hasNext() ? completedDomainTransactions.last()
+							: null;
 		}
 
 		/*

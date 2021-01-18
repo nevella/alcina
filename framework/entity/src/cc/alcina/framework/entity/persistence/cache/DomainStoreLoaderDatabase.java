@@ -176,6 +176,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	Map<Object, Object> interns = new ConcurrentHashMap<>();
 
+	private Thread postInitConnectionLockThread = null;
+
 	public DomainStoreLoaderDatabase(DomainStore store,
 			RetargetableDataSource dataSource,
 			ThreadPoolExecutor warmupExecutor) {
@@ -1138,7 +1140,17 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					resetConnection();
 				}
 			}
+			Thread postInitConnectionLockThread = this.postInitConnectionLockThread;
+			if (postInitConnectionLockThread != null) {
+				logger.info(
+						"Waiting on postInitConnectionLock - held by {}\n\n{}\n",
+						postInitConnectionLockThread,
+						SEUtilities.getStacktraceSlice(
+								postInitConnectionLockThread,
+								DomainStore.LONG_POST_PROCESS_TRACE_LENGTH, 0));
+			}
 			postInitConnectionLock.lock();
+			this.postInitConnectionLockThread = Thread.currentThread();
 			return postInitConn;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -1153,6 +1165,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			if (store.initialising) {
 				releaseWarmupConnection(conn);
 			} else {
+				postInitConnectionLockThread = null;
 				postInitConnectionLock.unlock();
 			}
 		} catch (Exception e) {

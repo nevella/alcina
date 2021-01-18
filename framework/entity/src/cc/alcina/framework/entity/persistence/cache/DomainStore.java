@@ -258,6 +258,8 @@ public class DomainStore implements IDomainStore {
 
 	Map<EntityLocator, Boolean> lazyLoadAttempted = new ConcurrentHashMap<>();
 
+	private DomainTransformEventPersistent postProcessTransform;
+
 	public DomainStore(DomainStoreDescriptor descriptor) {
 		this();
 		this.domainDescriptor = descriptor;
@@ -760,6 +762,7 @@ public class DomainStore implements IDomainStore {
 			// filtered.removeIf(collation::isCreatedAndDeleted);
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
 			for (DomainTransformEventPersistent transform : filtered) {
+				postProcessTransform = transform;
 				// remove from indicies before first change - and only if
 				// preexisting object
 				EntityCollation entityCollation = collation
@@ -832,6 +835,7 @@ public class DomainStore implements IDomainStore {
 			TransformManager.get().setIgnorePropertyChanges(false);
 			health.domainStorePostProcessStartTime = 0;
 			postProcessThread = null;
+			postProcessTransform = null;
 			postProcessEvent = null;
 			long postProcessTime = System.currentTimeMillis()
 					- postProcessStart;
@@ -1006,10 +1010,11 @@ public class DomainStore implements IDomainStore {
 			long time = domainStorePostProcessStartTime == 0 ? 0
 					: System.currentTimeMillis()
 							- domainStorePostProcessStartTime;
+			DomainTransformEventPersistent postProcessTransform2 = postProcessTransform;
 			Thread postProcessThread2 = postProcessThread;
 			if (time > 100 && postProcessThread2 != null) {
-				logger.info("Long postprocess time - {} ms - {}\n{}\n\n", time,
-						postProcessThread2,
+				logger.info("Long postprocess time - {} ms - {}\n{}\n\n{}\n\n",
+						time, postProcessThread2, postProcessTransform2,
 						SEUtilities.getStacktraceSlice(postProcessThread2,
 								LONG_POST_PROCESS_TRACE_LENGTH, 0));
 			}

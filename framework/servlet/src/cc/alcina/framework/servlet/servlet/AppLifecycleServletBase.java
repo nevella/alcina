@@ -37,6 +37,7 @@ import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -73,6 +74,7 @@ import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
 import cc.alcina.framework.servlet.misc.ReadonlySupportServlet;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected ServletConfig initServletConfig;
@@ -246,6 +248,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		Registry.registerSingleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());
+		LiSet.degenerateCreator = ObjectOpenHashSet::new;
 	}
 
 	protected abstract void initCustom();

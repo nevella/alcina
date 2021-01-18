@@ -25,6 +25,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIte
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
@@ -105,15 +107,21 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			Object o = concurrent.get(id);
 			logger.info("debugNotFound - concurrent - value {} - null: {}", o,
 					o == null);
-			logger.info(
-					"debugNotFound - concurrent - value {} - nullMarker: {}", o,
-					o == NULL_KEY_MARKER);
-			if (o != null && o != NULL_KEY_MARKER) {
+			if (o != null) {
 				TransactionalValue value = (TransactionalValue) o;
+				logger.info("debugNotFound - concurrent - txKey {} ",
+						value.key);
 				logger.info("debugNotFound - concurrent - txValue {} ", value);
+				logger.info("debugNotFound - concurrent - isNotRemoved {} ",
+						value.isNotRemoved());
 				ObjectWrapper resolve = value.resolve(false);
 				logger.info("debugNotFound - concurrent - txValue.resolve {} ",
 						resolve);
+				if (resolve != null) {
+					logger.info(
+							"debugNotFound - concurrent - txValue.resolve.get {} ",
+							resolve.get());
+				}
 			}
 		}
 	}
@@ -570,6 +578,13 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		public void remove() {
+			if (Entity.class.isAssignableFrom(valueClass) && ResourceUtilities
+					.is(TransactionalMap.class, "debugEntityRemoval")) {
+				logger.info("TransactionalValue - remove - {} - {}\n\n{}\n",
+						key, valueClass.getSimpleName(),
+						SEUtilities.getStacktraceSlice(Thread.currentThread(),
+								50, 0));
+			}
 			resolve(true).set(REMOVED_VALUE_MARKER);
 		}
 

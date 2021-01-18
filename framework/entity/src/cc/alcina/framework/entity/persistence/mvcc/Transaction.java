@@ -248,7 +248,8 @@ public class Transaction implements Comparable<Transaction> {
 		}
 		/*
 		 * If creating outside the base transaction, we'll immediately want a
-		 * writable version - so create it now
+		 * writable version - so create it now. No need to synchronize
+		 * MvccObjectVersions.ensureEntity since this is a newly created object
 		 */
 		if (!isBaseTransaction()) {
 			MvccObjectVersions<T> versions = MvccObjectVersions.ensureEntity(t,

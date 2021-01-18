@@ -46,6 +46,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TestTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -78,6 +79,7 @@ import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.ServletLayerObjects;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public abstract class DevHelper {
 	private static final String JBOSS_CONFIG_PATH = "jboss-config-path";
@@ -272,6 +274,7 @@ public abstract class DevHelper {
 		AppPersistenceBase.setTest();
 		AlcinaWebappConfig config = new AlcinaWebappConfig();
 		config.setStartDate(new Date());
+		LiSet.degenerateCreator = ObjectOpenHashSet::new;
 		Registry.registerSingleton(AlcinaWebappConfig.class, config);
 		registerNames(config);
 		initDataFolder();

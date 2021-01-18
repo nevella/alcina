@@ -456,8 +456,10 @@ public class JobRegistry extends WriterService {
 	}
 
 	private void updateThreadData(JobStateMessage message) {
+		logger.info("Checking thread data for job {}", message.getJob());
 		JobContext context = activeJobs.get(message.getJob());
 		if (context != null) {
+			logger.info("Populating thread data for job {}", message.getJob());
 			ProcessState processState = message.ensureProcessState();
 			context.updateProcessState(processState);
 			message.persistProcessState();
