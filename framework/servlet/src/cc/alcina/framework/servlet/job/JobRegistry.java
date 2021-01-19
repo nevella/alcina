@@ -58,6 +58,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -75,6 +76,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
@@ -539,6 +541,8 @@ public class JobRegistry extends WriterService {
 			LooseContext.set(
 					ThreadedPmClientInstanceResolverImpl.CONTEXT_CLIENT_INSTANCE,
 					EntityLayerObjects.get().getServerAsClientInstance());
+			DomainTransformPersistenceEvents
+					.setLocalCommitTimeout(120 * TimeConstants.ONE_SECOND_MS);
 			Thread.currentThread().setContextClassLoader(
 					launcherThreadState.contextClassLoader);
 			launcherThreadState.copyContext

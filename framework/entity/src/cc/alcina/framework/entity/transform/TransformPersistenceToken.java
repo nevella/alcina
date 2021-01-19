@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicyFactory;
@@ -285,7 +286,8 @@ public class TransformPersistenceToken implements Serializable {
 		return Ax.format(
 				"TransformPersistenceToken - requests: %s; localToVm: %s; requestorExternalToThisJvm: %s; \nrequests:\n%s",
 				getRequest().allRequests().size(), localToVm,
-				requestorExternalToThisJvm, getRequest());
+				requestorExternalToThisJvm, CommonUtils
+						.trimToWsChars(getRequest().toString(), 200000, true));
 	}
 
 	public enum Pass {

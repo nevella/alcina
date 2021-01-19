@@ -25,6 +25,13 @@ import cc.alcina.framework.entity.persistence.transform.CascadingTransformSuppor
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 
 public class DomainTransformPersistenceEvents {
+	private static final String CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS = DomainTransformPersistenceEvents.class
+			.getName() + ".CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS";
+
+	public static void setLocalCommitTimeout(long timeout) {
+		LooseContext.set(CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS, timeout);
+	}
+
 	private List<DomainTransformPersistenceListener> listenerList = new ArrayList<DomainTransformPersistenceListener>();
 
 	private DomainTransformPersistenceQueue queue;
@@ -126,10 +133,12 @@ public class DomainTransformPersistenceEvents {
 					 */
 					boolean timedOut = !queue.waitUntilRequestProcessed(
 							event.getMaxPersistedRequestId(),
-							10 * TimeConstants.ONE_SECOND_MS);
+							getLocalCommitTimeout());
 					if (timedOut) {
-						logger.warn("Timed out waiting for local-vm tx - {}",
-								event);
+						logger.warn(
+								"Timed out waiting for local-vm tx - {}\n\n{}\n",
+								event, SEUtilities.getFullStacktrace(
+										Thread.currentThread()));
 					}
 					Transaction.endAndBeginNew();
 					return;
@@ -163,6 +172,14 @@ public class DomainTransformPersistenceEvents {
 			} finally {
 				queue.onEventListenerFiringCompleted(event);
 			}
+		}
+	}
+
+	private long getLocalCommitTimeout() {
+		if (LooseContext.has(CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS)) {
+			return LooseContext.get(CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS);
+		} else {
+			return 10 * TimeConstants.ONE_SECOND_MS;
 		}
 	}
 

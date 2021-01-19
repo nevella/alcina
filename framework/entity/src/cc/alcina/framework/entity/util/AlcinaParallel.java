@@ -88,11 +88,19 @@ public class AlcinaParallel {
 					runnable -> wrapRunnableForParallel(snapshot, runnable))
 					.collect(Collectors.toList());
 			try {
+				if (parameters.wrapInTransaction) {
+					Transaction.commit();
+					Transaction.ensureEnded();
+				}
 				executor.invokeAll((List) callables);
 			} catch (InterruptedException e) {
 				// oksies, cancelled
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
+			} finally {
+				if (parameters.wrapInTransaction) {
+					Transaction.begin();
+				}
 			}
 			executor.shutdown();
 			return new AlcinaParallelResults();
