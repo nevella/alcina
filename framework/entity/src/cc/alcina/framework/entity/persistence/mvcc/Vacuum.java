@@ -26,7 +26,7 @@ class Vacuum {
 	 * The per-transaction vacuumables will only be accessed during write by the
 	 * transaction thread
 	 */
-	ConcurrentHashMap<Transaction, ReferenceOpenHashSet<Vacuumable>> vacuumables = new ConcurrentHashMap<>();
+	ConcurrentHashMap<Transaction, ObjectOpenHashSet<Vacuumable>> vacuumables = new ConcurrentHashMap<>();
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -116,8 +116,9 @@ class Vacuum {
 	}
 
 	void addVacuumable(Transaction transaction, Vacuumable vacuumable) {
-		vacuumables.computeIfAbsent(transaction,
-				tx -> new ReferenceOpenHashSet<>()).add(vacuumable);
+		vacuumables
+				.computeIfAbsent(transaction, tx -> new ObjectOpenHashSet<>())
+				.add(vacuumable);
 	}
 
 	long getVacuumStarted() {

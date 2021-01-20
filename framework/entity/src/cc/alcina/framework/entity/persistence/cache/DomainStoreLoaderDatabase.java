@@ -1141,15 +1141,18 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				}
 			}
 			Thread postInitConnectionLockThread = this.postInitConnectionLockThread;
-			if (postInitConnectionLockThread != null) {
-				logger.info(
-						"Waiting on postInitConnectionLock - held by {}\n\n{}\n",
-						postInitConnectionLockThread,
-						SEUtilities.getStacktraceSlice(
-								postInitConnectionLockThread,
-								DomainStore.LONG_POST_PROCESS_TRACE_LENGTH, 0));
-			}
+			String stacktraceSlice = SEUtilities.getStacktraceSlice(
+					postInitConnectionLockThread,
+					DomainStore.LONG_POST_PROCESS_TRACE_LENGTH, 0);
+			long start = System.currentTimeMillis();
 			postInitConnectionLock.lock();
+			long duration = System.currentTimeMillis() - start;
+			if (postInitConnectionLockThread != null && duration >= 5) {
+				logger.info(
+						"Waited %sms on postInitConnectionLock - held by {}\n\n{}\n",
+						duration, postInitConnectionLockThread,
+						stacktraceSlice);
+			}
 			this.postInitConnectionLockThread = Thread.currentThread();
 			return postInitConn;
 		} catch (Exception e) {

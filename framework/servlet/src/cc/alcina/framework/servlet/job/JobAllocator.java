@@ -19,8 +19,10 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.cache.LazyLoadProvideTask;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.Event;
@@ -189,24 +191,30 @@ class JobAllocator {
 						job.toDisplayName());
 			}
 			boolean deleted = false;
-			if (job.domain().domainVersion() == null) {
-				try {
-					// production issue -- revisit
-					Thread.sleep(1000);
-					DomainStore.waitUntilCurrentRequestsProcessed();
-					if (job.domain().domainVersion() != null) {
-						logger.info(
-								"DEVEX-12 ::  event with incomplete domain tx -  job {}",
-								job.toDisplayName());
-					} else {
-						deleted = true;
-						// was deleted - FIXME - mvcc.jobs.2 - remove this -
-						// improve upstream
-						// (AllocationQueue insert/remove)
+			try {
+				LooseContext.pushWithTrue(
+						LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED);
+				if (job.domain().domainVersion() == null) {
+					try {
+						// production issue -- revisit
+						Thread.sleep(1000);
+						DomainStore.waitUntilCurrentRequestsProcessed();
+						if (job.domain().domainVersion() != null) {
+							logger.info(
+									"DEVEX-12 ::  event with incomplete domain tx -  job {}",
+									job.toDisplayName());
+						} else {
+							deleted = true;
+							// was deleted - FIXME - mvcc.jobs.2 - remove this -
+							// improve upstream
+							// (AllocationQueue insert/remove)
+						}
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
 					}
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
 				}
+			} finally {
+				LooseContext.pop();
 			}
 			if (!deleted) {
 				new StatusMessage().checkPublish();

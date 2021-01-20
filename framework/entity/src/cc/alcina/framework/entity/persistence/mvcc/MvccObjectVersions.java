@@ -1,8 +1,10 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -220,20 +222,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		 * Don't use removeAll (because it calls CSLM.size() - OK with Java9,
 		 * not with Java8
 		 */
-		boolean debugVacuumSizes = size.get() > 5
-				|| vacuumableTransactions.completedNonDomainTransactions
-						.size() > 5
-				|| vacuumableTransactions.completedDomainTransactions
-						.size() > 5;
 		long start = System.currentTimeMillis();
-		if (debugVacuumSizes) {
-			logger.info(
-					"debug vacuum sizes 1 - versions: {}, completedNonDomainTransactions {}, completedDomainTransactions {}",
-					size,
-					vacuumableTransactions.completedNonDomainTransactions
-							.size(),
-					vacuumableTransactions.completedDomainTransactions.size());
-		}
+		List initialValues = Arrays.asList(size,
+				vacuumableTransactions.completedNonDomainTransactions.size(),
+				vacuumableTransactions.completedDomainTransactions.size());
 		if (size.get() > vacuumableTransactions.completedNonDomainTransactions
 				.size()) {
 			vacuumableTransactions.completedNonDomainTransactions
@@ -293,14 +285,19 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				}
 			}
 		}
-		if (debugVacuumSizes) {
+		long duration = System.currentTimeMillis() - start;
+		if (duration > 2) {
 			logger.info(
-					"debug vacuum sizes 2 - versions: {}, completedNonDomainTransactions {}, completedDomainTransactions {} - time {}ms",
+					"debug vacuum sizes pre  - versions: {}, completedNonDomainTransactions {}, completedDomainTransactions {}",
+					initialValues.get(0), initialValues.get(1),
+					initialValues.get(2));
+			logger.info(
+					"debug vacuum sizes post - versions: {}, completedNonDomainTransactions {}, completedDomainTransactions {} - time {}ms",
 					size,
 					vacuumableTransactions.completedNonDomainTransactions
 							.size(),
 					vacuumableTransactions.completedDomainTransactions.size(),
-					(System.currentTimeMillis() - start));
+					duration);
 		}
 	}
 
