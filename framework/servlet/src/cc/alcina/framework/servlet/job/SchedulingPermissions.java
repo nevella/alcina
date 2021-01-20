@@ -81,6 +81,8 @@ class SchedulingPermissions {
 
 	static boolean isCurrentScheduledJobExecutor() {
 		return JobRegistry.get().jobExecutors.isCurrentScheduledJobExecutor()
+				&& JobRegistry.get().jobExecutors
+						.isHighestBuildNumberInCluster()
 				&& ResourceUtilities.is(JobScheduler.class,
 						"scheduleClusterJobs")
 				&& !AppPersistenceBase.isInstanceReadOnly();
