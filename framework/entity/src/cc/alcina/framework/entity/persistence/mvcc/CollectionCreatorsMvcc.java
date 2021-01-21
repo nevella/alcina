@@ -6,14 +6,28 @@ import java.util.Set;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.IDomainStore;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.DegenerateCreator;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multiset;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public class CollectionCreatorsMvcc {
+	public static class DegenerateCreatorMvcc extends DegenerateCreator {
+		@Override
+		public Set copy(Set degenerate) {
+			return ((ObjectOpenHashSet) degenerate).clone();
+		}
+
+		@Override
+		public Set create() {
+			return new ObjectOpenHashSet<>(60);
+		}
+	}
+
 	@RegistryLocation(registryPoint = CollectionCreators.MultisetCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	public static class DomainStoreMultisetCreator<K, V>
 			implements CollectionCreators.MultisetCreator<K, V> {

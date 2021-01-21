@@ -72,6 +72,7 @@ import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
@@ -215,7 +216,7 @@ public class ResourceUtilities {
 	public static <T> T fieldwiseClone(T t, boolean withTransients,
 			boolean withCollectionProjection) {
 		try {
-			T instance = newInstance(t);
+			T instance = newInstanceForCopy(t);
 			return fieldwiseCopy(t, instance, withTransients,
 					withCollectionProjection);
 		} catch (Exception e) {
@@ -273,7 +274,7 @@ public class ResourceUtilities {
 						value = newMap;
 					} else {
 						Collection collection = (Collection) value;
-						Collection newCollection = (Collection) newInstance(
+						Collection newCollection = (Collection) newInstanceForCopy(
 								collection);
 						newCollection.addAll(collection);
 						value = newCollection;
@@ -913,7 +914,8 @@ public class ResourceUtilities {
 			boolean keepOutputOpen) throws IOException {
 		OutputStream bos = os instanceof ByteArrayOutputStream ? os
 				: new BufferedOutputStream(os);
-		int bufLength = in.available() <= 1024 ? 1024 * 64 : Math.min(1024*1024, in.available());
+		int bufLength = in.available() <= 1024 ? 1024 * 64
+				: Math.min(1024 * 1024, in.available());
 		byte[] buffer = new byte[bufLength];
 		int result;
 		while ((result = in.read(buffer)) != -1) {
@@ -974,9 +976,13 @@ public class ResourceUtilities {
 		bw.close();
 	}
 
-	private static <T> T newInstance(T t)
+	private static <T> T newInstanceForCopy(T t)
 			throws NoSuchMethodException, InstantiationException,
 			IllegalAccessException, InvocationTargetException {
+		// optimise
+		if (t instanceof LiSet) {
+			return (T) ((LiSet) t).clone();
+		}
 		Constructor<T> constructor = null;
 		try {
 			constructor = (Constructor<T>) t.getClass()

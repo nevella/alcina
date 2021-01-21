@@ -9,9 +9,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.google.gwt.core.client.GWT;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 
 /**
@@ -31,7 +33,7 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		implements Cloneable, Serializable {
 	static final transient int DEGENERATE_THRESHOLD = 30;
 
-	public static Supplier<Set> degenerateCreator = LinkedHashSet::new;
+	public static transient DegenerateCreator degenerateCreator = new DegenerateCreator();
 
 	public static <H extends Entity> LiSet<H> of(H h) {
 		LiSet<H> result = new LiSet<>();
@@ -108,8 +110,19 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 	}
 
 	@Override
-	public Object clone() {
-		return new LiSet<H>(this);
+	public LiSet clone() {
+		if (GWT.isClient()) {
+			return new LiSet(this);
+		}
+		try {
+			LiSet clone = (LiSet) super.clone();
+			if (clone.degenerate != null) {
+				clone.degenerate = degenerateCreator.copy(clone.degenerate);
+			}
+			return clone;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	@Override
@@ -261,11 +274,21 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 	}
 
 	protected void toDegenerate() {
-		Set degenerate = degenerateCreator.get();
+		Set degenerate = degenerateCreator.create();
 		degenerate.addAll(this);
 		this.degenerate = degenerate;
 		elementData = null;
 		size = -1;
+	}
+
+	public static class DegenerateCreator {
+		public Set copy(Set degenerate) {
+			throw new UnsupportedOperationException();
+		}
+
+		public Set create() {
+			return new LinkedHashSet<>();
+		}
 	}
 
 	class LiSetIterator implements Iterator<H> {

@@ -57,6 +57,7 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase.ServletClassMet
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.DbAppender;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
+import cc.alcina.framework.entity.persistence.mvcc.CollectionCreatorsMvcc.DegenerateCreatorMvcc;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
@@ -74,7 +75,6 @@ import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
 import cc.alcina.framework.servlet.misc.ReadonlySupportServlet;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected ServletConfig initServletConfig;
@@ -248,7 +248,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		Registry.registerSingleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());
-		LiSet.degenerateCreator = ObjectOpenHashSet::new;
+		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
 	}
 
 	protected abstract void initCustom();

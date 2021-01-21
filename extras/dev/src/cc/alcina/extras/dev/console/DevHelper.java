@@ -63,6 +63,7 @@ import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
+import cc.alcina.framework.entity.persistence.mvcc.CollectionCreatorsMvcc.DegenerateCreatorMvcc;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
@@ -79,7 +80,6 @@ import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.ServletLayerObjects;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public abstract class DevHelper {
 	private static final String JBOSS_CONFIG_PATH = "jboss-config-path";
@@ -274,7 +274,7 @@ public abstract class DevHelper {
 		AppPersistenceBase.setTest();
 		AlcinaWebappConfig config = new AlcinaWebappConfig();
 		config.setStartDate(new Date());
-		LiSet.degenerateCreator = ObjectOpenHashSet::new;
+		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
 		Registry.registerSingleton(AlcinaWebappConfig.class, config);
 		registerNames(config);
 		initDataFolder();
