@@ -7,7 +7,7 @@ import cc.alcina.extras.dev.console.remote.client.common.widget.main.RootCompone
 import cc.alcina.extras.dev.console.remote.client.common.widget.nav.NavComponent;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.lux.IClientFactory;
+import cc.alcina.framework.gwt.client.Client;
 
 public class RemoteConsoleLayout {
 	private static RemoteConsoleLayout instance;
@@ -53,8 +53,8 @@ public class RemoteConsoleLayout {
 	}
 
 	private void initOnceRendered() {
-		IClientFactory.get().setupPlaceMapping();
-		IClientFactory.get().initAppHistory();
+		Client.get().setupPlaceMapping();
+		Client.get().initAppHistory();
 	}
 
 	private <T> void subscribe0(TopicListener<T> listener,

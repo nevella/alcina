@@ -4,7 +4,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.InlineLabel;
 
-import cc.alcina.extras.dev.console.remote.client.common.logic.RemoteConsole;
+import cc.alcina.extras.dev.console.remote.client.common.logic.RemoteConsoleClientImpl;
 import cc.alcina.extras.dev.console.remote.client.common.logic.RemoteConsoleModels;
 
 public class NavComponent extends Composite {
@@ -28,7 +28,7 @@ public class NavComponent extends Composite {
 		logo.add(appNameLabel);
 		RemoteConsoleModels.topicStartupModelLoaded()
 				.addRunnable(() -> appNameLabel.setText(
-						RemoteConsole.models().getStartupModel().getAppName()),
+						RemoteConsoleClientImpl.models().getStartupModel().getAppName()),
 						true);
 		bar.add(logo);
 	}

@@ -8,7 +8,7 @@ import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.SimplePanel;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.lux.IClientFactory;
+import cc.alcina.framework.gwt.client.Client;
 
 public class RootComponent extends Composite implements AcceptsOneWidget {
 	private SimplePanel sp;
@@ -17,9 +17,8 @@ public class RootComponent extends Composite implements AcceptsOneWidget {
 		this.sp = new SimplePanel();
 		initWidget(sp);
 		ActivityMapper activityMapper = Registry.impl(ActivityMapper.class);
-		IClientFactory clientFactory = Registry.impl(IClientFactory.class);
 		ActivityManager activityManager = new ActivityManager(activityMapper,
-				clientFactory.getEventBus());
+				Client.get().getEventBus());
 		activityManager.setDisplay(this);
 	}
 

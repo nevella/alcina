@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client;
 
+import java.util.Objects;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.place.shared.Place;
@@ -30,6 +32,9 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 @RegistryLocation(registryPoint = Client.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 public abstract class Client {
+	public static CommonRemoteServiceAsync commonRemoteService() {
+		return Registry.impl(CommonRemoteServiceAsync.class);
+	}
 
 	public static Place currentPlace() {
 		return get().getPlaceController().getWhere();
@@ -51,29 +56,20 @@ public abstract class Client {
 		CommitToStorageTransformListener.flushAndRun(runnable);
 	}
 
+	public static boolean isCurrentPlace(Place place) {
+		return Objects.equals(place, get().placeController.getWhere());
+	}
+
+	public static boolean isDeveloper() {
+		return EntityClientUtils.isTestServer()
+				|| PermissionsManager.get().isDeveloper();
+	}
+
 	public static void refreshCurrentPlace() {
 		BasePlace place = (BasePlace) currentPlace();
 		place.setRefreshed(true);
 		place = place.copy();
 		goTo(place);
-	}
-
-	public static class Init {
-		public static void preRegistry() {
-			LiSet liSet = new LiSet();
-			CommonUtils.setSupplier = () -> new LightSet();
-			LocalDom.mutations.setDisabled(true);
-			//
-			if (GWT.isScript()) {
-				Registry.setDelegateCreator(new JsRegistryDelegateCreator());
-			}
-			JavascriptKeyableLookup.initJs();
-		}
-
-		public static void registry() {
-			Registry.get().registerBootstrapServices(ClientReflector.get());
-			Reflections.registerClassLookup(ClientReflector.get());
-		}
 	}
 
 	protected final EventBus eventBus = new SimpleEventBus();
@@ -104,11 +100,6 @@ public abstract class Client {
 		historyHandler.handleCurrentHistory();
 	}
 
-	public static boolean isDeveloper() {
-		return EntityClientUtils.isTestServer()
-				|| PermissionsManager.get().isDeveloper();
-	}
-
 	public void setupPlaceMapping() {
 		historyHandler = new PlaceHistoryHandler(
 				Registry.impl(RegistryHistoryMapper.class));
@@ -117,7 +108,21 @@ public abstract class Client {
 
 	protected abstract void createPlaceController();
 
-	public static CommonRemoteServiceAsync commonRemoteService() {
-		return Registry.impl(CommonRemoteServiceAsync.class);
+	public static class Init {
+		public static void preRegistry() {
+			LiSet liSet = new LiSet();
+			CommonUtils.setSupplier = () -> new LightSet();
+			LocalDom.mutations.setDisabled(true);
+			//
+			if (GWT.isScript()) {
+				Registry.setDelegateCreator(new JsRegistryDelegateCreator());
+			}
+			JavascriptKeyableLookup.initJs();
+		}
+
+		public static void registry() {
+			Registry.get().registerBootstrapServices(ClientReflector.get());
+			Reflections.registerClassLookup(ClientReflector.get());
+		}
 	}
 }

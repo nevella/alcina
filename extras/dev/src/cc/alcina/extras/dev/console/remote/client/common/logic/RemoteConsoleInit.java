@@ -96,7 +96,7 @@ public class RemoteConsoleInit {
 	}
 
 	void handleStartupResponse(RemoteConsoleResponse response) {
-		RemoteConsole.models().setStartupModel(response.getStartupModel());
+		RemoteConsoleClientImpl.models().setStartupModel(response.getStartupModel());
 		Window.setTitle(Ax.format("DevConsole - %s",
 				response.getStartupModel().getAppName()));
 	}
