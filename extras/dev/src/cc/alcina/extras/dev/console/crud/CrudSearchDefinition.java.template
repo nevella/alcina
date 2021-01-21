@@ -2,7 +2,7 @@ package ${searchDefinition-package};
 
 import ${entity-name};
 
-import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -20,7 +20,7 @@ public class ${searchDefinition-simpleName} extends EntitySearchDefinition {
 	}
 
 	@Override
-	public <C extends VersionableEntity> Class<C> resultClass() {
+	public <C extends Entity> Class<C> queriedEntityClass() {
 		return (Class<C>) ${entity-simpleName}.class;
 	}
 }

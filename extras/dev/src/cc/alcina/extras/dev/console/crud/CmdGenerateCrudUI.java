@@ -80,6 +80,7 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 	enum GeneratedUnitType {
 		Place, Referred_object_handler, BaseCriterion, SearchDefinition,
 		SearchOrders, TextCriterionPack, Searchables, Referred_object;
+
 		public String outputPath(TemplateGenerator gen) {
 			switch (this) {
 			case Place:
@@ -164,14 +165,22 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 
 		private String referredObjectBasePath;
 
+		private String basePackageName;
+
 		public void generateFile(GeneratedUnitType unitType) {
 			String template = ResourceUtilities
 					.readClazzp(unitType.templateRelativePath());
 			String out = replaceLookup.replaceSubstrings(template);
 			String outPath = unitType.outputPath(this);
 			outPath = outPath.replace("/persistent/", "/");
-			ResourceUtilities.write(out, outPath);
-			Ax.out("Wrote %s file: \n\t%s", unitType, outPath);
+			File file = new File(outPath);
+			file.getParentFile().mkdirs();
+			if (file.exists()) {
+				Ax.out("Already written: %s file: \n\t%s", unitType, outPath);
+			} else {
+				ResourceUtilities.write(out, outPath);
+				Ax.out("Wrote %s file: \n\t%s", unitType, outPath);
+			}
 		}
 
 		public void generateLookup() throws Exception {
@@ -181,15 +190,16 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 			CompilationUnit unit = StaticJavaParser.parse(file);
 			this.entityPackageName = unit.getPackageDeclaration().get()
 					.getNameAsString();
+			this.basePackageName = this.entityPackageName.replaceFirst("(.+)\\.persistent(\\..+|$)", "$1");
 			this.entityName = unit.getType(0).getNameAsString();
 			this.searchBasePath = Ax.format("%s/search/%s", this.outputBasePath,
 					this.entityName.toLowerCase());
 			new File(this.searchBasePath).mkdirs();
 			this.searchDefinitionPackageName = Ax.format("%s.search.%s",
-					this.entityPackageName.replaceFirst("(.+)\\..+", "$1"),
+					this.basePackageName,
 					this.entityName.toLowerCase());
 			this.placePackageName = Ax.format("%s.place",
-					this.entityPackageName.replaceFirst("(.+)\\..+", "$1"));
+					this.basePackageName);
 			this.searchDefinitionName = this.entityName + "SearchDefinition";
 			this.placeName = this.entityName + "Place";
 			set("entity-package-name", this.entityPackageName);
@@ -227,7 +237,7 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 			CompilationUnit unit = StaticJavaParser.parse(file);
 			this.referredObjectName = unit.getType(0).getNameAsString();
 			this.referredObjectPackageName = Ax.format("%s.search.%s",
-					this.entityPackageName.replaceFirst("(.+)\\..+", "$1"),
+					this.basePackageName,
 					this.referredObjectName.toLowerCase());
 			this.referredObjectBasePath = Ax.format("%s/search/%s",
 					this.outputBasePath, this.referredObjectName.toLowerCase());
