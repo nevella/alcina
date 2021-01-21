@@ -87,9 +87,9 @@ import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
+import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
@@ -1196,7 +1196,7 @@ public class ContentViewFactory {
 					if (PermissionsManager.get().isMemberOfGroup(
 							PermissionsManager.getAdministratorGroupName())
 							&& sender != null) {
-						if (ClientBase.getGeneralProperties()
+						if (GeneralProperties.get()
 								.isAllowAdminInvalidObjectWrite()
 								&& !alwaysDisallowOkIfInvalid) {
 							Registry.impl(ClientNotifications.class).confirm(

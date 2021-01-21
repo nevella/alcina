@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallb
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
@@ -85,7 +85,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 
 		@Override
 		public void run() {
-			ClientBase.getCommonRemoteServiceAsyncInstance().ping(this);
+			Client.commonRemoteService().ping(this);
 		}
 	}
 

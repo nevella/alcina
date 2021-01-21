@@ -10,6 +10,7 @@ import com.google.gwt.place.shared.Place;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.widget.VisibilityChangeEvent;
 import cc.alcina.framework.gwt.client.widget.VisibilityChangeEvent.HasVisibilityChangeHandlers;
 
@@ -39,7 +40,7 @@ public class SubwidgetActivitySupport
 	}
 
 	public void goToWhere() {
-		Place where = ClientFactory.get().getPlaceController().getWhere();
+		Place where = Client.get().getPlaceController().getWhere();
 		Activity activity = activityMapper.getActivity(where);
 		if (activity != null) {
 			activity.start(display, null);
@@ -78,7 +79,7 @@ public class SubwidgetActivitySupport
 			if (activityManager == null) {
 				activityMapper = activityMapperSupplier.get();
 				activityManager = new ActivityManager(activityMapper,
-						ClientFactory.get().getEventBus());
+						Client.get().getEventBus());
 			}
 			if (!receivingEvents) {
 				receivingEvents = true;

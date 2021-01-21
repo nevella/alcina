@@ -53,7 +53,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
@@ -328,7 +328,7 @@ public abstract class ActionViewProviderBase
 	public static class ActionViewProvider extends ActionViewProviderBase {
 		@Override
 		protected void performAction(AsyncCallback<String> asyncCallback) {
-			ClientBase.getCommonRemoteServiceAsyncInstance()
+			Client.commonRemoteService()
 					.performAction(action, asyncCallback);
 			action.wasCalled();
 		}

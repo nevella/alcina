@@ -11,13 +11,9 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.RootLayoutPanel;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientBase;
-import cc.alcina.framework.gwt.client.LayoutManagerBase;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 public class StatusPanel extends Composite {
@@ -227,13 +223,7 @@ public class StatusPanel extends Composite {
 		}
 		content.setHTML(html);
 		setShowingProblem(false);
-		if (!inresize
-				&& Registry.impl(LayoutManagerBase.class).isDisplayInitialised()
-				&& Registry.impl(ClientBase.class).isUsesRootLayoutPanel()) {
-			inresize = true;
-			RootLayoutPanel.get().onResize();
-			inresize = false;
-		}
+		
 	}
 
 	private void updateHandlers(boolean show) {

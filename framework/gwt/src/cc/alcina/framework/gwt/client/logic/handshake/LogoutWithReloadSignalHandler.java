@@ -6,7 +6,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.ConsortSignalHandler;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.logic.CallManager;
 
 public class LogoutWithReloadSignalHandler
@@ -31,7 +31,7 @@ public class LogoutWithReloadSignalHandler
 	@Override
 	public void signal(Consort consort, AsyncCallback signalHandledCallback) {
 		consort.addOneTimeFinishedCallback(signalHandledCallback);
-		ClientBase.getCommonRemoteServiceAsyncInstance().logout(this);
+		Client.commonRemoteService().logout(this);
 		CallManager.get().register(this, "Logging out");
 	}
 }

@@ -22,8 +22,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
-import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CloneActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHandler;
@@ -245,7 +245,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 
 		protected boolean isAutoSave() {
-			return ClientBase.getGeneralProperties().isAutoSave();
+			return GeneralProperties.get().isAutoSave();
 		}
 	}
 }

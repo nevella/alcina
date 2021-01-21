@@ -7,6 +7,7 @@ import com.google.gwt.user.client.ui.IsWidget;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.view.ViewModel.DetailViewModel;
@@ -28,9 +29,9 @@ public abstract class TypedModelActivity<P extends Place, VM extends ViewModel>
 
 	@Override
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
-		model = ClientFactory.get().getUiController()
+		model = Client.get().getUiController()
 				.getViewModel(getModelClass());
-		IsWidget view = ClientFactory.get().getUiController().getView(panel,
+		IsWidget view = Client.get().getUiController().getView(panel,
 				model, place);
 		updateModel();
 		panel.setWidget(view);

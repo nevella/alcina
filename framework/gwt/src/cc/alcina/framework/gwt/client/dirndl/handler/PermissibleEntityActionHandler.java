@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.actions.PermissibleEntityAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.gwt.client.entity.view.ClientFactory;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
 @RegistryLocation(registryPoint = PermissibleActionHandler.class, targetClass = PermissibleEntityAction.class, implementationType = ImplementationType.INSTANCE)
@@ -18,12 +18,12 @@ public class PermissibleEntityActionHandler
 	@Override
 	public void handleAction(Widget sourceWidget,
 			PermissibleEntityAction action, Object target) {
-		Place currentPlace = ClientFactory.currentPlace();
+		Place currentPlace = Client.currentPlace();
 		if (currentPlace instanceof CategoryNamePlace) {
 			CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
 					.copy();
 			categoryNamePlace.nodeName = null;
-			ClientFactory.goTo(categoryNamePlace);
+			Client.goTo(categoryNamePlace);
 		}
 	}
 }

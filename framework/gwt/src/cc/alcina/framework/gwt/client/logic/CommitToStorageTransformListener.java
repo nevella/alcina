@@ -22,6 +22,8 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -51,7 +53,7 @@ import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientState;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
@@ -179,6 +181,20 @@ public class CommitToStorageTransformListener extends StateListenable
 	private Object commitMonitor = new Object();
 
 	public CommitToStorageTransformListener() {
+		if(GWT.isClient()) {
+			new WindowClosingHandler().add();
+		}
+	}
+	private static class WindowClosingHandler {
+
+		public void add() {
+			Window.addWindowClosingHandler(evt->{
+				CommitToStorageTransformListener transformListener = CommitToStorageTransformListener.get();
+				transformListener.setPaused(false);
+				transformListener.flush();
+			});
+		}
+		
 	}
 
 	public void clearPriorRequestsWithoutResponse() {
@@ -370,7 +386,7 @@ public class CommitToStorageTransformListener extends StateListenable
 			return;
 		}
 		if (PermissionsManager.get().getOnlineState() == OnlineState.OFFLINE) {
-			ClientBase.getCommonRemoteServiceAsyncInstance()
+			Client.commonRemoteService()
 					.ping(new AsyncCallback<Void>() {
 						@Override
 						public void onFailure(Throwable caught) {
@@ -410,7 +426,7 @@ public class CommitToStorageTransformListener extends StateListenable
 
 	protected void commitRemote(DomainTransformRequest request,
 			AsyncCallback<DomainTransformResponse> callback) {
-		ClientBase.getCommonRemoteServiceAsyncInstance().transform(request,
+		Client.commonRemoteService().transform(request,
 				callback);
 	}
 

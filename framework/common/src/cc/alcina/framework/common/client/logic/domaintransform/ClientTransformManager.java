@@ -34,7 +34,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Wrapper;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.Client;
 
 public abstract class ClientTransformManager extends TransformManager {
 	public static ClientTransformManager cast() {
@@ -387,7 +387,7 @@ public abstract class ClientTransformManager extends TransformManager {
 		protected void callRemotePersistence(
 				WrapperPersistable persistableObject,
 				AsyncCallback<Long> savedCallback) {
-			ClientBase.getCommonRemoteServiceAsyncInstance()
+			Client.commonRemoteService()
 					.persist(persistableObject, savedCallback);
 		}
 	}

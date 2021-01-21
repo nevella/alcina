@@ -88,7 +88,7 @@ public class FormValidation {
 				// if (PermissionsManager.get().isMemberOfGroup(
 				// PermissionsManager.getAdministratorGroupName())
 				// && sender != null) {
-				// if (ClientBase.getGeneralProperties()
+				// if (GeneralProperties.get()
 				// .isAllowAdminInvalidObjectWrite()
 				// && !alwaysDisallowOkIfInvalid) {
 				// Registry.impl(ClientNotifications.class).confirm(

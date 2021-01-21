@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.Client;
 
 @RegistryLocation(registryPoint = WaitForTransformsClient.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
@@ -92,7 +92,7 @@ public class WaitForTransformsClient implements AsyncCallback<DomainUpdate> {
 	}
 
 	private void waitForTransforms() {
-		ClientBase.getCommonRemoteServiceAsyncInstance()
+		Client.commonRemoteService()
 				.waitForTransforms(position, this);
 	}
 }

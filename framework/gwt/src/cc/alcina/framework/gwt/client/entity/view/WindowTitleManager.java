@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
 @RegistryLocation(registryPoint = WindowTitleManager.class, implementationType = ImplementationType.SINGLETON)
@@ -35,7 +36,7 @@ public class WindowTitleManager {
 		DetailView.topicDetailModelObjectSet().add(new TopicListener<Entity>() {
 			@Override
 			public void topicPublished(String key, Entity message) {
-				updateTitle(ClientFactory.currentPlace());
+				updateTitle(Client.currentPlace());
 			}
 		});
 	}

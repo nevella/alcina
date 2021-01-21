@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
 import cc.alcina.framework.common.client.util.ColumnMapper;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.entity.export.RowExportContentDefinition;
 import cc.alcina.framework.gwt.client.entity.place.EntitySubPlace;
 import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
@@ -55,7 +56,7 @@ public interface GroupedCellTableView<VM extends ViewModel> extends IsWidget {
 					} else {
 						def.setGroupingParameters(null);
 					}
-					ClientFactory.goTo(copy);
+					Client.goTo(copy);
 				}).dialog().noGlass().caption("Edit grouping")
 				.okButtonName("Group results").cancelButtonName("No grouping")
 				.show();

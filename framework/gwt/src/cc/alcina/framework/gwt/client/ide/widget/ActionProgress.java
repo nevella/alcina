@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
 import cc.alcina.framework.common.client.logic.MuteablePropertyChangeSupport;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.widget.Link;
 
 /**
@@ -178,7 +178,7 @@ public class ActionProgress extends Composite
 					}
 				};
 				if (!checking) {
-					ClientBase.getCommonRemoteServiceAsyncInstance()
+					Client.commonRemoteService()
 							.pollJobStatus(id, false, callback);
 					checking = true;
 				}
@@ -298,7 +298,7 @@ public class ActionProgress extends Composite
 		cancelLink.setVisible(false);
 		cancellingStatusMessage.setText(" - Cancelling...");
 		cancellingStatusMessage.setVisible(true);
-		ClientBase.getCommonRemoteServiceAsyncInstance().pollJobStatus(getId(),
+		Client.commonRemoteService().pollJobStatus(getId(),
 				true, new AsyncCallback<JobTracker>() {
 					@Override
 					public void onFailure(Throwable e) {

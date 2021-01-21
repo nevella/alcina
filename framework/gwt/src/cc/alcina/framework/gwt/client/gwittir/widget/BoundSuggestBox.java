@@ -38,7 +38,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
 import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
@@ -229,7 +229,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 			Optional.ofNullable(runningCallback)
 					.ifPresent(sc -> sc.setCancelled(true));
 			runningCallback = new SuggestCallback(request, callback);
-			ClientBase.getCommonRemoteServiceAsyncInstance()
+			Client.commonRemoteService()
 					.suggest(boundRequest, runningCallback);
 		}
 

@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 import cc.alcina.framework.gwt.client.entity.view.ViewModel.ViewModelWithDataProvider;
@@ -169,7 +170,7 @@ public abstract class AbstractViewModelView<VM extends ViewModel>
 	}
 
 	protected void refresh() {
-		ClientFactory.refreshCurrentPlace();
+		Client.refreshCurrentPlace();
 	}
 
 	protected void showAdvancedActionMenu(ClickEvent c) {

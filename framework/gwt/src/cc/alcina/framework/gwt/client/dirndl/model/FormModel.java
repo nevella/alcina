@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
@@ -36,7 +37,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.A
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
-import cc.alcina.framework.gwt.client.entity.view.ClientFactory;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
@@ -83,16 +83,16 @@ public class FormModel extends Model {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			Place currentPlace = ClientFactory.currentPlace();
+			Place currentPlace = Client.currentPlace();
 			if (currentPlace instanceof EntityPlace) {
 				EntityPlace entityPlace = ((EntityPlace) currentPlace).copy();
 				entityPlace.action = EntityAction.VIEW;
-				ClientFactory.goTo(entityPlace);
+				Client.goTo(entityPlace);
 			} else if (currentPlace instanceof CategoryNamePlace) {
 				CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
 						.copy();
 				categoryNamePlace.nodeName = null;
-				ClientFactory.goTo(categoryNamePlace);
+				Client.goTo(categoryNamePlace);
 			}
 		}
 	}
@@ -103,14 +103,14 @@ public class FormModel extends Model {
 				ClientTransformManager.cast()
 						.promoteToDomainObject(getState().model);
 			}
-			if (ClientFactory.currentPlace() instanceof EntityPlace) {
-				EntityPlace entityPlace = ((EntityPlace) ClientFactory
+			if (Client.currentPlace() instanceof EntityPlace) {
+				EntityPlace entityPlace = ((EntityPlace) Client
 						.currentPlace()).copy();
 				entityPlace.action = EntityAction.VIEW;
-				ClientFactory.goTo(entityPlace);
-			} else if (ClientFactory
+				Client.goTo(entityPlace);
+			} else if (Client
 					.currentPlace() instanceof CategoryNamePlace) {
-				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) ClientFactory
+				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
 						.currentPlace();
 				DefaultPermissibleActionHandler.handleAction(null,
 						categoryNamePlace.ensureAction(), node);

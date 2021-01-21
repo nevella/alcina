@@ -37,7 +37,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
@@ -125,7 +125,7 @@ public class ChildBeanCustomiser implements Customiser {
 				@Override
 				public void onClick(ClickEvent event) {
 					Class clazz = ChildBeanWidget.this.objectClass;
-					boolean autoSave = ClientBase.getGeneralProperties()
+					boolean autoSave = GeneralProperties.get()
 							.isAutoSave();
 					Entity obj = autoSave
 							? TransformManager.get().createDomainObject(clazz)

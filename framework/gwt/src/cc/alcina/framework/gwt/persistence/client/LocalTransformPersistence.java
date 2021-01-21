@@ -37,7 +37,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ToStringConverter;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -479,7 +479,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	protected void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted, ModalNotifier notifier,
 			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
-		ClientBase.getCommonRemoteServiceAsyncInstance()
+		Client.commonRemoteService()
 				.persistOfflineTransforms(uncommitted,
 						postPersistOfflineTransformsCallback);
 	}

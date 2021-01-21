@@ -25,7 +25,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.ide.widget.ActionProgress;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
@@ -101,7 +101,7 @@ public class RunningActionsViewProvider implements ViewProvider {
 				refreshTimer.schedule(10000);
 			}
 		};
-		ClientBase.getCommonRemoteServiceAsyncInstance()
+		Client.commonRemoteService()
 				.listRunningJobs(callback);
 	}
 

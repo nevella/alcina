@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.actions.instances.NonstandardObjectActi
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -23,7 +24,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafNodeRenderer;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
-import cc.alcina.framework.gwt.client.entity.view.ClientFactory;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
 //FIXME - ert.dirndl.2 - baseplace should implement a  'link provider' interface
@@ -84,7 +84,7 @@ public class LinkModel {
 			rendered.getElement().setInnerText(getText(node));
 			NonstandardObjectAction objectAction = model(node).getObjectAction();
 			if (objectAction != null) {
-				EntityPlace currentPlace = (EntityPlace) ClientFactory.currentPlace();
+				EntityPlace currentPlace = (EntityPlace) Client.currentPlace();
 				rendered.getElement().setAttribute("href", "#");
 				rendered.addDomHandler(
 						e -> DefaultPermissibleActionHandler.handleAction(

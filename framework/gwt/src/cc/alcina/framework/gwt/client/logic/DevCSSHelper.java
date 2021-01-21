@@ -6,7 +6,6 @@ import java.beans.PropertyChangeListener;
 import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
@@ -47,8 +46,8 @@ public class DevCSSHelper {
 	}
 
 	public void updateDeveloperCss() {
-		String css = ClientBase.getGeneralProperties().getPersistentCss()
-				+ ClientBase.getGeneralProperties().getTransientCss();
+		String css = GeneralProperties.get().getPersistentCss()
+				+ GeneralProperties.get().getTransientCss();
 		this.styleElement = ClientUtils.updateCss(styleElement, css);
 	}
 }

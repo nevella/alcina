@@ -1,25 +1,35 @@
-package cc.alcina.framework.gwt.client.entity.view;
+package cc.alcina.framework.gwt.client;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
 import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.SimpleEventBus;
 
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistryDelegateCreator;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
+import cc.alcina.framework.gwt.client.entity.view.UiController;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
-@RegistryLocation(registryPoint = ClientFactory.class, implementationType = ImplementationType.SINGLETON)
+@RegistryLocation(registryPoint = Client.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
-public abstract class ClientFactory {
-	static ClientFactory singleton = Registry
-			.checkSingleton(ClientFactory.class);
+public abstract class Client {
 
 	public static Place currentPlace() {
 		return get().getPlaceController().getWhere();
@@ -32,8 +42,8 @@ public abstract class ClientFactory {
 		CommitToStorageTransformListener.flushAndRun(runnable);
 	}
 
-	public static ClientFactory get() {
-		return Registry.impl(ClientFactory.class);
+	public static Client get() {
+		return Registry.impl(Client.class);
 	}
 
 	public static void goTo(Place newPlace) {
@@ -48,28 +58,38 @@ public abstract class ClientFactory {
 		goTo(place);
 	}
 
+	public static class Init {
+		public static void preRegistry() {
+			LiSet liSet = new LiSet();
+			CommonUtils.setSupplier = () -> new LightSet();
+			LocalDom.mutations.setDisabled(true);
+			//
+			if (GWT.isScript()) {
+				Registry.setDelegateCreator(new JsRegistryDelegateCreator());
+			}
+			JavascriptKeyableLookup.initJs();
+		}
+
+		public static void registry() {
+			Registry.get().registerBootstrapServices(ClientReflector.get());
+			Reflections.registerClassLookup(ClientReflector.get());
+		}
+	}
+
 	protected final EventBus eventBus = new SimpleEventBus();
 
 	protected PlaceController placeController;
 
 	protected UiController uiController;
 
-	protected RegistryHistoryMapper historyMapper;
-
 	protected PlaceHistoryHandler historyHandler;
 
-	protected WindowTitleManager windowTitleManager;
-
-	public ClientFactory() {
+	public Client() {
 		createPlaceController();
 	}
 
 	public EventBus getEventBus() {
 		return eventBus;
-	}
-
-	public RegistryHistoryMapper getHistoryMapper() {
-		return this.historyMapper;
 	}
 
 	public PlaceController getPlaceController() {
@@ -84,16 +104,20 @@ public abstract class ClientFactory {
 		historyHandler.handleCurrentHistory();
 	}
 
-	public boolean isDeveloper() {
+	public static boolean isDeveloper() {
 		return EntityClientUtils.isTestServer()
 				|| PermissionsManager.get().isDeveloper();
 	}
 
 	public void setupPlaceMapping() {
-		historyMapper = Registry.impl(RegistryHistoryMapper.class);
-		historyHandler = new PlaceHistoryHandler(historyMapper);
+		historyHandler = new PlaceHistoryHandler(
+				Registry.impl(RegistryHistoryMapper.class));
 		uiController = new UiController();
 	}
 
 	protected abstract void createPlaceController();
+
+	public static CommonRemoteServiceAsync commonRemoteService() {
+		return Registry.impl(CommonRemoteServiceAsync.class);
+	}
 }

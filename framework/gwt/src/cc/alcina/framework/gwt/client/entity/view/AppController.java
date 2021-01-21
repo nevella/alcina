@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 import cc.alcina.framework.gwt.client.entity.export.RowExportContentDefinition;
@@ -57,7 +58,7 @@ public class AppController {
 		EntityPlace target = (EntityPlace) RegistryHistoryMapper.get()
 				.getPlaceByModelClass(clazz);
 		target.action = EntityAction.CREATE;
-		ClientFactory.goTo(target);
+		Client.goTo(target);
 	}
 
 	public boolean doDelete(VersionableEntity object) {
@@ -76,7 +77,7 @@ public class AppController {
 				.getPlaceByModelClass(object.getClass());
 		target.action = EntityAction.EDIT;
 		target.id = object.getId();
-		ClientFactory.goTo(target);
+		Client.goTo(target);
 	}
 
 	public void doSearch(Class<? extends Entity> clazz, String text) {
@@ -84,7 +85,7 @@ public class AppController {
 				.getPlaceByModelClass(clazz);
 		target.getSearchDefinition().toTextSearch(text);
 		target.action = EntityAction.VIEW;
-		ClientFactory.goTo(target);
+		Client.goTo(target);
 	}
 
 	public void doSearch(EntitySearchDefinition def) {
@@ -95,7 +96,7 @@ public class AppController {
 				.getPlaceByModelClass(def.queriedEntityClass());
 		target.action = EntityAction.VIEW;
 		target.def = def;
-		ClientFactory.goTo(target);
+		Client.goTo(target);
 	}
 
 	public void doView(VersionableEntity object) {
@@ -106,7 +107,7 @@ public class AppController {
 		if (Event.getCurrentEvent() != null && WidgetUtils.isNewTabModifier()) {
 			Window.open(target.toAbsoluteHrefString(), "_blank", "");
 		} else {
-			ClientFactory.goTo(target);
+			Client.goTo(target);
 		}
 	}
 
@@ -115,7 +116,7 @@ public class AppController {
 				.getPlaceByModelClass(clazz);
 		target.action = EntityAction.VIEW;
 		target.id = objectId;
-		ClientFactory.goTo(target);
+		Client.goTo(target);
 	}
 
 	public void export(DomainStoreDataProvider dataProvider,
@@ -149,7 +150,7 @@ public class AppController {
 	}
 
 	public void goToCurrentPlace() {
-		Place place = ClientFactory.get().getPlaceController().getWhere();
+		Place place = Client.get().getPlaceController().getWhere();
 		if (place != null) {
 			String token = RegistryHistoryMapper.get().getToken(place);
 			place = RegistryHistoryMapper.get().getPlace(token);
@@ -166,7 +167,7 @@ public class AppController {
 			LooseContext.pushWithBoolean(
 					PlaceHistoryHandler.CONTEXT_IGNORE_NEXT_TOKEN,
 					!fireHistoryEvent);
-			ClientFactory.goTo(place);
+			Client.goTo(place);
 		} finally {
 			LooseContext.pop();
 		}
@@ -176,25 +177,25 @@ public class AppController {
 		try {
 			LooseContext.pushWithTrue(
 					PlaceHistoryHandler.CONTEXT_REPLACE_CURRENT_TOKEN);
-			ClientFactory.goTo(place);
+			Client.goTo(place);
 		} finally {
 			LooseContext.pop();
 		}
 	}
 
 	public void toggleCurrentPlaceEditing(boolean edit) {
-		Place current = ClientFactory.currentPlace();
+		Place current = Client.currentPlace();
 		Place copy = RegistryHistoryMapper.get().copyPlace(current);
 		((HasEntityAction) copy)
 				.setAction(edit ? EntityAction.EDIT : EntityAction.VIEW);
-		ClientFactory.goTo(copy);
+		Client.goTo(copy);
 	}
 
 	private void afterDeleteSuccess(VersionableEntity object) {
 		MessageManager.get().showMessage(Ax.format("Deleted %s %s",
 				object.getClass().getSimpleName(), object.getId()));
 		AppViewModel.get().resetProviderFor(object.getClass());
-		ClientFactory.refreshCurrentPlace();
+		Client.refreshCurrentPlace();
 	}
 
 	protected void addObjectCriterion(Object model, EntityPlace place) {

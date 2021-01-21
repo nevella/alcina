@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
@@ -31,10 +32,10 @@ public class EntityActions {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			EntityPlace entityPlace = ((EntityPlace) ClientFactory
+			EntityPlace entityPlace = ((EntityPlace) Client
 					.currentPlace()).copy();
 			entityPlace.action = EntityAction.EDIT;
-			ClientFactory.goTo(entityPlace);
+			Client.goTo(entityPlace);
 		}
 	}
 
@@ -54,7 +55,7 @@ public class EntityActions {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			EntityPlace entityPlace = ((EntityPlace) ClientFactory
+			EntityPlace entityPlace = ((EntityPlace) Client
 					.currentPlace()).copy();
 			if (Window.confirm(Ax.format(
 					"Are you sure you want to delete the selected %s?",
@@ -62,7 +63,7 @@ public class EntityActions {
 				entityPlace.provideEntity().delete();
 				MessageManager.get().icyMessage(Ax.format("%s deleted",
 						entityPlace.provideCategoryString(1, false)));
-				ClientFactory.refreshCurrentPlace();
+				Client.refreshCurrentPlace();
 			}
 		}
 	}
@@ -76,7 +77,7 @@ public class EntityActions {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			EntityPlace currentPlace = (EntityPlace) ClientFactory
+			EntityPlace currentPlace = (EntityPlace) Client
 					.currentPlace();
 			EntityPlace entityPlace = Reflections
 					.newInstance(currentPlace.getClass());
@@ -101,7 +102,7 @@ public class EntityActions {
 			}
 			entityPlace.action = EntityAction.CREATE;
 			entityPlace.withId(0);
-			ClientFactory.goTo(entityPlace);
+			Client.goTo(entityPlace);
 		}
 	}
 
@@ -109,10 +110,10 @@ public class EntityActions {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			EntityPlace entityPlace = ((EntityPlace) ClientFactory
+			EntityPlace entityPlace = ((EntityPlace) Client
 					.currentPlace()).copy();
 			entityPlace.action = EntityAction.VIEW;
-			ClientFactory.goTo(entityPlace);
+			Client.goTo(entityPlace);
 		}
 	}
 

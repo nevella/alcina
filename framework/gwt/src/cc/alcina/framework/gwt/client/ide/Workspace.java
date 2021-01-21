@@ -42,7 +42,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CloneActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.DeleteActionHandler;
@@ -228,7 +228,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		if (colln != null && colln.size() == 1) {
 			singleObj = colln.iterator().next();
 		}
-		boolean autoSave = ClientBase.getGeneralProperties().isAutoSave();
+		boolean autoSave = GeneralProperties.get().isAutoSave();
 		if (singleObj instanceof PermissibleAction) {
 			Widget view = getViewForAction((PermissibleAction) singleObj);
 			visualiser.setContentWidget(view);

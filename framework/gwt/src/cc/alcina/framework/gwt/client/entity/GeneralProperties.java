@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.misc.PerUserProperties;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
 @Bean(displayInfo = @Display(name = "Developer"), displayNamePropertyName = "id")
@@ -56,6 +57,11 @@ public class GeneralProperties extends WrapperPersistable
 	private String persistentCss = "";
 
 	private boolean allowAdminInvalidObjectWrite = true;
+	
+	public static GeneralProperties get() {
+		return Registry.impl(GeneralProperties.class);
+		
+	}
 
 	public GeneralProperties() {
 	}

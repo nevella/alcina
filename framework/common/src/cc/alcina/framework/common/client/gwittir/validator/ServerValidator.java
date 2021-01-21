@@ -25,7 +25,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 /**
@@ -230,7 +230,7 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 
 	protected void validateWithCallback(
 			AsyncCallback<List<ServerValidator>> callback) {
-		ClientBase.getCommonRemoteServiceAsyncInstance().validateOnServer(
+		Client.commonRemoteService().validateOnServer(
 				Arrays.asList(new ServerValidator[] { this }), callback);
 	}
 

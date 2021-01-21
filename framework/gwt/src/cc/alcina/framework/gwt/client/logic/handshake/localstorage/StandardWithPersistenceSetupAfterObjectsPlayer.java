@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.DevCSSHelper;
 import cc.alcina.framework.gwt.client.logic.handshake.SetupAfterObjectsPlayer;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
@@ -49,7 +49,7 @@ public abstract class StandardWithPersistenceSetupAfterObjectsPlayer
 
 	@Override
 	public void run() {
-		DevCSSHelper.get().addCssListeners(ClientBase.getGeneralProperties());
+		DevCSSHelper.get().addCssListeners(GeneralProperties.get());
 		saveToLocalPersistenceAndStat();
 	}
 
