@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -61,6 +62,10 @@ public abstract class LooseContext {
 
 	public static boolean is(String key) {
 		return getBoolean(key);
+	}
+
+	public static <T> Optional<T> optional(String key) {
+		return Optional.ofNullable(get(key));
 	}
 
 	public static void pop() {

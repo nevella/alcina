@@ -41,6 +41,9 @@ public class JobContext {
 	static final String CONTEXT_CURRENT = JobContext.class.getName()
 			+ ".CONTEXT_CURRENT";
 
+	static final String CONTEXT_LOG_MAX_CHARS = JobContext.class.getName()
+			+ ".CONTEXT_LOG_MAX_CHARS";
+
 	private static final String CONTEXT_EX_JOB_RESOURCES = JobContext.class
 			.getName() + ".CONTEXT_EX_JOB_RESOURCES";
 
@@ -280,6 +283,9 @@ public class JobContext {
 		}
 		if (job.provideIsNotComplete()) {
 			log = Registry.impl(PerThreadLogging.class).endBuffer();
+			int maxChars = LooseContext
+					.<Integer> optional(CONTEXT_LOG_MAX_CHARS).orElse(500000);
+			log = CommonUtils.trimToWsChars(log, maxChars, true);
 			job.setLog(log);
 			if (job.provideRelatedSequential().stream().filter(j -> j != job)
 					.anyMatch(Job::provideIsNotComplete)) {
