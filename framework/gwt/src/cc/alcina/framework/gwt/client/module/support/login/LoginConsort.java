@@ -134,11 +134,7 @@ public abstract class LoginConsort extends Consort<State> {
 	}
 
 	LoginRemoteServiceAsync getAsyncService() {
-		LoginRemoteServiceAsync service = (LoginRemoteServiceAsync) GWT
-				.create(LoginRemoteService.class);
-		Registry.impl(AlcinaRpcRequestBuilderLight.class)
-				.adjustEndpoint((ServiceDefTarget) service);
-		return service;
+		return Registry.impl(LoginRemoteServiceAsync.class);
 	}
 
 	class Player_Got_2fa extends EnumPlayer<State> {
