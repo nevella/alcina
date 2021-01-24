@@ -5,8 +5,10 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -34,7 +36,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
@@ -42,7 +46,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Handler;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
+import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class DirectedLayout {
@@ -97,10 +101,12 @@ public class DirectedLayout {
 			this.locationResolver = locationResolver;
 		}
 
+		@Override
 		public Object resolveModel(Object model) {
 			return parent.resolveModel(model);
 		}
 
+		@Override
 		public <T> T resolveRenderContextProperty(String key) {
 			return parent.resolveRenderContextProperty(key);
 		}
@@ -201,12 +207,8 @@ public class DirectedLayout {
 			return idx == 0 ? null : children.get(idx - 1);
 		}
 
-		public Object getModel() {
-			return this.model;
-		}
-
-		public void publishTopic(Class<? extends NodeTopic> topic) {
-			rendered.behaviours.forEach(binding -> binding.publishTopic(topic));
+		public <T> T getModel() {
+			return (T) this.model;
 		}
 
 		public Node resolveNode(String path) {
@@ -320,10 +322,7 @@ public class DirectedLayout {
 			if (directed == null || directed.behaviours().length == 0) {
 				return;
 			}
-			Preconditions.checkState(rendered.widgets.size() == 1);
-			rendered.behaviours = Arrays.stream(directed.behaviours())
-					.map(BehaviourBinding::new).collect(Collectors.toList());
-			rendered.behaviours.forEach(BehaviourBinding::bind);
+			rendered.bindBehaviours();
 		}
 
 		private void bindProperties() {
@@ -532,6 +531,22 @@ public class DirectedLayout {
 				return panel.getWidgetIndex(childWidget);
 			}
 
+			void bindBehaviours() {
+				Preconditions.checkState(widgets.size() == 1);
+				behaviours = Arrays.stream(directed.behaviours())
+						.map(BehaviourBinding::new)
+						.collect(Collectors.toList());
+				behaviours.forEach(BehaviourBinding::bind);
+				if (preRenderListeners != null) {
+					preRenderListeners
+							.forEach((behaviour, behaviourBinding) -> {
+								behaviourBindingFor(behaviour).topicListeners
+										.addListener(behaviourBinding);
+							});
+					preRenderListeners = null;
+				}
+			}
+
 			public Optional<Widget> lastWidgetOrPredecessorLastWidget() {
 				Node cursor = Node.this;
 				while (cursor != null) {
@@ -566,6 +581,27 @@ public class DirectedLayout {
 					return parent.rendered.verifyContainer();
 				}
 				return (FlowPanel) verifySingleWidget();
+			}
+
+			public BehaviourBinding behaviourBindingFor(Behaviour behaviour) {
+				return behaviours.stream()
+						.filter(bb -> bb.behaviour == behaviour).findFirst()
+						.get();
+			}
+
+			private Map<Behaviour, BehaviourBinding> preRenderListeners;
+
+			public void addBehaviourBinding(Behaviour behaviour,
+					BehaviourBinding behaviourBinding) {
+				if (behaviours != null) {
+					behaviourBindingFor(behaviour).topicListeners
+							.addListener(behaviourBinding);
+				} else {
+					if (preRenderListeners == null) {
+						preRenderListeners = new LinkedHashMap<>();
+					}
+					preRenderListeners.put(behaviour, behaviourBinding);
+				}
 			}
 		}
 
@@ -627,11 +663,32 @@ public class DirectedLayout {
 
 			PropertyBinding(Binding binding) {
 				this.binding = binding;
-				/*
-				 * exactly one of from() and value() must be non-empty
-				 */
-				Preconditions.checkArgument(binding.from().length() > 0
-						^ binding.value().length() > 0);
+				switch (binding.type()) {
+				case CSS_CLASS:
+					/*
+					 * requires from/transform or from/literal
+					 */
+					Preconditions.checkArgument(
+							binding.from().length() > 0 && (binding
+									.transform() != ToStringFunction.Identity.class
+									^ binding.literal().length() > 0));
+					break;
+				case SWITCH_CSS_CLASS:
+					/*
+					 * requires both 'inputs', literal must be | separated
+					 */
+					Preconditions.checkArgument(binding.from().length() > 0
+							&& binding.literal().length() > 0
+							&& binding.literal().split("\\|").length == 2);
+					break;
+				default:
+					/*
+					 * exactly one of from() and value() must be non-empty
+					 */
+					Preconditions.checkArgument(binding.from().length() > 0
+							^ binding.literal().length() > 0);
+					break;
+				}
 				if (binding.from().length() > 0) {
 					this.listener = new RemovablePropertyChangeListener(
 							(Bindable) model, binding.from(), evt -> set());
@@ -640,21 +697,57 @@ public class DirectedLayout {
 			}
 
 			void set() {
-				String value = binding.from().length() > 0
-						? (String) Reflections.propertyAccessor()
-								.getPropertyValue(model, binding.from())
-						: binding.value();
+				Object value = binding.from().length() > 0
+						? Reflections.propertyAccessor().getPropertyValue(model,
+								binding.from())
+						: binding.literal();
+				boolean hasTransform = (Class) binding
+						.transform() != ToStringFunction.Identity.class;
+				if (hasTransform) {
+					value = Reflections.newInstance(binding.transform())
+							.apply(value);
+				}
+				String stringValue = value.toString();
 				Element element = rendered.widgets.get(0).getElement();
 				switch (binding.type()) {
 				case INNER_HTML:
-					element.setInnerHTML(value);
+					element.setInnerHTML(stringValue);
 					break;
 				case INNER_TEXT:
-					element.setInnerText(value);
+					element.setInnerText(stringValue);
 					break;
 				case PROPERTY:
-					element.setAttribute(binding.to(), value);
+					element.setAttribute(binding.to(), stringValue);
 					break;
+				case CSS_CLASS: {
+					if (hasTransform) {
+						element.setClassName(stringValue);
+					} else {
+						boolean present = (boolean) value;
+						element.setClassName(binding.literal(), present);
+					}
+				}
+					break;
+				case SWITCH_CSS_CLASS: {
+					String[] parts = binding.literal().split("\\|");
+					boolean part1 = (boolean) value;
+					if (parts[0].length() > 0) {
+						element.setClassName(parts[0], !part1);
+					}
+					if (parts[1].length() > 0) {
+						element.setClassName(parts[1], part1);
+					}
+				}
+					break;
+				case TOGGLE_CSS_CLASS:
+					element.setClassName(stringValue,
+							element.hasClassName(stringValue));
+					break;
+				case STYLE_ATTRIBUTE:
+					element.getStyle().setProperty(binding.to(), stringValue);
+					break;
+				default:
+					throw new UnsupportedOperationException();
 				}
 			}
 
@@ -670,6 +763,8 @@ public class DirectedLayout {
 
 			NodeEvent eventBinding;
 
+			TopicListeners topicListeners = new TopicListeners();
+
 			public BehaviourBinding(Behaviour behaviour) {
 				this.behaviour = behaviour;
 			}
@@ -677,10 +772,34 @@ public class DirectedLayout {
 			@Override
 			public void onEvent(GwtEvent event) {
 				Context context = new NodeEvent.Context();
+				context.gwtEvent = event;
+				fireEvent(context);
+			}
+
+			void onTopicEvent(TopicEvent topicEvent) {
+				if (Behaviour.Util.hasActivationTopic(behaviour,
+						topicEvent.topic)) {
+					bindEvent(true);
+				}
+				if (Behaviour.Util.hasListenerTopic(behaviour,
+						topicEvent.topic)) {
+					Context context = new NodeEvent.Context();
+					context.topicEvent = topicEvent;
+					fireEvent(context);
+				}
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("Binding :: %s :: %s",
+						model.getClass().getSimpleName(), behaviour);
+			}
+
+			private void fireEvent(Context context) {
+				context.nodeEvent = eventBinding;
 				context.behaviour = behaviour;
 				context.node = Node.this;
-				context.gwtEvent = event;
-				context.nodeEvent = eventBinding;
+				context.topicListeners = topicListeners;
 				Class<? extends Handler> handlerClass = behaviour.handler();
 				Handler handler = null;
 				// allow context-sensitive handlers
@@ -710,24 +829,40 @@ public class DirectedLayout {
 								.newInstance(behaviour.event());
 						eventBinding.setReceiver(this);
 					}
-					Widget widgetToBind = resolveWidget(
-							behaviour.eventSourcePath());
-					eventBinding.bind(widgetToBind, true);
+					eventBinding.bind(getBindingWidget(), true);
 				} else {
 					eventBinding.bind(null, false);
 				}
 			}
 
 			void bind() {
-				if (behaviour.activationTopic() == NodeTopic.VoidTopic.class) {
+				if (!Behaviour.Util.hasActivationTopic(behaviour)) {
 					bindEvent(true);
+				}
+				for (TopicBehaviour topicBehaviour : behaviour.topics()) {
+					if (Behaviour.Util.isListenerTopic(topicBehaviour)) {
+						Node cursor = Node.this;
+						while (cursor != null) {
+							Behaviour behaviour = Behaviour.Util.getEmitter(
+									cursor.directed, topicBehaviour.topic());
+							if (behaviour != null) {
+								cursor.rendered.addBehaviourBinding(behaviour,
+										this);
+								logger.warn(
+										"Binding topic behaviour {} on {} to {}\n",
+										topicBehaviour.topic().getSimpleName(),
+										Node.this.pathSegment(),
+										cursor.pathSegment());
+								break;
+							}
+							cursor = cursor.parent;
+						}
+					}
 				}
 			}
 
-			void publishTopic(Class<? extends NodeTopic> topic) {
-				if (behaviour.activationTopic() == topic) {
-					bindEvent(true);
-				}
+			Widget getBindingWidget() {
+				return rendered.verifySingleWidget();
 			}
 		}
 
@@ -738,6 +873,12 @@ public class DirectedLayout {
 		public void pushResolver(AnnotationLocation.Resolver locationResolver) {
 			resolver = new DelegatingContextResolver(resolver,
 					locationResolver);
+		}
+
+		public void fireEvent(TopicEvent topicEvent) {
+			if (rendered.behaviours != null) {
+				rendered.behaviours.forEach(bb -> bb.onTopicEvent(topicEvent));
+			}
 		}
 	}
 

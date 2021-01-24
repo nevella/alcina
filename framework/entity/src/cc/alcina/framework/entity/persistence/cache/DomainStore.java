@@ -62,6 +62,8 @@ import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManyMultipleSummary;
+import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManyMultipleSummary.SizeProvider;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.AssociationPropagationTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -1706,6 +1708,24 @@ public class DomainStore implements IDomainStore {
 		@Override
 		protected void performDeleteObject(Entity entity) {
 			super.performDeleteObject(entity);
+		}
+	}
+
+	@RegistryLocation(registryPoint = SizeProvider.class, implementationType = ImplementationType.SINGLETON)
+	public static class DomainSizeProvider implements SizeProvider {
+		@Override
+		public int getSize(OneToManyMultipleSummary summary, Entity source) {
+			try {
+				String providerMethodName = summary
+						.getCollectionAccessorMethodName();
+				Method method = source.getClass().getMethod(providerMethodName,
+						new Class[0]);
+				Collection<? extends Entity> collection = (Collection<? extends Entity>) method
+						.invoke(source, new Object[0]);
+				return collection.size();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 }

@@ -17,13 +17,11 @@ import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
-		BindablePlace<SD> implements ClearableIdPlace, HasEntityAction {
+public abstract class EntityPlace<SD extends EntitySearchDefinition>
+		extends BindablePlace<SD> implements ClearableIdPlace, HasEntityAction {
 	public transient Entity entity;
 
 	public EntityAction action = EntityAction.VIEW;
-
-	
 
 	public <EP extends EntityPlace> EP withAction(EntityAction action) {
 		this.action = action;
@@ -48,8 +46,8 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition> extends
 
 	@Override
 	public boolean provideIsDefaultDefs() {
-		return def.provideHasNoCriteria()
-				&& def.getGroupingParameters() == null;
+		return def.provideHasNoCriteria() && def.getGroupingParameters() == null
+				&& def.provideIsDefaultSortOrder();
 	}
 
 	@Override

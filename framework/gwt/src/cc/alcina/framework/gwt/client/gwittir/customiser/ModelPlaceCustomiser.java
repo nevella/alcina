@@ -86,10 +86,12 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 			}
 			String template = "<a href='#%s'>%s</a>";
 			String token = place.toTokenString();
-			String displayName = ((HasDisplayName) hasDisplayName).displayName();
-			displayName=Ax.blankTo(displayName, "(Blank)");
-			return Ax.format(template, token, SafeHtmlUtils.htmlEscape(
-					displayName));
+			String displayName = source instanceof String
+					&& ((String) source).length() > 0 ? (String) source
+							: ((HasDisplayName) hasDisplayName).displayName();
+			displayName = Ax.blankTo(displayName, "(Blank)");
+			return Ax.format(template, token,
+					SafeHtmlUtils.htmlEscape(displayName));
 		}
 	}
 }

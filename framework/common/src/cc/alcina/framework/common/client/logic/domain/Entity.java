@@ -212,6 +212,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 
 	public void reHash() {
 		hash = 0;
+		hashCode();
 	}
 
 	// not a propertychangeevent source - this should be invisible to transform

@@ -36,8 +36,8 @@ public abstract class Client {
 		return Registry.impl(CommonRemoteServiceAsync.class);
 	}
 
-	public static Place currentPlace() {
-		return get().getPlaceController().getWhere();
+	public static <P extends Place> P currentPlace() {
+		return (P) get().getPlaceController().getWhere();
 	}
 
 	public static void flushAndRefresh() {

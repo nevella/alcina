@@ -32,8 +32,8 @@ public class EntityActions {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			EntityPlace entityPlace = ((EntityPlace) Client
-					.currentPlace()).copy();
+			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
+					.copy();
 			entityPlace.action = EntityAction.EDIT;
 			Client.goTo(entityPlace);
 		}
@@ -55,8 +55,8 @@ public class EntityActions {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			EntityPlace entityPlace = ((EntityPlace) Client
-					.currentPlace()).copy();
+			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
+					.copy();
 			if (Window.confirm(Ax.format(
 					"Are you sure you want to delete the selected %s?",
 					entityPlace.provideCategoryString(1, false)))) {
@@ -77,8 +77,7 @@ public class EntityActions {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			EntityPlace currentPlace = (EntityPlace) Client
-					.currentPlace();
+			EntityPlace currentPlace = (EntityPlace) Client.currentPlace();
 			EntityPlace entityPlace = Reflections
 					.newInstance(currentPlace.getClass());
 			Optional<TruncatedObjectCriterion> o_ownerCriterion = ClientReflector
@@ -110,8 +109,8 @@ public class EntityActions {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
-			EntityPlace entityPlace = ((EntityPlace) Client
-					.currentPlace()).copy();
+			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
+					.copy();
 			entityPlace.action = EntityAction.VIEW;
 			Client.goTo(entityPlace);
 		}

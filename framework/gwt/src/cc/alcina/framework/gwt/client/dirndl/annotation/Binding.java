@@ -8,9 +8,7 @@ import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic.VoidTopic;
+import cc.alcina.framework.common.client.util.ToStringFunction;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -19,13 +17,18 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic.VoidTopic;
 @ClientVisible
 public @interface Binding {
 	String from() default "";
-	String value() default "";
-	String to() default "";
-	Type type() default Type.PROPERTY;
-	@ClientInstantiable
-	public enum Type{
-		PROPERTY,INNER_HTML,INNER_TEXT;
-		
-	}
 
+	String literal() default "";
+
+	String to() default "";
+
+	Type type() default Type.PROPERTY;
+
+	Class<? extends ToStringFunction> transform() default ToStringFunction.Identity.class;
+
+	@ClientInstantiable
+	public enum Type {
+		PROPERTY, INNER_HTML, INNER_TEXT, CSS_CLASS, TOGGLE_CSS_CLASS,
+		STYLE_ATTRIBUTE, SWITCH_CSS_CLASS;
+	}
 }

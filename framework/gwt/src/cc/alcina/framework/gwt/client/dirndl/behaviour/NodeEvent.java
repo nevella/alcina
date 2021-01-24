@@ -15,9 +15,19 @@ import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.NodeEventReceiver;
+import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 
 @ClientInstantiable
+/*
+ * FIXME - dirndl 1.1 - don't like the interplay between NodeEvent,
+ * BehaviourBinding and NodeEventReceiver...
+ * 
+ * but...maybe...it's right? It's an event fired on a node, so as long as
+ * there's one nodeevent per logical 'event', per node, maybe it's right...?
+ * weird...
+ */
 public abstract class NodeEvent {
 	public static class Context {
 		public Behaviour behaviour;
@@ -28,9 +38,9 @@ public abstract class NodeEvent {
 
 		public GwtEvent gwtEvent;
 
-		public Widget resolveHandlerTarget() {
-			return node.resolveWidget(behaviour.handlerTargetPath());
-		}
+		public TopicEvent<?> topicEvent;
+
+		public TopicListeners topicListeners;
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			return node.annotation(clazz);

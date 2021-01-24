@@ -49,4 +49,8 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 			boolean returnSingleDataObjectImplementations) {
 		this.returnSingleDataObjectImplementations = returnSingleDataObjectImplementations;
 	}
+
+	public boolean provideIsDefaultSortOrder() {
+		return getSearchOrders().isEmpty();
+	}
 }
