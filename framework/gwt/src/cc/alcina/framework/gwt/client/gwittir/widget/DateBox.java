@@ -55,6 +55,12 @@ public class DateBox extends AbstractBoundWidget<Date>
 
 	private BidiConverter<Date, Date> dateTranslator = new BidiIdentityConverter<Date>();
 
+	private DatePicker picker;
+
+	public DatePicker getPicker() {
+		return this.picker;
+	}
+
 	public DateBox() {
 		this(DateTimeFormat.getFormat("dd/MM/yyyy"));
 	}
@@ -62,7 +68,7 @@ public class DateBox extends AbstractBoundWidget<Date>
 	public DateBox(DateTimeFormat dateTimeFormat) {
 		this.dateTimeFormat = dateTimeFormat;
 		Format dtFormat = new DefaultFormat(getDateTimeFormat());
-		DatePicker picker = new DatePicker();
+		picker = new DatePicker();
 		picker.addStyleName("alcina-DatePicker");
 		base = createDateBox(dtFormat, picker);
 		base.getTextBox().addValueChangeHandler(this);

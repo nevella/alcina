@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -86,12 +87,12 @@ public interface EntityDataObject {
 		}
 
 		private transient String collectionAccessorMethodName;
+
 		private transient Class<? extends Entity> entityClass;
 
 		public Class<? extends Entity> getEntityClass() {
 			return this.entityClass;
 		}
-
 
 		public OneToManyMultipleSummary(String collectionAccessorMethodName,
 				Class<? extends Entity> entityClass) {
@@ -99,11 +100,9 @@ public interface EntityDataObject {
 			this.entityClass = entityClass;
 		}
 
-
 		public String getCollectionAccessorMethodName() {
 			return this.collectionAccessorMethodName;
 		}
-
 
 		public void setSize(int size) {
 			this.size = size;
@@ -123,7 +122,8 @@ public interface EntityDataObject {
 		}
 
 		public OneToManyMultipleSummary(Entity source,
-				Collection<? extends Entity> collection, Class<? extends Entity> entityClass) {
+				Collection<? extends Entity> collection,
+				Class<? extends Entity> entityClass) {
 			this.entityClass = entityClass;
 			size = collection.size();
 			place = (EntityPlace) RegistryHistoryMapper.get()
@@ -132,6 +132,16 @@ public interface EntityDataObject {
 					.impl(TruncatedObjectCriterion.class, source.entityClass());
 			objectCriterion.withObject(source);
 			place.def.addCriterionToSoleCriteriaGroup(objectCriterion);
+		}
+
+		public int provideSize(Entity source) {
+			return Registry.impl(SizeProvider.class).getSize(this, source);
+		}
+
+		@RegistryLocation(registryPoint = SizeProvider.class)
+		public static interface SizeProvider {
+			int getSize(OneToManyMultipleSummary oneToManyMultipleSummary,
+					Entity source);
 		}
 	}
 }

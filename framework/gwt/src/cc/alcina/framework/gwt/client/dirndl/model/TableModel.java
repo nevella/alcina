@@ -3,12 +3,17 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
+import com.google.gwt.place.shared.Place;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.domain.search.DisplaySearchOrder;
+import cc.alcina.framework.common.client.domain.search.SearchOrder;
+import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
@@ -17,15 +22,20 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.HasDisplayName;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedBindableSearchActivity;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedCategoriesActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
+import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceCustomiser;
+import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
 public class TableModel extends Model {
@@ -68,8 +78,22 @@ public class TableModel extends Model {
 		}
 	}
 
+	public enum SortDirection {
+		ASCENDING, DESCENDING;
+	}
+
 	public static class TableColumn extends Model {
 		private Field field;
+
+		private SortDirection sortDirection;
+
+		public SortDirection getSortDirection() {
+			return this.sortDirection;
+		}
+
+		public void setSortDirection(SortDirection sortDirection) {
+			this.sortDirection = sortDirection;
+		}
 
 		public Field getField() {
 			return this.field;
@@ -85,7 +109,12 @@ public class TableModel extends Model {
 		}
 
 		public TableColumn(Field field) {
+			this(field, null);
+		}
+
+		public TableColumn(Field field, SortDirection sortDirection) {
 			this.field = field;
+			this.sortDirection = sortDirection;
 			this.caption = field.getLabel();
 		}
 
@@ -99,9 +128,36 @@ public class TableModel extends Model {
 
 		public TableHeader() {
 		}
-@Directed
+
+		@Directed
 		public List<TableColumn> getColumns() {
 			return this.columns;
+		}
+	}
+
+	@ClientInstantiable
+	public static class SearchTableColumnClickHandler
+			implements NodeEvent.Handler {
+		@Override
+		public void onEvent(Context eventContext) {
+			TableColumn column = eventContext.node.getModel();
+			Place rawPlace = Client.currentPlace();
+			if (!(rawPlace instanceof BindablePlace)) {
+				return;
+			}
+			BindablePlace<?> place = Client.currentPlace();
+			place = place.copy();
+			DisplaySearchOrder order = new DisplaySearchOrder();
+			order.setFieldName(column.getField().getPropertyName());
+			SearchOrders searchOrders = place.def.getSearchOrders();
+			Optional<SearchOrder> firstOrder = searchOrders.getFirstOrder();
+			if (firstOrder.isPresent()
+					&& firstOrder.get().equivalentTo(order)) {
+				searchOrders.toggleFirstOrder();
+			} else {
+				searchOrders.putFirstOrder(order);
+			}
+			Client.goTo(place);
 		}
 	}
 
@@ -117,6 +173,12 @@ public class TableModel extends Model {
 				return model;
 			}
 			node.pushResolver(ModalResolver.multiple(true));
+			BindableSearchDefinition def = activity.getSearchResults().def;
+			String sortFieldName = def.getSearchOrders()
+					.provideSearchOrderFieldName();
+			SortDirection sortDirection = def.getSearchOrders()
+					.provideIsAscending() ? SortDirection.ASCENDING
+							: SortDirection.DESCENDING;
 			Class<? extends Bindable> resultClass = activity.getSearchResults()
 					.resultClass();
 			GwittirBridge.get()
@@ -124,8 +186,11 @@ public class TableModel extends Model {
 							Reflections.classLookup()
 									.getTemplateInstance(resultClass),
 							factory, false, true, node.getResolver())
-					.stream().map(TableColumn::new)
-					.forEach(model.header.columns::add);
+					.stream().map(field -> {
+						SortDirection fieldDirection = field.getPropertyName()
+								.equals(sortFieldName) ? sortDirection : null;
+						return new TableColumn(field, fieldDirection);
+					}).forEach(model.header.columns::add);
 			activity.getSearchResults().queriedResultObjects.stream()
 					.map(bindable -> new TableRow(model, bindable))
 					.forEach(model.rows::add);
@@ -133,9 +198,6 @@ public class TableModel extends Model {
 			return model;
 		}
 	}
-
-	
-
 
 	public static class DirectedCategoriesActivityTransformer extends
 			AbstractContextSensitiveModelTransform<DirectedCategoriesActivity<?>, TableModel> {

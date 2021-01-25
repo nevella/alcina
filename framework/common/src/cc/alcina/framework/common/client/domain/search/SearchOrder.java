@@ -7,14 +7,19 @@ import java.util.function.Function;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasEquivalence;
 
 @ClientInstantiable
 public abstract class SearchOrder<T, V extends Comparable>
-		implements Function<T, V>, Serializable, Comparator<T> {
+		implements Function<T, V>, Serializable, Comparator<T>,
+		HasEquivalence<SearchOrder> {
 	public V comparable(T o) {
 		return apply(o);
 	}
-
+@Override
+public boolean equivalentTo(SearchOrder other) {
+	return getClass()==other.getClass();
+}
 	@Override
 	public int compare(T o1, T o2) {
 		int comparison = CommonUtils.compareWithNullMinusOne(comparable(o1),
@@ -37,5 +42,9 @@ public abstract class SearchOrder<T, V extends Comparable>
 		} else {
 			return 0;
 		}
+	}
+
+	public String provideKey() {
+		return getClass().getName();
 	}
 }

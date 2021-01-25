@@ -12,7 +12,7 @@ public class DomEvents {
 			return widget.addDomHandler(this::fireEvent, ClickEvent.getType());
 		}
 	};
-	
+
 	public static class Change extends NodeEvent {
 		@Override
 		protected HandlerRegistration bind0(Widget widget) {

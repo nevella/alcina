@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
@@ -83,6 +84,22 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		return _getCmps().size() == 0;
 	}
 
+	public Optional<SearchOrder<T, ?>> getFirstOrder() {
+		return _getCmps().keySet().stream().findFirst();
+	}
+
+	public void putFirstOrder(SearchOrder order) {
+		_getCmps().clear();
+		this.serializableSearchOrders.clear();
+		addOrder(order, true);
+	}
+
+	public void toggleFirstOrder() {
+		_getCmps().entrySet().stream().findFirst()
+				.ifPresent(e -> e.setValue(!e.getValue()));
+		refreshSerializable();
+	}
+
 	public boolean removeOrder(Class<SearchOrder> clazz) {
 		int size = _getCmps().size();
 		boolean result = _getCmps().keySet()
@@ -97,8 +114,8 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	}
 
 	public boolean startsWith(SearchOrder order) {
-		return _getCmps().size() > 0 && _getCmps().keySet().iterator().next()
-				.getClass() == order.getClass();
+		return _getCmps().size() > 0
+				&& _getCmps().keySet().iterator().next().equivalentTo(order);
 	}
 
 	@Override
@@ -127,10 +144,16 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		if (cmps.isEmpty() && serializableSearchOrders.size() > 0) {
 			cmps = (Map) serializableSearchOrders.stream()
 					.collect(Collectors.toMap(sso -> {
-						Class clazz = Reflections.classLookup()
-								.getClassForName(sso.getSearchOrderClassName());
-						return (SearchOrder) Reflections.classLookup()
-								.newInstance(clazz);
+						if (sso.getKey().contains(".")) {
+							Class clazz = Reflections.classLookup()
+									.getClassForName(sso.getKey());
+							return (SearchOrder) Reflections.classLookup()
+									.newInstance(clazz);
+						} else {
+							DisplaySearchOrder displaySearchOrder = new DisplaySearchOrder();
+							displaySearchOrder.setFieldName(sso.getKey());
+							return displaySearchOrder;
+						}
 					}, sso -> sso.isAscending()));
 		}
 		return cmps;
@@ -181,7 +204,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	@Introspectable
 	public static class SerializableSearchOrder implements Serializable,
 			HasReflectiveEquivalence<SerializableSearchOrder> {
-		private String searchOrderClassName;
+		private String key;
 
 		private boolean ascending;
 
@@ -190,12 +213,12 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 
 		public SerializableSearchOrder(SearchOrder searchOrder,
 				Boolean ascending) {
-			setSearchOrderClassName(searchOrder.getClass().getName());
+			setKey(searchOrder.provideKey());
 			setAscending(ascending);
 		}
 
-		public String getSearchOrderClassName() {
-			return this.searchOrderClassName;
+		public String getKey() {
+			return this.key;
 		}
 
 		public boolean isAscending() {
@@ -206,8 +229,8 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 			this.ascending = ascending;
 		}
 
-		public void setSearchOrderClassName(String searchOrderClassName) {
-			this.searchOrderClassName = searchOrderClassName;
+		public void setKey(String key) {
+			this.key = key;
 		}
 	}
 
@@ -226,5 +249,16 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		public Integer apply(H t) {
 			return sorted.indexOf(Long.valueOf(t.getId()));
 		}
+	}
+
+	public String provideSearchOrderFieldName() {
+		return cmps.keySet().stream()
+				.filter(so -> so instanceof DisplaySearchOrder).findFirst()
+				.map(so -> ((DisplaySearchOrder) so).getFieldName())
+				.orElse(null);
+	}
+
+	public boolean provideIsAscending() {
+		return cmps.values().stream().findFirst().orElse(true);
 	}
 }
