@@ -283,9 +283,18 @@ public class TransformPersistenceToken implements Serializable {
 
 	@Override
 	public String toString() {
+		List<Long> requestIds = new ArrayList<>();
+		for (DomainTransformRequest domainTransformRequest : getRequest()
+				.allRequests()) {
+			if (domainTransformRequest instanceof DomainTransformRequestPersistent) {
+				requestIds.add(
+						((DomainTransformRequestPersistent) domainTransformRequest)
+								.getId());
+			}
+		}
 		return Ax.format(
-				"TransformPersistenceToken - requests: %s; localToVm: %s; requestorExternalToThisJvm: %s; \nrequests:\n%s",
-				getRequest().allRequests().size(), localToVm,
+				"TransformPersistenceToken - requests: %s %s; localToVm: %s; requestorExternalToThisJvm: %s; \nrequests:\n%s",
+				getRequest().allRequests().size(), requestIds, localToVm,
 				requestorExternalToThisJvm, CommonUtils
 						.trimToWsChars(getRequest().toString(), 200000, true));
 	}

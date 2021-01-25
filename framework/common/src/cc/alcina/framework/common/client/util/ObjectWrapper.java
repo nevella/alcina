@@ -2,9 +2,9 @@ package cc.alcina.framework.common.client.util;
 
 public class ObjectWrapper<T> {
 	public static <T> ObjectWrapper<T> of(T t) {
-		ObjectWrapper<T> innerAccess = new ObjectWrapper<>();
-		innerAccess.set(t);
-		return innerAccess;
+		ObjectWrapper<T> wrapper = new ObjectWrapper<>();
+		wrapper.set(t);
+		return wrapper;
 	}
 
 	private T t;

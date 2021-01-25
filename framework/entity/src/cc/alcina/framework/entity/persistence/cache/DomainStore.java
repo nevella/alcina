@@ -1013,8 +1013,10 @@ public class DomainStore implements IDomainStore {
 			DomainTransformEventPersistent postProcessTransform2 = postProcessTransform;
 			Thread postProcessThread2 = postProcessThread;
 			if (time > 100 && postProcessThread2 != null) {
-				logger.info("Long postprocess time - {} ms - {}\n{}\n\n{}\n\n",
-						time, postProcessThread2, postProcessTransform2,
+				String prefix = time > 5000 ? "Very " : "";
+				logger.info(
+						"{}Long postprocess time - {} ms - {}\n{}\n\n{}\n\n",
+						prefix, time, postProcessThread2, postProcessTransform2,
 						SEUtilities.getStacktraceSlice(postProcessThread2,
 								LONG_POST_PROCESS_TRACE_LENGTH, 0));
 			}

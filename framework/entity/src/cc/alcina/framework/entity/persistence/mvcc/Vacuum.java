@@ -156,6 +156,10 @@ class Vacuum {
 		}
 	}
 
+	/*
+	 * Try to override hashcode - it seems that causes a lot of the performance
+	 * cost
+	 */
 	interface Vacuumable {
 		void vacuum(VacuumableTransactions vacuumableTransactions);
 	}

@@ -121,6 +121,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 					logger.info(
 							"debugNotFound - concurrent - txValue.resolve.get {} ",
 							resolve.get());
+				} else {
+					logger.info(
+							"debugNotFound - concurrent - txValue.resolve == null");
 				}
 			}
 		}
@@ -188,12 +191,19 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			nonConcurrent.put(key, value);
 		} else {
 			boolean hasExisting = containsKey(key);
-			ensureTransactional(currentTransaction);
-			concurrent.computeIfAbsent(wrapTransactionalKey(key),
-					k -> new TransactionalValue(key, ObjectWrapper.of(value),
-							currentTransaction, true));
+			ensureConcurrent(currentTransaction);
+			Object transactionalKey = wrapTransactionalKey(key);
+			/*
+			 * https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8161372
+			 */
+			if (concurrent.get(key) == null) {
+				concurrent.computeIfAbsent(transactionalKey,
+						k -> new TransactionalValue(key,
+								ObjectWrapper.of(value), currentTransaction,
+								true));
+			}
 			TransactionalValue transactionalValue = (TransactionalValue) concurrent
-					.get(wrapTransactionalKey(key));
+					.get(transactionalKey);
 			transactionalValue.put(value);
 			if (!hasExisting) {
 				sizeMetadata.delta(1);
@@ -212,11 +222,13 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		if (currentTransaction.isBaseTransaction()) {
 			nonConcurrent.remove(key);
 		} else {
-			ensureTransactional(currentTransaction);
-			concurrent.computeIfAbsent(wrapTransactionalKey(key),
-					k -> new TransactionalValue((K) key,
-							ObjectWrapper.of(REMOVED_VALUE_MARKER),
-							currentTransaction, true));
+			ensureConcurrent(currentTransaction);
+			if (concurrent.get(key) == null) {
+				concurrent.computeIfAbsent(wrapTransactionalKey(key),
+						k -> new TransactionalValue((K) key,
+								ObjectWrapper.of(REMOVED_VALUE_MARKER),
+								currentTransaction, true));
+			}
 			TransactionalValue transactionalValue = (TransactionalValue) concurrent
 					.get(wrapTransactionalKey(key));
 			transactionalValue.remove();
@@ -272,7 +284,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	void ensureTransactional(Transaction currentTransaction) {
+	void ensureConcurrent(Transaction currentTransaction) {
 		if (concurrent == null) {
 			synchronized (this) {
 				if (concurrent == null) {
