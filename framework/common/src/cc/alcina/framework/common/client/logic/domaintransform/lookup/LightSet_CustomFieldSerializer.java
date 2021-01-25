@@ -22,7 +22,7 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 import com.google.gwt.user.client.rpc.core.java.util.Collection_CustomFieldSerializerBase;
 
 /**
- * Custom field serializer for LiSet
+ * Custom field serializer for LightSet
  */
 public final class LightSet_CustomFieldSerializer
 		extends CustomFieldSerializer<LightSet> {

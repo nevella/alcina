@@ -1311,19 +1311,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 				if (typeCheck.iterator().next() instanceof Entity) {
 					Set<Entity> oldValues = (Set) event.getOldValue();
 					Set<Entity> newValues = (Set) event.getNewValue();
-					/*
-					 * patch until hashing fix
-					 */
-					if (rehashBeforeDelta()) {
-						if (!(oldValues instanceof LiSet)) {
-							oldValues = new LiSet(oldValues);
-						}
-						((LiSet) oldValues).reHash();
-						if (!(newValues instanceof LiSet)) {
-							newValues = new LiSet(newValues);
-						}
-						((LiSet) newValues).reHash();
-					}
 					oldValues.remove(null);
 					newValues.remove(null);
 					for (Entity entity : newValues) {
@@ -1390,10 +1377,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 						true);
 			}
 		}
-	}
-
-	protected boolean rehashBeforeDelta() {
-		return false;
 	}
 
 	public void pushTransformsInCurrentThread(

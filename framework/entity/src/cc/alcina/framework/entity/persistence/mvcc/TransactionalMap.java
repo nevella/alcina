@@ -196,7 +196,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			/*
 			 * https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8161372
 			 */
-			if (concurrent.get(key) == null) {
+			if (concurrent.get(transactionalKey) == null) {
 				concurrent.computeIfAbsent(transactionalKey,
 						k -> new TransactionalValue(key,
 								ObjectWrapper.of(value), currentTransaction,
@@ -223,14 +223,15 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			nonConcurrent.remove(key);
 		} else {
 			ensureConcurrent(currentTransaction);
-			if (concurrent.get(key) == null) {
-				concurrent.computeIfAbsent(wrapTransactionalKey(key),
+			Object transactionalKey = wrapTransactionalKey(key);
+			if (concurrent.get(transactionalKey) == null) {
+				concurrent.computeIfAbsent(transactionalKey,
 						k -> new TransactionalValue((K) key,
 								ObjectWrapper.of(REMOVED_VALUE_MARKER),
 								currentTransaction, true));
 			}
 			TransactionalValue transactionalValue = (TransactionalValue) concurrent
-					.get(wrapTransactionalKey(key));
+					.get(transactionalKey);
 			transactionalValue.remove();
 			sizeMetadata.delta(-1);
 		}

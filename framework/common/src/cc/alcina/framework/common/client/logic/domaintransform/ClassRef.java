@@ -104,7 +104,7 @@ public abstract class ClassRef extends Entity {
 
 	@Override
 	public int hashCode() {
-		return refClassName.hashCode();
+		return refClassName==null?0:refClassName.hashCode();
 	}
 
 	public boolean notInVm() {

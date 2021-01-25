@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Base64;
@@ -38,9 +39,11 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 
@@ -97,13 +100,9 @@ public class KryoUtils {
 			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
 					? new UnsafeInput(bytes)
 					: new Input(bytes);
-			((LiSetSerializer) kryo.getDefaultSerializer(LiSet.class))
-					.beforeDeseralization();
 			T someObject = kryo.readObject(input, knownType);
 			input.close();
 			someObject = resolve(knownType, someObject);
-			((LiSetSerializer) kryo.getDefaultSerializer(LiSet.class))
-					.deserializationFinished();
 			return someObject;
 		} catch (Exception e) {
 			throw new KryoDeserializationException(e);
@@ -127,13 +126,9 @@ public class KryoUtils {
 			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
 					? new UnsafeInput(stream)
 					: new Input(stream);
-			((LiSetSerializer) kryo.getDefaultSerializer(LiSet.class))
-					.beforeDeseralization();
 			T someObject = kryo.readObject(input, clazz);
 			input.close();
 			someObject = resolve(clazz, someObject);
-			((LiSetSerializer) kryo.getDefaultSerializer(LiSet.class))
-					.deserializationFinished();
 			return someObject;
 		} catch (Exception e) {
 			throw new KryoDeserializationException(e);
@@ -304,7 +299,66 @@ public class KryoUtils {
 			if (MvccObject.class.isAssignableFrom(type)) {
 				return new MvccObjectSerializer(kryo, type);
 			}
+			if (Entity.class.isAssignableFrom(type)
+					&& (Ax.isTest() || AppPersistenceBase.isTestServer())) {
+				return new EntitySerializer(kryo, type);
+			}
 			return new FieldSerializer<>(kryo, type);
+		}
+	}
+
+	private static class EntitySerializer extends FieldSerializer {
+		private static transient long VERSION_1 = 980250682;
+
+		public EntitySerializer(Kryo kryo, Class<?> type) {
+			super(kryo, type);
+		}
+
+		@Override
+		public Object read(Kryo kryo, Input input, Class type) {
+			long version = input.readLong();
+			if (version != VERSION_1) {
+				throw new IllegalArgumentException("Invalid version");
+			}
+			return super.read(kryo, input, type);
+		}
+
+		@Override
+		public int compare(CachedField o1, CachedField o2) {
+			boolean entityType = false;
+			try {
+				Field fieldAccessor = SEUtilities.getFieldByName(o1.getClass(), "field");
+				fieldAccessor.setAccessible(true);
+				Field field = (Field) fieldAccessor.get(o1);
+				Class checkType = field.getDeclaringClass();
+				while (checkType != null) {
+					if (checkType.getName().equals(
+							"cc.alcina.framework.common.client.logic.domain.Entity")) {
+						entityType = true;
+						break;
+					}
+					checkType = checkType.getSuperclass();
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			if (entityType) {
+				int idx1 = getCachedFieldName(o1).equals("id") ? 0
+						: getCachedFieldName(o1).equals("localId") ? 1 : 2;
+				int idx2 = getCachedFieldName(o2).equals("id") ? 0
+						: getCachedFieldName(o2).equals("localId") ? 1 : 2;
+				if (idx1 != idx2) {
+					return idx1 - idx2;
+				}
+			}
+			// Fields are sorted by alpha so the order of the data is known.
+			return getCachedFieldName(o1).compareTo(getCachedFieldName(o2));
+		}
+
+		@Override
+		public void write(Kryo kryo, Output output, Object object) {
+			output.writeLong(VERSION_1);
+			super.write(kryo, output, object);
 		}
 	}
 
@@ -372,7 +426,6 @@ public class KryoUtils {
 				kryo.setClassLoader(key.classLoader);
 				kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(
 						new SerializingInstantiatorStrategy()));
-				kryo.addDefaultSerializer(LiSet.class, new LiSetSerializer());
 				kryo.setDefaultSerializer(new MvccInterceptorSerializer());
 				KryoCreationCustomiser customiser = Registry
 						.implOrNull(KryoCreationCustomiser.class);

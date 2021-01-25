@@ -15,10 +15,6 @@
  */
 package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
@@ -30,22 +26,10 @@ import com.google.gwt.user.client.rpc.core.java.util.Collection_CustomFieldSeria
  */
 public final class LiSet_CustomFieldSerializer
 		extends CustomFieldSerializer<LiSet> {
-	public static transient boolean incorrectHashes=false;
-	private static List<LiSet> clientDeserialized;
-	public static List<LiSet> getClientDeserialized() {
-		return LiSet_CustomFieldSerializer.clientDeserialized;
-	}
-
 	public static void deserialize(SerializationStreamReader streamReader,
 			LiSet instance) throws SerializationException {
 		Collection_CustomFieldSerializerBase.deserialize(streamReader,
 				instance);
-		if(GWT.isClient()&&incorrectHashes) {
-			if(clientDeserialized==null) {
-				clientDeserialized=new ArrayList<>();
-			}
-			clientDeserialized.add(instance);
-		}
 	}
 
 	public static void serialize(SerializationStreamWriter streamWriter,
@@ -63,12 +47,5 @@ public final class LiSet_CustomFieldSerializer
 	public void serializeInstance(SerializationStreamWriter streamWriter,
 			LiSet instance) throws SerializationException {
 		serialize(streamWriter, instance);
-	}
-
-	public static void rehashLiSets() {
-		if(clientDeserialized==null) {
-			clientDeserialized.forEach(LiSet::reHash);
-			clientDeserialized.clear();
-		}
 	}
 }

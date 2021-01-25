@@ -154,14 +154,7 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		return new LiSetIterator();
 	}
 
-	public void reHash() {
-		List<H> entities = stream().collect(Collectors.toList());
-		degenerate = null;
-		elementData = null;
-		size = 0;
-		modCount = 0;
-		entities.stream().peek(Entity::reHash).forEach(this::add);
-	}
+	
 
 	@Override
 	public boolean remove(Object o) {
