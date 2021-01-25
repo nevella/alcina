@@ -7,6 +7,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
@@ -44,6 +45,8 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 @RegistryLocation(registryPoint = Entity.class, implementationType = ImplementationType.MULTIPLE)
 @NonClientRegistryPointType
 @DomainTransformPropagation(PropagationType.PERSISTENT)
+//ensure { "id", "localId" } are before other properties (because needed for the hash in recursive deserialization)
+@JsonPropertyOrder(value={ "id", "localId" },alphabetic = true)
 public abstract class Entity<T extends Entity> extends Bindable
 		implements HasVersionNumber, HasId {
 	public static final transient String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class

@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -18,6 +19,8 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Kryo.DefaultInstantiatorStrategy;
@@ -34,7 +37,6 @@ import com.esotericsoftware.minlog.Log;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -43,6 +45,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.ThrowingSupplier;
+import cc.alcina.framework.entity.KryoUtils.KryoPool.KryoPoolObjectFactory;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
@@ -57,6 +61,12 @@ public class KryoUtils {
 
 	public static final String CONTEXT_USE_UNSAFE_FIELD_SERIALIZER = KryoUtils.class
 			.getName() + ".CONTEXT_USE_UNSAFE_FIELD_SERIALIZER";
+
+	private static final String CONTEXT_V20210124 = KryoUtils.class.getName()
+			+ ".CONTEXT_V20210124";
+
+	private static final String CONTEXT_BYPASS_POOL = KryoUtils.class.getName()
+			+ ".CONTEXT_BYPASS_POOL";
 
 	// concurrency - access synchronized on Kryo.class
 	private static CachingMap<KryoPoolKey, KryoPool> kryosPool;
@@ -78,6 +88,8 @@ public class KryoUtils {
 		resetPool();
 	}
 
+	private static Logger logger = LoggerFactory.getLogger(KryoUtils.class);
+
 	public static <T> T clone(T t) {
 		Kryo kryo = borrowKryo();
 		try {
@@ -95,25 +107,14 @@ public class KryoUtils {
 
 	public static <T> T deserializeFromByteArray(byte[] bytes,
 			Class<T> knownType) {
-		Kryo kryo = borrowKryo();
-		try {
-			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
-					? new UnsafeInput(bytes)
-					: new Input(bytes);
-			T someObject = kryo.readObject(input, knownType);
-			input.close();
-			someObject = resolve(knownType, someObject);
-			return someObject;
-		} catch (Exception e) {
-			throw new KryoDeserializationException(e);
-		} finally {
-			returnKryo(kryo);
-		}
+		return deserializeFromStream(new ByteArrayInputStream(bytes), knownType,
+				() -> new ByteArrayInputStream(bytes));
 	}
 
 	public static <T> T deserializeFromFile(File file, Class<T> knownType) {
 		try {
-			return deserializeFromStream(new FileInputStream(file), knownType);
+			return deserializeFromStream(new FileInputStream(file), knownType,
+					() -> new FileInputStream(file));
 		} catch (Exception e) {
 			throw new KryoDeserializationException(e);
 		}
@@ -121,24 +122,7 @@ public class KryoUtils {
 
 	public static <T> T deserializeFromStream(InputStream stream,
 			Class<T> clazz) {
-		Kryo kryo = borrowKryo();
-		try {
-			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
-					? new UnsafeInput(stream)
-					: new Input(stream);
-			T someObject = kryo.readObject(input, clazz);
-			input.close();
-			someObject = resolve(clazz, someObject);
-			return someObject;
-		} catch (Exception e) {
-			throw new KryoDeserializationException(e);
-		} finally {
-			returnKryo(kryo);
-			try {
-				stream.close();
-			} catch (IOException e) {
-			}
-		}
+		return deserializeFromStream(stream, clazz, null);
 	}
 
 	public static void onlyErrorLogging() {
@@ -203,6 +187,46 @@ public class KryoUtils {
 		}
 	}
 
+	private static <T> T deserializeFromStream(InputStream stream,
+			Class<T> clazz, ThrowingSupplier<InputStream> retry) {
+		Kryo kryo = borrowKryo();
+		try {
+			Input input = LooseContext.is(CONTEXT_USE_UNSAFE_FIELD_SERIALIZER)
+					? new UnsafeInput(stream)
+					: new Input(stream);
+			T someObject = kryo.readObject(input, clazz);
+			input.close();
+			someObject = resolve(clazz, someObject);
+			return someObject;
+		} catch (Exception e) {
+			/*
+			 * backwards compatibility
+			 */
+			if (retry != null) {
+				try {
+					LooseContext.pushWithTrue(CONTEXT_V20210124);
+					LooseContext.setTrue(CONTEXT_BYPASS_POOL);
+					EntitySerializer.checkVersionCheck = true;
+					logger.warn("retry deserialize with old serializer");
+					InputStream retryStream = retry.get();
+					return deserializeFromStream(retryStream, clazz, null);
+				} catch (Exception e1) {
+					throw new KryoDeserializationException(e1);
+				} finally {
+					EntitySerializer.checkVersionCheck = false;
+					LooseContext.pop();
+				}
+			}
+			throw new KryoDeserializationException(e);
+		} finally {
+			returnKryo(kryo);
+			try {
+				stream.close();
+			} catch (IOException e) {
+			}
+		}
+	}
+
 	private static KryoPoolKey getContextKey() {
 		boolean useCompatibleFieldSerializer = LooseContext
 				.is(CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER);
@@ -237,6 +261,9 @@ public class KryoUtils {
 	}
 
 	private static void returnKryo(Kryo kryo) {
+		if (LooseContext.is(CONTEXT_BYPASS_POOL)) {
+			return;
+		}
 		KryoPoolKey key = getContextKey();
 		KryoPool pool;
 		synchronized (Kryo.class) {
@@ -260,6 +287,15 @@ public class KryoUtils {
 
 	protected static Kryo borrowKryo() {
 		KryoPoolKey key = getContextKey();
+		if (LooseContext.is(CONTEXT_BYPASS_POOL)) {
+			KryoPoolObjectFactory kryoPoolObjectFactory = new KryoPoolObjectFactory();
+			kryoPoolObjectFactory.key = key;
+			try {
+				return kryoPoolObjectFactory.create();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 		KryoPool pool;
 		synchronized (Kryo.class) {
 			pool = kryosPool.get(key);
@@ -291,43 +327,24 @@ public class KryoUtils {
 		}
 	}
 
-	// FIXME - mvcc.4 - inject from mvcc to here
-	private static class MvccInterceptorSerializer
-			implements SerializerFactory {
-		@Override
-		public Serializer makeSerializer(Kryo kryo, Class<?> type) {
-			if (MvccObject.class.isAssignableFrom(type)) {
-				return new MvccObjectSerializer(kryo, type);
-			}
-			if (Entity.class.isAssignableFrom(type)
-					&& (Ax.isTest() || AppPersistenceBase.isTestServer())) {
-				return new EntitySerializer(kryo, type);
-			}
-			return new FieldSerializer<>(kryo, type);
-		}
-	}
-
 	private static class EntitySerializer extends FieldSerializer {
 		private static transient long VERSION_1 = 980250682;
+
+		private static volatile boolean checkVersionCheck = false;
 
 		public EntitySerializer(Kryo kryo, Class<?> type) {
 			super(kryo, type);
 		}
 
 		@Override
-		public Object read(Kryo kryo, Input input, Class type) {
-			long version = input.readLong();
-			if (version != VERSION_1) {
-				throw new IllegalArgumentException("Invalid version");
-			}
-			return super.read(kryo, input, type);
-		}
-
-		@Override
 		public int compare(CachedField o1, CachedField o2) {
+			if (checkVersionCheck && LooseContext.is(CONTEXT_V20210124)) {
+				return super.compare(o1, o2);
+			}
 			boolean entityType = false;
 			try {
-				Field fieldAccessor = SEUtilities.getFieldByName(o1.getClass(), "field");
+				Field fieldAccessor = SEUtilities.getFieldByName(o1.getClass(),
+						"field");
 				fieldAccessor.setAccessible(true);
 				Field field = (Field) fieldAccessor.get(o1);
 				Class checkType = field.getDeclaringClass();
@@ -356,9 +373,39 @@ public class KryoUtils {
 		}
 
 		@Override
+		public Object read(Kryo kryo, Input input, Class type) {
+			if (!checkVersionCheck || !LooseContext.is(CONTEXT_V20210124)) {
+				long version = input.readLong();
+				if (version != VERSION_1) {
+					throw new InvalidVersionException();
+				}
+			}
+			return super.read(kryo, input, type);
+		}
+
+		@Override
 		public void write(Kryo kryo, Output output, Object object) {
 			output.writeLong(VERSION_1);
 			super.write(kryo, output, object);
+		}
+	}
+
+	private static class InvalidVersionException extends RuntimeException {
+	}
+
+	// FIXME - mvcc.4 - inject from mvcc to here
+	private static class MvccInterceptorSerializer
+			implements SerializerFactory {
+		@Override
+		public Serializer makeSerializer(Kryo kryo, Class<?> type) {
+			if (MvccObject.class.isAssignableFrom(type)) {
+				return new MvccObjectSerializer(kryo, type);
+			}
+			if (Entity.class.isAssignableFrom(type)
+					&& (Ax.isTest() || AppPersistenceBase.isTestServer())) {
+				return new EntitySerializer(kryo, type);
+			}
+			return new FieldSerializer<>(kryo, type);
 		}
 	}
 
@@ -383,8 +430,6 @@ public class KryoUtils {
 
 		private KryoPoolObjectFactory factory;
 
-		private KryoPoolKey key;
-
 		public KryoPool(boolean withPool) {
 			factory = new KryoPoolObjectFactory();
 			if (withPool) {
@@ -400,7 +445,7 @@ public class KryoUtils {
 		}
 
 		synchronized Kryo borrow(KryoPoolKey key) {
-			this.key = key;
+			factory.key = key;
 			try {
 				if (objectPool == null) {
 					return factory.create();
@@ -413,7 +458,10 @@ public class KryoUtils {
 			}
 		}
 
-		class KryoPoolObjectFactory extends BasePooledObjectFactory<Kryo> {
+		static class KryoPoolObjectFactory
+				extends BasePooledObjectFactory<Kryo> {
+			public KryoPoolKey key;
+
 			@Override
 			public Kryo create() throws Exception {
 				Kryo kryo = new Kryo();
