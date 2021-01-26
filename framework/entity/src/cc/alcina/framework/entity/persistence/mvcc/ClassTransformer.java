@@ -321,6 +321,8 @@ class ClassTransformer {
 					.allFields(originalClass).stream()
 					.collect(AlcinaCollectors.toKeyMultimap(Field::getName));
 			byName.entrySet().stream().filter(e -> e.getValue().size() > 1)
+					.filter(e -> !(e.getKey().equals("id") && ResourceUtilities
+							.is(ClassTransformer.class, "allowShadowIdField")))
 					.forEach(e -> {
 						fieldsWithProblematicAccess.add(e.getKey());
 						correctnessIssueTopic.publish(new MvccCorrectnessIssue(
