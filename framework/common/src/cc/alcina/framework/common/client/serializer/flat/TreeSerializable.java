@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.serializer;
+package cc.alcina.framework.common.client.serializer.flat;
 
 import java.io.Serializable;
 

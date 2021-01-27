@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.common.client.publication;
 
-import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 
 /**
  * Marker interface for publication content

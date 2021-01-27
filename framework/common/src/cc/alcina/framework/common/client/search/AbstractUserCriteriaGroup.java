@@ -9,6 +9,13 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 public abstract class AbstractUserCriteriaGroup<SC extends AbstractUserCriterion>
 		extends CriteriaGroup<SC> {
 	@Override
+	public void addCriterion(SC criterion) {
+		Set<SC> deltaSet = TransformManager.getDeltaSet(getCriteria(),
+				criterion, CollectionModificationType.ADD);
+		setCriteria(deltaSet);
+	}
+
+	@Override
 	public String validatePermissions() {
 		String result = super.validatePermissions();
 		if (result != null) {
@@ -23,12 +30,5 @@ public abstract class AbstractUserCriteriaGroup<SC extends AbstractUserCriterion
 			}
 		}
 		return null;
-	}
-
-	@Override
-	public void addCriterion(SC criterion) {
-		Set<SC> deltaSet = TransformManager.getDeltaSet(getCriteria(),
-				criterion, CollectionModificationType.ADD);
-		setCriteria(deltaSet);
 	}
 }

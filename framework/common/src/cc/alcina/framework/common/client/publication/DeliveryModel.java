@@ -16,7 +16,7 @@ package cc.alcina.framework.common.client.publication;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 
 /**
  *

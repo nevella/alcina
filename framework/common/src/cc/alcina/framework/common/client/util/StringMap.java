@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public class StringMap extends LinkedHashMap<String, String> {
@@ -117,6 +118,10 @@ public class StringMap extends LinkedHashMap<String, String> {
 	@Override
 	public StringMap clone() {
 		return new StringMap(this);
+	}
+
+	public boolean contains(String s1, String s2) {
+		return containsKey(s1) && Objects.equals(get(s1), s2);
 	}
 
 	public boolean existsAndIsBooleanFalse(String key) {
