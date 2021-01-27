@@ -77,6 +77,7 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
@@ -320,8 +321,8 @@ public class JobRegistry extends WriterService {
 				new ArrayList<>());
 		for (JobResource resource : resources) {
 			/*
-			* attempt to acquire from antecedent
-			*/
+			 * attempt to acquire from antecedent
+			 */
 			Optional<JobResource> antecedentAcquired = getAcquiredResource(
 					forJob, resource);
 			ProcessState processState = forJob.ensureProcessState();
@@ -334,7 +335,8 @@ public class JobRegistry extends WriterService {
 			} else {
 				forJob.persistProcessState();
 				Transaction.commit();
-				resource.acquire();
+				MethodContext.instance().withExecuteOutsideTransaction()
+						.run(resource::acquire);
 				try {
 					forJob.ensureProcessState().provideRecord(record)
 							.setAcquired(true);
@@ -342,8 +344,8 @@ public class JobRegistry extends WriterService {
 					Transaction.commit();
 					acquired.add(resource);
 				} catch (Exception e) {
-					logger.error("Exception acquiring resource for job {}: {}", 
-						resource.getPath(), e);
+					logger.error("Exception acquiring resource for job {}: {}",
+							resource.getPath(), e);
 					resource.release();
 					throw new WrappedRuntimeException(e);
 				}
