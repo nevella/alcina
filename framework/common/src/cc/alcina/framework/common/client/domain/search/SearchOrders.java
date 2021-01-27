@@ -16,6 +16,8 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasEquivalence;
@@ -24,7 +26,7 @@ import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 @ClientInstantiable
 @Introspectable
 public class SearchOrders<T> implements Comparator<T>, Serializable,
-		HasEquivalence<SearchOrders<T>> {
+		HasEquivalence<SearchOrders<T>>, TreeSerializable {
 	/*
 	 * Don't access directly - even when altering (call refreshSerializable when
 	 * altering). The boolean value is true ascending; false descending
@@ -71,6 +73,11 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 				other.serializableSearchOrders);
 	}
 
+	public Optional<SearchOrder<T, ?>> getFirstOrder() {
+		return _getCmps().keySet().stream().findFirst();
+	}
+
+	@PropertySerialization(defaultValue = true, childTypes = SerializableSearchOrder.class)
 	public List<SerializableSearchOrder> getSerializableSearchOrders() {
 		return this.serializableSearchOrders;
 	}
@@ -84,20 +91,21 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		return _getCmps().size() == 0;
 	}
 
-	public Optional<SearchOrder<T, ?>> getFirstOrder() {
-		return _getCmps().keySet().stream().findFirst();
+	public boolean provideIsAscending() {
+		return cmps.values().stream().findFirst().orElse(true);
+	}
+
+	public String provideSearchOrderFieldName() {
+		return cmps.keySet().stream()
+				.filter(so -> so instanceof DisplaySearchOrder).findFirst()
+				.map(so -> ((DisplaySearchOrder) so).getFieldName())
+				.orElse(null);
 	}
 
 	public void putFirstOrder(SearchOrder order) {
 		_getCmps().clear();
 		this.serializableSearchOrders.clear();
 		addOrder(order, true);
-	}
-
-	public void toggleFirstOrder() {
-		_getCmps().entrySet().stream().findFirst()
-				.ifPresent(e -> e.setValue(!e.getValue()));
-		refreshSerializable();
 	}
 
 	public boolean removeOrder(Class<SearchOrder> clazz) {
@@ -116,6 +124,12 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	public boolean startsWith(SearchOrder order) {
 		return _getCmps().size() > 0
 				&& _getCmps().keySet().iterator().next().equivalentTo(order);
+	}
+
+	public void toggleFirstOrder() {
+		_getCmps().entrySet().stream().findFirst()
+				.ifPresent(e -> e.setValue(!e.getValue()));
+		refreshSerializable();
 	}
 
 	@Override
@@ -203,7 +217,8 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	@ClientInstantiable
 	@Introspectable
 	public static class SerializableSearchOrder implements Serializable,
-			HasReflectiveEquivalence<SerializableSearchOrder> {
+			HasReflectiveEquivalence<SerializableSearchOrder>,
+			TreeSerializable {
 		private String key;
 
 		private boolean ascending;
@@ -217,10 +232,12 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 			setAscending(ascending);
 		}
 
+		@PropertySerialization(defaultValue = true)
 		public String getKey() {
 			return this.key;
 		}
 
+		@PropertySerialization(name = "asc")
 		public boolean isAscending() {
 			return this.ascending;
 		}
@@ -249,16 +266,5 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		public Integer apply(H t) {
 			return sorted.indexOf(Long.valueOf(t.getId()));
 		}
-	}
-
-	public String provideSearchOrderFieldName() {
-		return cmps.keySet().stream()
-				.filter(so -> so instanceof DisplaySearchOrder).findFirst()
-				.map(so -> ((DisplaySearchOrder) so).getFieldName())
-				.orElse(null);
-	}
-
-	public boolean provideIsAscending() {
-		return cmps.values().stream().findFirst().orElse(true);
 	}
 }

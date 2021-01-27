@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
-import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**

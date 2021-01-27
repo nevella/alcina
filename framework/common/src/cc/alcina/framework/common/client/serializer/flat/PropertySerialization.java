@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.common.client.serializer;
+package cc.alcina.framework.common.client.serializer.flat;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -30,12 +30,27 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target({ ElementType.TYPE })
+@Target({ ElementType.METHOD })
 @ClientVisible
-public @interface TypeSerialization {
-	Class[] childTypes() default {};
+/*
+ * Not necessary if the containing type has one property with
+ * non-TreeSerializable child types (that will automatically be registered as
+ * the default)
+ */
+public @interface PropertySerialization {
+	/*
+	 * Applicable to collection properties, the list of allowable element types.
+	 * The first childType (if any) will be the default
+	 */
+	Class<? extends TreeSerializable>[] childTypes() default {};
 
-	String defaultFieldName() default "";
+	/*
+	 * Maximum one per type property. Exactly one of this or name must be set
+	 */
+	boolean defaultValue() default false;
 
-	String name();
+	/*
+	 * Unique per path segment (including default resolution)
+	 */
+	String name() default "";
 }

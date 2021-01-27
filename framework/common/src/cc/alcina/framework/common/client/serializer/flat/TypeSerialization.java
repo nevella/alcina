@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.common.client.serializer;
+package cc.alcina.framework.common.client.serializer.flat;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -32,6 +32,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 @Documented
 @Target({ ElementType.TYPE })
 @ClientVisible
-public @interface FieldSerialization {
+public @interface TypeSerialization {
+	/*
+	 * Unique per path segment (including default resolution)
+	 */
 	String value();
 }
