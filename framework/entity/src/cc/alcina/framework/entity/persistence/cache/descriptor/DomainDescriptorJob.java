@@ -135,6 +135,11 @@ public class DomainDescriptorJob {
 
 	private DomainTransformPersistenceListener stacktraceRequestListener = new DomainTransformPersistenceListener() {
 		@Override
+		public boolean isAllVmEventsListener() {
+			return true;
+		}
+
+		@Override
 		public void onDomainTransformRequestPersistence(
 				DomainTransformPersistenceEvent event) {
 			AdjunctTransformCollation collation = event
