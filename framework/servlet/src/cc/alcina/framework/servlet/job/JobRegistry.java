@@ -320,8 +320,8 @@ public class JobRegistry extends WriterService {
 				new ArrayList<>());
 		for (JobResource resource : resources) {
 			/*
-			 * attempt to acquire from antecedent
-			 */
+			* attempt to acquire from antecedent
+			*/
 			Optional<JobResource> antecedentAcquired = getAcquiredResource(
 					forJob, resource);
 			ProcessState processState = forJob.ensureProcessState();
@@ -335,11 +335,18 @@ public class JobRegistry extends WriterService {
 				forJob.persistProcessState();
 				Transaction.commit();
 				resource.acquire();
-				forJob.ensureProcessState().provideRecord(record)
-						.setAcquired(true);
-				forJob.persistProcessState();
-				Transaction.commit();
-				acquired.add(resource);
+				try {
+					forJob.ensureProcessState().provideRecord(record)
+							.setAcquired(true);
+					forJob.persistProcessState();
+					Transaction.commit();
+					acquired.add(resource);
+				} catch (Exception e) {
+					logger.error("Exception acquiring resource for job {}: {}", 
+						resource.getPath(), e);
+					resource.release();
+					throw new WrappedRuntimeException(e);
+				}
 			}
 		}
 		if (acquired.size() > 0) {
