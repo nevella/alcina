@@ -45,7 +45,7 @@ public class Domain {
 		handler.async(clazz, objectId, create, resultConsumer);
 	}
 
-	public static <V extends Entity> V byProperty(Class<V> clazz,
+	public static <V extends Entity> V by(Class<V> clazz,
 			String propertyName, Object value) {
 		return handler.byProperty(clazz, propertyName, value);
 	}
@@ -120,14 +120,13 @@ public class Domain {
 		return handler.find(v);
 	}
 
-	public static <V extends Entity> V findOrCreate(Class<V> clazz,
-			String propertyName, Object value, boolean createIfNonexistent) {
-		V first = byProperty(clazz, propertyName, value);
-		if (first == null && createIfNonexistent) {
+	public static <V extends Entity> V ensure(Class<V> clazz,
+			String propertyName, Object value) {
+		V first = by(clazz, propertyName, value);
+		if (first == null) {
 			first = create(clazz);
 			Reflections.propertyAccessor().setPropertyValue(first, propertyName,
 					value);
-		} else {
 		}
 		return first;
 	}
@@ -143,7 +142,7 @@ public class Domain {
 
 	public static <V extends Entity> Optional<V> optionalByProperty(
 			Class<V> clazz, String propertyName, Object value) {
-		return Optional.ofNullable(byProperty(clazz, propertyName, value));
+		return Optional.ofNullable(by(clazz, propertyName, value));
 	}
 
 	public static <V extends Entity> DomainQuery<V> query(Class<V> clazz) {

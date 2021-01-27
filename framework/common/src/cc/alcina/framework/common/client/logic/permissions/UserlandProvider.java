@@ -20,7 +20,7 @@ public class UserlandProvider {
 	}
 
 	public <G extends Entity & IGroup> G getGroupByName(String name) {
-		return (G) Domain.byProperty((Class<G>) AlcinaPersistentEntityImpl
+		return (G) Domain.by((Class<G>) AlcinaPersistentEntityImpl
 				.getImplementation(IGroup.class), "name", name);
 	}
 
@@ -35,7 +35,7 @@ public class UserlandProvider {
 
 	public <U extends Entity & IUser> U getUserByName(String name) {
 		return (U) Domain
-				.byProperty(
+				.by(
 						(Class<U>) AlcinaPersistentEntityImpl
 								.getImplementation(IUser.class),
 						"userName", name);

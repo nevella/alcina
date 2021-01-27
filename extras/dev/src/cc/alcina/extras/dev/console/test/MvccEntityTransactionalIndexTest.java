@@ -48,14 +48,14 @@ public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG exte
 					createdUser.setUserName(username);
 					createdGroup.domain().addToProperty("memberUsers",
 							createdUser);
-					IU foundUser = Domain.byProperty(userClass, "email",
+					IU foundUser = Domain.by(userClass, "email",
 							username);
 					Preconditions.checkState(foundUser != null,
 							"non-committed-tx1: index not visible from tx1");
 					tx1Latch1.countDown();
 					Transaction.commit();
 					tx1Latch2.countDown();
-					foundUser = Domain.byProperty(userClass, "email", username);
+					foundUser = Domain.by(userClass, "email", username);
 					Preconditions.checkState(foundUser != null,
 							"committed-tx1: index not visible from tx1");
 				} catch (Exception e) {
@@ -76,17 +76,17 @@ public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG exte
 				try {
 					Transaction.begin();
 					tx1Latch1.await();
-					IU foundUser = Domain.byProperty(userClass, "email",
+					IU foundUser = Domain.by(userClass, "email",
 							username);
 					Preconditions.checkState(foundUser == null,
 							"non-committed-tx1: index visible from tx2");
 					tx2Latch1.countDown();
 					tx1Latch2.await();
-					foundUser = Domain.byProperty(userClass, "email", username);
+					foundUser = Domain.by(userClass, "email", username);
 					Preconditions.checkState(foundUser == null,
 							"committed-tx1: index visible from tx2 (old tx)");
 					Transaction.endAndBeginNew();
-					foundUser = Domain.byProperty(userClass, "email", username);
+					foundUser = Domain.by(userClass, "email", username);
 					Preconditions.checkState(foundUser != null,
 							"committed-tx1: index not visible from thread tx2 (post-committed-tx1 tx)");
 				} catch (Exception e) {

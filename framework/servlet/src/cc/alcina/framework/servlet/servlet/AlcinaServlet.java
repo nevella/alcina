@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -121,7 +122,11 @@ public abstract class AlcinaServlet extends HttpServlet {
 			logger.warn("Exception detail:", t);
 			EntityLayerLogging.persistentLog(LogMessageType.RPC_EXCEPTION, t);
 			try {
-				writeTextResponse(response, "Sorry, that's a 500");
+				response.setStatus(500);
+				writeTextResponse(response,
+						throwDetailedExceptions()
+								? SEUtilities.getFullExceptionMessage(t)
+								: "Sorry, that's a 500");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -133,6 +138,10 @@ public abstract class AlcinaServlet extends HttpServlet {
 			}
 			alcinaContext.end();
 		}
+	}
+
+	protected boolean throwDetailedExceptions() {
+		return false;
 	}
 
 	protected void writeHtmlResponse(HttpServletResponse response,

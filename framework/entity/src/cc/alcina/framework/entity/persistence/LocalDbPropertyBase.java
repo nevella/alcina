@@ -79,8 +79,7 @@ public abstract class LocalDbPropertyBase extends Entity {
 			return Domain.optionalByProperty(impl(), KEY_FIELD_NAME, key)
 					.map(LocalDbPropertyBase::getPropertyValue).orElse(null);
 		} else {
-			Domain.findOrCreate(impl(), KEY_FIELD_NAME, key, true)
-					.setPropertyValue(value);
+			Domain.ensure(impl(), KEY_FIELD_NAME, key).setPropertyValue(value);
 			Transaction.commit();
 			return null;
 		}

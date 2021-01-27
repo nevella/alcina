@@ -69,6 +69,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
 import com.google.gwt.core.shared.GWT;
+import com.google.gwt.user.client.rpc.StatusCodeException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDoc;
@@ -1062,6 +1063,11 @@ public class ResourceUtilities {
 				}
 				in = connection.getInputStream();
 				byte[] input = readStreamToByteArray(in);
+				int responseCode = connection.getResponseCode();
+				if (responseCode >= 400) {
+					throw new StatusCodeException(responseCode,
+							connection.getResponseMessage());
+				}
 				if (decodeGz) {
 					input = maybeDecodeGzip(input);
 				}

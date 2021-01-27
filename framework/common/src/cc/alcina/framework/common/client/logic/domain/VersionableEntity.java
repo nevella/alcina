@@ -87,11 +87,6 @@ public abstract class VersionableEntity<T extends VersionableEntity>
 	}
 
 	@Override
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	@Override
 	public void setLastModificationDate(Date lastModificationDate) {
 		this.lastModificationDate = lastModificationDate;
 	}

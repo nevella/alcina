@@ -1038,4 +1038,16 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			return EntityComparator.INSTANCE.compare(o1, o2);
 		}
 	}
+
+	public void throwIfException() {
+		if (getResultType() == JobResultType.EXCEPTION) {
+			throw new JobException(getLog());
+		}
+	}
+
+	public static class JobException extends RuntimeException {
+		public JobException(String message) {
+			super(message);
+		}
+	}
 }
