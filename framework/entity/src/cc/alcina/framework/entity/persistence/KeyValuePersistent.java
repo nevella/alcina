@@ -45,8 +45,8 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 
 	public static <KVP extends KeyValuePersistent> Optional<KVP>
 			byKey(String key) {
-		return (Optional<KVP>) Optional.ofNullable(Domain
-				.byProperty(implementation(), "key", keyMapper.apply(key)));
+		return (Optional<KVP>) Optional.ofNullable(
+				Domain.by(implementation(), "key", keyMapper.apply(key)));
 	}
 
 	public static <KVP extends KeyValuePersistent> List<KVP>
@@ -60,16 +60,16 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 	}
 
 	public static void persist(String key, String value) {
-		KeyValuePersistent writeable = (KeyValuePersistent) Domain.findOrCreate(
-				implementation(), "key", keyMapper.apply(key), true);
+		KeyValuePersistent writeable = (KeyValuePersistent) Domain
+				.ensure(implementation(), "key", keyMapper.apply(key));
 		writeable.setParentKey(SEUtilities.getParentPath(key));
 		writeable.setValue(value);
 		persist();
 	}
 
 	public static void persistObject(String key, Object value) {
-		KeyValuePersistent writeable = (KeyValuePersistent) Domain.findOrCreate(
-				implementation(), "key", keyMapper.apply(key), true);
+		KeyValuePersistent writeable = (KeyValuePersistent) Domain
+				.ensure(implementation(), "key", keyMapper.apply(key));
 		writeable.setParentKey(SEUtilities.getParentPath(key));
 		writeable.serializeObject(value);
 		persist();
