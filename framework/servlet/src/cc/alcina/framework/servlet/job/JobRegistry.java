@@ -318,51 +318,36 @@ public class JobRegistry extends WriterService {
 	private void acquireResources(Job forJob, List<JobResource> resources) {
 		List<JobResource> acquired = jobResources.getOrDefault(forJob,
 				new ArrayList<>());
-		try {
-			for (JobResource resource : resources) {
-				/*
-				* attempt to acquire from antecedent
-				*/
-				Optional<JobResource> antecedentAcquired = getAcquiredResource(
-						forJob, resource);
-				ProcessState processState = forJob.ensureProcessState();
-				ResourceRecord record = processState.addResourceRecord(resource);
-				if (antecedentAcquired.isPresent()) {
-					record.setAcquired(true);
-					record.setAcquiredFromAncestor(true);
-					forJob.persistProcessState();
-					Transaction.commit();
-				} else {
-					forJob.persistProcessState();
-					Transaction.commit();
-					resource.acquire();
-					try {
-						forJob.ensureProcessState().provideRecord(record)
-								.setAcquired(true);
-						forJob.persistProcessState();
-						Transaction.commit();
-						acquired.add(resource);
-					} catch (Exception e) {
-						logger.error("Exception acquiring resource for job {}: {}", 
-							resource.getPath(), e);
-						resource.release();
-						throw new WrappedRuntimeException(e);
-					}
-				}
-			}
-		} catch (Exception e) {
-			logger.error("Exception acquiring resources for job {}: {}", 
-					forJob.provideName(), e);
-			for (JobResource res : acquired) {
+		for (JobResource resource : resources) {
+			/*
+			* attempt to acquire from antecedent
+			*/
+			Optional<JobResource> antecedentAcquired = getAcquiredResource(
+					forJob, resource);
+			ProcessState processState = forJob.ensureProcessState();
+			ResourceRecord record = processState.addResourceRecord(resource);
+			if (antecedentAcquired.isPresent()) {
+				record.setAcquired(true);
+				record.setAcquiredFromAncestor(true);
+				forJob.persistProcessState();
+				Transaction.commit();
+			} else {
+				forJob.persistProcessState();
+				Transaction.commit();
+				resource.acquire();
 				try {
-					res.release();
-				} catch (Exception f) {
-					logger.warn("Failed to release resource {}: {}", 
-							res.getPath(), f);
-					f.printStackTrace();
+					forJob.ensureProcessState().provideRecord(record)
+							.setAcquired(true);
+					forJob.persistProcessState();
+					Transaction.commit();
+					acquired.add(resource);
+				} catch (Exception e) {
+					logger.error("Exception acquiring resource for job {}: {}", 
+						resource.getPath(), e);
+					resource.release();
+					throw new WrappedRuntimeException(e);
 				}
 			}
-			throw new WrappedRuntimeException(e);
 		}
 		if (acquired.size() > 0) {
 			jobResources.put(forJob, acquired);
