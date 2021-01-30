@@ -277,7 +277,11 @@ public class ResourceUtilities {
 						Collection collection = (Collection) value;
 						Collection newCollection = (Collection) newInstanceForCopy(
 								collection);
-						newCollection.addAll(collection);
+						if (newCollection instanceof LiSet) {
+							// handled by clone
+						} else {
+							newCollection.addAll(collection);
+						}
 						value = newCollection;
 					}
 				}
