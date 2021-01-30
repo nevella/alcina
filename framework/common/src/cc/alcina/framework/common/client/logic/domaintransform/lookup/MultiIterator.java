@@ -24,6 +24,10 @@ public class MultiIterator<E> extends FilteringIterator<E> {
 				.map(FilteringIterator::wrap).collect(Collectors.toList());
 	}
 
+	public FilteringIterator getCurrentIterator() {
+		return iterators.get(currentIteratorIndex);
+	}
+
 	public int getCurrentIteratorIndex() {
 		return currentIteratorIndex;
 	}
@@ -31,7 +35,7 @@ public class MultiIterator<E> extends FilteringIterator<E> {
 	@Override
 	public void remove() {
 		if (allowRemove) {
-			Iterator<E> itr = iterators.get(currentIteratorIndex);
+			Iterator<E> itr = getCurrentIterator();
 			if (itr == null) {
 				throw new NoSuchElementException();
 			}
@@ -45,8 +49,7 @@ public class MultiIterator<E> extends FilteringIterator<E> {
 		peeked = true;
 		while (currentIteratorIndex < iterators.size()) {
 			if (iterators.get(currentIteratorIndex).hasNext()) {
-				FilteringIterator<E> filteringIterator = iterators
-						.get(currentIteratorIndex);
+				FilteringIterator<E> filteringIterator = getCurrentIterator();
 				next = filteringIterator.next();
 				return;
 			}
@@ -96,7 +99,7 @@ public class MultiIterator<E> extends FilteringIterator<E> {
 	protected void resetPeeked() {
 		super.resetPeeked();
 		if (currentIteratorIndex != -1) {
-			iterators.get(currentIteratorIndex).peeked = false;
+			getCurrentIterator().peeked = false;
 		}
 	}
 }
