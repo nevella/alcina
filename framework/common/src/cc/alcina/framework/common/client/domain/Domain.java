@@ -45,8 +45,8 @@ public class Domain {
 		handler.async(clazz, objectId, create, resultConsumer);
 	}
 
-	public static <V extends Entity> V by(Class<V> clazz,
-			String propertyName, Object value) {
+	public static <V extends Entity> V by(Class<V> clazz, String propertyName,
+			Object value) {
 		return handler.byProperty(clazz, propertyName, value);
 	}
 
