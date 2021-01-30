@@ -45,8 +45,9 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 @RegistryLocation(registryPoint = Entity.class, implementationType = ImplementationType.MULTIPLE)
 @NonClientRegistryPointType
 @DomainTransformPropagation(PropagationType.PERSISTENT)
-//ensure { "id", "localId" } are before other properties (because needed for the hash in recursive deserialization)
-@JsonPropertyOrder(value={ "id", "localId" },alphabetic = true)
+// ensure { "id", "localId" } are before other properties (because needed for
+// the hash in recursive deserialization)
+@JsonPropertyOrder(value = { "id", "localId" }, alphabetic = true)
 public abstract class Entity<T extends Entity> extends Bindable
 		implements HasVersionNumber, HasId {
 	public static final transient String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class
@@ -213,6 +214,10 @@ public abstract class Entity<T extends Entity> extends Bindable
 		return hash;
 	}
 
+	@Override
+	public void setId(long id) {
+		this.id = id;
+	}
 
 	// not a propertychangeevent source - this should be invisible to transform
 	// listeners

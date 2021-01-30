@@ -77,6 +77,7 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.WriterService;
@@ -334,12 +335,20 @@ public class JobRegistry extends WriterService {
 			} else {
 				forJob.persistProcessState();
 				Transaction.commit();
-				resource.acquire();
-				forJob.ensureProcessState().provideRecord(record)
-						.setAcquired(true);
-				forJob.persistProcessState();
-				Transaction.commit();
-				acquired.add(resource);
+				MethodContext.instance().withExecuteOutsideTransaction()
+						.run(resource::acquire);
+				try {
+					forJob.ensureProcessState().provideRecord(record)
+							.setAcquired(true);
+					forJob.persistProcessState();
+					Transaction.commit();
+					acquired.add(resource);
+				} catch (Exception e) {
+					logger.error("Exception acquiring resource for job {}: {}",
+							resource.getPath(), e);
+					resource.release();
+					throw new WrappedRuntimeException(e);
+				}
 			}
 		}
 		if (acquired.size() > 0) {
