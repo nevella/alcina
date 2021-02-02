@@ -77,7 +77,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		return _getCmps().keySet().stream().findFirst();
 	}
 
-	@PropertySerialization(defaultValue = true, childTypes = SerializableSearchOrder.class)
+	@PropertySerialization(defaultProperty = true, childTypes = SerializableSearchOrder.class)
 	public List<SerializableSearchOrder> getSerializableSearchOrders() {
 		return this.serializableSearchOrders;
 	}
@@ -232,7 +232,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 			setAscending(ascending);
 		}
 
-		@PropertySerialization(defaultValue = true)
+		@PropertySerialization(defaultProperty = true)
 		public String getKey() {
 			return this.key;
 		}

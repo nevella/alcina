@@ -45,9 +45,15 @@ public @interface PropertySerialization {
 	Class<? extends TreeSerializable>[] childTypes() default {};
 
 	/*
-	 * Maximum one per type property. Exactly one of this or name must be set
+	 * Maximum one per type. Exactly one of this or name must be set
 	 */
-	boolean defaultValue() default false;
+	boolean defaultProperty() default false;
+
+	/*
+	 * To support single-group (bindable) search definitions - only permissible
+	 * if childTypes.length==1
+	 */
+	Class<? extends TreeSerializable>[] grandchildTypes() default {};
 
 	/*
 	 * Unique per path segment (including default resolution)

@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.actions;
 
 import cc.alcina.framework.common.client.logic.HasParameters;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 
 /**
  * Marker subclass, to be run on the server
@@ -29,6 +30,7 @@ public class RemoteActionWithParameters<T extends RemoteParameters>
 	}
 
 	@Override
+	@PropertySerialization(defaultProperty = true)
 	public T getParameters() {
 		return parameters;
 	}

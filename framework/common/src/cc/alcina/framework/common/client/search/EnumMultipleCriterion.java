@@ -23,7 +23,9 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import cc.alcina.framework.common.client.logic.domain.HasElementType;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -34,7 +36,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * 
  */
 public abstract class EnumMultipleCriterion<E extends Enum>
-		extends SearchCriterion implements HasValue<Set<E>> {
+		extends SearchCriterion implements HasValue<Set<E>>, HasElementType {
 	static final transient long serialVersionUID = -1L;
 
 	public EnumMultipleCriterion() {
@@ -66,7 +68,13 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 	@Override
 	@XmlTransient
 	@JsonIgnore
+	@PropertySerialization(defaultProperty = true)
 	public abstract Set<E> getValue();
+
+	@Override
+	public Class<?> provideElementType() {
+		return enumClass();
+	}
 
 	/**
 	 * add property change firing to the subclass implementation, if you care

@@ -968,6 +968,11 @@ public class CommonUtils {
 		return false;
 	}
 
+	public static boolean isEnumish(Object test) {
+		Class<? extends Object> clazz = test.getClass();
+		return clazz.isEnum() || isEnumSubclass(clazz);
+	}
+
 	public static boolean isEnumSubclass(Class c) {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}

@@ -2,9 +2,11 @@ package cc.alcina.framework.gwt.client.entity.search;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -16,6 +18,11 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 	// return editable dataobjects (either the entity class or a dataobject
 	// extending it)
 	private boolean returnSingleDataObjectImplementations;
+
+	@Override
+	public Set<CriteriaGroup> getCriteriaGroups() {
+		return super.getCriteriaGroups();
+	}
 
 	public boolean isReturnSingleDataObjectImplementations() {
 		return this.returnSingleDataObjectImplementations;
@@ -38,6 +45,10 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 		return places;
 	}
 
+	public boolean provideIsDefaultSortOrder() {
+		return getSearchOrders().isEmpty();
+	}
+
 	@Override
 	public Class<? extends Bindable> queriedBindableClass() {
 		return queriedEntityClass();
@@ -48,9 +59,5 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 	public void setReturnSingleDataObjectImplementations(
 			boolean returnSingleDataObjectImplementations) {
 		this.returnSingleDataObjectImplementations = returnSingleDataObjectImplementations;
-	}
-
-	public boolean provideIsDefaultSortOrder() {
-		return getSearchOrders().isEmpty();
 	}
 }

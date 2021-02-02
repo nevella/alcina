@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
@@ -71,6 +72,7 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 		return result;
 	}
 
+	@PropertySerialization(defaultProperty = true)
 	public String getText() {
 		return text;
 	}

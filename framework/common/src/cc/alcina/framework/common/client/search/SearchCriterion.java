@@ -15,14 +15,18 @@ package cc.alcina.framework.common.client.search;
 
 import java.util.Collection;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
@@ -81,6 +85,7 @@ public abstract class SearchCriterion extends Bindable
 		return null;
 	}
 
+	@PropertySerialization(name = "dir")
 	public Direction getDirection() {
 		return this.direction;
 	}
@@ -94,10 +99,13 @@ public abstract class SearchCriterion extends Bindable
 		return this.displayName;
 	}
 
+	@PropertySerialization(name = "op")
 	public StandardSearchOperator getOperator() {
 		return this.operator;
 	}
 
+	@AlcinaTransient
+	@XmlTransient
 	public String getTargetPropertyName() {
 		return targetPropertyName;
 	}

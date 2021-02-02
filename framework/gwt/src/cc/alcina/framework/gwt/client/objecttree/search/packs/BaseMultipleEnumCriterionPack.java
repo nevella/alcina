@@ -9,6 +9,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.search.EnumMultipleCriterion;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
@@ -29,10 +30,13 @@ public class BaseMultipleEnumCriterionPack {
 			return this;
 		}
 
+		@Override
+		@PropertySerialization(defaultProperty = true)
 		public Set<E> getValue() {
 			return this.value;
 		}
 
+		@Override
 		public void setValue(Set<E> value) {
 			Set<E> old_value = this.value;
 			this.value = value;
