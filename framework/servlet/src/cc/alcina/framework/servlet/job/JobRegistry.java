@@ -44,7 +44,7 @@ import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.job.NonRootTask;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
@@ -618,7 +618,7 @@ public class JobRegistry extends WriterService {
 
 		public Job create() {
 			checkAnnotatedPermissions(task);
-			Job job = AlcinaPersistentEntityImpl.create(Job.class);
+			Job job = PersistentImpl.create(Job.class);
 			job.setUser(PermissionsManager.get().getUser());
 			job.setState(initialState);
 			job.setTask(task);
@@ -886,7 +886,7 @@ public class JobRegistry extends WriterService {
 					.filter(j -> j.getState() == JobState.PROCESSING)
 					.forEach(job -> {
 						queriedJobs.add(job);
-						JobStateMessage stateMessage = AlcinaPersistentEntityImpl
+						JobStateMessage stateMessage = PersistentImpl
 								.create(JobStateMessage.class);
 						stateMessage.setJob(job);
 					});

@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -368,7 +368,7 @@ public class JobScheduler {
 					}
 				}
 			} else {
-				Job test = AlcinaPersistentEntityImpl
+				Job test = PersistentImpl
 						.getNewImplementationInstance(Job.class);
 				test.setTask(Reflections.newInstance(key));
 				if (SchedulingPermissions.canCreateFuture(schedule)) {

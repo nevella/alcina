@@ -4,7 +4,7 @@ import java.util.Objects;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -20,7 +20,7 @@ public class UserlandProvider {
 	}
 
 	public <G extends Entity & IGroup> G getGroupByName(String name) {
-		return (G) Domain.by((Class<G>) AlcinaPersistentEntityImpl
+		return (G) Domain.by((Class<G>) PersistentImpl
 				.getImplementation(IGroup.class), "name", name);
 	}
 
@@ -29,14 +29,14 @@ public class UserlandProvider {
 	}
 
 	public <U extends Entity & IUser> U getUserById(Long id) {
-		return (U) Domain.find((Class<U>) AlcinaPersistentEntityImpl
+		return (U) Domain.find((Class<U>) PersistentImpl
 				.getImplementation(IUser.class), id);
 	}
 
 	public <U extends Entity & IUser> U getUserByName(String name) {
 		return (U) Domain
 				.by(
-						(Class<U>) AlcinaPersistentEntityImpl
+						(Class<U>) PersistentImpl
 								.getImplementation(IUser.class),
 						"userName", name);
 	}

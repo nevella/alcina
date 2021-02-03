@@ -6,7 +6,7 @@ import javax.persistence.Transient;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.util.Ax;
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @Bean
-@RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = JobRelation.class)
+@RegistryLocation(registryPoint = PersistentImpl.class, targetClass = JobRelation.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 	private JobRelationType type;

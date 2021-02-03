@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
  */
 @DomainTransformPersistable
 @DomainTransformPropagation(PropagationType.NONE)
-@RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = PublicationCounter.class)
+@RegistryLocation(registryPoint = PersistentImpl.class, targetClass = PublicationCounter.class)
 public abstract class PublicationCounter
 		extends VersionableEntity<PublicationCounter> implements HasIUser {
 	private long counter;

@@ -1,7 +1,7 @@
 package cc.alcina.framework.entity.persistence.cache.descriptor;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.PublicationCounter;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -26,9 +26,9 @@ public class DomainDescriptorPublication {
 	private Class<? extends Entity> iUserImpl;
 
 	public void configureDescriptor(DomainStoreDescriptor descriptor) {
-		this.iUserImpl = (Class<? extends Entity>) AlcinaPersistentEntityImpl
+		this.iUserImpl = (Class<? extends Entity>) PersistentImpl
 				.getImplementation(IUser.class);
-		this.publicationImpl = (Class<? extends PublicationCounter>) AlcinaPersistentEntityImpl
+		this.publicationImpl = (Class<? extends PublicationCounter>) PersistentImpl
 				.getImplementation(PublicationCounter.class);
 		descriptor.addClassDescriptor(publicationImpl);
 	}
@@ -60,7 +60,7 @@ public class DomainDescriptorPublication {
 							DomainTransformEvent::provideIsCreationTransform)
 							.stream().forEach(qr -> {
 								IUser iUser = qr.getObject();
-								PublicationCounter counter = AlcinaPersistentEntityImpl
+								PublicationCounter counter = PersistentImpl
 										.create(PublicationCounter.class);
 								counter.setUser(iUser);
 							});

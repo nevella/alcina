@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -56,7 +56,7 @@ public class AuthenticationPersistence {
 	public AuthenticationSession createAuthenticationSession(Iid iid,
 			Date startDate, String sessionId, IUser user,
 			String authenticationType) {
-		Class<? extends AuthenticationSession> clazz = AlcinaPersistentEntityImpl
+		Class<? extends AuthenticationSession> clazz = PersistentImpl
 				.getImplementation(AuthenticationSession.class);
 		AuthenticationSession session = Domain.create(clazz);
 		if (iid.getVersionNumber() == -1) {
@@ -112,7 +112,7 @@ public class AuthenticationPersistence {
 	public ClientInstance createClientInstance(AuthenticationSession session,
 			String userAgent, String remoteAddress, String referrer,
 			String url) {
-		Class<? extends ClientInstance> clazz = AlcinaPersistentEntityImpl
+		Class<? extends ClientInstance> clazz = PersistentImpl
 				.getImplementation(ClientInstance.class);
 		ClientInstance clientInstance = Domain.create(clazz);
 		clientInstance.setAuthenticationSession(session);
@@ -130,7 +130,7 @@ public class AuthenticationPersistence {
 	}
 
 	public Iid createIid(String instanceId) {
-		Class<? extends Iid> clazz = AlcinaPersistentEntityImpl
+		Class<? extends Iid> clazz = PersistentImpl
 				.getImplementation(Iid.class);
 		Iid iid = Domain.create(clazz);
 		iid.setInstanceId(instanceId);
@@ -138,7 +138,7 @@ public class AuthenticationPersistence {
 	}
 
 	public AuthenticationSession getAuthenticationSession(String sessionId) {
-		Class<? extends AuthenticationSession> clazz = AlcinaPersistentEntityImpl
+		Class<? extends AuthenticationSession> clazz = PersistentImpl
 				.getImplementation(AuthenticationSession.class);
 		Optional<? extends AuthenticationSession> domainEntity = Domain
 				.query(clazz).filter("sessionId", sessionId).optional();
@@ -164,12 +164,12 @@ public class AuthenticationPersistence {
 	}
 
 	public ClientInstance getClientInstance(long clientInstanceId) {
-		return AlcinaPersistentEntityImpl.find(ClientInstance.class,
+		return PersistentImpl.find(ClientInstance.class,
 				clientInstanceId);
 	}
 
 	public Iid getIid(String instanceId) {
-		Class<? extends Iid> clazz = AlcinaPersistentEntityImpl
+		Class<? extends Iid> clazz = PersistentImpl
 				.getImplementation(Iid.class);
 		Optional<? extends Iid> domainEntity = Domain.query(clazz)
 				.filter("instanceId", instanceId).optional();
@@ -234,11 +234,11 @@ public class AuthenticationPersistence {
 		List<Entity> createdObjects = new ArrayList<>();
 		Iid iid = (Iid) Ax.first(em.createQuery(Ax.format(
 				"select iid from %s iid where instanceId = '%s'",
-				AlcinaPersistentEntityImpl
+				PersistentImpl
 						.getImplementationSimpleClassName(Iid.class),
 				iidUid)).getResultList());
 		if (iid == null) {
-			iid = AlcinaPersistentEntityImpl
+			iid = PersistentImpl
 					.getNewImplementationInstance(Iid.class);
 			iid.setInstanceId(iidUid);
 			em.persist(iid);
@@ -247,12 +247,12 @@ public class AuthenticationPersistence {
 		AuthenticationSession authenticationSession = (AuthenticationSession) Ax
 				.first(em.createQuery(Ax.format(
 						"select authenticationSession from %s authenticationSession where sessionId = '%s'",
-						AlcinaPersistentEntityImpl
+						PersistentImpl
 								.getImplementationSimpleClassName(
 										AuthenticationSession.class),
 						authenticationSessionUid)).getResultList());
 		if (authenticationSession == null) {
-			authenticationSession = AlcinaPersistentEntityImpl
+			authenticationSession = PersistentImpl
 					.getNewImplementationInstance(AuthenticationSession.class);
 			authenticationSession.setSessionId(authenticationSessionUid);
 			authenticationSession.setStartTime(new Date());
@@ -263,7 +263,7 @@ public class AuthenticationPersistence {
 			em.persist(authenticationSession);
 			createdObjects.add(authenticationSession);
 		}
-		ClientInstance clientInstance = AlcinaPersistentEntityImpl
+		ClientInstance clientInstance = PersistentImpl
 				.getNewImplementationInstance(ClientInstance.class);
 		clientInstance.setHelloDate(new Date());
 		clientInstance.setUserAgent(authenticationSessionUid);
@@ -272,20 +272,20 @@ public class AuthenticationPersistence {
 		clientInstance.setIpAddress("127.0.0.1");
 		clientInstance.setBotUserAgent(false);
 		em.persist(clientInstance);
-		Iid detachedIid = AlcinaPersistentEntityImpl
+		Iid detachedIid = PersistentImpl
 				.getNewImplementationInstance(Iid.class);
 		detachedIid.setId(iid.getId());
 		if (createdObjects.contains(iid)) {
 			result.createdDetached.add(detachedIid);
 		}
-		AuthenticationSession detachedSession = AlcinaPersistentEntityImpl
+		AuthenticationSession detachedSession = PersistentImpl
 				.getNewImplementationInstance(AuthenticationSession.class);
 		detachedSession.setId(authenticationSession.getId());
 		detachedSession.setIid(detachedIid);
 		if (createdObjects.contains(authenticationSession)) {
 			result.createdDetached.add(detachedSession);
 		}
-		ClientInstance detachedInstance = AlcinaPersistentEntityImpl
+		ClientInstance detachedInstance = PersistentImpl
 				.getNewImplementationInstance(ClientInstance.class);
 		detachedInstance.setId(clientInstance.getId());
 		detachedInstance.setAuthenticationSession(detachedSession);

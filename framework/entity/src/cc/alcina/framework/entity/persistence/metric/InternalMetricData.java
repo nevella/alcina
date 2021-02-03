@@ -4,7 +4,7 @@ import java.lang.management.ThreadInfo;
 import java.util.Date;
 import java.util.function.Supplier;
 
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.SEUtilities;
@@ -64,7 +64,7 @@ public class InternalMetricData {
 
 	public InternalMetric asMetric() {
 		if (persistent == null) {
-			persistent = AlcinaPersistentEntityImpl
+			persistent = PersistentImpl
 					.getNewImplementationInstance(InternalMetric.class);
 			persistent.setCallName(metricName);
 			persistent.setStartTime(new Date(startTime));

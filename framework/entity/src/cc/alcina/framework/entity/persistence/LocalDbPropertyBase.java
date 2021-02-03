@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -52,7 +52,7 @@ public abstract class LocalDbPropertyBase extends Entity {
 	public static LocalDbPropertyBase getLocalDbPropertyObject(String key) {
 		CommonPersistenceLocal cpl = Registry
 				.impl(CommonPersistenceProvider.class).getCommonPersistence();
-		Class<? extends LocalDbPropertyBase> implClass = AlcinaPersistentEntityImpl
+		Class<? extends LocalDbPropertyBase> implClass = PersistentImpl
 				.getImplementation(LocalDbPropertyBase.class);
 		LocalDbPropertyBase dbProperty = cpl.getItemByKeyValue(implClass,
 				KEY_FIELD_NAME, key, true, null, false);
@@ -95,7 +95,7 @@ public abstract class LocalDbPropertyBase extends Entity {
 				CommonPersistenceLocal cpl = Registry
 						.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence();
-				Class<? extends LocalDbPropertyBase> implClass = AlcinaPersistentEntityImpl
+				Class<? extends LocalDbPropertyBase> implClass = PersistentImpl
 						.getImplementation(LocalDbPropertyBase.class);
 				cpl.setField(implClass, dbPropertyObject.getId(),
 						VALUE_FIELD_NAME, value);
@@ -107,7 +107,7 @@ public abstract class LocalDbPropertyBase extends Entity {
 	}
 
 	private static Class<? extends LocalDbPropertyBase> impl() {
-		return AlcinaPersistentEntityImpl
+		return PersistentImpl
 				.getImplementation(LocalDbPropertyBase.class);
 	}
 

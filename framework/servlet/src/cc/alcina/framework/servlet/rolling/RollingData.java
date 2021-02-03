@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.persistence.RollingDataItem;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -31,7 +31,7 @@ public abstract class RollingData<K extends Comparable, V> {
 	}
 
 	private SortedMap<K, V> getValues0(K earliestKey) {
-		Class<? extends RollingDataItem> rdImplClass = AlcinaPersistentEntityImpl
+		Class<? extends RollingDataItem> rdImplClass = PersistentImpl
 				.getImplementation(RollingDataItem.class);
 		Function<String, K> keyDeserializer = keyDeserializer();
 		List<? extends RollingDataItem> list = Domain.query(rdImplClass)

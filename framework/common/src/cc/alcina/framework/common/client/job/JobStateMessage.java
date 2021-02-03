@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @Bean
-@RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = JobStateMessage.class)
+@RegistryLocation(registryPoint = PersistentImpl.class, targetClass = JobStateMessage.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 // TODO - possibly add a 'cancel' message to further ensure only owner thread
 // modifies job

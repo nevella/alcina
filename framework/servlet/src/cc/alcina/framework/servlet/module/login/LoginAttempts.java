@@ -7,7 +7,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.LoginAttempt;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -18,7 +18,7 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 public class LoginAttempts {
 	public boolean checkLockedOut(LoginModel loginModel) {
 		List<LoginAttempt> attempts = (List) Domain.listByProperty(
-				AlcinaPersistentEntityImpl.getImplementation(
+				PersistentImpl.getImplementation(
 						LoginAttempt.class),
 				"userNameLowerCase",
 				loginModel.loginBean.getUserName().toLowerCase());
@@ -44,13 +44,13 @@ public class LoginAttempts {
 				"maxAttempts");
 		Preconditions.checkArgument(maxAttempts != 0);
 		List<LoginAttempt> attempts = (List) Domain.listByProperty(
-				AlcinaPersistentEntityImpl.getImplementation(
+				PersistentImpl.getImplementation(
 						LoginAttempt.class),
 				"userNameLowerCase",
 				loginModel.loginBean.getUserName().toLowerCase());
 		attempts.stream().sorted(Entity.EntityComparator.REVERSED_INSTANCE)
 				.skip(maxAttempts).forEach(Entity::delete);
-		LoginAttempt loginAttempt = Domain.create(AlcinaPersistentEntityImpl
+		LoginAttempt loginAttempt = Domain.create(PersistentImpl
 				.getImplementation(LoginAttempt.class));
 		loginAttempt.setUserNameLowerCase(
 				loginModel.loginRequest.getUserName().toLowerCase());

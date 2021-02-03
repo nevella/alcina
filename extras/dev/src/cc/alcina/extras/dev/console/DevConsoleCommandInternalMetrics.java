@@ -18,7 +18,7 @@ import org.json.JSONArray;
 
 import cc.alcina.extras.dev.console.DevConsoleCommandTransforms.DateTimeFormatter;
 import cc.alcina.extras.dev.console.DevConsoleCommandTransforms.TrimmedStringFormatter;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -226,7 +226,7 @@ public class DevConsoleCommandInternalMetrics {
 			case dump: {
 				List<InternalMetric> metrics = SqlUtils.getMapped(ps, sql,
 						rs -> {
-							InternalMetric metric = AlcinaPersistentEntityImpl
+							InternalMetric metric = PersistentImpl
 									.getNewImplementationInstance(
 											InternalMetric.class);
 							metric.setCallName(rs.getString("callname"));

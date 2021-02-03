@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
@@ -430,7 +430,7 @@ public class DomainTransformPersistenceQueue {
 					requestId);
 			DomainTransformRequestPersistent request = loadRequest(event);
 			if (request == null) {
-				request = AlcinaPersistentEntityImpl
+				request = PersistentImpl
 						.getNewImplementationInstance(
 								DomainTransformRequestPersistent.class);
 				request.setId(requestId);

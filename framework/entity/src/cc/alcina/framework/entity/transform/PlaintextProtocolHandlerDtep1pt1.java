@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -60,7 +60,7 @@ public class PlaintextProtocolHandlerDtep1pt1 {
 	private SimpleStringParser asyncParser = null;
 
 	public PlaintextProtocolHandlerDtep1pt1() {
-		dtrEvtImpl = AlcinaPersistentEntityImpl
+		dtrEvtImpl = PersistentImpl
 				.getImplementation(DomainTransformEventPersistent.class);
 	}
 

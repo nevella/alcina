@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * 
  */
 @NonClientRegistryPointType
-public interface AlcinaPersistentEntityImpl {
+public interface PersistentImpl {
 	static <A extends Entity> A create(Class<A> clazz) {
 		return Domain.create(getImplementation(clazz));
 	}
@@ -23,7 +23,7 @@ public interface AlcinaPersistentEntityImpl {
 	}
 
 	static <A> Class<? extends A> getImplementation(Class<A> clazz) {
-		return Registry.get().lookupSingle(AlcinaPersistentEntityImpl.class,
+		return Registry.get().lookupSingle(PersistentImpl.class,
 				clazz);
 	}
 

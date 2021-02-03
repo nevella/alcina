@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.NonDomainTransformPersistable;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
@@ -249,7 +249,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 			CommonPersistenceLocal cp = Registry
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistenceExTransaction();
-			Class<? extends ClassRef> crimpl = AlcinaPersistentEntityImpl
+			Class<? extends ClassRef> crimpl = PersistentImpl
 					.getImplementation(ClassRef.class);
 			long idCtr = 0;
 			for (Class clazz : persistableClasses) {
@@ -263,7 +263,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 			CommonPersistenceLocal cp = Registry
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence();
-			Class<? extends ClassRef> crimpl = AlcinaPersistentEntityImpl
+			Class<? extends ClassRef> crimpl = PersistentImpl
 					.getImplementation(ClassRef.class);
 			Set<? extends ClassRef> classrefs = cp.getAll(crimpl);
 			Set<? extends ClassRef> deleteClassrefs = new HashSet<ClassRef>();

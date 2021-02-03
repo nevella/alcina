@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -152,9 +152,9 @@ public class TransformCommit {
 				logger.info("Wrote {} offline/bulk records to {}",
 						records.size(), saveDir);
 			}
-			Class<? extends ClientInstance> clientInstanceClass = AlcinaPersistentEntityImpl
+			Class<? extends ClientInstance> clientInstanceClass = PersistentImpl
 					.getImplementation(ClientInstance.class);
-			Class<? extends DomainTransformRequestPersistent> dtrClass = AlcinaPersistentEntityImpl
+			Class<? extends DomainTransformRequestPersistent> dtrClass = PersistentImpl
 					.getImplementation(DomainTransformRequestPersistent.class);
 			long currentClientInstanceId = 0;
 			int committed = 0;
@@ -240,7 +240,7 @@ public class TransformCommit {
 								.getId() == deltaRecord.getUserId()) {
 						} else {
 							wrapperUser = Domain.find(
-									AlcinaPersistentEntityImpl
+									PersistentImpl
 											.getImplementation(IUser.class),
 									deltaRecord.getUserId());
 							if (reuseIUserHolder != null) {
@@ -537,7 +537,7 @@ public class TransformCommit {
 			removeTransforms(Class<? extends Entity>... entityClassNames) {
 		Set<Class> toRemove = Arrays.stream(entityClassNames).map(clazz -> {
 			if (Modifier.isAbstract(clazz.getModifiers())) {
-				return AlcinaPersistentEntityImpl.getImplementation(clazz);
+				return PersistentImpl.getImplementation(clazz);
 			}
 			return clazz;
 		}).collect(Collectors.toSet());
@@ -978,7 +978,7 @@ public class TransformCommit {
 
 	static class IsWrappedObjectDteFilter
 			implements CollectionFilter<DomainTransformEvent> {
-		Class clazz = AlcinaPersistentEntityImpl
+		Class clazz = PersistentImpl
 				.getImplementation(WrappedObject.class);
 
 		@Override

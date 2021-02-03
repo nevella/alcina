@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.Table;
 
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LongPair;
@@ -47,10 +47,10 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 					TRANSFORM_REAPER_2_LAST_RQ_ID, null, true);
 			stmt = conn.createStatement();
 			long lastId = lastValue == null ? 1 : Long.parseLong(lastValue);
-			String dtrTableName = AlcinaPersistentEntityImpl
+			String dtrTableName = PersistentImpl
 					.getImplementation(DomainTransformRequestPersistent.class)
 					.getAnnotation(Table.class).name();
-			String dteTableName = AlcinaPersistentEntityImpl
+			String dteTableName = PersistentImpl
 					.getImplementation(DomainTransformEventPersistent.class)
 					.getAnnotation(Table.class).name();
 			ResultSet rs = executeQuery("select max(id) from %s", dtrTableName);

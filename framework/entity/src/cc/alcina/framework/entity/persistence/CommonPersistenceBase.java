@@ -52,7 +52,7 @@ import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValid
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -120,11 +120,11 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			.getName() + ".CONTEXT_CLIENT_INSTANCE_ID";
 
 	private static <A> Class<? extends A> getImplementation(Class<A> clazz) {
-		return AlcinaPersistentEntityImpl.getImplementation(clazz);
+		return PersistentImpl.getImplementation(clazz);
 	}
 
 	private static String getImplementationSimpleClassName(Class<?> clazz) {
-		return AlcinaPersistentEntityImpl
+		return PersistentImpl
 				.getImplementationSimpleClassName(clazz);
 	}
 
@@ -295,9 +295,9 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		for (Object[] array : objects) {
 			long max = (long) array[0];
 			long userId = (long) array[1];
-			Class<? extends PublicationCounter> clazz = AlcinaPersistentEntityImpl
+			Class<? extends PublicationCounter> clazz = PersistentImpl
 					.getImplementation(PublicationCounter.class);
-			Class<? extends IUser> iUserClass = AlcinaPersistentEntityImpl
+			Class<? extends IUser> iUserClass = PersistentImpl
 					.getImplementation(IUser.class);
 			PublicationCounter counter = Reflections.newInstance(clazz);
 			getEntityManager().persist(counter);
@@ -450,7 +450,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		ThreadlocalTransformManager.get().setEntityManager(getEntityManager());
 		ThreadlocalTransformManager.get()
 				.setUserSessionEntityMap(new EntityLocatorMap());
-		ClientInstance clientInstanceImpl = AlcinaPersistentEntityImpl
+		ClientInstance clientInstanceImpl = PersistentImpl
 				.getNewImplementationInstance(ClientInstance.class);
 		clientInstanceImpl.setId(clientInstanceId);
 		// don't get the real client instance - don't want to attach
@@ -570,7 +570,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			List<Long> ids = query.getResultList();
 			long id = ids.isEmpty() ? 0L : ids.get(0);
 			dtrps = new ArrayList<DomainTransformRequestPersistent>();
-			DomainTransformRequestPersistent instance = AlcinaPersistentEntityImpl
+			DomainTransformRequestPersistent instance = PersistentImpl
 					.getNewImplementationInstance(
 							DomainTransformRequestPersistent.class);
 			instance.setId(id);
@@ -754,7 +754,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			records.addAll(r.getLogRecords());
 		}
 		for (ClientLogRecord clr : records) {
-			ClientLogRecordPersistent clrp = AlcinaPersistentEntityImpl
+			ClientLogRecordPersistent clrp = PersistentImpl
 					.getNewImplementationInstance(
 							ClientLogRecordPersistent.class);
 			getEntityManager().persist(clrp);
@@ -835,7 +835,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		ThreadlocalTransformManager tm = new ThreadlocalTransformManager();
 		tm.resetTltm(new EntityLocatorMap());
 		tm.setEntityManager(getEntityManager());
-		ClientInstance clientInstance = AlcinaPersistentEntityImpl
+		ClientInstance clientInstance = PersistentImpl
 				.getNewImplementationInstance(ClientInstance.class);
 		clientInstance.setId(clientInstanceId);
 		// don't use the real client instance, requires

@@ -24,7 +24,7 @@ import javax.persistence.Table;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -63,7 +63,7 @@ public class DevConsoleCommandTransforms {
 			long id = rs.getLong("id");
 			String cn = rs.getString("refclassname");
 			Class clazz = Registry.get().lookupSingle(
-					AlcinaPersistentEntityImpl.class, ClassRef.class);
+					PersistentImpl.class, ClassRef.class);
 			ClassRef cr = (ClassRef) clazz.newInstance();
 			cr.setId(id);
 			cr.setRefClassName(cn);
@@ -356,10 +356,10 @@ public class DevConsoleCommandTransforms {
 			argv = f.argv;
 			Connection conn = getConn();
 			ensureClassRefs(conn);
-			Class<? extends DomainTransformRequestPersistent> clazz = AlcinaPersistentEntityImpl
+			Class<? extends DomainTransformRequestPersistent> clazz = PersistentImpl
 					.getImplementation(DomainTransformRequestPersistent.class);
 			String dtrName = clazz.getAnnotation(Table.class).name();
-			Class<? extends DomainTransformEventPersistent> class1 = AlcinaPersistentEntityImpl
+			Class<? extends DomainTransformEventPersistent> class1 = PersistentImpl
 					.getImplementation(DomainTransformEventPersistent.class);
 			String dteName = class1.getAnnotation(Table.class).name();
 			String authClause = "client_instance ci "

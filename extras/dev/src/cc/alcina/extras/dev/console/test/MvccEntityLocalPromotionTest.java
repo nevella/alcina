@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -18,9 +18,9 @@ public class MvccEntityLocalPromotionTest<IU extends Entity & IUser, IG extends 
 		extends MvccEntityTransactionTest {
 	@Override
 	protected void run0() throws Exception {
-		Class<IG> groupClass = (Class<IG>) AlcinaPersistentEntityImpl
+		Class<IG> groupClass = (Class<IG>) PersistentImpl
 				.getImplementation(IGroup.class);
-		Class<IU> userClass = (Class<IU>) AlcinaPersistentEntityImpl
+		Class<IU> userClass = (Class<IU>) PersistentImpl
 				.getImplementation(IUser.class);
 		long suffix = System.currentTimeMillis();
 		IG createdGroup = Domain.create(groupClass);

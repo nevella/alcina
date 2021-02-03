@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobRelation;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
@@ -65,7 +65,7 @@ public class ReadonlyInMemoryPersister {
 			DomainTransformLayerWrapper wrapper) {
 		Registry.impl(InMemoryPersistableProvider.class).permittedClasses()
 				.map(c -> {
-					Class impl = AlcinaPersistentEntityImpl
+					Class impl = PersistentImpl
 							.getImplementationNonGeneric(c);
 					return impl != null && impl != Void.class ? impl : c;
 				}).forEach(inMemoryPersistable::add);
@@ -81,7 +81,7 @@ public class ReadonlyInMemoryPersister {
 	}
 
 	private void generatePersistentResponse() {
-		Class<? extends DomainTransformEventPersistent> persistentEventClass = AlcinaPersistentEntityImpl
+		Class<? extends DomainTransformEventPersistent> persistentEventClass = PersistentImpl
 				.getImplementation(DomainTransformEventPersistent.class);
 		AtomicBoolean missingClassRefWarned = new AtomicBoolean();
 		token.getRequest().allTransforms().forEach(transform -> {
@@ -106,7 +106,7 @@ public class ReadonlyInMemoryPersister {
 				.allRequests()) {
 			subRequest.updateTransformCommitType(CommitType.ALL_COMMITTED,
 					false);
-			DomainTransformRequestPersistent persistentRequest = AlcinaPersistentEntityImpl
+			DomainTransformRequestPersistent persistentRequest = PersistentImpl
 					.getNewImplementationInstance(
 							DomainTransformRequestPersistent.class);
 			persistentRequest.setId(idGenerator.decrementAndGet());

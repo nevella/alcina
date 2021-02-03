@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -169,13 +169,13 @@ public class DomainDescriptorJob {
 	private Set<AllocationQueue> queuesWithBufferedEvents = new LinkedHashSet<>();
 
 	public void configureDescriptor(DomainStoreDescriptor descriptor) {
-		jobImplClass = AlcinaPersistentEntityImpl.getImplementation(Job.class);
+		jobImplClass = PersistentImpl.getImplementation(Job.class);
 		jobDescriptor = new JobDescriptor();
 		descriptor.addClassDescriptor(jobDescriptor);
-		jobRelationImplClass = AlcinaPersistentEntityImpl
+		jobRelationImplClass = PersistentImpl
 				.getImplementation(JobRelation.class);
 		descriptor.addClassDescriptor(jobRelationImplClass);
-		jobStateMessageImplClass = AlcinaPersistentEntityImpl
+		jobStateMessageImplClass = PersistentImpl
 				.getImplementation(JobStateMessage.class);
 		descriptor.addClassDescriptor(jobStateMessageImplClass);
 		if (ResourceUtilities.is("lazy")) {
@@ -717,14 +717,14 @@ public class DomainDescriptorJob {
 	class AllocationQueueProjection implements DomainProjection<Job> {
 		private TransactionalMultiset<Class, Job> futuresByTask = new TransactionalMultiset(
 				Class.class,
-				AlcinaPersistentEntityImpl.getImplementation(Job.class));
+				PersistentImpl.getImplementation(Job.class));
 
 		private TransactionalMultiset<Class, Job> incompleteTopLevelByTask = new TransactionalMultiset(
 				Class.class,
-				AlcinaPersistentEntityImpl.getImplementation(Job.class));
+				PersistentImpl.getImplementation(Job.class));
 
 		private TransactionalSet<Job> undeserializableJobs = new TransactionalSet(
-				AlcinaPersistentEntityImpl.getImplementation(Job.class));
+				PersistentImpl.getImplementation(Job.class));
 
 		public AllocationQueueProjection() {
 		}

@@ -7,7 +7,7 @@ import javax.persistence.Table;
 
 import cc.alcina.extras.dev.console.DevConsoleCommand;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
@@ -38,8 +38,8 @@ public class CmdPersistentClassBuilder extends DevConsoleCommand {
 	public String run(String[] argv) throws Exception {
 		Stream<Class> entities = Registry.get().lookup(Entity.class).stream()
 				.filter(e -> e.getAnnotation(Table.class) != null);
-		Stream<Class> transformPersistent = Stream.of(AlcinaPersistentEntityImpl
-				.getImplementation(DomainTransformRequestPersistent.class),AlcinaPersistentEntityImpl
+		Stream<Class> transformPersistent = Stream.of(PersistentImpl
+				.getImplementation(DomainTransformRequestPersistent.class),PersistentImpl
 				.getImplementation(DomainTransformEventPersistent.class));
 		String collect = Stream.concat(entities, transformPersistent).map(e -> e.getName()).sorted()
 				.map(n -> Ax.format("<class>%s</class>", n))

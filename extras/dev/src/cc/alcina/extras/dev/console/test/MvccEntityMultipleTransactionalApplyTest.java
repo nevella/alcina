@@ -8,7 +8,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.Ax;
@@ -22,10 +22,10 @@ import cc.alcina.framework.entity.persistence.mvcc.Transactions;
  */
 public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser, IG extends Entity & IGroup>
 		extends MvccEntityTransactionTest {
-	Class<IG> groupClass = (Class<IG>) AlcinaPersistentEntityImpl
+	Class<IG> groupClass = (Class<IG>) PersistentImpl
 			.getImplementation(IGroup.class);
 
-	Class<IU> userClass = (Class<IU>) AlcinaPersistentEntityImpl
+	Class<IU> userClass = (Class<IU>) PersistentImpl
 			.getImplementation(IUser.class);
 
 	private CountDownLatch txLatch;

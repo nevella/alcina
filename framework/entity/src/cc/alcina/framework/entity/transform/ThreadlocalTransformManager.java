@@ -53,7 +53,7 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
@@ -754,10 +754,10 @@ public class ThreadlocalTransformManager extends TransformManager
 					+ clientInstance.getId();
 			// System.out.println(message);
 			// cp.log(message, LogMessageType.INFO.toString());
-			String dteName = AlcinaPersistentEntityImpl
+			String dteName = PersistentImpl
 					.getImplementation(DomainTransformEventPersistent.class)
 					.getSimpleName();
-			String dtrName = AlcinaPersistentEntityImpl
+			String dtrName = PersistentImpl
 					.getImplementation(DomainTransformRequestPersistent.class)
 					.getSimpleName();
 			MetricLogging.get().start(message);

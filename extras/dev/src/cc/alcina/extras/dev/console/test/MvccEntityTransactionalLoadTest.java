@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.Ax;
@@ -41,7 +41,7 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 	private long minDeletionId;
 
 	private <E extends Entity & IUser> Class<E> getUserClass() {
-		return (Class<E>) AlcinaPersistentEntityImpl
+		return (Class<E>) PersistentImpl
 				.getImplementation(IUser.class);
 	}
 

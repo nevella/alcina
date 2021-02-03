@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -29,7 +29,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @DomainTransformPersistable
-@RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = KeyValuePersistent.class)
+@RegistryLocation(registryPoint = PersistentImpl.class, targetClass = KeyValuePersistent.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 		extends VersionableEntity<T> {
@@ -84,7 +84,7 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 	}
 
 	private static Class<? extends KeyValuePersistent> implementation() {
-		return AlcinaPersistentEntityImpl
+		return PersistentImpl
 				.getImplementation(KeyValuePersistent.class);
 	}
 

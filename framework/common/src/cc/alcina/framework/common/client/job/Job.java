@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -50,13 +50,13 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @Bean
-@RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = Job.class)
+@RegistryLocation(registryPoint = PersistentImpl.class, targetClass = Job.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public static final transient String PROPERTY_STATE = "state";
 
 	public static Job byId(long id) {
-		return AlcinaPersistentEntityImpl.find(Job.class, id);
+		return PersistentImpl.find(Job.class, id);
 	}
 
 	private Task task;
@@ -131,7 +131,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			// FIXME - mvcc.jobs - get rid'o'me
 			public ActionLogItem getActionLogItem() {
 				ActionLogItem logItem = Reflections
-						.newInstance(AlcinaPersistentEntityImpl
+						.newInstance(PersistentImpl
 								.getImplementation(ActionLogItem.class));
 				logItem.setActionClass((Class) getTask().getClass());
 				logItem.setActionClassName(getTaskClassName());
@@ -203,7 +203,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		if (invalidMessage != null) {
 			throw new IllegalStateException(invalidMessage);
 		}
-		JobRelation relation = AlcinaPersistentEntityImpl
+		JobRelation relation = PersistentImpl
 				.create(JobRelation.class);
 		relation.setType(type);
 		relation.setFrom(from);

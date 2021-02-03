@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.UserWith2FA;
@@ -67,7 +67,7 @@ public abstract class Authenticator<U extends Entity & IUser> {
 	}
 
 	public U createUser(String userName, String password) {
-		U user = (U) Domain.create((Class) AlcinaPersistentEntityImpl
+		U user = (U) Domain.create((Class) PersistentImpl
 				.getImplementation(IUser.class));
 		user.setUserName(userName);
 		setPassword(user, password);

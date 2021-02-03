@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -396,10 +396,10 @@ public class TransformPersisterInPersistenceContext {
 					if (!eventsPersisted.isEmpty()) {
 						TransformPropagationPolicy propagationPolicy = token
 								.getTransformPropagationPolicy();
-						Class<? extends DomainTransformRequestPersistent> persistentRequestClass = AlcinaPersistentEntityImpl
+						Class<? extends DomainTransformRequestPersistent> persistentRequestClass = PersistentImpl
 								.getImplementation(
 										DomainTransformRequestPersistent.class);
-						Class<? extends DomainTransformEventPersistent> persistentEventClass = AlcinaPersistentEntityImpl
+						Class<? extends DomainTransformEventPersistent> persistentEventClass = PersistentImpl
 								.getImplementation(
 										DomainTransformEventPersistent.class);
 						DomainTransformRequestPersistent persistentRequest = persistentRequestClass

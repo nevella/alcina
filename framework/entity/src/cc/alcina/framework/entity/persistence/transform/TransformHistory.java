@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEventView;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -81,14 +81,14 @@ public class TransformHistory {
 	public <U extends IUser> U getCreationUser() {
 		DomainTransformEventView transformEvent = creationEvent();
 		return transformEvent == null ? null
-				: (U) Domain.find(AlcinaPersistentEntityImpl.getImplementation(
+				: (U) Domain.find(PersistentImpl.getImplementation(
 						IUser.class), transformEvent.getUserId());
 	}
 
 	public <U extends IUser> U
 			getUser(DomainTransformEventView transformEvent) {
 		return transformEvent == null ? null
-				: (U) Domain.find(AlcinaPersistentEntityImpl.getImplementation(
+				: (U) Domain.find(PersistentImpl.getImplementation(
 						IUser.class), transformEvent.getUserId());
 	}
 

@@ -8,7 +8,7 @@ import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
-import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER), delete = @Permission(access = AccessLevel.ROOT))
 @DomainTransformPersistable
-@RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = UserProperty.class)
+@RegistryLocation(registryPoint = PersistentImpl.class, targetClass = UserProperty.class)
 @DomainTransformPropagation(PropagationType.PERSISTENT)
 /*
  * Similar to the (jvm-only) KeyValuePersistentBase
@@ -46,7 +46,7 @@ public abstract class UserProperty<T extends UserProperty> extends Entity<T>
 	}
 
 	private static Class<? extends UserProperty> implementation() {
-		return AlcinaPersistentEntityImpl.getImplementation(UserProperty.class);
+		return PersistentImpl.getImplementation(UserProperty.class);
 	}
 
 	private String key;
