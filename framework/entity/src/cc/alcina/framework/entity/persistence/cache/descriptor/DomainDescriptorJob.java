@@ -32,8 +32,8 @@ import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -63,6 +63,11 @@ public class DomainDescriptorJob {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	private DomainTransformPersistenceListener jobLogger = new DomainTransformPersistenceListener() {
+		@Override
+		public boolean isAllVmEventsListener() {
+			return true;
+		}
+
 		@Override
 		public void onDomainTransformRequestPersistence(
 				DomainTransformPersistenceEvent event) {
@@ -99,6 +104,11 @@ public class DomainDescriptorJob {
 	};
 
 	private DomainTransformPersistenceListener bufferedEventFiringListener = new DomainTransformPersistenceListener() {
+		@Override
+		public boolean isAllVmEventsListener() {
+			return true;
+		}
+
 		@Override
 		public void onDomainTransformRequestPersistence(
 				DomainTransformPersistenceEvent event) {
@@ -716,12 +726,10 @@ public class DomainDescriptorJob {
 
 	class AllocationQueueProjection implements DomainProjection<Job> {
 		private TransactionalMultiset<Class, Job> futuresByTask = new TransactionalMultiset(
-				Class.class,
-				PersistentImpl.getImplementation(Job.class));
+				Class.class, PersistentImpl.getImplementation(Job.class));
 
 		private TransactionalMultiset<Class, Job> incompleteTopLevelByTask = new TransactionalMultiset(
-				Class.class,
-				PersistentImpl.getImplementation(Job.class));
+				Class.class, PersistentImpl.getImplementation(Job.class));
 
 		private TransactionalSet<Job> undeserializableJobs = new TransactionalSet(
 				PersistentImpl.getImplementation(Job.class));

@@ -30,7 +30,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.util.UrlComponentEncoder;
+import cc.alcina.framework.gwt.client.util.TextUtils;
 
 /**
  * <p>
@@ -592,7 +592,7 @@ public class FlatTreeSerializer {
 		}
 
 		public String escapeValue(String str) {
-			return UrlComponentEncoder.get().encode(str);
+			return TextUtils.Encoder.encodeURIComponentEsque(str);
 		}
 
 		public boolean isCollection() {
@@ -666,7 +666,7 @@ public class FlatTreeSerializer {
 
 		Object parseStringValue(Class valueClass, String stringValue) {
 			if (valueClass == String.class) {
-				return UrlComponentEncoder.get().decode(stringValue);
+				return TextUtils.Encoder.decodeURIComponentEsque(stringValue);
 			}
 			if (valueClass == Long.class || valueClass == long.class) {
 				return Long.parseLong(stringValue);

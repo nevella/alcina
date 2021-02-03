@@ -1150,7 +1150,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			long duration = System.currentTimeMillis() - start;
 			if (postInitConnectionLockThread != null && duration >= 5) {
 				logger.info(
-						"Waited %sms on postInitConnectionLock - held by {}\n\n{}\n",
+						"Waited {}ms on postInitConnectionLock - held by {}\n\n{}\n",
 						duration, postInitConnectionLockThread,
 						stacktraceSlice);
 			}

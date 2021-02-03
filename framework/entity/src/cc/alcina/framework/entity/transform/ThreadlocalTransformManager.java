@@ -53,7 +53,6 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
@@ -62,6 +61,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
@@ -80,6 +80,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
@@ -1187,6 +1188,8 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	protected boolean checkHasSufficientInfoForPropertyPersist(Entity entity) {
 		return entity.getId() != 0
+				// FIXME - mvcc.wrap - treeserializable->non-entity
+				|| entity instanceof TreeSerializable
 				|| (localIdToEntityMap.get(entity.getLocalId()) != null
 						&& getEntityManager() == null)
 				|| (entity instanceof SourcesPropertyChangeEvents && listeningTo

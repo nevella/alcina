@@ -20,6 +20,11 @@ class SchedulingPermissions {
 			return true;
 		}
 		Job job = queue.job;
+		if (job.provideParent().isPresent()
+				&& ExecutionConstraints.forQueue(queue.ensureParentQueue())
+						.isClusteredChildAllocation()) {
+			return true;
+		}
 		return canAllocate(job);
 	}
 
