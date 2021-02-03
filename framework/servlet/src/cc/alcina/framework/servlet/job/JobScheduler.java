@@ -106,6 +106,9 @@ public class JobScheduler {
 				fireWakeup();
 			}
 		}, untilNext5MinutesMillis, 5 * TimeConstants.ONE_MINUTE_MS);
+		MethodContext.instance().withWrappingTransaction()
+				.run(() -> enqueueEvent(
+						new ScheduleEvent(Type.APPLICATION_STARTUP)));
 	}
 
 	public JobAllocator awaitAllocator(Job job) {

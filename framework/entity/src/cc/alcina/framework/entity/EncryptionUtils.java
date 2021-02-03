@@ -334,11 +334,19 @@ public class EncryptionUtils {
 	}
 
 	public String SHA1(String text) {
+		try {
+			return SHA1(text.getBytes("utf-8"));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public String SHA1(byte[] bytes) {
 		MessageDigest md = null;
 		try {
 			md = sha1DigestPool.borrowObject();
 			byte[] sha1hash = new byte[32];
-			md.update(text.getBytes("utf-8"), 0, text.length());
+			md.update(bytes);
 			sha1hash = md.digest();
 			return convertToHex(sha1hash);
 		} catch (Exception e) {
