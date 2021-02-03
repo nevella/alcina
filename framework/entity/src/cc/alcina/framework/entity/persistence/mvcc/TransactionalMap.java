@@ -415,9 +415,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			if (concurrent == null) {
 				return nonConcurrent.entrySet().iterator();
 			}
+			TransactionalIterator transactionalIterator = new TransactionalIterator();
 			Iterator<Entry<K, V>>[] iteratorArray = new Iterator[] {
 					nonConcurrent.entrySet().iterator(),
-					new TransactionalIterator() };
+					transactionalIterator };
 			MultiIterator<Entry<K, V>> layerIterator = new MultiIterator<Entry<K, V>>(
 					false, keyComparator == null ? null
 							: new Comparator<Entry<K, V>>() {
@@ -434,7 +435,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				TransactionalValue transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 						.get(key);
 				if (transactionalValue != null) {
-					return transactionalValue.isNotRemoved();
+					return layerIterator.getCurrentIterator()
+							.getSource() == transactionalIterator
+							&& transactionalValue.isNotRemoved();
 				}
 				return true;
 			};

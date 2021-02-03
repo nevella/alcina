@@ -15,11 +15,14 @@ package cc.alcina.framework.common.client.actions;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+
 /**
  * Limits serialization options for gwt serialization generator
  * 
  * @author nick@alcina.cc
  *
  */
-public interface RemoteParameters extends SourcesPropertyChangeEvents {
+public interface RemoteParameters
+		extends SourcesPropertyChangeEvents, TreeSerializable {
 }

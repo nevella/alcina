@@ -44,8 +44,7 @@ public class FormatBuilder {
 
 	public FormatBuilder appendIfNotBlank(Collection optionals) {
 		for (Object optional : optionals) {
-			if (optional == null) {
-			} else {
+			if (optional != null) {
 				appendIfNotBlank(optional.toString());
 			}
 		}

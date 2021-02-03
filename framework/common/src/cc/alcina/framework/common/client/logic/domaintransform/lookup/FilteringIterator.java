@@ -30,6 +30,10 @@ public class FilteringIterator<E> implements Iterator<E> {
 		// for multi-iterator
 	}
 
+	public Iterator<E> getSource() {
+		return this.source;
+	}
+
 	@Override
 	public boolean hasNext() {
 		if (!finished) {

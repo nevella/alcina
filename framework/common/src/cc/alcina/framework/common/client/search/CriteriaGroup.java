@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
@@ -152,10 +153,12 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		return null;
 	}
 
+	@PropertySerialization(name = "join")
 	public FilterCombinator getCombinator() {
 		return combinator;
 	}
 
+	@PropertySerialization(defaultProperty = true)
 	public Set<SC> getCriteria() {
 		return this.criteria;
 	}
