@@ -108,8 +108,8 @@ public class JobServlet extends AlcinaServlet {
 				task = (Task) Reflections.newInstance(
 						Class.forName(request.getParameter("task")));
 			} catch (Exception e) {
-				task = TransformManager.resolveMaybeDeserialize(null,
-						serialized, null);
+				task = TransformManager.Serializer.get()
+						.deserialize(serialized);
 			}
 			job = JobRegistry.get().perform(task);
 			break;

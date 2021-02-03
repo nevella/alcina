@@ -31,8 +31,8 @@ import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
@@ -130,9 +130,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			@Override
 			// FIXME - mvcc.jobs - get rid'o'me
 			public ActionLogItem getActionLogItem() {
-				ActionLogItem logItem = Reflections
-						.newInstance(PersistentImpl
-								.getImplementation(ActionLogItem.class));
+				ActionLogItem logItem = Reflections.newInstance(
+						PersistentImpl.getImplementation(ActionLogItem.class));
 				logItem.setActionClass((Class) getTask().getClass());
 				logItem.setActionClassName(getTaskClassName());
 				logItem.setActionDate(getEndTime());
@@ -203,8 +202,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		if (invalidMessage != null) {
 			throw new IllegalStateException(invalidMessage);
 		}
-		JobRelation relation = PersistentImpl
-				.create(JobRelation.class);
+		JobRelation relation = PersistentImpl.create(JobRelation.class);
 		relation.setType(type);
 		relation.setFrom(from);
 		relation.setTo(to);
@@ -327,7 +325,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@DomainProperty(serialize = true)
 	public Task getTask() {
 		task = TransformManager.resolveMaybeDeserialize(task,
-				this.taskSerialized, null);
+				this.taskSerialized, null,
+				Reflections.classLookup().getClassForName(taskClassName));
 		return this.task;
 	}
 
@@ -796,6 +795,12 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				old_taskSerialized, taskSerialized);
 	}
 
+	public void throwIfException() {
+		if (getResultType() == JobResultType.EXCEPTION) {
+			throw new JobException(getLog());
+		}
+	}
+
 	public String toDisplayName() {
 		if (cachedDisplayName == null) {
 			cachedDisplayName = toDisplayName0();
@@ -895,6 +900,12 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public static abstract class ClientInstanceLoadOracle
 			extends DomainStorePropertyLoadOracle<Job> {
+	}
+
+	public static class JobException extends RuntimeException {
+		public JobException(String message) {
+			super(message);
+		}
 	}
 
 	@Bean
@@ -1036,18 +1047,6 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 				}
 			}
 			return EntityComparator.INSTANCE.compare(o1, o2);
-		}
-	}
-
-	public void throwIfException() {
-		if (getResultType() == JobResultType.EXCEPTION) {
-			throw new JobException(getLog());
-		}
-	}
-
-	public static class JobException extends RuntimeException {
-		public JobException(String message) {
-			super(message);
 		}
 	}
 }

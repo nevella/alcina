@@ -54,7 +54,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSource;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupClient;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfo;
@@ -67,6 +66,8 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -256,11 +257,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public static <V> V resolveMaybeDeserialize(V existing, String serialized,
 			V defaultValue) {
 		return resolveMaybeDeserialize(existing, serialized, defaultValue,
-				s -> AlcinaBeanSerializer.deserializeHolder(s));
+				null);
+	}
+
+	public static <V> V resolveMaybeDeserialize(V existing, String serialized,
+			V defaultValue, Class<V> clazz) {
+		return resolveMaybeDeserialize(existing, serialized, defaultValue,
+				clazz, s -> Serializer.get().deserialize(serialized, clazz));
 	}
 
 	public static String serialize(Object object) {
-		return AlcinaBeanSerializer.serializeHolder(object);
+		return Serializer.get().serialize(object);
 	}
 
 	public static String stringId(Entity entity) {
@@ -287,7 +294,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	private static <V> V resolveMaybeDeserialize(V existing, String serialized,
-			V defaultValue, Function<String, V> deserializer) {
+			V defaultValue, Class<V> clazz, Function<String, V> deserializer) {
 		if (existing != null) {
 			return existing;
 		}
@@ -2196,6 +2203,25 @@ public abstract class TransformManager implements PropertyChangeListener,
 				tm.setTransformCommitType(evt, CommitType.TO_LOCAL_GRAPH);
 				return;
 			}
+		}
+	}
+
+	@RegistryLocation(registryPoint = Serializer.class, implementationType = ImplementationType.SINGLETON)
+	public static class Serializer {
+		public static TransformManager.Serializer get() {
+			return Registry.impl(TransformManager.Serializer.class);
+		}
+
+		public <V> V deserialize(String serialized) {
+			return deserialize(serialized, null);
+		}
+
+		public <V> V deserialize(String serialized, Class<V> clazz) {
+			return AlcinaBeanSerializer.deserializeHolder(serialized);
+		}
+
+		public String serialize(Object object) {
+			return AlcinaBeanSerializer.serializeHolder(object);
 		}
 	}
 

@@ -8,14 +8,11 @@ import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.RpcRequestBuilder;
-import com.google.gwt.user.client.rpc.impl.RequestCallbackAdapter;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstanceExpiredException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet_CustomFieldSerializer;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -227,9 +224,8 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 			String outOfBandMessagesSerialized = response
 					.getHeader(RESPONSE_HEADER_OUT_OF_BAND_MESSAGES);
 			if (Ax.notBlank(outOfBandMessagesSerialized)) {
-				List<OutOfBandMessage> messages = TransformManager
-						.resolveMaybeDeserialize(null,
-								outOfBandMessagesSerialized, null);
+				List<OutOfBandMessage> messages = TransformManager.Serializer
+						.get().deserialize(outOfBandMessagesSerialized);
 				for (OutOfBandMessage outOfBandMessage : messages) {
 					Registry.impl(OutOfBandMessageHandler.class,
 							outOfBandMessage.getClass())
