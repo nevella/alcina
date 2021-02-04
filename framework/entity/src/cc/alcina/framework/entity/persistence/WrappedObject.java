@@ -97,11 +97,12 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 				return null;
 			}
 			try {
-				xmlStr = Registry.impl(PreProcessor.class).preprocess(xmlStr);
+				String preProcessed = Registry.optional(PreProcessor.class)
+						.map(pp -> pp.preprocess(xmlStr)).orElse(xmlStr);
 				List<Class> classes = getContextClasses(clazz);
 				JAXBContext jc = JaxbUtils.getContext(classes);
 				Unmarshaller um = jc.createUnmarshaller();
-				StringReader sr = new StringReader(xmlStr);
+				StringReader sr = new StringReader(preProcessed);
 				return (T) um.unmarshal(sr);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -156,10 +157,8 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 		}
 
 		@RegistryLocation(registryPoint = PreProcessor.class, implementationType = ImplementationType.INSTANCE)
-		public static class PreProcessor {
-			public String preprocess(String xmlStr) {
-				return xmlStr;
-			}
+		public abstract static class PreProcessor {
+			public abstract String preprocess(String xmlStr);
 		}
 	}
 }
