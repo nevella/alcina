@@ -30,6 +30,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.transform.WrappedObjectProvider;
@@ -95,6 +97,7 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 				return null;
 			}
 			try {
+				xmlStr = Registry.impl(PreProcessor.class).preprocess(xmlStr);
 				List<Class> classes = getContextClasses(clazz);
 				JAXBContext jc = JaxbUtils.getContext(classes);
 				Unmarshaller um = jc.createUnmarshaller();
@@ -150,6 +153,13 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 						(List) LooseContext.get(CONTEXT_CLASSES));
 			}
 			return classes;
+		}
+
+		@RegistryLocation(registryPoint = PreProcessor.class, implementationType = ImplementationType.INSTANCE)
+		public static class PreProcessor {
+			public String preprocess(String xmlStr) {
+				return xmlStr;
+			}
 		}
 	}
 }
