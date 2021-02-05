@@ -880,6 +880,18 @@ public class DirectedLayout {
 				rendered.behaviours.forEach(bb -> bb.onTopicEvent(topicEvent));
 			}
 		}
+
+		public Node root() {
+			Node cursor = this;
+			while (cursor.parent != null) {
+				cursor = cursor.parent;
+			}
+			return cursor;
+		}
+
+		public Widget getWidget() {
+			return rendered.verifySingleWidget();
+		}
 	}
 
 	public interface NodeEventReceiver {

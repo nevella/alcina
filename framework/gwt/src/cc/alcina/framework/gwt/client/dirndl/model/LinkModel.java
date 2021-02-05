@@ -19,9 +19,14 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafNodeRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -82,13 +87,15 @@ public class LinkModel {
 			LinkModel model = model(node);
 			Widget rendered = super.render(node);
 			rendered.getElement().setInnerText(getText(node));
-			NonstandardObjectAction objectAction = model(node).getObjectAction();
+			NonstandardObjectAction objectAction = model(node)
+					.getObjectAction();
 			if (objectAction != null) {
 				EntityPlace currentPlace = (EntityPlace) Client.currentPlace();
 				rendered.getElement().setAttribute("href", "#");
 				rendered.addDomHandler(
 						e -> DefaultPermissibleActionHandler.handleAction(
-								(Widget)e.getSource(), objectAction, currentPlace.provideEntity()),
+								(Widget) e.getSource(), objectAction,
+								currentPlace.provideEntity()),
 						ClickEvent.getType());
 				return rendered;
 			}
@@ -103,6 +110,19 @@ public class LinkModel {
 					rendered.addDomHandler(evt -> actionHandler.get()
 							.handleAction(node, evt, actionRefPlace),
 							ClickEvent.getType());
+				}
+				Optional<TopicBehaviour> actionTopic = actionRefPlace
+						.getActionTopic();
+				if (actionTopic.isPresent()) {
+					rendered.addDomHandler(event -> {
+						TopicBehaviour behaviour = actionTopic.get();
+						Context context = new NodeEvent.Context();
+						context.gwtEvent = event;
+						context.node = node;
+						context.topicListeners = new TopicListeners();
+						TopicEvent.fire(context, behaviour.topic(),
+								behaviour.payloadTransformer(), false);
+					}, ClickEvent.getType());
 				}
 			}
 			if (model.isPrimaryAction()) {
@@ -129,7 +149,8 @@ public class LinkModel {
 		}
 
 		protected String getText(Node node) {
-			NonstandardObjectAction objectAction = model(node).getObjectAction();
+			NonstandardObjectAction objectAction = model(node)
+					.getObjectAction();
 			if (objectAction != null) {
 				return objectAction.getDisplayName();
 			}

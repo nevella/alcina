@@ -30,8 +30,11 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour.TopicBehaviourType;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
@@ -55,8 +58,15 @@ public class FormModel extends Model {
 		return this.actions;
 	}
 
+	public static class Submitted extends NodeTopic {
+	}
+
+	public static class Cancelled extends NodeTopic {
+	}
+
 	@Ref("submit")
 	@ActionRefHandler(SubmitHandler.class)
+	@TopicBehaviour(topic = Submitted.class, type = TopicBehaviourType.EMIT)
 	public static class SubmitRef extends ActionRef {
 	}
 
@@ -76,6 +86,7 @@ public class FormModel extends Model {
 
 	@Ref("cancel")
 	@ActionRefHandler(CancelHandler.class)
+	@TopicBehaviour(topic = Cancelled.class, type = TopicBehaviourType.EMIT)
 	public static class CancelRef extends ActionRef {
 	}
 

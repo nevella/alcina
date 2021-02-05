@@ -24,15 +24,15 @@ public @interface Behaviour {
 	public static class Util {
 		public static boolean hasActivationTopic(Behaviour behaviour) {
 			return behaviour.topics().length > 0
-					&& Arrays.stream(behaviour.topics())
-							.anyMatch(tb -> tb.type() == TopicBehaviourType.ACTIVATION);
+					&& Arrays.stream(behaviour.topics()).anyMatch(
+							tb -> tb.type() == TopicBehaviourType.ACTIVATION);
 		}
 
 		public static boolean hasActivationTopic(Behaviour behaviour,
 				Class<? extends NodeTopic> topic) {
 			return behaviour.topics().length > 0
-					&& Arrays.stream(behaviour.topics())
-							.anyMatch(tb -> tb.type() == TopicBehaviourType.ACTIVATION
+					&& Arrays.stream(behaviour.topics()).anyMatch(
+							tb -> tb.type() == TopicBehaviourType.ACTIVATION
 									&& tb.topic() == topic);
 		}
 
@@ -62,14 +62,15 @@ public @interface Behaviour {
 		public static TopicBehaviour
 				getEmitTopicBehaviour(Behaviour behaviour) {
 			return Arrays.stream(behaviour.topics())
-					.filter(tb -> tb.type() == TopicBehaviourType.EMIT).findFirst().get();
+					.filter(tb -> tb.type() == TopicBehaviourType.EMIT)
+					.findFirst().get();
 		}
 
 		public static boolean hasListenerTopic(Behaviour behaviour,
 				Class topic) {
 			return behaviour.topics().length > 0
-					&& Arrays.stream(behaviour.topics())
-							.anyMatch(tb -> tb.type() == TopicBehaviourType.RECEIVE
+					&& Arrays.stream(behaviour.topics()).anyMatch(
+							tb -> tb.type() == TopicBehaviourType.RECEIVE
 									&& tb.topic() == topic);
 		}
 	}
@@ -84,8 +85,8 @@ public @interface Behaviour {
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	// in fact, should only be an inner annotation for @Behaviour
-	@Target(ElementType.TYPE_USE)
+	// inner annotation for @Behaviour; type annotation for @ActionRef
+	@Target({ ElementType.TYPE_USE, ElementType.TYPE })
 	@ClientVisible
 	public @interface TopicBehaviour {
 		Class<? extends NodeTopic> topic();

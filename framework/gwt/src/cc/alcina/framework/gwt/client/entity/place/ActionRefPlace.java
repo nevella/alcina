@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Reference;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -23,10 +24,18 @@ public class ActionRefPlace extends BasePlace {
 	}
 
 	public Optional<ActionHandler> getActionHandler() {
+		/*
+		 * FIXME - dirndl1.1 - should annotation resolution be via context?
+		 */
 		return Optional
 				.ofNullable(Reflections.classLookup().getAnnotationForClass(ref,
 						ActionRefHandler.class))
 				.map(ann -> Reflections.newInstance(ann.value()));
+	}
+
+	public Optional<TopicBehaviour> getActionTopic() {
+		return Optional.ofNullable(Reflections.classLookup()
+				.getAnnotationForClass(ref, TopicBehaviour.class));
 	}
 
 	public ActionRefPlace(Class<? extends ActionRef> ref) {
