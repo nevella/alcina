@@ -104,12 +104,11 @@ public class FormModel extends Model {
 						.promoteToDomainObject(getState().model);
 			}
 			if (Client.currentPlace() instanceof EntityPlace) {
-				EntityPlace entityPlace = ((EntityPlace) Client
-						.currentPlace()).copy();
+				EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
+						.copy();
 				entityPlace.action = EntityAction.VIEW;
 				Client.goTo(entityPlace);
-			} else if (Client
-					.currentPlace() instanceof CategoryNamePlace) {
+			} else if (Client.currentPlace() instanceof CategoryNamePlace) {
 				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
 						.currentPlace();
 				DefaultPermissibleActionHandler.handleAction(null,
@@ -133,6 +132,23 @@ public class FormModel extends Model {
 			state.model = entity;
 			state.adjunct = state.editable
 					&& ClientTransformManager.cast().isProvisionalEditing();
+			return new FormModelTransformer().withContextNode(node)
+					.apply(state);
+		}
+	}
+
+	public static class BindableFormModelTransformer extends
+			AbstractContextSensitiveModelTransform<Bindable, FormModel> {
+		@Override
+		public FormModel apply(Bindable bindable) {
+			FormModelState state = new FormModelState();
+			state.editable = true;
+			if (bindable instanceof Entity && state.editable) {
+				bindable = ClientTransformManager.cast()
+						.ensureEditable((Entity) bindable);
+			}
+			state.model = bindable;
+			state.adjunct = true;
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
 		}
@@ -212,10 +228,10 @@ public class FormModel extends Model {
 							args.model.getClass(), Bean.class);
 					if (bean != null) {
 						Arrays.stream(bean.actions().value())
-								.map(a ->  Reflections
+								.map(a -> Reflections
 										.newInstance(a.actionClass()))
-								.filter(a->a instanceof NonstandardObjectAction)
-								.map(a->(NonstandardObjectAction)a)
+								.filter(a -> a instanceof NonstandardObjectAction)
+								.map(a -> (NonstandardObjectAction) a)
 								.forEach(action -> {
 									model.actions.add(new LinkModel()
 											.withNonstandardObjectAction(

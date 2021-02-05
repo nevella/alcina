@@ -181,20 +181,20 @@ public class CommitToStorageTransformListener extends StateListenable
 	private Object commitMonitor = new Object();
 
 	public CommitToStorageTransformListener() {
-		if(GWT.isClient()) {
+		if (GWT.isClient()) {
 			new WindowClosingHandler().add();
 		}
 	}
-	private static class WindowClosingHandler {
 
+	private static class WindowClosingHandler {
 		public void add() {
-			Window.addWindowClosingHandler(evt->{
-				CommitToStorageTransformListener transformListener = CommitToStorageTransformListener.get();
+			Window.addWindowClosingHandler(evt -> {
+				CommitToStorageTransformListener transformListener = CommitToStorageTransformListener
+						.get();
 				transformListener.setPaused(false);
 				transformListener.flush();
 			});
 		}
-		
 	}
 
 	public void clearPriorRequestsWithoutResponse() {
@@ -337,7 +337,7 @@ public class CommitToStorageTransformListener extends StateListenable
 		this.suppressErrors = suppressErrors;
 	}
 
-	private synchronized void commit0() {
+	protected synchronized void commit0() {
 		if (queueingFinishedTimer != null) {
 			queueingFinishedTimer.cancel();
 		}
@@ -386,23 +386,22 @@ public class CommitToStorageTransformListener extends StateListenable
 			return;
 		}
 		if (PermissionsManager.get().getOnlineState() == OnlineState.OFFLINE) {
-			Client.commonRemoteService()
-					.ping(new AsyncCallback<Void>() {
-						@Override
-						public void onFailure(Throwable caught) {
-							// ignore - expected(ish) behaviour - if it's a
-							// non-'offline' error, it's more graceful to ignore
-							// here than not
-							fireStateChanged(OFFLINE);
-						}
+			Client.commonRemoteService().ping(new AsyncCallback<Void>() {
+				@Override
+				public void onFailure(Throwable caught) {
+					// ignore - expected(ish) behaviour - if it's a
+					// non-'offline' error, it's more graceful to ignore
+					// here than not
+					fireStateChanged(OFFLINE);
+				}
 
-						@Override
-						public void onSuccess(Void result) {
-							if (canTransitionToOnline()) {
-								commitRemote(request, commitRemoteCallback);
-							}
-						}
-					});
+				@Override
+				public void onSuccess(Void result) {
+					if (canTransitionToOnline()) {
+						commitRemote(request, commitRemoteCallback);
+					}
+				}
+			});
 		} else {
 			commitRemote(request, commitRemoteCallback);
 		}
@@ -426,8 +425,7 @@ public class CommitToStorageTransformListener extends StateListenable
 
 	protected void commitRemote(DomainTransformRequest request,
 			AsyncCallback<DomainTransformResponse> callback) {
-		Client.commonRemoteService().transform(request,
-				callback);
+		Client.commonRemoteService().transform(request, callback);
 	}
 
 	@Override
