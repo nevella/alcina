@@ -64,6 +64,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoMana
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -2207,6 +2208,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	@RegistryLocation(registryPoint = Serializer.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
 	public static class Serializer {
 		public static TransformManager.Serializer get() {
 			return Registry.impl(TransformManager.Serializer.class);

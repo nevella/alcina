@@ -41,8 +41,9 @@ public abstract class DomainDescriptor {
 	}
 
 	public void addClassDescriptor(DomainClassDescriptor classDescriptor) {
-		Preconditions
-				.checkArgument(!perClass.containsKey(classDescriptor.clazz));
+		Preconditions.checkArgument(
+				!perClass.containsKey(classDescriptor.clazz),
+				classDescriptor.toString());
 		perClass.put(classDescriptor.clazz, classDescriptor);
 	}
 
@@ -102,15 +103,15 @@ public abstract class DomainDescriptor {
 		public void run(Class clazz, Collection<T> objects, boolean topLevel)
 				throws Exception;
 
+		default boolean filter(T t) {
+			return true;
+		}
+
 		Class<T> forClazz();
 
 		default void registerStore(IDomainStore domainStore) {
 		}
 
 		Stream<T> wrap(Stream<T> stream);
-
-		default boolean filter(T t) {
-			return true;
-		}
 	}
 }
