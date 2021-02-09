@@ -31,8 +31,8 @@ import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -198,7 +198,7 @@ public class JobScheduler {
 	}
 
 	private void processEvent0(ScheduleEvent event) {
-		logger.info("Received event {}", event);
+		logger.trace("Received event {}", event);
 		if (event.type == Type.WAKEUP) {
 			if (nextScheduledWakeup != null && nextScheduledWakeup
 					.compareTo(LocalDateTime.now()) <= 0) {

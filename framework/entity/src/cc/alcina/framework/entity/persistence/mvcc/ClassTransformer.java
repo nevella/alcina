@@ -64,6 +64,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -230,6 +231,10 @@ class ClassTransformer {
 		return logBuilder.toString();
 	}
 
+	public static interface SourceFinderFsHelper {
+		public URL transformPath(URL path);
+	}
+
 	private static class SourceFinderFs implements SourceFinder {
 		@Override
 		public String findSource(Class clazz) {
@@ -265,6 +270,17 @@ class ClassTransformer {
 				if (new File(toPath(sourceFileLocation)).exists()) {
 					return ResourceUtilities
 							.readUrlAsString(sourceFileLocation.toString());
+				}
+				Optional<SourceFinderFsHelper> helper = Registry
+						.optional(SourceFinderFsHelper.class);
+				if (helper.isPresent()) {
+					sourceFileLocation = new URL(sourceFileLocation.toString()
+							.replace("/alcina/framework/entity/src/",
+									"/alcina/framework/common/src/"));
+					if (new File(toPath(sourceFileLocation)).exists()) {
+						return ResourceUtilities
+								.readUrlAsString(sourceFileLocation.toString());
+					}
 				}
 				return null;
 			} catch (Exception e) {

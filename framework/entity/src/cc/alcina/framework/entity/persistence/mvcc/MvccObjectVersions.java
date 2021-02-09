@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
@@ -286,12 +287,12 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			}
 		}
 		long duration = System.currentTimeMillis() - start;
-		if (duration > 2) {
-			logger.info(
+		if (duration > 10 && !EntityLayerUtils.isTestOrTestServer()) {
+			logger.trace(
 					"debug vacuum sizes pre  - versions: {}, completedNonDomainTransactions {}, completedDomainTransactions {}",
 					initialValues.get(0), initialValues.get(1),
 					initialValues.get(2));
-			logger.info(
+			logger.trace(
 					"debug vacuum sizes post - versions: {}, completedNonDomainTransactions {}, completedDomainTransactions {} - time {}ms",
 					size,
 					vacuumableTransactions.completedNonDomainTransactions

@@ -55,6 +55,11 @@ public class JacksonUtils {
 		}
 	}
 
+	public static String serializeNoTypes(Object object) {
+		return new JacksonJsonObjectSerializer().withIdRefs()
+				.withAllowUnknownProperties().serialize(object);
+	}
+
 	public static String serializeWithDefaultsAndTypes(Object object) {
 		try {
 			return serialize(object);

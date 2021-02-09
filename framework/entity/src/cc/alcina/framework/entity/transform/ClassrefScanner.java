@@ -29,6 +29,9 @@ import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
@@ -36,8 +39,8 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.NonDomainTransformPersistable;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -68,6 +71,8 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 	boolean persistent = true;
 
 	boolean reachabilityCheck = true;
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	// persistableClasses.addAll(Arrays.asList(new Class[] { long.class,
 	// double.class, float.class, int.class, short.class,
@@ -285,7 +290,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 					}
 					ref.setId(id);
 					ClassRef.add(CommonUtils.wrapInCollection(ref));
-					System.out.format("adding classref - %s %s\n", ref.getId(),
+					logger.info("adding classref - {} {}\n", ref.getId(),
 							ref.getRefClassName());
 				} else {
 					deleteClassrefs.remove(ref);
@@ -295,8 +300,8 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 			} else {
 				for (ClassRef ref : deleteClassrefs) {
 					delta = true;
-					System.out.format("removing classref - %s %s\n",
-							ref.getId(), ref.getRefClassName());
+					logger.trace("removing classref - {} {}\n", ref.getId(),
+							ref.getRefClassName());
 					if (ResourceUtilities.is(ClassrefScanner.class,
 							"removePersistentClassrefs")) {
 						cp.remove(ref);

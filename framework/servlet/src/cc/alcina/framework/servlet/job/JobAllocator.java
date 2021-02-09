@@ -187,7 +187,7 @@ class JobAllocator {
 				firstEvent = false;
 				Thread.currentThread().setName(
 						Ax.format("job-allocator::%s", queue.toDisplayName()));
-				logger.info("Allocation thread started -  job {}",
+				logger.trace("Allocation thread started -  job {}",
 						job.toDisplayName());
 			}
 			boolean deleted = false;
@@ -226,7 +226,7 @@ class JobAllocator {
 					 * sneaky deletion - FIXME - mvcc.jobs.2
 					 */
 					|| deleted) {
-				logger.info("Allocation thread ended -  job {}",
+				logger.trace("Allocation thread ended -  job {}",
 						job.toDisplayName());
 				if (queue.phase == SubqueuePhase.Complete) {
 					if (job.getState() == JobState.COMPLETED
@@ -243,7 +243,7 @@ class JobAllocator {
 			}
 			if (event.type == EventType.WAKEUP) {
 			} else {
-				logger.info("Allocation thread - job {} - event {}",
+				logger.trace("Allocation thread - job {} - event {}",
 						job.toDisplayName(), event);
 			}
 			if (isPhaseComplete(event)) {
@@ -253,7 +253,7 @@ class JobAllocator {
 					 * sequence
 					 */
 					if (queue.job.provideNextInSequence().isPresent()) {
-						logger.info(
+						logger.trace(
 								"Releasing child completion latch -  job {}",
 								job.toDisplayName());
 						childCompletionLatch.countDown();
@@ -261,7 +261,7 @@ class JobAllocator {
 				}
 				SubqueuePhase priorPhase = queue.phase;
 				queue.incrementPhase();
-				logger.info("Changed phase :: {} :: {} -> {}",
+				logger.trace("Changed phase :: {} :: {} -> {}",
 						job.toDisplayName(), priorPhase, queue.phase);
 				// resubmit until event does not cause phase change
 				// (or complete)
@@ -311,11 +311,11 @@ class JobAllocator {
 								} else {
 									j.setState(JobState.ALLOCATED);
 									j.setPerformer(ClientInstance.self());
-									logger.info("Allocated job {}", j);
+									logger.trace("Allocated job {}", j);
 								}
 							});
 							Transaction.commit();
-							allocated.forEach(j -> logger.info(
+							allocated.forEach(j -> logger.trace(
 									"Sending to executor service - {} - {}",
 									j.getId(), j));
 							allocated.stream()
@@ -330,7 +330,7 @@ class JobAllocator {
 													existingContext.launcherThreadState);
 										} else {
 											LauncherThreadState launcherThreadState = new LauncherThreadState();
-											logger.info(
+											logger.trace(
 													"Sending to executor service (2) - {} - {}",
 													j.getId(), j);
 											executorService

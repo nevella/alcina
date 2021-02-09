@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.FromObjectKeyValueMapper;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
 
 public interface HasEquivalence<T> {
@@ -335,6 +337,15 @@ public interface HasEquivalence<T> {
 			} else {
 				return Collections.EMPTY_LIST;
 			}
+		}
+
+		public static <T extends Entity & HasEquivalenceHash> void
+				mergeTransforms(Collection<T> existing,
+						Collection<T> generated) {
+			ThreeWaySetResult<T> split = threeWaySplit(existing, generated);
+			split.firstOnly.forEach(Entity::delete);
+			TransformManager.get()
+					.removeTransformsForObjects(split.intersection);
 		}
 
 		public static <T extends HasEquivalence> List<? super HasEquivalence>

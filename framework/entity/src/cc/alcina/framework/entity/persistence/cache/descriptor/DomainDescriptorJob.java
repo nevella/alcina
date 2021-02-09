@@ -82,9 +82,8 @@ public class DomainDescriptorJob {
 				Set<Long> ids = collation.query(jobImplClass).stream()
 						.map(qr -> qr.entityCollation.getId())
 						.collect(Collectors.toSet());
-				logger.info("Post-process job transform - rq: {}, ids: {}",
+				logger.trace("Post-process job transform - rq: {}, ids: {}",
 						event.getPersistedRequestIds(), ids);
-				// CommonUtils.toLimitedCollectionString(ids, 50));
 				break;
 			}
 			case COMMIT_ERROR:
@@ -95,9 +94,8 @@ public class DomainDescriptorJob {
 				Set<Long> ids = collation.query(jobImplClass).stream()
 						.map(qr -> qr.entityCollation.getId())
 						.collect(Collectors.toSet());
-				logger.info("Flushing job transform - rq: {}, ids: {}",
+				logger.trace("Flushing job transform - rq: {}, ids: {}",
 						event.getPersistedRequestIds(), ids);
-				// CommonUtils.toLimitedCollectionString(ids, 50));
 				break;
 			}
 		}
@@ -841,7 +839,7 @@ public class DomainDescriptorJob {
 					}
 					return;
 				} else {
-					logger.info("Adding future: {} {}",
+					logger.trace("Adding future: {} {}",
 							job.provideTaskClass().getSimpleName(), job);
 					futuresByTask.add(job.provideTaskClass(), job);
 				}

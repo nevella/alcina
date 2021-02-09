@@ -79,8 +79,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
 
 	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
-			clazz -> SEUtilities.getSortedPropertyDescriptors(clazz).stream()
-					.map(pd -> new JvmPropertyReflector(clazz, pd))
+			clazz -> SEUtilities.getPropertyDescriptorsSortedByField(clazz)
+					.stream().map(pd -> new JvmPropertyReflector(clazz, pd))
 					.collect(Collectors.toList()),
 			100);
 
@@ -260,6 +260,13 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	@Override
+	public boolean isReadOnly(Class objectClass, String propertyName) {
+		return SEUtilities
+				.getPropertyDescriptorByName(objectClass, propertyName)
+				.getWriteMethod() == null;
+	}
+
+	@Override
 	public <T> T newInstance(Class<T> clazz) {
 		try {
 			return clazz.newInstance();
@@ -299,12 +306,5 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 			return Enum.valueOf(evt.getValueClass(), evt.getNewStringValue());
 		}
 		return null;
-	}
-
-	@Override
-	public boolean isReadOnly(Class objectClass, String propertyName) {
-		return SEUtilities
-				.getPropertyDescriptorByName(objectClass, propertyName)
-				.getWriteMethod() == null;
 	}
 }

@@ -94,7 +94,7 @@ class PersistenceDeltaScanner
 					pool.appendClassPath(jarPath);
 				}
 				CtClass ctClass = pool.get(className);
-				Object[] annotations = ctClass.getAnnotations();
+				Object[] annotations = ctClass.getAvailableAnnotations();
 				boolean hasPersistentAnnotations = false;
 				for (Object annotation : annotations) {
 					if (Annotation.class

@@ -156,7 +156,7 @@ public class DomainStoreTransformSequencer
 				preparedStatement.addBatch();
 			}
 			int[] affectedRecords = preparedStatement.executeBatch();
-			logger.info("Updated {} timestamps", toUpdate.size());
+			logger.trace("Updated {} timestamps", toUpdate.size());
 		}
 		lastEnsure = LocalDateTime.now();
 		return toUpdate.size();
@@ -282,7 +282,7 @@ public class DomainStoreTransformSequencer
 		positions.sort(Comparator.naturalOrder());
 		unpublishedPositions.addAll(positions);
 		if (positions.size() > 0) {
-			logger.info("Added unpublished positions: - since: {} - {}", since,
+			logger.trace("Added unpublished positions: - since: {} - {}", since,
 					CommonUtils.joinWithNewlines(positions));
 		}
 		if (positions.size() > 0) {

@@ -7,24 +7,37 @@ import cc.alcina.framework.common.client.Reflections;
 public class AnnotationLocation {
 	public PropertyReflector propertyReflector;
 
-	public Class containingClass;
+	/*
+	 * Can be either the containing class of the propertyReflector, or the value
+	 * type of the property reflector
+	 */
+	public Class fallbackToClass;
 
 	private Resolver resolver;
 
-	public AnnotationLocation(Class containingClass,
+	public AnnotationLocation(Class clazz,
 			PropertyReflector propertyReflector) {
-		this(containingClass, propertyReflector, new DefaultResolver());
+		this(clazz, propertyReflector, new DefaultResolver());
 	}
 
-	public AnnotationLocation(Class containingClass,
-			PropertyReflector propertyReflector, Resolver resolver) {
-		this.containingClass = containingClass;
+	public AnnotationLocation(Class clazz, PropertyReflector propertyReflector,
+			Resolver resolver) {
+		this.fallbackToClass = clazz;
 		this.propertyReflector = propertyReflector;
 		this.resolver = resolver;
 	}
 
 	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
 		return resolver.getAnnotation(annotationClass, this);
+	}
+
+	@Override
+	public String toString() {
+		if (propertyReflector != null) {
+			return propertyReflector.toString();
+		} else {
+			return fallbackToClass.getSimpleName();
+		}
 	}
 
 	private <A extends Annotation> A getAnnotation0(Class<A> annotationClass) {
@@ -34,20 +47,11 @@ public class AnnotationLocation {
 				return annotation;
 			}
 		}
-		if (containingClass == null) {
+		if (fallbackToClass == null) {
 			return null;
 		} else {
-			return Reflections.classLookup()
-					.getAnnotationForClass(containingClass, annotationClass);
-		}
-	}
-
-	@Override
-	public String toString() {
-		if (propertyReflector != null) {
-			return propertyReflector.toString();
-		} else {
-			return containingClass.getSimpleName();
+			return Reflections.classLookup().getAnnotationForClass(fallbackToClass,
+					annotationClass);
 		}
 	}
 

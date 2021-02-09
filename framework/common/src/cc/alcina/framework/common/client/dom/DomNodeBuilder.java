@@ -128,7 +128,9 @@ public class DomNodeBuilder {
 
 	public DomNode replaceWith() {
 		DomNode node = build();
-		node.children.adoptFrom(relativeTo);
+		if (node.isElement()) {
+			node.children.adoptFrom(relativeTo);
+		}
 		relativeTo.replaceWith(node);
 		return node;
 	}

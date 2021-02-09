@@ -6,8 +6,17 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 
 public class EntityLayerUtils {
+	private static Pattern botExtraUa;
+
+	private static Pattern botUa;
+
+	public static String getApplicationHostName() {
+		return ResourceUtilities.get("applicationHostName");
+	}
+
 	public static String getLocalHostName() {
 		try {
 			String defined = ResourceUtilities.get(EntityLayerUtils.class,
@@ -22,8 +31,9 @@ public class EntityLayerUtils {
 		}
 	}
 
-	public static String getApplicationHostName() {
-		return ResourceUtilities.get("applicationHostName");
+	public static Boolean isBotExtraUserAgent(String userAgent) {
+		return EntityLayerUtils.botExtraUa != null
+				&& EntityLayerUtils.botExtraUa.matcher(userAgent).find();
 	}
 
 	public static Boolean isBotUserAgent(String userAgent) {
@@ -46,12 +56,7 @@ public class EntityLayerUtils {
 				|| EntityLayerUtils.isBotExtraUserAgent(userAgent);
 	}
 
-	public static Boolean isBotExtraUserAgent(String userAgent) {
-		return EntityLayerUtils.botExtraUa != null
-				&& EntityLayerUtils.botExtraUa.matcher(userAgent).find();
+	public static boolean isTestOrTestServer() {
+		return Ax.isTest() || AppPersistenceBase.isTestServer();
 	}
-
-	private static Pattern botExtraUa;
-
-	private static Pattern botUa;
 }
