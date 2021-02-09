@@ -1405,8 +1405,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						.get(c);
 				if (itemDescriptor != null
 						&& itemDescriptor.provideNotFullyLoadedOnStartup()) {
-					// only one thread should load a given class, for
-					// threadsafety reasons
+					// sublock is now just used as a marker (FIXME - mvcc.4 -
+					// remove and just have a boolean 'should index' marker)
+					//
+					// since effects of the object version load are isolated to
+					// the current thread tx
 					ClassIdLock lock = LockUtils.obtainClassIdLock(c, 0L);
 					logger.debug("Backup lazy load: {} - {}\n",
 							c.getSimpleName(), id);
