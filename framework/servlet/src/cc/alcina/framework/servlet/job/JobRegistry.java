@@ -44,8 +44,8 @@ import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.job.NonRootTask;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -225,6 +225,13 @@ public class JobRegistry extends WriterService {
 		// FIXME - mvcc.jobs.1a - *really* make these lazy, mr annotation
 		// you
 		return Domain.find(job);
+	}
+
+	/*
+	 * PROCESSING or COMPLETE (not SEQUENCE_COMPLETE), this vm
+	 */
+	public int getActiveJobCount() {
+		return activeJobs.size();
 	}
 
 	public Stream<QueueStat> getActiveQueueStats() {
