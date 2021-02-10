@@ -289,7 +289,7 @@ class JobAllocator {
 						ExecutorService executorService = executionConstraints
 								.getExecutorServiceProvider()
 								.getService(constraintQueue);
-						List<Job> allocated = new ArrayList<>();
+						List<Job> allocating = new ArrayList<>();
 						Runnable allocateJobs = () -> {
 							/*
 							 * Double-checking
@@ -300,9 +300,9 @@ class JobAllocator {
 							queue.getUnallocatedJobs()
 									.filter(this::isAllocatable)
 									.limit(maxAllocatable)
-									.forEach(allocated::add);
+									.forEach(allocating::add);
 							int debug = 3;
-							allocated.forEach(j -> {
+							allocating.forEach(j -> {
 								if (j.getState() != JobState.PENDING) {
 									logger.warn(
 											"jobAllocator-invalid-state - not allocating job {}",
@@ -315,10 +315,10 @@ class JobAllocator {
 								}
 							});
 							Transaction.commit();
-							allocated.forEach(j -> logger.info(
+							allocating.forEach(j -> logger.info(
 									"Sending to executor service - {} - {}",
 									j.getId(), j));
-							allocated.stream()
+							allocating.stream()
 									.filter(j -> !invalidAllocated.contains(j))
 									.forEach(j -> {
 										JobContext existingContext = JobRegistry
