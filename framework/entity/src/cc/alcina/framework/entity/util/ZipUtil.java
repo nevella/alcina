@@ -34,29 +34,38 @@ import java.util.zip.ZipOutputStream;
  * @author Nick Reddel
  */
 public class ZipUtil {
-	public void createZip(File outputFile, File containerFolder,
+	public void createZip(File outputFile, File root,
 			Map<String, File> substitutes) throws Exception {
-		String dInfMname = containerFolder.getAbsolutePath();
+		String dInfMname = root.getAbsolutePath();
 		ZipOutputStream s = new ZipOutputStream(
 				new FileOutputStream(outputFile));
 		s.setLevel(5);
 		List<File> files = new ArrayList<File>();
 		Stack<File> pathStack = new Stack<File>();
-		pathStack.push(containerFolder);
+		pathStack.push(root);
 		while (pathStack.size() != 0) {
 			File f = pathStack.pop();
-			File[] filez = f.listFiles();
-			for (File file : filez) {
-				if (file.isDirectory()) {
-					pathStack.push(file);
-				}
-				if (!file.equals(containerFolder)) {
-					files.add(file);
+			if (f.isFile()) {
+				files.add(f);
+			} else {
+				File[] filez = f.listFiles();
+				for (File file : filez) {
+					if (file.isDirectory()) {
+						pathStack.push(file);
+					}
+					if (!file.equals(root)) {
+						files.add(file);
+					}
 				}
 			}
 		}
 		for (File f : files) {
-			String subName = f.getPath().substring(dInfMname.length() + 1);
+			String subName = null;
+			if (f == root) {
+				subName = f.getName();
+			} else {
+				subName = f.getPath().substring(dInfMname.length() + 1);
+			}
 			if (f.isDirectory()) {
 				subName += "/";
 			}
@@ -116,11 +125,13 @@ public class ZipUtil {
 		}
 		s.close();
 	}
+
 	private static void writeStreamToStream(InputStream in, OutputStream os,
 			boolean keepOutputOpen) throws IOException {
 		OutputStream bos = os instanceof ByteArrayOutputStream ? os
 				: new BufferedOutputStream(os);
-		int bufLength = in.available() <= 1024 ? 1024 * 64 : Math.min(1024*1024, in.available());
+		int bufLength = in.available() <= 1024 ? 1024 * 64
+				: Math.min(1024 * 1024, in.available());
 		byte[] buffer = new byte[bufLength];
 		int result;
 		while ((result = in.read(buffer)) != -1) {

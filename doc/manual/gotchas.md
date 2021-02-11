@@ -6,3 +6,9 @@ a conditional breakpoint in com.google.gwt.dev.shell.CompilingClassLoader.MultiP
 
 # also (Ax.out(resources)
 com.google.gwt.dev.javac.CompilationStateBuilder.doBuildFrom(TreeLogger, CompilerContext, Set<Resource>, AdditionalTypeProviderDelegate)
+
+# where is my cache?
+PersistentUnitCacheDir line 355
+
+# the dangers of alcina-entity.jar
+gwt serialization issues? clean & rebuild that jar

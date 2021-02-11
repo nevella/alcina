@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.publication.excel;
+package cc.alcina.framework.common.client.publication.grid;
 
 import javax.xml.bind.annotation.XmlRootElement;
 

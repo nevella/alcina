@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.grid;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -19,15 +20,21 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 import cc.alcina.framework.common.client.publication.PublicationContent;
-import cc.alcina.framework.common.client.publication.excel.BasicGridContentDefinition;
-import cc.alcina.framework.common.client.publication.excel.BasicGridRequest;
+import cc.alcina.framework.common.client.publication.grid.BasicGridContentDefinition;
+import cc.alcina.framework.common.client.publication.grid.BasicGridRequest;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
+import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.util.CsvCols;
+import cc.alcina.framework.entity.util.JacksonUtils;
+import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
+import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.servlet.CommonRemoteServletProvider;
 import cc.alcina.framework.servlet.publication.ContentModelHandler;
 import cc.alcina.framework.servlet.publication.ContentRenderer;
@@ -45,15 +52,33 @@ public class BasicGridPublisher {
 			deliveryModel.setNoPersistence(true);
 			deliveryModel.setFooter(false);
 			deliveryModel.setCoverPage(false);
-			SingleTableSearchDefinition def = contentDefinition
-					.getSearchDefinition();
+			SearchDefinition def = contentDefinition.getSearchDefinition();
 			def.setResultsPerPage(PUB_MAX_RESULTS);
-			deliveryModel.setSuggestedFileName(SEUtilities
-					.sanitiseFileName(def.toString().replace(" ", "_")));
-			SearchResultsBase results = Registry
-					.impl(CommonRemoteServletProvider.class)
-					.getCommonRemoteServiceServlet().search(def, 0);
-			publicationContent.searchResults = results;
+			String defName = def.toString();
+			defName = Ax.blankTo(defName, () -> Ax.format("%s-%s",
+					def.getClass().getSimpleName(),
+					CommonUtils.formatDate(new Date(), DateStyle.TIMESTAMP)));
+			if (def instanceof SingleTableSearchDefinition) {
+				deliveryModel.setSuggestedFileName(SEUtilities
+						.sanitiseFileName(defName.replace(" ", "_")));
+				SearchResultsBase results = Registry
+						.impl(CommonRemoteServletProvider.class)
+						.getCommonRemoteServiceServlet().search(def, 0);
+				publicationContent.resultRows = results.getResults();
+			} else if (def instanceof BindableSearchDefinition) {
+				BindableSearchDefinition bdef = (BindableSearchDefinition) def;
+				deliveryModel.setSuggestedFileName(SEUtilities
+						.sanitiseFileName(defName.replace(" ", "_")));
+				defName = Ax.blankTo(defName, () -> Ax.format("%s-%s",
+						bdef.entityClass().getSimpleName(), CommonUtils
+								.formatDate(new Date(), DateStyle.TIMESTAMP)));
+				ModelSearchResults modelSearchResults = Registry
+						.impl(CommonRemoteServletProvider.class)
+						.getCommonRemoteServiceServlet().searchModel(bdef);
+				publicationContent.resultRows = modelSearchResults.queriedResultObjects;
+			} else {
+				throw new UnsupportedOperationException();
+			}
 			hasResults = true;
 		}
 	}
@@ -81,7 +106,7 @@ public class BasicGridPublisher {
 	public static class BasicGridPublicationModel
 			implements PublicationContent {
 		@XmlTransient
-		public SearchResultsBase searchResults;
+		public List resultRows;
 
 		public BasicGridPublicationModel() {
 		}
@@ -103,9 +128,9 @@ public class BasicGridPublisher {
 			wr.pc = publicationContent;
 			wr.dm = deliveryModel;
 			wrapper = wr;
-			ExcelExporter ee = new ExcelExporter();
-			Document doc = ee.getTemplate();
-			ee.addCollectionToBook(wr.pc.searchResults.getResults(), doc,
+			ExcelExporter exporter = new ExcelExporter();
+			Document doc = exporter.getTemplate();
+			exporter.addCollectionToBook(wr.pc.resultRows, doc,
 					"query_results");
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			OutputStreamWriter writer = new OutputStreamWriter(baos, "UTF-8");
@@ -116,7 +141,7 @@ public class BasicGridPublisher {
 			} else if (deliveryModel
 					.provideTargetFormat() == FormatConversionTarget.HTML) {
 				results.bytes = baos.toByteArray();
-				List<List> cellList = ee.getCellList();
+				List<List> cellList = exporter.getCellList();
 				FormatBuilder fb = new FormatBuilder();
 				fb.format("<table>\n");
 				for (List tr : cellList) {
@@ -136,9 +161,14 @@ public class BasicGridPublisher {
 				results.htmlContent = fb.toString();
 			} else if (deliveryModel
 					.provideTargetFormat() == FormatConversionTarget.CSV) {
-				CsvCols csvCols = new CsvCols((List) ee.getCellList());
+				CsvCols csvCols = new CsvCols((List) exporter.getCellList());
 				results.bytes = csvCols.toCsv()
 						.getBytes(StandardCharsets.UTF_8);
+			} else if (deliveryModel
+					.provideTargetFormat() == FormatConversionTarget.JSON) {
+				List<List> cellList = exporter.getCellList();
+				String json = JacksonUtils.toNestedJsonList(cellList);
+				results.bytes = json.getBytes(StandardCharsets.UTF_8);
 			} else {
 				throw new UnsupportedOperationException();
 			}

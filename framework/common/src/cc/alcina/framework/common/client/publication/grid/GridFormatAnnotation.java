@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.common.client.publication.excel;
+package cc.alcina.framework.common.client.publication.grid;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Inherited;

@@ -1,9 +1,15 @@
 package cc.alcina.framework.entity.util;
 
+import java.util.List;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class JacksonUtils {
 	public static ObjectMapper defaultGraphMapper() {
@@ -74,5 +80,24 @@ public class JacksonUtils {
 		} else {
 			return null;
 		}
+	}
+
+	public static String toNestedJsonList(List<List> cellList)
+			throws JsonProcessingException {
+		JsonNodeFactory nodeFactory = JsonNodeFactory.instance;
+		ArrayNode root = nodeFactory.arrayNode();
+		List<String> headers = cellList.get(0);
+		cellList.stream().skip(1).forEach(list -> {
+			ObjectNode row = nodeFactory.objectNode();
+			root.add(row);
+			for (int idx = 0; idx < headers.size(); idx++) {
+				String header = headers.get(idx);
+				String value = CommonUtils.nullSafeToString(list.get(idx));
+				row.put(header, value);
+			}
+		});
+		String json = new ObjectMapper().writerWithDefaultPrettyPrinter()
+				.writeValueAsString(root);
+		return json;
 	}
 }

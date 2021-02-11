@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.gen.Base64;
 
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
@@ -123,6 +124,9 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 		}
 		if (type == Class.class) {
 			return cl.loadClass(o.toString());
+		}
+		if (type.isArray() && type.getComponentType() == byte.class) {
+			return Base64.decode(o.toString());
 		}
 		Collection c = null;
 		if (type == Set.class || type == LinkedHashSet.class) {
@@ -250,6 +254,9 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 		}
 		if (type == Date.class) {
 			return (String.valueOf(((Date) value).getTime()));
+		}
+		if (type.isArray() && type.getComponentType() == byte.class) {
+			return Base64.encodeBytes((byte[]) value);
 		}
 		if (value instanceof Multimap) {
 			Multimap m = (Multimap) value;

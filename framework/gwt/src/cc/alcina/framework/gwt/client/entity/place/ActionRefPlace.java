@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.entity.place;
 import java.util.Optional;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
@@ -24,6 +25,11 @@ public class ActionRefPlace extends BasePlace {
 	}
 
 	public Optional<ActionHandler> getActionHandler() {
+		Optional<ActionHandler> handler = Registry.optional(ActionHandler.class,
+				ref);
+		if (handler.isPresent()) {
+			return handler;
+		}
 		/*
 		 * FIXME - dirndl1.1 - should annotation resolution be via context?
 		 */

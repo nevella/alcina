@@ -18,6 +18,7 @@ import java.io.Serializable;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 
 /**
@@ -27,6 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  * 
  */
 @WebMethod(customPermission = @Permission(access = AccessLevel.ADMIN))
+@ClientInstantiable
 public class RemoteAction extends PermissibleAction
 		implements Serializable, Task {
 	public RemoteAction() {

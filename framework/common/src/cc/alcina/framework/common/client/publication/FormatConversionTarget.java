@@ -45,6 +45,9 @@ public abstract class FormatConversionTarget extends ExtensibleEnum
 
 	public static final FormatConversionTarget XML = new FormatConversionTarget_XML();
 
+	public static final FormatConversionTarget JSON = new FormatConversionTarget_JSON();
+
+	@Override
 	public String displayName() {
 		return CommonUtils.friendlyConstant(serializedForm());
 	}
@@ -124,6 +127,14 @@ public abstract class FormatConversionTarget extends ExtensibleEnum
 	}
 
 	public static class FormatConversionTarget_XLSX
+			extends FormatConversionTarget {
+		@Override
+		public boolean gridResult() {
+			return true;
+		}
+	}
+
+	public static class FormatConversionTarget_JSON
 			extends FormatConversionTarget {
 		@Override
 		public boolean gridResult() {

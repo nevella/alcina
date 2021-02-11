@@ -59,12 +59,19 @@ public class DateCriterion extends AbstractDateCriterion {
 
 	@Override
 	public String toString() {
+		return toStringWithDisplayName(true);
+	}
+
+	public String toStringWithDisplayName(boolean withDisplayName) {
 		if (getDate() == null) {
 			return null;
 		}
 		String displayName = getDisplayName() != null ? getDisplayName()
 				: getDirection() == Direction.ASCENDING ? "from" : "to";
-		return Ax.format("%s %s", displayName,
-				CommonUtils.formatDate(getDate(), DateStyle.AU_DATE_SLASH));
+		return withDisplayName
+				? Ax.format("%s %s", displayName,
+						CommonUtils.formatDate(getDate(),
+								DateStyle.AU_DATE_SLASH))
+				: CommonUtils.formatDate(getDate(), DateStyle.AU_DATE_SLASH);
 	}
 }

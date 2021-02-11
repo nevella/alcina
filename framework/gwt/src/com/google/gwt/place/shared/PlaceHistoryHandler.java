@@ -57,6 +57,10 @@ public class PlaceHistoryHandler {
 
 	private String defaultPlaceToken = "";
 
+	private Place lastPlace;
+
+	private Place currentPlace;
+
 	/**
 	 * Create a new PlaceHistoryHandler with a {@link DefaultHistorian}. The
 	 * DefaultHistorian is created via a call to GWT.create(), so an alternative
@@ -170,6 +174,8 @@ public class PlaceHistoryHandler {
 				return;
 			}
 		}
+		lastPlace = currentPlace;
+		currentPlace = newPlace;
 		placeController.goTo(newPlace);
 	}
 
