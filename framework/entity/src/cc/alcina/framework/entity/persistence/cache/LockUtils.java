@@ -26,15 +26,21 @@ public class LockUtils {
 	public static synchronized ClassIdLock obtainClassIdLock(Class clazz,
 			long id, boolean log) {
 		ClassIdLock key = new ClassIdLock(clazz, id);
-		if (!classIdLocks.containsKey(key)) {
+		ClassIdLock result = null;
+		WeakReference<ClassIdLock> weakReference = classIdLocks.get(key);
+		if (weakReference != null) {
+			result = weakReference.get();
+		}
+		if (result == null) {
+			result = key;
 			classIdLocks.put(key, new WeakReference<ClassIdLock>(key));
 		}
 		if (log) {
 			logger.info(
 					"Obtained classIdLock - {} - hash {} - identity hash {}",
-					key, key.hashCode(), System.identityHashCode(key));
+					result, result.hashCode(), System.identityHashCode(result));
 		}
-		return classIdLocks.get(key).get();
+		return result;
 	}
 
 	public static ClassIdLock obtainClassIdLock(Entity entity) {
