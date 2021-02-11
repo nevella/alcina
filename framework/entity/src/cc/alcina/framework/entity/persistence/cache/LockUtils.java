@@ -6,14 +6,17 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.logic.domain.Entity;
 
 public class LockUtils {
-	public static final String ARTICLE_DELETION_LOCK = "ARTICLE_DELETION_LOCK";
-
 	private static Map<ClassIdLock, WeakReference<ClassIdLock>> classIdLocks = new WeakHashMap<ClassIdLock, WeakReference<ClassIdLock>>();
 
 	private static Map<ClassStringKeyLock, ClassStringKeyLock> classStringKeyLocks = new HashMap<ClassStringKeyLock, ClassStringKeyLock>();
+
+	private static Logger logger = LoggerFactory.getLogger(LockUtils.class);
 
 	public static synchronized ClassIdLock obtainClassIdLock(Class clazz,
 			long id) {
@@ -21,7 +24,13 @@ public class LockUtils {
 		if (!classIdLocks.containsKey(key)) {
 			classIdLocks.put(key, new WeakReference<ClassIdLock>(key));
 		}
+		logger.info("Obtained classIdLock - {} - hash {} - identity hash {}",
+				key, key.hashCode(), System.identityHashCode(key));
 		return classIdLocks.get(key).get();
+	}
+
+	public static ClassIdLock obtainClassIdLock(Entity entity) {
+		return obtainClassIdLock(entity.entityClass(), entity.getId());
 	}
 
 	public static synchronized ClassStringKeyLock
@@ -72,9 +81,5 @@ public class LockUtils {
 		public void unlock() {
 			this.lock.unlock();
 		}
-	}
-
-	public static ClassIdLock obtainClassIdLock(Entity entity) {
-		return obtainClassIdLock(entity.entityClass(), entity.getId());
 	}
 }

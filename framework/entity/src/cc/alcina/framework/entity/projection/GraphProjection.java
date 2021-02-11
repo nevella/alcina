@@ -573,6 +573,18 @@ public class GraphProjection {
 		return result;
 	}
 
+	public List<Field> getNonPrimitiveOrDataFieldsForClass(Class clazz)
+			throws Exception {
+		List<Field> result = projectableNonPrimitiveOrDataFields.get(clazz);
+		if (result == null) {
+			result = getFieldsForClass(clazz).stream()
+					.filter(f -> !isPrimitiveOrDataClass(f.getType()))
+					.collect(Collectors.toList());
+			projectableNonPrimitiveOrDataFields.put(clazz, result);
+		}
+		return result;
+	}
+
 	/*
 	 * if we have: a.b .equals c - but not a.b==c and we want to project c, not
 	 * a.b - put c in this map
@@ -633,7 +645,6 @@ public class GraphProjection {
 								traversalCount, creationCount);
 					}
 				}
-
 			}
 		}
 	}
@@ -951,18 +962,6 @@ public class GraphProjection {
 		}
 	}
 
-	public List<Field> getNonPrimitiveOrDataFieldsForClass(Class clazz)
-			throws Exception {
-		List<Field> result = projectableNonPrimitiveOrDataFields.get(clazz);
-		if (result == null) {
-			result = getFieldsForClass(clazz).stream()
-					.filter(f -> !isPrimitiveOrDataClass(f.getType()))
-					.collect(Collectors.toList());
-			projectableNonPrimitiveOrDataFields.put(clazz, result);
-		}
-		return result;
-	}
-
 	private List<Field> getPrimitiveOrDataFieldsForClass(Class clazz)
 			throws Exception {
 		List<Field> result = projectablePrimitiveOrDataFields.get(clazz);
@@ -1217,6 +1216,9 @@ public class GraphProjection {
 		JPAImplementation jpaImplementation = Registry
 				.implOrNull(JPAImplementation.class);
 
+		private boolean entityMapDisabled = ResourceUtilities
+				.is(GraphProjection.class, "entityMapDisabled");
+
 		@Override
 		public Set entrySet() {
 			throw new UnsupportedOperationException();
@@ -1256,8 +1258,9 @@ public class GraphProjection {
 		}
 
 		boolean useNonEntityMap(Entity entity) {
-			return entity.getId() == 0 || (jpaImplementation != null
-					&& jpaImplementation.isProxy(entity));
+			return entityMapDisabled || entity.getId() == 0
+					|| (jpaImplementation != null
+							&& jpaImplementation.isProxy(entity));
 		}
 
 		static class ClassIdKey {

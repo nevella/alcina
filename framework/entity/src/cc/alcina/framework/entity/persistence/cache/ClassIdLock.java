@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.persistence.cache;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 public class ClassIdLock {
 	Class clazz;
 
@@ -15,7 +17,7 @@ public class ClassIdLock {
 	public boolean equals(Object obj) {
 		if (obj instanceof ClassIdLock) {
 			ClassIdLock lock = (ClassIdLock) obj;
-			return lock.clazz == clazz && lock.id.longValue() == id;
+			return lock.clazz == clazz && lock.id.longValue() == id.longValue();
 		}
 		return false;
 	}
@@ -23,5 +25,10 @@ public class ClassIdLock {
 	@Override
 	public int hashCode() {
 		return clazz.hashCode() ^ id.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s::%s - %s", clazz, id, super.toString());
 	}
 }
