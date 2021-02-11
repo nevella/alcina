@@ -479,7 +479,7 @@ public class JobScheduler {
 		}
 
 		public ExecutorServiceProvider getExecutorServiceProvider() {
-			if (queue.phase == SubqueuePhase.Child) {
+			if (queue.currentPhase == SubqueuePhase.Child) {
 				return getDescendantExcutorServiceProvider();
 			}
 			return executorServiceProvider;

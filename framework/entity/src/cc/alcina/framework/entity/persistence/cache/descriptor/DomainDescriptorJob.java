@@ -301,7 +301,7 @@ public class DomainDescriptorJob {
 
 		SubqueueProjection subqueues = new SubqueueProjection();
 
-		public SubqueuePhase phase = SubqueuePhase.Self;
+		public SubqueuePhase currentPhase = SubqueuePhase.Self;
 
 		List<JobState> incompleteAllocatableStates = Arrays.asList(
 				JobState.PENDING, JobState.ALLOCATED, JobState.PROCESSING);
@@ -346,12 +346,13 @@ public class DomainDescriptorJob {
 			 */
 			Stream.of(JobState.ALLOCATED, JobState.PROCESSING)
 					.forEach(state -> {
-						Set<? extends Job> jobs = subQueueJobs(phase, state);
+						Set<? extends Job> jobs = subQueueJobs(currentPhase,
+								state);
 						Iterator<? extends Job> itr = jobs.iterator();
 						while (itr.hasNext()) {
 							Job next = itr.next();
 							logger.info("Cancelling from subQueue {}/{} - {}",
-									phase, state, next);
+									currentPhase, state, next);
 							next.cancel();
 						}
 					});
@@ -362,7 +363,7 @@ public class DomainDescriptorJob {
 			if (isComplete()) {
 				queues.remove(job);
 				publish(EventType.DELETED);
-				phase = SubqueuePhase.Complete;
+				currentPhase = SubqueuePhase.Complete;
 			}
 		}
 
@@ -376,12 +377,13 @@ public class DomainDescriptorJob {
 			 */
 			Stream.of(JobState.ALLOCATED, JobState.PROCESSING)
 					.forEach(state -> {
-						Set<? extends Job> jobs = subQueueJobs(phase, state);
+						Set<? extends Job> jobs = subQueueJobs(currentPhase,
+								state);
 						Iterator<? extends Job> itr = jobs.iterator();
 						while (itr.hasNext()) {
 							Job next = itr.next();
 							logger.info("Removing from subQueue {}/{} - {}",
-									phase, state, next);
+									currentPhase, state, next);
 							itr.remove();
 						}
 					});
@@ -408,14 +410,13 @@ public class DomainDescriptorJob {
 		}
 
 		public long getIncompleteAllocatedJobCountForCurrentPhaseThisVm() {
-			return perPhaseJobs(Arrays.asList(JobState.ALLOCATED,
-					JobState.PROCESSING)).filter(
-							j -> j.getPerformer() == ClientInstance.self())
-							.count();
+			return perPhaseJobs(incompleteStates(currentPhase))
+					.filter(j -> j.getPerformer() == ClientInstance.self())
+					.count();
 		}
 
 		public long getIncompleteJobCountForCurrentPhase() {
-			return perPhaseJobCount(incompleteStates(phase));
+			return perPhaseJobCount(incompleteStates(currentPhase));
 		}
 
 		public Stream<Job> getIncompleteJobs() {
@@ -437,7 +438,7 @@ public class DomainDescriptorJob {
 		}
 
 		public void incrementPhase() {
-			phase = SubqueuePhase.values()[phase.ordinal() + 1];
+			currentPhase = SubqueuePhase.values()[currentPhase.ordinal() + 1];
 		}
 
 		public void insert(Job job) {
@@ -502,8 +503,8 @@ public class DomainDescriptorJob {
 								.map(String::valueOf)
 								.collect(Collectors.joining("/"))));
 			}
-			return Ax.format("Allocation Queue - %s - %s\n\t%s", job, phase,
-					CommonUtils.joinWithNewlineTab(phaseStates));
+			return Ax.format("Allocation Queue - %s - %s\n\t%s", job,
+					currentPhase, CommonUtils.joinWithNewlineTab(phaseStates));
 		}
 
 		private void checkFireToProcessing(Job job) {
@@ -532,9 +533,9 @@ public class DomainDescriptorJob {
 		}
 
 		private boolean isComplete() {
-			for (SubqueuePhase type : SubqueuePhase.values()) {
-				for (JobState state : incompleteStates(type)) {
-					if (subQueueJobs(type, state).size() > 0) {
+			for (SubqueuePhase subqueuePhase : SubqueuePhase.values()) {
+				for (JobState state : incompleteStates(subqueuePhase)) {
+					if (subQueueJobs(subqueuePhase, state).size() > 0) {
 						return false;
 					}
 				}
@@ -547,14 +548,14 @@ public class DomainDescriptorJob {
 		}
 
 		private long perPhaseJobCount(List<JobState> states) {
-			return Stream.of(phase)
+			return Stream.of(currentPhase)
 					.flatMap(type -> states.stream()
 							.map(state -> subQueueJobs(type, state)))
 					.collect(Collectors.summingInt(Collection::size));
 		}
 
 		private Stream<Job> perPhaseJobs(List<JobState> states) {
-			return (Stream) Stream.of(phase)
+			return (Stream) Stream.of(currentPhase)
 					.flatMap(type -> states.stream()
 							.map(state -> subQueueJobs(type, state))
 							.flatMap(Collection::stream));

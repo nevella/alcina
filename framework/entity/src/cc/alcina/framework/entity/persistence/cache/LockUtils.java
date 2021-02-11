@@ -20,12 +20,20 @@ public class LockUtils {
 
 	public static synchronized ClassIdLock obtainClassIdLock(Class clazz,
 			long id) {
+		return obtainClassIdLock(clazz, id, true);
+	}
+
+	public static synchronized ClassIdLock obtainClassIdLock(Class clazz,
+			long id, boolean log) {
 		ClassIdLock key = new ClassIdLock(clazz, id);
 		if (!classIdLocks.containsKey(key)) {
 			classIdLocks.put(key, new WeakReference<ClassIdLock>(key));
 		}
-		logger.info("Obtained classIdLock - {} - hash {} - identity hash {}",
-				key, key.hashCode(), System.identityHashCode(key));
+		if (log) {
+			logger.info(
+					"Obtained classIdLock - {} - hash {} - identity hash {}",
+					key, key.hashCode(), System.identityHashCode(key));
+		}
 		return classIdLocks.get(key).get();
 	}
 

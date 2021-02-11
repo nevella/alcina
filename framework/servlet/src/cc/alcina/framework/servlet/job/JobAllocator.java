@@ -169,7 +169,7 @@ class JobAllocator {
 	}
 
 	void toAwaitingChildren() {
-		if (queue.phase == SubqueuePhase.Self) {
+		if (queue.currentPhase == SubqueuePhase.Self) {
 			queue.publish(EventType.TO_AWAITING_CHILDREN);
 		}
 	}
@@ -219,7 +219,7 @@ class JobAllocator {
 			if (!deleted) {
 				new StatusMessage().checkPublish();
 			}
-			if (queue.phase == SubqueuePhase.Complete
+			if (queue.currentPhase == SubqueuePhase.Complete
 					|| job.resolveState() == JobState.CANCELLED
 					|| job.resolveState() == JobState.ABORTED
 					/*
@@ -228,7 +228,7 @@ class JobAllocator {
 					|| deleted) {
 				logger.info("Allocation thread ended -  job {}",
 						job.toDisplayName());
-				if (queue.phase == SubqueuePhase.Complete) {
+				if (queue.currentPhase == SubqueuePhase.Complete) {
 					if (job.getState() == JobState.COMPLETED
 							&& job.getPerformer() == ClientInstance.self()
 							&& job.provideRelatedSequential().size() > 1
@@ -247,7 +247,7 @@ class JobAllocator {
 						job.toDisplayName(), event);
 			}
 			if (isPhaseComplete(event)) {
-				if (queue.phase == SubqueuePhase.Child) {
+				if (queue.currentPhase == SubqueuePhase.Child) {
 					/*
 					 * only countdown the child latch if we'll be waiting on
 					 * sequence
@@ -259,10 +259,10 @@ class JobAllocator {
 						childCompletionLatch.countDown();
 					}
 				}
-				SubqueuePhase priorPhase = queue.phase;
+				SubqueuePhase priorPhase = queue.currentPhase;
 				queue.incrementPhase();
 				logger.info("Changed phase :: {} :: {} -> {}",
-						job.toDisplayName(), priorPhase, queue.phase);
+						job.toDisplayName(), priorPhase, queue.currentPhase);
 				// resubmit until event does not cause phase change
 				// (or complete)
 				new StatusMessage().publish();
@@ -270,7 +270,7 @@ class JobAllocator {
 			} else {
 				Transaction.endAndBeginNew();
 				AllocationQueue constraintQueue = queue;
-				if (queue.phase == SubqueuePhase.Sequence
+				if (queue.currentPhase == SubqueuePhase.Sequence
 						&& queue.job.provideParent().isPresent()) {
 					/*
 					 * use the parent constraints
@@ -388,7 +388,7 @@ class JobAllocator {
 									&& !constraints.isClusteredChildAllocation()
 									&& queue.job.getCreator() == ClientInstance
 											.self()
-									&& queue.phase == SubqueuePhase.Child) {
+									&& queue.currentPhase == SubqueuePhase.Child) {
 								ThreadPoolExecutor tpex = (ThreadPoolExecutor) executorService;
 								if (tpex.getActiveCount() == 0
 										&& incompleteCount > 0) {
@@ -433,7 +433,7 @@ class JobAllocator {
 			}
 			boolean selfPerformer = queue.job.getPerformer() == ClientInstance
 					.self();
-			switch (queue.phase) {
+			switch (queue.currentPhase) {
 			case Self:
 				if (queue.job.provideIsComplete()) {
 					return true;
@@ -469,7 +469,7 @@ class JobAllocator {
 		}
 
 		boolean isAllocatable(Job job) {
-			switch (queue.phase) {
+			switch (queue.currentPhase) {
 			case Self:
 				if (!SchedulingPermissions.canAllocate(queue.job)) {
 					return false;
@@ -522,7 +522,7 @@ class JobAllocator {
 		SubqueuePhase phase;
 
 		public StatusMessage() {
-			phase = queue.phase;
+			phase = queue.currentPhase;
 			completedCount = queue.getCompletedJobCount();
 			totalCount = queue.getTotalJobCount();
 			if (finished && !queue.job.provideNextInSequence().isPresent()
@@ -557,7 +557,7 @@ class JobAllocator {
 			message = Ax.format("%s - %s% (%s/%s)", Ax.friendly(phase),
 					percentComplete, completedCount, totalCount);
 			enqueuedStatusMessage = this;
-			if (queue.phase == SubqueuePhase.Sequence
+			if (queue.currentPhase == SubqueuePhase.Sequence
 					&& queue.job.getPerformer() == ClientInstance.self()
 					&& jobContext == null) {
 				applyStatusMessage();
