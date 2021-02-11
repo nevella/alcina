@@ -82,6 +82,7 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
+import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 
@@ -573,6 +574,18 @@ public class GraphProjection {
 		return result;
 	}
 
+	public List<Field> getNonPrimitiveOrDataFieldsForClass(Class clazz)
+			throws Exception {
+		List<Field> result = projectableNonPrimitiveOrDataFields.get(clazz);
+		if (result == null) {
+			result = getFieldsForClass(clazz).stream()
+					.filter(f -> !isPrimitiveOrDataClass(f.getType()))
+					.collect(Collectors.toList());
+			projectableNonPrimitiveOrDataFields.put(clazz, result);
+		}
+		return result;
+	}
+
 	/*
 	 * if we have: a.b .equals c - but not a.b==c and we want to project c, not
 	 * a.b - put c in this map
@@ -633,7 +646,6 @@ public class GraphProjection {
 								traversalCount, creationCount);
 					}
 				}
-
 			}
 		}
 	}
@@ -951,18 +963,6 @@ public class GraphProjection {
 		}
 	}
 
-	public List<Field> getNonPrimitiveOrDataFieldsForClass(Class clazz)
-			throws Exception {
-		List<Field> result = projectableNonPrimitiveOrDataFields.get(clazz);
-		if (result == null) {
-			result = getFieldsForClass(clazz).stream()
-					.filter(f -> !isPrimitiveOrDataClass(f.getType()))
-					.collect(Collectors.toList());
-			projectableNonPrimitiveOrDataFields.put(clazz, result);
-		}
-		return result;
-	}
-
 	private List<Field> getPrimitiveOrDataFieldsForClass(Class clazz)
 			throws Exception {
 		List<Field> result = projectablePrimitiveOrDataFields.get(clazz);
@@ -1208,8 +1208,12 @@ public class GraphProjection {
 	private static class ProjectionIdentityMap extends AbstractMap {
 		ClassIdKey queryKey = new ClassIdKey();
 
+		/*
+		 * Memory isn't a constraint (these are throw-away lookups), and the
+		 * original implementation of ClassIdKey.hashCode was collision-prone...
+		 */
 		private Map<ClassIdKey, Object> entities = new Object2ObjectOpenHashMap<>(
-				4 * LOOKUP_SIZE);
+				4 * LOOKUP_SIZE, Hash.VERY_FAST_LOAD_FACTOR);
 
 		private Map nonEntities = new Reference2ReferenceOpenHashMap<Object, Object>(
 				100);
@@ -1286,7 +1290,13 @@ public class GraphProjection {
 
 			@Override
 			public int hashCode() {
-				return ((int) id) ^ clazzName.hashCode();
+				/*
+				 * if the majority of objects returned are of one type, this
+				 * lessens entropy significantly it seems - causing issues when
+				 * map fillfactor is just less than 0.75f
+				 */
+				// return ((int) id) ^ clazzName.hashCode();
+				return (int) id;
 			}
 		}
 	}

@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
@@ -276,12 +277,15 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	protected Map<K, V> createNonConcurrentMap() {
 		if (keyClass == Long.class) {
 			if (valueClass == Boolean.class) {
-				return (Map<K, V>) new Long2BooleanLinkedOpenHashMap();
+				return (Map<K, V>) new Long2BooleanLinkedOpenHashMap(
+						Hash.DEFAULT_INITIAL_SIZE, Hash.FAST_LOAD_FACTOR);
 			} else {
-				return (Map<K, V>) new Long2ObjectLinkedOpenHashMap<>();
+				return (Map<K, V>) new Long2ObjectLinkedOpenHashMap<>(
+						Hash.DEFAULT_INITIAL_SIZE, Hash.FAST_LOAD_FACTOR);
 			}
 		} else {
-			return (Map<K, V>) new Object2ObjectLinkedOpenHashMap<>();
+			return (Map<K, V>) new Object2ObjectLinkedOpenHashMap<>(
+					Hash.DEFAULT_INITIAL_SIZE, Hash.FAST_LOAD_FACTOR);
 		}
 	}
 

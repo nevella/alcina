@@ -101,11 +101,12 @@ public class EntityLayerLogging {
 				java.util.logging.Logger jblmLogger = (java.util.logging.Logger) loggerField
 						.get(slf4jlogger);
 				java.util.logging.Level julLevel = java.util.logging.Level.WARNING;
-				if (level == Level.DEBUG || level == Level.TRACE
-						|| level == Level.ALL) {
+				if (level == Level.DEBUG || level == Level.TRACE) {
 					julLevel = java.util.logging.Level.FINE;
 				} else if (level == Level.INFO) {
 					julLevel = java.util.logging.Level.INFO;
+				} else if (level == Level.ALL) {
+					julLevel = java.util.logging.Level.ALL;
 				}
 				jblmLogger.setLevel(julLevel);
 			} catch (Exception e) {

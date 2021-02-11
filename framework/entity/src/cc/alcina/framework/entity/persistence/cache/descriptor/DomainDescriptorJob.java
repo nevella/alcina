@@ -407,9 +407,11 @@ public class DomainDescriptorJob {
 			return perPhaseJobCount(JobState.SEQUENCE_COMPLETE);
 		}
 
-		public long getIncompleteAllocatedJobCountForCurrentPhase() {
-			return getIncompleteJobCountForCurrentPhase() - perPhaseJobCount(
-					Collections.singletonList(JobState.PENDING));
+		public long getIncompleteAllocatedJobCountForCurrentPhaseThisVm() {
+			return perPhaseJobs(Arrays.asList(JobState.ALLOCATED,
+					JobState.PROCESSING)).filter(
+							j -> j.getPerformer() == ClientInstance.self())
+							.count();
 		}
 
 		public long getIncompleteJobCountForCurrentPhase() {
