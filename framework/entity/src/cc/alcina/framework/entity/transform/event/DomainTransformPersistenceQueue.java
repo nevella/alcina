@@ -19,13 +19,13 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPositionProvider;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
@@ -430,9 +430,8 @@ public class DomainTransformPersistenceQueue {
 					requestId);
 			DomainTransformRequestPersistent request = loadRequest(event);
 			if (request == null) {
-				request = PersistentImpl
-						.getNewImplementationInstance(
-								DomainTransformRequestPersistent.class);
+				request = PersistentImpl.getNewImplementationInstance(
+						DomainTransformRequestPersistent.class);
 				request.setId(requestId);
 				fireEventThreadLogger.warn(
 						"publishTransformEvent - firing empty event (no transforms?) dtr {}",
@@ -534,18 +533,17 @@ public class DomainTransformPersistenceQueue {
 				long now = System.currentTimeMillis();
 				long timeRemaining = -now + startTime + timeoutMs;
 				int awaitingRequestCount = 0;
+				if (timeRemaining <= 0) {
+					logger.warn("Queue waiter timeout - {} - {} ms", this,
+							now - startTime);
+					timedOut = true;
+					return;
+				}
+				if (now > warnLongRunningTime) {
+					logger.info("Long running wait for processed - {} - {} ms",
+							this, now - startTime);
+				}
 				synchronized (state) {
-					if (timeRemaining <= 0) {
-						logger.warn("Queue waiter timeout - {} - {} ms", this,
-								now - startTime);
-						timedOut = true;
-						return;
-					}
-					if (now > warnLongRunningTime) {
-						logger.info(
-								"Long running wait for processed - {} - {} ms",
-								this, now - startTime);
-					}
 					state.removeFiredFrom(awaitingRequestIds);
 					awaitingRequestCount = awaitingRequestIds.size();
 					if (awaitingRequestCount > 0) {
