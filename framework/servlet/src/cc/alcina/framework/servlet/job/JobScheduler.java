@@ -112,7 +112,8 @@ public class JobScheduler {
 	}
 
 	public JobAllocator awaitAllocator(Job job) {
-		while (true) {
+		long timeout = System.currentTimeMillis() + TimeConstants.ONE_MINUTE_MS;
+		while (System.currentTimeMillis() < timeout) {
 			JobAllocator allocator = allocators.get(job);
 			if (allocator != null) {
 				return allocator;
@@ -128,6 +129,15 @@ public class JobScheduler {
 				}
 			}
 		}
+		/*
+		 * An issue - fallback on resubmit
+		 */
+		Transaction.ensureBegun();
+		ResubmitPolicy policy = ResubmitPolicy.forJob(job);
+		policy.visit(job);
+		job.setState(JobState.ABORTED);
+		job.setEndTime(new Date());
+		job.setResultType(JobResultType.DID_NOT_COMPLETE);
 	}
 
 	public Predicate<Job> canModify(boolean scheduleClusterJobs,
