@@ -501,7 +501,7 @@ class JobAllocator {
 				}
 				return job.providePreviousOrSelfInSequence().provideIsComplete()
 						&& job.providePreviousOrSelfInSequence()
-								.getCreator() == ClientInstance.self();
+								.getPerformer() == ClientInstance.self();
 			default:
 				throw new UnsupportedOperationException();
 			}
