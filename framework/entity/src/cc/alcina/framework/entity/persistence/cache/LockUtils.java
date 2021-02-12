@@ -16,6 +16,7 @@ public class LockUtils {
 
 	private static Map<ClassStringKeyLock, ClassStringKeyLock> classStringKeyLocks = new HashMap<ClassStringKeyLock, ClassStringKeyLock>();
 
+	@SuppressWarnings("unused")
 	private static Logger logger = LoggerFactory.getLogger(LockUtils.class);
 
 	public static synchronized ClassIdLock obtainClassIdLock(Class clazz,
@@ -33,13 +34,16 @@ public class LockUtils {
 		}
 		if (result == null) {
 			result = key;
-			classIdLocks.put(key, new WeakReference<ClassIdLock>(key));
 		}
 		if (log) {
-			logger.info(
-					"Obtained classIdLock - {} - hash {} - identity hash {}",
-					result, result.hashCode(), System.identityHashCode(result));
+			// logger.info(
+			// "Obtained classIdLock - {} - hash {} - identity hash {}",
+			// result, result.hashCode(), System.identityHashCode(result));
 		}
+		/*
+		 * always put back (since it may have been g-c-d during this method)
+		 */
+		classIdLocks.put(result, new WeakReference<ClassIdLock>(result));
 		return result;
 	}
 
