@@ -311,7 +311,10 @@ public class JobContext {
 		if (performer.deferMetadataPersistence(job)) {
 			TransformCommit.enqueueTransforms(JobRegistry.TRANSFORM_QUEUE_NAME);
 		} else {
-			Transaction.commit();
+			/*
+			 * Because of possible collisions with stacktrace?
+			 */
+			TransformCommit.commitWithBackoff();
 		}
 	}
 

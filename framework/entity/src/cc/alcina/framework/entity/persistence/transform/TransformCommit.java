@@ -29,7 +29,6 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -42,6 +41,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
@@ -484,7 +484,7 @@ public class TransformCommit {
 	}
 
 	public static void commitWithBackoff() {
-		commitWithBackoff(10, 3, 10, 2.0);
+		commitWithBackoff(0, 5, 40, 2.0);
 	}
 
 	public static void commitWithBackoff(int initialDelayMs, int retries,
@@ -978,8 +978,7 @@ public class TransformCommit {
 
 	static class IsWrappedObjectDteFilter
 			implements CollectionFilter<DomainTransformEvent> {
-		Class clazz = PersistentImpl
-				.getImplementation(WrappedObject.class);
+		Class clazz = PersistentImpl.getImplementation(WrappedObject.class);
 
 		@Override
 		public boolean allow(DomainTransformEvent o) {

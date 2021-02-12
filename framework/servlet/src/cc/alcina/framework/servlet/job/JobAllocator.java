@@ -29,6 +29,7 @@ import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJ
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.EventType;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.SubqueuePhase;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 
@@ -295,13 +296,10 @@ class JobAllocator {
 							 * Double-checking
 							 */
 							Set<Job> invalidAllocated = new LinkedHashSet<>();
-							// FIXME - mvcc.jobs.1a - check this doesn't
-							// traverse more than it needs to
 							queue.getUnallocatedJobs()
 									.filter(this::isAllocatable)
 									.limit(maxAllocatable)
 									.forEach(allocating::add);
-							int debug = 3;
 							allocating.forEach(j -> {
 								if (j.getState() != JobState.PENDING) {
 									logger.warn(
@@ -314,7 +312,10 @@ class JobAllocator {
 									logger.info("Allocated job {}", j);
 								}
 							});
-							Transaction.commit();
+							/*
+							 * 
+							 */
+							TransformCommit.commitWithBackoff();
 							allocating.forEach(j -> logger.info(
 									"Sending to executor service - {} - {}",
 									j.getId(), j));
