@@ -139,6 +139,8 @@ public class JobScheduler {
 		job.setState(JobState.ABORTED);
 		job.setEndTime(new Date());
 		job.setResultType(JobResultType.DID_NOT_COMPLETE);
+		Transaction.commit();
+		throw new RuntimeException("Timed out");
 	}
 
 	public Predicate<Job> canModify(boolean scheduleClusterJobs,
