@@ -130,7 +130,8 @@ public class JobScheduler {
 			}
 		}
 		/*
-		 * An issue - fallback on resubmit
+		 * An issue - fallback on resubmit. FIXME - mvcc.jobs.2 - add logging
+		 * (is the event not received? out-of-order?)
 		 */
 		Transaction.ensureBegun();
 		ResubmitPolicy policy = ResubmitPolicy.forJob(job);
