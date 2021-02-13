@@ -61,17 +61,13 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	 */
 	private Map<K, V> nonConcurrent;
 
-	/*
-	 * marked as volatile to prevent edge-case out-of-order reads (since
-	 * generation happens in blocked synchronized on concurrent)
-	 */
-	private volatile SizeMetadata sizeMetadata;
+	private SizeMetadata sizeMetadata;
 
 	/*
 	 * Non-generic because we use the NULL_KEY_MARKER - other than that; Map<K,
 	 * TransactionalValue<V>>
 	 */
-	private volatile Map concurrent;
+	private Map concurrent;
 
 	public TransactionalMap(Class<K> keyClass, Class<V> valueClass) {
 		this(keyClass, valueClass, null);
@@ -297,11 +293,21 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		if (concurrent == null) {
 			synchronized (this) {
 				if (concurrent == null) {
-					// volatile and written before concurrent
 					sizeMetadata = new SizeMetadata(
 							new AtomicInteger(nonConcurrent.size()),
 							currentTransaction, true);
 					concurrent = createConcurrentMap();
+				}
+			}
+		}
+		if (sizeMetadata == null) {
+			synchronized (this) {
+				// force wait for other sync block (this is needed because
+				// instructions in the 'if (concurrent == null) {' block may be
+				// out of order - wanted to avoid volatile access since that
+				// affects performance
+				if (sizeMetadata == null) {
+					throw new RuntimeException("Should not be null");
 				}
 			}
 		}

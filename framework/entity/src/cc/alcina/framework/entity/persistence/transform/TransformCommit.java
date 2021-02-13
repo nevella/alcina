@@ -570,7 +570,8 @@ public class TransformCommit {
 		}
 		DomainTransformLayerWrapper layerWrapper = commitTransforms(null,
 				asRoot, true);
-		if (layerWrapper.response.getTransformExceptions().size() > 0) {
+		if (layerWrapper.response != null
+				&& layerWrapper.response.getTransformExceptions().size() > 0) {
 			throw WrappedRuntimeException.wrapIfNotRuntime(
 					layerWrapper.response.getTransformExceptions().get(0));
 		}
