@@ -284,6 +284,18 @@ public class JobRegistry extends WriterService {
 	 */
 	public Job perform(Task task) {
 		try {
+			/*
+			 * Check that the current job (if any) allows this concurrent task
+			 * (a deadlock check, essentially)
+			 */
+			if (JobContext.has()) {
+				if (!JobContext.get().getPerformer()
+						.checkCanPerformConcurrently(task)) {
+					throw Ax.runtimeException(
+							"(Deadlock prevention) Task {} cannot be performed from Job {}",
+							task, JobContext.get().getJob());
+				}
+			}
 			Job job = createBuilder().withTask(task).withAwaiter().create();
 			return await(job);
 		} catch (Exception e) {

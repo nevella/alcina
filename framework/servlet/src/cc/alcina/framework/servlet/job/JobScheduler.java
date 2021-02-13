@@ -140,7 +140,7 @@ public class JobScheduler {
 		job.setEndTime(new Date());
 		job.setResultType(JobResultType.DID_NOT_COMPLETE);
 		Transaction.commit();
-		throw new RuntimeException("Timed out");
+		throw new RuntimeException("DEVEX::12 - awaitAllocator timeout");
 	}
 
 	public Predicate<Job> canModify(boolean scheduleClusterJobs,

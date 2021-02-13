@@ -229,6 +229,11 @@ class JobAllocator {
 					|| deleted) {
 				logger.info("Allocation thread ended -  job {}",
 						job.toDisplayName());
+				logger.info(
+						"Allocation thread debug -  job {} - phase {} - state {} - selfPerformer {} - sequential {} - deleted {}",
+						job.getId(), queue.currentPhase, job.getState(),
+						job.getPerformer() == ClientInstance.self(),
+						job.provideRelatedSequential().size(), deleted);
 				if (queue.currentPhase == SubqueuePhase.Complete) {
 					if (job.getState() == JobState.COMPLETED
 							&& job.getPerformer() == ClientInstance.self()
