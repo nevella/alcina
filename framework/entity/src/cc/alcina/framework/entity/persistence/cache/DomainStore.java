@@ -81,6 +81,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCacheObjectStore;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.NonDomainNotifier;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -729,6 +731,15 @@ public class DomainStore implements IDomainStore {
 		try {
 			LooseContext.pushWithTrue(
 					TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
+			LooseContext.set(LiSet.CONTEXT_NON_DOMAIN_NOTIFIER,
+					new NonDomainNotifier() {
+						@Override
+						public void notifyNonDomain(LiSet liSet, Entity e) {
+							logger.warn(
+									"Non-domain delta in tx: \nliset: {}\nentity: {}\nevent:\n{}",
+									liSet, e, persistenceEvent);
+						}
+					});
 			TransformManager.get().setIgnorePropertyChanges(true);
 			postProcessStart = System.currentTimeMillis();
 			MetricLogging.get().start("post-process");
@@ -972,6 +983,24 @@ public class DomainStore implements IDomainStore {
 
 		enum DomainLoaderType {
 			Database, Remote;
+		}
+	}
+
+	@RegistryLocation(registryPoint = SizeProvider.class, implementationType = ImplementationType.SINGLETON)
+	public static class DomainSizeProvider implements SizeProvider {
+		@Override
+		public int getSize(OneToManyMultipleSummary summary, Entity source) {
+			try {
+				String providerMethodName = summary
+						.getCollectionAccessorMethodName();
+				Method method = source.getClass().getMethod(providerMethodName,
+						new Class[0]);
+				Collection<? extends Entity> collection = (Collection<? extends Entity>) method
+						.invoke(source, new Object[0]);
+				return collection.size();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 
@@ -1710,24 +1739,6 @@ public class DomainStore implements IDomainStore {
 		@Override
 		protected void performDeleteObject(Entity entity) {
 			super.performDeleteObject(entity);
-		}
-	}
-
-	@RegistryLocation(registryPoint = SizeProvider.class, implementationType = ImplementationType.SINGLETON)
-	public static class DomainSizeProvider implements SizeProvider {
-		@Override
-		public int getSize(OneToManyMultipleSummary summary, Entity source) {
-			try {
-				String providerMethodName = summary
-						.getCollectionAccessorMethodName();
-				Method method = source.getClass().getMethod(providerMethodName,
-						new Class[0]);
-				Collection<? extends Entity> collection = (Collection<? extends Entity>) method
-						.invoke(source, new Object[0]);
-				return collection.size();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
 		}
 	}
 }

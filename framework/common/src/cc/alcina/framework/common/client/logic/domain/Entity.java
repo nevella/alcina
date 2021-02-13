@@ -55,7 +55,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 
 	public static transient EntityClassResolver classResolver = new EntityClassResolver();
 
-	protected long id = 0;
+	protected volatile long id = 0;
 
 	protected transient int hash = 0;
 
@@ -66,7 +66,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 	// has @GwtTransient annotation because we don't want to send
 	// server-generated local ids to the client - or vice-versa
 	@GwtTransient
-	long localId;
+	volatile long localId;
 
 	public void delete() {
 		Domain.delete(domainIdentity());
