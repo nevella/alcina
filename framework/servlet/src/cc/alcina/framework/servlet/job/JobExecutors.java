@@ -13,7 +13,7 @@ public interface JobExecutors {
 	void addScheduledJobExecutorChangeConsumer(
 			Consumer<Boolean> changeConsumer);
 
-	void allocationLock(String path, boolean acquire);
+	Object allocationLock(String path, boolean acquire);
 
 	List<ClientInstance> getActiveServers();
 

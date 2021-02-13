@@ -318,18 +318,19 @@ public class JobRegistry extends WriterService {
 		scheduler.fireWakeup();
 	}
 
-	public void withJobMetadataLock(Job job, Runnable runnable) {
-		withJobMetadataLock(job.toLocator().toRecoverableNumericString(),
+	public Object withJobMetadataLock(Job job, Runnable runnable) {
+		return withJobMetadataLock(job.toLocator().toRecoverableNumericString(),
 				runnable);
 	}
 
-	public void withJobMetadataLock(String path, Runnable runnable) {
+	public Object withJobMetadataLock(String path, Runnable runnable) {
 		if (runnable == null) {
-			return;
+			return null;
 		}
 		try {
-			jobExecutors.allocationLock(path, true);
+			Object lock = jobExecutors.allocationLock(path, true);
 			runnable.run();
+			return lock;
 		} finally {
 			jobExecutors.allocationLock(path, false);
 		}
@@ -751,7 +752,8 @@ public class JobRegistry extends WriterService {
 		}
 
 		@Override
-		public void allocationLock(String path, boolean acquire) {
+		public Object allocationLock(String path, boolean acquire) {
+			return null;
 			// noop
 		}
 

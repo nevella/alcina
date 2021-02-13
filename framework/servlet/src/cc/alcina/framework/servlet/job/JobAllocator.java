@@ -29,7 +29,6 @@ import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJ
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.EventType;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.SubqueuePhase;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 
@@ -318,9 +317,10 @@ class JobAllocator {
 								}
 							});
 							/*
-							 * 
+							 * If this fails, we *want* it to throw an exception
+							 * (for later retry)
 							 */
-							TransformCommit.commitWithBackoff();
+							Transaction.commit();
 							allocating.forEach(j -> logger.info(
 									"Sending to executor service - {} - {}",
 									j.getId(), j));
@@ -348,8 +348,12 @@ class JobAllocator {
 									});
 						};
 						// FIXME - mvcc.jobs.1a - getting splurgey allocation?
-						JobRegistry.get().withJobMetadataLock(job,
+						Object lock = JobRegistry.get().withJobMetadataLock(job,
 								allocateJobs);
+						if (lock == null) {
+							logger.warn("Ran allocation job without lock? {}",
+									job);
+						}
 						// if
 						// (executionConstraints.isClusteredChildAllocation()) {
 						// JobRegistry.get().withJobMetadataLock(job,
