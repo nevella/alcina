@@ -5,22 +5,34 @@ import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 public class TaskSwitchPostgresUrl extends AbstractTaskPerformer {
-	@Override
-	protected void run0() throws Exception {
-		Spec spec = typedValue(Spec.class);
-		DomainStore store = DomainStore.stores()
-				.storeFor(spec.descriptorClassName);
-		store.setConnectionUrl(spec.newUrl);
-		if (store == DomainStore.writableStore()) {
-			CommonPersistenceProvider.get().getCommonPersistence()
-					.changeJdbcConnectionUrl(spec.newUrl);
-		}
-		logger.info("Connection url changed to: {}", spec.newUrl);
+	private String newUrl;
+
+	private String descriptorClassName;
+
+	public String getDescriptorClassName() {
+		return this.descriptorClassName;
 	}
 
-	public static class Spec {
-		public String newUrl;
+	public String getNewUrl() {
+		return this.newUrl;
+	}
 
-		public String descriptorClassName;
+	public void setDescriptorClassName(String descriptorClassName) {
+		this.descriptorClassName = descriptorClassName;
+	}
+
+	public void setNewUrl(String newUrl) {
+		this.newUrl = newUrl;
+	}
+
+	@Override
+	protected void run0() throws Exception {
+		DomainStore store = DomainStore.stores().storeFor(descriptorClassName);
+		store.setConnectionUrl(newUrl);
+		if (store == DomainStore.writableStore()) {
+			CommonPersistenceProvider.get().getCommonPersistence()
+					.changeJdbcConnectionUrl(newUrl);
+		}
+		logger.info("Connection url changed to: {}", newUrl);
 	}
 }

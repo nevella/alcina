@@ -38,7 +38,7 @@ import cc.alcina.framework.servlet.task.TaskWakeupJobScheduler;
  * @author Nick Reddel
  */
 public class JobServlet extends AlcinaServlet {
-	public static String createTaskUrl(Task task) {
+	public static String createTaskUrl(String host, Task task) {
 		StringMap queryParameters = new StringMap();
 		if (task instanceof TaskLogJobDetails) {
 			queryParameters.put("action", "detail");
@@ -61,8 +61,13 @@ public class JobServlet extends AlcinaServlet {
 		}
 		UrlBuilder urlBuilder = new UrlBuilder();
 		urlBuilder.path("/job.do");
+		urlBuilder.host(host);
 		queryParameters.forEach((k, v) -> urlBuilder.qsParam(k, v));
 		return urlBuilder.build();
+	}
+
+	public static String createTaskUrl(Task task) {
+		return createTaskUrl(null, task);
 	}
 
 	@Override

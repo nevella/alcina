@@ -1108,6 +1108,14 @@ public class ResourceUtilities {
 			return new String(asBytes(), StandardCharsets.UTF_8);
 		}
 
+		public void echo() {
+			try {
+				Ax.out(asString());
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
 		public String getContentDisposition() {
 			return this.contentDisposition;
 		}
