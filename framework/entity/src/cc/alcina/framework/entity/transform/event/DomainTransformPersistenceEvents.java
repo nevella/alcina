@@ -119,7 +119,13 @@ public class DomainTransformPersistenceEvents {
 			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
 					listenerList)) {
 				if (listener.isPreBarrierListener()) {
-					listener.onDomainTransformRequestPersistence(event);
+					try {
+						listener.onDomainTransformRequestPersistence(event);
+					} catch (Exception e) {
+						// FIXME - mvcc.jobs.2 - formal logging
+						logger.warn("DEVEX::9 {}", e);
+						e.printStackTrace();
+					}
 				}
 			}
 			if (hasPersistentRequests && !event.isFiringFromQueue()) {
@@ -164,6 +170,10 @@ public class DomainTransformPersistenceEvents {
 									Thread.currentThread().getName(),
 									() -> true);
 							listener.onDomainTransformRequestPersistence(event);
+						} catch (Exception e) {
+							// FIXME - mvcc.jobs.2 - formal logging
+							logger.warn("DEVEX::9 {}", e);
+							e.printStackTrace();
 						} finally {
 							InternalMetrics.get().endTracker(event);
 						}
