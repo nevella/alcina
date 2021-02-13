@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,7 +33,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import javax.persistence.Column;
@@ -77,7 +77,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -138,21 +137,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private ThreadPoolExecutor warmupExecutor;
 
-	private volatile Connection postInitConn;
-
 	private AtomicInteger connectionsReopened = new AtomicInteger();
-
-	private int originalTransactionIsolation;
 
 	private UnsortedMultikeyMap<Field> domainStorePropertyFields = new UnsortedMultikeyMap<Field>(
 			2);
-
-	// only access via synchronized code
-	CountingMap<Connection> warmupConnections = new CountingMap<>();
+	//
 
 	MultikeyMap<PdOperator> operatorsByClass = new UnsortedMultikeyMap<>(2);
-
-	private ReentrantLock postInitConnectionLock = new ReentrantLock(true);
 
 	private BackupLazyLoader backupLazyLoader = new BackupLazyLoader();
 
@@ -176,13 +167,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	Map<Object, Object> interns = new ConcurrentHashMap<>();
 
-	private Thread postInitConnectionLockThread = null;
+	private ConnectionPool connectionPool;
 
 	public DomainStoreLoaderDatabase(DomainStore store,
 			RetargetableDataSource dataSource,
 			ThreadPoolExecutor warmupExecutor) {
 		this.store = store;
 		this.dataSource = dataSource;
+		connectionPool = new ConnectionPool(dataSource);
 		this.warmupExecutor = warmupExecutor;
 		transformSequencer = new DomainStoreTransformSequencer(this);
 		store.getPersistenceEvents().getQueue()
@@ -191,13 +183,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	@Override
 	public void appShutdown() {
-		if (postInitConn != null) {
-			try {
-				postInitConn.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
-		}
+		connectionPool.drain();
 	}
 
 	@Override
@@ -272,7 +258,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		warmupTransaction = Transaction.current();
 		transformSequencer.setInitialised(true);
 		transformSequencer.initialEnsureTimestamps();
-		createWarmupConnections();
 		{
 			Connection conn = getConnection();
 			transformSequencer.markHighestVisibleTransformList(conn);
@@ -386,7 +371,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		store.initialising = false;
 		// don't close, but indicate that everything write-y from now shd be
 		// single-threaded
-		warmupConnections.keySet().forEach(conn -> closeWarmupConnection(conn));
+		connectionPool.drain();
 		warmupExecutor = null;
 		warmupTransaction = null;
 		Transaction.current().toDomainCommitted();
@@ -400,10 +385,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		columnDescriptors.add(clazz,
 				new ColumnDescriptor(clazz, pd, propertyType));
 		propertyDescriptorFetchTypes.put(pd, propertyType);
-	}
-
-	private void createWarmupConnections() throws Exception {
-		new WarmupConnectionCreatorPg().create();
 	}
 
 	private synchronized PdOperator ensurePdOperator(PropertyDescriptor pd,
@@ -443,12 +424,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			return domainStoreColumn.targetEntity();
 		}
 		return rm.getReturnType();
-	}
-
-	private synchronized Connection getWarmupConnection() throws Exception {
-		Connection min = warmupConnections.min();
-		warmupConnections.add(min);
-		return min;
 	}
 
 	private void initialiseDomainSegment() throws Exception {
@@ -1077,23 +1052,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	protected void closeWarmupConnection(Connection conn) {
-		try {
-			conn.commit();
-			conn.setAutoCommit(true);
-			conn.setReadOnly(false);
-			conn.setTransactionIsolation(originalTransactionIsolation);
-			logger.debug("Closing warmup db connection (post-init) {}", conn);
-			conn.close();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	protected synchronized void releaseWarmupConnection(Connection conn) {
-		warmupConnections.add(conn, -1);
-	}
-
 	/*
 	 * Use the write method of the domain entity (to force a transactional
 	 * version) but don't record the property change. The populated version will
@@ -1127,66 +1085,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	Connection getConnection() {
-		if (store.initialising) {
-			try {
-				return getWarmupConnection();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-		try {
-			synchronized (postInitConnectionLock) {
-				if (postInitConn == null) {
-					resetConnection();
-				}
-			}
-			Thread postInitConnectionLockThread = this.postInitConnectionLockThread;
-			String stacktraceSlice = postInitConnectionLockThread == null ? null
-					: SEUtilities.getStacktraceSlice(
-							postInitConnectionLockThread,
-							DomainStore.LONG_POST_PROCESS_TRACE_LENGTH, 0);
-			long start = System.currentTimeMillis();
-			postInitConnectionLock.lock();
-			long duration = System.currentTimeMillis() - start;
-			if (postInitConnectionLockThread != null && duration >= 5) {
-				logger.info(
-						"Waited {}ms on postInitConnectionLock - held by {}\n\n{}\n",
-						duration, postInitConnectionLockThread,
-						stacktraceSlice);
-			}
-			this.postInitConnectionLockThread = Thread.currentThread();
-			return postInitConn;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return connectionPool.getConnection();
 	}
 
 	void releaseConn(Connection conn) {
 		if (conn == null) {
 			return;
 		}
-		try {
-			if (store.initialising) {
-				releaseWarmupConnection(conn);
-			} else {
-				postInitConnectionLockThread = null;
-				postInitConnectionLock.unlock();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	// calling thread already has connection lock
-	Connection resetConnection() throws Exception {
-		synchronized (postInitConnectionLock) {
-			postInitConn = dataSource.getConnection();
-			logger.debug("Opened new db connection (post-init) {}",
-					postInitConn);
-			postInitConn.setAutoCommit(true);
-			postInitConn.setReadOnly(true);
-		}
-		return postInitConn;
+		connectionPool.releaseConnection(conn);
 	}
 
 	synchronized LaterLookup warmupLaterLookup() {
@@ -1584,6 +1490,196 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
+	class ConnectionPool {
+		int maxConnections = 8;
+
+		private Connection initialWarmupConnection;
+
+		private int originalWarmupTransactionIsolation;
+
+		// only access via synchronized code
+		private List<Member> members = new ArrayList<>();
+
+		WarmupConnectionCreatorPg warmupCreator = new WarmupConnectionCreatorPg();
+
+		public ConnectionPool(RetargetableDataSource dataSource) {
+		}
+
+		private Member getMember() {
+			long start = System.currentTimeMillis();
+			Optional<Member> o_member = getMember0();
+			if (o_member.isPresent()) {
+				return o_member.get();
+			}
+			synchronized (this) {
+				while (true) {
+					try {
+						wait(1000);
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+					long now = System.currentTimeMillis();
+					if (now - start > 1000 && store.initialised) {
+						logger.warn("Long wait for connection - {} threads",
+								members.stream().collect(Collectors
+										.summingInt(m -> m.threads.size())));
+					}
+					o_member = getMember0();
+					if (o_member.isPresent()) {
+						return o_member.get();
+					}
+				}
+			}
+		}
+
+		/*
+		 * look for a free member; then allocate up to maxconnections; then wait
+		 */
+		private Optional<Member> getMember0() {
+			Optional<Member> o_member = members.stream()
+					.filter(m -> m.threads.isEmpty()).findFirst();
+			if (o_member.isPresent()) {
+				return o_member;
+			}
+			if (members.size() < maxConnections) {
+				Member member = new Member();
+				members.add(member);
+				return Optional.of(member);
+			}
+			return Optional.empty();
+		}
+
+		synchronized void drain() {
+			members.forEach(Member::close);
+			members.clear();
+			synchronized (this) {
+				notifyAll();
+			}
+		}
+
+		synchronized Connection getConnection() {
+			Member member = getMember();
+			member.threads.add(Thread.currentThread());
+			return member.connection;
+		}
+
+		synchronized void markInvalidConnection(Connection connection) {
+			Optional<Member> o_member = members.stream()
+					.filter(m -> m.connection == connection).findFirst();
+			if (o_member.isPresent()) {
+				Member member = o_member.get();
+				members.remove(member);
+			}
+		}
+
+		synchronized void releaseConnection(Connection connection) {
+			Optional<Member> o_member = members.stream()
+					.filter(m -> m.connection == connection).findFirst();
+			if (o_member.isPresent()) {
+				Member member = o_member.get();
+				member.threads.remove(Thread.currentThread());
+				member.lastRelease = System.currentTimeMillis();
+				notifyAll();
+			}
+		}
+
+		class Member {
+			Connection connection;
+
+			List<Thread> threads = new ArrayList<>();
+
+			boolean invalid;
+
+			long lastRelease;
+
+			private boolean warmup;
+
+			public Member() {
+				try {
+					if (store.initialising) {
+						connection = warmupCreator.create();
+						warmup = true;
+					} else {
+						connection = dataSource.getConnection();
+					}
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+
+			void close() {
+				try {
+					logger.debug("Closing  db connection  {}", connection);
+					invalid = true;
+					connection.commit();
+					if (warmup) {
+						connection.setTransactionIsolation(
+								originalWarmupTransactionIsolation);
+					}
+					connection.setAutoCommit(true);
+					connection.setReadOnly(false);
+					connection.close();
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		class WarmupConnectionCreator {
+			Connection create() throws SQLException {
+				Connection conn = dataSource.getConnection();
+				conn.setAutoCommit(false);
+				conn.setReadOnly(true);
+				originalWarmupTransactionIsolation = conn
+						.getTransactionIsolation();
+				conn.setTransactionIsolation(
+						Connection.TRANSACTION_REPEATABLE_READ);
+				logger.debug("Opening new warmup connection {}", conn);
+				return conn;
+			}
+		}
+
+		class WarmupConnectionCreatorPg {
+			private String snapshotId;
+
+			Connection create() throws SQLException {
+				String isolationLevel = "SERIALIZABLE";
+				if (ResourceUtilities.is(DomainStore.class, "warmStandbyDb")) {
+					isolationLevel = "REPEATABLE_READ";
+				}
+				if (initialWarmupConnection == null) {
+					initialWarmupConnection = dataSource.getConnection();
+					initialWarmupConnection.setAutoCommit(false);
+					originalWarmupTransactionIsolation = initialWarmupConnection
+							.getTransactionIsolation();
+					try (Statement stmt = initialWarmupConnection
+							.createStatement()) {
+						stmt.execute(Ax.format(
+								"BEGIN TRANSACTION ISOLATION LEVEL %s DEFERRABLE;",
+								isolationLevel));
+						ResultSet rs = stmt
+								.executeQuery("SELECT pg_export_snapshot();");
+						rs.next();
+						snapshotId = rs.getString(1);
+					}
+					return initialWarmupConnection;
+				} else {
+					Connection conn = dataSource.getConnection();
+					conn.setAutoCommit(false);
+					try (Statement stmt = conn.createStatement()) {
+						stmt.execute(Ax.format(
+								"BEGIN TRANSACTION ISOLATION LEVEL %s DEFERRABLE;",
+								isolationLevel));
+						stmt.execute(Ax.format("SET TRANSACTION SNAPSHOT '%s';",
+								snapshotId));
+					}
+					return conn;
+				}
+			}
+			//
+		}
+	}
+
 	static class ConnResults implements Iterable<Object[]> {
 		public static Builder builder() {
 			return new Builder();
@@ -1682,7 +1778,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						&& loader.connectionsReopened.get() < 20) {
 					try {
 						// don't close the last one, invalid
-						conn = loader.resetConnection();
+						loader.connectionPool.markInvalidConnection(conn);
+						conn = loader.getConnection();
 						Ax.out("{} - got new connection - %s",
 								loader.store.name, conn);
 					} catch (Exception e2) {
@@ -2178,56 +2275,5 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				}
 			}
 		}
-	}
-
-	class WarmupConnectionCreator {
-		void create() throws SQLException {
-			for (int i = 0; i < warmupExecutor.getMaximumPoolSize(); i++) {
-				Connection conn = dataSource.getConnection();
-				conn.setAutoCommit(false);
-				conn.setReadOnly(true);
-				originalTransactionIsolation = conn.getTransactionIsolation();
-				conn.setTransactionIsolation(
-						Connection.TRANSACTION_REPEATABLE_READ);
-				logger.debug("Opening new warmup connection {}", conn);
-				warmupConnections.put(conn, 0);
-			}
-		}
-	}
-
-	class WarmupConnectionCreatorPg {
-		void create() throws SQLException {
-			Connection conn1 = dataSource.getConnection();
-			conn1.setAutoCommit(false);
-			originalTransactionIsolation = conn1.getTransactionIsolation();
-			String snapshotId = null;
-			String isolationLevel = "SERIALIZABLE";
-			if (ResourceUtilities.is(DomainStore.class, "warmStandbyDb")) {
-				isolationLevel = "REPEATABLE_READ";
-			}
-			try (Statement stmt = conn1.createStatement()) {
-				stmt.execute(Ax.format(
-						"BEGIN TRANSACTION ISOLATION LEVEL %s DEFERRABLE;",
-						isolationLevel));
-				ResultSet rs = stmt
-						.executeQuery("SELECT pg_export_snapshot();");
-				rs.next();
-				snapshotId = rs.getString(1);
-			}
-			warmupConnections.put(conn1, 0);
-			for (int i = 1; i < warmupExecutor.getMaximumPoolSize(); i++) {
-				Connection conn = dataSource.getConnection();
-				conn.setAutoCommit(false);
-				try (Statement stmt = conn.createStatement()) {
-					stmt.execute(Ax.format(
-							"BEGIN TRANSACTION ISOLATION LEVEL %s DEFERRABLE;",
-							isolationLevel));
-					stmt.execute(Ax.format("SET TRANSACTION SNAPSHOT '%s';",
-							snapshotId));
-				}
-				warmupConnections.put(conn, 0);
-			}
-		}
-		//
 	}
 }
