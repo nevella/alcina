@@ -220,7 +220,7 @@ public class DomainTransformPersistenceQueue {
 
 	private DomainTransformPersistenceEvent
 			createPersistenceEventFromPersistedRequest(
-					DomainTransformRequestPersistent dtrp,
+					DomainTransformRequestPersistent dtrp, Type type,
 					DomainTransformCommitPosition position) {
 		// create an "event" to publish in the queue
 		/*
@@ -246,7 +246,17 @@ public class DomainTransformPersistenceQueue {
 		domainTransformResponse
 				.setRequestId(persistenceToken.getRequest().getRequestId());
 		domainTransformResponse.setTransformsProcessed(events.size());
-		domainTransformResponse.setResult(DomainTransformResponseResult.OK);
+		switch (type) {
+		case COMMIT:
+			domainTransformResponse.setResult(DomainTransformResponseResult.OK);
+			break;
+		case ABORTED:
+			domainTransformResponse
+					.setResult(DomainTransformResponseResult.FAILURE);
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
 		domainTransformResponse.setRequest(persistenceToken.getRequest());
 		wrapper.response = domainTransformResponse;
 		DomainTransformPersistenceEvent event = new DomainTransformPersistenceEvent(
@@ -446,7 +456,7 @@ public class DomainTransformPersistenceQueue {
 			}
 			Transaction.current().toNoActiveTransaction();
 			DomainTransformPersistenceEvent persistenceEvent = createPersistenceEventFromPersistedRequest(
-					request, event.commitPosition);
+					request, event.type, event.commitPosition);
 			persistenceEvent.ensureTransformsValidForVm();
 			persistenceEvents
 					.fireDomainTransformPersistenceEvent(persistenceEvent);

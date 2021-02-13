@@ -222,7 +222,7 @@ public class JobContext {
 		String simpleExceptionMessage = CommonUtils.toSimpleExceptionMessage(e);
 		job.setStatusMessage(simpleExceptionMessage);
 		job.setResultMessage(simpleExceptionMessage);
-		logger.warn("Unexpected job exception", e);
+		logger.warn("Unexpected job exception - job {}", e, job.getId());
 		e.printStackTrace();
 	}
 
