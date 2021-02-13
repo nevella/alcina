@@ -493,13 +493,13 @@ public class TransformCommit {
 			Thread.sleep(initialDelayMs);
 			while (retries-- > 0) {
 				try {
-					commitTransformsAsRoot();
+					commitTransforms(true);
 					break;
 				} catch (Exception e) {
 					Ax.simpleExceptionOut(e);
 					logger.warn("Exception in commitWithBackoff, retrying");
 					Thread.sleep((long) delayMs);
-					delayMs *= retryMultiplier;
+					delayMs *= (0.5 + Math.random()) * retryMultiplier;
 				}
 			}
 		} catch (InterruptedException e) {
@@ -568,7 +568,12 @@ public class TransformCommit {
 			}
 			return pendingTransformCount;
 		}
-		commitTransforms(null, asRoot, true);
+		DomainTransformLayerWrapper layerWrapper = commitTransforms(null,
+				asRoot, true);
+		if (layerWrapper.response.getTransformExceptions().size() > 0) {
+			throw WrappedRuntimeException.wrapIfNotRuntime(
+					layerWrapper.response.getTransformExceptions().get(0));
+		}
 		return pendingTransformCount;
 	}
 
