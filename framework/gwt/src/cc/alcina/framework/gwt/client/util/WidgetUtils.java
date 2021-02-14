@@ -258,12 +258,56 @@ public class WidgetUtils {
 	}
 
 	public static native void focus(Element elem) /*-{
-		  var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
+    var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
     var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
     remote.focus();
 	}-*/;
-	
-	
+
+	public static <W extends Widget> W getAncestorWidget(Widget w,
+			Class<W> widgetClass) {
+		while (w != null) {
+			if (w.getClass() == widgetClass) {
+				return (W) w;
+			}
+			w = w.getParent();
+		}
+		return null;
+	}
+
+	public static <W extends Widget> W getAncestorWidget(Widget w,
+			String widgetClassName) {
+		while (w != null) {
+			if (CommonUtils.simpleClassName(w.getClass())
+					.equals(widgetClassName)) {
+				return (W) w;
+			}
+			w = w.getParent();
+		}
+		return null;
+	}
+
+	public static Widget getAncestorWidgetSatisfyingCallback(Widget w,
+			CollectionFilter<Object> callback) {
+		while (w != null) {
+			if (callback.allow(w)) {
+				return w;
+			}
+			w = w.getParent();
+		}
+		return null;
+	}
+
+	public static <T extends Widget> T getAncestorWidgetSatisfyingTypedCallback(
+			Widget w, CollectionFilter<Widget> callback) {
+		while (w != null) {
+			if (callback.allow(w)) {
+				return (T) w;
+			}
+			w = w.getParent();
+		}
+		return null;
+	}
+
 	public static int getBestOffsetHeight(Element e) {
 		return getBestOffsetHeight(e, false);
 	}
@@ -292,7 +336,7 @@ public class WidgetUtils {
 
 	public static native String getComputedStyle(Element eltMulti,
 			String attributeName)/*-{
-    var elt = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
+    var elt = eltMulti.@com.google.gwt.dom.client.Element::ensureRemote()();
     if (elt.currentStyle) {
       return elt.currentStyle[attributeName];
     }
@@ -325,8 +369,7 @@ public class WidgetUtils {
 		return elements;
 	}
 
-	public static native Element getElementByNameOrId(Document doc,
-			String name) /*-{
+	public static native Element getElementByNameOrId(Document doc, String name) /*-{
     var e = doc.getElementById(name);
     if (!e) {
       e = doc.getElementsByName(name)
@@ -494,51 +537,6 @@ public class WidgetUtils {
     return h;
 	}-*/;
 
-	public static <W extends Widget> W getAncestorWidget(Widget w,
-			Class<W> widgetClass) {
-		while (w != null) {
-			if (w.getClass() == widgetClass) {
-				return (W) w;
-			}
-			w = w.getParent();
-		}
-		return null;
-	}
-
-	public static <W extends Widget> W getAncestorWidget(Widget w,
-			String widgetClassName) {
-		while (w != null) {
-			if (CommonUtils.simpleClassName(w.getClass())
-					.equals(widgetClassName)) {
-				return (W) w;
-			}
-			w = w.getParent();
-		}
-		return null;
-	}
-
-	public static Widget getAncestorWidgetSatisfyingCallback(Widget w,
-			CollectionFilter<Object> callback) {
-		while (w != null) {
-			if (callback.allow(w)) {
-				return w;
-			}
-			w = w.getParent();
-		}
-		return null;
-	}
-
-	public static <T extends Widget> T getAncestorWidgetSatisfyingTypedCallback(
-			Widget w, CollectionFilter<Widget> callback) {
-		while (w != null) {
-			if (callback.allow(w)) {
-				return (T) w;
-			}
-			w = w.getParent();
-		}
-		return null;
-	}
-
 	public static Widget getPositioningParent(Widget widget) {
 		while (widget.getParent() != null) {
 			String pos = getComputedStyle(widget.getElement(), "position");
@@ -551,8 +549,7 @@ public class WidgetUtils {
 		return widget;// root panel
 	}
 
-	public native static int getRelativeTopTo(Element elem,
-			Element end) /*-{
+	public native static int getRelativeTopTo(Element elem, Element end) /*-{
     var top = 0;
     while (elem != end) {
       top += elem.offsetTop;
@@ -1149,8 +1146,7 @@ public class WidgetUtils {
     }
 	}-*/;
 
-	private native static boolean
-			isVisibleWithOffsetParent(Element elem)/*-{
+	private native static boolean isVisibleWithOffsetParent(Element elem)/*-{
     var implAccess = elem.@com.google.gwt.dom.client.Element::implAccess()();
     var remote = implAccess.@com.google.gwt.dom.client.Element.ElementImplAccess::ensureRemote()();
     return (remote.style.display != 'none' && remote.offsetParent != null);
@@ -1253,5 +1249,4 @@ public class WidgetUtils {
 			attachHandlerRegistration.removeHandler();
 		}
 	}
-
 }

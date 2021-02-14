@@ -290,7 +290,7 @@ public class FastROBoundTable extends BoundTableExt {
 			Property p = GwittirBridge.get().getProperty(target,
 					col.getPropertyName());
 			BoundWidgetProvider wp = this.factory
-					.getWidgetProvider( p.getType());
+					.getWidgetProvider(p.getType());
 			pMap.put(col.getPropertyName(), p);
 			wpMap.put(col.getPropertyName(), wp);
 		}
@@ -516,8 +516,12 @@ public class FastROBoundTable extends BoundTableExt {
 		}
 	}
 
-	private class ROFlexTable extends FlexTable implements
-			HasMouseOverHandlers, HasMouseOutHandlers, HasMouseMoveHandlers {
+	private class ROFlexTable extends FlexTable implements HasMouseOverHandlers,
+			HasMouseOutHandlers, HasMouseMoveHandlers {
+		public ROFlexTable() {
+			int debug = 3;
+		}
+
 		@Override
 		public HandlerRegistration
 				addMouseMoveHandler(MouseMoveHandler handler) {
@@ -548,6 +552,12 @@ public class FastROBoundTable extends BoundTableExt {
 			} else {
 				return super.internalClearCell(td, clearInnerHTML);
 			}
+		}
+
+		@Override
+		protected void onAttach() {
+			// TODO Auto-generated method stub
+			super.onAttach();
 		}
 	}
 

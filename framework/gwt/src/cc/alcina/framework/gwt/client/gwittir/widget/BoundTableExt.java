@@ -583,7 +583,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					.removeClickListener((ClickListener) entry.getValue());
 		}
 		lastRendered = null;
-		createTable();
+		table.removeAllRows();
+		// createTable();
 		if (this.selectedRowStyles != null) {
 			this.selectedRowStyles.clear();
 		}
@@ -1940,8 +1941,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				final Property p = GwittirBridge.get().getProperty(target,
 						col.getPropertyName());
 				widget = (BoundWidget) this.factory
-						.getWidgetProvider( p.getType())
-						.get();
+						.getWidgetProvider(p.getType()).get();
 				// TODO Figure out some way to make this read only.
 			}
 			rowWidgets[colIndex] = widget;
