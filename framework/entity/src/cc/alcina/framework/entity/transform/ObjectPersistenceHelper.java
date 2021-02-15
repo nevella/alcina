@@ -280,8 +280,12 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	@Override
 	public void setPropertyValue(Object bean, String propertyName,
 			Object value) {
-		(ThreadlocalTransformManager.cast()).setPropertyValue(bean,
-				propertyName, value);
+		if (bean instanceof Entity) {
+			(ThreadlocalTransformManager.cast()).setPropertyValue(bean,
+					propertyName, value);
+		} else {
+			SEUtilities.setPropertyValue(bean, propertyName, value);
+		}
 	}
 
 	public void
