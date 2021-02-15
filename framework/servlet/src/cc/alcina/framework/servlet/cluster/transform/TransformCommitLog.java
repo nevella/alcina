@@ -62,6 +62,8 @@ public class TransformCommitLog {
 
 	private long hostUid;
 
+	private long highestSeekOffset = -1;
+
 	private TransformCommitLogHost commitLogHost;
 
 	public TransformCommitLog() {
@@ -192,6 +194,9 @@ public class TransformCommitLog {
 				if (seek == -1) {
 					seek = currentConsumerThread.previousConsumerCompletedOffset;
 				}
+				if (seek == -1) {
+					seek = highestSeekOffset;
+				}
 				logger.warn(
 						"Restarting {} consumer - poll timeout: {} - max {} - ordinal {} - seekTo {}",
 						getClass().getSimpleName(), pollWait, pollTimeout,
@@ -319,6 +324,8 @@ public class TransformCommitLog {
 								position, currentOffset);
 						if (currentOffset == -1) {
 							currentOffset = position - 1;
+							highestSeekOffset = Math.max(highestSeekOffset,
+									currentOffset);
 						}
 						if (position == currentOffset + 1) {
 							checkCurrentPositionLatch.countDown();
@@ -348,6 +355,8 @@ public class TransformCommitLog {
 							e.printStackTrace();
 						} finally {
 							currentOffset = record.offset();
+							highestSeekOffset = Math.max(highestSeekOffset,
+									currentOffset);
 						}
 					}
 					if (checkCurrentPositionLatch != null) {
