@@ -1250,7 +1250,11 @@ public class XmlUtils {
 	}
 
 	public static String removeXmlDeclaration(String xml) {
-		return xml.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "");
+		if (xml.startsWith("<?xml")) {
+			return xml.replaceFirst("^<\\?xml.+?>", "");
+		} else {
+			return xml;
+		}
 	}
 
 	public static void replaceNode(Element from, Element to) {
