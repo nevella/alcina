@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.util.Objects;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 
 class ObjectVersion<T> {
@@ -34,6 +35,17 @@ class ObjectVersion<T> {
 	 */
 	public boolean isCorrectWriteableState(boolean write) {
 		return !write || writeable;
+	}
+
+	@Override
+	public String toString() {
+		if (object instanceof Entity) {
+			return Ax.format("(%s) - %s", writeable,
+					((Entity) object).toLocator());
+		} else {
+			return Ax.format("(%s) - %s - %s", writeable,
+					object.getClass().getSimpleName(), object);
+		}
 	}
 
 	void debugObjectHash() {

@@ -68,6 +68,7 @@ import org.cyberneko.html.parsers.DOMParser;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.user.client.rpc.StatusCodeException;
 
@@ -278,10 +279,12 @@ public class ResourceUtilities {
 						Collection newCollection = (Collection) newInstanceForCopy(
 								collection);
 						if (newCollection instanceof LiSet) {
-							// handled by clone
+							// handled by newInstanceForCopy/clone
 						} else {
 							newCollection.addAll(collection);
 						}
+						Preconditions.checkState(
+								collection.size() == newCollection.size());
 						value = newCollection;
 					}
 				}
@@ -984,7 +987,6 @@ public class ResourceUtilities {
 	private static <T> T newInstanceForCopy(T t)
 			throws NoSuchMethodException, InstantiationException,
 			IllegalAccessException, InvocationTargetException {
-		// optimise
 		if (t instanceof LiSet) {
 			return (T) ((LiSet) t).clone();
 		}
