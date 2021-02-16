@@ -39,6 +39,10 @@ public class PublicationContext {
 				: ctx.getContextInfoForPublicationException();
 	}
 
+	public static boolean has() {
+		return LooseContext.is(CONTEXT_PUBLICATION_CONTEXT);
+	}
+
 	public static PublicationContext setupForExternalToPublisher(
 			ContentDefinition contentDefinition, DeliveryModel deliveryModel) {
 		return setupContext(contentDefinition, deliveryModel);
