@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  *
@@ -47,6 +48,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * 
  */
 public class DetachedEntityCache implements Serializable, MemoryStatProvider {
+	public static final transient String CONTEXT_CREATED_LOCAL_DEBUG = DetachedEntityCache.class
+			.getName() + ".CONTEXT_CREATED_LOCAL_DEBUG";
+
 	protected Map<Class, Map<Long, Entity>> domain;
 
 	protected Map<Class, Map<Long, Entity>> local;
@@ -322,8 +326,22 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 			}
 			localPerClass.put(localId, entity);
 			if (!external) {
+				if (LooseContext.has(CONTEXT_CREATED_LOCAL_DEBUG)) {
+					((CreatedLocalDebug) LooseContext
+							.get(CONTEXT_CREATED_LOCAL_DEBUG))
+									.debugCreation(localId, entity);
+				}
+				if (createdLocals.containsKey(localId)) {
+					throw Ax.runtimeException(
+							"Created local collision (!!) - %s %s - existing %s",
+							localId, entity, createdLocals.get(localId));
+				}
 				createdLocals.put(localId, entity);
 			}
 		}
+	}
+
+	public static interface CreatedLocalDebug {
+		void debugCreation(long localId, Entity entity);
 	}
 }
