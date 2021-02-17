@@ -8,6 +8,7 @@ td {
 	overflow:scroll;
 	white-space: pre-wrap;
 	max-width: calc(100vw - 200px);
+	word-break: break-all;
 }
 
 .allocation-queue,.stack-trace{
