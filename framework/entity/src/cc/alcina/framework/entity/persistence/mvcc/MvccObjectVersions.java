@@ -1,7 +1,6 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -286,7 +285,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			}
 		}
 		// }
-		if (versions.isEmpty() && !isDebug()) {
+		if (versions.isEmpty()) {
+			// if (versions.isEmpty() && !isDebug()) {
 			synchronized (baseObject) {
 				if (versions.isEmpty() && baseObject instanceof MvccObject) {
 					logger.trace("removed mvcc versions: {} : {}", baseObject,
@@ -411,14 +411,14 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	protected void removeWithSize(Transaction tx) {
 		ObjectVersion<T> removed = versions.remove(tx);
 		if (removed != null) {
-			if (isDebug()) {
-				synchronized (this) {
-					if (debugVersions == null) {
-						debugVersions = new ArrayList<>();
-					}
-					debugVersions.add(new VersionDebug(tx, removed));
-				}
-			}
+			// if (isDebug()) {
+			// synchronized (this) {
+			// if (debugVersions == null) {
+			// debugVersions = new ArrayList<>();
+			// }
+			// debugVersions.add(new VersionDebug(tx, removed));
+			// }
+			// }
 			size.decrementAndGet();
 		}
 	}
