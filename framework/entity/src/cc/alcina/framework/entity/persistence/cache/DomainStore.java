@@ -876,9 +876,17 @@ public class DomainStore implements IDomainStore {
 						health.domainStoreExceptionCount.incrementAndGet();
 						logger.warn("Update exception persistence event :: {}",
 								persistenceEvent);
-						logger.warn(
-								"Update exception transform request queue data :: {}",
-								persistenceEvents.getQueue().toDebugString());
+						try {
+							String debugString = persistenceEvents.getQueue()
+									.toDebugString();
+							logger.warn(
+									"Update exception transform request queue data :: {}",
+									debugString);
+						} catch (Exception e) {
+							logger.warn(
+									"Update exception - exception getting queue debug string");
+							e.printStackTrace();
+						}
 						throw updateException;
 					}
 				}
