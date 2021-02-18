@@ -18,7 +18,7 @@ public class LazyPropertyLoadTask<T extends Entity>
 			.getName() + ".CONTEXT_IN_LAZY_PROPERTY_LOAD";
 
 	public static final String CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES = LazyLoadProvideTask.class
-			.getName() + ".CONTEXT_LOAD_STREAM_ELEMENTS";
+			.getName() + ".CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES";
 
 	public LazyPropertyLoadTask(Class<T> clazz, DomainStore domainStore) {
 		super(clazz);
@@ -34,8 +34,8 @@ public class LazyPropertyLoadTask<T extends Entity>
 				.is(DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)) {
 			return stream;
 		}
-		if (!LooseContext
-				.is(LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)) {
+		if (!LooseContext.is(
+				LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)) {
 			return stream;
 		}
 		return super.wrap(stream);
