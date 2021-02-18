@@ -654,12 +654,15 @@ public class RelativePopupPositioning {
 				// y+=WidgetUtils.getScrollTop(positioningWidget.getElement());
 			}
 			rpp.setPopupPosition(x, y);
-			switch (positioningParams.positioningStrategy) {
-			case ABSOLUTE_RIGHT:
-				rpp.getElement().getStyle().setTop(0, Unit.PX);
-				rpp.getElement().getStyle().removePropertyImpl("left");
-				rpp.getElement().getStyle().setRight(-positioningParams.shiftX,
-						Unit.PX);
+			if (axes == null) {
+				switch (positioningParams.positioningStrategy) {
+				case ABSOLUTE_RIGHT:
+					rpp.getElement().getStyle().setTop(0, Unit.PX);
+					rpp.getElement().getStyle().removePropertyImpl("left");
+					rpp.getElement().getStyle()
+							.setRight(-positioningParams.shiftX, Unit.PX);
+					break;
+				}
 			}
 			notifyPopupDisplayed(new PopupWrapper(rpp));
 		}
