@@ -13,10 +13,8 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.QueueStat;
-import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobRegistry;
@@ -34,70 +32,6 @@ public class TaskListJobs extends AbstractTaskPerformer {
 
 	public void setFilter(String filter) {
 		this.filter = filter;
-	}
-
-	private void run1() throws Exception {
-		DomDoc doc = DomDoc.basicHtmlDoc();
-		String css = ResourceUtilities.readClazzp("res/TaskListJobs.css");
-		doc.xpath("//head").node().builder().tag("style").text(css).append();
-		{
-			Stream<QueueStat> queues = JobRegistry.get().getActiveQueueStats();
-			doc.html().body().builder().tag("h2")
-					.text("Active allocation queues").append();
-			DomNodeHtmlTableBuilder builder = doc.html().body().html()
-					.tableBuilder();
-			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
-					.accept(Utils::large).cell("Started").accept(Utils::date)
-					.cell("Active").accept(Utils::date).cell("Pending")
-					.accept(Utils::numeric).cell("Completed")
-					.accept(Utils::numeric).cell("Total")
-					.accept(Utils::numeric);
-			queues.filter(q -> q.active != 0).filter(q -> filter(q.name))
-					.forEach(queue -> builder.row().cell(queue.jobId)
-							.cell(queue.name).accept(Utils::large)
-							.cell(timestamp(queue.startTime)).cell(queue.active)
-							.cell(queue.pending).cell(queue.completed)
-							.cell(queue.total));
-		}
-		{
-			Stream<FutureStat> pending = JobRegistry.get().getFutureQueueStats()
-					.filter(s -> filter(s.taskName));
-			doc.html().body().builder().tag("h2").text("Pending queues")
-					.append();
-			DomNodeHtmlTableBuilder builder = doc.html().body().html()
-					.tableBuilder();
-			builder.row().cell("Id").accept(Utils::numeric).cell("Task")
-					.cell("Run at").cell("Link").accept(Utils::links);
-			pending.forEach(stat -> {
-				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-						.cell(stat.jobId).cell(stat.taskName)
-						.accept(Utils::large).cell(timestamp(stat.runAt));
-				DomNode td = cellBuilder.append();
-				{
-					String href = JobServlet.createTaskUrl(
-							new TaskCancelJob().withValue(stat.jobId));
-					td.html().addLink("Cancel", href, "_blank");
-				}
-				td.builder().text(" - ").tag("span").append();
-				{
-					String href = JobServlet.createTaskUrl(
-							new TaskRunJob().withValue(stat.jobId));
-					td.html().addLink("Run", href, "_blank");
-				}
-				td.builder().text(" - ").tag("span").append();
-				{
-					String href = JobServlet.createTaskUrl(
-							new TaskLogJobDetails().withValue(stat.jobId));
-					td.html().addLink("Details", href, "_blank");
-				}
-			});
-		}
-		addActive(doc, "top-level - active", Job::provideIsTopLevel);
-		addActive(doc, "child - active", Job::provideIsNotTopLevel);
-		addCompleted(doc, "top-level", true, 20);
-		addCompleted(doc, "child", false, 20);
-		JobContext.get().getJob().setLargeResult(doc.prettyToString());
-		logger.info("Log output to job.largeResult");
 	}
 
 	protected void addActive(DomDoc doc, String sectionFilterName,
@@ -174,9 +108,67 @@ public class TaskListJobs extends AbstractTaskPerformer {
 
 	@Override
 	protected void run0() throws Exception {
-		MethodContext.instance().withContextTrue(
-				DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)
-				.run(this::run1);
+		DomDoc doc = DomDoc.basicHtmlDoc();
+		String css = ResourceUtilities.readClazzp("res/TaskListJobs.css");
+		doc.xpath("//head").node().builder().tag("style").text(css).append();
+		{
+			Stream<QueueStat> queues = JobRegistry.get().getActiveQueueStats();
+			doc.html().body().builder().tag("h2")
+					.text("Active allocation queues").append();
+			DomNodeHtmlTableBuilder builder = doc.html().body().html()
+					.tableBuilder();
+			builder.row().cell("Id").accept(Utils::numeric).cell("Name")
+					.accept(Utils::large).cell("Started").accept(Utils::date)
+					.cell("Active").accept(Utils::date).cell("Pending")
+					.accept(Utils::numeric).cell("Completed")
+					.accept(Utils::numeric).cell("Total")
+					.accept(Utils::numeric);
+			queues.filter(q -> q.active != 0).filter(q -> filter(q.name))
+					.forEach(queue -> builder.row().cell(queue.jobId)
+							.cell(queue.name).accept(Utils::large)
+							.cell(timestamp(queue.startTime)).cell(queue.active)
+							.cell(queue.pending).cell(queue.completed)
+							.cell(queue.total));
+		}
+		{
+			Stream<FutureStat> pending = JobRegistry.get().getFutureQueueStats()
+					.filter(s -> filter(s.taskName));
+			doc.html().body().builder().tag("h2").text("Pending queues")
+					.append();
+			DomNodeHtmlTableBuilder builder = doc.html().body().html()
+					.tableBuilder();
+			builder.row().cell("Id").accept(Utils::numeric).cell("Task")
+					.cell("Run at").cell("Link").accept(Utils::links);
+			pending.forEach(stat -> {
+				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
+						.cell(stat.jobId).cell(stat.taskName)
+						.accept(Utils::large).cell(timestamp(stat.runAt));
+				DomNode td = cellBuilder.append();
+				{
+					String href = JobServlet.createTaskUrl(
+							new TaskCancelJob().withValue(stat.jobId));
+					td.html().addLink("Cancel", href, "_blank");
+				}
+				td.builder().text(" - ").tag("span").append();
+				{
+					String href = JobServlet.createTaskUrl(
+							new TaskRunJob().withValue(stat.jobId));
+					td.html().addLink("Run", href, "_blank");
+				}
+				td.builder().text(" - ").tag("span").append();
+				{
+					String href = JobServlet.createTaskUrl(
+							new TaskLogJobDetails().withValue(stat.jobId));
+					td.html().addLink("Details", href, "_blank");
+				}
+			});
+		}
+		addActive(doc, "top-level - active", Job::provideIsTopLevel);
+		addActive(doc, "child - active", Job::provideIsNotTopLevel);
+		addCompleted(doc, "top-level", true, 20);
+		addCompleted(doc, "child", false, 20);
+		JobContext.get().getJob().setLargeResult(doc.prettyToString());
+		logger.info("Log output to job.largeResult");
 	}
 
 	boolean filter(String test) {
