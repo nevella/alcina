@@ -313,7 +313,10 @@ public class DomainLinker<E extends Entity> {
 			Long id = (Long) array[offset() + mappingOffset];
 			if (id != null) {
 				if (isDomainClass()) {
-					field.set(detached, Domain.find(getType(), id));
+					MethodContext.instance().withContextTrue(
+							LazyPropertyLoadTask.CONTEXT_LAZY_LOAD_DISABLED)
+							.run(() -> field.set(detached,
+									Domain.find(getType(), id)));
 					return;
 				} else {
 					byEntity.put(detached, id);

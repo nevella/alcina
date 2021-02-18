@@ -290,6 +290,7 @@ public class RelativePopupPositioning {
 				return true;
 			}
 		};
+
 		abstract AxisType axisType();
 
 		/**
@@ -360,7 +361,8 @@ public class RelativePopupPositioning {
 
 	public enum OtherPositioningStrategy {
 		BELOW_WITH_PREFERRED_LEFT, RIGHT_OR_LEFT_WITH_PREFERRED_TOP,
-		BELOW_CENTER, ABOVE_CENTER, BELOW_RIGHT, ABOVE_RIGHT, TOP_CENTER
+		BELOW_CENTER, ABOVE_CENTER, BELOW_RIGHT, ABOVE_RIGHT, TOP_CENTER,
+		ABSOLUTE_RIGHT
 	}
 
 	public static class PopupWrapper {
@@ -586,6 +588,8 @@ public class RelativePopupPositioning {
 					} else {
 					}
 					break;
+				case ABSOLUTE_RIGHT:
+					// not applied here
 				}
 				// guard against a double-add
 				if (!positioningParams.shiftToEventXY) {
@@ -650,6 +654,13 @@ public class RelativePopupPositioning {
 				// y+=WidgetUtils.getScrollTop(positioningWidget.getElement());
 			}
 			rpp.setPopupPosition(x, y);
+			switch (positioningParams.positioningStrategy) {
+			case ABSOLUTE_RIGHT:
+				rpp.getElement().getStyle().setTop(0, Unit.PX);
+				rpp.getElement().getStyle().removePropertyImpl("left");
+				rpp.getElement().getStyle().setRight(-positioningParams.shiftX,
+						Unit.PX);
+			}
 			notifyPopupDisplayed(new PopupWrapper(rpp));
 		}
 	}

@@ -237,7 +237,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private Set<DomainTransformEvent> explicitlyPermittedTransforms = new LinkedHashSet<>();
 
-	private boolean useTlIdGenerator = false;
+	private volatile boolean useTlIdGenerator = false;
 
 	private Set<DomainTransformEvent> flushAfterTransforms = new LinkedHashSet<>();
 

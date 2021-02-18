@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.Style.Position;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.logical.shared.HasValueChangeHandlers;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -219,19 +220,19 @@ public class SliderBar extends FocusPanel
 		this.images = images;
 		setLabelFormatter(labelFormatter);
 		// Create the outer shell
-		DOM.setStyleAttribute(getElement(), "position", "relative");
+		getElement().getStyle().setPosition(Position.RELATIVE);
 		setStyleName("gwt-SliderBar-shell");
 		// Create the line
 		lineElement = DOM.createDiv();
 		DOM.appendChild(getElement(), lineElement);
-		DOM.setStyleAttribute(lineElement, "position", "absolute");
-		DOM.setElementProperty(lineElement, "className", "gwt-SliderBar-line");
+		lineElement.getStyle().setPosition(Position.ABSOLUTE);
+		lineElement.setClassName("gwt-SliderBar-line");
 		// Create the knob
 		AbstractImagePrototype.create(images.slider()).applyTo(knobImage);
 		Element knobElement = knobImage.getElement();
 		DOM.appendChild(getElement(), knobElement);
-		DOM.setStyleAttribute(knobElement, "position", "absolute");
-		DOM.setElementProperty(knobElement, "className", "gwt-SliderBar-knob");
+		knobElement.getStyle().setPosition(Position.ABSOLUTE);
+		knobElement.setClassName("gwt-SliderBar-knob");
 		sinkEvents(Event.MOUSEEVENTS | Event.KEYEVENTS | Event.FOCUSEVENTS);
 	}
 
