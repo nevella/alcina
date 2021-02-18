@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.job;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,11 +11,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -31,6 +35,7 @@ import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJ
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
+import cc.alcina.framework.servlet.job.JobScheduler.ResubmitPolicy;
 
 /*
  * Start the wrapped thread either on creation - if a 'self-starter' (top-level, first in sequence), or once the job has reached stage 'processing'
@@ -177,6 +182,8 @@ class JobAllocator {
 	private class AllocationTask implements Runnable {
 		boolean firstEvent = true;
 
+		long lastAllocated = System.currentTimeMillis();
+
 		public void processEvent(Event event) {
 			if (finished) {
 				return;
@@ -314,6 +321,7 @@ class JobAllocator {
 									j.setState(JobState.ALLOCATED);
 									j.setPerformer(ClientInstance.self());
 									logger.info("Allocated job {}", j);
+									lastAllocated = System.currentTimeMillis();
 								}
 							});
 							/*
@@ -363,6 +371,31 @@ class JobAllocator {
 						// }
 					}
 				}
+			}
+			if (System.currentTimeMillis()
+					- lastAllocated > TimeConstants.ONE_HOUR_MS) {
+				List<Job> incompleteChildren = job.provideChildren()
+						.filter(j -> j.provideIsNotComplete()
+								|| j.getState() == JobState.COMPLETED)
+						.collect(Collectors.toList());
+				logger.warn(
+						"DEVEX::1 - Cancelling/aborting timed-out job - no allocations for one hour :: {} - incomplete children :: {}",
+						job, incompleteChildren);
+				Stream<Job> toAbort = incompleteChildren.isEmpty()
+						? Stream.of(job)
+						: incompleteChildren.stream();
+				Stream<Job> toCancel = incompleteChildren.isEmpty()
+						? Stream.empty()
+						: Stream.of(job);
+				toAbort.forEach(j -> {
+					ResubmitPolicy policy = ResubmitPolicy.forJob(j);
+					policy.visit(j);
+					j.setState(JobState.ABORTED);
+					j.setEndTime(new Date());
+					j.setResultType(JobResultType.DID_NOT_COMPLETE);
+				});
+				toCancel.forEach(Job::cancel);
+				Transaction.commit();
 			}
 			Transaction.ensureEnded();
 		}

@@ -165,6 +165,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		if (!resolveState().isComplete()) {
 			setState(JobState.CANCELLED);
 			setEndTime(new Date());
+			setResultType(JobResultType.DID_NOT_COMPLETE);
 			// no need to set child state - completed states propagate down
 		}
 	}
