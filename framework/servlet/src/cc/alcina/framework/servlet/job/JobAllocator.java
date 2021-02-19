@@ -373,7 +373,9 @@ class JobAllocator {
 				}
 			}
 			if (System.currentTimeMillis()
-					- lastAllocated > TimeConstants.ONE_HOUR_MS) {
+					- lastAllocated > TimeConstants.ONE_HOUR_MS
+					&& JobContext.get().getPerformer()
+							.canAbort(job.getTask())) {
 				List<Job> incompleteChildren = job.provideChildren()
 						.filter(j -> j.provideIsNotComplete()
 								|| j.getState() == JobState.COMPLETED)
