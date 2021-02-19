@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalMap;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 
 class DomainStoreEntityCache extends DetachedEntityCache {
 	@Override
@@ -51,6 +52,11 @@ class DomainStoreEntityCache extends DetachedEntityCache {
 	@Override
 	protected <T> T getLocal(Class<T> clazz, long localId) {
 		return super.getLocal(clazz, localId);
+	}
+
+	@Override
+	protected boolean isExternalCreate() {
+		return ThreadlocalTransformManager.cast().isExternalCreate();
 	}
 
 	void initialiseMap(Class clazz) {

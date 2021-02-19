@@ -576,6 +576,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		return this.applyingExternalTransforms;
 	}
 
+	public boolean isExternalCreate() {
+		return useTlIdGenerator;
+	}
+
 	public boolean isIgnoreTransformPermissions() {
 		return this.ignoreTransformPermissions || ResourceUtilities.getBoolean(
 				ThreadlocalTransformManager.class,

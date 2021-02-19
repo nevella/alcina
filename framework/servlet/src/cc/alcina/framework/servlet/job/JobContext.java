@@ -284,7 +284,7 @@ public class JobContext {
 		if (job.provideIsNotComplete()) {
 			log = Registry.impl(PerThreadLogging.class).endBuffer();
 			int maxChars = LooseContext
-					.<Integer> optional(CONTEXT_LOG_MAX_CHARS).orElse(500000);
+					.<Integer> optional(CONTEXT_LOG_MAX_CHARS).orElse(5000000);
 			log = CommonUtils.trimToWsChars(log, maxChars, true);
 			job.setLog(log);
 			if (job.provideRelatedSequential().stream().filter(j -> j != job)

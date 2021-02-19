@@ -297,6 +297,10 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		return t;
 	}
 
+	protected boolean isExternalCreate() {
+		return false;
+	}
+
 	protected void put0(Entity entity, boolean external) {
 		Class<? extends Entity> clazz = entity.entityClass();
 		ensureMap(clazz);
@@ -325,6 +329,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 				}
 			}
 			localPerClass.put(localId, entity);
+			external |= isExternalCreate();
 			if (!external) {
 				if (LooseContext.has(CONTEXT_CREATED_LOCAL_DEBUG)) {
 					((CreatedLocalDebug) LooseContext
@@ -333,7 +338,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 				}
 				if (createdLocals.containsKey(localId)) {
 					throw Ax.runtimeException(
-							"Created local collision (!!) - %s %s - existing %s",
+							"DEVEX::1 - Created local collision (!!) - %s %s - existing %s",
 							localId, entity, createdLocals.get(localId));
 				}
 				createdLocals.put(localId, entity);

@@ -4,6 +4,8 @@ import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -21,10 +23,19 @@ public class ThreadedPmClientInstanceResolverImpl
 		if (LooseContext.has(CONTEXT_CLIENT_INSTANCE)) {
 			return LooseContext.get(CONTEXT_CLIENT_INSTANCE);
 		}
-		Optional<ClientInstance> result = AuthenticationManager.get()
-				.getContextClientInstance();
-		return result
-				.orElse(EntityLayerObjects.get().getServerAsClientInstance());
+		try {
+			Optional<ClientInstance> result = AuthenticationManager.get()
+					.getContextClientInstance();
+			return result.orElse(
+					EntityLayerObjects.get().getServerAsClientInstance());
+		} catch (Exception e) {
+			LoggerFactory.getLogger(getClass()).warn(
+					"DEVEX::5 - Unexpected authenticator issue - Classloader clazz: {} thread: {}",
+					getClass().getClassLoader(),
+					Thread.currentThread().getContextClassLoader());
+			e.printStackTrace();
+			return EntityLayerObjects.get().getServerAsClientInstance();
+		}
 	}
 
 	@Override

@@ -48,6 +48,34 @@
  * <li>And then of course there's ... eventual consistency
  * </ul>
  * 
+ * <h2>DEVEX styles
+ * <table>
+ * <tr>
+ * <td>Ordinal</td>
+ * <td>Meaning</td>
+ * </tr>
+ * <tr>
+ * <td>0</td>
+ * <td>Noted, no logging code</td>
+ * </tr>
+ * <tr>
+ * <td>1</td>
+ * <td>Noted, logging code</td>
+ * </tr>
+ * *
+ * <tr>
+ * <td>2</td>
+ * <td>Noted, testing fix</td>
+ * </tr>
+ * <tr>
+ * <td>3</td>
+ * <td>(Hopefully) verified fix - should not be thrown</td>
+ * </tr>
+ * <tr>
  * 
+ * <td>5</td>
+ * <td>Unknown how it got here - just catch and log for now</td>
+ * </tr>
+ * </table>
  */
 package cc.alcina.framework.entity.persistence.mvcc;
