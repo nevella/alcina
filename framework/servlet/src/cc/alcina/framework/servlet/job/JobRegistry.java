@@ -580,7 +580,7 @@ public class JobRegistry extends WriterService {
 			Task task = job.getTask();
 			if (task instanceof NonRootTask) {
 				ThreadedPermissionsManager.cast().pushUser(
-						((NonRootTask) task).provideIUser(),
+						((NonRootTask) task).provideIUser(job),
 						LoginState.LOGGED_IN);
 			} else {
 				ThreadedPermissionsManager.cast().pushSystemUser();
