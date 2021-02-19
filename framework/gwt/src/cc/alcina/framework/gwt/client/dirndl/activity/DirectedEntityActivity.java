@@ -6,12 +6,10 @@ import java.util.Optional;
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -70,14 +68,18 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 
 	private void onCreate(Entity e, Runnable postCreate) {
 		if (place.fromId != 0 && place.fromClass != null) {
-			EntityPlace fromPlace = (EntityPlace) RegistryHistoryMapper.get().getPlace(place.fromClass);
+			EntityPlace fromPlace = (EntityPlace) RegistryHistoryMapper.get()
+					.getPlace(place.fromClass);
 			Class implementationClass = fromPlace.provideEntityClass();
-			Optional<PropertyReflector> ownerReflector = ClientReflector
-			.get().beanInfoForClass(e.entityClass())
-			.getOwnerReflectors().filter(r->r.getAnnotation(Association.class).implementationClass()==implementationClass)
-			.filter(Objects::nonNull).findFirst();
+			Optional<PropertyReflector> ownerReflector = Entity.Ownership
+					.getOwnerReflectors(e.entityClass())
+					.filter(r -> r.getAnnotation(Association.class)
+							.implementationClass() == implementationClass)
+					.filter(Objects::nonNull).findFirst();
 			Domain.async(implementationClass, place.fromId, false, parent -> {
-				ownerReflector.get().setPropertyValue(e, parent);
+				if (ownerReflector.isPresent()) {
+					ownerReflector.get().setPropertyValue(e, parent);
+				}
 				postCreate.run();
 			});
 			return;

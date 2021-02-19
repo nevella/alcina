@@ -18,10 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Stream;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -120,16 +117,5 @@ public class ClientBeanReflector {
 		}
 		return TextProvider.get().getUiObjectText(beanClass,
 				TextProvider.DISPLAY_NAME, tn);
-	}
-
-	public Stream<PropertyReflector> getOwnerReflectors() {
-		return Reflections
-				.classLookup().getPropertyReflectors(beanClass)
-				.stream()
-				.filter(pr -> pr
-						.getAnnotation(DomainProperty.class) != null)
-				.filter(Objects::nonNull).filter(pr -> pr
-						.getAnnotation(DomainProperty.class).owner());
-				
 	}
 }

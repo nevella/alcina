@@ -57,10 +57,11 @@ public @interface DomainProperty {
 	 * this.xxxString, new XXX);
 	 */
 	boolean serialize() default false;
-	
+
 	/*
 	 * 
-	 * Can be multiple - but signifies 'populate this field if created from Entity x'
+	 * Can be multiple - but signifies 'populate this field if created from
+	 * Entity x'
 	 */
 	boolean owner() default false;
 }

@@ -136,4 +136,8 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 		return (EntityPlace) RegistryHistoryMapper.get()
 				.getPlaceByModelClass(clazz);
 	}
+
+	public static EntityPlace forEntity(Entity entity) {
+		return forClassAndId(entity.getClass(), entity.getId()).withEntity(entity);
+	}
 }

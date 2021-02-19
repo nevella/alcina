@@ -7,8 +7,8 @@ import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
@@ -80,9 +80,8 @@ public class EntityActions {
 			EntityPlace currentPlace = (EntityPlace) Client.currentPlace();
 			EntityPlace entityPlace = Reflections
 					.newInstance(currentPlace.getClass());
-			Optional<TruncatedObjectCriterion> o_ownerCriterion = ClientReflector
-					.get().beanInfoForClass(entityPlace.provideEntityClass())
-					.getOwnerReflectors().map(
+			Optional<TruncatedObjectCriterion> o_ownerCriterion = Entity.Ownership
+					.getOwnerReflectors(entityPlace.provideEntityClass()).map(
 							ownerReflector -> currentPlace.def
 									.provideTruncatedObjectCriterion(
 											ownerReflector

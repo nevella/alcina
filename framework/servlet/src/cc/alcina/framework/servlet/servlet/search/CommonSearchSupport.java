@@ -1,8 +1,11 @@
 package cc.alcina.framework.servlet.servlet.search;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,7 +26,9 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.projection.CollectionProjectionFilterWithCache;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
@@ -150,7 +155,7 @@ public class CommonSearchSupport {
 
 	private ModelSearchResults getModelSearchResults(
 			List<? extends Entity> queried, EntitySearchDefinition def) {
-		ModelSearchResults modelSearchResults = new ModelSearchResults();
+		ModelSearchResults<?> modelSearchResults = new ModelSearchResults();
 		modelSearchResults.def = def;
 		if (LooseContext.is(CONTEXT_DO_NOT_PROJECT_SEARCH)) {
 		} else {
@@ -169,20 +174,42 @@ public class CommonSearchSupport {
 				queried = project(queried, modelSearchResults,
 						def.isReturnSingleDataObjectImplementations());
 				List<EntityPlace> filterPlaces = def.provideFilterPlaces();
-				modelSearchResults.filteringEntities = filterPlaces.stream()
-						.map(EntityPlace::asLocator).map(Domain::find)
+				modelSearchResults.filteringEntities = (List) filterPlaces
+						.stream().map(EntityPlace::asLocator).map(Domain::find)
 						.collect(Collectors.toList());
 				/*
 				 * Just get non-entity properties, essentially - for things like
 				 * breadcrumbs client-side
 				 */
-				modelSearchResults.filteringEntities = GraphProjection
-						.maxDepthProjection(
-								modelSearchResults.filteringEntities, 1, null);
-				;
+				Set<Entity> alsoProject = modelSearchResults.filteringEntities
+						.stream().map(Entity.Ownership::getOwningEntities)
+						.flatMap(Collection::stream)
+						.collect(Collectors.toSet());
+				CollectionProjectionFilterWithCache dataFilter = new CollectionProjectionFilterWithCache() {
+					@Override
+					public <T> T filterData(T original, T projected,
+							GraphProjectionContext context,
+							GraphProjection graphProjection) throws Exception {
+						if (original instanceof Set
+								|| original instanceof Map) {
+							return null;
+						}
+						if (original instanceof Entity
+								&& !(modelSearchResults.filteringEntities
+										.contains(original))
+								&& !(alsoProject.contains(original))) {
+							return null;
+						}
+						return super.filterData(original, projected, context,
+								graphProjection);
+					}
+				};
+				modelSearchResults.filteringEntities = GraphProjections
+						.defaultProjections().dataFilter(dataFilter)
+						.project(modelSearchResults.filteringEntities);
 			}
 		}
-		modelSearchResults.queriedResultObjects = queried;
+		modelSearchResults.queriedResultObjects = (List) queried;
 		return modelSearchResults;
 	}
 

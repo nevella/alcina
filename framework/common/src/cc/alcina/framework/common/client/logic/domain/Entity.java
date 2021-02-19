@@ -1,6 +1,12 @@
 package cc.alcina.framework.common.client.logic.domain;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -23,10 +29,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrappe
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PermissionRule;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
@@ -429,6 +437,43 @@ public abstract class Entity<T extends Entity> extends Bindable
 		@Override
 		public int compare(Entity o1, Entity o2) {
 			return EntityHelper.compareNoLocals(o1, o2);
+		}
+	}
+
+	public static interface Ownership {
+		public static Stream<PropertyReflector>
+				getOwnerReflectors(Class<?> beanClass) {
+			return Reflections.classLookup().getPropertyReflectors(beanClass)
+					.stream()
+					.filter(pr -> pr
+							.getAnnotation(DomainProperty.class) != null)
+					.filter(Objects::nonNull).filter(pr -> pr
+							.getAnnotation(DomainProperty.class).owner());
+		}
+
+		public static List<Entity> getOwningEntities(Entity entity) {
+			Entity cursor = entity;
+			List<Entity> result = new ArrayList<>();
+			while (true) {
+				Entity f_cursor = cursor;
+				List<Entity> values = (List) getOwnerReflectors(
+						cursor.entityClass())
+								.map(pr -> pr.getPropertyValue(f_cursor))
+								.collect(Collectors.toList());
+				if (values.size() > 1) {
+					if (entity instanceof HasLogicalParent) {
+						Entity logicalParent = ((HasLogicalParent) entity)
+								.provideLogicalParent();
+						values = Collections.singletonList(logicalParent);
+					}
+				}
+				if (values.size() == 1 && values.get(0) != null) {
+					cursor = values.get(0);
+					result.add(0, cursor);
+				} else {
+					return result;
+				}
+			}
 		}
 	}
 }
