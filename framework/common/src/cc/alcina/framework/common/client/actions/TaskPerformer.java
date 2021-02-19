@@ -26,6 +26,10 @@ import cc.alcina.framework.common.client.job.Task;
  * @author Nick Reddel
  */
 public interface TaskPerformer<T extends Task> {
+	default boolean canAbort(Task task) {
+		return false;
+	}
+
 	default boolean checkCanPerformConcurrently(Task task) {
 		return true;
 	}
