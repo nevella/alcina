@@ -248,7 +248,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		return Ax.format(
 				"tx.map: %s=>%s : %s non-tx keys; %s tx keys : %s objects in this tx",
 				keyClass.getSimpleName(), valueClass.getSimpleName(),
-				nonConcurrent.size(), concurrent.size(), entrySet().size());
+				nonConcurrent.size(),
+				(concurrent == null ? 0 : concurrent.size()),
+				entrySet().size());
 	}
 
 	@Override

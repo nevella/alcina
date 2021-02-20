@@ -75,6 +75,14 @@ public class Mvcc {
 		classTransformer.generateTransformedClasses();
 	}
 
+	public Class<? extends HasId>
+			resolveMvccClass(Class<? extends Entity> clazz) {
+		if (!MvccObject.class.isAssignableFrom(clazz)) {
+			return classTransformer.getTransformedClass(clazz);
+		}
+		return clazz;
+	}
+
 	public void testTransformer(Class<? extends Entity> clazz,
 			MvccCorrectnessToken token) {
 		// valid if we get an 'exception' result for each correctness type -
