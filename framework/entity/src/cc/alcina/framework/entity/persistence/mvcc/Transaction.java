@@ -222,6 +222,9 @@ public class Transaction implements Comparable<Transaction> {
 
 	TransactionId highestVisibleCommittedTransactionId;
 
+	// if zero, use system default (for abort)
+	private long timeout;
+
 	public Transaction(TransactionPhase initialPhase) {
 		DomainStore.stores().stream().forEach(store -> storeTransactions
 				.put(store, new StoreTransaction(store)));
@@ -269,6 +272,10 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	public long getTimeout() {
+		return this.timeout;
+	}
+
 	@Override
 	public int hashCode() {
 		return id.hashCode();
@@ -305,6 +312,10 @@ public class Transaction implements Comparable<Transaction> {
 	 */
 	public void setBaseTransaction(boolean baseTransaction) {
 		this.baseTransaction = baseTransaction;
+	}
+
+	public void setTimeout(long timeout) {
+		this.timeout = timeout;
 	}
 
 	public void toDbAborted() {

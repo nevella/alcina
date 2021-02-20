@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.persistence.mvcc;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -254,47 +255,59 @@ public class Transactions {
 	void cancelTimedOutTransactions() {
 		synchronized (transactionMetadataLock) {
 			if (activeTransactions.size() > 0) {
-				Transaction oldest = activeTransactions.values().iterator()
-						.next();
-				if (!oldest.publishedLongRunningTxWarning
-						&& (System.currentTimeMillis()
-								- oldest.startTime) > ResourceUtilities
-										.getInteger(Transaction.class,
-												"warnAgeSecs")
-										* TimeConstants.ONE_SECOND_MS) {
-					oldest.publishedLongRunningTxWarning = true;
-					Transaction.logger.warn(
-							"Long running mvcc transaction :: {}", oldest);
-					if (oldest.originatingThread != null) {
-						try {
-							Transaction.logger
-									.info(SEUtilities.getStacktraceSlice(
-											oldest.originatingThread));
-						} catch (Exception e) {
-							e.printStackTrace();
+				Iterator<Transaction> iterator = activeTransactions.values()
+						.iterator();
+				boolean seenStandardTransactionTimeout = false;
+				while (!seenStandardTransactionTimeout && iterator.hasNext()) {
+					Transaction transaction = iterator.next();
+					long age = System.currentTimeMillis()
+							- transaction.startTime;
+					if (!transaction.publishedLongRunningTxWarning
+							&& age > ResourceUtilities.getInteger(
+									Transaction.class, "warnAgeSecs")
+									* TimeConstants.ONE_SECOND_MS) {
+						transaction.publishedLongRunningTxWarning = true;
+						Transaction.logger.warn(
+								"Long running mvcc transaction :: {}",
+								transaction);
+						if (transaction.originatingThread != null) {
+							try {
+								Transaction.logger
+										.info(SEUtilities.getStacktraceSlice(
+												transaction.originatingThread));
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						} else {
+							Transaction.logger.warn(
+									"No originating thread :: {}", transaction);
 						}
-					} else {
-						Transaction.logger.warn("No originating thread :: {}",
-								oldest);
 					}
-				}
-				if ((System.currentTimeMillis()
-						- oldest.startTime) > ResourceUtilities
-								.getInteger(Transaction.class, "maxAgeSecs")
-								* TimeConstants.ONE_SECOND_MS) {
-					try {
-						Transaction.logger.error(
-								"Cancelling timed out transaction :: {}",
-								oldest);
-						oldest.toTimedOut();
-						// only the tx thread should end the transaction (calls
-						// to Transaction.current() will throw)
-						// oldest.endTransaction();
-					} catch (Exception e) {
-						Transaction.logger.error("Cancel exception",
-								new MvccException(e));
-						// ignore phase checks
-						onTransactionEnded(oldest);
+					long timeout = ResourceUtilities
+							.getInteger(Transaction.class, "maxAgeSecs")
+							* TimeConstants.ONE_SECOND_MS;
+					if (transaction.getTimeout() == 0) {
+						seenStandardTransactionTimeout = true;
+					} else {
+						timeout = transaction.getTimeout();
+					}
+					if (age > ResourceUtilities.getInteger(Transaction.class,
+							"maxAgeSecs") * TimeConstants.ONE_SECOND_MS) {
+						try {
+							Transaction.logger.error(
+									"Cancelling timed out transaction :: {}",
+									transaction);
+							transaction.toTimedOut();
+							// only the tx thread should end the transaction
+							// (calls
+							// to Transaction.current() will throw)
+							// oldest.endTransaction();
+						} catch (Exception e) {
+							Transaction.logger.error("Cancel exception",
+									new MvccException(e));
+							// ignore phase checks
+							onTransactionEnded(transaction);
+						}
 					}
 				}
 			}
