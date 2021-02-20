@@ -336,10 +336,11 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 							.get(CONTEXT_CREATED_LOCAL_DEBUG))
 									.debugCreation(localId, entity);
 				}
-				if (createdLocals.containsKey(localId)) {
+				Entity existing = createdLocals.get(localId);
+				if (existing != null && existing != entity) {
 					throw Ax.runtimeException(
 							"DEVEX::1 - Created local collision (!!) - %s %s - existing %s",
-							localId, entity, createdLocals.get(localId));
+							localId, entity, existing);
 				}
 				createdLocals.put(localId, entity);
 			}
