@@ -14,9 +14,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
@@ -67,8 +65,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	private volatile ConcurrentSkipListMap<Transaction, ObjectVersion<T>> versions = new ConcurrentSkipListMap<>(
 			Collections.reverseOrder());
-
-	private List<VersionDebug> debugVersions = null;
 
 	// object pointed to by this field never changes (for a given class/id or
 	// class/clientinstance/localid
@@ -253,11 +249,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 						.get(mostRecentCommonVisible);
 				// baseObject fields will not be reachable here to app code
 				// (all active txs will be looking at version.object fields)
-				if (isDebug()) {
-					logger.info("Copying {} :: {} => {}", version,
-							System.identityHashCode(version.object),
-							System.identityHashCode(baseObject));
-				}
 				copyObject(version.object, baseObject);
 				if (firstCommittedTransactionId == null) {
 					firstCommittedTransactionId = vacuumableTransactions.oldestVacuumableDomainTransaction
@@ -268,7 +259,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			// of accessing incorrect versions
 			if (size.get() > vacuumableTransactions.completedDomainTransactions
 					.size()) {
-				// Transactions.debugRemoveVersion(baseObject, version);
 				ObjectBidirectionalIterator<Transaction> bidiItr = vacuumableTransactions.completedDomainTransactions
 						.iterator(
 								vacuumableTransactions.oldestVacuumableDomainTransaction);
@@ -286,7 +276,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 		// }
 		if (versions.isEmpty()) {
-			// if (versions.isEmpty() && !isDebug()) {
 			synchronized (baseObject) {
 				if (versions.isEmpty() && baseObject instanceof MvccObject) {
 					logger.trace("removed mvcc versions: {} : {}", baseObject,
@@ -295,24 +284,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				}
 			}
 		}
-		long duration = System.currentTimeMillis() - start;
-		if (duration > 10 && !EntityLayerUtils.isTestOrTestServer()) {
-			logger.trace(
-					"debug vacuum sizes pre  - versions: {}, completedNonDomainTransactions {}, completedDomainTransactions {}",
-					initialValues.get(0), initialValues.get(1),
-					initialValues.get(2));
-			logger.trace(
-					"debug vacuum sizes post - versions: {}, completedNonDomainTransactions {}, completedDomainTransactions {} - time {}ms",
-					size,
-					vacuumableTransactions.completedNonDomainTransactions
-							.size(),
-					vacuumableTransactions.completedDomainTransactions.size(),
-					duration);
-		}
-	}
-
-	private boolean isDebug() {
-		return ResourceUtilities.is(MvccObjectVersions.class, "debug");
 	}
 
 	/*
@@ -394,11 +365,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected T copyObject(T mostRecentObject) {
 		T result = (T) Transactions.copyObject((MvccObject) mostRecentObject);
-		if (isDebug()) {
-			logger.info("Tx {} - copied {} {} => {}", Transaction.current(),
-					mostRecentObject, System.identityHashCode(mostRecentObject),
-					System.identityHashCode(result));
-		}
 		return result;
 	}
 
@@ -447,17 +413,5 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			__mostRecentWritable = resolved;
 		}
 		return resolved;
-	}
-
-	@SuppressWarnings("unused")
-	private class VersionDebug {
-		Transaction transaction;
-
-		ObjectVersion version;
-
-		public VersionDebug(Transaction transaction, ObjectVersion version) {
-			this.transaction = transaction;
-			this.version = version;
-		}
 	}
 }

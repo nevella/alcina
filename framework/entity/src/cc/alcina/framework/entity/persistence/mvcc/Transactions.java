@@ -108,7 +108,6 @@ public class Transactions {
 	}
 
 	static <T extends MvccObject> T copyObject(T from) {
-		// synchronized (debugMonitor) {
 		T clone = null;
 		try {
 			if (from instanceof TransactionalSet) {
@@ -128,13 +127,10 @@ public class Transactions {
 		MvccObjectVersions __getMvccVersions__ = from.__getMvccVersions__();
 		clone.__setMvccVersions__(__getMvccVersions__);
 		return clone;
-		// }
 	}
 
 	static <T> void copyObjectFields(T from, T to) {
-		// synchronized (debugMonitor) {
 		ResourceUtilities.fieldwiseCopy(from, to, false, true);
-		// }
 	}
 
 	static Transactions get() {
@@ -250,7 +246,6 @@ public class Transactions {
 			}
 		}
 	}
-	// static Object debugMonitor = new Object();
 
 	void cancelTimedOutTransactions() {
 		synchronized (transactionMetadataLock) {

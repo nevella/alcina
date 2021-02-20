@@ -25,8 +25,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIte
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
-import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.SEUtilities;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
@@ -609,13 +607,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		public void remove() {
-			if (Entity.class.isAssignableFrom(valueClass) && ResourceUtilities
-					.is(TransactionalMap.class, "debugEntityRemoval")) {
-				logger.info("TransactionalValue - remove - {} - {}\n\n{}\n",
-						key, valueClass.getSimpleName(),
-						SEUtilities.getStacktraceSlice(Thread.currentThread(),
-								50, 0));
-			}
 			resolve(true).set(REMOVED_VALUE_MARKER);
 		}
 
