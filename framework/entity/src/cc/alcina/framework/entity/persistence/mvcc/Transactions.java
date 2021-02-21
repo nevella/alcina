@@ -248,6 +248,9 @@ public class Transactions {
 	}
 
 	void cancelTimedOutTransactions() {
+		if (!ResourceUtilities.is("cancelTimedoutTransactions")) {
+			return;
+		}
 		synchronized (transactionMetadataLock) {
 			if (activeTransactions.size() > 0) {
 				Iterator<Transaction> iterator = activeTransactions.values()
