@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.persistence.EntityManager;
@@ -148,6 +149,8 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public static Map<Long, String> setIgnoreTrace = new LinkedHashMap<>();
 
+	private static AtomicInteger removeListenerCounter = new AtomicInteger();
+
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
 		threadLocalListeners.add(listener);
@@ -171,7 +174,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static boolean isInEntityManagerTransaction() {
 		return get() instanceof ThreadlocalTransformManager
 				&& cast().getEntityManager() != null;
-	}
+	};
 
 	public static boolean isServerOnly(DomainTransformEvent evt) {
 		Class clazz = evt.getObjectClass();
@@ -184,7 +187,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			return true;
 		}
 		return false;
-	};
+	}
 
 	// for testing
 	public static void registerPerThreadTransformManager(
@@ -1145,10 +1148,12 @@ public class ThreadlocalTransformManager extends TransformManager
 				try {
 					entity.removePropertyChangeListener(this);
 				} catch (Exception e) {
-					// FIXME - mvcc.4 - devex
-					logger.warn("DEVEX:5 - Exception removing listener: {} ",
+					logger.warn("DEVEX:0 - Exception removing listener: {} ",
 							entity.toStringEntity());
-					logger.warn("DEVEX:5 - Exception removing listener ", e);
+					if (removeListenerCounter.incrementAndGet() < 50) {
+						logger.warn("DEVEX:0 - Exception removing listener ",
+								e);
+					}
 				}
 			}
 		}

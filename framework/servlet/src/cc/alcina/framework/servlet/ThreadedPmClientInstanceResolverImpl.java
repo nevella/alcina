@@ -30,7 +30,7 @@ public class ThreadedPmClientInstanceResolverImpl
 					EntityLayerObjects.get().getServerAsClientInstance());
 		} catch (Exception e) {
 			LoggerFactory.getLogger(getClass()).warn(
-					"DEVEX::5 - Unexpected authenticator issue - Classloader clazz: {} thread: {}",
+					"DEVEX::1 - Unexpected authenticator issue - Classloader clazz: {} thread: {}",
 					getClass().getClassLoader(),
 					Thread.currentThread().getContextClassLoader());
 			e.printStackTrace();

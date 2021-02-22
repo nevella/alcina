@@ -438,8 +438,8 @@ public class JobRegistry extends WriterService {
 			try {
 				releaseResources(job, false);
 			} catch (Exception e) {
+				logger.warn("DEVEX::0 - JobRegistry.releaseResources", e);
 				e.printStackTrace();
-				logger.warn("DEVEX::7 - JobRegistry.releaseResources", e);
 			}
 			LooseContext.remove(
 					ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
@@ -556,13 +556,14 @@ public class JobRegistry extends WriterService {
 		try {
 			if (Transaction.isInTransaction()) {
 				logger.warn(Ax.format(
-						"DEVEX::4 - JobRegistry.performJob - begin with open transaction "
+						"DEVEX::0 - JobRegistry.performJobInTx - begin with open transaction "
 								+ " - {}\nuncommitted transforms:\n{}",
 						job), TransformManager.get().getTransforms());
 				try {
 					Transaction.commit();
 				} catch (Exception e) {
-					logger.warn("DEVEX::4 - JobRegistry.performJob", e);
+					logger.warn("DEVEX::0 - JobRegistry.performJob", e);
+					e.printStackTrace();
 				}
 				Transaction.ensureEnded();
 			}
@@ -594,9 +595,9 @@ public class JobRegistry extends WriterService {
 			} else {
 				// will generally be close to the top of a thread - so log, even
 				// if there's logging higher
-				e.printStackTrace();
-				logger.warn(Ax.format("DEVEX::3 - JobRegistry.performJob - %s",
+				logger.warn(Ax.format("DEVEX::0 - JobRegistry.performJob - %s",
 						job), e);
+				e.printStackTrace();
 			}
 		} finally {
 			PermissionsManager.get().popUser();

@@ -152,7 +152,8 @@ class Vacuum {
 						vacuum();
 					}
 				} catch (Exception e) {
-					logger.warn("DEVEX::1", e);
+					logger.warn("DEVEX::0 - vacuum issue");
+					e.printStackTrace();
 				}
 			}
 		}

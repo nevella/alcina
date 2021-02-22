@@ -122,8 +122,9 @@ public class DomainTransformPersistenceEvents {
 					try {
 						listener.onDomainTransformRequestPersistence(event);
 					} catch (Exception e) {
-						// FIXME - mvcc.jobs.2 - formal logging
-						logger.warn("DEVEX::9 {}", e);
+						logger.warn(
+								"DEVEX::0 - Exception in persistenceListener - {}",
+								e);
 						e.printStackTrace();
 					}
 				}
@@ -142,7 +143,7 @@ public class DomainTransformPersistenceEvents {
 							getLocalCommitTimeout());
 					if (timedOut) {
 						logger.warn(
-								"Timed out waiting for local-vm tx - {}\n\n{}\n",
+								"DEVEX::0 - Timed out waiting for local-vm tx - {}\n\n{}\n",
 								event, SEUtilities.getFullStacktrace(
 										Thread.currentThread()));
 					}
@@ -171,8 +172,9 @@ public class DomainTransformPersistenceEvents {
 									() -> true);
 							listener.onDomainTransformRequestPersistence(event);
 						} catch (Exception e) {
-							// FIXME - mvcc.jobs.2 - formal logging
-							logger.warn("DEVEX::9 {}", e);
+							logger.warn(
+									"DEVEX::0 - Exception in persistenceListener - {}",
+									e);
 							e.printStackTrace();
 						} finally {
 							InternalMetrics.get().endTracker(event);

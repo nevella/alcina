@@ -140,7 +140,7 @@ public class JobScheduler {
 		job.setEndTime(new Date());
 		job.setResultType(JobResultType.DID_NOT_COMPLETE);
 		Transaction.commit();
-		throw new RuntimeException("DEVEX::12 - awaitAllocator timeout");
+		throw new RuntimeException("DEVEX::0 - awaitAllocator timeout");
 	}
 
 	public Predicate<Job> canModify(boolean scheduleClusterJobs,
@@ -228,7 +228,8 @@ public class JobScheduler {
 					processOrphans();
 					Transaction.commit();
 				} catch (Exception e) {
-					logger.warn("DEVEX::7 - processOrphans", e);
+					logger.warn("DEVEX::0 - processOrphans", e);
+					e.printStackTrace();
 				}
 			}
 			jobRegistry.withJobMetadataLock(

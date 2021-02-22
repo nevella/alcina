@@ -381,7 +381,7 @@ class JobAllocator {
 								|| j.getState() == JobState.COMPLETED)
 						.collect(Collectors.toList());
 				logger.warn(
-						"DEVEX::1 - Cancelling/aborting timed-out job - no allocations for one hour :: {} - incomplete children :: {}",
+						"DEVEX::0 - Cancelling/aborting timed-out job - no allocations for one hour :: {} - incomplete children :: {}",
 						job, incompleteChildren);
 				Stream<Job> toAbort = incompleteChildren.isEmpty()
 						? Stream.of(job)

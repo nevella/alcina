@@ -72,9 +72,12 @@
  * <td>(Hopefully) verified fix - should not be thrown</td>
  * </tr>
  * <tr>
- * 
  * <td>5</td>
  * <td>Unknown how it got here - just catch and log for now</td>
+ * </tr>
+ * <tr>
+ * <td>6</td>
+ * <td>Cannot reproduce</td>
  * </tr>
  * </table>
  */

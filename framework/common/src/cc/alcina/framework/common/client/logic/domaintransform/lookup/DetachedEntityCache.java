@@ -338,9 +338,15 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 				}
 				Entity existing = createdLocals.get(localId);
 				if (existing != null && existing != entity) {
-					throw Ax.runtimeException(
+					RuntimeException exception = Ax.runtimeException(
 							"DEVEX::1 - Created local collision (!!) - %s %s - existing %s",
 							localId, entity, existing);
+					if (existing == entity) {
+						Ax.out(exception);
+						exception.printStackTrace();
+					} else {
+						throw exception;
+					}
 				}
 				createdLocals.put(localId, entity);
 			}
