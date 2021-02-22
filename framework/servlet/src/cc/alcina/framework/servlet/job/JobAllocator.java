@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.LazyLoadProvideTask;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
@@ -33,6 +34,7 @@ import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJ
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.EventType;
 import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.SubqueuePhase;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ResubmitPolicy;
@@ -375,7 +377,9 @@ class JobAllocator {
 			if (System.currentTimeMillis()
 					- lastAllocated > TimeConstants.ONE_HOUR_MS
 					&& jobContext.getPerformer() == ClientInstance.self()
-					&& jobContext.getPerformer().canAbort(job.getTask())) {
+					&& jobContext.getPerformer().canAbort(job.getTask())
+					&& ResourceUtilities.is(Transactions.class,
+							"cancelTimedoutTransactions")) {
 				List<Job> incompleteChildren = job.provideChildren()
 						.filter(j -> j.provideIsNotComplete()
 								|| j.getState() == JobState.COMPLETED)

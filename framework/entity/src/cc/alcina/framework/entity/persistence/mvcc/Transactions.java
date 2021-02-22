@@ -249,7 +249,8 @@ public class Transactions {
 	}
 
 	void cancelTimedOutTransactions() {
-		if (!ResourceUtilities.is("cancelTimedoutTransactions")) {
+		if (!ResourceUtilities.is(Transactions.class,
+				"cancelTimedoutTransactions")) {
 			return;
 		}
 		synchronized (transactionMetadataLock) {
