@@ -18,13 +18,17 @@ public interface PersistentImpl {
 		return Domain.create(getImplementation(clazz));
 	}
 
+	static <A extends Entity> A ensure(Class<A> clazz, String propertyName,
+			Object value) {
+		return Domain.ensure(getImplementation(clazz), propertyName, value);
+	}
+
 	static <A extends Entity> A find(Class<A> clazz, Long id) {
 		return Domain.find(getImplementation(clazz), id);
 	}
 
 	static <A> Class<? extends A> getImplementation(Class<A> clazz) {
-		return Registry.get().lookupSingle(PersistentImpl.class,
-				clazz);
+		return Registry.get().lookupSingle(PersistentImpl.class, clazz);
 	}
 
 	static Class getImplementationNonGeneric(Class clazz) {

@@ -76,7 +76,8 @@ public class Transactions {
 				// TODO - possibly optimise (app level 'in warmup')
 				// although - doesn't warmup write fields, not via setters? In
 				// which case this isn't called in warmup?
-				if (transaction.isBaseTransaction()) {
+				if (transaction.isBaseTransaction() || (versions != null
+						&& transaction == versions.initialWriteableTransaction)) {
 					return t;
 				} else {
 					synchronized (t) {

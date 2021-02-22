@@ -94,6 +94,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	private AtomicInteger size = new AtomicInteger();
 
+	Transaction initialWriteableTransaction;
+
 	/*
 	 * synchronization - either a newly created object t for this domainstore
 	 * (so no sync needed), or accessed via a block synced on 't'
@@ -137,6 +139,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			 * modified (so may well be the base or a previous tx version)
 			 */
 			{
+				if (initialObjectIsWriteable) {
+					this.initialWriteableTransaction = initialTransaction;
+				}
 				ObjectVersion<T> version = new ObjectVersion<>();
 				version.transaction = initialTransaction;
 				version.object = t;
@@ -205,6 +210,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (size.get() == 0) {
 			return;
 		}
+		/*
+		 * this is an optimisation for initial write resolution
+		 */
+		initialWriteableTransaction = null;
 		// /*
 		// * swap or modify live map, depending on size of delta
 		// */

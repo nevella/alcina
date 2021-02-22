@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.concurrent.ConcurrentHashMap;
@@ -587,6 +588,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				throw new UnsupportedOperationException();
 			}
 			return (V) o.get();
+		}
+
+		@Override
+		public int hashCode() {
+			return key instanceof Entity ? Objects.hash(key) : super.hashCode();
 		}
 
 		public boolean isNotRemoved() {

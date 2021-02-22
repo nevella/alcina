@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
+import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
@@ -116,8 +117,9 @@ class Vacuum {
 	}
 
 	void addVacuumable(Transaction transaction, Vacuumable vacuumable) {
-		vacuumables
-				.computeIfAbsent(transaction, tx -> new ObjectOpenHashSet<>())
+		vacuumables.computeIfAbsent(transaction,
+				tx -> new ObjectOpenHashSet<>(Hash.DEFAULT_INITIAL_SIZE,
+						Hash.VERY_FAST_LOAD_FACTOR))
 				.add(vacuumable);
 	}
 
