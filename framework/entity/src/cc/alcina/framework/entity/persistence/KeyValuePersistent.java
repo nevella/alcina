@@ -42,9 +42,7 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 			.identity();
 
 	public static <KVP extends KeyValuePersistent> KVP byId(long id) {
-		return MethodContext.instance()
-			.withContextTrue(LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
-			.call(() -> Domain.find(implementation(), id));
+		return Domain.find(implementation(), id);
 	}
 
 	public static <KVP extends KeyValuePersistent> Optional<KVP>
