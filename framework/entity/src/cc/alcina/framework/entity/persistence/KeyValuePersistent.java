@@ -24,7 +24,9 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.persistence.cache.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.util.MethodContext;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
@@ -40,19 +42,25 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 			.identity();
 
 	public static <KVP extends KeyValuePersistent> KVP byId(long id) {
-		return Domain.find(implementation(), id);
+		return MethodContext.instance()
+			.withContextTrue(LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
+			.call(() -> Domain.find(implementation(), id));
 	}
 
 	public static <KVP extends KeyValuePersistent> Optional<KVP>
 			byKey(String key) {
-		return (Optional<KVP>) Optional.ofNullable(
-				Domain.by(implementation(), "key", keyMapper.apply(key)));
+		return MethodContext.instance()
+			.withContextTrue(LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
+			.call(() -> (Optional<KVP>) Optional.ofNullable(
+				Domain.by(implementation(), "key", keyMapper.apply(key))));
 	}
 
 	public static <KVP extends KeyValuePersistent> List<KVP>
 			byParentKey(String parentKey) {
-		return (List<KVP>) Domain.listByProperty(implementation(), "parentKey",
-				keyMapper.apply(parentKey));
+		return MethodContext.instance()
+			.withContextTrue(LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
+			.call(() -> (List<KVP>) Domain.listByProperty(implementation(), "parentKey",
+					keyMapper.apply(parentKey)));
 	}
 
 	public static String getClassKey(Class clazz, String key) {
