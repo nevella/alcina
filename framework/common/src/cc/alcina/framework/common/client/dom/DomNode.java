@@ -45,17 +45,15 @@ public class DomNode {
 	public static final transient String CONTEXT_DEBUG_SUPPORT = DomNode.class
 			.getName() + ".CONTEXT_DEBUG_SUPPORT";
 
-	/**
-	 * Basically, don't use in a loop - more a debugging aid
-	 */
-	public static DomNode from(Node n) {
+	public static DomNode from(Node node) {
+		Document document = null;
 		DomDoc doc = null;
-		if (n.getNodeType() == Node.DOCUMENT_NODE) {
-			doc = new DomDoc((Document) n);
+		if (node.getNodeType() == Node.DOCUMENT_NODE) {
+			document = (Document) node;
 		} else {
-			doc = new DomDoc(n.getOwnerDocument());
+			document = node.getOwnerDocument();
 		}
-		return doc.nodeFor(n);
+		return DomDoc.documentFor(document).nodeFor(node);
 	}
 
 	protected Node node;

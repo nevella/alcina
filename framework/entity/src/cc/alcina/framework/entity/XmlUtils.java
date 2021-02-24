@@ -176,7 +176,7 @@ public class XmlUtils {
 	}
 
 	public static void cleanNamespacedAttributes(Document doc) {
-		DomDoc.from(doc).children.flat().filter(DomNode::isElement)
+		DomDoc.documentFor(doc).children.flat().filter(DomNode::isElement)
 				.forEach(n -> {
 					if (n.domElement().hasAttributes()) {
 						n.attributes().keySet().stream()

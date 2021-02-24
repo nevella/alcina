@@ -22,6 +22,9 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.Multimap;
 
 public class DomDoc extends DomNode {
+	private static PerDocumentSupplier perDocumentSupplier = Registry
+			.impl(PerDocumentSupplier.class);
+
 	public static DomDoc basicHtmlDoc() {
 		return new DomDoc("<html><head></head><body></body></html>");
 	}
@@ -30,8 +33,8 @@ public class DomDoc extends DomNode {
 		return new DomDoc(Ax.format("<%s/>", tag)).getDocumentElementNode();
 	}
 
-	public static DomDoc from(Document domDocument) {
-		return new DomDoc(domDocument);
+	public static DomDoc documentFor(Document document) {
+		return perDocumentSupplier.get(document);
 	}
 
 	public static DomDoc from(String xml) {
@@ -174,6 +177,21 @@ public class DomDoc extends DomNode {
 	}
 
 	void register(DomNode xmlNode) {
+	}
+
+	@RegistryLocation(registryPoint = PerDocumentSupplier.class, implementationType = ImplementationType.SINGLETON)
+	public static class PerDocumentSupplier {
+		private Map<Document, DomDoc> perDocument;
+
+		public PerDocumentSupplier() {
+			perDocument = new LinkedHashMap<>();
+		}
+
+		public DomDoc get(Document document) {
+			synchronized (perDocument) {
+				return perDocument.computeIfAbsent(document, DomDoc::new);
+			}
+		}
 	}
 
 	@RegistryLocation(registryPoint = ReadonlyDocCache.class, implementationType = ImplementationType.SINGLETON)

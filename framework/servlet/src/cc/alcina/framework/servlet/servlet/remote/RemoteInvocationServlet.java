@@ -11,13 +11,13 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.esotericsoftware.minlog.Log;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -105,9 +105,12 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				Preconditions.checkArgument(
 						clientInstance.getAuth() == params.clientInstanceAuth);
 			}
+			boolean asRoot = UserlandProvider.get()
+					.getSystemUser() == clientInstance
+							.getAuthenticationSession().getUser();
 			PermissionsManager.get().pushUser(
 					clientInstance.getAuthenticationSession().getUser(),
-					LoginState.LOGGED_IN);
+					LoginState.LOGGED_IN, asRoot);
 			PermissionsManager.get().setClientInstance(clientInstance);
 			Object invocationTarget = getInvocationTarget(params);
 			Class<? extends Object> targetClass = invocationTarget.getClass();

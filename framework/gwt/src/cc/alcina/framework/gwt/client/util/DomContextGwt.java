@@ -40,7 +40,7 @@ public class DomContextGwt extends DomContext {
 	@Override
 	protected DomDoc getXmlDoc(org.w3c.dom.Document domDocument) {
 		if (doc == null) {
-			doc = DomDoc.from(getDocument0());
+			doc = DomDoc.documentFor(getDocument0());
 		}
 		return doc;
 	}

@@ -27,12 +27,12 @@ public class JsUniqueMap<K, V> implements Map<K, V> {
 	}
 
 	public static native boolean supportsJsMap()/*-{
-												return !!(window.Map && window.Map.prototype.clear);
-												}-*/;
+    return !!(window.Map && window.Map.prototype.clear);
+	}-*/;
 
 	public static native boolean supportsJsWeakMap()/*-{
-													return !!(window.WeakMap && window.WeakMap.prototype.get);
-													}-*/;
+    return !!(window.WeakMap && window.WeakMap.prototype.get);
+	}-*/;
 
 	private Function keyUniquenessMapper = Function.identity();
 

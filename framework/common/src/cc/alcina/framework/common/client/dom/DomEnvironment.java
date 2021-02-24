@@ -65,11 +65,11 @@ public interface DomEnvironment {
 			return cursor.ancestors().orSelf().match(this);
 		}
 
+		boolean isBlock(DomNode node);
+
 		default boolean isBlock(Element e) {
 			return isBlock(DomNode.from(e));
 		}
-
-		boolean isBlock(DomNode node);
 
 		boolean isBold(DomNode node);
 
@@ -84,19 +84,14 @@ public interface DomEnvironment {
 	@RegistryLocation(registryPoint = StyleResolver.class, implementationType = ImplementationType.INSTANCE)
 	@ClientInstantiable
 	public static class StyleResolverHtml implements StyleResolver {
-		DomDoc doc = null;
-
-		@Override
-		public boolean isBlock(Element e) {
-			if (doc == null) {
-				doc = DomNode.from(e).doc;
-			}
-			return isBlock(doc.nodeFor(e));
-		}
-
 		@Override
 		public boolean isBlock(DomNode node) {
 			return HtmlConstants.isHtmlBlock(node.name());
+		}
+
+		@Override
+		public boolean isBlock(Element e) {
+			return isBlock(DomNode.from(e));
 		}
 
 		@Override
