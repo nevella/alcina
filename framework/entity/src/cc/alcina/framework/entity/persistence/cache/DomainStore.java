@@ -599,6 +599,44 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	private <T extends Entity> Stream<T> query0(Class<T> clazz,
+			DomainStoreQuery<T> query) {
+		boolean debugMetrics = isDebug()
+				&& LooseContext.is(CONTEXT_DEBUG_QUERY_METRICS);
+		StringBuilder debugMetricBuilder = new StringBuilder();
+		int filterSize = query.getFilters().size();
+		QueryToken token = new QueryToken(query);
+		token.planner().optimiseFilters();
+		for (; token.idx < filterSize; token.idx++) {
+			int idx = token.idx;
+			long start = System.nanoTime();
+			DomainFilter cacheFilter = query.getFilters().get(idx);
+			DomainFilter nextFilter = idx == filterSize - 1 ? null
+					: query.getFilters().get(idx + 1);
+			applyFilter(clazz, cacheFilter, nextFilter, token);
+			if (debugMetrics) {
+				double ms = (double) (System.nanoTime() - start) / 1000000.0;
+				String filters = token.lastFilterString;
+				debugMetricBuilder.append(String.format("\t%.3f ms - %s\n", ms,
+						CommonUtils.trimToWsChars(filters, 100, true)));
+			}
+			if (token.isEmpty()) {
+				break;
+			}
+		}
+		if (debugMetrics && !token.hasIdQuery()) {
+			metricLogger.debug("Query metrics:\n========\n{}\n{}", query,
+					debugMetricBuilder.toString());
+		}
+		Stream stream = token.applyEndOfStreamOperators();
+		List<PreProvideTask<T>> preProvideTasks = domainDescriptor
+				.getPreProvideTasks(clazz);
+		for (PreProvideTask<T> preProvideTask : preProvideTasks) {
+			stream = preProvideTask.wrap(stream);
+		}
+		return stream;
+	}
+
 	private List<DomainTransformEventPersistent> removeNonApplicableTransforms(
 			Collection<DomainTransformEventPersistent> events) {
 		return events.stream().filter(new InSubgraphFilter())
@@ -892,40 +930,14 @@ public class DomainStore implements IDomainStore {
 
 	<T extends Entity> Stream<T> query(Class<T> clazz,
 			DomainStoreQuery<T> query) {
-		boolean debugMetrics = isDebug()
-				&& LooseContext.is(CONTEXT_DEBUG_QUERY_METRICS);
-		StringBuilder debugMetricBuilder = new StringBuilder();
-		int filterSize = query.getFilters().size();
-		QueryToken token = new QueryToken(query);
-		token.planner().optimiseFilters();
-		for (; token.idx < filterSize; token.idx++) {
-			int idx = token.idx;
-			long start = System.nanoTime();
-			DomainFilter cacheFilter = query.getFilters().get(idx);
-			DomainFilter nextFilter = idx == filterSize - 1 ? null
-					: query.getFilters().get(idx + 1);
-			applyFilter(clazz, cacheFilter, nextFilter, token);
-			if (debugMetrics) {
-				double ms = (double) (System.nanoTime() - start) / 1000000.0;
-				String filters = token.lastFilterString;
-				debugMetricBuilder.append(String.format("\t%.3f ms - %s\n", ms,
-						CommonUtils.trimToWsChars(filters, 100, true)));
-			}
-			if (token.isEmpty()) {
-				break;
-			}
+		try {
+			LooseContext.push();
+			query.getContextProperties()
+					.forEach((k, v) -> LooseContext.set(k, v));
+			return query0(clazz, query);
+		} finally {
+			LooseContext.pop();
 		}
-		if (debugMetrics && !token.hasIdQuery()) {
-			metricLogger.debug("Query metrics:\n========\n{}\n{}", query,
-					debugMetricBuilder.toString());
-		}
-		Stream stream = token.applyEndOfStreamOperators();
-		List<PreProvideTask<T>> preProvideTasks = domainDescriptor
-				.getPreProvideTasks(clazz);
-		for (PreProvideTask<T> preProvideTask : preProvideTasks) {
-			stream = preProvideTask.wrap(stream);
-		}
-		return stream;
 	}
 
 	public static class Builder {

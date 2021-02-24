@@ -26,7 +26,6 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.cache.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.entity.util.MethodContext;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
@@ -47,18 +46,16 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 
 	public static <KVP extends KeyValuePersistent> Optional<KVP>
 			byKey(String key) {
-		return MethodContext.instance()
-			.withContextTrue(LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
-			.call(() -> (Optional<KVP>) Optional.ofNullable(
-				Domain.by(implementation(), "key", keyMapper.apply(key))));
+		return (Optional<KVP>) Domain.query(implementation()).contextTrue(
+				LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
+				.filter("key", keyMapper.apply(key)).optional();
 	}
 
 	public static <KVP extends KeyValuePersistent> List<KVP>
 			byParentKey(String parentKey) {
-		return MethodContext.instance()
-			.withContextTrue(LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
-			.call(() -> (List<KVP>) Domain.listByProperty(implementation(), "parentKey",
-					keyMapper.apply(parentKey)));
+		return (List<KVP>) Domain.query(implementation()).contextTrue(
+				LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
+				.filter("parentKey", keyMapper.apply(parentKey)).list();
 	}
 
 	public static String getClassKey(Class clazz, String key) {
@@ -90,8 +87,7 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 	}
 
 	private static Class<? extends KeyValuePersistent> implementation() {
-		return PersistentImpl
-				.getImplementation(KeyValuePersistent.class);
+		return PersistentImpl.getImplementation(KeyValuePersistent.class);
 	}
 
 	private static void persist() {

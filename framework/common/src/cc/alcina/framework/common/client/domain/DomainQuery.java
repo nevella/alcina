@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -26,6 +28,8 @@ public abstract class DomainQuery<E extends Entity> {
 
 	private Optional<Stream<E>> sourceStream = Optional.empty();
 
+	private Map<String, Object> contextProperties = new LinkedHashMap<>();
+
 	private int limit = -1;
 
 	private Comparator<E> comparator;
@@ -36,6 +40,11 @@ public abstract class DomainQuery<E extends Entity> {
 
 	public Set<E> asSet() {
 		return stream().collect(Collectors.toSet());
+	}
+
+	public DomainQuery<E> contextTrue(String contextProperty) {
+		contextProperties.put(contextProperty, Boolean.TRUE);
+		return this;
 	}
 
 	public DomainQuery<E> filter(DomainFilter filter) {
@@ -80,6 +89,10 @@ public abstract class DomainQuery<E extends Entity> {
 
 	public Comparator<E> getComparator() {
 		return this.comparator;
+	}
+
+	public Map<String, Object> getContextProperties() {
+		return this.contextProperties;
 	}
 
 	public Class<E> getEntityClass() {
