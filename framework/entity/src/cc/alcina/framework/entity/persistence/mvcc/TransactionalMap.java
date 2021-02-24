@@ -279,14 +279,14 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		if (keyClass == Long.class) {
 			if (valueClass == Boolean.class) {
 				return (Map<K, V>) new Long2BooleanLinkedOpenHashMap(
-						Hash.DEFAULT_INITIAL_SIZE, Hash.FAST_LOAD_FACTOR);
+						Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
 			} else {
 				return (Map<K, V>) new Long2ObjectLinkedOpenHashMap<>(
-						Hash.DEFAULT_INITIAL_SIZE, Hash.FAST_LOAD_FACTOR);
+						Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
 			}
 		} else {
 			return (Map<K, V>) new Object2ObjectLinkedOpenHashMap<>(
-					Hash.DEFAULT_INITIAL_SIZE, Hash.FAST_LOAD_FACTOR);
+					Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
 		}
 	}
 
