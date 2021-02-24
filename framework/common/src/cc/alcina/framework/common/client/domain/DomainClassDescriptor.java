@@ -108,6 +108,15 @@ public class DomainClassDescriptor<T extends Entity>
 		return "";
 	}
 
+	public DomainLookup getLookupFor(String propertyName) {
+		for (DomainStoreLookupDescriptor descriptor : lookupDescriptors) {
+			if (descriptor.handles(clazz, propertyName)) {
+				return descriptor.getLookup();
+			}
+		}
+		return null;
+	}
+
 	public boolean ignoreField(String name) {
 		return false;
 	}

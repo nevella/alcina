@@ -52,7 +52,6 @@ import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainQuery;
-import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.FilterCost;
 import cc.alcina.framework.common.client.domain.IDomainStore;
@@ -315,6 +314,10 @@ public class DomainStore implements IDomainStore {
 		return health;
 	}
 
+	public DomainLookup getLookupFor(Class clazz, String propertyName) {
+		return domainDescriptor.perClass.get(clazz).getLookupFor(propertyName);
+	}
+
 	public MemoryStat getMemoryStats(StatType type) {
 		MemoryStat top = new MemoryStat(this);
 		top.setObjectMemory(Registry.impl(ObjectMemory.class));
@@ -532,16 +535,6 @@ public class DomainStore implements IDomainStore {
 		return domainDescriptor.complexFilters.stream()
 				.filter(cf -> cf.handles(clazz, filters)).findFirst()
 				.orElse(null);
-	}
-
-	private DomainLookup getLookupFor(Class clazz, String propertyName) {
-		for (DomainStoreLookupDescriptor descriptor : domainDescriptor.perClass
-				.get(clazz).lookupDescriptors) {
-			if (descriptor.handles(clazz, propertyName)) {
-				return descriptor.getLookup();
-			}
-		}
-		return null;
 	}
 
 	private IndexedValueProvider getValueProviderFor(Class clazz,

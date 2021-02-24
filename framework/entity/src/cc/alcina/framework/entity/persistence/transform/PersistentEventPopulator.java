@@ -27,14 +27,6 @@ class PersistentEventPopulator {
 		for (DomainTransformEvent event : eventsPersisted) {
 			DomainTransformEventPersistent propagationEvent = Reflections
 					.newInstance(persistentEventClass);
-			if (propagationPolicy.shouldPersistEventRecord(event)
-					|| ResourceUtilities.is(
-							TransformPersisterInPersistenceContext.class,
-							"persistAllTransforms")) {
-				if (!persistTransformsDisabled) {
-					tltm.persist(propagationEvent);
-				}
-			}
 			propagationEvent.wrap(event);
 			/*
 			 * Remove all non-propagatable refs (they'll be confusing for local
@@ -79,6 +71,17 @@ class PersistentEventPopulator {
 						.setDomainTransformRequestPersistent(persistentRequest);
 				persistentRequest.getEvents().add(propagationEvent);
 				persistentEvents.add(propagationEvent);
+			}
+			/*
+			 * persist at end (no double-calls)
+			 */
+			if (propagationPolicy.shouldPersistEventRecord(event)
+					|| ResourceUtilities.is(
+							TransformPersisterInPersistenceContext.class,
+							"persistAllTransforms")) {
+				if (!persistTransformsDisabled) {
+					tltm.persist(propagationEvent);
+				}
 			}
 		}
 	}

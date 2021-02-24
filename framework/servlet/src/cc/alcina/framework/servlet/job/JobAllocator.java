@@ -376,6 +376,7 @@ class JobAllocator {
 			}
 			if (System.currentTimeMillis()
 					- lastAllocated > TimeConstants.ONE_HOUR_MS
+					&& jobContext != null
 					&& jobContext.getPerformer() == ClientInstance.self()
 					&& jobContext.getPerformer().canAbort(job.getTask())
 					&& ResourceUtilities.is(Transactions.class,

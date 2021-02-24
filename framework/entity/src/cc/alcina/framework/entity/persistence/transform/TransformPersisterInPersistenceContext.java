@@ -5,17 +5,19 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.OneToMany;
 import javax.persistence.OptimisticLockException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -25,6 +27,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -51,6 +54,8 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 /**
  * 
@@ -125,13 +130,15 @@ public class TransformPersisterInPersistenceContext {
 		List<DomainTransformRequestPersistent> dtrps = wrapper.persistentRequests;
 		wrapper.locatorMap = locatorMap;
 		ObjectPersistenceHelper.get();
-		ThreadlocalTransformManager tltm = ThreadlocalTransformManager.cast();
+		ThreadlocalTransformManager tlTransformManager = ThreadlocalTransformManager
+				.cast();
+		DelayedEntityPersister delayedEntityPersister = new DelayedEntityPersister();
 		try {
 			// We know this is thread-local, so we can clear the tm transforms
 			// add the entity version checker now
-			tltm.resetTltm(locatorMap, token.getTransformExceptionPolicy(),
-					true);
-			tltm.setEntityManager(getEntityManager());
+			tlTransformManager.resetTltm(locatorMap,
+					token.getTransformExceptionPolicy(), true);
+			tlTransformManager.setEntityManager(getEntityManager());
 			ClientInstance persistentClientInstance = (ClientInstance) commonPersistenceBase
 					.findImplInstance(ClientInstance.class,
 							request.getClientInstance().getId());
@@ -159,8 +166,8 @@ public class TransformPersisterInPersistenceContext {
 					return;
 				}
 			}
-			tltm.setClientInstance(persistentClientInstance);
-			tltm.setUseCreatedLocals(false);
+			tlTransformManager.setClientInstance(persistentClientInstance);
+			tlTransformManager.setUseCreatedLocals(false);
 			List<DomainTransformRequest> transformRequests = new ArrayList<DomainTransformRequest>();
 			transformRequests.addAll(request.getPriorRequestsWithoutResponse());
 			transformRequests.add(request);
@@ -256,29 +263,12 @@ public class TransformPersisterInPersistenceContext {
 							if (event
 									.getCommitType() == CommitType.TO_STORAGE) {
 								if (!replaying) {
-									boolean wrappedObjectAssignable = WrappedObject.class
-											.isAssignableFrom(
-													event.getObjectClass());
-									try {
-										if (wrappedObjectAssignable) {
-											tltm.setIgnorePropertyChangesTo(
-													event);
-										} else {
-											tltm.setIgnorePropertyChanges(true);
-										}
-										tltm.fireDomainTransform(event);
-									} finally {
-										if (wrappedObjectAssignable) {
-											tltm.setIgnorePropertyChangesTo(
-													null);
-										} else {
-											tltm.setIgnorePropertyChanges(
-													false);
-										}
-									}
-									if (tltm.provideIsMarkedFlushTransform(
-											event)) {
-										tltm.flush();
+									persistEvent(tlTransformManager,
+											delayedEntityPersister, event);
+									if (tlTransformManager
+											.provideIsMarkedFlushTransform(
+													event)) {
+										tlTransformManager.flush();
 									}
 								}
 								eventsPersisted.add(event);
@@ -315,11 +305,11 @@ public class TransformPersisterInPersistenceContext {
 											: MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS)) {
 								break loop_dtrs;
 							}
-							tltm.fireDomainTransform(event);
+							tlTransformManager.fireDomainTransform(event);
 							int dontFlushTilNthTransform = token
 									.getDontFlushTilNthTransform();
 							if (transformCount >= dontFlushTilNthTransform) {
-								tltm.flush();
+								tlTransformManager.flush();
 								token.setDontFlushTilNthTransform(
 										dontFlushTilNthTransform + 1);
 							}
@@ -369,6 +359,7 @@ public class TransformPersisterInPersistenceContext {
 						}
 					} // commit/determine exception
 				} // dtes
+				delayedEntityPersister.checkPersistEntity(null);
 				subRequest.updateTransformCommitType(CommitType.ALL_COMMITTED,
 						false);
 				if (token.getPass() == Pass.TRY_COMMIT) {
@@ -404,7 +395,7 @@ public class TransformPersisterInPersistenceContext {
 										DomainTransformEventPersistent.class);
 						DomainTransformRequestPersistent persistentRequest = persistentRequestClass
 								.newInstance();
-						tltm.persist(persistentRequest);
+						tlTransformManager.persist(persistentRequest);
 						persistentRequest.setStartPersistTime(startPersistTime);
 						if (!LooseContext.is(
 								CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM)) {
@@ -429,15 +420,17 @@ public class TransformPersisterInPersistenceContext {
 						 */
 						eventsPersisted.forEach(event -> {
 							if (event.getObjectId() == 0) {
-								event.setObjectId(tltm.getUserSessionEntityMap()
+								event.setObjectId(tlTransformManager
+										.getUserSessionEntityMap()
 										.getForLocalId(event.getObjectLocalId())
 										.getId());
 							}
 						});
 						new PersistentEventPopulator().populate(
-								persistentEvents, tltm, eventsPersisted,
-								propagationPolicy, persistentEventClass,
-								persistentRequest, missingClassRefWarned,
+								persistentEvents, tlTransformManager,
+								eventsPersisted, propagationPolicy,
+								persistentEventClass, persistentRequest,
+								missingClassRefWarned,
 								LooseContext.is(
 										TransformPersisterInPersistenceContext.CONTEXT_DO_NOT_PERSIST_TRANSFORMS),
 								false);
@@ -457,7 +450,7 @@ public class TransformPersisterInPersistenceContext {
 				response.getEventsToUseForClientUpdate()
 						.addAll(token.getClientUpdateEvents());
 				response.getEventsToUseForClientUpdate()
-						.addAll(tltm.getModificationEvents());
+						.addAll(tlTransformManager.getModificationEvents());
 				response.setRequestId(request.getRequestId());
 				response.setTransformsProcessed(transformCount);
 				wrapper.response = response;
@@ -507,7 +500,7 @@ public class TransformPersisterInPersistenceContext {
 			// necessary -- rollback
 			throw new DeliberatelyThrownWrapperException();
 		} finally {
-			tltm.setUseCreatedLocals(true);
+			tlTransformManager.setUseCreatedLocals(true);
 		}
 	}
 
@@ -528,6 +521,74 @@ public class TransformPersisterInPersistenceContext {
 						itrEvent, transformException.getType());
 				silentSkip.setSilent(true);
 				token.getTransformExceptions().add(addPos, silentSkip);
+			}
+		}
+	}
+
+	protected void persistEvent(ThreadlocalTransformManager tlTransformManager,
+			DelayedEntityPersister delayedEntityPersister,
+			DomainTransformEvent event) throws DomainTransformException {
+		boolean wrappedObjectAssignable = WrappedObject.class
+				.isAssignableFrom(event.getObjectClass());
+		// do not apply parent association transforms (although they'll be used
+		// in domainstore processing)
+		switch (event.getTransformType()) {
+		case ADD_REF_TO_COLLECTION:
+		case REMOVE_REF_FROM_COLLECTION:
+			OneToMany oneToMany = Reflections.classLookup()
+					.getPropertyReflector(event.getObjectClass(),
+							event.getPropertyName())
+					.getAnnotation(OneToMany.class);
+			if (oneToMany != null) {
+				return;
+			}
+			break;
+		}
+		try {
+			if (wrappedObjectAssignable) {
+				tlTransformManager.setIgnorePropertyChangesTo(event);
+			} else {
+				tlTransformManager.setIgnorePropertyChanges(true);
+			}
+			tlTransformManager.fireDomainTransform(event);
+			delayedEntityPersister.checkPersistEntity(event);
+		} finally {
+			if (wrappedObjectAssignable) {
+				tlTransformManager.setIgnorePropertyChangesTo(null);
+			} else {
+				tlTransformManager.setIgnorePropertyChanges(false);
+			}
+		}
+	}
+
+	/*
+	 * Most insertion transform patterns will be
+	 * "create - modify modify modify - next entity" - this persistence approach
+	 * means no need to worry about persisting associations of not-yet-persisted
+	 * entities
+	 */
+	private class DelayedEntityPersister {
+		long lastLocalId = -1;
+
+		Set<Long> persistedLocals = new LongOpenHashSet(
+				Hash.DEFAULT_INITIAL_SIZE, Hash.VERY_FAST_LOAD_FACTOR);
+
+		void checkPersistEntity(DomainTransformEvent event) {
+			if (event == null || event.getObjectId() != 0
+					|| event.getObjectLocalId() != lastLocalId) {
+				if (lastLocalId != -1) {
+					Entity entity = ThreadlocalTransformManager.cast()
+							.getLocalIdToEntityMap().get(lastLocalId);
+					getEntityManager().persist(entity);
+					persistedLocals.add(lastLocalId);
+					ThreadlocalTransformManager.cast().getUserSessionEntityMap()
+							.putToLookups(entity.toLocator());
+					lastLocalId = -1;
+				}
+			}
+			if (event != null && event.getObjectId() == 0
+					&& !persistedLocals.contains(event.getObjectLocalId())) {
+				lastLocalId = event.getObjectLocalId();
 			}
 		}
 	}

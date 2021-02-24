@@ -526,12 +526,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 						false);
 				break;
 			} else {
-				long creationLocalId = isZeroCreatedObjectLocalId(
-						event.getObjectClass()) ? 0 : event.getObjectLocalId();
 				Entity entity = (Entity) classLookup().newInstance(
 						event.getObjectClass(), event.getObjectId(),
 						event.getObjectLocalId());
-				entity.setLocalId(creationLocalId);
+				if (isZeroCreatedObjectLocalId(event.getObjectClass())) {
+					entity.setLocalId(0);
+				}
 				if (entity.getId() == 0 && event.getObjectId() != 0) {// replay
 																		// from
 																		// server
@@ -545,7 +545,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				objectModified(entity, event, false);
 				maybeFireCollectionModificationEvent(event.getObjectClass(),
 						false);
-				if (getDomainObjects() != null) {
+				if (getDomainObjects() != null && isAddToDomainObjects()) {
 					getDomainObjects().mapObject(entity);
 				}
 			}
@@ -1821,11 +1821,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		provisionalObjects = new IdentityHashMap<>();
 	}
 
-	protected boolean isPerformDirectAssociationUpdates(Entity targetObject) {
-		return false;
+	protected boolean isAddToDomainObjects() {
+		return true;
 	}
 
-	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
+	protected boolean isPerformDirectAssociationUpdates(Entity targetObject) {
 		return false;
 	}
 
@@ -2279,5 +2279,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 				newTargetEntity = (Entity) newTargetObject;
 			}
 		}
+	}
+
+	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
+		return false;
 	}
 }

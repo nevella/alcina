@@ -216,7 +216,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private ClientInstance clientInstance;
 
-	protected Map<Long, Entity> localIdToEntityMap;
+	private Map<Long, Entity> localIdToEntityMap;
 
 	protected EntityLocatorMap userSessionEntityMap;
 
@@ -415,6 +415,10 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public EntityManager getEntityManager() {
 		return entityManager;
+	}
+
+	public Map<Long, Entity> getLocalIdToEntityMap() {
+		return this.localIdToEntityMap;
 	}
 
 	public List<DomainTransformEvent> getModificationEvents() {
@@ -683,6 +687,7 @@ public class ThreadlocalTransformManager extends TransformManager
 				} else {
 					newInstance = (Entity) clazz.newInstance();
 				}
+				newInstance.setLocalId(localId);
 				if (entityManager != null) {
 					if (isUseObjectCreationId() && objectId != 0) {
 						newInstance.setId(objectId);
@@ -694,14 +699,17 @@ public class ThreadlocalTransformManager extends TransformManager
 						Registry.impl(JPAImplementation.class)
 								.afterSpecificSetId(fromBefore);
 					} else {
-						entityManager.persist(newInstance);
+						/*
+						 * TransformInPersistenceContext does this at the end of
+						 * transform application (before transform event
+						 * persistence) so that inserts can be batched
+						 */
+						// entityManager.persist(newInstance);
 					}
-				} else {
-					newInstance.setLocalId(localId);
 				}
-				EntityLocator entityLocator = new EntityLocator(
-						(Class<? extends Entity>) clazz, newInstance.getId(),
-						localId);
+				// FIXME - mvcc.4 - there's probably some consolidation that can
+				// be done, since createdlocals are tracked by domainstore
+				EntityLocator entityLocator = newInstance.toLocator();
 				localIdToEntityMap.put(localId, newInstance);
 				createdObjectLocators.add(entityLocator);
 				if (!isApplyingExternalTransforms()) {
@@ -928,7 +936,6 @@ public class ThreadlocalTransformManager extends TransformManager
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
-		} else {
 		}
 		throw new WrappedRuntimeException(
 				"Attempting to alter property of non-persistent bean: " + bean,
@@ -1199,8 +1206,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		return entity.getId() != 0
 				// FIXME - mvcc.wrap - treeserializable->non-entity
 				|| entity instanceof TreeSerializable
-				|| (localIdToEntityMap.get(entity.getLocalId()) != null
-						&& getEntityManager() == null)
+				|| (localIdToEntityMap.get(entity.getLocalId()) != null)
 				|| (entity instanceof SourcesPropertyChangeEvents && listeningTo
 						.containsKey((SourcesPropertyChangeEvents) entity))
 				|| LooseContext
@@ -1282,6 +1288,11 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 	}
 
+	@Override
+	protected boolean isAddToDomainObjects() {
+		return entityManager == null;
+	}
+
 	protected boolean isIgnorePropertyChangesForEvent(PropertyChangeEvent evt) {
 		return evt.getSource() == ignorePropertyChangesTo
 				|| (evt.getSource() instanceof WrappedObject
@@ -1297,11 +1308,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		 * clone/modify
 		 */
 		return entity.getPropertyChangeListeners().length == 1;
-	}
-
-	@Override
-	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
-		return entityManager != null;
 	}
 
 	protected void maybeEnsureSource(DomainTransformEvent evt) {
