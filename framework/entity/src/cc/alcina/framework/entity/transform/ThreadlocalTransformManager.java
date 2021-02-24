@@ -1326,7 +1326,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		boolean addToResults = false;
 		if (evt.getTransformType() == TransformType.CREATE_OBJECT) {
 			addToResults = true;
-			evt.setGeneratedServerId(entity.getId());
 		}
 		// TODO - think about handling this as a postpersist entity listener?
 		// that way we ensure correct version numbers

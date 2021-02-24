@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -568,27 +569,30 @@ public class TransformPersisterInPersistenceContext {
 	 * entities
 	 */
 	private class DelayedEntityPersister {
-		long lastLocalId = -1;
+		DomainTransformEvent lastCreationEvent = null;
 
 		Set<Long> persistedLocals = new LongOpenHashSet(
 				Hash.DEFAULT_INITIAL_SIZE, Hash.VERY_FAST_LOAD_FACTOR);
 
 		void checkPersistEntity(DomainTransformEvent event) {
-			if (event == null || event.getObjectId() != 0
-					|| event.getObjectLocalId() != lastLocalId) {
-				if (lastLocalId != -1) {
-					Entity entity = ThreadlocalTransformManager.cast()
-							.getLocalIdToEntityMap().get(lastLocalId);
-					getEntityManager().persist(entity);
-					persistedLocals.add(lastLocalId);
-					ThreadlocalTransformManager.cast().getUserSessionEntityMap()
-							.putToLookups(entity.toLocator());
-					lastLocalId = -1;
-				}
+			if (lastCreationEvent != null
+					&& (event == null || event.getObjectId() != 0
+							|| event.getObjectLocalId() != lastCreationEvent
+									.getObjectLocalId())) {
+				Entity entity = ThreadlocalTransformManager.cast()
+						.getLocalIdToEntityMap()
+						.get(lastCreationEvent.getObjectLocalId());
+				getEntityManager().persist(entity);
+				persistedLocals.add(lastCreationEvent.getObjectLocalId());
+				lastCreationEvent.setGeneratedServerId(entity.getId());
+				ThreadlocalTransformManager.cast().getUserSessionEntityMap()
+						.putToLookups(entity.toLocator());
+				lastCreationEvent = null;
 			}
-			if (event != null && event.getObjectId() == 0
+			if (event != null
+					&& event.getTransformType() == TransformType.CREATE_OBJECT
 					&& !persistedLocals.contains(event.getObjectLocalId())) {
-				lastLocalId = event.getObjectLocalId();
+				lastCreationEvent = event;
 			}
 		}
 	}
