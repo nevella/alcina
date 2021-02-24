@@ -358,6 +358,9 @@ public class JobRegistry extends WriterService {
 				MethodContext.instance().withExecuteOutsideTransaction()
 						.run(resource::acquire);
 				try {
+					// ensure lazy (process state) field. FIXME - mvcc.jobs.4 -
+					// remove process state (in job)
+					forJob = forJob.domain().domainVersion();
 					forJob.ensureProcessState().provideRecord(record)
 							.setAcquired(true);
 					forJob.persistProcessState();
