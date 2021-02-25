@@ -23,9 +23,14 @@ import cc.alcina.framework.entity.persistence.cache.LockUtils.ClassStringKeyLock
 
 public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	public static <C> FsObjectCache<C> singletonCache(Class<C> clazz) {
+		return singletonCache(clazz, clazz);
+	}
+
+	public static <C> FsObjectCache<C> singletonCache(Class<C> type,
+			Class<?> forClass) {
 		return new FsObjectCache<>(
-				DataFolderProvider.get().getChildFile(clazz.getName()), clazz,
-				p -> clazz.newInstance());
+				DataFolderProvider.get().getChildFile(forClass.getName()), type,
+				p -> type.newInstance());
 	}
 
 	private File root;
