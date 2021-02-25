@@ -60,6 +60,13 @@ public class WdExec {
 		setTextAndFire(string);
 	}
 
+	public void clearBy() {
+		linkText = null;
+		cssSelector = null;
+		xpath = null;
+		textMatchParent = null;
+	}
+
 	public boolean click() {
 		return click(false);
 	}
@@ -73,7 +80,7 @@ public class WdExec {
 	}
 
 	public WdExec css(String cssSelector) {
-		clearByParams();
+		clearBy();
 		this.cssSelector = cssSelector;
 		return this;
 	}
@@ -121,7 +128,7 @@ public class WdExec {
 	}
 
 	public WdExec id(String id) {
-		clearByParams();
+		clearBy();
 		this.xpath = Ax.format("//*[@id='%s']", id);
 		return this;
 	}
@@ -156,7 +163,7 @@ public class WdExec {
 	}
 
 	public WdExec linkText(String linkText) {
-		clearByParams();
+		clearBy();
 		this.linkText = linkText;
 		return this;
 	}
@@ -274,7 +281,7 @@ public class WdExec {
 	}
 
 	public WdExec textMatchParent(String template, Object... args) {
-		clearByParams();
+		clearBy();
 		textMatchParent = Ax.format(template, args);
 		return this;
 	}
@@ -305,16 +312,9 @@ public class WdExec {
 	}
 
 	public WdExec xpath(String xpath, Object... args) {
-		clearByParams();
+		clearBy();
 		this.xpath = Ax.format(xpath, args);
 		return this;
-	}
-
-	private void clearByParams() {
-		linkText = null;
-		cssSelector = null;
-		xpath = null;
-		textMatchParent = null;
 	}
 
 	private By getBy() {
