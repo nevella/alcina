@@ -90,7 +90,7 @@ public class DomainTransformPersistenceEvent {
 
 	@Override
 	public String toString() {
-		return Ax.format("DTPE: %s\n%s", getPersistenceEventType(),
+		return Ax.format("%s\n%s", toStringId(),
 				getTransformPersistenceToken());
 	}
 
