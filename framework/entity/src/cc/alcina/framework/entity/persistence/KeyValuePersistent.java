@@ -11,8 +11,6 @@ import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
-import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
-import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -31,7 +29,6 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @DomainTransformPersistable
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = KeyValuePersistent.class)
-@DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 		extends VersionableEntity<T> {
 	public static final transient String CONTEXT_NO_COMMIT = KeyValuePersistent.class
@@ -71,11 +68,7 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 	}
 
 	public static void persistObject(String key, Object value) {
-		KeyValuePersistent writeable = (KeyValuePersistent) Domain
-				.ensure(implementation(), "key", keyMapper.apply(key));
-		writeable.setParentKey(SEUtilities.getParentPath(key));
-		writeable.serializeObject(value);
-		persist();
+		persist(key, KeyValuePersistent.toSerializableForm(value));
 	}
 
 	public static void remove(String key) {
@@ -84,6 +77,12 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 			persistent.get().delete();
 			persist();
 		}
+	}
+
+	public static String toSerializableForm(Object object) {
+		byte[] bytes = KryoUtils.serializeToByteArray(object);
+		byte[] zipped = ResourceUtilities.gzipBytes(bytes);
+		return Base64.getEncoder().encodeToString(zipped);
 	}
 
 	private static Class<? extends KeyValuePersistent> implementation() {
@@ -129,13 +128,6 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 	@Transient
 	public String getValue() {
 		return this.value;
-	}
-
-	public void serializeObject(Object object) {
-		byte[] bytes = KryoUtils.serializeToByteArray(object);
-		byte[] zipped = ResourceUtilities.gzipBytes(bytes);
-		String serializeToBase64 = Base64.getEncoder().encodeToString(zipped);
-		setValue(serializeToBase64);
 	}
 
 	public void setBytes(byte[] bytes) {
