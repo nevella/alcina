@@ -31,6 +31,10 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 	public LongPair() {
 	}
 
+	public long length() {
+		return l2 - l1;
+	}
+
 	public LongPair(long l1, long l2) {
 		super();
 		this.l1 = l1;

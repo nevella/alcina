@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import cc.alcina.framework.common.client.domain.DomainCollections;
 
@@ -89,6 +90,10 @@ public class Multiset<K, V extends Set> implements Serializable {
 
 	public Set<Entry<K, V>> entrySet() {
 		return this.map.entrySet();
+	}
+
+	public void forEach(BiConsumer<? super K, ? super V> action) {
+		this.map.forEach(action);
 	}
 
 	public V get(Object key) {

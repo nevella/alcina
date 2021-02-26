@@ -1609,7 +1609,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 			void close() {
 				try {
-					logger.debug("Closing  db connection  {}", connection);
+					logger.warn("Closing  db connection  {}", connection);
+					if (invalid) {
+						Exception exception = new Exception(
+								"Closing closed/invalid connection");
+						exception.printStackTrace();
+						return;
+					}
 					invalid = true;
 					connection.commit();
 					if (warmup) {
