@@ -716,12 +716,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		boolean transactional = DomainStore.stores().storeFor(clazz) != null;
 		ignoreIfExisting &= sublock == null;
 		for (Object[] objects : connResults) {
+			long entityId = (Long) objects[idOperator.idx];
 			HasId hasId = (HasId) (transactional && !keepDetached
-					? transaction.create(clazz, store)
+					? transaction.create(clazz, store, entityId, 0L)
 					: clazz.newInstance());
 			if (ignoreIfExisting) {
-				if (store.transformManager.store.contains(clazz,
-						(Long) objects[idOperator.idx])) {
+				if (store.transformManager.store.contains(clazz, entityId)) {
 					continue;
 				}
 			}

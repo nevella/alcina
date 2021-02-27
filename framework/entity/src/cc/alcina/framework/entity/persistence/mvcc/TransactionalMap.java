@@ -199,8 +199,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			if (concurrent.get(transactionalKey) == null) {
 				concurrent.computeIfAbsent(transactionalKey,
 						k -> new TransactionalValue(key,
-								ObjectWrapper.of(value), currentTransaction,
-								true));
+								ObjectWrapper.of(value), currentTransaction));
 			}
 			TransactionalValue transactionalValue = (TransactionalValue) concurrent
 					.get(transactionalKey);
@@ -228,7 +227,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				concurrent.computeIfAbsent(transactionalKey,
 						k -> new TransactionalValue((K) key,
 								ObjectWrapper.of(REMOVED_VALUE_MARKER),
-								currentTransaction, true));
+								currentTransaction));
 			}
 			TransactionalValue transactionalValue = (TransactionalValue) concurrent
 					.get(transactionalKey);
@@ -296,7 +295,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				if (concurrent == null) {
 					sizeMetadata = new SizeMetadata(
 							new AtomicInteger(nonConcurrent.size()),
-							currentTransaction, true);
+							currentTransaction);
 					concurrent = createConcurrentMap();
 				}
 			}
@@ -522,18 +521,12 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	}
 
 	class SizeMetadata extends MvccObjectVersions<AtomicInteger> {
-		SizeMetadata(AtomicInteger t, Transaction initialTransaction,
-				boolean initialObjectIsWriteable) {
-			super(t, initialTransaction, initialObjectIsWriteable);
+		SizeMetadata(AtomicInteger t, Transaction initialTransaction) {
+			super(t, initialTransaction, false);
 		}
 
 		public void delta(int delta) {
 			resolve(true).addAndGet(delta);
-		}
-
-		@Override
-		protected boolean accessibleFromOtherTransactions(AtomicInteger t) {
-			return false;
 		}
 
 		@Override
@@ -569,9 +562,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		private K key;
 
 		TransactionalValue(K key, ObjectWrapper t,
-				Transaction initialTransaction,
-				boolean initialObjectIsWriteable) {
-			super(t, initialTransaction, initialObjectIsWriteable);
+				Transaction initialTransaction) {
+			super(t, initialTransaction, false);
 			this.key = key;
 		}
 
@@ -616,11 +608,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		public void remove() {
 			resolve(true).set(REMOVED_VALUE_MARKER);
-		}
-
-		@Override
-		protected boolean accessibleFromOtherTransactions(ObjectWrapper t) {
-			return false;
 		}
 
 		@Override

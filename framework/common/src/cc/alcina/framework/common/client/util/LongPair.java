@@ -3,6 +3,9 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.totsp.gwittir.client.beans.Converter;
 
@@ -22,6 +25,38 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 		} catch (NumberFormatException nfe) {
 			return null;
 		}
+	}
+
+	public static boolean isContinuous(List<LongPair> matchedRanges) {
+		LongPair union = unionOf(matchedRanges);
+		return provideUncovered(matchedRanges, union).isEmpty();
+	}
+
+	public static List<LongPair> provideUncovered(List<LongPair> covered,
+			LongPair container) {
+		List<LongPair> result = new ArrayList<LongPair>();
+		for (int idx = 0; idx <= covered.size(); idx++) {
+			long from = idx == 0 ? container.l1 : covered.get(idx - 1).l2;
+			long to = idx == covered.size() ? container.l2
+					: covered.get(idx).l1;
+			if (from != to) {
+				result.add(new LongPair(from, to));
+			}
+		}
+		return result;
+	}
+
+	public LongPair shiftRight(int offset) {
+		return new LongPair(l1 + offset, l2 + offset);
+	}
+
+	public static LongPair unionOf(List<LongPair> matchedRanges) {
+		LongPair result = matchedRanges.get(0).shiftRight(0);// i.e clone
+		matchedRanges.forEach(ip -> {
+			result.l1 = Math.min(ip.l1, result.l1);
+			result.l2 = Math.max(ip.l2, result.l2);
+		});
+		return result;
 	}
 
 	public long l1;

@@ -61,7 +61,7 @@ public abstract class DomainQuery<E extends Entity> {
 		return this;
 	}
 
-	public DomainQuery<E> filter(Predicate p) {
+	public DomainQuery<E> filter(Predicate<E> p) {
 		return filter(new DomainFilter(p));
 	}
 

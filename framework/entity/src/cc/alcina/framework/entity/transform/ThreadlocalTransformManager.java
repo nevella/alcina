@@ -683,11 +683,12 @@ public class ThreadlocalTransformManager extends TransformManager
 				Entity newInstance = null;
 				if (entityManager == null) {
 					newInstance = Transaction.current().create((Class) clazz,
-							DomainStore.stores().storeFor(clazz));
+							DomainStore.stores().storeFor(clazz), objectId,
+							localId);
 				} else {
 					newInstance = (Entity) clazz.newInstance();
+					newInstance.setLocalId(localId);
 				}
-				newInstance.setLocalId(localId);
 				if (entityManager != null) {
 					if (isUseObjectCreationId() && objectId != 0) {
 						newInstance.setId(objectId);

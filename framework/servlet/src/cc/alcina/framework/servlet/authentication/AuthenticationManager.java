@@ -130,6 +130,7 @@ public class AuthenticationManager {
 		}
 		// all auth objects persisted as root
 		Transaction.commit();
+		int debug = 3;
 	}
 
 	private void createClientInstance(AuthenticationContext context) {
@@ -161,18 +162,17 @@ public class AuthenticationManager {
 				// providers have >1 'anonymous' users)
 				context.session = createAuthenticationSession(new Date(),
 						anonymousUser, "replace-anonymous", false);
+			} else {
+				Registry.impl(AuthenticationExpiration.class)
+						.checkExpiration(context.session);
+				logger.trace("Check expiration :: session {}", context.session);
+				if (context.session.provideIsExpired()) {
+					logger.info("Session expired :: session {}",
+							context.session);
+					context.session = null;
+				}
 			}
-		}
-		if (validSession) {
-			Registry.impl(AuthenticationExpiration.class)
-					.checkExpiration(context.session);
-			logger.trace("Check expiration :: session {}", context.session);
-			if (context.session.provideIsExpired()) {
-				logger.info("Session expired :: session {}", context.session);
-				context.session = null;
-			}
-		}
-		if (!validSession) {
+		} else {
 			createAuthenticationSession(new Date(),
 					UserlandProvider.get().getAnonymousUser(), "anonymous",
 					false);
@@ -181,7 +181,6 @@ public class AuthenticationManager {
 				persistence
 						.populateSessionUserFromRememberMeUser(context.session);
 			}
-		} else {
 		}
 	}
 

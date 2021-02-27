@@ -32,11 +32,6 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
-	protected boolean accessibleFromOtherTransactions(T t) {
-		return t.domain().wasPersisted();
-	}
-
-	@Override
 	protected void copyObject(T fromObject, T baseObject) {
 		Transactions.copyObjectFields(fromObject, baseObject);
 	}

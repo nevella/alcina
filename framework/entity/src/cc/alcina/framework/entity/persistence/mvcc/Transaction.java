@@ -238,17 +238,23 @@ public class Transaction implements Comparable<Transaction> {
 		return id.compareTo(o.id);
 	}
 
-	public <T extends Entity> T create(Class<T> clazz, DomainStore store) {
+	public <T extends Entity> T create(Class<T> clazz, DomainStore store,
+			long objectId, long localId) {
 		StoreTransaction storeTransaction = storeTransactions.get(store);
 		T t = storeTransaction.getMvcc().create(clazz);
 		if (t == null) {
 			try {
 				// non-transactional entity
-				return clazz.newInstance();
+				T newInstance = clazz.newInstance();
+				newInstance.setId(objectId);
+				newInstance.setLocalId(localId);
+				return newInstance;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
 		}
+		t.setLocalId(localId);
+		t.setId(objectId);
 		/*
 		 * If creating outside the base transaction, we'll immediately want a
 		 * writable version - so create it now. No need to synchronize
@@ -257,7 +263,6 @@ public class Transaction implements Comparable<Transaction> {
 		if (!isBaseTransaction()) {
 			MvccObjectVersions<T> versions = MvccObjectVersions.ensureEntity(t,
 					this, true);
-			((MvccObject<T>) t).__setMvccVersions__(versions);
 		}
 		return t;
 	}

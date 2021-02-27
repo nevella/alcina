@@ -44,11 +44,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	static <E extends Entity> MvccObjectVersions<E> ensureEntity(E baseObject,
 			Transaction transaction, boolean initialObjectIsWriteable) {
 		MvccObject mvccObject = (MvccObject) baseObject;
-		MvccObjectVersions<E> versions = null;
-		versions = new MvccObjectVersionsEntity<E>(baseObject, transaction,
+		return new MvccObjectVersionsEntity<E>(baseObject, transaction,
 				initialObjectIsWriteable);
-		mvccObject.__setMvccVersions__(versions);
-		return versions;
 	}
 
 	// called in a synchronized block (synchronized on baseObject)
@@ -56,11 +53,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			TransactionalTrieEntry baseObject, Transaction transaction,
 			boolean initialObjectIsWriteable) {
 		MvccObject mvccObject = (MvccObject) baseObject;
-		MvccObjectVersions<TransactionalTrieEntry> versions = null;
-		versions = new MvccObjectVersionsTrieEntry(baseObject, transaction,
+		return new MvccObjectVersionsTrieEntry(baseObject, transaction,
 				initialObjectIsWriteable);
-		mvccObject.__setMvccVersions__(versions);
-		return versions;
 	}
 
 	private volatile ConcurrentSkipListMap<Transaction, ObjectVersion<T>> versions = new ConcurrentSkipListMap<>(
@@ -102,53 +96,24 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 */
 	MvccObjectVersions(T t, Transaction initialTransaction,
 			boolean initialObjectIsWriteable) {
-		/*
-		 * If in the 'preparing' phase, and t is non-local, this is a
-		 * modification of the initial transaction version.
-		 * 
-		 * In that case, create a copy (to be modified) from the base object
-		 * 
-		 * 
-		 * FIXME - mvcc.4 - explain logic here and in resolve0
-		 * 
-		 * Also check the logic here. What about a transform from 'outside'
-		 * against an object in our graph? Doesn't that also need the defensive
-		 * copy?
-		 * 
-		 * 20201228 - this may be the root of many evils (the 'optimisation') -
-		 * it's the old 'domain identity // defensive copy' thang
-		 */
+		ObjectVersion<T> version = new ObjectVersion<>();
+		version.transaction = initialTransaction;
 		baseObject = t;
-		if (initialTransaction.phase == TransactionPhase.TO_DB_PREPARING
-				&& accessibleFromOtherTransactions(t)) {
-			{
-				ObjectVersion<T> version = new ObjectVersion<>();
-				version.transaction = initialTransaction;
-				version.object = copyObject(t);
-				((MvccObject) version.object).__setMvccVersions__(this);
-				putVersion(version);
-			}
-		} else {
+		if (initialObjectIsWriteable) {
 			/*
-			 * transforms from another vm - or domain commit - or created this
-			 * tx. initialObjectIsWriteable will only be true on object creation
-			 * (so it's the correct value, the object won't be visible outside
-			 * the tx until the tx is finished).
-			 * 
-			 * if initialObjectIsWriteable==false; the incoming object won't be
-			 * modified (so may well be the base or a previous tx version)
+			 * t (and associated mvccobjectversions) will not be visible to
+			 * other txs until tx
 			 */
-			{
-				if (initialObjectIsWriteable) {
-					this.initialWriteableTransaction = initialTransaction;
-				}
-				ObjectVersion<T> version = new ObjectVersion<>();
-				version.transaction = initialTransaction;
-				version.object = t;
-				version.writeable = initialObjectIsWriteable;
-				putVersion(version);
+			this.initialWriteableTransaction = initialTransaction;
+			version.object = baseObject;
+			version.writeable = true;
+		} else {
+			if (baseObject instanceof MvccObject) {
+				((MvccObject) baseObject).__setMvccVersions__(this);
 			}
+			version.object = copyObject(t);
 		}
+		putVersion(version);
 	}
 
 	public T getBaseObject() {
@@ -210,10 +175,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (size.get() == 0) {
 			return;
 		}
-		/*
-		 * this is an optimisation for initial write resolution
-		 */
-		initialWriteableTransaction = null;
 		// /*
 		// * swap or modify live map, depending on size of delta
 		// */
@@ -235,6 +196,14 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		List initialValues = Arrays.asList(size,
 				vacuumableTransactions.completedNonDomainTransactions.size(),
 				vacuumableTransactions.completedDomainTransactions.size());
+		if (initialWriteableTransaction != null) {
+			if (vacuumableTransactions.completedNonDomainTransactions
+					.contains(initialWriteableTransaction)
+					|| vacuumableTransactions.completedDomainTransactions
+							.contains(initialWriteableTransaction)) {
+				initialWriteableTransaction = null;
+			}
+		}
 		if (size.get() > vacuumableTransactions.completedNonDomainTransactions
 				.size()) {
 			vacuumableTransactions.completedNonDomainTransactions
@@ -286,7 +255,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		// }
 		if (versions.isEmpty()) {
 			synchronized (baseObject) {
-				if (versions.isEmpty() && baseObject instanceof MvccObject) {
+				if (versions.isEmpty() && baseObject instanceof MvccObject
+						&& initialWriteableTransaction == null) {
 					logger.trace("removed mvcc versions: {} : {}", baseObject,
 							System.identityHashCode(baseObject));
 					((MvccObject) baseObject).__setMvccVersions__(null);
@@ -299,6 +269,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 * Guaranteed that version.transaction does not exist
 	 */
 	private void putVersion(ObjectVersion<T> version) {
+		if (version.object instanceof MvccObject) {
+			((MvccObject) version.object).__setMvccVersions__(this);
+		}
 		versions.put(version.transaction, version);
 		size.incrementAndGet();
 		Transactions.get().onAddedVacuumable(version.transaction, this);
@@ -369,8 +342,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			return mostRecentObject;
 		}
 	}
-
-	protected abstract boolean accessibleFromOtherTransactions(T t);
 
 	protected T copyObject(T mostRecentObject) {
 		T result = (T) Transactions.copyObject((MvccObject) mostRecentObject);

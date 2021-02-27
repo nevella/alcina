@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -445,5 +446,11 @@ public class Transactions {
 		public Thread getVacuumThread() {
 			return vacuum.getVacuumThread();
 		}
+	}
+
+	public static void revertToDefaultFieldValues(Entity entity) {
+		Entity defaults = (Entity) Reflections
+				.newInstance(entity.entityClass());
+		copyObjectFields(defaults, entity);
 	}
 }

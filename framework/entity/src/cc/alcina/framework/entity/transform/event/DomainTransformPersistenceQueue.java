@@ -377,13 +377,21 @@ public class DomainTransformPersistenceQueue {
 			}
 			DomainTransformRequestPersistent request = loadedRequests
 					.get(event.requestId);
-			if (request != null) {
-				return request;
-			}
 			if (event.type == Type.ABORTED) {
 				return request;
 			}
+			if (request != null) {
+				return request;
+			}
 			long id = event.requestId;
+			if (!ResourceUtilities.is(DomainTransformPersistenceQueue.class,
+					"clustered")) {
+				request = persistenceEvents.domainStore
+						.loadTransformRequest(id);
+			}
+			if (request != null) {
+				return request;
+			}
 			/*
 			 * 'Exists' seems ... to return false when should be true, in a few
 			 * cases
@@ -713,5 +721,9 @@ public class DomainTransformPersistenceQueue {
 				onPreparingVmLocalRequest(DomainTransformRequest dtr) {
 			appLifetimeEventUuidsThisVm.add(dtr.getChunkUuidString());
 		}
+	}
+
+	public void refreshPositions() {
+		sequencer.onPersistedRequestCommitted(-1);
 	}
 }

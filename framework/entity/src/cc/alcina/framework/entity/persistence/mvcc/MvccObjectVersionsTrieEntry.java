@@ -10,13 +10,6 @@ public class MvccObjectVersionsTrieEntry
 	}
 
 	@Override
-	protected boolean
-			accessibleFromOtherTransactions(TransactionalTrieEntry t) {
-		// this is impossible to determine, so return 'true'
-		return true;
-	}
-
-	@Override
 	protected void copyObject(TransactionalTrieEntry fromObject,
 			TransactionalTrieEntry baseObject) {
 		Transactions.copyObjectFields(fromObject, baseObject);

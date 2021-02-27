@@ -61,6 +61,9 @@ public class DomainTransformPersistenceEvents {
 				transformLocalIdSupport.runWithOffsetLocalIdCounter(
 						() -> fireDomainTransformPersistenceEvent0(event));
 			} else {
+				event.getTransformPersistenceToken().getRequest().allRequests()
+						.forEach(
+								rq -> getQueue().onPreparingVmLocalRequest(rq));
 				fireDomainTransformPersistenceEvent0(event);
 			}
 			break;

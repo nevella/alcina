@@ -1727,15 +1727,17 @@ public class DomainStore implements IDomainStore {
 				 * This means that id and localid are invariant for all versions
 				 * of the object
 				 */
+				long localId = localReplacement.getLocalId();
+				/*
+				 * Revert all non id/localid field values of the base (initial)
+				 * object so that replay occurs
+				 */
+				Transactions.revertToDefaultFieldValues(localReplacement);
+				localReplacement.setLocalId(localId);
 				localReplacement.setId(event.getObjectId());
-				// this has to be done, and has to happen after setId, since the
-				// very act of setId will put the
-				// (local) version into the cache in tx phase
-				// TO_DOMAIN_COMMITTED by Transactions.resolve(write==true)
-				//
 				// only local-id objects created by this webapp client instance
 				// will ever be put into the store cache in this phase - thus
-				// preserving the "local ids don't collied because they're on
+				// preserving the "local ids don't collide because they're on
 				// different transactions" logic of the cache
 				store.getCache().removeLocal(localReplacement);
 				store.getCache().put(localReplacement);

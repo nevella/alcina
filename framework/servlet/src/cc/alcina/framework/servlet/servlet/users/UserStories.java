@@ -28,8 +28,8 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.IUserStory;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -276,8 +276,8 @@ public class UserStories {
 									.equals(us.getClientInstanceUid())
 							: us.getClientInstanceId() == clientInstance
 									.getId();
-					return Domain.query(getImplementation()).filter(predicate)
-							.stream().findFirst();
+					return Domain.query(getImplementation())
+							.filter((Predicate) predicate).stream().findFirst();
 				});
 	}
 
@@ -298,8 +298,7 @@ public class UserStories {
 	}
 
 	protected <T extends Entity & IUserStory> Class<T> getImplementation() {
-		return (Class<T>) PersistentImpl
-				.getImplementation(IUserStory.class);
+		return (Class<T>) PersistentImpl.getImplementation(IUserStory.class);
 	}
 
 	protected List<String> getUserStoryPropertiesNotPopulatedByClient() {

@@ -198,6 +198,8 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				resultHolder.add(ThreadlocalTransformManager.get()
 						.getPostTransactionEntityResolver(
 								DomainStore.writableStore()));
+				DomainStore.writableStore().getPersistenceEvents().getQueue()
+						.refreshPositions();
 			}
 			if (params.api.isLinkToDomain(method.getName())
 					&& params.mayLinkToDomain) {
