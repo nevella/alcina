@@ -322,11 +322,11 @@ public class DomainDescriptorJob {
 
 		public QueueStat asQueueStat() {
 			QueueStat stat = new QueueStat();
-			stat.active = (int) perStateJobs(JobState.PROCESSING).count();
-			stat.completed = (int) (perStateJobs(JobState.COMPLETED).count()
-					+ perStateJobs(JobState.SEQUENCE_COMPLETE).count());
-			stat.pending = (int) (perStateJobs(JobState.PENDING).count()
-					+ perStateJobs(JobState.ALLOCATED).count());
+			stat.active = perStateJobCount(JobState.PROCESSING);
+			stat.completed = perStateJobCount(JobState.COMPLETED,
+					JobState.SEQUENCE_COMPLETE);
+			stat.pending = perStateJobCount(JobState.PENDING,
+					JobState.ALLOCATED);
 			stat.total = stat.active + stat.pending + stat.completed;
 			stat.name = job.toDisplayName();
 			stat.jobId = String.valueOf(job.getId());
@@ -559,6 +559,17 @@ public class DomainDescriptorJob {
 					.flatMap(type -> states.stream()
 							.map(state -> subQueueJobs(type, state))
 							.flatMap(Collection::stream));
+		}
+
+		private int perStateJobCount(JobState... states) {
+			return perStateJobCount(Arrays.asList(states));
+		}
+
+		private int perStateJobCount(List<JobState> states) {
+			return Arrays.stream(SubqueuePhase.values())
+					.flatMap(type -> states.stream()
+							.map(state -> subQueueJobs(type, state)))
+					.collect(Collectors.summingInt(Collection::size));
 		}
 
 		private Stream<Job> perStateJobs(JobState... states) {
