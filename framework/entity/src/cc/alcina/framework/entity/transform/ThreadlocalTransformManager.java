@@ -547,6 +547,11 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
+	public String getSimpleClassName(Class<?> clazz) {
+		return ObjectPersistenceHelper.get().getSimpleClassName(clazz);
+	}
+
+	@Override
 	public TransformManager getT() {
 		return (TransformManager) threadLocalTLTMInstance.get();
 	}

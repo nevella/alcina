@@ -437,6 +437,10 @@ public class DomainDescriptorJob {
 					Collections.singletonList(JobState.PENDING));
 		}
 
+		public boolean hasActive() {
+			return perStateJobCount(JobState.PROCESSING) > 0;
+		}
+
 		public void incrementPhase() {
 			currentPhase = SubqueuePhase.values()[currentPhase.ordinal() + 1];
 		}

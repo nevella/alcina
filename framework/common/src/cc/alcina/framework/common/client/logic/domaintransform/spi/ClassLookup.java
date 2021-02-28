@@ -57,6 +57,10 @@ public interface ClassLookup {
 				.findFirst().orElse(null);
 	}
 
+	default String getSimpleClassName(Class<?> clazz) {
+		return clazz.getSimpleName();
+	}
+
 	default boolean handlesClass(Class clazz) {
 		return true;
 	}

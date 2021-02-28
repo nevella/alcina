@@ -236,6 +236,7 @@ public class JobRegistry extends WriterService {
 
 	public Stream<QueueStat> getActiveQueueStats() {
 		return DomainDescriptorJob.get().getAllocationQueues()
+				.filter(AllocationQueue::hasActive)
 				.map(AllocationQueue::asQueueStat).sorted(Comparator
 						// aka reversed date order
 						.comparing(stat -> -stat.startTime.getTime()));
@@ -313,7 +314,6 @@ public class JobRegistry extends WriterService {
 		stopped = true;
 		scheduler.stopService();
 	}
-
 
 	public void wakeupScheduler() {
 		scheduler.fireWakeup();

@@ -1,11 +1,12 @@
 package cc.alcina.framework.common.client.job;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 
 public interface Task extends TreeSerializable {
 	default String getName() {
-		return getClass().getSimpleName();
+		return Reflections.classLookup().getSimpleClassName(getClass());
 	}
 
 	default void onJobCreate(Job job) {

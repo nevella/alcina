@@ -123,7 +123,7 @@ public class TaskListJobs extends AbstractTaskPerformer {
 					.accept(Utils::numeric).cell("Completed")
 					.accept(Utils::numeric).cell("Total")
 					.accept(Utils::numeric);
-			queues.filter(q -> q.active != 0).filter(q -> filter(q.name))
+			queues.filter(q -> filter(q.name))
 					.forEach(queue -> builder.row().cell(queue.jobId)
 							.cell(queue.name).accept(Utils::large)
 							.cell(timestamp(queue.startTime)).cell(queue.active)

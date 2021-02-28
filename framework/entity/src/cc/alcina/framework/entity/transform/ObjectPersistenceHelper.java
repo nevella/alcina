@@ -81,7 +81,10 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 				} else {
 					return Class.forName(cn);
 				}
-			}, 100);
+			}, 1000);
+
+	private CachingConcurrentMap<Class, String> simpleClassNames = new CachingConcurrentMap<Class, String>(
+			Class::getSimpleName, 1000);
 
 	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
 			clazz -> SEUtilities.getPropertyDescriptorsSortedByField(clazz)
@@ -214,6 +217,11 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	public ClassLoader getServletLayerClassloader() {
 		return this.servletLayerClassloader;
+	}
+
+	@Override
+	public String getSimpleClassName(Class<?> clazz) {
+		return simpleClassNames.get(clazz);
 	}
 
 	@Override
