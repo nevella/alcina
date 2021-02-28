@@ -17,6 +17,10 @@ public interface JobExecutors {
 
 	List<ClientInstance> getActiveServers();
 
+	default boolean isCurrentOrphanage() {
+		return isCurrentScheduledJobExecutor();
+	}
+
 	boolean isCurrentScheduledJobExecutor();
 
 	boolean isHighestBuildNumberInCluster();

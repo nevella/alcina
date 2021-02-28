@@ -774,7 +774,7 @@ public class JobRegistry extends WriterService {
 
 		@Override
 		public boolean isHighestBuildNumberInCluster() {
-			return false;
+			return true;
 		}
 	}
 

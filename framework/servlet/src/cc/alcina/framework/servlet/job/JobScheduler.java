@@ -13,7 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -310,18 +309,23 @@ public class JobScheduler {
 				.get("visibleInstanceRegex");
 		Date cutoff = SEUtilities
 				.toOldDate(LocalDateTime.now().minusMinutes(1));
-		AtomicBoolean zeroChanges = new AtomicBoolean(false);
 		Date abortTime = new Date();
-		while (!zeroChanges.get() && getToAbortOrReassign(activeInstances,
-				visibleInstanceRegex, cutoff).anyMatch(j -> true)) {
+		long toOrphanCount = getToAbortOrReassign(activeInstances,
+				visibleInstanceRegex, cutoff).count();
+		if (toOrphanCount > 0) {
 			jobRegistry.withJobMetadataLock(
 					getClass().getName() + "::processOrphans", () -> {
-						logger.info("Orphans remaining: {}",
-								getToAbortOrReassign(activeInstances,
-										visibleInstanceRegex, cutoff).count());
+						logger.info("Orphans remaining: {}", toOrphanCount);
+						/*
+						 * FIXME - mvcc.jobs.2 - performance of 'orphan' is
+						 * fairly poor - db indicies? for the moment, let the
+						 * gentle healing of time resolve this - and push a
+						 * wakeup to the event queue (so we don't block on
+						 * orphan) rather than looping here
+						 */
 						Stream<Job> doubleChecked = getToAbortOrReassign(
 								activeInstances, visibleInstanceRegex, cutoff)
-										.limit(1000);
+										.limit(200);
 						doubleChecked.forEach(job -> {
 							if (job.provideIsComplete()) {
 								logger.warn(
@@ -347,7 +351,13 @@ public class JobScheduler {
 						logger.warn("Aborting jobs - committing transforms");
 						int committed = Transaction.commit();
 						if (committed == 0) {
-							zeroChanges.set(true);
+							logger.warn(
+									"Aborting jobs - no commits - don't reschedule wakeup");
+						} else {
+							logger.warn(
+									"Aborting jobs - {} commits - reschedule wakeup",
+									committed);
+							fireWakeup();
 						}
 					});
 		}

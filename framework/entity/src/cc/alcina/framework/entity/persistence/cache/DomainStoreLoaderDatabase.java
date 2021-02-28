@@ -1005,6 +1005,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		if (addLazyPropertyLoadTask) {
 			domainDescriptor.preProvideTasks
 					.add(new LazyPropertyLoadTask<>(clazz, store));
+			logger.warn("Adding lazy property load task for: {}", clazz);
 		}
 		domainDescriptor.preProvideTasks
 				.add(new LazyPropertyLoadTask<>(clazz, store));

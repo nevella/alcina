@@ -80,8 +80,7 @@ class SchedulingPermissions {
 		if (AppPersistenceBase.isInstanceReadOnly()) {
 			return false;
 		}
-		return isCurrentScheduledJobExecutor() || ResourceUtilities
-				.is(JobScheduler.class, "forceProcessOrphans");
+		return JobRegistry.get().jobExecutors.isCurrentOrphanage();
 	}
 
 	static boolean isCurrentScheduledJobExecutor() {
