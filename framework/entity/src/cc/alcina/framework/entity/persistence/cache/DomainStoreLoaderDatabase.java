@@ -1006,6 +1006,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			domainDescriptor.preProvideTasks
 					.add(new LazyPropertyLoadTask<>(clazz, store));
 		}
+		domainDescriptor.preProvideTasks
+				.add(new LazyPropertyLoadTask<>(clazz, store));
 	}
 
 	private void serverClientInstanceToDomainStoreVersion() {
@@ -1609,7 +1611,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 			void close() {
 				try {
-					logger.warn("Closing  db connection  {}", connection);
+					logger.debug("Closing db connection  {}", connection);
 					if (invalid) {
 						Exception exception = new Exception(
 								"Closing closed/invalid connection");

@@ -42,7 +42,7 @@ public class MvccEntityLazyPropertyTest<IU extends Entity & IUser, IG extends En
 					}
 					return false;
 				}).collect(Collectors.toList());
-		Domain.stream(clazz).limit(2).forEach(e -> {
+		Domain.stream(clazz).limit(2).map(Domain::find).forEach(e -> {
 			try {
 				for (PropertyDescriptor pd : withLazy) {
 					Object invoke = pd.getReadMethod().invoke(e, new Object[0]);
