@@ -164,7 +164,14 @@ public class JobScheduler {
 				.filter(job -> job.getCreator().toString()
 						.matches(visibleInstanceRegex))
 				.filter(job -> (job.getPerformer() == null
-						&& !activeInstances.contains(job.getCreator()))
+						&& !activeInstances.contains(job.getCreator())
+						/*
+						 * don't abort if the creator has moved on but we have a
+						 * still-active related processor (edge case)
+						 */
+						&& !job.provideRelatedSequential().stream()
+								.anyMatch(relatedJob -> activeInstances
+										.contains(relatedJob.getPerformer())))
 						|| (job.getPerformer() != null && !activeInstances
 								.contains(job.getPerformer())));
 	}
@@ -320,13 +327,6 @@ public class JobScheduler {
 								logger.warn(
 										"Not aborting job {} - already complete",
 										job);
-								Optional<AllocationQueue> queue = DomainDescriptorJob
-										.get()
-										.getIncompleteQueueContaining(job);
-								if (queue.isPresent()) {
-									logger.warn("Not aborting job - queue {}",
-											queue);
-								}
 								return;
 							}
 							logger.warn(
