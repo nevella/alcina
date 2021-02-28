@@ -284,85 +284,6 @@ public class JobScheduler {
 		}
 	}
 
-	private void processOrphans() {
-		if (jobRegistry.jobExecutors.isHighestBuildNumberInCluster()) {
-			DomainDescriptorJob.get().getUndeserializableJobs()
-					.forEach(Job::delete);
-		}
-		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
-				.getActiveServers();
-		logger.info("Process orphans - visible instances: {}", activeInstances);
-		/*
-		 * handle flaky health/instances
-		 */
-		int minimumVisibleInstancesForOrphanProcessing = ResourceUtilities
-				.getInteger(JobScheduler.class,
-						"minimumVisibleInstancesForOrphanProcessing");
-		if (activeInstances
-				.size() < minimumVisibleInstancesForOrphanProcessing) {
-			logger.info(
-					"Not processing orphans - visible instances size: {}, minimum size: {}",
-					activeInstances.size(),
-					minimumVisibleInstancesForOrphanProcessing);
-		}
-		String visibleInstanceRegex = ResourceUtilities
-				.get("visibleInstanceRegex");
-		Date cutoff = SEUtilities
-				.toOldDate(LocalDateTime.now().minusMinutes(1));
-		Date abortTime = new Date();
-		long toOrphanCount = getToAbortOrReassign(activeInstances,
-				visibleInstanceRegex, cutoff).count();
-		if (toOrphanCount > 0) {
-			jobRegistry.withJobMetadataLock(
-					getClass().getName() + "::processOrphans", () -> {
-						logger.info("Orphans remaining: {}", toOrphanCount);
-						/*
-						 * FIXME - mvcc.jobs.2 - performance of 'orphan' is
-						 * fairly poor - db indicies? for the moment, let the
-						 * gentle healing of time resolve this - and push a
-						 * wakeup to the event queue (so we don't block on
-						 * orphan) rather than looping here
-						 */
-						Stream<Job> doubleChecked = getToAbortOrReassign(
-								activeInstances, visibleInstanceRegex, cutoff)
-										.limit(200);
-						doubleChecked.forEach(job -> {
-							if (job.provideIsComplete()) {
-								logger.warn(
-										"Not aborting job {} - already complete",
-										job);
-								return;
-							}
-							logger.warn(
-									"Aborting job {} (inactive client creator: {} - performer: {})",
-									job, job.getCreator(), job.getPerformer());
-							if (ResourceUtilities.is("abortDisabled")) {
-								logger.warn(
-										"(Would abort job - but abortDisabled)");
-								return;
-							}
-							/* resubmit, then abort */
-							ResubmitPolicy policy = ResubmitPolicy.forJob(job);
-							policy.visit(job);
-							job.setState(JobState.ABORTED);
-							job.setEndTime(abortTime);
-							job.setResultType(JobResultType.DID_NOT_COMPLETE);
-						});
-						logger.warn("Aborting jobs - committing transforms");
-						int committed = Transaction.commit();
-						if (committed == 0) {
-							logger.warn(
-									"Aborting jobs - no commits - don't reschedule wakeup");
-						} else {
-							logger.warn(
-									"Aborting jobs - {} commits - reschedule wakeup",
-									committed);
-							fireWakeup();
-						}
-					});
-		}
-	}
-
 	private void refreshFutures(ScheduleEvent event) {
 		List<Class<? extends Task>> scheduleTaskClasses = (List) Registry.get()
 				.allImplementationKeys(Schedule.class);
@@ -447,6 +368,85 @@ public class JobScheduler {
 	void fireWakeup() {
 		MethodContext.instance().withWrappingTransaction()
 				.run(() -> enqueueEvent(new ScheduleEvent(Type.WAKEUP)));
+	}
+
+	private void processOrphans() {
+		if (jobRegistry.jobExecutors.isHighestBuildNumberInCluster()) {
+			DomainDescriptorJob.get().getUndeserializableJobs()
+					.forEach(Job::delete);
+		}
+		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
+				.getActiveServers();
+		logger.info("Process orphans - visible instances: {}", activeInstances);
+		/*
+		 * handle flaky health/instances
+		 */
+		int minimumVisibleInstancesForOrphanProcessing = ResourceUtilities
+				.getInteger(JobScheduler.class,
+						"minimumVisibleInstancesForOrphanProcessing");
+		if (activeInstances
+				.size() < minimumVisibleInstancesForOrphanProcessing) {
+			logger.info(
+					"Not processing orphans - visible instances size: {}, minimum size: {}",
+					activeInstances.size(),
+					minimumVisibleInstancesForOrphanProcessing);
+		}
+		String visibleInstanceRegex = ResourceUtilities
+				.get("visibleInstanceRegex");
+		Date cutoff = SEUtilities
+				.toOldDate(LocalDateTime.now().minusMinutes(1));
+		Date abortTime = new Date();
+		long toOrphanCount = getToAbortOrReassign(activeInstances,
+				visibleInstanceRegex, cutoff).count();
+		if (toOrphanCount > 0) {
+			jobRegistry.withJobMetadataLock(
+					getClass().getName() + "::processOrphans", () -> {
+						logger.info("Orphans remaining: {}", toOrphanCount);
+						/*
+						 * FIXME - mvcc.jobs.2 - performance of 'orphan' is
+						 * fairly poor - db indicies? for the moment, let the
+						 * gentle healing of time resolve this - and push a
+						 * wakeup to the event queue (so we don't block on
+						 * orphan) rather than looping here
+						 */
+						Stream<Job> doubleChecked = getToAbortOrReassign(
+								activeInstances, visibleInstanceRegex, cutoff)
+										.limit(200);
+						doubleChecked.forEach(job -> {
+							if (job.provideIsComplete()) {
+								logger.warn(
+										"Not aborting job {} - already complete",
+										job);
+								return;
+							}
+							logger.warn(
+									"Aborting job {} (inactive client creator: {} - performer: {})",
+									job, job.getCreator(), job.getPerformer());
+							if (ResourceUtilities.is("abortDisabled")) {
+								logger.warn(
+										"(Would abort job - but abortDisabled)");
+								return;
+							}
+							/* resubmit, then abort */
+							ResubmitPolicy policy = ResubmitPolicy.forJob(job);
+							policy.visit(job);
+							job.setState(JobState.ABORTED);
+							job.setEndTime(abortTime);
+							job.setResultType(JobResultType.DID_NOT_COMPLETE);
+						});
+						logger.warn("Aborting jobs - committing transforms");
+						int committed = Transaction.commit();
+						if (committed == 0) {
+							logger.warn(
+									"Aborting jobs - no commits - don't reschedule wakeup");
+						} else {
+							logger.warn(
+									"Aborting jobs - {} commits - reschedule wakeup",
+									committed);
+							fireWakeup();
+						}
+					});
+		}
 	}
 
 	@RegistryLocation(registryPoint = ExecutionConstraints.class, implementationType = ImplementationType.FACTORY)

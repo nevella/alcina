@@ -314,6 +314,7 @@ public class JobRegistry extends WriterService {
 		scheduler.stopService();
 	}
 
+
 	public void wakeupScheduler() {
 		scheduler.fireWakeup();
 	}
