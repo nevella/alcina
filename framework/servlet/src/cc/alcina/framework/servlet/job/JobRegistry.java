@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.job.NonRootTask;
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.job.TransientFieldTask;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -668,6 +669,9 @@ public class JobRegistry extends WriterService {
 			if (awaiter) {
 				JobRegistry.get().contextAwaiters.put(job,
 						new ContextAwaiter());
+			}
+			if (task instanceof TransientFieldTask) {
+				TransientFieldTasks.get().registerTask(job, task);
 			}
 			task.onJobCreate(job);
 			lastCreated = job;

@@ -613,7 +613,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public Job provideTopLevelAncestor() {
-		return provideIsTopLevel() ? this
+		return provideIsTopLevel() ? domainIdentity()
 				: provideParent().get().provideTopLevelAncestor();
 	}
 
