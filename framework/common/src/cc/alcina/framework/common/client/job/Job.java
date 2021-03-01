@@ -612,6 +612,11 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		}
 	}
 
+	public Job provideTopLevelAncestor() {
+		return provideIsTopLevel() ? this
+				: provideParent().get().provideTopLevelAncestor();
+	}
+
 	public Stream<Job> provideUncompletedChildren() {
 		return provideChildren().filter(Job::provideIsNotComplete);
 	}

@@ -91,10 +91,12 @@ public class CompilationUnits {
 				if (!file.isDirectory()) {
 					CompilationUnitWrapper unit = new CompilationUnitWrapper(
 							file);
-					unit.cu().accept(visitorCreator.apply(units, unit), null);
+					unit.unit().accept(visitorCreator.apply(units, unit), null);
 					units.units.add(unit);
 					unit.declarations.stream().filter(d -> d.hasFlags())
 							.forEach(d -> {
+								units.declarations.put(d.qualifiedSourceName,
+										d);
 								Ax.out("%s :: %s", d.typeFlags,
 										d.clazz().getSimpleName());
 							});
@@ -109,7 +111,8 @@ public class CompilationUnits {
 
 	static String fqn(CompilationUnitWrapper unit, ClassOrInterfaceType n) {
 		String nameAsString = n.getNameAsString();
-		Optional<ImportDeclaration> importDecl = unit.cu().getImports().stream()
+		Optional<ImportDeclaration> importDecl = unit.unit().getImports()
+				.stream()
 				.filter(id -> id.getNameAsString().endsWith(nameAsString))
 				.findFirst();
 		if (importDecl.isPresent()) {
@@ -121,13 +124,13 @@ public class CompilationUnits {
 			} catch (Exception e) {
 				try {
 					Class<?> clazz = Class
-							.forName(unit.cu.getPackageDeclaration().get()
+							.forName(unit.unit.getPackageDeclaration().get()
 									.getNameAsString() + "." + nameAsString);
 					return clazz.getName();
 				} catch (Exception e2) {
 					try {
 						// inner
-						String cn = unit.cu.getPackageDeclaration().get()
+						String cn = unit.unit.getPackageDeclaration().get()
 								.getNameAsString()
 								+ "."
 								+ ((ClassOrInterfaceDeclaration) n
@@ -151,7 +154,8 @@ public class CompilationUnits {
 		}
 		nameAsString = nameAsString.replaceFirst("<.+>", "");
 		String f_nameAsString = nameAsString;
-		Optional<ImportDeclaration> importDecl = unit.cu().getImports().stream()
+		Optional<ImportDeclaration> importDecl = unit.unit().getImports()
+				.stream()
 				.filter(id -> id.getNameAsString().endsWith(f_nameAsString))
 				.findFirst();
 		if (importDecl.isPresent()) {
@@ -163,15 +167,15 @@ public class CompilationUnits {
 			} catch (Exception e) {
 				try {
 					Class<?> clazz = Class
-							.forName(unit.cu.getPackageDeclaration().get()
+							.forName(unit.unit.getPackageDeclaration().get()
 									.getNameAsString() + "." + nameAsString);
 					return clazz.getName();
 				} catch (Exception e2) {
 					try {
 						// inner
-						String cn = unit.cu.getPackageDeclaration().get()
+						String cn = unit.unit.getPackageDeclaration().get()
 								.getNameAsString() + "."
-								+ unit.cu.getType(0).getNameAsString() + "$"
+								+ unit.unit.getType(0).getNameAsString() + "$"
 								+ nameAsString;
 						Class<?> clazz = Class.forName(cn);
 						return clazz.getName().replace("$", ".");
@@ -190,7 +194,7 @@ public class CompilationUnits {
 					+ (binary ? "$" : ".") + n.getNameAsString();
 		}
 		return Ax.format("%s.%s",
-				unit.cu().getPackageDeclaration().get().getNameAsString(),
+				unit.unit().getPackageDeclaration().get().getNameAsString(),
 				n.getNameAsString());
 	}
 
@@ -214,14 +218,22 @@ public class CompilationUnits {
 		return new SolverUtils();
 	}
 
+	public void writeDirty(boolean test) {
+		File outDir = new File("/tmp/refactor");
+		SEUtilities.deleteDirectory(outDir);
+		outDir.mkdirs();
+		units.stream().filter(u -> u.dirty)
+				.forEach(u -> u.writeTo(test ? outDir : null));
+	}
+
 	public static class ClassOrInterfaceDeclarationWrapper {
-		public transient ClassOrInterfaceDeclaration declaration;
+		private transient ClassOrInterfaceDeclaration declaration;
 
 		public Set<TypeFlag> typeFlags = new LinkedHashSet<>();
 
-		private String name;
+		public String name;
 
-		public CompilationUnitWrapper unit;
+		public CompilationUnitWrapper unitWrapper;
 
 		public String qualifiedSourceName;
 
@@ -234,7 +246,7 @@ public class CompilationUnits {
 
 		public ClassOrInterfaceDeclarationWrapper(CompilationUnitWrapper unit,
 				ClassOrInterfaceDeclaration n) {
-			this.unit = unit;
+			this.unitWrapper = unit;
 			this.name = n.getNameAsString();
 			qualifiedSourceName = fqn(unit, n, false);
 			qualifiedBinaryName = fqn(unit, n, true);
@@ -258,7 +270,27 @@ public class CompilationUnits {
 		}
 
 		public void dirty() {
-			unit.dirty = true;
+			unitWrapper.dirty = true;
+		}
+
+		public void ensureImport(Class<?> clazz) {
+			unitWrapper.ensureImport(clazz);
+		}
+
+		public ClassOrInterfaceDeclaration getDeclaration() {
+			if (declaration == null) {
+				unitWrapper.unit().accept(new VoidVisitorAdapter<Void>() {
+					@Override
+					public void visit(ClassOrInterfaceDeclaration node,
+							Void arg) {
+						if (Objects.equals(qualifiedSourceName,
+								fqn(unitWrapper, node, false))) {
+							declaration = node;
+						}
+					}
+				}, null);
+			}
+			return declaration;
 		}
 
 		public boolean hasFlag(TypeFlag flag) {
@@ -289,12 +321,12 @@ public class CompilationUnits {
 		}
 
 		public String resolveFqn(Type type) {
-			return fqn(unit, type.asString());
+			return fqn(unitWrapper, type.asString());
 		}
 
 		public String resolveFqnOrNull(String genericPart) {
 			try {
-				return fqn(unit, genericPart);
+				return fqn(unitWrapper, genericPart);
 			} catch (Exception e) {
 				return null;
 			}
@@ -306,6 +338,10 @@ public class CompilationUnits {
 			} catch (Exception e) {
 				return null;
 			}
+		}
+
+		public void setDeclaration(ClassOrInterfaceDeclaration declaration) {
+			this.declaration = declaration;
 		}
 
 		public void setFlag(TypeFlag flag) {
@@ -332,6 +368,10 @@ public class CompilationUnits {
 			return Ax.format("%s: %s", typeFlags, name);
 		}
 
+		public <T> T typedInstance() {
+			return (T) Reflections.newInstance(clazz());
+		}
+
 		private CompilationUnits compUnits() {
 			return LooseContext.get(CONTEXT_COMP_UNITS);
 		}
@@ -342,7 +382,7 @@ public class CompilationUnits {
 
 		public List<ClassOrInterfaceDeclarationWrapper> declarations = new ArrayList<>();
 
-		transient CompilationUnit cu;
+		transient CompilationUnit unit;
 
 		public boolean dirty;
 
@@ -353,23 +393,20 @@ public class CompilationUnits {
 			this.file = file;
 		}
 
-		public CompilationUnit cu() {
-			try {
-				if (cu == null) {
-					cu = StaticJavaParser.parse(file);
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			return cu;
-		}
-
 		public ClassOrInterfaceDeclarationWrapper
-				decFor(ClassOrInterfaceDeclaration n) {
-			cu();
+				declarationWrapperFor(ClassOrInterfaceDeclaration n) {
+			unit();
 			return declarations.stream().filter(
 					d -> d.qualifiedSourceName.endsWith(n.getNameAsString()))
 					.findFirst().get();
+		}
+
+		public void ensureImport(Class<?> clazz) {
+			if (unit().getImports().stream()
+					.noneMatch(id -> id.getName().equals(clazz.getName()))) {
+				unit().addImport(clazz);
+				dirty = true;
+			}
 		}
 
 		public boolean hasFlag(TypeFlag flag) {
@@ -382,9 +419,20 @@ public class CompilationUnits {
 		}
 
 		public void removeImport(Class<?> clazz) {
-			new ArrayList<>(cu.getImports()).stream()
+			new ArrayList<>(unit.getImports()).stream()
 					.filter(i -> i.getNameAsString().equals(clazz.getName()))
 					.forEach(ImportDeclaration::remove);
+		}
+
+		public CompilationUnit unit() {
+			try {
+				if (unit == null) {
+					unit = StaticJavaParser.parse(file);
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			return unit;
 		}
 
 		public void writeTo(File outDir) {
@@ -393,7 +441,7 @@ public class CompilationUnits {
 			}
 			File outFile = SEUtilities.getChildFile(outDir, file.getName());
 			try {
-				ResourceUtilities.writeStringToFile(cu.toString(), outFile);
+				ResourceUtilities.writeStringToFile(unit.toString(), outFile);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

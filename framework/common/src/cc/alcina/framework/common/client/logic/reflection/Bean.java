@@ -20,11 +20,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import cc.alcina.framework.common.client.logic.domain.Entity;
-
-
 /**
- * To be applied at the class level Also functions as an GwtClientInstantiable
+ * To be applied at the class level Also functions as a GWT ClientInstantiable
  * annotation
  * 
  * @author nick@alcina.cc
@@ -40,12 +37,7 @@ public @interface Bean {
 
 	boolean allPropertiesVisualisable() default false;
 
-	String description() default "";
-
 	Display displayInfo() default @Display(name = "");
 
 	String displayNamePropertyName() default "";
-
-	
-	
 }
