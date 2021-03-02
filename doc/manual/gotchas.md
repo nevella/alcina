@@ -12,3 +12,7 @@ PersistentUnitCacheDir line 355
 
 # the dangers of alcina-entity.jar
 gwt serialization issues? clean & rebuild that jar
+
+# debugging serialization incompatibility
+Look in /tmp/rpclog == compare first the xx fromBrowser & xx fromServer files (to see how hosted & production mode differ)
+Then compare xxx.short (a little more involved)
