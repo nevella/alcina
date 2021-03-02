@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -85,6 +86,9 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 			String template = "<a href='#%s'>%s</a>";
 			String token = place.toTokenString();
 			String displayName = CommonUtils.nullSafeToString(value);
+			if (value instanceof BasePlace && value instanceof HasDisplayName) {
+				displayName = ((HasDisplayName) value).displayName();
+			}
 			displayName = Ax.blankTo(displayName, "(Blank)");
 			return Ax.format(template, token,
 					SafeHtmlUtils.htmlEscape(displayName));
