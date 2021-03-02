@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
@@ -541,6 +542,19 @@ public class TransformPersisterInPersistenceContext {
 							event.getPropertyName())
 					.getAnnotation(OneToMany.class);
 			if (oneToMany != null) {
+				/*
+				 * Ensure the source/target object exist (otherwise there'll be
+				 * an invalid attempt to apply to the graph). But ignore for db
+				 * persistence
+				 */
+				if (Domain.find(event.toObjectLocator()) == null) {
+					throw new DomainTransformException(event,
+							DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND);
+				}
+				if (Domain.find(event.toValueLocator()) == null) {
+					throw new DomainTransformException(event,
+							DomainTransformExceptionType.TARGET_ENTITY_NOT_FOUND);
+				}
 				return;
 			}
 			break;
