@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.HasDisplayName;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -57,21 +57,20 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 		}
 
 		@Override
-		public String render(Object source) {
-			if (source == null) {
+		public String render(Object value) {
+			if (value == null) {
 				return "";
 			}
-			Object hasDisplayName = source;
 			BasePlace place = null;
 			Entity entity = null;
-			if (source instanceof Entity) {
-				entity = (Entity) source;
+			if (value instanceof Entity) {
+				entity = (Entity) value;
 			} else if (html.getModel() instanceof Entity) {
 				entity = (Entity) html.getModel();
 			} else if (html.getModel() instanceof BasePlace) {
 				place = (BasePlace) html.getModel();
-			} else if (source instanceof BasePlace) {
-				place = (BasePlace) source;
+			} else if (value instanceof BasePlace) {
+				place = (BasePlace) value;
 			}
 			if (entity != null) {
 				EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
@@ -81,14 +80,11 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 				} else {
 					instancePlace.withEntity(entity);
 					place = instancePlace;
-					hasDisplayName = entity;
 				}
 			}
 			String template = "<a href='#%s'>%s</a>";
 			String token = place.toTokenString();
-			String displayName = source instanceof String
-					&& ((String) source).length() > 0 ? (String) source
-							: ((HasDisplayName) hasDisplayName).displayName();
+			String displayName = CommonUtils.nullSafeToString(value);
 			displayName = Ax.blankTo(displayName, "(Blank)");
 			return Ax.format(template, token,
 					SafeHtmlUtils.htmlEscape(displayName));
