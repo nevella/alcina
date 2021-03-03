@@ -24,6 +24,7 @@ public abstract class DomainView extends VersionableEntity<DomainView> {
 		return this.entityDefinition;
 	}
 
+	@Transient
 	public String getEntityDefinitionSerialized() {
 		return this.entityDefinitionSerialized;
 	}
@@ -37,6 +38,7 @@ public abstract class DomainView extends VersionableEntity<DomainView> {
 		return this.entityTransformModel;
 	}
 
+	@Transient
 	public String getEntityTransformModelSerialized() {
 		return this.entityTransformModelSerialized;
 	}
