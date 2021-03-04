@@ -32,6 +32,8 @@ public class ReflectiveSearchDefinitionSerializer
 
 	private static final String RS0 = "rs0_";
 
+	public static boolean flatTreeSerializationEnabled = false;
+
 	public static String escapeJsonForUrl(String str) {
 		StringBuilder sb = new StringBuilder();
 		for (int idx = 0; idx < str.length(); idx++) {
@@ -170,7 +172,7 @@ public class ReflectiveSearchDefinitionSerializer
 
 	private boolean
 			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
-		return Reflections.classLookup()
+		return flatTreeSerializationEnabled && Reflections.classLookup()
 				.getPropertyReflector(defClass, "criteriaGroups")
 				.getAnnotation(PropertySerialization.class) != null;
 	}
