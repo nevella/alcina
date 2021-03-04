@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /**
  * 
@@ -40,10 +41,12 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 	static final transient long serialVersionUID = -1L;
 
 	public EnumMultipleCriterion() {
+		setOperator(StandardSearchOperator.CONTAINS);
 	}
 
 	public EnumMultipleCriterion(String criteriaDisplayName) {
 		super(criteriaDisplayName);
+		setOperator(StandardSearchOperator.CONTAINS);
 	}
 
 	public abstract Class<E> enumClass();

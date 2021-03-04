@@ -212,7 +212,6 @@ public class LogStoreInterceptors {
 		if (!logStatPaused) {
 			stats.forEach(s -> logStat(s));
 			stats.clear();
-			;
 		}
 	}
 

@@ -1,7 +1,8 @@
 package cc.alcina.framework.common.client.search;
 
 public interface SearchDefinitionSerializer {
-	public <SD extends SearchDefinition> SD deserialize(String serializedDef);
+	public <SD extends SearchDefinition> SD deserialize(
+			Class<? extends SearchDefinition> clazz, String serializedDef);
 
 	public String serialize(SearchDefinition def);
 
@@ -11,6 +12,10 @@ public interface SearchDefinitionSerializer {
 
 	default boolean canSimpleSerialize(SearchDefinition def) {
 		return simpleSerialize(def) != null;
+	}
+
+	default <SD extends SearchDefinition> SD deserialize(String serializedDef) {
+		return deserialize(null, serializedDef);
 	}
 
 	default String serializeSimplyIfPossible(SearchDefinition def) {

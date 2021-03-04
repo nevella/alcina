@@ -16,10 +16,10 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
-import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.cache.LockUtils;
 import cc.alcina.framework.entity.persistence.cache.LockUtils.ClassStringKeyLock;
+import cc.alcina.framework.entity.util.SerializationStrategy.SerializationStrategy_Kryo;
 
 public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	public static <C> FsObjectCache<C> singletonCache(Class<C> clazz) {
@@ -32,6 +32,8 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 				DataFolderProvider.get().getChildFile(forClass.getName()), type,
 				p -> type.newInstance());
 	}
+
+	private SerializationStrategy serializationStrategy = new SerializationStrategy_Kryo();
 
 	private File root;
 
@@ -77,7 +79,8 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	}
 
 	public File getCacheFile(String path) {
-		return new File(Ax.format("%s/%s.dat", root.getPath(), path));
+		return new File(Ax.format("%s/%s.%s", root.getPath(), path,
+				serializationStrategy.getFileSuffix()));
 	}
 
 	public long getObjectInvalidationTime() {
@@ -87,6 +90,10 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	@Override
 	public Class<T> getPersistedClass() {
 		return clazz;
+	}
+
+	public SerializationStrategy getSerializationStrategy() {
+		return this.serializationStrategy;
 	}
 
 	@Override
@@ -103,7 +110,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		try {
 			lock.lock();
 			File cacheFile = getCacheFile(path);
-			KryoUtils.serializeToFile(t, cacheFile);
+			serializationStrategy.serializeToFile(t, cacheFile);
 		} finally {
 			lock.unlock();
 		}
@@ -117,7 +124,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		try {
 			lock.lock();
 			File cacheFile = getCacheFile(path);
-			byte[] updated = KryoUtils.serializeToByteArray(t);
+			byte[] updated = serializationStrategy.serializeToByteArray(t);
 			if (cacheFile.exists()) {
 				byte[] existing = ResourceUtilities
 						.readFileToByteArray(cacheFile);
@@ -141,6 +148,11 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	public void setObjectInvalidationTime(long objectInvalidationTime) {
 		this.objectInvalidationTime = objectInvalidationTime;
+	}
+
+	public void setSerializationStrategy(
+			SerializationStrategy serializationStrategy) {
+		this.serializationStrategy = serializationStrategy;
 	}
 
 	public void shutdown() {
@@ -215,7 +227,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 				T value = pathToValue == null ? clazz.newInstance()
 						: pathToValue.apply(path);
 				if (value != null) {
-					KryoUtils.serializeToFile(value, cacheFile);
+					serializationStrategy.serializeToFile(value, cacheFile);
 				} else {
 					return null;
 				}
@@ -235,7 +247,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		String key = Ax.format("Deserialize cache: %s", path);
 		// MetricLogging.get().start(key);
 		try {
-			T t = KryoUtils.deserializeFromFile(cacheFile, clazz);
+			T t = serializationStrategy.deserializeFromFile(cacheFile, clazz);
 			// MetricLogging.get().end(key, metricLogger);
 			if (retainInMemory) {
 				FsObjectCache<T>.CacheEntry entry = new CacheEntry();

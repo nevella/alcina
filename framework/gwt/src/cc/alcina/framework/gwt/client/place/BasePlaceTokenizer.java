@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.place;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.place.shared.Place;
@@ -81,7 +83,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		addTokenPart(getPrefix());
 		getToken0(place);
 		if (params != null && !params.isEmpty()) {
-			addTokenPart(AlcinaHistory.toHash(params));
+			addTokenPart(AlcinaHistory.toHash(params, encodedValues()));
 		}
 		return tokenBuilder.toString();
 	}
@@ -138,6 +140,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		}
 		tokenBuilder.append(part);
 		added = true;
+	}
+
+	protected List<String> encodedValues() {
+		return Collections.emptyList();
 	}
 
 	protected <E extends Enum> E enumValue(Class<E> clazz, String value) {

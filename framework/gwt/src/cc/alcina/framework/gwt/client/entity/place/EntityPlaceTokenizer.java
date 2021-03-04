@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.client.entity.place;
 
+import java.util.Arrays;
+import java.util.List;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
@@ -17,6 +20,11 @@ public abstract class EntityPlaceTokenizer<E extends Entity, SD extends EntitySe
 	protected void deserializeSearchDefinition(P place) {
 		place.def = searchDefinitionSerializer()
 				.deserialize(getStringParameter(P_DEF));
+	}
+
+	@Override
+	protected List<String> encodedValues() {
+		return Arrays.asList(P_DEF);
 	}
 
 	@Override
@@ -73,7 +81,7 @@ public abstract class EntityPlaceTokenizer<E extends Entity, SD extends EntitySe
 		if (place.fromId != 0) {
 			addTokenPart(place.fromId);
 		}
-		if (place.fromClass!=null) {
+		if (place.fromClass != null) {
 			addTokenPart(place.fromClass);
 		}
 	}

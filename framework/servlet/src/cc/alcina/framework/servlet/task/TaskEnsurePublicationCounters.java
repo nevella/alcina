@@ -8,6 +8,5 @@ public class TaskEnsurePublicationCounters extends AbstractTaskPerformer {
 	protected void run0() throws Exception {
 		CommonPersistenceProvider.get().getCommonPersistence()
 				.ensurePublicationCounters();
-		;
 	}
 }

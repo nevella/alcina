@@ -18,7 +18,9 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /**
  * 
@@ -49,10 +51,12 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 	private boolean withNull = true;
 
 	public EnumCriterion() {
+		setOperator(StandardSearchOperator.EQUALS);
 	}
 
 	public EnumCriterion(String criteriaDisplayName, boolean withNull) {
 		super(criteriaDisplayName);
+		setOperator(StandardSearchOperator.EQUALS);
 		this.withNull = withNull;
 	}
 
@@ -68,22 +72,21 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		return result;
 	}
 
+	@Override
 	@XmlTransient
 	@JsonIgnore
+	@PropertySerialization(defaultProperty = true)
 	public abstract E getValue();
 
+	@Override
 	public boolean isWithNull() {
 		return withNull;
-	}
-
-	public <T extends EnumCriterion<E>> T withValue(E value) {
-		setValue(value);
-		return (T) this;
 	}
 
 	/**
 	 * add property change firing to the subclass implementation, if you care
 	 */
+	@Override
 	public abstract void setValue(E value);
 
 	public void setWithNull(boolean withNull) {
@@ -93,6 +96,11 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 	@Override
 	public String toString() {
 		return String.valueOf(getValue());
+	}
+
+	public <T extends EnumCriterion<E>> T withValue(E value) {
+		setValue(value);
+		return (T) this;
 	}
 
 	/**

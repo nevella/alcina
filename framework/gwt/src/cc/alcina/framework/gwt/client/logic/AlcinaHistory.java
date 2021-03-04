@@ -17,6 +17,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.user.client.History;
@@ -68,12 +69,14 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 
 	static UrlComponentEncoder encoder;
 
-	public static String encode(String string) {
+	public static String encodeValue(String string) {
 		if (encoder == null) {
 			encoder = Registry.impl(UrlComponentEncoder.class);
 		}
 		string = string.replace("&", "&&");
 		String encoded = encoder.encode(string);
+		encoded = encoded.replace("%3D", "=");
+		encoded = encoded.replace("%3B", ";");
 		return encoded;
 	}
 
@@ -159,11 +162,18 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		return s;
 	}
 
+	public static String toHash(Map<String, String> params) {
+		return toHash(params, Collections.emptyList());
+	}
+
 	/**
 	 * '&' in values is encoded as &&, to allow for hotmail escaping '&' in the
 	 * hash as a whole - see fromHash
+	 * 
+	 * encodedValues will not be double-encoded
 	 */
-	public static String toHash(Map<String, String> params) {
+	public static String toHash(Map<String, String> params,
+			List<String> encodedValues) {
 		StringBuffer sb = new StringBuffer();
 		ArrayList<String> keys = new ArrayList<String>(params.keySet());
 		Collections.sort(keys);
@@ -176,7 +186,11 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 			}
 			sb.append(k);
 			sb.append("=");
-			sb.append(encode(params.get(k).toString()));
+			if (encodedValues.contains(k)) {
+				sb.append(params.get(k).toString());
+			} else {
+				sb.append(encodeValue(params.get(k).toString()));
+			}
 		}
 		return sb.toString();
 	}

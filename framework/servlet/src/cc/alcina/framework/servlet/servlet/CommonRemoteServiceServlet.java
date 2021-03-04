@@ -261,6 +261,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			LooseContext.pushWithKey(
 					CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
 					remoteAddr);
+			if (exceptionToString.matches(
+					".*ReflectiveSearchDefinitionSerializer.FlatTreeException.*")) {
+				Ax.out("Client exception:\n%s", exceptionToString);
+			}
 			return Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence()
 					.log(exceptionToString, exceptionType);

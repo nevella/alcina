@@ -40,6 +40,25 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
  * 
  */
 public class CloneHelper {
+	public static <T extends Collection> T newCollectionInstance(T coll) {
+		T c = null;
+		if (coll instanceof ArrayList) {
+			c = (T) new ArrayList();
+		} else if (coll instanceof LinkedHashSet) {
+			c = (T) new LinkedHashSet();
+		} else if (coll instanceof HashSet) {
+			c = (T) new HashSet();
+		} else if (coll instanceof LiSet) {
+			c = (T) new LiSet();
+		} else if (coll instanceof LightSet) {
+			c = (T) new LightSet();
+		} else {
+			throw new RuntimeException(
+					"Can't create new instance - " + coll.getClass().getName());
+		}
+		return c;
+	}
+
 	private Map createdMap = new IdentityHashMap();
 
 	// optimisation, part. for GWT
@@ -51,7 +70,7 @@ public class CloneHelper {
 	 * called)
 	 */
 	public void copyBeanProperties(Object source, Object target,
-			Set<String> excludeProperties){
+			Set<String> excludeProperties) {
 		try {
 			Property[] prs = Reflections.beanDescriptorProvider()
 					.getDescriptor(target).getProperties();
@@ -78,7 +97,6 @@ public class CloneHelper {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-		
 	}
 
 	// TODO - wrap exceptions

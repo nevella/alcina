@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -103,6 +104,9 @@ public class FlatTreeSerializer {
 		}
 		State state = new State();
 		state.options = options;
+		if (options.singleLine) {
+			value = value.replace("&", "\n");
+		}
 		state.keyValues = StringMap.fromPropertyString(value);
 		if (clazz == null) {
 			clazz = Reflections.classLookup()
@@ -135,7 +139,11 @@ public class FlatTreeSerializer {
 		state.pending.add(node);
 		FlatTreeSerializer serializer = new FlatTreeSerializer(state);
 		serializer.serialize();
-		return state.keyValues.sorted().toPropertyString();
+		String result = state.keyValues.sorted().toPropertyString();
+		if (options.singleLine) {
+			result = result.replace("\n", "&");
+		}
+		return result;
 	}
 
 	private static boolean isLeafValue(Object value) {
@@ -317,28 +325,30 @@ public class FlatTreeSerializer {
 	}
 
 	private List<Property> getProperties(Object value) {
-		return serializationProperties.computeIfAbsent(value.getClass(), v -> {
-			BeanDescriptor descriptor = Reflections.beanDescriptorProvider()
-					.getDescriptor(value);
-			Property[] propertyArray = descriptor.getProperties();
-			return Arrays.stream(propertyArray)
-					.sorted(Comparator.comparing(Property::getName))
-					.filter(property -> {
-						if (property.getMutatorMethod() == null) {
-							return false;
-						}
-						if (property.getAccessorMethod() == null) {
-							return false;
-						}
-						String name = property.getName();
-						if (Reflections.propertyAccessor()
-								.getAnnotationForProperty(v.getClass(),
-										AlcinaTransient.class, name) != null) {
-							return false;
-						}
-						return true;
-					}).collect(Collectors.toList());
-		});
+		return serializationProperties.computeIfAbsent(value.getClass(),
+				valueClass -> {
+					BeanDescriptor descriptor = Reflections
+							.beanDescriptorProvider().getDescriptor(value);
+					Property[] propertyArray = descriptor.getProperties();
+					return Arrays.stream(propertyArray)
+							.sorted(Comparator.comparing(Property::getName))
+							.filter(property -> {
+								if (property.getMutatorMethod() == null) {
+									return false;
+								}
+								if (property.getAccessorMethod() == null) {
+									return false;
+								}
+								String name = property.getName();
+								if (Reflections.propertyAccessor()
+										.getAnnotationForProperty(valueClass,
+												AlcinaTransient.class,
+												name) != null) {
+									return false;
+								}
+								return true;
+							}).collect(Collectors.toList());
+				});
 	}
 
 	private Object getValue(Property property, Object value) {
@@ -374,7 +384,10 @@ public class FlatTreeSerializer {
 			if (value instanceof Collection) {
 				Counter counter = new Counter();
 				Collection valueCollection = (Collection) value;
-				Collection defaultCollection = (Collection) node.defaultValue;
+				Collection defaultCollection = node.defaultValue == null ?
+				/* parent object is default null */
+						CloneHelper.newCollectionInstance(valueCollection)
+						: (Collection) node.defaultValue;
 				/*
 				 * Preconditions:
 				 * 
@@ -453,7 +466,8 @@ public class FlatTreeSerializer {
 			} else if (value instanceof TreeSerializable) {
 				getProperties(value).forEach(property -> {
 					Object childValue = getValue(property, value);
-					Object defaultValue = getValue(property, node.defaultValue);
+					Object defaultValue = node.defaultValue == null ? null
+							: getValue(property, node.defaultValue);
 					Node childNode = new Node(node, childValue, defaultValue);
 					childNode.path.property = property;
 					childNode.path.propertySerialization = Reflections
@@ -477,6 +491,8 @@ public class FlatTreeSerializer {
 
 		boolean topLevelTypeInfo;
 
+		boolean singleLine;
+
 		public Options withDefaults(boolean defaults) {
 			this.defaults = defaults;
 			return this;
@@ -484,6 +500,11 @@ public class FlatTreeSerializer {
 
 		public Options withShortPaths(boolean shortPaths) {
 			this.shortPaths = shortPaths;
+			return this;
+		}
+
+		public Options withSingleLine(boolean singleLine) {
+			this.singleLine = singleLine;
 			return this;
 		}
 
@@ -659,6 +680,8 @@ public class FlatTreeSerializer {
 				return String.valueOf(((Date) value).getTime());
 			} else if (value instanceof String) {
 				return escapeValue(value.toString());
+			} else if (CommonUtils.isEnumish(value)) {
+				return value.toString().replace("_", "-").toLowerCase();
 			} else {
 				return value.toString();
 			}
@@ -683,8 +706,10 @@ public class FlatTreeSerializer {
 			if (valueClass == Date.class) {
 				value = new Date(Long.parseLong(stringValue));
 			}
-			if (valueClass.isEnum()) {
-				return Enum.valueOf(valueClass, stringValue);
+			if (valueClass.isEnum() || (valueClass.getSuperclass() != null
+					&& valueClass.getSuperclass().isEnum())) {
+				return CommonUtils.getEnumValueOrNull(valueClass, stringValue,
+						true, null);
 			}
 			throw new UnsupportedOperationException();
 		}

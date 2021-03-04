@@ -210,6 +210,11 @@ public class CompilationUnits {
 		this.solver = JavaParserFacade.get(typeSolver);
 	}
 
+	public ClassOrInterfaceDeclarationWrapper
+			declarationWrapperForClass(Class<?> clazz) {
+		return declByFqn(clazz.getCanonicalName());
+	}
+
 	public ClassOrInterfaceDeclarationWrapper declByFqn(String typeFqn) {
 		return declarations.get(typeFqn);
 	}
@@ -287,6 +292,7 @@ public class CompilationUnits {
 								fqn(unitWrapper, node, false))) {
 							declaration = node;
 						}
+						super.visit(node, arg);
 					}
 				}, null);
 			}

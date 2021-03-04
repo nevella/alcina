@@ -11,11 +11,19 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.Options;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.rpc.VoidCallback;
 
 public class ReflectiveSearchDefinitionSerializer
 		implements SearchDefinitionSerializer {
@@ -97,7 +105,17 @@ public class ReflectiveSearchDefinitionSerializer
 	}
 
 	@Override
-	public SearchDefinition deserialize(String serializedDef) {
+	public <SD extends SearchDefinition> SD deserialize(
+			Class<? extends SearchDefinition> clazz, String serializedDef) {
+		if (clazz != null && canFlatTreeSerialize(clazz)) {
+			try {
+				return (SD) FlatTreeSerializer.deserialize(clazz, serializedDef,
+						new Options().withSingleLine(true).withDefaults(true)
+								.withShortPaths(true));
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+			}
+		}
 		if (serializedDef.startsWith(RS0)) {
 			serializedDef = serializedDef.substring(RS0.length());
 		}
@@ -121,7 +139,7 @@ public class ReflectiveSearchDefinitionSerializer
 					def.getOrderGroups().add(cg);
 				}
 			});
-			return def;
+			return (SD) def;
 		} catch (Exception e) {
 			GWT.log("Exception in reflective search", e);
 			AlcinaTopics.notifyDevWarning(e);
@@ -150,6 +168,13 @@ public class ReflectiveSearchDefinitionSerializer
 		return lastStringDef;
 	}
 
+	private boolean
+			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
+		return Reflections.classLookup()
+				.getPropertyReflector(defClass, "criteriaGroups")
+				.getAnnotation(PropertySerialization.class) != null;
+	}
+
 	private void ensureLookups() {
 		if (abbrevLookup.isEmpty()) {
 			List<Class> classes = Registry.get()
@@ -173,6 +198,17 @@ public class ReflectiveSearchDefinitionSerializer
 	}
 
 	private String serialize0(SearchDefinition def) {
+		Exception flatTreeException = null;
+		if (canFlatTreeSerialize(def.getClass())) {
+			try {
+				return FlatTreeSerializer.serialize(def,
+						new Options().withTopLevelTypeInfo(false)
+								.withShortPaths(true).withSingleLine(true));
+			} catch (Exception e) {
+				e.printStackTrace();
+				flatTreeException = e;
+			}
+		}
 		ensureLookups();
 		try {
 			def = def.cloneObject();
@@ -194,6 +230,13 @@ public class ReflectiveSearchDefinitionSerializer
 		String str = Registry.impl(AlcinaBeanSerializer.class)
 				.registerLookups(abbrevLookup, reverseAbbrevLookup)
 				.serialize(def);
+		if (flatTreeException != null) {
+			Client.commonRemoteService().logClientError(Ax.format(
+					"ReflectiveSearchDefinitionSerializer.FlatTreeException: %s %s",
+					CommonUtils.toSimpleExceptionMessage(flatTreeException),
+					str), LogMessageType.CLIENT_EXCEPTION.toString(),
+					new VoidCallback());
+		}
 		return RS0 + escapeJsonForUrl(str);
 	}
 }

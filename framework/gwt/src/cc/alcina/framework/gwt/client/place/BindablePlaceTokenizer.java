@@ -12,7 +12,7 @@ public abstract class BindablePlaceTokenizer<HL extends Bindable, SD extends Bin
 
 	protected void deserializeSearchDefinition(P place) {
 		place.def = searchDefinitionSerializer()
-				.deserialize(getStringParameter(P_DEF));
+				.deserialize(place.def.getClass(), getStringParameter(P_DEF));
 	}
 
 	@Override

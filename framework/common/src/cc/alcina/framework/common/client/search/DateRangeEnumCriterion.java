@@ -13,50 +13,51 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
+
 /**
- * 
  * @author Nick Reddel
  */
+@TypeSerialization("daterange")
 public class DateRangeEnumCriterion extends EnumCriterion<DateRange> {
-	static final transient long serialVersionUID = -1L;
 
-	private DateRange dateRange;
+    static final transient long serialVersionUID = -1L;
 
-	public DateRangeEnumCriterion() {
-	}
+    private DateRange dateRange;
 
-	public DateRangeEnumCriterion(DateRange value) {
-		setValue(value);
-	}
+    public DateRangeEnumCriterion() {
+    }
 
-	public DateRangeEnumCriterion(String criteriaDisplayName,
-			boolean withNull) {
-		super(criteriaDisplayName, withNull);
-	}
+    public DateRangeEnumCriterion(DateRange value) {
+        setValue(value);
+    }
 
-	public DateRange getDateRange() {
-		return this.dateRange;
-	}
+    public DateRangeEnumCriterion(String criteriaDisplayName, boolean withNull) {
+        super(criteriaDisplayName, withNull);
+    }
 
-	@Override
-	public DateRange getValue() {
-		return getDateRange();
-	}
+    public DateRange getDateRange() {
+        return this.dateRange;
+    }
 
-	public void setDateRange(DateRange dateRange) {
-		DateRange old_dateRange = this.dateRange;
-		this.dateRange = dateRange;
-		propertyChangeSupport().firePropertyChange("dateRange", old_dateRange,
-				dateRange);
-	}
+    @Override
+    public DateRange getValue() {
+        return getDateRange();
+    }
 
-	@Override
-	public void setValue(DateRange value) {
-		setDateRange(value);
-	}
+    public void setDateRange(DateRange dateRange) {
+        DateRange old_dateRange = this.dateRange;
+        this.dateRange = dateRange;
+        propertyChangeSupport().firePropertyChange("dateRange", old_dateRange, dateRange);
+    }
 
-	@Override
-	protected boolean valueAsString() {
-		return true;
-	}
+    @Override
+    public void setValue(DateRange value) {
+        setDateRange(value);
+    }
+
+    @Override
+    protected boolean valueAsString() {
+        return true;
+    }
 }
