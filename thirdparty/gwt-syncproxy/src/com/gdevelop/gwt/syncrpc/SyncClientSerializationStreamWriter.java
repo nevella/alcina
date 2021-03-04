@@ -27,15 +27,15 @@ import java.util.Set;
 
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamWriter;
-import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter;
+import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter2;
 import com.google.gwt.user.client.rpc.impl.Serializer;
 import com.google.gwt.user.server.rpc.SerializationPolicy;
 import com.google.gwt.user.server.rpc.impl.SerializabilityUtil;
 
 
 /**
- * @see com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter
- * @see com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader
+ * @see com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter2
+ * @see com.google.gwt.user.client.rpc.impl.SyncClientSerializationStreamReader2
  * @see com.google.gwt.user.server.rpc.impl.ServerSerializationStreamWriter
  * @see com.google.gwt.user.server.rpc.impl.ServerSerializationStreamReader
  */
@@ -305,7 +305,7 @@ public class SyncClientSerializationStreamWriter extends AbstractSerializationSt
   }
 
   /**
-   * @see ClientSerializationStreamWriter#writeLong
+   * @see ClientSerializationStreamWriter2#writeLong
    * @param fieldValue
    */
   public void writeLong(long fieldValue) {

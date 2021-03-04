@@ -156,7 +156,7 @@ class ClassTransformer {
 				.sorted(Comparator.comparing(Class::getSimpleName))
 				.collect(AlcinaCollectors.toValueMap(ClassTransform::new));
 		MvccCorrectnessToken token = new MvccCorrectnessToken();
-		for (ClassTransform ct : classTransforms.values()) {
+		classTransforms.values().parallelStream().forEach(ct -> {
 			ct.setTransformer(this);
 			ct.init(false);
 			if (ResourceUtilities.is(ClassTransformer.class,
@@ -167,7 +167,7 @@ class ClassTransformer {
 				}
 			}
 			ct.generateMvccClass();
-		}
+		});
 		if (ResourceUtilities.is(ClassTransformer.class,
 				"cancelStartupIfInvalid")) {
 			if (classTransforms.values().stream().anyMatch(ct -> ct.invalid)) {
@@ -294,7 +294,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 9;
+		private static final transient int VERSION = 10;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.local();
@@ -436,7 +436,7 @@ class ClassTransformer {
 			}
 		}
 
-		void generateMvccClass() {
+		synchronized void generateMvccClass() {
 			if (isSameSourceAsLastRun()
 					&& lastRun.transformedClassBytes != null) {
 				try {
@@ -480,7 +480,7 @@ class ClassTransformer {
 			}
 		}
 
-		void persist() {
+		synchronized void persist() {
 			if (isSameSourceAsLastRun()
 					&& lastRun.transformedClassBytes != null) {
 				return;

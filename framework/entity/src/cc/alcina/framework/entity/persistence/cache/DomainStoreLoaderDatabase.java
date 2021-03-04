@@ -369,8 +369,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("projections");
 		store.initialising = false;
-		// don't close, but indicate that everything write-y from now shd be
-		// single-threaded
 		connectionPool.drain();
 		warmupExecutor = null;
 		warmupTransaction = null;
@@ -1492,7 +1490,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	class ConnectionPool {
-		int maxConnections = 8;
+		int maxConnections = ResourceUtilities
+				.getInteger(DomainStoreLoaderDatabase.class, "maxConnections");
 
 		private Connection initialWarmupConnection;
 
