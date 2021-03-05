@@ -146,8 +146,13 @@ public abstract class ClientReflector implements ClassLookup {
 
 	@Override
 	public Class getPropertyType(Class clazz, String propertyName) {
-		return GwittirBridge.get().getPropertyForClass(clazz, propertyName)
-				.getType();
+		Property property = GwittirBridge.get().getPropertyForClass(clazz,
+				propertyName);
+		if (property == null) {
+			throw new NoSuchPropertyException(
+					Ax.format("%s.%s", clazz.getSimpleName(), propertyName));
+		}
+		return property.getType();
 	}
 
 	@Override

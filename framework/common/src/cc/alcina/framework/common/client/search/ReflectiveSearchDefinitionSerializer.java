@@ -109,7 +109,8 @@ public class ReflectiveSearchDefinitionSerializer
 	@Override
 	public <SD extends SearchDefinition> SD deserialize(
 			Class<? extends SearchDefinition> clazz, String serializedDef) {
-		if (clazz != null && canFlatTreeSerialize(clazz)) {
+		if (clazz != null && serializedDef.contains("=")
+				&& canFlatTreeSerialize(clazz)) {
 			try {
 				return (SD) FlatTreeSerializer.deserialize(clazz, serializedDef,
 						new Options().withSingleLine(true).withDefaults(true)

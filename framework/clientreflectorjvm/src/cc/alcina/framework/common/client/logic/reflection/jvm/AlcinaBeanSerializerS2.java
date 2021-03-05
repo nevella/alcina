@@ -171,7 +171,16 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 			return null;
 		}
 		String cn = (String) jsonObj.get(CLASS_NAME);
-		Class clazz = getClassMaybeAbbreviated(cn);
+		Class clazz = null;
+		try {
+			clazz = getClassMaybeAbbreviated(cn);
+		} catch (Exception e1) {
+			if (isThrowOnUnrecognisedProperty()) {
+				throw new Exception(Ax.format("class not found - %s", cn));
+			} else {
+				return null;
+			}
+		}
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)
 				|| clazz == Class.class) {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
