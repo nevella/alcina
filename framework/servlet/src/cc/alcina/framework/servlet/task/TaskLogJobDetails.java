@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.dom.DomDoc;
@@ -18,6 +19,7 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -118,10 +120,23 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 			String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
 					.withValue(String.valueOf(active.getId())));
 			td.html().addLink(active.toDisplayName(), href, "_blank");
+			td.builder().text("\u00a0-\u00a0").append();
+			String cancelHref = JobServlet.createTaskUrl(new TaskCancelJob()
+					.withValue(String.valueOf(active.getId())));
+			td.html().addLink("Cancel", cancelHref, "_blank");
 			if (messageState == null) {
 				builder.row().cell("Response").cell("(No state response)");
 			} else {
-				builder.row().cell("Thread").cell(messageState.getThreadName());
+				Optional<String> logHref = Registry
+						.optional(JobThreadLogUrlProvider.class)
+						.map(p -> p.getLogUrl(active, messageState));
+				DomNode threadTd = builder.row().cell("Thread").append();
+				if (logHref.isPresent()) {
+					threadTd.html().addLink(messageState.getThreadName(),
+							logHref.get(), "_blank");
+				} else {
+					threadTd.setText(messageState.getThreadName());
+				}
 				builder.row().cell("Allocator thread")
 						.cell(messageState.getAllocatorThreadName());
 				DomNode resourcesTd = builder.row().cell("Resources").append();
@@ -175,5 +190,9 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 
 	String timestamp(Date date) {
 		return CommonUtils.formatDate(date, DateStyle.TIMESTAMP_HUMAN);
+	}
+
+	public static interface JobThreadLogUrlProvider {
+		public String getLogUrl(Job job, ProcessState messageState);
 	}
 }
