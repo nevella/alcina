@@ -504,7 +504,7 @@ public class DomainStoreTransformSequencer
 					}
 					// FIXME - 2022 - moving average? for the moment, 7ms
 					// (although should be <1)
-					return nanoDiff < 70000000;
+					return nanoDiff < 7000000;
 				}
 			});
 		}
