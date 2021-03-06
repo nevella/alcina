@@ -86,6 +86,10 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 	public static class MethodWrapper implements Method {
 		private final java.lang.reflect.Method inner;
 
+		public java.lang.reflect.Method getInner() {
+			return this.inner;
+		}
+
 		public MethodWrapper(java.lang.reflect.Method inner) {
 			assert inner != null;
 			this.inner = inner;
@@ -107,7 +111,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 
 		@Override
 		public String toString() {
-			return inner.toString();
+			return inner.getDeclaringClass() + ":" + inner.toString();
 		}
 	}
 

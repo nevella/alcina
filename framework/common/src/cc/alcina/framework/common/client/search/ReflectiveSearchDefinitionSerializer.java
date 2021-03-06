@@ -15,7 +15,8 @@ import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
-import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.Options;
+import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.DeserializerOptions;
+import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -113,8 +114,7 @@ public class ReflectiveSearchDefinitionSerializer
 				&& canFlatTreeSerialize(clazz)) {
 			try {
 				return (SD) FlatTreeSerializer.deserialize(clazz, serializedDef,
-						new Options().withSingleLine(true).withDefaults(true)
-								.withShortPaths(true));
+						new DeserializerOptions().withShortPaths(true));
 			} catch (Exception e) {
 				Ax.simpleExceptionOut(e);
 			}
@@ -173,7 +173,7 @@ public class ReflectiveSearchDefinitionSerializer
 
 	private boolean
 			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
-		return flatTreeSerializationEnabled && Reflections.classLookup()
+		return Reflections.classLookup()
 				.getPropertyReflector(defClass, "criteriaGroups")
 				.getAnnotation(PropertySerialization.class) != null;
 	}
@@ -202,11 +202,13 @@ public class ReflectiveSearchDefinitionSerializer
 
 	private String serialize0(SearchDefinition def) {
 		Exception flatTreeException = null;
-		if (canFlatTreeSerialize(def.getClass())) {
+		if (flatTreeSerializationEnabled
+				&& canFlatTreeSerialize(def.getClass())) {
 			try {
 				return FlatTreeSerializer.serialize(def,
-						new Options().withTopLevelTypeInfo(false)
-								.withShortPaths(true).withSingleLine(true));
+						new SerializerOptions().withTopLevelTypeInfo(false)
+								.withShortPaths(true).withSingleLine(true)
+								.withTestSerialized(true));
 			} catch (Exception e) {
 				e.printStackTrace();
 				flatTreeException = e;

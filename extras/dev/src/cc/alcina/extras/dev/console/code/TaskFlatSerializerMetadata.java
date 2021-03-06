@@ -239,6 +239,10 @@ public class TaskFlatSerializerMetadata
 					.handlesSearchCriterion();
 			ClassOrInterfaceDeclarationWrapper declarationWrapper = compUnits
 					.declarationWrapperForClass(searchCriterionClass);
+			if (declarationWrapper == null) {
+				Ax.out("--**-- omit -- %s", searchCriterionClass);
+				return;
+			}
 			String name = searchCriterionClass.getCanonicalName();
 			Optional<FlatSerializationConfiguration> o_configuration = flatSerializationConfigurations
 					.get().names.stream()
@@ -302,9 +306,9 @@ public class TaskFlatSerializerMetadata
 		}
 		case UPDATE_ANNOTATIONS:
 			updateAnnotations();
+			flatSerializationConfigurations.persist();
 			break;
 		}
-		flatSerializationConfigurations.persist();
 	}
 
 	public enum Action {

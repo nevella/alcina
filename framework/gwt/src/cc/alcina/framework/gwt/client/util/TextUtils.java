@@ -81,7 +81,10 @@ public class TextUtils {
 			try {
 				for (int i = 0; i < length;) {
 					char c = str.charAt(i);
-					if (c != '%') {
+					if (c == '+') {
+						builder.append(' ');
+						i += 1;
+					} else if (c != '%') {
 						builder.append(c);
 						i += 1;
 					} else {
@@ -135,9 +138,10 @@ public class TextUtils {
 				if (c >= 32 && c <= 126) {
 					switch (c) {
 					case '%':// escape
-					case ';':// value separator
+					case ',':// value separator
 					case '+':// space
-					case '&':// kv separator
+					case '&':// query-string separator
+					case ':':// k-v separator
 						break;
 					case ' ':
 						escape = false;

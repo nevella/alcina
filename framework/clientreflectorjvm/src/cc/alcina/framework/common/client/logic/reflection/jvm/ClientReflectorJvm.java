@@ -235,6 +235,7 @@ public class ClientReflectorJvm extends ClientReflector {
 			}.scan(classes, new ArrayList<String>(), Registry.get(),
 					"client-reflector");
 		} catch (Throwable e) {
+			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
 		} finally {
 			LooseContext.pop();

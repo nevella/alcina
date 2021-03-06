@@ -10,6 +10,9 @@ com.google.gwt.dev.javac.CompilationStateBuilder.doBuildFrom(TreeLogger, Compile
 # where is my cache?
 PersistentUnitCacheDir line 355
 
+# gwt compilation error logging?
+CompilationStateBuilder l 373 
+
 # the dangers of alcina-entity.jar
 gwt serialization issues? clean & rebuild that jar
 

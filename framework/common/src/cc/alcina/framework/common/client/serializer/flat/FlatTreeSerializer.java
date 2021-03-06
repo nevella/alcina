@@ -15,7 +15,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
+import com.totsp.gwittir.client.beans.Method;
 import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -89,24 +91,23 @@ public class FlatTreeSerializer {
 	private static Map<Class, Map<String, Property>> deSerializationClassAliasProperty = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
 
-	private static Map<Property, Map<String, Class>> deSerializationPropertyAliasClass = Registry
+	private static Map<RootClassPropertyKey, Map<String, Class>> deSerializationPropertyAliasClass = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
 
 	public static <T> T deserialize(Class<T> clazz, String value) {
-		Options options = new Options().withShortPaths(true).withDefaults(true);
+		DeserializerOptions options = new DeserializerOptions()
+				.withShortPaths(true);
 		return deserialize(clazz, value, options);
 	}
 
 	public static <T> T deserialize(Class<T> clazz, String value,
-			Options options) {
+			DeserializerOptions options) {
 		if (value == null) {
 			return null;
 		}
 		State state = new State();
-		state.options = options;
-		if (options.singleLine) {
-			value = value.replace("&", "\n");
-		}
+		state.deserializerOptions = options;
+		value = value.replace(":", "\n");
 		state.keyValues = StringMap.fromPropertyString(value);
 		if (clazz == null) {
 			clazz = Reflections.classLookup()
@@ -118,32 +119,44 @@ public class FlatTreeSerializer {
 	}
 
 	public static <T> T deserialize(String value) {
-		Options options = new Options().withShortPaths(true).withDefaults(true)
-				.withTopLevelTypeInfo(true);
-		return deserialize(null, value, options);
+		return deserialize(null, value);
 	}
 
 	public static String serialize(Object object) {
-		return serialize(object,
-				new Options().withTopLevelTypeInfo(true).withShortPaths(true));
+		return serialize(object, new SerializerOptions()
+				.withTopLevelTypeInfo(true).withShortPaths(true));
 	}
 
-	public static String serialize(Object object, Options options) {
+	public static String serialize(Object object, SerializerOptions options) {
 		if (object == null) {
 			return null;
 		}
 		State state = new State();
-		state.options = options;
+		state.serializerOptions = options;
 		Node node = new Node(null, object, Reflections.classLookup()
 				.getTemplateInstance(object.getClass()));
 		state.pending.add(node);
 		FlatTreeSerializer serializer = new FlatTreeSerializer(state);
 		serializer.serialize();
-		String result = state.keyValues.sorted().toPropertyString();
+		String serialized = state.keyValues.sorted().toPropertyString();
 		if (options.singleLine) {
-			result = result.replace("\n", "&");
+			serialized = serialized.replace("\n", ":");
 		}
-		return result;
+		if (options.testSerialized) {
+			DeserializerOptions deserializerOptions = new DeserializerOptions()
+					.withShortPaths(options.shortPaths);
+			Object checkObject = deserialize(object.getClass(), serialized,
+					deserializerOptions);
+			SerializerOptions checkOptions = new SerializerOptions()
+					.withDefaults(options.defaults)
+					.withShortPaths(options.shortPaths)
+					.withSingleLine(options.singleLine)
+					.withTopLevelTypeInfo(options.topLevelTypeInfo);
+			String checkSerialied = serialize(checkObject, checkOptions);
+			Preconditions.checkState(Objects.equals(serialized, checkSerialied),
+					"Unequal serialized: \n%s\n%s", serialized, checkSerialied);
+		}
+		return serialized;
 	}
 
 	private static boolean isLeafValue(Object value) {
@@ -190,19 +203,26 @@ public class FlatTreeSerializer {
 					resolved |= resolvingLastSegment;
 					if (cursor.isCollection()) {
 						Class elementClass = null;
-						if (state.options.shortPaths) {
+						if (state.deserializerOptions.shortPaths) {
 							Map<String, Class> typeMap = getAliasClassMap(
-									cursor);
+									root.value.getClass(), cursor);
 							elementClass = typeMap.get(segmentPath);
 							if (elementClass != null) {
 								resolved = true;
 							} else {
 								elementClass = typeMap.get("");
 							}
-							Object childValue = ensureNthCollectionElement(
-									elementClass, index,
-									(Collection) cursor.value);
-							cursor = new Node(cursor, childValue, null);
+							try {
+								Object childValue = ensureNthCollectionElement(
+										elementClass, index,
+										(Collection) cursor.value);
+								cursor = new Node(cursor, childValue, null);
+							} catch (RuntimeException e) {
+								Method accessorMethod = cursor.path.property
+										.getAccessorMethod();
+								accessorMethod.toString();
+								throw e;
+							}
 							cursor.path.index = new CollectionIndex(
 									elementClass, index, false);
 						} else {
@@ -210,7 +230,7 @@ public class FlatTreeSerializer {
 						}
 					} else {
 						Property property = null;
-						if (state.options.shortPaths) {
+						if (state.deserializerOptions.shortPaths) {
 							Map<String, Property> segmentMap = getAliasPropertyMap(
 									cursor);
 							property = segmentMap.get(segment);
@@ -266,7 +286,38 @@ public class FlatTreeSerializer {
 		return object;
 	}
 
-	private Map<String, Class> getAliasClassMap(Node cursor) {
+	class RootClassPropertyKey {
+		Class rootClass;
+
+		Property property;
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof RootClassPropertyKey) {
+				RootClassPropertyKey o = (RootClassPropertyKey) obj;
+				return rootClass == o.rootClass && property == o.property;
+			}
+			return super.equals(obj);
+		}
+
+		public RootClassPropertyKey(Class rootClass, Property property) {
+			super();
+			this.rootClass = rootClass;
+			this.property = property;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(rootClass, property);
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s:%s", rootClass.getName(), property.getName());
+		}
+	}
+
+	private Map<String, Class> getAliasClassMap(Class rootClass, Node cursor) {
 		Function<? super Class, ? extends String> keyMapper = clazz -> {
 			TypeSerialization typeSerialization = Reflections.classLookup()
 					.getAnnotationForClass(clazz, TypeSerialization.class);
@@ -276,32 +327,42 @@ public class FlatTreeSerializer {
 				return clazz.getName();
 			}
 		};
-		return deSerializationPropertyAliasClass
-				.computeIfAbsent(cursor.path.property, p -> {
-					PropertySerialization propertySerialization = Reflections
-							.propertyAccessor().getAnnotationForProperty(
-									cursor.parent.value.getClass(),
-									PropertySerialization.class, p.getName());
-					Class[] availableTypes = propertySerialization.childTypes();
-					if (availableTypes.length == 0) {
-						propertySerialization = Reflections.propertyAccessor()
-								.getAnnotationForProperty(
-										cursor.parent.parent.parent.value
-												.getClass(),
-										PropertySerialization.class,
-										cursor.parent.parent.path.property
-												.getName());
-						availableTypes = propertySerialization
-								.grandchildTypes();
-					}
-					Map<String, Class> map = new LinkedHashMap<>();
-					for (int idx = 0; idx < availableTypes.length; idx++) {
-						Class clazz = availableTypes[idx];
-						String name = idx == 0 ? "" : keyMapper.apply(clazz);
-						map.put(name, clazz);
-					}
-					return map;
-				});
+		RootClassPropertyKey key = new RootClassPropertyKey(rootClass,
+				cursor.path.property);
+		return deSerializationPropertyAliasClass.computeIfAbsent(key, k -> {
+			PropertySerialization propertySerialization = Reflections
+					.propertyAccessor()
+					.getAnnotationForProperty(cursor.parent.value.getClass(),
+							PropertySerialization.class, k.property.getName());
+			Class[] availableTypes = propertySerialization.childTypes();
+			boolean defaultType = availableTypes.length == 1;
+			if (availableTypes.length == 0) {
+				propertySerialization = Reflections.propertyAccessor()
+						.getAnnotationForProperty(
+								cursor.parent.parent.parent.value.getClass(),
+								PropertySerialization.class,
+								cursor.parent.parent.path.property.getName());
+				availableTypes = propertySerialization.grandchildTypes();
+				/*
+				 * if both parent childTypes and grandchildTypes are length 1,
+				 * force this (grandchildtype) to be non-default - otherwise we
+				 * end up with blanks all the way down...
+				 */
+				defaultType = availableTypes.length == 1
+						&& propertySerialization.childTypes().length != 1;
+			}
+			Map<String, Class> map = new LinkedHashMap<>();
+			if (defaultType) {
+				map.put("", availableTypes[0]);
+			} else {
+				for (int idx = 0; idx < availableTypes.length; idx++) {
+					Class clazz = availableTypes[idx];
+					String name = keyMapper.apply(clazz);
+					map.put(name, clazz);
+				}
+			}
+			return map;
+		});
 	}
 
 	private Map<String, Property> getAliasPropertyMap(Node cursor) {
@@ -484,7 +545,7 @@ public class FlatTreeSerializer {
 		}
 	}
 
-	public static class Options {
+	public static class SerializerOptions {
 		boolean defaults;
 
 		boolean shortPaths;
@@ -493,23 +554,40 @@ public class FlatTreeSerializer {
 
 		boolean singleLine;
 
-		public Options withDefaults(boolean defaults) {
+		boolean testSerialized;
+
+		public SerializerOptions withTestSerialized(boolean testSerialized) {
+			this.testSerialized = testSerialized;
+			return this;
+		}
+
+		public SerializerOptions withDefaults(boolean defaults) {
 			this.defaults = defaults;
 			return this;
 		}
 
-		public Options withShortPaths(boolean shortPaths) {
+		public SerializerOptions withShortPaths(boolean shortPaths) {
 			this.shortPaths = shortPaths;
 			return this;
 		}
 
-		public Options withSingleLine(boolean singleLine) {
+		public SerializerOptions withSingleLine(boolean singleLine) {
 			this.singleLine = singleLine;
 			return this;
 		}
 
-		public Options withTopLevelTypeInfo(boolean topLevelTypeInfo) {
+		public SerializerOptions
+				withTopLevelTypeInfo(boolean topLevelTypeInfo) {
 			this.topLevelTypeInfo = topLevelTypeInfo;
+			return this;
+		}
+	}
+
+	public static class DeserializerOptions {
+		boolean shortPaths;
+
+		public DeserializerOptions withShortPaths(boolean shortPaths) {
+			this.shortPaths = shortPaths;
 			return this;
 		}
 	}
@@ -592,7 +670,7 @@ public class FlatTreeSerializer {
 	}
 
 	static class Node {
-		private static final String VALUE_SEPARATOR = ";";
+		private static final String VALUE_SEPARATOR = ",";
 
 		Path path;
 
@@ -653,7 +731,8 @@ public class FlatTreeSerializer {
 		public void putValue(State state) {
 			String existingValue = null;
 			String leafValue = toStringValue();
-			if (state.mergeableNode != null && state.options.shortPaths
+			boolean shortPaths = state.serializerOptions.shortPaths;
+			if (state.mergeableNode != null && shortPaths
 					&& path.canMergeTo(state.mergeableNode.path)) {
 				existingValue = state.keyValues.get(path.toString(true, true));
 			}
@@ -662,8 +741,8 @@ public class FlatTreeSerializer {
 			fb.appendIfNotBlank(existingValue, leafValue);
 			String value = fb.toString();
 			if (Ax.notBlank(value)) {
-				state.keyValues.put(path.toString(state.options.shortPaths,
-						state.options.shortPaths), value);
+				state.keyValues.put(path.toString(shortPaths, shortPaths),
+						value);
 			}
 		}
 
@@ -800,18 +879,20 @@ public class FlatTreeSerializer {
 	}
 
 	static class State {
+		public SerializerOptions serializerOptions;
+
 		public Node mergeableNode;
 
 		StringMap keyValues = new StringMap();
 
 		IdentityHashMap<Object, Path> visitedObjects = new IdentityHashMap();
 
-		public Options options;
+		public DeserializerOptions deserializerOptions;
 
 		List<Node> pending = new LinkedList<>();
 
 		public void maybeWriteTypeInfo() {
-			if (options.topLevelTypeInfo) {
+			if (serializerOptions.topLevelTypeInfo) {
 				Node root = pending.get(0);
 				keyValues.put(CLASS, root.value.getClass().getName());
 				// FIXME - mvcc.flat - application.hash
