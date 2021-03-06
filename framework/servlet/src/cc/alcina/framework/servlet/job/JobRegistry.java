@@ -229,6 +229,20 @@ public class JobRegistry extends WriterService {
 	}
 
 	/*
+	 * Ensure there is exactly one pending job (which takes care of changes
+	 * affecting the model which will be missed by an in-glight)
+	 */
+	public void ensureScheduled(Task task) {
+		withJobMetadataLock(task.getClass().getName(), () -> {
+			if (DomainDescriptorJob.get().getJobsForTask(task.getClass())
+					.anyMatch(j -> j.getState() == JobState.PENDING)) {
+				return;
+			}
+			task.schedule();
+		});
+	}
+
+	/*
 	 * PROCESSING or COMPLETE (not SEQUENCE_COMPLETE), this vm
 	 */
 	public int getActiveJobCount() {
