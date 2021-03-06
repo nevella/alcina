@@ -22,12 +22,15 @@ import javax.persistence.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
+import cc.alcina.framework.entity.util.SqlUtils;
 
 /**
  * dtrp - start persist time (set in persister), committime
@@ -53,6 +56,8 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueu
  */
 public class DomainStoreTransformSequencer
 		implements DomainTransformPersistenceQueue.Sequencer {
+	static long lastIndexCreationTime;
+
 	private DomainStoreLoaderDatabase loaderDatabase;
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
@@ -108,6 +113,10 @@ public class DomainStoreTransformSequencer
 	@Override
 	public void refresh() {
 		refreshPositions(-1);
+	}
+
+	public void rotateIndex() {
+		new IndexRotater().rotate();
 	}
 
 	public void setInitialised(boolean initialised) {
@@ -361,5 +370,143 @@ public class DomainStoreTransformSequencer
 		logger.info("Marked highest visible position - {}",
 				highestVisiblePosition);
 		unpublishedPositions.clear();
+	}
+
+	class IndexRotater {
+		private static final int MAX_INDEX = 3;
+
+		int counter;
+
+		List<Integer> existing;
+
+		List<Integer> drop;
+
+		Integer responseTimeOk;
+
+		Integer created;
+
+		public void rotate() {
+			existing = new ArrayList<>();
+			if (valid()) {
+				return;
+			}
+			for (counter = -1; counter <= MAX_INDEX; counter++) {
+				if (exists()) {
+					existing.add(counter);
+				}
+			}
+			if (created == null) {
+				drop = existing;
+				for (counter = -1; counter <= MAX_INDEX; counter++) {
+					if (!exists()) {
+						if (System.currentTimeMillis()
+								- lastIndexCreationTime < 30
+										* TimeConstants.ONE_MINUTE_MS) {
+							logger.warn(
+									"Not creating new index - last creation too recent");
+							return;
+						}
+						create();
+						created = counter;
+						break;
+					}
+				}
+				if (created == null) {
+					throw new RuntimeException("No blank index slot");
+				}
+				for (counter = -1; counter <= MAX_INDEX; counter++) {
+					if (drop.contains(counter)) {
+						drop();
+					}
+				}
+				drop = null;
+				rotate();
+				return;
+			} else {
+				throw new RuntimeException("No responseTimeOk after create");
+			}
+		}
+
+		private void create() {
+			logger.warn("Creating index {}", name());
+			try {
+				try (Connection conn = loaderDatabase.dataSource
+						.getConnection()) {
+					Statement statement = conn.createStatement();
+					SqlUtils.execute(statement,
+							Ax.format("CREATE INDEX CONCURRENTLY " + "%s "
+									+ "  ON %s  USING btree(transactionCommitTime) WHERE transactionCommitTime IS NULL",
+									name(), tableName()));
+					lastIndexCreationTime = System.currentTimeMillis();
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		private void drop() {
+			logger.warn("Dropping index {}", name());
+			runWithConnection("drop", conn -> {
+				try (Statement statement = conn.createStatement()) {
+					String sql = Ax.format("drop index %s", name());
+					SqlUtils.execute(statement, sql);
+					return null;
+				}
+			});
+		}
+
+		private boolean exists() {
+			return runWithConnection("exists", conn -> {
+				try (Statement statement = conn.createStatement()) {
+					String sql = Ax.format(
+							"select * from pg_class where relname='%s'",
+							name());
+					ResultSet rs = statement.executeQuery(sql);
+					return rs.next();
+				}
+			});
+		}
+
+		private String name() {
+			String suffix = counter == -1 ? "" : String.valueOf(counter);
+			return "domaintransformrequest_transactioncommittime_null" + suffix;
+		}
+
+		private boolean valid() {
+			return runWithConnection("valid", conn -> {
+				String querySql = Ax.format(
+						"select id, transactionCommitTime,pg_xact_commit_timestamp(xmin) as commit_timestamp "
+								+ "from %s where transactionCommitTime is null OR"
+								+ " transactionCommitTime>=?",
+						tableName());
+				querySql += " order by pg_xact_commit_timestamp(xmin) desc ";
+				try (PreparedStatement statement = conn
+						.prepareStatement(querySql)) {
+					Timestamp since = new Timestamp(System.currentTimeMillis()
+							- TimeConstants.ONE_MINUTE_MS);
+					statement.setTimestamp(1, since);
+					long nanoTime = System.nanoTime();
+					Ax.out(querySql);
+					statement.execute();
+					long nanoDiff = System.nanoTime() - nanoTime;
+					if (nanoDiff > 2000000) {
+						logger.warn("transactionCommitTime >2ms - {} ns",
+								nanoDiff);
+						try (PreparedStatement statement2 = conn
+								.prepareStatement(
+										"explain analyze " + querySql)) {
+							statement2.setTimestamp(1, since);
+							ResultSet rs = statement2.executeQuery();
+							while (rs.next()) {
+								logger.warn(rs.getString(1));
+							}
+						}
+					}
+					// FIXME - 2022 - moving average? for the moment, 7ms
+					// (although should be <1)
+					return nanoDiff < 70000000;
+				}
+			});
+		}
 	}
 }
