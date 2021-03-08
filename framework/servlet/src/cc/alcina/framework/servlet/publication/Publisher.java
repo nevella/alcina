@@ -163,7 +163,7 @@ public class Publisher {
 		} else {
 			if (result.publicationUid == null) {
 				result.publicationUid = SEUtilities.generateId();
-				result.publicationId = -1L;
+				result.publicationId = 0L;
 			}
 		}
 		long publicationId = CommonUtils.lv(result.publicationId);
