@@ -37,6 +37,11 @@ public class BaseMultipleEnumCriterionPack {
 		}
 
 		@Override
+		public void prepareForTreeDeserialization() {
+			getValue().clear();
+		}
+
+		@Override
 		public void setValue(Set<E> value) {
 			Set<E> old_value = this.value;
 			this.value = value;

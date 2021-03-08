@@ -94,14 +94,15 @@ public class FlatTreeSerializer {
 	private static Map<RootClassPropertyKey, Map<String, Class>> deSerializationPropertyAliasClass = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
 
-	public static <T> T deserialize(Class<T> clazz, String value) {
+	public static <T extends TreeSerializable> T deserialize(Class<T> clazz,
+			String value) {
 		DeserializerOptions options = new DeserializerOptions()
 				.withShortPaths(true);
 		return deserialize(clazz, value, options);
 	}
 
-	public static <T> T deserialize(Class<T> clazz, String value,
-			DeserializerOptions options) {
+	public static <T extends TreeSerializable> T deserialize(Class<T> clazz,
+			String value, DeserializerOptions options) {
 		if (value == null) {
 			return null;
 		}
@@ -113,21 +114,24 @@ public class FlatTreeSerializer {
 			clazz = Reflections.classLookup()
 					.getClassForName(state.keyValues.get(CLASS));
 		}
-		Node node = new Node(null, Reflections.newInstance(clazz), null);
+		T instance = Reflections.newInstance(clazz);
+		instance.prepareForTreeDeserialization();
+		Node node = new Node(null, instance, null);
 		new FlatTreeSerializer(state).deserialize(node);
 		return (T) node.value;
 	}
 
-	public static <T> T deserialize(String value) {
+	public static <T extends TreeSerializable> T deserialize(String value) {
 		return deserialize(null, value);
 	}
 
-	public static String serialize(Object object) {
+	public static String serialize(TreeSerializable object) {
 		return serialize(object, new SerializerOptions()
 				.withTopLevelTypeInfo(true).withShortPaths(true));
 	}
 
-	public static String serialize(Object object, SerializerOptions options) {
+	public static String serialize(TreeSerializable object,
+			SerializerOptions options) {
 		if (object == null) {
 			return null;
 		}
@@ -145,8 +149,8 @@ public class FlatTreeSerializer {
 		if (options.testSerialized) {
 			DeserializerOptions deserializerOptions = new DeserializerOptions()
 					.withShortPaths(options.shortPaths);
-			Object checkObject = deserialize(object.getClass(), serialized,
-					deserializerOptions);
+			TreeSerializable checkObject = deserialize(object.getClass(),
+					serialized, deserializerOptions);
 			SerializerOptions checkOptions = new SerializerOptions()
 					.withDefaults(options.defaults)
 					.withShortPaths(options.shortPaths)
@@ -286,37 +290,6 @@ public class FlatTreeSerializer {
 		return object;
 	}
 
-	class RootClassPropertyKey {
-		Class rootClass;
-
-		Property property;
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof RootClassPropertyKey) {
-				RootClassPropertyKey o = (RootClassPropertyKey) obj;
-				return rootClass == o.rootClass && property == o.property;
-			}
-			return super.equals(obj);
-		}
-
-		public RootClassPropertyKey(Class rootClass, Property property) {
-			super();
-			this.rootClass = rootClass;
-			this.property = property;
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(rootClass, property);
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("%s:%s", rootClass.getName(), property.getName());
-		}
-	}
-
 	private Map<String, Class> getAliasClassMap(Class rootClass, Node cursor) {
 		Function<? super Class, ? extends String> keyMapper = clazz -> {
 			TypeSerialization typeSerialization = Reflections.classLookup()
@@ -452,8 +425,8 @@ public class FlatTreeSerializer {
 				/*
 				 * Preconditions:
 				 * 
-				 * - if valueCollection contains enums, it must be a superset of
-				 * defaultCollection
+				 * - if valueCollection contains leaf values, all values will be
+				 * serialized (if non-default)
 				 * 
 				 * - if valueCollection contains TreeSerializables, either
 				 * defaultCollection is empty or there's an onto per-class
@@ -461,24 +434,28 @@ public class FlatTreeSerializer {
 				 * 
 				 * - if valueCollection contains any other type,
 				 * defaultCollection must be empty
+				 * 
+				 * FIXME - mvcc.flat - review commented sections
 				 */
 				if (defaultCollection.size() > 0) {
 					if (valueCollection.isEmpty()) {
-						throw new IllegalArgumentException(Ax
-								.format("Illegal collection at %s", node.path));
+						// throw new IllegalArgumentException(Ax
+						// .format("Illegal collection at %s", node.path));
 					}
-					Object test = valueCollection.iterator().next();
+					Object test = defaultCollection.iterator().next();
 					if (CommonUtils.isEnumish(test)) {
-						if (!valueCollection.containsAll(defaultCollection)) {
-							throw new IllegalArgumentException(Ax.format(
-									"Illegal collection at %s", node.path));
-						}
+						// if (!valueCollection.containsAll(defaultCollection))
+						// {
+						// throw new IllegalArgumentException(Ax.format(
+						// "Illegal collection at %s", node.path));
+						// }
 					} else if (test instanceof TreeSerializable) {
-						if (valueCollection.size() < defaultCollection.size()) {
-							throw new IllegalArgumentException(Ax.format(
-									"Illegal collection - missing default - at %s",
-									node.path));
-						}
+						// if (valueCollection.size() <
+						// defaultCollection.size()) {
+						// throw new IllegalArgumentException(Ax.format(
+						// "Illegal collection - missing default - at %s",
+						// node.path));
+						// }
 						Set<Class> seenClasses = new HashSet<>();
 						Set<Class> defaultClasses = (Set) defaultCollection
 								.stream().map(Object::getClass)
@@ -490,13 +467,14 @@ public class FlatTreeSerializer {
 										node.path));
 							}
 						}
-						for (Object element : defaultCollection) {
-							if (!seenClasses.contains(element.getClass())) {
-								throw new IllegalArgumentException(Ax.format(
-										"Illegal collection - missing default element %s - at %s",
-										element, node.path));
-							}
-						}
+						// for (Object element : defaultCollection) {
+						// if (!seenClasses.contains(element.getClass())) {
+						// throw new IllegalArgumentException(Ax.format(
+						// "Illegal collection - missing default element %s - at
+						// %s",
+						// element, node.path));
+						// }
+						// }
 					} else {
 						throw new IllegalArgumentException(Ax
 								.format("Illegal collection at %s", node.path));
@@ -505,9 +483,9 @@ public class FlatTreeSerializer {
 				((Collection) value).forEach(childValue -> {
 					Object defaultValue = null;
 					if (CommonUtils.isEnumish(childValue)) {
-						defaultValue = defaultCollection.contains(childValue)
-								? childValue
-								: null;
+						// defaultValue = defaultCollection.contains(childValue)
+						// ? childValue
+						// : null;
 					} else if (childValue instanceof TreeSerializable) {
 						for (Object element : defaultCollection) {
 							if (element.getClass() == childValue.getClass()) {
@@ -545,6 +523,15 @@ public class FlatTreeSerializer {
 		}
 	}
 
+	public static class DeserializerOptions {
+		boolean shortPaths;
+
+		public DeserializerOptions withShortPaths(boolean shortPaths) {
+			this.shortPaths = shortPaths;
+			return this;
+		}
+	}
+
 	public static class SerializerOptions {
 		boolean defaults;
 
@@ -555,11 +542,6 @@ public class FlatTreeSerializer {
 		boolean singleLine;
 
 		boolean testSerialized;
-
-		public SerializerOptions withTestSerialized(boolean testSerialized) {
-			this.testSerialized = testSerialized;
-			return this;
-		}
 
 		public SerializerOptions withDefaults(boolean defaults) {
 			this.defaults = defaults;
@@ -576,18 +558,14 @@ public class FlatTreeSerializer {
 			return this;
 		}
 
+		public SerializerOptions withTestSerialized(boolean testSerialized) {
+			this.testSerialized = testSerialized;
+			return this;
+		}
+
 		public SerializerOptions
 				withTopLevelTypeInfo(boolean topLevelTypeInfo) {
 			this.topLevelTypeInfo = topLevelTypeInfo;
-			return this;
-		}
-	}
-
-	public static class DeserializerOptions {
-		boolean shortPaths;
-
-		public DeserializerOptions withShortPaths(boolean shortPaths) {
-			this.shortPaths = shortPaths;
 			return this;
 		}
 	}
@@ -875,6 +853,37 @@ public class FlatTreeSerializer {
 				shortPath = fb.toString();
 			}
 			return shortPath;
+		}
+	}
+
+	class RootClassPropertyKey {
+		Class rootClass;
+
+		Property property;
+
+		public RootClassPropertyKey(Class rootClass, Property property) {
+			super();
+			this.rootClass = rootClass;
+			this.property = property;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof RootClassPropertyKey) {
+				RootClassPropertyKey o = (RootClassPropertyKey) obj;
+				return rootClass == o.rootClass && property == o.property;
+			}
+			return super.equals(obj);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(rootClass, property);
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s:%s", rootClass.getName(), property.getName());
 		}
 	}
 

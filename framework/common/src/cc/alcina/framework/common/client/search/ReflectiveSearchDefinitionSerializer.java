@@ -145,6 +145,7 @@ public class ReflectiveSearchDefinitionSerializer
 			return (SD) def;
 		} catch (Exception e) {
 			GWT.log("Exception in reflective search", e);
+			e.printStackTrace();
 			AlcinaTopics.notifyDevWarning(e);
 			return null;
 		}
@@ -236,11 +237,15 @@ public class ReflectiveSearchDefinitionSerializer
 				.registerLookups(abbrevLookup, reverseAbbrevLookup)
 				.serialize(def);
 		if (flatTreeException != null) {
-			Client.commonRemoteService().logClientError(Ax.format(
-					"ReflectiveSearchDefinitionSerializer.FlatTreeException: %s %s",
-					CommonUtils.toSimpleExceptionMessage(flatTreeException),
-					str), LogMessageType.CLIENT_EXCEPTION.toString(),
-					new VoidCallback());
+			if (GWT.isClient()) {
+				Client.commonRemoteService().logClientError(Ax.format(
+						"ReflectiveSearchDefinitionSerializer.FlatTreeException: %s %s",
+						CommonUtils.toSimpleExceptionMessage(flatTreeException),
+						str), LogMessageType.CLIENT_EXCEPTION.toString(),
+						new VoidCallback());
+			} else {
+				flatTreeException.printStackTrace();
+			}
 		}
 		return RS0 + escapeJsonForUrl(str);
 	}

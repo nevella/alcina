@@ -183,6 +183,11 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		}
 	}
 
+	@Override
+	public void prepareForTreeDeserialization() {
+		getCriteria().forEach(SearchCriterion::prepareForTreeDeserialization);
+	}
+
 	public boolean provideIsEmpty() {
 		for (SearchCriterion criterion : getCriteria()) {
 			if (criterion instanceof HasValue

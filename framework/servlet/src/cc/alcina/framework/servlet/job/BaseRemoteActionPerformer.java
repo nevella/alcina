@@ -29,11 +29,19 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 	}
 
 	protected void jobError(Exception exception) {
-		JobContext.get().onJobException(exception);
+		if (JobContext.has()) {
+			JobContext.get().onJobException(exception);
+		} else {
+			exception.printStackTrace();
+		}
 	}
 
 	protected void jobError(String message) {
-		JobContext.get().onJobException(new Exception(message));
+		if (JobContext.has()) {
+			JobContext.get().onJobException(new Exception(message));
+		} else {
+			new Exception(message).printStackTrace();
+		}
 	}
 
 	protected String jobName() {

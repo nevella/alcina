@@ -362,6 +362,13 @@ public abstract class SearchDefinition extends WrapperPersistable
 				.findFirst().orElse(null);
 	}
 
+	@Override
+	public void prepareForTreeDeserialization() {
+		getCriteriaGroups()
+				.forEach(CriteriaGroup::prepareForTreeDeserialization);
+		getOrderGroups().forEach(CriteriaGroup::prepareForTreeDeserialization);
+	}
+
 	/**
 	 * Note, this does not allow multiple orderings by default (to simplify
 	 * injection avoidance) Override if you need multiple orderings
