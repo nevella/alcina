@@ -563,7 +563,7 @@ class ClassTransformer {
 			 */
 			public void visit(FieldAccessExpr expr, Void arg) {
 				super.visit(expr, arg);
-				if (expr.toString().contains("disallowedInnerAccessField2")) {
+				if (expr.toString().contains("startOffsetInOverlay")) {
 					int debug = 3;
 				}
 				if (isDefinedOk(expr)) {
@@ -659,28 +659,33 @@ class ClassTransformer {
 				if (expr.toString().contains("disallowedInnerAccessField2")) {
 					int debug = 3;
 				}
-				SymbolReference<? extends ResolvedValueDeclaration> ref = transformer.solver
-						.solve(expr);
-				if (!ref.isSolved()) {
-					// Ax.out("Not solved: %s", expr);
-					return;
-				}
-				if (ref.getCorrespondingDeclaration().isField()) {
-					ResolvedFieldDeclaration field = ref
-							.getCorrespondingDeclaration().asField();
-					AccessSpecifier accessSpecifier = field.accessSpecifier();
-					if (accessSpecifier != AccessSpecifier.PUBLIC) {
-						if (expressionIsInNestedType
-								&& !field.declaringType().getQualifiedName()
-										.equals(containingClassName)) {
-							addProblematicAccess(
-									MvccCorrectnessIssueType.InnerClassOuterFieldAccessByName);
-						}
-						if (expressionIsInNestedAnonymousType) {
-							addProblematicAccess(
-									MvccCorrectnessIssueType.InnerAnonymousClassOuterFieldAccess);
+				try {
+					SymbolReference<? extends ResolvedValueDeclaration> ref = transformer.solver
+							.solve(expr);
+					if (!ref.isSolved()) {
+						// Ax.out("Not solved: %s", expr);
+						return;
+					}
+					if (ref.getCorrespondingDeclaration().isField()) {
+						ResolvedFieldDeclaration field = ref
+								.getCorrespondingDeclaration().asField();
+						AccessSpecifier accessSpecifier = field
+								.accessSpecifier();
+						if (accessSpecifier != AccessSpecifier.PUBLIC) {
+							if (expressionIsInNestedType
+									&& !field.declaringType().getQualifiedName()
+											.equals(containingClassName)) {
+								addProblematicAccess(
+										MvccCorrectnessIssueType.InnerClassOuterFieldAccessByName);
+							}
+							if (expressionIsInNestedAnonymousType) {
+								addProblematicAccess(
+										MvccCorrectnessIssueType.InnerAnonymousClassOuterFieldAccess);
+							}
 						}
 					}
+				} catch (RuntimeException e) {
+					logSolverException(expr, e);
 				}
 			}
 
@@ -857,7 +862,9 @@ class ClassTransformer {
 								.getAnnotationByClass(MvccAccess.class)
 								.isPresent();
 					}
-					if (node instanceof ObjectCreationExpr) {
+					if (node instanceof ObjectCreationExpr
+							&& ((ObjectCreationExpr) node)
+									.getAnonymousClassBody().isPresent()) {
 						expressionIsInNestedAnonymousType = true;
 					}
 					if (node instanceof TypeDeclaration) {
