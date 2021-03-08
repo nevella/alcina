@@ -17,6 +17,8 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 @MappedSuperclass
@@ -73,6 +75,7 @@ public abstract class LocalDbPropertyBase extends Entity {
 		return getOrSetLocalDbProperty(key, value, false);
 	}
 
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	private static String getOrSetLocalDbPropertyDomainStore(String key,
 			String value, boolean get) {
 		if (get) {
@@ -107,8 +110,7 @@ public abstract class LocalDbPropertyBase extends Entity {
 	}
 
 	private static Class<? extends LocalDbPropertyBase> impl() {
-		return PersistentImpl
-				.getImplementation(LocalDbPropertyBase.class);
+		return PersistentImpl.getImplementation(LocalDbPropertyBase.class);
 	}
 
 	private String propertyKey;

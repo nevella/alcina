@@ -1,16 +1,32 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
+import java.util.Comparator;
+import java.util.Date;
 import java.util.stream.IntStream;
 
+import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
 public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
+	public static final transient Comparator<MvccTestEntity> PRECEDENCE_COMPARATOR = new Comparator<MvccTestEntity>() {
+		@Override
+		public int compare(MvccTestEntity o1, MvccTestEntity o2) {
+			String assign = o1.disallowedInnerAccessField;
+			return CommonUtils.compareWithNullMinusOne(
+					o1.disallowedInnerAccessField,
+					o2.disallowedInnerAccessField);
+		}
+	};
+
 	@SuppressWarnings("unused")
 	private long invalidDuplicateFieldName;
 
 	protected String incorrectAccessField;
 
 	private String disallowedInnerAccessField;
+
+	private String disallowedInnerAccessField2;
 
 	public void a1test() {
 	}
@@ -65,12 +81,16 @@ public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 		v = 5;
 	}
 
+	Date invalidInnerClassAccessMethod2(Object resolutionCache) {
+		return null;
+	}
+
 	public class Inner1 {
 		public Inner1() {
 		}
 
 		public void invalid_InnerClassOuterFieldAccess() {
-			String s = disallowedInnerAccessField;
+			String s = MvccTestEntity.this.disallowedInnerAccessField;
 		}
 
 		public void invalid_InnerClassOuterPrivateMethodAccess() {
@@ -80,6 +100,30 @@ public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 		public void invalid_InnerClassOuterPrivateMethodRef() {
 			IntStream.of(1, 2)
 					.forEach(MvccTestEntity.this::disallowedInnerAccessMethod);
+		}
+	}
+
+	public class InnerStatic1 {
+		private Object resolutionCache = new Object();
+
+		@SuppressWarnings("unused")
+		private CachingMap<MvccTestEntity, Date> dateLookup = new CachingMap<MvccTestEntity, Date>(
+				this::dateLookupLambda);
+
+		public InnerStatic1() {
+		}
+
+		public void invalid_InnerClassOuterFieldAccess() {
+			String s = disallowedInnerAccessField2;
+		}
+
+		public void invalid_InnerClassOuterPrivateMethodRef() {
+			IntStream.of(1, 2)
+					.forEach(MvccTestEntity.this::disallowedInnerAccessMethod);
+		}
+
+		private Date dateLookupLambda(MvccTestEntity entity) {
+			return entity.invalidInnerClassAccessMethod2(resolutionCache);
 		}
 	}
 }

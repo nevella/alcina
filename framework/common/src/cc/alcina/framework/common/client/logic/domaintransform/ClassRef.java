@@ -31,6 +31,8 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
 @MappedSuperclass
 /**
@@ -50,6 +52,7 @@ public abstract class ClassRef extends Entity {
 		}
 	}
 
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public static Set<ClassRef> all() {
 		return new LinkedHashSet<ClassRef>(refMap.values());
 	}
@@ -104,7 +107,7 @@ public abstract class ClassRef extends Entity {
 
 	@Override
 	public int hashCode() {
-		return refClassName==null?0:refClassName.hashCode();
+		return refClassName == null ? 0 : refClassName.hashCode();
 	}
 
 	public boolean notInVm() {

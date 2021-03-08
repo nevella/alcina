@@ -11,6 +11,10 @@ import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 public class MvccEntityAllTransactionTests extends AbstractTaskPerformer {
 	@Override
 	protected void run0() throws Exception {
+		/*
+		 * not a tx test, but throw in
+		 */
+		// new MvccEntityConstraintTest().run();
 		new MvccEntityLocalPromotionTest().run();
 		Transactions.waitForAllToCompleteExSelf();
 		new MvccEntityTransactionalIndexTest().run();

@@ -45,6 +45,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 import cc.alcina.framework.common.client.util.HasEquivalenceString;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @MappedSuperclass
@@ -571,6 +573,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	/*
 	 * self, previous in stream, and, if present, repeat from parent
 	 */
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public Stream<Job> provideSelfAndAntecedents() {
 		Job cursor = domainIdentity();
 		List<Job> selfAndPreviousSiblings = new ArrayList<>();
@@ -928,8 +931,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 		public ResourceRecord addResourceRecord(JobResource resource) {
 			ResourceRecord record = new ResourceRecord();
-			record.className = resource.getClass().getName();
-			record.path = resource.getPath();
+			record.setClassName(resource.getClass().getName());
+			record.setPath(resource.getPath());
 			resources.add(record);
 			return record;
 		}

@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,7 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.AccessSpecifier;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
@@ -156,7 +158,11 @@ class ClassTransformer {
 				.sorted(Comparator.comparing(Class::getSimpleName))
 				.collect(AlcinaCollectors.toValueMap(ClassTransform::new));
 		MvccCorrectnessToken token = new MvccCorrectnessToken();
-		classTransforms.values().parallelStream().forEach(ct -> {
+		Stream<ClassTransform> stream = ResourceUtilities
+				.is("checkClassCorrectnessParallel")
+						? classTransforms.values().parallelStream()
+						: classTransforms.values().stream();
+		stream.forEach(ct -> {
 			ct.setTransformer(this);
 			ct.init(false);
 			if (ResourceUtilities.is(ClassTransformer.class,
@@ -294,7 +300,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 10;
+		private static final transient int VERSION = 11;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.local();
@@ -500,6 +506,8 @@ class ClassTransformer {
 
 			private boolean expressionIsInNestedType;
 
+			private boolean expressionIsInNestedAnonymousType;
+
 			private String containingClassName;
 
 			@SuppressWarnings("unused")
@@ -507,6 +515,12 @@ class ClassTransformer {
 			private MethodCallExpr visiting;
 
 			public CheckAccessVisitor() {
+			}
+
+			@Override
+			public void visit(ClassOrInterfaceDeclaration n, Void arg) {
+				// Ax.err("Visit COI Decl:: %s", n.getName());
+				super.visit(n, arg);
 			}
 
 			@Override
@@ -549,6 +563,35 @@ class ClassTransformer {
 			 */
 			public void visit(FieldAccessExpr expr, Void arg) {
 				super.visit(expr, arg);
+				if (expr.toString().contains("disallowedInnerAccessField2")) {
+					int debug = 3;
+				}
+				if (isDefinedOk(expr)) {
+					// annotation etc
+					return;
+				}
+				try {
+					SymbolReference<? extends ResolvedValueDeclaration> ref = transformer.solver
+							.solve(expr);
+					if (ref.getCorrespondingDeclaration().isField()) {
+						ResolvedFieldDeclaration field = ref
+								.getCorrespondingDeclaration().asField();
+						if (expressionIsInNestedType
+								&& !field.declaringType().getQualifiedName()
+										.equals(containingClassName)
+								&& field.accessSpecifier() != AccessSpecifier.PUBLIC) {
+							addProblematicAccess(
+									MvccCorrectnessIssueType.InnerClassOuterFieldAccess);
+						}
+						if (expressionIsInNestedAnonymousType && field
+								.accessSpecifier() != AccessSpecifier.PUBLIC) {
+							addProblematicAccess(
+									MvccCorrectnessIssueType.InnerAnonymousClassOuterFieldAccess);
+						}
+					}
+				} catch (RuntimeException e) {
+					logSolverException(expr, e);
+				}
 			}
 
 			@Override
@@ -557,46 +600,33 @@ class ClassTransformer {
 				if (isDefinedOk(expr)) {
 					return;
 				}
+				if (expr.toString()
+						.contains("invalidInnerClassAccessMethod2")) {
+					int debug = 3;
+				}
 				super.visit(expr, arg);
 				try {
 					SymbolReference<ResolvedMethodDeclaration> ref = transformer.solver
 							.solve(expr);
 					if (!ref.isSolved()) {
-						Ax.out("Not solved: %s", expr);
+						// Ax.out("Not solved: %s", expr);
 						return;
 					}
 					ResolvedMethodDeclaration decl = ref
 							.getCorrespondingDeclaration();
-					boolean privateMethod = decl
-							.accessSpecifier() == AccessSpecifier.PRIVATE;
+					boolean privateOrPackageMethod = decl
+							.accessSpecifier() == AccessSpecifier.PRIVATE
+							|| decl.accessSpecifier() == AccessSpecifier.PACKAGE_PRIVATE;
 					boolean entityMethod = decl.declaringType()
 							.getQualifiedName().equals(originalClass.getName());
-					if (privateMethod && entityMethod
-							&& expressionIsInNestedType) {
+					if (privateOrPackageMethod && entityMethod
+							&& (expressionIsInNestedType
+									|| expressionIsInNestedAnonymousType)) {
 						addProblematicAccess(
 								MvccCorrectnessIssueType.InnerClassOuterPrivateMethodAccess);
 					}
-				} catch (Exception e) {
-					// assume these are ok...
-					// String methodName =
-					// methodDeclaration.getName().asString();
-					// switch (containingClassName) {
-					// case "au.com.barnet.demeter.crm.client.ContactBase":
-					// switch (methodName) {
-					// case "provideReachableActiveRecurrentOrders":
-					// case "provideActiveProductCategories":
-					// case "ensureFlow":
-					// case "provideActiveProductCodes":
-					// case "provideAllProductCodes":
-					// case "provideAllProductCategories":
-					// case "provideBestAddress":
-					// case "provideCCExpiration":
-					// case "provideCCMaskedNumber":
-					// return;
-					// }
-					// break;
-					// }
-					// throw new WrappedRuntimeException(e);
+				} catch (RuntimeException e) {
+					logSolverException(expr, e);
 				}
 			}
 
@@ -626,18 +656,29 @@ class ClassTransformer {
 					// constant expression
 					return;
 				}
-				if (expr.getNameAsString()
-						.equals("disallowedInnerAccessField")) {
-					SymbolReference<? extends ResolvedValueDeclaration> ref = transformer.solver
-							.solve(expr);
-					if (ref.getCorrespondingDeclaration().isField()) {
-						ResolvedFieldDeclaration field = ref
-								.getCorrespondingDeclaration().asField();
+				if (expr.toString().contains("disallowedInnerAccessField2")) {
+					int debug = 3;
+				}
+				SymbolReference<? extends ResolvedValueDeclaration> ref = transformer.solver
+						.solve(expr);
+				if (!ref.isSolved()) {
+					// Ax.out("Not solved: %s", expr);
+					return;
+				}
+				if (ref.getCorrespondingDeclaration().isField()) {
+					ResolvedFieldDeclaration field = ref
+							.getCorrespondingDeclaration().asField();
+					AccessSpecifier accessSpecifier = field.accessSpecifier();
+					if (accessSpecifier != AccessSpecifier.PUBLIC) {
 						if (expressionIsInNestedType
 								&& !field.declaringType().getQualifiedName()
 										.equals(containingClassName)) {
 							addProblematicAccess(
-									MvccCorrectnessIssueType.InnerClassOuterFieldAccess);
+									MvccCorrectnessIssueType.InnerClassOuterFieldAccessByName);
+						}
+						if (expressionIsInNestedAnonymousType) {
+							addProblematicAccess(
+									MvccCorrectnessIssueType.InnerAnonymousClassOuterFieldAccess);
 						}
 					}
 				}
@@ -653,7 +694,7 @@ class ClassTransformer {
 				ClassOrInterfaceType type = expr.getType();
 				ResolvedType creationType = transformer.solver.getType(expr);
 				ResolvedReferenceTypeDeclaration creationTypeDeclaration = creationType
-						.asReferenceType().getTypeDeclaration();
+						.asReferenceType().getTypeDeclaration().get();
 				if (creationTypeDeclaration instanceof JavaParserClassDeclaration) {
 					try {
 						Class clazz = getJvmClassFromTypeDeclaration(
@@ -803,13 +844,21 @@ class ClassTransformer {
 				boolean isInAnnotationExpression = false;
 				boolean mvccAccessCorrectAnnotationPresent = false;
 				Optional<Node> cursor = Optional.<Node> ofNullable(expr);
+				boolean debug = false;
+				expressionIsInNestedAnonymousType = false;
 				while (cursor.isPresent()) {
 					Node node = cursor.get();
+					if (debug) {
+						Ax.out(node.getClass().getSimpleName());
+					}
 					if (node instanceof MethodDeclaration) {
 						methodDeclaration = (MethodDeclaration) node;
 						mvccAccessCorrectAnnotationPresent = methodDeclaration
 								.getAnnotationByClass(MvccAccess.class)
 								.isPresent();
+					}
+					if (node instanceof ObjectCreationExpr) {
+						expressionIsInNestedAnonymousType = true;
 					}
 					if (node instanceof TypeDeclaration) {
 						typeDeclaration = (TypeDeclaration) node;
@@ -855,9 +904,21 @@ class ClassTransformer {
 				return !innerNonStatic && !Entity.class.isAssignableFrom(clazz);
 			}
 
+			private void logSolverException(Expression expr,
+					RuntimeException e) {
+				Ax.simpleExceptionOut(e);
+				Ax.sysLogHigh("%s:%s\nNot solved: %s", containingClassName,
+						(methodDeclaration == null ? null
+								: methodDeclaration.getName().toString()),
+						expr);
+				int debug = 3;
+			}
+
 			protected void addProblematicAccess(MvccCorrectnessIssueType type) {
+				Ax.out("Incorrect access: method '%s'", decorateLocation());
 				methodsWithProblematicAccess
-						.add(methodDeclaration.getDeclarationAsString());
+						.add(methodDeclaration == null ? "(constructor)"
+								: methodDeclaration.getDeclarationAsString());
 				correctnessIssueTopic.publish(new MvccCorrectnessIssue(type,
 						Ax.format("Incorrect access: method '%s'",
 								decorateLocation())));

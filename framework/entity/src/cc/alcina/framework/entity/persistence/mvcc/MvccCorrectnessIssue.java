@@ -23,7 +23,9 @@ class MvccCorrectnessIssue {
 		 */
 		InnerClassConstructor, InnerClassOuterFieldAccess,
 		InnerClassOuterPrivateMethodAccess, InnerClassOuterPrivateMethodRef,
-		Duplicate_field_name;
+		Duplicate_field_name, InnerAnonymousClassOuterFieldAccess,
+		InnerClassOuterFieldAccessByName;
+
 		boolean isUnknown() {
 			return this.toString().contains("unknown");
 		}

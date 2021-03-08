@@ -23,6 +23,8 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.cache.LazyPropertyLoadTask;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 @MappedSuperclass
@@ -41,6 +43,7 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 		return Domain.find(implementation(), id);
 	}
 
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public static <KVP extends KeyValuePersistent> Optional<KVP>
 			byKey(String key) {
 		return (Optional<KVP>) Domain.query(implementation()).contextTrue(
@@ -48,6 +51,7 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 				.filter("key", keyMapper.apply(key)).optional();
 	}
 
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public static <KVP extends KeyValuePersistent> List<KVP>
 			byParentKey(String parentKey) {
 		return (List<KVP>) Domain.query(implementation()).contextTrue(
