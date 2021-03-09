@@ -169,6 +169,10 @@ public class DomainTransformPersistenceQueue {
 		}
 	}
 
+	public void refreshPositions() {
+		sequencer.onPersistedRequestCommitted(-1);
+	}
+
 	public void setMuteEventsOnOrBefore(
 			Timestamp highestVisibleTransactionTimestamp) {
 		this.muteEventsOnOrBefore = highestVisibleTransactionTimestamp;
@@ -332,6 +336,7 @@ public class DomainTransformPersistenceQueue {
 			setName(Ax.format("DomainTransformPersistenceQueue-fire::%s",
 					persistenceEvents.domainStore.name));
 			while (true) {
+				Exception logged = null;
 				try {
 					firingEvent = events.poll(5, TimeUnit.SECONDS);
 					if (closed.get()) {
@@ -357,6 +362,10 @@ public class DomainTransformPersistenceQueue {
 						Transaction.ensureBegun();
 						ThreadedPermissionsManager.cast().pushSystemUser();
 						publishTransformEvent(firingEvent);
+					} catch (Exception e) {
+						e.printStackTrace();
+						logged = e;
+						throw e;
 					} finally {
 						Transaction.ensureBegun();
 						ThreadedPermissionsManager.cast().popSystemUser();
@@ -364,7 +373,10 @@ public class DomainTransformPersistenceQueue {
 						LooseContext.pop();
 					}
 				} catch (Exception e) {
-					e.printStackTrace();
+					if (e != logged) {
+						e.printStackTrace();
+					}
+					logged = null;
 				} finally {
 					firingEvent = null;
 				}
@@ -721,9 +733,5 @@ public class DomainTransformPersistenceQueue {
 				onPreparingVmLocalRequest(DomainTransformRequest dtr) {
 			appLifetimeEventUuidsThisVm.add(dtr.getChunkUuidString());
 		}
-	}
-
-	public void refreshPositions() {
-		sequencer.onPersistedRequestCommitted(-1);
 	}
 }

@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -120,11 +118,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	public T getBaseObject() {
 		return this.baseObject;
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(baseObject);
 	}
 
 	@Override
@@ -299,21 +292,12 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (version != null && version.isCorrectWriteableState(write)) {
 			return version.object;
 		}
-		if (!write) {
-			if (versions.isEmpty()) {
-				if (thisMayBeVisibleToPriorTransactions() && !transaction
-						.isVisible(firstCommittedTransactionId)) {
-					return null;
-				} else {
-					return baseObject;
-				}
-			}
-			Optional<T> resolvedReadVersion = transaction
-					.getResolvedReadVersion(this);
-			if (resolvedReadVersion != null) {
-				return resolvedReadVersion.isPresent()
-						? resolvedReadVersion.get()
-						: null;
+		if (versions.isEmpty() && !write) {
+			if (thisMayBeVisibleToPriorTransactions()
+					&& !transaction.isVisible(firstCommittedTransactionId)) {
+				return null;
+			} else {
+				return baseObject;
 			}
 		}
 		Class<? extends Entity> entityClass = entityClass();
@@ -326,7 +310,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			 */
 			if (thisMayBeVisibleToPriorTransactions()
 					&& !transaction.isVisible(firstCommittedTransactionId)) {
-				return transaction.putResolvedReadVersion(this, null);
+				return null;
 			}
 		}
 		T mostRecentObject = null;
@@ -355,7 +339,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			 * We could cache - by creating an ObjectVerson for this read call -
 			 * but that would require a later vacuum
 			 */
-			return transaction.putResolvedReadVersion(this, mostRecentObject);
+			return mostRecentObject;
 		}
 	}
 
