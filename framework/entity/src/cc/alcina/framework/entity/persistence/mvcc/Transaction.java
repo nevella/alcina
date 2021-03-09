@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -26,6 +27,8 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 /*
  * DOCUMENT - there are some slight differences between 'ensure ended' and 'ensure begun' - particularly around state TO_DB_ABORTED.
@@ -45,6 +48,8 @@ public class Transaction implements Comparable<Transaction> {
 	};
 
 	static Logger logger = LoggerFactory.getLogger(Transaction.class);
+
+	private static transient final Object NULL_VALUE_MARKER = new Object();
 
 	public static void begin() {
 		begin(TransactionPhase.TO_DB_PREPARING);
@@ -187,6 +192,9 @@ public class Transaction implements Comparable<Transaction> {
 					.getCurrentThreadStacktraceSlice();
 		}
 	}
+
+	private Map resolvedReadVersions = new Object2ObjectOpenHashMap(
+			Hash.DEFAULT_INITIAL_SIZE, Hash.FAST_LOAD_FACTOR);
 
 	Thread originatingThread;
 
@@ -487,6 +495,28 @@ public class Transaction implements Comparable<Transaction> {
 		return this.phase;
 	}
 
+	/*
+	 * returns as effectively a tri-state: null = key not present, empty = null
+	 * value
+	 */
+	<T> Optional<T> getResolvedReadVersion(MvccObjectVersions versions) {
+		Object object = null;
+		if (threadCount.get() > 1) {
+			synchronized (resolvedReadVersions) {
+				object = resolvedReadVersions.get(versions);
+			}
+		} else {
+			object = resolvedReadVersions.get(versions);
+		}
+		if (object == NULL_VALUE_MARKER) {
+			return Optional.empty();
+		} else if (object == null) {
+			return null;
+		} else {
+			return Optional.of((T) object);
+		}
+	}
+
 	long getTransformRequestId() {
 		return this.transformRequestId;
 	}
@@ -503,6 +533,19 @@ public class Transaction implements Comparable<Transaction> {
 			NavigableSet<Transaction> otherCommittedTransactionsSet) {
 		return TransactionVersions.mostRecentCommonVisible(
 				otherCommittedTransactionsSet, committedTransactions);
+	}
+
+	<T> T putResolvedReadVersion(MvccObjectVersions versions, T objectVersion) {
+		Object objectWithNullMarker = objectVersion == null ? NULL_VALUE_MARKER
+				: objectVersion;
+		if (threadCount.get() > 1) {
+			synchronized (resolvedReadVersions) {
+				resolvedReadVersions.put(versions, objectWithNullMarker);
+			}
+		} else {
+			resolvedReadVersions.put(versions, objectWithNullMarker);
+		}
+		return objectVersion;
 	}
 
 	void setId(TransactionId id) {
