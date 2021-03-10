@@ -137,12 +137,12 @@ public class TaskFlatSerializerMetadata
 	}
 
 	private void createTaskHierarchy() {
-		List<Class<? extends Task>> taskClasses = compUnits.declarations
+		List<Class<? extends Task>> taskClasses = (List) compUnits.declarations
 				.values().stream()
 				.filter(dec -> Task.class.isAssignableFrom(dec.clazz())
 						&& !Modifier.isAbstract(dec.clazz().getModifiers())
 						&& !dec.clazz().isInterface())
-				.map(dec -> dec.clazz()).collect(Collectors.toList());
+				.map(dec -> (Class) dec.clazz()).collect(Collectors.toList());
 		Multimap<Class<? extends Task>, List<Class<? extends Task>>> byHighestTaskImplementor = taskClasses
 				.stream().collect(AlcinaCollectors.toKeyMultimap(
 						c -> getHighestImplementor(c, Task.class)));

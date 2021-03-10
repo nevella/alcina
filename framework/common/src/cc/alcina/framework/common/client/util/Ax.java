@@ -176,4 +176,12 @@ public class Ax {
 			};
 		}
 	}
+
+	public static int length(Object[] array) {
+		return array.length;
+	}
+
+	public static int length(double[] array) {
+		return array.length;
+	}
 }

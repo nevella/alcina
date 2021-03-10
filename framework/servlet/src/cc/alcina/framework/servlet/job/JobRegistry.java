@@ -776,8 +776,7 @@ public class JobRegistry extends WriterService {
 
 		@Override
 		public Object allocationLock(String path, boolean acquire) {
-			return null;
-			// noop
+			return new Object();
 		}
 
 		@Override
