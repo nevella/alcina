@@ -8,7 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
@@ -35,11 +37,20 @@ public class ClusterTransformListener
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
+	private TopicListener<List<DomainTransformCommitPosition>> sequencedTransformListener = (
+			k, list) -> {
+		transformCommitLog.sendTransformPublishedMessages(list,
+				State.SEQUENCED_COMMIT_REGISTERED);
+		logger.info("Published commit positions: {} ", list.size());
+	};
+
 	public ClusterTransformListener(TransformCommitLogHost commitLogHost,
 			TransformCommitLog transformCommitLog, DomainStore domainStore) {
 		this.commitLogHost = commitLogHost;
 		this.transformCommitLog = transformCommitLog;
 		this.domainStore = domainStore;
+		domainStore.getPersistenceEvents().getQueue().publishedFromSequencer
+				.add(sequencedTransformListener);
 	}
 
 	@Override
@@ -146,6 +157,9 @@ public class ClusterTransformListener
 			break;
 		case ABORTED:
 			queue.onTransformRequestAborted(request.id);
+			break;
+		case SEQUENCED_COMMIT_REGISTERED:
+			queue.onClusteredSequencedCommitPositions(request.positions);
 			break;
 		}
 	}

@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -135,11 +136,12 @@ public class TransformCommitLog {
 	public synchronized List<Future<RecordMetadata>>
 			sendTransformPublishedMessages(
 					DomainTransformRequestPersistent request, State state) {
-		List<byte[]> serialized = serialize(request, state);
-		return serialized.stream()
-				.map(packet -> producer().send(new ProducerRecord<Void, byte[]>(
-						getTopic(), null, packet)))
-				.collect(Collectors.toList());
+		return sendTransformPublishedMessages0(request, null, state);
+	}
+
+	public List<Future<RecordMetadata>> sendTransformPublishedMessages(
+			List<DomainTransformCommitPosition> positions, State state) {
+		return sendTransformPublishedMessages0(null, positions, state);
 	}
 
 	public void shutdown() {
@@ -169,10 +171,20 @@ public class TransformCommitLog {
 		currentConsumerThread.start();
 	}
 
+	private List<Future<RecordMetadata>> sendTransformPublishedMessages0(
+			DomainTransformRequestPersistent request,
+			List<DomainTransformCommitPosition> positions, State state) {
+		List<byte[]> serialized = serialize(request, positions, state);
+		return serialized.stream()
+				.map(packet -> producer().send(new ProducerRecord<Void, byte[]>(
+						getTopic(), null, packet)))
+				.collect(Collectors.toList());
+	}
+
 	private List<byte[]> serialize(DomainTransformRequestPersistent request,
-			State state) {
+			List<DomainTransformCommitPosition> positions, State state) {
 		return Registry.impl(ClusterTransformSerializer.class)
-				.serialize(request, state);
+				.serialize(request, positions, state);
 	}
 
 	protected synchronized void checkPollTimeout() {

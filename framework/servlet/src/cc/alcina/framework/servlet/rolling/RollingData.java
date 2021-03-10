@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.persistence.RollingDataItem;
+import cc.alcina.framework.entity.persistence.cache.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 //REVIEW - lowpri - formal support for "go back a bit" in transform sequence - probably using transform utc date
@@ -35,6 +36,8 @@ public abstract class RollingData<K extends Comparable, V> {
 				.getImplementation(RollingDataItem.class);
 		Function<String, K> keyDeserializer = keyDeserializer();
 		List<? extends RollingDataItem> list = Domain.query(rdImplClass)
+				.contextTrue(
+						LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
 				.filter("typeKey", typeKey).list();
 		List<K> existingKeys = list.stream().map(RollingDataItem::getMaxKey)
 				.map(k -> keyDeserializer.apply(k))
@@ -60,7 +63,9 @@ public abstract class RollingData<K extends Comparable, V> {
 				Transaction.commit();
 			}
 		}
-		list = Domain.query(rdImplClass).filter("typeKey", typeKey).list();
+		list = Domain.query(rdImplClass).filter("typeKey", typeKey).contextTrue(
+				LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
+				.list();
 		TreeMap<K, V> map = new TreeMap<K, V>();
 		Function<String, List<V>> deserializer = deserializer();
 		try {

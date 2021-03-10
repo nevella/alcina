@@ -5,8 +5,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
-import java.util.Optional;
 import java.util.SortedSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -28,7 +28,6 @@ import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import it.unimi.dsi.fastutil.Hash;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 /*
  * DOCUMENT - there are some slight differences between 'ensure ended' and 'ensure begun' - particularly around state TO_DB_ABORTED.
@@ -48,8 +47,6 @@ public class Transaction implements Comparable<Transaction> {
 	};
 
 	static Logger logger = LoggerFactory.getLogger(Transaction.class);
-
-	private static transient final Object NULL_VALUE_MARKER = new Object();
 
 	public static void begin() {
 		begin(TransactionPhase.TO_DB_PREPARING);
@@ -193,7 +190,7 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
-	private Map resolvedReadVersions = new Object2ObjectOpenHashMap(
+	private ConcurrentHashMap<MvccObjectVersions, Transaction> resolvedMostRecentVisibleTransactions = new ConcurrentHashMap<>(
 			Hash.DEFAULT_INITIAL_SIZE, Hash.FAST_LOAD_FACTOR);
 
 	Thread originatingThread;
@@ -232,6 +229,8 @@ public class Transaction implements Comparable<Transaction> {
 
 	// if zero, use system default (for abort)
 	private long timeout;
+
+	Boolean emptyCommitted = null;
 
 	public Transaction(TransactionPhase initialPhase) {
 		DomainStore.stores().stream().forEach(store -> storeTransactions
@@ -296,6 +295,13 @@ public class Transaction implements Comparable<Transaction> {
 
 	public boolean isBaseTransaction() {
 		return this.baseTransaction;
+	}
+
+	public boolean isEmptyCommittedTransactions() {
+		if (emptyCommitted == null) {
+			emptyCommitted = committedTransactions.isEmpty();
+		}
+		return emptyCommitted;
 	}
 
 	public boolean isEnded() {
@@ -495,28 +501,6 @@ public class Transaction implements Comparable<Transaction> {
 		return this.phase;
 	}
 
-	/*
-	 * returns as effectively a tri-state: null = key not present, empty = null
-	 * value
-	 */
-	<T> Optional<T> getResolvedReadVersion(MvccObjectVersions versions) {
-		Object object = null;
-		if (threadCount.get() > 1) {
-			synchronized (resolvedReadVersions) {
-				object = resolvedReadVersions.get(versions);
-			}
-		} else {
-			object = resolvedReadVersions.get(versions);
-		}
-		if (object == NULL_VALUE_MARKER) {
-			return Optional.empty();
-		} else if (object == null) {
-			return null;
-		} else {
-			return Optional.of((T) object);
-		}
-	}
-
 	long getTransformRequestId() {
 		return this.transformRequestId;
 	}
@@ -529,23 +513,15 @@ public class Transaction implements Comparable<Transaction> {
 		return phase == TransactionPhase.TO_DOMAIN_COMMITTED;
 	}
 
-	Transaction mostRecentVisibleCommittedTransaction(
-			NavigableSet<Transaction> otherCommittedTransactionsSet) {
-		return TransactionVersions.mostRecentCommonVisible(
-				otherCommittedTransactionsSet, committedTransactions);
-	}
-
-	<T> T putResolvedReadVersion(MvccObjectVersions versions, T objectVersion) {
-		Object objectWithNullMarker = objectVersion == null ? NULL_VALUE_MARKER
-				: objectVersion;
-		if (threadCount.get() > 1) {
-			synchronized (resolvedReadVersions) {
-				resolvedReadVersions.put(versions, objectWithNullMarker);
-			}
-		} else {
-			resolvedReadVersions.put(versions, objectWithNullMarker);
-		}
-		return objectVersion;
+	/*
+	 * Cache the result (for a given object, and a given transaction, it may be
+	 * called many times)
+	 */
+	Transaction
+			mostRecentVisibleCommittedTransaction(MvccObjectVersions versions) {
+		return resolvedMostRecentVisibleTransactions.computeIfAbsent(versions,
+				v -> TransactionVersions.mostRecentCommonVisible(
+						v.versions.keySet(), committedTransactions));
 	}
 
 	void setId(TransactionId id) {

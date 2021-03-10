@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
@@ -61,6 +62,9 @@ public class DomainTransformPersistenceQueue {
 	public static final String CONTEXT_WAIT_TIMEOUT_MS = DomainTransformPersistenceQueue.class
 			.getName() + ".CONTEXT_WAIT_TIMEOUT_MS";
 
+	public Topic<List<DomainTransformCommitPosition>> publishedFromSequencer = Topic
+			.local();
+
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	State state;
@@ -77,8 +81,6 @@ public class DomainTransformPersistenceQueue {
 	 * On change, notify() is called
 	 */
 	private Map<Long, DomainTransformRequestPersistent> loadedRequests = new ConcurrentHashMap<>();
-
-	private Map<Long, Boolean> enqueuedRequestIds = new ConcurrentHashMap<>();
 
 	private Timestamp muteEventsOnOrBefore;
 
@@ -123,6 +125,11 @@ public class DomainTransformPersistenceQueue {
 		return state.transformCommitPosition;
 	}
 
+	public void onClusteredSequencedCommitPositions(
+			List<DomainTransformCommitPosition> positions) {
+		sequencer.addIncomingPositions(positions);
+	}
+
 	public void
 			onPersistingVmLocalRequest(DomainTransformRequestPersistent dtrp) {
 		state.onPersistingVmLocalRequest(dtrp);
@@ -152,8 +159,15 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public void onSequencedCommitPositions(
-			List<DomainTransformCommitPosition> positions) {
+			List<DomainTransformCommitPosition> positions,
+			boolean fromSequencer) {
 		positions.forEach(p -> events.add(Event.committed(p)));
+		if (fromSequencer) {
+			if (positions.isEmpty()) {
+				int debug = 3;
+			}
+			publishedFromSequencer.publish(positions);
+		}
 	}
 
 	public void onTransformRequestAborted(long requestId) {
@@ -161,8 +175,7 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public void onTransformRequestCommitted(long requestId) {
-		if (enqueuedRequestIds.containsKey(requestId)
-				|| state.hasFired(requestId)) {
+		if (state.hasFired(requestId)) {
 			return;
 		} else {
 			sequencer.onPersistedRequestCommitted(requestId);
@@ -345,6 +358,9 @@ public class DomainTransformPersistenceQueue {
 					if (firingEvent == null) {
 						continue;
 					}
+					if (state.hasFired(firingEvent.requestId)) {
+						continue;
+					}
 					logger.debug("Polled event from queue: {}", firingEvent);
 					try {
 						LooseContext.pushWithKey(
@@ -502,6 +518,9 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public interface Sequencer {
+		void addIncomingPositions(
+				List<DomainTransformCommitPosition> positions);
+
 		Long getLastRequestIdAtTimestamp(Timestamp timestamp);
 
 		void onPersistedRequestCommitted(long requestId);
@@ -672,16 +691,6 @@ public class DomainTransformPersistenceQueue {
 
 		private DomainTransformCommitPosition transformCommitPosition;
 
-		public synchronized boolean
-				isAwaitEmptyEventQueue(Timestamp timestamp) {
-			if (transformCommitPosition == null) {
-				return false;
-			}
-			int dir = transformCommitPosition.commitTimestamp
-					.compareTo(timestamp);
-			return dir <= 0;
-		}
-
 		public synchronized boolean isTimstampVisible(Timestamp timestamp) {
 			if (transformCommitPosition == null) {
 				return false;
@@ -701,6 +710,19 @@ public class DomainTransformPersistenceQueue {
 
 		synchronized boolean hasFired(long requestId) {
 			return appLifetimeEventsFired.contains(requestId);
+		}
+
+		synchronized boolean hasOutstandingCommits() {
+			return false;
+		}
+
+		synchronized boolean isAwaitEmptyEventQueue(Timestamp timestamp) {
+			if (transformCommitPosition == null) {
+				return false;
+			}
+			int dir = transformCommitPosition.commitTimestamp
+					.compareTo(timestamp);
+			return dir <= 0;
 		}
 
 		synchronized boolean

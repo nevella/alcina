@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.entity.util;
 
+import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -25,8 +26,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
@@ -43,6 +46,36 @@ public class AnnotationUtils {
 			2);
 
 	private static Map<Class, Multimap<Class, List<Annotation>>> superAnnotationMap = new ConcurrentHashMap<Class, Multimap<Class, List<Annotation>>>();
+
+	public static void checkNotObscuredAnnotation(PropertyDescriptor pd,
+			Class<? extends Annotation> annotationClass) {
+		try {
+			Method method = pd.getReadMethod();
+			Class cursor = method.getDeclaringClass();
+			if (method.getAnnotation(annotationClass) != null) {
+				return;
+			}
+			while (cursor.getSuperclass() != null) {
+				cursor = cursor.getSuperclass();
+				Method method2 = null;
+				try {
+					method2 = cursor.getMethod(method.getName(),
+							new Class[] {});
+				} catch (Exception e) {
+				}
+				if (method2 != null) {
+					if (method2.getAnnotation(annotationClass) != null) {
+						Ax.sysLogHigh("Overriding annotation in %s for %s.%s",
+								cursor, method.getDeclaringClass(),
+								method.getName());
+						throw new RuntimeException();
+					}
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
 	public static <A extends Annotation> Collection<A> filterAnnotations(
 			Collection<Annotation> ann, Class<? extends A>... filterClasses) {

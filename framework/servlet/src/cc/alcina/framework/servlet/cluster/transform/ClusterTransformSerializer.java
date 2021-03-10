@@ -20,6 +20,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -83,8 +85,16 @@ public class ClusterTransformSerializer {
 	}
 
 	public List<byte[]> serialize(DomainTransformRequestPersistent request,
-			State state) {
-		request = projectRequest(request);
+			List<DomainTransformCommitPosition> positions, State state) {
+		if (request == null) {
+			/*
+			 * just create an unused placeholder
+			 */
+			request = PersistentImpl.getNewImplementationInstance(
+					DomainTransformRequestPersistent.class);
+		} else {
+			request = projectRequest(request);
+		}
 		ClusterTransformRequest clusterRequest = new ClusterTransformRequest();
 		clusterRequest.id = request.getId();
 		clusterRequest.state = state;
@@ -99,6 +109,7 @@ public class ClusterTransformSerializer {
 		if (state == State.PRE_COMMIT) {
 			clusterRequest.request = request;
 		}
+		clusterRequest.positions = positions;
 		List<byte[]> result = new ArrayList<>();
 		byte[] zipped = new byte[0];
 		byte[] unzipped = null;

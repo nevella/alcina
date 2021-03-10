@@ -57,7 +57,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				initialObjectIsWriteable);
 	}
 
-	private volatile ConcurrentSkipListMap<Transaction, ObjectVersion<T>> versions = new ConcurrentSkipListMap<>(
+	volatile ConcurrentSkipListMap<Transaction, ObjectVersion<T>> versions = new ConcurrentSkipListMap<>(
 			Collections.reverseOrder());
 
 	// object pointed to by this field never changes (for a given class/id or
@@ -292,7 +292,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (version != null && version.isCorrectWriteableState(write)) {
 			return version.object;
 		}
-		if (versions.isEmpty() && !write) {
+		if ((size.get() == 0 || transaction.isEmptyCommittedTransactions())
+				&& !write) {
 			if (thisMayBeVisibleToPriorTransactions()
 					&& !transaction.isVisible(firstCommittedTransactionId)) {
 				return null;
@@ -300,9 +301,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				return baseObject;
 			}
 		}
-		Class<? extends Entity> entityClass = entityClass();
 		Transaction mostRecentTransaction = transaction
-				.mostRecentVisibleCommittedTransaction(versions.keySet());
+				.mostRecentVisibleCommittedTransaction(this);
 		if (mostRecentTransaction == null && !write) {
 			/*
 			 * Object not visible to the current tx - note that if this is an

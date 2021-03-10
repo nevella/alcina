@@ -50,6 +50,8 @@ import javax.persistence.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
@@ -59,6 +61,8 @@ import cc.alcina.framework.common.client.domain.DomainStoreLookupDescriptor;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadOracle;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
+import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
@@ -98,6 +102,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.util.AnnotationUtils;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.SqlUtils;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -919,6 +924,20 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 			if (classDescriptor.ignoreField(pd.getName())) {
 				continue;
+			}
+			AnnotationUtils.checkNotObscuredAnnotation(pd,
+					DomainTransformPropagation.class);
+			AnnotationUtils.checkNotObscuredAnnotation(pd,
+					DomainStoreProperty.class);
+			if (domainStoreProperty != null && domainStoreProperty
+					.loadType() == DomainStorePropertyLoadType.LAZY) {
+				Preconditions.checkArgument(rm
+						.getAnnotation(DomainTransformPropagation.class) != null
+						&& rm.getAnnotation(DomainTransformPropagation.class)
+								.value() == PropagationType.NONE,
+						Ax.format(
+								"Incorrect propagation for lazy load property: %s.%s",
+								clazz.getSimpleName(), rm.getName()));
 			}
 			OneToMany oneToMany = rm.getAnnotation(OneToMany.class);
 			if (oneToMany != null) {

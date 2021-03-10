@@ -24,6 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
@@ -80,8 +83,21 @@ public class DomainStoreTransformSequencer
 
 	private volatile boolean initialised = false;
 
+	private ClusteredSequencing clusteredSequencing = Registry
+			.impl(ClusteredSequencing.class);
+
 	DomainStoreTransformSequencer(DomainStoreLoaderDatabase loaderDatabase) {
 		this.loaderDatabase = loaderDatabase;
+	}
+
+	@Override
+	public synchronized void addIncomingPositions(
+			List<DomainTransformCommitPosition> positions) {
+		positions.removeIf(p -> publishedIds.containsKey(p.commitRequestId));
+		if (positions.size() > 0) {
+			unpublishedPositions.addAll(positions);
+			publishUnpublishedPositions(false);
+		}
 	}
 
 	@Override
@@ -107,12 +123,12 @@ public class DomainStoreTransformSequencer
 		if (highestVisiblePosition == null) {
 			return;
 		}
-		refreshPositions(requestId);
+		refreshPositions(requestId, System.currentTimeMillis());
 	}
 
 	@Override
 	public void refresh() {
-		refreshPositions(-1);
+		refreshPositions(-1, System.currentTimeMillis());
 	}
 
 	public void rotateIndex() {
@@ -200,9 +216,47 @@ public class DomainStoreTransformSequencer
 		}
 	}
 
-	private synchronized void refreshPositions(long ignoreIfSeenRequestId) {
+	private void publishUnpublishedPositions(boolean publishToCluster) {
+		loaderDatabase.getStore().getPersistenceEvents().getQueue()
+				.onSequencedCommitPositions(unpublishedPositions,
+						publishToCluster);
+		unpublishedPositions
+				.forEach(p -> publishedIds.put(p.commitRequestId, true));
+		highestVisiblePosition = Ax.last(unpublishedPositions);
+		unpublishedPositions.clear();
+		synchronized (unpublishedPositions) {
+			unpublishedPositions.notifyAll();
+		}
+	}
+
+	private synchronized void refreshPositions(long ignoreIfSeenRequestId,
+			long refreshTime) {
 		if (!initialised) {
 			return;
+		}
+		if (clusteredSequencing.isPrimarySequenceRefresher()) {
+		} else {
+			if (highestVisiblePosition != null
+					&& highestVisiblePosition.commitTimestamp
+							.after(new Timestamp(refreshTime))) {
+				logger.info("Non-primary sequence refresher: OK (updated)");
+				return;
+			}
+			synchronized (unpublishedPositions) {
+				try {
+					unpublishedPositions.wait(clusteredSequencing
+							.waitForPrimarySequenceRefresherTime());
+				} catch (InterruptedException e) {
+				}
+			}
+			if (highestVisiblePosition != null
+					&& highestVisiblePosition.commitTimestamp
+							.after(new Timestamp(refreshTime))) {
+				logger.info("Non-primary sequence refresher: OK (updated)");
+				return;
+			}
+			logger.info(
+					"Non-primary sequence refresher: non-optimised (not updated)");
 		}
 		runWithConnection("refresh-positions",
 				conn -> refreshPositions0(conn, false, ignoreIfSeenRequestId));
@@ -210,7 +264,7 @@ public class DomainStoreTransformSequencer
 
 	private synchronized int refreshPositions0(Connection conn, boolean initial,
 			long ignoreIfSeenRequestId) throws SQLException {
-		if (publishedIds.containsKey(ignoreIfSeenRequestId)) {
+		if (publishedIds.containsKey(ignoreIfSeenRequestId) && !initial) {
 			return 0;
 		}
 		boolean publishToQueue = !initial;
@@ -293,16 +347,10 @@ public class DomainStoreTransformSequencer
 		if (positions.size() > 0) {
 			logger.trace("Added unpublished positions: - since: {} - {}", since,
 					CommonUtils.joinWithNewlines(positions));
-		}
-		if (positions.size() > 0) {
 			highestVisiblePosition = Ax.last(unpublishedPositions);
 		}
-		if (publishToQueue) {
-			loaderDatabase.getStore().getPersistenceEvents().getQueue()
-					.onSequencedCommitPositions(unpublishedPositions);
-			unpublishedPositions
-					.forEach(p -> publishedIds.put(p.commitRequestId, true));
-			unpublishedPositions.clear();
+		if (publishToQueue && unpublishedPositions.size() > 0) {
+			publishUnpublishedPositions(true);
 			if (shouldEnsure()) {
 				conn.commit();
 				ensureTimestamps();
@@ -370,6 +418,20 @@ public class DomainStoreTransformSequencer
 		logger.info("Marked highest visible position - {}",
 				highestVisiblePosition);
 		unpublishedPositions.clear();
+	}
+
+	/*
+	 * Prevent contentious herds
+	 */
+	@RegistryLocation(registryPoint = ClusteredSequencing.class, implementationType = ImplementationType.INSTANCE)
+	public static class ClusteredSequencing {
+		public boolean isPrimarySequenceRefresher() {
+			return true;
+		}
+
+		public long waitForPrimarySequenceRefresherTime() {
+			return 10;
+		}
 	}
 
 	class IndexRotater {
