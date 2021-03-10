@@ -63,9 +63,9 @@ public abstract class RollingData<K extends Comparable, V> {
 				Transaction.commit();
 			}
 		}
-		list = Domain.query(rdImplClass).filter("typeKey", typeKey).contextTrue(
+		list = Domain.query(rdImplClass).contextTrue(
 				LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
-				.list();
+				.filter("typeKey", typeKey).list();
 		TreeMap<K, V> map = new TreeMap<K, V>();
 		Function<String, List<V>> deserializer = deserializer();
 		try {
