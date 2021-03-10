@@ -57,6 +57,7 @@ public class PlaceHistoryHandler {
 
 	private String defaultPlaceToken = "";
 
+	@SuppressWarnings("unused")
 	private Place lastPlace;
 
 	private Place currentPlace;

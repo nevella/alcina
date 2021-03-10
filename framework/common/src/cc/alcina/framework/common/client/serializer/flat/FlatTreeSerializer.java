@@ -4,20 +4,17 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
-import com.totsp.gwittir.client.beans.Method;
 import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -222,15 +219,29 @@ public class FlatTreeSerializer {
 										(Collection) cursor.value);
 								cursor = new Node(cursor, childValue, null);
 							} catch (RuntimeException e) {
-								Method accessorMethod = cursor.path.property
-										.getAccessorMethod();
-								accessorMethod.toString();
 								throw e;
 							}
 							cursor.path.index = new CollectionIndex(
 									elementClass, index, false);
 						} else {
-							throw new UnsupportedOperationException();
+							if (segmentPath.matches("\\d+")) {
+								// leaf value index
+							} else {
+								elementClass = Reflections.classLookup()
+										.getClassForName(
+												segmentPath.replace("_", "."));
+								try {
+									Object childValue = ensureNthCollectionElement(
+											elementClass, index,
+											(Collection) cursor.value);
+									cursor = new Node(cursor, childValue, null);
+								} catch (RuntimeException e) {
+									throw e;
+								}
+								cursor.path.index = new CollectionIndex(
+										elementClass, index, false);
+							}
+							resolved = true;
 						}
 					} else {
 						Property property = null;
@@ -402,7 +413,8 @@ public class FlatTreeSerializer {
 			Node node = state.pending.remove(0);
 			Object value = node.value;
 			if (isLeafValue(value)) {
-				if (!Objects.equals(value, node.defaultValue)) {
+				if (!Objects.equals(value, node.defaultValue)
+						|| !state.serializerOptions.defaults) {
 					node.putValue(state);
 				}
 				state.mergeableNode = node;
@@ -422,70 +434,10 @@ public class FlatTreeSerializer {
 				/* parent object is default null */
 						CloneHelper.newCollectionInstance(valueCollection)
 						: (Collection) node.defaultValue;
-				/*
-				 * Preconditions:
-				 * 
-				 * - if valueCollection contains leaf values, all values will be
-				 * serialized (if non-default)
-				 * 
-				 * - if valueCollection contains TreeSerializables, either
-				 * defaultCollection is empty or there's an onto per-class
-				 * mapping from value(i.e. elements are unique per-class)
-				 * 
-				 * - if valueCollection contains any other type,
-				 * defaultCollection must be empty
-				 * 
-				 * FIXME - mvcc.flat - review commented sections
-				 */
-				if (defaultCollection.size() > 0) {
-					if (valueCollection.isEmpty()) {
-						// throw new IllegalArgumentException(Ax
-						// .format("Illegal collection at %s", node.path));
-					}
-					Object test = defaultCollection.iterator().next();
-					if (CommonUtils.isEnumish(test)) {
-						// if (!valueCollection.containsAll(defaultCollection))
-						// {
-						// throw new IllegalArgumentException(Ax.format(
-						// "Illegal collection at %s", node.path));
-						// }
-					} else if (test instanceof TreeSerializable) {
-						// if (valueCollection.size() <
-						// defaultCollection.size()) {
-						// throw new IllegalArgumentException(Ax.format(
-						// "Illegal collection - missing default - at %s",
-						// node.path));
-						// }
-						Set<Class> seenClasses = new HashSet<>();
-						Set<Class> defaultClasses = (Set) defaultCollection
-								.stream().map(Object::getClass)
-								.collect(Collectors.toSet());
-						for (Object element : valueCollection) {
-							if (!seenClasses.add(element.getClass())) {
-								throw new IllegalArgumentException(Ax.format(
-										"Illegal collection - multiple same-class elements - at %s",
-										node.path));
-							}
-						}
-						// for (Object element : defaultCollection) {
-						// if (!seenClasses.contains(element.getClass())) {
-						// throw new IllegalArgumentException(Ax.format(
-						// "Illegal collection - missing default element %s - at
-						// %s",
-						// element, node.path));
-						// }
-						// }
-					} else {
-						throw new IllegalArgumentException(Ax
-								.format("Illegal collection at %s", node.path));
-					}
-				}
 				((Collection) value).forEach(childValue -> {
 					Object defaultValue = null;
-					if (CommonUtils.isEnumish(childValue)) {
-						// defaultValue = defaultCollection.contains(childValue)
-						// ? childValue
-						// : null;
+					if (isLeafValue(childValue)) {
+						//
 					} else if (childValue instanceof TreeSerializable) {
 						for (Object element : defaultCollection) {
 							if (element.getClass() == childValue.getClass()) {
@@ -497,6 +449,10 @@ public class FlatTreeSerializer {
 							defaultValue = Reflections.classLookup()
 									.getTemplateInstance(childValue.getClass());
 						}
+					} else {
+						throw new IllegalStateException(Ax.format(
+								"Object %s - illegal in collection: \n\t%s\n\t%s ",
+								childValue, existingPath, node));
 					}
 					Node childNode = new Node(node, childValue, defaultValue);
 					childNode.path.index = counter.getAndIncrement(childValue);
@@ -710,7 +666,7 @@ public class FlatTreeSerializer {
 			String existingValue = null;
 			String leafValue = toStringValue();
 			boolean shortPaths = state.serializerOptions.shortPaths;
-			if (state.mergeableNode != null && shortPaths
+			if (state.mergeableNode != null
 					&& path.canMergeTo(state.mergeableNode.path)) {
 				existingValue = state.keyValues.get(path.toString(true, true));
 			}
@@ -745,6 +701,9 @@ public class FlatTreeSerializer {
 		}
 
 		Object parseStringValue(Class valueClass, String stringValue) {
+			if (NULL_MARKER.equals(stringValue)) {
+				return null;
+			}
 			if (valueClass == String.class) {
 				return TextUtils.Encoder.decodeURIComponentEsque(stringValue);
 			}
@@ -761,7 +720,7 @@ public class FlatTreeSerializer {
 				return Boolean.valueOf(stringValue);
 			}
 			if (valueClass == Date.class) {
-				value = new Date(Long.parseLong(stringValue));
+				return new Date(Long.parseLong(stringValue));
 			}
 			if (valueClass.isEnum() || (valueClass.getSuperclass() != null
 					&& valueClass.getSuperclass().isEnum())) {

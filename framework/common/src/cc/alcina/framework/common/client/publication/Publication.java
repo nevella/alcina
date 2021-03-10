@@ -17,6 +17,7 @@ import java.util.Date;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 
 /**
  *
@@ -71,6 +72,10 @@ public interface Publication extends HasId {
 	String getPublicationUid();
 
 	String getSerializedPublication();
+
+	default ContentRequestBase provideContentRequest() {
+		return (ContentRequestBase) getDeliveryModel();
+	}
 
 	default void setMimeMessageId(String messageId) {
 	}

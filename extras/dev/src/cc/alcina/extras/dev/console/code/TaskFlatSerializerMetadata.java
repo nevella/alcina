@@ -39,6 +39,7 @@ import cc.alcina.extras.dev.console.code.CompilationUnits.TypeFlag;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
@@ -133,6 +134,20 @@ public class TaskFlatSerializerMetadata
 
 	public void setTest(boolean test) {
 		this.test = test;
+	}
+
+	private void createTaskHierarchy() {
+		List<Class<? extends Task>> taskClasses = compUnits.declarations
+				.values().stream()
+				.filter(dec -> Task.class.isAssignableFrom(dec.clazz())
+						&& !Modifier.isAbstract(dec.clazz().getModifiers())
+						&& !dec.clazz().isInterface())
+				.map(dec -> dec.clazz()).collect(Collectors.toList());
+		Multimap<Class<? extends Task>, List<Class<? extends Task>>> byHighestTaskImplementor = taskClasses
+				.stream().collect(AlcinaCollectors.toKeyMultimap(
+						c -> getHighestImplementor(c, Task.class)));
+		byHighestTaskImplementor.forEach(
+				(k, v) -> Ax.out("%s :: %s", k.getSimpleName(), v.size()));
 	}
 
 	private void enumerateSearchDefinitions() {
@@ -308,11 +323,25 @@ public class TaskFlatSerializerMetadata
 			updateAnnotations();
 			flatSerializationConfigurations.persist();
 			break;
+		case CREATE_TASK_HIERARCHY:
+			createTaskHierarchy();
+			break;
 		}
 	}
 
+	<T> Class<? extends T> getHighestImplementor(Class<? extends T> clazz,
+			Class<T> implementing) {
+		Class<? extends T> cursor = clazz;
+		while (cursor.getSuperclass() != null
+				&& implementing.isAssignableFrom(cursor.getSuperclass())) {
+			cursor = (Class<? extends T>) cursor.getSuperclass();
+		}
+		return cursor;
+	}
+
 	public enum Action {
-		LIST_INTERESTING, ENUMERATE_SEARCH_DEFINITIONS, UPDATE_ANNOTATIONS;
+		LIST_INTERESTING, ENUMERATE_SEARCH_DEFINITIONS, UPDATE_ANNOTATIONS,
+		CREATE_TASK_HIERARCHY;
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -343,7 +372,7 @@ public class TaskFlatSerializerMetadata
 			try {
 				visit0(node, arg);
 			} catch (VerifyError ve) {
-				Ax.simpleExceptionOut(ve);
+				Ax.out("Verify error: %s", node.getName());
 			}
 		}
 
@@ -366,6 +395,9 @@ public class TaskFlatSerializerMetadata
 				if (declaration
 						.isAssignableFrom(BindableSearchDefinition.class)) {
 					declaration.setFlag(Type.BindableSearchDefinition);
+				}
+				if (declaration.isAssignableFrom(Task.class)) {
+					declaration.setFlag(Type.Task);
 				}
 			}
 			super.visit(node, arg);
@@ -425,6 +457,6 @@ public class TaskFlatSerializerMetadata
 
 	enum Type implements TypeFlag {
 		DomainCriterionHandler, SearchCriterion, CriteriaGroup,
-		BindableSearchDefinition
+		BindableSearchDefinition, Task
 	}
 }

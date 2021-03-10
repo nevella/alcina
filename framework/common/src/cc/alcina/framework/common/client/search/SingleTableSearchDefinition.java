@@ -27,8 +27,6 @@ public abstract class SingleTableSearchDefinition<R extends SearchResult>
 
 	private String orderPropertyName;
 
-	private transient Class<? extends R> resultClass;
-
 	public SingleTableSearchDefinition() {
 		init();
 	}
@@ -45,9 +43,7 @@ public abstract class SingleTableSearchDefinition<R extends SearchResult>
 		return orderPropertyName;
 	}
 
-	public Class<? extends R> getResultClass() {
-		return resultClass;
-	}
+	public abstract Class<? extends R> getResultClass();
 
 	public boolean isOrderable() {
 		return true;
@@ -59,10 +55,6 @@ public abstract class SingleTableSearchDefinition<R extends SearchResult>
 
 	public void setOrderPropertyName(String orderPropertyName) {
 		this.orderPropertyName = orderPropertyName;
-	}
-
-	public void setResultClass(Class<? extends R> resultClass) {
-		this.resultClass = resultClass;
 	}
 
 	protected abstract void init();

@@ -20,6 +20,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 
 /**
  * Marker subclass, to be run on the server
@@ -29,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  */
 @WebMethod(customPermission = @Permission(access = AccessLevel.ADMIN))
 @ClientInstantiable
+@RegistryLocation(registryPoint = TreeSerializable.class)
 public class RemoteAction extends PermissibleAction
 		implements Serializable, Task {
 	public RemoteAction() {

@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.projection;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -46,7 +47,7 @@ public class GraphTraversal {
 		if (object == null) {
 			return;
 		}
-		if (!filter.test(object.getClass())) {
+		if (filter != null && !filter.test(object.getClass())) {
 			return;
 		}
 		if (!reached.containsKey(object)) {
@@ -71,7 +72,8 @@ public class GraphTraversal {
 				List<Field> fields = projectionHelper
 						.getFieldsForClass(object.getClass());
 				for (Field f : fields) {
-					if (GraphProjection.isPrimitiveOrDataClass(f.getType())) {
+					if (GraphProjection.isPrimitiveOrDataClass(f.getType())
+							&& !Date.class.isAssignableFrom(f.getType())) {
 					} else {
 						add(f.get(object));
 					}

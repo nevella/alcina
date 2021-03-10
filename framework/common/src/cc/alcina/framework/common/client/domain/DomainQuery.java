@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -29,6 +31,8 @@ public abstract class DomainQuery<E extends Entity> {
 	private Optional<Stream<E>> sourceStream = Optional.empty();
 
 	private Map<String, Object> contextProperties = new LinkedHashMap<>();
+
+	private Set<Hint> hints = new LinkedHashSet<>();
 
 	private int limit = -1;
 
@@ -103,6 +107,10 @@ public abstract class DomainQuery<E extends Entity> {
 		return this.filters;
 	}
 
+	public Set<Hint> getHints() {
+		return this.hints;
+	}
+
 	public int getLimit() {
 		return this.limit;
 	}
@@ -143,6 +151,23 @@ public abstract class DomainQuery<E extends Entity> {
 				CommonUtils.join(filters, ",\n"));
 	}
 
+	public DomainQuery<E> withHint(Hint hint) {
+		hints.add(hint);
+		return this;
+	}
+
 	public static class DomainIdFilter {
+	}
+
+	/*
+	 * Ignoreable if server-only, client-side
+	 */
+	@ClientInstantiable
+	public enum Hint {
+		WITH_LAZY_PROPERTIES
+	}
+
+	public interface HintResolver {
+		boolean resolve(Hint hint, DomainQuery query);
 	}
 }

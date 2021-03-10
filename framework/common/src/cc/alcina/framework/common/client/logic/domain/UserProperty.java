@@ -6,6 +6,7 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -13,17 +14,22 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
+import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER), delete = @Permission(access = AccessLevel.ROOT))
-@DomainTransformPersistable
+@Bean
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = UserProperty.class)
 @DomainTransformPropagation(PropagationType.PERSISTENT)
 /*
- * Similar to the (jvm-only) KeyValuePersistentBase
+ * Similar to the (jvm-only) KeyValuePersistentBase. user/key is unique,
+ * user/category not. If used as a java object persistence container,
  */
 public abstract class UserProperty<T extends UserProperty> extends Entity<T>
 		implements HasIUser {
@@ -34,27 +40,63 @@ public abstract class UserProperty<T extends UserProperty> extends Entity<T>
 		return Domain.find(implementation(), id);
 	}
 
+	public static <P extends UserProperty> Optional<P> byKey(String key) {
+		return byUserKey(PermissionsManager.get().getUser(), key);
+	}
+
 	public static <P extends UserProperty> Optional<P> byUserClass(IUser user,
 			Class<? extends UserPropertyPersistable> clazz) {
 		return byUserKey(user, clazz.getName());
 	}
 
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public static <P extends UserProperty> Optional<P> byUserKey(IUser user,
 			String key) {
 		return (Optional<P>) Domain.query(implementation()).filter("user", user)
 				.filter("key", key).optional();
 	}
 
-	private static Class<? extends UserProperty> implementation() {
-		return PersistentImpl.getImplementation(UserProperty.class);
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
+	public static <P extends UserProperty> P ensure(IUser user, String key) {
+		Optional<P> existing = byUserKey(user, key);
+		return existing.orElseGet(() -> {
+			P created = Domain.create(implementation());
+			created.setUser(user);
+			created.setKey(key);
+			return created;
+		});
 	}
+
+	public static <P extends UserProperty> P ensure(String key) {
+		return ensure(PermissionsManager.get().getUser(), key);
+	}
+
+	private static <P extends UserProperty> Class<P> implementation() {
+		return (Class<P>) PersistentImpl.getImplementation(UserProperty.class);
+	}
+
+	private String category;
 
 	private String key;
 
 	private String value;
 
 	public <UPP extends UserPropertyPersistable> UPP deserialize() {
-		return TransformManager.resolveMaybeDeserialize(null, getValue(), null);
+		Class clazz = null;
+		if (category != null) {
+			try {
+				clazz = Reflections.classLookup().getClassForName(category);
+			} catch (Exception e) {
+			}
+		}
+		return (UPP) TransformManager.resolveMaybeDeserialize(null, getValue(),
+				null, clazz);
+	}
+
+	@Lob
+	@Transient
+	public String getCategory() {
+		return this.category;
 	}
 
 	@Lob
@@ -71,6 +113,14 @@ public abstract class UserProperty<T extends UserProperty> extends Entity<T>
 
 	public void serializeObject(Object object) {
 		setValue(TransformManager.serialize(object));
+		setCategory(object.getClass().getName());
+	}
+
+	public void setCategory(String category) {
+		String old_category = this.category;
+		this.category = category;
+		propertyChangeSupport().firePropertyChange("category", old_category,
+				category);
 	}
 
 	@Override

@@ -50,6 +50,11 @@ public @interface PropertySerialization {
 	boolean defaultProperty() default false;
 
 	/*
+	 * Collection element types
+	 */
+	Class<?> elementType() default void.class;
+
+	/*
 	 * To support single-group (bindable) search definitions - only permissible
 	 * if childTypes.length==1
 	 */

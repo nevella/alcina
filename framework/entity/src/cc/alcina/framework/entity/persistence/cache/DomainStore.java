@@ -52,6 +52,8 @@ import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.domain.DomainQuery;
+import cc.alcina.framework.common.client.domain.DomainQuery.Hint;
+import cc.alcina.framework.common.client.domain.DomainQuery.HintResolver;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.FilterCost;
 import cc.alcina.framework.common.client.domain.IDomainStore;
@@ -936,6 +938,11 @@ public class DomainStore implements IDomainStore {
 			DomainStoreQuery<T> query) {
 		try {
 			LooseContext.push();
+			for (Hint hint : query.getHints()) {
+				boolean resolved = Registry.impls(HintResolver.class).stream()
+						.anyMatch(resolver -> resolver.resolve(hint, query));
+				Preconditions.checkState(resolved);
+			}
 			query.getContextProperties()
 					.forEach((k, v) -> LooseContext.set(k, v));
 			return query0(clazz, query);
