@@ -163,9 +163,6 @@ public class DomainTransformPersistenceQueue {
 			boolean fromSequencer) {
 		positions.forEach(p -> events.add(Event.committed(p)));
 		if (fromSequencer) {
-			if (positions.isEmpty()) {
-				int debug = 3;
-			}
 			publishedFromSequencer.publish(positions);
 		}
 	}

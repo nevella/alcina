@@ -144,7 +144,7 @@ public class ClusterTransformListener
 	}
 
 	void handleClusterTransformRequest(ClusterTransformRequest request) {
-		logger.info("Received transform message: {} {}", request.id,
+		logger.info("Received transform message: {} {}", request.provideIds(),
 				request.state);
 		DomainTransformPersistenceQueue queue = domainStore
 				.getPersistenceEvents().getQueue();

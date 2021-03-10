@@ -95,6 +95,7 @@ public class DomainStoreTransformSequencer
 			List<DomainTransformCommitPosition> positions) {
 		positions.removeIf(p -> publishedIds.containsKey(p.commitRequestId));
 		if (positions.size() > 0) {
+			logger.info("Publishing unpublished positions:\n{}", positions);
 			unpublishedPositions.addAll(positions);
 			publishUnpublishedPositions(false);
 		}
@@ -217,6 +218,9 @@ public class DomainStoreTransformSequencer
 	}
 
 	private void publishUnpublishedPositions(boolean publishToCluster) {
+		if (unpublishedPositions.isEmpty()) {
+			return;
+		}
 		loaderDatabase.getStore().getPersistenceEvents().getQueue()
 				.onSequencedCommitPositions(unpublishedPositions,
 						publishToCluster);
