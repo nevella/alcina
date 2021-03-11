@@ -154,7 +154,21 @@ public class ClusterTransformListener
 			queue.onRequestDataReceived(request.request);
 			break;
 		case COMMIT:
-			queue.onTransformRequestCommitted(request.id, false);
+			// Fire in another thread to not block subsequent
+			// SEQUENCED_COMMIT_REGISTERED
+			new Thread(Thread.currentThread().getName() + "::fire-commit") {
+				@Override
+				public void run() {
+					try {
+						queue.onTransformRequestCommitted(request.id, false);
+					} catch (Throwable t) {
+						logger.warn(
+								"DEVEX::0 - Exception in handleClusterTransformRequest::commit - {}",
+								t);
+						t.printStackTrace();
+					}
+				}
+			}.start();
 			break;
 		case ABORTED:
 			queue.onTransformRequestAborted(request.id);
