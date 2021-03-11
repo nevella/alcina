@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.cluster.transform;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -174,6 +175,10 @@ public class TransformCommitLog {
 	private List<Future<RecordMetadata>> sendTransformPublishedMessages0(
 			DomainTransformRequestPersistent request,
 			List<DomainTransformCommitPosition> positions, State state) {
+		if (producer() == null) {
+			logger.warn("Mpt sending transform packets - no producer");
+			return new ArrayList<>();
+		}
 		List<byte[]> serialized = serialize(request, positions, state);
 		return serialized.stream()
 				.map(packet -> producer().send(new ProducerRecord<Void, byte[]>(
