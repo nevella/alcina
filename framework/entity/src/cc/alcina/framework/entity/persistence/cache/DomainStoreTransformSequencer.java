@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.util.SqlUtils;
@@ -61,6 +62,8 @@ import cc.alcina.framework.entity.util.SqlUtils;
  CREATE INDEX CONCURRENTLY domaintransformrequest_transactionCommitTime_null1
 									  ON domaintransformrequest  USING btree(transactionCommitTime) WHERE transactionCommitTime IS NULL
 	
+explain analyze select id, pg_xact_commit_timestamp(xmin) as commit_timestamp 
+						from domaintransformrequest where transactionCommitTime is null 	
 	
 	@formatter:on
  *
@@ -99,13 +102,12 @@ public class DomainStoreTransformSequencer
 	}
 
 	@Override
-	public synchronized void addIncomingPositions(
+	public void addIncomingPositions(
 			List<DomainTransformCommitPosition> positions) {
 		positions.removeIf(p -> publishedIds.containsKey(p.commitRequestId));
 		if (positions.size() > 0) {
 			logger.info("Publishing unpublished positions:\n{}", positions);
-			unpublishedPositions.addAll(positions);
-			publishUnpublishedPositions(false);
+			publishUnpublishedPositions(positions, false);
 		}
 	}
 
@@ -225,7 +227,11 @@ public class DomainStoreTransformSequencer
 		}
 	}
 
-	private void publishUnpublishedPositions(boolean publishToCluster) {
+	private synchronized void publishUnpublishedPositions(
+			List<DomainTransformCommitPosition> positions,
+			boolean publishToCluster) {
+		positions.removeIf(p -> publishedIds.containsKey(p.commitRequestId));
+		unpublishedPositions.addAll(positions);
 		if (unpublishedPositions.isEmpty()) {
 			return;
 		}
@@ -242,7 +248,7 @@ public class DomainStoreTransformSequencer
 		}
 	}
 
-	private synchronized void refreshPositions(long ignoreIfSeenRequestId,
+	private void refreshPositions(long ignoreIfSeenRequestId,
 			long refreshTime) {
 		if (!initialised) {
 			return;
@@ -250,10 +256,10 @@ public class DomainStoreTransformSequencer
 		if (clusteredSequencing.isPrimarySequenceRefresher()
 				&& loaderDatabase.getStore().isWritable()) {
 		} else {
-			if (highestVisiblePosition != null
-					&& highestVisiblePosition.commitTimestamp
-							.after(new Timestamp(refreshTime))) {
-				logger.info("Non-primary sequence refresher: OK (updated)");
+			if (publishedIds.containsKey(ignoreIfSeenRequestId)) {
+				logger.info(
+						"Non-primary sequence refresher: OK (updated)(1): {}",
+						ignoreIfSeenRequestId);
 				return;
 			}
 			synchronized (unpublishedPositions) {
@@ -263,14 +269,15 @@ public class DomainStoreTransformSequencer
 				} catch (InterruptedException e) {
 				}
 			}
-			if (highestVisiblePosition != null
-					&& highestVisiblePosition.commitTimestamp
-							.after(new Timestamp(refreshTime))) {
-				logger.info("Non-primary sequence refresher: OK (updated)");
+			if (publishedIds.containsKey(ignoreIfSeenRequestId)) {
+				logger.info(
+						"Non-primary sequence refresher: OK (updated)(2): {}",
+						ignoreIfSeenRequestId);
 				return;
 			}
 			logger.info(
-					"Non-primary sequence refresher: non-optimised (not updated)");
+					"Non-primary sequence refresher: non-optimised (not updated): {}",
+					ignoreIfSeenRequestId);
 		}
 		runWithConnection("refresh-positions",
 				conn -> refreshPositions0(conn, false, ignoreIfSeenRequestId));
@@ -361,10 +368,14 @@ public class DomainStoreTransformSequencer
 		if (positions.size() > 0) {
 			logger.trace("Added unpublished positions: - since: {} - {}", since,
 					CommonUtils.joinWithNewlines(positions));
-			highestVisiblePosition = Ax.last(unpublishedPositions);
 		}
-		if (publishToQueue && unpublishedPositions.size() > 0) {
-			publishUnpublishedPositions(true);
+		if (positions.size() > 0) {
+			if (publishToQueue) {
+				publishUnpublishedPositions(positions, true);
+			} else {
+				unpublishedPositions.addAll(positions);
+				highestVisiblePosition = Ax.last(unpublishedPositions);
+			}
 			if (shouldEnsure()) {
 				conn.commit();
 				ensureTimestamps();
@@ -413,7 +424,9 @@ public class DomainStoreTransformSequencer
 		/*
 		 * round-robin, based on server count
 		 */
-		return LocalDateTime.now().getSecond() % serverCount == serverOffset;
+		return clusteredSequencing.isPrimarySequenceRefresher()
+				|| LocalDateTime.now().getSecond()
+						% serverCount == serverOffset;
 	}
 
 	private String tableName() {
@@ -444,7 +457,9 @@ public class DomainStoreTransformSequencer
 		}
 
 		public long waitForPrimarySequenceRefresherTime() {
-			return 10;
+			return ResourceUtilities.getLong(
+					DomainStoreTransformSequencer.class,
+					"waitForPrimarySequenceRefresherTime");
 		}
 	}
 

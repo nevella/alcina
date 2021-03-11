@@ -41,7 +41,8 @@ public class ClusterTransformListener
 			k, list) -> {
 		transformCommitLog.sendTransformPublishedMessages(list,
 				State.SEQUENCED_COMMIT_REGISTERED);
-		logger.info("Published commit positions: {} ", list.size());
+		logger.info("Published commit positions: {} ",
+				list.stream().map(p -> p.commitRequestId));
 	};
 
 	public ClusterTransformListener(TransformCommitLogHost commitLogHost,
@@ -153,7 +154,7 @@ public class ClusterTransformListener
 			queue.onRequestDataReceived(request.request);
 			break;
 		case COMMIT:
-			queue.onTransformRequestCommitted(request.id);
+			queue.onTransformRequestCommitted(request.id, false);
 			break;
 		case ABORTED:
 			queue.onTransformRequestAborted(request.id);

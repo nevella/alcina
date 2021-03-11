@@ -161,20 +161,19 @@ public class DomainTransformPersistenceQueue {
 	public void onSequencedCommitPositions(
 			List<DomainTransformCommitPosition> positions,
 			boolean fromSequencer) {
-		positions.forEach(p -> events.add(Event.committed(p)));
 		if (fromSequencer) {
 			publishedFromSequencer.publish(positions);
 		}
+		positions.forEach(p -> events.add(Event.committed(p)));
 	}
 
 	public void onTransformRequestAborted(long requestId) {
 		events.add(Event.aborted(requestId));
 	}
 
-	public void onTransformRequestCommitted(long requestId) {
-		if (state.hasFired(requestId)) {
-			return;
-		} else {
+	public void onTransformRequestCommitted(long requestId,
+			boolean fromLocalEvent) {
+		if (state.shouldPublishRequestCommitted(requestId, fromLocalEvent)) {
 			sequencer.onPersistedRequestCommitted(requestId);
 		}
 	}
@@ -686,6 +685,8 @@ public class DomainTransformPersistenceQueue {
 
 		private Set<Long> appLifetimeEventsFired = new LinkedHashSet<>();
 
+		private Set<Long> appLifetimeCommitEventsRegistered = new LinkedHashSet<>();
+
 		private DomainTransformCommitPosition transformCommitPosition;
 
 		public synchronized boolean isTimstampVisible(Timestamp timestamp) {
@@ -751,6 +752,15 @@ public class DomainTransformPersistenceQueue {
 		synchronized void
 				onPreparingVmLocalRequest(DomainTransformRequest dtr) {
 			appLifetimeEventUuidsThisVm.add(dtr.getChunkUuidString());
+		}
+
+		synchronized boolean shouldPublishRequestCommitted(long requestId,
+				boolean fromLocalEvent) {
+			if (appLifetimeEventIdsThisVm.contains(requestId)
+					&& !fromLocalEvent) {
+				return false;
+			}
+			return appLifetimeCommitEventsRegistered.add(requestId);
 		}
 	}
 }

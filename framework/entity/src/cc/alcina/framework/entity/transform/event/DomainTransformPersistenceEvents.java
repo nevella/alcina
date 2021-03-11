@@ -54,6 +54,21 @@ public class DomainTransformPersistenceEvents {
 
 	public void fireDomainTransformPersistenceEvent(
 			DomainTransformPersistenceEvent event) {
+		if (event.isLocalToVm()) {
+			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
+					listenerList)) {
+				if (listener.isPreBarrierListener()) {
+					try {
+						listener.onDomainTransformRequestPersistence(event);
+					} catch (Exception e) {
+						logger.warn(
+								"DEVEX::0 - Exception in persistenceListener - {}",
+								e);
+						e.printStackTrace();
+					}
+				}
+			}
+		}
 		switch (event.getPersistenceEventType()) {
 		case PRE_COMMIT: {
 			if (event.getTransformPersistenceToken()
@@ -69,19 +84,17 @@ public class DomainTransformPersistenceEvents {
 			break;
 		}
 		case PRE_FLUSH: {
-			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
-					listenerList)) {
-				if (listener.isPreBarrierListener() && event.isLocalToVm()) {
-					listener.onDomainTransformRequestPersistence(event);
-				}
-			}
+			/*
+			 * just prebarrier
+			 */
 			break;
 		}
-		default: {
+		case COMMIT_OK:
+		case COMMIT_ERROR: {
 			event.getPersistedRequests().forEach(queue::onRequestDataReceived);
 			if (event.isLocalToVm() && !event.isFiringFromQueue()) {
-				event.getPersistedRequestIds()
-						.forEach(queue::onTransformRequestCommitted);
+				event.getPersistedRequestIds().forEach(
+						id -> queue.onTransformRequestCommitted(id, true));
 			}
 			try {
 				if (event.isFiringFromQueue()) {
@@ -119,19 +132,6 @@ public class DomainTransformPersistenceEvents {
 				? event.getPersistedRequestIds().get(0)
 				: 0;
 		if (event.isLocalToVm()) {
-			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
-					listenerList)) {
-				if (listener.isPreBarrierListener()) {
-					try {
-						listener.onDomainTransformRequestPersistence(event);
-					} catch (Exception e) {
-						logger.warn(
-								"DEVEX::0 - Exception in persistenceListener - {}",
-								e);
-						e.printStackTrace();
-					}
-				}
-			}
 			if (hasPersistentRequests && !event.isFiringFromQueue()) {
 				switch (event.getPersistenceEventType()) {
 				// REVISIT - check this is fired;
