@@ -55,6 +55,14 @@ import cc.alcina.framework.entity.util.SqlUtils;
  * the barrier has generated it before proceeding.
  * 
  * @author nick@alcina.cc
+ * 
+ * @formatter:off
+ * 
+ CREATE INDEX CONCURRENTLY domaintransformrequest_transactionCommitTime_null1
+									  ON domaintransformrequest  USING btree(transactionCommitTime) WHERE transactionCommitTime IS NULL
+	
+	
+	@formatter:on
  *
  */
 public class DomainStoreTransformSequencer
@@ -223,7 +231,8 @@ public class DomainStoreTransformSequencer
 		}
 		loaderDatabase.getStore().getPersistenceEvents().getQueue()
 				.onSequencedCommitPositions(unpublishedPositions,
-						publishToCluster);
+						publishToCluster
+								&& loaderDatabase.getStore().isWritable());
 		unpublishedPositions
 				.forEach(p -> publishedIds.put(p.commitRequestId, true));
 		highestVisiblePosition = Ax.last(unpublishedPositions);
@@ -238,7 +247,8 @@ public class DomainStoreTransformSequencer
 		if (!initialised) {
 			return;
 		}
-		if (clusteredSequencing.isPrimarySequenceRefresher()) {
+		if (clusteredSequencing.isPrimarySequenceRefresher()
+				&& loaderDatabase.getStore().isWritable()) {
 		} else {
 			if (highestVisiblePosition != null
 					&& highestVisiblePosition.commitTimestamp

@@ -368,6 +368,10 @@ public class DomainStore implements IDomainStore {
 		return initialised;
 	}
 
+	public boolean isWritable() {
+		return this.writable;
+	}
+
 	public DomainTransformRequestPersistent loadTransformRequest(long id) {
 		return loader.loadTransformRequest(id);
 	}
