@@ -145,6 +145,13 @@ public class PermissionsManager implements DomainTransformListener {
 		return developerGroupName;
 	}
 
+	public static ObjectPermissions getObjectPermissions(Class domainClass) {
+		ObjectPermissions objectPermissions = Reflections.classLookup()
+				.getAnnotationForClass(domainClass, ObjectPermissions.class);
+		return objectPermissions == null ? get().getDefaultObjectPermissions()
+				: objectPermissions;
+	}
+
 	public static PermissionsExtension getPermissionsExtension() {
 		return permissionsExtension;
 	}
@@ -578,6 +585,10 @@ public class PermissionsManager implements DomainTransformListener {
 		return isPermissible(null, p);
 	}
 
+	public boolean isPermissible(Permission create) {
+		return isPermissible(new AnnotatedPermissible(create));
+	}
+
 	public boolean isRoot() {
 		return root;
 	}
@@ -697,6 +708,7 @@ public class PermissionsManager implements DomainTransformListener {
 	}
 
 	public synchronized void setUser(IUser user) {
+		root = false;
 		invalidateGroupMap();
 		if (this.user != null
 				&& this.user instanceof SourcesPropertyChangeEvents) {
@@ -884,19 +896,5 @@ public class PermissionsManager implements DomainTransformListener {
 		public void register(PermissionsExtensionForRule ext) {
 			extensionMapForRule.put(ext.getRuleName(), ext);
 		}
-	}
-
-	public static ObjectPermissions
-			getObjectPermissions(Class domainClass) {
-		ObjectPermissions objectPermissions = Reflections.classLookup()
-		.getAnnotationForClass(domainClass,
-				ObjectPermissions.class);
-return objectPermissions == null
-		? get().getDefaultObjectPermissions()
-		: objectPermissions;
-	}
-
-	public boolean isPermissible(Permission create) {
-		return isPermissible(new AnnotatedPermissible(create));
 	}
 }
