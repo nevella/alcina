@@ -56,7 +56,7 @@ public class AlcinaParallel {
 			// to be registry-copied and this removed
 			jobChecker = new AlcinaParallelJobChecker();
 		}
-		if (parameters.serial) {
+		if (parameters.serial || parameters.threadCount == 1) {
 			for (Runnable runnable : parameters.runnables) {
 				try {
 					LooseContext.push();
