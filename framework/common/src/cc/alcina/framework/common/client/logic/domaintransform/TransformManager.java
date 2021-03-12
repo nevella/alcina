@@ -126,7 +126,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected static SequentialIdGenerator localIdGenerator = new SequentialIdGenerator(
 			1 << 29);
 
-	private static TransformManager theInstance;
+	private static TransformManager factoryInstance;
 
 	protected static Map<Integer, List<Entity>> createdLocalAndPromoted = null;
 
@@ -139,14 +139,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public static TransformManager get() {
-		if (theInstance == null) {
+		if (factoryInstance == null) {
 			// well, throw an exception.
 		}
-		TransformManager tm = theInstance.getT();
+		TransformManager tm = factoryInstance.getT();
 		if (tm != null) {
 			return tm;
 		}
-		return theInstance;
+		return factoryInstance;
 	}
 
 	public static <H> Set<H> getDeltaSet(Collection<H> old, Object delta,
@@ -166,7 +166,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public static boolean hasInstance() {
-		return theInstance != null;
+		return factoryInstance != null;
 	}
 
 	public static List<Long> idListToLongs(String str) {
@@ -211,7 +211,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public static void register(TransformManager tm) {
-		theInstance = tm;
+		factoryInstance = tm;
 	}
 
 	// synchronized method because createdLocalAndPromoted is initially null -
@@ -234,6 +234,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 					.computeIfAbsent(withoutLocalIdHash, h -> new ArrayList<>())
 					.add(entity);
 		}
+	}
+
+	public static void removePerThreadContext() {
+		if (factoryInstance == null) {
+			return;
+		}
+		factoryInstance.removePerThreadContext0();
 	}
 
 	public static int replaceWithCreatedLocalObjectHash(Entity entity,
@@ -558,7 +565,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public void appShutdown() {
-		theInstance = null;
+		factoryInstance = null;
 	}
 
 	public boolean checkForExistingLocallyCreatedObjects() {
@@ -1829,6 +1836,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return false;
 	}
 
+	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
+		return false;
+	}
+
 	protected void maybeAddVersionNumbers(DomainTransformEvent evt, Entity obj,
 			Object tgt) {
 		if (obj instanceof HasVersionNumber) {
@@ -1969,6 +1980,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected PropertyAccessor propertyAccessor() {
 		return Reflections.propertyAccessor();
+	}
+
+	/*
+	 * Overridden by threaded subclasses
+	 */
+	protected void removePerThreadContext0() {
 	}
 
 	protected void setDomainObjects(ObjectStore domainObjects) {
@@ -2279,9 +2296,5 @@ public abstract class TransformManager implements PropertyChangeListener,
 				newTargetEntity = (Entity) newTargetObject;
 			}
 		}
-	}
-
-	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
-		return false;
 	}
 }

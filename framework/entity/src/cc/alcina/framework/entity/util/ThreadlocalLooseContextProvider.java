@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ThreadlocalLooseContextProvider extends LooseContext {
 	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
+		@Override
 		protected synchronized Object initialValue() {
 			ThreadlocalLooseContextProvider provider = new ThreadlocalLooseContextProvider();
 			return provider;
@@ -31,5 +32,10 @@ public class ThreadlocalLooseContextProvider extends LooseContext {
 	@Override
 	public LooseContext getT() {
 		return (LooseContext) threadLocalInstance.get();
+	}
+
+	@Override
+	protected void removePerThreadContext0() {
+		threadLocalInstance.remove();
 	}
 }

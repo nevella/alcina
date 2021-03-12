@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.util.ThrowingRunnable;
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ThreadedPermissionsManager extends PermissionsManager {
-	private static ThreadLocal getTTL = new ThreadLocal() {
+	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		@Override
 		protected synchronized Object initialValue() {
 			return new ThreadedPermissionsManager();
@@ -38,10 +38,6 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 
 	public static ThreadedPermissionsManager cast() {
 		return (ThreadedPermissionsManager) PermissionsManager.get();
-	}
-
-	public static void clearThreadLocal() {
-		getTTL.remove();
 	}
 
 	public static boolean is() {
@@ -95,7 +91,7 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 
 	@Override
 	public PermissionsManager getT() {
-		return (ThreadedPermissionsManager) getTTL.get();
+		return (ThreadedPermissionsManager) threadLocalInstance.get();
 	}
 
 	public boolean isSystemUser() {
@@ -175,5 +171,10 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	protected void removePerThreadContext0() {
+		threadLocalInstance.remove();
 	}
 }

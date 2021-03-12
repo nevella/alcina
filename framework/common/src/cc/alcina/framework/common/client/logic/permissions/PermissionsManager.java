@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 
+import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -83,7 +84,7 @@ public class PermissionsManager implements DomainTransformListener {
 
 	private static String anonymousUserName = "anonymous";
 
-	private static PermissionsManager theInstance;
+	private static PermissionsManager factoryInstance;
 
 	private static PermissionsExtension permissionsExtension;
 
@@ -122,15 +123,26 @@ public class PermissionsManager implements DomainTransformListener {
 
 	private static Topic<OnlineState> topicOnlineState = Topic.local();
 
-	public static PermissionsManager get() {
-		if (theInstance == null) {
-			theInstance = new PermissionsManager();
+	public static void confirmDepth(int depth) {
+		Preconditions.checkState(get().depth0() == depth);
+	}
+
+	public static int depth() {
+		if (factoryInstance == null) {
+			return 0;
 		}
-		PermissionsManager pm = theInstance.getT();
+		return get().depth0();
+	}
+
+	public static PermissionsManager get() {
+		if (factoryInstance == null) {
+			factoryInstance = new PermissionsManager();
+		}
+		PermissionsManager pm = factoryInstance.getT();
 		if (pm != null) {
 			return pm;
 		}
-		return theInstance;
+		return factoryInstance;
 	}
 
 	public static String getAdministratorGroupName() {
@@ -198,7 +210,14 @@ public class PermissionsManager implements DomainTransformListener {
 	}
 
 	public static void register(PermissionsManager pm) {
-		theInstance = pm;
+		factoryInstance = pm;
+	}
+
+	public static void removePerThreadContext() {
+		if (factoryInstance == null) {
+			return;
+		}
+		factoryInstance.removePerThreadContext0();
 	}
 
 	public static void
@@ -310,7 +329,7 @@ public class PermissionsManager implements DomainTransformListener {
 	}
 
 	public void appShutdown() {
-		theInstance = null;
+		factoryInstance = null;
 	}
 
 	public boolean checkEffectivePropertyPermission(Object bean,
@@ -749,12 +768,22 @@ public class PermissionsManager implements DomainTransformListener {
 		return state;
 	}
 
+	private int depth0() {
+		return stateStack.size();
+	}
+
 	protected IUser getSystemUser() {
 		return UserlandProvider.get().getSystemUser();
 	}
 
 	protected void invalidateGroupMap() {
 		groupMap = null;
+	}
+
+	/*
+	 * Overridden by threaded subclasses
+	 */
+	protected void removePerThreadContext0() {
 	}
 
 	@ClientInstantiable

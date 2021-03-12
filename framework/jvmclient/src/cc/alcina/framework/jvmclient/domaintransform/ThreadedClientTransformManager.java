@@ -67,4 +67,10 @@ public class ThreadedClientTransformManager
 		provisionalObjects = Collections
 				.synchronizedMap(new IdentityHashMap<>());
 	}
+
+	@Override
+	protected void removePerThreadContext0() {
+		ignorePropertyChanges.remove();
+		replayingRemoteEvent.remove();
+	}
 }

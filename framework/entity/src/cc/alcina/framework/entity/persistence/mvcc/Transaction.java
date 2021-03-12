@@ -145,6 +145,10 @@ public class Transaction implements Comparable<Transaction> {
 		threadLocalInstance.set(transaction);
 	}
 
+	public static void removePerThreadContext() {
+		threadLocalInstance.remove();
+	}
+
 	// inverse of join
 	public static void split() {
 		Transaction transaction = threadLocalInstance.get();

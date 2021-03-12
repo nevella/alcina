@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * @author Nick Reddel
  */
 public class MetricLogging extends MetricLoggingBase {
-	private static ThreadLocal TL = new ThreadLocal() {
+	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		@Override
 		protected synchronized Object initialValue() {
 			MetricLogging metricLogging = new MetricLogging();
@@ -46,8 +46,12 @@ public class MetricLogging extends MetricLoggingBase {
 	}
 
 	public static MetricLogging get() {
-		MetricLogging m = (MetricLogging) TL.get();
+		MetricLogging m = (MetricLogging) threadLocalInstance.get();
 		return m;
+	}
+
+	public static void removePerThreadContext() {
+		threadLocalInstance.remove();
 	}
 
 	protected MetricLogging() {

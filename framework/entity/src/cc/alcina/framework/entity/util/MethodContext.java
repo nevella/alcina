@@ -35,6 +35,7 @@ public class MethodContext {
 
 	public <T> T call(Callable<T> callable) {
 		entryClassLoader = Thread.currentThread().getContextClassLoader();
+		boolean pushedRoot = false;
 		boolean inTransaction = Transaction.isInTransaction();
 		try {
 			if (wrappingTransaction && !inTransaction) {
@@ -55,6 +56,7 @@ public class MethodContext {
 					&& !ThreadedPermissionsManager.cast().isRoot()) {
 				ThreadedPermissionsManager.cast()
 						.pushSystemOrCurrentUserAsRoot();
+				pushedRoot = true;
 			}
 			if (contextClassLoader != null) {
 				Thread.currentThread()
@@ -66,8 +68,7 @@ public class MethodContext {
 			throw new RuntimeException(e);
 		} finally {
 			Thread.currentThread().setContextClassLoader(entryClassLoader);
-			if (rootPermissions
-					&& !ThreadedPermissionsManager.cast().isRoot()) {
+			if (pushedRoot) {
 				ThreadedPermissionsManager.cast().popUser();
 			}
 			if (metricKey != null) {

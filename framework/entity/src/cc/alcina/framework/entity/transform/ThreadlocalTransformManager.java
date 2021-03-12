@@ -130,7 +130,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
 			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
 
-	private static ThreadLocal threadLocalTLTMInstance = new ThreadLocal() {
+	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		@Override
 		protected synchronized Object initialValue() {
 			ThreadlocalTransformManager tm = ThreadlocalTransformManager
@@ -174,7 +174,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static boolean isInEntityManagerTransaction() {
 		return get() instanceof ThreadlocalTransformManager
 				&& cast().getEntityManager() != null;
-	};
+	}
 
 	public static boolean isServerOnly(DomainTransformEvent evt) {
 		Class clazz = evt.getObjectClass();
@@ -187,12 +187,12 @@ public class ThreadlocalTransformManager extends TransformManager
 			return true;
 		}
 		return false;
-	}
+	};
 
 	// for testing
 	public static void registerPerThreadTransformManager(
 			TransformManager perThreadTransformManager) {
-		threadLocalTLTMInstance.set(perThreadTransformManager);
+		threadLocalInstance.set(perThreadTransformManager);
 	}
 
 	public static Topic<Thread> topicTransformManagerWasReset() {
@@ -553,7 +553,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	@Override
 	public TransformManager getT() {
-		return (TransformManager) threadLocalTLTMInstance.get();
+		return (TransformManager) threadLocalInstance.get();
 	}
 
 	@Override
@@ -1388,6 +1388,11 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	protected void propertyChangeSuper(PropertyChangeEvent evt) {
 		super.propertyChange(evt);
+	}
+
+	@Override
+	protected void removePerThreadContext0() {
+		threadLocalInstance.remove();
 	}
 
 	protected Entity resolveForPermissionsChecks(Entity entity) {

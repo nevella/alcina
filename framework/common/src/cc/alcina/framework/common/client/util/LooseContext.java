@@ -111,6 +111,13 @@ public abstract class LooseContext {
 		return getContext().remove(key);
 	}
 
+	public static void removePerThreadContext() {
+		if (factoryInstance == null) {
+			return;
+		}
+		factoryInstance.removePerThreadContext0();
+	}
+
 	public static <T> T run(ThrowingSupplier<T> supplier) {
 		return runWithKeyValue(null, Boolean.TRUE, supplier);
 	}
@@ -172,6 +179,9 @@ public abstract class LooseContext {
 			context = new LooseContextInstance();
 		}
 		return context;
+	}
+
+	protected void removePerThreadContext0() {
 	}
 
 	public static class ClientLooseContextProvider extends LooseContext {

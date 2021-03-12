@@ -409,13 +409,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public String processCall(String payload) throws SerializationException {
 		RPCRequest rpcRequest = null;
 		try {
-			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
-					getThreadLocalRequest());
-			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
-					getThreadLocalResponse());
-			getThreadLocalRequest().setAttribute(
-					CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS,
-					new StringMap());
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			String suffix = getRpcHandlerThreadNameSuffix(rpcRequest);
 			String name = rpcRequest.getMethod().getName();
@@ -423,6 +416,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					callCounter.incrementAndGet(), suffix);
 			alcinaServletContext.begin(getThreadLocalRequest(),
 					getThreadLocalResponse(), threadName);
+			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
+					getThreadLocalRequest());
+			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
+					getThreadLocalResponse());
+			getThreadLocalRequest().setAttribute(
+					CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS,
+					new StringMap());
 			if (rpcRequest
 					.getSerializationPolicy() instanceof LegacySerializationPolicy) {
 				throw new IncompatibleRemoteServiceException();
