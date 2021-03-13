@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
 import cc.alcina.framework.gwt.client.entity.view.UiController;
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -123,6 +124,8 @@ public abstract class Client {
 		public static void registry() {
 			Registry.get().registerBootstrapServices(ClientReflector.get());
 			Reflections.registerClassLookup(ClientReflector.get());
+			Reflections.registerPropertyAccessor(GwittirBridge.get());
+			Reflections.registerBeanDescriptorProvider(GwittirBridge.get());
 		}
 	}
 }

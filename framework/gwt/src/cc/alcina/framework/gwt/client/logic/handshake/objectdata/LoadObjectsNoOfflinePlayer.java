@@ -17,7 +17,11 @@ public class LoadObjectsNoOfflinePlayer extends RunnablePlayer<HandshakeState>
 		addRequires(HandshakeState.SERVICES_INITIALISED);
 		addProvides(HandshakeState.OBJECT_DATA_LOADED);
 		addProvides(HandshakeState.OBJECT_DATA_LOAD_FAILED);
-		loadObjectsConsort = new LoadObjectsNoOfflineConsort();
+		loadObjectsConsort = new LoadObjectsNoOfflineConsort(this);
+	}
+
+	public LoadObjectsHelloPlayer getLoadObjectsHelloPlayer() {
+		return Registry.impl(LoadObjectsHelloPlayer.class);
 	}
 
 	@Override
@@ -40,9 +44,10 @@ public class LoadObjectsNoOfflinePlayer extends RunnablePlayer<HandshakeState>
 
 	public static class LoadObjectsNoOfflineConsort
 			extends Consort<LoadObjectDataState> {
-		public LoadObjectsNoOfflineConsort() {
+		public LoadObjectsNoOfflineConsort(
+				LoadObjectsNoOfflinePlayer loadObjectsNoOfflinePlayer) {
 			LoadObjectsHelloPlayer loadObjectsHelloPlayer = addPlayer(
-					Registry.impl(LoadObjectsHelloPlayer.class));
+					loadObjectsNoOfflinePlayer.getLoadObjectsHelloPlayer());
 			LoadObjectsFromRemotePlayer loadObjectsFromRemotePlayer = Registry
 					.implOrNull(LoadObjectsFromRemotePlayer.class);
 			if (loadObjectsFromRemotePlayer != null) {

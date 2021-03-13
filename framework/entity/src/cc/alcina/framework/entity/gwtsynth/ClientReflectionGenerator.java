@@ -531,6 +531,10 @@ public class ClientReflectionGenerator extends Generator {
 		}
 	}
 
+	private void addImport(ClassSourceFileComposerFactory factory, String fqn) {
+		factory.addImport(fqn.replace("[]", ""));
+	}
+
 	private void commit(GeneratorContext context, TreeLogger logger,
 			PrintWriter printWriter) {
 		context.commit(logger, printWriter);
@@ -572,7 +576,7 @@ public class ClientReflectionGenerator extends Generator {
 					&& !ignore(jClassType,
 							ReflectionAction.BEAN_INFO_DESCRIPTOR)) {
 				results.add(jClassType);
-				crf.addImport(getQualifiedSourceName(jClassType));
+				addImport(crf, getQualifiedSourceName(jClassType));
 			}
 		}
 		return results;
@@ -603,7 +607,7 @@ public class ClientReflectionGenerator extends Generator {
 							cc.alcina.framework.common.client.logic.reflection.Bean.class))
 					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
 				results.add(jClassType);
-				crf.addImport(getQualifiedSourceName(jClassType));
+				// addImport(crf, getQualifiedSourceName(jClassType));
 			}
 		}
 		return results;
@@ -737,7 +741,8 @@ public class ClientReflectionGenerator extends Generator {
 		}
 		sb.append(String.format("new %s()", implSimpleName));
 		for (Method m : declaredMethods) {
-			if (m.getName().matches("hashCode|toString|equals|annotationType")) {
+			if (m.getName()
+					.matches("hashCode|toString|equals|annotationType")) {
 				continue;
 			}
 			Object annotationValue = m.invoke(a,
@@ -779,7 +784,7 @@ public class ClientReflectionGenerator extends Generator {
 					+ "_Impl";
 			String implFQN = type.getPackage().getName() + "."
 					+ implementationName;
-			crf.addImport(implFQN);
+			addImport(crf, implFQN);
 			ClassSourceFileComposerFactory annf = new ClassSourceFileComposerFactory(
 					type.getPackage().getName(), implementationName);
 			annf.addImport(Annotation.class.getCanonicalName());
