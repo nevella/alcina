@@ -90,14 +90,6 @@ public class Multimap<K, V extends List>
 		}
 	}
 
-	public V allValues() {
-		List list = new ArrayList();
-		for (V v : values()) {
-			list.addAll(v);
-		}
-		return (V) list;
-	}
-
 	public V allNonFirstItems() {
 		List result = new ArrayList();
 		for (V v : values()) {
@@ -106,6 +98,14 @@ public class Multimap<K, V extends List>
 			}
 		}
 		return (V) result;
+	}
+
+	public V allValues() {
+		List list = new ArrayList();
+		for (V v : values()) {
+			list.addAll(v);
+		}
+		return (V) list;
 	}
 
 	public CountingMap<K> asCountingMap() {
@@ -136,6 +136,16 @@ public class Multimap<K, V extends List>
 					(V) new ArrayList((List) entry.getValue()));
 		}
 		return copy;
+	}
+
+	public boolean ensure(K key, Object item) {
+		V list = getAndEnsure(key);
+		if (list.contains(item)) {
+			return false;
+		} else {
+			list.add(item);
+			return true;
+		}
 	}
 
 	@Override
