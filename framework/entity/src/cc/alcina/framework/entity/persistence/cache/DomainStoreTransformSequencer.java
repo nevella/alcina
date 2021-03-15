@@ -37,23 +37,10 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueu
 import cc.alcina.framework.entity.util.SqlUtils;
 
 /**
- * dtrp - start persist time (set in persister), committime
  * 
- * and that's all she wrote. updater sets persist/committime to update time,
  * 
- * TODO - this really bridges the db side (and in the right package for that)
- * and domain transform queues - would be nice to split in two and reduce
- * visibility of dtrq package methods. And re-implement as subclass
- * (commit/dbcommit) sequencing.
- * 
- * A note re the complexity of the interaction of this class and
- * DomainTransformPersistenceQueue:: most of the complexity is because we can't
- * know who will call
- * DomainTransformPersistenceEvents.fireDomainTransformPersistenceEvent() first
- * :: the originator of the transforms, or the firing queue. So rather than do
- * any general initialisation, each thread performs wait/notify loops on the
- * maps containing the per-thread barriers to ensure that the thread requiring
- * the barrier has generated it before proceeding.
+ * A postgres-specific class to order applications of transformrequests to the domain by db transactionCommitTime. 
+ * It uses a null-specific index and pg_xact_commit_timestamp(xmin) to order these efficiently - 
  * 
  * @author nick@alcina.cc
  * 
@@ -70,7 +57,7 @@ explain analyze select id, pg_xact_commit_timestamp(xmin) as commit_timestamp
  */
 public class DomainStoreTransformSequencer
 		implements DomainTransformPersistenceQueue.Sequencer {
-	static long lastIndexCreationTime;
+	static long lastNonConcurrentIndexCreationTime;
 
 	private DomainStoreLoaderDatabase loaderDatabase;
 
@@ -476,6 +463,8 @@ public class DomainStoreTransformSequencer
 
 		Integer created;
 
+		int indexCreationCount;
+
 		public void rotate() {
 			existing = new ArrayList<>();
 			if (valid()) {
@@ -486,18 +475,20 @@ public class DomainStoreTransformSequencer
 					existing.add(counter);
 				}
 			}
-			if (created == null) {
+			if (indexCreationCount <= 1) {
 				drop = existing;
+				created = null;
 				for (counter = -1; counter <= MAX_INDEX; counter++) {
 					if (!exists()) {
 						if (System.currentTimeMillis()
-								- lastIndexCreationTime < 30
+								- lastNonConcurrentIndexCreationTime < 30
 										* TimeConstants.ONE_MINUTE_MS) {
 							logger.warn(
 									"Not creating new index - last creation too recent");
 							return;
 						}
-						create();
+						create(indexCreationCount == 0);
+						indexCreationCount++;
 						created = counter;
 						break;
 					}
@@ -518,17 +509,29 @@ public class DomainStoreTransformSequencer
 			}
 		}
 
-		private void create() {
-			logger.warn("Creating index {}", name());
+		private void create(boolean concurrently) {
+			String concurrentlyWarnString = concurrently ? ""
+					: "non-concurrently ";
+			logger.warn("Creating index {}{}", concurrentlyWarnString, name());
 			try {
 				try (Connection conn = loaderDatabase.dataSource
 						.getConnection()) {
 					Statement statement = conn.createStatement();
-					SqlUtils.execute(statement,
-							Ax.format("CREATE INDEX CONCURRENTLY " + "%s "
-									+ "  ON %s  USING btree(transactionCommitTime) WHERE transactionCommitTime IS NULL",
-									name(), tableName()));
-					lastIndexCreationTime = System.currentTimeMillis();
+					statement.setQueryTimeout(ResourceUtilities.getInteger(
+							DomainStoreTransformSequencer.class,
+							"indexCreationTimeout"));
+					String concurrentlyString = concurrently ? "CONCURRENTLY"
+							: "";
+					SqlUtils.execute(statement, Ax.format("CREATE INDEX  %s "
+							+ " %s "
+							+ "  ON %s  USING btree(transactionCommitTime) "
+							+ " WITH (FILLFACTOR=50) "
+							+ "WHERE transactionCommitTime IS NULL" + " ",
+							concurrentlyString, name(), tableName()));
+					if (!concurrently) {
+						lastNonConcurrentIndexCreationTime = System
+								.currentTimeMillis();
+					}
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
