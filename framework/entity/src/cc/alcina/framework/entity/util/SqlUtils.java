@@ -65,6 +65,18 @@ public class SqlUtils {
 		}
 	}
 
+	public static ResultSet executeQuery(Statement statement, String sql) {
+		try {
+			MetricLogging.get().start("query");
+			maybeLogQuery(sql);
+			return statement.executeQuery(sql);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		} finally {
+			MetricLogging.get().end("query");
+		}
+	}
+
 	public static <T> List<T> getMapped(Statement statement, String sql,
 			ThrowingFunction<ResultSet, T> mapper) {
 		try {

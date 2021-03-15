@@ -521,29 +521,39 @@ public class DomainStoreTransformSequencer
 				try (Connection conn = loaderDatabase.dataSource
 						.getConnection()) {
 					Statement statement = conn.createStatement();
-					statement.setQueryTimeout(ResourceUtilities.getInteger(
-							DomainStoreTransformSequencer.class,
-							"indexCreationTimeout"));
-					String killIdleInTransactionSql = "SELECT "
-							+ "   pg_terminate_backend(pid)  " + " FROM  "
-							+ " pg_stat_activity " + " WHERE  "
-							// + " -- don't kill my own connection! "
-							+ " pid <> pg_backend_pid() "
-							// + " -- don't kill the connections to other
-							// databases "
-							+ " AND state='idle in transaction';";
-					SqlUtils.execute(statement, killIdleInTransactionSql);
-					String concurrentlyString = concurrently ? "CONCURRENTLY"
-							: "";
-					SqlUtils.execute(statement, Ax.format("CREATE INDEX  %s "
-							+ " %s "
-							+ "  ON %s  USING btree(transactionCommitTime) "
-							+ " WITH (FILLFACTOR=50) "
-							+ "WHERE transactionCommitTime IS NULL" + " ",
-							concurrentlyString, name(), tableName()));
-					if (!concurrently) {
-						lastNonConcurrentIndexCreationTime = System
-								.currentTimeMillis();
+					try {
+						String killIdleInTransactionSql = "SELECT "
+								+ "   pg_terminate_backend(pid)  " + " FROM  "
+								+ " pg_stat_activity " + " WHERE  "
+								// + " -- don't kill my own connection! "
+								+ " pid <> pg_backend_pid() "
+								// + " -- don't kill the connections to other
+								// databases "
+								+ " AND state='idle in transaction';";
+						SqlUtils.executeQuery(statement,
+								killIdleInTransactionSql);
+						String concurrentlyString = concurrently
+								? "CONCURRENTLY"
+								: "";
+						SqlUtils.execute(statement, Ax.format(
+								"SET  statement_timeout =%s;",
+								ResourceUtilities.getInteger(
+										DomainStoreTransformSequencer.class,
+										"indexCreationTimeout")));
+						SqlUtils.execute(statement, Ax.format(
+								"CREATE INDEX  %s " + " %s "
+										+ "  ON %s  USING btree(transactionCommitTime DESC NULLS FIRST) "
+										+ " WITH (FILLFACTOR=50) "
+										+ "WHERE transactionCommitTime IS NULL;\n",
+								concurrentlyString, name(), tableName()));
+						if (!concurrently) {
+							lastNonConcurrentIndexCreationTime = System
+									.currentTimeMillis();
+						}
+					} catch (Exception e) {
+						SqlUtils.execute(statement,
+								"SET  statement_timeout =0");
+						throw e;
 					}
 				}
 			} catch (Exception e) {
@@ -590,7 +600,7 @@ public class DomainStoreTransformSequencer
 				try (PreparedStatement statement = conn
 						.prepareStatement(querySql)) {
 					Timestamp since = new Timestamp(System.currentTimeMillis()
-							- TimeConstants.ONE_MINUTE_MS);
+							- TimeConstants.ONE_SECOND_MS * 10);
 					statement.setTimestamp(1, since);
 					long nanoTime = System.nanoTime();
 					Ax.out(querySql);
