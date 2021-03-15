@@ -52,6 +52,10 @@ import cc.alcina.framework.entity.util.SqlUtils;
 explain analyze select id, pg_xact_commit_timestamp(xmin) as commit_timestamp 
 						from domaintransformrequest where transactionCommitTime is null 	
 	
+	 CREATE INDEX CONCURRENTLY domaintransformrequest_transactionCommitTime_nullsfirst
+									  ON domaintransformrequest  USING btree(transactionCommitTime DESC NULLS FIRST)
+
+
 	@formatter:on
  *
  */
@@ -595,14 +599,13 @@ public class DomainStoreTransformSequencer
 					if (nanoDiff > 2000000) {
 						logger.warn("transactionCommitTime >2ms - {} ns",
 								nanoDiff);
-						try (PreparedStatement statement2 = conn
-								.prepareStatement(
-										"explain analyze " + querySql)) {
-							statement2.setTimestamp(1, since);
-							ResultSet rs = statement2.executeQuery();
-							while (rs.next()) {
-								logger.warn(rs.getString(1));
-							}
+					}
+					try (PreparedStatement statement2 = conn
+							.prepareStatement("explain analyze " + querySql)) {
+						statement2.setTimestamp(1, since);
+						ResultSet rs = statement2.executeQuery();
+						while (rs.next()) {
+							logger.warn(rs.getString(1));
 						}
 					}
 					// FIXME - 2022 - moving average? for the moment, 7ms
