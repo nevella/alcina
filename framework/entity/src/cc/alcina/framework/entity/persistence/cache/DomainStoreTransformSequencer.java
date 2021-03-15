@@ -153,7 +153,8 @@ public class DomainStoreTransformSequencer
 		return runWithConnection("ensureTimestamps", this::ensureTimestamps0);
 	}
 
-	private int ensureTimestamps0(Connection conn) throws SQLException {
+	private synchronized int ensureTimestamps0(Connection conn)
+			throws SQLException {
 		String tableName = tableName();
 		String querySql = Ax.format(
 				"select id, pg_xact_commit_timestamp(xmin) as commit_timestamp "
@@ -607,7 +608,7 @@ public class DomainStoreTransformSequencer
 					statement.execute();
 					long nanoDiff = System.nanoTime() - nanoTime;
 					if (nanoDiff > 2000000) {
-						logger.warn("transactionCommitTime >2ms - {} ns",
+						logger.info("transactionCommitTime >2ms - {} ns",
 								nanoDiff);
 					}
 					try (PreparedStatement statement2 = conn
@@ -618,9 +619,10 @@ public class DomainStoreTransformSequencer
 							logger.warn(rs.getString(1));
 						}
 					}
-					// FIXME - 2022 - moving average? for the moment, 7ms
-					// (although should be <1)
-					return nanoDiff < 7000000;
+					// Note that execution time includes lock time - so anything
+					// less than say 15ms may be locking for update rather than
+					// something pathological
+					return nanoDiff < 15000000;
 				}
 			});
 		}
