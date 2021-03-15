@@ -607,9 +607,19 @@ public class DomainStoreTransformSequencer
 					Ax.out(querySql);
 					statement.execute();
 					long nanoDiff = System.nanoTime() - nanoTime;
-					if (nanoDiff > 2000000) {
-						logger.info("transactionCommitTime >2ms - {} ns",
-								nanoDiff);
+					int warnMs = ResourceUtilities.getInteger(
+							DomainStoreTransformSequencer.class,
+							"IndexRotater.warnMs");
+					// Note that execution time includes lock time - so anything
+					// less than say 1/500,000*(count(dtr.id))ms may be locking
+					// for update/contention rather than
+					// something pathological
+					int invalidMs = ResourceUtilities.getInteger(
+							DomainStoreTransformSequencer.class,
+							"IndexRotater.invalidMs");
+					if (nanoDiff > warnMs * 000000) {
+						logger.info("transactionCommitTime > {} ms - {} ns",
+								warnMs, nanoDiff);
 					}
 					try (PreparedStatement statement2 = conn
 							.prepareStatement("explain analyze " + querySql)) {
@@ -622,7 +632,7 @@ public class DomainStoreTransformSequencer
 					// Note that execution time includes lock time - so anything
 					// less than say 15ms may be locking for update rather than
 					// something pathological
-					return nanoDiff < 15000000;
+					return nanoDiff < invalidMs * 1000000;
 				}
 			});
 		}
