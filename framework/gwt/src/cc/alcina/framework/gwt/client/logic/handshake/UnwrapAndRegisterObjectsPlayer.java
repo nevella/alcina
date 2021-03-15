@@ -107,13 +107,18 @@ public class UnwrapAndRegisterObjectsPlayer
 
 	@Override
 	public void run() {
-		if (HandshakeConsortModel.get().getLoadObjectsResponse() == null) {
+		if (HandshakeConsortModel.get().getLoadObjectsResponse() == null
+				&& isBypassInitialObjectsRegistration()) {
 			consort.wasPlayed(this, Collections.singletonList(
 					HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED));
 			return;
 		}
 		HandshakeConsortModel.get().prepareInitialPlaySequence();
 		loop();
+	}
+
+	protected boolean isBypassInitialObjectsRegistration() {
+		return false;
 	}
 
 	private void loop0() {
