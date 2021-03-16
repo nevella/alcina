@@ -5,6 +5,7 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
@@ -53,6 +54,9 @@ public class TransformPropagationPolicy {
 
 	public boolean shouldPropagate(DomainTransformEvent event) {
 		DomainTransformPropagation propagation = resolvePropagation(event);
+		if (isNonDomainStoreClass(event.getObjectClass())) {
+			return false;
+		}
 		return propagation.value() == PropagationType.PERSISTENT
 				|| propagation.value() == PropagationType.NON_PERSISTENT;
 	}
@@ -74,5 +78,9 @@ public class TransformPropagationPolicy {
 		DomainTransformPropagation annotation = location
 				.getAnnotation(DomainTransformPropagation.class);
 		return annotation;
+	}
+
+	protected boolean isNonDomainStoreClass(Class<? extends Entity> clazz) {
+		return !DomainStore.stores().storeFor(clazz).isCached(clazz);
 	}
 }
