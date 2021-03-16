@@ -174,11 +174,18 @@ public class DomainTransformPersistenceEvents {
 									Thread.currentThread().getName(),
 									() -> true);
 							listener.onDomainTransformRequestPersistence(event);
-						} catch (Exception e) {
+						} catch (RuntimeException rex) {
 							logger.warn(
 									"DEVEX::0 - Exception in persistenceListener - {}",
-									e);
-							e.printStackTrace();
+									rex);
+							switch (event.getPersistenceEventType()) {
+							case PRE_COMMIT:
+							case PRE_FLUSH:
+								throw rex;
+							default:
+								rex.printStackTrace();
+								break;
+							}
 						} finally {
 							InternalMetrics.get().endTracker(event);
 						}
