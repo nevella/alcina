@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import javax.persistence.EntityManager;
+import javax.persistence.FlushModeType;
 import javax.persistence.Query;
 
 import org.slf4j.Logger;
@@ -52,13 +53,13 @@ import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValid
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.PublicationCounter;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -75,6 +76,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DurationCounter;
+import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -111,7 +113,7 @@ import cc.alcina.framework.entity.util.MethodContext;
 @RegistryLocation(registryPoint = CommonPersistenceBase.class, implementationType = ImplementationType.INSTANCE)
 public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	// note - this'll be a function of the stack depth of the eql ast processor
-	private static final int PRECACHE_RQ_SIZE = 500;
+	private static final int PRECACHE_RQ_SIZE = 5000;
 
 	public static final transient String CONTEXT_CLIENT_IP_ADDRESS = CommonPersistenceBase.class
 			.getName() + ".CONTEXT_CLIENT_IP_ADDRESS";
@@ -124,8 +126,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	private static String getImplementationSimpleClassName(Class<?> clazz) {
-		return PersistentImpl
-				.getImplementationSimpleClassName(clazz);
+		return PersistentImpl.getImplementationSimpleClassName(clazz);
 	}
 
 	Map<Long, EntityLocatorMap> locatorMaps = Collections
@@ -212,12 +213,17 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
 					List<Long> idsSlice = ids.subList(i,
 							Math.min(ids.size(), i + PRECACHE_RQ_SIZE));
-					List<Entity> resultList = getEntityManager()
-							.createQuery(String.format("from %s where id in %s",
-									storageClass.getSimpleName(),
-									EntityPersistenceHelper
-											.toInClause(idsSlice)))
-							.getResultList();
+					if (ids.size() > PRECACHE_RQ_SIZE) {
+						logger.info("Transform precache - {} - {}",
+								clazz.getSimpleName(),
+								new IntPair(i, i + idsSlice.size()));
+					}
+					Query query = getEntityManager().createQuery(String.format(
+							"from %s where id in %s",
+							storageClass.getSimpleName(),
+							EntityPersistenceHelper.toInClause(idsSlice)));
+					query.setFlushMode(FlushModeType.COMMIT);
+					List<Entity> resultList = query.getResultList();
 					for (Entity entity : resultList) {
 						cache.put(entity);
 						if (fixWithPrecreate) {
