@@ -60,11 +60,12 @@ public class DomainTransformPersistenceEvents {
 				if (listener.isPreBarrierListener()) {
 					try {
 						listener.onDomainTransformRequestPersistence(event);
-					} catch (Exception e) {
+					} catch (RuntimeException rex) {
 						logger.warn(
 								"DEVEX::0 - Exception in persistenceListener - {}",
-								e);
-						e.printStackTrace();
+								rex);
+						throwOrLogBasedOnEventPhase(
+								event.getPersistenceEventType(), rex);
 					}
 				}
 			}
@@ -178,14 +179,8 @@ public class DomainTransformPersistenceEvents {
 							logger.warn(
 									"DEVEX::0 - Exception in persistenceListener - {}",
 									rex);
-							switch (event.getPersistenceEventType()) {
-							case PRE_COMMIT:
-							case PRE_FLUSH:
-								throw rex;
-							default:
-								rex.printStackTrace();
-								break;
-							}
+							throwOrLogBasedOnEventPhase(
+									event.getPersistenceEventType(), rex);
 						} finally {
 							InternalMetrics.get().endTracker(event);
 						}
@@ -194,6 +189,19 @@ public class DomainTransformPersistenceEvents {
 			} finally {
 				queue.onEventListenerFiringCompleted(event);
 			}
+		}
+	}
+
+	private void throwOrLogBasedOnEventPhase(
+			DomainTransformPersistenceEventType persistenceEventType,
+			RuntimeException rex) {
+		rex.printStackTrace();
+		switch (persistenceEventType) {
+		case PRE_COMMIT:
+		case PRE_FLUSH:
+			throw rex;
+		default:
+			break;
 		}
 	}
 
