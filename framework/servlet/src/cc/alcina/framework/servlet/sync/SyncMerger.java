@@ -339,11 +339,15 @@ public class SyncMerger<T> {
 			mapping.merge(pair.getLeft().getObject(),
 					pair.getRight().getObject());
 		}
+		postMerge(pair);
 		return true;
 	}
 
 	protected T postCreateInstance(T newInstance, boolean createLeft) {
 		return newInstance;
+	}
+
+	protected void postMerge(SyncPair<T> merged) {
 	}
 
 	protected List<SyncMapping> syncMappings(SyncPair<T> pair) {
