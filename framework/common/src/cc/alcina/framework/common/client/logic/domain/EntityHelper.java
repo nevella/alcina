@@ -184,6 +184,19 @@ public class EntityHelper {
 		return sb.toString();
 	}
 
+	public static class EntityDebugIdFilter implements Predicate<Entity> {
+		private long id;
+
+		public EntityDebugIdFilter(long id) {
+			this.id = id;
+		}
+
+		@Override
+		public boolean test(Entity t) {
+			return id == 0 || t.getId() == 0;
+		}
+	}
+
 	public static class EntityToIdMapper
 			extends FromObjectKeyValueMapper<Long, Entity> {
 		@Override
