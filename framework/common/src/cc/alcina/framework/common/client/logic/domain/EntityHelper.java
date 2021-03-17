@@ -193,7 +193,7 @@ public class EntityHelper {
 
 		@Override
 		public boolean test(Entity t) {
-			return id == 0 || t.getId() == 0;
+			return id == 0 || t.getId() == id;
 		}
 	}
 
