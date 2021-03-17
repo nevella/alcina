@@ -34,6 +34,9 @@ import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.State;
 
+/*
+ * mvcc.4 - serialize to streams rather than strings
+ */
 @RegistryLocation(registryPoint = ClusterTransformSerializer.class, implementationType = ImplementationType.SINGLETON)
 public class ClusterTransformSerializer {
 	private static final int CHUNK_SIZE = 500000;
