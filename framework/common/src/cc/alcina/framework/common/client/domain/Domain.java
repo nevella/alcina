@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.domain;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -18,8 +19,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.util.CommonUtils;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class Domain {
@@ -189,8 +190,11 @@ public class Domain {
 
 		default <V extends Entity> V byProperty(Class<V> clazz,
 				String propertyName, Object value) {
-			return CommonUtils
-					.first(listByProperty(clazz, propertyName, value));
+			PropertyReflector reflector = Reflections.classLookup()
+					.getPropertyReflector(clazz, propertyName);
+			return stream(clazz).filter(
+					e -> Objects.equals(reflector.getPropertyValue(e), value))
+					.findFirst().orElse(null);
 		}
 
 		default <V extends Entity> V create(Class<V> clazz) {
@@ -207,7 +211,11 @@ public class Domain {
 
 		default <V extends Entity> List<V> listByProperty(Class<V> clazz,
 				String propertyName, Object value) {
-			return query(clazz).filter(propertyName, value).list();
+			PropertyReflector reflector = Reflections.classLookup()
+					.getPropertyReflector(clazz, propertyName);
+			return stream(clazz).filter(
+					e -> Objects.equals(reflector.getPropertyValue(e), value))
+					.collect(Collectors.toList());
 		}
 
 		<V extends Entity> DomainQuery<V> query(Class<V> clazz);
