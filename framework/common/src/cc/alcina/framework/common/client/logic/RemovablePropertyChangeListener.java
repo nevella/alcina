@@ -10,7 +10,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 public class RemovablePropertyChangeListener implements PropertyChangeListener {
 	private SourcesPropertyChangeEvents bound;
 
-	private String propertyName;
+	protected String propertyName;
 
 	private Consumer<PropertyChangeEvent> handler;
 

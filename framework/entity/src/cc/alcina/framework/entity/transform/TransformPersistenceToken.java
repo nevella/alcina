@@ -86,7 +86,7 @@ public class TransformPersistenceToken implements Serializable {
 				.impl(TransformPropagationPolicy.class);
 	}
 
-	public void addCascadedEvents() {
+	public boolean addCascadedEvents() {
 		Set<DomainTransformEvent> pendingTransforms = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		for (DomainTransformEvent pending : pendingTransforms) {
@@ -94,6 +94,7 @@ public class TransformPersistenceToken implements Serializable {
 		}
 		request.getEvents().addAll(pendingTransforms);
 		pendingTransforms.clear();
+		return pendingTransforms.size() > 0;
 	}
 
 	public List<DomainTransformEvent> getClientUpdateEvents() {
@@ -313,5 +314,10 @@ public class TransformPersistenceToken implements Serializable {
 
 	public enum Pass {
 		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
+	}
+
+	public void checkNoPendingTransforms() {
+		Preconditions.checkState(TransformManager.get()
+				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).isEmpty());
 	}
 }

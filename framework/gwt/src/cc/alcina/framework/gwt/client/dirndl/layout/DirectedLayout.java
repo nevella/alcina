@@ -630,6 +630,11 @@ public class DirectedLayout {
 					// FIXME - dirndl.1 - elaborate this
 					return;
 				}
+				if (propertyName == null && evt.getPropertyName() != null) {
+					// whole-object/model listeners shouldn't fire on named
+					// changes
+					return;
+				}
 				logger.info("removed listener :: {} :: {}  :: {}",
 						child.pathSegment(), child.hashCode(), this.hashCode());
 				Node newChild = addChild(
