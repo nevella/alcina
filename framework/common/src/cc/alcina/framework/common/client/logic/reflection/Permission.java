@@ -37,70 +37,85 @@ public @interface Permission {
 			switch (level) {
 			case ROOT:
 				return new Permission() {
+					@Override
 					public AccessLevel access() {
 						return AccessLevel.ROOT;
 					}
 
+					@Override
 					public Class<? extends Annotation> annotationType() {
 						return Permission.class;
 					}
 
+					@Override
 					public String rule() {
 						return null;
 					}
 				};
 			case EVERYONE:
 				return new Permission() {
+					@Override
 					public AccessLevel access() {
 						return AccessLevel.EVERYONE;
 					}
 
+					@Override
 					public Class<? extends Annotation> annotationType() {
 						return Permission.class;
 					}
 
+					@Override
 					public String rule() {
 						return null;
 					}
 				};
 			case ADMIN:
 				return new Permission() {
+					@Override
 					public AccessLevel access() {
 						return AccessLevel.ADMIN;
 					}
 
+					@Override
 					public Class<? extends Annotation> annotationType() {
 						return Permission.class;
 					}
 
+					@Override
 					public String rule() {
 						return null;
 					}
 				};
 			case ADMIN_OR_OWNER:
 				return new Permission() {
+					@Override
 					public AccessLevel access() {
 						return AccessLevel.ADMIN_OR_OWNER;
 					}
 
+					@Override
 					public Class<? extends Annotation> annotationType() {
 						return Permission.class;
 					}
 
+					@Override
 					public String rule() {
 						return null;
 					}
 				};
 			case LOGGED_IN:
 				return new Permission() {
+					@Override
 					public AccessLevel access() {
 						return AccessLevel.LOGGED_IN;
 					}
 
+					@Override
 					public Class<? extends Annotation> annotationType() {
 						return Permission.class;
 					}
 
+					@Override
 					public String rule() {
 						return null;
 					}

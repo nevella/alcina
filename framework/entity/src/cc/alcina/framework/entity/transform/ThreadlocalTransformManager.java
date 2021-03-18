@@ -127,6 +127,9 @@ public class ThreadlocalTransformManager extends TransformManager
 	public static final String CONTEXT_THROW_ON_RESET_TLTM = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_THROW_ON_RESET_TLTM";
 
+	public static final String CONTEXT_LOADING_FOR_TRANSFORM = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_LOADING_FOR_TRANSFORM";
+
 	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
 			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
 
@@ -490,6 +493,8 @@ public class ThreadlocalTransformManager extends TransformManager
 				return MethodContext.instance()
 						.withContextTrue(
 								LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)
+						.withContextTrue(
+								ThreadlocalTransformManager.CONTEXT_LOADING_FOR_TRANSFORM)
 						.call(() -> Domain.find(clazz, f_id));
 			}
 		}

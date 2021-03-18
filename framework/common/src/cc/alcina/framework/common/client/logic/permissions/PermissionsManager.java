@@ -41,6 +41,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -924,6 +926,20 @@ public class PermissionsManager implements DomainTransformListener {
 
 		public void register(PermissionsExtensionForRule ext) {
 			extensionMapForRule.put(ext.getRuleName(), ext);
+		}
+	}
+
+	public static boolean hasReadPermission(Object object) {
+		AnnotationLocation clazzLocation = new AnnotationLocation(
+				object.getClass(), null);
+		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
+		ObjectPermissions op = clazzLocation
+				.getAnnotation(ObjectPermissions.class);
+		if (op == null) {
+			return false;
+		} else {
+			return PermissionsManager.get().checkEffectivePropertyPermission(op,
+					null, object, true);
 		}
 	}
 }
