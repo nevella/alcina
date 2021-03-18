@@ -12,10 +12,12 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
@@ -82,6 +84,16 @@ public class TransformPersistenceToken implements Serializable {
 				.getPolicy(this, forOfflineTransforms);
 		this.transformPropagationPolicy = Registry
 				.impl(TransformPropagationPolicy.class);
+	}
+
+	public void addCascadedEvents() {
+		Set<DomainTransformEvent> pendingTransforms = TransformManager.get()
+				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		for (DomainTransformEvent pending : pendingTransforms) {
+			pending.setCommitType(CommitType.TO_STORAGE);
+		}
+		request.getEvents().addAll(pendingTransforms);
+		pendingTransforms.clear();
 	}
 
 	public List<DomainTransformEvent> getClientUpdateEvents() {
