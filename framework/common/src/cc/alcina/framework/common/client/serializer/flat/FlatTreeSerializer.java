@@ -105,7 +105,9 @@ public class FlatTreeSerializer {
 		}
 		State state = new State();
 		state.deserializerOptions = options;
-		value = value.replace(":", "\n");
+		if (!value.contains("\n")) {
+			value = value.replace(":", "\n");
+		}
 		state.keyValues = StringMap.fromPropertyString(value);
 		if (clazz == null) {
 			clazz = Reflections.classLookup()
