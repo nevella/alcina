@@ -23,15 +23,17 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 		HasDirectedModel, HandlesModelBinding, RendersToParentContainer {
 	@Override
-	public List<Widget> renderWithDefaults(Node node) {
-		List<Widget> result = new ArrayList<>();
-		Object directedModel = getDirectedModel(node);
-		if (directedModel == null) {
-			return Collections.emptyList();
+	public Object getDirectedModel(Node node) {
+		ModelTransformNodeRendererArgs args = node
+				.annotation(ModelTransformNodeRendererArgs.class);
+		if (node.model == null && !args.transformsNull()) {
+			return null;
 		}
-		Node child = node.addChild(directedModel, null, node.propertyReflector);
-		result.addAll(child.render().widgets);
-		return result;
+		ModelTransform transform = Reflections.newInstance(args.value());
+		if (transform instanceof ContextSensitiveTransform) {
+			((ContextSensitiveTransform) transform).withContextNode(node);
+		}
+		return transform.apply(node.model);
 	}
 
 	// Not called
@@ -41,17 +43,48 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 	}
 
 	@Override
-	public Object getDirectedModel(Node node) {
-		ModelTransformNodeRendererArgs args = node
-				.annotation(ModelTransformNodeRendererArgs.class);
-		if (node.model == null && !args.transformsNull()) {
-			return null;
+	public List<Widget> renderWithDefaults(Node node) {
+		List<Widget> result = new ArrayList<>();
+		Object directedModel = getDirectedModel(node);
+		if (directedModel == null) {
+			return Collections.emptyList();
 		}
-		ModelTransform transform = Reflections.newInstance(args.value());
-		if(transform instanceof ContextSensitiveTransform) {
-			((ContextSensitiveTransform) transform).withContextNode(node);
+		Node child = node.addChild(directedModel, null, node.propertyReflector);
+		/*
+		 * add node css
+		 */
+		List<Widget> widgets = child.render().widgets;
+		widgets.forEach(w -> this.renderDefaults(node, w));
+		result.addAll(widgets);
+		return result;
+	}
+
+	public abstract static class AbstractContextSensitiveModelTransform<A, B extends Bindable>
+			extends AbstractModelTransform<A, B>
+			implements ContextSensitiveTransform<A, B> {
+		protected Node node;
+
+		@Override
+		public AbstractContextSensitiveModelTransform<A, B>
+				withContextNode(Node node) {
+			this.node = node;
+			return this;
 		}
-		return transform.apply(node.model);
+	}
+
+	@ClientInstantiable
+	public abstract static class AbstractModelTransform<A, B extends Bindable>
+			implements ModelTransform<A, B> {
+	}
+
+	public interface ContextSensitiveTransform<A, B extends Bindable>
+			extends ModelTransform<A, B> {
+		public ContextSensitiveTransform<A, B>
+				withContextNode(DirectedLayout.Node node);
+	}
+
+	public interface ModelTransform<A, B extends Bindable>
+			extends Function<A, B> {
 	}
 
 	@ClientVisible
@@ -59,40 +92,9 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 	@Documented
 	@Target({ ElementType.TYPE, ElementType.METHOD })
 	public @interface ModelTransformNodeRendererArgs {
-		Class<? extends ModelTransform> value();
 		boolean transformsNull() default false;
-	}
 
-	public interface ModelTransform<A, B extends Bindable>
-			extends Function<A, B> {
-	}
-	public interface ContextSensitiveTransform<A, B extends Bindable>
-	extends ModelTransform<A, B> {
-		public ContextSensitiveTransform<A, B > withContextNode(DirectedLayout.Node node);
-}
-
-	@ClientInstantiable
-	public abstract static class AbstractModelTransform<A, B extends Bindable>
-			implements ModelTransform<A, B> {
-	}
-	public abstract static class AbstractContextSensitiveModelTransform<A, B extends Bindable>
-	extends AbstractModelTransform<A, B> implements ContextSensitiveTransform<A,B>{
-		protected Node node;
-
-		@Override
-		public AbstractContextSensitiveModelTransform<A,B> withContextNode(Node node) {
-			this.node = node;
-			return this;
-		}
-}
-
-	public static class PlaceholderModelTransform
-			extends AbstractModelTransform<Object, Bindable> {
-		@Override
-		public Bindable apply(Object t) {
-			PlaceholderModel model = new PlaceholderModel();
-			return model;
-		}
+		Class<? extends ModelTransform> value();
 	}
 
 	@Directed(renderer = DelegatingNodeRenderer.class)
@@ -108,5 +110,12 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 		}
 	}
 
-	
+	public static class PlaceholderModelTransform
+			extends AbstractModelTransform<Object, Bindable> {
+		@Override
+		public Bindable apply(Object t) {
+			PlaceholderModel model = new PlaceholderModel();
+			return model;
+		}
+	}
 }

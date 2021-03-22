@@ -43,22 +43,30 @@ public class LinkModel {
 
 	private NonstandardObjectAction objectAction;
 
+	private String text;
+
+	public void addTo(List<LinkModel> actions) {
+		actions.add(this);
+	}
+
 	public NonstandardObjectAction getObjectAction() {
 		return this.objectAction;
 	}
 
-	public LinkModel withPrimaryAction(boolean primaryAction) {
-		this.primaryAction = primaryAction;
-		return this;
+	public BasePlace getPlace() {
+		return this.place;
+	}
+
+	public boolean isPrimaryAction() {
+		return this.primaryAction;
+	}
+
+	public boolean isWithoutLink() {
+		return this.withoutLink;
 	}
 
 	public LinkModel withActionRef(Class<? extends ActionRef> clazz) {
 		return withPlace(new ActionRefPlace(clazz));
-	}
-
-	public LinkModel withPlace(BasePlace place) {
-		this.place = place;
-		return this;
 	}
 
 	public LinkModel
@@ -67,17 +75,24 @@ public class LinkModel {
 		return this;
 	}
 
-	public LinkModel withWithoutLink(boolean withoutLink) {
-		this.withoutLink = withoutLink;
+	public LinkModel withPlace(BasePlace place) {
+		this.place = place;
 		return this;
 	}
 
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface LinkModelRendererPrimaryClassName {
-		String value();
+	public LinkModel withPrimaryAction(boolean primaryAction) {
+		this.primaryAction = primaryAction;
+		return this;
+	}
+
+	public LinkModel withText(String text) {
+		this.text = text;
+		return this;
+	}
+
+	public LinkModel withWithoutLink(boolean withoutLink) {
+		this.withoutLink = withoutLink;
+		return this;
 	}
 
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = LinkModel.class)
@@ -87,6 +102,9 @@ public class LinkModel {
 			LinkModel model = model(node);
 			Widget rendered = super.render(node);
 			rendered.getElement().setInnerText(getText(node));
+			if (model.isWithoutLink() && model.text != null) {
+				return rendered;
+			}
 			NonstandardObjectAction objectAction = model(node)
 					.getObjectAction();
 			if (objectAction != null) {
@@ -135,12 +153,12 @@ public class LinkModel {
 			return rendered;
 		}
 
-		private LinkModel model(Node node) {
-			return (LinkModel) node.getModel();
-		}
-
 		private BasePlace getPlace(Node node) {
 			return model(node).getPlace();
+		}
+
+		private LinkModel model(Node node) {
+			return (LinkModel) node.getModel();
 		}
 
 		@Override
@@ -149,8 +167,11 @@ public class LinkModel {
 		}
 
 		protected String getText(Node node) {
-			NonstandardObjectAction objectAction = model(node)
-					.getObjectAction();
+			LinkModel model = model(node);
+			if (model.text != null) {
+				return model.text;
+			}
+			NonstandardObjectAction objectAction = model.getObjectAction();
 			if (objectAction != null) {
 				return objectAction.getDisplayName();
 			}
@@ -159,19 +180,11 @@ public class LinkModel {
 		}
 	}
 
-	public BasePlace getPlace() {
-		return this.place;
-	}
-
-	public boolean isWithoutLink() {
-		return this.withoutLink;
-	}
-
-	public boolean isPrimaryAction() {
-		return this.primaryAction;
-	}
-
-	public void addTo(List<LinkModel> actions) {
-		actions.add(this);
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	public @interface LinkModelRendererPrimaryClassName {
+		String value();
 	}
 }
