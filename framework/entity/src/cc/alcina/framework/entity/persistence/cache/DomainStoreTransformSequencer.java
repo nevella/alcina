@@ -456,7 +456,7 @@ public class DomainStoreTransformSequencer
 	}
 
 	class IndexRotater {
-		private static final int MAX_INDEX = 3;
+		private static final int MAX_INDEX = 4;
 
 		int counter;
 
