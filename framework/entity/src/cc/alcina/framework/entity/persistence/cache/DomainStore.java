@@ -117,6 +117,7 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
+import cc.alcina.framework.entity.util.OffThreadLogger;
 
 /**
  * <h3>Locking notes:</h3>
@@ -216,7 +217,7 @@ public class DomainStore implements IDomainStore {
 
 	Logger metricLogger = AlcinaLogUtils.getMetricLogger(getClass());
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	Logger logger = OffThreadLogger.getLogger(getClass());
 
 	Mvcc mvcc;
 

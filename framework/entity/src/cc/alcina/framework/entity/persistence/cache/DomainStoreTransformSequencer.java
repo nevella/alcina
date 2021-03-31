@@ -20,7 +20,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.Table;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -32,6 +31,7 @@ import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
+import cc.alcina.framework.entity.util.OffThreadLogger;
 
 /**
  * 
@@ -64,7 +64,7 @@ public class DomainStoreTransformSequencer
 
 	private DomainStoreLoaderDatabase loaderDatabase;
 
-	private Logger logger = LoggerFactory.getLogger(getClass());
+	private Logger logger = OffThreadLogger.getLogger(getClass());
 
 	private Connection connection;
 

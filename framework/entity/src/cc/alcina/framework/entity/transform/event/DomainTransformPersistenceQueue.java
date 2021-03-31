@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -44,6 +43,7 @@ import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue.Event.Type;
+import cc.alcina.framework.entity.util.OffThreadLogger;
 
 /**
  * Improvement: rather than a strict dtrp-id queue, use 'happens after' field of
@@ -61,7 +61,7 @@ public class DomainTransformPersistenceQueue {
 	public static final String CONTEXT_WAIT_TIMEOUT_MS = DomainTransformPersistenceQueue.class
 			.getName() + ".CONTEXT_WAIT_TIMEOUT_MS";
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	Logger logger = OffThreadLogger.getLogger(getClass());
 
 	State state;
 
@@ -332,7 +332,7 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public class FireEventsThread extends Thread {
-		Logger fireEventThreadLogger = LoggerFactory.getLogger(getClass());
+		Logger fireEventThreadLogger = OffThreadLogger.getLogger(getClass());
 
 		@Override
 		public void run() {

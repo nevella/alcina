@@ -7,7 +7,6 @@ import java.util.concurrent.Future;
 
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -19,6 +18,7 @@ import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.transform.event.ExternalTransformPersistenceListener;
+import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.State;
 
 /**
@@ -35,7 +35,7 @@ public class ClusterTransformListener
 
 	private TransformCommitLogHost commitLogHost;
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	Logger logger = OffThreadLogger.getLogger(getClass());
 
 	private ConcurrentHashMap<Long, CountDownLatch> preFlushLatches = new ConcurrentHashMap<>();
 

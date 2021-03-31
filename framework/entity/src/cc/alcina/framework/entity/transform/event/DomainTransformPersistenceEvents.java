@@ -23,6 +23,7 @@ import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMet
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.CascadingTransformSupport;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.util.OffThreadLogger;
 
 public class DomainTransformPersistenceEvents {
 	private static final String CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS = DomainTransformPersistenceEvents.class
@@ -40,7 +41,7 @@ public class DomainTransformPersistenceEvents {
 
 	CascadedTransformLocalIdSupport transformLocalIdSupport = new CascadedTransformLocalIdSupport();
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	Logger logger = OffThreadLogger.getLogger(getClass());
 
 	public DomainTransformPersistenceEvents(DomainStore domainStore) {
 		this.domainStore = domainStore;
