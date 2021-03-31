@@ -85,9 +85,8 @@ public class DomainTransformPersistenceEvents {
 			break;
 		}
 		case PRE_FLUSH: {
-			/*
-			 * just prebarrier
-			 */
+			event.getPersistedRequests()
+					.forEach(queue::onPersistedRequestPreCommitted);
 			break;
 		}
 		case COMMIT_OK:
@@ -192,6 +191,14 @@ public class DomainTransformPersistenceEvents {
 		}
 	}
 
+	private long getLocalCommitTimeout() {
+		if (LooseContext.has(CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS)) {
+			return LooseContext.get(CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS);
+		} else {
+			return 10 * TimeConstants.ONE_SECOND_MS;
+		}
+	}
+
 	private void throwOrLogBasedOnEventPhase(
 			DomainTransformPersistenceEventType persistenceEventType,
 			RuntimeException rex) {
@@ -202,14 +209,6 @@ public class DomainTransformPersistenceEvents {
 			throw rex;
 		default:
 			break;
-		}
-	}
-
-	private long getLocalCommitTimeout() {
-		if (LooseContext.has(CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS)) {
-			return LooseContext.get(CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS);
-		} else {
-			return 10 * TimeConstants.ONE_SECOND_MS;
 		}
 	}
 

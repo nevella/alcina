@@ -34,7 +34,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
@@ -61,9 +60,6 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueu
 public class DomainTransformPersistenceQueue {
 	public static final String CONTEXT_WAIT_TIMEOUT_MS = DomainTransformPersistenceQueue.class
 			.getName() + ".CONTEXT_WAIT_TIMEOUT_MS";
-
-	public Topic<List<DomainTransformCommitPosition>> publishedFromSequencer = Topic
-			.local();
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -125,9 +121,9 @@ public class DomainTransformPersistenceQueue {
 		return state.transformCommitPosition;
 	}
 
-	public void onClusteredSequencedCommitPositions(
-			List<DomainTransformCommitPosition> positions) {
-		sequencer.addIncomingPositions(positions);
+	public void onPersistedRequestPreCommitted(
+			DomainTransformRequestPersistent request) {
+		sequencer.onPersistedRequestPreCommitted(request.getId());
 	}
 
 	public void
@@ -142,7 +138,9 @@ public class DomainTransformPersistenceQueue {
 
 	public void
 			onRequestDataReceived(DomainTransformRequestPersistent request) {
+		onPersistedRequestPreCommitted(request);
 		long requestId = request.getId();
+		logger.info("Pre-commit: {}", requestId);
 		if (loadedRequests.containsKey(requestId)) {
 			// local request coming in from clustertransformlistener - ignore
 			logger.debug("Did not cache already loaded request: {}", requestId);
@@ -159,11 +157,7 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public void onSequencedCommitPositions(
-			List<DomainTransformCommitPosition> positions,
-			boolean fromSequencer) {
-		if (fromSequencer) {
-			publishedFromSequencer.publish(positions);
-		}
+			List<DomainTransformCommitPosition> positions) {
 		positions.forEach(p -> events.add(Event.committed(p)));
 	}
 
@@ -514,12 +508,11 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public interface Sequencer {
-		void addIncomingPositions(
-				List<DomainTransformCommitPosition> positions);
-
 		Long getLastRequestIdAtTimestamp(Timestamp timestamp);
 
 		void onPersistedRequestCommitted(long requestId);
+
+		void onPersistedRequestPreCommitted(long requestId);
 
 		void refresh();
 	}

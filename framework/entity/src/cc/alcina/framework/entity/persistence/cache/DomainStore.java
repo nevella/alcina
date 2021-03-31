@@ -384,10 +384,6 @@ public class DomainStore implements IDomainStore {
 		cache.putExternalLocal(instance);
 	}
 
-	public void refreshIndicies() {
-		loader.getTransformSequencer().rotateIndex();
-	}
-
 	// FIXME - mvcc.wrap - goes away
 	public void reloadEntity(Entity wrapped) {
 		Preconditions.checkArgument(wrapped instanceof WrappedObject);

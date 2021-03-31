@@ -22,7 +22,6 @@ import javax.persistence.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -30,11 +29,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
-import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
-import cc.alcina.framework.entity.util.SqlUtils;
 
 /**
  * 
@@ -57,6 +54,8 @@ explain analyze select id, pg_xact_commit_timestamp(xmin) as commit_timestamp
 
 
 	@formatter:on
+	
+	FIXME - document - the above index is only used on store initialisation
  *
  */
 public class DomainStoreTransformSequencer
@@ -69,7 +68,14 @@ public class DomainStoreTransformSequencer
 
 	private Connection connection;
 
-	private Map<Long, Boolean> publishedIds = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<Long, Boolean> publishedIds = new ConcurrentHashMap<>();
+
+	/*
+	 * Synchronization - this is iterated over in refreshPositions0, but a
+	 * concurrent add will not cause problems (since the ultimate concurrency
+	 * control is the db-tx visibility of the dtr id)
+	 */
+	private ConcurrentHashMap<Long, Boolean> pendingRequestIds = new ConcurrentHashMap<>();
 
 	DomainTransformCommitPosition highestVisiblePosition;
 
@@ -78,10 +84,6 @@ public class DomainStoreTransformSequencer
 	Map<Long, DomainTransformCommitPosition> visiblePositions = new LinkedHashMap<>();
 
 	LocalDateTime lastEnsure = null;
-
-	private int serverCount = 1;
-
-	private int serverOffset = 0;
 
 	private volatile boolean initialised = false;
 
@@ -93,27 +95,9 @@ public class DomainStoreTransformSequencer
 	}
 
 	@Override
-	public void addIncomingPositions(
-			List<DomainTransformCommitPosition> positions) {
-		positions.removeIf(p -> publishedIds.containsKey(p.commitRequestId));
-		if (positions.size() > 0) {
-			logger.info("Publishing unpublished positions:\n{}", positions);
-			publishUnpublishedPositions(positions, false);
-		}
-	}
-
-	@Override
 	public Long getLastRequestIdAtTimestamp(Timestamp timestamp) {
 		return runWithConnection("getLastRequestId",
 				conn -> getRequestIdAtTimestamp0(conn, timestamp));
-	}
-
-	public int getServerCount() {
-		return this.serverCount;
-	}
-
-	public int getServerOffset() {
-		return this.serverOffset;
 	}
 
 	public boolean isInitialised() {
@@ -129,24 +113,21 @@ public class DomainStoreTransformSequencer
 	}
 
 	@Override
-	public void refresh() {
-		refreshPositions(-1, System.currentTimeMillis());
+	public void onPersistedRequestPreCommitted(long requestId) {
+		pendingRequestIds.put(requestId, true);
 	}
 
-	public void rotateIndex() {
-		new IndexRotater().rotate();
+	@Override
+	public void refresh() {
+		refreshPositions(-1, System.currentTimeMillis());
 	}
 
 	public void setInitialised(boolean initialised) {
 		this.initialised = initialised;
 	}
 
-	public void setServerCount(int serverCount) {
-		this.serverCount = serverCount;
-	}
-
-	public void setServerOffset(int serverOffset) {
-		this.serverOffset = serverOffset;
+	public void vacuumTables() {
+		runWithConnection("vacuum", this::vacuumTables0);
 	}
 
 	private int ensureTimestamps() throws SQLException {
@@ -220,17 +201,16 @@ public class DomainStoreTransformSequencer
 	}
 
 	private synchronized void publishUnpublishedPositions(
-			List<DomainTransformCommitPosition> positions,
-			boolean publishToCluster) {
+			List<DomainTransformCommitPosition> positions) {
 		positions.removeIf(p -> publishedIds.containsKey(p.commitRequestId));
 		unpublishedPositions.addAll(positions);
 		if (unpublishedPositions.isEmpty()) {
 			return;
 		}
 		loaderDatabase.getStore().getPersistenceEvents().getQueue()
-				.onSequencedCommitPositions(unpublishedPositions,
-						publishToCluster
-								&& loaderDatabase.getStore().isWritable());
+				.onSequencedCommitPositions(unpublishedPositions);
+		unpublishedPositions
+				.forEach(p -> pendingRequestIds.remove(p.commitRequestId));
 		unpublishedPositions
 				.forEach(p -> publishedIds.put(p.commitRequestId, true));
 		highestVisiblePosition = Ax.last(unpublishedPositions);
@@ -244,32 +224,6 @@ public class DomainStoreTransformSequencer
 			long refreshTime) {
 		if (!initialised) {
 			return;
-		}
-		if (clusteredSequencing.isPrimarySequenceRefresher()
-				&& loaderDatabase.getStore().isWritable()) {
-		} else {
-			if (publishedIds.containsKey(ignoreIfSeenRequestId)) {
-				logger.info(
-						"Non-primary sequence refresher: OK (updated)(1): {}",
-						ignoreIfSeenRequestId);
-				return;
-			}
-			synchronized (unpublishedPositions) {
-				try {
-					unpublishedPositions.wait(clusteredSequencing
-							.waitForPrimarySequenceRefresherTime());
-				} catch (InterruptedException e) {
-				}
-			}
-			if (publishedIds.containsKey(ignoreIfSeenRequestId)) {
-				logger.info(
-						"Non-primary sequence refresher: OK (updated)(2): {}",
-						ignoreIfSeenRequestId);
-				return;
-			}
-			logger.info(
-					"Non-primary sequence refresher: non-optimised (not updated): {}",
-					ignoreIfSeenRequestId);
 		}
 		runWithConnection("refresh-positions",
 				conn -> refreshPositions0(conn, false, ignoreIfSeenRequestId));
@@ -314,18 +268,26 @@ public class DomainStoreTransformSequencer
 		 */
 		Timestamp since = new Timestamp(highestVisible.getTime() - 1000);
 		since.setNanos(highestVisible.getNanos());
-		String querySql = Ax.format(
-				"select id, transactionCommitTime,pg_xact_commit_timestamp(xmin) as commit_timestamp "
-						+ "from %s where transactionCommitTime is null OR"
-						+ " transactionCommitTime>=?",
-				tableName);
-		if (!initial) {
-			querySql += " order by pg_xact_commit_timestamp(xmin) desc ";
+		String querySql = null;
+		if (initial) {
+			querySql = Ax.format(
+					"select id, transactionCommitTime,pg_xact_commit_timestamp(xmin) as commit_timestamp "
+							+ "from %s where transactionCommitTime is null OR"
+							+ " transactionCommitTime>=?",
+					tableName);
+		} else {
+			querySql = Ax.format(
+					"select id, transactionCommitTime,pg_xact_commit_timestamp(xmin) as commit_timestamp "
+							+ "from %s where id in %s order by pg_xact_commit_timestamp(xmin) desc ",
+					tableName, EntityPersistenceHelper
+							.toInClause(pendingRequestIds.keySet()));
 		}
 		List<DomainTransformCommitPosition> positions = new ArrayList<>();
 		try (PreparedStatement pStatement = conn.prepareStatement(querySql)) {
 			pStatement.setFetchSize(10000);
-			pStatement.setTimestamp(1, since);
+			if (initial) {
+				pStatement.setTimestamp(1, since);
+			}
 			ResultSet rs = pStatement.executeQuery();
 			while (rs.next()) {
 				long id = rs.getLong(1);
@@ -333,7 +295,7 @@ public class DomainStoreTransformSequencer
 				Timestamp xminTimestamp = rs.getTimestamp(3);
 				Timestamp timestamp = storedTimestamp != null ? storedTimestamp
 						: xminTimestamp;
-				if (timestamp.compareTo(since) >= 0) {
+				if (!initial || timestamp.compareTo(since) >= 0) {
 					DomainTransformCommitPosition position = new DomainTransformCommitPosition(
 							id, timestamp);
 					DomainTransformCommitPosition existing = visiblePositions
@@ -344,6 +306,7 @@ public class DomainStoreTransformSequencer
 									"Different timestamps for positions:\nDB: {}\nExisting: {}",
 									timestamp, existing);
 						}
+						pendingRequestIds.remove(existing.commitRequestId);
 					} else {
 						positions.add(position);
 					}
@@ -363,7 +326,7 @@ public class DomainStoreTransformSequencer
 		}
 		if (positions.size() > 0) {
 			if (publishToQueue) {
-				publishUnpublishedPositions(positions, true);
+				publishUnpublishedPositions(positions);
 			} else {
 				unpublishedPositions.addAll(positions);
 				highestVisiblePosition = Ax.last(unpublishedPositions);
@@ -416,9 +379,7 @@ public class DomainStoreTransformSequencer
 		/*
 		 * round-robin, based on server count
 		 */
-		return clusteredSequencing.isPrimarySequenceRefresher()
-				|| LocalDateTime.now().getSecond()
-						% serverCount == serverOffset;
+		return clusteredSequencing.isPrimarySequenceRefresher();
 	}
 
 	private String tableName() {
@@ -426,6 +387,21 @@ public class DomainStoreTransformSequencer
 				.getDomainTransformRequestPersistentClass();
 		String tableName = persistentClass.getAnnotation(Table.class).name();
 		return tableName;
+	}
+
+	private int vacuumTables0(Connection conn) throws SQLException {
+		String querySql = Ax.format("vacuum (VERBOSE, ANALYZE) %s ",
+				tableName());
+		try (Statement statement = conn.createStatement()) {
+			ResultSet rs = statement.executeQuery(querySql);
+			while (rs.next()) {
+				logger.info(rs.getString(1));
+			}
+		} catch (SQLException sqlex) {
+			logger.warn("Issue in vacuum");
+			throw sqlex;
+		}
+		return 0;
 	}
 
 	void initialEnsureTimestamps() throws SQLException {
@@ -439,202 +415,13 @@ public class DomainStoreTransformSequencer
 		unpublishedPositions.clear();
 	}
 
+	@RegistryLocation(registryPoint = ClusteredSequencing.class, implementationType = ImplementationType.INSTANCE)
 	/*
 	 * Prevent contentious herds
 	 */
-	@RegistryLocation(registryPoint = ClusteredSequencing.class, implementationType = ImplementationType.INSTANCE)
 	public static class ClusteredSequencing {
 		public boolean isPrimarySequenceRefresher() {
 			return true;
-		}
-
-		public long waitForPrimarySequenceRefresherTime() {
-			return ResourceUtilities.getLong(
-					DomainStoreTransformSequencer.class,
-					"waitForPrimarySequenceRefresherTime");
-		}
-	}
-
-	class IndexRotater {
-		private static final int MAX_INDEX = 3;
-
-		int counter;
-
-		List<Integer> existing;
-
-		List<Integer> drop;
-
-		Integer responseTimeOk;
-
-		Integer created;
-
-		int indexCreationCount;
-
-		public void rotate() {
-			existing = new ArrayList<>();
-			if (valid()) {
-				return;
-			}
-			for (counter = -1; counter <= MAX_INDEX; counter++) {
-				if (exists()) {
-					existing.add(counter);
-				}
-			}
-			if (indexCreationCount <= 1) {
-				drop = existing;
-				created = null;
-				for (counter = -1; counter <= MAX_INDEX; counter++) {
-					if (!exists()) {
-						if (System.currentTimeMillis()
-								- lastNonConcurrentIndexCreationTime < 30
-										* TimeConstants.ONE_MINUTE_MS) {
-							logger.warn(
-									"Not creating new index - last creation too recent");
-							return;
-						}
-						create(indexCreationCount == 0);
-						indexCreationCount++;
-						created = counter;
-						break;
-					}
-				}
-				if (created == null) {
-					throw new RuntimeException("No blank index slot");
-				}
-				for (counter = -1; counter <= MAX_INDEX; counter++) {
-					if (drop.contains(counter)) {
-						drop();
-					}
-				}
-				drop = null;
-				rotate();
-				return;
-			} else {
-				throw new RuntimeException("No responseTimeOk after create");
-			}
-		}
-
-		private void create(boolean concurrently) {
-			String concurrentlyWarnString = concurrently ? ""
-					: "non-concurrently ";
-			logger.warn("Creating index {}{}", concurrentlyWarnString, name());
-			try {
-				try (Connection conn = loaderDatabase.dataSource
-						.getConnection()) {
-					Statement statement = conn.createStatement();
-					try {
-						String killIdleInTransactionSql = "SELECT "
-								+ "   pg_terminate_backend(pid)  " + " FROM  "
-								+ " pg_stat_activity " + " WHERE  "
-								// + " -- don't kill my own connection! "
-								+ " pid <> pg_backend_pid() "
-								// + " -- don't kill the connections to other
-								// databases "
-								+ " AND state='idle in transaction';";
-						SqlUtils.executeQuery(statement,
-								killIdleInTransactionSql);
-						String concurrentlyString = concurrently
-								? "CONCURRENTLY"
-								: "";
-						SqlUtils.execute(statement, Ax.format(
-								"SET  statement_timeout =%s;",
-								ResourceUtilities.getInteger(
-										DomainStoreTransformSequencer.class,
-										"indexCreationTimeout")));
-						SqlUtils.execute(statement, Ax.format(
-								"CREATE INDEX  %s " + " %s "
-										+ "  ON %s  USING btree(transactionCommitTime DESC NULLS FIRST) "
-										+ " WITH (FILLFACTOR=50) "
-										+ "WHERE transactionCommitTime IS NULL;\n",
-								concurrentlyString, name(), tableName()));
-						if (!concurrently) {
-							lastNonConcurrentIndexCreationTime = System
-									.currentTimeMillis();
-						}
-					} catch (Exception e) {
-						SqlUtils.execute(statement,
-								"SET  statement_timeout =0");
-						throw e;
-					}
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		private void drop() {
-			logger.warn("Dropping index {}", name());
-			runWithConnection("drop", conn -> {
-				try (Statement statement = conn.createStatement()) {
-					String sql = Ax.format("drop index %s", name());
-					SqlUtils.execute(statement, sql);
-					return null;
-				}
-			});
-		}
-
-		private boolean exists() {
-			return runWithConnection("exists", conn -> {
-				try (Statement statement = conn.createStatement()) {
-					String sql = Ax.format(
-							"select * from pg_class where relname='%s'",
-							name());
-					ResultSet rs = statement.executeQuery(sql);
-					return rs.next();
-				}
-			});
-		}
-
-		private String name() {
-			String suffix = counter == -1 ? "" : String.valueOf(counter);
-			return "domaintransformrequest_transactioncommittime_null" + suffix;
-		}
-
-		private boolean valid() {
-			return runWithConnection("valid", conn -> {
-				String querySql = Ax.format(
-						"select id, transactionCommitTime,pg_xact_commit_timestamp(xmin) as commit_timestamp "
-								+ "from %s where transactionCommitTime is null OR"
-								+ " transactionCommitTime>=?",
-						tableName());
-				querySql += " order by pg_xact_commit_timestamp(xmin) desc ";
-				try (PreparedStatement statement = conn
-						.prepareStatement(querySql)) {
-					Timestamp since = new Timestamp(System.currentTimeMillis()
-							- TimeConstants.ONE_SECOND_MS * 10);
-					statement.setTimestamp(1, since);
-					long nanoTime = System.nanoTime();
-					Ax.out(querySql);
-					statement.execute();
-					long nanoDiff = System.nanoTime() - nanoTime;
-					int warnMs = ResourceUtilities.getInteger(
-							DomainStoreTransformSequencer.class,
-							"IndexRotater.warnMs");
-					// Note that execution time includes lock time - so anything
-					// less than say 1/500,000*(count(dtr.id))ms may be locking
-					// for update/contention rather than
-					// something pathological
-					int invalidMs = ResourceUtilities.getInteger(
-							DomainStoreTransformSequencer.class,
-							"IndexRotater.invalidMs");
-					if (nanoDiff > warnMs * 000000) {
-						logger.info("transactionCommitTime > {} ms - {} ns",
-								warnMs, nanoDiff);
-					}
-					try (PreparedStatement statement2 = conn
-							.prepareStatement("explain analyze " + querySql)) {
-						statement2.setTimestamp(1, since);
-						ResultSet rs = statement2.executeQuery();
-						while (rs.next()) {
-							logger.warn(rs.getString(1));
-						}
-					}
-					// Note that execution time includes lock time - so anything
-					// less than say 15ms may be locking for update rather than
-					// something pathological
-					return nanoDiff < invalidMs * 1000000;
-				}
-			});
 		}
 	}
 }

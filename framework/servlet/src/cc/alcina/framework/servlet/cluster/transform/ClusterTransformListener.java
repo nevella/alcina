@@ -1,6 +1,8 @@
 package cc.alcina.framework.servlet.cluster.transform;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -8,9 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
@@ -37,21 +37,13 @@ public class ClusterTransformListener
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	private TopicListener<List<DomainTransformCommitPosition>> sequencedTransformListener = (
-			k, list) -> {
-		transformCommitLog.sendTransformPublishedMessages(list,
-				State.SEQUENCED_COMMIT_REGISTERED);
-		logger.info("Published commit positions: {} ",
-				list.stream().map(p -> p.commitRequestId));
-	};
+	private ConcurrentHashMap<Long, CountDownLatch> preFlushLatches = new ConcurrentHashMap<>();
 
 	public ClusterTransformListener(TransformCommitLogHost commitLogHost,
 			TransformCommitLog transformCommitLog, DomainStore domainStore) {
 		this.commitLogHost = commitLogHost;
 		this.transformCommitLog = transformCommitLog;
 		this.domainStore = domainStore;
-		domainStore.getPersistenceEvents().getQueue().publishedFromSequencer
-				.add(sequencedTransformListener);
 	}
 
 	@Override
@@ -79,13 +71,23 @@ public class ClusterTransformListener
 			publishRequests(requests, ClusterTransformRequest.State.COMMIT);
 			break;
 		case PRE_FLUSH:
+			if (requests.isEmpty()) {
+				return;
+			}
 			ClassLoader contextClassLoader = Thread.currentThread()
 					.getContextClassLoader();
 			try {
 				Thread.currentThread()
 						.setContextClassLoader(ClassLoaderAwareRegistryProvider
 								.get().getServletLayerClassloader());
-				publishRequests(event.getPersistedRequests(), State.PRE_COMMIT);
+				CountDownLatch latch = new CountDownLatch(1);
+				preFlushLatches.put(event.getMaxPersistedRequestId(), latch);
+				publishRequests(requests, State.PRE_COMMIT);
+				try {
+					latch.await();
+				} catch (InterruptedException e) {
+					throw new WrappedRuntimeException(e);
+				}
 			} finally {
 				Thread.currentThread()
 						.setContextClassLoader(contextClassLoader);
@@ -152,29 +154,24 @@ public class ClusterTransformListener
 		switch (request.state) {
 		case PRE_COMMIT:
 			queue.onRequestDataReceived(request.request);
+			CountDownLatch latch = preFlushLatches
+					.remove(request.request.getId());
+			if (latch != null) {
+				latch.countDown();
+			}
 			break;
 		case COMMIT:
-			// Fire in another thread to not block subsequent
-			// SEQUENCED_COMMIT_REGISTERED
-			new Thread(Thread.currentThread().getName() + "::fire-commit") {
-				@Override
-				public void run() {
-					try {
-						queue.onTransformRequestCommitted(request.id, false);
-					} catch (Throwable t) {
-						logger.warn(
-								"DEVEX::0 - Exception in handleClusterTransformRequest::commit - {}",
-								t);
-						t.printStackTrace();
-					}
-				}
-			}.start();
+			try {
+				queue.onTransformRequestCommitted(request.id, false);
+			} catch (Throwable t) {
+				logger.warn(
+						"DEVEX::0 - Exception in handleClusterTransformRequest::commit - {}",
+						t);
+				t.printStackTrace();
+			}
 			break;
 		case ABORTED:
 			queue.onTransformRequestAborted(request.id);
-			break;
-		case SEQUENCED_COMMIT_REGISTERED:
-			queue.onClusteredSequencedCommitPositions(request.positions);
 			break;
 		}
 	}
