@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -137,12 +136,7 @@ public class TransformCommitLog {
 	public synchronized List<Future<RecordMetadata>>
 			sendTransformPublishedMessages(
 					DomainTransformRequestPersistent request, State state) {
-		return sendTransformPublishedMessages0(request, null, state);
-	}
-
-	public List<Future<RecordMetadata>> sendTransformPublishedMessages(
-			List<DomainTransformCommitPosition> positions, State state) {
-		return sendTransformPublishedMessages0(null, positions, state);
+		return sendTransformPublishedMessages0(request, state);
 	}
 
 	public void shutdown() {
@@ -173,13 +167,12 @@ public class TransformCommitLog {
 	}
 
 	private List<Future<RecordMetadata>> sendTransformPublishedMessages0(
-			DomainTransformRequestPersistent request,
-			List<DomainTransformCommitPosition> positions, State state) {
+			DomainTransformRequestPersistent request, State state) {
 		if (producer() == null) {
 			logger.warn("Mpt sending transform packets - no producer");
 			return new ArrayList<>();
 		}
-		List<byte[]> serialized = serialize(request, positions, state);
+		List<byte[]> serialized = serialize(request, state);
 		return serialized.stream()
 				.map(packet -> producer().send(new ProducerRecord<Void, byte[]>(
 						getTopic(), null, packet)))
@@ -187,9 +180,9 @@ public class TransformCommitLog {
 	}
 
 	private List<byte[]> serialize(DomainTransformRequestPersistent request,
-			List<DomainTransformCommitPosition> positions, State state) {
+			State state) {
 		return Registry.impl(ClusterTransformSerializer.class)
-				.serialize(request, positions, state);
+				.serialize(request, state);
 	}
 
 	protected synchronized void checkPollTimeout() {
