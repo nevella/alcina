@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainProjection;
+import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.domain.ReverseDateProjection;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ClientInstanceLoadOracle;
@@ -44,6 +45,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.DomainStoreDescriptor;
+import cc.alcina.framework.entity.persistence.cache.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalMultiset;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalSet;
@@ -249,8 +251,16 @@ public class DomainDescriptorJob {
 
 	public Stream<? extends Job>
 			getJobsForTask(Class<? extends Task> taskClass) {
-		return Domain.query(jobImplClass)
-				.filter("taskClassName", taskClass.getName()).stream();
+		return getJobsForTask(taskClass, false);
+	}
+
+	public Stream<? extends Job>
+			getJobsForTask(Class<? extends Task> taskClass, boolean loadAllProperties) {
+		DomainQuery query = Domain.query(jobImplClass);
+		if (loadAllProperties) {
+			query.contextTrue(LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES);
+		}
+		return query.filter("taskClassName", taskClass.getName()).stream();
 	}
 
 	public Stream<? extends Job> getRecentlyCompletedJobs(boolean topLevel) {
