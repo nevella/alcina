@@ -140,13 +140,13 @@ public class DomainTransformPersistenceQueue {
 			onRequestDataReceived(DomainTransformRequestPersistent request) {
 		onPersistedRequestPreCommitted(request);
 		long requestId = request.getId();
-		logger.info("Pre-commit: {}", requestId);
+		logger.debug("Pre-commit: {}", requestId);
 		if (loadedRequests.containsKey(requestId)) {
 			// local request coming in from clustertransformlistener - ignore
 			logger.debug("Did not cache already loaded request: {}", requestId);
 			return;
 		}
-		logger.info("Cached request: {}", requestId);
+		logger.debug("Cached request: {}", requestId);
 		loadedRequests.put(requestId, request);
 		/*
 		 * Notify the possibly waiting event thread
@@ -478,7 +478,7 @@ public class DomainTransformPersistenceQueue {
 			 * REVISIT - null if of type ERROR?
 			 */
 			Long requestId = event.requestId;
-			fireEventThreadLogger.info("publishTransformEvent - dtr {}",
+			fireEventThreadLogger.debug("publishTransformEvent - dtr {}",
 					requestId);
 			DomainTransformRequestPersistent request = loadRequest(event);
 			if (request == null) {
