@@ -312,6 +312,15 @@ public class PermissionsManager implements DomainTransformListener {
 
 	protected Stack<PermissionsState> stateStack = new Stack<>();
 
+	// This should never be necessary, if the code always surrounds user
+	// push/pop in try/finally...but...
+	public void reset() {
+		stateStack.clear();
+		setRoot(false);
+		setUser(null);
+		setLoginState(LoginState.NOT_LOGGED_IN);
+	}
+
 	private Long authenticatedClientInstanceId;
 
 	private boolean allPermissible = false;
@@ -638,11 +647,6 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public IUser popUser() {
 		stackDebug.maybeDebugStack(stateStack, false);
-		if (stateStack.size() == 0) {
-			setLoginState(LoginState.NOT_LOGGED_IN);
-			setRoot(false);
-			return null;
-		}
 		IUser currentUser = getUser();
 		PermissionsState state = stateStack.pop();
 		setLoginState(state.loginState);
@@ -667,11 +671,9 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public void pushUser(IUser user, LoginState loginState, boolean asRoot) {
 		stackDebug.maybeDebugStack(stateStack, true);
-		if (getUser() != null) {
-			PermissionsState state = new PermissionsState(getUser(),
-					getLoginState(), isRoot());
-			stateStack.push(state);
-		}
+		PermissionsState state = new PermissionsState(getUser(),
+				getLoginState(), isRoot());
+		stateStack.push(state);
 		setLoginState(loginState);
 		setUser(user);
 		setRoot(asRoot);

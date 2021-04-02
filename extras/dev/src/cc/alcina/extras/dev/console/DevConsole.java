@@ -78,6 +78,8 @@ import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -975,6 +977,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			DevConsoleCommand c, boolean topLevel) {
 		try {
 			LooseContext.push();
+			PermissionsManager.get().pushUser(DevHelper.getDefaultUser(),
+					LoginState.LOGGED_IN);
 			runningJobs.add(c);
 			history.addCommand(lastCommand);
 			if (!c.silent()) {
@@ -1008,6 +1012,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			}
 		} finally {
 			runningLastCommand = false;
+			PermissionsManager.get().popUser();
 			LooseContext.pop();
 			runningJobs.remove(c);
 		}

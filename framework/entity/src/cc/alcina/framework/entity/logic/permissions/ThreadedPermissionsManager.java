@@ -131,13 +131,6 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		}
 	}
 
-	// This should never be necessary, if the code always surrounds user
-	// push/pop in try/finally...but...
-	public void reset() {
-		stateStack.clear();
-		setRoot(false);
-	}
-
 	public void
 			runThrowingWithPushedSystemUserIfNeeded(ThrowingRunnable runnable) {
 		try {

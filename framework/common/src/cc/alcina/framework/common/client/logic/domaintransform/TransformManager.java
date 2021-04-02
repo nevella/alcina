@@ -1128,31 +1128,23 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Object templateInstance = classLookup.getTemplateInstance(clazz);
 		PropertyAccessor accessor = propertyAccessor();
 		Map<String, Object> defaultValues = new HashMap();
-		Set<Class> implementsEntity = new HashSet<Class>();
+		Map<Class<? extends Entity>, Class<? extends Entity>> entityImplementations = new LinkedHashMap<>();
 		for (Iterator<PropertyInfo> itr = pds.iterator(); itr.hasNext();) {
 			PropertyInfo info = itr.next();
 			String propertyName = info.getPropertyName();
-			if (ignorePropertyForCaching(clazz, info.getPropertyType(),
-					propertyName)) {
+			Class propertyType = info.getPropertyType();
+			if (ignorePropertyForCaching(clazz, propertyType, propertyName)) {
 				itr.remove();
 			} else {
 				Object defaultValue = accessor
 						.getPropertyValue(templateInstance, propertyName);
 				defaultValues.put(propertyName, defaultValue);
-				try {
-					if (info.getPropertyType() == Set.class
-							|| info.getPropertyType() == List.class
-							|| CommonUtils.isStandardJavaClassOrEnum(
-									info.getPropertyType())) {
-						continue;
-					}
-					Object template = classLookup
-							.getTemplateInstance(info.getPropertyType());
-					if (template instanceof Entity) {
-						implementsEntity.add(info.getPropertyType());
-					}
-				} catch (Exception e) {
-					// probably primitive - ignore
+				if (CommonUtils.hasSuperClass(propertyType, Entity.class)) {
+					Class implementation = PersistentImpl
+							.getImplementation(propertyType);
+					entityImplementations.put(propertyType,
+							implementation != null ? implementation
+									: propertyType);
 				}
 			}
 		}
@@ -1225,12 +1217,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 					}
 					dte.setNewValue(value);
 					dte.setPropertyName(propertyName);
-					if (!implementsEntity.contains(propertyType)) {
-						convertToTargetObject(dte);
-						dte.setTransformType(
-								TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
-					} else {
-						dte.setValueClass(propertyType);
+					if (entityImplementations.containsKey(propertyType)) {
+						dte.setValueClass(
+								entityImplementations.get(propertyType));
 						long valueId = asObjectSpec ? (Long) value
 								: ((Entity) value).getId();
 						long valueLocalId = valueId == 0L
@@ -1239,6 +1228,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 						dte.setValueId(valueId);
 						dte.setValueLocalId(valueLocalId);
 						dte.setTransformType(TransformType.CHANGE_PROPERTY_REF);
+					} else {
+						convertToTargetObject(dte);
+						dte.setTransformType(
+								TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 					}
 					dtes.add(dte);
 				}

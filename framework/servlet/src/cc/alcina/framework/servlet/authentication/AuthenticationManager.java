@@ -130,7 +130,6 @@ public class AuthenticationManager {
 		}
 		// all auth objects persisted as root
 		Transaction.commit();
-		int debug = 3;
 	}
 
 	private void createClientInstance(AuthenticationContext context) {
