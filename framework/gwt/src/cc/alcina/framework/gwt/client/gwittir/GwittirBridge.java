@@ -299,7 +299,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
 		Class<? extends Object> c = obj.getClass();
-		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
 		Bean beanInfo = bi.getAnnotation(Bean.class);
 		for (ClientPropertyReflector pr : prs) {
 			String pn = pr.getPropertyName();
@@ -454,7 +453,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, obj, true)
 					&& display != null
-					&& PermissionsManager.get().isPermissible(obj,
+					&& PermissionsManager.get().isPermitted(obj,
 							display.visible())
 					&& ((display.displayMask()
 							& Display.DISPLAY_AS_PROPERTY) != 0);
@@ -810,7 +809,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, obj, true)
 					&& displayInfo != null
-					&& PermissionsManager.get().isPermissible(obj,
+					&& PermissionsManager.get().isPermitted(obj,
 							displayInfo.visible())
 					&& ((displayInfo.displayMask()
 							& Display.DISPLAY_AS_PROPERTY) != 0);

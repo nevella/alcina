@@ -358,7 +358,7 @@ public class PermissionsManager implements DomainTransformListener {
 			PropertyPermissions pp, Object bean, boolean read) {
 		op = op == null ? PermissionsManager.get().getDefaultObjectPermissions()
 				: op;
-		if (pp == null && !PermissionsManager.get().isPermissible(bean,
+		if (pp == null && !PermissionsManager.get().isPermitted(bean,
 				read ? op.read() : op.write())) {
 			return false;
 		}
@@ -368,7 +368,7 @@ public class PermissionsManager implements DomainTransformListener {
 			return true;
 		}
 		pp = pp == null ? getDefaultPropertyPermissions() : pp;
-		return isPermissible(bean, read ? pp.read() : pp.write());
+		return isPermitted(bean, read ? pp.read() : pp.write());
 	}
 
 	public boolean checkReadable(Class clazz, String propertyName,
@@ -544,7 +544,7 @@ public class PermissionsManager implements DomainTransformListener {
 		return this.overrideAsOwnedObject;
 	}
 
-	public boolean isPermissible(Object o, Object assigningTo, Permissible p,
+	public boolean isPermitted(Object o, Object assigningTo, Permissible p,
 			boolean doNotEvaluateNullObjectPermissions) {
 		if (allPermissible) {
 			return true;
@@ -598,25 +598,25 @@ public class PermissionsManager implements DomainTransformListener {
 		return permitted;
 	}
 
-	public boolean isPermissible(Object o, Permissible p) {
-		return isPermissible(o, p, false);
+	public boolean isPermitted(Object o, Permissible p) {
+		return isPermitted(o, p, false);
 	}
 
-	public boolean isPermissible(Object o, Permissible p,
+	public boolean isPermitted(Object o, Permissible p,
 			boolean doNotEvaluateNullObjectPermissions) {
-		return isPermissible(o, null, p, doNotEvaluateNullObjectPermissions);
+		return isPermitted(o, null, p, doNotEvaluateNullObjectPermissions);
 	}
 
-	public boolean isPermissible(Object o, Permission p) {
-		return isPermissible(o, new AnnotatedPermissible(p));
+	public boolean isPermitted(Object o, Permission p) {
+		return isPermitted(o, new AnnotatedPermissible(p));
 	}
 
-	public boolean isPermissible(Permissible p) {
-		return isPermissible(null, p);
+	public boolean isPermitted(Permissible p) {
+		return isPermitted(null, p);
 	}
 
-	public boolean isPermissible(Permission create) {
-		return isPermissible(new AnnotatedPermissible(create));
+	public boolean isPermitted(Permission create) {
+		return isPermitted(new AnnotatedPermissible(create));
 	}
 
 	public boolean isRoot() {
@@ -943,5 +943,15 @@ public class PermissionsManager implements DomainTransformListener {
 			return PermissionsManager.get().checkEffectivePropertyPermission(op,
 					null, object, true);
 		}
+	}
+
+	public boolean isPermittedClass(Object object,
+			Permission defaultPermission) {
+		if (object instanceof Permissible) {
+			return isPermitted((Permissible) object);
+		}
+		Permission permission = Reflections.classLookup()
+				.getAnnotationForClass(object.getClass(), Permission.class);
+		return isPermitted(permission != null ? permission : defaultPermission);
 	}
 }

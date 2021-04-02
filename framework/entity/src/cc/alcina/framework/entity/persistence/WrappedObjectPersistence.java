@@ -172,10 +172,8 @@ public class WrappedObjectPersistence {
 					return;
 				}
 			}
-			if (PermissionsManager.get()
-					.isPermissible(PermissionsManager.ADMIN_PERMISSIBLE)) {
-				if (!PermissionsManager.get()
-						.isPermissible(PermissionsManager.ROOT_PERMISSIBLE)) {
+			if (PermissionsManager.get().isPermitted(PermissionsManager.ADMIN_PERMISSIBLE)) {
+				if (!PermissionsManager.get().isPermitted(PermissionsManager.ROOT_PERMISSIBLE)) {
 					System.err.println(Ax.format(
 							"Warn - allowing access to %s : %s only via admin override",
 							wrapper == null ? "(null wrapper)"

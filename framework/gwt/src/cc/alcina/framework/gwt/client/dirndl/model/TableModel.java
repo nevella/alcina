@@ -14,10 +14,13 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.DisplaySearchOrder;
 import cc.alcina.framework.common.client.domain.search.SearchOrder;
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
+import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
+import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -209,6 +212,7 @@ public class TableModel extends Model {
 			node.pushResolver(ModalResolver.multiple(true));
 			List<CategoryNamePlace> places = activity.getPlace()
 					.getNamedPlaces();
+			places.removeIf(p -> !isPermitted(p));
 			Class<? extends Bindable> resultClass = CategoryNamePlaceTableAdapter.class;
 			GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
@@ -223,6 +227,11 @@ public class TableModel extends Model {
 			return model;
 		}
 
+		protected boolean isPermitted(CategoryNamePlace place) {
+			return true;
+		}
+
+		@ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE))
 		public static class CategoryNamePlaceTableAdapter extends Model
 				implements HasDisplayName {
 			private CategoryNamePlace place;

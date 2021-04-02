@@ -266,8 +266,7 @@ public class Toolbar extends Composite
 					actions.add(action);
 					if (isHideUnpermittedActions()
 							&& action instanceof Permissible
-							&& !PermissionsManager.get()
-									.isPermissible((Permissible) action)) {
+							&& !PermissionsManager.get().isPermitted((Permissible) action)) {
 						button.setVisible(false);
 					}
 				}
@@ -283,8 +282,7 @@ public class Toolbar extends Composite
 				actionButtons.put(action.getClass(), button);
 				actionButtonsByAction.put(action, button);
 				if (isHideUnpermittedActions() && action instanceof Permissible
-						&& !PermissionsManager.get()
-								.isPermissible((Permissible) action)) {
+						&& !PermissionsManager.get().isPermitted((Permissible) action)) {
 					button.setVisible(false);
 				}
 			}

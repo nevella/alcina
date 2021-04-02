@@ -114,7 +114,7 @@ public abstract class HibernateEJBSearcherBase {
 		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
 		Set<OrderGroup> orderGroups = def.getOrderGroups();
 		for (CriteriaGroup cg : criteriaGroups) {
-			if (!PermissionsManager.get().isPermissible(cg)) {
+			if (!PermissionsManager.get().isPermitted(cg)) {
 				continue;
 			}
 			if (!cg.provideIsEmpty() && getEntityClass(cg) != null) {
@@ -131,7 +131,7 @@ public abstract class HibernateEJBSearcherBase {
 	protected void processHandlers(SearchDefinition def) {
 		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
 		for (CriteriaGroup cg : criteriaGroups) {
-			if (!PermissionsManager.get().isPermissible(cg)) {
+			if (!PermissionsManager.get().isPermitted(cg)) {
 				continue;
 			}
 			if (!cg.provideIsEmpty()) {

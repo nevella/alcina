@@ -203,8 +203,7 @@ public class MainTabPanel extends TabPanel {
 						.visibleForLoginState(state);
 			}
 			if (button instanceof Permissible) {
-				curVis &= PermissionsManager.get()
-						.isPermissible((Permissible) button);
+				curVis &= PermissionsManager.get().isPermitted((Permissible) button);
 			}
 			bp.getWidget(index++).setVisible(curVis);
 			if (index > 1) {

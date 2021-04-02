@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
 public abstract class CategoryNamePlace<CNP extends CategoryNamePlace>
@@ -22,6 +23,10 @@ public abstract class CategoryNamePlace<CNP extends CategoryNamePlace>
 	}
 
 	public String nodeName;
+
+	public String provideCategoryString() {
+		return CommonUtils.pluralise(super.toTitleString(), 0, false);
+	}
 
 	protected transient PermissibleAction action;
 
@@ -44,16 +49,16 @@ public abstract class CategoryNamePlace<CNP extends CategoryNamePlace>
 	@Override
 	public String toTitleString() {
 		if (nodeName == null) {
-			return super.toTitleString();
+			return provideCategoryString();
 		} else {
-			return Ax.format("%s - %s", super.toTitleString(), nodeName);
+			return Ax.format("%s - %s", provideCategoryString(), nodeName);
 		}
 	}
 
 	@Override
 	public String toNameString() {
 		if (nodeName == null) {
-			return super.toTitleString();
+			return toTitleString();
 		} else {
 			return displayName();
 		}

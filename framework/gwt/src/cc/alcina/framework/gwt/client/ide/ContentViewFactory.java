@@ -1368,7 +1368,7 @@ public class ContentViewFactory {
 								right.object.getClass(), Display.class,
 								right.property.getName());
 						if (displayInfo != null) {
-							if (!PermissionsManager.get().isPermissible(
+							if (!PermissionsManager.get().isPermitted(
 									right.object, displayInfo.visible())) {
 								grid.setRowVisibility(r, false);
 							}
@@ -1378,8 +1378,7 @@ public class ContentViewFactory {
 								PropertyPermissions.class,
 								right.property.getName());
 						if (pp != null) {
-							if (!PermissionsManager.get()
-									.isPermissible(right.object, pp.write())) {
+							if (!PermissionsManager.get().isPermitted(right.object, pp.write())) {
 								SourcesPropertyChangeEvents left = b
 										.getLeft().object;
 								if (left instanceof HasEnabled

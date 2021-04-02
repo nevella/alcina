@@ -446,7 +446,7 @@ public class WorkspaceView extends Composite implements HasName,
 				}
 			}
 			if (item instanceof ActionDisplayNode) {
-				if (PermissionsManager.get().isPermissible(
+				if (PermissionsManager.get().isPermitted(
 						(PermissibleAction) item.getUserObject())) {
 					actions.add(ViewAction.class);
 				}
@@ -477,7 +477,7 @@ public class WorkspaceView extends Composite implements HasName,
 							p = op.delete();
 						}
 						if (p != null) {
-							if (!PermissionsManager.get().isPermissible(obj,
+							if (!PermissionsManager.get().isPermitted(obj,
 									new AnnotatedPermissible(p))) {
 								itr.remove();
 							}

@@ -1043,14 +1043,14 @@ public class ThreadlocalTransformManager extends TransformManager
 				return checkPropertyWriteAccessAndThrow(entity, propertyName,
 						evt);
 			case CREATE_OBJECT:
-				if (!PermissionsManager.get().isPermissible(entity,
+				if (!PermissionsManager.get().isPermitted(entity,
 						op.create())) {
 					throw new DomainTransformException(new PermissionsException(
 							"Permission denied : create - object " + evt));
 				}
 				break;
 			case DELETE_OBJECT:
-				if (!PermissionsManager.get().isPermissible(entity,
+				if (!PermissionsManager.get().isPermitted(entity,
 						op.delete())) {
 					throw new DomainTransformException(new PermissionsException(
 							"Permission denied : delete - object " + evt));
@@ -1102,11 +1102,11 @@ public class ThreadlocalTransformManager extends TransformManager
 		if (assigning == null) {
 			return;
 		}
-		if (!PermissionsManager.get().isPermissible(assigning, oph.read())) {
+		if (!PermissionsManager.get().isPermitted(assigning, oph.read())) {
 			throw new DomainTransformException(new PermissionsException(
 					"Permission denied : read - target object " + evt));
 		}
-		if (aph != null && !PermissionsManager.get().isPermissible(assigning,
+		if (aph != null && !PermissionsManager.get().isPermitted(assigning,
 				assigningTo, new AnnotatedPermissible(aph.value()), false)) {
 			throw new DomainTransformException(new PermissionsException(
 					"Permission denied : assign - target object " + evt));
