@@ -25,6 +25,8 @@ public class DomainTransformPersistenceEvent {
 
 	private DomainTransformCommitPosition position;
 
+	public long firingStartTime;
+
 	public DomainTransformPersistenceEvent(
 			TransformPersistenceToken transformPersistenceToken,
 			DomainTransformLayerWrapper domainTransformLayerWrapper,

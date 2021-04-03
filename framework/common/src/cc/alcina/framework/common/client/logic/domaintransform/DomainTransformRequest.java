@@ -288,8 +288,8 @@ public class DomainTransformRequest implements Serializable {
 	}
 
 	public String shortId() {
-		return Ax.format("Dtr: cli-id: %s - rq-id: %s",
-				EntityHelper.getIdOrNull(clientInstance), requestId);
+		return Ax.format("%s/%s", EntityHelper.getIdOrNull(clientInstance),
+				requestId);
 	}
 
 	@Override

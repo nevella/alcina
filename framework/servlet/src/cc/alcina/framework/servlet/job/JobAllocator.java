@@ -196,7 +196,7 @@ class JobAllocator {
 				firstEvent = false;
 				Thread.currentThread().setName(
 						Ax.format("job-allocator::%s", queue.toDisplayName()));
-				logger.info("Allocation thread started -  job {}",
+				logger.debug("Allocation thread started -  job {}",
 						job.toDisplayName());
 			}
 			boolean deleted = false;
@@ -209,7 +209,7 @@ class JobAllocator {
 						Thread.sleep(1000);
 						DomainStore.waitUntilCurrentRequestsProcessed();
 						if (job.domain().domainVersion() != null) {
-							logger.info(
+							logger.debug(
 									"DEVEX-12 ::  event with incomplete domain tx -  job {}",
 									job.toDisplayName());
 						} else {
@@ -235,9 +235,9 @@ class JobAllocator {
 					 * sneaky deletion - FIXME - mvcc.jobs.2
 					 */
 					|| deleted) {
-				logger.info("Allocation thread ended -  job {}",
+				logger.debug("Allocation thread ended -  job {}",
 						job.toDisplayName());
-				logger.info(
+				logger.debug(
 						"Allocation thread debug -  job {} - phase {} - state {} - selfPerformer {} - sequential {} - deleted {}",
 						job.getId(), queue.currentPhase, job.getState(),
 						job.getPerformer() == ClientInstance.self(),
@@ -257,7 +257,7 @@ class JobAllocator {
 			}
 			if (event.type == EventType.WAKEUP) {
 			} else {
-				logger.info("Allocation thread - job {} - event {}",
+				logger.debug("Allocation thread - job {} - event {}",
 						job.toDisplayName(), event);
 			}
 			if (isPhaseComplete(event)) {
@@ -267,7 +267,7 @@ class JobAllocator {
 					 * sequence
 					 */
 					if (queue.job.provideNextInSequence().isPresent()) {
-						logger.info(
+						logger.debug(
 								"Releasing child completion latch -  job {}",
 								job.toDisplayName());
 						childCompletionLatch.countDown();
@@ -275,7 +275,7 @@ class JobAllocator {
 				}
 				SubqueuePhase priorPhase = queue.currentPhase;
 				queue.incrementPhase();
-				logger.info("Changed phase :: {} :: {} -> {}",
+				logger.debug("Changed phase :: {} :: {} -> {}",
 						job.toDisplayName(), priorPhase, queue.currentPhase);
 				// resubmit until event does not cause phase change
 				// (or complete)
@@ -322,7 +322,7 @@ class JobAllocator {
 								} else {
 									j.setState(JobState.ALLOCATED);
 									j.setPerformer(ClientInstance.self());
-									logger.info("Allocated job {}", j);
+									logger.debug("Allocated job {}", j);
 									lastAllocated = System.currentTimeMillis();
 								}
 							});
@@ -331,7 +331,7 @@ class JobAllocator {
 							 * (for later retry)
 							 */
 							Transaction.commit();
-							allocating.forEach(j -> logger.info(
+							allocating.forEach(j -> logger.debug(
 									"Sending to executor service - {} - {}",
 									j.getId(), j));
 							allocating.stream()
@@ -346,7 +346,7 @@ class JobAllocator {
 													existingContext.launcherThreadState);
 										} else {
 											LauncherThreadState launcherThreadState = new LauncherThreadState();
-											logger.info(
+											logger.debug(
 													"Sending to executor service (2) - {} - {}",
 													j.getId(), j);
 											executorService

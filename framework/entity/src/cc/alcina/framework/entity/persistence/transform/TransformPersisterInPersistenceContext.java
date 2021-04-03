@@ -208,7 +208,7 @@ public class TransformPersisterInPersistenceContext {
 					if (highestPersistedRequestId != null && dtr
 							.getRequestId() <= highestPersistedRequestId) {
 						Ax.out("transformpersister - removing already processed "
-								+ "request :: clid: %s; rqid: %s",
+								+ "request :: %s/%s",
 								request.getClientInstance().getId(),
 								transformRequests.get(i).getRequestId());
 						transformRequests.remove(i);
@@ -216,17 +216,14 @@ public class TransformPersisterInPersistenceContext {
 				}
 			}
 			if (token.getPass() == Pass.TRY_COMMIT) {
-				EntityLayerObjects.get().getMetricLogger().info(String.format(
-						"domain transform - %s - clid:"
-								+ "%s - rqid:%s - prev-per-cli-id:%s",
+				EntityLayerObjects.get().getMetricLogger().debug(String.format(
+						"domain transform - %s - %s/%s",
 						persistentClientInstance.provideUser().getUserName(),
 						request.getClientInstance().getId(),
 						transformRequests.stream()
 								.map(DomainTransformRequest::getRequestId)
 								.map(String::valueOf)
-								.collect(Collectors.joining(",")),
-						(highestPersistedRequestId == null ? "(servlet layer)"
-								: highestPersistedRequestId)));
+								.collect(Collectors.joining(","))));
 			}
 			int transformCount = 0;
 			boolean replaying = LooseContext

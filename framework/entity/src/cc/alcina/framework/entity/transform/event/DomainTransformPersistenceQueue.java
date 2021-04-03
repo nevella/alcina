@@ -288,7 +288,8 @@ public class DomainTransformPersistenceQueue {
 			return;
 		}
 		Logger logger = getLogger(event.isLocalToVm());
-		logger.info("firing - {} - {} - {} events - range {}",
+		event.firingStartTime = System.currentTimeMillis();
+		logger.debug("firing - {} - {} - {} events - range {}",
 				Ax.friendly(event.getPersistenceEventType()),
 				event.getTransformPersistenceToken().getRequest().shortId(),
 				event.getTransformPersistenceToken().getRequest().getEvents()
@@ -302,12 +303,13 @@ public class DomainTransformPersistenceQueue {
 		if (persistedRequestIds.isEmpty()) {
 			return;
 		}
-		getLogger(event.isLocalToVm()).info("fired - {} - {} events - range {}",
+		getLogger(event.isLocalToVm()).info(
+				"fired: {} - {} - {} events - {} ms ",
+				Ax.friendly(event.getPersistenceEventType()),
 				event.getTransformPersistenceToken().getRequest().shortId(),
 				event.getTransformPersistenceToken().getRequest().getEvents()
 						.size(),
-				new LongPair(CollectionFilters.min(persistedRequestIds),
-						CollectionFilters.max(persistedRequestIds)));
+				System.currentTimeMillis() - event.firingStartTime);
 	}
 
 	void onEventQueueEmpty() {
