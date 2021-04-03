@@ -127,6 +127,10 @@ public class FlatTreeSerializer {
 		return deserialize(null, value);
 	}
 
+	public static <R extends TreeSerializable> R serialClone(R object) {
+		return deserialize(serialize(object));
+	}
+
 	public static String serialize(TreeSerializable object) {
 		return serialize(object, new SerializerOptions()
 				.withTopLevelTypeInfo(true).withShortPaths(true));
