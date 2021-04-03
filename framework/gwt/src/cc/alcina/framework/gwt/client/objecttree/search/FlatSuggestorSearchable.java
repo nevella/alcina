@@ -25,7 +25,6 @@ public class FlatSuggestorSearchable<TC extends TruncatedObjectCriterion>
 
 	@Override
 	public AbstractBoundWidget createEditor() {
-		
 		throw new UnsupportedOperationException();
 	}
 
@@ -38,6 +37,7 @@ public class FlatSuggestorSearchable<TC extends TruncatedObjectCriterion>
 				.clazz(newInstance.getObjectClass()).hint(getHint()));
 		boundSuggestBox
 				.setRenderer(new TruncatedObjectHelperRenderer(criterion));
+		boundSuggestBox.setShowOnFocus(true);
 		return boundSuggestBox;
 	}
 

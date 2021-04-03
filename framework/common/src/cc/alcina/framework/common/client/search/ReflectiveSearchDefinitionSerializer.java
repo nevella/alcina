@@ -211,8 +211,11 @@ public class ReflectiveSearchDefinitionSerializer
 								.withShortPaths(true).withSingleLine(true)
 								.withTestSerialized(true));
 			} catch (Exception e) {
-				e.printStackTrace();
-				flatTreeException = e;
+				if (!LooseContext
+						.is(FlatTreeSerializer.CONTEXT_SUPPRESS_EXCEPTIONS)) {
+					e.printStackTrace();
+					flatTreeException = e;
+				}
 			}
 		}
 		ensureLookups();

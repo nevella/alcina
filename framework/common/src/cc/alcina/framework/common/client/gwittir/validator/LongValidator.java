@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.common.client.gwittir.validator;
 
-import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
@@ -30,6 +29,7 @@ public class LongValidator implements Validator {
 	public LongValidator() {
 	}
 
+	@Override
 	public Object validate(Object value) throws ValidationException {
 		if (value == null || value instanceof Long) {
 			return value;
@@ -38,7 +38,6 @@ public class LongValidator implements Validator {
 		try {
 			l = Long.valueOf(value.toString());
 		} catch (NumberFormatException nfe) {
-			GWT.log(null, nfe);
 			throw new ValidationException("Must be an integer value.",
 					LongValidator.class);
 		}

@@ -80,6 +80,9 @@ import cc.alcina.framework.gwt.client.util.TextUtils;
 public class FlatTreeSerializer {
 	private static final String CLASS = "#class";
 
+	public static final String CONTEXT_SUPPRESS_EXCEPTIONS = FlatTreeSerializer.class
+			.getName() + ".CONTEXT_SUPPRESS_EXCEPTIONS";
+
 	private static String NULL_MARKER = "__fts_NULL__";
 
 	private static Map<Class, List<Property>> serializationProperties = Registry

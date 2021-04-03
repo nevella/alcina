@@ -25,7 +25,7 @@ public abstract class PermissionRule<E extends Entity> {
 			ObjectPermissions objectPermissions = Reflections.classLookup()
 					.getAnnotationForClass(e.getClass(),
 							ObjectPermissions.class);
-			throwIfFalse(PermissionsManager.get().isPermissible(e,
+			throwIfFalse(PermissionsManager.get().isPermitted(e,
 					objectPermissions.create()));
 			return e;
 		}
@@ -38,7 +38,7 @@ public abstract class PermissionRule<E extends Entity> {
 			ObjectPermissions objectPermissions = Reflections.classLookup()
 					.getAnnotationForClass(e.getClass(),
 							ObjectPermissions.class);
-			throwIfFalse(PermissionsManager.get().isPermissible(e,
+			throwIfFalse(PermissionsManager.get().isPermitted(e,
 					objectPermissions.delete()));
 			return e;
 		}
@@ -70,7 +70,7 @@ public abstract class PermissionRule<E extends Entity> {
 			ObjectPermissions objectPermissions = Reflections.classLookup()
 					.getAnnotationForClass(e.getClass(),
 							ObjectPermissions.class);
-			throwIfFalse(PermissionsManager.get().isPermissible(e,
+			throwIfFalse(PermissionsManager.get().isPermitted(e,
 					objectPermissions.read()));
 			return e;
 		}
@@ -83,7 +83,7 @@ public abstract class PermissionRule<E extends Entity> {
 			ObjectPermissions objectPermissions = Reflections.classLookup()
 					.getAnnotationForClass(e.getClass(),
 							ObjectPermissions.class);
-			throwIfFalse(PermissionsManager.get().isPermissible(e,
+			throwIfFalse(PermissionsManager.get().isPermitted(e,
 					objectPermissions.write()));
 			return e;
 		}

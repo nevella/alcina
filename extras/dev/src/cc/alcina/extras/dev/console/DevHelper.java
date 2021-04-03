@@ -296,6 +296,7 @@ public abstract class DevHelper {
 		AlcinaTopics.notifyDevWarningListenerDelta(devWarningListener, true);
 		Registry.registerSingleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());
+		PermissionsManager.register(new ThreadedPermissionsManager());
 		try {
 			Method m = GWT.class.getDeclaredMethod("setBridge",
 					GWTBridge.class);
@@ -488,11 +489,6 @@ public abstract class DevHelper {
 
 	protected abstract void initCustomServicesFirstHalf();
 
-	protected void initPermissionsManager() {
-		IUser user = PermissionsManager.get().getUser();
-		PermissionsManager.register(new ThreadedPermissionsManagerDevConsole());
-	}
-
 	protected abstract void registerNames(AlcinaWebappConfig config);
 
 	public static class ConsolePrompter implements StringPrompter {
@@ -631,22 +627,5 @@ public abstract class DevHelper {
 
 	public interface StringPrompter {
 		String getValue(String prompt);
-	}
-
-	public class ThreadedPermissionsManagerDevConsole
-			extends ThreadedPermissionsManager {
-		private ThreadedPermissionsManagerDevConsole() {
-		}
-
-		@Override
-		public PermissionsManager getT() {
-			// always start with whatever our default user is
-			PermissionsManager instance = super.getT();
-			if (DevHelper.defaultUser != null && instance.getUser() == null) {
-				instance.setUser(DevHelper.defaultUser);
-				instance.setLoginState(LoginState.LOGGED_IN);
-			}
-			return instance;
-		}
 	}
 }

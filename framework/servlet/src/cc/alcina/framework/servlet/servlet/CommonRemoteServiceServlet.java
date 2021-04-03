@@ -456,7 +456,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					WebMethod webMethod = method.getAnnotation(WebMethod.class);
 					AnnotatedPermissible ap = new AnnotatedPermissible(
 							webMethod.customPermission());
-					if (!PermissionsManager.get().isPermissible(ap)) {
+					if (!PermissionsManager.get().isPermitted(ap)) {
 						WebException wex = new WebException(
 								"Action not permitted: " + name);
 						logRpcException(wex,

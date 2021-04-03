@@ -67,8 +67,7 @@ public class ClientBeanReflector {
 						|| actionClass == EditAction.class
 						|| actionClass == ViewAction.class
 						|| actionClass == DeleteAction.class;
-				if (noPermissionsCheck || PermissionsManager.get()
-						.isPermissible(userObject, new AnnotatedPermissible(
+				if (noPermissionsCheck || PermissionsManager.get().isPermitted(userObject, new AnnotatedPermissible(
 								action.permission()))) {
 					result.add(actionClass);
 				}

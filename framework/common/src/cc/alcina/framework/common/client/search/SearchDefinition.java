@@ -187,7 +187,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 		int ct = 0;
 		int paramCounter = 1;
 		for (CriteriaGroup cg : getCriteriaGroups()) {
-			if (!PermissionsManager.get().isPermissible(cg)) {
+			if (!PermissionsManager.get().isPermitted(cg)) {
 				continue;
 			}
 			EqlWithParameters ewp2 = cg.eql();

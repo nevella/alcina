@@ -240,7 +240,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 
 	@Override
 	public String validatePermissions() {
-		if (!PermissionsManager.get().isPermissible(this)) {
+		if (!PermissionsManager.get().isPermitted(this)) {
 			// won't be used in search anyway
 			return null;
 		}

@@ -97,7 +97,7 @@ public class NodeFactory {
 						&& PermissionsManager.get()
 								.checkEffectivePropertyPermission(op, pp,
 										domainObject, true)
-						&& PermissionsManager.get().isPermissible(domainObject,
+						&& PermissionsManager.get().isPermitted(domainObject,
 								displayInfo.visible());
 				if (fieldVisible) {
 					subCollectionFolders.add(c, pr);

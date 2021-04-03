@@ -40,6 +40,11 @@ public class PersistentObjectCriterion extends SearchCriterion {
 		this.classRef = classRef;
 	}
 
+	public PersistentObjectCriterion withValue(ClassRef value) {
+		setClassRef(value);
+		return this;
+	}
+
 	@Override
 	public String toString() {
 		return classRef == null ? ""
