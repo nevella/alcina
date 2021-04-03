@@ -2002,4 +2002,11 @@ public class CommonUtils {
 	public static interface YearResolver {
 		int getYear(Date d);
 	}
+
+	public static boolean containsIgnoreCase(String string, String contains) {
+		if (string == null || contains == null) {
+			return false;
+		}
+		return string.toLowerCase().contains(contains.toLowerCase());
+	}
 }

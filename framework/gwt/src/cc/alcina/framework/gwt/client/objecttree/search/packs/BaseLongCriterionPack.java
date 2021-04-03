@@ -42,7 +42,7 @@ public class BaseLongCriterionPack {
 	public static abstract class SubLongCriterionSearchable<T extends LongCriterion>
 			extends FlatSearchable<T> {
 		public SubLongCriterionSearchable(Class<T> clazz, String objectName) {
-			super(clazz, objectName, "Long",
+			super(clazz, "", objectName,
 					Arrays.asList(StandardSearchOperator.CONTAINS,
 							StandardSearchOperator.DOES_NOT_CONTAIN));
 		}
