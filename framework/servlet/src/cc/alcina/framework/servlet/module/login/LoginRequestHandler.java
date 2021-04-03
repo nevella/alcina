@@ -1,5 +1,8 @@
 package cc.alcina.framework.servlet.module.login;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.LoginResponseState;
@@ -98,10 +101,19 @@ public abstract class LoginRequestHandler<U extends IUser> {
 	 * states to meet security requirements
 	 */
 	protected void postRequestHandled() {
-		if (ResourceUtilities.is(LoginRequestHandler.class, "recordLoginAttempts")) {
+		if (ResourceUtilities.is(LoginRequestHandler.class,
+				"recordLoginAttempts")) {
 			new LoginAttempts().handleLoginResult(loginModel);
 		}
+		if (loginResponse.isOk()) {
+			logger.info("Logged in: {}", loginRequest.getUserName());
+		} else {
+			logger.warn("Login failed: {} {}", loginRequest.getUserName(),
+					loginResponse.getStates());
+		}
 	}
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	protected void processLogin() throws Exception {
 		authenticator.processValidLogin(loginResponse,
