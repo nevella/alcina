@@ -35,32 +35,41 @@ import javax.servlet.http.HttpServletResponse;
 public class ResponseHeaderFilter implements Filter {
 	public static final String URL_REGEX = "Url-Regex";
 
+	public static final String CROSS_ORIGIN_IF_GWT = "Cross-Origin-If-GWT";
+
 	FilterConfig fc;
 
 	private Pattern filterRegex;
 
 	private Map<String, String> headerKvs;
 
+	private boolean crossOriginIfGwt;
+
+	@Override
 	public void destroy() {
 		this.fc = null;
 	}
 
+	@Override
 	public void doFilter(ServletRequest req, ServletResponse res,
 			FilterChain chain) throws IOException, ServletException {
 		HttpServletResponse response = (HttpServletResponse) res;
 		HttpServletRequest request = (HttpServletRequest) req;
-		boolean addHeaders = filterRegex == null;
-		if (!addHeaders) {
-			addHeaders = filterRegex.matcher(request.getRequestURI()).matches();
-		}
+		boolean addHeaders = filterRegex == null
+				|| filterRegex.matcher(request.getRequestURI()).matches();
 		if (addHeaders) {
 			for (String k : headerKvs.keySet()) {
 				response.addHeader(k, headerKvs.get(k));
 			}
 		}
+		if (crossOriginIfGwt && request.getParameter("gwt.codesvr") != null) {
+			response.addHeader("Cross-Origin-Embedder-Policy", "require-corp");
+			response.addHeader("Cross-Origin-Opener-Policy", "same-origin");
+		}
 		chain.doFilter(req, response);
 	}
 
+	@Override
 	public void init(FilterConfig filterConfig) {
 		this.fc = filterConfig;
 		filterRegex = null;
@@ -68,10 +77,16 @@ public class ResponseHeaderFilter implements Filter {
 		for (Enumeration e = fc.getInitParameterNames(); e.hasMoreElements();) {
 			String k = (String) e.nextElement();
 			String v = fc.getInitParameter(k);
-			if (URL_REGEX.equals(k)) {
+			switch (k) {
+			case URL_REGEX:
 				filterRegex = Pattern.compile(v);
-			} else {
+				break;
+			case CROSS_ORIGIN_IF_GWT:
+				crossOriginIfGwt = Boolean.valueOf(v);
+				break;
+			default:
 				headerKvs.put(k, v);
+				break;
 			}
 		}
 	}
