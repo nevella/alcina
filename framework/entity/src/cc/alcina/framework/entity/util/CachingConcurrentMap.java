@@ -9,6 +9,10 @@ public class CachingConcurrentMap<I, O> extends CachingMap<I, O> {
 	public CachingConcurrentMap() {
 	}
 
+	public CachingConcurrentMap(ThrowingFunction<I, O> converter) {
+		this(converter, 20);
+	}
+
 	public CachingConcurrentMap(ThrowingFunction<I, O> converter, int size) {
 		super(converter, new ConcurrentHashMap<I, O>(size));
 	}

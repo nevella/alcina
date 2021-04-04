@@ -101,6 +101,8 @@ public class ResourceUtilities {
 
 	private static ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
 
+	private static Method getCallerClassMethod;
+
 	public static void appShutdown() {
 	}
 
@@ -300,9 +302,8 @@ public class ResourceUtilities {
 		return getBundledString(clazz, propertyName);
 	}
 
-	@SuppressWarnings("deprecation")
 	public static String get(String propertyName) {
-		return get(sun.reflect.Reflection.getCallerClass(2), propertyName);
+		return get(getCallerClass(), propertyName);
 	}
 
 	/**
@@ -434,10 +435,8 @@ public class ResourceUtilities {
 		return getBoolean(clazz, propertyName);
 	}
 
-	@SuppressWarnings("deprecation")
 	public static boolean is(String propertyName) {
-		Class<?> callerClass = sun.reflect.Reflection.getCallerClass(2);
-		return is(callerClass, propertyName);
+		return is(getCallerClass(), propertyName);
 	}
 
 	public static boolean isClientWithJvmProperties() {
@@ -591,10 +590,8 @@ public class ResourceUtilities {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	public static String readClazzp(String path) {
-		return readClassPathResourceAsString(
-				sun.reflect.Reflection.getCallerClass(2), path);
+		return readClassPathResourceAsString(getCallerClass(), path);
 	}
 
 	public static byte[] readFileToByteArray(File f) throws IOException {
@@ -1001,6 +998,20 @@ public class ResourceUtilities {
 		constructor.setAccessible(true);
 		T instance = constructor.newInstance();
 		return instance;
+	}
+
+	protected static Class getCallerClass() {
+		try {
+			if (getCallerClassMethod == null) {
+				Class clazz = Class.forName("sun.reflect.Reflection");
+				getCallerClassMethod = clazz.getMethod("getCallerClass",
+						int.class);
+			}
+			Class callerClass = (Class) getCallerClassMethod.invoke(null, 3);
+			return callerClass;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static interface BeanInfoHelper {
