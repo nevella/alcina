@@ -22,7 +22,7 @@ public @interface Binding {
 
 	String to() default "";
 
-	Type type() default Type.PROPERTY;
+	Type type();
 
 	Class<? extends ToStringFunction> transform() default ToStringFunction.Identity.class;
 

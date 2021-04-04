@@ -40,6 +40,6 @@ public interface PersistentImpl {
 	}
 
 	static <A> A getNewImplementationInstance(Class<A> clazz) {
-		return Reflections.classLookup().newInstance(getImplementation(clazz));
+		return Reflections.newInstance(getImplementation(clazz));
 	}
 }

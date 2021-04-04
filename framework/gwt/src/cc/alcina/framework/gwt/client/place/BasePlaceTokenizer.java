@@ -35,7 +35,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	}
 
 	public Place createDefaultPlace() {
-		return Reflections.classLookup().newInstance(getTokenizedClass());
+		return Reflections.newInstance(getTokenizedClass());
 	}
 
 	public boolean getBooleanParameter(String key) {

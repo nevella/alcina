@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.logic.domaintransform.spi;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import com.totsp.gwittir.client.beans.Method;
 
@@ -49,6 +50,24 @@ public interface ClassLookup {
 	public <T> T newInstance(Class<T> clazz);
 
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId);
+
+	/**
+	 * Convenience method
+	 * 
+	 * @param annotationClass
+	 * @param callback
+	 */
+	default <A extends Annotation> void iterateForPropertyWithAnnotation(
+			Class<?> beanClass, Class<A> annotationClass,
+			BiConsumer<A, PropertyReflector> callback) {
+		for (PropertyReflector propertyReflector : getPropertyReflectors(
+				beanClass)) {
+			A annotation = propertyReflector.getAnnotation(annotationClass);
+			if (annotation != null) {
+				callback.accept(annotation, propertyReflector);
+			}
+		}
+	}
 
 	default PropertyReflector getPropertyReflector(Class<?> beanClass,
 			String propertyName) {

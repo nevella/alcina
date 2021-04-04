@@ -41,7 +41,7 @@ public class EntityLocator implements Serializable {
 		}
 		String[] parts = v.split("/");
 		return new EntityLocator(
-				Reflections.classLookup().getClassForName(parts[2]),
+				Reflections.forName(parts[2]),
 				Long.parseLong(parts[0]), Long.parseLong(parts[1]));
 	}
 

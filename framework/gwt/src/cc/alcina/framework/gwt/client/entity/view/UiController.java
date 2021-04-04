@@ -33,7 +33,7 @@ public class UiController {
 
 	public <VM extends ViewModel> VM getViewModel(Class<VM> clazz) {
 		if (viewModels.get(clazz) == null) {
-			viewModels.put(clazz, Reflections.classLookup().newInstance(clazz));
+			viewModels.put(clazz, Reflections.newInstance(clazz));
 		}
 		return (VM) viewModels.get(clazz);
 	}

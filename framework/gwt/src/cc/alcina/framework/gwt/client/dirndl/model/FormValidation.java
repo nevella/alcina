@@ -103,11 +103,8 @@ public class FormValidation {
 				// return false;
 				// }
 				// }
-				if (sender != null) {
-					Registry.impl(ClientNotifications.class).showWarning(
-							"Please correct the problems in the form");
-				} else {
-				}
+				Registry.impl(ClientNotifications.class)
+						.showWarning("Please correct the problems in the form");
 				return false;
 			} // not valid
 			if (serverValidationCallback != null) {

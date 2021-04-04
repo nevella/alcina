@@ -77,7 +77,7 @@ public abstract class AlcinaBeanSerializer {
 		if (abbrevLookup.containsKey(cns)) {
 			clazz = abbrevLookup.get(cns);
 		} else {
-			clazz = Reflections.classLookup().getClassForName(cns);
+			clazz = Reflections.forName(cns);
 		}
 		return clazz;
 	}

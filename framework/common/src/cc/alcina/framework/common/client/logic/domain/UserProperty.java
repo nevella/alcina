@@ -85,7 +85,7 @@ public abstract class UserProperty<T extends UserProperty> extends Entity<T>
 		Class clazz = null;
 		if (category != null) {
 			try {
-				clazz = Reflections.classLookup().getClassForName(category);
+				clazz = Reflections.forName(category);
 			} catch (Exception e) {
 			}
 		}

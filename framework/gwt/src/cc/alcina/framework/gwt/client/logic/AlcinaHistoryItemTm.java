@@ -24,7 +24,7 @@ public class AlcinaHistoryItemTm extends AlcinaHistoryItem {
 			return getClassName();
 		}
 		return TransformManager.get().getObject(
-				Reflections.classLookup().getClassForName(getClassName()),
+				Reflections.forName(getClassName()),
 				getId(), getLocalId());
 	}
 

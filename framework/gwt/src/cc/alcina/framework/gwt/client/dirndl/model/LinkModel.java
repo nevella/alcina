@@ -95,6 +95,10 @@ public class LinkModel {
 		return this;
 	}
 
+	public String getText() {
+		return text;
+	}
+
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = LinkModel.class)
 	public static class LinkModelRenderer extends LeafNodeRenderer {
 		@Override
@@ -102,7 +106,7 @@ public class LinkModel {
 			LinkModel model = model(node);
 			Widget rendered = super.render(node);
 			rendered.getElement().setInnerText(getText(node));
-			if (model.isWithoutLink() && model.text != null) {
+			if (model.isWithoutLink() && model.getText() != null) {
 				return rendered;
 			}
 			NonstandardObjectAction objectAction = model(node)
@@ -168,8 +172,8 @@ public class LinkModel {
 
 		protected String getText(Node node) {
 			LinkModel model = model(node);
-			if (model.text != null) {
-				return model.text;
+			if (model.getText() != null) {
+				return model.getText();
 			}
 			NonstandardObjectAction objectAction = model.getObjectAction();
 			if (objectAction != null) {

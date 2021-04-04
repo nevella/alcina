@@ -21,7 +21,7 @@ public class ModelSearchResults<B extends Bindable & SearchResult>
 			return (Class<B>) (Class<?>) ((EntitySearchDefinition) def)
 					.queriedEntityClass();
 		}
-		return Reflections.classLookup().getClassForName(resultClassName);
+		return Reflections.forName(resultClassName);
 	}
 
 	public String resultClassName;

@@ -1,5 +1,10 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +28,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
@@ -211,32 +217,39 @@ public class FormModel extends Model {
 	public static class FormModelTransformer extends
 			AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
 		@Override
-		public FormModel apply(FormModelState args) {
+		public FormModel apply(FormModelState state) {
 			FormModel model = new FormModel();
-			model.state = args;
-			if (args.model == null && args.expectsModel) {
+			model.state = state;
+			if (state.model == null && state.expectsModel) {
 				return model;
 			}
+			ActionsModulator actionsModulator = new ActionsModulator();
+			Args args = node.annotation(Args.class);
+			if (args != null) {
+				actionsModulator = Reflections.classLookup()
+						.newInstance(args.actionsModulator());
+			}
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			node.pushResolver(ModalResolver.single(!args.editable));
-			if (args.model != null) {
+			node.pushResolver(ModalResolver.single(!state.editable));
+			if (state.model != null) {
 				List<Field> fields = GwittirBridge.get()
 						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-								args.model, factory, args.editable,
-								args.adjunct, node.getResolver());
-				fields.stream().map(field -> new FormElement(field, args.model))
+								state.model, factory, state.editable,
+								state.adjunct, node.getResolver());
+				fields.stream()
+						.map(field -> new FormElement(field, state.model))
 						.forEach(model.elements::add);
 			}
-			if (args.adjunct) {
+			if (state.adjunct) {
 				model.actions.add(new LinkModel()
 						.withPlace(new ActionRefPlace(SubmitRef.class))
 						.withPrimaryAction(true));
 				model.actions.add(new LinkModel()
 						.withPlace(new ActionRefPlace(CancelRef.class)));
 			} else {
-				if (args.model != null) {
+				if (state.model != null) {
 					Bean bean = Reflections.classLookup().getAnnotationForClass(
-							args.model.getClass(), Bean.class);
+							state.model.getClass(), Bean.class);
 					if (bean != null) {
 						Arrays.stream(bean.actions().value())
 								.map(a -> Reflections
@@ -251,7 +264,34 @@ public class FormModel extends Model {
 					}
 				}
 			}
+			model.actions.removeIf(actionsModulator::isRemoveAction);
+			for (LinkModel link : model.actions) {
+				String overrideLinkText = actionsModulator
+						.getOverrideLinkText(link);
+				if (overrideLinkText != null) {
+					link.withText(overrideLinkText);
+				}
+			}
 			return model;
+		}
+
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE, ElementType.METHOD })
+		@ClientVisible
+		public static @interface Args {
+			Class<? extends ActionsModulator> actionsModulator() default ActionsModulator.class;
+		}
+
+		@ClientInstantiable
+		public static class ActionsModulator {
+			public boolean isRemoveAction(LinkModel linkModel) {
+				return false;
+			}
+
+			public String getOverrideLinkText(LinkModel linkModel) {
+				return null;
+			}
 		}
 	}
 

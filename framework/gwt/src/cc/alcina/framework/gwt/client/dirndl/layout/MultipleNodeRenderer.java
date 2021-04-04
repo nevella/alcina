@@ -12,6 +12,7 @@ import java.util.List;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -71,7 +72,7 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 	public @interface MultipleNodeRendererArgs {
 		String[] tags();
 
-		String[] cssClasses() ;
+		String[] cssClasses();
 	}
 
 	@ClientVisible
@@ -101,7 +102,23 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 		MultipleNodeRendererLeaf leaf = node
 				.annotation(MultipleNodeRendererLeaf.class);
 		if (leaf != null) {
-			result.add(leaf.value());
+			Directed leafDirected = leaf.value();
+			/*
+			 * if the property has a simple @Directed annotation, and the class
+			 * has a non-simple @Directed, use the class
+			 */
+			if (DirectedLayout.isDefault(leafDirected)) {
+				Object model = node.getModel();
+				Class clazz = model == null ? void.class : model.getClass();
+				if (clazz != null) {
+					Directed directed = Reflections.classLookup()
+							.getAnnotationForClass(clazz, Directed.class);
+					if (directed != null) {
+						leafDirected = directed;
+					}
+				}
+			}
+			result.add(leafDirected);
 		}
 		return result;
 	}

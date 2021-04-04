@@ -11,7 +11,7 @@ public class QuickSearchRequest implements Serializable {
 	public String className;
 
 	public Class<? extends VersionableEntity> provideType() {
-		return Reflections.classLookup().getClassForName(className);
+		return Reflections.forName(className);
 	}
 
 	public void putType(Class<? extends VersionableEntity> type) {

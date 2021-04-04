@@ -201,7 +201,7 @@ public class CloneHelper {
 
 	protected <T> T newInstance(T o) {
 		Class<? extends Object> clazz = o.getClass();
-		return (T) Reflections.classLookup().newInstance(clazz);
+		return (T) Reflections.newInstance(clazz);
 	}
 
 	protected Object shallowishObjectClone(Object o) {

@@ -161,7 +161,7 @@ public class DomainObjectActionLinkCustomiser implements Customiser {
 			link.setAsHtml(asHtml);
 			if (rendererClass != null) {
 				link.setRenderer(
-						Reflections.classLookup().newInstance(rendererClass));
+						Reflections.newInstance(rendererClass));
 			}
 			return link;
 		}

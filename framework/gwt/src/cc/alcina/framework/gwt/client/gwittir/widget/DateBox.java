@@ -40,6 +40,12 @@ import cc.alcina.framework.common.client.collections.BidiConverter.BidiIdentityC
  * validator is automatically added by gwittir bridge but must be added manually
  * if using in imperative code
  * 
+ * FIXME - 2022 - the structure of this is sort of wrong - it'd be better to
+ * have a textbox, converter, and popdown date selector (i.e. getValue() returns
+ * text, not a date))
+ * 
+ * ...and Dirndlise. That'll fix issues like "form validation works" for invalid
+ * strings
  * 
  * @author Nick Reddel
  */

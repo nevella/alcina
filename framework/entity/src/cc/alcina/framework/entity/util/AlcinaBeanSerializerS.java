@@ -184,7 +184,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		}
 		JSONObject props = (JSONObject) jsonObj
 				.get(getPropertyFieldName(jsonObj));
-		Object object = Reflections.classLookup().newInstance(clazz);
+		Object object = Reflections.newInstance(clazz);
 		int index = seenIn.size();
 		seenIn.put(index, object);
 		String[] names = JSONObject.getNames(props);
@@ -395,7 +395,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 					try {
 						clazz = classLoader.loadClass(cns);
 					} catch (Exception e) {
-						clazz = Reflections.classLookup().getClassForName(cns);
+						clazz = Reflections.forName(cns);
 					}
 					resolvedClassLookup.put(cns, clazz);
 					return clazz;

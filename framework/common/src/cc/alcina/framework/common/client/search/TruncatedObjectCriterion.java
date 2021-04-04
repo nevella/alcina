@@ -33,7 +33,7 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 
 	public E ensurePlaceholderObject() {
 		if (value == null && id != 0) {
-			value = Reflections.classLookup().newInstance(getObjectClass());
+			value = Reflections.newInstance(getObjectClass());
 			value.setId(id);
 		}
 		return value;

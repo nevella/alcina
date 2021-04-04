@@ -239,6 +239,9 @@ public class DirectedLayout {
 			if (directed == null) {
 				// FIXME - dirndl.0 - no, resolver is from the node tree, not
 				// the class
+				//
+				// another FIXME - this should be merged with
+				// MultipleNodeRenderer
 				Class clazz = model == null ? void.class : model.getClass();
 				/*
 				 * if the property has a simple @Directed annotation, and the
@@ -269,16 +272,8 @@ public class DirectedLayout {
 					rendererClass = DefaultNodeRenderer.class;
 				}
 			}
-			renderer = Reflections.classLookup().newInstance(rendererClass);
+			renderer = Reflections.newInstance(rendererClass);
 			return renderer;
-		}
-
-		private boolean isDefault(Directed annotation) {
-			return annotation.renderer() == ModelClassNodeRenderer.class
-					&& annotation.cssClass().isEmpty()
-					&& annotation.tag().isEmpty()
-					&& annotation.behaviours().length == 0
-					&& annotation.bindings().length == 0;
 		}
 
 		public Widget resolveWidget(String path) {
@@ -399,10 +394,6 @@ public class DirectedLayout {
 								.getAnnotation(Directed.class) != null) {
 							Object childModel = propertyReflector
 									.getPropertyValue(model);
-							if (childModel != null && childModel.getClass()
-									.getName().contains("GlobalHeader")) {
-								int debug = 3;
-							}
 							Node child = addChild(childModel, propertyReflector,
 									propertyReflector);
 						}
@@ -901,5 +892,12 @@ public class DirectedLayout {
 
 	public interface NodeEventReceiver {
 		public void onEvent(GwtEvent event);
+	}
+
+	public static boolean isDefault(Directed annotation) {
+		return annotation.renderer() == ModelClassNodeRenderer.class
+				&& annotation.cssClass().isEmpty() && annotation.tag().isEmpty()
+				&& annotation.behaviours().length == 0
+				&& annotation.bindings().length == 0;
 	}
 }

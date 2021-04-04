@@ -11,4 +11,10 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 public abstract class NodeTopic {
 	public static class VoidTopic extends NodeTopic {
 	}
+
+	public static class Closed extends NodeTopic {
+	}
+
+	public static class CloseButtonClicked extends NodeTopic {
+	}
 }

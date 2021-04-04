@@ -70,7 +70,7 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 	}
 
 	public SC createCriterionInstance() {
-		return Reflections.classLookup().newInstance(clazz);
+		return Reflections.newInstance(clazz);
 	}
 
 	public abstract AbstractBoundWidget createEditor();

@@ -31,7 +31,7 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		if (className == null || className.equals("null")) {
 			return null;
 		}
-		return Reflections.classLookup().getClassForName(className);
+		return Reflections.forName(className);
 	}
 
 	private static String unescape(String s) {

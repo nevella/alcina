@@ -166,7 +166,7 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 			return seenIn
 					.get((int) ((JSONNumber) jsonObj.get(REF)).doubleValue());
 		}
-		Object obj = Reflections.classLookup().newInstance(clazz);
+		Object obj = Reflections.newInstance(clazz);
 		seenIn.put(seenIn.size(), obj);
 		GwittirBridge gb = GwittirBridge.get();
 		for (String propertyName : props.keySet()) {

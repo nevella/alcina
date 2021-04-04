@@ -89,7 +89,7 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 			return lookupIndexClass;
 		}
 		Class chainedPropertyType = propertyPathAccesor.getChainedPropertyType(
-				Reflections.classLookup().newInstance(clazz));
+				Reflections.newInstance(clazz));
 		if (chainedPropertyType != null) {
 			return chainedPropertyType;
 		}

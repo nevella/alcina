@@ -85,7 +85,7 @@ public class ClientPropertyReflector
 		Display displayInfo = getDisplayInfo();
 		Class clazz = displayInfo.filterClass();
 		return (CollectionFilter) (clazz == null || clazz == Void.class ? null
-				: Reflections.classLookup().newInstance(clazz));
+				: Reflections.newInstance(clazz));
 	}
 
 	@Override

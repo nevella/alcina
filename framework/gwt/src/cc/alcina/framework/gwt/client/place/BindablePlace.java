@@ -29,7 +29,7 @@ public abstract class BindablePlace<SD extends BindableSearchDefinition>
 
 	@Override
 	public boolean provideIsDefaultDefs() {
-		BindablePlace o = Reflections.classLookup().newInstance(getClass());
+		BindablePlace o = Reflections.newInstance(getClass());
 		return HasEquivalenceHelper.argwiseEquivalent(def, o.def);
 	}
 

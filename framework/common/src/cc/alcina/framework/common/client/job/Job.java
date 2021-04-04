@@ -329,7 +329,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	public Task getTask() {
 		task = TransformManager.resolveMaybeDeserialize(task,
 				this.taskSerialized, null,
-				Reflections.classLookup().getClassForName(taskClassName));
+				Reflections.forName(taskClassName));
 		return this.task;
 	}
 

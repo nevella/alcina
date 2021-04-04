@@ -110,8 +110,9 @@ public abstract class ClientTransformManager extends TransformManager {
 	 */
 	public <T extends Entity> T persistWrappedObjectReferrer(final T referrer,
 			boolean onlyLocalGraph) {
-		Reflections.iterateForPropertyWithAnnotation(referrer.getClass(),
-				Wrapper.class, (annotation, propertyReflector) -> {
+		Reflections.classLookup().iterateForPropertyWithAnnotation(
+				referrer.getClass(), Wrapper.class,
+				(annotation, propertyReflector) -> {
 					WrapperPersistable obj = (WrapperPersistable) propertyReflector
 							.getPropertyValue(referrer);
 					Reflections.propertyAccessor().setPropertyValue(referrer,
@@ -125,7 +126,7 @@ public abstract class ClientTransformManager extends TransformManager {
 				target = promoted;
 				// copy, because at the moment wrapped refs don't get handled by
 				// the TM
-				Reflections.iterateForPropertyWithAnnotation(
+				Reflections.classLookup().iterateForPropertyWithAnnotation(
 						referrer.getClass(), Wrapper.class,
 						(annotation, propertyReflector) -> {
 							propertyReflector.setPropertyValue(promoted,
@@ -138,8 +139,9 @@ public abstract class ClientTransformManager extends TransformManager {
 		}
 		final Entity finalTarget = target;
 		if (!onlyLocalGraph) {
-			Reflections.iterateForPropertyWithAnnotation(referrer.getClass(),
-					Wrapper.class, (annotation, propertyReflector) -> {
+			Reflections.classLookup().iterateForPropertyWithAnnotation(
+					referrer.getClass(), Wrapper.class,
+					(annotation, propertyReflector) -> {
 						WrapperPersistable persistableObject = (WrapperPersistable) propertyReflector
 								.getPropertyValue(finalTarget);
 						AsyncCallback<Long> savedCallback = new AsyncCallback<Long>() {
@@ -387,8 +389,8 @@ public abstract class ClientTransformManager extends TransformManager {
 		protected void callRemotePersistence(
 				WrapperPersistable persistableObject,
 				AsyncCallback<Long> savedCallback) {
-			Client.commonRemoteService()
-					.persist(persistableObject, savedCallback);
+			Client.commonRemoteService().persist(persistableObject,
+					savedCallback);
 		}
 	}
 

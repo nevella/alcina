@@ -47,7 +47,7 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 	public B convert(A a) {
 		try {
 			B b = rightSupplier == null
-					? Reflections.classLookup().newInstance(rightClass)
+					? Reflections.newInstance(rightClass)
 					: rightSupplier.get();
 			apply(a, b);
 			return b;

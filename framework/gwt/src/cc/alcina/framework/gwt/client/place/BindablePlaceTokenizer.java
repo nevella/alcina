@@ -25,7 +25,7 @@ public abstract class BindablePlaceTokenizer<HL extends Bindable, SD extends Bin
 
 	@Override
 	protected P getPlace0(String token) {
-		P place = Reflections.classLookup().newInstance(getTokenizedClass());
+		P place = Reflections.newInstance(getTokenizedClass());
 		int offset = 0;
 		if (!getPrefix().contains("/")) {
 			offset = -1;

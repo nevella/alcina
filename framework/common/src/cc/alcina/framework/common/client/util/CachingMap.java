@@ -21,7 +21,7 @@ public class CachingMap<I, O> {
 		this(new ThrowingFunction<I, O>() {
 			@Override
 			public O apply(I original) {
-				return (O) Reflections.classLookup().newInstance(valueClass);
+				return (O) Reflections.newInstance(valueClass);
 			}
 		}, new LinkedHashMap<I, O>());
 	}

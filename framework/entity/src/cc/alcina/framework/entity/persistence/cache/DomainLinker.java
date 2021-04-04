@@ -187,7 +187,7 @@ public class DomainLinker<E extends Entity> {
 				.map(Field::getName).collect(Collectors.toList());
 		for (Object[] array : objs) {
 			E attached = (E) array[0];
-			E detached = Reflections.classLookup().newInstance(clazz);
+			E detached = Reflections.newInstance(clazz);
 			result.add(detached);
 			ResourceUtilities.copyBeanProperties(attached, detached, null, true,
 					ignorePropertyNames);

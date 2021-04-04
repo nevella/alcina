@@ -69,8 +69,9 @@ public class AssociationPropagationTransformListener
 			break;
 		}
 		case DELETE_OBJECT: {
-			Reflections.iterateForPropertyWithAnnotation(entity.entityClass(),
-					Association.class, (association, propertyReflector) -> {
+			Reflections.classLookup().iterateForPropertyWithAnnotation(
+					entity.entityClass(), Association.class,
+					(association, propertyReflector) -> {
 						Object associated = propertyReflector
 								.getPropertyValue(entity);
 						if (tm.markedForDeletion.contains(associated)) {

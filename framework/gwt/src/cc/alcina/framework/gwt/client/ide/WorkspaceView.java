@@ -440,7 +440,7 @@ public class WorkspaceView extends Composite implements HasName,
 						&& isAllowEditCollections()) {
 					actions.add(EditAction.class);
 				}
-				obj = Reflections.classLookup().newInstance(domainClass);
+				obj = Reflections.newInstance(domainClass);
 				if (item.getParentItem() instanceof DomainNode) {
 					parentObject = item.getParentItem().getUserObject();
 				}
