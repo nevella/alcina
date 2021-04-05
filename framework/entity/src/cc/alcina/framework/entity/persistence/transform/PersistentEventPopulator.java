@@ -1,11 +1,14 @@
 package cc.alcina.framework.entity.persistence.transform;
 
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -24,6 +27,7 @@ class PersistentEventPopulator {
 			AtomicBoolean missingClassRefWarned,
 			boolean persistTransformsDisabled, boolean forcePropagation) {
 		TransformCollation collation = new TransformCollation(eventsPersisted);
+		Map<EntityLocator, DomainTransformEventPersistent> mostRecentWithMetadata = new LinkedHashMap<>();
 		for (DomainTransformEvent event : eventsPersisted) {
 			DomainTransformEventPersistent propagationEvent = Reflections
 					.newInstance(persistentEventClass);
@@ -35,10 +39,15 @@ class PersistentEventPopulator {
 			propagationEvent.setSource(null);
 			propagationEvent.setNewValue(null);
 			propagationEvent.setOldValue(null);
-			if (collation.forLocator(event.toObjectLocator()).last() == event
-					&& event.getTransformType() != TransformType.DELETE_OBJECT
+			if (event.getTransformType() != TransformType.DELETE_OBJECT
 					&& propagationPolicy.handlesEvent(event)) {
 				propagationEvent.populateDbMetadata(event);
+				DomainTransformEventPersistent mostRecent = mostRecentWithMetadata
+						.get(event.toObjectLocator());
+				if (mostRecent != null) {
+					mostRecent.setExTransformDbMetadata(null);
+				}
+				mostRecentWithMetadata.put(event.toObjectLocator(), mostRecent);
 			}
 			if (propagationEvent.getObjectClassRef() == null
 					&& !missingClassRefWarned.get()) {

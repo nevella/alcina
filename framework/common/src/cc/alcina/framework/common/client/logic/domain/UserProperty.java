@@ -31,8 +31,8 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
  * Similar to the (jvm-only) KeyValuePersistentBase. user/key is unique,
  * user/category not. If used as a java object persistence container,
  */
-public abstract class UserProperty<T extends UserProperty> extends Entity<T>
-		implements HasIUser {
+public abstract class UserProperty<T extends UserProperty>
+		extends VersionableEntity<T> implements HasIUser {
 	public static final transient String CONTEXT_NO_COMMIT = UserProperty.class
 			.getName() + ".CONTEXT_NO_COMMIT";
 

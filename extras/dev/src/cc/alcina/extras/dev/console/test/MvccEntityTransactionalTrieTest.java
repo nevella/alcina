@@ -21,21 +21,21 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
  */
 public class MvccEntityTransactionalTrieTest<IU extends Entity & IUser, IG extends Entity & IGroup>
 		extends MvccEntityTransactionTest {
-	private CountDownLatch txLatch;
+	transient private CountDownLatch txLatch;
 
-	private CountDownLatch tx1Latch1;
+	transient private CountDownLatch tx1Latch1;
 
-	private CountDownLatch tx1Latch2;
+	transient private CountDownLatch tx1Latch2;
 
-	private CountDownLatch tx2Latch1;
+	transient private CountDownLatch tx2Latch1;
 
-	private String key;
+	transient private String key;
 
-	private TrieProjection projection;
+	transient private TrieProjection projection;
 
-	private String testKey;
+	transient private String testKey;
 
-	private long initialCount;
+	transient private long initialCount;
 
 	private void startTx1() {
 		new Thread("test-mvcc-1") {

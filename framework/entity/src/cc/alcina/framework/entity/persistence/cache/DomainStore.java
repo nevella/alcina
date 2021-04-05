@@ -1444,7 +1444,10 @@ public class DomainStore implements IDomainStore {
 				EntityLocator locator = ThreadlocalTransformManager.get()
 						.resolvePersistedLocal(DomainStore.this, v);
 				if (locator == null) {
-					return null;
+					/*
+					 * not yet persisted, tx-local
+					 */
+					return (V) cache.get(v.toLocator());
 				} else {
 					return (V) cache.get(v.entityClass(), locator.id);
 				}

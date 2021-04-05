@@ -8,7 +8,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 public abstract class MvccEntityTransactionTest extends AbstractTaskPerformer {
-	private Exception lastThreadException;
+	transient private Exception lastThreadException;
 
 	protected void notifyThreadException(Exception e) {
 		TransformManager.get().clearTransforms();

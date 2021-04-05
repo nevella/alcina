@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.search.TxtCriterion;
 import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
@@ -58,7 +59,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		return this.pageNumber;
 	}
 
-	@PropertySerialization(name = "o")
+	@PropertySerialization(path = "o")
 	public SearchOrders getSearchOrders() {
 		return this.searchOrders;
 	}
@@ -149,6 +150,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	}
 
 	@ClientInstantiable
+	@TypeSerialization(notSerializable = true)
 	public static class DataNullSearchDefinition
 			extends EntitySearchDefinition {
 		@Override

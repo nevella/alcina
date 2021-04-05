@@ -24,7 +24,7 @@ import cc.alcina.framework.servlet.servlet.JobServlet;
 public class TaskListJobs extends AbstractTaskPerformer {
 	private String filter;
 
-	private Pattern filterPattern;
+	private transient Pattern filterPattern;
 
 	public String getFilter() {
 		return this.filter;

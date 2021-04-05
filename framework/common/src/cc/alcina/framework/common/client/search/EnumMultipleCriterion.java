@@ -17,17 +17,21 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
-import cc.alcina.framework.common.client.logic.domain.HasElementType;
+import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
+import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
+import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /**
@@ -37,8 +41,10 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  * 
  */
 public abstract class EnumMultipleCriterion<E extends Enum>
-		extends SearchCriterion implements HasValue<Set<E>>, HasElementType {
+		extends SearchCriterion implements HasValue<Set<E>> {
 	static final transient long serialVersionUID = -1L;
+
+	private Set<E> value = new LinkedHashSet<>();
 
 	public EnumMultipleCriterion() {
 		setOperator(StandardSearchOperator.CONTAINS);
@@ -47,6 +53,16 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 	public EnumMultipleCriterion(String criteriaDisplayName) {
 		super(criteriaDisplayName);
 		setOperator(StandardSearchOperator.CONTAINS);
+	}
+
+	public EnumMultipleCriterion<E> add(E e) {
+		getValue().add(e);
+		return this;
+	}
+
+	public EnumMultipleCriterion<E> add(Set<E> e) {
+		getValue().addAll(e);
+		return this;
 	}
 
 	public abstract Class<E> enumClass();
@@ -69,21 +85,18 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 	}
 
 	@Override
-	@XmlTransient
-	@JsonIgnore
 	@PropertySerialization(defaultProperty = true)
-	public abstract Set<E> getValue();
-
-	@Override
-	public Class<?> provideElementType() {
-		return enumClass();
+	@XmlTransient
+	public Set<E> getValue() {
+		return this.value;
 	}
 
-	/**
-	 * add property change firing to the subclass implementation, if you care
-	 */
 	@Override
-	public abstract void setValue(Set<E> value);
+	public void setValue(Set<E> value) {
+		Set<E> old_value = this.value;
+		this.value = value;
+		propertyChangeSupport().firePropertyChange("value", old_value, value);
+	}
 
 	@Override
 	public String toString() {
@@ -114,5 +127,57 @@ public abstract class EnumMultipleCriterion<E extends Enum>
 	 */
 	protected boolean valueAsString() {
 		return false;
+	}
+
+	public interface Handler<T, E extends Enum, SC extends EnumMultipleCriterion<E>> {
+		public boolean test(T t, Set<E> value);
+
+		default DomainFilter getFilter0(SC sc) {
+			Set<E> values = sc.getValue();
+			if (values.isEmpty()) {
+				return null;
+			}
+			Predicate<T> pred = t -> test(t, values);
+			return new DomainFilter(pred).invertIf(sc
+					.getOperator() == StandardSearchOperator.DOES_NOT_CONTAIN);
+		}
+	}
+
+	public static abstract class Searchable<E extends Enum, C extends EnumMultipleCriterion<E>>
+			extends FlatSearchable<C> {
+		protected Class<E> enumClass;
+
+		protected int maxSelectedItems = 999;
+
+		public Searchable(Class<C> clazz, Class<E> enumClass, String objectName,
+				String criteriaName) {
+			super(clazz, objectName, criteriaName,
+					Arrays.asList(StandardSearchOperator.CONTAINS,
+							StandardSearchOperator.DOES_NOT_CONTAIN));
+			this.enumClass = enumClass;
+		}
+
+		@Override
+		public AbstractBoundWidget createEditor() {
+			return new FlatSearchSelector(enumClass, maxSelectedItems,
+					FriendlyEnumRenderer.INSTANCE,
+					() -> Arrays.asList(enumClass.getEnumConstants()));
+		}
+
+		@Override
+		public String getCriterionPropertyName() {
+			return "value";
+		}
+
+		@Override
+		public boolean hasValue(C sc) {
+			return sc.getValue() != null && sc.getValue().size() > 0;
+		}
+
+		protected <T extends EnumMultipleCriterion.Searchable> T
+				maxSelectedItems(int maxSelectedItems) {
+			this.maxSelectedItems = maxSelectedItems;
+			return (T) this;
+		}
 	}
 }

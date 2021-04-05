@@ -19,21 +19,21 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
  */
 public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG extends Entity & IGroup>
 		extends MvccEntityTransactionTest {
-	Class<IG> groupClass = (Class<IG>) PersistentImpl
+	transient Class<IG> groupClass = (Class<IG>) PersistentImpl
 			.getImplementation(IGroup.class);
 
-	Class<IU> userClass = (Class<IU>) PersistentImpl
+	transient Class<IU> userClass = (Class<IU>) PersistentImpl
 			.getImplementation(IUser.class);
 
-	private CountDownLatch txLatch;
+	transient private CountDownLatch txLatch;
 
-	private CountDownLatch tx1Latch1;
+	transient private CountDownLatch tx1Latch1;
 
-	private CountDownLatch tx1Latch2;
+	transient private CountDownLatch tx1Latch2;
 
-	private CountDownLatch tx2Latch1;
+	transient private CountDownLatch tx2Latch1;
 
-	private String username;
+	transient private String username;
 
 	private void startTx1() {
 		new Thread("test-mvcc-1") {
@@ -48,8 +48,7 @@ public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG exte
 					createdUser.setUserName(username);
 					createdGroup.domain().addToProperty("memberUsers",
 							createdUser);
-					IU foundUser = Domain.by(userClass, "email",
-							username);
+					IU foundUser = Domain.by(userClass, "email", username);
 					Preconditions.checkState(foundUser != null,
 							"non-committed-tx1: index not visible from tx1");
 					tx1Latch1.countDown();
@@ -76,8 +75,7 @@ public class MvccEntityTransactionalIndexTest<IU extends Entity & IUser, IG exte
 				try {
 					Transaction.begin();
 					tx1Latch1.await();
-					IU foundUser = Domain.by(userClass, "email",
-							username);
+					IU foundUser = Domain.by(userClass, "email", username);
 					Preconditions.checkState(foundUser == null,
 							"non-committed-tx1: index visible from tx2");
 					tx2Latch1.countDown();

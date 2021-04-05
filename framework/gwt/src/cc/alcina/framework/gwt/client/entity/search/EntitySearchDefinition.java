@@ -6,9 +6,10 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.search.CriteriaGroup;
+import cc.alcina.framework.common.client.search.OrderGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 
 /*
@@ -20,8 +21,9 @@ public abstract class EntitySearchDefinition extends BindableSearchDefinition {
 	private boolean returnSingleDataObjectImplementations;
 
 	@Override
-	public Set<CriteriaGroup> getCriteriaGroups() {
-		return super.getCriteriaGroups();
+	@PropertySerialization(ignore = true)
+	public Set<OrderGroup> getOrderGroups() {
+		return super.getOrderGroups();
 	}
 
 	public boolean isReturnSingleDataObjectImplementations() {

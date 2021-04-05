@@ -7,24 +7,28 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.core.dom.Modifier;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.EncryptionUtils;
-import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphTraversal;
+import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 public class TaskGenerateTreeSerializableSignatures
@@ -47,9 +51,6 @@ public class TaskGenerateTreeSerializableSignatures
 							field.getName());
 			if (propertyDescriptor == null) {
 				missingPropertyDescriptors.add(field);
-				Ax.sysLogHigh("Missing property descriptor :: %s.%s",
-						serializable.getClass().getSimpleName(),
-						field.getName());
 			}
 		}
 	}
@@ -101,20 +102,35 @@ public class TaskGenerateTreeSerializableSignatures
 		Preconditions.checkState(serializationIssues.isEmpty());
 		Registry.impls(TreeSerializable.class).stream().filter(this::filter)
 				.forEach(this::checkAllFieldsAreProperties);
-		Preconditions.checkState(missingPropertyDescriptors.isEmpty());
+		if (!missingPropertyDescriptors.isEmpty()) {
+			missingPropertyDescriptors.stream().collect(
+					AlcinaCollectors.toKeyMultimap(Field::getDeclaringClass))
+					.entrySet()
+					.forEach(e -> Ax.out("%s :: %s", e.getKey().getSimpleName(),
+							e.getValue().stream().map(Field::getName)
+									.collect(Collectors.toList())));
+		}
+		Preconditions.checkState(missingPropertyDescriptors.isEmpty(),
+				"Missing property descriptors");
 		Registry.impls(TreeSerializable.class).stream().filter(this::filter)
 				.forEach(this::generateSignature);
 		TreeSerializableSignatures stableCheck = signatures;
 		signatures = new TreeSerializableSignatures();
 		Registry.impls(TreeSerializable.class).stream().filter(this::filter)
 				.forEach(this::generateSignature);
-		Preconditions.checkState(signatures.getClassNameDefaultSerializedForms()
-				.equals(stableCheck.getClassNameDefaultSerializedForms()));
-		String signaturesBytes = KryoUtils.serializeToBase64(signatures);
+		Preconditions
+				.checkState(
+						signatures.getClassNameDefaultSerializedForms()
+								.equals(stableCheck
+										.getClassNameDefaultSerializedForms()),
+						"Signature stable check not equal");
+		String signaturesBytes = new JacksonJsonObjectSerializer()
+				.withBase64Encoding().serialize(signatures);
 		String sha1 = EncryptionUtils.get().SHA1(signaturesBytes);
 		String key = Ax.format("%s::%s",
 				TreeSerializableSignatures.class.getName(), sha1);
-		UserProperty.ensure(key).setValue(signaturesBytes);
+		((UserProperty) UserProperty.ensure(key).domain().ensurePopulated())
+				.setValue(signaturesBytes);
 		Transaction.commit();
 		logger.info("TreeSerializable serializedDefaults signature: ({}) : {} ",
 				signatures.classNameDefaultSerializedForms.size(), sha1);
@@ -122,6 +138,23 @@ public class TaskGenerateTreeSerializableSignatures
 
 	boolean filter(TreeSerializable treeSerializable) {
 		if (treeSerializable instanceof SingleTableSearchDefinition) {
+			return false;
+		}
+		if (Ax.isTest()) {
+			try {
+				Class<?> devConsoleRunnableClass = Class.forName(
+						"cc.alcina.extras.dev.console.DevConsoleRunnable");
+				if (devConsoleRunnableClass
+						.isAssignableFrom(treeSerializable.getClass())) {
+					return false;
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+		TypeSerialization typeSerialization = treeSerializable.getClass()
+				.getAnnotation(TypeSerialization.class);
+		if (typeSerialization != null && typeSerialization.notSerializable()) {
 			return false;
 		}
 		return true;

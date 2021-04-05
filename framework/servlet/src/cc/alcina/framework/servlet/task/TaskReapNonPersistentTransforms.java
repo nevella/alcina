@@ -28,11 +28,11 @@ import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job.JobContext;
 
 public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
-	private static final int SLICE_SIZE = 1000;
+	private static final transient int SLICE_SIZE = 1000;
 
 	public static final transient String TRANSFORM_REAPER_2_LAST_RQ_ID = "TRANSFORM_REAPER_2_LAST_RQ_ID";
 
-	private Statement stmt;
+	private transient Statement stmt;
 
 	private ResultSet executeQuery(String template, Object... args)
 			throws Exception {
@@ -56,8 +56,7 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 			ResultSet rs = executeQuery("select max(id) from %s", dtrTableName);
 			rs.next();
 			long maxId = rs.getLong(1);
-			logger.info("Requests to check: {}",
-					new LongPair(lastId, maxId));
+			logger.info("Requests to check: {}", new LongPair(lastId, maxId));
 			while (true) {
 				String rSql = String.format(
 						"select dtrq.id from %s "

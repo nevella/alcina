@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
  *
  * @author Nick Reddel
  */
-public class LocalSearchDefinition extends SearchDefinition {
+public abstract class LocalSearchDefinition extends SearchDefinition {
 	static final transient long serialVersionUID = -1L;
 
 	private Class resultClass;

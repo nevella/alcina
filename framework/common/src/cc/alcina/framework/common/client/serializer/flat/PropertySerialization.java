@@ -50,18 +50,25 @@ public @interface PropertySerialization {
 	boolean defaultProperty() default false;
 
 	/*
-	 * Collection element types
-	 */
-	Class<?> elementType() default void.class;
-
-	/*
 	 * To support single-group (bindable) search definitions - only permissible
 	 * if childTypes.length==1
 	 */
 	Class<? extends TreeSerializable>[] grandchildTypes() default {};
 
+	boolean ignore() default false;
+
+	/*
+	 * Collection element (or enum field) types
+	 */
+	Class<?> leafType() default void.class;
+
+	/*
+	 * Only use if this annotation is part of a TypeSerialization definition
+	 */
+	String name() default "";
+
 	/*
 	 * Unique per path segment (including default resolution)
 	 */
-	String name() default "";
+	String path() default "";
 }

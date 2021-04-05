@@ -40,6 +40,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -469,11 +472,19 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					runnable.value = argv.length == 1 ? null : argv[1];
 					runnable.argv = argv;
 					boolean runSuccess = false;
+					IUser pushedUser = null;
 					try {
 						LooseContext.pushWithKey(
 								DevConsoleRunnable.CONTEXT_ACTION_RESULT, "");
 						if (Transactions.isInitialised()) {
 							Transaction.ensureBegun();
+						}
+						if (runnable.requiresDomainStore()
+								&& DevHelper.getDefaultUser() == null) {
+							console.ensureDomainStore();
+							pushedUser = DevHelper.getDefaultUser();
+							PermissionsManager.get().pushUser(pushedUser,
+									LoginState.LOGGED_IN);
 						}
 						runnable.run();
 						String msg = LooseContext.getString(
@@ -510,6 +521,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 								// additional exception (tx phase) that ain't
 								// helpful
 						} finally {
+							if (pushedUser != null) {
+								PermissionsManager.get().popUser();
+							}
 							LooseContext.pop();
 						}
 					}

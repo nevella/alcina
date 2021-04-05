@@ -22,7 +22,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
  */
 public class MvccEntitySortedIndexTest2<IU extends Entity & IUser, IG extends Entity & IGroup>
 		extends MvccEntityTransactionTest {
-	List<Entity> entitiesInCreationOrder = new ArrayList<>();
+	transient List<Entity> entitiesInCreationOrder = new ArrayList<>();
 
 	private void debug(List<Entity> list) {
 		Ax.out(list.stream().map(Entity::toLocator)

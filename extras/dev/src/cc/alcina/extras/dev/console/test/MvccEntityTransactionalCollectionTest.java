@@ -23,23 +23,23 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
  */
 public class MvccEntityTransactionalCollectionTest<IU extends Entity & IUser, IG extends Entity & IGroup>
 		extends MvccEntityTransactionTest {
-	Class<IG> groupClass = (Class<IG>) PersistentImpl
+	transient Class<IG> groupClass = (Class<IG>) PersistentImpl
 			.getImplementation(IGroup.class);
 
-	Class<IU> userClass = (Class<IU>) PersistentImpl
+	transient Class<IU> userClass = (Class<IU>) PersistentImpl
 			.getImplementation(IUser.class);
 
-	private CountDownLatch txLatch;
+	transient private CountDownLatch txLatch;
 
-	private CountDownLatch tx1Latch1;
+	transient private CountDownLatch tx1Latch1;
 
-	private CountDownLatch tx1Latch2;
+	transient private CountDownLatch tx1Latch2;
 
-	private CountDownLatch tx2Latch1;
+	transient private CountDownLatch tx2Latch1;
 
-	private String username;
+	transient private String username;
 
-	private long initialSize;
+	transient private long initialSize;
 
 	private void startTx1() {
 		new Thread("test-mvcc-1") {

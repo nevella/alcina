@@ -28,6 +28,10 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		return false;
 	}
 
+	public boolean requiresDomainStore() {
+		return false;
+	}
+
 	public boolean rerunIfMostRecentOnRestart() {
 		return true;
 	}

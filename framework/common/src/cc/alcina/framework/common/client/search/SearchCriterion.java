@@ -85,7 +85,7 @@ public abstract class SearchCriterion extends Bindable
 		return null;
 	}
 
-	@PropertySerialization(name = "dir")
+	@PropertySerialization(path = "dir")
 	public Direction getDirection() {
 		return this.direction;
 	}
@@ -99,7 +99,7 @@ public abstract class SearchCriterion extends Bindable
 		return this.displayName;
 	}
 
-	@PropertySerialization(name = "op")
+	@PropertySerialization(path = "op")
 	public StandardSearchOperator getOperator() {
 		return this.operator;
 	}

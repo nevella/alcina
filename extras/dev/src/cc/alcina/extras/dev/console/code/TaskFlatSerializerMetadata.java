@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ast.Modifier.Keyword;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
@@ -28,7 +27,6 @@ import com.github.javaparser.ast.expr.Name;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
-import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.google.common.base.Preconditions;
 
@@ -41,6 +39,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.DomainCriterionHandler;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
+import cc.alcina.framework.common.client.search.EnumMultipleCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
@@ -54,18 +53,16 @@ import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 import cc.alcina.framework.entity.util.SerializationStrategy.SerializationStrategy_WrappedObject;
 import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
+import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
 public class TaskFlatSerializerMetadata
 		extends ServerTask<TaskFlatSerializerMetadata> {
-	static Logger logger = LoggerFactory
-			.getLogger(TaskFlatSerializerMetadata.class);
-
 	private boolean overwriteOriginals;
 
 	private String classPathList;
 
-	private CompilationUnits compUnits;
+	private transient CompilationUnits compUnits;
 
 	private List<Class<? extends SearchDefinition>> searchDefinitions = new ArrayList<>();
 
@@ -91,6 +88,7 @@ public class TaskFlatSerializerMetadata
 		return this.criterionNameRemovalRegex;
 	}
 
+	@PropertySerialization(leafType = Class.class)
 	public List<Class<? extends SearchDefinition>> getSearchDefinitions() {
 		return this.searchDefinitions;
 	}
@@ -150,6 +148,19 @@ public class TaskFlatSerializerMetadata
 				(k, v) -> Ax.out("%s :: %s", k.getSimpleName(), v.size()));
 	}
 
+	private void ensureAnnotations() {
+		List<DomainCriterionHandler> criterionHandlers = compUnits.declarations
+				.values().stream()
+				.filter(dec -> DomainCriterionHandler.class
+						.isAssignableFrom(dec.clazz())
+						&& !Modifier.isAbstract(dec.clazz().getModifiers()))
+				.map(dec -> dec.<DomainCriterionHandler> typedInstance())
+				.collect(Collectors.toList());
+		ensureSearchDefinitionAnnotations(criterionHandlers);
+		ensureSearchCriterionAnnotations(criterionHandlers);
+		compUnits.writeDirty(isTest());
+	}
+
 	private void enumerateSearchDefinitions() {
 		compUnits.declarations.values().stream().filter(
 				dec -> SearchDefinition.class.isAssignableFrom(dec.clazz()))
@@ -195,62 +206,13 @@ public class TaskFlatSerializerMetadata
 		return name;
 	}
 
-	private void updateAnnotations() {
-		List<DomainCriterionHandler> criterionHandlers = compUnits.declarations
-				.values().stream()
-				.filter(dec -> DomainCriterionHandler.class
-						.isAssignableFrom(dec.clazz())
-						&& !Modifier.isAbstract(dec.clazz().getModifiers()))
-				.map(dec -> dec.<DomainCriterionHandler> typedInstance())
-				.collect(Collectors.toList());
-		getSearchDefinitions().forEach(clazz -> {
-			ClassOrInterfaceDeclarationWrapper declarationWrapper = compUnits.declarations
-					.get(clazz.getName());
-			/*
-			 * ensure getCriteriaGroups method
-			 */
-			MethodDeclaration methodDeclaration = SourceMods
-					.ensureGetCriteriaGroupsMethod(declarationWrapper);
-			NormalAnnotationExpr propertySerialization = (NormalAnnotationExpr) methodDeclaration
-					.getAnnotationByClass(PropertySerialization.class).get();
-			MemberValuePair grandchildTypesPair = propertySerialization
-					.getPairs().stream().filter(mv -> mv.getName().asString()
-							.equals("grandchildTypes"))
-					.findFirst().get();
-			Expression initialValue = grandchildTypesPair.getValue();
-			ArrayInitializerExpr initializerExpr = new ArrayInitializerExpr();
-			grandchildTypesPair.setValue(initializerExpr);
-			List<ClassExpr> expressions = criterionHandlers.stream()
-					.filter(dch -> dch.handlesSearchDefinition() == clazz)
-					.map(dch -> {
-						Class<? extends SearchCriterion> searchCriterion = dch
-								.handlesSearchCriterion();
-						declarationWrapper.ensureImport(searchCriterion);
-						ClassOrInterfaceType type = StaticJavaParser
-								.parseClassOrInterfaceType(
-										searchCriterion.getSimpleName());
-						return new ClassExpr(type);
-					}).collect(Collectors.toList());
-			initializerExpr.setValues(new NodeList(expressions));
-			if (initialValue.toString().equals(initializerExpr.toString())) {
-			} else {
-				declarationWrapper.dirty();
-			}
-			compUnits.declarations.values().stream()
-					.filter(dec -> DomainCriterionHandler.class
-							.isAssignableFrom(dec.clazz())
-							&& !Modifier.isAbstract(dec.clazz().getModifiers()))
-					.map(dec -> dec.<DomainCriterionHandler> typedInstance())
-					.collect(Collectors.toList());
-		});
-		/*
-		 * set @TypeSerialization annotations
-		 */
-		Multimap<Class, List<DomainCriterionHandler<?>>> dchs = (Multimap) criterionHandlers
+	protected void ensureSearchCriterionAnnotations(
+			List<DomainCriterionHandler> criterionHandlers) {
+		Multimap<Class, List<DomainCriterionHandler<?>>> perClassHandlers = (Multimap) criterionHandlers
 				.stream().collect(AlcinaCollectors.toKeyMultimap(
 						DomainCriterionHandler::handlesSearchCriterion));
-		criterionHandlers.stream().forEach(dch -> {
-			Class<? extends SearchCriterion> searchCriterionClass = dch
+		criterionHandlers.stream().forEach(handler -> {
+			Class<? extends SearchCriterion> searchCriterionClass = handler
 					.handlesSearchCriterion();
 			ClassOrInterfaceDeclarationWrapper declarationWrapper = compUnits
 					.declarationWrapperForClass(searchCriterionClass);
@@ -276,21 +238,122 @@ public class TaskFlatSerializerMetadata
 					.get();
 			if (!CommonUtils.bv(configuration.manual)) {
 				configuration.shortForm = shortForm(searchCriterionClass,
-						dchs.get(searchCriterionClass));
+						perClassHandlers.get(searchCriterionClass));
 			}
-			SingleMemberAnnotationExpr typeSerialization = SourceMods
-					.ensureTypeSerializationAnnotation(declarationWrapper);
-			Expression memberValue = typeSerialization.getMemberValue();
-			StringLiteralExpr expr = new StringLiteralExpr(
+			StringLiteralExpr pathExpr = new StringLiteralExpr(
 					configuration.shortForm);
-			typeSerialization.setMemberValue(expr);
-			if (memberValue != null
-					&& memberValue.toString().equals(expr.toString())) {
+			if (EnumMultipleCriterion.class
+					.isAssignableFrom(searchCriterionClass)) {
+				NormalAnnotationExpr typeSerialization = SourceMods
+						.ensureNormalTypeSerializationAnnotation(
+								declarationWrapper);
+				String initialSource = typeSerialization.toString();
+				SourceMods.ensureValue(typeSerialization, "value", pathExpr);
+				ArrayInitializerExpr propertiesInitializerExpr = SourceMods
+						.ensureValue(typeSerialization, "properties",
+								new ArrayInitializerExpr());
+				propertiesInitializerExpr.getValues().stream()
+						.collect(Collectors.toList())
+						.forEach(Expression::remove);
+				NormalAnnotationExpr valueSerialization = new NormalAnnotationExpr();
+				valueSerialization
+						.setName(PropertySerialization.class.getSimpleName());
+				valueSerialization.addPair("name",
+						new StringLiteralExpr("value"));
+				valueSerialization.addPair("defaultProperty", "true");
+				EnumMultipleCriterion newInstance = (EnumMultipleCriterion) Reflections
+						.newInstance(searchCriterionClass);
+				Class enumClass = newInstance.enumClass();
+				valueSerialization.addPair("leafType",
+						enumClass.getSimpleName() + ".class");
+				propertiesInitializerExpr.getValues().add(valueSerialization);
+				declarationWrapper.dirty(initialSource,
+						typeSerialization.toString());
 			} else {
-				declarationWrapper.dirty();
+				SingleMemberAnnotationExpr typeSerialization = SourceMods
+						.ensureSingleMemberTypeSerializationAnnotation(
+								declarationWrapper);
+				Expression memberValue = typeSerialization.getMemberValue();
+				typeSerialization.setMemberValue(pathExpr);
+				if (memberValue != null
+						&& memberValue.toString().equals(pathExpr.toString())) {
+				} else {
+					declarationWrapper.dirty();
+				}
 			}
 		});
-		compUnits.writeDirty(isTest());
+	}
+
+	protected void ensureSearchDefinitionAnnotations(
+			List<DomainCriterionHandler> criterionHandlers) {
+		getSearchDefinitions().forEach(clazz -> {
+			if (!EntitySearchDefinition.class.isAssignableFrom(clazz)) {
+				return;
+			}
+			ClassOrInterfaceDeclarationWrapper declarationWrapper = compUnits.declarations
+					.get(clazz.getName());
+			SourceMods.ensureNoGetCriteriaGroupsMethod(declarationWrapper);
+			NormalAnnotationExpr typeSerializationAnnotation = SourceMods
+					.ensureNormalTypeSerializationAnnotation(
+							declarationWrapper);
+			String initialSource = typeSerializationAnnotation.toString();
+			NormalAnnotationExpr criteriaGroupsSerialization = null;
+			ArrayInitializerExpr propertiesInitializerExpr = SourceMods
+					.ensureValue(typeSerializationAnnotation, "properties",
+							new ArrayInitializerExpr());
+			propertiesInitializerExpr.getValues().stream()
+					.collect(Collectors.toList()).forEach(Expression::remove);
+			for (Expression e : propertiesInitializerExpr.getValues()) {
+				NormalAnnotationExpr ann = (NormalAnnotationExpr) e;
+				boolean criteriaGroupsAnnotation = ann.getPairs().stream()
+						.anyMatch(pair -> pair.getName().toString()
+								.equals("propertyName")
+								&& pair.getValue().toString()
+										.equals("criteriaGroups"));
+				if (criteriaGroupsAnnotation) {
+					criteriaGroupsSerialization = ann;
+				}
+			}
+			if (criteriaGroupsSerialization == null) {
+				criteriaGroupsSerialization = new NormalAnnotationExpr();
+				criteriaGroupsSerialization
+						.setName(PropertySerialization.class.getSimpleName());
+				criteriaGroupsSerialization.addPair("name",
+						new StringLiteralExpr("criteriaGroups"));
+				criteriaGroupsSerialization.addPair("childTypes",
+						"EntityCriteriaGroup.class");
+				criteriaGroupsSerialization.addPair("grandchildTypes", "{}");
+				propertiesInitializerExpr.getValues()
+						.add(criteriaGroupsSerialization);
+			}
+			MemberValuePair grandchildTypesPair = criteriaGroupsSerialization
+					.getPairs().stream().filter(mv -> mv.getName().asString()
+							.equals("grandchildTypes"))
+					.findFirst().get();
+			Expression initialValue = grandchildTypesPair.getValue();
+			ArrayInitializerExpr initializerExpr = new ArrayInitializerExpr();
+			grandchildTypesPair.setValue(initializerExpr);
+			List<ClassExpr> expressions = criterionHandlers.stream()
+					.filter(dch -> dch.handlesSearchDefinition() == clazz)
+					.map(dch -> {
+						Class<? extends SearchCriterion> searchCriterion = dch
+								.handlesSearchCriterion();
+						declarationWrapper.ensureImport(searchCriterion);
+						ClassOrInterfaceType type = StaticJavaParser
+								.parseClassOrInterfaceType(
+										searchCriterion.getSimpleName());
+						return new ClassExpr(type);
+					}).collect(Collectors.toList());
+			initializerExpr.setValues(new NodeList(expressions));
+			declarationWrapper.dirty(initialSource,
+					typeSerializationAnnotation.toString());
+			compUnits.declarations.values().stream()
+					.filter(dec -> DomainCriterionHandler.class
+							.isAssignableFrom(dec.clazz())
+							&& !Modifier.isAbstract(dec.clazz().getModifiers()))
+					.map(dec -> dec.<DomainCriterionHandler> typedInstance())
+					.collect(Collectors.toList());
+		});
 	}
 
 	@Override
@@ -319,8 +382,8 @@ public class TaskFlatSerializerMetadata
 			enumerateSearchDefinitions();
 			break;
 		}
-		case UPDATE_ANNOTATIONS:
-			updateAnnotations();
+		case ENSURE_ANNOTATIONS:
+			ensureAnnotations();
 			flatSerializationConfigurations.persist();
 			break;
 		case CREATE_TASK_HIERARCHY:
@@ -340,7 +403,7 @@ public class TaskFlatSerializerMetadata
 	}
 
 	public enum Action {
-		LIST_INTERESTING, ENUMERATE_SEARCH_DEFINITIONS, UPDATE_ANNOTATIONS,
+		LIST_INTERESTING, ENUMERATE_SEARCH_DEFINITIONS, ENSURE_ANNOTATIONS,
 		CREATE_TASK_HIERARCHY;
 	}
 
@@ -405,7 +468,10 @@ public class TaskFlatSerializerMetadata
 	}
 
 	static class SourceMods {
-		public static MethodDeclaration ensureGetCriteriaGroupsMethod(
+		static Logger logger = LoggerFactory
+				.getLogger(TaskFlatSerializerMetadata.class);
+
+		public static void ensureNoGetCriteriaGroupsMethod(
 				ClassOrInterfaceDeclarationWrapper declarationWrapper) {
 			ClassOrInterfaceDeclaration declaration = declarationWrapper
 					.getDeclaration();
@@ -414,27 +480,46 @@ public class TaskFlatSerializerMetadata
 			declarationWrapper.ensureImport(CriteriaGroup.class);
 			declarationWrapper.ensureImport(Set.class);
 			if (methods.size() > 0) {
-				return methods.get(0);
+				MethodDeclaration methodDeclaration = methods.get(0);
+				if (methodDeclaration.toString().contains("")) {
+					methodDeclaration.remove();
+					logger.info("Removed getCriteria() for {}",
+							declaration.getName());
+					declarationWrapper.dirty();
+				}
 			}
-			MethodDeclaration methodDeclaration = declaration
-					.addMethod("getCriteriaGroups", Keyword.PUBLIC);
-			methodDeclaration.setType("Set<CriteriaGroup>");
-			NormalAnnotationExpr annotationExpr = methodDeclaration
-					.addAndGetAnnotation(PropertySerialization.class);
-			declarationWrapper.ensureImport(PropertySerialization.class);
-			annotationExpr.addPair("defaultProperty", "true");
-			annotationExpr.addPair("childTypes", "EntityCriteriaGroup.class");
-			annotationExpr.addPair("grandchildTypes", "{}");
-			BlockStmt body = new BlockStmt();
-			body.addAndGetStatement("return super.getCriteriaGroups();");
-			methodDeclaration.setBody(body);
-			logger.info("Created getCriteria() for {}", declaration.getName());
-			declarationWrapper.dirty();
-			return methodDeclaration;
+		}
+
+		public static NormalAnnotationExpr
+				ensureNormalTypeSerializationAnnotation(
+						ClassOrInterfaceDeclarationWrapper declarationWrapper) {
+			Optional<AnnotationExpr> o_typeSerialization = declarationWrapper
+					.getDeclaration()
+					.getAnnotationByClass(TypeSerialization.class);
+			if (o_typeSerialization.isPresent() && o_typeSerialization
+					.get() instanceof SingleMemberAnnotationExpr) {
+				o_typeSerialization.get().remove();
+				o_typeSerialization = declarationWrapper.getDeclaration()
+						.getAnnotationByClass(TypeSerialization.class);
+			}
+			if (!o_typeSerialization.isPresent()) {
+				NormalAnnotationExpr annotationExpr = declarationWrapper
+						.getDeclaration()
+						.addAndGetAnnotation(TypeSerialization.class);
+				declarationWrapper.ensureImport(TypeSerialization.class);
+				declarationWrapper.ensureImport(PropertySerialization.class);
+				annotationExpr.addPair("properties",
+						new ArrayInitializerExpr());
+				o_typeSerialization = declarationWrapper.getDeclaration()
+						.getAnnotationByClass(TypeSerialization.class);
+			}
+			NormalAnnotationExpr typeSerialization = (NormalAnnotationExpr) o_typeSerialization
+					.get();
+			return typeSerialization;
 		}
 
 		public static SingleMemberAnnotationExpr
-				ensureTypeSerializationAnnotation(
+				ensureSingleMemberTypeSerializationAnnotation(
 						ClassOrInterfaceDeclarationWrapper declarationWrapper) {
 			Optional<AnnotationExpr> o_typeSerialization = declarationWrapper
 					.getDeclaration()
@@ -452,6 +537,19 @@ public class TaskFlatSerializerMetadata
 			SingleMemberAnnotationExpr typeSerialization = (SingleMemberAnnotationExpr) o_typeSerialization
 					.get();
 			return typeSerialization;
+		}
+
+		public static <E extends Expression> E ensureValue(
+				NormalAnnotationExpr annotationExpr, String name, E valueExpr) {
+			Optional<MemberValuePair> match = annotationExpr.getPairs().stream()
+					.filter(pair -> pair.getName().toString().equals(name))
+					.findFirst();
+			if (match.isPresent()) {
+				return (E) match.get().getValue();
+			} else {
+				annotationExpr.addPair(name, valueExpr);
+				return valueExpr;
+			}
 		}
 	}
 

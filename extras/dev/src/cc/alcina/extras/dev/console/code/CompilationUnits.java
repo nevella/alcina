@@ -278,6 +278,12 @@ public class CompilationUnits {
 			unitWrapper.dirty = true;
 		}
 
+		public void dirty(String initialSource, String ensuredSource) {
+			if (!Objects.equals(initialSource, ensuredSource)) {
+				dirty();
+			}
+		}
+
 		public void ensureImport(Class<?> clazz) {
 			unitWrapper.ensureImport(clazz);
 		}

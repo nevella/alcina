@@ -19,7 +19,6 @@ import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasElementType;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -96,6 +95,10 @@ public class FlatTreeSerializer {
 	private static Map<RootClassPropertyKey, Map<String, Class>> deSerializationPropertyAliasClass = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
 
+	public static <R extends TreeSerializable> R clone(R object) {
+		return deserialize(serialize(object));
+	}
+
 	public static <T extends TreeSerializable> T deserialize(Class<T> clazz,
 			String value) {
 		DeserializerOptions options = new DeserializerOptions()
@@ -121,7 +124,6 @@ public class FlatTreeSerializer {
 		state.keyValues.remove(CLASS);
 		state.keyValues.remove(HASH);
 		T instance = Reflections.newInstance(clazz);
-		instance.prepareForTreeDeserialization();
 		Node node = new Node(null, instance, null);
 		new FlatTreeSerializer(state).deserialize(node);
 		return (T) node.value;
@@ -129,10 +131,6 @@ public class FlatTreeSerializer {
 
 	public static <T extends TreeSerializable> T deserialize(String value) {
 		return deserialize(null, value);
-	}
-
-	public static <R extends TreeSerializable> R serialClone(R object) {
-		return deserialize(serialize(object));
 	}
 
 	public static String serialize(TreeSerializable object) {
@@ -215,11 +213,17 @@ public class FlatTreeSerializer {
 				 */
 				while (!resolved) {
 					resolved |= resolvingLastSegment;
-					if (cursor.isCollection()) {
+					if (cursor.isCollection() && !cursor.isLeaf()) {
 						Class elementClass = null;
 						if (state.deserializerOptions.shortPaths) {
 							Map<String, Class> typeMap = getAliasClassMap(
 									root.value.getClass(), cursor);
+							if (typeMap.isEmpty()) {
+								int debug = 3;
+								cursor.isLeaf();
+								deSerializationPropertyAliasClass.clear();
+								getAliasClassMap(root.value.getClass(), cursor);
+							}
 							elementClass = typeMap.get(segmentPath);
 							if (elementClass != null) {
 								resolved = true;
@@ -278,6 +282,9 @@ public class FlatTreeSerializer {
 										cursor.value, property.getName()),
 								null);
 						cursor.path.property = property;
+						cursor.path.propertySerialization = getPropertySerialization(
+								cursor.parent.value.getClass(),
+								property.getName());
 					}
 					if (resolved) {
 						/*
@@ -327,18 +334,14 @@ public class FlatTreeSerializer {
 		RootClassPropertyKey key = new RootClassPropertyKey(rootClass,
 				cursor.path.property);
 		return deSerializationPropertyAliasClass.computeIfAbsent(key, k -> {
-			PropertySerialization propertySerialization = Reflections
-					.propertyAccessor()
-					.getAnnotationForProperty(cursor.parent.value.getClass(),
-							PropertySerialization.class, k.property.getName());
+			PropertySerialization propertySerialization = getPropertySerialization(
+					cursor.parent.value.getClass(), k.property.getName());
 			Class[] availableTypes = propertySerialization.childTypes();
 			boolean defaultType = availableTypes.length == 1;
 			if (availableTypes.length == 0) {
-				propertySerialization = Reflections.propertyAccessor()
-						.getAnnotationForProperty(
-								cursor.parent.parent.parent.value.getClass(),
-								PropertySerialization.class,
-								cursor.parent.parent.path.property.getName());
+				propertySerialization = getPropertySerialization(
+						cursor.parent.parent.parent.value.getClass(),
+						cursor.parent.parent.path.property.getName());
 				availableTypes = propertySerialization.grandchildTypes();
 				/*
 				 * if both parent childTypes and grandchildTypes are length 1,
@@ -364,13 +367,11 @@ public class FlatTreeSerializer {
 
 	private Map<String, Property> getAliasPropertyMap(Node cursor) {
 		Function<? super Property, ? extends String> keyMapper = p -> {
-			PropertySerialization propertySerialization = Reflections
-					.propertyAccessor()
-					.getAnnotationForProperty(cursor.value.getClass(),
-							PropertySerialization.class, p.getName());
+			PropertySerialization propertySerialization = getPropertySerialization(
+					cursor.value.getClass(), p.getName());
 			if (propertySerialization != null) {
 				return propertySerialization.defaultProperty() ? ""
-						: propertySerialization.name();
+						: propertySerialization.path();
 			} else {
 				return p.getName();
 			}
@@ -402,6 +403,12 @@ public class FlatTreeSerializer {
 										.getAnnotationForProperty(valueClass,
 												AlcinaTransient.class,
 												name) != null) {
+									return false;
+								}
+								PropertySerialization propertySerialization = getPropertySerialization(
+										valueClass, name);
+								if (propertySerialization != null
+										&& propertySerialization.ignore()) {
 									return false;
 								}
 								return true;
@@ -443,6 +450,7 @@ public class FlatTreeSerializer {
 			if (value instanceof Collection) {
 				Counter counter = new Counter();
 				Collection valueCollection = (Collection) value;
+				node.path.verifyProvidesElementTypeInfo();
 				Collection defaultCollection = node.defaultValue == null ?
 				/* parent object is default null */
 						CloneHelper.newCollectionInstance(valueCollection)
@@ -478,11 +486,8 @@ public class FlatTreeSerializer {
 							: getValue(property, node.defaultValue);
 					Node childNode = new Node(node, childValue, defaultValue);
 					childNode.path.property = property;
-					childNode.path.propertySerialization = Reflections
-							.propertyAccessor()
-							.getAnnotationForProperty(node.value.getClass(),
-									PropertySerialization.class,
-									property.getName());
+					childNode.path.propertySerialization = getPropertySerialization(
+							node.value.getClass(), property.getName());
 					state.pending.add(childNode);
 				});
 			} else {
@@ -492,12 +497,33 @@ public class FlatTreeSerializer {
 		}
 	}
 
+	protected PropertySerialization getPropertySerialization(Class<?> clazz,
+			String propertyName) {
+		TypeSerialization typeSerialization = Reflections.classLookup()
+				.getAnnotationForClass(clazz, TypeSerialization.class);
+		if (typeSerialization != null) {
+			for (PropertySerialization p : typeSerialization.properties()) {
+				if (p.name().equals(propertyName)) {
+					return p;
+				}
+			}
+		}
+		return Reflections.propertyAccessor().getAnnotationForProperty(clazz,
+				PropertySerialization.class, propertyName);
+	}
+
 	public static class DeserializerOptions {
 		boolean shortPaths;
 
 		public DeserializerOptions withShortPaths(boolean shortPaths) {
 			this.shortPaths = shortPaths;
 			return this;
+		}
+	}
+
+	public static class MissingElementTypeException extends RuntimeException {
+		public MissingElementTypeException(String message) {
+			super(message);
 		}
 	}
 
@@ -554,7 +580,7 @@ public class FlatTreeSerializer {
 
 		@Override
 		public String toString() {
-			return toStringFull();
+			return toStringFull(false);
 		}
 
 		public String toStringShort(Path path, boolean mergeLeafValuePaths) {
@@ -594,9 +620,10 @@ public class FlatTreeSerializer {
 			return shortenedClassName + strIndex;
 		}
 
-		String toStringFull() {
+		String toStringFull(boolean mergeLeafValuePaths) {
 			if (leafValue) {
-				return index == 1 ? "" : String.valueOf(index - 1);
+				return index == 1 || mergeLeafValuePaths ? ""
+						: String.valueOf(index - 1);
 			}
 			String leafIndex = index == 1 ? "" : "" + (index - 1);
 			return clazz.getName().replace(".", "_") + leafIndex;
@@ -621,15 +648,15 @@ public class FlatTreeSerializer {
 
 		Path path;
 
-		Class clazz;
-
 		Object value;
 
 		Object defaultValue;
 
 		Node parent;
 
-		public Node(Node parent, Object value, Object defaultValue) {
+		boolean leafCollectionCleared;
+
+		Node(Node parent, Object value, Object defaultValue) {
 			this.parent = parent;
 			this.path = new Path(parent == null ? null : parent.path);
 			this.path.type = value == null ? null : value.getClass();
@@ -637,80 +664,28 @@ public class FlatTreeSerializer {
 			this.defaultValue = defaultValue;
 		}
 
-		public String escapeValue(String str) {
-			return TextUtils.Encoder.encodeURIComponentEsque(str);
-		}
-
-		public boolean isCollection() {
-			return value instanceof Collection;
-		}
-
-		public boolean isLeaf() {
-			if (value instanceof TreeSerializable) {
-				return false;
-			}
-			if (value instanceof Collection) {
-				return parent.value instanceof HasElementType;
-			}
-			return true;
-		}
-
-		public void putToObject(String stringValue) {
-			Property property = path.property;
-			// always leaf (primitiveish) values
-			if (isCollection()) {
-				Class elementClass = ((HasElementType) parent.value)
-						.provideElementType();
-				for (String leafStringValue : stringValue
-						.split(VALUE_SEPARATOR)) {
-					Object leafValue = parseStringValue(elementClass,
-							leafStringValue);
-					((Collection) value).add(leafValue);
-				}
-			} else {
-				Class valueClass = property.getType();
-				Object leafValue = parseStringValue(valueClass, stringValue);
-				Reflections.propertyAccessor().setPropertyValue(parent.value,
-						property.getName(), leafValue);
-			}
-		}
-
-		public void putValue(State state) {
-			String existingValue = null;
-			String leafValue = toStringValue();
-			boolean shortPaths = state.serializerOptions.shortPaths;
-			if (state.mergeableNode != null
-					&& path.canMergeTo(state.mergeableNode.path)) {
-				existingValue = state.keyValues.get(path.toString(true, true));
-			}
-			FormatBuilder fb = new FormatBuilder();
-			fb.separator(VALUE_SEPARATOR);
-			fb.appendIfNotBlank(existingValue, leafValue);
-			String value = fb.toString();
-			if (Ax.notBlank(value)) {
-				state.keyValues.put(path.toString(shortPaths, shortPaths),
-						value);
-			}
-		}
-
 		@Override
 		public String toString() {
 			return Ax.format("%s=%s", path, value);
 		}
 
-		public String toStringValue() {
-			if (value == null) {
-				return NULL_MARKER;
+		String escapeValue(String str) {
+			return TextUtils.Encoder.encodeURIComponentEsque(str);
+		}
+
+		boolean isCollection() {
+			return value instanceof Collection;
+		}
+
+		boolean isLeaf() {
+			if (value instanceof TreeSerializable) {
+				return false;
 			}
-			if (value instanceof Date) {
-				return String.valueOf(((Date) value).getTime());
-			} else if (value instanceof String) {
-				return escapeValue(value.toString());
-			} else if (CommonUtils.isEnumish(value)) {
-				return value.toString().replace("_", "-").toLowerCase();
-			} else {
-				return value.toString();
+			if (value instanceof Collection) {
+				return path.propertySerialization != null
+						&& path.propertySerialization.leafType() != void.class;
 			}
+			return true;
 		}
 
 		Object parseStringValue(Class valueClass, String stringValue) {
@@ -741,6 +716,73 @@ public class FlatTreeSerializer {
 						true, null);
 			}
 			throw new UnsupportedOperationException();
+		}
+
+		void putToObject(String stringValue) {
+			Property property = path.property;
+			// always leaf (primitiveish) values
+			if (isCollection()) {
+				Collection collection = (Collection) value;
+				/*
+				 * Always clear any defaults for the leaf collection before
+				 * first add
+				 */
+				if (!leafCollectionCleared) {
+					collection.clear();
+					leafCollectionCleared = true;
+				}
+				Class leafType = path.propertySerialization.leafType();
+				for (String leafStringValue : stringValue
+						.split(VALUE_SEPARATOR)) {
+					Object leafValue = parseStringValue(leafType,
+							leafStringValue);
+					collection.add(leafValue);
+				}
+			} else {
+				Class leafType = property.getType();
+				if (path.propertySerialization != null
+						&& path.propertySerialization
+								.leafType() != void.class) {
+					leafType = path.propertySerialization.leafType();
+				}
+				Object leafValue = parseStringValue(leafType, stringValue);
+				Reflections.propertyAccessor().setPropertyValue(parent.value,
+						property.getName(), leafValue);
+			}
+		}
+
+		void putValue(State state) {
+			String existingValue = null;
+			String leafValue = toStringValue();
+			boolean shortPaths = state.serializerOptions.shortPaths;
+			if (state.mergeableNode != null
+					&& path.canMergeTo(state.mergeableNode.path)) {
+				existingValue = state.keyValues
+						.get(path.toString(shortPaths, true));
+			}
+			FormatBuilder fb = new FormatBuilder();
+			fb.separator(VALUE_SEPARATOR);
+			fb.appendIfNotBlank(existingValue, leafValue);
+			String value = fb.toString();
+			if (Ax.notBlank(value)) {
+				state.keyValues.put(path.toString(shortPaths, shortPaths),
+						value);
+			}
+		}
+
+		String toStringValue() {
+			if (value == null) {
+				return NULL_MARKER;
+			}
+			if (value instanceof Date) {
+				return String.valueOf(((Date) value).getTime());
+			} else if (value instanceof String) {
+				return escapeValue(value.toString());
+			} else if (CommonUtils.isEnumish(value)) {
+				return value.toString().replace("_", "-").toLowerCase();
+			} else {
+				return value.toString();
+			}
 		}
 	}
 
@@ -775,24 +817,41 @@ public class FlatTreeSerializer {
 			return toString(false, false);
 		}
 
+		public void verifyProvidesElementTypeInfo() {
+			boolean valid = propertySerialization != null
+					&& (propertySerialization.childTypes().length > 0
+							|| propertySerialization.leafType() != void.class);
+			if (!valid && parent != null && parent.parent != null) {
+				valid = parent.parent.propertySerialization != null
+						&& parent.parent.propertySerialization
+								.grandchildTypes().length > 0;
+			}
+			if (!valid) {
+				throw new MissingElementTypeException(Ax.format(
+						"Unable to determine element type for collection property %s.%s",
+						parent.type.getSimpleName(), property.getName()));
+			}
+		}
+
 		String toString(boolean shortPaths, boolean mergeLeafValuePaths) {
 			if (shortPaths) {
 				return toStringShort(mergeLeafValuePaths);
 			} else {
-				return toStringFull();
+				return toStringFull(mergeLeafValuePaths);
 			}
 		}
 
-		String toStringFull() {
+		String toStringFull(boolean mergeLeafValuePaths) {
 			if (parent == null) {
 				path = "";
 			}
 			if (path == null) {
 				FormatBuilder fb = new FormatBuilder();
 				fb.separator(".");
-				fb.appendIfNotBlank(parent.toStringFull());
+				fb.appendIfNotBlank(parent.toStringFull(mergeLeafValuePaths));
 				if (property == null && index != null) {
-					fb.appendIfNotBlank(index.toString());
+					fb.appendIfNotBlank(
+							index.toStringFull(mergeLeafValuePaths));
 				} else {
 					fb.append(property.getName());
 				}
@@ -816,7 +875,7 @@ public class FlatTreeSerializer {
 					if (propertySerialization != null) {
 						if (propertySerialization.defaultProperty()) {
 						} else {
-							fb.append(propertySerialization.name());
+							fb.append(propertySerialization.path());
 						}
 					} else {
 						fb.append(property.getName());
