@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 import java.util.Timer;
@@ -998,12 +999,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 						.ok(String.format("  %s - ok - %s ms\n", msg, l2 - l1));
 			}
 			if (topLevel && !c.ignoreForCommandHistory()) {
-				props.lastCommand = c.rerunIfMostRecentOnRestart() ? lastCommand
+				String modCommand = c.rerunIfMostRecentOnRestart() ? lastCommand
 						: "";
-				try {
-					saveConfig();
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
+				if (!Objects.equals(modCommand, props.lastCommand)) {
+					props.lastCommand = modCommand;
+					serializeObject(props, consolePropertiesFile);
 				}
 			}
 		} catch (Exception e) {

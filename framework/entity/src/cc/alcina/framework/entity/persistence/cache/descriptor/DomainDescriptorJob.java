@@ -47,6 +47,7 @@ import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.cache.DomainStoreDescriptor;
 import cc.alcina.framework.entity.persistence.cache.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalMultiset;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalSet;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
@@ -254,11 +255,12 @@ public class DomainDescriptorJob {
 		return getJobsForTask(taskClass, false);
 	}
 
-	public Stream<? extends Job>
-			getJobsForTask(Class<? extends Task> taskClass, boolean loadAllProperties) {
+	public Stream<? extends Job> getJobsForTask(Class<? extends Task> taskClass,
+			boolean loadAllProperties) {
 		DomainQuery query = Domain.query(jobImplClass);
 		if (loadAllProperties) {
-			query.contextTrue(LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES);
+			query.contextTrue(
+					LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES);
 		}
 		return query.filter("taskClassName", taskClass.getName()).stream();
 	}
@@ -622,12 +624,12 @@ public class DomainDescriptorJob {
 
 			public EventType type;
 
-			public Transaction transaction;
+			public TransactionId transactionId;
 
 			public Event(EventType type) {
 				this.type = type;
 				this.queue = AllocationQueue.this;
-				this.transaction = Transaction.current();
+				this.transactionId = Transaction.current().getId();
 			}
 
 			@Override

@@ -462,7 +462,7 @@ class JobAllocator {
 							if (event.type == EventType.RELATED_MODIFICATION) {
 								Event peekEvent = null;
 								while ((peekEvent = eventQueue.peek()) != null
-										&& peekEvent.transaction == event.transaction
+										&& peekEvent.transactionId == event.transactionId
 										&& peekEvent.type == EventType.RELATED_MODIFICATION) {
 									eventQueue.poll();
 								}

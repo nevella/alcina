@@ -288,6 +288,10 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	public TransactionId getId() {
+		return this.id;
+	}
+
 	public long getTimeout() {
 		return this.timeout;
 	}
@@ -495,10 +499,6 @@ public class Transaction implements Comparable<Transaction> {
 		}
 		logger.debug("Ended tx: {}", this);
 		Transactions.get().onTransactionEnded(this);
-	}
-
-	TransactionId getId() {
-		return this.id;
 	}
 
 	TransactionPhase getPhase() {
