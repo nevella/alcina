@@ -67,7 +67,7 @@ public abstract class UserProperty<T extends UserProperty>
 		});
 	}
 
-	public static <P extends UserProperty> P ensure(String key) {
+	public static <P extends UserProperty<?>> P ensure(String key) {
 		return ensure(PermissionsManager.get().getUser(), key);
 	}
 

@@ -129,7 +129,7 @@ public class TaskGenerateTreeSerializableSignatures
 		String sha1 = EncryptionUtils.get().SHA1(signaturesBytes);
 		String key = Ax.format("%s::%s",
 				TreeSerializableSignatures.class.getName(), sha1);
-		((UserProperty) UserProperty.ensure(key).domain().ensurePopulated())
+		UserProperty.ensure(key).domain().ensurePopulated()
 				.setValue(signaturesBytes);
 		Transaction.commit();
 		logger.info("TreeSerializable serializedDefaults signature: ({}) : {} ",
