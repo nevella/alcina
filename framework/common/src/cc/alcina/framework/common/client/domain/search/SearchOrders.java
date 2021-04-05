@@ -237,7 +237,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 			return this.key;
 		}
 
-		@PropertySerialization(name = "asc")
+		@PropertySerialization(path = "asc")
 		public boolean isAscending() {
 			return this.ascending;
 		}

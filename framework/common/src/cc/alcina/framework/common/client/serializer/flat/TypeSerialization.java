@@ -38,8 +38,11 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
  * if any)
  */
 public @interface TypeSerialization {
+	PropertySerialization[] properties() default {};
+
 	/*
-	 * Unique per path segment (including default resolution)
+	 * Unique per path segment (including default resolution). Not required for
+	 * root types
 	 */
-	String value();
+	String value() default "";
 }

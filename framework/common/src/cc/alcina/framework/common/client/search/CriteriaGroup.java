@@ -153,7 +153,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		return null;
 	}
 
-	@PropertySerialization(name = "join")
+	@PropertySerialization(path = "join")
 	public FilterCombinator getCombinator() {
 		return combinator;
 	}
@@ -181,11 +181,6 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 				sc.setTargetPropertyName(propertyName);
 			}
 		}
-	}
-
-	@Override
-	public void prepareForTreeDeserialization() {
-		getCriteria().forEach(SearchCriterion::prepareForTreeDeserialization);
 	}
 
 	public boolean provideIsEmpty() {

@@ -58,7 +58,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		return this.pageNumber;
 	}
 
-	@PropertySerialization(name = "o")
+	@PropertySerialization(path = "o")
 	public SearchOrders getSearchOrders() {
 		return this.searchOrders;
 	}
