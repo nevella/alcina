@@ -161,6 +161,7 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 			JobContext.info("Job {} does not exist", jobId);
 		} else {
 			List<Job> threadData = JobRegistry.get().getThreadData(job);
+			job.domain().ensurePopulated();
 			DomDoc doc = DomDoc.basicHtmlDoc();
 			String css = ResourceUtilities.readClazzp("res/TaskListJobs.css");
 			doc.xpath("//head").node().builder().tag("style").text(css)

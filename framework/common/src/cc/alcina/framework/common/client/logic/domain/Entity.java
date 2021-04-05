@@ -329,9 +329,16 @@ public abstract class Entity<T extends Entity> extends Bindable
 		 * Basically server-side, connected version from a DomainStore
 		 * 
 		 * //FIXME - mvcc.4 - remove...ahhh...but this populatees lazy fields.
-		 * Maybe not, eh? But remove all inessential (legacy/writeable) usages
+		 * Maybe not, eh? Also there's the possibility of needing to access the
+		 * domain version from a non-domain (say de-serialized) instance. Fixme
+		 * is to check codebase, remove if unnecessary, rename to populate() if
+		 * that's what it is
 		 */
 		public T domainVersion() {
+			return ensurePopulated();
+		}
+
+		public T ensurePopulated() {
 			return (T) Domain.find(Entity.this);
 		}
 
