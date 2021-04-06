@@ -19,8 +19,10 @@ import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.util.Ax;
 
 @MappedSuperclass
 /**
@@ -81,6 +83,12 @@ public abstract class DomainTransformRequestPersistent
 
 	public void setTransactionCommitTime(Date transactionCommitTime) {
 		this.transactionCommitTime = transactionCommitTime;
+	}
+
+	@Override
+	public String shortId() {
+		return Ax.format("%s/%s", EntityHelper.getIdOrNull(getClientInstance()),
+				id != 0 ? id : getRequestId());
 	}
 
 	public abstract void wrap(DomainTransformRequest dtr);
