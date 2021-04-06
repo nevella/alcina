@@ -1,8 +1,8 @@
 package cc.alcina.framework.entity.persistence.cache.descriptor;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.PublicationCounter;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -64,6 +64,7 @@ public class DomainDescriptorPublication {
 										.create(PublicationCounter.class);
 								counter.setUser(iUser);
 							});
+					event.getTransformPersistenceToken().addCascadedEvents();
 				}
 			}
 		}

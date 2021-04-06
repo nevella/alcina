@@ -1153,8 +1153,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 					Class implementation = PersistentImpl
 							.getImplementation(propertyType);
 					entityImplementations.put(propertyType,
-							implementation != null ? implementation
-									: propertyType);
+							implementation != null
+									&& implementation != void.class
+									&& implementation != Void.class
+											? implementation
+											: propertyType);
 				}
 			}
 		}
