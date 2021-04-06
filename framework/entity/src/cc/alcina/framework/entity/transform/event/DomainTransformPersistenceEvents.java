@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -132,9 +133,11 @@ public class DomainTransformPersistenceEvents {
 		long firstRequestId = hasPersistentRequests
 				? event.getPersistedRequestIds().get(0)
 				: 0;
+		DomainTransformPersistenceEventType persistenceEventType = event
+				.getPersistenceEventType();
 		if (event.isLocalToVm()) {
 			if (hasPersistentRequests && !event.isFiringFromQueue()) {
-				switch (event.getPersistenceEventType()) {
+				switch (persistenceEventType) {
 				// REVISIT - check this is fired;
 				case COMMIT_ERROR:
 					int debug = 3;
@@ -156,7 +159,22 @@ public class DomainTransformPersistenceEvents {
 				}
 			}
 		}
-		synchronized (this) {
+		Object monitor = null;
+		switch (persistenceEventType) {
+		// fire sequentially
+		case COMMIT_OK:
+		case COMMIT_ERROR:
+			monitor = this;
+			break;
+		// can fire in parallel
+		case PRE_COMMIT:
+		case PRE_FLUSH:
+			monitor = new Object();
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
+		synchronized (monitor) {
 			try {
 				queue.onEventListenerFiring(event);
 				for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
@@ -175,12 +193,16 @@ public class DomainTransformPersistenceEvents {
 									Thread.currentThread().getName(),
 									() -> true);
 							listener.onDomainTransformRequestPersistence(event);
+							if (persistenceEventType == DomainTransformPersistenceEventType.PRE_COMMIT) {
+								TransformManager.get()
+										.checkNoPendingTransforms();
+							}
 						} catch (RuntimeException rex) {
 							logger.warn(
 									"DEVEX::0 - Exception in persistenceListener - {}",
 									rex);
-							throwOrLogBasedOnEventPhase(
-									event.getPersistenceEventType(), rex);
+							throwOrLogBasedOnEventPhase(persistenceEventType,
+									rex);
 						} finally {
 							InternalMetrics.get().endTracker(event);
 						}

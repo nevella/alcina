@@ -572,6 +572,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return true;
 	}
 
+	public void checkNoPendingTransforms() {
+		Preconditions.checkState(getTransforms().size() == 0);
+	}
+
 	public void clearTransforms() {
 		getTransforms().clear();
 		for (CommitType ct : transformsByType.keySet()) {
@@ -1741,15 +1745,15 @@ public abstract class TransformManager implements PropertyChangeListener,
 		boolean toSerializePropertyChange = false;
 		PropertyReflector toSerializeReflector = null;
 		PropertyReflector serializedReflector = null;
-		if (event.getPropertyName().matches("(.+)Serialized")) {
-			String sourcePropertyname = event.getPropertyName()
+		Class entityClass = entity.entityClass();
+		String propertyName = event.getPropertyName();
+		if (propertyName.matches("(.+)Serialized")) {
+			String sourcePropertyname = propertyName
 					.replaceFirst("(.+)Serialized", "$1");
 			toSerializeReflector = Reflections.classLookup()
-					.getPropertyReflector(entity.entityClass(),
-							sourcePropertyname);
+					.getPropertyReflector(entityClass, sourcePropertyname);
 			serializedReflector = Reflections.classLookup()
-					.getPropertyReflector(entity.entityClass(),
-							event.getPropertyName());
+					.getPropertyReflector(entityClass, propertyName);
 			serializedPropertyChange = toSerializeReflector != null
 					&& toSerializeReflector
 							.getAnnotation(DomainProperty.class) != null
@@ -1757,8 +1761,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 							.serialize();
 		} else {
 			toSerializeReflector = Reflections.classLookup()
-					.getPropertyReflector(entity.entityClass(),
-							event.getPropertyName());
+					.getPropertyReflector(entityClass, propertyName);
 			toSerializePropertyChange = toSerializeReflector != null
 					&& toSerializeReflector
 							.getAnnotation(DomainProperty.class) != null
@@ -1766,8 +1769,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 							.serialize();
 			if (toSerializePropertyChange) {
 				serializedReflector = Reflections.classLookup()
-						.getPropertyReflector(entity.entityClass(),
-								event.getPropertyName() + "Serialized");
+						.getPropertyReflector(entityClass,
+								propertyName + "Serialized");
 			}
 		}
 		/*
@@ -1801,6 +1804,15 @@ public abstract class TransformManager implements PropertyChangeListener,
 						CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
 				serializedReflector.setPropertyValue(entity,
 						serialize(event.getNewValue()));
+				String classNamePropertyName = propertyName + "ClassName";
+				if (Reflections.classLookup().hasProperty(entityClass,
+						classNamePropertyName)) {
+					PropertyReflector serializedClassNameReflector = Reflections
+							.classLookup().getPropertyReflector(entityClass,
+									classNamePropertyName);
+					serializedClassNameReflector.setPropertyValue(entity,
+							event.getNewValue().getClass().getName());
+				}
 				// do not persist as a transform
 				return true;
 			} finally {

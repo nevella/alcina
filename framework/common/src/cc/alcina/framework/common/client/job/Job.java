@@ -109,6 +109,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	private transient String cachedDisplayName;
 
+	@GwtTransient
+	private String taskSignature;
+
 	public Job() {
 	}
 
@@ -328,8 +331,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@DomainProperty(serialize = true)
 	public Task getTask() {
 		task = TransformManager.resolveMaybeDeserialize(task,
-				this.taskSerialized, null,
-				Reflections.forName(taskClassName));
+				this.taskSerialized, null, Reflections.forName(taskClassName));
 		return this.task;
 	}
 
@@ -341,6 +343,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@Transient
 	public String getTaskSerialized() {
 		return this.taskSerialized;
+	}
+
+	public String getTaskSignature() {
+		return this.taskSignature;
 	}
 
 	@Transient
@@ -802,6 +808,13 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		this.taskSerialized = taskSerialized;
 		propertyChangeSupport().firePropertyChange("taskSerialized",
 				old_taskSerialized, taskSerialized);
+	}
+
+	public void setTaskSignature(String taskSignature) {
+		String old_taskSignature = this.taskSignature;
+		this.taskSignature = taskSignature;
+		propertyChangeSupport().firePropertyChange("taskSignature",
+				old_taskSignature, taskSignature);
 	}
 
 	public void throwIfException() {

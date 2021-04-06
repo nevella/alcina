@@ -111,6 +111,7 @@ import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
+import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
 @RegistryLocation(registryPoint = DevConsole.class, implementationType = ImplementationType.SINGLETON)
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
@@ -830,16 +831,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	protected void addDomainStoreAndFlowLoggers() {
-		// EntityLayerUtils.setStandardAppender(
-		// AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.DEBUG);
-		// EntityLayerUtils.setStandardAppender(
-		// AlcinaLogUtils.getTaggedLogger(DomainStore.class, "sql"),
-		// Level.DEBUG);
-		EntityLayerLogging.setLevel(
-				AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.WARN);
-	}
-
 	protected abstract void createDevHelper();
 
 	protected void filterLookup(List<Class> lookup) {
@@ -973,6 +964,14 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	protected abstract P newConsoleProperties();
+
+	protected void onAddDomainStore() {
+		EntityLayerLogging.setLevel(
+				AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.WARN);
+		DomainStore.stores().writableStore().getPersistenceEvents()
+				.addDomainTransformPersistenceListener(
+						new SerializationSignatureListener());
+	}
 
 	protected void performCommandInThread(List<String> args,
 			DevConsoleCommand c, boolean topLevel) {

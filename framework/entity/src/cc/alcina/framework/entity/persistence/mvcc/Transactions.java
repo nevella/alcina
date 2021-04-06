@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -21,6 +22,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public class Transactions {
 	private static Transactions instance;
@@ -44,6 +46,10 @@ public class Transactions {
 
 	public static List<EntityLocator> getEnqueuedLazyLoads() {
 		return get().getEnqueuedLazyLoads0();
+	}
+
+	public static boolean isCommitted(TransactionId committingTxId) {
+		return get().isCommitted0(committingTxId);
 	}
 
 	public static synchronized boolean isInitialised() {
@@ -94,6 +100,12 @@ public class Transactions {
 		} else {
 			return t;
 		}
+	}
+
+	public static void revertToDefaultFieldValues(Entity entity) {
+		Entity defaults = (Entity) Reflections
+				.newInstance(entity.entityClass());
+		copyObjectFields(defaults, entity);
 	}
 
 	public static void shutdown() {
@@ -184,6 +196,8 @@ public class Transactions {
 
 	private TransactionId highestVisibleCommittedTransactionId;
 
+	private Set<TransactionId> committedTransactionIds = new ObjectOpenHashSet<>();
+
 	public List<Transaction> getCompletedNonDomainTransactions() {
 		synchronized (transactionMetadataLock) {
 			List<Transaction> result = completedNonDomainCommittedTransactions;
@@ -196,6 +210,7 @@ public class Transactions {
 		synchronized (transactionMetadataLock) {
 			committedTransactions.add(transaction);
 			highestVisibleCommittedTransactionId = transaction.getId();
+			committedTransactionIds.add(transaction.getId());
 		}
 	}
 
@@ -226,6 +241,12 @@ public class Transactions {
 					.collect(Collectors.toList());
 			enqueuedLazyLoads.clear();
 			return result;
+		}
+	}
+
+	private boolean isCommitted0(TransactionId committingTxId) {
+		synchronized (transactionMetadataLock) {
+			return committedTransactionIds.contains(committingTxId);
 		}
 	}
 
@@ -446,11 +467,5 @@ public class Transactions {
 		public Thread getVacuumThread() {
 			return vacuum.getVacuumThread();
 		}
-	}
-
-	public static void revertToDefaultFieldValues(Entity entity) {
-		Entity defaults = (Entity) Reflections
-				.newInstance(entity.entityClass());
-		copyObjectFields(defaults, entity);
 	}
 }

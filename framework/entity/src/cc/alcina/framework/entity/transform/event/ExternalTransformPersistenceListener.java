@@ -5,16 +5,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.LifecycleServ
 public interface ExternalTransformPersistenceListener
 		extends DomainTransformPersistenceListener, LifecycleService {
 	@Override
-	public void onDomainTransformRequestPersistence(
-			DomainTransformPersistenceEvent evt);
-
-	@Override
-	public void startService();
-
-	@Override
-	public void stopService();
-
-	@Override
 	default boolean isAllVmEventsListener() {
 		return true;
 	}

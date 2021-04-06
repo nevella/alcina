@@ -6,15 +6,11 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.permissions.HasIUser;
-import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -25,57 +21,41 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER), delete = @Permission(access = AccessLevel.ROOT))
 @Bean
-@RegistryLocation(registryPoint = PersistentImpl.class, targetClass = UserProperty.class)
+@RegistryLocation(registryPoint = PersistentImpl.class, targetClass = SystemProperty.class)
 @DomainTransformPropagation(PropagationType.PERSISTENT)
 /*
- * Similar to the (jvm-only) KeyValuePersistentBase. user/key is unique,
- * user/category not. If used as a java object persistence container,
  * 
- * *DO NOT* reference via foreign key constraints from large tables (since
- * intention is that table rows be removable). Use SystemProperty for that
+ * *DO * reference via foreign key constraints from large tables (since
+ * intention is that table rows be non-removable).
  */
-public abstract class UserProperty<T extends UserProperty>
-		extends VersionableEntity<T> implements HasIUser {
-	public static final transient String CONTEXT_NO_COMMIT = UserProperty.class
+public abstract class SystemProperty<T extends SystemProperty>
+		extends VersionableEntity<T> {
+	public static final transient String CONTEXT_NO_COMMIT = SystemProperty.class
 			.getName() + ".CONTEXT_NO_COMMIT";
 
-	public static <P extends UserProperty> P byId(long id) {
+	public static <P extends SystemProperty> P byId(long id) {
 		return Domain.find(implementation(), id);
 	}
 
-	public static <P extends UserProperty> Optional<P> byKey(String key) {
-		return byUserKey(PermissionsManager.get().getUser(), key);
-	}
-
-	public static <P extends UserProperty> Optional<P> byUserClass(IUser user,
-			Class<? extends UserPropertyPersistable> clazz) {
-		return byUserKey(user, clazz.getName());
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
+	public static <P extends SystemProperty> Optional<P> byKey(String key) {
+		return (Optional<P>) Domain.query(implementation()).filter("key", key)
+				.optional();
 	}
 
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-	public static <P extends UserProperty> Optional<P> byUserKey(IUser user,
-			String key) {
-		return (Optional<P>) Domain.query(implementation()).filter("user", user)
-				.filter("key", key).optional();
-	}
-
-	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-	public static <P extends UserProperty> P ensure(IUser user, String key) {
-		Optional<P> existing = byUserKey(user, key);
+	public static <P extends SystemProperty<?>> P ensure(String key) {
+		Optional<P> existing = byKey(key);
 		return existing.orElseGet(() -> {
 			P created = Domain.create(implementation());
-			created.setUser(user);
 			created.setKey(key);
 			return created;
 		});
 	}
 
-	public static <P extends UserProperty<?>> P ensure(String key) {
-		return ensure(PermissionsManager.get().getUser(), key);
-	}
-
-	private static <P extends UserProperty> Class<P> implementation() {
-		return (Class<P>) PersistentImpl.getImplementation(UserProperty.class);
+	private static <P extends SystemProperty> Class<P> implementation() {
+		return (Class<P>) PersistentImpl
+				.getImplementation(SystemProperty.class);
 	}
 
 	private String category;
@@ -83,18 +63,6 @@ public abstract class UserProperty<T extends UserProperty>
 	private String key;
 
 	private String value;
-
-	public <UPP extends UserPropertyPersistable> UPP deserialize() {
-		Class clazz = null;
-		if (category != null) {
-			try {
-				clazz = Reflections.forName(category);
-			} catch (Exception e) {
-			}
-		}
-		return (UPP) TransformManager.resolveMaybeDeserialize(null, getValue(),
-				null, clazz);
-	}
 
 	@Lob
 	@Transient

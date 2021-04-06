@@ -107,6 +107,7 @@ import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -262,7 +263,7 @@ public class DomainStore implements IDomainStore {
 
 	private GraphProjection graphProjection;
 
-	Map<EntityLocator, Boolean> lazyLoadAttempted = new ConcurrentHashMap<>();
+	Map<EntityLocator, TransactionId> lazyLoadAttempted = new ConcurrentHashMap<>();
 
 	private DomainTransformEventPersistent postProcessTransform;
 
@@ -668,7 +669,9 @@ public class DomainStore implements IDomainStore {
 				EntityLocator locator = new EntityLocator(clazz, id, 0L);
 				boolean toDomainCommitting = Transaction.current()
 						.isToDomainCommitting();
-				if (!lazyLoadAttempted.containsKey(locator)) {
+				TransactionId lazyLoadTxId = lazyLoadAttempted.get(locator);
+				if (lazyLoadTxId == null
+						|| !Transactions.isCommitted(lazyLoadTxId)) {
 					lazyObjectLoader.loadObject(clazz, id, 0);
 					t = cache.get(clazz, id);
 					if (t != null && !toDomainCommitting) {
@@ -679,7 +682,8 @@ public class DomainStore implements IDomainStore {
 				// located objects (and refs to them) will be discarded at end
 				// of tx)
 				if (toDomainCommitting) {
-					lazyLoadAttempted.put(locator, Boolean.TRUE);
+					lazyLoadAttempted.put(locator,
+							Transaction.current().getId());
 				}
 			}
 		}

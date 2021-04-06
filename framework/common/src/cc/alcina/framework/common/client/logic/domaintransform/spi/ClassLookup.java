@@ -51,6 +51,30 @@ public interface ClassLookup {
 
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId);
 
+	default PropertyReflector getPropertyReflector(Class<?> beanClass,
+			String propertyName) {
+		return getPropertyReflectors(beanClass).stream()
+				.filter(pr -> pr.getPropertyName().equals(propertyName))
+				.findFirst().orElse(null);
+	}
+
+	default String getSimpleClassName(Class<?> clazz) {
+		return clazz.getSimpleName();
+	}
+
+	default boolean handlesClass(Class clazz) {
+		return true;
+	}
+
+	default boolean hasProperty(Class beanClass, String propertyName) {
+		return getPropertyReflectors(beanClass).stream()
+				.anyMatch(pr -> pr.getPropertyName().equals(propertyName));
+	}
+
+	default boolean isPrimitive(Class<?> clazz) {
+		return clazz.isPrimitive();
+	}
+
 	/**
 	 * Convenience method
 	 * 
@@ -67,25 +91,6 @@ public interface ClassLookup {
 				callback.accept(annotation, propertyReflector);
 			}
 		}
-	}
-
-	default PropertyReflector getPropertyReflector(Class<?> beanClass,
-			String propertyName) {
-		return getPropertyReflectors(beanClass).stream()
-				.filter(pr -> pr.getPropertyName().equals(propertyName))
-				.findFirst().orElse(null);
-	}
-
-	default String getSimpleClassName(Class<?> clazz) {
-		return clazz.getSimpleName();
-	}
-
-	default boolean handlesClass(Class clazz) {
-		return true;
-	}
-
-	default boolean isPrimitive(Class<?> clazz) {
-		return clazz.isPrimitive();
 	}
 
 	default <T> T newInstance(String fqn) {

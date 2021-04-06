@@ -662,7 +662,6 @@ public class JobRegistry extends WriterService {
 			job.setUser(PermissionsManager.get().getUser());
 			job.setState(initialState);
 			job.setTask(task);
-			job.setTaskClassName(task.getClass().getName());
 			job.setCreator(
 					EntityLayerObjects.get().getServerAsClientInstance());
 			if (runAt != null) {

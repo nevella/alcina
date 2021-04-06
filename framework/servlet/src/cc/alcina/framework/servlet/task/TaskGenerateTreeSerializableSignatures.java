@@ -14,7 +14,8 @@ import org.eclipse.jdt.core.dom.Modifier;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.UserProperty;
+import cc.alcina.framework.common.client.logic.domain.SystemProperty;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
@@ -38,6 +39,13 @@ public class TaskGenerateTreeSerializableSignatures
 	private transient List<Field> missingPropertyDescriptors = new ArrayList<>();
 
 	private transient List<String> serializationIssues = new ArrayList<>();
+
+	private transient String signature;
+
+	@AlcinaTransient
+	public String getSignature() {
+		return this.signature;
+	}
 
 	private void checkAllFieldsAreProperties(TreeSerializable serializable) {
 		Field[] fields = serializable.getClass().getDeclaredFields();
@@ -127,9 +135,10 @@ public class TaskGenerateTreeSerializableSignatures
 		String signaturesBytes = new JacksonJsonObjectSerializer()
 				.withBase64Encoding().serialize(signatures);
 		String sha1 = EncryptionUtils.get().SHA1(signaturesBytes);
+		this.signature = sha1;
 		String key = Ax.format("%s::%s",
 				TreeSerializableSignatures.class.getName(), sha1);
-		UserProperty.ensure(key).domain().ensurePopulated()
+		SystemProperty.ensure(key).domain().ensurePopulated()
 				.setValue(signaturesBytes);
 		Transaction.commit();
 		logger.info("TreeSerializable serializedDefaults signature: ({}) : {} ",

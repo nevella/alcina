@@ -57,6 +57,7 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase.ServletClassMet
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.DbAppender;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
+import cc.alcina.framework.entity.persistence.cache.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.CollectionCreatorsMvcc.DegenerateCreatorMvcc;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
@@ -75,6 +76,7 @@ import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
 import cc.alcina.framework.servlet.misc.ReadonlySupportServlet;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
+import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected ServletConfig initServletConfig;
@@ -178,7 +180,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initCluster();
 			getStatusNotifier().deploying();
 			initEntityLayer();
-			BackendTransformQueue.get().start();
+			postInitEntityLayer();
 			initCustom();
 			ServletLayerUtils.setAppServletInitialised(true);
 			onAppServletInitialised();
@@ -453,6 +455,15 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			Transaction.begin();
 			JobRegistry.get();
 			Transaction.end();
+		}
+	}
+
+	protected void postInitEntityLayer() {
+		if (DomainStore.stores().hasInitialisedDatabaseStore()) {
+			BackendTransformQueue.get().start();
+			DomainStore.stores().writableStore().getPersistenceEvents()
+					.addDomainTransformPersistenceListener(
+							new SerializationSignatureListener());
 		}
 	}
 

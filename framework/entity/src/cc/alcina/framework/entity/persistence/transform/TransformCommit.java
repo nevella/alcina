@@ -715,7 +715,7 @@ public class TransformCommit {
 		}
 		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
 				pendingTransforms);
-		pendingTransforms.clear();
+		TransformManager.get().clearTransforms();
 		return transformFromServletLayer(items, tag);
 	}
 
