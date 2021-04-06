@@ -16,7 +16,6 @@ package cc.alcina.framework.common.client.util;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -51,10 +50,6 @@ public class Multimap<K, V extends List>
 			}
 		}
 		return map;
-	}
-
-	public static <K, V extends List> Multimap<K, V> synchronizedMultimap() {
-		return new Synchronized<>(new Multimap<>());
 	}
 
 	protected Map<K, V> map;
@@ -266,6 +261,10 @@ public class Multimap<K, V extends List>
 		return result;
 	}
 
+	public Map<K, V> provideMap() {
+		return this.map;
+	}
+
 	@Override
 	public V put(K key, V value) {
 		return this.map.put(key, value);
@@ -314,12 +313,5 @@ public class Multimap<K, V extends List>
 
 	private Map<K, V> createMap() {
 		return new LinkedHashMap<K, V>();
-	}
-
-	private static class Synchronized<K, V extends List>
-			extends Multimap<K, V> {
-		private Synchronized(Multimap<K, V> delegate) {
-			map = Collections.synchronizedMap(delegate.map);
-		}
 	}
 }
