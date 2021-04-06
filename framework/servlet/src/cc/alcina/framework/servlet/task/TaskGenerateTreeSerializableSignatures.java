@@ -14,7 +14,7 @@ import org.eclipse.jdt.core.dom.Modifier;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.SystemProperty;
+import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
@@ -30,6 +30,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphTraversal;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 public class TaskGenerateTreeSerializableSignatures
@@ -138,9 +139,11 @@ public class TaskGenerateTreeSerializableSignatures
 		this.signature = sha1;
 		String key = Ax.format("%s::%s",
 				TreeSerializableSignatures.class.getName(), sha1);
-		SystemProperty.ensure(key).domain().ensurePopulated()
-				.setValue(signaturesBytes);
-		Transaction.commit();
+		MethodContext.instance().withRootPermissions(true).run(() -> {
+			UserProperty.ensure(key).domain().ensurePopulated()
+					.setValue(signaturesBytes);
+			Transaction.commit();
+		});
 		logger.info("TreeSerializable serializedDefaults signature: ({}) : {} ",
 				signatures.classNameDefaultSerializedForms.size(), sha1);
 	}

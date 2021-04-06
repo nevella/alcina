@@ -32,7 +32,11 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
  * user/category not. If used as a java object persistence container,
  * 
  * *DO NOT* reference via foreign key constraints from large tables (since
- * intention is that table rows be removable). Use SystemProperty for that
+ * intention is that table rows be removable, and that would require huge
+ * indicies). In general (say for type serialization signatures) use the
+ * UserProperty.key value rather than an id ref/foreign key. This means a
+ * possible breach of "referential integrity", (quotes intended) - this is once
+ * place where the tradeoff comes down on the side of avoiding the constraint.
  */
 public abstract class UserProperty<T extends UserProperty>
 		extends VersionableEntity<T> implements HasIUser {

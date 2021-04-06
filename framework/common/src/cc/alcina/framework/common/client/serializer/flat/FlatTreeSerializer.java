@@ -77,9 +77,7 @@ import cc.alcina.framework.gwt.client.util.TextUtils;
  * @author nick@alcina.cc
  */
 public class FlatTreeSerializer {
-	private static final String CLASS = "__fts_class__";
-
-	private static final String HASH = "__fts_hash__";
+	private static final String CLASS = "class$";
 
 	public static final String CONTEXT_SUPPRESS_EXCEPTIONS = FlatTreeSerializer.class
 			.getName() + ".CONTEXT_SUPPRESS_EXCEPTIONS";
@@ -122,7 +120,6 @@ public class FlatTreeSerializer {
 					.getClassForName(state.keyValues.get(CLASS));
 		}
 		state.keyValues.remove(CLASS);
-		state.keyValues.remove(HASH);
 		T instance = Reflections.newInstance(clazz);
 		Node node = new Node(null, instance, null);
 		new FlatTreeSerializer(state).deserialize(node);
@@ -935,8 +932,6 @@ public class FlatTreeSerializer {
 			if (serializerOptions.topLevelTypeInfo) {
 				Node root = pending.get(0);
 				keyValues.put(CLASS, root.value.getClass().getName());
-				// FIXME - mvcc.flat - application.hash
-				keyValues.put(HASH, String.valueOf(System.currentTimeMillis()));
 			}
 		}
 	}

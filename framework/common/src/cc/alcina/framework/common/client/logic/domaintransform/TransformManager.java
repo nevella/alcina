@@ -275,7 +275,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public static String serialize(Object object) {
-		return Serializer.get().serialize(object);
+		return serialize(object, false);
 	}
 
 	public static String stringId(Entity entity) {
@@ -306,10 +306,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (existing != null) {
 			return existing;
 		}
-		if (Ax.isBlank(serialized)) {
+		if (serialized == null
+				|| (serialized.isEmpty() && defaultValue != null)) {
 			return defaultValue;
 		}
 		return deserializer.apply(serialized);
+	}
+
+	protected static String serialize(Object object,
+			boolean hasClassNameProperty) {
+		return Serializer.get().serialize(object, hasClassNameProperty);
 	}
 
 	private boolean useCreatedLocals = true;
@@ -1802,11 +1808,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 			try {
 				LooseContext.pushWithTrue(
 						CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
-				serializedReflector.setPropertyValue(entity,
-						serialize(event.getNewValue()));
 				String classNamePropertyName = propertyName + "ClassName";
-				if (Reflections.classLookup().hasProperty(entityClass,
-						classNamePropertyName)) {
+				boolean hasClassNameProperty = Reflections.classLookup()
+						.hasProperty(entityClass, classNamePropertyName);
+				serializedReflector.setPropertyValue(entity,
+						serialize(event.getNewValue(), hasClassNameProperty));
+				if (hasClassNameProperty) {
 					PropertyReflector serializedClassNameReflector = Reflections
 							.classLookup().getPropertyReflector(entityClass,
 									classNamePropertyName);
@@ -2244,7 +2251,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return AlcinaBeanSerializer.deserializeHolder(serialized);
 		}
 
-		public String serialize(Object object) {
+		public String serialize(Object object, boolean hasClassNameProperty) {
 			return AlcinaBeanSerializer.serializeHolder(object);
 		}
 	}

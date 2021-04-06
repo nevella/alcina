@@ -801,6 +801,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		this.taskClassName = taskClassName;
 		propertyChangeSupport().firePropertyChange("taskClassName",
 				old_taskClassName, taskClassName);
+		cachedDisplayName = null;
 	}
 
 	public void setTaskSerialized(String taskSerialized) {
