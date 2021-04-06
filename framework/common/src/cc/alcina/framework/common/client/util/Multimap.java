@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.util;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,8 +33,6 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
  */
 public class Multimap<K, V extends List>
 		implements Map<K, V>, Serializable, Cloneable {
-	private static final long serialVersionUID = 1L;
-
 	public static Multimap<String, List<String>> fromPropertyString(String text,
 			boolean unQuote) {
 		Multimap<String, List<String>> map = new Multimap();
@@ -54,7 +53,11 @@ public class Multimap<K, V extends List>
 		return map;
 	}
 
-	private Map<K, V> map;
+	public static <K, V extends List> Multimap<K, V> synchronizedMultimap() {
+		return new Synchronized<>(new Multimap<>());
+	}
+
+	protected Map<K, V> map;
 
 	public Multimap() {
 		map = createMap();
@@ -311,5 +314,12 @@ public class Multimap<K, V extends List>
 
 	private Map<K, V> createMap() {
 		return new LinkedHashMap<K, V>();
+	}
+
+	private static class Synchronized<K, V extends List>
+			extends Multimap<K, V> {
+		private Synchronized(Multimap<K, V> delegate) {
+			map = Collections.synchronizedMap(delegate.map);
+		}
 	}
 }
