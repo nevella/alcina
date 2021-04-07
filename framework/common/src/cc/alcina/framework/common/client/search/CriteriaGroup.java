@@ -41,7 +41,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
-@Bean(displayNamePropertyName = "displayName")
+@Bean
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		implements TreeRenderable, Permissible, HasPermissionsValidation,

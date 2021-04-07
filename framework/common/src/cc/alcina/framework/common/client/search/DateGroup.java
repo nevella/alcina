@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-@Bean(displayNamePropertyName = "displayName")
+@Bean
 public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
 	static final transient long serialVersionUID = -1L;
 

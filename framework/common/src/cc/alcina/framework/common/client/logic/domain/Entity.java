@@ -57,7 +57,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 // the hash in recursive deserialization)
 @JsonPropertyOrder(value = { "id", "localId" }, alphabetic = true)
 public abstract class Entity<T extends Entity> extends Bindable
-		implements HasVersionNumber, HasId {
+		implements HasVersionNumber, HasId, HasEntity<T> {
 	public static final transient String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class
 			+ ".CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID";
 
@@ -220,6 +220,11 @@ public abstract class Entity<T extends Entity> extends Bindable
 			}
 		}
 		return hash;
+	}
+
+	@Override
+	public T provideEntity() {
+		return (T) this;
 	}
 
 	@Override

@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 
-@Bean(displayNamePropertyName = "displayName")
+@Bean
 public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
 	static final transient long serialVersionUID = -1L;
 

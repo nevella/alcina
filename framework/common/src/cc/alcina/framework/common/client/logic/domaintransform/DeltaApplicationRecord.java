@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
-@Bean(displayNamePropertyName = "id")
+@Bean
 @XmlRootElement
 /**
  * TODO - this can either be a wrapper for a DomainTransformRequest, *or* a

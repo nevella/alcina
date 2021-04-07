@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.misc.PerUserProperties
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
-@Bean(displayInfo = @Display(name = "Developer"), displayNamePropertyName = "id")
+@Bean(displayInfo = @Display(name = "Developer"))
 @XmlRootElement
 @RegistryLocations(value = {
 		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
@@ -48,6 +48,10 @@ public class GeneralProperties extends WrapperPersistable
 
 	public static final transient String PROPERTY_PERSISTENT_CSS = "persistentCss";
 
+	public static GeneralProperties get() {
+		return Registry.impl(GeneralProperties.class);
+	}
+
 	private boolean autoSave;
 
 	private int filterDelayMs = DEFAULT_FILTER_DELAY;
@@ -57,11 +61,6 @@ public class GeneralProperties extends WrapperPersistable
 	private String persistentCss = "";
 
 	private boolean allowAdminInvalidObjectWrite = true;
-	
-	public static GeneralProperties get() {
-		return Registry.impl(GeneralProperties.class);
-		
-	}
 
 	public GeneralProperties() {
 	}

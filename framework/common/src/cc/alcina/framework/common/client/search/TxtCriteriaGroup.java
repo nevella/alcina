@@ -16,7 +16,7 @@ package cc.alcina.framework.common.client.search;
 import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 
-@Bean(displayNamePropertyName = "displayName")
+@Bean
 /**
  *
  * @author Nick Reddel

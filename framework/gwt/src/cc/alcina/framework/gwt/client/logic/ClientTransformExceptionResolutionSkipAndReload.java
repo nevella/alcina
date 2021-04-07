@@ -205,7 +205,7 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		}
 	}
 
-	@Bean(displayNamePropertyName = "recommendedAction")
+	@Bean
 	public static class DTEView extends Bindable {
 		boolean reloadRequired = false;
 

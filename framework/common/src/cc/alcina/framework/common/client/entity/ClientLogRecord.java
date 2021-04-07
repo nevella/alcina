@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
 
-@Bean(displayNamePropertyName = "time")
+@Bean
 @Introspectable
 @MappedSuperclass
 public class ClientLogRecord implements Serializable {
@@ -154,7 +154,7 @@ public class ClientLogRecord implements Serializable {
 		}
 	}
 
-	@Bean(displayNamePropertyName = "size")
+	@Bean
 	@Introspectable
 	public static class ClientLogRecords implements Serializable {
 		static final transient long serialVersionUID = -3L;

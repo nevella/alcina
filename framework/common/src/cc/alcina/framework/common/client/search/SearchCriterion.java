@@ -35,7 +35,7 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
-@Bean(displayNamePropertyName = "displayName", allPropertiesVisualisable = true)
+@Bean( allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 public abstract class SearchCriterion extends Bindable

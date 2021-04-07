@@ -4,7 +4,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 
-@Bean(displayNamePropertyName = "displayName")
+@Bean
 @PermissibleChildClasses({ PersistentObjectCriterion.class })
 public class PersistentObjectCriteriaGroup
 		extends CriteriaGroup<PersistentObjectCriterion> {

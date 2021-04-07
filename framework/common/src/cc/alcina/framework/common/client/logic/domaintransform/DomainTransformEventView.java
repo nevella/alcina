@@ -21,7 +21,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.ExpandableLabelCustomis
 import cc.alcina.framework.gwt.client.gwittir.customiser.RenderedLabelCustomiser;
 
 // has no pcls, read-only on client
-@Bean(displayNamePropertyName = "persistentId")
+@Bean
 @Introspectable
 public class DomainTransformEventView extends DomainTransformEvent
 		implements SourcesPropertyChangeEvents, SearchResult {
