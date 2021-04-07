@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.Ax;
  *
  * @author Nick Reddel
  */
-public interface IUser extends IVersionable {
+public interface IUser extends IVersionable, HasObjectName {
 	public abstract String getEmail();
 
 	public abstract String getFirstName();
@@ -49,10 +49,6 @@ public interface IUser extends IVersionable {
 
 	public void setUserName(String userName);
 
-	default String toIdNameString() {
-		return Ax.format("%s/%s", getId(), getUserName());
-	}
-
 	default boolean provideIsMemberOf(IGroup otherGroup) {
 		Set<IGroup> queued = new HashSet<>();
 		Stack<IGroup> toTraverse = new Stack<>();
@@ -66,5 +62,14 @@ public interface IUser extends IVersionable {
 					.forEach(toTraverse::add);
 		}
 		return false;
+	}
+
+	@Override
+	default void putObjectName(String name) {
+		setUserName(name);
+	}
+
+	default String toIdNameString() {
+		return Ax.format("%s/%s", getId(), getUserName());
 	}
 }

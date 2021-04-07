@@ -18,18 +18,15 @@ import java.util.function.Function;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.permissions.HasObjectName;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.Display;
-import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
 /**
  * Support for localisations. Defaults to a simple provider
@@ -116,14 +113,7 @@ public class TextProvider {
 		if (o instanceof HasDisplayName) {
 			return ((HasDisplayName) o).displayName();
 		}
-		String dnpn = beanReflector.getDisplayNamePropertyName();
-		if (Ax.isBlank(dnpn)) {
-			return ((Entity) o).toStringEntity();
-		}
-		Object pv = GwittirBridge.get().getPropertyValue(o, dnpn);
-		return (pv == null) ? "---"
-				: CommonUtils.trimToWsChars(pv.toString(),
-						trimmed ? TRIMMED_LENGTH : 999, true);
+		return ((Entity) o).toStringEntity();
 	}
 
 	public String getUiObjectText(Class clazz, String key,
@@ -139,20 +129,12 @@ public class TextProvider {
 		return this.trimmed;
 	}
 
-	public void setDecorated(boolean decorated) {
-		this.decorated = decorated;
+	public void putObjectName(Entity entity, String name) {
+		((HasObjectName) entity).putObjectName(name);
 	}
 
-	public void setObjectName(Entity newObj, String name) {
-		if (newObj instanceof HasDisplayName) {
-			return;
-		}
-		String dnpn = ClientReflector.get().beanInfoForClass(newObj.getClass())
-				.getDisplayNamePropertyName();
-		if (dnpn.equals("id")) {
-			return;
-		}
-		Reflections.propertyAccessor().setPropertyValue(newObj, dnpn, name);
+	public void setDecorated(boolean decorated) {
+		this.decorated = decorated;
 	}
 
 	public void setTrimmed(boolean trimmed) {

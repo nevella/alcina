@@ -38,6 +38,4 @@ public @interface Bean {
 	boolean allPropertiesVisualisable() default false;
 
 	Display displayInfo() default @Display(name = "");
-
-	String displayNamePropertyName() default "";
 }

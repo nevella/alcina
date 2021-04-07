@@ -35,11 +35,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ImplementationLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.entity.SEUtilities;
@@ -98,16 +96,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		if (o instanceof HasDisplayName) {
 			return ((HasDisplayName) o).displayName();
 		}
-		String dnpn = "id";
-		Bean info = o.getClass().getAnnotation(Bean.class);
-		if (info != null) {
-			dnpn = info.displayNamePropertyName();
-		}
-		if (Ax.isBlank(dnpn)) {
-			return "";
-		}
-		Object pv = Reflections.propertyAccessor().getPropertyValue(o, dnpn);
-		return (pv == null) ? "---" : pv.toString();
+		return o.toString();
 	}
 
 	public List<String> getAnnotatedPropertyNames(Class clazz) {

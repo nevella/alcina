@@ -67,8 +67,9 @@ public class ClientBeanReflector {
 						|| actionClass == EditAction.class
 						|| actionClass == ViewAction.class
 						|| actionClass == DeleteAction.class;
-				if (noPermissionsCheck || PermissionsManager.get().isPermitted(userObject, new AnnotatedPermissible(
-								action.permission()))) {
+				if (noPermissionsCheck || PermissionsManager.get().isPermitted(
+						userObject,
+						new AnnotatedPermissible(action.permission()))) {
 					result.add(actionClass);
 				}
 			}
@@ -82,11 +83,6 @@ public class ClientBeanReflector {
 
 	public Class getBeanClass() {
 		return this.beanClass;
-	}
-
-	public String getDisplayNamePropertyName() {
-		String dnpn = getGwBeanInfo().displayNamePropertyName();
-		return (dnpn == null) ? "id" : dnpn;
 	}
 
 	public Bean getGwBeanInfo() {

@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
  * 
  * @author Nick Reddel
  */
-public interface IGroup extends IVersionable {
+public interface IGroup extends IVersionable, HasObjectName {
 	@Override
 	public long getId();
 
@@ -82,6 +82,11 @@ public interface IGroup extends IVersionable {
 
 	default boolean provideIsMemberOf(IGroup otherGroup) {
 		return forAllMemberGroups(group -> Objects.equals(group, otherGroup));
+	}
+
+	@Override
+	default void putObjectName(String name) {
+		setGroupName(name);
 	}
 
 	default <IU extends Entity & IUser> void removeMemberUser(IU user) {
