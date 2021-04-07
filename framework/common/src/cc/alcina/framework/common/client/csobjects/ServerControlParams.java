@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.Validators;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 
-@Bean(displayNamePropertyName = "", allPropertiesVisualisable = true)
+@Bean( allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))
 public class ServerControlParams extends Bindable implements RemoteParameters {
 	private String propertyValue;

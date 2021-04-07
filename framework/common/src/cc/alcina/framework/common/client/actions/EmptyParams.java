@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 
-@Bean(displayNamePropertyName = "", allPropertiesVisualisable = true)
+@Bean( allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))
 public class EmptyParams extends Bindable implements RemoteParameters {
 }
