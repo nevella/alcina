@@ -37,12 +37,11 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
-import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 /**
  * Base for classes which can be handled by the
@@ -224,7 +223,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 
 	@Override
 	public T provideEntity() {
-		return (T) this;
+		return (T) domainIdentity();
 	}
 
 	@Override
@@ -248,23 +247,15 @@ public abstract class Entity<T extends Entity> extends Bindable
 	}
 
 	@Override
-	/*
-	 * the last line is to deal with a weird gwt/ff/webkit bug
-	 */
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public String toString() {
 		if (Reflections.classLookup() == null) {
 			return toLocator().toString();
 		}
-		if (!GwittirUtils.isIntrospectable(getClass())) {
-			return super.toString();
+		if (this instanceof HasDisplayName) {
+			return ((HasDisplayName) this).displayName();
 		}
-		String dn = Reflections.classLookup()
-				.displayNameForObject(domainIdentity());
-		if (dn != null && dn.equals("---")) {
-			dn = this.toLocator().toString();
-		}
-		dn = Ax.blankTo(dn, this::toStringEntity);
-		return dn.substring(0, dn.length());
+		return toLocator().toString();
 	}
 
 	public final String toStringEntity() {

@@ -28,6 +28,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  *
  * @author Nick Reddel
@@ -35,7 +37,7 @@ import javax.servlet.http.HttpServletResponse;
 public class ResponseHeaderFilter implements Filter {
 	public static final String URL_REGEX = "Url-Regex";
 
-	public static final String CROSS_ORIGIN_IF_GWT = "Cross-Origin-If-GWT";
+	public static final String CROSS_ORIGIN_IF_GWT_CODESERVER = "Cross-Origin-If-GWT-CodeServer";
 
 	FilterConfig fc;
 
@@ -43,7 +45,7 @@ public class ResponseHeaderFilter implements Filter {
 
 	private Map<String, String> headerKvs;
 
-	private boolean crossOriginIfGwt;
+	private boolean crossOriginIfGwtCodeserver;
 
 	@Override
 	public void destroy() {
@@ -62,9 +64,15 @@ public class ResponseHeaderFilter implements Filter {
 				response.addHeader(k, headerKvs.get(k));
 			}
 		}
-		if (crossOriginIfGwt && request.getParameter("gwt.codesvr") != null) {
-			response.addHeader("Cross-Origin-Embedder-Policy", "require-corp");
-			response.addHeader("Cross-Origin-Opener-Policy", "same-origin");
+		if (crossOriginIfGwtCodeserver) {
+			boolean usesCodeserver = request.getParameter("gwt.codesvr") != null
+					|| Ax.matches(request.getHeader("Referer"),
+							".*gwt.codesvr.*");
+			if (usesCodeserver) {
+				response.addHeader("Cross-Origin-Embedder-Policy",
+						"require-corp");
+				response.addHeader("Cross-Origin-Opener-Policy", "same-origin");
+			}
 		}
 		chain.doFilter(req, response);
 	}
@@ -81,8 +89,8 @@ public class ResponseHeaderFilter implements Filter {
 			case URL_REGEX:
 				filterRegex = Pattern.compile(v);
 				break;
-			case CROSS_ORIGIN_IF_GWT:
-				crossOriginIfGwt = Boolean.valueOf(v);
+			case CROSS_ORIGIN_IF_GWT_CODESERVER:
+				crossOriginIfGwtCodeserver = Boolean.valueOf(v);
 				break;
 			default:
 				headerKvs.put(k, v);

@@ -1,1 +1,0 @@
-Half done - for the mo' gotta qualify all refs and run in run method

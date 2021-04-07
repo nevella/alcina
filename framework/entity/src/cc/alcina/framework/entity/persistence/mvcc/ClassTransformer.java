@@ -40,6 +40,7 @@ import com.github.javaparser.ast.expr.ConditionalExpr;
 import com.github.javaparser.ast.expr.EnclosedExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
+import com.github.javaparser.ast.expr.InstanceOfExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.MethodReferenceExpr;
 import com.github.javaparser.ast.expr.NameExpr;
@@ -771,6 +772,10 @@ class ClassTransformer {
 				// OK -- e.g. MvccTestEntity.this::someMethod (we check access
 				// elsewhere)
 				if (parent instanceof MethodReferenceExpr) {
+					return;
+				}
+				if (parent instanceof InstanceOfExpr) {
+					// OK - this instanceof Foo
 					return;
 				}
 				if (isInStaticNonEntityInnerClass(expr)) {
