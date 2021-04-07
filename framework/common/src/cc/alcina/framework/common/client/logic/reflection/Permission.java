@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -23,6 +24,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ClientVisible
+@Inherited
 /**
  *
  * @author Nick Reddel
