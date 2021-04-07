@@ -39,44 +39,38 @@ public class DirectedActivity<P extends BasePlace> extends Model
 		if (provider.isPresent()) {
 			directedActivity = provider.get().getActivity(place);
 		} else {
-			directedActivity = Registry.impl(DirectedActivity.class,
-					place.getClass());
-			if (directedActivity.getClass() == DirectedActivity.class)
-			// i.e. the default
-			{
-				if (place instanceof EntityPlace) {
-					EntityPlace entityPlace = (EntityPlace) place;
-					if (entityPlace.id != 0
-							|| entityPlace.action == EntityAction.CREATE) {
-						directedActivity = Registry.impl(
-								DirectedEntityActivity.class, place.getClass());
-					} else {
-						directedActivity = Registry.impl(
-								DirectedBindableSearchActivity.class,
-								place.getClass());
-					}
-				} else if (place instanceof BindablePlace) {
+			if (place instanceof EntityPlace) {
+				EntityPlace entityPlace = (EntityPlace) place;
+				if (entityPlace.id != 0
+						|| entityPlace.action == EntityAction.CREATE) {
+					directedActivity = Registry.impl(
+							DirectedEntityActivity.class, place.getClass());
+				} else {
 					directedActivity = Registry.impl(
 							DirectedBindableSearchActivity.class,
 							place.getClass());
-				} else if (place instanceof CategoryNamePlace) {
-					CategoryNamePlace categoryPlace = (CategoryNamePlace) place;
-					PermissibleAction action = categoryPlace.ensureAction();
-					if (action instanceof PlaceAction) {
-						AppController.get().goToPlaceReplaceCurrent(
-								((PlaceAction) action).getTargetPlace());
-						return ActivityManager.NULL_ACTIVITY;
-					}
-					if (categoryPlace.nodeName == null) {
-						directedActivity = Registry.impl(
-								DirectedCategoriesActivity.class,
-								place.getClass());
-					} else {
-						directedActivity = Registry.impl(
-								DirectedCategoryActivity.class,
-								place.getClass());
-					}
 				}
+			} else if (place instanceof BindablePlace) {
+				directedActivity = Registry.impl(
+						DirectedBindableSearchActivity.class, place.getClass());
+			} else if (place instanceof CategoryNamePlace) {
+				CategoryNamePlace categoryPlace = (CategoryNamePlace) place;
+				PermissibleAction action = categoryPlace.ensureAction();
+				if (action instanceof PlaceAction) {
+					AppController.get().goToPlaceReplaceCurrent(
+							((PlaceAction) action).getTargetPlace());
+					return ActivityManager.NULL_ACTIVITY;
+				}
+				if (categoryPlace.nodeName == null) {
+					directedActivity = Registry.impl(
+							DirectedCategoriesActivity.class, place.getClass());
+				} else {
+					directedActivity = Registry.impl(
+							DirectedCategoryActivity.class, place.getClass());
+				}
+			} else {
+				directedActivity = Registry.impl(DirectedActivity.class,
+						place.getClass());
 			}
 		}
 		directedActivity.setPlace((BasePlace) place);
