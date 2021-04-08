@@ -865,6 +865,11 @@ public class DomainStore implements IDomainStore {
 				}
 				if (transform.getTransformType() != TransformType.DELETE_OBJECT
 						&& last == transform) {
+					if (entity == null && transform
+							.getTransformType() == TransformType.CREATE_OBJECT) {
+						entity = transformManager
+								.getObjectForCreationTransform(transform, true);
+					}
 					if (entity != null) {
 						ExTransformDbMetadata dbMetadata = transform
 								.getExTransformDbMetadata();
@@ -1707,6 +1712,11 @@ public class DomainStore implements IDomainStore {
 
 	class SubgraphTransformManagerPostProcess extends SubgraphTransformManager {
 		private LocalReplacementCreationObjectResolver localReplacementCreationObjectResolver;
+
+		public Entity getObjectForCreationTransform(DomainTransformEvent dte,
+				boolean ignoreSource) {
+			return super.getObject(dte, ignoreSource);
+		}
 
 		@Override
 		public Entity getObject(DomainTransformEvent dte,
