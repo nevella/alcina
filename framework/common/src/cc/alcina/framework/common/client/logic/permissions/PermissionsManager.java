@@ -615,6 +615,8 @@ public class PermissionsManager implements DomainTransformListener {
 		return isPermitted(null, p);
 	}
 
+	// pretty much only for create permi8ssion checks (all others may be
+	// object-dependent)
 	public boolean isPermitted(Permission create) {
 		return isPermitted(new AnnotatedPermissible(create));
 	}

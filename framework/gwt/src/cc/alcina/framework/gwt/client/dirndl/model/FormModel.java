@@ -26,10 +26,12 @@ import cc.alcina.framework.common.client.actions.instances.NonstandardObjectActi
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
+import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
@@ -47,6 +49,7 @@ import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
 public class FormModel extends Model {
@@ -119,6 +122,7 @@ public class FormModel extends Model {
 			if (getState().model instanceof Entity) {
 				ClientTransformManager.cast()
 						.promoteToDomainObject(getState().model);
+				CommitToStorageTransformListener.get().flush();
 			}
 			if (Client.currentPlace() instanceof EntityPlace) {
 				EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
@@ -182,7 +186,20 @@ public class FormModel extends Model {
 			state.expectsModel = true;
 			if (action instanceof PermissibleEntityAction) {
 				Entity entity = ((PermissibleEntityAction) action).getEntity();
-				entity = ClientTransformManager.cast().ensureEditable(entity);
+				ObjectPermissions op = Reflections.classLookup()
+						.getAnnotationForClass(entity.getClass(),
+								ObjectPermissions.class);
+				op = op == null
+						? PermissionsManager.get().getDefaultObjectPermissions()
+						: op;
+				state.editable = PermissionsManager.get().isPermitted(entity,
+						op.write());
+				if (state.editable) {
+					entity = ClientTransformManager.cast()
+							.ensureEditable(entity);
+				} else {
+					state.adjunct = false;
+				}
 				state.model = entity;
 			} else if (action instanceof RemoteActionWithParameters) {
 				state.model = (Bindable) ((RemoteActionWithParameters) action)
