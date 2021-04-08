@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlBuilder;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.task.TaskCancelJob;
 import cc.alcina.framework.servlet.task.TaskListJobs;
@@ -116,7 +117,14 @@ public class JobServlet extends AlcinaServlet {
 				task = TransformManager.Serializer.get()
 						.deserialize(serialized);
 			}
-			job = JobRegistry.get().perform(task);
+			job = task.schedule();
+			Transaction.commit();
+			String href = createTaskUrl(new TaskLogJobDetails()
+					.withValue(String.valueOf(job.getId())));
+			response.setContentType("text/plain");
+			response.getWriter().write(Ax.format("Job started:\n%s\n", href));
+			response.flushBuffer();
+			JobRegistry.get().await(job);
 			break;
 		}
 		job = Domain.find(job);
