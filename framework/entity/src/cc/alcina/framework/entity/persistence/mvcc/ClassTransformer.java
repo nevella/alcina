@@ -515,13 +515,17 @@ class ClassTransformer {
 			// for debugging
 			private MethodCallExpr visiting;
 
+			private ClassOrInterfaceDeclaration classOrInterfaceDeclaration;
+
 			public CheckAccessVisitor() {
 			}
 
 			@Override
-			public void visit(ClassOrInterfaceDeclaration n, Void arg) {
-				// Ax.err("Visit COI Decl:: %s", n.getName());
-				super.visit(n, arg);
+			public void visit(
+					ClassOrInterfaceDeclaration classOrInterfaceDeclaration,
+					Void arg) {
+				this.classOrInterfaceDeclaration = classOrInterfaceDeclaration;
+				super.visit(classOrInterfaceDeclaration, arg);
 			}
 
 			@Override
@@ -715,6 +719,13 @@ class ClassTransformer {
 						}
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
+					} catch (VerifyError vr) {
+						Logger logger = LoggerFactory.getLogger(getClass());
+						logger.warn("Verify error in visitor: {} - {}",
+								CommonUtils.toSimpleExceptionMessage(vr),
+								classOrInterfaceDeclaration.getName()
+										.toString());
+						logger.warn("Verify error", vr);
 					}
 				}
 			}
