@@ -20,9 +20,10 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistryException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.util.ClasspathScanner;
+import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
+import cc.alcina.framework.entity.util.JacksonUtils;
 
 /**
  *
@@ -41,6 +42,8 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 
 	protected ClassMetadataCache<T> outgoingCache;
 
+	String debugClassloaderExceptionRegex = null;
+
 	public InputStream getStreamForMd5(ClassMetadata classMetadata)
 			throws Exception {
 		try {
@@ -50,8 +53,6 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 			return new JarHelper().openStream(classMetadata.url());
 		}
 	}
-
-	String debugClassloaderExceptionRegex = null;
 
 	public void scan(ClassMetadataCache<ClassMetadata> foundCache,
 			String cachePath) throws Exception {
@@ -104,8 +105,8 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 		}
 		try {
 			LooseContext.pushWithTrue(
-					KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER);
-			KryoUtils.serializeToFile(outgoingCache, cacheFile);
+					JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL);
+			JacksonUtils.serializeToFile(outgoingCache, cacheFile);
 		} finally {
 			LooseContext.pop();
 		}
@@ -125,9 +126,9 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 	protected ClassMetadataCache getCached(File cacheFile) {
 		try {
 			LooseContext.pushWithTrue(
-					KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER);
-			ClassMetadataCache value = KryoUtils.deserializeFromFile(cacheFile,
-					ClassMetadataCache.class);
+					JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL);
+			ClassMetadataCache value = JacksonUtils
+					.deserializeFromFile(cacheFile, ClassMetadataCache.class);
 			return value;
 		} catch (Exception e) {
 			return new ClassMetadataCache();

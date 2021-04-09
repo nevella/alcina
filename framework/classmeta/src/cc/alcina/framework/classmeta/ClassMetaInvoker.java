@@ -7,20 +7,20 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
+import cc.alcina.framework.entity.util.JacksonUtils;
 
 public class ClassMetaInvoker {
 	public ClassMetaResponse invoke(ClassMetaRequest metaRequest) {
 		try {
 			LooseContext.pushWithTrue(
-					KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER);
+					JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL);
 			String url = ResourceUtilities.get(ClassMetaInvoker.class,
 					"remoteScannerUrl");
-			byte[] bytes = ResourceUtilities.readUrlAsBytesWithPost(url,
-					KryoUtils.serializeToBase64(metaRequest), new StringMap());
-			return KryoUtils.deserializeFromByteArray(bytes,
-					ClassMetaResponse.class);
+			String json = ResourceUtilities.readUrlAsStringWithPost(url,
+					JacksonUtils.serialize(metaRequest), new StringMap());
+			return JacksonUtils.deserialize(json, ClassMetaResponse.class);
 		} catch (Exception e) {
 			if (CommonUtils.extractCauseOfClass(e,
 					ConnectException.class) != null) {

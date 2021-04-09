@@ -36,11 +36,15 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 
 @RegistryLocation(registryPoint = JsonObjectSerializer.class, implementationType = ImplementationType.INSTANCE)
 public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
+	public static final String CONTEXT_WITHOUT_MAPPER_POOL = JacksonJsonObjectSerializer.class
+			+ ".CONTEXT_NO_MAPPER";
+
 	private static CachingMap<JacksonJsonObjectSerializer, ObjectMapperPool> objectMappersPool = new CachingConcurrentMap<>(
 			serializer -> new ObjectMapperPool(serializer), 10);
 
@@ -240,12 +244,17 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	private <T> T
 			runWithObjectMapper(Function<ObjectMapper, T> mapperFunction) {
-		ObjectMapperPool pool = objectMappersPool.get(this);
-		ObjectMapper mapper = pool.borrow();
-		try {
+		if (LooseContext.is(CONTEXT_WITHOUT_MAPPER_POOL)) {
+			ObjectMapper mapper = createObjectMapper();
 			return mapperFunction.apply(mapper);
-		} finally {
-			pool.returnObject(mapper);
+		} else {
+			ObjectMapperPool pool = objectMappersPool.get(this);
+			ObjectMapper mapper = pool.borrow();
+			try {
+				return mapperFunction.apply(mapper);
+			} finally {
+				pool.returnObject(mapper);
+			}
 		}
 	}
 

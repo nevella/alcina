@@ -29,7 +29,12 @@ import cc.alcina.framework.common.client.util.TopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
 /**
- * Manages an ecology of players - a sort of organic state machine
+ * Manages an ecology of players - a sort of organic state machine.
+ * 
+ * 
+ * The usage as per: noun noun: consort; plural noun: consorts a small group of
+ * musicians performing together, typically playing instrumental music of the
+ * Renaissance period. "a consort of viols"
  * 
  * @author nick@alcina.cc
  * 

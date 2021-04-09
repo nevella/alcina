@@ -33,6 +33,9 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	private static Topic<DirectedActivity> topicActivityStarted = Topic.local();
 
 	public static Activity forPlace(Place place) {
+		if(!(place instanceof BasePlace)){
+			return null;
+		}
 		DirectedActivity directedActivity = null;
 		Optional<Provider> provider = Registry
 				.optional(DirectedActivity.Provider.class, place.getClass());

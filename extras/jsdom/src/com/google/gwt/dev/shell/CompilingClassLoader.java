@@ -704,6 +704,8 @@ public final class CompilingClassLoader extends ClassLoader
 		throw new RuntimeException("Error initializing JavaScriptHost", caught);
 	}
 
+	
+	int multiParentDepth = 0;
 	@Override
 	protected Class<?> findClass(String className)
 			throws ClassNotFoundException {
@@ -721,8 +723,16 @@ public final class CompilingClassLoader extends ClassLoader
 		loadLock.lock();
 		try {
 			if (scriptOnlyClasses.contains(className)) {
+				/*
+				 * the scriptOnlyClassLoader reentrancy can have issues - so make sure
+				 *  we're in a multiParentClassloader stack before throwing the exception (otherwise resolve) 
+				 */
+				if(multiParentDepth>0){
 				// Allow the child ClassLoader to handle this
 				throw new ClassNotFoundException();
+				}else{
+					return Class.forName(className, false, scriptOnlyClassLoader);
+				}
 			}
 			// Get the bytes, compiling if necessary.
 			// Check for a bridge class that spans hosted and user space.
@@ -745,7 +755,13 @@ public final class CompilingClassLoader extends ClassLoader
 				loadLock.unlock();
 				// Also don't run the static initializer to lower the risk of
 				// deadlock.
-				return Class.forName(className, false, scriptOnlyClassLoader);
+				
+				try {
+					multiParentDepth++;
+					return Class.forName(className, false, scriptOnlyClassLoader);
+				} finally {
+					multiParentDepth--;
+				}
 			}
 			/*
 			 * Prevent reentrant problems where classes that need to be injected
