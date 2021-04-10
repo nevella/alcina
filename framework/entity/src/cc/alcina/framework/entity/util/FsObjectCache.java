@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -94,6 +95,12 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	public SerializationStrategy getSerializationStrategy() {
 		return this.serializationStrategy;
+	}
+
+	@Override
+	public Optional<Long> lastModified(String path) {
+		return Optional.of(new File(path)).filter(File::exists)
+				.map(File::lastModified);
 	}
 
 	@Override

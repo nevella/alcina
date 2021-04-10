@@ -26,6 +26,8 @@ public interface PersistentObjectCache<T> {
 
 	T get(String path);
 
+	Optional<Long> lastModified(String path);
+
 	List<String> listChildPaths(String path);
 
 	default Optional<T> optional(String path) {
