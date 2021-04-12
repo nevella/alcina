@@ -69,6 +69,11 @@ public interface IUser extends IVersionable, HasObjectName {
 		setUserName(name);
 	}
 
+	@Override
+	default String getObjectName() {
+		return Ax.blankTo(getUserName(), "(null)");
+	}
+
 	default String toIdNameString() {
 		return Ax.format("%s/%s", getId(), getUserName());
 	}

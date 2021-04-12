@@ -113,6 +113,9 @@ public class TextProvider {
 		if (o instanceof HasDisplayName) {
 			return ((HasDisplayName) o).displayName();
 		}
+		if (o instanceof HasObjectName) {
+			return ((HasObjectName) o).getObjectName();
+		}
 		return ((Entity) o).toStringEntity();
 	}
 

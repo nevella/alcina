@@ -20,6 +20,7 @@ import java.util.Stack;
 import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * 
@@ -87,6 +88,11 @@ public interface IGroup extends IVersionable, HasObjectName {
 	@Override
 	default void putObjectName(String name) {
 		setGroupName(name);
+	}
+
+	@Override
+	default String getObjectName() {
+		return Ax.blankTo(getName(), "(null)");
 	}
 
 	default <IU extends Entity & IUser> void removeMemberUser(IU user) {
