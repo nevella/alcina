@@ -249,10 +249,6 @@ public class FlatTreeSerializer {
 				 */
 				while (!resolved) {
 					resolved |= resolvingLastSegment;
-					if (cursor.toString().equals(
-							"parameters.contactSearchDefinition.groupingParameters.columnOrders=[]")) {
-						int debug = 3;
-					}
 					if (cursor.isCollection() && !cursor.isLeaf()) {
 						Class elementClass = null;
 						if (state.deserializerOptions.shortPaths) {
@@ -305,12 +301,6 @@ public class FlatTreeSerializer {
 							} else {
 								property = segmentMap.get("");
 							}
-							if (property == null) {
-								// REMOVE once ok
-								deSerializationClassAliasProperty.clear();
-								int debug = 3;
-								getAliasPropertyMap(cursor);
-							}
 						} else {
 							property = getProperties(cursor.value).stream()
 									.filter(p -> p.getName().equals(segment))
@@ -322,19 +312,30 @@ public class FlatTreeSerializer {
 										property.getName());
 						PropertySerialization propertySerialization = getPropertySerialization(
 								cursor.value.getClass(), property.getName());
-						if (!lastSegment && childValue == null) {
-							// ensure value (since not at leaf)
-							Class propertyType = property.getType();
-							if (propertySerialization != null
-									&& propertySerialization
-											.leafType() != void.class) {
-								propertyType = propertySerialization.leafType();
+						if (childValue == null) {
+							if (lastSegment) {
+								// nullable parameters cannot be intermediate
+								// defaults
+							} else {
+								// ensure value (since not at leaf)
+								Class propertyType = property.getType();
+								if (propertySerialization != null
+										&& propertySerialization
+												.leafType() != void.class) {
+									propertyType = propertySerialization
+											.leafType();
+								}
+								childValue = Reflections
+										.newInstance(propertyType);
+								Reflections.propertyAccessor().setPropertyValue(
+										cursor.value, property.getName(),
+										childValue);
 							}
-							childValue = Reflections.newInstance(propertyType);
-							Reflections.propertyAccessor().setPropertyValue(
-									cursor.value, property.getName(),
-									childValue);
 						}
+						/*
+						 * If null, definitely can't descend further (since null
+						 * has no properties...)
+						 */
 						cursor = new Node(cursor, childValue, null);
 						cursor.path.property = property;
 						cursor.path.propertySerialization = getPropertySerialization(
@@ -420,15 +421,18 @@ public class FlatTreeSerializer {
 	}
 
 	private Map<String, Property> getAliasPropertyMap(Node cursor) {
-		Function<? super Property, ? extends String> keyMapper = p -> {
+		Function<? super Property, ? extends String> keyMapper = property -> {
 			PropertySerialization propertySerialization = getPropertySerialization(
-					cursor.value.getClass(), p.getName());
+					cursor.value.getClass(), property.getName());
 			if (propertySerialization != null) {
-				return propertySerialization.defaultProperty() ? ""
-						: propertySerialization.path();
-			} else {
-				return p.getName();
+				if (propertySerialization.defaultProperty()) {
+					return "";
+				}
+				if (propertySerialization.path().length() > 0) {
+					return propertySerialization.path();
+				}
 			}
+			return property.getName();
 		};
 		return deSerializationClassAliasProperty
 				.computeIfAbsent(cursor.value.getClass(), clazz -> {
@@ -1074,8 +1078,10 @@ public class FlatTreeSerializer {
 				} else {
 					if (propertySerialization != null) {
 						if (propertySerialization.defaultProperty()) {
-						} else {
+						} else if (propertySerialization.path().length() > 0) {
 							fb.append(propertySerialization.path());
+						} else {
+							fb.append(propertySerialization.name());
 						}
 					} else {
 						fb.append(property.getName());

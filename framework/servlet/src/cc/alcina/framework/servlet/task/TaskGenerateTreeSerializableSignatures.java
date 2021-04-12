@@ -70,10 +70,10 @@ public class TaskGenerateTreeSerializableSignatures
 			FlatTreeSerializer.serialize(serializable,
 					new SerializerOptions().withDefaults(false)
 							.withShortPaths(true).withTestSerialized(true));
-			FlatTreeSerializer.serialize(serializable,
-					new SerializerOptions().withDefaults(false)
-							.withShortPaths(true).withTestSerialized(true)
-							.withTestSerializedPopulateAllPaths(true));
+			// FlatTreeSerializer.serialize(serializable,
+			// new SerializerOptions().withDefaults(false)
+			// .withShortPaths(true).withTestSerialized(true)
+			// .withTestSerializedPopulateAllPaths(true));
 		} catch (Exception e) {
 			String message = Ax.format("%s - %s",
 					serializable.getClass().getSimpleName(),
