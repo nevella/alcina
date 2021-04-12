@@ -91,7 +91,7 @@ public interface IGroup extends IVersionable, HasObjectName {
 
 	@Override
 	default String getObjectName() {
-		return getName();
+		return Ax.blankTo(getName(), "(null)");
 	}
 
 	default <IU extends Entity & IUser> void removeMemberUser(IU user) {

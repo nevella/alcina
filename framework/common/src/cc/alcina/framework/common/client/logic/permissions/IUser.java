@@ -71,7 +71,7 @@ public interface IUser extends IVersionable, HasObjectName {
 
 	@Override
 	default String getObjectName() {
-		return getUserName();
+		return Ax.blankTo(getUserName(), "(null)");
 	}
 
 	default String toIdNameString() {
