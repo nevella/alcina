@@ -89,6 +89,11 @@ public interface IGroup extends IVersionable, HasObjectName {
 		setGroupName(name);
 	}
 
+	@Override
+	default String getObjectName() {
+		return getName();
+	}
+
 	default <IU extends Entity & IUser> void removeMemberUser(IU user) {
 		((Entity) this).domain().removeFromProperty("memberUsers", user);
 	}
