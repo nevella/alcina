@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
  * @author nick@alcina.cc
  *
  */
-public class RemoteActionWithParameters<T extends RemoteParameters>
+public abstract class RemoteActionWithParameters<T extends RemoteParameters>
 		extends RemoteAction implements HasParameters<T> {
 	private T parameters;
 

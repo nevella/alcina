@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.gen;
+package cc.alcina.framework.common.client.util;
 
 /**
  * This code is a stripped down version of Robert Harder's Public Domain Base64

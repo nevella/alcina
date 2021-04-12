@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HtmlConstants;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
 /**

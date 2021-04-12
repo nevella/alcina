@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.task;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,10 @@ public class TaskGenerateTreeSerializableSignatures
 			FlatTreeSerializer.serialize(serializable,
 					new SerializerOptions().withDefaults(false)
 							.withShortPaths(true).withTestSerialized(true));
+			FlatTreeSerializer.serialize(serializable,
+					new SerializerOptions().withDefaults(false)
+							.withShortPaths(true).withTestSerialized(true)
+							.withTestSerializedPopulateAllPaths(true));
 		} catch (Exception e) {
 			String message = Ax.format("%s - %s",
 					serializable.getClass().getSimpleName(),
@@ -106,11 +111,13 @@ public class TaskGenerateTreeSerializableSignatures
 
 	@Override
 	protected void run0() throws Exception {
-		Registry.impls(TreeSerializable.class).stream().filter(this::filter)
-				.forEach(this::checkSerializationIssues);
+		List<TreeSerializable> serializables = Registry
+				.impls(TreeSerializable.class).stream()
+				.sorted(Comparator.comparing(c -> c.getClass().getName()))
+				.filter(this::filter).collect(Collectors.toList());
+		serializables.forEach(this::checkSerializationIssues);
 		Preconditions.checkState(serializationIssues.isEmpty());
-		Registry.impls(TreeSerializable.class).stream().filter(this::filter)
-				.forEach(this::checkAllFieldsAreProperties);
+		serializables.forEach(this::checkAllFieldsAreProperties);
 		if (!missingPropertyDescriptors.isEmpty()) {
 			missingPropertyDescriptors.stream().collect(
 					AlcinaCollectors.toKeyMultimap(Field::getDeclaringClass))
@@ -121,12 +128,10 @@ public class TaskGenerateTreeSerializableSignatures
 		}
 		Preconditions.checkState(missingPropertyDescriptors.isEmpty(),
 				"Missing property descriptors");
-		Registry.impls(TreeSerializable.class).stream().filter(this::filter)
-				.forEach(this::generateSignature);
+		serializables.forEach(this::generateSignature);
 		TreeSerializableSignatures stableCheck = signatures;
 		signatures = new TreeSerializableSignatures();
-		Registry.impls(TreeSerializable.class).stream().filter(this::filter)
-				.forEach(this::generateSignature);
+		serializables.forEach(this::generateSignature);
 		Preconditions
 				.checkState(
 						signatures.getClassNameDefaultSerializedForms()

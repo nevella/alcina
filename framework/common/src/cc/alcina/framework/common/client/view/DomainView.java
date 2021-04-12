@@ -1,12 +1,16 @@
 package cc.alcina.framework.common.client.view;
 
+import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 
+@MappedSuperclass
+@Bean
 public abstract class DomainView extends VersionableEntity<DomainView> {
 	private ContentDefinition entityDefinition;
 
@@ -15,6 +19,8 @@ public abstract class DomainView extends VersionableEntity<DomainView> {
 	private EntityTransformModel entityTransformModel;
 
 	private String entityTransformModelSerialized;
+
+	private String name;
 
 	@Transient
 	@DomainProperty(serialize = true)
@@ -41,6 +47,10 @@ public abstract class DomainView extends VersionableEntity<DomainView> {
 	@Transient
 	public String getEntityTransformModelSerialized() {
 		return this.entityTransformModelSerialized;
+	}
+
+	public String getName() {
+		return this.name;
 	}
 
 	public void setEntityDefinition(ContentDefinition entityDefinition) {
@@ -74,5 +84,11 @@ public abstract class DomainView extends VersionableEntity<DomainView> {
 				"entityTransformModelSerialized",
 				old_entityTransformModelSerialized,
 				entityTransformModelSerialized);
+	}
+
+	public void setName(String name) {
+		String old_name = this.name;
+		this.name = name;
+		propertyChangeSupport().firePropertyChange("name", old_name, name);
 	}
 }

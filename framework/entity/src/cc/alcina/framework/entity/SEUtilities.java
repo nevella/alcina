@@ -93,7 +93,7 @@ import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
 import cc.alcina.framework.common.client.util.CommonUtils.YearResolver;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
-import cc.alcina.framework.gwt.client.util.TextUtils;
+import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
  * @author nick@alcina.cc

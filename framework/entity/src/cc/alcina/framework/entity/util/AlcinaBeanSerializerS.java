@@ -34,11 +34,11 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.gen.Base64;
 
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable

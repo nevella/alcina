@@ -1,15 +1,18 @@
 package cc.alcina.framework.common.client.serializer.flat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,17 +22,21 @@ import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.gwt.client.util.TextUtils;
+import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
  * <p>
@@ -70,8 +77,17 @@ import cc.alcina.framework.gwt.client.util.TextUtils;
  * <li>pluggable client sdef ser/deser
  * <li>serialize with 2 copies of each collection<treeser> elt; all enum values;
  * hash string; check roundtrip gives identical kryo bytes
- * <li>(later) GWT RPC
+ * <li>(later) GWT RPC (for serializing places, searchdefs etc without
+ * serialization classes)
  * <li>Apps
+ * </ul>
+ * 
+ * <h2>FIXME:</h2>
+ * <ul>
+ * <li>PropertySerialization to ResolvedPropertySerialization (which respects
+ * Type.PropertySerialization, path.parent.PropertySerialization.grandchildTypes
+ * <li>Clarify anything complicated with psuedocode
+ * <li>Check that collision detection works
  * </ul>
  *
  * @author nick@alcina.cc
@@ -161,9 +177,11 @@ public class FlatTreeSerializer {
 					.withShortPaths(options.shortPaths)
 					.withSingleLine(options.singleLine)
 					.withTopLevelTypeInfo(options.topLevelTypeInfo);
-			String checkSerialied = serialize(checkObject, checkOptions);
-			Preconditions.checkState(Objects.equals(serialized, checkSerialied),
-					"Unequal serialized: \n%s\n%s", serialized, checkSerialied);
+			String checkSerialized = serialize(checkObject, checkOptions);
+			Preconditions.checkState(
+					Objects.equals(serialized, checkSerialized),
+					"Unequal serialized: \n%s\n%s", serialized,
+					checkSerialized);
 		}
 		return serialized;
 	}
@@ -172,7 +190,27 @@ public class FlatTreeSerializer {
 		if (value == null) {
 			return true;
 		}
-		Class<? extends Object> clazz = value.getClass();
+		if (value instanceof TreeSerializable) {
+			return false;
+		}
+		Class<? extends Object> valueClass = value.getClass();
+		if (CommonUtils.stdAndPrimitives.contains(valueClass)) {
+			return true;
+		}
+		if (valueClass.isEnum() || CommonUtils.isEnumSubclass(valueClass)) {
+			return true;
+		}
+		if (valueClass.isArray()
+				&& valueClass.getComponentType() == byte.class) {
+			return true;
+		}
+		if (value instanceof Entity) {
+			return true;
+		}
+		return false;
+	}
+
+	private static boolean isValueClass(Class clazz) {
 		if (CommonUtils.stdAndPrimitives.contains(clazz)) {
 			return true;
 		}
@@ -197,6 +235,7 @@ public class FlatTreeSerializer {
 				String segment = segments[idx];
 				String segmentPath = segment;
 				int index = 1;
+				boolean lastSegment = idx == segments.length - 1;
 				if (segment.matches("(.+?)(\\d+)")) {
 					segmentPath = segment.replaceFirst("(.+?)(\\d+)", "$1");
 					index = Integer.parseInt(
@@ -210,17 +249,15 @@ public class FlatTreeSerializer {
 				 */
 				while (!resolved) {
 					resolved |= resolvingLastSegment;
+					if (cursor.toString().equals(
+							"parameters.contactSearchDefinition.groupingParameters.columnOrders=[]")) {
+						int debug = 3;
+					}
 					if (cursor.isCollection() && !cursor.isLeaf()) {
 						Class elementClass = null;
 						if (state.deserializerOptions.shortPaths) {
 							Map<String, Class> typeMap = getAliasClassMap(
 									root.value.getClass(), cursor);
-							if (typeMap.isEmpty()) {
-								int debug = 3;
-								cursor.isLeaf();
-								deSerializationPropertyAliasClass.clear();
-								getAliasClassMap(root.value.getClass(), cursor);
-							}
 							elementClass = typeMap.get(segmentPath);
 							if (elementClass != null) {
 								resolved = true;
@@ -268,16 +305,37 @@ public class FlatTreeSerializer {
 							} else {
 								property = segmentMap.get("");
 							}
+							if (property == null) {
+								// REMOVE once ok
+								deSerializationClassAliasProperty.clear();
+								int debug = 3;
+								getAliasPropertyMap(cursor);
+							}
 						} else {
 							property = getProperties(cursor.value).stream()
 									.filter(p -> p.getName().equals(segment))
 									.findFirst().get();
 							resolved = true;
 						}
-						cursor = new Node(cursor,
-								Reflections.propertyAccessor().getPropertyValue(
-										cursor.value, property.getName()),
-								null);
+						Object childValue = Reflections.propertyAccessor()
+								.getPropertyValue(cursor.value,
+										property.getName());
+						PropertySerialization propertySerialization = getPropertySerialization(
+								cursor.value.getClass(), property.getName());
+						if (!lastSegment && childValue == null) {
+							// ensure value (since not at leaf)
+							Class propertyType = property.getType();
+							if (propertySerialization != null
+									&& propertySerialization
+											.leafType() != void.class) {
+								propertyType = propertySerialization.leafType();
+							}
+							childValue = Reflections.newInstance(propertyType);
+							Reflections.propertyAccessor().setPropertyValue(
+									cursor.value, property.getName(),
+									childValue);
+						}
+						cursor = new Node(cursor, childValue, null);
 						cursor.path.property = property;
 						cursor.path.propertySerialization = getPropertySerialization(
 								cursor.parent.value.getClass(),
@@ -289,7 +347,6 @@ public class FlatTreeSerializer {
 						 * default paths
 						 * 
 						 */
-						boolean lastSegment = idx == segments.length - 1;
 						resolvingLastSegment |= lastSegment;
 						if (lastSegment && !cursor.isLeaf()) {
 							resolved = false;
@@ -413,7 +470,10 @@ public class FlatTreeSerializer {
 				});
 	}
 
-	private Object getValue(Property property, Object value) {
+	private Object getValue(Node node, Property property, Object value) {
+		if (state.serializerOptions.testSerializedPopulateAllPaths) {
+			return synthesisePopulatedPropertyValue(node, property);
+		}
 		try {
 			return property.getAccessorMethod().invoke(value, new Object[0]);
 		} catch (Exception e) {
@@ -478,9 +538,9 @@ public class FlatTreeSerializer {
 				});
 			} else if (value instanceof TreeSerializable) {
 				getProperties(value).forEach(property -> {
-					Object childValue = getValue(property, value);
+					Object childValue = getValue(node, property, value);
 					Object defaultValue = node.defaultValue == null ? null
-							: getValue(property, node.defaultValue);
+							: getValue(node, property, node.defaultValue);
 					Node childNode = new Node(node, childValue, defaultValue);
 					childNode.path.property = property;
 					childNode.path.propertySerialization = getPropertySerialization(
@@ -492,6 +552,127 @@ public class FlatTreeSerializer {
 						"Invalid value type: %s at %s", value, node.path));
 			}
 		}
+	}
+
+	private Object synthesisePopulatedPropertyValue(Node node,
+			Property property) {
+		PropertySerialization propertySerialization = getPropertySerialization(
+				node.value.getClass(), property.getName());
+		Class type = property.getType();
+		if (propertySerialization == null || isValueClass(type)) {
+			/*
+			 * get a value - any value
+			 */
+			return synthesiseSimpleValue(type);
+		}
+		Collection collection = null;
+		if (type == Set.class) {
+			collection = new LinkedHashSet<>();
+		}
+		if (type == List.class) {
+			collection = new ArrayList<>();
+		}
+		if (collection != null) {
+			if (propertySerialization.leafType() != void.class) {
+				collection.add(synthesiseSimpleValue(
+						propertySerialization.leafType()));
+			} else if (propertySerialization.childTypes().length > 0) {
+				for (Class clazz : propertySerialization.childTypes()) {
+					collection.add(Reflections.newInstance(clazz));
+				}
+			} else if (node.parent != null
+					&& node.parent.path.propertySerialization != null
+					&& node.parent.path.propertySerialization
+							.grandchildTypes().length > 0) {
+				for (Class clazz : node.parent.path.propertySerialization
+						.grandchildTypes()) {
+					collection.add(Reflections.newInstance(clazz));
+				}
+			} else {
+				throw new UnsupportedOperationException();
+			}
+			return collection;
+		}
+		if (propertySerialization.leafType() != void.class) {
+			type = propertySerialization.leafType();
+		} else {
+			try {
+				Object value = property.getAccessorMethod().invoke(node.value,
+						new Object[0]);
+				if (value != null) {
+					return value;
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+		try {
+			Object instance = Reflections.newInstance(type);
+			if (instance instanceof TreeSerializable) {
+				return instance;
+			}
+			if (instance instanceof Entity) {
+				((Entity) instance).setId(1);
+				return instance;
+			}
+		} catch (Exception e) {
+			if (e instanceof InstantiationException) {
+				throw new UnsupportedOperationException(Ax
+						.format("Cannot determine serialization of %s", type));
+			} else {
+				throw WrappedRuntimeException.wrapIfNotRuntime(e);
+			}
+		}
+		throw new UnsupportedOperationException();
+	}
+
+	private Object synthesiseSimpleValue(Class valueClass) {
+		if (valueClass == String.class) {
+			return "string-value";
+		}
+		if (valueClass == Long.class || valueClass == long.class) {
+			return 1L;
+		}
+		if (valueClass == Double.class || valueClass == double.class) {
+			return 1.0;
+		}
+		if (valueClass == Integer.class || valueClass == int.class) {
+			return 1;
+		}
+		if (valueClass == Boolean.class || valueClass == boolean.class) {
+			return true;
+		}
+		if (valueClass == Date.class) {
+			return new Date();
+		}
+		if (valueClass.isEnum() || (valueClass.getSuperclass() != null
+				&& valueClass.getSuperclass().isEnum())) {
+			return valueClass.getEnumConstants()[0];
+		}
+		if (CommonUtils.hasSuperClass(valueClass, VersionableEntity.class)) {
+			VersionableEntity entity = (VersionableEntity) Reflections
+					.newInstance(valueClass);
+			entity.setId(1);
+			return entity;
+		}
+		if (valueClass.isArray()
+				&& valueClass.getComponentType() == byte.class) {
+			return new byte[] { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
+		}
+		try {
+			Object instance = Reflections.newInstance(valueClass);
+			if (instance instanceof TreeSerializable) {
+				return instance;
+			}
+		} catch (Exception e) {
+			if (e instanceof InstantiationException) {
+				throw new UnsupportedOperationException(Ax.format(
+						"Cannot determine serialization of %s", valueClass));
+			} else {
+				throw WrappedRuntimeException.wrapIfNotRuntime(e);
+			}
+		}
+		throw new UnsupportedOperationException();
 	}
 
 	protected PropertySerialization getPropertySerialization(Class<?> clazz,
@@ -535,6 +716,8 @@ public class FlatTreeSerializer {
 
 		boolean testSerialized;
 
+		private boolean testSerializedPopulateAllPaths;
+
 		public SerializerOptions withDefaults(boolean defaults) {
 			this.defaults = defaults;
 			return this;
@@ -552,6 +735,12 @@ public class FlatTreeSerializer {
 
 		public SerializerOptions withTestSerialized(boolean testSerialized) {
 			this.testSerialized = testSerialized;
+			return this;
+		}
+
+		public SerializerOptions withTestSerializedPopulateAllPaths(
+				boolean testSerializedPopulateAllPaths) {
+			this.testSerializedPopulateAllPaths = testSerializedPopulateAllPaths;
 			return this;
 		}
 
@@ -712,6 +901,13 @@ public class FlatTreeSerializer {
 				return CommonUtils.getEnumValueOrNull(valueClass, stringValue,
 						true, null);
 			}
+			if (CommonUtils.hasSuperClass(valueClass, Entity.class)) {
+				return Domain.find(valueClass, Long.parseLong(stringValue));
+			}
+			if (value.getClass().isArray()
+					&& value.getClass().getComponentType() == byte.class) {
+				return Base64.decode(stringValue);
+			}
 			throw new UnsupportedOperationException();
 		}
 
@@ -775,8 +971,15 @@ public class FlatTreeSerializer {
 				return String.valueOf(((Date) value).getTime());
 			} else if (value instanceof String) {
 				return escapeValue(value.toString());
+			} else if (value instanceof Entity) {
+				Entity entity = (Entity) value;
+				Preconditions.checkArgument(entity.domain().wasPersisted());
+				return String.valueOf(entity.getId());
 			} else if (CommonUtils.isEnumish(value)) {
 				return value.toString().replace("_", "-").toLowerCase();
+			} else if (value.getClass().isArray()
+					&& value.getClass().getComponentType() == byte.class) {
+				return Base64.encodeBytes((byte[]) value);
 			} else {
 				return value.toString();
 			}

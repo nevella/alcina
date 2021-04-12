@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 @WebMethod(customPermission = @Permission(access = AccessLevel.ADMIN))
 @ClientInstantiable
 @RegistryLocation(registryPoint = TreeSerializable.class)
-public class RemoteAction extends PermissibleAction
+public abstract class RemoteAction extends PermissibleAction
 		implements Serializable, Task {
 	public RemoteAction() {
 	}

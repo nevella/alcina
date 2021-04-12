@@ -32,11 +32,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 @Documented
 @Target({ ElementType.TYPE })
 @ClientVisible
-/*
- * TODO - add optional properties() for leaf collection types.
- * PropertySerialization should refactor name -> path (name now the property key
- * if any)
- */
 public @interface TypeSerialization {
 	boolean notSerializable() default false;
 

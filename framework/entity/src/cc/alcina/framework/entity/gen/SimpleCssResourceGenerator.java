@@ -41,6 +41,7 @@ import com.google.gwt.user.rebind.SourceWriter;
 import com.google.gwt.user.rebind.StringSourceWriter;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
 import cc.alcina.framework.gwt.client.gen.SimpleCssResource.ResolveParent;

@@ -15,6 +15,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
@@ -173,9 +174,9 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		return cmps;
 	}
 
-	@ClientInstantiable
-	@Introspectable
-	public static class ColumnSearchOrder implements Serializable {
+	@Bean
+	public static class ColumnSearchOrder
+			implements Serializable, TreeSerializable {
 		private String columnName;
 
 		private boolean ascending;
@@ -184,6 +185,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 			return columnName;
 		}
 
+		@PropertySerialization(name = "asc")
 		public boolean isAscending() {
 			return ascending;
 		}

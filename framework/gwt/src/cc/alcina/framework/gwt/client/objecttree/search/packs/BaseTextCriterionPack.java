@@ -9,10 +9,10 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.search.TxtCriterion;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
-import cc.alcina.framework.gwt.client.util.TextUtils;
 
 public class BaseTextCriterionPack {
 	public interface BaseTextCriterionHandler<T> {

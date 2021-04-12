@@ -63,6 +63,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Rect;
+import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.widget.HasComplexPanel;

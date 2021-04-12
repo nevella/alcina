@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.gwt.client.util.TextUtils;
 
 public class Ax {
 	private static boolean test;

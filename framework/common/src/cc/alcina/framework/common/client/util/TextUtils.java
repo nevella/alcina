@@ -1,11 +1,9 @@
-package cc.alcina.framework.gwt.client.util;
+package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.IntPair;
 
 public class TextUtils {
 	public static List<IntPair> findStringMatches(String text, String search) {

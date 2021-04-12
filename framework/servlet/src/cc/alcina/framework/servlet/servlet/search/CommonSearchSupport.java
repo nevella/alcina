@@ -92,7 +92,12 @@ public class CommonSearchSupport {
 			Optional<CustomSearchHandler> customSearchHandler = Registry
 					.optional(CustomSearchHandler.class, def.getClass());
 			if (customSearchHandler.isPresent()) {
-				return customSearchHandler.get().searchModel(searchContext);
+				customSearchHandler.get().prepareContext(searchContext);
+				ModelSearchResults searchModel = customSearchHandler.get()
+						.searchModel(searchContext);
+				if (searchModel != null) {
+					return searchModel;
+				}
 			}
 			Stream<Entity> search = new DomainSearcher().search(def, clazz,
 					searchContext.orders);
@@ -118,6 +123,9 @@ public class CommonSearchSupport {
 						searchContext.modelSearchResults.groupedResult,
 						searchContext.groupingParameters);
 				searchContext.modelSearchResults.queriedResultObjects = new ArrayList<>();
+				if (customSearchHandler.isPresent()) {
+					customSearchHandler.get().beforeProjection(searchContext);
+				}
 				if (LooseContext.is(CONTEXT_DO_NOT_PROJECT_SEARCH)) {
 				} else {
 					searchContext.modelSearchResults = GraphProjections
@@ -229,6 +237,13 @@ public class CommonSearchSupport {
 
 	public static abstract class CustomSearchHandler<BSD extends BindableSearchDefinition> {
 		private SearchContext searchContext;
+
+		public void beforeProjection(SearchContext searchContext2) {
+			// TODO Auto-generated method stub
+		}
+
+		public void prepareContext(SearchContext searchContext) {
+		}
 
 		public ModelSearchResults searchModel(SearchContext searchContext) {
 			this.searchContext = searchContext;

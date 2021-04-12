@@ -39,7 +39,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.gwt.client.util.TextUtils;
+import cc.alcina.framework.common.client.util.TextUtils;
 
 public class DomNode {
 	public static final transient String CONTEXT_DEBUG_SUPPORT = DomNode.class

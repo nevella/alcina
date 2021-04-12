@@ -1,11 +1,9 @@
-package cc.alcina.framework.gwt.client.util;
+package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import cc.alcina.framework.common.client.util.IntPair;
 
 public class TextUtilsImpl {
 	public static final String WS_PATTERN_STR = "(?:[\\u0009\\u000A\\u000B\\u000C\\u000D\\u0020\\u00A0\\u0085])";

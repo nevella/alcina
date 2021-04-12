@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.gwt.client.util.TextUtils;
+import cc.alcina.framework.common.client.util.TextUtils;
 
 public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
 	public static final transient String CONTEXT_NO_TD_STYLES = DomNodeHtmlTableBuilder.class

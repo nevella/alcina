@@ -18,13 +18,22 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * 
  * @author Nick Reddel
+ * 
+ *         FIXME - dirndl.2 - all these UI properties (just make them transient
+ *         getters)
  */
+@TypeSerialization(properties = {
+		@PropertySerialization(ignore = true, name = "actionName"),
+		@PropertySerialization(ignore = true, name = "cssClassName"),
+		@PropertySerialization(ignore = true, name = "displayName") })
 public class PermissibleAction implements Permissible {
 	private String displayName;
 
@@ -64,6 +73,7 @@ public class PermissibleAction implements Permissible {
 		return "";
 	}
 
+	@PropertySerialization(ignore = true)
 	public String getDisplayName() {
 		return displayName != null ? displayName : getActionName();
 	}
