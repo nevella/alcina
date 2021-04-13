@@ -64,8 +64,10 @@ public class DownloadServlet extends HttpServlet {
 			res.setContentType(item.mimeType);
 			res.setContentLength((int) f.length());
 			if (item.fileName != null) {
+				String fixedFileName = 
+						item.fileName.replaceAll("[^\\x20-\\x7e]", "");
 				res.setHeader("Content-Disposition",
-						"attachment; filename=\"" + item.fileName + '"');
+						"attachment; filename=\"" + fixedFileName + "\"");
 			}
 		}
 		try {
