@@ -19,7 +19,6 @@ import java.io.InputStream;
 import java.net.ConnectException;
 import java.util.List;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistryException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -138,16 +137,17 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 						return JacksonUtils.deserializeFromFile(cacheFile,
 								ClassMetadataCache.class);
 					} catch (Exception e) {
+						if (cacheFile.exists()) {
+							cacheFile.delete();
+						}
 						if (CommonUtils.extractCauseOfClass(e,
 								ConnectException.class) != null) {
 							Ax.err("ClassMetaServer not reachable");
-							return new ClassMetadataCache();
-						} else if (CommonUtils.extractCauseOfClass(e, 
+						} else if (CommonUtils.extractCauseOfClass(e,
 								FileNotFoundException.class) != null) {
 							Ax.err("No cache found, creating");
-							return new ClassMetadataCache();
 						}
-						throw new WrappedRuntimeException(e);
+						return new ClassMetadataCache();
 					}
 				});
 	}
