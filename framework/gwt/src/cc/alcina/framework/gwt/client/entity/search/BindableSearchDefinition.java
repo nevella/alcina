@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.entity.search;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -9,6 +10,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.SpecificIdOrder;
@@ -145,7 +147,13 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	}
 
 	protected void init() {
-		getCriteriaGroups().add(new EntityCriteriaGroup());
+		TypeSerialization typeSerialization = Reflections.classLookup()
+				.getAnnotationForClass(getClass(), TypeSerialization.class);
+		Class<? extends EntityCriteriaGroup> ecgClass = Arrays
+				.stream(typeSerialization.properties())
+				.filter(ps -> ps.name().equals("criteriaGroups")).findFirst()
+				.get().types()[0];
+		getCriteriaGroups().add(Reflections.newInstance(ecgClass));
 		setResultsPerPage(50);
 	}
 

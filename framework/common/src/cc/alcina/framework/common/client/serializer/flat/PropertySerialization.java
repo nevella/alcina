@@ -38,29 +38,15 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
  * the default)
  */
 public @interface PropertySerialization {
+	// Class<? extends TreeSerializable>[] childTypes() default {};
 	/*
-	 * Applicable to collection properties, the list of allowable element types.
-	 * The first childType (if any) will be the default
-	 */
-	Class<? extends TreeSerializable>[] childTypes() default {};
-
-	/*
-	 * Maximum one per type. Exactly one of this or name must be set
+	 * Maximum one per type.
 	 */
 	boolean defaultProperty() default false;
-
-	/*
-	 * To support single-group (bindable) search definitions - only permissible
-	 * if childTypes.length==1
-	 */
-	Class<? extends TreeSerializable>[] grandchildTypes() default {};
+	// Class<? extends TreeSerializable>[] grandchildTypes() default {};
 
 	boolean ignore() default false;
-
-	/*
-	 * Collection element (or enum field) types
-	 */
-	Class<?> leafType() default void.class;
+	// Class leafType() default void.class;
 
 	/*
 	 * Only use if this annotation is part of a TypeSerialization definition
@@ -71,4 +57,16 @@ public @interface PropertySerialization {
 	 * Unique per path segment (including default resolution)
 	 */
 	String path() default "";
+	// Class[] type() default {};
+
+	/*
+	 * Usages:
+	 * 
+	 * -- types are a {1,n} list of TreeSerializable subclasses. Property type
+	 * can be either assignable from those subclasses or a collection
+	 * 
+	 * -- types is a single value leaftype. Property type can be either
+	 * assignable from that subclass or a collection
+	 */
+	Class[] types() default {};
 }

@@ -19,7 +19,7 @@ public abstract class GroupingParameters<GP extends GroupingParameters>
 		ReflectCloneable<GP>, TreeSerializable {
 	private List<ColumnSearchOrder> columnOrders = new ArrayList<>();
 
-	@PropertySerialization(childTypes = ColumnSearchOrder.class)
+	@PropertySerialization(types = ColumnSearchOrder.class)
 	public List<ColumnSearchOrder> getColumnOrders() {
 		return this.columnOrders;
 	}
