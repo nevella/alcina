@@ -14,6 +14,7 @@
 package cc.alcina.framework.entity.registry;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.ConnectException;
 import java.util.List;
@@ -140,6 +141,10 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 						if (CommonUtils.extractCauseOfClass(e,
 								ConnectException.class) != null) {
 							Ax.err("ClassMetaServer not reachable");
+							return new ClassMetadataCache();
+						} else if (CommonUtils.extractCauseOfClass(e, 
+								FileNotFoundException.class) != null) {
+							Ax.err("No cache found, creating");
 							return new ClassMetadataCache();
 						}
 						throw new WrappedRuntimeException(e);
