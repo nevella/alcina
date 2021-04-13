@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.activity;
 
-import java.util.Collections;
 import java.util.stream.Stream;
 
 import com.google.gwt.event.shared.EventBus;
@@ -14,7 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
+import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
@@ -27,6 +26,10 @@ import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 public class DirectedBindableSearchActivity<BP extends BindablePlace, B extends Bindable & SearchResult>
 		extends DirectedActivity<BP> {
 	private transient ModelSearchResults<B> searchResults;
+
+	public Stream<Class<? extends ActionRef>> getActions() {
+		return Stream.empty();
+	}
 
 	public ModelSearchResults<B> getSearchResults() {
 		return this.searchResults;
@@ -41,16 +44,12 @@ public class DirectedBindableSearchActivity<BP extends BindablePlace, B extends 
 
 	@Override
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
-		Registry.impl(CommonRemoteServiceAsync.class).searchModel(place.def,
+		Registry.impl(SearchRemoteServiceAsync.class).searchModel(place.def,
 				AsyncCallbackStd.<ModelSearchResults> consumerForm(results -> {
 					setSearchResults(results);
 					fireUpdated();
 				}));
 		super.start(panel, eventBus);
-	}
-
-	public Stream<Class<? extends ActionRef>> getActions() {
-		return Stream.empty();
 	}
 
 	@RegistryLocation(registryPoint = DirectedBindableSearchActivity.class, targetClass = EntityPlace.class, implementationType = ImplementationType.INSTANCE)

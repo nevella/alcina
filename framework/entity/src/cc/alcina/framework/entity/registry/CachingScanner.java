@@ -15,15 +15,19 @@ package cc.alcina.framework.entity.registry;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.util.List;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistryException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.JacksonUtils;
+import cc.alcina.framework.entity.util.MethodContext;
 
 /**
  *
@@ -124,17 +128,23 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 	protected abstract T createMetadata(String className, ClassMetadata found);
 
 	protected ClassMetadataCache getCached(File cacheFile) {
-		try {
-			LooseContext.pushWithTrue(
-					JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL);
-			ClassMetadataCache value = JacksonUtils
-					.deserializeFromFile(cacheFile, ClassMetadataCache.class);
-			return value;
-		} catch (Exception e) {
-			return new ClassMetadataCache();
-		} finally {
-			LooseContext.pop();
-		}
+		return MethodContext.instance()
+				.withContextTrue(
+						JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL)
+				.withContextClassloader(getClass().getClassLoader())
+				.call(() -> {
+					try {
+						return JacksonUtils.deserializeFromFile(cacheFile,
+								ClassMetadataCache.class);
+					} catch (Exception e) {
+						if (CommonUtils.extractCauseOfClass(e,
+								ConnectException.class) != null) {
+							Ax.err("ClassMetaServer not reachable");
+							return new ClassMetadataCache();
+						}
+						throw new WrappedRuntimeException(e);
+					}
+				});
 	}
 
 	protected File getHomeDir() {

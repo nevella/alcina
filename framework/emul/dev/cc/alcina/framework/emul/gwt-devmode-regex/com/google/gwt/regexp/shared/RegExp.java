@@ -35,7 +35,7 @@ public class RegExp {
 	private static boolean isScript() {
 		if (isScript == null) {
 			// cache
-			isScript = GWT.isScript();
+			isScript = GWT.isScript()||true;
 		}
 		return isScript;
 	}

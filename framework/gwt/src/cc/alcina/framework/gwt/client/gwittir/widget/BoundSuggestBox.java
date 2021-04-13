@@ -13,9 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -33,10 +30,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
@@ -62,12 +56,18 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 
 	private boolean showOnFocus = false;
 
+	private String placeholderText = "Type for suggestions";
+
 	/** Creates a new instance of Label */
 	public BoundSuggestBox() {
 	}
 
 	public String getLastFilterText() {
 		return base.getText();
+	}
+
+	public String getPlaceholderText() {
+		return this.placeholderText;
 	}
 
 	/**
@@ -79,6 +79,12 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 		return this.renderer;
 	}
 
+	@Override
+	public int getTabIndex() {
+		return base.getValueBox().getTabIndex();
+	}
+
+	@Override
 	public T getValue() {
 		return value;
 	}
@@ -91,6 +97,11 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 		return this.withPlaceholder;
 	}
 
+	@Override
+	public void setAccessKey(char key) {
+		base.getValueBox().setAccessKey(key);
+	}
+
 	public void setFilterText(String filterText) {
 		base.setText(filterText);
 		if (!Ax.isBlank(filterText)) {
@@ -99,9 +110,18 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 	}
 
 	@Override
+	public void setFocus(boolean focused) {
+		base.getValueBox().setFocus(focused);
+	}
+
+	@Override
 	public void setModel(Object model) {
 		super.setModel(model);
 		suggestOracle.model = model;
+	}
+
+	public void setPlaceholderText(String placeholderText) {
+		this.placeholderText = placeholderText;
 	}
 
 	public void setRenderer(Renderer<T, String> newrenderer) {
@@ -112,6 +132,16 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 		this.showOnFocus = showOnFocus;
 	}
 
+	public void setSuggestBoxStyleName(String suggestBoxCssClassName) {
+		base.getValueBox().setStyleName(suggestBoxCssClassName);
+	}
+
+	@Override
+	public void setTabIndex(int index) {
+		base.getValueBox().setTabIndex(index);
+	}
+
+	@Override
 	public void setValue(T value) {
 		T old = this.getValue();
 		this.value = value;
@@ -120,16 +150,6 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 				|| (this.getValue() != null && !this.getValue().equals(old)))) {
 			this.changes.firePropertyChange("value", old, this.getValue());
 		}
-	}
-
-	private String placeholderText = "Type for suggestions";
-
-	public String getPlaceholderText() {
-		return this.placeholderText;
-	}
-
-	public void setPlaceholderText(String placeholderText) {
-		this.placeholderText = placeholderText;
 	}
 
 	public void setWithPlaceholder(boolean withPlaceholder) {
@@ -229,8 +249,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 			Optional.ofNullable(runningCallback)
 					.ifPresent(sc -> sc.setCancelled(true));
 			runningCallback = new SuggestCallback(request, callback);
-			Client.commonRemoteService()
-					.suggest(boundRequest, runningCallback);
+			Client.searchRemoteService().suggest(boundRequest, runningCallback);
 		}
 
 		class SuggestCallback extends CancellableAsyncCallback<Response> {
@@ -263,31 +282,5 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 		public String targetClassName;
 
 		public String hint;
-
-		
-	}
-
-	@Override
-	public int getTabIndex() {
-		return base.getValueBox().getTabIndex();
-	}
-
-	@Override
-	public void setAccessKey(char key) {
-		base.getValueBox().setAccessKey(key);
-	}
-
-	@Override
-	public void setFocus(boolean focused) {
-		base.getValueBox().setFocus(focused);
-	}
-
-	@Override
-	public void setTabIndex(int index) {
-		base.getValueBox().setTabIndex(index);
-	}
-
-	public void setSuggestBoxStyleName(String suggestBoxCssClassName) {
-		base.getValueBox().setStyleName(suggestBoxCssClassName);
 	}
 }

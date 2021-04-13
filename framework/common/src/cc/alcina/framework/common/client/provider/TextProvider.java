@@ -19,7 +19,6 @@ import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.permissions.HasObjectName;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
@@ -113,9 +112,6 @@ public class TextProvider {
 		if (o instanceof HasDisplayName) {
 			return ((HasDisplayName) o).displayName();
 		}
-		if (o instanceof HasObjectName) {
-			return ((HasObjectName) o).getObjectName();
-		}
 		return ((Entity) o).toStringEntity();
 	}
 
@@ -132,8 +128,8 @@ public class TextProvider {
 		return this.trimmed;
 	}
 
-	public void putObjectName(Entity entity, String name) {
-		((HasObjectName) entity).putObjectName(name);
+	public void putDisplayName(Entity entity, String name) {
+		((HasDisplayName.Settable) entity).putDisplayName(name);
 	}
 
 	public void setDecorated(boolean decorated) {

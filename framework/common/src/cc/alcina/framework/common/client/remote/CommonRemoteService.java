@@ -16,7 +16,6 @@ package cc.alcina.framework.common.client.remote;
 import java.util.List;
 
 import com.google.gwt.user.client.rpc.RemoteService;
-import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
@@ -40,9 +39,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
-import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 
 /**
  * 
@@ -99,10 +95,4 @@ public interface CommonRemoteService extends RemoteService {
 	@WebMethod
 	public DomainUpdate waitForTransforms(
 			DomainTransformCommitPosition position) throws PermissionsException;
-
-	ModelSearchResults getForClass(String className, long objectId);
-
-	ModelSearchResults searchModel(BindableSearchDefinition def);
-
-	Response suggest(BoundSuggestOracleRequest request);
 }

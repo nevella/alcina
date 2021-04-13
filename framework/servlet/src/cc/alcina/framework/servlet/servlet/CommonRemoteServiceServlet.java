@@ -84,6 +84,7 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.remote.CommonRemoteService;
+import cc.alcina.framework.common.client.remote.SearchRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -134,7 +135,7 @@ import cc.alcina.framework.servlet.misc.ReadonlySupportServlet;
  *
  */
 public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
-		implements CommonRemoteService {
+		implements CommonRemoteService, SearchRemoteService {
 	public static final String UA_NULL_SERVER = "null/server";
 
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";

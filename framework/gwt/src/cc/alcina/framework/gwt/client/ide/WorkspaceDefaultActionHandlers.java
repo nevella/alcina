@@ -88,7 +88,7 @@ public class WorkspaceDefaultActionHandlers {
 				String newName = TextProvider.get().getObjectName(newObj)
 						+ " (copy)";
 				TextProvider.get().setDecorated(false);
-				TextProvider.get().putObjectName(newObj, newName);
+				TextProvider.get().putDisplayName(newObj, newName);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			} finally {
@@ -130,7 +130,7 @@ public class WorkspaceDefaultActionHandlers {
 				String tdn = ClientReflector.get()
 						.beanInfoForClass(nodeObjectClass).getTypeDisplayName();
 				TextProvider.get().setDecorated(true);
-				TextProvider.get().putObjectName(newObj, "New " + tdn);
+				TextProvider.get().putDisplayName(newObj, "New " + tdn);
 				if (newObj instanceof IVersionableOwnable) {
 					((IVersionableOwnable) newObj)
 							.setOwner(PermissionsManager.get().getUser());

@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
+import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
 import cc.alcina.framework.gwt.client.entity.view.UiController;
@@ -71,6 +72,10 @@ public abstract class Client {
 		place.setRefreshed(true);
 		place = place.copy();
 		goTo(place);
+	}
+
+	public static SearchRemoteServiceAsync searchRemoteService() {
+		return Registry.impl(SearchRemoteServiceAsync.class);
 	}
 
 	protected final EventBus eventBus = new SimpleEventBus();

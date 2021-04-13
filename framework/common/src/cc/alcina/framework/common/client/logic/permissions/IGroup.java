@@ -21,12 +21,13 @@ import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
  * 
  * @author Nick Reddel
  */
-public interface IGroup extends IVersionable, HasObjectName {
+public interface IGroup extends IVersionable, HasDisplayName.Settable {
 	@Override
 	public long getId();
 
@@ -66,6 +67,11 @@ public interface IGroup extends IVersionable, HasObjectName {
 		return forAllMemberGroups(group -> group.containsUser(user));
 	}
 
+	@Override
+	default String displayName() {
+		return Ax.blankTo(getName(), "(null)");
+	}
+
 	default boolean forAllMemberGroups(Predicate<IGroup> predicate) {
 		Set<IGroup> queued = new HashSet<>();
 		Stack<IGroup> toTraverse = new Stack<>();
@@ -86,13 +92,8 @@ public interface IGroup extends IVersionable, HasObjectName {
 	}
 
 	@Override
-	default void putObjectName(String name) {
+	default void putDisplayName(String name) {
 		setGroupName(name);
-	}
-
-	@Override
-	default String getObjectName() {
-		return Ax.blankTo(getName(), "(null)");
 	}
 
 	default <IU extends Entity & IUser> void removeMemberUser(IU user) {

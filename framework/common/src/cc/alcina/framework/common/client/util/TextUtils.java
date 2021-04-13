@@ -3,9 +3,17 @@ package cc.alcina.framework.common.client.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.regexp.shared.MatchResult;
+import com.google.gwt.regexp.shared.RegExp;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public class TextUtils {
+	public static final String WS_PATTERN_STR = "(?:[\\u0009\\u000A\\u000B\\u000C\\u000D\\u0020\\u00A0\\u0085])";
+
+	public static final RegExp WS_PATTERN = RegExp.compile(WS_PATTERN_STR + "+",
+			"g");
+
 	public static List<IntPair> findStringMatches(String text, String search) {
 		int idx0 = 0;
 		List<IntPair> result = new ArrayList<>();
@@ -35,7 +43,15 @@ public class TextUtils {
 		if (text == null || regex == null) {
 			return new ArrayList<IntPair>();
 		}
-		return TextUtilsImpl.match(text, regex);
+		RegExp regExp = RegExp.compile(regex, "ig");
+		List<IntPair> result = new ArrayList<IntPair>();
+		MatchResult matchResult;
+		int idx = 0;
+		while ((matchResult = regExp.exec(text)) != null) {
+			result.add(new IntPair(matchResult.getIndex(),
+					matchResult.getIndex() + matchResult.getGroup(0).length()));
+		}
+		return result;
 	}
 
 	public static String normalisedLcKey(String key) {
@@ -43,13 +59,12 @@ public class TextUtils {
 				CommonUtils.nullToEmpty(key).toLowerCase());
 	}
 
-	public static String normalizeWhitespace(String text) {
-		return TextUtilsImpl.normalizeWhitespace(text);
+	public static String normalizeWhitespace(String input) {
+		return input == null ? null : WS_PATTERN.replace(input, " ");
 	}
 
 	public static String normalizeWhitespaceAndTrim(String text) {
-		return text == null ? null
-				: TextUtilsImpl.normalizeWhitespace(text).trim();
+		return text == null ? null : normalizeWhitespace(text).trim();
 	}
 
 	public static String removeWhitespace(String text) {
