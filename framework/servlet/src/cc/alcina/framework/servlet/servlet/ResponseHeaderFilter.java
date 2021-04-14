@@ -65,7 +65,8 @@ public class ResponseHeaderFilter implements Filter {
 			}
 		}
 		if (crossOriginIfGwtCodeserver) {
-			boolean usesCodeserver = request.getParameter("gwt.codesvr") != null
+			boolean usesCodeserver = (Ax.notBlank(request.getQueryString())
+					&& request.getParameter("gwt.codesvr") != null)
 					|| Ax.matches(request.getHeader("Referer"),
 							".*gwt.codesvr.*");
 			if (usesCodeserver) {
