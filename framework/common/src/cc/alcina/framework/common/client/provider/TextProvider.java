@@ -109,10 +109,16 @@ public class TextProvider {
 	}
 
 	public String getObjectName(Object o, ClientBeanReflector beanReflector) {
+		if (o == null) {
+			return "(null)";
+		}
 		if (o instanceof HasDisplayName) {
 			return ((HasDisplayName) o).displayName();
 		}
-		return ((Entity) o).toStringEntity();
+		if (o instanceof Entity) {
+			return ((Entity) o).toStringEntity();
+		}
+		return o.toString();
 	}
 
 	public String getUiObjectText(Class clazz, String key,
