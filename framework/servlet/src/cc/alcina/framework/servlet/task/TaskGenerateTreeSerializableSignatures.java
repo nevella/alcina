@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions;
+import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions.PathTraversal;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -70,10 +71,14 @@ public class TaskGenerateTreeSerializableSignatures
 			FlatTreeSerializer.serialize(serializable,
 					new SerializerOptions().withDefaults(false)
 							.withShortPaths(true).withTestSerialized(true));
-			// FlatTreeSerializer.serialize(serializable,
-			// new SerializerOptions().withDefaults(false)
-			// .withShortPaths(true).withTestSerialized(true)
-			// .withTestSerializedPopulateAllPaths(true));
+			PathTraversal pathTraversal = new SerializerOptions.PathTraversal();
+			do {
+				FlatTreeSerializer.serialize(serializable,
+						new SerializerOptions().withDefaults(false)
+								.withShortPaths(true).withTestSerialized(true)
+								.withTestSerializedPopulateAllPaths(
+										pathTraversal));
+			} while (pathTraversal.pending.size() > 0);
 		} catch (Exception e) {
 			String message = Ax.format("%s - %s",
 					serializable.getClass().getSimpleName(),

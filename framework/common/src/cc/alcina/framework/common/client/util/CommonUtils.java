@@ -883,7 +883,7 @@ public class CommonUtils {
 		}
 	}
 
-	public static boolean hasSuperClass(Class clazz, Class superClass) {
+	public static boolean isOrHasSuperClass(Class clazz, Class superClass) {
 		while (clazz != null && clazz != Object.class) {
 			if (clazz == superClass) {
 				return true;

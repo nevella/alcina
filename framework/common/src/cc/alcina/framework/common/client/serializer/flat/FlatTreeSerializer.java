@@ -109,6 +109,9 @@ public class FlatTreeSerializer {
 	private static Map<Class, Boolean> assignableFromTreeSerializable = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
 
+	private static Map<Class, Boolean> assignableFromCollection = Registry
+			.impl(ConcurrentMapCreator.class).createMap();
+
 	private static Map<RootClassPropertyKey, Map<String, Class>> deSerializationPropertyAliasClass = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
 
@@ -189,39 +192,35 @@ public class FlatTreeSerializer {
 		return serialized;
 	}
 
+	private static boolean isCollection(Class clazz) {
+		if (clazz == List.class || clazz == Set.class) {
+			return true;
+		}
+		return assignableFromCollection.computeIfAbsent(clazz, c -> {
+			try {
+				Object instance = Reflections.newInstance(clazz);
+				return !(instance instanceof Collection);
+			} catch (Exception e) {
+				return true;
+			}
+		});
+	}
+
+	private static boolean isIntermediateType(Class clazz) {
+		return isTreeSerializable(clazz) || isCollection(clazz);
+	}
+
 	private static boolean isLeafValue(Object value) {
 		if (value == null) {
 			return true;
 		}
-		if (value instanceof TreeSerializable) {
-			return false;
-		}
-		Class<? extends Object> valueClass = value.getClass();
-		if (CommonUtils.stdAndPrimitives.contains(valueClass)) {
-			return true;
-		}
-		if (valueClass.isEnum() || CommonUtils.isEnumSubclass(valueClass)) {
-			return true;
-		}
-		if (valueClass.isArray()
-				&& valueClass.getComponentType() == byte.class) {
-			return true;
-		}
-		if (value instanceof Entity) {
-			return true;
-		}
-		return false;
+		return isValueType(value.getClass());
 	}
 
-	private static boolean isValueType(Class clazz) {
-		if (CommonUtils.stdAndPrimitives.contains(clazz)) {
-			return true;
-		}
-		if (clazz.isEnum() || CommonUtils.isEnumSubclass(clazz)) {
-			return true;
-		}
+	// FIXME - support Class.isAssignableFrom in GWT
+	private static boolean isTreeSerializable(Class clazz) {
 		if (clazz == TreeSerializable.class) {
-			return false;
+			return true;
 		}
 		return assignableFromTreeSerializable.computeIfAbsent(clazz, c -> {
 			try {
@@ -233,6 +232,25 @@ public class FlatTreeSerializer {
 		});
 	}
 
+	private static boolean isValueType(Class clazz) {
+		if (CommonUtils.stdAndPrimitives.contains(clazz)) {
+			return true;
+		}
+		if (clazz.isEnum() || CommonUtils.isEnumSubclass(clazz)) {
+			return true;
+		}
+		if (clazz.isArray() && clazz.getComponentType() == byte.class) {
+			return true;
+		}
+		if (isIntermediateType(clazz)) {
+			return false;
+		}
+		if (CommonUtils.isOrHasSuperClass(clazz, Entity.class)) {
+			return true;
+		}
+		return false;
+	}
+
 	State state;
 
 	private FlatTreeSerializer(State state) {
@@ -240,6 +258,27 @@ public class FlatTreeSerializer {
 	}
 
 	private void deserialize(Node root) {
+		/*
+		 * (Document for 'short paths' case - non-short is simpler (does not use
+		 * elision) For each path:
+		 * 
+		 * * Split to segments
+		 * 
+		 * * For each segment, either map to a property of the cursor object or
+		 * descend the default property
+		 * 
+		 * * Once 'in' a property, resolve property type. Property type can be
+		 * represented by:
+		 * 
+		 * * Empty string (one type only) * Type marker (multipe types)
+		 * 
+		 * * plus an index marker if property is a collection containing
+		 * multiple elements of the same type
+		 * 
+		 * Once all segments are resolved, may still need to descend end-of-path
+		 * defaults
+		 * 
+		 */
 		state.keyValues.forEach((path, value) -> {
 			Node cursor = root;
 			String[] segments = path.split("\\.");
@@ -255,12 +294,13 @@ public class FlatTreeSerializer {
 							segment.replaceFirst("(.+?)(\\d+)", "$2")) + 1;
 				}
 				boolean resolved = false;
-				/*
-				 * If resolving last segment, we're just descending the defaults
-				 * at the end of the path (so the last segment is, yes, already
-				 * resolved)
-				 */
 				while (!resolved) {
+					/*
+					 * If resolving last segment, we're just descending the
+					 * defaults at the end of the path (so the last segment is,
+					 * yes, already resolved) - FIXME - possibly move to the end
+					 * of the loop?
+					 */
 					resolved |= resolvingLastSegment;
 					if (cursor.isCollection() && !cursor.isLeaf()) {
 						Class elementClass = null;
@@ -273,6 +313,17 @@ public class FlatTreeSerializer {
 							} else {
 								elementClass = typeMap.get("");
 							}
+						} else {
+							if (segmentPath.matches("\\d+")) {
+								// leaf value index
+							} else {
+								elementClass = Reflections.classLookup()
+										.getClassForName(
+												segmentPath.replace("_", "."));
+							}
+							resolved = true;
+						}
+						if (cursor.isCollection()) {
 							try {
 								Object childValue = ensureNthCollectionElement(
 										elementClass, index,
@@ -283,25 +334,6 @@ public class FlatTreeSerializer {
 							}
 							cursor.path.index = new CollectionIndex(
 									elementClass, index, false);
-						} else {
-							if (segmentPath.matches("\\d+")) {
-								// leaf value index
-							} else {
-								elementClass = Reflections.classLookup()
-										.getClassForName(
-												segmentPath.replace("_", "."));
-								try {
-									Object childValue = ensureNthCollectionElement(
-											elementClass, index,
-											(Collection) cursor.value);
-									cursor = new Node(cursor, childValue, null);
-								} catch (RuntimeException e) {
-									throw e;
-								}
-								cursor.path.index = new CollectionIndex(
-										elementClass, index, false);
-							}
-							resolved = true;
 						}
 					} else {
 						Property property = null;
@@ -320,16 +352,44 @@ public class FlatTreeSerializer {
 									.findFirst().get();
 							resolved = true;
 						}
+						PropertySerialization propertySerialization = getPropertySerialization(
+								cursor.value.getClass(), property.getName());
 						Object childValue = Reflections.propertyAccessor()
 								.getPropertyValue(cursor.value,
 										property.getName());
+						Node lookahead = new Node(cursor, null, null);
+						lookahead.path.property = property;
+						lookahead.path.propertySerialization = propertySerialization;
+						/*
+						 * Always skip the lookahead type parameter segment in
+						 * the segment loop.
+						 */
+						if (lookahead.isMultipleTypes()) {
+							resolved = true;
+							idx++;
+						}
 						if (childValue == null) {
 							if (lastSegment) {
 								// nullable parameters cannot be intermediate
 								// defaults
 							} else {
 								// ensure value (since not at leaf)
-								Class type = cursor.path.soleType();
+								Class type = null;
+								if (lookahead.isMultipleTypes()) {
+									String typeSegment = segments[idx];
+									if (state.deserializerOptions.shortPaths) {
+										Map<String, Class> typeMap = getAliasClassMap(
+												root.value.getClass(),
+												lookahead);
+										type = typeMap.get(typeSegment);
+									} else {
+										type = Reflections.classLookup()
+												.getClassForName(typeSegment
+														.replace("_", "."));
+									}
+								} else {
+									type = lookahead.path.soleType();
+								}
 								childValue = Reflections.newInstance(type);
 								Reflections.propertyAccessor().setPropertyValue(
 										cursor.value, property.getName(),
@@ -337,14 +397,18 @@ public class FlatTreeSerializer {
 							}
 						}
 						/*
-						 * If null, definitely can't descend further (since null
-						 * has no properties...)
+						 * If null , definitely can't descend further for
+						 * resolution (since null has no properties...). If at
+						 * the end, though (lookahead.isLeaf()), change the
+						 * cursor to the leaf setter
 						 */
-						cursor = new Node(cursor, childValue, null);
-						cursor.path.property = property;
-						cursor.path.propertySerialization = getPropertySerialization(
-								cursor.parent.value.getClass(),
-								property.getName());
+						if (childValue != null || lookahead.isLeaf()) {
+							cursor = new Node(cursor, childValue, null);
+							cursor.path.property = property;
+							cursor.path.propertySerialization = propertySerialization;
+						} else {
+							resolved = true;
+						}
 					}
 					if (resolved) {
 						/*
@@ -482,31 +546,31 @@ public class FlatTreeSerializer {
 			/*
 			 * FIFO
 			 */
-			Node node = state.pending.remove(0);
-			Object value = node.value;
+			Node cursor = state.pending.remove(0);
+			Object value = cursor.value;
 			if (isLeafValue(value)) {
-				if (!Objects.equals(value, node.defaultValue)
+				if (!Objects.equals(value, cursor.defaultValue)
 						|| !state.serializerOptions.defaults) {
-					node.putValue(state);
+					cursor.putValue(state);
 				}
-				state.mergeableNode = node;
+				state.mergeableNode = cursor;
 				continue;
 			}
 			state.mergeableNode = null;
-			Path existingPath = state.visitedObjects.put(value, node.path);
+			Path existingPath = state.visitedObjects.put(value, cursor.path);
 			if (existingPath != null) {
 				throw new IllegalStateException(Ax.format(
 						"Object %s - multiple references: \n\t%s\n\t%s ", value,
-						existingPath, node));
+						existingPath, cursor));
 			}
-			if (value instanceof Collection) {
-				Counter counter = new Counter();
+			Counter counter = new Counter();
+			if (cursor.isCollection()) {
 				Collection valueCollection = (Collection) value;
-				node.path.verifyProvidesElementTypeInfo();
-				Collection defaultCollection = node.defaultValue == null ?
+				cursor.path.verifyProvidesElementTypeInfo();
+				Collection defaultCollection = cursor.defaultValue == null ?
 				/* parent object is default null */
 						CloneHelper.newCollectionInstance(valueCollection)
-						: (Collection) node.defaultValue;
+						: (Collection) cursor.defaultValue;
 				((Collection) value).forEach(childValue -> {
 					Object defaultValue = null;
 					if (isLeafValue(childValue)) {
@@ -525,26 +589,34 @@ public class FlatTreeSerializer {
 					} else {
 						throw new IllegalStateException(Ax.format(
 								"Object %s - illegal in collection: \n\t%s\n\t%s ",
-								childValue, existingPath, node));
+								childValue, existingPath, cursor));
 					}
-					Node childNode = new Node(node, childValue, defaultValue);
+					Node childNode = new Node(cursor, childValue, defaultValue);
 					childNode.path.index = counter.getAndIncrement(childValue);
 					state.pending.add(childNode);
 				});
 			} else if (value instanceof TreeSerializable) {
 				getProperties(value).forEach(property -> {
-					Object childValue = getValue(node, property, value);
-					Object defaultValue = node.defaultValue == null ? null
-							: getValue(node, property, node.defaultValue);
-					Node childNode = new Node(node, childValue, defaultValue);
+					Object childValue = getValue(cursor, property, value);
+					Object defaultValue = cursor.defaultValue == null ? null
+							: getValue(cursor, property, cursor.defaultValue);
+					Node childNode = new Node(cursor, childValue, defaultValue);
 					childNode.path.property = property;
 					childNode.path.propertySerialization = getPropertySerialization(
-							node.value.getClass(), property.getName());
+							cursor.value.getClass(), property.getName());
+					if (childNode.isMultipleTypes()
+							&& !childNode.isCollection()) {
+						/*
+						 * So as to write (required) typeinfo to the path
+						 */
+						childNode.path.index = counter
+								.getAndIncrement(childValue);
+					}
 					state.pending.add(childNode);
 				});
 			} else {
 				throw new UnsupportedOperationException(Ax.format(
-						"Invalid value type: %s at %s", value, node.path));
+						"Invalid value type: %s at %s", value, cursor.path));
 			}
 		}
 	}
@@ -638,7 +710,8 @@ public class FlatTreeSerializer {
 				&& valueClass.getSuperclass().isEnum())) {
 			return valueClass.getEnumConstants()[0];
 		}
-		if (CommonUtils.hasSuperClass(valueClass, VersionableEntity.class)) {
+		if (CommonUtils.isOrHasSuperClass(valueClass,
+				VersionableEntity.class)) {
 			VersionableEntity entity = (VersionableEntity) Reflections
 					.newInstance(valueClass);
 			entity.setId(1);
@@ -705,7 +778,9 @@ public class FlatTreeSerializer {
 
 		boolean testSerialized;
 
-		private boolean testSerializedPopulateAllPaths;
+		boolean testSerializedPopulateAllPaths;
+
+		PathTraversal pathTraversal;
 
 		public SerializerOptions withDefaults(boolean defaults) {
 			this.defaults = defaults;
@@ -728,8 +803,9 @@ public class FlatTreeSerializer {
 		}
 
 		public SerializerOptions withTestSerializedPopulateAllPaths(
-				boolean testSerializedPopulateAllPaths) {
-			this.testSerializedPopulateAllPaths = testSerializedPopulateAllPaths;
+				PathTraversal pathTraversal) {
+			this.testSerializedPopulateAllPaths = true;
+			this.pathTraversal = pathTraversal;
 			return this;
 		}
 
@@ -737,6 +813,12 @@ public class FlatTreeSerializer {
 				withTopLevelTypeInfo(boolean topLevelTypeInfo) {
 			this.topLevelTypeInfo = topLevelTypeInfo;
 			return this;
+		}
+
+		public static class PathTraversal {
+			public Set<String> traversed = new LinkedHashSet<>();
+
+			public Set<String> pending = new LinkedHashSet<>();
 		}
 	}
 
@@ -831,6 +913,10 @@ public class FlatTreeSerializer {
 			this.defaultValue = defaultValue;
 		}
 
+		public boolean isMultipleTypes() {
+			return path.isMultipleTypes();
+		}
+
 		@Override
 		public String toString() {
 			return Ax.format("%s=%s", path, value);
@@ -883,7 +969,7 @@ public class FlatTreeSerializer {
 				return CommonUtils.getEnumValueOrNull(valueClass, stringValue,
 						true, null);
 			}
-			if (CommonUtils.hasSuperClass(valueClass, Entity.class)) {
+			if (CommonUtils.isOrHasSuperClass(valueClass, Entity.class)) {
 				return Domain.find(valueClass, Long.parseLong(stringValue));
 			}
 			if (value.getClass().isArray()
@@ -935,10 +1021,6 @@ public class FlatTreeSerializer {
 			String value = fb.toString();
 			if (Ax.notBlank(value)) {
 				String pathString = path.toString(shortPaths, shortPaths);
-				if (pathString.equals("date")) {
-					int debug = 3;
-					path.toString(shortPaths, shortPaths);
-				}
 				state.keyValues.put(pathString, value);
 			}
 		}
@@ -1018,6 +1100,11 @@ public class FlatTreeSerializer {
 			}
 		}
 
+		boolean isMultipleTypes() {
+			return propertySerialization != null
+					&& propertySerialization.types().length > 1;
+		}
+
 		String toString(boolean shortPaths, boolean mergeLeafValuePaths) {
 			if (shortPaths) {
 				return toStringShort(mergeLeafValuePaths);
@@ -1034,11 +1121,12 @@ public class FlatTreeSerializer {
 				FormatBuilder fb = new FormatBuilder();
 				fb.separator(".");
 				fb.appendIfNotBlank(parent.toStringFull(mergeLeafValuePaths));
-				if (property == null && index != null) {
+				if (property != null) {
+					fb.append(property.getName());
+				}
+				if (index != null) {
 					fb.appendIfNotBlank(
 							index.toStringFull(mergeLeafValuePaths));
-				} else {
-					fb.append(property.getName());
 				}
 				path = fb.toString();
 			}
@@ -1053,10 +1141,7 @@ public class FlatTreeSerializer {
 				FormatBuilder fb = new FormatBuilder();
 				fb.separator(".");
 				fb.appendIfNotBlank(parent.toStringShort(mergeLeafValuePaths));
-				if (property == null && index != null) {
-					fb.appendIfNotBlank(
-							index.toStringShort(this, mergeLeafValuePaths));
-				} else {
+				if (property != null) {
 					if (propertySerialization != null) {
 						if (propertySerialization.defaultProperty()) {
 						} else if (propertySerialization.path().length() > 0) {
@@ -1067,6 +1152,10 @@ public class FlatTreeSerializer {
 					} else {
 						fb.append(property.getName());
 					}
+				}
+				if (index != null) {
+					fb.appendIfNotBlank(
+							index.toStringShort(this, mergeLeafValuePaths));
 				}
 				shortPath = fb.toString();
 			}

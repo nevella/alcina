@@ -1149,7 +1149,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				Object defaultValue = accessor
 						.getPropertyValue(templateInstance, propertyName);
 				defaultValues.put(propertyName, defaultValue);
-				if (CommonUtils.hasSuperClass(propertyType, Entity.class)) {
+				if (CommonUtils.isOrHasSuperClass(propertyType, Entity.class)) {
 					Class implementation = PersistentImpl
 							.getImplementation(propertyType);
 					entityImplementations.put(propertyType,
