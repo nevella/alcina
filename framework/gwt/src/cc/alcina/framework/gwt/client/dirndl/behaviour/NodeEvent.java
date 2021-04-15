@@ -29,57 +29,12 @@ import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
  * weird...
  */
 public abstract class NodeEvent {
-	public static class Context {
-		public Context() {
-		}
-
-		public Behaviour behaviour;
-
-		public DirectedLayout.Node node;
-
-		public NodeEvent nodeEvent;
-
-		public GwtEvent gwtEvent;
-
-		public TopicEvent<?> topicEvent;
-
-		public TopicListeners topicListeners;
-
-		public <A extends Annotation> A annotation(Class<A> clazz) {
-			return node.annotation(clazz);
-		}
-
-		public <B extends Bindable> B typedModel() {
-			return (B) node.getModel();
-		}
-
-		public <E extends GwtEvent> E typedEvent() {
-			return (E) gwtEvent;
-		}
-	}
-
-	public interface Handler {
-		public abstract void onEvent(NodeEvent.Context eventContext);
-	}
-
-	@ClientInstantiable
-	public static abstract class AbstractHandler implements Handler {
-	}
-
-	private NodeEventReceiver eventReceiver;
-
-	public void setReceiver(NodeEventReceiver eventReceiver) {
-		this.eventReceiver = eventReceiver;
-	}
-
 	static Logger logger = LoggerFactory.getLogger(NodeEvent.class);
 	static {
 		AlcinaLogUtils.sysLogClient(NodeEvent.class, Level.OFF);
 	}
 
-	protected void fireEvent(GwtEvent gwtEvent) {
-		eventReceiver.onEvent(gwtEvent);
-	}
+	private NodeEventReceiver eventReceiver;
 
 	protected HandlerRegistration handlerRegistration;
 
@@ -100,9 +55,60 @@ public abstract class NodeEvent {
 		}
 	}
 
+	public void setReceiver(NodeEventReceiver eventReceiver) {
+		this.eventReceiver = eventReceiver;
+	}
+
+	protected abstract HandlerRegistration bind0(Widget widget);
+
+	protected void fireEvent(GwtEvent gwtEvent) {
+		eventReceiver.onEvent(gwtEvent);
+	}
+
 	protected void unbind() {
 		bind(null, false);
 	}
 
-	protected abstract HandlerRegistration bind0(Widget widget);
+	@ClientInstantiable
+	public static abstract class AbstractHandler implements Handler {
+	}
+
+	public static class Context {
+		public Behaviour behaviour;
+
+		public DirectedLayout.Node node;
+
+		public NodeEvent nodeEvent;
+
+		public GwtEvent gwtEvent;
+
+		public TopicEvent<?> topicEvent;
+
+		public TopicListeners topicListeners;
+
+		public Context() {
+		}
+
+		public <A extends Annotation> A annotation(Class<A> clazz) {
+			return node.annotation(clazz);
+		}
+
+		public <E extends GwtEvent> E typedEvent() {
+			return (E) gwtEvent;
+		}
+
+		public <B extends Bindable> B typedModel() {
+			return (B) node.getModel();
+		}
+	}
+
+	public interface Handler {
+		public abstract void onEvent(NodeEvent.Context eventContext);
+
+		/*
+		 * Indicates the registering class handles the events
+		 */
+		public static interface Self extends Handler {
+		}
+	}
 }

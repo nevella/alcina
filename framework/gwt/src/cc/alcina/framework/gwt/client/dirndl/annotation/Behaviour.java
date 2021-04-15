@@ -21,65 +21,11 @@ import cc.alcina.framework.gwt.client.dirndl.handler.EmitTopicHandler;
 @Target(ElementType.TYPE_USE)
 @ClientVisible
 public @interface Behaviour {
-	public static class Util {
-		public static boolean hasActivationTopic(Behaviour behaviour) {
-			return behaviour.topics().length > 0
-					&& Arrays.stream(behaviour.topics()).anyMatch(
-							tb -> tb.type() == TopicBehaviourType.ACTIVATION);
-		}
-
-		public static boolean hasActivationTopic(Behaviour behaviour,
-				Class<? extends NodeTopic> topic) {
-			return behaviour.topics().length > 0
-					&& Arrays.stream(behaviour.topics()).anyMatch(
-							tb -> tb.type() == TopicBehaviourType.ACTIVATION
-									&& tb.topic() == topic);
-		}
-
-		public static boolean isListenerTopic(TopicBehaviour topicBehaviour) {
-			return topicBehaviour.type().isListenerTopic();
-		}
-
-		public static Behaviour getEmitter(Directed directed,
-				Class<? extends NodeTopic> topic) {
-			if (directed.behaviours().length == 0) {
-				return null;
-			}
-			return Arrays.stream(directed.behaviours())
-					.filter(b -> b.handler() == EmitTopicHandler.class
-							&& hasEmitTopicBehaviour(b, topic))
-					.findFirst().orElse(null);
-		}
-
-		public static boolean hasEmitTopicBehaviour(Behaviour behaviour,
-				Class<? extends NodeTopic> topic) {
-			return behaviour.topics().length > 0
-					&& Arrays.stream(behaviour.topics())
-							.anyMatch(tb -> tb.type() == TopicBehaviourType.EMIT
-									&& tb.topic() == topic);
-		}
-
-		public static TopicBehaviour
-				getEmitTopicBehaviour(Behaviour behaviour) {
-			return Arrays.stream(behaviour.topics())
-					.filter(tb -> tb.type() == TopicBehaviourType.EMIT)
-					.findFirst().get();
-		}
-
-		public static boolean hasListenerTopic(Behaviour behaviour,
-				Class topic) {
-			return behaviour.topics().length > 0
-					&& Arrays.stream(behaviour.topics()).anyMatch(
-							tb -> tb.type() == TopicBehaviourType.RECEIVE
-									&& tb.topic() == topic);
-		}
-	}
-
 	Class<? extends NodeEvent> event();
 
 	boolean fireOnce() default false;
 
-	Class<? extends NodeEvent.Handler> handler();
+	Class<? extends NodeEvent.Handler> handler() default NodeEvent.Handler.Self.class;
 
 	TopicBehaviour[] topics() default {};
 
@@ -89,6 +35,8 @@ public @interface Behaviour {
 	@Target({ ElementType.TYPE_USE, ElementType.TYPE })
 	@ClientVisible
 	public @interface TopicBehaviour {
+		Class<? extends Function> payloadTransformer() default IdentityFunction.class;
+
 		Class<? extends NodeTopic> topic();
 
 		TopicBehaviourType type();
@@ -106,7 +54,59 @@ public @interface Behaviour {
 				}
 			}
 		}
+	}
 
-		Class<? extends Function> payloadTransformer() default IdentityFunction.class;
+	public static class Util {
+		public static Behaviour getEmitter(Directed directed,
+				Class<? extends NodeTopic> topic) {
+			if (directed.behaviours().length == 0) {
+				return null;
+			}
+			return Arrays.stream(directed.behaviours())
+					.filter(b -> b.handler() == EmitTopicHandler.class
+							&& hasEmitTopicBehaviour(b, topic))
+					.findFirst().orElse(null);
+		}
+
+		public static TopicBehaviour
+				getEmitTopicBehaviour(Behaviour behaviour) {
+			return Arrays.stream(behaviour.topics())
+					.filter(tb -> tb.type() == TopicBehaviourType.EMIT)
+					.findFirst().get();
+		}
+
+		public static boolean hasActivationTopic(Behaviour behaviour) {
+			return behaviour.topics().length > 0
+					&& Arrays.stream(behaviour.topics()).anyMatch(
+							tb -> tb.type() == TopicBehaviourType.ACTIVATION);
+		}
+
+		public static boolean hasActivationTopic(Behaviour behaviour,
+				Class<? extends NodeTopic> topic) {
+			return behaviour.topics().length > 0
+					&& Arrays.stream(behaviour.topics()).anyMatch(
+							tb -> tb.type() == TopicBehaviourType.ACTIVATION
+									&& tb.topic() == topic);
+		}
+
+		public static boolean hasEmitTopicBehaviour(Behaviour behaviour,
+				Class<? extends NodeTopic> topic) {
+			return behaviour.topics().length > 0
+					&& Arrays.stream(behaviour.topics())
+							.anyMatch(tb -> tb.type() == TopicBehaviourType.EMIT
+									&& tb.topic() == topic);
+		}
+
+		public static boolean hasListenerTopic(Behaviour behaviour,
+				Class topic) {
+			return behaviour.topics().length > 0
+					&& Arrays.stream(behaviour.topics()).anyMatch(
+							tb -> tb.type() == TopicBehaviourType.RECEIVE
+									&& tb.topic() == topic);
+		}
+
+		public static boolean isListenerTopic(TopicBehaviour topicBehaviour) {
+			return topicBehaviour.type().isListenerTopic();
+		}
 	}
 }

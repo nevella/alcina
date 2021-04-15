@@ -19,12 +19,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 @RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = AbstractCollection.class)
 public class CollectionNodeRenderer extends DirectedNodeRenderer {
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface CollectionNodeRendererArgs {
-		public Directed value();
+	@Override
+	public Widget render(Node node) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -44,8 +41,11 @@ public class CollectionNodeRenderer extends DirectedNodeRenderer {
 		return result;
 	}
 
-	@Override
-	public Widget render(Node node) {
-		throw new UnsupportedOperationException();
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	public @interface CollectionNodeRendererArgs {
+		public Directed value();
 	}
 }

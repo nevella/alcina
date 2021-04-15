@@ -58,6 +58,13 @@ public class DirectedLayout {
 
 	public static Node current = null;
 
+	public static boolean isDefault(Directed annotation) {
+		return annotation.renderer() == ModelClassNodeRenderer.class
+				&& annotation.cssClass().isEmpty() && annotation.tag().isEmpty()
+				&& annotation.behaviours().length == 0
+				&& annotation.bindings().length == 0;
+	}
+
 	Widget parent;
 
 	public Widget render(ContextResolver resolver, Widget parent,
@@ -74,47 +81,19 @@ public class DirectedLayout {
 		public ContextResolver() {
 		}
 
-		public Object resolveModel(Object model) {
-			return model;
-		}
-
-		public <T> T resolveRenderContextProperty(String key) {
-			return null;
-		}
-
 		@Override
 		public <A extends Annotation> A getAnnotation(Class<A> annotationClass,
 				AnnotationLocation location) {
 			return AnnotationLocation.Resolver.super.getAnnotation(
 					annotationClass, location);
 		}
-	}
 
-	private static class DelegatingContextResolver extends ContextResolver {
-		private ContextResolver parent = null;
-
-		private Resolver locationResolver;
-
-		public DelegatingContextResolver(ContextResolver parent,
-				Resolver locationResolver) {
-			this.parent = parent;
-			this.locationResolver = locationResolver;
-		}
-
-		@Override
 		public Object resolveModel(Object model) {
-			return parent.resolveModel(model);
+			return model;
 		}
 
-		@Override
 		public <T> T resolveRenderContextProperty(String key) {
-			return parent.resolveRenderContextProperty(key);
-		}
-
-		@Override
-		public <A extends Annotation> A getAnnotation(Class<A> annotationClass,
-				AnnotationLocation location) {
-			return locationResolver.getAnnotation(annotationClass, location);
+			return null;
 		}
 	}
 
@@ -138,10 +117,6 @@ public class DirectedLayout {
 	 */
 	public static class Node {
 		private ContextResolver resolver;
-
-		public ContextResolver getResolver() {
-			return this.resolver;
-		}
 
 		final Object model;
 
@@ -207,8 +182,31 @@ public class DirectedLayout {
 			return idx == 0 ? null : children.get(idx - 1);
 		}
 
+		public AnnotationLocation.Resolver contextResolver() {
+			return resolver;
+		}
+
+		public void fireEvent(TopicEvent topicEvent) {
+			if (rendered.behaviours != null) {
+				rendered.behaviours.forEach(bb -> bb.onTopicEvent(topicEvent));
+			}
+		}
+
 		public <T> T getModel() {
 			return (T) this.model;
+		}
+
+		public ContextResolver getResolver() {
+			return this.resolver;
+		}
+
+		public Widget getWidget() {
+			return rendered.verifySingleWidget();
+		}
+
+		public void pushResolver(AnnotationLocation.Resolver locationResolver) {
+			resolver = new DelegatingContextResolver(resolver,
+					locationResolver);
 		}
 
 		public Node resolveNode(String path) {
@@ -278,6 +276,14 @@ public class DirectedLayout {
 
 		public Widget resolveWidget(String path) {
 			return resolveNode(path).rendered.verifySingleWidget();
+		}
+
+		public Node root() {
+			Node cursor = this;
+			while (cursor.parent != null) {
+				cursor = cursor.parent;
+			}
+			return cursor;
 		}
 
 		@Override
@@ -517,25 +523,30 @@ public class DirectedLayout {
 
 			public List<PropertyBinding> bindings;
 
+			private Map<Behaviour, BehaviourBinding> preRenderListeners;
+
+			public void addBehaviourBinding(Behaviour behaviour,
+					BehaviourBinding behaviourBinding) {
+				if (behaviours != null) {
+					behaviourBindingFor(behaviour).topicListeners
+							.addListener(behaviourBinding);
+				} else {
+					if (preRenderListeners == null) {
+						preRenderListeners = new LinkedHashMap<>();
+					}
+					preRenderListeners.put(behaviour, behaviourBinding);
+				}
+			}
+
+			public BehaviourBinding behaviourBindingFor(Behaviour behaviour) {
+				return behaviours.stream()
+						.filter(bb -> bb.behaviour == behaviour).findFirst()
+						.get();
+			}
+
 			public int getChildIndex(Widget childWidget) {
 				FlowPanel panel = verifyContainer();
 				return panel.getWidgetIndex(childWidget);
-			}
-
-			void bindBehaviours() {
-				Preconditions.checkState(widgets.size() == 1);
-				behaviours = Arrays.stream(directed.behaviours())
-						.map(BehaviourBinding::new)
-						.collect(Collectors.toList());
-				behaviours.forEach(BehaviourBinding::bind);
-				if (preRenderListeners != null) {
-					preRenderListeners
-							.forEach((behaviour, behaviourBinding) -> {
-								behaviourBindingFor(behaviour).topicListeners
-										.addListener(behaviourBinding);
-							});
-					preRenderListeners = null;
-				}
 			}
 
 			public Optional<Widget> lastWidgetOrPredecessorLastWidget() {
@@ -574,24 +585,19 @@ public class DirectedLayout {
 				return (FlowPanel) verifySingleWidget();
 			}
 
-			public BehaviourBinding behaviourBindingFor(Behaviour behaviour) {
-				return behaviours.stream()
-						.filter(bb -> bb.behaviour == behaviour).findFirst()
-						.get();
-			}
-
-			private Map<Behaviour, BehaviourBinding> preRenderListeners;
-
-			public void addBehaviourBinding(Behaviour behaviour,
-					BehaviourBinding behaviourBinding) {
-				if (behaviours != null) {
-					behaviourBindingFor(behaviour).topicListeners
-							.addListener(behaviourBinding);
-				} else {
-					if (preRenderListeners == null) {
-						preRenderListeners = new LinkedHashMap<>();
-					}
-					preRenderListeners.put(behaviour, behaviourBinding);
+			void bindBehaviours() {
+				Preconditions.checkState(widgets.size() == 1);
+				behaviours = Arrays.stream(directed.behaviours())
+						.map(BehaviourBinding::new)
+						.collect(Collectors.toList());
+				behaviours.forEach(BehaviourBinding::bind);
+				if (preRenderListeners != null) {
+					preRenderListeners
+							.forEach((behaviour, behaviourBinding) -> {
+								behaviourBindingFor(behaviour).topicListeners
+										.addListener(behaviourBinding);
+							});
+					preRenderListeners = null;
 				}
 			}
 		}
@@ -649,6 +655,117 @@ public class DirectedLayout {
 			}
 		}
 
+		class BehaviourBinding implements NodeEventReceiver {
+			Behaviour behaviour;
+
+			NodeEvent eventBinding;
+
+			TopicListeners topicListeners = new TopicListeners();
+
+			public BehaviourBinding(Behaviour behaviour) {
+				this.behaviour = behaviour;
+			}
+
+			@Override
+			public void onEvent(GwtEvent event) {
+				Context context = new NodeEvent.Context();
+				context.gwtEvent = event;
+				fireEvent(context);
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("Binding :: %s :: %s",
+						model.getClass().getSimpleName(), behaviour);
+			}
+
+			private void bindEvent(boolean bind) {
+				if (bind) {
+					if (eventBinding == null) {
+						eventBinding = Reflections
+								.newInstance(behaviour.event());
+						eventBinding.setReceiver(this);
+					}
+					eventBinding.bind(getBindingWidget(), true);
+				} else {
+					eventBinding.bind(null, false);
+				}
+			}
+
+			private void fireEvent(Context context) {
+				context.nodeEvent = eventBinding;
+				context.behaviour = behaviour;
+				context.node = Node.this;
+				context.topicListeners = topicListeners;
+				Class<? extends Handler> handlerClass = behaviour.handler();
+				Handler handler = null;
+				// allow context-sensitive handlers
+				if (context.node.renderer.getClass() == handlerClass) {
+					handler = (Handler) context.node.renderer;
+				} else if (context.node.model.getClass() == handlerClass) {
+					handler = (Handler) context.node.model;
+				} else if (handlerClass == NodeEvent.Handler.Self.class) {
+					handler = (Handler) context.node.model;
+				} else {
+					// FIXME - remove (with ancestor model)
+					Handler ancestorHandler = context.node
+							.ancestorModel(handlerClass);
+					if (ancestorHandler == null) {
+						handler = Reflections.newInstance(handlerClass);
+					} else {
+						handler = ancestorHandler;
+					}
+				}
+				logger.trace("Firing behaviour {} on {} to {}",
+						eventBinding.getClass().getSimpleName(),
+						Node.this.pathSegment(), handlerClass.getSimpleName());
+				handler.onEvent(context);
+			}
+
+			void bind() {
+				if (!Behaviour.Util.hasActivationTopic(behaviour)) {
+					bindEvent(true);
+				}
+				for (TopicBehaviour topicBehaviour : behaviour.topics()) {
+					if (Behaviour.Util.isListenerTopic(topicBehaviour)) {
+						Node cursor = Node.this;
+						while (cursor != null) {
+							Behaviour behaviour = Behaviour.Util.getEmitter(
+									cursor.directed, topicBehaviour.topic());
+							if (behaviour != null) {
+								cursor.rendered.addBehaviourBinding(behaviour,
+										this);
+								logger.warn(
+										"Binding topic behaviour {} on {} to {}\n",
+										topicBehaviour.topic().getSimpleName(),
+										Node.this.pathSegment(),
+										cursor.pathSegment());
+								break;
+							}
+							cursor = cursor.parent;
+						}
+					}
+				}
+			}
+
+			Widget getBindingWidget() {
+				return rendered.verifySingleWidget();
+			}
+
+			void onTopicEvent(TopicEvent topicEvent) {
+				if (Behaviour.Util.hasActivationTopic(behaviour,
+						topicEvent.topic)) {
+					bindEvent(true);
+				}
+				if (Behaviour.Util.hasListenerTopic(behaviour,
+						topicEvent.topic)) {
+					Context context = new NodeEvent.Context();
+					context.topicEvent = topicEvent;
+					fireEvent(context);
+				}
+			}
+		}
+
 		/*
 		 * Similar to Gwittir Binding - but simpler
 		 */
@@ -703,7 +820,7 @@ public class DirectedLayout {
 					value = Reflections.newInstance(binding.transform())
 							.apply(value);
 				}
-				String stringValue = value.toString();
+				String stringValue = value == null ? "null" : value.toString();
 				Element element = rendered.widgets.get(0).getElement();
 				switch (binding.type()) {
 				case INNER_HTML:
@@ -753,151 +870,37 @@ public class DirectedLayout {
 				}
 			}
 		}
-
-		class BehaviourBinding implements NodeEventReceiver {
-			Behaviour behaviour;
-
-			NodeEvent eventBinding;
-
-			TopicListeners topicListeners = new TopicListeners();
-
-			public BehaviourBinding(Behaviour behaviour) {
-				this.behaviour = behaviour;
-			}
-
-			@Override
-			public void onEvent(GwtEvent event) {
-				Context context = new NodeEvent.Context();
-				context.gwtEvent = event;
-				fireEvent(context);
-			}
-
-			void onTopicEvent(TopicEvent topicEvent) {
-				if (Behaviour.Util.hasActivationTopic(behaviour,
-						topicEvent.topic)) {
-					bindEvent(true);
-				}
-				if (Behaviour.Util.hasListenerTopic(behaviour,
-						topicEvent.topic)) {
-					Context context = new NodeEvent.Context();
-					context.topicEvent = topicEvent;
-					fireEvent(context);
-				}
-			}
-
-			@Override
-			public String toString() {
-				return Ax.format("Binding :: %s :: %s",
-						model.getClass().getSimpleName(), behaviour);
-			}
-
-			private void fireEvent(Context context) {
-				context.nodeEvent = eventBinding;
-				context.behaviour = behaviour;
-				context.node = Node.this;
-				context.topicListeners = topicListeners;
-				Class<? extends Handler> handlerClass = behaviour.handler();
-				Handler handler = null;
-				// allow context-sensitive handlers
-				if (context.node.renderer.getClass() == handlerClass) {
-					handler = (Handler) context.node.renderer;
-				} else if (context.node.model.getClass() == handlerClass) {
-					handler = (Handler) context.node.model;
-				} else {
-					Handler ancestorHandler = context.node
-							.ancestorModel(handlerClass);
-					if (ancestorHandler == null) {
-						handler = Reflections.newInstance(handlerClass);
-					} else {
-						handler = ancestorHandler;
-					}
-				}
-				logger.trace("Firing behaviour {} on {} to {}",
-						eventBinding.getClass().getSimpleName(),
-						Node.this.pathSegment(), handlerClass.getSimpleName());
-				handler.onEvent(context);
-			}
-
-			private void bindEvent(boolean bind) {
-				if (bind) {
-					if (eventBinding == null) {
-						eventBinding = Reflections
-								.newInstance(behaviour.event());
-						eventBinding.setReceiver(this);
-					}
-					eventBinding.bind(getBindingWidget(), true);
-				} else {
-					eventBinding.bind(null, false);
-				}
-			}
-
-			void bind() {
-				if (!Behaviour.Util.hasActivationTopic(behaviour)) {
-					bindEvent(true);
-				}
-				for (TopicBehaviour topicBehaviour : behaviour.topics()) {
-					if (Behaviour.Util.isListenerTopic(topicBehaviour)) {
-						Node cursor = Node.this;
-						while (cursor != null) {
-							Behaviour behaviour = Behaviour.Util.getEmitter(
-									cursor.directed, topicBehaviour.topic());
-							if (behaviour != null) {
-								cursor.rendered.addBehaviourBinding(behaviour,
-										this);
-								logger.warn(
-										"Binding topic behaviour {} on {} to {}\n",
-										topicBehaviour.topic().getSimpleName(),
-										Node.this.pathSegment(),
-										cursor.pathSegment());
-								break;
-							}
-							cursor = cursor.parent;
-						}
-					}
-				}
-			}
-
-			Widget getBindingWidget() {
-				return rendered.verifySingleWidget();
-			}
-		}
-
-		public AnnotationLocation.Resolver contextResolver() {
-			return resolver;
-		}
-
-		public void pushResolver(AnnotationLocation.Resolver locationResolver) {
-			resolver = new DelegatingContextResolver(resolver,
-					locationResolver);
-		}
-
-		public void fireEvent(TopicEvent topicEvent) {
-			if (rendered.behaviours != null) {
-				rendered.behaviours.forEach(bb -> bb.onTopicEvent(topicEvent));
-			}
-		}
-
-		public Node root() {
-			Node cursor = this;
-			while (cursor.parent != null) {
-				cursor = cursor.parent;
-			}
-			return cursor;
-		}
-
-		public Widget getWidget() {
-			return rendered.verifySingleWidget();
-		}
 	}
 
 	public interface NodeEventReceiver {
 		public void onEvent(GwtEvent event);
 	}
 
-	public static boolean isDefault(Directed annotation) {
-		return annotation.renderer() == ModelClassNodeRenderer.class
-				&& annotation.cssClass().isEmpty() && annotation.tag().isEmpty()
-				&& annotation.behaviours().length == 0
-				&& annotation.bindings().length == 0;
+	private static class DelegatingContextResolver extends ContextResolver {
+		private ContextResolver parent = null;
+
+		private Resolver locationResolver;
+
+		public DelegatingContextResolver(ContextResolver parent,
+				Resolver locationResolver) {
+			this.parent = parent;
+			this.locationResolver = locationResolver;
+		}
+
+		@Override
+		public <A extends Annotation> A getAnnotation(Class<A> annotationClass,
+				AnnotationLocation location) {
+			return locationResolver.getAnnotation(annotationClass, location);
+		}
+
+		@Override
+		public Object resolveModel(Object model) {
+			return parent.resolveModel(model);
+		}
+
+		@Override
+		public <T> T resolveRenderContextProperty(String key) {
+			return parent.resolveRenderContextProperty(key);
+		}
 	}
 }
