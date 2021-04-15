@@ -14,12 +14,15 @@ import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
-public abstract class GroupingParameters<GP extends GroupingParameters>
-		extends Bindable implements Serializable, HasReflectiveEquivalence<GP>,
+/*
+ * Non-abstract to provide default impl for GWT RPC
+ */
+public class GroupingParameters<GP extends GroupingParameters> extends Bindable
+		implements Serializable, HasReflectiveEquivalence<GP>,
 		ReflectCloneable<GP>, TreeSerializable {
 	private List<ColumnSearchOrder> columnOrders = new ArrayList<>();
 
-	@PropertySerialization(types = ColumnSearchOrder.class)
+	@PropertySerialization(path = "columnOrders", types = ColumnSearchOrder.class)
 	public List<ColumnSearchOrder> getColumnOrders() {
 		return this.columnOrders;
 	}

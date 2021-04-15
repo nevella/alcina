@@ -18,6 +18,7 @@ import java.util.Date;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -48,6 +49,7 @@ public class AbstractDateCriterion extends SearchCriterion
 	}
 
 	@SuppressWarnings("deprecation")
+	@AlcinaTransient
 	public Date getDate() {
 		if (date != null) {
 			try {

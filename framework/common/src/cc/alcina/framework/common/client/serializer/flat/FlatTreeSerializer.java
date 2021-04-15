@@ -27,7 +27,6 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CloneHelper;
@@ -57,39 +56,41 @@ import cc.alcina.framework.common.client.util.TextUtils;
  * </ul>
  * </ul>
  * <p>
- * Polymporhpic collections must define the complete list of allowable members,
- * to ensure serialization uniqueness
+ * Polymporhpic collections must either define the complete list of allowable
+ * members, to ensure alias uniqueness, or use any-type (unspecified - types()
+ * annotation length==0) serialization - in the latter case the path compression
+ * use the full classname as typeinfo.
+ * 
  * </p>
  * <p>
- * Constraints: Collections cannot contain nulls, and all-default value
- * TreeSerializable elements will not be serialized
+ * Constraints: Collections cannot contain nulls. If a default property has no
+ * type constraints, it must be populated by the constructor
  * </p>
+ * 
+ * <h2>Verification and safety:</h2>
+ * <ul>
+ * <li>Deserialization checks no property/name collisions.
+ * <li>Deserialization checks for invalid types if types were specified for a
+ * given property
+ * <li>If with testing option, adds reachable TreeSerializable types to the
+ * testing queue
+ * </ul>
  *
  * <h2>TODO:</h2>
  * <ul>
- * <li>Build resolution map at earch path node (single-prop top-level doesn't
- * elide default btw) - e.g. ServerTask.value
- * <li>Use for ser/deser
- * <li>deser
- * <li>annotation builders (bindableSDef)
- * <li>annotation builders (publication)
- * <li>transformmanager serialization
- * <li>pluggable client sdef ser/deser
- * <li>serialize with 2 copies of each collection<treeser> elt; all enum values;
- * hash string; check roundtrip gives identical kryo bytes
  * <li>(later) GWT RPC (for serializing places, searchdefs etc without
  * serialization classes)
- * <li>Apps
+ * <li>Per-application implementations
  * </ul>
  * 
- * <h2>FIXME:</h2>
- * <ul>
- * <li>PropertySerialization to ResolvedPropertySerialization (which respects
- * Type.PropertySerialization, path.parent.PropertySerialization.grandchildTypes
- * <li>Clarify anything complicated with psuedocode
- * <li>Check that collision detection works
- * </ul>
  *
+ *
+ * <h2>For: 2021.04.16</h2>
+ * <ul>
+ * <li>Check groupingparameters annotation
+ * </ul>
+ * 
+ * 
  * @author nick@alcina.cc
  */
 public class FlatTreeSerializer {
@@ -199,9 +200,9 @@ public class FlatTreeSerializer {
 		return assignableFromCollection.computeIfAbsent(clazz, c -> {
 			try {
 				Object instance = Reflections.newInstance(clazz);
-				return !(instance instanceof Collection);
+				return instance instanceof Collection;
 			} catch (Exception e) {
-				return true;
+				return false;
 			}
 		});
 	}
@@ -225,14 +226,17 @@ public class FlatTreeSerializer {
 		return assignableFromTreeSerializable.computeIfAbsent(clazz, c -> {
 			try {
 				Object instance = Reflections.newInstance(clazz);
-				return !(instance instanceof TreeSerializable);
+				return instance instanceof TreeSerializable;
 			} catch (Exception e) {
-				return true;
+				return false;
 			}
 		});
 	}
 
 	private static boolean isValueType(Class clazz) {
+		if (clazz == Class.class) {
+			return true;
+		}
 		if (CommonUtils.stdAndPrimitives.contains(clazz)) {
 			return true;
 		}
@@ -257,7 +261,50 @@ public class FlatTreeSerializer {
 		this.state = state;
 	}
 
+	private <T> void addWithUniquenessCheck(Map<String, T> map, String key,
+			T value, Node cursor) {
+		T existingValue = map.put(key, value);
+		if (existingValue != null) {
+			throw new IllegalStateException(
+					Ax.format("Key collision %s at path %s :: %s",
+							state.rootClass.getSimpleName(), cursor.path, key));
+		}
+	}
+
+	private void checkBranchUniqueness(List<String> resolvedSegments,
+			Set<String> seenPossibleBranchesThisSegment, Set<String> newKeys) {
+		for (String key : newKeys) {
+			if (!seenPossibleBranchesThisSegment.add(key) && key.length() > 0) {
+				throw new IllegalStateException(
+						Ax.format("Key collision %s at path %s :: %s",
+								state.rootClass.getSimpleName(),
+								resolvedSegments, key));
+			}
+		}
+	}
+
+	private void checkPermittedType(Class elementClass,
+			Map<String, Class> typeMap, Node cursor) {
+		if (typeMap.size() > 0 && !typeMap.values().contains(elementClass)) {
+			throw new IllegalStateException(
+					Ax.format("Unexpected type %s at %s",
+							elementClass.getName(), cursor.path));
+		}
+	}
+
+	private void checkReachableTestingTypes(Node childNode) {
+		if (state.serializerOptions.reachables != null
+				&& childNode.path.propertySerialization != null) {
+			for (Class clazz : childNode.path.propertySerialization.types()) {
+				if (isTreeSerializable(clazz)) {
+					state.serializerOptions.reachables.add(clazz);
+				}
+			}
+		}
+	}
+
 	private void deserialize(Node root) {
+		state.rootClass = root.value.getClass();
 		/*
 		 * (Document for 'short paths' case - non-short is simpler (does not use
 		 * elision) For each path:
@@ -283,6 +330,8 @@ public class FlatTreeSerializer {
 			Node cursor = root;
 			String[] segments = path.split("\\.");
 			boolean resolvingLastSegment = false;
+			String reachedPath = "";
+			List<String> resolvedSegments = new ArrayList<>();
 			for (int idx = 0; idx < segments.length; idx++) {
 				String segment = segments[idx];
 				String segmentPath = segment;
@@ -294,52 +343,67 @@ public class FlatTreeSerializer {
 							segment.replaceFirst("(.+?)(\\d+)", "$2")) + 1;
 				}
 				boolean resolved = false;
+				Set<String> seenPossibleBranchesThisSegment = new LinkedHashSet<>();
 				while (!resolved) {
 					/*
 					 * If resolving last segment, we're just descending the
 					 * defaults at the end of the path (so the last segment is,
-					 * yes, already resolved) - FIXME - possibly move to the end
-					 * of the loop?
+					 * yes, already resolved) - there may be several default
+					 * steps so the 'descend until resolved' loop is correct,
+					 * rather than attempting a short-circuit
 					 */
 					resolved |= resolvingLastSegment;
 					if (cursor.isCollection() && !cursor.isLeaf()) {
 						Class elementClass = null;
+						Map<String, Class> typeMap = getAliasClassMap(
+								state.rootClass, cursor);
 						if (state.deserializerOptions.shortPaths) {
-							Map<String, Class> typeMap = getAliasClassMap(
-									root.value.getClass(), cursor);
-							elementClass = typeMap.get(segmentPath);
-							if (elementClass != null) {
-								resolved = true;
+							if (typeMap.isEmpty()) {
+								elementClass = getClassFromSegment(segmentPath);
 							} else {
-								elementClass = typeMap.get("");
+								checkBranchUniqueness(resolvedSegments,
+										seenPossibleBranchesThisSegment,
+										typeMap.keySet());
+								elementClass = typeMap.get(segmentPath);
+								if (elementClass != null) {
+									resolved = true;
+								} else {
+									elementClass = typeMap.get("");
+								}
+							}
+							if (elementClass == null) {
+								throw new IllegalStateException(
+										Ax.format("Illegal type '%s' at %s",
+												segmentPath, cursor.path));
 							}
 						} else {
 							if (segmentPath.matches("\\d+")) {
 								// leaf value index
 							} else {
-								elementClass = Reflections.classLookup()
-										.getClassForName(
-												segmentPath.replace("_", "."));
+								elementClass = getClassFromSegment(segmentPath);
+								checkPermittedType(elementClass, typeMap,
+										cursor);
 							}
 							resolved = true;
 						}
-						if (cursor.isCollection()) {
-							try {
-								Object childValue = ensureNthCollectionElement(
-										elementClass, index,
-										(Collection) cursor.value);
-								cursor = new Node(cursor, childValue, null);
-							} catch (RuntimeException e) {
-								throw e;
-							}
-							cursor.path.index = new CollectionIndex(
-									elementClass, index, false);
+						try {
+							Object childValue = ensureNthCollectionElement(
+									elementClass, index,
+									(Collection) cursor.value);
+							cursor = new Node(cursor, childValue, null);
+						} catch (RuntimeException e) {
+							throw e;
 						}
+						cursor.path.index = new CollectionIndex(elementClass,
+								index, false);
 					} else {
 						Property property = null;
 						if (state.deserializerOptions.shortPaths) {
 							Map<String, Property> segmentMap = getAliasPropertyMap(
 									cursor);
+							checkBranchUniqueness(resolvedSegments,
+									seenPossibleBranchesThisSegment,
+									segmentMap.keySet());
 							property = segmentMap.get(segment);
 							if (property != null) {
 								resolved = true;
@@ -357,16 +421,18 @@ public class FlatTreeSerializer {
 						Object childValue = Reflections.propertyAccessor()
 								.getPropertyValue(cursor.value,
 										property.getName());
-						Node lookahead = new Node(cursor, null, null);
+						Node lookahead = new Node(cursor, childValue, null);
 						lookahead.path.property = property;
 						lookahead.path.propertySerialization = propertySerialization;
 						/*
 						 * Always skip the lookahead type parameter segment in
 						 * the segment loop.
 						 */
-						if (lookahead.isMultipleTypes()) {
+						if (lookahead.isMultipleTypes()
+								&& !lookahead.isCollection() && !lastSegment) {
 							resolved = true;
 							idx++;
+							resolvedSegments.add(segments[idx]);
 						}
 						if (childValue == null) {
 							if (lastSegment) {
@@ -375,20 +441,33 @@ public class FlatTreeSerializer {
 							} else {
 								// ensure value (since not at leaf)
 								Class type = null;
-								if (lookahead.isMultipleTypes()) {
-									String typeSegment = segments[idx];
-									if (state.deserializerOptions.shortPaths) {
-										Map<String, Class> typeMap = getAliasClassMap(
-												root.value.getClass(),
-												lookahead);
-										type = typeMap.get(typeSegment);
-									} else {
-										type = Reflections.classLookup()
-												.getClassForName(typeSegment
-														.replace("_", "."));
-									}
+								Map<String, Class> typeMap = getAliasClassMap(
+										state.rootClass, lookahead);
+								if (lookahead.path.propertySerialization == null) {
+									// no type info, only allow property type
+									type = property.getType();
 								} else {
-									type = lookahead.path.soleType();
+									if (typeMap.size() != 1) {
+										String typeSegment = segments[idx];
+										if (state.deserializerOptions.shortPaths) {
+											// no need to validate branch
+											// uniqueness, no other path will
+											// resolve to here
+											if (typeMap.isEmpty()) {
+												type = getClassFromSegment(
+														typeSegment);
+											} else {
+												type = typeMap.get(typeSegment);
+											}
+										} else {
+											type = getClassFromSegment(
+													typeSegment);
+											checkPermittedType(type, typeMap,
+													cursor);
+										}
+									} else {
+										type = lookahead.path.soleType();
+									}
 								}
 								childValue = Reflections.newInstance(type);
 								Reflections.propertyAccessor().setPropertyValue(
@@ -419,6 +498,8 @@ public class FlatTreeSerializer {
 						resolvingLastSegment |= lastSegment;
 						if (lastSegment && !cursor.isLeaf()) {
 							resolved = false;
+						} else {
+							resolvedSegments.add(segment);
 						}
 					}
 				}
@@ -459,16 +540,18 @@ public class FlatTreeSerializer {
 		return deSerializationPropertyAliasClass.computeIfAbsent(key, k -> {
 			PropertySerialization propertySerialization = getPropertySerialization(
 					cursor.parent.value.getClass(), k.property.getName());
-			Class[] availableTypes = propertySerialization.types();
+			Class[] availableTypes = propertySerialization == null
+					? new Class[0]
+					: propertySerialization.types();
 			boolean defaultType = availableTypes.length == 1;
 			Map<String, Class> map = new LinkedHashMap<>();
 			if (defaultType) {
-				map.put("", availableTypes[0]);
+				addWithUniquenessCheck(map, "", availableTypes[0], cursor);
 			} else {
 				for (int idx = 0; idx < availableTypes.length; idx++) {
 					Class clazz = availableTypes[idx];
 					String name = keyMapper.apply(clazz);
-					map.put(name, clazz);
+					addWithUniquenessCheck(map, name, clazz, cursor);
 				}
 			}
 			return map;
@@ -489,11 +572,19 @@ public class FlatTreeSerializer {
 			}
 			return property.getName();
 		};
+		Map<String, Property> map = new LinkedHashMap<>();
 		return deSerializationClassAliasProperty
 				.computeIfAbsent(cursor.value.getClass(), clazz -> {
-					return getProperties(cursor.value).stream()
-							.collect(AlcinaCollectors.toKeyMap(keyMapper));
+					getProperties(cursor.value)
+							.forEach(p -> addWithUniquenessCheck(map,
+									keyMapper.apply(p), p, cursor));
+					return map;
 				});
+	}
+
+	private Class getClassFromSegment(String segmentPath) {
+		return Reflections.classLookup()
+				.getClassForName(segmentPath.replace("_", "."));
 	}
 
 	private List<Property> getProperties(Object value) {
@@ -604,6 +695,7 @@ public class FlatTreeSerializer {
 					childNode.path.property = property;
 					childNode.path.propertySerialization = getPropertySerialization(
 							cursor.value.getClass(), property.getName());
+					checkReachableTestingTypes(childNode);
 					if (childNode.isMultipleTypes()
 							&& !childNode.isCollection()) {
 						/*
@@ -615,6 +707,8 @@ public class FlatTreeSerializer {
 					state.pending.add(childNode);
 				});
 			} else {
+				// FIXME - remove check
+				isLeafValue(value);
 				throw new UnsupportedOperationException(Ax.format(
 						"Invalid value type: %s at %s", value, cursor.path));
 			}
@@ -706,6 +800,9 @@ public class FlatTreeSerializer {
 		if (valueClass == Date.class) {
 			return new Date();
 		}
+		if (valueClass == Class.class) {
+			return String.class;
+		}
 		if (valueClass.isEnum() || (valueClass.getSuperclass() != null
 				&& valueClass.getSuperclass().isEnum())) {
 			return valueClass.getEnumConstants()[0];
@@ -714,7 +811,8 @@ public class FlatTreeSerializer {
 				VersionableEntity.class)) {
 			VersionableEntity entity = (VersionableEntity) Reflections
 					.newInstance(valueClass);
-			entity.setId(1);
+			// deliberately non-persistent so that testing roundtrip is stable
+			entity.setId(-1);
 			return entity;
 		}
 		if (valueClass.isArray()
@@ -780,7 +878,7 @@ public class FlatTreeSerializer {
 
 		boolean testSerializedPopulateAllPaths;
 
-		PathTraversal pathTraversal;
+		Reachables reachables;
 
 		public SerializerOptions withDefaults(boolean defaults) {
 			this.defaults = defaults;
@@ -802,10 +900,10 @@ public class FlatTreeSerializer {
 			return this;
 		}
 
-		public SerializerOptions withTestSerializedPopulateAllPaths(
-				PathTraversal pathTraversal) {
+		public SerializerOptions
+				withTestSerializedReachables(Reachables reachables) {
 			this.testSerializedPopulateAllPaths = true;
-			this.pathTraversal = pathTraversal;
+			this.reachables = reachables;
 			return this;
 		}
 
@@ -815,10 +913,18 @@ public class FlatTreeSerializer {
 			return this;
 		}
 
-		public static class PathTraversal {
-			public Set<String> traversed = new LinkedHashSet<>();
+		public static class Reachables {
+			public Set<Class<? extends TreeSerializable>> traversed = new LinkedHashSet<>();
 
-			public Set<String> pending = new LinkedHashSet<>();
+			public Set<Class<? extends TreeSerializable>> pending = new LinkedHashSet<>();
+
+			// Given the implicit requirement that TreeSerializables can't form
+			// containment loops, no need to add root types
+			public void add(Class<? extends TreeSerializable> clazz) {
+				if (!traversed.contains(clazz)) {
+					pending.add(clazz);
+				}
+			}
 		}
 	}
 
@@ -949,8 +1055,12 @@ public class FlatTreeSerializer {
 			if (valueClass == String.class) {
 				return TextUtils.Encoder.decodeURIComponentEsque(stringValue);
 			}
+			if (valueClass == Class.class) {
+				return Reflections.forName(stringValue);
+			}
 			if (valueClass == Long.class || valueClass == long.class) {
-				return Long.parseLong(stringValue);
+				long id = Long.parseLong(stringValue);
+				return id;
 			}
 			if (valueClass == Double.class || valueClass == double.class) {
 				return Double.valueOf(stringValue);
@@ -969,11 +1079,21 @@ public class FlatTreeSerializer {
 				return CommonUtils.getEnumValueOrNull(valueClass, stringValue,
 						true, null);
 			}
-			if (CommonUtils.isOrHasSuperClass(valueClass, Entity.class)) {
-				return Domain.find(valueClass, Long.parseLong(stringValue));
+			if (CommonUtils.isOrHasSuperClass(valueClass,
+					VersionableEntity.class)) {
+				long id = Long.parseLong(stringValue);
+				if (id < 0) {
+					// testing, synthesised entity
+					VersionableEntity newInstance = (VersionableEntity) Reflections
+							.newInstance(valueClass);
+					newInstance.setId(id);
+					return newInstance;
+				} else {
+					return Domain.find(valueClass, id);
+				}
 			}
-			if (value.getClass().isArray()
-					&& value.getClass().getComponentType() == byte.class) {
+			if (valueClass.isArray()
+					&& valueClass.getComponentType() == byte.class) {
 				return Base64.decode(stringValue);
 			}
 			throw new UnsupportedOperationException();
@@ -981,7 +1101,8 @@ public class FlatTreeSerializer {
 
 		void putToObject(String stringValue) {
 			Property property = path.property;
-			Class leafType = path.soleType();
+			Class leafType = NULL_MARKER.equals(stringValue) ? void.class
+					: path.soleType();
 			// always leaf (primitiveish) values
 			if (isCollection()) {
 				Collection collection = (Collection) value;
@@ -1042,6 +1163,8 @@ public class FlatTreeSerializer {
 			} else if (value.getClass().isArray()
 					&& value.getClass().getComponentType() == byte.class) {
 				return Base64.encodeBytes((byte[]) value);
+			} else if (value instanceof Class) {
+				return ((Class) value).getCanonicalName();
 			} else {
 				return value.toString();
 			}
@@ -1144,10 +1267,12 @@ public class FlatTreeSerializer {
 				if (property != null) {
 					if (propertySerialization != null) {
 						if (propertySerialization.defaultProperty()) {
-						} else if (propertySerialization.path().length() > 0) {
-							fb.append(propertySerialization.path());
 						} else {
-							fb.append(propertySerialization.name());
+							if (propertySerialization.path().length() > 0) {
+								fb.append(propertySerialization.path());
+							} else {
+								fb.append(property.getName());
+							}
 						}
 					} else {
 						fb.append(property.getName());
@@ -1195,6 +1320,8 @@ public class FlatTreeSerializer {
 	}
 
 	static class State {
+		public Class<? extends Object> rootClass;
+
 		public SerializerOptions serializerOptions;
 
 		public Node mergeableNode;

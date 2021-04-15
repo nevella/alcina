@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -14,6 +15,7 @@ import org.eclipse.jdt.core.dom.Modifier;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -21,7 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions;
-import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions.PathTraversal;
+import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions.Reachables;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -68,17 +70,22 @@ public class TaskGenerateTreeSerializableSignatures
 
 	private void checkSerializationIssues(TreeSerializable serializable) {
 		try {
+			Reachables reachables = new SerializerOptions.Reachables();
 			FlatTreeSerializer.serialize(serializable,
 					new SerializerOptions().withDefaults(false)
-							.withShortPaths(true).withTestSerialized(true));
-			PathTraversal pathTraversal = new SerializerOptions.PathTraversal();
-			do {
-				FlatTreeSerializer.serialize(serializable,
+							.withShortPaths(true).withTestSerialized(true)
+							.withTestSerializedReachables(reachables));
+			while (reachables.pending.size() > 0) {
+				Iterator<Class<? extends TreeSerializable>> itr = reachables.pending
+						.iterator();
+				Class<? extends TreeSerializable> clazz = itr.next();
+				itr.remove();
+				reachables.traversed.add(clazz);
+				FlatTreeSerializer.serialize(Reflections.newInstance(clazz),
 						new SerializerOptions().withDefaults(false)
 								.withShortPaths(true).withTestSerialized(true)
-								.withTestSerializedPopulateAllPaths(
-										pathTraversal));
-			} while (pathTraversal.pending.size() > 0);
+								.withTestSerializedReachables(reachables));
+			}
 		} catch (Exception e) {
 			String message = Ax.format("%s - %s",
 					serializable.getClass().getSimpleName(),

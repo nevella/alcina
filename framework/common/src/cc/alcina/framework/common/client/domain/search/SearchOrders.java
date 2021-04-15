@@ -185,7 +185,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 			return columnName;
 		}
 
-		@PropertySerialization(name = "asc")
+		@PropertySerialization(path = "asc")
 		public boolean isAscending() {
 			return ascending;
 		}
