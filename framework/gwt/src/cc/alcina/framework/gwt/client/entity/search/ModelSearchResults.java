@@ -5,24 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.csobjects.IsBindable;
 import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 
-public class ModelSearchResults<B extends Bindable & SearchResult>
+public class ModelSearchResults<B extends IsBindable & SearchResult>
 		implements Serializable {
 	public List<B> queriedResultObjects;
-
-	public Class<B> resultClass() {
-		if (resultClassName == null && def instanceof EntitySearchDefinition) {
-			return (Class<B>) (Class<?>) ((EntitySearchDefinition) def)
-					.queriedEntityClass();
-		}
-		return Reflections.forName(resultClassName);
-	}
 
 	public String resultClassName;
 
@@ -51,5 +43,13 @@ public class ModelSearchResults<B extends Bindable & SearchResult>
 		}
 		int pageCount = (recordCount - 1) / def.getResultsPerPage() + 1;
 		return pageCount;
+	}
+
+	public Class<B> resultClass() {
+		if (resultClassName == null && def instanceof EntitySearchDefinition) {
+			return (Class<B>) (Class<?>) ((EntitySearchDefinition) def)
+					.queriedEntityClass();
+		}
+		return Reflections.forName(resultClassName);
 	}
 }
