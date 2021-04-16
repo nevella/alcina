@@ -11,7 +11,6 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
@@ -21,10 +20,7 @@ import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.gwt.client.Client;
-import cc.alcina.framework.gwt.client.rpc.VoidCallback;
 
 public class ReflectiveSearchDefinitionSerializer
 		implements SearchDefinitionSerializer {
@@ -240,15 +236,16 @@ public class ReflectiveSearchDefinitionSerializer
 				.registerLookups(abbrevLookup, reverseAbbrevLookup)
 				.serialize(def);
 		if (flatTreeException != null) {
-			if (GWT.isClient()) {
-				Client.commonRemoteService().logClientError(Ax.format(
-						"ReflectiveSearchDefinitionSerializer.FlatTreeException: %s %s",
-						CommonUtils.toSimpleExceptionMessage(flatTreeException),
-						str), LogMessageType.CLIENT_EXCEPTION.toString(),
-						new VoidCallback());
-			} else {
-				flatTreeException.printStackTrace();
-			}
+			// if (GWT.isClient()) {
+			// Client.commonRemoteService().logClientError(Ax.format(
+			// "ReflectiveSearchDefinitionSerializer.FlatTreeException: %s %s",
+			// CommonUtils.toSimpleExceptionMessage(flatTreeException),
+			// str), LogMessageType.CLIENT_EXCEPTION.toString(),
+			// new VoidCallback());
+			// } else {
+			// flatTreeException.printStackTrace();
+			// }
+			flatTreeException.printStackTrace();
 		}
 		return RS0 + escapeJsonForUrl(str);
 	}
