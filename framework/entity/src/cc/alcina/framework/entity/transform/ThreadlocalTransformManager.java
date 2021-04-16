@@ -1030,18 +1030,20 @@ public class ThreadlocalTransformManager extends TransformManager
 			switch (evt.getTransformType()) {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
-				checkPropertyReadAccessAndThrow(entity, propertyName, evt);
 				checkTargetReadAndAssignmentAccessAndThrow(entity, entityChange,
 						oph, aph, evt);
+				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
 				break;
 			case CHANGE_PROPERTY_REF:
 				checkTargetReadAndAssignmentAccessAndThrow(entity, entityChange,
 						oph, aph, evt);
-				// deliberate fall-through
+				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
+				break;
+			// deliberate fall-through
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_SIMPLE_VALUE:
-				return checkPropertyWriteAccessAndThrow(entity, propertyName,
-						evt);
+				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
+				break;
 			case CREATE_OBJECT:
 				if (!PermissionsManager.get().isPermitted(entity,
 						op.create())) {
