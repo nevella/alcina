@@ -1,19 +1,20 @@
-package cc.alcina.framework.gwt.client.entity.search;
+package cc.alcina.framework.common.client.domain.search.criterion;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
 import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 
-@SearchDefinitionSerializationInfo("fctsc")
+@SearchDefinitionSerializationInfo("mdfc")
 @RegistryLocation(registryPoint = SearchDefinitionSerializationInfo.class)
-@TypeSerialization("finishedfrom")
-public class FinishedFromCriterion extends DateCriterion {
+@TypeSerialization("modifiedfrom")
+public class ModifiedFromCriterion extends DateCriterion {
 
-    public FinishedFromCriterion() {
-        super("Finished since", Direction.ASCENDING);
+    public ModifiedFromCriterion() {
+        super("Modified from", Direction.ASCENDING);
     }
 
+    @Override
     public boolean rangeControlledByDirection() {
         return true;
     }

@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.entity.search;
+package cc.alcina.framework.common.client.domain.search;
 
 import java.io.Serializable;
 import java.util.ArrayList;

@@ -10,11 +10,11 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
+import cc.alcina.framework.common.client.domain.search.GroupingParameters;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.entity.export.RowExportContentDefinition;
 import cc.alcina.framework.gwt.client.entity.place.EntitySubPlace;
-import cc.alcina.framework.gwt.client.entity.search.GroupingParameters;
 import cc.alcina.framework.gwt.client.entity.view.ViewModel.ViewModelWithDataProvider;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections.ContentViewSectionsDialogBuilder;

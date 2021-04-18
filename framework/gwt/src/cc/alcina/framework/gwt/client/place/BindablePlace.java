@@ -1,11 +1,11 @@
 package cc.alcina.framework.gwt.client.place;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
-import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
 
 @RegistryLocation(registryPoint = BindablePlace.class)
 public abstract class BindablePlace<SD extends BindableSearchDefinition>

@@ -13,7 +13,11 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.domain.search.DomainSearcher;
+import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
+import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
+import cc.alcina.framework.common.client.domain.search.SearchContext;
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -31,10 +35,6 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
-import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
-import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
-import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
-import cc.alcina.framework.gwt.client.entity.search.SearchContext;
 
 @RegistryLocation(registryPoint = CommonSearchSupport.class, implementationType = ImplementationType.INSTANCE)
 public class CommonSearchSupport {

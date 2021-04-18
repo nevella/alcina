@@ -1,20 +1,16 @@
-package cc.alcina.framework.gwt.client.entity.search;
+package cc.alcina.framework.common.client.domain.search.criterion;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
 import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 
-@SearchDefinitionSerializationInfo("ctsc")
+@SearchDefinitionSerializationInfo("stdc")
 @RegistryLocation(registryPoint = SearchDefinitionSerializationInfo.class)
-@TypeSerialization("createdfrom")
-public class CreatedFromCriterion extends DateCriterion {
+@TypeSerialization("startdate")
+public class StartDateCriterion extends DateCriterion {
 
-    public CreatedFromCriterion() {
-        super("Created since", Direction.ASCENDING);
-    }
-
-    public boolean rangeControlledByDirection() {
-        return true;
+    public StartDateCriterion() {
+        super("Start", Direction.ASCENDING);
     }
 }

@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.entity.search;
+package cc.alcina.framework.common.client.domain.search.criterion;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;

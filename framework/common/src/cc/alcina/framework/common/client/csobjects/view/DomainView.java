@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.view;
+package cc.alcina.framework.common.client.csobjects.view;
 
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;

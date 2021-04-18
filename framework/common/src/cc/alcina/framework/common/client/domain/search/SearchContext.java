@@ -1,10 +1,9 @@
-package cc.alcina.framework.gwt.client.entity.search;
+package cc.alcina.framework.common.client.domain.search;
 
 import java.util.List;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;

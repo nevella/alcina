@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.entity.search.searchable;
 
-import cc.alcina.framework.gwt.client.entity.search.ModifiedFromCriterion;
+import cc.alcina.framework.common.client.domain.search.criterion.ModifiedFromCriterion;
 import cc.alcina.framework.gwt.client.objecttree.search.DateCriterionSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 

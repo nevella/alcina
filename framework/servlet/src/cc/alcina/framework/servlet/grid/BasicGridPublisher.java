@@ -14,6 +14,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.w3c.dom.Document;
 
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
+import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
+import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -33,8 +35,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.util.CsvCols;
 import cc.alcina.framework.entity.util.JacksonUtils;
-import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
-import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.servlet.CommonRemoteServletProvider;
 import cc.alcina.framework.servlet.publication.ContentModelHandler;
 import cc.alcina.framework.servlet.publication.ContentRenderer;

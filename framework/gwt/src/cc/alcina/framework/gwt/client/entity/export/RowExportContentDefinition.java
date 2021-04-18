@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.entity.export;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -13,7 +14,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
-import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
 
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 @XmlRootElement

@@ -16,8 +16,8 @@ package cc.alcina.framework.common.client.remote;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
 
-import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
-import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
+import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
+import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
 
 /**

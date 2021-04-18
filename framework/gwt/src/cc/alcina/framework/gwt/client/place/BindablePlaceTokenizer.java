@@ -5,7 +5,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
+import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 
 public abstract class BindablePlaceTokenizer<HL extends Bindable, SD extends BindableSearchDefinition, P extends BindablePlace<SD>>
 		extends BasePlaceTokenizer<P> {
