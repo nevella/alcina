@@ -47,9 +47,9 @@ import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreQuery;
-import cc.alcina.framework.entity.persistence.cache.NotCacheFilter;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreQuery;
+import cc.alcina.framework.entity.persistence.domain.NotCacheFilter;
 
 public class DomainStoreQueryTranslator {
 	DomainStoreQuery query;

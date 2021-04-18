@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicyFactory;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;

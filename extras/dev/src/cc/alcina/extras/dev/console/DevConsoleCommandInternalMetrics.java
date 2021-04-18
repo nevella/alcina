@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.console.FilterArgvParam;
 import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreWaitStats.DomainStoreWaitOnLockStat;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats.DomainStoreWaitOnLockStat;
 import cc.alcina.framework.entity.persistence.metric.InternalMetric;
 import cc.alcina.framework.entity.persistence.metric.ThreadHistory;
 import cc.alcina.framework.entity.persistence.metric.ThreadInfoSer;

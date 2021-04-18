@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreDescriptor.TestSupport;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor.TestSupport;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 /**

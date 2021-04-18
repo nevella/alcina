@@ -18,8 +18,8 @@ import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.persistence.cache.LockUtils;
-import cc.alcina.framework.entity.persistence.cache.LockUtils.ClassStringKeyLock;
+import cc.alcina.framework.entity.persistence.domain.LockUtils;
+import cc.alcina.framework.entity.persistence.domain.LockUtils.ClassStringKeyLock;
 import cc.alcina.framework.entity.util.SerializationStrategy.SerializationStrategy_Kryo;
 
 public class FsObjectCache<T> implements PersistentObjectCache<T> {

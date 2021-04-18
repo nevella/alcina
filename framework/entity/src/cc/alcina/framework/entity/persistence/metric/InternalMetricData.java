@@ -9,8 +9,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreLockState;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreWaitStats;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricType;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 

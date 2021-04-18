@@ -83,7 +83,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.UnwrapInfoItem.UnwrapInfoContainer;
-import cc.alcina.framework.entity.persistence.cache.DomainLinker;
+import cc.alcina.framework.entity.persistence.domain.DomainLinker;
 import cc.alcina.framework.entity.persistence.metric.InternalMetric;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;

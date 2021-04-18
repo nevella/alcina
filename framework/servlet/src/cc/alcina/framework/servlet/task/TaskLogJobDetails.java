@@ -24,8 +24,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobRegistry;
@@ -173,7 +173,7 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 			body.builder().tag("h2").text("Allocator").append();
 			DomNodeBuilder queueDiv = body.builder().tag("div")
 					.className("allocation-queue");
-			AllocationQueue allocationQueue = DomainDescriptorJob.get()
+			AllocationQueue allocationQueue = JobDomain.get()
 					.getAllocationQueue(job);
 			if (allocationQueue == null) {
 				queueDiv.text("(No allocation queue)");

@@ -26,13 +26,13 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
-import cc.alcina.framework.entity.persistence.cache.LazyLoadProvideTask;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.Event;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.EventType;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.SubqueuePhase;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.EventType;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.SubqueuePhase;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.Event;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
@@ -251,7 +251,7 @@ class JobAllocator {
 						Transaction.commit();
 					}
 				}
-				DomainDescriptorJob.get().removeAllocationQueue(job);
+				JobDomain.get().removeAllocationQueue(job);
 				onFinished();
 				return;
 			}

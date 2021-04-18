@@ -13,8 +13,8 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.QueueStat;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.QueueStat;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobRegistry;
@@ -47,7 +47,7 @@ public class TaskListJobs extends AbstractTaskPerformer {
 					.cell("Thread").accept(Utils::medium).cell("Performer")
 					.accept(Utils::instance).cell("Links").accept(Utils::links);
 			Predicate<Job> nameFilter = job -> filter(job.getTaskClassName());
-			DomainDescriptorJob.get().getActiveJobs().filter(nameFilter)
+			JobDomain.get().getActiveJobs().filter(nameFilter)
 					.filter(sectionFilter).forEach(job -> {
 						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 								.cell(String.valueOf(job.getId()))
@@ -88,7 +88,7 @@ public class TaskListJobs extends AbstractTaskPerformer {
 					.cell("Finished").accept(Utils::date).cell("Performer")
 					.accept(Utils::instance).cell("Link").accept(Utils::links);
 			Predicate<Job> nameFilter = job -> filter(job.getTaskClassName());
-			DomainDescriptorJob.get().getRecentlyCompletedJobs(topLevel)
+			JobDomain.get().getRecentlyCompletedJobs(topLevel)
 					.filter(nameFilter).limit(limit).forEach(job -> {
 						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 								.cell(String.valueOf(job.getId()))

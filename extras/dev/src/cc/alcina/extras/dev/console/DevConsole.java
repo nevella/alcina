@@ -97,7 +97,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.metric.StartupStats;
 import cc.alcina.framework.entity.persistence.metric.StartupStats.KeyedStat;
 import cc.alcina.framework.entity.persistence.metric.StartupStats.LogProvider;

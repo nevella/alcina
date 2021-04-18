@@ -34,8 +34,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreLockState;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreWaitStats;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
 
 @RegistryLocation(registryPoint = InternalMetrics.class, implementationType = ImplementationType.SINGLETON)
 public class InternalMetrics {

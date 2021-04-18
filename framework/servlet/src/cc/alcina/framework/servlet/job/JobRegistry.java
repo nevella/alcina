@@ -67,10 +67,10 @@ import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.QueueStat;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.QueueStat;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -200,7 +200,7 @@ public class JobRegistry extends WriterService {
 			}
 		});
 		scheduler = new JobScheduler(this);
-		DomainDescriptorJob.get().stateMessageEvents.add((k, messages) -> {
+		JobDomain.get().stateMessageEvents.add((k, messages) -> {
 			for (JobStateMessage message : messages) {
 				if (message.getProcessState() == null
 						&& activeJobs.containsKey(message.getJob())) {
@@ -234,7 +234,7 @@ public class JobRegistry extends WriterService {
 	 */
 	public void ensureScheduled(Task task) {
 		withJobMetadataLock(task.getClass().getName(), () -> {
-			if (DomainDescriptorJob.get().getJobsForTask(task.getClass())
+			if (JobDomain.get().getJobsForTask(task.getClass())
 					.anyMatch(j -> j.getState() == JobState.PENDING)) {
 				return;
 			}
@@ -250,7 +250,7 @@ public class JobRegistry extends WriterService {
 	}
 
 	public Stream<QueueStat> getActiveQueueStats() {
-		return DomainDescriptorJob.get().getAllocationQueues()
+		return JobDomain.get().getAllocationQueues()
 				.filter(AllocationQueue::hasActive)
 				.map(AllocationQueue::asQueueStat).sorted(Comparator
 						// aka reversed date order
@@ -265,14 +265,14 @@ public class JobRegistry extends WriterService {
 	}
 
 	public Stream<FutureStat> getFutureQueueStats() {
-		return DomainDescriptorJob.get().getAllFutureJobs()
+		return JobDomain.get().getAllFutureJobs()
 				.map(FutureStat::new);
 	}
 
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
 		checkAnnotatedPermissions(action);
-		return DomainDescriptorJob.get().getJobsForTask(action.getClass(), true)
+		return JobDomain.get().getJobsForTask(action.getClass(), true)
 				.sorted(EntityComparator.REVERSED_INSTANCE)
 				.map(Job::asJobResult).map(JobResult::getActionLogItem)
 				.limit(count).collect(Collectors.toList());
@@ -933,7 +933,7 @@ public class JobRegistry extends WriterService {
 						stateMessage.setJob(job);
 					});
 			try {
-				DomainDescriptorJob.get().stateMessageEvents.add(listener);
+				JobDomain.get().stateMessageEvents.add(listener);
 				latch = new CountDownLatch(queriedJobs.size());
 				Transaction.commit();
 				latch.await(1, TimeUnit.SECONDS);
@@ -944,7 +944,7 @@ public class JobRegistry extends WriterService {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} finally {
-				DomainDescriptorJob.get().stateMessageEvents.remove(listener);
+				JobDomain.get().stateMessageEvents.remove(listener);
 			}
 		}
 	}

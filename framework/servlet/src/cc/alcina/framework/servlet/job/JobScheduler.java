@@ -43,11 +43,11 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.Event;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.SubqueuePhase;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.SubqueuePhase;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.Event;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -88,8 +88,8 @@ public class JobScheduler {
 
 	JobScheduler(JobRegistry jobRegistry) {
 		this.jobRegistry = jobRegistry;
-		DomainDescriptorJob.get().queueEvents.add(queueEventListener);
-		DomainDescriptorJob.get().fireInitialAllocatorQueueCreationEvents();
+		JobDomain.get().queueEvents.add(queueEventListener);
+		JobDomain.get().fireInitialAllocatorQueueCreationEvents();
 		thread = new ScheduleJobsThread();
 		thread.start();
 		/*
@@ -158,7 +158,7 @@ public class JobScheduler {
 	public Stream<Job> getToAbortOrReassign(
 			List<ClientInstance> activeInstances, String visibleInstanceRegex,
 			Date cutoff) {
-		return DomainDescriptorJob.get().getIncompleteJobs()
+		return JobDomain.get().getIncompleteJobs()
 				.filter(job -> job.provideCreationDateOrNow().before(cutoff))
 				.filter(job -> job.getCreator().toString()
 						.matches(visibleInstanceRegex))
@@ -184,14 +184,14 @@ public class JobScheduler {
 			return;
 		}
 		logger.info("futures to pending :: visible futures :: \n{}",
-				DomainDescriptorJob.get().getAllFutureJobs()
+				JobDomain.get().getAllFutureJobs()
 						.collect(Collectors.toList()));
-		DomainDescriptorJob.get().getAllFutureJobs()
+		JobDomain.get().getAllFutureJobs()
 				.filter(job -> job.getRunAt().compareTo(new Date()) <= 0)
 				.filter(SchedulingPermissions::canModifyFuture).forEach(job -> {
 					Class<? extends Task> key = job.provideTaskClass();
 					Schedule schedule = Schedule.forTaskClass(key);
-					Optional<Job> earliestIncompleteScheduled = DomainDescriptorJob
+					Optional<Job> earliestIncompleteScheduled = JobDomain
 							.get().getEarliestIncompleteScheduled(key,
 									schedule.isVmLocal());
 					if (schedule != null
@@ -295,10 +295,10 @@ public class JobScheduler {
 			if (nextForTaskClass == null) {
 				continue;
 			}
-			Optional<Job> earliestIncompleteScheduled = DomainDescriptorJob
+			Optional<Job> earliestIncompleteScheduled = JobDomain
 					.get()
 					.getEarliestIncompleteScheduled(key, schedule.isVmLocal());
-			Optional<Job> earliestFuture = DomainDescriptorJob.get()
+			Optional<Job> earliestFuture = JobDomain.get()
 					.getEarliestFuture(key, schedule.isVmLocal());
 			if (earliestFuture.isPresent()) {
 				Date nextDate = SEUtilities.toOldDate(nextForTaskClass);
@@ -372,7 +372,7 @@ public class JobScheduler {
 
 	private void processOrphans() {
 		if (jobRegistry.jobExecutors.isHighestBuildNumberInCluster()) {
-			DomainDescriptorJob.get().getUndeserializableJobs()
+			JobDomain.get().getUndeserializableJobs()
 					.forEach(Job::delete);
 		}
 		List<ClientInstance> activeInstances = jobRegistry.jobExecutors

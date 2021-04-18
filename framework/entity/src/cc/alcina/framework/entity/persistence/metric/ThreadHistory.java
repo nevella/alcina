@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import cc.alcina.framework.entity.persistence.cache.DomainStoreLockState;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreWaitStats;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
 
 public class ThreadHistory {
 	public String note;
